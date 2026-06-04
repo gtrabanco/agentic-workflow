@@ -1,10 +1,14 @@
 # Skill system reference
 
-The skills that make up the agentic workflow, grouped by role. The six at the
-top are added by this system; the rest already exist in the repo and compose with
-them.
+The skills that make up the agentic workflow, grouped by role.
 
-## Planning & creation (this system)
+## Setup
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; offer to install the skills | `design-feature` / `feature-from-issue` |
+
+## Planning & creation
 
 | Skill | Role | Hands off to |
 |---|---|---|
@@ -12,7 +16,7 @@ them.
 | `feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` | `plan-feature` |
 | `plan-feature` | Scaffolds SPEC + all planning artifacts; registers in roadmap (docs only) | `execute-phase` |
 
-## Decision & audit (this system)
+## Decision & audit
 
 | Skill | Role | Hands off to |
 |---|---|---|
@@ -20,15 +24,15 @@ them.
 | `audit-docs` | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 | `review-implementation` | Two-phase review (find → classify) → decision table: fix-now / postpone / ignore / intentional-tradeoff; findings only, no refactor | `draft-fix-spec` / `triage-issue` |
 
-## Execution & review (already in the repo)
+## Execution & review
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default) or a fix (`--fix`); branch safety + per-phase doc discipline + gate |
+| `execute-phase` | Execute one feature phase (default), a small feature in a single pass, or a fix (`--fix`); branch safety + per-phase doc discipline + gate |
 | `draft-fix-spec` | Draft a fix SPEC from an issue; commit on a fix branch |
-| `/code-review` | Correctness + simplification over the diff |
-| `/security-review` | Security pass on branch changes |
-| `/verify` | Run the app; confirm the change behaves |
+| `/code-review` | Correctness + simplification over the diff (Claude Code built-in) |
+| `/security-review` | Security pass on branch changes (Claude Code built-in) |
+| `/verify` | Run the app; confirm the change behaves (Claude Code built-in) |
 
 ## Domain guardrails (per project — not bundled)
 
