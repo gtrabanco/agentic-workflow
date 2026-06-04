@@ -32,7 +32,7 @@ docs/fix/                fix SPEC template + index
 The skills are the **behavior**; `template/` is the **substrate** they read (a
 generic `CLAUDE.md` + documentation map, SPEC/feature/fix templates, and GitHub
 templates). Scaffold a new project's way of working with
-`npx degit gtrabanco/agentic-skills/template my-project` — see
+`npx degit gtrabanco/agentic-workflow/template my-project` — see
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
 
 ## The skills
@@ -140,14 +140,14 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 
 ```sh
 # From the root of the TARGET repository — install all 9 skills:
-npx skills add gtrabanco/agentic-skills
+npx skills add gtrabanco/agentic-workflow
 
 # Pick specific skills, or target a specific agent:
-npx skills add gtrabanco/agentic-skills --skill plan-feature --skill triage-issue
-npx skills add gtrabanco/agentic-skills --agent claude-code --agent cursor
+npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
+npx skills add gtrabanco/agentic-workflow --agent claude-code --agent cursor
 
 # Install for the current user (global) instead of the current project:
-npx skills add gtrabanco/agentic-skills --global
+npx skills add gtrabanco/agentic-workflow --global
 
 # Manage them later:
 npx skills list

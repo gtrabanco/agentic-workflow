@@ -144,11 +144,11 @@ chore(<area>): <summary>
 ## Skills
 
 This project uses the agentic workflow skills
-([`gtrabanco/agentic-skills`](https://github.com/gtrabanco/agentic-skills)),
+([`gtrabanco/agentic-workflow`](https://github.com/gtrabanco/agentic-workflow)),
 installed with:
 
 ```sh
-npx skills add gtrabanco/agentic-skills
+npx skills add gtrabanco/agentic-workflow
 ```
 
 They discover this project's docs (the map above) at runtime and drive the

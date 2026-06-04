@@ -7,7 +7,7 @@ rather than copying this repo's specifics verbatim.
 
 Use this when you want the skills tuned to a new project. For a deterministic,
 identical copy instead, install them with the `skills` CLI:
-`npx skills add gtrabanco/agentic-skills` (see `REPLICATE.md`).
+`npx skills add gtrabanco/agentic-workflow` (see `REPLICATE.md`).
 
 ---
 

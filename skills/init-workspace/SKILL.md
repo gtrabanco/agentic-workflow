@@ -23,7 +23,7 @@ raw placeholders.
 
 - Setting up a repo to use these skills and you want the documentation substrate
   (`CLAUDE.md` + `docs/` map + templates) adapted to the project, not just copied.
-- Prefer this over a static `npx degit gtrabanco/agentic-skills/template` when you
+- Prefer this over a static `npx degit gtrabanco/agentic-workflow/template` when you
   want the gate commands, architecture, and doc domains filled in by interview.
 
 ## Step 0 — Discover the project (always first)
@@ -40,7 +40,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 1. **Preflight.** Confirm the target dir and the discovery findings. If scaffold
    files already exist, get an explicit decision before overwriting.
-2. **Fetch the template.** `npx degit gtrabanco/agentic-skills/template <dir>`
+2. **Fetch the template.** `npx degit gtrabanco/agentic-workflow/template <dir>`
    (into the target if empty, else a temp dir to merge from). **`degit` can't read
    a private repo — it fails, or in `--mode=git` silently leaves an empty dir; for
    a private source, `git clone` via SSH and copy the `template/` subtree instead.**
@@ -62,7 +62,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    `.github/` templates; prune unused doc folders and map rows. Leave honest
    placeholders where the user hasn't decided — never invent values.
 5. **Offer the skills.** Propose installing them:
-   `npx skills add gtrabanco/agentic-skills` (note the SSH/local-path variant if
+   `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
 6. **Report.** List what was created, which placeholders still need human input,
    and the next step: `design-feature` / `feature-from-issue` → `plan-feature` →
@@ -79,7 +79,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 ## Relationship to other skills
 
-- `npx degit gtrabanco/agentic-skills/template` — the static copy this skill
+- `npx degit gtrabanco/agentic-workflow/template` — the static copy this skill
   adapts. Use that when you want the raw scaffold and will fill it yourself.
 - `docs/workflow/PORTABLE_PROMPT.md` — regenerates the **skills** adapted to a
   project (behavior). This skill adapts the **substrate** (docs). Complementary.
