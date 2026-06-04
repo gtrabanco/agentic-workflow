@@ -63,10 +63,12 @@ cuáles aplican y cuándo.
 
 ## Modelo y esfuerzo recomendados
 
-Recomendaciones de partida — **tú mandas**. En Claude Code cambia el modelo cuando
-quieras con `/model`, y sube/baja el esfuerzo de razonamiento según necesites. La
-tabla va por **tier** (Opus / Sonnet / Haiku), no por versión concreta, para que
-siga siendo válida según se actualicen los modelos.
+Cada skill **fija su modelo** en el frontmatter (tabla abajo) usando un alias de
+tier flotante (`opus`/`sonnet`/`haiku`) que se auto-actualiza a la última versión —
+así no caduca. El override aplica solo durante el turno de esa skill; tu modelo de
+sesión vuelve después. **Tú mandas:** para cambiar el modelo de una skill, edita su
+línea `model:` (o pon `model: inherit` para seguir tu sesión). El esfuerzo lo
+decides en cada ejecución.
 
 | Skill | Tier de modelo | Esfuerzo | Por qué |
 |---|---|---|---|

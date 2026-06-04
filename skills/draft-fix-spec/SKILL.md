@@ -2,6 +2,7 @@
 name: draft-fix-spec
 user-invocable: true
 argument-hint: <issue-number>
+model: opus
 description: >
   Senior-architect persona that drafts docs/fix/<n>-<topic>/SPEC.md from a GitHub
   issue. Reads the repo docs map, scopes the fix tightly, surfaces blockers and

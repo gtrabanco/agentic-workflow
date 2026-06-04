@@ -2,6 +2,7 @@
 name: triage-issue
 user-invocable: true
 argument-hint: <issue-number>
+model: opus
 description: >
   Classify an issue and take a defensible decision: fix-now, postpone
   (deferred/trigger-based), wontfix, or promote-to-feature. Reads the issue's own
