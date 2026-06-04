@@ -2,6 +2,7 @@
 name: plan-feature
 user-invocable: true
 argument-hint: <feature idea | NN-slug>
+model: opus
 description: >
   Scaffold a feature's full planning artifact set (SPEC + PLAN + TASKS +
   progress/testing/known-issues/decisions/architecture-notes) from the project's
