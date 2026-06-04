@@ -20,7 +20,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 8 skills (one SKILL.md each) — the installable source
+skills/                  the 9 skills (one SKILL.md each) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -36,6 +36,11 @@ templates). Scaffold a new project's way of working with
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
 
 ## The skills
+
+### Setup
+| Skill | What it does |
+|---|---|
+| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); offers to install the skills |
 
 ### Planning & creation
 | Skill | What it does |
@@ -70,6 +75,7 @@ call per run.
 
 | Skill | Model tier | Effort | Why |
 |---|---|---|---|
+| `init-workspace` | Opus | high | interview-driven project bootstrap + adaptation |
 | `design-feature` | Opus | high | open-ended interview + design judgement |
 | `feature-from-issue` | Opus | high | classify, translate, scope, map to the roadmap |
 | `draft-fix-spec` | Opus | high | architect-level scoping + risk analysis |
@@ -133,7 +139,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ more](https://skills.sh)).
 
 ```sh
-# From the root of the TARGET repository — install all 8 skills:
+# From the root of the TARGET repository — install all 9 skills:
 npx skills add gtrabanco/agentic-skills
 
 # Pick specific skills, or target a specific agent:

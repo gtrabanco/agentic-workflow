@@ -21,7 +21,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 8 skills (un SKILL.md cada una) — la fuente instalable
+skills/                  las 9 skills (un SKILL.md cada una) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -37,6 +37,11 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
 
 ## Las skills
+
+### Configuración inicial
+| Skill | Qué hace |
+|---|---|
+| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); ofrece instalar las skills |
 
 ### Planificación y creación
 | Skill | Qué hace |
@@ -72,6 +77,7 @@ decides en cada ejecución.
 
 | Skill | Tier de modelo | Esfuerzo | Por qué |
 |---|---|---|---|
+| `init-workspace` | Opus | alto | bootstrap del proyecto guiado por entrevista + adaptación |
 | `design-feature` | Opus | alto | entrevista abierta + juicio de diseño |
 | `feature-from-issue` | Opus | alto | clasificar, traducir, acotar, mapear al roadmap |
 | `draft-fix-spec` | Opus | alto | scoping de arquitecto + análisis de riesgo |
@@ -137,7 +143,7 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 [más de 70](https://skills.sh)).
 
 ```sh
-# Desde la raíz del repositorio DESTINO — instala las 8 skills:
+# Desde la raíz del repositorio DESTINO — instala las 9 skills:
 npx skills add gtrabanco/agentic-skills
 
 # Elige skills concretas, o un agente concreto:
