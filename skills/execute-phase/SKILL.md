@@ -1,113 +1,93 @@
 ---
 name: execute-phase
 user-invocable: true
-description: Implements one phase of a feature (default) or a fix (--fix mode). Enforces branch safety, issue policy, and the project's per-phase update discipline.
+argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
+description: >
+  Implement one phase of a feature (default), a small feature end-to-end in a
+  single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces
+  branch safety, issue policy, the project's verification gate, and per-phase doc
+  discipline. Triggers: "execute phase P1 of NN", "implement the NN feature",
+  "build NN from its spec", "execute-phase NN P2", "execute-phase --fix".
 ---
 
 # Execute Phase
 
-Default mode: implement one phase of a feature from `docs/features/`.
-Alt mode `--fix`: implement a single-shot fix from `docs/fix/`.
+Three modes:
+
+- **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
+- **single-pass** — a small feature with only a `SPEC.md` (no planning artifacts): implement it end-to-end in one pass.
+- **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`.
 
 ## Hard rules
 
-- **NEVER work on `main`.** Before any edit/commit run
-  `git branch --show-current`. If the result is `main`, create the
-  working branch first (see *Branch creation*). The user retains the
-  right to work on `main` themselves; this rule applies to the
-  assistant only.
-- Implement only the requested phase. Never bundle multiple phases
-  unless explicitly asked.
-- Stop after verification passes; keep commits small and reviewable.
-- Update on each phase (feature mode): `TASKS.md`, `progress.md`,
-  `testing.md`, `known-issues.md`, and `decisions.md` only if
-  architecture changes.
+- **Never work on `main`.** Run `git branch --show-current` before any edit/commit; if `main`, create the working branch first. (Applies to the assistant only; the user may use `main`.)
+- Implement only the requested scope — one phase (feature mode) or the whole SPEC (single-pass/fix). Never bundle phases unless asked.
+- Stop after the gate passes; keep commits small and reviewable.
+- Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
 
 ## Forbidden
 
-- Overengineering
-- Premature abstractions
-- Refactoring unrelated code
-- Adding dependencies without justification
-- Implementing future features early
+Overengineering · premature abstractions · refactoring unrelated code · unjustified dependencies · building future features early.
 
-## Branch naming
+## Branch
 
-| Mode | Format | Example |
-|------|--------|---------|
-| feature (default) | `feat/<NN>-<slug>` | `feat/09-pricing-ui` |
-| `--fix` | `fix/<issue-number>-<topic>` | `fix/142-applypatch-stub` |
+| Mode | Format |
+|------|--------|
+| feature / single-pass | `feat/<NN>-<slug>` |
+| `--fix` | `fix/<issue-number>-<topic>` |
 
-## Branch creation
-
-1. Read the `Branch` field from the SPEC.
-2. If present, create silently: `git switch -c <name>`.
-3. If absent or ambiguous, ask the user for the branch name, then create.
-4. Never commit to `main`. Never amend on `main`. Never force-push to `main`.
+Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/ambiguous, ask. Never commit, amend, or force-push on `main`.
 
 ## Issue policy
 
-GitHub issue + PR templates live in `.github/ISSUE_TEMPLATE/` and
-`.github/PULL_REQUEST_TEMPLATE.md`. Their fields mirror the SPEC
-sections so issues and SPECs stay aligned.
+- **`--fix`:** every fix needs a GitHub issue; create with `gh issue create --template fix.yml` if missing, populating the body from the SPEC. Use the returned number for branch and folder.
+- **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
+- All issues, specs, code, commits, and PRs in English; translate the source first if needed.
 
-- **`--fix` mode** — every fix requires a GitHub issue. If the user
-  has not created one, run:
+## Workflows
 
-  ```sh
-  gh issue create \
-    --template fix.yml \
-    --title "fix: <topic>" \
-    --body-file <path-to-rendered-body>
-  ```
+**Feature phase (default)** — `docs/features/<NN>-<slug>/`
 
-  Populate the body from the SPEC's `Root cause`, `Detected in`,
-  `Goal`, and `Acceptance` sections. Use the returned issue number
-  for the branch (`fix/<n>-<topic>`) and folder
-  (`docs/fix/<n>-<topic>/`).
+1. Verify branch (create if on `main`).
+2. Read `SPEC.md` + `TASKS.md` for the requested phase.
+3. Implement only that phase (see *Implementation guidance*).
+4. Run the gate (type-check, tests, build).
+5. Update the per-phase docs.
+6. Commit (conventional; one per phase). Stop for review.
 
-- **Feature mode** — if the feature came from an issue, include
-  `Closes #<n>` in the PR body so the issue closes on merge. Do not
-  create issues for features that did not originate from one.
+**Single-pass** — small feature with only a `SPEC.md`, no planning artifacts:
 
-- **All issues, specs, code, commits and PR descriptions are written
-  in English**, regardless of the language used to request the work.
-  Translate before drafting the SPEC if the source issue is in
-  another language.
+1. Verify branch.
+2. Read `SPEC.md` (+ `DECISIONS.md` if present) and the docs its documentation map points to.
+3. If the SPEC is ambiguous on scope / edge cases / UI, ask first — one question at a time, nothing it already answers.
+4. Implement end-to-end (see *Implementation guidance*).
+5. Run the gate; write `CHECKLIST.md` (below).
+6. Commit. Stop for review.
 
----
+**`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
 
-## Mode: feature (default)
+1. Ensure the issue exists (`gh issue create` if missing).
+2. **If `docs/fix/<n>-<topic>/SPEC.md` already exists (e.g. from `draft-fix-spec`), use it — do not re-draft.** Otherwise copy the template, fill every section, and register the entry in `docs/fix/README.md`.
+3. Verify branch (`fix/<n>-<topic>`).
+4. Implement the fix (no planning artifacts; the SPEC is enough).
+5. Run the gate.
+6. Open the PR with `Closes #<n>`.
+7. After merge: remove the `docs/fix/README.md` entry.
 
-Path: `docs/features/<NN>-<slug>/`
+If the SPEC declares `Depends on:` other fixes, verify they're merged first; block if not.
 
-Workflow:
+## Implementation guidance (single-pass & per-phase)
 
-1. Verify branch — create if on `main`.
-2. Read `SPEC.md` and `TASKS.md` for the requested phase.
-3. Implement only that phase.
-4. Run the project's verification gate (type-check, tests, build).
-5. Update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md`
-   (and `decisions.md` if architecture moved).
-6. Commit (conventional commit format, one commit per phase).
-7. Stop and wait for review.
+Map each change to the project's layers per its architecture doc; build inner layers first, outer last:
 
-## Mode: `--fix`
+1. **Persistence/schema** (if any) — update where defined, generate migrations with the project's tooling, never hand-edit generated output.
+2. **Core/domain** — no outer-layer imports; use the project's value objects/rules.
+3. **Orchestration/use-case** — inject dependencies, idempotent if re-callable, typed errors.
+4. **Adapters** — implement the project's ports; never leak raw external errors inward.
+5. **Controller/endpoint** — map errors to responses; webhooks: verify signature, enqueue, return fast.
+6. **UI** (if any) — follow the design-system/i18n/accessibility docs; no hardcoded strings.
+7. **Tests** — light mocks of the project's interfaces; test orchestration, not adapters.
 
-Path: `docs/fix/<issue-number>-<topic>/`
-Template: `docs/fix/_TEMPLATE/SPEC.md`
-Index: `docs/fix/README.md` (active only)
+## Completion checklist (single-pass)
 
-Workflow:
-
-1. Ensure a GitHub issue exists; create via `gh issue create` if missing.
-2. Copy the template to `docs/fix/<issue-number>-<topic>/SPEC.md` and
-   fill every section. Register the entry in `docs/fix/README.md`.
-3. Verify branch — create `fix/<issue-number>-<topic>` if on `main`.
-4. Implement the fix (no Phase 0 planning artifacts; SPEC is enough).
-5. Run the project's verification gate (type-check, tests, build).
-6. Open the PR with `Closes #<n>` in the body.
-7. After merge: remove the entry from `docs/fix/README.md`.
-
-If the SPEC declares `Depends on:` other fixes, verify those are merged
-before starting. Block if not.
+Write `docs/features/<NN>-<slug>/CHECKLIST.md`: schema migration applied (if any) · core layer has no outer imports · orchestration idempotent + typed errors · adapters implement ports · tests pass · type-check/lint green · UI strings localized (if UI) · domain value-object rules respected · user-facing limitations disclosed · new deps pinned. Note any decisions not captured in the SPEC.

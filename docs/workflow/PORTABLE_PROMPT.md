@@ -71,7 +71,7 @@ discover-first and reference THIS project's real paths/commands/language.
    Findings only — never refactor.
 
 Compose with (do not duplicate) whatever execution/review skills the project
-already has (e.g. a `execute-phase`, `implement-feature`, `draft-fix-spec`,
+already has (e.g. a `execute-phase`, `draft-fix-spec`,
 `/code-review`, `/security-review`). If they're absent, note the gap in the docs
 you write.
 

@@ -66,8 +66,8 @@ dependencies). It does **not** create the branch or write code.
 6. Commits in conventional format — one commit per phase.
 7. Stops for review.
 
-Repeat for each phase (P1, P2, …). For small features, `implement-feature` can
-take a SPEC end-to-end in one pass instead.
+Repeat for each phase (P1, P2, …). Small features are handled by `execute-phase`
+in a single pass — no separate skill.
 
 During execution, domain knowledge skills auto-load as guardrails: the
 project's stack/domain guardrail skills (architecture pattern, domain rules,

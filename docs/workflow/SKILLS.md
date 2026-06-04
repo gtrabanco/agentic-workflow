@@ -25,7 +25,6 @@ them.
 | Skill | Role |
 |---|---|
 | `execute-phase` | Execute one feature phase (default) or a fix (`--fix`); branch safety + per-phase doc discipline + gate |
-| `implement-feature` | Take a SPEC end-to-end in one pass (small features) |
 | `draft-fix-spec` | Draft a fix SPEC from an issue; commit on a fix branch |
 | `/code-review` | Correctness + simplification over the diff |
 | `/security-review` | Security pass on branch changes |
