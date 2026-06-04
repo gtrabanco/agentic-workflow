@@ -11,7 +11,7 @@ substrate as a generic, copyable scaffold in `template/`:
 
 ```sh
 # Scaffold a new project's way of working (CLAUDE.md, docs/ tree, .github templates):
-npx degit gtrabanco/agentic-skills/template my-project
+npx degit gtrabanco/agentic-workflow/template my-project
 ```
 
 Then fill in the placeholders in `CLAUDE.md` (commands, the documentation map,
@@ -39,7 +39,7 @@ universal set, etc.
 
 ```sh
 # From the root of the TARGET repository — install all 9 skills:
-npx skills add gtrabanco/agentic-skills
+npx skills add gtrabanco/agentic-workflow
 
 # Useful flags:
 #   --skill <name>     install only specific skills (repeatable)
@@ -66,7 +66,7 @@ index). Nothing in them is hardcoded to this repo's paths.
 
 > **Single skill / different ref.** The source accepts a path to one skill
 > (`.../tree/main/skills/plan-feature`), a full git URL, or a local path
-> (`npx skills add ./path/to/agentic-skills`). See the `skills` README for all
+> (`npx skills add ./path/to/agentic-workflow`). See the `skills` README for all
 > source formats.
 
 ## Method 2 — Portable prompt (adaptive)

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for AI coding agents working in **this** repository (`agentic-skills`).
+Guidance for AI coding agents working in **this** repository (`agentic-workflow`).
 
 This repo is **not** an application. It ships two things:
 
@@ -76,7 +76,7 @@ which reads the `SKILL.md` files straight from this repo into any supported agen
 (Claude Code, Cursor, Codex, …):
 
 ```sh
-npx skills add gtrabanco/agentic-skills
+npx skills add gtrabanco/agentic-workflow
 ```
 
 There is no build step and no generated installer — adding a skill is just adding
