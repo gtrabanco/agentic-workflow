@@ -61,10 +61,12 @@ are **not bundled** — they're domain-specific, so install them per project. Se
 
 ## Recommended model & effort
 
-Starting recommendations — **you stay in control**. In Claude Code switch the
-model anytime with `/model`, and raise/lower reasoning effort as needed. The table
-is by **tier** (Opus / Sonnet / Haiku), not a specific version, so it stays valid
-as new models ship.
+Each skill **pre-sets its model** in frontmatter (table below) using a floating
+tier alias (`opus`/`sonnet`/`haiku`) that auto-updates to the latest version — so
+it never goes stale. The override applies only for that skill's turn; your session
+model resumes afterward. **You stay in control:** to change a skill's model, edit
+its `model:` line (or set `model: inherit` to follow your session). Effort is your
+call per run.
 
 | Skill | Model tier | Effort | Why |
 |---|---|---|---|
