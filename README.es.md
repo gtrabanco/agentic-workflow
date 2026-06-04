@@ -21,7 +21,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 9 skills (un SKILL.md cada una) — la fuente instalable
+skills/                  las 8 skills (un SKILL.md cada una) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -53,14 +53,34 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 | `audit-docs` | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones |
 
 ### Ejecución (se componen con las anteriores)
-`execute-phase` (ejecuta una fase, o un fix con `--fix`), `implement-feature`
-(features pequeñas de principio a fin), `draft-fix-spec` (redacta un SPEC de fix
-desde un issue).
+`execute-phase` (una fase, una feature pequeña de una pasada, o un fix con
+`--fix`), `draft-fix-spec` (redacta un SPEC de fix desde un issue).
 
 Las skills complementarias para UI/UX y calidad específica del lenguaje (diseño,
 ux, tipado…) **no van incluidas** — son específicas del dominio, así que se
 instalan por proyecto. Ver `docs/workflow/RECOMMENDED_SKILLS.md` para saber
 cuáles aplican y cuándo.
+
+## Modelo y esfuerzo recomendados
+
+Recomendaciones de partida — **tú mandas**. En Claude Code cambia el modelo cuando
+quieras con `/model`, y sube/baja el esfuerzo de razonamiento según necesites. La
+tabla va por **tier** (Opus / Sonnet / Haiku), no por versión concreta, para que
+siga siendo válida según se actualicen los modelos.
+
+| Skill | Tier de modelo | Esfuerzo | Por qué |
+|---|---|---|---|
+| `design-feature` | Opus | alto | entrevista abierta + juicio de diseño |
+| `feature-from-issue` | Opus | alto | clasificar, traducir, acotar, mapear al roadmap |
+| `draft-fix-spec` | Opus | alto | scoping de arquitecto + análisis de riesgo |
+| `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
+| `review-implementation` | Opus | alto | revisión profunda multi-eje + clasificación |
+| `plan-feature` | Opus | medio | generación estructurada de artefactos desde un SPEC ya acotado |
+| `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
+| `execute-phase` | Sonnet | medio | implementación mecánica según el SPEC — una fase o de una pasada (Opus si la lógica es sutil) |
+
+> Regla general: **planificar, decidir y revisar → Opus, esfuerzo alto**;
+> **ejecución mecánica → Sonnet, medio** (sube a Opus si la lógica es sutil).
 
 ## Cómo usarlas
 
@@ -115,7 +135,7 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 [más de 70](https://skills.sh)).
 
 ```sh
-# Desde la raíz del repositorio DESTINO — instala las 9 skills:
+# Desde la raíz del repositorio DESTINO — instala las 8 skills:
 npx skills add gtrabanco/agentic-skills
 
 # Elige skills concretas, o un agente concreto:
