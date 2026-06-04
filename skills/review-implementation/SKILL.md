@@ -1,0 +1,125 @@
+---
+name: review-implementation
+user-invocable: true
+description: >
+  Two-phase review of the current implementation that ends in a CLASSIFIED
+  decision table — not just a bug list. Phase 1 finds issues across bugs,
+  architecture violations, removable/dead code, security/cybersecurity,
+  platform/runtime incompatibilities, overengineering & premature optimization,
+  bundle-size risks, and test problems (failing AND missing). Phase 2 classifies
+  every finding as fix-now / postpone / ignore / intentional-tradeoff with the
+  reasoning. Never refactors — findings only. Triggers: "review the
+  implementation", "review my changes and classify", "find and triage code
+  issues", "decision table for this branch", "what should I fix before merge".
+---
+
+# Review Implementation
+
+Replace the manual "review prompt → classify prompt" pair with one skill. It
+**produces findings and a decision table, and stops** — it never refactors or
+edits code.
+
+## When to use
+
+- Before opening a PR, or mid-feature, to get a triaged view of what's wrong and
+  what to actually do about it.
+- Whenever you'd otherwise run a "review for X, Y, Z — findings only" prompt
+  followed by a "classify those findings" prompt. This skill does both.
+
+## Scope
+
+Default target is the **current change** (the branch diff vs. the default
+branch); accept an explicit path/glob to widen or narrow it. State the scope at
+the top of the report so the reader knows what was and wasn't reviewed.
+
+## Step 0 — Discover the project (always first)
+
+Read the agent guide (`CLAUDE.md`/`AGENTS.md`) and its documentation map, the
+architecture/layering rules, the testing philosophy, and any runtime/platform,
+security, money, i18n/SEO/a11y and bundle rules the project defines. Pull the
+project's specific risk axes from its guardrail skills where present (its
+architecture-pattern, runtime/platform, and domain-rules skills). The axis list
+below is the default; the project's docs refine it.
+
+## Phase 1 — Find (no refactor)
+
+Scan the scope and record findings across these axes. Do not fix anything.
+
+| # | Axis | Looks for |
+|---|---|---|
+| 1 | **Bug / correctness** | Logic errors, wrong edge-case handling, races, unhandled rejections, imprecise numeric handling |
+| 2 | **Architecture violation** | Dependency direction broken, business logic leaking into the wrong layer, abstraction bypass, cross-layer shortcut (per the project's architecture doc) |
+| 3 | **Overengineering / premature optimization** | Unnecessary abstractions, indirection with one caller, speculative generality, micro-opt without a measured bottleneck |
+| 4 | **Removable / dead code** | Unused exports, unreachable branches, commented-out blocks, obsolete files — **see the in-progress exception below** |
+| 5 | **Security / cybersecurity** | Secrets in code, injection, missing authz, unsafe deserialization, PII exposure, weak crypto, SSRF, over-broad CORS, leaking errors |
+| 6 | **Platform / runtime incompatibility** | APIs unavailable on the target runtime, unsupported in-memory state assumptions, runtime-incompatible deps, blocking external calls in the request path |
+| 7 | **Bundle-size risk** | Heavy/duplicate deps, accidental large imports, non-tree-shakeable patterns |
+| 8 | **Tests — failing/weak** | Flaky/over-mocked/snapshot-heavy tests, tests asserting nothing meaningful |
+| 9 | **Tests — missing** | Uncovered branches, new use-cases/adapters without tests, failure modes from the SPEC's dev scenarios not exercised |
+| 10 | **Project-rule violations** | Whatever the project's docs mandate (e.g. domain value-object rules, no hardcoded UI strings, don't hide user-facing limitations, naming conventions) |
+
+### Dead-code exception (important)
+
+Do **not** flag code as removable if it is **intentionally staged for an
+in-progress or planned feature**. Before reporting axis 4, cross-check the
+roadmap, the feature SPECs/`TASKS.md`, and `known-issues.md`: if the code is
+wired into a planned phase or another feature, classify it as *intentional /
+in-progress*, not dead. When you can't tell, mark it **verify** and ask — never
+assert "dead" on a guess.
+
+### Finding format
+
+Each finding gets: a stable id (`F-1`, `F-2`, …), `file:line`, axis, a one-line
+description, and the **evidence** (the code/why it qualifies). No remedy code yet.
+
+## Phase 2 — Classify (no refactor)
+
+Turn the findings into a **decision table**. Classify each into exactly one of:
+
+- **fix-now** — correctness/security risk, or blocks the merge.
+- **postpone** — real but deferrable; must become a tracked issue (with a
+  trigger), not inline work.
+- **ignore** — not worth acting on; say why (false positive, negligible).
+- **intentional-tradeoff** — deliberate and acceptable; document the rationale
+  where future readers will see it.
+
+For every finding, give the reasoning columns:
+
+| Finding | Axis | Sev | Class | WHY | Implementation risk | Long-term impact | Premature-opt? | Route |
+|---|---|---|---|---|---|---|---|---|
+
+- **WHY** — the one-sentence justification for the class.
+- **Implementation risk** — risk of *fixing* it now (blast radius, churn).
+- **Long-term impact** — cost of *not* fixing it (debt, drift, incident odds).
+- **Premature-opt?** — yes/no: is this optimizing without a measured need?
+- **Route** — where it goes next (see below).
+
+## Routing (what each class feeds)
+
+- **fix-now** → `draft-fix-spec` → `execute-phase --fix`, or fold into the
+  current feature phase if it's part of unmerged work.
+- **postpone** → open a tracked issue with an explicit *when-to-fix* trigger;
+  `triage-issue` owns it thereafter. **Do not implement inline.**
+- **intentional-tradeoff** → record it (a code comment, `decisions.md`, or an
+  issue documenting the deliberate choice) so it isn't re-flagged.
+- **ignore** → note the rationale in the report; no further action.
+
+## Guardrails
+
+- **Findings + table only. Never refactor or edit code in this skill.**
+- Evidence-backed: cite `file:line`; don't speculate without marking it *verify*.
+- Honor the dead-code exception — staged/planned code is not dead code.
+- Don't inflate severity; separate "correctness/security" from "taste".
+- Report language = the project's docs language (this repo: **English**).
+
+## Relationship to other skills
+
+- Complements the built-in `/code-review` and `/security-review` (this skill adds
+  the **classification table** and the project-aware axes in one pass).
+- Sits in **Stage 4** of the feature workflow (verification & review).
+- `fix-now`/`postpone` outcomes hand off to `draft-fix-spec` / `triage-issue`.
+
+## Done when
+
+- A scoped findings list (Phase 1) and a complete decision table (Phase 2) exist,
+  every finding classified with reasoning, each routed — and **no code changed**.

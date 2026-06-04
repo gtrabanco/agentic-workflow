@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose new product capability to be planned into a SPEC.
+title: "feat: <short title>"
+labels: ["feature", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / goal
+      description: What changes for the user, and why now.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What this should and should NOT do (non-goals).
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Objective, verifiable conditions for "done".
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies & risks
+      description: Other features, external services, unknowns.
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Anything else relevant (links, prior art, constraints).
+    validations:
+      required: false

@@ -1,0 +1,119 @@
+# NN — <feature-slug>
+
+> Feature specification. This is the **feature doc** read at the start
+> of the workflow (`CLAUDE.md` → Feature workflow). Fill every section.
+> Detailed phase tasks live in `PLAN.md` / `TASKS.md`, generated in
+> planning mode from this spec.
+>
+> Copy this folder to `docs/features/NN-<feature-slug>/` and keep the
+> file named `SPEC.md`. Register the feature in
+> `docs/features/ROADMAP.md` before starting.
+
+## Goal
+
+One paragraph: what this feature delivers and why it exists now.
+
+## Branch
+
+`feat/<NN>-<feature-slug>`
+
+## Dependencies
+
+What must be merged or true before this feature can start. Distinguish
+hard dependencies (cannot start without) from soft ones.
+
+## Context
+
+Why this feature, why now. What already exists, what is missing, and
+what problem the gap causes. Reference prior features and their open
+questions where relevant.
+
+## Business goals
+
+The business outcome, tied to the platform positioning — transparency,
+honest connectivity, low-support scalable architecture, trust-first
+UX. Omit only if the feature is purely internal/technical.
+
+## Technical goals
+
+The architectural outcomes — not implementation detail.
+
+## Scope
+
+### In scope
+
+Concrete, checkable list of what this feature delivers.
+
+### Out of scope / non-goals
+
+Explicit list of what this feature deliberately does NOT do, and which
+feature owns each item instead. This section is the primary defence
+against scope creep during implementation.
+
+## Architecture impact
+
+How the feature interacts with the project's architecture and layering
+(as defined in its architecture doc). State the invariants the
+implementation must hold (e.g. "outer-layer-only — no changes to the
+core/domain layer"). If the feature touches the core/domain, justify it
+here.
+
+## Design
+
+The substantive technical content: entities, ports, adapters, schema,
+data shapes, algorithms, state machines. Pre-resolve every decision the
+implementer would otherwise have to guess. Close inherited open
+questions explicitly. This is the section that most reduces
+implementation risk — if it is vague, the implementation improvises.
+
+## Decisions to confirm
+
+Decisions the project lead must make (or has made) before
+implementation starts. Record the chosen option and the rationale, so
+later reviewers understand the trade-off.
+
+## Acceptance criteria
+
+Objective, verifiable conditions for "done". Each must be checkable
+without judgement.
+
+## Testing requirements
+
+What must be tested and how. State the test layer (unit / integration
+/ architecture) and any tooling or runtime constraints. The project
+prefers integration and architecture tests over heavy mocking.
+
+## Dev scenarios
+
+The situations this feature introduces that must be reproducible in local
+dev — happy path **and** failure modes (empty/degraded state, races,
+outages, mass changes, data loss). For each, name it and state how it is
+reached through an **existing** mechanism (queued message, guard threshold,
+manual override, stubbed source) — scenarios are orchestration, never new
+domain. If the project has a runnable dev-scenario harness, register each
+scenario there (dev-gated, never reaching production) and link it here;
+otherwise list them as prose.
+
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `<area>:<name>` | the situation | the existing trigger |
+
+## Phases
+
+High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
+Phase 0 is always planning (produce the seven planning artifacts); the
+final phase is always the PR.
+
+## Open questions / risks
+
+Known unknowns and risks. Promote to `TASKS.md` if they become
+blockers. Mark inherited questions as RESOLVED or DEFERRED with a
+pointer to where they are now handled.
+
+## Deliverables
+
+The concrete artifacts the PR contains.
+
+## Post-merge next feature
+
+The expected next feature in the sequence — see `docs/features/ROADMAP.md`.

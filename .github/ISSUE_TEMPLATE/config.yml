@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/<username>/<repository>/tree/main/docs
+    about: Architecture, domain, infrastructure and feature roadmap live in /docs.
