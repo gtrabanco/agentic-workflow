@@ -1,0 +1,44 @@
+name: Bug / fix
+description: Report a defect to be scoped into a fix SPEC.
+title: "fix: <short title>"
+labels: ["fix", "needs-triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What's broken, in 1–3 sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: detected
+    attributes:
+      label: Detected in
+      description: Where it surfaced — review, incident, audit, user report.
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Suggested severity
+      options:
+        - critical
+        - high
+        - medium
+        - low
+    validations:
+      required: true
+  - type: textarea
+    id: when-to-fix
+    attributes:
+      label: When to fix / trigger
+      description: If deferrable, the signal that should make this actionable (e.g. "when a 3rd consumer appears", a threshold, a milestone).
+    validations:
+      required: false
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance (when triggered)
+      description: What "fixed" looks like, objectively.
+    validations:
+      required: false
