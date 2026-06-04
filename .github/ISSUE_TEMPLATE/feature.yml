@@ -1,0 +1,94 @@
+name: Feature proposal
+description: Propose a new feature. Fields map 1-to-1 to docs/features/_TEMPLATE/SPEC.md.
+title: "NEW FEATURE: <short description>"
+labels: ["feature", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Language:** write the issue body in English when possible. If you
+        write in another language, the maintainer will translate before the
+        SPEC is drafted — all repository artifacts (specs, docs, code,
+        commits, PRs) are kept in English.
+
+        This issue becomes the starting point of `docs/features/NN-<slug>/SPEC.md`.
+        Be specific where you can; leave fields blank if you genuinely do
+        not know.
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One paragraph — what this feature delivers and why now.
+      placeholder: |
+        Surface a clear breakdown on the detail view so users can see the
+        relevant options and limitations before they commit.
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-value
+    attributes:
+      label: Business value
+      description: Tie to product positioning (transparency, trust, low-support).
+    validations:
+      required: false
+
+  - type: textarea
+    id: in-scope
+    attributes:
+      label: In scope
+      description: Concrete checkable list of what the feature delivers.
+      placeholder: |
+        - Breakdown component on the detail page
+        - Clear disclosure of any user-facing limitations
+        - Segment/category badges
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What this feature deliberately does NOT do, and which feature owns each excluded item.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Objective, verifiable conditions for "done".
+      placeholder: |
+        - Detail page renders the breakdown in every supported locale
+        - Limitation badge is visible above the fold on mobile (≤375px)
+        - SEO score meets the project's threshold on the detail route
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Features that must merge first. Use ROADMAP numbering when known.
+      placeholder: "F-07 (catalog pages), F-08 (i18n platform)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: open-questions
+    attributes:
+      label: Open questions / risks
+      description: Known unknowns. The SPEC author will resolve or defer each.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: prereqs
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I checked the ROADMAP — this is not already planned under a different number.
+          required: true
+        - label: I read CLAUDE.md and the relevant docs for this area.
+          required: false

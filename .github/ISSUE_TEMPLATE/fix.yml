@@ -1,0 +1,103 @@
+name: Bug / fix request
+description: Report a defect. Fields map 1-to-1 to docs/fix/_TEMPLATE/SPEC.md.
+title: "ISSUE: <short description>"
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Language:** write the issue body in English when possible. If you
+        write in another language, the maintainer will translate before the
+        fix SPEC is drafted — all repository artifacts (specs, docs, code,
+        commits, PRs) are kept in English.
+
+        This issue becomes the starting point of `docs/fix/<n>-<topic>/SPEC.md`.
+        The PR that fixes it must close this issue via `Closes #<n>`.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's broken
+      description: One paragraph — what the defect is and the impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: detected-in
+    attributes:
+      label: Detected in
+      description: When and how the defect surfaced (review, incident, failing test, customer report).
+      placeholder: "Documentation audit on 2026-05-27 (carryover from F-03)."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Minimal steps to reproduce. Skip if defect is documentation-only.
+      placeholder: |
+        1. Run `bun test tests/integration/apply-patch.test.ts`
+        2. Observe NotImplementedError thrown by D1CatalogPublicationRepository.applyPatch
+    validations:
+      required: false
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+    validations:
+      required: false
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Root cause (if known)
+      description: Reference the commit, feature, or decision where the defect was introduced.
+      placeholder: "F-03 Phase 8, D-11: stub left intentionally for F-04 to implement."
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How we know the fix is done.
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback strategy (if known)
+      description: How to revert the fix safely if it misbehaves in production.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - critical (production-down or data-loss risk)
+        - high (blocks next feature or hidden in-flight)
+        - medium (functional but degraded)
+        - low (cosmetic / docs)
+    validations:
+      required: true
+
+  - type: textarea
+    id: depends-on
+    attributes:
+      label: Depends on
+      description: Other fixes (by issue number) that must merge first.
+      placeholder: "#141"
+    validations:
+      required: false

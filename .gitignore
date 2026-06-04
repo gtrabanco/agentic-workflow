@@ -1,0 +1,8 @@
+# OS / editor cruft
+.DS_Store
+*.swp
+*~
+
+# Logs / temp
+*.log
+tmp/
