@@ -25,8 +25,8 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 8 skills copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
-| **Portable prompt** | The 8 skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
+| **`skills` CLI** | The 9 skills copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **Portable prompt** | The 9 skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
 
 ## Method 1 — `skills` CLI (deterministic)
 
@@ -38,7 +38,7 @@ directory — `.claude/skills/` for Claude Code, `.agents/skills/` for the
 universal set, etc.
 
 ```sh
-# From the root of the TARGET repository — install all 8 skills:
+# From the root of the TARGET repository — install all 9 skills:
 npx skills add gtrabanco/agentic-skills
 
 # Useful flags:

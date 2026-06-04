@@ -1,0 +1,92 @@
+---
+name: init-workspace
+user-invocable: true
+argument-hint: [target-dir]
+model: opus
+description: >
+  Bootstrap a project's way of working: fetch the agentic-workflow documentation
+  scaffold (template/) and adapt it to THIS project by interview — fill the
+  CLAUDE.md documentation map, gate commands and architecture, prune doc folders
+  that don't apply, keep the SPEC/feature/fix and GitHub templates — then offer to
+  install the skills. The adaptive counterpart to a raw `npx degit` copy. Triggers:
+  "set up the agentic workflow here", "init-workspace", "scaffold this project's
+  docs", "adapt the workflow template to this repo", "bootstrap the way of working".
+---
+
+# Init Workspace
+
+Turn an empty or existing repo into one that works with the agentic workflow:
+copy the generic scaffold, then **tailor it to this project** instead of leaving
+raw placeholders.
+
+## When to use
+
+- Setting up a repo to use these skills and you want the documentation substrate
+  (`CLAUDE.md` + `docs/` map + templates) adapted to the project, not just copied.
+- Prefer this over a static `npx degit gtrabanco/agentic-skills/template` when you
+  want the gate commands, architecture, and doc domains filled in by interview.
+
+## Step 0 — Discover the project (always first)
+
+Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
+
+- Existing `CLAUDE.md` / `AGENTS.md` / `docs/` / `.github/`? If so, **do not
+  clobber** — ask whether to merge, adapt in place, or abort.
+- Detect the stack from manifests (`package.json`, `pyproject.toml`, `go.mod`,
+  `Cargo.toml`, `Gemfile`, …) to *propose* gate commands and naming conventions.
+- Note the git state (is it a repo, what's the default branch).
+
+## Process
+
+1. **Preflight.** Confirm the target dir and the discovery findings. If scaffold
+   files already exist, get an explicit decision before overwriting.
+2. **Fetch the template.** `npx degit gtrabanco/agentic-skills/template <dir>`
+   (into the target if empty, else a temp dir to merge from). For a **private**
+   source, clone it instead and copy the `template/` subtree.
+3. **Interview to adapt** — small batched rounds, each with a recommended default
+   drawn from Step 0; skip whatever discovery already answers:
+   - **Project** — name + one-line purpose.
+   - **Gate** — dev / build / test commands and the verification gate (proposed
+     from the detected stack; confirm).
+   - **Docs language.**
+   - **Architecture** — pattern, layers/modules, and dependency-direction rules
+     (stay architecture-agnostic; record the user's choice in `ARCHITECTURE.md`).
+   - **Doc domains** — which of `providers/ brand/ domain/ business/
+     infrastructure/ legal/ frontend/` apply. **Delete the folders that don't**
+     (e.g. `frontend/` for a non-UI project).
+   - **Naming conventions** and **MCP servers**, if any.
+4. **Write the adapted scaffold.** Fill the `CLAUDE.md` placeholders (commands,
+   the documentation map rows, architecture); keep `AGENTS.md`, the
+   `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and the
+   `.github/` templates; prune unused doc folders and map rows. Leave honest
+   placeholders where the user hasn't decided — never invent values.
+5. **Offer the skills.** Propose installing them:
+   `npx skills add gtrabanco/agentic-skills` (note the SSH/local-path variant if
+   the source is private). Don't install without a yes.
+6. **Report.** List what was created, which placeholders still need human input,
+   and the next step: `design-feature` / `feature-from-issue` → `plan-feature` →
+   `execute-phase`.
+
+## Guardrails
+
+- **Never overwrite an existing `CLAUDE.md` or `docs/` without explicit consent.**
+- Docs-only scaffolding; no app code, no dependencies installed unprompted.
+- Architecture-agnostic: record the project's pattern, don't impose one.
+- Honest placeholders over invented specifics; flag what's left to fill.
+- Respect the target's branch rules — if it's an existing repo, don't work on its
+  default branch; never commit/push unless asked.
+
+## Relationship to other skills
+
+- `npx degit gtrabanco/agentic-skills/template` — the static copy this skill
+  adapts. Use that when you want the raw scaffold and will fill it yourself.
+- `docs/workflow/PORTABLE_PROMPT.md` — regenerates the **skills** adapted to a
+  project (behavior). This skill adapts the **substrate** (docs). Complementary.
+- After init: `design-feature` / `feature-from-issue` → `plan-feature` →
+  `execute-phase`; run `audit-docs` to confirm the scaffold is coherent.
+
+## Done when
+
+- A tailored `CLAUDE.md` + `docs/` scaffold + `.github/` templates exist in the
+  target, unused folders pruned, residual placeholders flagged, and the user knows
+  how to install the skills and start the first feature.
