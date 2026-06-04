@@ -41,8 +41,9 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 1. **Preflight.** Confirm the target dir and the discovery findings. If scaffold
    files already exist, get an explicit decision before overwriting.
 2. **Fetch the template.** `npx degit gtrabanco/agentic-skills/template <dir>`
-   (into the target if empty, else a temp dir to merge from). For a **private**
-   source, clone it instead and copy the `template/` subtree.
+   (into the target if empty, else a temp dir to merge from). **`degit` can't read
+   a private repo — it fails, or in `--mode=git` silently leaves an empty dir; for
+   a private source, `git clone` via SSH and copy the `template/` subtree instead.**
 3. **Interview to adapt** — small batched rounds, each with a recommended default
    drawn from Step 0; skip whatever discovery already answers:
    - **Project** — name + one-line purpose.
