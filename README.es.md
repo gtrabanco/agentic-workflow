@@ -33,7 +33,7 @@ docs/fix/                plantilla de SPEC de fix + índice
 Las skills son el **comportamiento**; `template/` es el **sustrato** que leen (un
 `CLAUDE.md` genérico + mapa de documentación, plantillas de SPEC/feature/fix y
 plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
-`npx degit gtrabanco/agentic-skills/template mi-proyecto` — ver
+`npx degit gtrabanco/agentic-workflow/template mi-proyecto` — ver
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
 
 ## Las skills
@@ -144,14 +144,14 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 
 ```sh
 # Desde la raíz del repositorio DESTINO — instala las 9 skills:
-npx skills add gtrabanco/agentic-skills
+npx skills add gtrabanco/agentic-workflow
 
 # Elige skills concretas, o un agente concreto:
-npx skills add gtrabanco/agentic-skills --skill plan-feature --skill triage-issue
-npx skills add gtrabanco/agentic-skills --agent claude-code --agent cursor
+npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
+npx skills add gtrabanco/agentic-workflow --agent claude-code --agent cursor
 
 # Instala para el usuario actual (global) en vez de para el proyecto actual:
-npx skills add gtrabanco/agentic-skills --global
+npx skills add gtrabanco/agentic-workflow --global
 
 # Gestiónalas después:
 npx skills list
