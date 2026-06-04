@@ -20,7 +20,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 9 skills (one SKILL.md each) — the installable source
+skills/                  the 8 skills (one SKILL.md each) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -52,12 +52,33 @@ templates). Scaffold a new project's way of working with
 | `audit-docs` | Audits docs ↔ roadmap ↔ code ↔ fix index for drift |
 
 ### Execution (compose with the above)
-`execute-phase` (execute one phase, or a fix with `--fix`), `implement-feature`
-(small features end-to-end), `draft-fix-spec` (draft a fix SPEC from an issue).
+`execute-phase` (one phase, a small feature in a single pass, or a fix with
+`--fix`), `draft-fix-spec` (draft a fix SPEC from an issue).
 
 Companion skills for UI/UX and language-specific quality (design, ux, typing…)
 are **not bundled** — they're domain-specific, so install them per project. See
 `docs/workflow/RECOMMENDED_SKILLS.md` for which apply when.
+
+## Recommended model & effort
+
+Starting recommendations — **you stay in control**. In Claude Code switch the
+model anytime with `/model`, and raise/lower reasoning effort as needed. The table
+is by **tier** (Opus / Sonnet / Haiku), not a specific version, so it stays valid
+as new models ship.
+
+| Skill | Model tier | Effort | Why |
+|---|---|---|---|
+| `design-feature` | Opus | high | open-ended interview + design judgement |
+| `feature-from-issue` | Opus | high | classify, translate, scope, map to the roadmap |
+| `draft-fix-spec` | Opus | high | architect-level scoping + risk analysis |
+| `triage-issue` | Opus | high | verify triggers against the code; judgement call |
+| `review-implementation` | Opus | high | deep multi-axis review + classification |
+| `plan-feature` | Opus | medium | structured artifact scaffolding from a scoped SPEC |
+| `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
+| `execute-phase` | Sonnet | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle) |
+
+> Rule of thumb: **planning, judgement and review → Opus, high effort**;
+> **mechanical execution → Sonnet, medium** (bump to Opus when the logic is subtle).
 
 ## How to use them
 
@@ -110,7 +131,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ more](https://skills.sh)).
 
 ```sh
-# From the root of the TARGET repository — install all 9 skills:
+# From the root of the TARGET repository — install all 8 skills:
 npx skills add gtrabanco/agentic-skills
 
 # Pick specific skills, or target a specific agent:
