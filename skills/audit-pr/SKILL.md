@@ -1,10 +1,11 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: "[pr-number] (defaults to the current branch's PR)"
 model: opus
 effort: high
+context: fork
 description: >
   PR-level merge gate. Audits the WHOLE pull request (not just the diff) against a
   merge-readiness contract: SPEC acceptance criteria met, all phases complete, docs

@@ -24,6 +24,17 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-05 — context isolation + product-audit 1M context
+
+- `product-audit` `1.0.1` → `1.0.2` — `model: opus` → `model: opus[1m]` (sweeps
+  the entire codebase; 1M context hardcoded so it never silently truncates on large
+  repos, regardless of session settings); add `context: fork` (runs as an isolated
+  subagent — doesn't consume or contaminate the main conversation context).
+- `audit-pr` `1.0.0` → `1.0.1` — add `context: fork` (reads PR + SPEC + all
+  planning artifacts + CI; autocontained work that should not fill the main context).
+- `audit-docs` `1.0.0` → `1.0.1` — add `context: fork` (cross-document scan across
+  the whole docs tree; isolated context keeps the main conversation clean).
+
 ## 2026-06-05 — skill composition → hand-off
 
 - `execute-phase` `1.0.0` → `1.1.0` (minor) — the every-2-phases review changes
