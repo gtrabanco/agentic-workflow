@@ -3,6 +3,7 @@ name: review-implementation
 user-invocable: true
 argument-hint: [path-or-glob]
 model: opus
+effort: high
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 description: >
   Two-phase review of the current implementation that ends in a CLASSIFIED

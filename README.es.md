@@ -68,12 +68,12 @@ cuáles aplican y cuándo.
 
 ## Modelo y esfuerzo recomendados
 
-Cada skill **fija su modelo** en el frontmatter (tabla abajo) usando un alias de
-tier flotante (`opus`/`sonnet`/`haiku`) que se auto-actualiza a la última versión —
-así no caduca. El override aplica solo durante el turno de esa skill; tu modelo de
-sesión vuelve después. **Tú mandas:** para cambiar el modelo de una skill, edita su
-línea `model:` (o pon `model: inherit` para seguir tu sesión). El esfuerzo lo
-decides en cada ejecución.
+Cada skill **fija su modelo y su esfuerzo** en el frontmatter (tabla abajo). El
+modelo usa un alias de tier flotante (`opus`/`sonnet`/`haiku`) que se auto-actualiza
+a la última versión — así no caduca. Ambos aplican solo durante el turno de esa
+skill; tu modelo/esfuerzo de sesión vuelven después. **Tú mandas:** para cambiarlos,
+edita las líneas `model:` / `effort:` de la skill (o `model: inherit` para seguir tu
+sesión).
 
 | Skill | Tier de modelo | Esfuerzo | Por qué |
 |---|---|---|---|
