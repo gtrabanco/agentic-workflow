@@ -40,12 +40,12 @@ the report so the reader knows what was and wasn't reviewed.
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide (`CLAUDE.md`/`AGENTS.md`) and its documentation map, the
-architecture/layering rules, the testing philosophy, and any runtime/platform,
-security, money, i18n/SEO/a11y and bundle rules. Pull the project's specific risk
-axes from its guardrail skills where present (architecture-pattern,
-runtime/platform, domain-rules). The axis list below is the default; the
-project's docs refine it.
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the architecture/layering rules, the testing philosophy,
+and any runtime/platform, security, money, i18n/SEO/a11y and bundle rules. Pull
+the project's specific risk axes from its guardrail skills where present
+(architecture-pattern, runtime/platform, domain-rules). The axis list below is the
+default; the project's docs refine it.
 
 ## Phase 1 — Find (no refactor)
 
@@ -113,10 +113,10 @@ For every finding, give the reasoning columns:
 ## Guardrails
 
 - **Findings + table only. Never refactor or edit code in this skill.**
-- Evidence-backed: cite `file:line`; don't speculate without marking it *verify*.
 - Honor the dead-code exception — staged/planned code is not dead code.
 - Don't inflate severity; separate "correctness/security" from "taste".
-- Report language = the project's docs language (this repo: **English**).
+- Otherwise per the project's **Workflow conventions** (docs-language, evidence):
+  cite `file:line`, mark uncertainties *verify*.
 
 ## Relationship to other skills
 

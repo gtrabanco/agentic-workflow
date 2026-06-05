@@ -27,20 +27,11 @@ Not for writing code (that is `execute-phase`) or deciding *whether* to build
 
 ## Step 0 — Discover the project (always first)
 
-Never assume paths or formats. Read, in order, whatever exists:
-
-1. The agent guide (`CLAUDE.md` / `AGENTS.md`) — especially its **documentation
-   map** and **feature workflow**.
-2. The feature SPEC **template** (e.g. `docs/features/_TEMPLATE/SPEC.md`).
-3. The **roadmap** (e.g. `docs/features/ROADMAP.md`) — source of truth for
-   numbering, ordering, dependencies.
-4. One or two **recent feature folders** (highest-numbered) to mirror the exact
-   artifact set and section style in use.
-5. The **architecture** doc and any domain/style docs the map points to for this
-   feature's area.
-
-With no template or roadmap, fall back to the agent guide's conventions and
-state the assumption explicitly before proceeding.
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the feature SPEC **template**, the **roadmap**
+(numbering/order/deps), 1–2 recent feature folders to mirror the artifact set, and
+the architecture/domain docs the map points to. No template/roadmap → fall back to
+the agent guide and state the assumption.
 
 ## Process
 
@@ -76,11 +67,9 @@ state the assumption explicitly before proceeding.
 - Docs only. No source edits, migrations, or dependencies.
 - Respect the architecture: honor layer rules (inner layers don't import outer)
   and any domain/i18n/SEO/a11y rules from the docs map.
-- All artifacts in the project's docs language (this repo: **English**),
-  whatever language the request used.
-- One PR per feature, based on the default branch — never stack PRs.
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
+- Otherwise honor the project's **Workflow conventions** (branch/PR, docs-language).
 
 ## Relationship to other skills
 
