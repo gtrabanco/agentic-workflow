@@ -3,7 +3,7 @@
 This shortlist is deliberately **stack-agnostic**: skills that help you *program
 well with agents* and raise **software quality and architecture** on **any**
 project — regardless of language, framework, or infrastructure. They support and
-sharpen our six workflow skills.
+sharpen our workflow skills.
 
 > **Out of scope on purpose:** stack/infra/service skills (your platform,
 > framework, ORM, runtime, and service/tool packs…). Install those simply
@@ -47,12 +47,12 @@ sharpen our six workflow skills.
 | Skill | Why | Pairs with (ours) |
 |---|---|---|
 | `engineering:architecture` | Architecture guidance & decisions. | `plan-feature`, `review-implementation` (arch axis) |
-| `engineering:system-design` | System design for non-trivial features. | `plan-feature`, `design-feature` |
+| `engineering:system-design` | System design for non-trivial features. | `plan-feature`, `plan-feature-interview` |
 | `engineering:testing-strategy` | What to test, at which layer, how much. | `review-implementation` test axes, `execute-phase` testing |
 | `engineering:tech-debt` | Identify & manage debt deliberately. | `triage-issue`, `audit-docs` |
 | `engineering:debug` | Systematic debugging methodology. | any bug work |
 | `engineering:documentation` | Documentation practice. | `plan-feature`, `audit-docs` |
-| `doc-coauthoring` (anthropic) | Structured long-form docs: specs, proposals, decision docs. | `plan-feature`, `design-feature` |
+| `doc-coauthoring` (anthropic) | Structured long-form docs: specs, proposals, decision docs. | `plan-feature`, `plan-feature-interview` |
 
 > **Architecture-pattern skill:** keep one that encodes *your* chosen pattern
 > (ports-and-adapters, clean architecture, layered, MVC…). The pattern is
@@ -76,10 +76,10 @@ claude-api. No documents to ship → no office skills.
 
 ---
 
-## How these reinforce our six skills
+## How these reinforce our workflow skills
 
 - **Plan** — `engineering:system-design` + `doc-coauthoring` sharpen
-  `plan-feature` / `design-feature` / `feature-from-issue`.
+  `plan-feature` (the router covering the idea, issue, and scoped-slug entry paths).
 - **Review** — `code-review` + `simplify` + `security-review` feed
   `review-implementation`'s findings; ours adds the **classification** they lack.
 - **Decide / debt** — `engineering:tech-debt` ↔ `triage-issue`;

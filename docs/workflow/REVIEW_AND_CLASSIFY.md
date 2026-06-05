@@ -1,9 +1,13 @@
-# Review & classify — `review-implementation`
+# Review & classify — `review-change` + `review-implementation`
 
-When and how to use the two-phase, **no-refactor** review that ends in a
-**classified decision table**. The full spec lives in the skill
-(`.claude/skills/review-implementation/SKILL.md`); this is the practical
-when/how.
+How to review a change. **`review-change`** is the platform-adaptive
+**orchestrator**: it runs only the reviews that apply to this project + change and
+synthesizes one report. **`review-implementation`** is its **findings engine** —
+the two-phase, **no-refactor** review that ends in a **classified decision
+table**. Reach for `review-change` for the full, right-sized review; call
+`review-implementation` directly for a quick classified pass. Full specs live in
+the skills (`.claude/skills/review-change/SKILL.md`,
+`.claude/skills/review-implementation/SKILL.md`); this is the practical when/how.
 
 ## When to use it
 
@@ -22,10 +26,13 @@ tests, build).
 
 ## How to invoke
 
-- `/review-implementation` — defaults to the **current branch diff vs `main`**.
+- `/review-change` — the orchestrator: runs the applicable axes for this platform
+  and synthesizes one table + a manual-verification checklist. Use this before a PR.
+- `/review-implementation` — just the engine; defaults to the **current branch diff
+  vs `main`**.
 - Pass a path/glob to widen or narrow scope, e.g. *"review-implementation on
   src/payments/"*.
-- It prints the **scope** at the top, so you know what was and wasn't covered.
+- Both print the **scope** at the top, so you know what was and wasn't covered.
 
 ## What it produces (two phases, no refactor)
 
@@ -46,14 +53,14 @@ violations (whatever the project's docs mandate).
 |---|---|---|---|---|---|---|---|---|
 | Unbounded query on hot path | perf | low | postpone | Negligible now | Low (cache) | Grows with data | no | issue + trigger |
 | Helper duplicated in 2 files | maintainability | low | intentional-tradeoff | Coupling 2 features is worse | — | Near-zero divergence | no | document in code |
-| Secret committed to a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | draft-fix-spec |
+| Secret committed to a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | plan-fix |
 | New module without tests | tests | med | fix-now | Untested failure path | Low | Regression risk | no | fold into phase |
 
 Classes: **fix-now / postpone / ignore / intentional-tradeoff**.
 
 ## What you do with the output
 
-- **fix-now** → `draft-fix-spec` → `execute-phase --fix` (or fold into the
+- **fix-now** → `plan-fix` → `execute-phase --fix` (or fold into the
   current feature phase if it's unmerged work).
 - **postpone** → open a tracked issue **with a trigger**; `triage-issue` owns it
   thereafter. Do **not** implement inline.
@@ -65,4 +72,4 @@ Classes: **fix-now / postpone / ignore / intentional-tradeoff**.
 
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
 `/verify`. It adds the **classification + project-aware axes** those don't, in
-one pass. Routes into `draft-fix-spec` (fix-now) and `triage-issue` (postpone).
+one pass. Routes into `plan-fix` (fix-now) and `triage-issue` (postpone).

@@ -9,19 +9,22 @@ SPEC → PLAN → TASKS → execution by phase → hardening → verification �
 
 ## Stage 0 — Decide what you're building
 
-Pick the entry point that matches where the work comes from:
+**One entry point** — `plan-feature` — detects where the work comes from and
+routes to the right internal step:
 
-| You have… | Use | Result |
-|---|---|---|
-| A rough idea, no issue | `design-feature` | An interview that fills the SPEC |
-| A GitHub issue requesting a feature | `feature-from-issue` | Issue → filled SPEC, with `Closes #N` |
-| An already-scoped feature/SPEC | `plan-feature` | Straight to artifact scaffolding |
+| You have… | Invoke | The router runs | Result |
+|---|---|---|---|
+| A rough idea, no issue | `plan-feature "<idea>"` (or `--interview`) | `plan-feature-interview` | An interview that fills the SPEC |
+| A GitHub issue requesting a feature | `plan-feature <N>` (or `--from-issue N`) | `plan-feature-from-issue` | Issue → filled SPEC, with `Closes #N` |
+| An already-scoped feature/SPEC | `plan-feature <slug>` (or `--scaffold`) | `plan-feature-scaffold` | Straight to artifact scaffolding |
+| Nothing — take the next roadmap item | `plan-feature --next` | picks the next `planned` entry | Scaffolds it (interviews if it's thin) |
 
-All three **read the project first** (agent guide, documentation map,
+All paths **read the project first** (agent guide, documentation map,
 architecture, roadmap, domain/style docs) so the feature respects the codebase's
-real constraints.
+real constraints. You only ever call `plan-feature`; the internal steps below are
+invoked for you (they never appear in the menu).
 
-### `design-feature` — the agentic interview
+### The idea path — `plan-feature-interview`
 
 Restates your idea, then proactively asks — in small batched rounds, each with a
 recommended default — about: problem & goal, scope (and what's OUT), architecture
@@ -30,16 +33,17 @@ impact (layers, ports, use-cases, adapters), data/schema, cross-cutting concerns
 failure modes), acceptance criteria, dependencies, risks, and non-goals. It only
 asks what the docs don't already answer, and offers to open a tracking issue.
 
-### `feature-from-issue` — issue → feature
+### The issue path — `plan-feature-from-issue`
 
 Reads the issue, **confirms it's actually a feature** (a bug/tech-debt gets
 routed to `triage-issue`), translates to the docs language if needed, maps it to
 the roadmap (number, slug, dependencies, conflicts), closes scope gaps with you,
 and wires `Closes #N` for the eventual PR.
 
-## Stage 1 — Plan: SPEC + artifacts (`plan-feature`)
+## Stage 1 — Plan: SPEC + artifacts (`plan-feature-scaffold`)
 
-`plan-feature` writes **docs only** into `docs/features/<NN>-<slug>/`:
+Once the feature is scoped, the router runs `plan-feature-scaffold`, which writes
+**docs only** into `docs/features/<NN>-<slug>/`:
 
 - `SPEC.md` — every section filled (goals, architecture impact, acceptance,
   branch, dependencies, testing, dev scenarios).
@@ -81,21 +85,29 @@ error mapping, and disclosure rules (e.g. don't hide user-facing
 limitations). Still
 docs-updated and gate-verified like any phase.
 
-## Stage 4 — Verification & review (whole branch)
+## Stage 4 — Review & audit (whole branch)
 
-Before opening the PR, run the review skills over the completed branch:
+`execute-phase` already auto-runs `review-change` every 2 phases; before opening
+the PR, run the final review and the merge gate over the completed branch:
 
-- `review-implementation` — two-phase review across bugs, architecture
-  violations, removable/dead code (minus planned-feature code), security,
-  platform/runtime incompatibilities, overengineering, bundle risks, and tests
-  (failing **and** missing) → a **classified decision table** (fix-now /
-  postpone / ignore / intentional-tradeoff), with WHY, implementation risk,
-  long-term impact, and a premature-optimization flag. Findings only, no
-  refactor; `fix-now` routes to `draft-fix-spec`, `postpone` to `triage-issue`.
-- `/code-review` — correctness bugs + simplification over the diff.
-- `/security-review` — security pass on the changes.
-- `/verify` — run the app and confirm the change does what it claims.
-- For UI features: `design-review`, `ux-audit`.
+- **`review-change`** — the orchestrator. Runs only the reviews that **apply to
+  this platform** and synthesizes one **classified decision table** plus an
+  explicit manual-verification checklist. It composes:
+  - `review-implementation` — two-phase review across bugs, architecture
+    violations, removable/dead code (minus planned-feature code), security,
+    platform/runtime incompatibilities, overengineering, bundle risks, and tests
+    (failing **and** missing), each classified fix-now / postpone / ignore /
+    intentional-tradeoff with WHY, impl risk, long-term impact, and a
+    premature-opt flag.
+  - `/code-review`, `/security-review`, `/verify`, and — for UI —
+    `design-review`, `accessibility-review`, `brand-review` (only the applicable
+    ones; never an irrelevant pass).
+
+  Findings only, no refactor; `fix-now` routes to `plan-fix` (or folds into the
+  current phase if it's unmerged work), `postpone` to `triage-issue`.
+- **`audit-pr`** — the merge gate. Acceptance criteria met, all phases complete,
+  docs/tests/CI green, `Closes #N` present, branch independently mergeable, and
+  the review axes clean → **merge-ready or a list of blockers**.
 
 Re-run the gate (type-check, tests, build) green.
 
@@ -112,14 +124,14 @@ Re-run the gate (type-check, tests, build) green.
 ## Worked example
 
 ```
-/design-feature  "<your feature>"
-   → interview → SPEC dimensions resolved → offers to open issue
-/plan-feature                       (invoked by design-feature)
-   → docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
-/execute-phase  NN  P1           → data/domain layer, gate green, commit
-/execute-phase  NN  P2           → orchestration + adapter, gate green, commit
-/execute-phase  NN  hardening    → edge cases, gate green, commit
-/review-implementation              → findings + decision table (fix-now/postpone/ignore/tradeoff)
-/code-review  ·  /security-review  ·  /verify
+/plan-feature  "<your feature>"     → router detects an idea → interview
+   → SPEC dimensions resolved (offers to open a tracking issue)
+   → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
+/execute-phase  NN  P1              → data/domain layer, gate green, commit
+/execute-phase  NN  P2              → orchestration + adapter, gate green, commit
+   → auto-runs /review-change (every 2 phases): classified table + manual checks
+/execute-phase  NN  hardening       → edge cases, gate green, commit
+/review-change                      → final review: the applicable axes, classified
+/audit-pr                           → merge gate: merge-ready or blockers
 gh pr create --base main            → "Closes #<issue>"
 ```

@@ -2,37 +2,57 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
+**10 user-facing skills** (one menu entry each) + **3 internal** planning steps the
+`plan-feature` router invokes for you.
+
 ## Setup
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; offer to install the skills | `design-feature` / `feature-from-issue` |
+| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `plan-feature` |
 
-## Planning & creation
-
-| Skill | Role | Hands off to |
-|---|---|---|
-| `design-feature` | Interactive interview from a raw idea; proactively asks to fill the SPEC | `plan-feature` |
-| `feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` | `plan-feature` |
-| `plan-feature` | Scaffolds SPEC + all planning artifacts; registers in roadmap (docs only) | `execute-phase` |
-
-## Decision & audit
+## Plan
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code | `draft-fix-spec`, `feature-from-issue`, or a dated comment |
-| `audit-docs` | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
-| `review-implementation` | Two-phase review (find → classify) → decision table: fix-now / postpone / ignore / intentional-tradeoff; findings only, no refactor | `draft-fix-spec` / `triage-issue` |
+| `plan-feature` | **Router.** Detects the input — raw idea (interview), issue `#N` (issue → scoped SPEC), or scoped slug/SPEC (scaffold) — routes, then registers the roadmap entry | `execute-phase` |
+| `plan-fix` | Architect-drafts a tightly-scoped fix SPEC from an issue; commits on a fix branch; stops for review | `execute-phase --fix` |
 
-## Execution & review
+### Internal planning steps (hidden from the menu; invoked by `plan-feature`)
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small feature in a single pass, or a fix (`--fix`); branch safety + per-phase doc discipline + gate |
-| `draft-fix-spec` | Draft a fix SPEC from an issue; commit on a fix branch |
-| `/code-review` | Correctness + simplification over the diff (Claude Code built-in) |
-| `/security-review` | Security pass on branch changes (Claude Code built-in) |
-| `/verify` | Run the app; confirm the change behaves (Claude Code built-in) |
+| `plan-feature-interview` | Interactive interview from a raw idea; proactively asks to fill the SPEC |
+| `plan-feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` |
+| `plan-feature-scaffold` | Scaffolds SPEC + all planning artifacts; registers in roadmap (docs only) |
+
+## Execute
+
+| Skill | Role |
+|---|---|
+| `execute-phase` | Execute one feature phase (default), a small feature in a single pass, or a fix (`--fix`); branch safety + per-phase doc discipline + gate; **auto-runs `review-change` every 2 phases** |
+
+## Review & audit — *change → PR → product*
+
+| Skill | Scope | Role | Hands off to |
+|---|---|---|---|
+| `review-change` | the **change** | Run only the reviews that apply to this platform + classify → one decision table + manual-verification checklist | `plan-fix` (fix-now) / `triage-issue` (postpone) |
+| `review-implementation` | the **change** (engine) | Two-phase find → classify → decision table (fix-now / postpone / ignore / intentional-tradeoff); findings only, no refactor | `plan-fix` / `triage-issue` |
+| `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
+| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
+| `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
+
+## Decide
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code | `plan-fix`, `plan-feature`, or a dated comment |
+
+## Built-in companions (Claude Code)
+
+`/code-review` (correctness + simplification), `/security-review` (security pass),
+`/verify` (run the app, confirm behavior) — composed by `review-change` when they
+apply to the change.
 
 ## Domain guardrails (per project — not bundled)
 
@@ -44,18 +64,23 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
 ## How they compose
 
 ```
-IDEA ─▶ design-feature ─┐
-ISSUE(feature) ─▶ feature-from-issue ─┼─▶ plan-feature ─▶ execute-phase ─▶ review skills ─▶ PR
-SCOPED ─────────────────┘
+                   ┌──────────────── plan-feature (router) ────────────────┐
+IDEA ──────────────┤  --interview → plan-feature-interview                 │
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue          ├─▶ execute-phase ─▶ review-change ─▶ audit-pr ─▶ PR
+SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (auto review every 2 phases)
+ROADMAP --next ────┘  registers the roadmap entry, prints the next step    │
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ draft-fix-spec ─▶ execute-phase --fix ─▶ PR
-                            ├─ promote ─▶ feature-from-issue ─▶ (planning chain above)
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ review-change ─▶ audit-pr ─▶ PR
+                            ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-review-implementation ── find + classify a branch before PR (Stage 4);
-                         fix-now ─▶ draft-fix-spec · postpone ─▶ triage-issue
-audit-docs ── audits everything above, anytime
+review-change ── runs the applicable reviews + classifies a change (Stage 4);
+                 composes review-implementation + the platform's companion skills;
+                 fix-now ─▶ plan-fix · postpone ─▶ triage-issue
+audit-pr ─────── PR-level merge gate (merge-ready or blockers)
+product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
+audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
 ```
 
 ## Design rules every skill follows
