@@ -2,8 +2,9 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**10 user-facing skills** (one menu entry each) + **3 internal** planning steps the
-`plan-feature` router invokes for you.
+**9 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+you (the `plan-feature` router's three planning steps + the `review-change`
+findings engine, `review-implementation`).
 
 ## Setup
 
@@ -18,13 +19,14 @@ The skills that make up the agentic workflow, grouped by role.
 | `plan-feature` | **Router.** Detects the input — raw idea (interview), issue `#N` (issue → scoped SPEC), or scoped slug/SPEC (scaffold) — routes, then registers the roadmap entry | `execute-phase` |
 | `plan-fix` | Architect-drafts a tightly-scoped fix SPEC from an issue; commits on a fix branch; stops for review | `execute-phase --fix` |
 
-### Internal planning steps (hidden from the menu; invoked by `plan-feature`)
+### Internal steps (hidden from the menu; composed for you)
 
 | Skill | Role |
 |---|---|
-| `plan-feature-interview` | Interactive interview from a raw idea; proactively asks to fill the SPEC |
-| `plan-feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` |
-| `plan-feature-scaffold` | Scaffolds SPEC + all planning artifacts; registers in roadmap (docs only) |
+| `plan-feature-interview` | Interactive interview from a raw idea; proactively asks to fill the SPEC (invoked by `plan-feature`) |
+| `plan-feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` (invoked by `plan-feature`) |
+| `plan-feature-scaffold` | Scaffolds SPEC + all planning artifacts; registers in roadmap (docs only) (invoked by `plan-feature`) |
+| `review-implementation` | Two-phase find → classify → decision table (fix-now / postpone / ignore / intentional-tradeoff); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
 
 ## Execute
 
@@ -37,10 +39,14 @@ The skills that make up the agentic workflow, grouped by role.
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
 | `review-change` | the **change** | Run only the reviews that apply to this platform + classify → one decision table + manual-verification checklist | `plan-fix` (fix-now) / `triage-issue` (postpone) |
-| `review-implementation` | the **change** (engine) | Two-phase find → classify → decision table (fix-now / postpone / ignore / intentional-tradeoff); findings only, no refactor | `plan-fix` / `triage-issue` |
 | `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
+
+> `review-change`'s findings engine is the internal `review-implementation`
+> (`user-invocable: false`) — the two-phase find → classify pass it composes, and
+> that `audit-pr` / `product-audit` reuse. It's not a menu entry; see
+> [Internal steps](#internal-steps-hidden-from-the-menu-composed-for-you).
 
 ## Decide
 
