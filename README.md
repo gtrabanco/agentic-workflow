@@ -66,12 +66,12 @@ are **not bundled** — they're domain-specific, so install them per project. Se
 
 ## Recommended model & effort
 
-Each skill **pre-sets its model** in frontmatter (table below) using a floating
-tier alias (`opus`/`sonnet`/`haiku`) that auto-updates to the latest version — so
-it never goes stale. The override applies only for that skill's turn; your session
-model resumes afterward. **You stay in control:** to change a skill's model, edit
-its `model:` line (or set `model: inherit` to follow your session). Effort is your
-call per run.
+Each skill **pre-sets its model and effort** in frontmatter (table below). The
+model uses a floating tier alias (`opus`/`sonnet`/`haiku`) that auto-updates to the
+latest version — so it never goes stale. Both apply only for that skill's turn;
+your session model/effort resume afterward. **You stay in control:** to change
+them, edit the skill's `model:` / `effort:` lines (or `model: inherit` to follow
+your session).
 
 | Skill | Model tier | Effort | Why |
 |---|---|---|---|

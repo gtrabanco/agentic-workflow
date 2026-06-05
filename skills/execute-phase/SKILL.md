@@ -3,6 +3,7 @@ name: execute-phase
 user-invocable: true
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
+effort: medium
 description: >
   Implement one phase of a feature (default), a small feature end-to-end in a
   single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces

@@ -2,6 +2,7 @@
 name: audit-docs
 user-invocable: true
 model: sonnet
+effort: medium
 description: >
   Audit cross-document coherence: docs ↔ roadmap ↔ code ↔ fix index ↔ issues.
   Finds drift — features in docs/ not in the roadmap (or vice versa), fix-index
