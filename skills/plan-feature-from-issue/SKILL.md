@@ -4,6 +4,8 @@ user-invocable: false
 version: 1.0.0
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Internal step of plan-feature. Turn a GitHub issue that requests a FEATURE into
   a planned, roadmap-registered feature: read the issue, confirm it is a feature

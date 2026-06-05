@@ -6,6 +6,8 @@ argument-hint: "[path-or-area] (defaults to the whole product)"
 model: opus[1m]
 effort: max
 context: fork
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Periodic, product-wide health check — the CTO's "where do we actually stand?"
   Sweeps the WHOLE codebase (not a diff, not a PR) across every applicable axis —

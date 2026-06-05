@@ -221,3 +221,7 @@ detalles y la guía de "qué método cuándo" están en
 `engineering:*`) y —crucialmente— cuáles **omitir** según el proyecto (p. ej.
 skills de diseño para un programa de terminal, `claude-api` si no hay features
 con LLM).
+
+## Licencia
+
+MIT © [Gabriel Trabanco](https://github.com/gtrabanco) — ver [LICENSE](LICENSE).

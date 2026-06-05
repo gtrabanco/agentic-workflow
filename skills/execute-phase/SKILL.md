@@ -6,6 +6,8 @@ argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Implement one phase of a feature (default), a small feature end-to-end in a
   single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces

@@ -4,6 +4,8 @@ user-invocable: false
 version: 1.0.0
 model: opus
 effort: medium
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Internal step of plan-feature. Given a scoped feature (a filled SPEC, a slug, or
   a clear idea), generate the project's full planning artifact set (SPEC + PLAN +

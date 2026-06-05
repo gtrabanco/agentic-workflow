@@ -5,6 +5,8 @@ version: 1.0.1
 argument-hint: [path-or-glob]
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Platform-adaptive review orchestrator. Reviews the current change by running
   review-implementation (find → classify) AND invoking only the review skills that

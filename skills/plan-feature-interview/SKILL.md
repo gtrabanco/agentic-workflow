@@ -4,6 +4,8 @@ user-invocable: false
 version: 1.0.0
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Internal step of plan-feature. Interactively design a feature from a raw idea —
   evaluate everything a complete SPEC needs and proactively ask about the gaps,
