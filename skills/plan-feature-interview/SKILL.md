@@ -1,29 +1,25 @@
 ---
-name: design-feature
-user-invocable: true
-argument-hint: <feature idea>
+name: plan-feature-interview
+user-invocable: false
 model: opus
 effort: high
 description: >
-  Interactively design a feature from a raw description, evaluating everything a
-  complete SPEC needs and proactively asking about the gaps before any code is
-  written. The "agentic interview" entry point: surfaces assumptions, proposes
-  defaults, flags conflicts with the project's architecture/docs, optionally
-  opens a tracking issue, then produces the SPEC via plan-feature. Triggers:
-  "help me create a feature", "I have an idea, guide me", "design a feature with
-  me", "I want to build X, ask me what you need".
+  Internal step of plan-feature. Interactively design a feature from a raw idea —
+  evaluate everything a complete SPEC needs and proactively ask about the gaps,
+  surfacing assumptions, proposing defaults, and flagging conflicts with the
+  project's architecture/docs — then produce a filled SPEC. Invoked by the
+  plan-feature router when the input is a vague idea (or `--interview`).
 ---
 
-# Design Feature
+# Plan Feature — Interview (internal)
 
 Turn a rough idea into a well-scoped, architecture-respecting feature through a
 focused interview. Optimizes for catching unknowns *before* implementation.
 
 ## When to use
 
-- The user has a description or idea but no issue and no SPEC, and wants help
-  thinking it through.
-- Triggered by requests to be proactive / "ask me what you need".
+- The `plan-feature` router calls this when the input is a vague idea (or the user
+  forces it with `--interview`) and wants help thinking it through before any code.
 
 ## Step 0 — Discover the project (always first)
 
@@ -57,9 +53,11 @@ rules, runtime/platform limits, naming conventions).
    smallest version that delivers the value.
 4. **Traceability.** Offer to open a tracking issue (from the feature issue
    template); if created, the PR will `Closes #n`.
-5. **Produce the SPEC.** Once dimensions are answered, write the filled SPEC and
-   delegate the remaining artifacts + roadmap registration to `plan-feature`.
-6. **Hand off.** Next step is `execute-phase`.
+5. **Produce the SPEC.** Once dimensions are answered, write the filled SPEC. The
+   `plan-feature` router then runs `plan-feature-scaffold` for the remaining
+   artifacts + roadmap registration.
+6. **Hand off.** Return to the router; the next step after scaffolding is
+   `execute-phase`.
 
 ## Interview discipline
 
@@ -79,8 +77,9 @@ rules, runtime/platform limits, naming conventions).
 
 ## Relationship to other skills
 
-- `feature-from-issue` — use instead when an issue already exists.
-- `plan-feature` — scaffolds the artifacts once the interview yields a SPEC.
+- Sibling of `plan-feature-from-issue` (issue path); the `plan-feature` router
+  picks between them by input.
+- `plan-feature-scaffold` — scaffolds the artifacts once the interview yields a SPEC.
 - `execute-phase` — executes the phases afterward.
 
 ## Done when

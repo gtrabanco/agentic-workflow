@@ -1,101 +1,73 @@
 ---
 name: plan-feature
 user-invocable: true
-argument-hint: <feature idea | NN-slug>
+argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: medium
 description: >
-  Scaffold a feature's full planning artifact set (SPEC + PLAN + TASKS +
-  progress/testing/known-issues/decisions/architecture-notes) from the project's
-  template and register it in the roadmap. The planning half that runs BEFORE
-  phase execution. Use when a feature is scoped (an idea, a slug, or a filled
-  SPEC) and you need the docs/features/NN-slug/ folder generated and roadmap-
-  registered. Triggers: "plan the feature", "scaffold the feature docs",
-  "generate the planning artifacts", "create SPEC and TASKS for NN".
+  One entry point to plan a feature. Detects the input — a raw idea (interview), a
+  GitHub issue #N (issue → scoped SPEC), or an already-scoped slug/SPEC (straight
+  to scaffolding) — routes to the right internal step, then ensures the roadmap
+  entry and prints the next step. Force a path with flags to skip detection;
+  `--next` plans the next planned feature from the roadmap. Triggers: "plan a
+  feature", "plan the feature from issue N", "plan the next roadmap feature",
+  "scaffold feature NN", "I have an idea, plan it", "create SPEC and TASKS for NN".
 ---
 
-# Plan Feature
+# Plan Feature (router)
 
-Turn a scoped feature into the project's complete planning artifact set, ready
-for phase-by-phase execution. **Docs only — never code.**
-
-## When to use
-
-- A feature is decided (from `design-feature`, `feature-from-issue`, or a direct
-  ask) and needs its `docs/features/<NN>-<slug>/` folder filled out.
-- You need the roadmap updated with numbering, ordering, and dependencies.
-
-Not for writing code (that is `execute-phase`) or deciding *whether* to build
-(that is `design-feature` / `feature-from-issue` / `triage-issue`).
+One door to turn anything — an idea, an issue, or a scoped slug — into a planned,
+roadmap-registered feature. Routes to a focused internal step so only the work you
+need runs (no fat single skill). **Docs only — no code, no branch.**
 
 ## Step 0 — Discover the project (always first)
 
-Never assume paths or formats. Read, in order, whatever exists:
+Read the agent guide and its **documentation map**, and the **roadmap**
+(`docs/features/ROADMAP.md`), so routing and roadmap registration match the
+project's real layout.
 
-1. The agent guide (`CLAUDE.md` / `AGENTS.md`) — especially its **documentation
-   map** and **feature workflow**.
-2. The feature SPEC **template** (e.g. `docs/features/_TEMPLATE/SPEC.md`).
-3. The **roadmap** (e.g. `docs/features/ROADMAP.md`) — source of truth for
-   numbering, ordering, dependencies.
-4. One or two **recent feature folders** (highest-numbered) to mirror the exact
-   artifact set and section style in use.
-5. The **architecture** doc and any domain/style docs the map points to for this
-   feature's area.
+## Routing
 
-With no template or roadmap, fall back to the agent guide's conventions and
-state the assumption explicitly before proceeding.
+Pick the mode — first match wins:
+
+1. **Flag forces it** (skip detection): `--interview`, `--from-issue <N>`,
+   `--scaffold <slug>`, `--next`.
+2. **Issue** — an issue number or issue URL → `plan-feature-from-issue`.
+3. **Scoped** — an existing roadmap slug or a filled `SPEC.md` → `plan-feature-scaffold`.
+4. **Raw idea** — a vague description → `plan-feature-interview`.
+5. **`--next` / no input** — read the roadmap, take the next `planned` entry; if
+   it's a thin line → `plan-feature-interview`, if scoped → `plan-feature-scaffold`.
+6. **Ambiguous** — ask one question, then route.
 
 ## Process
 
-1. **Resolve identity.** From the roadmap, pick the next free number and a
-   kebab-case slug. Record dependencies (features that must land first) and note
-   ordering conflicts.
-2. **Fill the SPEC.** Copy the template to `docs/features/<NN>-<slug>/SPEC.md`
-   and complete *every* section — goals, architecture impact, acceptance,
-   branch name (`feat/<NN>-<slug>` or per project convention), dependencies,
-   testing, and **dev scenarios** (happy path **and** failure modes:
-   empty/degraded state, races, outages — plus how to reproduce each locally).
-   No unfilled placeholders; record genuinely-unknown values as open questions
-   in `decisions.md`, not blanks.
-3. **Generate the planning artifacts**, mirroring the recent features' set.
-   Typically:
-   - `PLAN.md` — phased plan (P1, P2, …); phases are an *implementation*
-     sequence, not a delivery boundary.
-   - `TASKS.md` — per-phase checklists the executor ticks off.
-   - `progress.md` — running log, one entry per phase.
-   - `testing.md` — what is tested at which layer (prefer integration).
-   - `known-issues.md` — deferred items, each linked to (or destined for) an
-     issue. Do **not** plan to implement deferred work inline.
-   - `decisions.md` — architecture/scope decisions + open questions.
-   - `architecture-notes.md` — layer impact, ports, schema, bindings touched.
-4. **Register in the roadmap** with number, ordering, dependencies.
-5. **Do not branch or code.** That belongs to `execute-phase`; record the branch
-   name in the SPEC only.
-6. **Hand off.** Tell the user the artifacts are ready; next step is
-   `execute-phase` for P1.
+1. **Route** per above. The interview / from-issue internals produce a **filled
+   SPEC**; then invoke `plan-feature-scaffold` to generate the full artifact set
+   and register the roadmap. The scoped path runs `plan-feature-scaffold` directly.
+2. **Confirm roadmap.** Ensure the feature is in `docs/features/ROADMAP.md` with
+   the right number, ordering, and dependencies.
+3. **Print the next step:** `execute-phase <NN> P1`.
 
 ## Guardrails
 
-- Docs only. No source edits, migrations, or dependencies.
-- Respect the architecture: honor layer rules (inner layers don't import outer)
-  and any domain/i18n/SEO/a11y rules from the docs map.
-- All artifacts in the project's docs language (this repo: **English**),
-  whatever language the request used.
-- One PR per feature, based on the default branch — never stack PRs.
+- Docs only — no code, no branch (that is `execute-phase`).
+- Don't re-ask what a flag, the issue, or the docs already settle.
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
+- All artifacts in the project's docs language, whatever language the request used.
+
+## Internal steps (not user-invocable)
+
+- `plan-feature-interview` — interview a raw idea into a SPEC.
+- `plan-feature-from-issue` — issue → scoped SPEC, `Closes #N`.
+- `plan-feature-scaffold` — SPEC → full artifact set + roadmap entry.
 
 ## Relationship to other skills
 
-```
-design-feature ─┐
-feature-from-issue ─┼─▶ plan-feature ─▶ execute-phase (executes phases)
-direct ask ─────┘                         │
-                                          └─▶ audit-docs (audit anytime)
-```
+- `triage-issue` routes here to promote an issue to a feature.
+- `execute-phase` executes the phases afterward (`audit-docs` audits anytime).
 
 ## Done when
 
-- `docs/features/<NN>-<slug>/` exists with SPEC + every planning artifact filled.
-- The roadmap lists the feature with correct number, order, dependencies.
-- No code changed; open questions captured in `decisions.md`.
+- A planned feature with its full artifact set exists and is roadmap-registered,
+  and the user knows the next step (`execute-phase <NN> P1`).
