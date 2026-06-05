@@ -66,7 +66,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
 6. **Report.** List what was created, which placeholders still need human input,
-   and the next step: `design-feature` / `feature-from-issue` → `plan-feature` →
+   and the next step: `plan-feature` →
    `execute-phase`.
 
 ## Guardrails
@@ -84,7 +84,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
   adapts. Use that when you want the raw scaffold and will fill it yourself.
 - `docs/workflow/PORTABLE_PROMPT.md` — regenerates the **skills** adapted to a
   project (behavior). This skill adapts the **substrate** (docs). Complementary.
-- After init: `design-feature` / `feature-from-issue` → `plan-feature` →
+- After init: `plan-feature` →
   `execute-phase`; run `audit-docs` to confirm the scaffold is coherent.
 
 ## Done when

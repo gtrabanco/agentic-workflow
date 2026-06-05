@@ -48,8 +48,8 @@ gh issue view <N> --json number,title,body,labels,state,comments
 3. **Classify** into one of:
    - **fix-now** — defect or trigger met → route to `draft-fix-spec` then
      `execute-phase --fix`; add the entry to the fix index.
-   - **promote-to-feature** — really new capability → route to
-     `feature-from-issue`.
+   - **promote-to-feature** — really new capability → route to `plan-feature`
+     (the router handles the issue path).
    - **postpone** — valid but trigger unmet → leave open; post a **dated
      re-confirmation** comment stating what you checked and why it stays
      deferred. Do **not** implement deferred work inline.
@@ -75,7 +75,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
 
 ```
                  ┌─ fix-now ─────────▶ draft-fix-spec ─▶ execute-phase --fix
-triage-issue ────┼─ promote ─────────▶ feature-from-issue ─▶ plan-feature
+triage-issue ────┼─ promote ─────────▶ plan-feature (router → from-issue)
                  ├─ postpone ────────▶ dated comment, leave open
                  └─ wontfix ─────────▶ propose close
 ```
