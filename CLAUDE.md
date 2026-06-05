@@ -55,6 +55,7 @@ A skill is a folder `skills/<name>/SKILL.md` with YAML frontmatter + a body.
 ---
 name: <kebab-case-name>          # must match the directory name
 user-invocable: true             # REQUIRED for it to appear in the agent's /command menu
+version: 1.0.0                   # per-skill semver; bump on every change (see below)
 description: >
   One paragraph with concrete trigger phrases so the agent knows when to load it.
 ---
@@ -66,6 +67,12 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 
 > **`user-invocable: true` is mandatory.** Without it, the skill is not offered
 > in the slash-command menu in this environment. Always set it explicitly.
+
+> **Version every change.** Each skill carries its own `version:` and evolves
+> independently. When you change a skill, bump its `version:` (major = rename or
+> contract/flag change; minor = backward-compatible capability; patch = wording/
+> examples) and add a line to [`CHANGELOG.md`](CHANGELOG.md). Renames are major and
+> need a note in `docs/workflow/MIGRATION.md`.
 
 ---
 

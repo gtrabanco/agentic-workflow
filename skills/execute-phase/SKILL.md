@@ -1,6 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
+version: 1.0.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium

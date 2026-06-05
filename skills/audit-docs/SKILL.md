@@ -1,6 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
+version: 1.0.0
 model: sonnet
 effort: medium
 description: >
