@@ -32,7 +32,7 @@ findings engine, `review-implementation`).
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small feature in a single pass, or a fix (`--fix`); branch safety + per-phase doc discipline + gate; **auto-runs `review-change` every 2 phases** |
+| `execute-phase` | Execute one feature phase (default), a small feature in a single pass, or a fix (`--fix`); branch safety + per-phase doc discipline + gate; **hands off to `review-change` every 2 phases** (review checkpoint) |
 
 ## Review & audit — *change → PR → product*
 
@@ -73,7 +73,7 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
                    ┌──────────────── plan-feature (router) ────────────────┐
 IDEA ──────────────┤  --interview → plan-feature-interview                 │
 ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue          ├─▶ execute-phase ─▶ review-change ─▶ audit-pr ─▶ PR
-SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (auto review every 2 phases)
+SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (hand off /review-change every 2 phases)
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step    │
 
 ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ review-change ─▶ audit-pr ─▶ PR

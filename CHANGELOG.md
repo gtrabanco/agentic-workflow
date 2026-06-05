@@ -24,6 +24,26 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-05 — skill composition → hand-off
+
+- `execute-phase` `1.0.0` → `1.1.0` (minor) — the every-2-phases review changes
+  from an **in-turn auto-run** of `review-change` to a **hand-off**: execute-phase
+  stops at the checkpoint and suggests `/review-change`, so it runs at its own
+  `opus`/`high` instead of execute-phase's `sonnet`/`medium`. A skill's model/effort
+  is fixed at turn start and doesn't change when it composes another skill mid-turn,
+  so composing across that model boundary was under-powering the review.
+- `review-change` `1.0.0` → `1.0.1` (patch) — wording: `execute-phase` "hands off
+  to" it (not "calls"/"triggers").
+- `product-audit` `1.0.0` → `1.0.1` (patch) — add a provisional tip that, for the
+  broadest run, the *user* can enable `ultracode` (a Claude Code session setting —
+  xhigh + multi-agent orchestration — **not** a frontmatter `effort:` value) so the
+  sweep fans out across subagents.
+- Authoring guide (`CLAUDE.md`): documented **"hand off, don't compose across a
+  model/effort boundary"** with the sanctioned same-model exceptions (orchestrators
+  like `review-change`/`product-audit`; the `plan-feature` router), and noted that
+  `ultracode` is a session setting, not an `effort:` value (`effort:` accepts
+  low/medium/high/xhigh/max).
+
 ## 2026-06-05 — plan-feature 1.0.1
 
 - `plan-feature` `1.0.0` → `1.0.1` (patch) — **effort `medium` → `high`.** The
