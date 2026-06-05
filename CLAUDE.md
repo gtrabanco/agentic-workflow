@@ -74,6 +74,32 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > examples) and add a line to [`CHANGELOG.md`](CHANGELOG.md). Renames are major and
 > need a note in `docs/workflow/MIGRATION.md`.
 
+### Hand off, don't compose across a model/effort boundary
+
+A skill's `model` and `effort` are **fixed at the start of its turn** and do **not**
+change when it loads another skill mid-turn (verified against the Claude Code
+skills / model-config docs). So invoking skill B from skill A runs B at **A's**
+model and effort, not B's — silently under- or over-powering B.
+
+**Rule:** when the next step is a skill with a different model/effort, **suggest
+it** (print `run /<skill>` / the next command) and let the user invoke it in a
+fresh turn at its own model/effort — don't run it in-turn. Most of the flow already
+hands off this way (`plan-feature` prints `execute-phase NN P1`; `plan-fix` stops
+and suggests `execute-phase --fix`; `triage-issue`, `review-change`, `audit-pr`
+route with suggestions; `execute-phase` hands off to `/review-change` at its review
+checkpoint).
+
+**Sanctioned exceptions** (composition is correct because there's no boundary to
+cross): a **same-model orchestrator** that must synthesize sub-results in one pass
+(`review-change`, `product-audit` — all `opus`), and a **same-model router** whose
+internal steps aren't menu-invocable (`plan-feature` → its `plan-feature-*`
+internals — all `opus`, router carries the highest effort of its paths).
+
+> Note: `ultracode` is a Claude Code **session setting** (xhigh effort + automatic
+> multi-agent workflow orchestration), **not** a frontmatter `effort:` value — a
+> skill cannot declare it. The accepted `effort:` values are `low`/`medium`/`high`/
+> `xhigh`/`max`.
+
 ---
 
 ## Distribution

@@ -61,7 +61,7 @@ pasos que se componen por ti (los tres pasos de planificación del router
 ### Ejecución
 | Skill | Qué hace |
 |---|---|
-| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña de una pasada, o un fix (`--fix`). Verificada por el gate, un commit por fase; **ejecuta `review-change` automáticamente cada 2 fases**. |
+| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña de una pasada, o un fix (`--fix`). Verificada por el gate, un commit por fase; **hace hand-off a `review-change` cada 2 fases** (un checkpoint de revisión, para que corra con su propio modelo/effort). |
 
 ### Revisión y auditoría — *cambio → PR → producto*
 | Skill | Alcance | Qué hace |
@@ -138,7 +138,7 @@ Tutorial completo en **[`docs/workflow/`](docs/workflow/README.md)**. En resumen
         → el router detecta idea / issue / slug acotado → entrevista · análisis del issue · scaffold
         → rellena el SPEC + PLAN + TASKS + … y registra la entrada en el roadmap
 /execute-phase <NN> <phase>     # una fase cada vez, verificada por el gate, un commit cada una
-        → ejecuta /review-change automáticamente cada 2 fases
+        → checkpoint de revisión cada 2 fases: hand-off a /review-change (corre con su propio modelo/effort)
 /review-change                  # las revisiones que aplican a este cambio, clasificadas (sin refactor)
 /audit-pr                       # gate de fusión: listo para fusionar o bloqueantes
 gh pr create --base main        # "Closes #N" si vino de un issue

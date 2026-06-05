@@ -87,7 +87,7 @@ docs-updated and gate-verified like any phase.
 
 ## Stage 4 — Review & audit (whole branch)
 
-`execute-phase` already auto-runs `review-change` every 2 phases; before opening
+`execute-phase` hands off to `review-change` at a checkpoint every 2 phases; before opening
 the PR, run the final review and the merge gate over the completed branch:
 
 - **`review-change`** — the orchestrator. Runs only the reviews that **apply to
@@ -129,7 +129,7 @@ Re-run the gate (type-check, tests, build) green.
    → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN  P1              → data/domain layer, gate green, commit
 /execute-phase  NN  P2              → orchestration + adapter, gate green, commit
-   → auto-runs /review-change (every 2 phases): classified table + manual checks
+   → review checkpoint (every 2 phases): run /review-change → classified table + manual checks
 /execute-phase  NN  hardening       → edge cases, gate green, commit
 /review-change                      → final review: the applicable axes, classified
 /audit-pr                           → merge gate: merge-ready or blockers

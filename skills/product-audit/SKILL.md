@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: "[path-or-area] (defaults to the whole product)"
 model: opus
 effort: max
@@ -43,6 +43,13 @@ roadmap, the fix index, open issues, and every feature folder's planning docs.
 Accept an optional path/area to focus a partial audit; state the scope and, if you
 sample rather than exhaust a dimension, **say what you sampled** — never imply full
 coverage you didn't do.
+
+> **Tip (provisional).** For the broadest, deepest run, the *user* can turn on
+> `ultracode` (`/effort ultracode` — a Claude Code session setting pairing xhigh
+> effort with automatic multi-agent orchestration) so this sweep fans out across
+> parallel subagents instead of one context window. It's a research-preview feature
+> and a **session choice** — not something this skill declares (no skill can set
+> `effort: ultracode`).
 
 ## Step 0 — Discover the project (always first)
 

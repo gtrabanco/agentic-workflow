@@ -68,7 +68,9 @@ reference THIS project's real paths/commands/language.
 **Execute**
 6. `execute-phase` — implement one phase (default), a small feature in a single
    pass, or a fix (`--fix`). Branch safety, the project's verification gate,
-   per-phase doc discipline; auto-run `review-change` every 2 phases.
+   per-phase doc discipline; hand off to `review-change` every 2 phases (a review
+   checkpoint — suggest it rather than composing it, so it runs at its own
+   model/effort).
 
 **Review & audit** (change → PR → product)
 7. `review-implementation` — two-phase review of a change. Phase 1 FIND (no
