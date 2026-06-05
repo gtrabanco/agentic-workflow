@@ -59,6 +59,12 @@ missing, say so and fall back to these conventions rather than guessing.
 - Plus this project's [Hard rules](#hard-rules) and [Architecture](#architecture)
   invariants.
 
+**Question protocol (when a skill must ask the user to decide).** Only ask when the
+answer materially changes the artifact — make routine choices silently and record
+them. Each question states: **what** is being decided; its **scope** (files,
+behavior, consumers affected); its **criticality** (critical / high / medium /
+low); and each **option** with pros and cons separately, recommendation flagged.
+
 ---
 
 ## Commands

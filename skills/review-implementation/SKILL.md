@@ -89,11 +89,19 @@ Turn findings into a **decision table**. Classify each into exactly one of:
 - **intentional-tradeoff** — deliberate and acceptable; document the rationale
   where future readers will see it.
 
-For every finding, give the reasoning columns:
+For every finding, give the reasoning columns. Example (generic — your findings,
+your domains):
 
 | Finding | Axis | Sev | Class | WHY | Implementation risk | Long-term impact | Premature-opt? | Route |
 |---|---|---|---|---|---|---|---|---|
+| API token committed in a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | `plan-fix` |
+| New export endpoint has no tests | tests | med | fix-now | Untested failure path | Low | Regression risk | no | fold into phase |
+| Helper duplicated across 2 modules | maintainability | low | intentional-tradeoff | Coupling the 2 callers is worse | — | Near-zero divergence | no | note in `decisions.md` |
+| Single-caller wrapper around a stdlib call | overengineering | low | ignore | Indirection with no payoff | — | Negligible | no | note rationale |
 
+- **Sev** — **high**: correctness, security, or data-loss risk, or a merge
+  blocker. **med**: degraded behavior, a real untested path, or notable debt.
+  **low**: taste, cosmetics, or micro-optimization without a measured need.
 - **WHY** — one-sentence justification for the class.
 - **Implementation risk** — risk of *fixing* it now (blast radius, churn).
 - **Long-term impact** — cost of *not* fixing it (debt, drift, incident odds).
