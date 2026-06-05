@@ -46,8 +46,8 @@ Cite the evidence (paths, counts, line refs) in the decision.
 
 | Verdict | When | Route |
 |---|---|---|
-| **fix-now** | Defect, or the trigger is met | `draft-fix-spec` → `execute-phase --fix`; add to fix index |
-| **promote-to-feature** | It's really new capability | `feature-from-issue` → `plan-feature` |
+| **fix-now** | Defect, or the trigger is met | `plan-fix` → `execute-phase --fix`; add to fix index |
+| **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped SPEC) |
 | **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment; **don't implement inline** |
 | **wontfix** | Obsolete or explicitly bounded | Propose closing with rationale |
 
@@ -56,10 +56,10 @@ verdict + options and let the user decide before acting.
 
 ## Stage 4 — The fix path (when fix-now)
 
-`draft-fix-spec` (senior-architect persona) drafts
+`plan-fix` (senior-architect persona) drafts
 `docs/fix/<N>-<topic>/SPEC.md` from the issue, scopes it tightly, surfaces
 blockers/risks, registers it in `docs/fix/README.md`, and commits on a fix
-branch. Then `execute-phase --fix`:
+branch — then **stops for review**. Then `execute-phase --fix`:
 
 1. Ensures the GitHub issue exists (creates via `gh issue create` if missing).
 2. Verifies/creates branch `fix/<N>-<topic>` (never `main`).
@@ -84,8 +84,8 @@ closed, deferred issues that quietly became actionable, and similar drift.
 
 ```
 /triage-issue  60
-   → reads "trigger = 3rd XML consumer"
-   → grep: only feed-helpers.ts + sitemap.xml.ts use esc()  → trigger UNMET
+   → reads "trigger = 3rd consumer of the shared helper"
+   → grep: only 2 modules import it  → trigger UNMET
    → verdict: postpone
    → gh issue comment 60  (dated re-confirmation, no code)
 ```

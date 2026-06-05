@@ -21,7 +21,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 9 skills (un SKILL.md cada una) — la fuente instalable
+skills/                  las 13 skills (10 de cara al usuario + 3 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -38,33 +38,54 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
+**10 skills de cara al usuario** (una entrada de menú cada una) + **3 internas**,
+pasos de planificación que el router `plan-feature` invoca por ti. Un único camino
+disciplinado: **plan → execute → review → audit → merge.**
+
 ### Configuración inicial
 | Skill | Qué hace |
 |---|---|
-| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); ofrece instalar las skills |
+| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills |
 
-### Planificación y creación
+### Planificación
 | Skill | Qué hace |
 |---|---|
-| `design-feature` | Entrevista interactiva desde una idea en crudo; pregunta proactivamente para rellenar el SPEC |
-| `feature-from-issue` | Convierte un issue de petición de feature en un SPEC acotado (enlaza `Closes #N`) |
-| `plan-feature` | Genera el SPEC + el conjunto completo de artefactos de planificación; lo registra en el roadmap (solo docs) |
+| `plan-feature` | **Un único punto de entrada para planificar una feature.** Detecta la entrada — una idea en crudo (entrevista), un issue `#N` (issue → SPEC acotado) o un slug/SPEC ya acotado (directo al scaffolding) — enruta al paso correcto y registra la entrada en el roadmap. `--next` planifica el siguiente elemento del roadmap. |
+| `plan-fix` | El equivalente del flujo de fix: como arquitecto redacta un SPEC de fix acotado a partir de un issue, commitea en una rama de fix y **se detiene para revisión**. |
 
-### Decisión y revisión
+> Solo llamas a `plan-feature`; este compone los pasos internos
+> `plan-feature-interview`, `plan-feature-from-issue` y `plan-feature-scaffold`
+> (ocultos del menú).
+
+### Ejecución
+| Skill | Qué hace |
+|---|---|
+| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña de una pasada, o un fix (`--fix`). Verificada por el gate, un commit por fase; **ejecuta `review-change` automáticamente cada 2 fases**. |
+
+### Revisión y auditoría — *cambio → PR → producto*
+| Skill | Alcance | Qué hace |
+|---|---|---|
+| `review-change` | el **cambio** | Ejecuta solo las revisiones que **aplican a tu plataforma** (código, seguridad, verify, diseño, a11y, marca, rendimiento, SEO) y clasifica → una tabla de decisión + una checklist explícita de verificación manual |
+| `review-implementation` | el **cambio** (motor) | El motor de dos fases encontrar → clasificar que compone `review-change`; llámalo directamente para una pasada clasificada rápida |
+| `audit-pr` | el **PR** | Gate de fusión: criterios de aceptación cumplidos, todas las fases hechas, docs/tests/CI en verde, `Closes #N`, ejes de revisión limpios → **listo para fusionar o una lista de bloqueantes** |
+| `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; mina las docs de features → propone issues + altas/bajas en el roadmap (**nunca arregla automáticamente**) |
+| `audit-docs` | las **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones |
+
+### Decisión
 | Skill | Qué hace |
 |---|---|
 | `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código** |
-| `review-implementation` | Revisión en dos fases (encontrar → clasificar) que termina en una tabla de decisión: fix-now / postpone / ignore / intentional-tradeoff |
-| `audit-docs` | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones |
-
-### Ejecución (se componen con las anteriores)
-`execute-phase` (una fase, una feature pequeña de una pasada, o un fix con
-`--fix`), `draft-fix-spec` (redacta un SPEC de fix desde un issue).
 
 Las skills complementarias para UI/UX y calidad específica del lenguaje (diseño,
-ux, tipado…) **no van incluidas** — son específicas del dominio, así que se
-instalan por proyecto. Ver `docs/workflow/RECOMMENDED_SKILLS.md` para saber
-cuáles aplican y cuándo.
+ux, tipado…) **no van incluidas** — `review-change` y `product-audit` las componen
+cuando están instaladas, e `init-workspace` sugiere las adecuadas según la
+plataforma. Ver `docs/workflow/RECOMMENDED_SKILLS.md` para saber cuáles aplican y
+cuándo.
+
+> **¿Actualizas desde una instalación anterior?** Mira
+> [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — se renombraron tres
+> skills, así que vuelve a añadirlas para actualizar + borra las tres carpetas
+> antiguas.
 
 ## Modelo y esfuerzo recomendados
 
@@ -78,17 +99,23 @@ sesión).
 | Skill | Tier de modelo | Esfuerzo | Por qué |
 |---|---|---|---|
 | `init-workspace` | Opus | alto | bootstrap del proyecto guiado por entrevista + adaptación |
-| `design-feature` | Opus | alto | entrevista abierta + juicio de diseño |
-| `feature-from-issue` | Opus | alto | clasificar, traducir, acotar, mapear al roadmap |
-| `draft-fix-spec` | Opus | alto | scoping de arquitecto + análisis de riesgo |
-| `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
-| `review-implementation` | Opus | alto | revisión profunda multi-eje + clasificación |
-| `plan-feature` | Opus | medio | generación estructurada de artefactos desde un SPEC ya acotado |
-| `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
+| `plan-feature` | Opus | medio | router: detecta la entrada, despacha, registra el roadmap |
+| `plan-fix` | Opus | alto | scoping de arquitecto + análisis de riesgo |
 | `execute-phase` | Sonnet | medio | implementación mecánica según el SPEC — una fase o de una pasada (Opus si la lógica es sutil) |
+| `review-implementation` | Opus | alto | revisión profunda multi-eje + clasificación |
+| `review-change` | Opus | alto | orquestación de revisión adaptativa a la plataforma + síntesis |
+| `audit-pr` | Opus | alto | juicio de aptitud de fusión de todo el PR |
+| `product-audit` | Opus | máx | barrido multi-eje de todo el producto + propuestas |
+| `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
+| `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
 
-> Regla general: **planificar, decidir y revisar → Opus, esfuerzo alto**;
-> **ejecución mecánica → Sonnet, medio** (sube a Opus si la lógica es sutil).
+> Los 3 pasos de planificación internos corren en Opus — `plan-feature-interview` y
+> `plan-feature-from-issue` con esfuerzo alto, `plan-feature-scaffold` con medio; nunca
+> los seleccionas directamente.
+>
+> Regla general: **planificar, decidir, revisar y auditar → Opus** (alto, o máx para
+> el barrido de todo el producto); **ejecución mecánica → Sonnet, medio** (sube a Opus
+> si la lógica es sutil).
 
 ## Cómo usarlas
 
@@ -96,13 +123,14 @@ Tutorial completo en **[`docs/workflow/`](docs/workflow/README.md)**. En resumen
 
 ### Construir una feature
 ```
-/design-feature   "<tu idea>"          # o  /feature-from-issue <N>
-        → entrevista / análisis del issue → rellena el SPEC
-/plan-feature                          # genera SPEC + PLAN + TASKS + … + entrada en el roadmap
-/execute-phase <NN> <fase>          # implementa una fase cada vez, verificada por el gate, un commit cada una
-/review-implementation                 # hallazgos + tabla de decisión clasificada (sin refactor)
-/code-review · /security-review · /verify
-gh pr create --base main               # "Closes #N" si vino de un issue
+/plan-feature "<tu idea>"     # o  /plan-feature <N> (issue)  ·  /plan-feature --next (siguiente elemento del roadmap)
+        → el router detecta idea / issue / slug acotado → entrevista · análisis del issue · scaffold
+        → rellena el SPEC + PLAN + TASKS + … y registra la entrada en el roadmap
+/execute-phase <NN> <phase>     # una fase cada vez, verificada por el gate, un commit cada una
+        → ejecuta /review-change automáticamente cada 2 fases
+/review-change                  # las revisiones que aplican a este cambio, clasificadas (sin refactor)
+/audit-pr                       # gate de fusión: listo para fusionar o bloqueantes
+gh pr create --base main        # "Closes #N" si vino de un issue
 ```
 Ver **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**.
 
@@ -110,16 +138,20 @@ Ver **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**
 ```
 /triage-issue <N>
    → lee el disparador "cuándo arreglar" del issue, lo verifica contra el código actual
-   → fix-now → draft-fix-spec → execute-phase --fix
-     promote → feature-from-issue
+   → fix-now  → plan-fix → execute-phase --fix
+     promote  → plan-feature   (el router toma el issue → SPEC acotado)
      postpone → comentario con fecha, dejar abierto (sin trabajo inline)
-     wontfix → proponer cierre
+     wontfix  → proponer cierre
 ```
 Ver **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 
-### Revisar y clasificar una rama
+### Revisar, auditar y clasificar
 ```
-/review-implementation                 # por defecto el diff actual vs main; pasa una ruta para acotar
+/review-change                  # ejecuta las revisiones correctas por plataforma + clasifica → una tabla + comprobaciones manuales
+/review-implementation          # solo el motor de hallazgos (diff actual vs main; pasa una ruta para acotar)
+/audit-pr                       # ¿está ESTE PR listo para fusionar?  listo para fusionar o bloqueantes
+/product-audit                  # ¿en qué punto está todo el producto?  issues + propuestas de roadmap
+/audit-docs                     # ¿se han desviado las docs del código / roadmap?
 ```
 Ver **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY.md)**.
 
@@ -143,7 +175,7 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 [más de 70](https://skills.sh)).
 
 ```sh
-# Desde la raíz del repositorio DESTINO — instala las 9 skills:
+# Desde la raíz del repositorio DESTINO — instala las 13 skills:
 npx skills add gtrabanco/agentic-workflow
 
 # Elige skills concretas, o un agente concreto:
