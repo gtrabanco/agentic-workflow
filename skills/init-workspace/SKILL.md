@@ -3,6 +3,7 @@ name: init-workspace
 user-invocable: true
 argument-hint: [target-dir]
 model: opus
+effort: high
 description: >
   Bootstrap a project's way of working: fetch the agentic-workflow documentation
   scaffold (template/) and adapt it to THIS project by interview — fill the

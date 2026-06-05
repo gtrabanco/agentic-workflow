@@ -3,6 +3,7 @@ name: feature-from-issue
 user-invocable: true
 argument-hint: <issue-number>
 model: opus
+effort: high
 description: >
   Turn a GitHub issue that requests a FEATURE into a planned, roadmap-registered
   feature. The feature-side analogue of draft-fix-spec (which handles fixes).

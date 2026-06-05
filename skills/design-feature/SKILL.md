@@ -3,6 +3,7 @@ name: design-feature
 user-invocable: true
 argument-hint: <feature idea>
 model: opus
+effort: high
 description: >
   Interactively design a feature from a raw description, evaluating everything a
   complete SPEC needs and proactively asking about the gaps before any code is
