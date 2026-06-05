@@ -22,7 +22,7 @@ clean issue → SPEC → PR(Closes #n) trace.
   `--from-issue N`) that describes new product capability.
 
 If the issue is a **bug or tech-debt**, stop and route it: `triage-issue` to
-classify, then `draft-fix-spec` + `execute-phase --fix`. This skill is for
+classify, then `plan-fix` + `execute-phase --fix`. This skill is for
 genuine features only.
 
 ## Step 0 — Discover the project (always first)
@@ -69,7 +69,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
 ## Relationship to other skills
 
 - `triage-issue` — decides bug vs feature vs defer; call it if unsure.
-- `draft-fix-spec` — the fix-side sibling for bug/debt issues.
+- `plan-fix` — the fix-side sibling for bug/debt issues.
 - Sibling of `plan-feature-interview` (idea path); the `plan-feature` router picks
   between them by input.
 - `plan-feature-scaffold` — scaffolds the artifacts once the SPEC is filled.

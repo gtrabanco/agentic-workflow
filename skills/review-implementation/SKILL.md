@@ -100,7 +100,7 @@ For every finding, give the reasoning columns:
 
 ## Routing (what each class feeds)
 
-- **fix-now** → `draft-fix-spec` → `execute-phase --fix`, or fold into the
+- **fix-now** → `plan-fix` → `execute-phase --fix`, or fold into the
   current feature phase if part of unmerged work.
 - **postpone** → open a tracked issue with an explicit *when-to-fix* trigger;
   `triage-issue` owns it thereafter. **Do not implement inline.**
@@ -121,7 +121,7 @@ For every finding, give the reasoning columns:
 - Complements built-in `/code-review` and `/security-review` (this skill adds the
   **classification table** and project-aware axes in one pass).
 - Sits in **Stage 4** of the feature workflow (verification & review).
-- `fix-now`/`postpone` outcomes hand off to `draft-fix-spec` / `triage-issue`.
+- `fix-now`/`postpone` outcomes hand off to `plan-fix` / `triage-issue`.
 
 ## Done when
 
