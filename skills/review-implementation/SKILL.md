@@ -1,34 +1,36 @@
 ---
 name: review-implementation
-user-invocable: true
+user-invocable: false
+version: 1.0.0
 argument-hint: [path-or-glob]
 model: opus
 effort: high
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 description: >
-  Two-phase review of the current implementation that ends in a CLASSIFIED
-  decision table — not just a bug list. Phase 1 finds issues across bugs,
-  architecture violations, removable/dead code, security/cybersecurity,
-  platform/runtime incompatibilities, overengineering & premature optimization,
-  bundle-size risks, and test problems (failing AND missing). Phase 2 classifies
-  every finding as fix-now / postpone / ignore / intentional-tradeoff with the
-  reasoning. Never refactors — findings only. Triggers: "review the
-  implementation", "review my changes and classify", "find and triage code
-  issues", "decision table for this branch", "what should I fix before merge".
+  Internal findings engine for review-change and the audit skills (not a menu
+  entry). Two-phase review of a change that ends in a CLASSIFIED decision table —
+  not a bug list: Phase 1 finds issues across bugs, architecture, removable/dead
+  code, security, platform/runtime, overengineering & premature optimization,
+  bundle-size, and tests (failing AND missing); Phase 2 classifies each as fix-now
+  / postpone / ignore / intentional-tradeoff with reasoning. Owns the review axes
+  and the classification rubric the orchestrators compose. Never refactors —
+  findings only. Invoked by review-change; run it directly only for a raw
+  classified pass.
 ---
 
-# Review Implementation
+# Review Implementation (internal engine)
 
-Replace the manual "review prompt → classify prompt" pair with one skill. It
-**produces findings and a decision table, and stops** — never refactors or edits
-code.
+The findings engine the review/audit skills compose: it **produces findings and a
+decision table, and stops** — never refactors or edits code. It owns the **review
+axes** (Phase 1) and the **classification rubric** (Phase 2) that `review-change`,
+`audit-pr`, and `product-audit` reference instead of restating.
 
 ## When to use
 
-- Before opening a PR, or mid-feature, to get a triaged view of what's wrong and
-  what to actually do about it.
-- Whenever you'd otherwise run a "review for X, Y, Z — findings only" prompt then
-  a "classify those findings" prompt. This skill does both.
+- Invoked by `review-change` (the user-facing review entry) as its engine; the
+  audit skills reference its rubric.
+- Run directly only when you want the raw classified pass without the
+  platform-adaptive orchestration `review-change` adds.
 
 ## Scope
 
@@ -118,8 +120,9 @@ For every finding, give the reasoning columns:
 
 ## Relationship to other skills
 
-- Complements built-in `/code-review` and `/security-review` (this skill adds the
-  **classification table** and project-aware axes in one pass).
+- **Engine of `review-change`** — the user-facing review skill composes this plus
+  the platform's applicable companion reviews (`/code-review`, `/security-review`,
+  `/verify`, design/a11y/brand…). `audit-pr` and `product-audit` reuse this rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
 - `fix-now`/`postpone` outcomes hand off to `plan-fix` / `triage-issue`.
 

@@ -35,6 +35,32 @@ your domains.
 
 ---
 
+## Workflow conventions (the skills read this)
+
+The single source of truth for what every agentic-workflow skill does first and
+always honors — **referenced** by the skills instead of restated in each one.
+
+**Discovery (always first).** Before acting, read: this guide + the **documentation
+map** above, the **roadmap** (`docs/features/ROADMAP.md`), and the template(s) or
+recent artifacts for the task at hand. Never assume paths or formats; if a doc is
+missing, say so and fall back to these conventions rather than guessing.
+
+**Hard rules (always honored).**
+- **Branch & PR:** never work on `main`; one PR per unit against `main`; never
+  stack — see [PR & branch workflow](#pr--branch-workflow).
+- **Gate before commit:** the verification gate (type-check + tests + build) is
+  green — see [Commands](#commands).
+- **Docs language:** every committed artifact in `<your docs language>`, whatever
+  language the work was requested in.
+- **Evidence over reflex:** verify claims against the code (counts, repro,
+  thresholds) and cite paths; don't assert from assumption.
+- **Track, don't inline:** deferred work becomes a tracked issue / known-issue,
+  never silently implemented.
+- Plus this project's [Hard rules](#hard-rules) and [Architecture](#architecture)
+  invariants.
+
+---
+
 ## Commands
 
 Fill in your project's real commands. The agentic workflow refers to the
