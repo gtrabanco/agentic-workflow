@@ -22,7 +22,7 @@ Three modes:
 
 ## Hard rules
 
-- **Never work on `main`.** Run `git branch --show-current` before any edit/commit; if `main`, create the working branch first. (Applies to the assistant only; the user may use `main`.)
+- Honor the project's **Workflow conventions** (branch/PR, gate-before-commit, docs-language). Run `git branch --show-current` before any edit/commit; if `main`, create the working branch first (assistant only; the user may use `main`).
 - Implement only the requested scope — one phase (feature mode) or the whole SPEC (single-pass/fix). Never bundle phases unless asked.
 - Stop after the gate passes; keep commits small and reviewable.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).

@@ -34,12 +34,13 @@ accept a path/glob to widen or narrow. State the scope at the top of the report.
 
 ## Step 0 — Discover the project & the change (always first)
 
-Decide which axes apply from two inputs:
+Per the agent guide's **Workflow conventions** + **documentation map**, then
+decide which axes apply from two inputs:
 
-1. **Project nature** — read the agent guide and its documentation map. Is there a
-   UI (`docs/frontend/` present)? Is it web, mobile, console/CLI, library/SDK, or
-   backend/infra? Note the companion review skills the project expects (its
-   `init-workspace` records them).
+1. **Project nature** — from the guide/map: is there a UI (`docs/frontend/`
+   present)? Is it web, mobile, console/CLI, library/SDK, or backend/infra? Note
+   the companion review skills the project expects (its `init-workspace` records
+   them).
 2. **Change footprint** — what the diff actually touches (UI components? an API?
    infra? domain logic?). An axis applies only if **both** the project has it
    **and** the change touches it.
@@ -91,8 +92,8 @@ Decide which axes apply from two inputs:
 - **Findings + tables only. Never refactor or edit code.**
 - Run only applicable axes; never an irrelevant pass (no a11y/SEO/brand for
   CLI/lib/infra). Always report what was skipped and why.
-- Evidence-backed: cite `file:line`; mark uncertainties *verify*, don't assert.
-- Report language = the project's docs language.
+- Honor the project's **Workflow conventions** (docs-language, evidence): cite
+  `file:line`, mark uncertainties *verify*.
 
 ## Relationship to other skills
 

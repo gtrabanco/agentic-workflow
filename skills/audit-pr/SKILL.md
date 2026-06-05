@@ -40,9 +40,10 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
 
 ## Step 0 — Discover the project & the PR (always first)
 
-1. **Project contract.** Read the agent guide (`CLAUDE.md` / `AGENTS.md`) and its
-   **documentation map**, the roadmap, the feature/fix templates, and the
-   verification gate the project defines (type-check / tests / build / CI).
+1. **Project contract.** Per the agent guide's **Workflow conventions** +
+   **documentation map**, then read what THIS skill needs: the roadmap, the
+   feature/fix templates, and the project's verification gate (type-check / tests
+   / build / CI).
 2. **The PR.** Identify it and read it in full:
    ```sh
    gh pr view <N> --json number,title,body,baseRefName,headRefName,isDraft,mergeable,mergeStateStatus,files,commits,statusCheckRollup,closingIssuesReferences
@@ -128,10 +129,9 @@ If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge
 - Never report MERGE-READY on an unconfirmed gate — absence of evidence is a blocker.
 - Don't re-run the full review from scratch; compose `review-change` and verify its
   open findings are resolved or tracked.
-- Evidence-backed: every blocker cites a file:line, check name, criterion, or issue.
-- Respect scope: surfaced out-of-scope problems become issues/fix entries, never
-  silent additions to this PR.
-- Report language = the project's docs language; reply to the user in their language.
+- Honor the project's **Workflow conventions** (gate, docs-language, evidence —
+  every blocker cites file:line/check/criterion/issue — track-don't-inline:
+  out-of-scope problems become issues/fix entries, never silent additions here).
 
 ## Relationship to other skills
 

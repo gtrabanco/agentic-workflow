@@ -35,11 +35,8 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 
 ## Hard rules
 
-- Never work on `main` — create the `fix/<n>-<topic>` branch first.
-- All committed artifacts in English regardless of the issue's language; respond to the user in the user's language.
+- Honor the project's **Workflow conventions** (branch/PR — create the `fix/<n>-<topic>` branch first, never `main`; gate; docs-language; evidence — every codebase claim cites a file path, every doc claim its section; track-don't-inline — new problems found become separate `docs/fix/` entries or roadmap items, never part of this SPEC).
 - If the issue body isn't English, translate silently; if translation is ambiguous, inconsistent, or technically nonsensical, ask the user before committing to a meaning.
-- Never expand scope beyond the issue. New problems found become separate `docs/fix/` entries or roadmap items — not part of this SPEC.
-- Cite evidence: every codebase claim points to a file path; every doc claim points to its section.
 - Never push, never open the PR — that's `execute-phase --fix`.
 
 ## Algorithm

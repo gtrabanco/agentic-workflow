@@ -87,8 +87,8 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 - Docs-only scaffolding; no app code, no dependencies installed unprompted.
 - Architecture-agnostic: record the project's pattern, don't impose one.
 - Honest placeholders over invented specifics; flag what's left to fill.
-- Respect the target's branch rules — if it's an existing repo, don't work on its
-  default branch; never commit/push unless asked.
+- Honor the project's **Workflow conventions** once present; on an existing repo,
+  don't work on its default branch and never commit/push unless asked.
 
 ## Relationship to other skills
 
