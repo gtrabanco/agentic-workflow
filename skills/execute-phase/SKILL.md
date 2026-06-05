@@ -56,6 +56,7 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 4. Run the gate (type-check, tests, build).
 5. Update the per-phase docs.
 6. Commit (conventional; one per phase). Stop for review.
+7. **Auto-review cadence** — every 2 phases (and before the PR), run `review-change` (see below) before offering the next phase.
 
 **Single-pass** — small feature with only a `SPEC.md`, no planning artifacts:
 
@@ -93,3 +94,36 @@ Map each change to the project's layers per its architecture doc; build inner la
 ## Completion checklist (single-pass)
 
 Write `docs/features/<NN>-<slug>/CHECKLIST.md`: schema migration applied (if any) · core layer has no outer imports · orchestration idempotent + typed errors · adapters implement ports · tests pass · type-check/lint green · UI strings localized (if UI) · domain value-object rules respected · user-facing limitations disclosed · new deps pinned. Note any decisions not captured in the SPEC.
+
+## Auto-review cadence (feature mode)
+
+To remove the "remember to invoke the review" friction without removing the
+review or the human gate: after every **2 completed phases** — and always once
+more **before opening the PR**, so the final phase is never unreviewed — auto-run
+`review-change` scoped to the branch's work so far, *before* offering the next
+phase.
+
+- **Clean** → say so and offer to proceed to the next phase.
+- **Findings** → present `review-change`'s classified table **and** its explicit
+  **manual-verification checklist**, so the dev knows exactly what to eyeball.
+  Address `fix-now` items by folding them into the current branch (they're
+  unmerged work) before continuing; `postpone` items become tracked issues via
+  `triage-issue`; record intentional tradeoffs.
+
+This never auto-merges and never skips the per-phase stop: still one phase at a
+time, human in the loop, gate enforced each phase. Single-pass and `--fix` modes
+review once at the end rather than on a cadence (there are no intermediate phases).
+
+## Relationship to other skills
+
+- Planned by `plan-feature` (features) or `plan-fix` (fixes); executes their SPEC.
+- Composes `review-change` on the auto-review cadence above; its `fix-now`
+  findings fold back in here, `postpone` findings route to `triage-issue`.
+- The completed branch is gated by `audit-pr` before merge.
+
+## Done when
+
+- The requested scope is implemented (one phase, or the whole SPEC for
+  single-pass/`--fix`), the project's gate is green, per-phase docs are updated,
+  and the work is committed on the correct branch — stopped for review, nothing
+  bundled beyond the requested scope.
