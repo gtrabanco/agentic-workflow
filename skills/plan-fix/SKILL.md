@@ -1,18 +1,22 @@
 ---
-name: draft-fix-spec
+name: plan-fix
 user-invocable: true
 argument-hint: <issue-number>
 model: opus
 effort: high
 description: >
-  Senior-architect persona that drafts docs/fix/<n>-<topic>/SPEC.md from a GitHub
-  issue. Reads the repo docs map, scopes the fix tightly, surfaces blockers and
-  risks, then commits locally on a fix branch. Hands off implementation to
-  execute-phase --fix. Triggers: "draft a fix spec for issue N", "scope fix #N",
-  "draft-fix-spec N".
+  Plan a fix: a senior-architect persona that drafts docs/fix/<n>-<topic>/SPEC.md
+  from a GitHub issue, scopes it tightly, surfaces blockers and risks, then commits
+  locally on a fix branch and stops for review. The fix-flow analogue of
+  plan-feature → execute-phase: hands implementation off to execute-phase --fix.
+  Triggers: "plan a fix for issue N", "draft the fix spec for #N", "scope fix #N",
+  "plan-fix N".
 ---
 
-# Draft Fix SPEC
+# Plan Fix
+
+The fix-flow counterpart of `plan-feature`: draft the fix SPEC and **stop for
+review**, then `execute-phase --fix` implements it (`plan-* → execute-*`).
 
 ## Persona
 
@@ -20,7 +24,7 @@ Senior software architect. Skeptical, scope-disciplined, evidence-based. Refuses
 
 ## Input
 
-A GitHub issue number from this repo. Example: `Skill: draft-fix-spec 17`.
+A GitHub issue number from this repo. Example: `plan-fix 17`.
 
 ## Output
 

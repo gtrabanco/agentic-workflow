@@ -46,7 +46,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
    - reproduce a reported defect, or confirm it's already fixed.
    Use `grep`/`gh`/tests — cite the evidence (paths, counts, line refs).
 3. **Classify** into one of:
-   - **fix-now** — defect or trigger met → route to `draft-fix-spec` then
+   - **fix-now** — defect or trigger met → route to `plan-fix` then
      `execute-phase --fix`; add the entry to the fix index.
    - **promote-to-feature** — really new capability → route to `plan-feature`
      (the router handles the issue path).
@@ -74,7 +74,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
 ## Relationship to other skills
 
 ```
-                 ┌─ fix-now ─────────▶ draft-fix-spec ─▶ execute-phase --fix
+                 ┌─ fix-now ─────────▶ plan-fix ─▶ execute-phase --fix
 triage-issue ────┼─ promote ─────────▶ plan-feature (router → from-issue)
                  ├─ postpone ────────▶ dated comment, leave open
                  └─ wontfix ─────────▶ propose close
