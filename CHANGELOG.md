@@ -24,6 +24,15 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-05 — execute-phase explicit commits + allowed-tools
+
+- `execute-phase` `1.1.0` → `1.1.1` (patch) — two fixes for the "skill doesn't
+  commit" symptom: (1) add `allowed-tools: [Bash, Read, Edit, Write, MultiEdit]` so
+  git/gh commands are pre-approved for the skill's turn instead of prompting per
+  operation; (2) rewrite commit and PR steps from descriptive ("Commit") to imperative
+  with actual commands (`git add … && git commit -m "…"`, `gh pr create …`) so the
+  agent executes them rather than treating them as outcome descriptions.
+
 ## 2026-06-05 — context isolation + product-audit 1M context
 
 - `product-audit` `1.0.1` → `1.0.2` — `model: opus` → `model: opus[1m]` (sweeps
