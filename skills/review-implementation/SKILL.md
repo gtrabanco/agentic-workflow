@@ -6,6 +6,8 @@ argument-hint: [path-or-glob]
 model: opus
 effort: high
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Internal findings engine for review-change and the audit skills (not a menu
   entry). Two-phase review of a change that ends in a CLASSIFIED decision table —

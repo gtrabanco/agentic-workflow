@@ -213,3 +213,7 @@ architecture skills worth having (e.g. `karpathy-guidelines`, `code-review`,
 `security-review`, `simplify`, `skill-creator`, the `engineering:*` set), and —
 crucially — which ones to **skip** for a given project (e.g. design skills for a
 terminal program, `claude-api` with no LLM features).
+
+## License
+
+MIT © [Gabriel Trabanco](https://github.com/gtrabanco) — see [LICENSE](LICENSE).
