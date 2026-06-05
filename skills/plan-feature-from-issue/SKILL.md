@@ -1,28 +1,25 @@
 ---
-name: feature-from-issue
-user-invocable: true
-argument-hint: <issue-number>
+name: plan-feature-from-issue
+user-invocable: false
 model: opus
 effort: high
 description: >
-  Turn a GitHub issue that requests a FEATURE into a planned, roadmap-registered
-  feature. The feature-side analogue of draft-fix-spec (which handles fixes).
-  Reads the issue, confirms it is a feature (not a bug/tech-debt), translates and
-  scopes it, maps it to the roadmap, proactively resolves gaps, then drives
-  plan-feature to produce the artifacts — with Closes #n traceability. Triggers:
-  "build a feature from issue N", "turn issue N into a feature", "plan the
-  feature requested in #N", "execute-phase --issue N" when N is a feature.
+  Internal step of plan-feature. Turn a GitHub issue that requests a FEATURE into
+  a planned, roadmap-registered feature: read the issue, confirm it is a feature
+  (not a bug/tech-debt), translate and scope it, map it to the roadmap, resolve
+  gaps, and produce a filled SPEC with Closes #n traceability. Invoked by the
+  plan-feature router when the input is an issue (or `--from-issue N`).
 ---
 
-# Feature From Issue
+# Plan Feature — From Issue (internal)
 
 Convert a feature-request issue into the project's planning artifacts, keeping a
 clean issue → SPEC → PR(Closes #n) trace.
 
 ## When to use
 
-- A tracker issue describes new product capability and you want it planned
-  properly rather than hacked in.
+- The `plan-feature` router calls this when the input is a GitHub issue (or
+  `--from-issue N`) that describes new product capability.
 
 If the issue is a **bug or tech-debt**, stop and route it: `triage-issue` to
 classify, then `draft-fix-spec` + `execute-phase --fix`. This skill is for
@@ -55,8 +52,8 @@ gh issue view <N> --json number,title,body,labels,state,comments
    acceptance, dependencies, risks). For each genuine gap you can't safely
    default, ask the user (batch related questions; never ask what the issue or
    docs already answer).
-5. **Produce the SPEC and artifacts.** Fill the SPEC, then delegate the rest of
-   the artifact set and roadmap registration to `plan-feature`.
+5. **Produce the SPEC.** Fill the SPEC; the `plan-feature` router then runs
+   `plan-feature-scaffold` for the rest of the artifact set + roadmap registration.
 6. **Wire traceability.** Record `#N` in the SPEC; the PR body must include
    `Closes #N` so the issue closes on merge.
 7. **Hand off.** Next step is `execute-phase`.
@@ -73,7 +70,9 @@ gh issue view <N> --json number,title,body,labels,state,comments
 
 - `triage-issue` — decides bug vs feature vs defer; call it if unsure.
 - `draft-fix-spec` — the fix-side sibling for bug/debt issues.
-- `plan-feature` — scaffolds the artifacts once the SPEC is filled (delegated to).
+- Sibling of `plan-feature-interview` (idea path); the `plan-feature` router picks
+  between them by input.
+- `plan-feature-scaffold` — scaffolds the artifacts once the SPEC is filled.
 - `execute-phase` — executes the phases; its PR carries `Closes #N`.
 
 ## Done when
