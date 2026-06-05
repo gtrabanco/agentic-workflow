@@ -1,10 +1,11 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
+allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 description: >
   Implement one phase of a feature (default), a small feature end-to-end in a
   single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces
@@ -56,7 +57,7 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 3. Implement only that phase (see *Implementation guidance*).
 4. Run the gate (type-check, tests, build).
 5. Update the per-phase docs.
-6. Commit (conventional; one per phase). Stop for review.
+6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"` — one commit per phase, conventional format. Run this; don't just describe what should be committed.
 7. **Review checkpoint** — every 2 phases (and before the PR), **stop and hand off** to `/review-change` (see below) before the next phase. Don't run it in this skill's turn.
 
 **Single-pass** — small feature with only a `SPEC.md`, no planning artifacts:
@@ -66,7 +67,7 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 3. If the SPEC is ambiguous on scope / edge cases / UI, ask first — one question at a time, nothing it already answers.
 4. Implement end-to-end (see *Implementation guidance*).
 5. Run the gate; write `CHECKLIST.md` (below).
-6. Commit. Stop for review.
+6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"`. Stop for review.
 
 **`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
 
@@ -75,7 +76,7 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 3. Verify branch (`fix/<n>-<topic>`).
 4. Implement the fix (no planning artifacts; the SPEC is enough).
 5. Run the gate.
-6. Open the PR with `Closes #<n>`.
+6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`. Then open the PR: `gh pr create --base main --title "fix(<scope>): <summary>" --body "Closes #<n>"`. Run both commands.
 7. After merge: remove the `docs/fix/README.md` entry.
 
 If the SPEC declares `Depends on:` other fixes, verify they're merged first; block if not.
