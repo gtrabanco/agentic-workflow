@@ -6,6 +6,8 @@ argument-hint: "[pr-number] (defaults to the current branch's PR)"
 model: opus
 effort: high
 context: fork
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   PR-level merge gate. Audits the WHOLE pull request (not just the diff) against a
   merge-readiness contract: SPEC acceptance criteria met, all phases complete, docs

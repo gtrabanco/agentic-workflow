@@ -5,6 +5,8 @@ version: 1.0.0
 argument-hint: <issue-number>
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Plan a fix: a senior-architect persona that drafts docs/fix/<n>-<topic>/SPEC.md
   from a GitHub issue, scopes it tightly, surfaces blockers and risks, then commits

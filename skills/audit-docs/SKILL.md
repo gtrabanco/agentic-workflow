@@ -5,6 +5,8 @@ version: 1.0.1
 model: sonnet
 effort: medium
 context: fork
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Audit cross-document coherence: docs ↔ roadmap ↔ code ↔ fix index ↔ issues.
   Finds drift — features in docs/ not in the roadmap (or vice versa), fix-index

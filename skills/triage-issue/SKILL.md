@@ -5,6 +5,8 @@ version: 1.0.0
 argument-hint: <issue-number>
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Classify an issue and take a defensible decision: fix-now, postpone
   (deferred/trigger-based), wontfix, or promote-to-feature. Reads the issue's own

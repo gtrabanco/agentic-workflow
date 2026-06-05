@@ -5,6 +5,8 @@ version: 1.0.0
 argument-hint: [target-dir]
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   Bootstrap a project's way of working: fetch the agentic-workflow documentation
   scaffold (template/) and adapt it to THIS project by interview — fill the

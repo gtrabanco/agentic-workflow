@@ -5,6 +5,8 @@ version: 1.0.1
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
 description: >
   One entry point to plan a feature. Detects the input — a raw idea (interview), a
   GitHub issue #N (issue → scoped SPEC), or an already-scoped slug/SPEC (straight
