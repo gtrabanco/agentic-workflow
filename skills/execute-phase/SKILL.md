@@ -69,7 +69,7 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 **`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
 
 1. Ensure the issue exists (`gh issue create` if missing).
-2. **If `docs/fix/<n>-<topic>/SPEC.md` already exists (e.g. from `draft-fix-spec`), use it — do not re-draft.** Otherwise copy the template, fill every section, and register the entry in `docs/fix/README.md`.
+2. **If `docs/fix/<n>-<topic>/SPEC.md` already exists (e.g. from `plan-fix`), use it — do not re-draft.** Otherwise copy the template, fill every section, and register the entry in `docs/fix/README.md`.
 3. Verify branch (`fix/<n>-<topic>`).
 4. Implement the fix (no planning artifacts; the SPEC is enough).
 5. Run the gate.
