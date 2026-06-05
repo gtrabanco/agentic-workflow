@@ -39,6 +39,15 @@ Pick the mode — first match wins:
    it's a thin line → `plan-feature-interview`, if scoped → `plan-feature-scaffold`.
 6. **Ambiguous** — ask one question, then route.
 
+### Example (routing)
+
+| You run | Detected | Routes to | Then |
+|---|---|---|---|
+| `plan-feature "add CSV export"` | raw idea | `plan-feature-interview` → `plan-feature-scaffold` | `execute-phase NN P1` |
+| `plan-feature 131` | issue #131 | `plan-feature-from-issue` → `plan-feature-scaffold` | PR carries `Closes #131` |
+| `plan-feature 14-csv-export` | scoped slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
+| `plan-feature --next` | next `planned` roadmap entry | scaffold (interview if thin) | `execute-phase NN P1` |
+
 ## Process
 
 1. **Route** per above. The interview / from-issue internals produce a **filled

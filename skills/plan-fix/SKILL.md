@@ -57,9 +57,7 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 
 ## Question protocol
 
-When the user must decide between alternatives, every question includes: **What** (the decision in plain terms); **Scope** (files, behaviour, observability, downstream consumers affected); **Criticality** (critical / high / medium / low — critical = a wrong answer breaks production or invalidates the fix); **What it affects** (users, ops, security, data, future features); **Each option** with pros and cons separately and the recommendation flagged.
-
-Only ask when the answer changes the SPEC materially. Routine assumptions (naming a private helper, choosing between equivalent log levels) are made silently and recorded under "Decisions made during drafting".
+Follow the project's **Workflow conventions** question protocol (what / scope / criticality / each option with pros-cons + flagged recommendation). Fix-specific: *critical* = a wrong answer breaks production or invalidates the fix; also note **what it affects** (users, ops, security, data, future features). Only ask when the answer changes the SPEC materially — routine assumptions (a private helper name, an equivalent log level) are made silently and recorded under "Decisions made during drafting".
 
 ## SPEC sections (extends the base template)
 
