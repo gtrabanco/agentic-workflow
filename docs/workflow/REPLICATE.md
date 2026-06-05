@@ -25,18 +25,24 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 13 skills (10 user-facing + 3 internal) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **`skills` CLI** | The 13 skills (9 user-facing + 4 internal) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
 | **Portable prompt** | The 13 skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
 
-The set is **13 skills — 10 user-facing + 3 internal**:
+The set is **13 skills — 9 user-facing + 4 internal**:
 
-- **User-facing (10):** `init-workspace`, `plan-feature`, `plan-fix`,
-  `execute-phase`, `review-implementation`, `review-change`, `audit-pr`,
-  `audit-docs`, `product-audit`, `triage-issue`.
-- **Internal (3):** `plan-feature-interview`, `plan-feature-from-issue`,
+- **User-facing (9):** `init-workspace`, `plan-feature`, `plan-fix`,
+  `execute-phase`, `review-change`, `audit-pr`, `audit-docs`, `product-audit`,
+  `triage-issue`.
+- **Internal (4):** `plan-feature-interview`, `plan-feature-from-issue`,
   `plan-feature-scaffold` — hidden from the menu and invoked by the
   `plan-feature` router, which detects the input (raw idea → interview, issue →
-  from-issue, scoped slug/SPEC → scaffold) and dispatches to the right engine.
+  from-issue, scoped slug/SPEC → scaffold) and dispatches to the right engine —
+  plus `review-implementation`, the two-phase find → classify findings engine
+  that `review-change` composes (and `audit-pr` / `product-audit` reuse).
+
+> **Versioning.** Each skill carries its own `version:` (semver) in frontmatter;
+> changes are logged in [`../../CHANGELOG.md`](../../CHANGELOG.md). Upgrade an
+> install with `npx skills update`.
 
 ## Method 1 — `skills` CLI (deterministic)
 

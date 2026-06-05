@@ -24,6 +24,16 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-05 — plan-feature 1.0.1
+
+- `plan-feature` `1.0.0` → `1.0.1` (patch) — **effort `medium` → `high`.** The
+  router composes its planning steps (`plan-feature-interview` / `-from-issue` /
+  `-scaffold`) **within its own turn**, and a skill's `effort` is fixed at turn
+  start (verified against the Claude Code skills + model-config docs) — so the
+  internals' `high` never took effect and the whole planning ran at the router's
+  `medium`. Raising the router to `high` powers the actual interview and scoping
+  correctly.
+
 ## 2026-06-05 — first versioned release (all skills `1.0.0`)
 
 Formal versioning starts here. Every skill is stamped `1.0.0`; from now on each

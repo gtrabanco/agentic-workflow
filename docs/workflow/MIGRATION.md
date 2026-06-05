@@ -28,7 +28,7 @@ and `--agent <name>` (to target a specific agent).
 
 ## What changed
 
-The 9 user-facing skills became **13** (10 user-facing + 3 internal). Nothing was
+The 9 user-facing skills became **13** (9 user-facing + 4 internal). Nothing was
 lost — three planning entry points **collapsed into one router**, one skill was
 **renamed for symmetry**, and four **new** quality/automation skills were added.
 
@@ -79,14 +79,15 @@ rm -rf .claude/skills/design-feature \
 
 ## Verify the result
 
-After upgrading you should see **13 skills** (10 in the `/` menu + 3 internal), and
+After upgrading you should see **13 skills** (9 in the `/` menu + 4 internal), and
 **none** of the three removed names:
 
 ```sh
 npx skills list
 # expect: init-workspace, plan-feature, plan-fix, execute-phase,
-#         review-implementation, review-change, audit-pr, audit-docs,
-#         product-audit, triage-issue  (+ the 3 internal plan-feature-* steps)
+#         review-change, audit-pr, audit-docs,
+#         product-audit, triage-issue
+#         (+ the 4 internal steps: 3 plan-feature-* + review-implementation)
 # expect: NO design-feature, draft-fix-spec, feature-from-issue
 ```
 

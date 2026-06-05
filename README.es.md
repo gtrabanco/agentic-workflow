@@ -21,7 +21,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 13 skills (10 de cara al usuario + 3 internas) — la fuente instalable
+skills/                  las 13 skills (9 de cara al usuario + 4 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -38,9 +38,10 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**10 skills de cara al usuario** (una entrada de menú cada una) + **3 internas**,
-pasos de planificación que el router `plan-feature` invoca por ti. Un único camino
-disciplinado: **plan → execute → review → audit → merge.**
+**9 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
+pasos que se componen por ti (los tres pasos de planificación del router
+`plan-feature` + el motor de `review-change`). Un único camino disciplinado:
+**plan → execute → review → audit → merge.**
 
 ### Configuración inicial
 | Skill | Qué hace |
@@ -66,10 +67,14 @@ disciplinado: **plan → execute → review → audit → merge.**
 | Skill | Alcance | Qué hace |
 |---|---|---|
 | `review-change` | el **cambio** | Ejecuta solo las revisiones que **aplican a tu plataforma** (código, seguridad, verify, diseño, a11y, marca, rendimiento, SEO) y clasifica → una tabla de decisión + una checklist explícita de verificación manual |
-| `review-implementation` | el **cambio** (motor) | El motor de dos fases encontrar → clasificar que compone `review-change`; llámalo directamente para una pasada clasificada rápida |
 | `audit-pr` | el **PR** | Gate de fusión: criterios de aceptación cumplidos, todas las fases hechas, docs/tests/CI en verde, `Closes #N`, ejes de revisión limpios → **listo para fusionar o una lista de bloqueantes** |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; mina las docs de features → propone issues + altas/bajas en el roadmap (**nunca arregla automáticamente**) |
 | `audit-docs` | las **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones |
+
+> El motor de hallazgos de `review-change` es el `review-implementation` interno
+> — la pasada de dos fases encontrar → clasificar que compone (y que reutilizan
+> `audit-pr` / `product-audit`). No es una entrada de menú; llegas a él a través de
+> `review-change`.
 
 ### Decisión
 | Skill | Qué hace |
@@ -86,6 +91,10 @@ cuándo.
 > [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — se renombraron tres
 > skills, así que vuelve a añadirlas para actualizar + borra las tres carpetas
 > antiguas.
+>
+> **Versionado.** Cada skill se versiona de forma independiente (`version:` en su
+> frontmatter); los cambios se registran en [`CHANGELOG.md`](CHANGELOG.md).
+> Actualiza con `npx skills update`.
 
 ## Modelo y esfuerzo recomendados
 
@@ -99,19 +108,21 @@ sesión).
 | Skill | Tier de modelo | Esfuerzo | Por qué |
 |---|---|---|---|
 | `init-workspace` | Opus | alto | bootstrap del proyecto guiado por entrevista + adaptación |
-| `plan-feature` | Opus | medio | router: detecta la entrada, despacha, registra el roadmap |
+| `plan-feature` | Opus | alto | router + planificación: sus pasos internos de entrevista/scoping corren **en su turno**, así que el router debe llevar el effort (las skills compuestas heredan el effort del turno) |
 | `plan-fix` | Opus | alto | scoping de arquitecto + análisis de riesgo |
 | `execute-phase` | Sonnet | medio | implementación mecánica según el SPEC — una fase o de una pasada (Opus si la lógica es sutil) |
-| `review-implementation` | Opus | alto | revisión profunda multi-eje + clasificación |
 | `review-change` | Opus | alto | orquestación de revisión adaptativa a la plataforma + síntesis |
 | `audit-pr` | Opus | alto | juicio de aptitud de fusión de todo el PR |
 | `product-audit` | Opus | máx | barrido multi-eje de todo el producto + propuestas |
 | `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
 | `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
 
-> Los 3 pasos de planificación internos corren en Opus — `plan-feature-interview` y
-> `plan-feature-from-issue` con esfuerzo alto, `plan-feature-scaffold` con medio; nunca
-> los seleccionas directamente.
+> Los 4 pasos internos no se seleccionan directamente. Como se componen **dentro del
+> turno del caller**, heredan su modelo/effort (el `model`/`effort` de una skill se
+> fija al inicio del turno) — los valores de su frontmatter (`review-implementation`,
+> `plan-feature-interview`, `plan-feature-from-issue` alto; `plan-feature-scaffold`
+> medio) son defaults para una ejecución directa, y por eso el router `plan-feature`
+> lleva `high`.
 >
 > Regla general: **planificar, decidir, revisar y auditar → Opus** (alto, o máx para
 > el barrido de todo el producto); **ejecución mecánica → Sonnet, medio** (sube a Opus
@@ -148,7 +159,6 @@ Ver **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 ### Revisar, auditar y clasificar
 ```
 /review-change                  # ejecuta las revisiones correctas por plataforma + clasifica → una tabla + comprobaciones manuales
-/review-implementation          # solo el motor de hallazgos (diff actual vs main; pasa una ruta para acotar)
 /audit-pr                       # ¿está ESTE PR listo para fusionar?  listo para fusionar o bloqueantes
 /product-audit                  # ¿en qué punto está todo el producto?  issues + propuestas de roadmap
 /audit-docs                     # ¿se han desviado las docs del código / roadmap?
