@@ -25,8 +25,18 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 9 skills copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
-| **Portable prompt** | The 9 skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
+| **`skills` CLI** | The 13 skills (10 user-facing + 3 internal) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **Portable prompt** | The 13 skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
+
+The set is **13 skills — 10 user-facing + 3 internal**:
+
+- **User-facing (10):** `init-workspace`, `plan-feature`, `plan-fix`,
+  `execute-phase`, `review-implementation`, `review-change`, `audit-pr`,
+  `audit-docs`, `product-audit`, `triage-issue`.
+- **Internal (3):** `plan-feature-interview`, `plan-feature-from-issue`,
+  `plan-feature-scaffold` — hidden from the menu and invoked by the
+  `plan-feature` router, which detects the input (raw idea → interview, issue →
+  from-issue, scoped slug/SPEC → scaffold) and dispatches to the right engine.
 
 ## Method 1 — `skills` CLI (deterministic)
 
@@ -38,8 +48,11 @@ directory — `.claude/skills/` for Claude Code, `.agents/skills/` for the
 universal set, etc.
 
 ```sh
-# From the root of the TARGET repository — install all 9 skills:
+# From the root of the TARGET repository — install all 13 skills:
 npx skills add gtrabanco/agentic-workflow
+
+# This repo is PRIVATE. The shorthand above can fail under bunx; use the SSH URL:
+npx skills add git@github.com:gtrabanco/agentic-workflow.git
 
 # Useful flags:
 #   --skill <name>     install only specific skills (repeatable)

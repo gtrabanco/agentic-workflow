@@ -20,7 +20,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 9 skills (one SKILL.md each) — the installable source
+skills/                  the 13 skills (10 user-facing + 3 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -37,32 +37,52 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
+**10 user-facing skills** (one menu entry each) + **3 internal** planning steps the
+`plan-feature` router invokes for you. One disciplined path: **plan → execute →
+review → audit → merge.**
+
 ### Setup
 | Skill | What it does |
 |---|---|
-| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); offers to install the skills |
+| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills |
 
-### Planning & creation
+### Plan
 | Skill | What it does |
 |---|---|
-| `design-feature` | Interactive interview from a raw idea; proactively asks to fill the SPEC |
-| `feature-from-issue` | Turns a feature-request issue into a scoped SPEC (wires `Closes #N`) |
-| `plan-feature` | Scaffolds the SPEC + full planning artifact set; registers it in the roadmap (docs only) |
+| `plan-feature` | **One entry point to plan a feature.** Detects the input — a raw idea (interview), an issue `#N` (issue → scoped SPEC), or a scoped slug/SPEC (straight to scaffolding) — routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. |
+| `plan-fix` | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from an issue, commits on a fix branch, **stops for review**. |
 
-### Decision & review
+> You only ever call `plan-feature`; it composes the internal steps
+> `plan-feature-interview`, `plan-feature-from-issue`, and `plan-feature-scaffold`
+> (hidden from the menu).
+
+### Execute
+| Skill | What it does |
+|---|---|
+| `execute-phase` | Implements one phase of a feature (default), a small feature in a single pass, or a fix (`--fix`). Gate-verified, one commit per phase; **auto-runs `review-change` every 2 phases**. |
+
+### Review & audit — *change → PR → product*
+| Skill | Scope | What it does |
+|---|---|---|
+| `review-change` | the **change** | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) and classifies → one decision table + an explicit manual-verification checklist |
+| `review-implementation` | the **change** (engine) | The two-phase find → classify findings engine `review-change` composes; call it directly for a quick classified pass |
+| `audit-pr` | the **PR** | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers** |
+| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (**never auto-fixes**) |
+| `audit-docs` | the **docs** | Audits docs ↔ roadmap ↔ code ↔ fix index for drift |
+
+### Decide
 | Skill | What it does |
 |---|---|
 | `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
-| `review-implementation` | Two-phase review (find → classify) ending in a decision table: fix-now / postpone / ignore / intentional-tradeoff |
-| `audit-docs` | Audits docs ↔ roadmap ↔ code ↔ fix index for drift |
 
-### Execution (compose with the above)
-`execute-phase` (one phase, a small feature in a single pass, or a fix with
-`--fix`), `draft-fix-spec` (draft a fix SPEC from an issue).
-
-Companion skills for UI/UX and language-specific quality (design, ux, typing…)
-are **not bundled** — they're domain-specific, so install them per project. See
+Companion skills for UI/UX and language-specific quality (design, ux, typing…) are
+**not bundled** — `review-change` and `product-audit` compose them when installed,
+and `init-workspace` suggests the right ones per platform. See
 `docs/workflow/RECOMMENDED_SKILLS.md` for which apply when.
+
+> **Upgrading from an older install?** See
+> [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — three skills were
+> renamed, so re-add to update + delete the three old folders.
 
 ## Recommended model & effort
 
@@ -76,17 +96,23 @@ your session).
 | Skill | Model tier | Effort | Why |
 |---|---|---|---|
 | `init-workspace` | Opus | high | interview-driven project bootstrap + adaptation |
-| `design-feature` | Opus | high | open-ended interview + design judgement |
-| `feature-from-issue` | Opus | high | classify, translate, scope, map to the roadmap |
-| `draft-fix-spec` | Opus | high | architect-level scoping + risk analysis |
-| `triage-issue` | Opus | high | verify triggers against the code; judgement call |
-| `review-implementation` | Opus | high | deep multi-axis review + classification |
-| `plan-feature` | Opus | medium | structured artifact scaffolding from a scoped SPEC |
-| `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
+| `plan-feature` | Opus | medium | router: detect the input, dispatch, register the roadmap |
+| `plan-fix` | Opus | high | architect-level scoping + risk analysis |
 | `execute-phase` | Sonnet | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle) |
+| `review-implementation` | Opus | high | deep multi-axis review + classification |
+| `review-change` | Opus | high | platform-adaptive review orchestration + synthesis |
+| `audit-pr` | Opus | high | whole-PR merge-readiness judgement |
+| `product-audit` | Opus | max | product-wide multi-axis sweep + proposals |
+| `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
+| `triage-issue` | Opus | high | verify triggers against the code; judgement call |
 
-> Rule of thumb: **planning, judgement and review → Opus, high effort**;
-> **mechanical execution → Sonnet, medium** (bump to Opus when the logic is subtle).
+> The 3 internal planning steps run at Opus — `plan-feature-interview` and
+> `plan-feature-from-issue` at high effort, `plan-feature-scaffold` at medium; you
+> never select them directly.
+>
+> Rule of thumb: **planning, judgement, review and audit → Opus** (high, or max for
+> the product-wide sweep); **mechanical execution → Sonnet, medium** (bump to Opus
+> when the logic is subtle).
 
 ## How to use them
 
@@ -94,13 +120,14 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 
 ### Build a feature
 ```
-/design-feature   "<your idea>"        # or  /feature-from-issue <N>
-        → interview / issue analysis → fills the SPEC
-/plan-feature                          # scaffolds SPEC + PLAN + TASKS + … + roadmap entry
-/execute-phase <NN> <phase>         # implement one phase at a time, gate-verified, one commit each
-/review-implementation                 # findings + classified decision table (no refactor)
-/code-review · /security-review · /verify
-gh pr create --base main               # "Closes #N" if it came from an issue
+/plan-feature "<your idea>"     # or  /plan-feature <N> (issue)  ·  /plan-feature --next (next roadmap item)
+        → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
+        → fills the SPEC + PLAN + TASKS + … and registers the roadmap entry
+/execute-phase <NN> <phase>     # one phase at a time, gate-verified, one commit each
+        → auto-runs /review-change every 2 phases
+/review-change                  # the reviews that apply to this change, classified (no refactor)
+/audit-pr                       # merge gate: merge-ready or blockers
+gh pr create --base main        # "Closes #N" if it came from an issue
 ```
 See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**.
 
@@ -108,16 +135,20 @@ See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**
 ```
 /triage-issue <N>
    → reads the issue's "when to fix" trigger, verifies it against the current code
-   → fix-now → draft-fix-spec → execute-phase --fix
-     promote → feature-from-issue
+   → fix-now  → plan-fix → execute-phase --fix
+     promote  → plan-feature   (the router takes the issue → scoped SPEC)
      postpone → dated comment, leave open (no inline work)
-     wontfix → propose close
+     wontfix  → propose close
 ```
 See **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 
-### Review & classify a branch
+### Review, audit & classify
 ```
-/review-implementation                 # defaults to the current diff vs main; pass a path to narrow
+/review-change                  # runs the right reviews per platform + classifies → one table + manual checks
+/review-implementation          # just the findings engine (current diff vs main; pass a path to narrow)
+/audit-pr                       # is THIS PR ready to merge?  merge-ready or blockers
+/product-audit                  # where does the whole product stand?  issues + roadmap proposals
+/audit-docs                     # did the docs drift from code / roadmap?
 ```
 See **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY.md)**.
 
@@ -139,7 +170,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ more](https://skills.sh)).
 
 ```sh
-# From the root of the TARGET repository — install all 9 skills:
+# From the root of the TARGET repository — install all 13 skills:
 npx skills add gtrabanco/agentic-workflow
 
 # Pick specific skills, or target a specific agent:

@@ -11,12 +11,13 @@ Notion ("Agentic Workflow").
 
 | Doc | What it covers |
 |---|---|
-| [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → PR |
+| [FEATURE_WORKFLOW.md](FEATURE_WORKFLOW.md) | Idea/issue → SPEC + artifacts → phase execution → hardening → review → audit → PR |
 | [ISSUE_WORKFLOW.md](ISSUE_WORKFLOW.md) | Triage → classify (fix-now / postpone / wontfix / promote) → route → report |
 | [SKILLS.md](SKILLS.md) | Every skill in the system, what it does, and how they compose |
-| [REVIEW_AND_CLASSIFY.md](REVIEW_AND_CLASSIFY.md) | When & how to use `review-implementation` (find → classified decision table) |
+| [REVIEW_AND_CLASSIFY.md](REVIEW_AND_CLASSIFY.md) | When & how to review — `review-change` (the right reviews per platform) and its `review-implementation` engine (find → classified decision table) |
 | [RECOMMENDED_SKILLS.md](RECOMMENDED_SKILLS.md) | Agnostic software-quality & architecture skills for good agentic programming — universal vs. conditional-by-project-nature; stack/infra skills out of scope |
 | [REPLICATE.md](REPLICATE.md) | `npx skills` install + portable prompt to set this up in any project |
+| [MIGRATION.md](MIGRATION.md) | Upgrading an existing install from the previous skill set — what was renamed, what to delete |
 
 ## Core principles
 
@@ -34,6 +35,8 @@ Notion ("Agentic Workflow").
    real code; deferred work is tracked, not implemented inline.
 6. **Verification gate before every commit.** Type-check, tests, and build must
    pass (use the project's own gate commands).
+7. **Review at the right altitude.** The change (`review-change`), then the PR
+   (`audit-pr`), then — periodically — the whole product (`product-audit`).
 
 ## The map at a glance
 
@@ -44,11 +47,14 @@ Notion ("Agentic Workflow").
                  └─────┬──────────┬──────────┬──────────┘
                        │          │          └─ leave open + dated comment
                        │          │
-        draft-fix-spec │          │ feature-from-issue
+              plan-fix │          │ plan-feature  (router takes the issue → SPEC)
                        │          │
                        ▼          ▼
-   FEATURE:   design-feature ─▶ plan-feature ─▶ execute-phase ─▶ review ─▶ PR
-   FIX:                          draft-fix-spec ─▶ execute-phase --fix ─▶ PR
+   FEATURE:   plan-feature ──▶ execute-phase ──▶ review-change ──▶ audit-pr ──▶ PR
+              (router:                            (auto every       (merge
+               idea│issue│scoped)                  2 phases)         gate)
+   FIX:        plan-fix ──▶ execute-phase --fix ──▶ review-change ──▶ audit-pr ──▶ PR
 
-   audit-docs ── audit docs ↔ roadmap ↔ code ↔ fix index (anytime)
+   audit-docs ───── docs ↔ roadmap ↔ code ↔ fix index coherence            (anytime)
+   product-audit ── product-wide health check → issues + roadmap proposals (periodic)
 ```
