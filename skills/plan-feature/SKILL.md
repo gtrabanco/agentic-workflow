@@ -1,10 +1,10 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
-effort: medium
+effort: high
 description: >
   One entry point to plan a feature. Detects the input — a raw idea (interview), a
   GitHub issue #N (issue → scoped SPEC), or an already-scoped slug/SPEC (straight

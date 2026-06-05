@@ -20,7 +20,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 13 skills (10 user-facing + 3 internal) — the installable source
+skills/                  the 13 skills (9 user-facing + 4 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -37,9 +37,9 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**10 user-facing skills** (one menu entry each) + **3 internal** planning steps the
-`plan-feature` router invokes for you. One disciplined path: **plan → execute →
-review → audit → merge.**
+**9 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+you (the `plan-feature` router's three planning steps + the `review-change`
+engine). One disciplined path: **plan → execute → review → audit → merge.**
 
 ### Setup
 | Skill | What it does |
@@ -65,10 +65,13 @@ review → audit → merge.**
 | Skill | Scope | What it does |
 |---|---|---|
 | `review-change` | the **change** | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) and classifies → one decision table + an explicit manual-verification checklist |
-| `review-implementation` | the **change** (engine) | The two-phase find → classify findings engine `review-change` composes; call it directly for a quick classified pass |
 | `audit-pr` | the **PR** | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers** |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (**never auto-fixes**) |
 | `audit-docs` | the **docs** | Audits docs ↔ roadmap ↔ code ↔ fix index for drift |
+
+> `review-change`'s findings engine is the internal `review-implementation` — the
+> two-phase find → classify pass it composes (and `audit-pr` / `product-audit`
+> reuse). It's not a menu entry; you reach it through `review-change`.
 
 ### Decide
 | Skill | What it does |
@@ -83,6 +86,10 @@ and `init-workspace` suggests the right ones per platform. See
 > **Upgrading from an older install?** See
 > [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — three skills were
 > renamed, so re-add to update + delete the three old folders.
+>
+> **Versioning.** Each skill is versioned independently (`version:` in its
+> frontmatter); changes are logged in [`CHANGELOG.md`](CHANGELOG.md). Upgrade an
+> install with `npx skills update`.
 
 ## Recommended model & effort
 
@@ -96,19 +103,21 @@ your session).
 | Skill | Model tier | Effort | Why |
 |---|---|---|---|
 | `init-workspace` | Opus | high | interview-driven project bootstrap + adaptation |
-| `plan-feature` | Opus | medium | router: detect the input, dispatch, register the roadmap |
+| `plan-feature` | Opus | high | router + planning: its internal interview/scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort) |
 | `plan-fix` | Opus | high | architect-level scoping + risk analysis |
 | `execute-phase` | Sonnet | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle) |
-| `review-implementation` | Opus | high | deep multi-axis review + classification |
 | `review-change` | Opus | high | platform-adaptive review orchestration + synthesis |
 | `audit-pr` | Opus | high | whole-PR merge-readiness judgement |
 | `product-audit` | Opus | max | product-wide multi-axis sweep + proposals |
 | `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
 | `triage-issue` | Opus | high | verify triggers against the code; judgement call |
 
-> The 3 internal planning steps run at Opus — `plan-feature-interview` and
-> `plan-feature-from-issue` at high effort, `plan-feature-scaffold` at medium; you
-> never select them directly.
+> The 4 internal steps aren't selected directly. Because they're composed **within
+> a caller's turn**, they inherit that turn's model/effort (a skill's `model`/`effort`
+> is fixed at turn start) — the values in their frontmatter
+> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue` high;
+> `plan-feature-scaffold` medium) are declared defaults for a direct run, which is
+> why the `plan-feature` router itself carries `high`.
 >
 > Rule of thumb: **planning, judgement, review and audit → Opus** (high, or max for
 > the product-wide sweep); **mechanical execution → Sonnet, medium** (bump to Opus
@@ -145,7 +154,6 @@ See **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 ### Review, audit & classify
 ```
 /review-change                  # runs the right reviews per platform + classifies → one table + manual checks
-/review-implementation          # just the findings engine (current diff vs main; pass a path to narrow)
 /audit-pr                       # is THIS PR ready to merge?  merge-ready or blockers
 /product-audit                  # where does the whole product stand?  issues + roadmap proposals
 /audit-docs                     # did the docs drift from code / roadmap?
