@@ -1,9 +1,10 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 model: sonnet
 effort: medium
+context: fork
 description: >
   Audit cross-document coherence: docs ↔ roadmap ↔ code ↔ fix index ↔ issues.
   Finds drift — features in docs/ not in the roadmap (or vice versa), fix-index

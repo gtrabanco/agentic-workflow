@@ -1,10 +1,11 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.0.1
+version: 1.0.2
 argument-hint: "[path-or-area] (defaults to the whole product)"
-model: opus
+model: opus[1m]
 effort: max
+context: fork
 description: >
   Periodic, product-wide health check — the CTO's "where do we actually stand?"
   Sweeps the WHOLE codebase (not a diff, not a PR) across every applicable axis —
