@@ -1,6 +1,7 @@
 ---
 name: plan-feature-interview
 user-invocable: false
+version: 1.0.0
 model: opus
 effort: high
 description: >

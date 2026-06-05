@@ -1,6 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
+version: 1.0.0
 argument-hint: "[path-or-area] (defaults to the whole product)"
 model: opus
 effort: max
