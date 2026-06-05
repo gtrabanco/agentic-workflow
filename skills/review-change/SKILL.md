@@ -79,6 +79,23 @@ decide which axes apply from two inputs:
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
 
+## Example output (generic)
+
+For a change to a backend export module (no UI surface):
+
+> Scope: branch diff vs `main` (`src/export/**`). Skipped: design / a11y / SEO /
+> brand — no UI surface.
+
+| Axis | Finding | Sev | Class | WHY | Route |
+|---|---|---|---|---|---|
+| security | API token read from a committed file | high | fix-now | Credential exposure | `plan-fix` |
+| tests | Export handler has no failure-mode test | med | fix-now | Untested error path | fold into phase |
+| perf | Full table loaded before filtering | low | postpone | Fine at current size | issue + trigger (>100k rows) |
+
+> Manual-verification (automation can't confirm):
+> - The exported file opens cleanly in a spreadsheet app.
+> - An empty result set still produces a valid (header-only) file.
+
 ## Routing
 
 - **fix-now** → `plan-fix` → `execute-phase --fix`, or fold into the current phase

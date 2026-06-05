@@ -113,6 +113,28 @@ Before merge, a human should still verify:
 
 If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge.
 
+Example (generic — substitute your project's numbers and gates):
+
+```
+PR #142 — Add CSV export to the reports view
+Base: main ← Head: feat/14-csv-export   CI: green
+
+VERDICT: BLOCKED (2 blockers)
+
+Blockers (ranked):
+  1. [Tests] Export handler has no test — acceptance criterion "export
+     round-trips the rows" is unverified
+     → fix: add an integration test for the handler (fold into the current phase)
+  2. [Traceability] PR body is missing `Closes #131` for issue-born work
+     → fix: add `Closes #131` to the PR body (execute-phase)
+
+Non-blocking nits:
+  - Help text wording diverges from the other commands — docs/USAGE.md
+
+Before merge, a human should still verify:
+  - The exported file opens cleanly in a spreadsheet app (visual)
+```
+
 ## Routing (blockers, by kind)
 
 - **Incomplete in-scope work** → fold into this branch via `execute-phase`
