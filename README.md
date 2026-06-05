@@ -59,7 +59,7 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 ### Execute
 | Skill | What it does |
 |---|---|
-| `execute-phase` | Implements one phase of a feature (default), a small feature in a single pass, or a fix (`--fix`). Gate-verified, one commit per phase; **auto-runs `review-change` every 2 phases**. |
+| `execute-phase` | Implements one phase of a feature (default), a small feature in a single pass, or a fix (`--fix`). Gate-verified, one commit per phase; **hands off to `review-change` every 2 phases** (a review checkpoint, so it runs at its own model/effort). |
 
 ### Review & audit — *change → PR → product*
 | Skill | Scope | What it does |
@@ -133,7 +133,7 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
         → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
         → fills the SPEC + PLAN + TASKS + … and registers the roadmap entry
 /execute-phase <NN> <phase>     # one phase at a time, gate-verified, one commit each
-        → auto-runs /review-change every 2 phases
+        → review checkpoint every 2 phases: hands off to /review-change (runs at its own model/effort)
 /review-change                  # the reviews that apply to this change, classified (no refactor)
 /audit-pr                       # merge gate: merge-ready or blockers
 gh pr create --base main        # "Closes #N" if it came from an issue

@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -57,7 +57,7 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 4. Run the gate (type-check, tests, build).
 5. Update the per-phase docs.
 6. Commit (conventional; one per phase). Stop for review.
-7. **Auto-review cadence** — every 2 phases (and before the PR), run `review-change` (see below) before offering the next phase.
+7. **Review checkpoint** — every 2 phases (and before the PR), **stop and hand off** to `/review-change` (see below) before the next phase. Don't run it in this skill's turn.
 
 **Single-pass** — small feature with only a `SPEC.md`, no planning artifacts:
 
@@ -96,30 +96,40 @@ Map each change to the project's layers per its architecture doc; build inner la
 
 Write `docs/features/<NN>-<slug>/CHECKLIST.md`: schema migration applied (if any) · core layer has no outer imports · orchestration idempotent + typed errors · adapters implement ports · tests pass · type-check/lint green · UI strings localized (if UI) · domain value-object rules respected · user-facing limitations disclosed · new deps pinned. Note any decisions not captured in the SPEC.
 
-## Auto-review cadence (feature mode)
+## Review checkpoint cadence (feature mode)
 
-To remove the "remember to invoke the review" friction without removing the
-review or the human gate: after every **2 completed phases** — and always once
-more **before opening the PR**, so the final phase is never unreviewed — auto-run
-`review-change` scoped to the branch's work so far, *before* offering the next
-phase.
+Keep the review on a cadence without mis-powering it. After every **2 completed
+phases** — and always once more **before opening the PR**, so the final phase is
+never unreviewed — **stop and hand off to `review-change`** instead of running it
+in this skill's turn.
 
-- **Clean** → say so and offer to proceed to the next phase.
-- **Findings** → present `review-change`'s classified table **and** its explicit
-  **manual-verification checklist**, so the dev knows exactly what to eyeball.
-  Address `fix-now` items by folding them into the current branch (they're
-  unmerged work) before continuing; `postpone` items become tracked issues via
-  `triage-issue`; record intentional tradeoffs.
+**Why hand off, not compose:** a skill's model and effort are fixed at the start of
+its turn, so invoking `review-change` from here would run it at execute-phase's
+`sonnet`/`medium` rather than its own `opus`/`high` — under-powering the review.
+Handing off lets the user run `/review-change` in a fresh turn at its proper
+model/effort. (This is the general rule: suggest the next skill across a
+model/effort boundary, don't compose it.)
+
+At the checkpoint, print the hand-off:
+
+```
+Phase <N> done and committed. Review checkpoint (every 2 phases).
+→ Run /review-change now — it reviews the branch at its own model/effort.
+  · clean    → continue with: execute-phase <NN> <next phase>
+  · findings → fold fix-now into the branch; postpone → triage-issue; then re-review.
+```
 
 This never auto-merges and never skips the per-phase stop: still one phase at a
 time, human in the loop, gate enforced each phase. Single-pass and `--fix` modes
-review once at the end rather than on a cadence (there are no intermediate phases).
+are reviewed once at the end the same way — hand off to `/review-change` — as they
+have no intermediate phases.
 
 ## Relationship to other skills
 
 - Planned by `plan-feature` (features) or `plan-fix` (fixes); executes their SPEC.
-- Composes `review-change` on the auto-review cadence above; its `fix-now`
-  findings fold back in here, `postpone` findings route to `triage-issue`.
+- **Hands off** to `review-change` at the review checkpoint (every 2 phases / before
+  the PR) — it runs at its own model/effort, not composed in this skill's turn.
+  `fix-now` findings fold back here; `postpone` routes to `triage-issue`.
 - The completed branch is gated by `audit-pr` before merge.
 
 ## Done when

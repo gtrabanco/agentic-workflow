@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: [path-or-glob]
 model: opus
 effort: high
@@ -24,7 +24,7 @@ or refactors.**
 
 ## When to use
 
-- Before opening a PR, or mid-feature (`execute-phase` calls it every 2 phases).
+- Before opening a PR, or mid-feature (`execute-phase` hands off to it every 2 phases).
 - When you want the *right* reviews for this change without running irrelevant
   passes (e.g. accessibility on a backend change).
 
@@ -116,8 +116,8 @@ For a change to a backend export module (no UI surface):
 ## Relationship to other skills
 
 - Composes `review-implementation` (engine) + the project's companion review skills.
-- Sits in Stage 4 of the feature workflow; `execute-phase` triggers it every 2
-  phases. `fix-now` → `plan-fix`; `postpone` → `triage-issue`.
+- Sits in Stage 4 of the feature workflow; `execute-phase` hands off to it every 2
+  phases (it runs in its own turn). `fix-now` → `plan-fix`; `postpone` → `triage-issue`.
 - `audit-pr` is the PR-level gate; `product-audit` the periodic full sweep.
 
 ## Done when
