@@ -45,11 +45,12 @@ coverage you didn't do.
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide (`CLAUDE.md` / `AGENTS.md`) and its **documentation map**, the
-roadmap, the fix index, the feature folder layout, and the verification gate. From
-the map decide the product's nature (web / mobile / console / library / backend /
-infra) and which axes apply — the same applicability logic `review-change` uses,
-applied product-wide. Note which companion review skills the project installed.
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the roadmap, the fix index, the feature folder layout, and
+the verification gate. From the map decide the product's nature (web / mobile /
+console / library / backend / infra) and which axes apply — the same applicability
+logic `review-change` uses, applied product-wide. Note which companion review
+skills the project installed.
 
 ## Audit dimensions (platform-adaptive — run only what applies)
 
@@ -128,14 +129,13 @@ security items to track first").
   report + proposals; **every action is the user's decision.** When the user
   accepts, route: `triage-issue` files/classifies, `plan-feature` adds roadmap
   work, `plan-fix` scopes a concrete fix.
-- Evidence-backed: every finding and proposal cites a `file:line`, metric, doc
-  section, issue, or feature-doc source. Mark uncertainties *verify*.
 - Platform-adaptive: run only applicable axes; always list what you skipped and why.
 - **No silent caps.** If you sampled, prioritized, or time-boxed a dimension, say
   so — never present partial coverage as exhaustive.
 - Severity-ranked and deduped: cluster the same issue found via multiple axes or
   multiple feature docs into one proposal.
-- Report language = the project's docs language; reply to the user in their language.
+- Honor the project's **Workflow conventions** (docs-language, evidence): every
+  finding/proposal cites a `file:line`/metric/doc/issue source; mark uncertainties *verify*.
 
 ## Relationship to other skills
 

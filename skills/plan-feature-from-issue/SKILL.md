@@ -27,10 +27,10 @@ genuine features only.
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide (`CLAUDE.md`/`AGENTS.md`) and its documentation map, the
-feature SPEC template, the roadmap, and the issue/PR templates
-(`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`) so the SPEC
-mirrors the fields reviewers expect. Then read the issue:
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the feature SPEC template, the roadmap, and the issue/PR
+templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`) so the
+SPEC mirrors the fields reviewers expect. Then read the issue:
 
 ```sh
 gh issue view <N> --json number,title,body,labels,state,comments
@@ -63,8 +63,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
 - Don't silently expand scope beyond the issue — surface additions as proposals.
 - Don't open the feature branch or write code here.
 - Keep the `Closes #N` link; an issue-born feature must close it.
-- All artifacts in the project's docs language, regardless of the issue's.
-- One independently-mergeable PR per feature against the default branch.
+- Otherwise honor the project's **Workflow conventions** (branch/PR, docs-language).
 
 ## Relationship to other skills
 

@@ -25,9 +25,9 @@ findings report; it does not silently rewrite docs.
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide and its **documentation map** (the canonical list of which
-doc owns what), the roadmap, the fix index + template, and the feature folder
-layout. The map tells you which links and invariants to check.
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the roadmap, the fix index + template, and the feature
+folder layout — the map tells you which links and invariants to check.
 
 ## Checks
 

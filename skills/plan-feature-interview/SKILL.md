@@ -23,11 +23,12 @@ focused interview. Optimizes for catching unknowns *before* implementation.
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide and its **documentation map**, the architecture doc, the
-domain/style docs relevant to the idea's area, the SPEC template, and the
-roadmap. Goal: ask only what the project does **not** already answer, and ground
-every question in the project's real constraints (layering, domain/i18n/SEO/a11y
-rules, runtime/platform limits, naming conventions).
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the architecture doc, the domain/style docs relevant to the
+idea's area, the SPEC template, and the roadmap. Goal: ask only what the project
+does **not** already answer, and ground every question in the project's real
+constraints (layering, domain/i18n/SEO/a11y rules, runtime/platform limits, naming
+conventions).
 
 ## Process
 
@@ -73,7 +74,7 @@ rules, runtime/platform limits, naming conventions).
 - No code, no branch, no dependencies — design only.
 - Smallest-shippable mindset; defer extras to issues.
 - Respect and cite the project's architecture and style rules in your reasoning.
-- Artifacts in the project's docs language (this repo: **English**).
+- Otherwise per the project's **Workflow conventions** (docs-language).
 
 ## Relationship to other skills
 

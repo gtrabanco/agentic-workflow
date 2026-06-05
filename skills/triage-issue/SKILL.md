@@ -27,9 +27,10 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide and its documentation map, the fix index (e.g.
-`docs/fix/README.md`) and fix SPEC template, and the roadmap. Then read the issue
-in full, including comments and labels:
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the fix index (e.g. `docs/fix/README.md`) and fix SPEC
+template, and the roadmap. Then read the issue in full, including comments and
+labels:
 
 ```sh
 gh issue view <N> --json number,title,body,labels,state,comments
@@ -65,11 +66,11 @@ gh issue view <N> --json number,title,body,labels,state,comments
 
 ## Guardrails
 
-- Decisions are evidence-backed: state exactly what you checked.
 - Don't build deferred work just because asked to "look at" the issue — surface
   that the trigger is unmet and stop.
 - Keep issues, the fix index, and docs in sync with reality.
-- Comments/SPECs in the project's docs language (this repo: **English**).
+- Otherwise per the project's **Workflow conventions** (docs-language, evidence):
+  state exactly what you checked.
 
 ## Relationship to other skills
 

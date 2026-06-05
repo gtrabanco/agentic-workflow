@@ -22,9 +22,9 @@ need runs (no fat single skill). **Docs only — no code, no branch.**
 
 ## Step 0 — Discover the project (always first)
 
-Read the agent guide and its **documentation map**, and the **roadmap**
-(`docs/features/ROADMAP.md`), so routing and roadmap registration match the
-project's real layout.
+Per the agent guide's **Workflow conventions** + **documentation map**, then read
+what THIS skill needs: the **roadmap** (`docs/features/ROADMAP.md`), so routing
+and roadmap registration match the project's real layout.
 
 ## Routing
 
@@ -54,7 +54,7 @@ Pick the mode — first match wins:
 - Don't re-ask what a flag, the issue, or the docs already settle.
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
-- All artifacts in the project's docs language, whatever language the request used.
+- Otherwise per the project's **Workflow conventions** (docs-language).
 
 ## Internal steps (not user-invocable)
 
