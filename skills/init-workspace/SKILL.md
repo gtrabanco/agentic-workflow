@@ -62,11 +62,23 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and the
    `.github/` templates; prune unused doc folders and map rows. Leave honest
    placeholders where the user hasn't decided — never invent values.
-5. **Offer the skills.** Propose installing them:
+5. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-6. **Report.** List what was created, which placeholders still need human input,
-   and the next step: `plan-feature` →
+6. **Suggest the companion review skills** the review/audit skills compose
+   internally — only the ones the detected platform needs (from Step 0 + the doc
+   domains chosen in step 3):
+   - **Always:** `code-review`, `security-review`, `verify`, `tech-debt`.
+   - **If UI** (web / mobile / TUI): `design-review`, `accessibility-review`,
+     `brand-review`.
+   - **If web:** `web-perf` and an SEO skill.
+   - **Never** suggest UI / SEO / brand skills for a CLI, library, or infra
+     project.
+   Record the expected set in `CLAUDE.md` (a short "Companion review skills" note)
+   so `review-change` and `product-audit` know what to compose — and so a missing
+   one is a noted gap rather than a silent skip. Don't install without a yes.
+7. **Report.** List what was created, which placeholders still need human input,
+   the companion skills recorded/installed, and the next step: `plan-feature` →
    `execute-phase`.
 
 ## Guardrails
@@ -90,5 +102,6 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 ## Done when
 
 - A tailored `CLAUDE.md` + `docs/` scaffold + `.github/` templates exist in the
-  target, unused folders pruned, residual placeholders flagged, and the user knows
-  how to install the skills and start the first feature.
+  target, unused folders pruned, residual placeholders flagged, the platform's
+  companion review skills are recorded (and offered), and the user knows how to
+  install the skills and start the first feature.
