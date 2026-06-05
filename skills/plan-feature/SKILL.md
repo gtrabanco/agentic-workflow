@@ -1,6 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
+version: 1.0.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: medium

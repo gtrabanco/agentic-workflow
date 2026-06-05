@@ -1,6 +1,7 @@
 ---
 name: review-change
 user-invocable: true
+version: 1.0.0
 argument-hint: [path-or-glob]
 model: opus
 effort: high

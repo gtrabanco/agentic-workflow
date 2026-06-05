@@ -1,6 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
+version: 1.0.0
 model: opus
 effort: medium
 description: >
