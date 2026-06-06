@@ -1,11 +1,10 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.0.2
+version: 1.0.3
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus[1m]
 effort: max
-context: fork
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >

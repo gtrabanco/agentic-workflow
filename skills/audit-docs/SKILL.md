@@ -1,10 +1,9 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.0.1
+version: 1.0.2
 model: sonnet
 effort: medium
-context: fork
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
