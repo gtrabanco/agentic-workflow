@@ -24,6 +24,14 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-05 — revert context: fork (output suppressed in CLI)
+
+- `audit-docs` `1.0.1` → `1.0.2` — remove `context: fork`: the CLI suppresses
+  the subagent's output, leaving the skill silent. Reverted until the feature
+  works end-to-end.
+- `audit-pr` `1.0.1` → `1.0.2` — same reason.
+- `product-audit` `1.0.2` → `1.0.3` — same reason.
+
 ## 2026-06-05 — execute-phase explicit commits + allowed-tools
 
 - `execute-phase` `1.1.0` → `1.1.1` (patch) — two fixes for the "skill doesn't
