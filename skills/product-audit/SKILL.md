@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 version: 1.0.2
-argument-hint: "[path-or-area] (defaults to the whole product)"
+argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus[1m]
 effort: max
 context: fork

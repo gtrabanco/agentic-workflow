@@ -2,7 +2,7 @@
 name: audit-pr
 user-invocable: true
 version: 1.0.1
-argument-hint: "[pr-number] (defaults to the current branch's PR)"
+argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
 context: fork
