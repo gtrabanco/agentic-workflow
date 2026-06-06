@@ -2,7 +2,7 @@
 name: review-implementation
 user-invocable: false
 version: 1.0.0
-argument-hint: [path-or-glob]
+argument-hint: <path-or-glob>
 model: opus
 effort: high
 allowed-tools: Read, Grep, Glob, Bash, WebFetch

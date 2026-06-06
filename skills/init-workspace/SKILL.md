@@ -2,7 +2,7 @@
 name: init-workspace
 user-invocable: true
 version: 1.0.0
-argument-hint: [target-dir]
+argument-hint: <target-dir>
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
