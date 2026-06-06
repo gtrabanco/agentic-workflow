@@ -2,7 +2,7 @@
 name: review-change
 user-invocable: true
 version: 1.0.1
-argument-hint: [path-or-glob]
+argument-hint: <path-or-glob>
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
