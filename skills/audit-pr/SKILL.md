@@ -1,11 +1,10 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.0.1
+version: 1.0.2
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
-context: fork
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
