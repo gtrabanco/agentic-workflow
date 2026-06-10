@@ -32,6 +32,15 @@ Renames are **major** and ship with a migration note — see
 - `audit-pr` `1.0.1` → `1.0.2` — same reason.
 - `product-audit` `1.0.2` → `1.0.3` — same reason.
 
+## 2026-06-09 — product-audit upgraded to Fable 5
+
+- `product-audit` `1.0.3` → `1.1.0` (minor) — `model: opus[1m]` → `model: fable`.
+  Fable 5 has native 1M context (no `[1m]` suffix needed), scores 80.3% on
+  SWE-Bench Pro vs 69.2% for Opus 4.8, and is designed for exactly this use case:
+  deep, long-horizon sweeps where depth matters more than speed. The suffix
+  `fable[1m]` is not documented and unnecessary — Fable 5 always runs at 1M.
+  Requires Claude Code ≥ v2.1.170.
+
 ## 2026-06-09 — execute-phase /loop pattern documented
 
 - `execute-phase` `1.1.1` → `1.1.2` (patch) — add "Batch execution with `/loop`"
