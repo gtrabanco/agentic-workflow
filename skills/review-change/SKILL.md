@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.0.1
+version: 1.1.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -68,16 +68,22 @@ decide which axes apply from two inputs:
 
 1. **Findings engine.** Run `review-implementation` over the scope → its classified
    decision table (fix-now / postpone / ignore / intentional-tradeoff).
-2. **Applicable externals.** For each axis the matrix + footprint mark as relevant,
+2. **SPEC drift check.** Locate the governing SPEC (feature or fix) and compare
+   the diff against its scope and acceptance criteria: flag work that contradicts
+   the SPEC, silently exceeds it, or leaves a claimed criterion untouched.
+   Findings get axis `spec-drift` in the table. Catching drift at a phase
+   checkpoint is far cheaper than at the `audit-pr` merge gate. (No SPEC found →
+   note it and skip.)
+3. **Applicable externals.** For each axis the matrix + footprint mark as relevant,
    invoke the project's review skill for it (`code-review`, `security-review`,
    `verify`, `design-review`, `accessibility-review`, `brand-review`, `tech-debt`,
    the perf/SEO skills). **Skip the rest** and say which you skipped and why.
-3. **Missing companions.** If an applicable skill isn't installed, note the gap and
+4. **Missing companions.** If an applicable skill isn't installed, note the gap and
    do a best-effort inline pass for that axis rather than failing.
-4. **Synthesize.** Merge all findings into **one** decision table, deduped by
+5. **Synthesize.** Merge all findings into **one** decision table, deduped by
    `file:line`. Keep `review-implementation`'s columns (Sev, Class, WHY, impl risk,
    long-term impact, premature-opt?, route) and add an **Axis** column.
-5. **Manual-verification checklist.** List what automated review **cannot** confirm
+6. **Manual-verification checklist.** List what automated review **cannot** confirm
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
