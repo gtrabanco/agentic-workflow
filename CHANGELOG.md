@@ -41,6 +41,43 @@ Renames are **major** and ship with a migration note — see
   `fable[1m]` is not documented and unnecessary — Fable 5 always runs at 1M.
   Requires Claude Code ≥ v2.1.170.
 
+## 2026-06-09 — quality batch: sizing, tests-first, SPEC drift, forge-agnostic
+
+One coordinated batch from the skills review (token efficiency + product
+quality), landed as atomic commits:
+
+- **Size-aware planning.** The feature SPEC template gains a `Size` field
+  (`XS/S/M/L`). `plan-feature-interview` `1.1.0` and `plan-feature-from-issue`
+  `1.1.0` estimate it (plus a **UI design reference** question for features with
+  a UI surface); `plan-feature-scaffold` `1.1.0` scales the artifacts — XS/S →
+  SPEC-only single-pass (no ceremony), M/L → full set whose `PLAN.md` **always
+  ends in a hardening phase**; `plan-feature` `1.1.0` routes and prints the right
+  next step. Small features from issues now have a first-class lightweight path.
+  Internal-step descriptions shortened (always-loaded context).
+- **`execute-phase` `1.2.0`** — tests-first on core/domain + orchestration
+  phases (SPEC dev scenarios = the test list, red → green); P1 commits planning
+  artifacts separately (fixes them landing untracked on `main`); gate-red
+  protocol (never commit red; unfixable-in-scope → `known-issues.md` + stop);
+  plan-divergence rule (update TASKS/PLAN + `decisions.md`, never silently
+  diverge); reads `progress.md` for continuity; same-session shortcut skips
+  re-reading unchanged planning docs between consecutive phases.
+- **`review-change` `1.1.0`** — SPEC drift check: diff vs. the governing SPEC's
+  scope and acceptance criteria, at every checkpoint (cheaper than catching it
+  at the `audit-pr` gate).
+- **`triage-issue` `1.1.0`** — batch triage (`triage-issue 12 14 17`):
+  independent verdicts, one summary table.
+- **Forge-agnostic.** Template `CLAUDE.md` Workflow conventions declare the
+  **Forge** (GitHub/`gh` | GitLab/`glab` | other); `init-workspace` `1.1.0`
+  detects it from the remote URL and records it. Skills running forge commands
+  (`plan-fix` `1.0.1`, `audit-pr` `1.0.3`, `audit-docs` `1.0.3`, plus the
+  already-bumped `plan-feature-from-issue`, `triage-issue`, `execute-phase`)
+  now say "forge CLI per Workflow conventions" with `gh` as the canonical
+  example — GitHub usage is unchanged.
+- **`review-implementation` `1.0.1`** — description shortened 96 → 36 words
+  (it sits in context every session; the body still owns the axes + rubric).
+- Repo's own feature SPEC template: removed leaked real-project positioning
+  wording.
+
 ## 2026-06-09 — execute-phase /loop pattern documented
 
 - `execute-phase` `1.1.1` → `1.1.2` (patch) — add "Batch execution with `/loop`"

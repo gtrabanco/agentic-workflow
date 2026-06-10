@@ -2,7 +2,13 @@
 
 What happens to an issue from the moment it lands to a defensible, recorded
 decision. The hub skill is `triage-issue`; the spokes route to fix, feature, or
-deferral.
+deferral. Several issues can be triaged in one batch (`triage-issue 12 14 17`) —
+independent verdicts, one summary table; any resulting fix still gets its own
+branch and PR.
+
+> Forge commands below use `gh` (GitHub) — the canonical example. The project's
+> **Workflow conventions** declare its forge; on GitLab/Gitea run the declared
+> CLI's equivalent.
 
 ## Stage 0 — Read the issue and the project
 
@@ -47,7 +53,7 @@ Cite the evidence (paths, counts, line refs) in the decision.
 | Verdict | When | Route |
 |---|---|---|
 | **fix-now** | Defect, or the trigger is met | `plan-fix` → `execute-phase --fix`; add to fix index |
-| **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped SPEC) |
+| **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped, **sized** SPEC; small `XS/S` features go SPEC-only → `execute-phase <NN>` single-pass) |
 | **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment; **don't implement inline** |
 | **wontfix** | Obsolete or explicitly bounded | Propose closing with rationale |
 

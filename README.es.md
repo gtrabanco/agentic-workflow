@@ -51,7 +51,7 @@ pasos que se componen por ti (los tres pasos de planificación del router
 ### Planificación
 | Skill | Qué hace |
 |---|---|
-| `plan-feature` | **Un único punto de entrada para planificar una feature.** Detecta la entrada — una idea en crudo (entrevista), un issue `#N` (issue → SPEC acotado) o un slug/SPEC ya acotado (directo al scaffolding) — enruta al paso correcto y registra la entrada en el roadmap. `--next` planifica el siguiente elemento del roadmap. |
+| `plan-feature` | **Un único punto de entrada para planificar una feature.** Detecta la entrada — una idea en crudo (entrevista), un issue `#N` (issue → SPEC acotado) o un slug/SPEC ya acotado (directo al scaffolding) — enruta al paso correcto y registra la entrada en el roadmap. `--next` planifica el siguiente elemento del roadmap. **Dimensiona cada feature** (`XS/S/M/L`): las pequeñas van por la vía SPEC-only de una pasada — sin ceremonia de artefactos; las M/L llevan el set completo con fase de hardening obligatoria. |
 | `plan-fix` | El equivalente del flujo de fix: como arquitecto redacta un SPEC de fix acotado a partir de un issue, commitea en una rama de fix y **se detiene para revisión**. |
 
 > Solo llamas a `plan-feature`; este compone los pasos internos
@@ -61,7 +61,7 @@ pasos que se componen por ti (los tres pasos de planificación del router
 ### Ejecución
 | Skill | Qué hace |
 |---|---|
-| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña de una pasada, o un fix (`--fix`). Verificada por el gate, un commit por fase; **hace hand-off a `review-change` cada 2 fases** (un checkpoint de revisión, para que corra con su propio modelo/effort). |
+| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña `XS/S` de una pasada, o un fix (`--fix`). **Tests primero** en trabajo de dominio/orquestación, nunca commitea en rojo, verificada por el gate, un commit por fase; **hace hand-off a `review-change` cada 2 fases** (un checkpoint de revisión, para que corra con su propio modelo/effort). |
 
 ### Revisión y auditoría — *cambio → PR → producto*
 | Skill | Alcance | Qué hace |

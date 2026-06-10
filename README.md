@@ -49,7 +49,7 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 ### Plan
 | Skill | What it does |
 |---|---|
-| `plan-feature` | **One entry point to plan a feature.** Detects the input — a raw idea (interview), an issue `#N` (issue → scoped SPEC), or a scoped slug/SPEC (straight to scaffolding) — routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. |
+| `plan-feature` | **One entry point to plan a feature.** Detects the input — a raw idea (interview), an issue `#N` (issue → scoped SPEC), or a scoped slug/SPEC (straight to scaffolding) — routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only, single-pass path — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
 | `plan-fix` | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from an issue, commits on a fix branch, **stops for review**. |
 
 > You only ever call `plan-feature`; it composes the internal steps
@@ -59,7 +59,7 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 ### Execute
 | Skill | What it does |
 |---|---|
-| `execute-phase` | Implements one phase of a feature (default), a small feature in a single pass, or a fix (`--fix`). Gate-verified, one commit per phase; **hands off to `review-change` every 2 phases** (a review checkpoint, so it runs at its own model/effort). |
+| `execute-phase` | Implements one phase of a feature (default), a small `XS/S` feature in a single pass, or a fix (`--fix`). **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **hands off to `review-change` every 2 phases** (a review checkpoint, so it runs at its own model/effort). |
 
 ### Review & audit — *change → PR → product*
 | Skill | Scope | What it does |

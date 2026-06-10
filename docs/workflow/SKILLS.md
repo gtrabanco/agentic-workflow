@@ -16,7 +16,7 @@ findings engine, `review-implementation`).
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `plan-feature` | **Router.** Detects the input — raw idea (interview), issue `#N` (issue → scoped SPEC), or scoped slug/SPEC (scaffold) — routes, then registers the roadmap entry | `execute-phase` |
+| `plan-feature` | **Router.** Detects the input — raw idea (interview), issue `#N` (issue → scoped SPEC), or scoped slug/SPEC (scaffold) — routes, **sizes the feature** (`XS/S/M/L`), then registers the roadmap entry | `execute-phase <NN> P1` (M/L) or `execute-phase <NN>` single-pass (XS/S) |
 | `plan-fix` | Architect-drafts a tightly-scoped fix SPEC from an issue; commits on a fix branch; stops for review | `execute-phase --fix` |
 
 ### Internal steps (hidden from the menu; composed for you)
@@ -25,20 +25,20 @@ findings engine, `review-implementation`).
 |---|---|
 | `plan-feature-interview` | Interactive interview from a raw idea; proactively asks to fill the SPEC (invoked by `plan-feature`) |
 | `plan-feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` (invoked by `plan-feature`) |
-| `plan-feature-scaffold` | Scaffolds SPEC + all planning artifacts; registers in roadmap (docs only) (invoked by `plan-feature`) |
+| `plan-feature-scaffold` | Scaffolds SPEC + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
 | `review-implementation` | Two-phase find → classify → decision table (fix-now / postpone / ignore / intentional-tradeoff); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
 
 ## Execute
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small feature in a single pass, or a fix (`--fix`); branch safety + per-phase doc discipline + gate; **hands off to `review-change` every 2 phases** (review checkpoint) |
+| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **hands off to `review-change` every 2 phases** (review checkpoint) |
 
 ## Review & audit — *change → PR → product*
 
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
-| `review-change` | the **change** | Run only the reviews that apply to this platform + classify → one decision table + manual-verification checklist | `plan-fix` (fix-now) / `triage-issue` (postpone) |
+| `review-change` | the **change** | Run only the reviews that apply to this platform + a **SPEC drift check** (diff vs. the SPEC's scope and acceptance criteria) + classify → one decision table + manual-verification checklist | `plan-fix` (fix-now) / `triage-issue` (postpone) |
 | `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
@@ -52,7 +52,7 @@ findings engine, `review-implementation`).
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code | `plan-fix`, `plan-feature`, or a dated comment |
+| `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code; accepts several issues in one batch | `plan-fix`, `plan-feature`, or a dated comment |
 
 ## Built-in companions (Claude Code)
 
