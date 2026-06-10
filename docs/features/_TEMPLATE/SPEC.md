@@ -112,6 +112,12 @@ High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
 Phase 0 is always planning (produce the seven planning artifacts); the
 final phase is always the PR.
 
+## Deploy & rollback
+
+Only when shipping needs more than merging: schema migrations and their order,
+feature flag (if gradual rollout), config/env changes, and the rollback path
+(revert PR? data cleanup?). State **n/a** explicitly when merging is enough.
+
 ## Open questions / risks
 
 Known unknowns and risks. Promote to `TASKS.md` if they become
