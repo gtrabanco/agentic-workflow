@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.1.2
+version: 1.2.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -21,7 +21,7 @@ description: >
 Three modes:
 
 - **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
-- **single-pass** — a small feature with only a `SPEC.md` (no planning artifacts): implement it end-to-end in one pass.
+- **single-pass** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): implement it end-to-end in one pass.
 - **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`.
 
 ## Hard rules
@@ -30,6 +30,7 @@ Three modes:
 - Implement only the requested scope — one phase (feature mode) or the whole SPEC (single-pass/fix). Never bundle phases unless asked.
 - Stop after the gate passes; keep commits small and reviewable.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
+- **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
 
 ## Forbidden
 
@@ -54,10 +55,20 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 
 **Feature phase (default)** — `docs/features/<NN>-<slug>/`
 
-1. Verify branch (create if on `main`).
-2. Read `SPEC.md` + `TASKS.md` for the requested phase.
+1. Verify branch (create if on `main`). **P1 only:** if the planning artifacts
+   (`docs/features/<NN>-<slug>/`) are still uncommitted, commit them first on the
+   feature branch — `git add docs/features/<NN>-<slug> && git commit -m "docs(<NN>-<slug>): planning artifacts"` —
+   so planning history stays separate from implementation.
+2. Read `progress.md` first (the running log — what prior phases did and left
+   open), then `SPEC.md` + `TASKS.md` for the requested phase. **Same-session
+   shortcut:** if you executed the previous phase in this session and the
+   planning docs haven't changed, don't re-read them — only the new phase's
+   `TASKS.md` section.
 3. Implement only that phase (see *Implementation guidance*).
-4. Run the gate (type-check, tests, build).
+4. Run the gate (type-check, tests, build). **If red:** fix within the phase's
+   scope and re-run — never commit red. If the failure can't be fixed within
+   this phase's scope, record it in `known-issues.md`, leave the work
+   uncommitted, and stop with a clear report.
 5. Update the per-phase docs.
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"` — one commit per phase, conventional format. Run this; don't just describe what should be committed.
 7. **Review checkpoint** — every 2 phases (and before the PR), **stop and hand off** to `/review-change` (see below) before the next phase. Don't run it in this skill's turn.
@@ -85,6 +96,11 @@ If the SPEC declares `Depends on:` other fixes, verify they're merged first; blo
 
 ## Implementation guidance (single-pass & per-phase)
 
+**Tests first where they pay.** For core/domain and orchestration phases, write
+the phase's acceptance/integration tests first (red), then implement to green —
+the SPEC's dev scenarios are the test list, so its failure modes get exercised,
+not just documented. UI and adapter glue may test after implementation.
+
 Map each change to the project's layers per its architecture doc; build inner layers first, outer last:
 
 1. **Persistence/schema** (if any) — update where defined, generate migrations with the project's tooling, never hand-edit generated output.
@@ -93,7 +109,7 @@ Map each change to the project's layers per its architecture doc; build inner la
 4. **Adapters** — implement the project's ports; never leak raw external errors inward.
 5. **Controller/endpoint** — map errors to responses; webhooks: verify signature, enqueue, return fast.
 6. **UI** (if any) — follow the design-system/i18n/accessibility docs; no hardcoded strings.
-7. **Tests** — light mocks of the project's interfaces; test orchestration, not adapters.
+7. **Tests** — whatever wasn't written first (see above): light mocks of the project's interfaces; test orchestration, not adapters.
 
 ## Completion checklist (single-pass)
 
