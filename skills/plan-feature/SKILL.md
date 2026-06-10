@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.0.1
+version: 1.1.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -53,12 +53,14 @@ Pick the mode — first match wins:
 
 ## Process
 
-1. **Route** per above. The interview / from-issue internals produce a **filled
-   SPEC**; then invoke `plan-feature-scaffold` to generate the full artifact set
-   and register the roadmap. The scoped path runs `plan-feature-scaffold` directly.
+1. **Route** per above. The interview / from-issue internals produce a **filled,
+   sized SPEC**; then invoke `plan-feature-scaffold`, which scales the artifacts
+   to the SPEC's size (XS/S → SPEC-only; M/L → full set) and registers the
+   roadmap. The scoped path runs `plan-feature-scaffold` directly.
 2. **Confirm roadmap.** Ensure the feature is in `docs/features/ROADMAP.md` with
    the right number, ordering, and dependencies.
-3. **Print the next step:** `execute-phase <NN> P1`.
+3. **Print the next step:** `execute-phase <NN> P1` (M/L, phased) or
+   `execute-phase <NN>` (XS/S, single-pass).
 
 ## Guardrails
 
