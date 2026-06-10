@@ -1,8 +1,8 @@
 # Portable prompt — install the agentic workflow skill system
 
 Paste the prompt below into Claude Code (or any capable coding agent) **from the
-root of the target repository**. It regenerates the agentic workflow — **10
-user-facing skills + 3 internal planning steps** — **adapted to that project's**
+root of the target repository**. It regenerates the agentic workflow — **9
+user-facing skills + 4 internal steps** — **adapted to that project's**
 architecture, documentation, and conventions, rather than copying this repo's
 specifics verbatim.
 
@@ -36,6 +36,9 @@ Find and read whatever exists; record the real paths and rules:
   to learn the exact artifact set used.
 - The fix system: a fix index (e.g. `docs/fix/README.md`) and fix SPEC template.
 - `.github/ISSUE_TEMPLATE/` and `.github/PULL_REQUEST_TEMPLATE.md`.
+- The **forge** (issue/PR tracker + CLI): detect it from the remote URL
+  (github.com → `gh`, gitlab → `glab`, else ask) and write the skills' forge
+  commands with the detected CLI. The `Closes #N` auto-close convention must hold.
 - Naming conventions, money/i18n/SEO/a11y/security rules, and runtime limits.
 If something doesn't exist, note it; the skills must degrade gracefully and say
 so at runtime rather than assuming a path.
@@ -51,29 +54,40 @@ reference THIS project's real paths/commands/language.
 1. `plan-feature` — the ROUTER and the only planning entry in the menu. Detect the
    input — a raw idea, an issue `#N`, a scoped slug/SPEC, or `--next` (next roadmap
    item) — dispatch to the right internal step below, then ensure the roadmap entry
-   and print the next step (`execute-phase NN P1`).
+   and print the next step: `execute-phase NN P1` (M/L) or `execute-phase NN`
+   single-pass (XS/S).
 2. `plan-fix` — architect-draft a tightly-scoped fix SPEC from an issue, register
    it in the fix index, commit on a fix branch, and STOP for review.
 
 **Internal planning steps** (`user-invocable: false` — invoked only by the router)
 3. `plan-feature-interview` — interactive interview from a raw idea; proactively
    ask (small batched rounds, recommended defaults) to fill every SPEC dimension,
-   including failure-mode dev scenarios; offer to open a tracking issue.
-4. `plan-feature-from-issue` — convert a feature-request issue into a scoped SPEC
-   (confirm it's a feature, not a bug/debt; translate to docs language; map to
-   roadmap; close gaps by asking; wire `Closes #N`).
-5. `plan-feature-scaffold` — scaffold the SPEC + the project's full planning
-   artifact set and register it in the roadmap. Docs only; no code, no branch.
+   including failure-mode dev scenarios and — when the feature has a UI surface —
+   a UI design reference (or flag a design pass); estimate the feature's **size**
+   (`XS/S/M/L`); offer to open a tracking issue.
+4. `plan-feature-from-issue` — convert a feature-request issue into a scoped,
+   **sized** SPEC (confirm it's a feature, not a bug/debt; translate to docs
+   language; map to roadmap; close gaps by asking; wire `Closes #N`).
+5. `plan-feature-scaffold` — scaffold the SPEC + planning artifacts **scaled to
+   the size**: XS/S → SPEC-only (single-pass path, no ceremony); M/L → the full
+   set, whose plan always ends in a **hardening phase** (edge cases + the SPEC's
+   failure modes). Register in the roadmap. Docs only; no code, no branch.
 
 **Execute**
-6. `execute-phase` — implement one phase (default), a small feature in a single
-   pass, or a fix (`--fix`). Branch safety, the project's verification gate,
-   per-phase doc discipline; hand off to `review-change` every 2 phases (a review
+6. `execute-phase` — implement one phase (default), a small `XS/S` feature in a
+   single pass, or a fix (`--fix`). Branch safety; on P1 commit the planning
+   artifacts separately before any code. **Tests-first** on core/domain and
+   orchestration work (the SPEC's dev scenarios are the test list, red → green).
+   The project's verification gate before every commit — **never commit red**
+   (unfixable-in-scope failures → known-issues + stop). When reality contradicts
+   the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
+   doc discipline; hand off to `review-change` every 2 phases (a review
    checkpoint — suggest it rather than composing it, so it runs at its own
    model/effort).
 
 **Review & audit** (change → PR → product)
-7. `review-implementation` — two-phase review of a change. Phase 1 FIND (no
+7. `review-implementation` (`user-invocable: false` — the engine `review-change`
+   composes) — two-phase review of a change. Phase 1 FIND (no
    refactor) across: bugs, architecture violations, removable/dead code (EXCEPT
    code intentionally staged for an in-progress/planned feature — cross-check
    roadmap/SPEC/known-issues), security/cybersecurity, platform/runtime
@@ -84,7 +98,9 @@ reference THIS project's real paths/commands/language.
    Findings only — never refactor.
 8. `review-change` — platform-adaptive orchestrator: run only the reviews that
    apply to this project + change (compose `review-implementation` + the project's
-   companion review skills) and synthesize ONE classified table + an explicit
+   companion review skills), check **SPEC drift** (diff vs. the governing SPEC's
+   scope and acceptance criteria — nothing contradicted, silently exceeded, or
+   left untouched), and synthesize ONE classified table + an explicit
    manual-verification checklist. Findings only.
 9. `audit-pr` — PR-level merge gate: SPEC acceptance met, all phases complete,
    docs updated, `Closes #N`, tests, CI green, branch independently mergeable, and
@@ -99,7 +115,8 @@ reference THIS project's real paths/commands/language.
 12. `triage-issue` — classify an issue (fix-now / promote-to-feature / postpone /
    wontfix). Parse the issue's own "when to fix"/trigger and VERIFY it against the
    current code (grep counts, thresholds, repro). Route, or leave open with a
-   dated re-confirmation comment. Never implement deferred work inline.
+   dated re-confirmation comment. Never implement deferred work inline. Accept
+   several issue numbers in one batch (independent verdicts, one summary table).
 
 Compose with (do not duplicate) the project's own companion review skills
 (`/code-review`, `/security-review`, `/verify`, and any design/a11y/brand/perf/SEO

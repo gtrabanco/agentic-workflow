@@ -41,6 +41,17 @@ Renames are **major** and ship with a migration note — see
   `fable[1m]` is not documented and unnecessary — Fable 5 always runs at 1M.
   Requires Claude Code ≥ v2.1.170.
 
+## 2026-06-09 — batch follow-up: portable prompt + Deploy & rollback
+
+- `docs/workflow/PORTABLE_PROMPT.md` — synced with the quality batch (it
+  regenerates the skills in other projects, so it must describe the current
+  contract): corrected the stale **10+3** count to **9 user-facing + 4
+  internal**; added sizing, UI design reference, hardening phase, tests-first +
+  execution protocols, SPEC drift, batch triage, and forge detection.
+- Feature SPEC template (template/ + repo mirror) — new optional **Deploy &
+  rollback** section (migrations order, feature flag, config changes, rollback
+  path; explicit n/a when merging is enough).
+
 ## 2026-06-09 — quality batch: sizing, tests-first, SPEC drift, forge-agnostic
 
 One coordinated batch from the skills review (token efficiency + product
