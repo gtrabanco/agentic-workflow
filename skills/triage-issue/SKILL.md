@@ -1,8 +1,8 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.0.0
-argument-hint: <issue-number>
+version: 1.1.0
+argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -27,6 +27,10 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 
 - Any issue needing a decision: a freshly filed bug, a `postpone`/`needs-triage`
   item, or a periodic re-confirmation of a deferred tradeoff.
+- **Batch triage** — pass several numbers (`triage-issue 12 14 17`): each issue
+  gets its own independent verdict + evidence, then one summary table at the
+  end. Batching applies to *triage only* — any resulting fix still gets its own
+  branch and PR.
 
 ## Step 0 — Discover the project (always first)
 
