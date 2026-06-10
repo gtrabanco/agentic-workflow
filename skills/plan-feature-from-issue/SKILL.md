@@ -30,7 +30,8 @@ genuine features only.
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the feature SPEC template, the roadmap, and the issue/PR
 templates (`.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md`) so the
-SPEC mirrors the fields reviewers expect. Then read the issue:
+SPEC mirrors the fields reviewers expect. Then read the issue (forge CLI per the
+project's Workflow conventions — examples use `gh`):
 
 ```sh
 gh issue view <N> --json number,title,body,labels,state,comments

@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: <target-dir>
 model: opus
 effort: high
@@ -38,7 +38,8 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
   clobber** — ask whether to merge, adapt in place, or abort.
 - Detect the stack from manifests (`package.json`, `pyproject.toml`, `go.mod`,
   `Cargo.toml`, `Gemfile`, …) to *propose* gate commands and naming conventions.
-- Note the git state (is it a repo, what's the default branch).
+- Note the git state (is it a repo, what's the default branch, and the **remote
+  URL → forge**: github.com → GitHub/`gh`, gitlab → GitLab/`glab`, else ask).
 
 ## Process
 
@@ -53,6 +54,8 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    - **Project** — name + one-line purpose.
    - **Gate** — dev / build / test commands and the verification gate (proposed
      from the detected stack; confirm).
+   - **Forge** — issue/PR tracker + CLI (proposed from the remote URL; confirm)
+     → recorded in the Workflow conventions **Forge** line.
    - **Docs language.**
    - **Architecture** — pattern, layers/modules, and dependency-direction rules
      (stay architecture-agnostic; record the user's choice in `ARCHITECTURE.md`).
