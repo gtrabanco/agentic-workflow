@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -44,7 +44,7 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 
 ## Algorithm
 
-1. **Ingest the issue.** `gh issue view <n> --json title,body,labels,number,author,createdAt,comments`. Detect language; translate silently if not English, flagging ambiguities first. Derive `<topic>` slug from the title (kebab-case, ≤ 40 chars, no leading verb).
+1. **Ingest the issue.** `gh issue view <n> --json title,body,labels,number,author,createdAt,comments` (forge CLI per the project's Workflow conventions — examples here use `gh`; translate to the declared forge's CLI if different). Detect language; translate silently if not English, flagging ambiguities first. Derive `<topic>` slug from the title (kebab-case, ≤ 40 chars, no leading verb).
 2. **Read the docs map.** Read `CLAUDE.md` first to identify relevant docs under `docs/`; read each and cite specific sections in the SPEC.
 3. **Locate the affected code.** Name the layers (domain / use-cases / infrastructure / pages), modules and files (with paths), and the ports / adapters / entities involved.
 4. **Cross-issue analysis.** `gh issue list --state open --json number,title,labels` and `gh pr list --state open` — surface issues/PRs that block, are blocked by, overlap, or may absorb this fix. Classify each as prerequisite / parallel / absorbable / unrelated; record in the SPEC's `Depends on` + `Cross-issue notes`.
