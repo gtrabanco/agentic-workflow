@@ -1,17 +1,15 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.0.0
+version: 1.1.0
 model: opus
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal step of plan-feature. Given a scoped feature (a filled SPEC, a slug, or
-  a clear idea), generate the project's full planning artifact set (SPEC + PLAN +
-  TASKS + progress/testing/known-issues/decisions/architecture-notes) from the
-  template and register it in the roadmap. Docs only — never code. Invoked by the
-  plan-feature router (or directly for an already-scoped slug/SPEC).
+  Internal step of plan-feature: from a scoped SPEC, generate the planning
+  artifact set scaled to the feature's size (XS/S → SPEC-only; M/L → full set
+  with a hardening phase) and register the roadmap entry. Docs only — never code.
 ---
 
 # Plan Feature — Scaffold (internal)
@@ -43,27 +41,34 @@ the agent guide and state the assumption.
    ordering conflicts.
 2. **Fill the SPEC.** Copy the template to `docs/features/<NN>-<slug>/SPEC.md`
    and complete *every* section — goals, architecture impact, acceptance,
-   branch name (`feat/<NN>-<slug>` or per project convention), dependencies,
-   testing, and **dev scenarios** (happy path **and** failure modes:
-   empty/degraded state, races, outages — plus how to reproduce each locally).
-   No unfilled placeholders; record genuinely-unknown values as open questions
-   in `decisions.md`, not blanks.
-3. **Generate the planning artifacts**, mirroring the recent features' set.
-   Typically:
-   - `PLAN.md` — phased plan (P1, P2, …); phases are an *implementation*
-     sequence, not a delivery boundary.
-   - `TASKS.md` — per-phase checklists the executor ticks off.
-   - `progress.md` — running log, one entry per phase.
-   - `testing.md` — what is tested at which layer (prefer integration).
-   - `known-issues.md` — deferred items, each linked to (or destined for) an
-     issue. Do **not** plan to implement deferred work inline.
-   - `decisions.md` — architecture/scope decisions + open questions.
-   - `architecture-notes.md` — layer impact, ports, schema, bindings touched.
+   branch name (`feat/<NN>-<slug>` or per project convention), **size**
+   (`XS/S/M/L` per the template's scale; estimate it if planning didn't),
+   dependencies, testing, and **dev scenarios** (happy path **and** failure
+   modes: empty/degraded state, races, outages — plus how to reproduce each
+   locally). No unfilled placeholders; record genuinely-unknown values as open
+   questions in `decisions.md`, not blanks.
+3. **Scale the artifacts to the size.**
+   - **XS/S** → the SPEC is the only planning artifact. Skip the set below,
+     register the roadmap entry, and hand off to `execute-phase <NN>`
+     (single-pass). Don't generate ceremony the feature doesn't need.
+   - **M/L** → generate the full set, mirroring the recent features':
+     - `PLAN.md` — phased plan (P1, P2, …); phases are an *implementation*
+       sequence, not a delivery boundary. **The last implementation phase is
+       always a hardening phase**: edge cases and the SPEC's dev-scenario
+       failure modes (empty/degraded states, races, outages), implemented and
+       tested — not just documented.
+     - `TASKS.md` — per-phase checklists the executor ticks off.
+     - `progress.md` — running log, one entry per phase.
+     - `testing.md` — what is tested at which layer (prefer integration).
+     - `known-issues.md` — deferred items, each linked to (or destined for) an
+       issue. Do **not** plan to implement deferred work inline.
+     - `decisions.md` — architecture/scope decisions + open questions.
+     - `architecture-notes.md` — layer impact, ports, schema, bindings touched.
 4. **Register in the roadmap** with number, ordering, dependencies.
 5. **Do not branch or code.** That belongs to `execute-phase`; record the branch
    name in the SPEC only.
 6. **Hand off.** Tell the user the artifacts are ready; next step is
-   `execute-phase` for P1.
+   `execute-phase <NN> P1` (M/L) or `execute-phase <NN>` single-pass (XS/S).
 
 ## Guardrails
 
