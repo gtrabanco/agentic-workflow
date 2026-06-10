@@ -29,9 +29,12 @@ invoked for you (they never appear in the menu).
 Restates your idea, then proactively asks — in small batched rounds, each with a
 recommended default — about: problem & goal, scope (and what's OUT), architecture
 impact (layers, ports, use-cases, adapters), data/schema, cross-cutting concerns
-(i18n, SEO, a11y, domain rules, security), **dev scenarios** (happy path *and*
-failure modes), acceptance criteria, dependencies, risks, and non-goals. It only
-asks what the docs don't already answer, and offers to open a tracking issue.
+(i18n, SEO, a11y, domain rules, security), a **UI design reference** when the
+feature has a UI surface (build against a design, or flag a design pass before
+coding), **dev scenarios** (happy path *and* failure modes), acceptance criteria,
+dependencies, risks, non-goals, and a **size estimate** (`XS/S/M/L`) that decides
+how much ceremony follows. It only asks what the docs don't already answer, and
+offers to open a tracking issue.
 
 ### The issue path — `plan-feature-from-issue`
 
@@ -43,12 +46,20 @@ and wires `Closes #N` for the eventual PR.
 ## Stage 1 — Plan: SPEC + artifacts (`plan-feature-scaffold`)
 
 Once the feature is scoped, the router runs `plan-feature-scaffold`, which writes
-**docs only** into `docs/features/<NN>-<slug>/`:
+**docs only** into `docs/features/<NN>-<slug>/`. **The artifact set scales to the
+SPEC's `Size`:**
 
-- `SPEC.md` — every section filled (goals, architecture impact, acceptance,
-  branch, dependencies, testing, dev scenarios).
-- `PLAN.md`, `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md`,
-  `decisions.md`, `architecture-notes.md` — mirroring the set recent features use.
+- **XS/S** (≤ one commit / ≤ half a day) — `SPEC.md` is the **only** planning
+  artifact; no PLAN/TASKS ceremony. Next step: `execute-phase <NN>` (single-pass).
+- **M/L** (phased work) — the full set:
+  - `SPEC.md` — every section filled (goals, architecture impact, acceptance,
+    branch, size, dependencies, testing, dev scenarios).
+  - `PLAN.md` — phased plan whose **last implementation phase is always a
+    hardening phase** (edge cases + the SPEC's dev-scenario failure modes,
+    implemented and tested — not just documented).
+  - `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md`,
+    `decisions.md`, `architecture-notes.md` — mirroring the set recent features use.
+  - **L** also prompts: consider splitting into independently shippable features.
 
 It then **registers the feature in the roadmap** (numbering, ordering,
 dependencies). It does **not** create the branch or write code.
@@ -60,18 +71,29 @@ dependencies). It does **not** create the branch or write code.
 `execute-phase` (default mode) implements **one phase** per run:
 
 1. Verifies the branch — creates `feat/<NN>-<slug>` if you're on `main`
-   (it never works on `main`).
-2. Reads `SPEC.md` + `TASKS.md` for the requested phase.
-3. Implements **only that phase** (no bundling, no premature abstraction, no
-   unrelated refactors).
-4. Runs the project's verification gate (type-check, tests, build).
+   (it never works on `main`). **On P1 it first commits the planning artifacts
+   separately** (`docs(NN-slug): planning artifacts`), so planning history
+   stays apart from implementation.
+2. Reads `progress.md` (what prior phases did), then `SPEC.md` + `TASKS.md`
+   for the requested phase.
+3. Implements **only that phase** — **tests first** on core/domain and
+   orchestration work: the phase's acceptance/integration tests are written
+   red, then implemented to green (the SPEC's dev scenarios are the test
+   list). No bundling, no premature abstraction, no unrelated refactors.
+4. Runs the project's verification gate (type-check, tests, build). **Never
+   commits red** — an unfixable-within-scope failure goes to
+   `known-issues.md` and execution stops with a report.
 5. Updates `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` (and
-   `decisions.md` if architecture moved).
+   `decisions.md` if architecture moved). When reality contradicts the plan,
+   `TASKS.md`/`PLAN.md` are updated and the why recorded in `decisions.md` —
+   never a silent divergence.
 6. Commits in conventional format — one commit per phase.
 7. Stops for review.
 
-Repeat for each phase (P1, P2, …). Small features are handled by `execute-phase`
-in a single pass — no separate skill.
+Repeat for each phase (P1, P2, …). Small features (`Size: XS/S`) are handled by
+`execute-phase <NN>` in a single pass — no separate skill. To run all phases
+unattended (review once at the end instead of every 2 phases), see the
+**batch execution with `/loop`** pattern in the `execute-phase` skill.
 
 During execution, domain knowledge skills auto-load as guardrails: the
 project's stack/domain guardrail skills (architecture pattern, domain rules,
@@ -79,11 +101,12 @@ framework, ORM, runtime/platform).
 
 ## Stage 3 — Hardening
 
-A dedicated pass (run as a phase via `execute-phase`): edge cases, failure
-modes from the SPEC's dev scenarios, empty/degraded states, races, idempotency,
-error mapping, and disclosure rules (e.g. don't hide user-facing
-limitations). Still
-docs-updated and gate-verified like any phase.
+**Always the last implementation phase in `PLAN.md`** (the scaffold puts it
+there for every M/L feature — it is not optional). Run as a phase via
+`execute-phase`: edge cases, failure modes from the SPEC's dev scenarios,
+empty/degraded states, races, idempotency, error mapping, and disclosure rules
+(e.g. don't hide user-facing limitations). Still docs-updated and gate-verified
+like any phase.
 
 ## Stage 4 — Review & audit (whole branch)
 
@@ -91,8 +114,10 @@ docs-updated and gate-verified like any phase.
 the PR, run the final review and the merge gate over the completed branch:
 
 - **`review-change`** — the orchestrator. Runs only the reviews that **apply to
-  this platform** and synthesizes one **classified decision table** plus an
-  explicit manual-verification checklist. It composes:
+  this platform**, checks **SPEC drift** (does the diff actually do what the
+  SPEC promises — nothing contradicted, silently exceeded, or left untouched?),
+  and synthesizes one **classified decision table** plus an explicit
+  manual-verification checklist. It composes:
   - `review-implementation` — two-phase review across bugs, architecture
     violations, removable/dead code (minus planned-feature code), security,
     platform/runtime incompatibilities, overengineering, bundle risks, and tests
