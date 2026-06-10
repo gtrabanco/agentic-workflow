@@ -15,6 +15,15 @@ One paragraph: what this feature delivers and why it exists now.
 
 `feat/<NN>-<feature-slug>`
 
+## Size
+
+`XS | S | M | L` — estimated in planning, drives how much ceremony follows.
+**XS/S** (≤ one commit / ≤ half a day): this SPEC is the only planning artifact —
+implement with `execute-phase <NN>` in a single pass. **M/L** (phased work): the
+full artifact set (`PLAN.md`, `TASKS.md`, …) is generated and execution goes phase
+by phase. **L** additionally: consider splitting into independently shippable
+features.
+
 ## Dependencies
 
 What must be merged or true before this can start. Distinguish hard dependencies

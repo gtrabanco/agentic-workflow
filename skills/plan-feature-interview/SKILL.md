@@ -1,17 +1,14 @@
 ---
 name: plan-feature-interview
 user-invocable: false
-version: 1.0.0
+version: 1.1.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal step of plan-feature. Interactively design a feature from a raw idea —
-  evaluate everything a complete SPEC needs and proactively ask about the gaps,
-  surfacing assumptions, proposing defaults, and flagging conflicts with the
-  project's architecture/docs — then produce a filled SPEC. Invoked by the
-  plan-feature router when the input is a vague idea (or `--interview`).
+  Internal step of plan-feature: interview a raw idea into a filled, sized SPEC,
+  proactively asking only what the project's docs don't already answer.
 ---
 
 # Plan Feature — Interview (internal)
@@ -47,11 +44,18 @@ conventions).
    - **Data** — schema/migrations, source of truth, cache/consistency.
    - **Cross-cutting** — i18n, SEO, a11y, domain rules, security, per the docs
      map. Call out which apply.
+   - **UI reference** (only when the feature has a UI surface) — is there a
+     design to build against (design-system components, mockup, Figma)? If the
+     surface is significant and no reference exists, flag that a design pass
+     should precede implementation rather than letting the code improvise.
    - **Dev scenarios** — happy path **and** failure modes (empty/degraded state,
      races, outages) and how to reproduce each locally.
    - **Acceptance criteria** — objective, verifiable conditions for done.
    - **Dependencies & risks** — other features, external services, unknowns.
    - **Non-goals / future work** — deferred to issues, not built early.
+   - **Size** — estimate `XS / S / M / L` (the SPEC template defines the scale).
+     XS/S → SPEC-only, single-pass execution; M/L → full artifact set, phased.
+     If L, propose splitting into independently shippable features.
 3. **Be proactive, not passive.** Volunteer assumptions and risks the user
    didn't mention; flag conflicts with existing architecture or docs; propose the
    smallest version that delivers the value.
