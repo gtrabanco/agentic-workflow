@@ -47,7 +47,10 @@ Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/am
 
 ## Issue policy
 
-- **`--fix`:** every fix needs a GitHub issue; create with `gh issue create --template fix.yml` if missing, populating the body from the SPEC. Use the returned number for branch and folder.
+Forge operations use the project's declared forge CLI (Workflow conventions —
+examples use `gh`; translate if the project declares another forge).
+
+- **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml` if missing, populating the body from the SPEC. Use the returned number for branch and folder.
 - **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
 - All issues, specs, code, commits, and PRs in English; translate the source first if needed.
 

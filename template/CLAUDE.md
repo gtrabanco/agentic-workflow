@@ -45,6 +45,11 @@ map** above, the **roadmap** (`docs/features/ROADMAP.md`), and the template(s) o
 recent artifacts for the task at hand. Never assume paths or formats; if a doc is
 missing, say so and fall back to these conventions rather than guessing.
 
+**Forge (issue/PR tracker):** `<GitHub (gh) | GitLab (glab) | other CLI>` — the
+CLI the skills use for issues and PRs. Skill examples are written with `gh`; when
+this project declares a different forge, run the equivalent command with its CLI.
+The auto-close convention (`Closes #N` in the PR/MR body) must hold either way.
+
 **Hard rules (always honored).**
 - **Branch & PR:** never work on `main`; one PR per unit against `main`; never
   stack — see [PR & branch workflow](#pr--branch-workflow).

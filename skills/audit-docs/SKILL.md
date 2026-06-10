@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.0.2
+version: 1.0.3
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -60,7 +60,8 @@ say so.
 
 ## Process
 
-1. Discover, then run the checks with `grep`/`gh`/file reads.
+1. Discover, then run the checks with `grep`, file reads, and the forge CLI
+   (per Workflow conventions; examples use `gh`).
 2. Produce a **findings report**: each item with severity (high = misleading or
    broken, low = cosmetic), evidence, and a proposed fix.
 3. **Fix only on request.** With explicit `--fix` (or user go-ahead), apply the

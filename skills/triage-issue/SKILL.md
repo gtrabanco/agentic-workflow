@@ -37,7 +37,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the fix index (e.g. `docs/fix/README.md`) and fix SPEC
 template, and the roadmap. Then read the issue in full, including comments and
-labels:
+labels (forge CLI per the project's Workflow conventions — examples use `gh`):
 
 ```sh
 gh issue view <N> --json number,title,body,labels,state,comments

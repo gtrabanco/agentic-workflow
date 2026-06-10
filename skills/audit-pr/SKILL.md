@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.0.2
+version: 1.0.3
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -47,7 +47,8 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
    **documentation map**, then read what THIS skill needs: the roadmap, the
    feature/fix templates, and the project's verification gate (type-check / tests
    / build / CI).
-2. **The PR.** Identify it and read it in full:
+2. **The PR.** Identify it and read it in full (forge CLI per the project's
+   Workflow conventions — examples use `gh`):
    ```sh
    gh pr view <N> --json number,title,body,baseRefName,headRefName,isDraft,mergeable,mergeStateStatus,files,commits,statusCheckRollup,closingIssuesReferences
    ```
