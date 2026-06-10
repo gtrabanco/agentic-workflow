@@ -32,6 +32,13 @@ Renames are **major** and ship with a migration note — see
 - `audit-pr` `1.0.1` → `1.0.2` — same reason.
 - `product-audit` `1.0.2` → `1.0.3` — same reason.
 
+## 2026-06-09 — execute-phase /loop pattern documented
+
+- `execute-phase` `1.1.1` → `1.1.2` (patch) — add "Batch execution with `/loop`"
+  section: goal-based invocation pattern that runs all phases unattended and
+  terminates naturally when `TASKS.md` is fully checked; notes that review
+  checkpoints are skipped and `/review-change` should be run once at the end.
+
 ## 2026-06-05 — execute-phase explicit commits + allowed-tools
 
 - `execute-phase` `1.1.0` → `1.1.1` (patch) — two fixes for the "skill doesn't

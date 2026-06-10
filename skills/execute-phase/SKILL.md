@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.1.1
+version: 1.1.2
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -126,6 +126,26 @@ This never auto-merges and never skips the per-phase stop: still one phase at a
 time, human in the loop, gate enforced each phase. Single-pass and `--fix` modes
 are reviewed once at the end the same way — hand off to `/review-change` — as they
 have no intermediate phases.
+
+## Batch execution with `/loop`
+
+To run all phases without manual re-invocation, use Claude Code's self-paced
+`/loop` with a goal rather than a direct command (the skill requires a phase
+argument, so `/loop /execute-phase NN` alone won't advance automatically):
+
+```
+/loop implement all phases of feature NN one by one using /execute-phase,
+commit each phase, and stop when TASKS.md shows all phases checked
+```
+
+The loop reads `TASKS.md` to pick the next uncompleted phase, implements it,
+and terminates naturally when nothing remains — no explicit stop condition
+needed. **Review-change checkpoints are skipped in this mode; run
+`/review-change` once at the end** before opening the PR.
+
+Use this when the SPEC is solid and you want to review the whole branch at once
+rather than after every two phases. For incremental, phase-by-phase review,
+stick to the default (manual re-invocation + checkpoint hand-offs).
 
 ## Relationship to other skills
 
