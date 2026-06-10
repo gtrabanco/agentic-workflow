@@ -1,9 +1,9 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.0.3
+version: 1.1.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
-model: opus[1m]
+model: fable
 effort: max
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
