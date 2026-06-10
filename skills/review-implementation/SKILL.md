@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.0.0
+version: 1.0.1
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -9,15 +9,10 @@ allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal findings engine for review-change and the audit skills (not a menu
-  entry). Two-phase review of a change that ends in a CLASSIFIED decision table —
-  not a bug list: Phase 1 finds issues across bugs, architecture, removable/dead
-  code, security, platform/runtime, overengineering & premature optimization,
-  bundle-size, and tests (failing AND missing); Phase 2 classifies each as fix-now
-  / postpone / ignore / intentional-tradeoff with reasoning. Owns the review axes
-  and the classification rubric the orchestrators compose. Never refactors —
-  findings only. Invoked by review-change; run it directly only for a raw
-  classified pass.
+  Internal findings engine composed by review-change (and reused by the audit
+  skills): two-phase find → classify pass ending in a classified decision table
+  (fix-now / postpone / ignore / intentional-tradeoff). Findings only — never
+  refactors.
 ---
 
 # Review Implementation (internal engine)
