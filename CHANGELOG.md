@@ -24,6 +24,46 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-10 — ship-roadmap 1.0.0: the autopilot
+
+- **New user-facing skill `ship-roadmap` `1.0.0`** (the set becomes **14 skills —
+  10 user-facing + 4 internal**). End-to-end autopilot designed for `/loop`:
+  - **One upfront interview** (6 rounds: product/scale/lifespan; features —
+    elicits them and builds the complete roadmap if absent; stack and
+    architecture — used if decided, else recommended *proportionally to the
+    interviewed scale*, never defaulting to a named pattern; quality bars; ops;
+    forge + autonomy + budget), then **no further questions for the entire run**.
+  - **Conductor architecture** (`opus`/`high`): composes `init-workspace`
+    (founding, answers pre-fed), `plan-feature` (JIT planning), `review-change`,
+    `audit-pr`, and `audit-docs` in-turn — all ≤ its tier per the composition
+    rule — and delegates implementation to **one `sonnet` subagent per phase**
+    following `execute-phase`'s SKILL.md. `product-audit` (fable/max) is never
+    composed — hand-off only.
+  - **Merge policy:** default = human merges (the run continues with
+    dependency-free features and stops with an unblock map when everything
+    waits on merges); `--fullauto` is dual-keyed (flag + committed decision
+    record) with fail-closed safety floors (never merge red, verdict bound to
+    head SHA, sensitive-area + destructive-operation pauses, no protection
+    bypass, first greenfield PR always human-merged).
+  - **State:** committed `docs/features/SHIP_DECISIONS.md` (run policy, survives
+    machines/crashes) + untracked `.ship-run.log` (iteration log). Iterations
+    are stateless-by-reconstruction and idempotent after a terminal banner.
+  - **Risk-proportional review cadence** (one review per branch for XS/S and
+    non-sensitive M; per-2-phase checkpoints for L/sensitive), capacity guard,
+    review/audit ping-pong caps, systemic stop on two consecutive SPEC drifts.
+  - **Final report:** per-feature outcomes, issues to open (each with the
+    trigger that should reopen it → feeds batch `triage-issue`), discovered
+    feature proposals sized against the stated product goal, residual risks,
+    manual-verification checklist, and the project's `product-audit` cadence.
+  - Designed by a 3-lens design panel (cost / risk / simplicity) scored by 3
+    independent judges; the simplicity architecture won with ~25 grafts from
+    the other two.
+- Registration sweep: READMEs (EN/ES) incl. a new Autopilot section,
+  `SKILLS.md`, `REPLICATE.md`, `MIGRATION.md` verification block,
+  `PORTABLE_PROMPT.md` (item 13), workflow `README.md` map, `FEATURE_WORKFLOW.md`
+  pointer; counts 13 → 14 everywhere. Fixed the stale `product-audit` model
+  row in both READMEs (Opus → Fable, from the 1.1.0 upgrade).
+
 ## 2026-06-05 — revert context: fork (output suppressed in CLI)
 
 - `audit-docs` `1.0.1` → `1.0.2` — remove `context: fork`: the CLI suppresses

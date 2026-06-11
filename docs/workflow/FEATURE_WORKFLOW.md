@@ -95,6 +95,11 @@ Repeat for each phase (P1, P2, …). Small features (`Size: XS/S`) are handled b
 unattended (review once at the end instead of every 2 phases), see the
 **batch execution with `/loop`** pattern in the `execute-phase` skill.
 
+> Want the **whole roadmap** built this way — every feature through every stage,
+> with you only at the merges? That's the `ship-roadmap` autopilot: one upfront
+> interview, then a `/loop`-driven run of this exact flow, feature by feature,
+> ending in a final report. See its entry in [SKILLS.md](SKILLS.md).
+
 During execution, domain knowledge skills auto-load as guardrails: the
 project's stack/domain guardrail skills (architecture pattern, domain rules,
 framework, ORM, runtime/platform).

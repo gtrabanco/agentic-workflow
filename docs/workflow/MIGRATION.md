@@ -11,7 +11,7 @@ remove those three yourself.
 ## TL;DR
 
 ```sh
-# 1. Re-add: updates the 6 kept skills in place and installs the 7 new ones.
+# 1. Re-add: updates the 6 kept skills in place and installs the 8 new ones.
 npx skills add gtrabanco/agentic-workflow
 #   Private repo? Use the SSH URL (the shorthand can fail under bunx):
 #   npx skills add git@github.com:gtrabanco/agentic-workflow.git
@@ -28,9 +28,11 @@ and `--agent <name>` (to target a specific agent).
 
 ## What changed
 
-The 9 user-facing skills became **13** (9 user-facing + 4 internal). Nothing was
-lost — three planning entry points **collapsed into one router**, one skill was
-**renamed for symmetry**, and four **new** quality/automation skills were added.
+The 9 user-facing skills became **13** at that upgrade (9 user-facing + 4
+internal) — **14 today**, with the later addition of the `ship-roadmap`
+autopilot (10 user-facing + 4 internal). Nothing was lost — three planning
+entry points **collapsed into one router**, one skill was **renamed for
+symmetry**, and four **new** quality/automation skills were added.
 
 | Status | Skill | Action on upgrade |
 |---|---|---|
@@ -79,14 +81,14 @@ rm -rf .claude/skills/design-feature \
 
 ## Verify the result
 
-After upgrading you should see **13 skills** (9 in the `/` menu + 4 internal), and
+After upgrading you should see **14 skills** (10 in the `/` menu + 4 internal), and
 **none** of the three removed names:
 
 ```sh
 npx skills list
 # expect: init-workspace, plan-feature, plan-fix, execute-phase,
 #         review-change, audit-pr, audit-docs,
-#         product-audit, triage-issue
+#         product-audit, triage-issue, ship-roadmap
 #         (+ the 4 internal steps: 3 plan-feature-* + review-implementation)
 # expect: NO design-feature, draft-fix-spec, feature-from-issue
 ```
