@@ -1,8 +1,9 @@
 # Portable prompt — install the agentic workflow skill system
 
 Paste the prompt below into Claude Code (or any capable coding agent) **from the
-root of the target repository**. It regenerates the agentic workflow — **9
-user-facing skills + 4 internal steps** — **adapted to that project's**
+root of the target repository**. It regenerates the agentic workflow — **10
+user-facing skills + 4 internal steps** (minus `init-workspace`, which this
+prompt itself replaces as the bootstrap) — **adapted to that project's**
 architecture, documentation, and conventions, rather than copying this repo's
 specifics verbatim.
 
@@ -117,6 +118,24 @@ reference THIS project's real paths/commands/language.
    current code (grep counts, thresholds, repro). Route, or leave open with a
    dated re-confirmation comment. Never implement deferred work inline. Accept
    several issue numbers in one batch (independent verdicts, one summary table).
+
+**Autopilot**
+13. `ship-roadmap` — end-to-end conductor driven by /loop. ONE upfront interview
+   (product/scale/lifespan; features — elicit and build the complete roadmap if
+   absent; stack — use or recommend; architecture — use or recommend PROPORTIONAL
+   to the app, never defaulting to a named pattern; quality bars; ops; forge;
+   autonomy and budget), then founds the substrate if missing, writes the
+   roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
+   cheap-tier subagent per phase following execute-phase) → review (compose
+   review-change) → PR → merge gate (compose audit-pr) → next feature. Default:
+   opens PRs, the human merges; --fullauto merges MERGE-READY PRs under
+   non-negotiable, fail-closed safety floors (never red, fresh verdict SHA,
+   sensitive-area and destructive-change pauses, no protection bypass). Run
+   policy lives in a committed decision record; an untracked run log carries
+   iteration state. Ends with a final report: per-feature outcomes, issues to
+   open (with reopening triggers), discovered feature proposals, manual
+   verification checklist, product-audit cadence. The conductor's tier must be
+   >= every skill it composes; the product-audit skill is always a hand-off.
 
 Compose with (do not duplicate) the project's own companion review skills
 (`/code-review`, `/security-review`, `/verify`, and any design/a11y/brand/perf/SEO

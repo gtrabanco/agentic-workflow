@@ -21,7 +21,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 13 skills (9 de cara al usuario + 4 internas) — la fuente instalable
+skills/                  las 14 skills (10 de cara al usuario + 4 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -38,7 +38,7 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**9 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
+**10 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
 pasos que se componen por ti (los tres pasos de planificación del router
 `plan-feature` + el motor de `review-change`). Un único camino disciplinado:
 **plan → execute → review → audit → merge.**
@@ -81,6 +81,11 @@ pasos que se componen por ti (los tres pasos de planificación del router
 |---|---|
 | `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código** |
 
+### Autopilot — el flujo completo, de punta a punta
+| Skill | Qué hace |
+|---|---|
+| `ship-roadmap` | **Construye la app entera desde el roadmap.** Una entrevista inicial (producto, features, stack, arquitectura — recomendada *proporcionalmente*, nunca por defecto a un patrón con nombre —, calidad, ops, autonomía, presupuesto), funda el proyecto si hace falta, crea o adopta el roadmap completo, y un bucle con `/loop` lo entrega feature a feature a través de las skills de arriba — **sin más preguntas**. Por defecto: abre PRs y tú fusionas; `--fullauto` fusiona los PRs MERGE-READY bajo suelos de seguridad innegociables. Termina con un informe final: issues a abrir, propuestas de features descubiertas, checks manuales, cadencia de product-audit. |
+
 Las skills complementarias para UI/UX y calidad específica del lenguaje (diseño,
 ux, tipado…) **no van incluidas** — `review-change` y `product-audit` las componen
 cuando están instaladas, e `init-workspace` sugiere las adecuadas según la
@@ -113,9 +118,10 @@ sesión).
 | `execute-phase` | Sonnet | medio | implementación mecánica según el SPEC — una fase o de una pasada (Opus si la lógica es sutil) |
 | `review-change` | Opus | alto | orquestación de revisión adaptativa a la plataforma + síntesis |
 | `audit-pr` | Opus | alto | juicio de aptitud de fusión de todo el PR |
-| `product-audit` | Opus | máx | barrido multi-eje de todo el producto + propuestas |
+| `product-audit` | Fable | máx | barrido multi-eje de todo el producto + propuestas (contexto 1M nativo) |
 | `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
 | `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
+| `ship-roadmap` | Opus | alto | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
 
 > Los 4 pasos internos no se seleccionan directamente. Como se componen **dentro del
 > turno del caller**, heredan su modelo/effort (el `model`/`effort` de una skill se
@@ -165,6 +171,15 @@ Ver **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 ```
 Ver **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY.md)**.
 
+### Construir la app entera (autopilot)
+```
+/ship-roadmap                   # UNA entrevista (producto, features, stack, arquitectura, autonomía, presupuesto)
+        → funda el proyecto si hace falta, escribe el roadmap completo, fija la política del run
+/loop /ship-roadmap --continue  # el bucle entrega el roadmap feature a feature (añade --fullauto para auto-fusionar)
+        → plan → execute → review → PR → audit → (tu merge) → siguiente feature → … → informe final
+```
+Solo reapareces en los merges (por defecto) y en el informe final.
+
 ## Principios fundamentales
 
 1. **Las docs dirigen el trabajo** — cada skill lee primero la guía del proyecto,
@@ -185,7 +200,7 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 [más de 70](https://skills.sh)).
 
 ```sh
-# Desde la raíz del repositorio DESTINO — instala las 13 skills:
+# Desde la raíz del repositorio DESTINO — instala las 14 skills:
 npx skills add gtrabanco/agentic-workflow
 
 # Elige skills concretas, o un agente concreto:

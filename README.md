@@ -20,7 +20,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 13 skills (9 user-facing + 4 internal) — the installable source
+skills/                  the 14 skills (10 user-facing + 4 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -37,7 +37,7 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**9 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+**10 user-facing skills** (one menu entry each) + **4 internal** steps composed for
 you (the `plan-feature` router's three planning steps + the `review-change`
 engine). One disciplined path: **plan → execute → review → audit → merge.**
 
@@ -78,6 +78,11 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 |---|---|
 | `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
 
+### Autopilot — the whole flow, end to end
+| Skill | What it does |
+|---|---|
+| `ship-roadmap` | **Builds the whole app from the roadmap.** One upfront interview (product, features, stack, architecture — recommended *proportionally*, never defaulting to a named pattern — quality bars, ops, autonomy, budget), founds the project if needed, creates or adopts the complete roadmap, then a `/loop`-driven build loop ships it feature by feature through the skills above — **with no further questions**. Default: opens PRs, you merge; `--fullauto` merges MERGE-READY PRs under non-negotiable safety floors. Ends with a final report: issues to open, discovered feature proposals, manual checks, product-audit cadence. |
+
 Companion skills for UI/UX and language-specific quality (design, ux, typing…) are
 **not bundled** — `review-change` and `product-audit` compose them when installed,
 and `init-workspace` suggests the right ones per platform. See
@@ -108,9 +113,10 @@ your session).
 | `execute-phase` | Sonnet | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle) |
 | `review-change` | Opus | high | platform-adaptive review orchestration + synthesis |
 | `audit-pr` | Opus | high | whole-PR merge-readiness judgement |
-| `product-audit` | Opus | max | product-wide multi-axis sweep + proposals |
+| `product-audit` | Fable | max | product-wide multi-axis sweep + proposals (native 1M context) |
 | `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
 | `triage-issue` | Opus | high | verify triggers against the code; judgement call |
+| `ship-roadmap` | Opus | high | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
 > The 4 internal steps aren't selected directly. Because they're composed **within
 > a caller's turn**, they inherit that turn's model/effort (a skill's `model`/`effort`
@@ -160,6 +166,15 @@ See **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 ```
 See **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY.md)**.
 
+### Build the whole app (autopilot)
+```
+/ship-roadmap                   # ONE interview (product, features, stack, architecture, autonomy, budget)
+        → founds the project if needed, writes the complete roadmap, locks the run policy
+/loop /ship-roadmap --continue  # the loop ships the roadmap feature by feature (add --fullauto to auto-merge)
+        → plan → execute → review → PR → audit → (your merge) → next feature → … → final report
+```
+You only reappear at the merges (default) and at the final report.
+
 ## Core principles
 
 1. **Docs drive the work** — every skill reads the project's guide, doc map,
@@ -178,7 +193,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ more](https://skills.sh)).
 
 ```sh
-# From the root of the TARGET repository — install all 13 skills:
+# From the root of the TARGET repository — install all 14 skills:
 npx skills add gtrabanco/agentic-workflow
 
 # Pick specific skills, or target a specific agent:
