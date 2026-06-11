@@ -2,7 +2,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**9 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+**10 user-facing skills** (one menu entry each) + **4 internal** steps composed for
 you (the `plan-feature` router's three planning steps + the `review-change`
 findings engine, `review-implementation`).
 
@@ -54,6 +54,12 @@ findings engine, `review-implementation`).
 |---|---|---|
 | `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code; accepts several issues in one batch | `plan-fix`, `plan-feature`, or a dated comment |
 
+## Autopilot — the whole flow, end to end
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `ship-roadmap` | **Conductor.** One upfront interview (product, features, stack, architecture, quality, ops, autonomy, budget) → founds the project if needed → creates or adopts the complete roadmap → a `/loop`-driven loop ships it feature by feature: composes `plan-feature`, `review-change`, `audit-pr` in-turn (equal tier), delegates each `execute-phase` phase to a Sonnet subagent. Default: opens PRs, human merges; `--fullauto` merges under non-negotiable safety floors. Ends in a final report | human merges / `triage-issue` batch / `product-audit` (always a hand-off — its tier exceeds the conductor's) |
+
 ## Built-in companions (Claude Code)
 
 `/code-review` (correctness + simplification), `/security-review` (security pass),
@@ -87,6 +93,11 @@ review-change ── runs the applicable reviews + classifies a change (Stage 4)
 audit-pr ─────── PR-level merge gate (merge-ready or blockers)
 product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
+
+ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
+                 roadmap → /loop { plan-feature → execute-phase (sonnet subagents)
+                 → review-change → PR → audit-pr → merge } → final report;
+                 human at the merges (default) and at product-audit (always)
 ```
 
 ## Design rules every skill follows
