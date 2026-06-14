@@ -237,7 +237,7 @@ three consecutive partials on the same stage parks the feature as blocked.
 | Merge gate | opus/high | compose `audit-pr` in-turn (the highest-stakes automated verdict; must share one turn with the floor checks) |
 | Forge/git mechanics | — | Bash tool calls; no model judgment involved |
 | Final-report evidence gathering | haiku (optional) | fan-out subagents for grep-shaped per-feature log collection when ultracode is on; synthesis stays opus |
-| `product-audit` | fable/max | **never composed, never imitated by a subagent** — its tier exceeds the conductor's and a subagent override cannot carry `effort: max`. Hand-off only: the report prescribes when to run it. |
+| `product-audit` | opus/max | **never composed, never imitated by a subagent** — its effort (max) exceeds the conductor's (high) and a subagent override cannot carry `effort: max`. Hand-off only: the report prescribes when to run it. |
 
 ### Merge policy
 
@@ -354,8 +354,8 @@ never a correctness risk.
 - **Spawns as sonnet subagents:** `execute-phase` discipline — phases,
   XS/S single passes, fix-now folding, audit-blocker fixes.
 - **Hands off to the human:** every merge in default mode; `product-audit`
-  always (fable/max exceeds the conductor — composing it would under-power it,
-  the exact regression the ≥ rule exists to prevent); `triage-issue` for the
+  always (its effort max exceeds the conductor's high — composing it would
+  under-power it, the exact regression the ≥ rule exists to prevent); `triage-issue` for the
   report's issue batch.
 - The manual flow (`plan-feature` → `execute-phase` → `review-change` →
   `audit-pr`, feature by feature) remains the default way of working —

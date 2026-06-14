@@ -113,7 +113,7 @@ your session).
 | `execute-phase` | Sonnet | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle) |
 | `review-change` | Opus | high | platform-adaptive review orchestration + synthesis |
 | `audit-pr` | Opus | high | whole-PR merge-readiness judgement |
-| `product-audit` | Fable | max | product-wide multi-axis sweep + proposals (native 1M context) |
+| `product-audit` | Opus | max | product-wide multi-axis sweep + proposals (max effort for the widest context sweep) |
 | `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
 | `triage-issue` | Opus | high | verify triggers against the code; judgement call |
 | `ship-roadmap` | Opus | high | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
