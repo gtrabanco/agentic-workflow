@@ -24,6 +24,14 @@ Renames are **major** and ship with a migration note — see
 
 ---
 
+## 2026-06-14 — product-audit 1.2.0: fable → opus (model unavailable)
+
+- `product-audit` `1.1.0` → `1.2.0` (minor) — `model: fable` → `model: opus`.
+  Fable is no longer available; Opus at `effort: max` is the equivalent sweep
+  tier. The hand-off rule in `ship-roadmap` / `SKILLS.md` updated: the reason
+  is now effort mismatch (max > high) rather than model mismatch.
+  Both READMEs updated (model column Fable → Opus).
+
 ## 2026-06-10 — ship-roadmap 1.0.0: the autopilot
 
 - **New user-facing skill `ship-roadmap` `1.0.0`** (the set becomes **14 skills —

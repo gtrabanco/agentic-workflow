@@ -118,7 +118,7 @@ sesión).
 | `execute-phase` | Sonnet | medio | implementación mecánica según el SPEC — una fase o de una pasada (Opus si la lógica es sutil) |
 | `review-change` | Opus | alto | orquestación de revisión adaptativa a la plataforma + síntesis |
 | `audit-pr` | Opus | alto | juicio de aptitud de fusión de todo el PR |
-| `product-audit` | Fable | máx | barrido multi-eje de todo el producto + propuestas (contexto 1M nativo) |
+| `product-audit` | Opus | máx | barrido multi-eje de todo el producto + propuestas (effort máx para el barrido más amplio) |
 | `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
 | `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
 | `ship-roadmap` | Opus | alto | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
