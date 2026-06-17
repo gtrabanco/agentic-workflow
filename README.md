@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="Agentic Workflow logo" width="120" height="120">
+</p>
+
 # Agentic Workflow Skills
 
 > 🇪🇸 [Versión en español](README.es.md)
@@ -82,6 +86,22 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 | Skill | What it does |
 |---|---|
 | `ship-roadmap` | **Builds the whole app from the roadmap.** One upfront interview (product, features, stack, architecture — recommended *proportionally*, never defaulting to a named pattern — quality bars, ops, autonomy, budget), founds the project if needed, creates or adopts the complete roadmap, then a `/loop`-driven build loop ships it feature by feature through the skills above — **with no further questions**. Default: opens PRs, you merge; `--fullauto` merges MERGE-READY PRs under non-negotiable safety floors. Ends with a final report: issues to open, discovered feature proposals, manual checks, product-audit cadence. |
+
+How the autopilot runs the workflow — one interview in, reviewed PRs out, and
+you only step in to merge (amber):
+
+```mermaid
+flowchart LR
+    I([Interview]):::you --> RM[Roadmap] --> P[Plan]
+    P --> X[Execute] --> RV[Review] --> PR[Open PR] --> A[Audit] --> M([Merge]):::you
+    M -->|next feature| P
+    M -.->|roadmap done| REP[Final report]
+    classDef you fill:#f6c177,stroke:#8a5a00,color:#3a2406;
+```
+
+The same `plan → execute → review → audit → merge` path you'd run by hand — the
+autopilot just moves you to its edges. Under `--fullauto`, `ship-roadmap` also
+handles the merges, under non-negotiable safety floors.
 
 Companion skills for UI/UX and language-specific quality (design, ux, typing…) are
 **not bundled** — `review-change` and `product-audit` compose them when installed,

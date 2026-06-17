@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/logo.svg" alt="Logo de Agentic Workflow" width="120" height="120">
+</p>
+
 # Agentic Workflow Skills
 
 > 🇬🇧 [English version](README.md)
@@ -85,6 +89,23 @@ pasos que se componen por ti (los tres pasos de planificación del router
 | Skill | Qué hace |
 |---|---|
 | `ship-roadmap` | **Construye la app entera desde el roadmap.** Una entrevista inicial (producto, features, stack, arquitectura — recomendada *proporcionalmente*, nunca por defecto a un patrón con nombre —, calidad, ops, autonomía, presupuesto), funda el proyecto si hace falta, crea o adopta el roadmap completo, y un bucle con `/loop` lo entrega feature a feature a través de las skills de arriba — **sin más preguntas**. Por defecto: abre PRs y tú fusionas; `--fullauto` fusiona los PRs MERGE-READY bajo suelos de seguridad innegociables. Termina con un informe final: issues a abrir, propuestas de features descubiertas, checks manuales, cadencia de product-audit. |
+
+Cómo el autopilot ejecuta el flujo — una entrevista al entrar, PRs revisadas al
+salir, y tú solo apareces para fusionar (ámbar):
+
+```mermaid
+flowchart LR
+    I([Entrevista]):::tu --> RM[Roadmap] --> P[Planificar]
+    P --> X[Ejecutar] --> RV[Revisar] --> PR[Abrir PR] --> A[Auditar] --> M([Fusionar]):::tu
+    M -->|siguiente feature| P
+    M -.->|roadmap completo| REP[Informe final]
+    classDef tu fill:#f6c177,stroke:#8a5a00,color:#3a2406;
+```
+
+Es el mismo camino `planificar → ejecutar → revisar → auditar → fusionar` que
+harías a mano — el autopilot solo te mueve a sus extremos. Con `--fullauto`,
+`ship-roadmap` también se encarga de los merges, bajo suelos de seguridad
+innegociables.
 
 Las skills complementarias para UI/UX y calidad específica del lenguaje (diseño,
 ux, tipado…) **no van incluidas** — `review-change` y `product-audit` las componen
