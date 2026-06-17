@@ -229,6 +229,13 @@ architecture skills worth having (e.g. `karpathy-guidelines`, `code-review`,
 crucially — which ones to **skip** for a given project (e.g. design skills for a
 terminal program, `claude-api` with no LLM features).
 
+## Projects built with this workflow
+
+| Project | Notes |
+|---|---|
+| [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the `ship-roadmap` autopilot |
+| [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Started with vibecoding, migrated to the workflow once it was working |
+
 ## License
 
 MIT © [Gabriel Trabanco](https://github.com/gtrabanco) — see [LICENSE](LICENSE).

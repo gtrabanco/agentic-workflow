@@ -237,6 +237,13 @@ detalles y la guía de "qué método cuándo" están en
 skills de diseño para un programa de terminal, `claude-api` si no hay features
 con LLM).
 
+## Proyectos construidos con este workflow
+
+| Proyecto | Notas |
+|---|---|
+| [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | CLI json2csv — construido de punta a punta con el autopilot `ship-roadmap` |
+| [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Empezado con vibecoding, migrado al workflow cuando ya funcionaba |
+
 ## Licencia
 
 MIT © [Gabriel Trabanco](https://github.com/gtrabanco) — ver [LICENSE](LICENSE).
