@@ -55,6 +55,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Histórico de versiones por skill
 
+### Mantenimiento del repo
+
+#### `bump-skill`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-06-19 | — | Nueva skill de mantenimiento del repo. Tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md |
+
 ### De cara al usuario
 
 #### `ship-roadmap`
@@ -155,6 +162,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-06-19 — `bump-skill` 1.0.0.** Nueva skill de mantenimiento del repo: tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza README.md + README.es.md. Eliminado `docs/features/ROADMAP.md` huérfano (contenido ficticio de e-commerce, vocabulario antiguo).
 - **2026-06-19 — política de workflow.** Una unidad nunca acaba solo-en-rama y nada
   no-fix-now se pierde en silencio: las unidades terminadas **siempre abren el PR** y
   pasan a **`done` al abrir PR** (construida, no mergeada — el estado de merge vive en

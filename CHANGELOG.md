@@ -53,6 +53,13 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Per-skill version history
 
+### Repo maintenance
+
+#### `bump-skill`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-06-19 | — | New repo-maintenance skill. After editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skills and model tables in README.md + README.es.md |
+
 ### User-facing
 
 #### `ship-roadmap`
@@ -153,6 +160,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-06-19 — `bump-skill` 1.0.0.** New repo-maintenance skill: after editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates README.md + README.es.md. Deleted orphaned `docs/features/ROADMAP.md` (fictional e-commerce content, old vocabulary).
 - **2026-06-19 — workflow policy.** A unit never ends branch-only and nothing
   non-fix-now is silently lost: finished units **always open the PR** and flip to
   **`done` at PR-open** (built, not merged — merge state lives in the forge);
