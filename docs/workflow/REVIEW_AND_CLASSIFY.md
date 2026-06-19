@@ -60,16 +60,23 @@ Classes: **fix-now / postpone / ignore / intentional-tradeoff**.
 
 ## What you do with the output
 
+`review-change` is **mandatory before every merge** (every unit gets it), and it
+runs **every non-fix-now finding through `triage-issue`** so each has a real
+destination — never silently lost:
+
 - **fix-now** → `plan-fix` → `execute-phase --fix` (or fold into the
   current feature phase if it's unmerged work).
-- **postpone** → open a tracked issue **with a trigger**; `triage-issue` owns it
-  thereafter. Do **not** implement inline.
-- **intentional-tradeoff** → document it (code comment, `decisions.md`, or an
-  issue) so it isn't re-flagged next review.
-- **ignore** → note the rationale; no action.
+- **postpone** → `triage-issue` → tracked issue **with a trigger**. Do **not**
+  implement inline.
+- **intentional-tradeoff** → `triage-issue` → document it (code comment,
+  `decisions.md`, or an issue) so it isn't re-flagged next review.
+- **ignore** → `triage-issue` → note the rationale (or confirm it needs nothing).
+
+Then it prints the next step (clean → `/audit-pr`).
 
 ## Where it sits
 
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
 `/verify`. It adds the **classification + project-aware axes** those don't, in
-one pass. Routes into `plan-fix` (fix-now) and `triage-issue` (postpone).
+one pass. Routes `fix-now` into `plan-fix`, and **every non-fix-now finding**
+(postpone / ignore / intentional-tradeoff) into `triage-issue`.

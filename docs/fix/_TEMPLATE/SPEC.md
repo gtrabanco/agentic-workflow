@@ -61,6 +61,6 @@ single command or PR-revert flow, plus any data-side cleanup.
 
 ## Status
 
-`pending` · `in-progress` · `in-review`
+`pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)
 
-(Removed from `docs/fix/README.md` on merge.)
+(Removed from `docs/fix/README.md` only **after** the PR merges.)

@@ -32,13 +32,13 @@ findings engine, `review-implementation`).
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **hands off to `review-change` every 2 phases** (review checkpoint) |
+| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **hands off to `review-change` every 2 phases and once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
 
 ## Review & audit — *change → PR → product*
 
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
-| `review-change` | the **change** | Run only the reviews that apply to this platform + a **SPEC drift check** (diff vs. the SPEC's scope and acceptance criteria) + classify → one decision table + manual-verification checklist | `plan-fix` (fix-now) / `triage-issue` (postpone) |
+| `review-change` | the **change** | Run only the reviews that apply to this platform + a **SPEC drift check** (diff vs. the SPEC's scope and acceptance criteria) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | `plan-fix` (fix-now) / `triage-issue` (every non-fix-now: postpone / ignore / intentional-tradeoff) |
 | `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
@@ -78,18 +78,18 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
 ```
                    ┌──────────────── plan-feature (router) ────────────────┐
 IDEA ──────────────┤  --interview → plan-feature-interview                 │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue          ├─▶ execute-phase ─▶ review-change ─▶ audit-pr ─▶ PR
-SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (hand off /review-change every 2 phases)
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue          ├─▶ execute-phase ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (review-change every 2 phases + mandatory at the end; PR opens at execute's last step)
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step    │
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ review-change ─▶ audit-pr ─▶ PR
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-review-change ── runs the applicable reviews + classifies a change (Stage 4);
+review-change ── runs the applicable reviews + classifies a change (Stage 4, mandatory);
                  composes review-implementation + the platform's companion skills;
-                 fix-now ─▶ plan-fix · postpone ─▶ triage-issue
+                 fix-now ─▶ plan-fix · every non-fix-now (postpone/ignore/tradeoff) ─▶ triage-issue
 audit-pr ─────── PR-level merge gate (merge-ready or blockers)
 product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime

@@ -82,9 +82,11 @@ reference THIS project's real paths/commands/language.
    The project's verification gate before every commit — **never commit red**
    (unfixable-in-scope failures → known-issues + stop). When reality contradicts
    the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
-   doc discipline; hand off to `review-change` every 2 phases (a review
-   checkpoint — suggest it rather than composing it, so it runs at its own
-   model/effort).
+   doc discipline; hand off to `review-change` every 2 phases AND for the
+   **mandatory** end review (suggest it rather than composing it, so it runs at its
+   own model/effort). A finished unit (single-pass, `--fix`, or final phase)
+   **always opens its PR** (never branch-only) and **flips to `done` at PR-open**
+   (built, not merged — merge state lives in the forge). Print the next step.
 
 **Review & audit** (change → PR → product)
 7. `review-implementation` (`user-invocable: false` — the engine `review-change`
@@ -97,15 +99,21 @@ reference THIS project's real paths/commands/language.
    fix-now / postpone / ignore / intentional-tradeoff in a decision table with
    WHY, implementation risk, long-term impact, and a premature-optimization flag.
    Findings only — never refactor.
-8. `review-change` — platform-adaptive orchestrator: run only the reviews that
-   apply to this project + change (compose `review-implementation` + the project's
-   companion review skills), check **SPEC drift** (diff vs. the governing SPEC's
-   scope and acceptance criteria — nothing contradicted, silently exceeded, or
-   left untouched), and synthesize ONE classified table + an explicit
-   manual-verification checklist. Findings only.
+8. `review-change` — platform-adaptive orchestrator, **mandatory before every
+   merge**: run only the reviews that apply to this project + change (compose
+   `review-implementation` + the project's companion review skills), check **SPEC
+   drift** (diff vs. the governing SPEC's scope and acceptance criteria — nothing
+   contradicted, silently exceeded, or left untouched), and synthesize ONE classified
+   table + an explicit manual-verification checklist. Run **every non-fix-now finding
+   through `triage-issue`** (compose in-turn — equal tier) so each gets a destination
+   (issue / documented decision / justified drop), never silently lost. Findings only;
+   print the next step (`audit-pr`).
 9. `audit-pr` — PR-level merge gate: SPEC acceptance met, all phases complete,
-   docs updated, `Closes #N`, tests, CI green, branch independently mergeable, and
-   the review axes clean → merge-ready or a list of blockers. Never merges or edits.
+   docs updated (**never merge with pending docs**), `Closes #N`, the issue/fix-index
+   entry still tracked (removed only after merge), tests, CI green, branch
+   independently mergeable, and the review axes clean → merge-ready or a list of
+   blockers. `done` ≠ merge-ready (a `done` unit can still have an open PR). Never
+   merges or edits.
 10. `product-audit` — periodic product-wide health check across every applicable
    axis + process/docs/roadmap coherence; mine feature docs → propose issues +
    roadmap add/remove. Never auto-fixes; the user decides.

@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
@@ -93,3 +93,5 @@ triage-issue ────┼─ promote ─────────▶ plan-feat
 - The issue has a clear verdict with cited evidence.
 - The verdict is recorded (routed, commented, and/or index-updated), and nothing
   deferred was implemented inline.
+- The **next step is stated** per verdict (fix-now → `plan-fix`; promote →
+  `plan-feature`; postpone → dated comment; wontfix → propose close).
