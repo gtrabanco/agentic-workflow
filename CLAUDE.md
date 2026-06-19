@@ -154,3 +154,10 @@ This repo has no application build. "Green" means:
 When repeated searches or repeated documentation lookups happen while working
 here, prefer creating or refining a skill over re-deriving the knowledge. Store
 reusable operational knowledge as a skill under `skills/`.
+
+**Repo maintenance skill (specific to this repo):**
+
+- **`bump-skill`** — after editing any SKILL.md, run this before committing.
+  It bumps `version:`, adds changelog rows to `CHANGELOG.md` and
+  `CHANGELOG.es.md`, and updates the skills and model tables in both READMEs.
+  This is the mechanical enforcement of the "Version every change" rule above.

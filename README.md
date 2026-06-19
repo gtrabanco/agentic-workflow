@@ -24,7 +24,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 14 skills (10 user-facing + 4 internal) — the installable source
+skills/                  the 15 skills (11 user-facing + 4 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -41,7 +41,7 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**10 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+**11 user-facing skills** (one menu entry each) + **4 internal** steps composed for
 you (the `plan-feature` router's three planning steps + the `review-change`
 engine). One disciplined path: **plan → execute → review → audit → merge.**
 
@@ -81,6 +81,11 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 | Skill | What it does |
 |---|---|
 | `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
+
+### Repo maintenance
+| Skill | What it does |
+|---|---|
+| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Run before every commit that touches a skill. |
 
 ### Autopilot — the whole flow, end to end
 | Skill | What it does |
@@ -262,6 +267,3 @@ terminal program, `claude-api` with no LLM features).
 | [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the `ship-roadmap` autopilot |
 | [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Started with vibecoding, migrated to the workflow once it was working |
 
-## License
-
-MIT © [Gabriel Trabanco](https://github.com/gtrabanco) — see [LICENSE](LICENSE).
