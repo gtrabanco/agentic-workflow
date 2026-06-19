@@ -63,7 +63,7 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 ### Execute
 | Skill | What it does |
 |---|---|
-| `execute-phase` | Implements one phase of a feature (default), a small `XS/S` feature in a single pass, or a fix (`--fix`). **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **hands off to `review-change` every 2 phases** (a review checkpoint, so it runs at its own model/effort). |
+| `execute-phase` | Implements one phase of a feature (default), a small `XS/S` feature in a single pass, or a fix (`--fix`). **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **hands off to `review-change` every 2 phases and once at the end (mandatory)**. A finished unit **always opens its PR and flips to `done`** (built, not merged). |
 
 ### Review & audit — *change → PR → product*
 | Skill | Scope | What it does |
@@ -159,10 +159,11 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
         → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
         → fills the SPEC + PLAN + TASKS + … and registers the roadmap entry
 /execute-phase <NN> <phase>     # one phase at a time, gate-verified, one commit each
-        → review checkpoint every 2 phases: hands off to /review-change (runs at its own model/effort)
-/review-change                  # the reviews that apply to this change, classified (no refactor)
-/audit-pr                       # merge gate: merge-ready or blockers
-gh pr create --base main        # "Closes #N" if it came from an issue
+        → review checkpoint every 2 phases (and mandatory at the end)
+        → a finished unit always opens its PR + flips to `done` (built, not merged)
+/review-change                  # mandatory: applicable reviews, classified; non-fix-now → triage-issue
+/audit-pr                       # merge gate: merge-ready or blockers (never merge with pending docs)
+        → human merges
 ```
 See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**.
 
@@ -227,6 +228,11 @@ npx skills add gtrabanco/agentic-workflow --global
 npx skills list
 npx skills update
 npx skills remove plan-feature
+
+# Pin a version: install from a tagged release (or any tag/branch) with #<ref>:
+npx skills add gtrabanco/agentic-workflow#release-2026-06-19
+#   …then `npx skills experimental_install` restores the exact set from skills-lock.json.
+#   See CHANGELOG.md → "Installing & pinning a version" for how pinning works.
 ```
 
 No npm publish, no registry, no build step — `skills` clones the repo and copies

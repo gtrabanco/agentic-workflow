@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.0.3
+version: 1.1.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -70,8 +70,8 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **Acceptance criteria** | Every SPEC acceptance criterion is satisfied, each mapped to concrete evidence (code, test, or doc). | Any criterion unmet, unverifiable, or silently dropped. |
 | **All phases complete** | Feature: every phase in `PLAN.md`/`TASKS.md` is done and logged in `progress.md`. Fix: the SPEC is fully implemented. | Any unchecked task or unimplemented phase without an explicit, tracked deferral. |
 | **Scope integrity** | The PR implements the SPEC and no more; out-of-scope work was split out. | Undocumented scope creep, or in-scope work missing. |
-| **Docs updated** | Every "Affected docs" criterion is satisfied; per-phase docs (`progress`/`testing`/`known-issues`/`decisions`) reflect reality; the doc map still resolves. | A doc the map or SPEC requires is stale, missing, or contradicts the code. |
-| **Traceability** | `Closes #N` is in the PR body when the work is issue-born (from `plan-feature-from-issue` or `plan-fix`); the roadmap/fix-index entry matches. | Issue-born work without `Closes #N`, or a roadmap/index entry out of sync. |
+| **Docs updated** | Every "Affected docs" criterion is satisfied; per-phase docs (`progress`/`testing`/`known-issues`/`decisions`) reflect reality; the doc map still resolves. **Never merge with documentation still pending.** | A doc the map or SPEC requires is stale, missing, pending, or contradicts the code. |
+| **Traceability** | `Closes #N` is in the PR body when the work is issue-born (from `plan-feature-from-issue` or `plan-fix`); the roadmap/fix-index entry matches and is **still present** (the issue/fix-index entry is removed only *after* merge, never before). | Issue-born work without `Closes #N`; a roadmap/index entry out of sync; or the issue/fix-index entry dropped before merge. |
 | **Tests** | New behavior is covered at the right layer (prefer integration); acceptance criteria map to tests; no regression-risk tests left red. | New behavior untested, or tests assert nothing meaningful. |
 | **Verification gate / CI** | The project's gate passes — type-check, tests, build — and `statusCheckRollup` is green. | Any required check failing, pending, or absent where the project requires one. |
 | **Mergeability** | Branch is off the default base, independently mergeable (no conflicts), not stacked on another PR, not draft. | Wrong base, conflicts, stacked dependency, or still draft. |
@@ -80,6 +80,12 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 > Run `review-change` for the axis check if it hasn't been run on the final state,
 > or read its latest report. Don't re-litigate findings already classified — verify
 > each open one is either resolved or has a real, tracked home.
+
+> **`done` ≠ merge-ready.** A unit flips to `done` when its PR opens (built, not
+> merged — merge state lives in the forge). So a `done` roadmap row is *not* evidence
+> of merge-readiness: this gate still has to pass on its own. The two things this gate
+> most often catches on a `done`-but-unmerged unit are **pending docs** and a
+> **prematurely-removed issue/fix-index entry** — both are blockers.
 
 ## Process
 
@@ -179,4 +185,6 @@ execute-phase (all phases done) ─▶ review-change (axes clean) ─▶ audit-p
 - Every applicable gate has a pass / blocker / n-a verdict backed by cited evidence.
 - A single top-line verdict (**MERGE-READY** or **BLOCKED** with ranked blockers) is
   reported, each blocker routed, with the human's manual-verification list explicit.
+- The **next step is stated** (MERGE-READY → human merges; BLOCKED → the routed fix,
+  then re-audit).
 - Nothing was merged, edited, or refactored.

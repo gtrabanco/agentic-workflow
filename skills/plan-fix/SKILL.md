@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.0.1
+version: 1.0.2
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -93,3 +93,11 @@ Next steps:
 ```
 
 Then end in the user's language with a 2-3 sentence summary: what the SPEC ships, the biggest risk identified, and any open decisions left for the implementer.
+
+## Done when
+
+- The fix SPEC is drafted from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections,
+  scoped tightly with risks/blockers surfaced, registered in `docs/fix/README.md`,
+  and committed locally on the `fix/<n>-<topic>` branch (not pushed, no PR).
+- **The next step is printed** — the Hand-off block above (review the SPEC, then
+  `execute-phase --fix`).

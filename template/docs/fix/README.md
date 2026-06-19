@@ -7,7 +7,8 @@ history lives in git log + closed issues.
 
 - `pending` — SPEC drafted, branch not yet open
 - `in-progress` — branch open, work ongoing
-- `in-review` — PR open, awaiting merge
+- `done` — built, PR open, awaiting merge (merge state lives in the forge — same
+  meaning as the roadmap's `done`); remove the row only **after** the PR merges
 
 ## Active
 

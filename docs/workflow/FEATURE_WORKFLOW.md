@@ -88,12 +88,17 @@ dependencies). It does **not** create the branch or write code.
    `TASKS.md`/`PLAN.md` are updated and the why recorded in `decisions.md` —
    never a silent divergence.
 6. Commits in conventional format — one commit per phase.
-7. Stops for review.
+7. Stops for review (intermediate phases). The **final phase / single-pass instead
+   flips the roadmap row to `done` and opens the PR** (never branch-only) — see
+   Stage 5 — then the mandatory `/review-change` → `/audit-pr`.
 
 Repeat for each phase (P1, P2, …). Small features (`Size: XS/S`) are handled by
-`execute-phase <NN>` in a single pass — no separate skill. To run all phases
-unattended (review once at the end instead of every 2 phases), see the
-**batch execution with `/loop`** pattern in the `execute-phase` skill.
+`execute-phase <NN>` in a single pass — no separate skill; the single pass ends by
+flipping the roadmap row to `done` and opening the PR, then the mandatory
+`/review-change` → `/audit-pr`. To run all phases unattended (the per-2-phase
+checkpoints are skipped, but the **mandatory** end review is not — it still runs once
+before the PR), see the **batch execution with `/loop`** pattern in the
+`execute-phase` skill.
 
 > Want the **whole roadmap** built this way — every feature through every stage,
 > with you only at the merges? That's the `ship-roadmap` autopilot: one upfront
@@ -115,8 +120,10 @@ like any phase.
 
 ## Stage 4 — Review & audit (whole branch)
 
-`execute-phase` hands off to `review-change` at a checkpoint every 2 phases; before opening
-the PR, run the final review and the merge gate over the completed branch:
+`execute-phase` hands off to `review-change` at a checkpoint every 2 phases **and
+once at the end (mandatory — every unit gets a final review)**. A finished unit
+**always opens its PR and flips to `done`** (built, not merged — merge state lives in
+the forge); the final review and the merge gate then run over the PR:
 
 - **`review-change`** — the orchestrator. Runs only the reviews that **apply to
   this platform**, checks **SPEC drift** (does the diff actually do what the
@@ -134,15 +141,20 @@ the PR, run the final review and the merge gate over the completed branch:
     ones; never an irrelevant pass).
 
   Findings only, no refactor; `fix-now` routes to `plan-fix` (or folds into the
-  current phase if it's unmerged work), `postpone` to `triage-issue`.
+  current phase if it's unmerged work); **every non-fix-now finding goes through
+  `triage-issue`** (issue / documented decision / justified drop), never silently lost.
 - **`audit-pr`** — the merge gate. Acceptance criteria met, all phases complete,
-  docs/tests/CI green, `Closes #N` present, branch independently mergeable, and
-  the review axes clean → **merge-ready or a list of blockers**.
+  docs/tests/CI green (**never merge with pending docs**), `Closes #N` present, the
+  issue/fix-index entry still tracked (removed only after merge), branch independently
+  mergeable, and the review axes clean → **merge-ready or a list of blockers**.
 
 Re-run the gate (type-check, tests, build) green.
 
 ## Stage 5 — PR
 
+- **The PR always opens — every unit, including a single-pass `XS/S` feature or a
+  fix, never ends branch-only.** Opening the PR is the unit's last step and flips its
+  roadmap/fix-index status to `done` (built, not merged).
 - Base **always** `main`; the branch must be **independently mergeable**.
 - **Never stack PRs.** If a feature is too large, split into independently
   shippable slices — never by internal phases.
@@ -161,7 +173,11 @@ Re-run the gate (type-check, tests, build) green.
 /execute-phase  NN  P2              → orchestration + adapter, gate green, commit
    → review checkpoint (every 2 phases): run /review-change → classified table + manual checks
 /execute-phase  NN  hardening       → edge cases, gate green, commit
-/review-change                      → final review: the applicable axes, classified
-/audit-pr                           → merge gate: merge-ready or blockers
-gh pr create --base main            → "Closes #<issue>"
+   → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
+/review-change                      → mandatory final review; non-fix-now → triage-issue
+/audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
+   → human merges
 ```
+
+(For a single-pass `XS/S` feature or a `--fix`, `execute-phase` does the implement →
+mark-done → open-PR in one go, then the same mandatory `/review-change` → `/audit-pr`.)
