@@ -25,7 +25,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 14 skills (10 de cara al usuario + 4 internas) — la fuente instalable
+skills/                  las 15 skills (11 de cara al usuario + 4 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -42,7 +42,7 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**10 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
+**11 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
 pasos que se componen por ti (los tres pasos de planificación del router
 `plan-feature` + el motor de `review-change`). Un único camino disciplinado:
 **plan → execute → review → audit → merge.**
@@ -84,6 +84,11 @@ pasos que se componen por ti (los tres pasos de planificación del router
 | Skill | Qué hace |
 |---|---|
 | `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código** |
+
+### Mantenimiento del repo
+| Skill | Qué hace |
+|---|---|
+| `bump-skill` | Tras editar una skill en este repo: sube la `version:` en el frontmatter del SKILL.md, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md. Ejecutar antes de cada commit que toque una skill. |
 
 ### Autopilot — el flujo completo, de punta a punta
 | Skill | Qué hace |
@@ -271,6 +276,3 @@ con LLM).
 | [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | CLI json2csv — construido de punta a punta con el autopilot `ship-roadmap` |
 | [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Empezado con vibecoding, migrado al workflow cuando ya funcionaba |
 
-## Licencia
-
-MIT © [Gabriel Trabanco](https://github.com/gtrabanco) — ver [LICENSE](LICENSE).
