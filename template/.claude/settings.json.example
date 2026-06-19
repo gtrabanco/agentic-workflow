@@ -1,0 +1,31 @@
+{
+  "//": "Example Claude Code hooks for automatic session logging. Copy the parts you want into .claude/settings.json (JSON has no comments, so delete this // key). See .claude/README.md for what each hook does and the opt-in note on restore-context.",
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "//": "RECOMMENDED — free. Writes a per-session marker so the end hook can compute exactly what changed.",
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/log-session-start.sh" }
+        ]
+      },
+      {
+        "//": "OPT-IN — re-injects the last log entry to resume context. Free to generate, but costs input-context tokens every session start. Delete this block if you don't want it.",
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/restore-context.sh" }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "//": "RECOMMENDED — free. Appends a mechanical entry (branch, commits, files) on /clear and exit.",
+        "matcher": "clear|logout|prompt_input_exit|other",
+        "hooks": [
+          { "type": "command", "command": "bash .claude/hooks/log-session-end.sh" }
+        ]
+      }
+    ]
+  }
+}
