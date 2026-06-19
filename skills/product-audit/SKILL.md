@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.2.0
+version: 1.2.1
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus
 effort: max
@@ -171,3 +171,5 @@ product-audit (whole product, all axes, periodic)
   roadmap add, roadmap remove/revise) exist, deduped and each routed.
 - Nothing was fixed, filed, or changed — the report is the deliverable; the user
   decides what to act on.
+- The **next step is named** — typically a batch `triage-issue` for the proposed
+  issues, then `plan-feature` / `plan-fix` for the accepted work.

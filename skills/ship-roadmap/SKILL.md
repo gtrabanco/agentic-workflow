@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -161,9 +161,12 @@ turns:
    yet → `SHIP: BLOCKED` with "merge the founding PR" as the unblock map.
    Read ROADMAP.md; query the forge for open/merged PRs on `feat/*`, `fix/*`,
    `docs/ship-founding` and `docs/ship-report` heads; check git state.
-   Reconcile: merged PR → stage the roadmap flip to `done` (flips **ride the
-   next PR-bound commit** — see the carrier rule in step 4 — never a lone
-   commit on the default branch). A dirty feature branch from a crashed phase
+   Reconcile: a feature flips to `done` when its **PR opens** (built, not merged
+   — see the PR stage), so a `done` row with an open PR is awaiting a human merge
+   (default mode), not finished shipping. A **merged** PR needs no status change
+   (already `done`) — it means *shipped*, and **unblocks its dependents** + counts
+   toward `SHIP: COMPLETE`. The done-flip rides the PR-bound commit, never a lone
+   commit on the default branch. A dirty feature branch from a crashed phase
    is handed to the next phase subagent to finish or restart (counts against
    the red-gate retry cap). Uncommitted changes on the default branch confined
    to `docs/features/<NN-slug>/` + ROADMAP.md that match an in-flight roadmap
@@ -173,9 +176,11 @@ turns:
    refresh the final report, open the report PR, print the `SHIP:` banner +
    status table, end the turn.
 3. **SELECT one unit.** An in-progress feature's next pending stage; else the
-   next `planned` feature whose depends-on rows are all `done` → PLAN; else
-   nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging #12
-   unblocks 05 and 07") and the resume command.
+   next `planned` feature whose depends-on rows are all **merged** (forge state,
+   not merely `done` — a `done` dep with an open PR isn't on the default branch
+   yet, so a dependent cut from it would lack its code) → PLAN; else nothing
+   startable → `SHIP: BLOCKED` with the **unblock map** ("merging #12 unblocks
+   05 and 07") and the resume command.
 4. **ADVANCE exactly one stage:**
    - **PLAN** — compose `plan-feature` in-turn via its scoped path (equal
      tier). The interview path is **forbidden** mid-run: SPEC gaps are resolved
@@ -193,20 +198,23 @@ turns:
      to its recipe: (a) **never ask** — SPEC ambiguity is resolved from the
      committed decision record with the most conservative reading, and the
      assumption is surfaced in the phase docs so the conductor logs it;
-     (b) the **P1 planning commit also carries `ROADMAP.md`** (staged status
-     flips and the feature's `in-progress` flip ride it; for XS/S single-pass
-     features they ride the single implementation commit, and any flips left at
-     run end ride the report commit). Never bundle phases into one subagent.
+     (b) the **P1 planning commit also carries `ROADMAP.md`** (the feature's
+     `in-progress` flip rides it; the **`done` flip rides the PR-stage commit**
+     when the PR opens — for XS/S single-pass features the `in-progress`→`done`
+     flips ride the single implementation/PR commit; any flips left at run end
+     ride the report commit). Never bundle phases into one subagent.
    - **REVIEW** — compose `review-change` in-turn (equal tier), with
      **risk-proportional cadence**: XS/S and non-sensitive M features get ONE
      review at branch end (matching execute-phase's documented batch pattern);
      L or sensitive-flagged features get a checkpoint every 2 phases. Persist
      the review report into the feature's docs folder. fix-now findings → one
-     sonnet fixer subagent + gate + commit (max 2 review-fix cycles); postpone
-     findings → tracked forge issues, never inlined.
-   - **PR** — push, `pr create` against the default branch with the PR
-     template and `Closes #N` where issue-born (forge CLI per Workflow
-     conventions).
+     sonnet fixer subagent + gate + commit (max 2 review-fix cycles); every
+     **non-fix-now finding is triaged** (review-change composes `triage-issue`)
+     → tracked forge issue / documented decision, never inlined.
+   - **PR** — **flip the feature to `done`** (built, not merged; the flip rides
+     this PR-bound commit), then push and `pr create` against the default branch
+     with the PR template and `Closes #N` where issue-born (forge CLI per Workflow
+     conventions). The PR always opens — a unit never ends branch-only.
    - **AUDIT** — compose `audit-pr` in-turn (equal tier); bind the verdict to
      the PR's head SHA in the run log. MERGE-READY → default mode logs and
      moves on; `--fullauto` checks the floors, **records the merge intent in
@@ -246,7 +254,8 @@ continues with the next feature whose dependencies are all merged (new branches
 always cut from the freshly pulled default branch); when everything remaining
 waits on human merges, it stops with `SHIP: BLOCKED` + the unblock map. After
 merging, re-run the same launch command (`/loop /ship-roadmap --continue`, plus
-`--fullauto` on fullauto runs) — recovery flips the rows and resumes.
+`--fullauto` on fullauto runs) — recovery records the merges (the rows are already
+`done` from PR-open), unblocks the dependents, and resumes.
 
 **`--fullauto` — dual-keyed.** Auto-merge requires **both** the `--fullauto`
 flag on the running command **and** `merge: fullauto` in the committed decision
@@ -276,8 +285,8 @@ Non-negotiable floors, evaluated fresh immediately before every merge —
 
 | Banner | Fires when |
 |---|---|
-| `SHIP: COMPLETE` | Every roadmap feature is `done`; report written, report PR open. |
-| `SHIP: BLOCKED` | Everything remaining is pr-open awaiting merges or planned with unmerged deps (default mode); or a parked feature transitively blocks the rest. Always includes the unblock map. |
+| `SHIP: COMPLETE` | Every roadmap feature is `done` **and its PR merged** (default mode: the human merged them all; `--fullauto`: merged under the floors) — `done` alone is not enough, since it only means *built + PR open*. Report written, report PR open. |
+| `SHIP: BLOCKED` | Everything remaining is `done`-but-pr-open awaiting human merges, or planned with unmerged deps (default mode); or a parked feature transitively blocks the rest. Always includes the unblock map. |
 | `SHIP: STOPPED` | Budget/iteration cap; a Round-5 milestone stop line; substrate invariant broken (gate unrunnable, roadmap unparseable, unexplained dirty default branch, decision record missing); forge unavailable (no stage that depends on PR state may proceed on guesses). |
 | (feature parked, run continues) | Repeated red gate (retry cap), review ping-pong (2 cycles), audit ping-pong (2 cycles), capacity guard (3 partials), planning contradiction. |
 | **Systemic drift stop** | `review-change` flags SPEC drift on **two consecutive features** → the locked founding assumptions are probably stale; the whole run stops rather than auto-merging a compounding error. |
@@ -289,7 +298,7 @@ Written by the terminal iteration to `docs/features/SHIP_REPORT_<date>.md` on a
 audit-gated like any PR), and printed in full under the banner:
 
 1. **Run summary** — mode, iterations used vs cap, stop reason, feature counts
-   (done / pr-open / parked / not started).
+   (merged / `done`-awaiting-merge / parked / not started).
 2. **Per-feature outcomes** — size planned vs final, phases, gate history,
    review findings folded vs postponed, audit verdict + SHA, PR + final state,
    merged by human or autopilot.

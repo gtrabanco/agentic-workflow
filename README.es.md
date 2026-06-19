@@ -65,7 +65,7 @@ pasos que se componen por ti (los tres pasos de planificación del router
 ### Ejecución
 | Skill | Qué hace |
 |---|---|
-| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña `XS/S` de una pasada, o un fix (`--fix`). **Tests primero** en trabajo de dominio/orquestación, nunca commitea en rojo, verificada por el gate, un commit por fase; **hace hand-off a `review-change` cada 2 fases** (un checkpoint de revisión, para que corra con su propio modelo/effort). |
+| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña `XS/S` de una pasada, o un fix (`--fix`). **Tests primero** en trabajo de dominio/orquestación, nunca commitea en rojo, verificada por el gate, un commit por fase; **hace hand-off a `review-change` cada 2 fases y una vez al final (obligatorio)**. Una unidad terminada **siempre abre su PR y pasa a `done`** (construida, no mergeada). |
 
 ### Revisión y auditoría — *cambio → PR → producto*
 | Skill | Alcance | Qué hace |
@@ -165,10 +165,11 @@ Tutorial completo en **[`docs/workflow/`](docs/workflow/README.md)**. En resumen
         → el router detecta idea / issue / slug acotado → entrevista · análisis del issue · scaffold
         → rellena el SPEC + PLAN + TASKS + … y registra la entrada en el roadmap
 /execute-phase <NN> <phase>     # una fase cada vez, verificada por el gate, un commit cada una
-        → checkpoint de revisión cada 2 fases: hand-off a /review-change (corre con su propio modelo/effort)
-/review-change                  # las revisiones que aplican a este cambio, clasificadas (sin refactor)
-/audit-pr                       # gate de fusión: listo para fusionar o bloqueantes
-gh pr create --base main        # "Closes #N" si vino de un issue
+        → checkpoint de revisión cada 2 fases (y obligatorio al final)
+        → una unidad terminada siempre abre su PR + pasa a `done` (construida, no mergeada)
+/review-change                  # obligatorio: revisiones aplicables, clasificadas; no-fix-now → triage-issue
+/audit-pr                       # gate de fusión: listo o bloqueantes (nunca fusionar con docs pendientes)
+        → el humano fusiona
 ```
 Ver **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**.
 
@@ -235,6 +236,11 @@ npx skills add gtrabanco/agentic-workflow --global
 npx skills list
 npx skills update
 npx skills remove plan-feature
+
+# Pinear una versión: instala desde un release etiquetado (o cualquier tag/rama) con #<ref>:
+npx skills add gtrabanco/agentic-workflow#release-2026-06-19
+#   …luego `npx skills experimental_install` restaura el conjunto exacto desde skills-lock.json.
+#   Ver CHANGELOG.es.md → "Instalar y pinear una versión" para cómo funciona el pinning.
 ```
 
 Sin publicar en npm, sin registro, sin paso de build — `skills` clona el repo y

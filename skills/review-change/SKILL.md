@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.1.0
+version: 1.2.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -26,7 +26,9 @@ or refactors.**
 
 ## When to use
 
-- Before opening a PR, or mid-feature (`execute-phase` hands off to it every 2 phases).
+- **Mandatory before every merge** — every unit (feature, single-pass, or fix) gets a
+  `review-change` pass; it's never skipped. `execute-phase` hands off to it every 2
+  phases and once more at the end.
 - When you want the *right* reviews for this change without running irrelevant
   passes (e.g. accessibility on a backend change).
 
@@ -87,6 +89,15 @@ decide which axes apply from two inputs:
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
+7. **Triage everything not fixed now.** For **every** finding you don't route to
+   `fix-now` (postpone / ignore / intentional-tradeoff), run it through
+   `triage-issue` (compose in-turn — equal tier) to decide and record its home: a
+   tracked issue with a trigger, a documented decision (`decisions.md` / a comment),
+   or a justified drop. **No non-fix-now finding may end without a destination** — the
+   point is to never silently lose one, and to catch the few that actually deserve an
+   issue or a doc note.
+8. **Next step.** Close with the suggested next command (clean → `/audit-pr`;
+   fix-now open → fold them, then re-review).
 
 ## Example output (generic)
 
@@ -107,11 +118,14 @@ For a change to a backend export module (no UI surface):
 
 ## Routing
 
+Every non-`fix-now` finding is routed **through `triage-issue`** (step 7) so its
+disposition is a decision, not a default:
+
 - **fix-now** → `plan-fix` → `execute-phase --fix`, or fold into the current phase
   if it's unmerged work.
-- **postpone** → open a tracked issue with a trigger; `triage-issue` owns it.
-- **intentional-tradeoff** → record it (comment / `decisions.md` / issue).
-- **ignore** → note the rationale.
+- **postpone** → `triage-issue` → open a tracked issue with a trigger.
+- **intentional-tradeoff** → `triage-issue` → record it (comment / `decisions.md` / issue).
+- **ignore** → `triage-issue` → note the rationale (or confirm it truly needs nothing).
 
 ## Guardrails
 
@@ -123,13 +137,19 @@ For a change to a backend export module (no UI surface):
 
 ## Relationship to other skills
 
-- Composes `review-implementation` (engine) + the project's companion review skills.
+- Composes `review-implementation` (engine), `triage-issue` (every non-fix-now
+  finding — equal tier, in-turn), and the project's companion review skills.
 - Sits in Stage 4 of the feature workflow; `execute-phase` hands off to it every 2
-  phases (it runs in its own turn). `fix-now` → `plan-fix`; `postpone` → `triage-issue`.
-- `audit-pr` is the PR-level gate; `product-audit` the periodic full sweep.
+  phases and for the mandatory end review (it runs in its own turn). `fix-now` →
+  `plan-fix`; everything else → `triage-issue`.
+- `audit-pr` is the PR-level gate it feeds; `product-audit` the periodic full sweep.
 
 ## Done when
 
 - One synthesized, classified decision table across all **applicable** axes exists,
-  the skipped axes are listed with reasons, the manual-verification checklist is
-  explicit, every finding is routed — and **no code changed**.
+  the skipped axes are listed with reasons, and the manual-verification checklist is
+  explicit.
+- **Every finding has a destination:** fix-now routed, and every non-fix-now finding
+  put through `triage-issue` (issue / documented decision / justified drop) — none
+  silently lost.
+- The **next step is printed** (clean → `/audit-pr`), and **no code changed**.

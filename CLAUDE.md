@@ -68,6 +68,12 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > **`user-invocable: true` is mandatory.** Without it, the skill is not offered
 > in the slash-command menu in this environment. Always set it explicitly.
 
+> **Always suggest the next step.** Every skill ends its turn by printing the
+> concrete next command(s) — the hand-off, the router target, or the resume line —
+> so the user never has to guess what follows. A terminal verdict still names what
+> to do with it (merge, re-audit, triage). This is part of "Done when" for every
+> skill.
+
 > **Version every change.** Each skill carries its own `version:` and evolves
 > independently. When you change a skill, bump its `version:` (major = rename or
 > contract/flag change; minor = backward-compatible capability; patch = wording/

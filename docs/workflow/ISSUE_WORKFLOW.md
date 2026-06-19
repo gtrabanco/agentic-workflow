@@ -71,8 +71,12 @@ branch — then **stops for review**. Then `execute-phase --fix`:
 2. Verifies/creates branch `fix/<N>-<topic>` (never `main`).
 3. Implements the fix (the SPEC is the only planning artifact — no phases).
 4. Runs the gate (type-check, tests, build).
-5. Opens the PR with `Closes #N`.
-6. On merge: removes the entry from `docs/fix/README.md`.
+5. **Marks the fix `done` and opens the PR with `Closes #N` (always — never
+   branch-only).** `done` means built, not merged.
+6. **Mandatory `/review-change`** (non-fix-now findings → `triage-issue`), then
+   `/audit-pr` as the merge gate (never merge with pending docs).
+7. **Only after merge:** removes the entry from `docs/fix/README.md` — never before
+   (don't drop issue tracking early).
 
 ## Stage 5 — Report and keep docs coherent
 

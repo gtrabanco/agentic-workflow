@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -83,7 +83,15 @@ examples use `gh`; translate if the project declares another forge).
 3. If the SPEC is ambiguous on scope / edge cases / UI, ask first — one question at a time, nothing it already answers.
 4. Implement end-to-end (see *Implementation guidance*).
 5. Run the gate; write `CHECKLIST.md` (below).
-6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"`. Stop for review.
+6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"`.
+7. **Mark done + open the PR — always (this is the last step).** Flip the roadmap
+   row to `done` (it's *built*; merge state lives in the forge, not the status —
+   see *Marking done*), commit that flip, then `git push` and open the PR:
+   `gh pr create --base main --title "<type>(<scope>): <summary>" --body "<summary>"`
+   (add `Closes #<n>` when issue-born). A single-pass unit **never ends branch-only** —
+   it always leaves an open PR, regardless of the review/audit still to come.
+8. **Mandatory review hand-off** → `/review-change` (the required final quality step;
+   see *Review checkpoint*), then `audit-pr` as the merge gate. Print the next step.
 
 **`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
 
@@ -92,8 +100,16 @@ examples use `gh`; translate if the project declares another forge).
 3. Verify branch (`fix/<n>-<topic>`).
 4. Implement the fix (no planning artifacts; the SPEC is enough).
 5. Run the gate.
-6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`. Then open the PR: `gh pr create --base main --title "fix(<scope>): <summary>" --body "Closes #<n>"`. Run both commands.
-7. After merge: remove the `docs/fix/README.md` entry.
+6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`.
+7. **Mark done + open the PR — always (this is the last step).** Set the
+   `docs/fix/README.md` entry's status to `done` (built, not yet merged), commit,
+   `git push`, then open the PR: `gh pr create --base main --title "fix(<scope>): <summary>" --body "Closes #<n>"`.
+   Run the commands. A fix **never ends branch-only** — it always leaves an open PR.
+8. **Mandatory review hand-off** → `/review-change`, then `audit-pr` as the merge gate.
+   Print the next step. **Keep the fix-index entry** until the PR is actually merged
+   (don't drop issue tracking early; the merge gate also blocks on pending docs).
+9. **After merge only:** remove the `docs/fix/README.md` entry (or archive it to the
+   project's fix history per its convention) — never before the merge.
 
 If the SPEC declares `Depends on:` other fixes, verify they're merged first; block if not.
 
@@ -118,33 +134,53 @@ Map each change to the project's layers per its architecture doc; build inner la
 
 Write `docs/features/<NN>-<slug>/CHECKLIST.md`: schema migration applied (if any) · core layer has no outer imports · orchestration idempotent + typed errors · adapters implement ports · tests pass · type-check/lint green · UI strings localized (if UI) · domain value-object rules respected · user-facing limitations disclosed · new deps pinned. Note any decisions not captured in the SPEC.
 
-## Review checkpoint cadence (feature mode)
+## Review checkpoint & finishing a unit
 
-Keep the review on a cadence without mis-powering it. After every **2 completed
-phases** — and always once more **before opening the PR**, so the final phase is
-never unreviewed — **stop and hand off to `review-change`** instead of running it
-in this skill's turn.
+**`review-change` is mandatory — every unit gets a final review before merge, no
+exceptions.** It runs in its own turn (hand-off, not composed): a skill's model and
+effort are fixed at turn start, so invoking `review-change` from here would run it at
+execute-phase's `sonnet`/`medium` rather than its own `opus`/`high` — under-powering
+the review. So **suggest** it; don't compose it. (General rule: across a model/effort
+boundary, hand off; don't compose.)
 
-**Why hand off, not compose:** a skill's model and effort are fixed at the start of
-its turn, so invoking `review-change` from here would run it at execute-phase's
-`sonnet`/`medium` rather than its own `opus`/`high` — under-powering the review.
-Handing off lets the user run `/review-change` in a fresh turn at its proper
-model/effort. (This is the general rule: suggest the next skill across a
-model/effort boundary, don't compose it.)
+**Cadence.** Feature mode: hand off after every **2 completed phases**, and always
+once more at the end so the final phase is never unreviewed. Single-pass and `--fix`
+have no intermediate phases — they get the one mandatory end review.
 
-At the checkpoint, print the hand-off:
+**Finishing a unit (single-pass, `--fix`, or a feature's final phase): the last step
+is always an open PR.** Mark the unit `done`, commit the flip, push, and `gh pr create`
+(see the mode steps above) — regardless of the review/audit still to come. Then hand
+off to `/review-change` (mandatory), which feeds `audit-pr` (the merge gate).
+
+Checkpoint hand-off (print it — every invocation ends by suggesting the next step):
 
 ```
-Phase <N> done and committed. Review checkpoint (every 2 phases).
+Phase <N> done and committed. Review checkpoint.
 → Run /review-change now — it reviews the branch at its own model/effort.
   · clean    → continue with: execute-phase <NN> <next phase>
-  · findings → fold fix-now into the branch; postpone → triage-issue; then re-review.
+  · findings → fold fix-now into the branch; non-fix-now → triage-issue; then re-review.
 ```
 
-This never auto-merges and never skips the per-phase stop: still one phase at a
-time, human in the loop, gate enforced each phase. Single-pass and `--fix` modes
-are reviewed once at the end the same way — hand off to `/review-change` — as they
-have no intermediate phases.
+Final-phase / single-pass / fix hand-off:
+
+```
+<unit> implemented, gate green, marked done, PR #<n> opened.
+→ Run /review-change now (mandatory final review).
+  · clean    → /audit-pr (merge gate) → human merges.
+  · findings → fold fix-now into this PR; non-fix-now → triage-issue; re-review.
+```
+
+This never auto-merges and never skips the per-phase stop: one phase at a time,
+human in the loop, gate enforced each phase, every unit reviewed before merge.
+
+### Marking done (status semantics)
+
+A unit flips to **`done` when its last step runs — opening the PR — even though it
+isn't merged yet.** `done` means *built and PR-open*; merge state lives in the forge
+(the open/merged PR), not in the status. The flip is a doc change, so it rides the
+PR-bound commit (never a lone commit on the default branch). **Never merge with docs
+still pending, and never drop the issue / fix-index entry before merge** — those are
+`audit-pr`'s gates, not removed at done-time.
 
 ## Batch execution with `/loop`
 
@@ -159,8 +195,9 @@ commit each phase, and stop when TASKS.md shows all phases checked
 
 The loop reads `TASKS.md` to pick the next uncompleted phase, implements it,
 and terminates naturally when nothing remains — no explicit stop condition
-needed. **Review-change checkpoints are skipped in this mode; run
-`/review-change` once at the end** before opening the PR.
+needed. **Per-2-phase checkpoints are skipped in this mode, but the end review is
+not optional:** at the end, **mark done + open the PR**, then run `/review-change`
+once (the mandatory final review) → `audit-pr`.
 
 Use this when the SPEC is solid and you want to review the whole branch at once
 rather than after every two phases. For incremental, phase-by-phase review,
@@ -169,14 +206,20 @@ stick to the default (manual re-invocation + checkpoint hand-offs).
 ## Relationship to other skills
 
 - Planned by `plan-feature` (features) or `plan-fix` (fixes); executes their SPEC.
-- **Hands off** to `review-change` at the review checkpoint (every 2 phases / before
-  the PR) — it runs at its own model/effort, not composed in this skill's turn.
-  `fix-now` findings fold back here; `postpone` routes to `triage-issue`.
-- The completed branch is gated by `audit-pr` before merge.
+- **Hands off** to `review-change` (mandatory final review) at the checkpoint (every
+  2 phases) and when finishing a unit — it runs at its own model/effort, not composed
+  in this skill's turn. `fix-now` findings fold back here; non-fix-now routes through
+  `triage-issue`.
+- A finished unit (single-pass, `--fix`, or final phase) **always opens its PR and
+  flips to `done`**; `audit-pr` then gates the merge (it blocks on pending docs or a
+  prematurely-dropped issue entry).
+- **Every invocation ends by printing the next step.**
 
 ## Done when
 
 - The requested scope is implemented (one phase, or the whole SPEC for
-  single-pass/`--fix`), the project's gate is green, per-phase docs are updated,
-  and the work is committed on the correct branch — stopped for review, nothing
-  bundled beyond the requested scope.
+  single-pass/`--fix`), the project's gate is green, per-phase docs are updated, and
+  the work is committed on the correct branch — nothing bundled beyond the requested
+  scope.
+- **A finished unit additionally:** is flipped to `done`, has its PR opened (never
+  branch-only), and prints the mandatory `/review-change` hand-off as the next step.
