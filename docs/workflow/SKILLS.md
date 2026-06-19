@@ -2,9 +2,10 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**10 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+**12 user-facing skills** (one menu entry each) + **4 internal** steps composed for
 you (the `plan-feature` router's three planning steps + the `review-change`
-findings engine, `review-implementation`).
+findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
+`log-session` journal helper, and the repo-only `bump-skill` maintenance helper.
 
 ## Setup
 
@@ -59,6 +60,18 @@ findings engine, `review-implementation`).
 | Skill | Role | Hands off to |
 |---|---|---|
 | `ship-roadmap` | **Conductor.** One upfront interview (product, features, stack, architecture, quality, ops, autonomy, budget) → founds the project if needed → creates or adopts the complete roadmap → a `/loop`-driven loop ships it feature by feature: composes `plan-feature`, `review-change`, `audit-pr` in-turn (equal tier), delegates each `execute-phase` phase to a Sonnet subagent. Default: opens PRs, human merges; `--fullauto` merges under non-negotiable safety floors. Ends in a final report | human merges / `triage-issue` batch / `product-audit` (always a hand-off — its effort max exceeds the conductor's high) |
+
+## Session
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `log-session` | Append a structured entry to `docs/LOGS.md` — summary, files, decisions + *why*, next step — so a cold reader (or the next session) resumes without re-reading git. Manual + rich; `model: sonnet` (cheap). Complemented by free, opt-in `template/.claude/` hooks that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start | `/clear` (session captured) or the resume command in the entry's **Next** line |
+
+## Repo maintenance (specific to the agentic-workflow repo)
+
+| Skill | Role |
+|---|---|
+| `bump-skill` | After editing a SKILL.md: bump `version:`, add CHANGELOG.md + CHANGELOG.es.md rows, update the README skill/model tables. Repo-only — its description keeps it from triggering in other projects |
 
 ## Built-in companions (Claude Code)
 

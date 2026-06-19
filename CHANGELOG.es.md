@@ -55,6 +55,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Histórico de versiones por skill
 
+### Sesión
+
+#### `log-session`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-06-19 | — | Nueva skill de diario de sesión. Añade una entrada estructurada a `docs/LOGS.md` (resumen, archivos, decisiones + por qué, siguiente paso) bajo demanda; `model: sonnet` (barato por diseño). Incluye hooks gratuitos y opt-in en `template/.claude/`: captura mecánica en SessionEnd + marcador en SessionStart, y restauración de contexto opt-in en SessionStart — todos sin modelo |
+
 ### Mantenimiento del repo
 
 #### `bump-skill`
@@ -162,6 +169,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-06-19 — `log-session` 1.0.0.** Nueva skill de diario de sesión (`docs/LOGS.md`) + hooks gratuitos y opt-in en `template/.claude/` (captura mecánica en SessionEnd, marcador en SessionStart, restauración de contexto opt-in — todos sin modelo). Conjunto → 16 skills (12 de cara al usuario + 4 internas).
 - **2026-06-19 — `bump-skill` 1.0.0.** Nueva skill de mantenimiento del repo: tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza README.md + README.es.md. Eliminado `docs/features/ROADMAP.md` huérfano (contenido ficticio de e-commerce, vocabulario antiguo).
 - **2026-06-19 — política de workflow.** Una unidad nunca acaba solo-en-rama y nada
   no-fix-now se pierde en silencio: las unidades terminadas **siempre abren el PR** y

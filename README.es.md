@@ -25,7 +25,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 15 skills (11 de cara al usuario + 4 internas) — la fuente instalable
+skills/                  las 16 skills (12 de cara al usuario + 4 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -42,7 +42,7 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**11 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
+**12 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
 pasos que se componen por ti (los tres pasos de planificación del router
 `plan-feature` + el motor de `review-change`). Un único camino disciplinado:
 **plan → execute → review → audit → merge.**
@@ -84,6 +84,11 @@ pasos que se componen por ti (los tres pasos de planificación del router
 | Skill | Qué hace |
 |---|---|
 | `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código** |
+
+### Sesión
+| Skill | Qué hace |
+|---|---|
+| `log-session` | Añade una entrada estructurada a `docs/LOGS.md` — qué hizo la sesión, archivos tocados, decisiones + *por qué*, y el siguiente paso — para que tú (o cualquiera) retome en frío. Ejecútala antes de `/clear` o de cerrar. El `template/` además trae **hooks gratuitos y opt-in** que añaden una entrada mecánica automáticamente en cada `/clear`/salida y pueden reinyectar la última entrada al arrancar. |
 
 ### Mantenimiento del repo
 | Skill | Qué hace |
@@ -147,6 +152,7 @@ sesión).
 | `product-audit` | Opus | máx | barrido multi-eje de todo el producto + propuestas (effort máx para el barrido más amplio) |
 | `audit-docs` | Sonnet | medio | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas) |
 | `triage-issue` | Opus | alto | verificar disparadores contra el código; decisión con criterio |
+| `log-session` | Sonnet | medio | resumen estructurado, no criterio — deliberadamente el tier barato, nunca Opus (los hooks de `.claude/` hacen la captura mecánica gratis) |
 | `ship-roadmap` | Opus | alto | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
 
 > Los 4 pasos internos no se seleccionan directamente. Como se componen **dentro del
@@ -206,6 +212,15 @@ Ver **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY
         → plan → execute → review → PR → audit → (tu merge) → siguiente feature → … → informe final
 ```
 Solo reapareces en los merges (por defecto) y en el informe final.
+
+### Retomar entre sesiones
+```
+/log-session                    # antes de /clear o de cerrar: añade a docs/LOGS.md lo que hiciste + el siguiente paso
+```
+El `template/` trae hooks de Claude Code gratuitos y opt-in (`template/.claude/`)
+que añaden una entrada mecánica automáticamente en cada `/clear` y salida, y
+pueden reinyectar la última entrada al arrancar para retomar en frío — sin
+modelo, sin coste de tokens en la captura.
 
 ## Principios fundamentales
 
