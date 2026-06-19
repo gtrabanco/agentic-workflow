@@ -53,6 +53,13 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Per-skill version history
 
+### Session
+
+#### `log-session`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-06-19 | — | New session-journal skill. Appends a structured entry to `docs/LOGS.md` (summary, files, decisions + why, next step) on demand; `model: sonnet` (cheap by design). Ships with free, opt-in `template/.claude/` hooks: SessionEnd mechanical capture + SessionStart marker, and an opt-in SessionStart context-restore — all model-free |
+
 ### Repo maintenance
 
 #### `bump-skill`
@@ -160,6 +167,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-06-19 — `log-session` 1.0.0.** New session-journal skill (`docs/LOGS.md`) + free, opt-in `template/.claude/` hooks (mechanical SessionEnd capture, SessionStart marker, opt-in context-restore — all model-free). Set count → 16 skills (12 user-facing + 4 internal).
 - **2026-06-19 — `bump-skill` 1.0.0.** New repo-maintenance skill: after editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates README.md + README.es.md. Deleted orphaned `docs/features/ROADMAP.md` (fictional e-commerce content, old vocabulary).
 - **2026-06-19 — workflow policy.** A unit never ends branch-only and nothing
   non-fix-now is silently lost: finished units **always open the PR** and flip to

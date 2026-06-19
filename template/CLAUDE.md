@@ -32,6 +32,7 @@ your domains.
 | Brand identity / voice | `docs/brand/BRAND.md` |
 | Domain / business rules | `docs/domain/*`, `docs/business/*` |
 | Legal / compliance | `docs/legal/*` |
+| Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
 
 ---
 
@@ -155,6 +156,20 @@ dependencies).
 A fix is lighter than a feature: only a `SPEC.md` (from
 `docs/fix/_TEMPLATE/SPEC.md`), registered in `docs/fix/README.md`, no planning
 artifacts. Every fix has a tracked issue; its PR closes it.
+
+---
+
+## Session log
+
+`docs/LOGS.md` is an append-only journal of working sessions — the *why* and the
+*what-next* that git history doesn't record. Two ways it's written, both
+optional:
+
+- **`/log-session`** (manual, rich) — summary, decisions, next step. Run it
+  before `/clear` or before closing for the day.
+- **`.claude/` hooks** (automatic, free) — append a mechanical entry on `/clear`
+  and exit; an opt-in hook re-injects the last entry to resume context. Copy
+  `.claude/settings.json.example` to enable; see `.claude/README.md`.
 
 ---
 

@@ -24,7 +24,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 15 skills (11 user-facing + 4 internal) — the installable source
+skills/                  the 16 skills (12 user-facing + 4 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -41,7 +41,7 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**11 user-facing skills** (one menu entry each) + **4 internal** steps composed for
+**12 user-facing skills** (one menu entry each) + **4 internal** steps composed for
 you (the `plan-feature` router's three planning steps + the `review-change`
 engine). One disciplined path: **plan → execute → review → audit → merge.**
 
@@ -81,6 +81,11 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 | Skill | What it does |
 |---|---|
 | `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
+
+### Session
+| Skill | What it does |
+|---|---|
+| `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + *why*, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
 
 ### Repo maintenance
 | Skill | What it does |
@@ -141,6 +146,7 @@ your session).
 | `product-audit` | Opus | max | product-wide multi-axis sweep + proposals (max effort for the widest context sweep) |
 | `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
 | `triage-issue` | Opus | high | verify triggers against the code; judgement call |
+| `log-session` | Sonnet | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free) |
 | `ship-roadmap` | Opus | high | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
 > The 4 internal steps aren't selected directly. Because they're composed **within
@@ -200,6 +206,14 @@ See **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY
         → plan → execute → review → PR → audit → (your merge) → next feature → … → final report
 ```
 You only reappear at the merges (default) and at the final report.
+
+### Resume across sessions
+```
+/log-session                    # before /clear or closing: append what you did + the next step to docs/LOGS.md
+```
+The `template/` ships free, opt-in Claude Code hooks (`template/.claude/`) that
+auto-append a mechanical entry on every `/clear` and exit, and can re-inject the
+last entry on start so you resume cold — no model, no token cost for the capture.
 
 ## Core principles
 
