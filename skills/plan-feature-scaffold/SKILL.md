@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.1.0
+version: 1.1.1
 model: opus
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -52,11 +52,15 @@ the agent guide and state the assumption.
      register the roadmap entry, and hand off to `execute-phase <NN>`
      (single-pass). Don't generate ceremony the feature doesn't need.
    - **M/L** → generate the full set, mirroring the recent features':
-     - `PLAN.md` — phased plan (P1, P2, …); phases are an *implementation*
-       sequence, not a delivery boundary. **The last implementation phase is
-       always a hardening phase**: edge cases and the SPEC's dev-scenario
-       failure modes (empty/degraded states, races, outages), implemented and
-       tested — not just documented.
+     - `PLAN.md` — phased plan **labelled `P1, P2, …`** and called *phases*;
+       phases are an *implementation* sequence, not a delivery boundary.
+       **Naming is fixed: always `P1, P2, …` / "phases" — never `S1`/`S2` or
+       "Steps".** The label is the executor's argument (`execute-phase NN P2`),
+       so every artifact (`PLAN.md`, `TASKS.md`, `progress.md`) must use the same
+       `P1, P2, …` labels. **The last implementation phase is always a hardening
+       phase**: edge cases and the SPEC's dev-scenario failure modes
+       (empty/degraded states, races, outages), implemented and tested — not just
+       documented.
      - `TASKS.md` — per-phase checklists the executor ticks off.
      - `progress.md` — running log, one entry per phase.
      - `testing.md` — what is tested at which layer (prefer integration).

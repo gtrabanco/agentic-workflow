@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -83,5 +83,11 @@ Pick the mode — first match wins:
 
 ## Done when
 
-- A planned feature with its full artifact set exists and is roadmap-registered,
-  and the user knows the next step (`execute-phase <NN> P1`).
+- A planned feature with its full artifact set exists and is roadmap-registered.
+- **The closing `→ Next:` block is printed:**
+
+  ```
+  → Next: /execute-phase <NN> P1 — start phase 1 (M/L, phased)
+    · XS/S feature → /execute-phase <NN> (single-pass)
+    · adjust scope first → re-run /plan-feature   · audit the planning docs → /audit-docs
+  ```

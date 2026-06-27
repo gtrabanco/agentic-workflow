@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.0.4
+version: 1.0.5
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -85,5 +85,10 @@ say so.
 
 - A severity-ranked findings report exists, and any approved low-risk fixes are
   applied — with genuine deferrals left untouched and labeled as such.
-- The **next step is suggested** (re-run after fixes, or route real drift to
-  `triage-issue` / `plan-fix`).
+- **The closing `→ Next:` block is printed:**
+
+  ```
+  → Next: apply the approved low-risk fixes, then re-run /audit-docs to confirm clean
+    · real drift (not cosmetic) → /triage-issue   · a concrete defect → /plan-fix
+    · already clean → nothing to do
+  ```

@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -226,8 +226,9 @@ turns:
    per iteration**: XS/S/M → PLAN → EXECUTE (all phases / single pass) →
    REVIEW → PR → AUDIT; L or sensitive-flagged → PLAN → EXECUTE (≤2 phases) →
    REVIEW → EXECUTE (next ≤2) → REVIEW → … → PR → AUDIT.
-5. **LOG** one line to `.ship-run.log`; print `CONTINUE — next: <unit>` as the
-   last line.
+5. **LOG** one line to `.ship-run.log`; print `→ Next: <unit> (CONTINUE)` as the
+   last line (the canonical next-step shape; `CONTINUE` stays the loop's
+   keep-going signal).
 
 **Capacity guard:** an iteration that cannot finish its stage in one turn
 (e.g. an oversized review) writes a partial-stage marker and ends cleanly;
@@ -314,7 +315,12 @@ audit-gated like any PR), and printed in full under the banner:
    checkpoint's manual checks plus audit notes: what no gate proved.
 7. **Going forward** — concrete `product-audit` cadence for this project
    (first one now if ≥2–3 features merged; then ~every 5 or pre-release), and
-   the suggested command sequence to continue.
+   the suggested command sequence to continue, closed with the canonical block:
+
+   ```
+   → Next: <merge the open PRs | /triage-issue <batch> | /plan-feature --next>
+     · accepted proposals → /plan-feature   · product-audit due → /product-audit
+   ```
 
 Closing line, verbatim policy: **this report recommends; the human decides.**
 

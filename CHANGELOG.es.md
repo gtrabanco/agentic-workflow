@@ -60,6 +60,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `log-session`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.0.1 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
 | 1.0.0 | 2026-06-19 | — | Nueva skill de diario de sesión. Añade una entrada estructurada a `docs/LOGS.md` (resumen, archivos, decisiones + por qué, siguiente paso) bajo demanda; `model: sonnet` (barato por diseño). Incluye hooks gratuitos y opt-in en `template/.claude/`: captura mecánica en SessionEnd + marcador en SessionStart, y restauración de contexto opt-in en SessionStart — todos sin modelo |
 
 ### Mantenimiento del repo
@@ -67,6 +68,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `bump-skill`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.0 | 2026-06-27 | menor | Paso de lint que marca las skills editadas sin bloque `→ Next:` o con etiquetas de fase `S1`/"Step" (avisa, nunca corrige solo) |
 | 1.0.0 | 2026-06-19 | — | Nueva skill de mantenimiento del repo. Tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md |
 
 ### De cara al usuario
@@ -74,12 +76,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.1 | 2026-06-27 | parche | El cierre por iteración y el del informe final usan la forma canónica `→ Next:`; consistencia de nombrado de fases (`P1, P2, …`) |
 | 1.1.0 | 2026-06-19 | menor | Alineado a done-al-abrir-PR: el flip a `done` viaja en el commit de la fase PR; `SHIP: COMPLETE` exige los PRs **mergeados** (no solo `done`); los dependientes se desbloquean al **merge**; REVIEW triagea cada hallazgo no-fix-now |
 | 1.0.0 | 2026-06-10 | — | Nuevo autopilot. Una entrevista inicial → funda el proyecto → entrega el roadmap feature a feature vía `/loop` (plan → execute → review → PR → audit). Merge humano por defecto; `--fullauto` con doble llave y suelos de seguridad fail-closed; registro de decisiones commiteado + log de run sin trackear |
 
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.1 | 2026-06-27 | parche | Fases fijadas a `P1, P2, …` (nunca `S1`/"Steps"; normaliza un plan recibido); los bloques de hand-off de revisión se reescriben a la forma canónica `→ Next:` |
 | 1.3.0 | 2026-06-19 | menor | Una unidad terminada (single-pass, `--fix`, fase final) **siempre abre su PR** + **pasa a `done` al abrir PR** (construida, no mergeada); el hand-off final a `review-change` ahora es **obligatorio**; la entrada del fix-index se mantiene hasta el merge; imprime el siguiente paso en todos los modos |
 | 1.2.0 | 2026-06-09 | menor | Tests primero en fases core/orquestación; P1 commitea los artefactos de planificación aparte; protocolo nunca-commitear-en-rojo (irreparable → `known-issues.md` + parar); regla de divergencia de plan; continuidad por `progress.md` |
 | 1.1.2 | 2026-06-09 | parche | Patrón de ejecución por lotes con `/loop` documentado |
@@ -90,6 +94,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.1 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
 | 1.1.0 | 2026-06-09 | menor | Dimensiona cada feature `XS/S/M/L`; enruta las pequeñas a la vía single-pass; imprime el siguiente paso correcto |
 | 1.0.1 | 2026-06-05 | parche | `effort medium → high` (sus pasos de planificación en turno lo necesitan) |
 | 1.0.0 | 2026-06-05 | — | Primer release — el router de planificación (idea / issue / slug acotado / `--next`) |
@@ -97,6 +102,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.0.3 | 2026-06-27 | parche | Hand-off normalizado al bloque canónico `→ Next:` |
 | 1.0.2 | 2026-06-19 | parche | Añadido `## Done when` — toda skill termina imprimiendo el siguiente paso |
 | 1.0.1 | 2026-06-09 | parche | Redacción forge-agnóstica ("forge CLI per Workflow conventions") |
 | 1.0.0 | 2026-06-05 | — | Primer release — redacta un SPEC de fix acotado como arquitecto, para para revisión |
@@ -104,6 +110,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.0 | 2026-06-27 | menor | Recomienda `product-audit` cuando la deriva del SPEC **se repite** entre unidades (no un hallazgo aislado); el cierre usa el bloque canónico `→ Next:` |
 | 1.2.0 | 2026-06-19 | menor | **Obligatorio antes de cada merge**; enruta **cada hallazgo no-fix-now por `triage-issue`** (issue / decisión documentada / descarte justificado), nunca se pierde en silencio; imprime el siguiente paso |
 | 1.1.0 | 2026-06-09 | menor | Comprobación de deriva del SPEC (diff vs. alcance + criterios de aceptación del SPEC) |
 | 1.0.1 | 2026-06-05 | parche | Redacción: `execute-phase` "hace hand-off a" él |
@@ -112,6 +119,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-06-27 | menor | Bloque `→ Next:` post-merge — MERGE-READY apunta a la siguiente unidad (`plan-feature --next` / `triage-issue`) para que una feature terminada no muera en el merge |
 | 1.1.0 | 2026-06-19 | menor | Gate de fusión reforzado: **nunca fusionar con docs pendientes**; la entrada issue/fix-index debe seguir trackeada (se retira solo tras el merge); `done` ≠ listo-para-fusionar; indica el siguiente paso |
 | 1.0.3 | 2026-06-09 | parche | Redacción forge-agnóstica |
 | 1.0.2 | 2026-06-05 | parche | Revertido `context: fork` (el CLI suprimía la salida de la skill) |
@@ -121,6 +129,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.2 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
 | 1.2.1 | 2026-06-19 | parche | Imprime un siguiente paso explícito (batch `triage-issue` → `plan-feature`/`plan-fix`) |
 | 1.2.0 | 2026-06-14 | menor | `model: fable → opus` (Fable ya no disponible; Opus a `effort: max` es el tier de barrido equivalente) |
 | 1.1.0 | 2026-06-09 | menor | `model: opus[1m] → fable` (Fable 5 con contexto 1M nativo) — revertido luego en 1.2.0 |
@@ -132,6 +141,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.0.5 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
 | 1.0.4 | 2026-06-19 | parche | Imprime un siguiente paso explícito |
 | 1.0.3 | 2026-06-09 | parche | Redacción forge-agnóstica |
 | 1.0.2 | 2026-06-05 | parche | Revertido `context: fork` |
@@ -141,6 +151,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-06-27 | menor | Recomienda `product-audit` cuando la **misma inconsistencia se repite** entre issues; el cierre por veredicto usa el bloque canónico `→ Next:` |
 | 1.1.1 | 2026-06-19 | parche | Imprime un siguiente paso explícito por veredicto |
 | 1.1.0 | 2026-06-09 | menor | Triage por lotes (`triage-issue 12 14 17`) — veredictos independientes, una tabla resumen |
 | 1.0.0 | 2026-06-05 | — | Primer release — clasifica un issue verificando su disparador contra el código |
@@ -148,6 +159,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.2 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
 | 1.1.1 | 2026-06-19 | parche | `## Done when` imprime el siguiente paso explícito |
 | 1.1.0 | 2026-06-09 | menor | Detecta el **forge** desde la URL del remoto y lo registra; sugiere las skills de revisión complementarias de la plataforma |
 | 1.0.0 | 2026-06-05 | — | Primer release — adapta el scaffold de docs a un proyecto |
@@ -162,13 +174,28 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.0.0 | 2026-06-05 | — | Entrevista una idea en crudo hasta un SPEC |
 | `plan-feature-from-issue` | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
-| `plan-feature-scaffold` | 1.1.0 | 2026-06-09 | menor | Escala los artefactos al tamaño — XS/S → solo SPEC; M/L → set completo que acaba en fase de hardening |
+| `plan-feature-scaffold` | 1.1.1 | 2026-06-27 | parche | Nombrado de fases fijado a `P1, P2, …` ("fases") en PLAN/TASKS/progress — nunca `S1`/"Steps" |
+| | 1.1.0 | 2026-06-09 | menor | Escala los artefactos al tamaño — XS/S → solo SPEC; M/L → set completo que acaba en fase de hardening |
 | | 1.0.0 | 2026-06-05 | — | SPEC → set completo de artefactos de planificación + entrada de roadmap |
 
 ---
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-06-27 — hardening del workflow (next-step canónico + nombrado de fases).**
+  Dos reglas de autoría a nivel de repo añadidas a `CLAUDE.md` y aplicadas a todo el
+  conjunto: (1) toda skill cierra con un **bloque canónico `→ Next:`** (un comando
+  recomendado + alternativas abiertas `·`) — al terminar una unidad apunta a la
+  siguiente (`plan-feature --next` / un issue concreto), y una inconsistencia
+  **recurrente** enruta a `product-audit`; (2) las fases del plan siempre son
+  **`P1, P2, …` ("fases"), nunca `S1`/"Steps"**. Routing nuevo: bloque post-merge de
+  `audit-pr` (1.2.0); `review-change` (1.3.0) y `triage-issue` (1.2.0) recomiendan
+  `product-audit` solo ante deriva *recurrente*; `bump-skill` (1.1.0) lintea ambas
+  reglas. Parches de nombrado/cierre: `execute-phase` 1.3.1, `plan-feature-scaffold`
+  1.1.1, `plan-feature` 1.1.1, `plan-fix` 1.0.3, `product-audit` 1.2.2, `audit-docs`
+  1.0.5, `init-workspace` 1.1.2, `log-session` 1.0.1, `ship-roadmap` 1.1.1. Ambas
+  plantillas SPEC + `template/CLAUDE.md` llevan la convención de nombrado. Conjunto sin
+  cambios en 16 skills.
 - **2026-06-19 — `log-session` 1.0.0.** Nueva skill de diario de sesión (`docs/LOGS.md`) + hooks gratuitos y opt-in en `template/.claude/` (captura mecánica en SessionEnd, marcador en SessionStart, restauración de contexto opt-in — todos sin modelo). Conjunto → 16 skills (12 de cara al usuario + 4 internas).
 - **2026-06-19 — `bump-skill` 1.0.0.** Nueva skill de mantenimiento del repo: tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza README.md + README.es.md. Eliminado `docs/features/ROADMAP.md` huérfano (contenido ficticio de e-commerce, vocabulario antiguo).
 - **2026-06-19 — política de workflow.** Una unidad nunca acaba solo-en-rama y nada

@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
@@ -58,6 +58,21 @@ the diff carefully:
 
 If the nature of the change is ambiguous, ask the user before proceeding. One
 question covering all ambiguous skills at once is fine.
+
+### 2b. Lint the repo's authoring rules (flag, don't fix)
+
+For each changed skill, check the two `CLAUDE.md` authoring invariants and **warn**
+if violated (this skill never edits a SKILL.md beyond its `version:` line, so it
+reports — it does not auto-correct):
+
+- **Closing `→ Next:` block.** A user-facing skill should end with a visible
+  `→ Next:` recommendation block (recommended command + open `·` alternatives), not
+  just a "Done when" bullet. `grep -L '→ Next:' skills/<name>/SKILL.md` flags a miss.
+- **Phase naming.** Plans use `P1, P2, …` ("phases") only — never `S1`/`S2`/"Step N".
+  `grep -nE '\bS[0-9]\b|\bStep [0-9]' skills/<name>/SKILL.md` should return nothing in
+  a planning/execution context; flag any hit for the user to fix before committing.
+
+Report violations in the summary; do not block the bump on them.
 
 ### 3. Compute the new version
 
@@ -192,5 +207,7 @@ Then print the next step:
   skill, newest first.
 - `README.md` and `README.es.md` skills and model tables are accurate.
 - Major bumps have a migration note and cross-reference updates.
+- Any authoring-rule violations (missing `→ Next:` block, `S1`/"Step" phase labels)
+  are reported for the user to fix before committing.
 - **The next step is printed** — the `git add` + `git commit` command, ready
   to run.

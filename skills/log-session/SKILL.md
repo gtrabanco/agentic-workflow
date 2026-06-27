@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: "[note to prepend to the entry]"
 model: sonnet
 effort: medium
@@ -122,5 +122,9 @@ the HEAD sha and start time at session open.
 
 - A new entry is appended to `docs/LOGS.md` with at least Summary and Next.
 - The mechanical facts (branch, commits, files) are accurate to git.
-- **The next step is printed** — typically: `/clear` is now safe (the session is
-  captured), or the resume command named in the entry's **Next** line.
+- **The closing `→ Next:` block is printed:**
+
+  ```
+  → Next: /clear is now safe — the session is captured
+    · resume later → the command named in the entry's **Next** line
+  ```
