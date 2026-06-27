@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.0.2
+version: 1.0.3
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -86,10 +86,9 @@ SPEC drafted: docs/fix/<n>-<topic>/SPEC.md
 Branch: fix/<n>-<topic> (local, not pushed)
 Commit: <short hash>
 
-Next steps:
-  1. Review the SPEC.
-  2. When ready, invoke execute-phase --fix to implement.
-  3. Implementation will push and open the PR with `Closes #<n>`.
+→ Next: review the SPEC, then /execute-phase --fix — implement the fix
+  · execution pushes and opens the PR with `Closes #<n>`
+  · scope looks wrong → adjust the SPEC and re-run /plan-fix
 ```
 
 Then end in the user's language with a 2-3 sentence summary: what the SPEC ships, the biggest risk identified, and any open decisions left for the implementer.
@@ -99,5 +98,5 @@ Then end in the user's language with a 2-3 sentence summary: what the SPEC ships
 - The fix SPEC is drafted from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections,
   scoped tightly with risks/blockers surfaced, registered in `docs/fix/README.md`,
   and committed locally on the `fix/<n>-<topic>` branch (not pushed, no PR).
-- **The next step is printed** — the Hand-off block above (review the SPEC, then
-  `execute-phase --fix`).
+- **The closing `→ Next:` block is printed** — the Hand-off block above (review the
+  SPEC, then `/execute-phase --fix`).

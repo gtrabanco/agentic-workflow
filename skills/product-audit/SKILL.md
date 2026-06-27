@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.2.1
+version: 1.2.2
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus
 effort: max
@@ -128,6 +128,10 @@ Proposals — the user decides which to act on:
 
 Manual-verification checklist (what automation can't confirm):
   - <item> …
+
+→ Next: /triage-issue <the proposed issues> — classify them in one batch
+  · accepted bug/debt → /plan-fix   · accepted capability → /plan-feature
+  · nothing to act on → record the verdict and move on
 ```
 
 Lead with the honest one-line health verdict (e.g. "shippable with 2 high-sev
@@ -171,5 +175,5 @@ product-audit (whole product, all axes, periodic)
   roadmap add, roadmap remove/revise) exist, deduped and each routed.
 - Nothing was fixed, filed, or changed — the report is the deliverable; the user
   decides what to act on.
-- The **next step is named** — typically a batch `triage-issue` for the proposed
-  issues, then `plan-feature` / `plan-fix` for the accepted work.
+- The **closing `→ Next:` block is printed** — typically a batch `/triage-issue` for
+  the proposed issues, then `/plan-feature` / `/plan-fix` for the accepted work.

@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.1.0
+version: 1.2.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -119,9 +119,16 @@ Non-blocking nits:
 
 Before merge, a human should still verify:
   - <manual-verification item from review-change>
+
+→ Next:
+  · MERGE-READY → you merge, then /plan-feature --next (the next roadmap unit)
+    or pick an issue with /triage-issue
+  · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
 ```
 
 If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge.
+The `→ Next:` block is always printed — on MERGE-READY it points the user at the
+next concrete unit so a finished feature never dead-ends at the merge.
 
 Example (generic — substitute your project's numbers and gates):
 
@@ -185,6 +192,7 @@ execute-phase (all phases done) ─▶ review-change (axes clean) ─▶ audit-p
 - Every applicable gate has a pass / blocker / n-a verdict backed by cited evidence.
 - A single top-line verdict (**MERGE-READY** or **BLOCKED** with ranked blockers) is
   reported, each blocker routed, with the human's manual-verification list explicit.
-- The **next step is stated** (MERGE-READY → human merges; BLOCKED → the routed fix,
+- The **closing `→ Next:` block is printed** (MERGE-READY → human merges, then the
+  next unit via `/plan-feature --next` or `/triage-issue`; BLOCKED → the routed fix,
   then re-audit).
 - Nothing was merged, edited, or refactored.
