@@ -68,11 +68,31 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > **`user-invocable: true` is mandatory.** Without it, the skill is not offered
 > in the slash-command menu in this environment. Always set it explicitly.
 
-> **Always suggest the next step.** Every skill ends its turn by printing the
-> concrete next command(s) — the hand-off, the router target, or the resume line —
-> so the user never has to guess what follows. A terminal verdict still names what
-> to do with it (merge, re-audit, triage). This is part of "Done when" for every
-> skill.
+> **Always close with a `→ Next:` block.** Every skill ends its turn with a
+> **visible recommendation block** — not a buried "Done when" bullet. The shape is
+> the "review checkpoint" style: one **recommended** command on the `→ Next:` line,
+> then the open alternatives as `·` sub-bullets, leaving the choice to the user
+> (recommend, never dictate). Use this exact shape:
+>
+> ```
+> → Next: /<recommended-command> — <one-line why>
+>   · <alternative> → <when to pick it>
+>   · <alternative> → <when to pick it>
+> ```
+>
+> Two cases the block must cover when they apply: (a) **finishing a unit/feature** →
+> point to the next concrete unit (`/plan-feature --next`, or a named issue/roadmap
+> entry); (b) **recurring inconsistency** — when `review-change`/`triage-issue` see
+> the *same* problem twice (e.g. SPEC drift on consecutive units) → recommend
+> `/product-audit`. A terminal verdict still names what to do with it (merge,
+> re-audit, triage). This is part of "Done when" for every skill.
+
+> **Phases are `P1, P2, …` ("phases"), never "Steps"/`S1`.** Any skill that
+> produces or references a plan labels implementation steps `P1, P2, …` and calls
+> them *phases* (a Spanish or other-language UI may say "fases"/"pasos", but the
+> committed artifacts and the labels stay `P1, P2, …`). The label is the executor's
+> argument (`execute-phase NN P2`), so it must be stable and uniform — never emit
+> `S1`/`S2`/"Step N" into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap.
 
 > **Version every change.** Each skill carries its own `version:` and evolves
 > independently. When you change a skill, bump its `version:` (major = rename or

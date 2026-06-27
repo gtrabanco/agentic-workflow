@@ -90,7 +90,7 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 ### Repo maintenance
 | Skill | What it does |
 |---|---|
-| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Run before every commit that touches a skill. |
+| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps"). Run before every commit that touches a skill. |
 
 ### Autopilot — the whole flow, end to end
 | Skill | What it does |

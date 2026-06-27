@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.1.1
+version: 1.1.2
 argument-hint: <target-dir>
 model: opus
 effort: high
@@ -110,5 +110,10 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 - A tailored `CLAUDE.md` + `docs/` scaffold + `.github/` templates exist in the
   target, unused folders pruned, residual placeholders flagged, the platform's
   companion review skills are recorded (and offered).
-- **The next step is printed** (`plan-feature` → `execute-phase`, plus the offer to
-  install the skills).
+- **The closing `→ Next:` block is printed** (plus the offer to install the skills):
+
+  ```
+  → Next: /plan-feature — plan the first feature
+    · raw idea → /plan-feature "<idea>"   · next roadmap entry → /plan-feature --next
+    · confirm the scaffold is coherent → /audit-docs
+  ```

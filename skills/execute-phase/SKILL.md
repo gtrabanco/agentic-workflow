@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.3.0
+version: 1.3.1
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -27,6 +27,7 @@ Three modes:
 ## Hard rules
 
 - Honor the project's **Workflow conventions** (branch/PR, gate-before-commit, docs-language). Run `git branch --show-current` before any edit/commit; if `main`, create the working branch first (assistant only; the user may use `main`).
+- **Phases are `P1, P2, …`.** The `<phase>` argument and every reference in `PLAN.md`/`TASKS.md`/`progress.md`/commits is `P1, P2, …` ("phase N") — **never** `S1`/`S2`/"Step N". If a plan you're handed uses `S1`-style labels, normalize it to `P1, …` before executing and note it in `decisions.md`.
 - Implement only the requested scope — one phase (feature mode) or the whole SPEC (single-pass/fix). Never bundle phases unless asked.
 - Stop after the gate passes; keep commits small and reviewable.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
@@ -156,18 +157,18 @@ Checkpoint hand-off (print it — every invocation ends by suggesting the next s
 
 ```
 Phase <N> done and committed. Review checkpoint.
-→ Run /review-change now — it reviews the branch at its own model/effort.
-  · clean    → continue with: execute-phase <NN> <next phase>
-  · findings → fold fix-now into the branch; non-fix-now → triage-issue; then re-review.
+→ Next: /review-change — it reviews the branch at its own model/effort
+  · clean    → continue with /execute-phase <NN> <next phase>
+  · findings → fold fix-now into the branch; non-fix-now → /triage-issue; then re-review
 ```
 
 Final-phase / single-pass / fix hand-off:
 
 ```
 <unit> implemented, gate green, marked done, PR #<n> opened.
-→ Run /review-change now (mandatory final review).
-  · clean    → /audit-pr (merge gate) → human merges.
-  · findings → fold fix-now into this PR; non-fix-now → triage-issue; re-review.
+→ Next: /review-change (mandatory final review)
+  · clean    → /audit-pr (merge gate) → human merges
+  · findings → fold fix-now into this PR; non-fix-now → /triage-issue; re-review
 ```
 
 This never auto-merges and never skips the per-phase stop: one phase at a time,

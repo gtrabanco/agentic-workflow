@@ -93,7 +93,7 @@ pasos que se componen por ti (los tres pasos de planificación del router
 ### Mantenimiento del repo
 | Skill | Qué hace |
 |---|---|
-| `bump-skill` | Tras editar una skill en este repo: sube la `version:` en el frontmatter del SKILL.md, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md. Ejecutar antes de cada commit que toque una skill. |
+| `bump-skill` | Tras editar una skill en este repo: sube la `version:` en el frontmatter del SKILL.md, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md. Además **lintea las reglas de autoría del repo** (toda skill cierra con un bloque `→ Next:`; las fases son `P1, P2, …`, nunca `S1`/"Steps"). Ejecutar antes de cada commit que toque una skill. |
 
 ### Autopilot — el flujo completo, de punta a punta
 | Skill | Qué hace |

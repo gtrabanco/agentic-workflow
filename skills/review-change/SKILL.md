@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -96,8 +96,18 @@ decide which axes apply from two inputs:
    or a justified drop. **No non-fix-now finding may end without a destination** — the
    point is to never silently lose one, and to catch the few that actually deserve an
    issue or a doc note.
-8. **Next step.** Close with the suggested next command (clean → `/audit-pr`;
-   fix-now open → fold them, then re-review).
+8. **Next step.** Close with the `→ Next:` block:
+
+   ```
+   → Next: /audit-pr — merge gate (when the table is clean)
+     · fix-now findings → fold into the branch, then re-review
+     · non-fix-now → /triage-issue (issue / documented decision / justified drop)
+     · SPEC drift flagged here AND on a prior unit → /product-audit (the founding
+       assumptions are probably stale — don't keep patching a compounding error)
+   ```
+
+   The `/product-audit` line fires **only on recurring drift** — the same kind of
+   inconsistency surfacing a second time, not a single isolated finding.
 
 ## Example output (generic)
 
@@ -152,4 +162,5 @@ disposition is a decision, not a default:
 - **Every finding has a destination:** fix-now routed, and every non-fix-now finding
   put through `triage-issue` (issue / documented decision / justified drop) — none
   silently lost.
-- The **next step is printed** (clean → `/audit-pr`), and **no code changed**.
+- The **closing `→ Next:` block is printed** (clean → `/audit-pr`; recurring drift →
+  `/product-audit`), and **no code changed**.

@@ -146,6 +146,10 @@ Features are planned before they are coded. Flow:
 6. verification & review
 7. PR
 
+Phases are labelled **`P1, P2, …`** ("phases") everywhere — `PLAN.md`, `TASKS.md`,
+`progress.md`, commits — never `S1`/"Steps". The label is `execute-phase`'s
+argument (`execute-phase NN P2`), so it must stay uniform.
+
 Start a new feature by copying `docs/features/_TEMPLATE/SPEC.md` to
 `docs/features/<NN>-<slug>/SPEC.md` and registering it in
 `docs/features/ROADMAP.md` (the source of truth for numbering, order, and

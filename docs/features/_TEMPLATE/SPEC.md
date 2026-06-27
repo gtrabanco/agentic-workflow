@@ -109,8 +109,12 @@ otherwise list them as prose.
 ## Phases
 
 High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
-Phase 0 is always planning (produce the seven planning artifacts); the
-final phase is always the PR.
+**Phases are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or
+"Steps".** Planning (producing the planning artifacts) is done by `plan-feature`
+before execution, so it is **not** a numbered phase here. `P1` is the first
+implementation phase (it also commits the planning artifacts); the **last phase
+is always hardening** (edge cases + the dev-scenario failure modes). Opening the
+PR is the final *step* of the last phase, not a phase of its own.
 
 ## Deploy & rollback
 

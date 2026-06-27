@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.1.1
+version: 1.2.0
 argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
@@ -93,5 +93,15 @@ triage-issue ────┼─ promote ─────────▶ plan-feat
 - The issue has a clear verdict with cited evidence.
 - The verdict is recorded (routed, commented, and/or index-updated), and nothing
   deferred was implemented inline.
-- The **next step is stated** per verdict (fix-now → `plan-fix`; promote →
-  `plan-feature`; postpone → dated comment; wontfix → propose close).
+- **The closing `→ Next:` block is printed** per verdict:
+
+  ```
+  → Next: act on the verdict(s)
+    · fix-now → /plan-fix   · promote → /plan-feature
+    · postpone → dated comment, leave open   · wontfix → propose close
+    · same inconsistency across several issues → /product-audit (a recurring pattern,
+      not isolated tickets — sweep the product rather than triaging one by one)
+  ```
+
+  The `/product-audit` line fires **only on a recurring inconsistency** — the same
+  underlying problem behind multiple issues, not any single triage.
