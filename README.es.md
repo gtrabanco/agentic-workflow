@@ -117,6 +117,11 @@ harías a mano — el autopilot solo te mueve a sus extremos. Con `--fullauto`,
 `ship-roadmap` también se encarga de los merges, bajo suelos de seguridad
 innegociables.
 
+**Vídeo:** `ship-roadmap` creando una PR de principio a fin en un repositorio de
+ejemplo.
+
+[![ship-roadmap creando una PR en un repositorio de ejemplo](https://img.youtube.com/vi/2Ai0NkTvoeM/0.jpg)](https://www.youtube.com/watch?v=2Ai0NkTvoeM)
+
 Las skills complementarias para UI/UX y calidad específica del lenguaje (diseño,
 ux, tipado…) **no van incluidas** — `review-change` y `product-audit` las componen
 cuando están instaladas, e `init-workspace` sugiere las adecuadas según la
