@@ -113,6 +113,10 @@ The same `plan → execute → review → audit → merge` path you'd run by han
 autopilot just moves you to its edges. Under `--fullauto`, `ship-roadmap` also
 handles the merges, under non-negotiable safety floors.
 
+**Video:** `ship-roadmap` opening a PR end to end on a sample repository.
+
+[![ship-roadmap opening a PR on a sample repository](https://img.youtube.com/vi/2Ai0NkTvoeM/0.jpg)](https://www.youtube.com/watch?v=2Ai0NkTvoeM)
+
 Companion skills for UI/UX and language-specific quality (design, ux, typing…) are
 **not bundled** — `review-change` and `product-audit` compose them when installed,
 and `init-workspace` suggests the right ones per platform. See
