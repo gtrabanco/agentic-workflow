@@ -4,10 +4,10 @@
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=2Ai0NkTvoeM">
-    <img src="https://img.youtube.com/vi/2Ai0NkTvoeM/mqdefault.jpg" alt="ship-roadmap opening a PR on a sample repository" width="480">
+    <img src="https://img.youtube.com/vi/2Ai0NkTvoeM/mqdefault.jpg" alt="ship-roadmap opening a PR on a sample repository" width="280">
   </a>
   <br>
-  <sub><code>ship-roadmap</code> opening a PR end to end on a sample repository — click to watch</sub>
+  <sub style="font-size: 0.75em;"><code>ship-roadmap</code> opening a PR end to end on a sample repository — click to watch</sub>
 </p>
 
 # Agentic Workflow Skills
