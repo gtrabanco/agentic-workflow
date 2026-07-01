@@ -2,6 +2,14 @@
   <img src="docs/assets/logo.svg" alt="Agentic Workflow logo" width="120" height="120">
 </p>
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=2Ai0NkTvoeM">
+    <img src="https://img.youtube.com/vi/2Ai0NkTvoeM/mqdefault.jpg" alt="ship-roadmap opening a PR on a sample repository" width="480">
+  </a>
+  <br>
+  <sub><code>ship-roadmap</code> opening a PR end to end on a sample repository — click to watch</sub>
+</p>
+
 # Agentic Workflow Skills
 
 > 🇪🇸 [Versión en español](README.es.md)
@@ -46,56 +54,64 @@ you (the `plan-feature` router's three planning steps + the `review-change`
 engine). One disciplined path: **plan → execute → review → audit → merge.**
 
 ### Setup
-| Skill | What it does |
-|---|---|
+
+| Skill            | What it does                                                                                                                                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills |
 
 ### Plan
-| Skill | What it does |
-|---|---|
+
+| Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `plan-feature` | **One entry point to plan a feature.** Detects the input — a raw idea (interview), an issue `#N` (issue → scoped SPEC), or a scoped slug/SPEC (straight to scaffolding) — routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only, single-pass path — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
-| `plan-fix` | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from an issue, commits on a fix branch, **stops for review**. |
+| `plan-fix`     | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from an issue, commits on a fix branch, **stops for review**.                                                                                                                                                                                                                                                                                                            |
 
 > You only ever call `plan-feature`; it composes the internal steps
 > `plan-feature-interview`, `plan-feature-from-issue`, and `plan-feature-scaffold`
 > (hidden from the menu).
 
 ### Execute
-| Skill | What it does |
-|---|---|
+
+| Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `execute-phase` | Implements one phase of a feature (default), a small `XS/S` feature in a single pass, or a fix (`--fix`). **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **hands off to `review-change` every 2 phases and once at the end (mandatory)**. A finished unit **always opens its PR and flips to `done`** (built, not merged). |
 
-### Review & audit — *change → PR → product*
-| Skill | Scope | What it does |
-|---|---|---|
-| `review-change` | the **change** | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) and classifies → one decision table + an explicit manual-verification checklist |
-| `audit-pr` | the **PR** | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers** |
-| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (**never auto-fixes**) |
-| `audit-docs` | the **docs** | Audits docs ↔ roadmap ↔ code ↔ fix index for drift |
+### Review & audit — _change → PR → product_
+
+| Skill           | Scope           | What it does                                                                                                                                                                                   |
+| --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) and classifies → one decision table + an explicit manual-verification checklist |
+| `audit-pr`      | the **PR**      | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers**                                                       |
+| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (**never auto-fixes**)                                                                          |
+| `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
 
 > `review-change`'s findings engine is the internal `review-implementation` — the
 > two-phase find → classify pass it composes (and `audit-pr` / `product-audit`
 > reuse). It's not a menu entry; you reach it through `review-change`.
 
 ### Decide
-| Skill | What it does |
-|---|---|
+
+| Skill          | What it does                                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
 | `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
 
 ### Session
-| Skill | What it does |
-|---|---|
-| `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + *why*, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
+
+| Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
 
 ### Repo maintenance
-| Skill | What it does |
-|---|---|
+
+| Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps"). Run before every commit that touches a skill. |
 
 ### Autopilot — the whole flow, end to end
-| Skill | What it does |
-|---|---|
-| `ship-roadmap` | **Builds the whole app from the roadmap.** One upfront interview (product, features, stack, architecture — recommended *proportionally*, never defaulting to a named pattern — quality bars, ops, autonomy, budget), founds the project if needed, creates or adopts the complete roadmap, then a `/loop`-driven build loop ships it feature by feature through the skills above — **with no further questions**. Default: opens PRs, you merge; `--fullauto` merges MERGE-READY PRs under non-negotiable safety floors. Ends with a final report: issues to open, discovered feature proposals, manual checks, product-audit cadence. |
+
+| Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ship-roadmap` | **Builds the whole app from the roadmap.** One upfront interview (product, features, stack, architecture — recommended _proportionally_, never defaulting to a named pattern — quality bars, ops, autonomy, budget), founds the project if needed, creates or adopts the complete roadmap, then a `/loop`-driven build loop ships it feature by feature through the skills above — **with no further questions**. Default: opens PRs, you merge; `--fullauto` merges MERGE-READY PRs under non-negotiable safety floors. Ends with a final report: issues to open, discovered feature proposals, manual checks, product-audit cadence. |
 
 How the autopilot runs the workflow — one interview in, reviewed PRs out, and
 you only step in to merge (amber):
@@ -112,10 +128,6 @@ flowchart LR
 The same `plan → execute → review → audit → merge` path you'd run by hand — the
 autopilot just moves you to its edges. Under `--fullauto`, `ship-roadmap` also
 handles the merges, under non-negotiable safety floors.
-
-**Video:** `ship-roadmap` opening a PR end to end on a sample repository.
-
-[![ship-roadmap opening a PR on a sample repository](https://img.youtube.com/vi/2Ai0NkTvoeM/0.jpg)](https://www.youtube.com/watch?v=2Ai0NkTvoeM)
 
 Companion skills for UI/UX and language-specific quality (design, ux, typing…) are
 **not bundled** — `review-change` and `product-audit` compose them when installed,
@@ -139,19 +151,19 @@ your session model/effort resume afterward. **You stay in control:** to change
 them, edit the skill's `model:` / `effort:` lines (or `model: inherit` to follow
 your session).
 
-| Skill | Model tier | Effort | Why |
-|---|---|---|---|
-| `init-workspace` | Opus | high | interview-driven project bootstrap + adaptation |
-| `plan-feature` | Opus | high | router + planning: its internal interview/scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort) |
-| `plan-fix` | Opus | high | architect-level scoping + risk analysis |
-| `execute-phase` | Sonnet | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle) |
-| `review-change` | Opus | high | platform-adaptive review orchestration + synthesis |
-| `audit-pr` | Opus | high | whole-PR merge-readiness judgement |
-| `product-audit` | Opus | max | product-wide multi-axis sweep + proposals (max effort for the widest context sweep) |
-| `audit-docs` | Sonnet | medium | mostly mechanical cross-document checks (Opus for deep audits) |
-| `triage-issue` | Opus | high | verify triggers against the code; judgement call |
-| `log-session` | Sonnet | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free) |
-| `ship-roadmap` | Opus | high | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
+| Skill            | Model tier | Effort | Why                                                                                                                                                                                      |
+| ---------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `init-workspace` | Opus       | high   | interview-driven project bootstrap + adaptation                                                                                                                                          |
+| `plan-feature`   | Opus       | high   | router + planning: its internal interview/scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                             |
+| `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |
+| `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle)                                                                                              |
+| `review-change`  | Opus       | high   | platform-adaptive review orchestration + synthesis                                                                                                                                       |
+| `audit-pr`       | Opus       | high   | whole-PR merge-readiness judgement                                                                                                                                                       |
+| `product-audit`  | Opus       | max    | product-wide multi-axis sweep + proposals (max effort for the widest context sweep)                                                                                                      |
+| `audit-docs`     | Sonnet     | medium | mostly mechanical cross-document checks (Opus for deep audits)                                                                                                                           |
+| `triage-issue`   | Opus       | high   | verify triggers against the code; judgement call                                                                                                                                         |
+| `log-session`    | Sonnet     | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free)                                              |
+| `ship-roadmap`   | Opus       | high   | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
 > The 4 internal steps aren't selected directly. Because they're composed **within
 > a caller's turn**, they inherit that turn's model/effort (a skill's `model`/`effort`
@@ -169,6 +181,7 @@ your session).
 Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 
 ### Build a feature
+
 ```
 /plan-feature "<your idea>"     # or  /plan-feature <N> (issue)  ·  /plan-feature --next (next roadmap item)
         → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
@@ -180,9 +193,11 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 /audit-pr                       # merge gate: merge-ready or blockers (never merge with pending docs)
         → human merges
 ```
+
 See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**.
 
 ### Handle an issue
+
 ```
 /triage-issue <N>
    → reads the issue's "when to fix" trigger, verifies it against the current code
@@ -191,30 +206,37 @@ See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**
      postpone → dated comment, leave open (no inline work)
      wontfix  → propose close
 ```
+
 See **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
 
 ### Review, audit & classify
+
 ```
 /review-change                  # runs the right reviews per platform + classifies → one table + manual checks
 /audit-pr                       # is THIS PR ready to merge?  merge-ready or blockers
 /product-audit                  # where does the whole product stand?  issues + roadmap proposals
 /audit-docs                     # did the docs drift from code / roadmap?
 ```
+
 See **[`docs/workflow/REVIEW_AND_CLASSIFY.md`](docs/workflow/REVIEW_AND_CLASSIFY.md)**.
 
 ### Build the whole app (autopilot)
+
 ```
 /ship-roadmap                   # ONE interview (product, features, stack, architecture, autonomy, budget)
         → founds the project if needed, writes the complete roadmap, locks the run policy
 /loop /ship-roadmap --continue  # the loop ships the roadmap feature by feature (add --fullauto to auto-merge)
         → plan → execute → review → PR → audit → (your merge) → next feature → … → final report
 ```
+
 You only reappear at the merges (default) and at the final report.
 
 ### Resume across sessions
+
 ```
 /log-session                    # before /clear or closing: append what you did + the next step to docs/LOGS.md
 ```
+
 The `template/` ships free, opt-in Claude Code hooks (`template/.claude/`) that
 auto-append a mechanical entry on every `/clear` and exit, and can re-inject the
 last entry on start so you resume cold — no model, no token cost for the capture.
@@ -280,8 +302,7 @@ terminal program, `claude-api` with no LLM features).
 
 ## Projects built with this workflow
 
-| Project | Notes |
-|---|---|
-| [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the `ship-roadmap` autopilot |
+| Project                                                     | Notes                                                                 |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| [gtrabanco/ship-lab](https://github.com/gtrabanco/ship-lab) | json2csv CLI — built end-to-end with the `ship-roadmap` autopilot     |
 | [gtrabanco/bingo-ev](https://github.com/gtrabanco/bingo-ev) | Started with vibecoding, migrated to the workflow once it was working |
-
