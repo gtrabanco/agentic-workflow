@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -12,7 +12,8 @@ description: >
   Implement one phase of a feature (default), a small feature end-to-end in a
   single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces
   branch safety, issue policy, the project's verification gate, and per-phase doc
-  discipline. Triggers: "execute phase P1 of NN", "implement the NN feature",
+  discipline. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Triggers: "execute phase P1 of NN", "implement the NN feature",
   "build NN from its spec", "execute-phase NN P2", "execute-phase --fix".
 ---
 
@@ -33,9 +34,49 @@ Three modes:
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
 - **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
 
-## Forbidden
+## Allowed & forbidden (fixed lists — no interpretation)
 
-Overengineering · premature abstractions · refactoring unrelated code · unjustified dependencies · building future features early.
+**Allowed changes in a phase:**
+- The phase's own tasks (from `TASKS.md`, or the SPEC for single-pass/fix)
+- Tests for the behavior this phase adds or alters
+- The per-phase doc updates listed in the completion gate below
+- The smallest refactor strictly required to land a task (state why in the commit)
+
+**Forbidden — never, even if it "would help":**
+- New abstractions beyond what the SPEC names (an interface with one
+  implementation is a violation)
+- New dependencies not justified in the SPEC
+- Public API / contract changes the SPEC doesn't name
+- Architecture changes (layers, boundaries, patterns)
+- Refactoring unrelated code
+- Building future phases or features early
+
+Something forbidden looks necessary → stop, record it in `decisions.md` or
+`known-issues.md`, and surface it — never do it silently.
+
+## Phase completion gate — pass only if (every box, every phase)
+
+```
+✓ Verification gate green — type-check + tests + build actually RUN (paste exit
+  status), never assumed
+✓ Every task of this phase checked off in TASKS.md, each mapped to evidence
+  (code path or test name)
+✓ Tests updated/added for every behavior this phase changed
+✓ No TODO/FIXME/HACK markers left in the diff
+✓ No duplicated logic (reuse the existing helper — cite it if one existed)
+✓ No dead code introduced (unused imports, functions, unreachable branches)
+✓ No hidden breaking change (changed public contracts diffed against their
+  consumers)
+✓ Architecture doc respected (dependency directions, layer boundaries)
+✓ Docs updated — at minimum verify each of: TASKS.md (checkboxes),
+  progress.md, testing.md, known-issues.md, decisions.md (if any decision was
+  taken), SPEC.md (only if scope/acceptance changed — with the change logged)
+```
+
+A phase that cannot tick every box is **not done**: fix within the phase's
+scope, or record the blocker in `known-issues.md`, leave the work uncommitted,
+and stop with a clear report. Never commit red; never tick a box you didn't
+verify.
 
 ## Branch
 
@@ -45,6 +86,12 @@ Overengineering · premature abstractions · refactoring unrelated code · unjus
 | `--fix` | `fix/<issue-number>-<topic>` |
 
 Read the SPEC's `Branch` field; create with `git switch -c <name>`. If absent/ambiguous, ask. Never commit, amend, or force-push on `main`.
+
+**Honor the project's declared Git workflow** (Workflow conventions — `branches`
+or `worktrees`). Default and assumption everywhere: **`branches`** — one active
+unit at a time, sequential, plain `git switch -c`; **never create a worktree**.
+Only when the project explicitly declares `worktrees` may a unit get its own
+checkout — and then one worktree per unit, removed after merge.
 
 ## Issue policy
 

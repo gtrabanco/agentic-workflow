@@ -51,6 +51,13 @@ CLI the skills use for issues and PRs. Skill examples are written with `gh`; whe
 this project declares a different forge, run the equivalent command with its CLI.
 The auto-close convention (`Closes #N` in the PR/MR body) must hold either way.
 
+**Git workflow:** `<branches | worktrees>` — how parallel work is handled.
+**`branches`** (default): plain feature/fix branches via `git switch -c`, **one
+active unit at a time**, sequential — slower, but the working tree is always the
+unit you're on. **`worktrees`**: parallel units in separate checkouts — only if
+your agent/tooling manages worktrees. Every skill that creates a branch honors
+this line; with `branches` declared, no skill may create a worktree.
+
 **Hard rules (always honored).**
 - **Branch & PR:** never work on `main`; one PR per unit against `main`; never
   stack — see [PR & branch workflow](#pr--branch-workflow).

@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -12,7 +12,8 @@ description: >
   stack, architecture, quality bars, ops, autonomy, budget), create or adopt the complete roadmap,
   then ship it feature by feature through the full workflow (plan → execute → review → PR → merge
   gate) driven by /loop, with no further questions. Default: opens PRs, the human merges;
-  --fullauto merges MERGE-READY PRs under non-negotiable safety floors. Triggers: "ship the
+  --fullauto merges MERGE-READY PRs under non-negotiable safety floors. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Triggers: "ship the
   roadmap", "build the whole app from the roadmap", "run the full workflow on autopilot",
   "ship-roadmap", "autopilot this project".
 ---
@@ -86,7 +87,7 @@ every later decision is made silently and logged with a one-line rationale.
 | 2 — Features | The feature list (or "elicit" → draft one from the goal); must-have vs can-wait; ordering constraints; explicit out-of-scope. |
 | 3 — Stack & architecture | Stack decided? else recommend from features/constraints. Architecture chosen? else recommend the **lightest structure proportional to Round 1** — a solo tool gets a flat modular layout, a thousands-of-customers system gets enforced boundaries; never default to DDD, hexagonal, or any named pattern. Platform/runtime constraints, library vetoes. |
 | 4 — Quality & ops | Test depth (smoke / workflow default / strict); whether a11y, SEO, i18n, perf budgets apply (proposed from platform type); deploy target + scaffold CI?; secrets posture; **confirm the proposed verification gate commands** — they become the gate every phase must pass. |
-| 5 — Workflow & autonomy | Docs language (default English); forge + CLI (**verify with a real authenticated call now**, e.g. `gh auth status` — not mid-loop); merge policy (default human-merge vs `--fullauto`); the sensitive-area list (defaults: auth, payments, destructive migrations/data deletion, secrets, CI config — **seeded with every integration named in rounds 2–4**, e.g. the payment processor or auth provider the user mentioned); budget caps (default: max iterations = 4× roadmap feature count; 2 retries per red gate; 2 review-fix and 2 audit-fix cycles; optional "pause after N shipped features" checkpoint and milestone stop lines); model-routing confirmation; recommend enabling `ultracode` for the loop. |
+| 5 — Workflow & autonomy | Docs language (default English); forge + CLI (**verify with a real authenticated call now**, e.g. `gh auth status` — not mid-loop); **git workflow** (default `branches`: one active unit, sequential, no worktrees — `worktrees` only if the user declares it and their tooling manages them; recorded in the Workflow conventions and honored by every stage); merge policy (default human-merge vs `--fullauto`); the sensitive-area list (defaults: auth, payments, destructive migrations/data deletion, secrets, CI config — **seeded with every integration named in rounds 2–4**, e.g. the payment processor or auth provider the user mentioned); budget caps (default: max iterations = 4× roadmap feature count; 2 retries per red gate; 2 review-fix and 2 audit-fix cycles; optional "pause after N shipped features" checkpoint and milestone stop lines); model-routing confirmation; recommend enabling `ultracode` for the loop. |
 | 6 — Confirm & launch | The drafted roadmap (numbers, order, deps, sizes) and the full decision record, presented for **one last edit**. Then: founding artifacts written, exact `/loop` command printed. |
 
 **2. Founding (only what's missing).** Compose `init-workspace`'s process

@@ -1,13 +1,14 @@
 ---
 name: bump-skill
 user-invocable: true
-version: 1.2.0
+version: 1.2.1
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
   documentation in the repo that must stay in sync: CHANGELOG.md,
   CHANGELOG.es.md, README.md, and README.es.md. Run before committing any
-  skill change. Trigger phrases: "bump the skill version", "update the
+  skill change. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Trigger phrases: "bump the skill version", "update the
   version", "update the changelog", "I just changed a skill", "log this
   change", "version bump".
 model: sonnet

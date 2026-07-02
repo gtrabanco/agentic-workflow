@@ -5,6 +5,12 @@ well with agents* and raise **software quality and architecture** on **any**
 project — regardless of language, framework, or infrastructure. They support and
 sharpen our workflow skills.
 
+> **None of these are dependencies.** The workflow ships its own internal review
+> pack (`skills/review-*`: code, security, verify, debt, design, a11y, brand,
+> perf, seo), so `review-change` / `product-audit` cover every review axis by
+> themselves, on any agent and any model. Everything below is an **optional
+> extra** that can sharpen an axis — never required for the workflow to function.
+
 > **Out of scope on purpose:** stack/infra/service skills (your platform,
 > framework, ORM, runtime, and service/tool packs…). Install those simply
 > because they match your stack — they make you faster on *that* stack, but they

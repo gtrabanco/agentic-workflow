@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.1.0
+version: 1.2.0
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -12,6 +12,7 @@ description: >
   entries already merged/closed, broken documentation-map links, dependency
   cycles, artifacts in the wrong language, naming-convention violations — and
   reports them ranked by severity, fixing only low-risk items on request.
+  Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
   Triggers: "check doc consistency", "are the docs in sync", "audit the docs",
   "doc coherence review", "did the docs drift", "validate the roadmap".
 ---
@@ -62,8 +63,21 @@ say so.
 
 1. Discover, then run the checks with `grep`, file reads, and the forge CLI
    (per Workflow conventions; examples use `gh`).
-2. Produce a **findings report**: each item with severity (high = misleading or
-   broken, low = cosmetic), evidence, and a proposed fix.
+2. Produce the findings report — **return exactly** (fixed output contract):
+
+   ```
+   AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
+
+   | # | Check (1-8) | Finding | Sev | Evidence | Proposed fix |
+   |---|-------------|---------|-----|----------|--------------|
+   | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
+
+   Checks run: <n>/8 (skipped: <which + why — absent structures only>)
+   Summary: <1-2 sentences>
+   Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
+   ```
+
+   Sev: **high** = misleading or broken; **low** = cosmetic.
 3. **Fix only on request.** With explicit `--fix` (or user go-ahead), apply the
    low-risk corrections (remove a merged fix-index row, fix a dead link, register
    a missing roadmap entry). Leave judgment calls to the user.
