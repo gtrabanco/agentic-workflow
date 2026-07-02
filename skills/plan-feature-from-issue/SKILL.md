@@ -1,7 +1,7 @@
 ---
 name: plan-feature-from-issue
 user-invocable: false
-version: 1.1.0
+version: 1.2.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -60,7 +60,14 @@ gh issue view <N> --json number,title,body,labels,state,comments
    `plan-feature-scaffold` for the rest of the artifact set + roadmap registration.
 7. **Wire traceability.** Record `#N` in the SPEC; the PR body must include
    `Closes #N` so the issue closes on merge.
-8. **Hand off.** Next step is `execute-phase`.
+8. **Hand off — return exactly** (fixed completion report, back to the router):
+
+   ```
+   ISSUE #<N> → SPEC <slug> — size: <XS|S|M|L>
+   Verdict: feature (not bug/debt — else this would have routed to triage-issue)
+   Gaps closed: <n> asked / <n> defaulted (logged)   Traceability: Closes #<N> wired
+   → scaffold next (plan-feature-scaffold)
+   ```
 
 ## Guardrails
 

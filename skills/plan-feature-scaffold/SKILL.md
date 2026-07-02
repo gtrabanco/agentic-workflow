@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.1.1
+version: 1.2.0
 model: opus
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -71,8 +71,17 @@ the agent guide and state the assumption.
 4. **Register in the roadmap** with number, ordering, dependencies.
 5. **Do not branch or code.** That belongs to `execute-phase`; record the branch
    name in the SPEC only.
-6. **Hand off.** Tell the user the artifacts are ready; next step is
-   `execute-phase <NN> P1` (M/L) or `execute-phase <NN>` single-pass (XS/S).
+6. **Hand off — return exactly** (fixed completion report):
+
+   ```
+   SCAFFOLD <NN>-<slug> — size: <XS|S|M|L>
+   Artifacts written: <SPEC.md [+ PLAN.md TASKS.md progress.md testing.md
+     known-issues.md decisions.md architecture-notes.md for M/L]>
+   Roadmap: registered as <NN> (deps: <list|none>)   Phases: <n> (P1…P<n>, last = hardening) | single-pass
+   Open questions: <n> (in decisions.md) | none
+   ```
+
+   The caller (`plan-feature`) prints the closing `→ Next:` block.
 
 ## Guardrails
 

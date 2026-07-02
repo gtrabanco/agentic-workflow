@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.1.1
+version: 1.1.2
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -54,8 +54,8 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 7. **Acceptance + tests.** Each criterion objective and checkable, mapped to a test layer (unit / integration / contract / architecture); note required manual verification and why. Identify existing tests at regression risk.
 8. **Observability.** What log line / metric / alert confirms the fix is live and healthy in prod; what changes if it degrades silently.
 9. **Affected docs.** Use the CLAUDE.md docs map; for each doc needing update, add an acceptance criterion: "Updated `<doc-path>` section `<section>`".
-10. **Rollback.** Single command or PR-revert flow; data-side cleanup if needed (e.g. orphan rows after schema rollback); what's preserved (archives, audit logs) and what's lost.
-11. **Effort.** T-shirt size: XS (1 commit, ≤ 1h), S (1 commit, ≤ 4h), M (multi-commit, ≤ 1 day), L (multi-commit, > 1 day → consider escalating to a feature).
+10. **Rollback.** Single command or PR-revert flow; name the data-side cleanup or state "none" explicitly (e.g. orphan rows after schema rollback); what's preserved (archives, audit logs) and what's lost.
+11. **Effort.** T-shirt size: XS (1 commit, ≤ 1h), S (1 commit, ≤ 4h), M (multi-commit, ≤ 1 day), L (multi-commit, > 1 day → propose escalating to a feature via `plan-feature`; the user decides).
 12. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; all English.
 13. **Commit.** Verify branch with `git branch --show-current`. If `main`, `git switch -c fix/<n>-<topic>`. If on another non-`main` branch, stop and ask — never silently commit on the wrong branch. Stage `docs/fix/<n>-<topic>/SPEC.md` and the updated `docs/fix/README.md`. Commit: `docs(fix): draft SPEC for #<n> — <topic>`. **Do not push or open the PR.** Print branch name + commit hash and the hand-off below.
 
