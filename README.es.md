@@ -225,6 +225,16 @@ se mueve rápido; contrástalo con un leaderboard actual antes de fijar nada):
   **Gemma 3 27B**, **Phi-4-mini** — corren en local, suficientes para trabajo
   tipo grep.
 
+**¿Prefieres no fijar modelos en absoluto?** Instala la **variante
+`#inheritance`** — las mismas skills, auto-sincronizada con latest en cada push,
+con todos los campos `model:` / `effort:` eliminados para que cada skill
+**herede el modelo y esfuerzo de tu sesión**. Ideal para agentes no-Claude o si
+prefieres controlar tú el modelo:
+
+```sh
+npx skills add gtrabanco/agentic-workflow#inheritance
+```
+
 `effort:` se mapea al presupuesto de razonamiento/thinking de tu modelo (`high` →
 razonamiento máximo; `medium` → por defecto; sin ese control → respeta solo la
 división fuerte/barato de arriba). Dos invariantes sobreviven a cualquier mapeo:
