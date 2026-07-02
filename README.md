@@ -218,6 +218,16 @@ fast; sanity-check against a current leaderboard before pinning):
 - **Small & cheap** (⇔ Haiku): **Qwen3 4–14B**, **Mistral Small 3.1**,
   **Gemma 3 27B**, **Phi-4-mini** — local-friendly, fine for grep-shaped work.
 
+**Prefer no model pinning at all?** Install the **`#inheritance` variant** —
+the same skills, auto-synced to latest on every push, with every `model:` /
+`effort:` field stripped so each skill **inherits your session's model and
+effort**. Ideal for non-Claude agents or when you drive the model choice
+yourself:
+
+```sh
+npx skills add gtrabanco/agentic-workflow#inheritance
+```
+
 `effort:` maps to your model's reasoning/thinking budget (`high` → maximum
 reasoning; `medium` → default; no such control → just honor the strong/cheap
 split above). Two invariants survive any mapping: **never review a change with a
