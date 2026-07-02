@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus
 effort: max
@@ -16,6 +16,7 @@ description: >
   coherence. Mines accumulated suggestions from feature docs. Output: a
   severity-ranked report and concrete PROPOSALS — issues to open, roadmap features
   to add or remove. NEVER auto-fixes; the user decides what to act on.
+  Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
   Triggers: "audit the product", "full health check", "are we product-ready",
   "product-audit", "what's the state of the codebase", "CTO review", "tech-debt
   and roadmap sweep".
@@ -60,8 +61,9 @@ Per the agent guide's **Workflow conventions** + **documentation map**, then rea
 what THIS skill needs: the roadmap, the fix index, the feature folder layout, and
 the verification gate. From the map decide the product's nature (web / mobile /
 console / library / backend / infra) and which axes apply — the same applicability
-logic `review-change` uses, applied product-wide. Note which companion review
-skills the project installed.
+logic `review-change` uses, applied product-wide. Note any optional platform
+review skills the project installed (extras, never requirements — the internal
+pack covers every axis).
 
 ## Audit dimensions (platform-adaptive — run only what applies)
 
@@ -80,16 +82,19 @@ skills the project installed.
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
-**say which you skipped and why**. Where an applicable companion skill isn't
-installed, do a best-effort inline pass and note the gap.
+**say which you skipped and why**. Every axis is covered by the workflow's own
+internal review pack (`review-code`, `review-security`, `review-verify`,
+`review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
+`review-seo`) — installed with the workflow, so an applicable axis can never be
+"missing". Platform skills the project installed run as optional extras on top.
 
 ## Process
 
 1. **Map & decide axes** — Step 0; mark each dimension applicable / n-a.
-2. **Sweep code & axes** — run the applicable `review-change` axes across the
-   codebase (compose `review-implementation` + the installed externals), plus the
-   security and performance sweeps. Classify findings (severity + fix-now /
-   postpone / tradeoff).
+2. **Sweep code & axes** — run the applicable axes across the codebase: compose
+   `review-implementation` plus the internal review pack's applicable passes
+   (each returns its fixed-format table + PASS|FAIL), and any optional installed
+   extras. Classify findings (severity + fix-now / postpone / tradeoff).
 3. **Audit process & docs** — incomplete phases (`progress.md`/`TASKS.md`), aging
    open issues, **solvable known-issues** (trigger now met), doc-map completeness
    (compose `audit-docs`), and missing/optimizable workflow docs.

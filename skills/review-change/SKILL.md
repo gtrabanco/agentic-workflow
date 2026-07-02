@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -9,12 +9,16 @@ author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Platform-adaptive review orchestrator. Reviews the current change by running
-  review-implementation (find → classify) AND invoking only the review skills that
-  apply to this project and this change (code, security, verify, design,
-  accessibility, brand, tech-debt, perf, SEO) — never the inapplicable ones (no
-  accessibility/SEO/brand for a CLI, library, or infra change). Synthesizes one
-  classified report plus an explicit manual-verification checklist. Findings only —
-  never refactors. Triggers: "review this change", "full review before merge",
+  review-implementation (find → classify) AND the workflow's own internal review
+  pack — only the passes that apply to this project and this change (review-code,
+  review-security, review-verify, review-debt, review-design, review-a11y,
+  review-brand, review-perf, review-seo) — never the inapplicable ones (no
+  a11y/SEO/brand for a CLI, library, or infra change). Self-contained: no external
+  review skills required; installed platform skills run as optional extras.
+  Synthesizes one classified report plus an explicit manual-verification checklist.
+  Findings only — never refactors. Using a non-Claude / free-inference model? Edit
+  model:/effort: in this frontmatter to your equivalent tier (see the README model
+  equivalence table). Triggers: "review this change", "full review before merge",
   "review-change", "run the right reviews for this", "what should I check before PR".
 ---
 
@@ -44,27 +48,30 @@ decide which axes apply from two inputs:
 
 1. **Project nature** — from the guide/map: is there a UI (`docs/frontend/`
    present)? Is it web, mobile, console/CLI, library/SDK, or backend/infra? Note
-   the companion review skills the project expects (its `init-workspace` records
-   them).
+   any optional platform review skills the project recorded (its `init-workspace`
+   notes them) — extras, never requirements.
 2. **Change footprint** — what the diff actually touches (UI components? an API?
    infra? domain logic?). An axis applies only if **both** the project has it
    **and** the change touches it.
 
 ## Applicability matrix (default; the project's docs refine it)
 
-| Axis / skill | Web | Mobile | Console/CLI | Lib/SDK | Backend/Infra |
+Every axis maps to a skill of the workflow's **own internal review pack**
+(`skills/review-*` — installed with the workflow, so none can be missing):
+
+| Axis — internal pack skill | Web | Mobile | Console/CLI | Lib/SDK | Backend/Infra |
 |---|---|---|---|---|---|
 | `review-implementation` (bugs, arch, security, dead code, perf, tests, rules) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `code-review` (correctness + simplification) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `security-review` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `verify` (run it, confirm real behavior) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `tech-debt` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `design-review` (UI/UX) | ✓ | ✓ | TUI only | ✗ | ✗ |
-| `accessibility-review` | ✓ | ✓ | rare | ✗ | ✗ |
-| `brand-review` (voice/copy) | ✓ | ✓ | output text | ✗ | ✗ |
-| perf (`web-perf` on web; complexity/profiling elsewhere) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| SEO | ✓ | ✗ | ✗ | ✗ | ✗ |
-| API ergonomics / usage docs | if API | if API | flags/help | ✓✓ | ✓ |
+| `review-code` (correctness + simplification) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-security` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-verify` (run it, confirm real behavior) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-debt` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-design` (UI/UX) | ✓ | ✓ | TUI only | ✗ | ✗ |
+| `review-a11y` | ✓ | ✓ | rare | ✗ | ✗ |
+| `review-brand` (voice/copy) | ✓ | ✓ | output text | ✗ | ✗ |
+| `review-perf` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-seo` | ✓ | ✗ | ✗ | ✗ | ✗ |
+| API ergonomics / usage docs (inline pass) | if API | if API | flags/help | ✓✓ | ✓ |
 
 ## Process
 
@@ -76,12 +83,17 @@ decide which axes apply from two inputs:
    Findings get axis `spec-drift` in the table. Catching drift at a phase
    checkpoint is far cheaper than at the `audit-pr` merge gate. (No SPEC found →
    note it and skip.)
-3. **Applicable externals.** For each axis the matrix + footprint mark as relevant,
-   invoke the project's review skill for it (`code-review`, `security-review`,
-   `verify`, `design-review`, `accessibility-review`, `brand-review`, `tech-debt`,
-   the perf/SEO skills). **Skip the rest** and say which you skipped and why.
-4. **Missing companions.** If an applicable skill isn't installed, note the gap and
-   do a best-effort inline pass for that axis rather than failing.
+3. **Applicable pack passes.** For each axis the matrix + footprint mark as
+   relevant, run the workflow's own internal skill for it (`review-code`,
+   `review-security`, `review-verify`, `review-debt`, `review-design`,
+   `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — composed in-turn
+   (this same conversation), each returning its fixed-format table + PASS|FAIL.
+   **Skip the rest** and say which you skipped and why. The pack ships with the
+   workflow, so an applicable pass can never be "missing".
+4. **Optional extras.** If the project recorded additional platform review skills
+   (stack-specific linters, framework skills) and they are installed, run them
+   **in addition** — their findings merge into the same table. Never treat an
+   absent extra as a gap; the pack already covered the axis.
 5. **Synthesize.** Merge all findings into **one** decision table, deduped by
    `file:line`. Keep `review-implementation`'s columns (Sev, Class, WHY, impl risk,
    long-term impact, premature-opt?, route) and add an **Axis** column.
@@ -97,7 +109,25 @@ decide which axes apply from two inputs:
    or a justified drop. **No non-fix-now finding may end without a destination** — the
    point is to never silently lose one, and to catch the few that actually deserve an
    issue or a doc note.
-8. **Next step.** Close with the `→ Next:` block:
+8. **Report — return exactly this structure** (fixed output contract; nothing
+   more, nothing less):
+
+   ```
+   REVIEW CHANGE — scope: <scope>
+   Axes run: <list>   Skipped: <list + why>
+
+   <the synthesized decision table (step 5)>
+
+   Manual verification (a human must check):
+   - <item> …
+
+   Non-fix-now destinations (step 7): <n> triaged — <issue #s / decisions / drops>
+
+   Summary: <1-2 sentences>
+   Decision: PASS | FAIL   (FAIL while any fix-now finding is open)
+   ```
+
+9. **Next step.** Close with the `→ Next:` block:
 
    ```
    → Next: /audit-pr — merge gate (when the table is clean)
@@ -163,8 +193,11 @@ enables:
 
 ## Relationship to other skills
 
-- Composes `review-implementation` (engine), `triage-issue` (every non-fix-now
-  finding — equal tier, in-turn), and the project's companion review skills.
+- Composes `review-implementation` (engine), the internal review pack
+  (`review-code`, `review-security`, `review-verify`, `review-debt`,
+  `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`),
+  `triage-issue` (every non-fix-now finding — equal tier, in-turn), and — as
+  optional extras only — any platform review skills the project installed.
 - Sits in Stage 4 of the feature workflow; `execute-phase` hands off to it every 2
   phases and for the mandatory end review (it runs in its own turn). `fix-now` →
   `plan-fix`; everything else → `triage-issue`.

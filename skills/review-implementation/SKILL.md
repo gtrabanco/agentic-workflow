@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.0.1
+version: 1.0.2
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -126,8 +126,9 @@ your domains):
 ## Relationship to other skills
 
 - **Engine of `review-change`** — the user-facing review skill composes this plus
-  the platform's applicable companion reviews (`/code-review`, `/security-review`,
-  `/verify`, design/a11y/brand…). `audit-pr` and `product-audit` reuse this rubric.
+  the internal review pack's applicable passes (`review-code`, `review-security`,
+  `review-verify`, `review-debt`, design/a11y/brand/perf/seo). `audit-pr` and
+  `product-audit` reuse this rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
 - `fix-now`/`postpone` outcomes hand off to `plan-fix` / `triage-issue`.
 

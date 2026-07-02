@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.3.0
+version: 1.3.1
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -14,6 +14,7 @@ description: >
   right layer, CI green, branch off the default branch and independently mergeable,
   and the review-change axes clean (or consciously deferred to tracked issues).
   Verdict: merge-ready, or a ranked list of blockers — never merges, never edits.
+  Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
   Triggers: "is this PR ready to merge", "audit the PR", "merge gate for #N",
   "can this ship", "pre-merge review", "audit-pr".
 ---

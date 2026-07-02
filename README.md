@@ -32,7 +32,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 16 skills (12 user-facing + 4 internal) — the installable source
+skills/                  the 25 skills (12 user-facing + 13 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -49,9 +49,13 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**12 user-facing skills** (one menu entry each) + **4 internal** steps composed for
-you (the `plan-feature` router's three planning steps + the `review-change`
-engine). One disciplined path: **plan → execute → review → audit → merge.**
+**12 user-facing skills** (one menu entry each) + **13 internal** ones composed
+for you: the `plan-feature` router's three planning steps, the `review-change`
+engine, and the workflow's **own 9-skill internal review pack** (`review-code`,
+`review-security`, `review-verify`, `review-debt`, `review-design`,
+`review-a11y`, `review-brand`, `review-perf`, `review-seo`) — so **no external
+review skill is ever required**, on any agent, with any model. One disciplined
+path: **plan → execute → review → audit → merge.**
 
 ### Setup
 
@@ -87,7 +91,9 @@ engine). One disciplined path: **plan → execute → review → audit → merge
 
 > `review-change`'s findings engine is the internal `review-implementation` — the
 > two-phase find → classify pass it composes (and `audit-pr` / `product-audit`
-> reuse). It's not a menu entry; you reach it through `review-change`.
+> reuse) — plus the internal review pack: one `review-*` skill per axis, each a
+> fixed checklist returning a findings table + PASS|FAIL. None are menu entries;
+> you reach them through `review-change`.
 
 ### Decide
 
@@ -129,10 +135,11 @@ The same `plan → execute → review → audit → merge` path you'd run by han
 autopilot just moves you to its edges. Under `--fullauto`, `ship-roadmap` also
 handles the merges, under non-negotiable safety floors.
 
-Companion skills for UI/UX and language-specific quality (design, ux, typing…) are
-**not bundled** — `review-change` and `product-audit` compose them when installed,
-and `init-workspace` suggests the right ones per platform. See
-`docs/workflow/RECOMMENDED_SKILLS.md` for which apply when.
+The review axes are **self-contained**: the bundled internal review pack covers
+code, security, verify, debt, design, a11y, brand, perf and SEO on any agent.
+Platform-specific extras (a framework skill, a stack linter) are optional —
+`review-change` and `product-audit` run them **in addition** when installed,
+never as a dependency. See `docs/workflow/RECOMMENDED_SKILLS.md`.
 
 > **Upgrading from an older install?** See
 > [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — three skills were
@@ -173,16 +180,37 @@ Code features are conveniences.
 | `log-session`    | Sonnet     | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free)                                              |
 | `ship-roadmap`   | Opus       | high   | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
-> The 4 internal steps aren't selected directly. Because they're composed **within
-> a caller's turn**, they inherit that turn's model/effort (a skill's `model`/`effort`
-> is fixed at turn start) — the values in their frontmatter
-> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue` high;
-> `plan-feature-scaffold` medium) are declared defaults for a direct run, which is
-> why the `plan-feature` router itself carries `high`.
+> The 13 internal skills aren't selected directly. Because they're composed
+> **within a caller's turn**, they inherit that turn's model/effort (a skill's
+> `model`/`effort` is fixed at turn start) — the values in their frontmatter
+> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue`,
+> `review-code`, `review-security` high; `plan-feature-scaffold` and the rest of
+> the review pack medium) are declared defaults for a direct run, which is why
+> the `plan-feature` and `review-change` orchestrators themselves carry `high`.
 >
 > Rule of thumb: **planning, judgement, review and audit → Opus** (high, or max for
 > the product-wide sweep); **mechanical execution → Sonnet, medium** (bump to Opus
 > when the logic is subtle).
+
+### Model equivalence (non-Claude / free-inference models)
+
+Claude tiers are the **default** (they set the reference bar), but nothing in the
+workflow depends on them — the skills are model-agnostic. Map the tiers to
+whatever family you run and edit each skill's `model:`/`effort:` accordingly:
+
+| Claude default | Capability class | Use it for |
+|---|---|---|
+| Opus + `high`/`max` | **Frontier reasoning** — the strongest model you have, reasoning/thinking mode on | planning, review, audit, triage, the merge gate |
+| Sonnet + `medium` | **Mid workhorse** — a solid coding model at default settings | mechanical execution per SPEC, doc checks, session logs |
+| Haiku | **Small & cheap** — any fast lightweight model | optional grep-shaped evidence gathering |
+
+`effort:` maps to your model's reasoning/thinking budget (`high` → maximum
+reasoning; `medium` → default; no such control → just honor the strong/cheap
+split above). Two invariants survive any mapping: **never review a change with a
+model weaker than the one that wrote it**, and **audit verdicts (the merge gate)
+get the strongest model you have**. Expect weaker models to follow the workflow
+correctly — the skills are written as checklists and fixed output formats — but
+produce shallower judgment; the discipline holds, the ceiling moves.
 
 ## How to use them
 
@@ -267,7 +295,7 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ more](https://skills.sh)).
 
 ```sh
-# From the root of the TARGET repository — install all 14 skills:
+# From the root of the TARGET repository — install all the skills:
 npx skills add gtrabanco/agentic-workflow
 
 # Pick specific skills, or target a specific agent:
@@ -300,13 +328,15 @@ conventions instead of copied verbatim? See the adaptive
 "which method when" guide live in
 **[`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md)**.
 
-## Recommended companion skills
+## Optional extra skills
 
-`docs/workflow/RECOMMENDED_SKILLS.md` lists the **stack-agnostic** quality &
-architecture skills worth having (e.g. `karpathy-guidelines`, `code-review`,
-`security-review`, `simplify`, `skill-creator`, the `engineering:*` set), and —
-crucially — which ones to **skip** for a given project (e.g. design skills for a
-terminal program, `claude-api` with no LLM features).
+The workflow needs **nothing beyond this repo** — the internal review pack covers
+every review axis on any agent. `docs/workflow/RECOMMENDED_SKILLS.md` lists
+**optional extras** that can sharpen specific axes when your agent has them
+(e.g. `karpathy-guidelines`, `simplify`, the `engineering:*` set), and — crucially
+— which ones to **skip** for a given project (e.g. design skills for a terminal
+program, `claude-api` with no LLM features). Extras merge into the same review
+tables; a missing extra is never a gap.
 
 ## Projects built with this workflow
 
