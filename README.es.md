@@ -33,7 +33,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 16 skills (12 de cara al usuario + 4 internas) — la fuente instalable
+skills/                  las 25 skills (12 de cara al usuario + 13 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -50,9 +50,13 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**12 skills de cara al usuario** (una entrada de menú cada una) + **4 internas**,
-pasos que se componen por ti (los tres pasos de planificación del router
-`plan-feature` + el motor de `review-change`). Un único camino disciplinado:
+**12 skills de cara al usuario** (una entrada de menú cada una) + **13 internas**
+que se componen por ti: los tres pasos de planificación del router `plan-feature`,
+el motor de `review-change`, y el **pack de revisión interno propio de 9 skills**
+(`review-code`, `review-security`, `review-verify`, `review-debt`,
+`review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`) —
+así que **nunca se requiere una skill de revisión externa**, en ningún agente y
+con ningún modelo. Un único camino disciplinado:
 **plan → execute → review → audit → merge.**
 
 ### Configuración inicial
@@ -89,7 +93,9 @@ pasos que se componen por ti (los tres pasos de planificación del router
 
 > El motor de hallazgos de `review-change` es el `review-implementation` interno
 > — la pasada de dos fases encontrar → clasificar que compone (y que reutilizan
-> `audit-pr` / `product-audit`). No es una entrada de menú; llegas a él a través de
+> `audit-pr` / `product-audit`) — más el pack de revisión interno: una skill
+> `review-*` por eje, cada una una checklist fija que devuelve una tabla de
+> hallazgos + PASS|FAIL. Ninguna es entrada de menú; llegas a ellas a través de
 > `review-change`.
 
 ### Decisión
@@ -133,11 +139,11 @@ harías a mano — el autopilot solo te mueve a sus extremos. Con `--fullauto`,
 `ship-roadmap` también se encarga de los merges, bajo suelos de seguridad
 innegociables.
 
-Las skills complementarias para UI/UX y calidad específica del lenguaje (diseño,
-ux, tipado…) **no van incluidas** — `review-change` y `product-audit` las componen
-cuando están instaladas, e `init-workspace` sugiere las adecuadas según la
-plataforma. Ver `docs/workflow/RECOMMENDED_SKILLS.md` para saber cuáles aplican y
-cuándo.
+Los ejes de revisión son **autocontenidos**: el pack de revisión interno incluido
+cubre código, seguridad, verify, deuda, diseño, a11y, marca, rendimiento y SEO en
+cualquier agente. Los extras específicos de plataforma (una skill de framework, un
+linter del stack) son opcionales — `review-change` y `product-audit` los ejecutan
+**además**, nunca como dependencia. Ver `docs/workflow/RECOMMENDED_SKILLS.md`.
 
 > **¿Actualizas desde una instalación anterior?** Mira
 > [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) — se renombraron tres
@@ -180,16 +186,38 @@ son conveniencias.
 | `log-session`    | Sonnet         | medio    | resumen estructurado, no criterio — deliberadamente el tier barato, nunca Opus (los hooks de `.claude/` hacen la captura mecánica gratis)                                                                                   |
 | `ship-roadmap`   | Opus           | alto     | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
 
-> Los 4 pasos internos no se seleccionan directamente. Como se componen **dentro del
-> turno del caller**, heredan su modelo/effort (el `model`/`effort` de una skill se
-> fija al inicio del turno) — los valores de su frontmatter (`review-implementation`,
-> `plan-feature-interview`, `plan-feature-from-issue` alto; `plan-feature-scaffold`
-> medio) son defaults para una ejecución directa, y por eso el router `plan-feature`
-> lleva `high`.
+> Las 13 skills internas no se seleccionan directamente. Como se componen **dentro
+> del turno del caller**, heredan su modelo/effort (el `model`/`effort` de una skill
+> se fija al inicio del turno) — los valores de su frontmatter
+> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue`,
+> `review-code`, `review-security` alto; `plan-feature-scaffold` y el resto del pack
+> de revisión medio) son defaults para una ejecución directa, y por eso los
+> orquestadores `plan-feature` y `review-change` llevan `high`.
 >
 > Regla general: **planificar, decidir, revisar y auditar → Opus** (alto, o máx para
 > el barrido de todo el producto); **ejecución mecánica → Sonnet, medio** (sube a Opus
 > si la lógica es sutil).
+
+### Equivalencia de modelos (modelos no-Claude / de libre inferencia)
+
+Los tiers de Claude son el **default** (marcan el listón de referencia), pero nada
+en el workflow depende de ellos — las skills son agnósticas del modelo. Mapea los
+tiers a la familia que uses y edita el `model:`/`effort:` de cada skill:
+
+| Default Claude | Clase de capacidad | Úsalo para |
+|---|---|---|
+| Opus + `high`/`max` | **Razonamiento frontier** — el modelo más fuerte que tengas, con modo razonamiento/thinking activado | planificar, revisar, auditar, triage, el gate de fusión |
+| Sonnet + `medium` | **Workhorse medio** — un buen modelo de código con ajustes por defecto | ejecución mecánica según SPEC, checks de docs, logs de sesión |
+| Haiku | **Pequeño y barato** — cualquier modelo ligero y rápido | recolección opcional de evidencia tipo grep |
+
+`effort:` se mapea al presupuesto de razonamiento/thinking de tu modelo (`high` →
+razonamiento máximo; `medium` → por defecto; sin ese control → respeta solo la
+división fuerte/barato de arriba). Dos invariantes sobreviven a cualquier mapeo:
+**nunca revises un cambio con un modelo más débil que el que lo escribió**, y
+**los veredictos de auditoría (el gate de fusión) van al modelo más fuerte que
+tengas**. Espera que los modelos más débiles sigan el workflow correctamente —
+las skills están escritas como checklists y formatos de salida fijos — pero con
+un juicio menos profundo: la disciplina se mantiene, el techo se mueve.
 
 ## Cómo usarlas
 
@@ -277,7 +305,7 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 [más de 70](https://skills.sh)).
 
 ```sh
-# Desde la raíz del repositorio DESTINO — instala las 14 skills:
+# Desde la raíz del repositorio DESTINO — instala todas las skills:
 npx skills add gtrabanco/agentic-workflow
 
 # Elige skills concretas, o un agente concreto:
@@ -310,14 +338,16 @@ proyecto en lugar de copiadas literalmente? Mira el
 detalles y la guía de "qué método cuándo" están en
 **[`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md)**.
 
-## Skills complementarias recomendadas
+## Skills extra opcionales
 
-`docs/workflow/RECOMMENDED_SKILLS.md` lista las skills de calidad y arquitectura
-**agnósticas del stack** que merece la pena tener (p. ej. `karpathy-guidelines`,
-`code-review`, `security-review`, `simplify`, `skill-creator`, el conjunto
-`engineering:*`) y —crucialmente— cuáles **omitir** según el proyecto (p. ej.
-skills de diseño para un programa de terminal, `claude-api` si no hay features
-con LLM).
+El workflow no necesita **nada más allá de este repo** — el pack de revisión
+interno cubre todos los ejes de revisión en cualquier agente.
+`docs/workflow/RECOMMENDED_SKILLS.md` lista **extras opcionales** que pueden
+afinar ejes concretos cuando tu agente los tiene (p. ej. `karpathy-guidelines`,
+`simplify`, el conjunto `engineering:*`) y —crucialmente— cuáles **omitir** según
+el proyecto (p. ej. skills de diseño para un programa de terminal, `claude-api`
+si no hay features con LLM). Los extras se funden en las mismas tablas de
+revisión; un extra ausente nunca es un hueco.
 
 ## Proyectos construidos con este workflow
 

@@ -94,6 +94,27 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > argument (`execute-phase NN P2`), so it must be stable and uniform — never emit
 > `S1`/`S2`/"Step N" into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap.
 
+> **Checklists over heuristics; fixed output formats.** Skills are executed by
+> models of any strength, not only frontier ones — write instructions a weaker
+> model cannot misread: (a) heuristics become **checklists** ("pass only if: ✓ …"),
+> every item independently checkable, n/a stated explicitly; (b) reports and
+> verdicts carry a **fixed output contract** ("Return exactly: …" with the block
+> quoted) ending in an unambiguous decision (`PASS | FAIL`,
+> `MERGE-READY | BLOCKED`, a named verdict); (c) bound freedom with
+> **Allowed / Forbidden lists** wherever a skill could "improve" beyond scope;
+> (d) "if needed" is banned — name the minimum set to verify (docs, files,
+> checks). Claude tiers stay the declared defaults (they set the reference bar),
+> but every skill must run correctly on any agent and any model — see the README
+> model-equivalence table.
+
+> **Self-contained reviews — never depend on external skills.** The review axes
+> are covered by the repo's **own internal review pack**
+> (`skills/review-*`: code, security, verify, debt, design, a11y, brand, perf,
+> seo — each a fixed checklist returning a findings table + `PASS | FAIL`).
+> `review-change` / `product-audit` compose the pack; platform skills a project
+> installs are **optional extras run in addition, never dependencies** — a skill
+> body must never require a Claude Code-bundled or third-party skill to function.
+
 > **Every user-facing skill carries a `## Portability` section.** The skills
 > install into 70+ agents via the `skills` CLI; Claude Code features (slash-command
 > menu, per-skill `model:`/`effort:`, `/loop`, subagents, hooks, `ultracode`) are

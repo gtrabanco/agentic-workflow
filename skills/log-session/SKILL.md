@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 argument-hint: "[note to prepend to the entry]"
 model: sonnet
 effort: medium
@@ -12,7 +12,8 @@ description: >
   what was done this session, files touched, decisions taken, and the next
   step — so the next session (or another person) can pick up the thread
   without re-reading git history. Run it before `/clear`, before closing
-  Claude Code, or at any natural stopping point. Triggers: "log this
+  Claude Code, or at any natural stopping point. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Triggers: "log this
   session", "log-session", "write a session log", "journal what we did",
   "record this session before I clear", "save the session summary".
 ---

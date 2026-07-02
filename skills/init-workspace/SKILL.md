@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <target-dir>
 model: opus
 effort: high
@@ -12,7 +12,8 @@ description: >
   scaffold (template/) and adapt it to THIS project by interview — fill the
   CLAUDE.md documentation map, gate commands and architecture, prune doc folders
   that don't apply, keep the SPEC/feature/fix and GitHub templates — then offer to
-  install the skills. The adaptive counterpart to a raw `npx degit` copy. Triggers:
+  install the skills. The adaptive counterpart to a raw `npx degit` copy. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Triggers:
   "set up the agentic workflow here", "init-workspace", "scaffold this project's
   docs", "adapt the workflow template to this repo", "bootstrap the way of working".
 ---
@@ -56,6 +57,11 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
      from the detected stack; confirm).
    - **Forge** — issue/PR tracker + CLI (proposed from the remote URL; confirm)
      → recorded in the Workflow conventions **Forge** line.
+   - **Git workflow** — how parallel work is handled: **branches** (default —
+     one active unit at a time, sequential, plain `git switch -c`) or
+     **worktrees** (parallel units in separate checkouts; only if the user's
+     agent/tooling manages them). Recorded in the Workflow conventions
+     **Git workflow** line; every skill that creates branches honors it.
    - **Docs language.**
    - **Architecture** — pattern, layers/modules, and dependency-direction rules
      (stay architecture-agnostic; record the user's choice in `ARCHITECTURE.md`).
@@ -71,18 +77,16 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 5. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-6. **Suggest the companion review skills** the review/audit skills compose
-   internally — only the ones the detected platform needs (from Step 0 + the doc
-   domains chosen in step 3):
-   - **Always:** `code-review`, `security-review`, `verify`, `tech-debt`.
-   - **If UI** (web / mobile / TUI): `design-review`, `accessibility-review`,
-     `brand-review`.
-   - **If web:** `web-perf` and an SEO skill.
-   - **Never** suggest UI / SEO / brand skills for a CLI, library, or infra
-     project.
-   Record the expected set in `CLAUDE.md` (a short "Companion review skills" note)
-   so `review-change` and `product-audit` know what to compose — and so a missing
-   one is a noted gap rather than a silent skip. Don't install without a yes.
+6. **State that reviews are self-contained; offer optional extras.** The
+   workflow ships its **own internal review pack** (`review-code`,
+   `review-security`, `review-verify`, `review-debt`, `review-design`,
+   `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
+   with the skills and covers every review axis, so **no external review skill
+   is required on any agent**. If the user wants platform-specific extras (a
+   framework skill, a stack-specific security skill), record them in `CLAUDE.md`
+   under a short "Optional review extras" note so `review-change` and
+   `product-audit` run them **in addition** — never as a dependency. Don't
+   install anything without a yes.
 7. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, and the next step: `plan-feature` →
    `execute-phase`.

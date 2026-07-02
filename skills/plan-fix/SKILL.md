@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -12,6 +12,7 @@ description: >
   from a GitHub issue, scopes it tightly, surfaces blockers and risks, then commits
   locally on a fix branch and stops for review. The fix-flow analogue of
   plan-feature → execute-phase: hands implementation off to execute-phase --fix.
+  Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
   Triggers: "plan a fix for issue N", "draft the fix spec for #N", "scope fix #N",
   "plan-fix N".
 ---

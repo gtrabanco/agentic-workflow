@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
@@ -12,7 +12,8 @@ description: >
   (deferred/trigger-based), wontfix, or promote-to-feature. Reads the issue's own
   "when to fix"/trigger and severity, verifies the trigger against the CURRENT
   codebase (counts consumers, checks thresholds, measures), then routes or
-  reports with a dated, auditable comment. Triggers: "triage issue N", "should we
+  reports with a dated, auditable comment. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Triggers: "triage issue N", "should we
   fix #N now", "classify this issue", "is #N's trigger met", "what do we do with
   #N".
 ---
@@ -70,6 +71,17 @@ gh issue view <N> --json number,title,body,labels,state,comments
    with evidence. If it becomes an active fix, register it in the fix index; if
    closed, remove any stale index entry. Never mutate GitHub state (labels,
    close) without confirmation when ambiguous.
+6. **Return exactly, per issue** (fixed verdict format — batch runs repeat it,
+   then add one summary table):
+
+   ```
+   ISSUE #<n> — <title>
+   Trigger (the issue's own): <quoted clause | "none stated">
+   Checked: <the exact commands/counts/repro run>
+   Evidence: <paths, counts, line refs, output>
+   VERDICT: fix-now | promote | postpone | wontfix
+   Action taken: <fix-index entry + route | dated comment posted | close proposed>
+   ```
 
 ## Guardrails
 

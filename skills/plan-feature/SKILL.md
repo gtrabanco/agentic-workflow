@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.2.0
+version: 1.2.1
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -12,7 +12,8 @@ description: >
   GitHub issue #N (issue → scoped SPEC), or an already-scoped slug/SPEC (straight
   to scaffolding) — routes to the right internal step, then ensures the roadmap
   entry and prints the next step. Force a path with flags to skip detection;
-  `--next` plans the next planned feature from the roadmap. Triggers: "plan a
+  `--next` plans the next planned feature from the roadmap. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  Triggers: "plan a
   feature", "plan the feature from issue N", "plan the next roadmap feature",
   "scaffold feature NN", "I have an idea, plan it", "create SPEC and TASKS for NN".
 ---
