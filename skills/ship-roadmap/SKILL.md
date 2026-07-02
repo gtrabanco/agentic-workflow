@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.1.1
+version: 1.2.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -359,6 +359,26 @@ it bounds each machine's run, not the run's lifetime across machines. Verdicts
 persist in the run log and feature docs,
 but a crash between a review and its PR may re-run one review — accepted cost,
 never a correctness risk.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. This skill
+leans on them harder than any other — here is the manual equivalent of each:
+
+- **No `/loop`** — re-invoke `/ship-roadmap --continue` by hand after every
+  iteration. Iterations are stateless-by-reconstruction, so manual re-invocation
+  is exactly equivalent; stop when the first line is a terminal `SHIP:` banner.
+- **No subagents** — execute phases sequentially yourself: for each phase, open
+  a **fresh conversation on a cheaper model** and follow the installed
+  `execute-phase` SKILL.md for exactly one phase (same two autopilot overrides).
+  The conductor stages (recover/plan/review/PR/audit) stay on your strongest model.
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally in the conversation the routing table assigns it (in-turn = this
+  conversation; subagent/hand-off = a fresh one).
+- **No per-skill `model:`/`effort:`** — the routing table's tiers state intent:
+  judgment stages on your **strongest** model, implementation on a cheaper one,
+  and `product-audit` always as its own maximum-effort run.
 
 ## Relationship to other skills
 

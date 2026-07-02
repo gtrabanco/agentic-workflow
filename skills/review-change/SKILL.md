@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -91,7 +91,8 @@ decide which axes apply from two inputs:
    doubt about what to eyeball.
 7. **Triage everything not fixed now.** For **every** finding you don't route to
    `fix-now` (postpone / ignore / intentional-tradeoff), run it through
-   `triage-issue` (compose in-turn — equal tier) to decide and record its home: a
+   `triage-issue` (compose in-turn — i.e. within this same conversation/run; equal
+   tier) to decide and record its home: a
    tracked issue with a trigger, a documented decision (`decisions.md` / a comment),
    or a justified drop. **No non-fix-now finding may end without a destination** — the
    point is to never silently lose one, and to catch the few that actually deserve an
@@ -144,6 +145,21 @@ disposition is a decision, not a default:
   CLI/lib/infra). Always report what was skipped and why.
 - Honor the project's **Workflow conventions** (docs-language, evidence): cite
   `file:line`, mark uncertainties *verify*.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+  "Compose in-turn" means the opposite: run that step within this same
+  conversation, as part of this review.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  this review needs your **strongest** model. Never review a change with a
+  model weaker than the one that wrote it.
 
 ## Relationship to other skills
 

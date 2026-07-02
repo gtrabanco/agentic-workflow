@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.0.3
+version: 1.1.0
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -92,6 +92,19 @@ Commit: <short hash>
 ```
 
 Then end in the user's language with a 2-3 sentence summary: what the SPEC ships, the biggest risk identified, and any open decisions left for the implementer.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  architect-level scoping is judgment work — run it on your **strongest**
+  model. The implementation it hands off to may run cheaper.
 
 ## Done when
 

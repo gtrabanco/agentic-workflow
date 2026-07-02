@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: true
-version: 1.1.0
+version: 1.2.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
@@ -71,6 +71,10 @@ reports — it does not auto-correct):
 - **Phase naming.** Plans use `P1, P2, …` ("phases") only — never `S1`/`S2`/"Step N".
   `grep -nE '\bS[0-9]\b|\bStep [0-9]' skills/<name>/SKILL.md` should return nothing in
   a planning/execution context; flag any hit for the user to fix before committing.
+- **Portability section.** Every user-facing skill (`user-invocable: true`) carries a
+  `## Portability` section with the standard non-Claude-Code fallbacks.
+  `grep -L '^## Portability' skills/<name>/SKILL.md` flags a miss (skip this check
+  for internal skills).
 
 Report violations in the summary; do not block the bump on them.
 
@@ -190,6 +194,16 @@ Then print the next step:
   what changed.
 - For the README cells, prefer updating over rewriting: keep the existing tone
   and length; change only what is factually wrong or missing.
+
+## Portability (agents other than Claude Code)
+
+This skill is repo-maintenance for `agentic-workflow` itself, but the repo may
+be worked on from any agent:
+
+- **No slash-command menu** — follow this `SKILL.md` directly after editing any
+  skill, before committing.
+- **No per-skill `model:`/`effort:`** — a mid-tier model is enough; this is
+  mechanical version/changelog bookkeeping.
 
 ## Relationship to other skills
 

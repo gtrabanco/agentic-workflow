@@ -151,6 +151,14 @@ your session model/effort resume afterward. **You stay in control:** to change
 them, edit the skill's `model:` / `effort:` lines (or `model: inherit` to follow
 your session).
 
+**On agents other than Claude Code** these frontmatter fields are ignored — and
+that's covered: every user-facing skill ships a **Portability** section with
+explicit fallbacks (no slash menu → follow the target `SKILL.md` in a fresh
+conversation; no model tiers → strongest model for planning/review/audit,
+cheaper for execution; no `/loop`/subagents → manual re-invocation guided by
+each skill's closing `→ Next:` block). The workflow is the contract; the Claude
+Code features are conveniences.
+
 | Skill            | Model tier | Effort | Why                                                                                                                                                                                      |
 | ---------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Opus       | high   | interview-driven project bootstrap + adaptation                                                                                                                                          |
