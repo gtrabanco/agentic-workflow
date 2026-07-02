@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.5.0
+version: 1.5.1
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -100,7 +100,7 @@ examples use `gh`; translate if the project declares another forge).
 
 - **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml` if missing, populating the body from the SPEC. Use the returned number for branch and folder.
 - **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
-- All issues, specs, code, commits, and PRs in English; translate the source first if needed.
+- All issues, specs, code, commits, and PRs in English; if the source material isn't English, translate it first.
 
 ## Workflows
 
@@ -143,7 +143,8 @@ examples use `gh`; translate if the project declares another forge).
 
 **`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
 
-1. Ensure the issue exists (`gh issue create` if missing).
+1. Verify the issue exists (`gh issue view <n>`); if it doesn't, create it
+   (`gh issue create --template fix.yml`, body from the SPEC).
 2. **If `docs/fix/<n>-<topic>/SPEC.md` already exists (e.g. from `plan-fix`), use it — do not re-draft.** Otherwise copy the template, fill every section, and register the entry in `docs/fix/README.md`.
 3. Verify branch (`fix/<n>-<topic>`).
 4. Implement the fix (no planning artifacts; the SPEC is enough).

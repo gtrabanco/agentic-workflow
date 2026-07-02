@@ -1,7 +1,7 @@
 ---
 name: plan-feature-interview
 user-invocable: false
-version: 1.1.0
+version: 1.2.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -64,8 +64,14 @@ conventions).
 5. **Produce the SPEC.** Once dimensions are answered, write the filled SPEC. The
    `plan-feature` router then runs `plan-feature-scaffold` for the remaining
    artifacts + roadmap registration.
-6. **Hand off.** Return to the router; the next step after scaffolding is
-   `execute-phase`.
+6. **Hand off — return exactly** (fixed completion report, back to the router):
+
+   ```
+   INTERVIEW → SPEC <slug> — size: <XS|S|M|L>
+   Dimensions resolved: <n>/<total>   Open questions: <n> (→ decisions.md) | none
+   Tracking issue: #<n> | declined | n/a
+   → scaffold next (plan-feature-scaffold)
+   ```
 
 ## Interview discipline
 

@@ -87,6 +87,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.1 | 2026-07-02 | patch | Two conditional phrasings made deterministic (translate-if-not-English; verify-then-create the fix issue). |
 | 1.5.0 | 2026-07-02 | minor | Fixed Allowed/Forbidden lists and a "pass only if" phase-completion gate checklist (explicit minimum doc set); honors the declared Git workflow (branches default — never worktrees unless declared); model-equivalence note. |
 | 1.4.0 | 2026-07-02 | minor | Added the Portability section; generic fallbacks inline for the review hand-off and a manual alternative to `/loop` batch execution. |
 | 1.3.1 | 2026-06-27 | patch | Phases pinned to `P1, P2, …` (never `S1`/"Steps"; normalize a handed-in plan); review hand-off blocks reshaped to the canonical `→ Next:` form |
@@ -100,6 +101,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.2 | 2026-07-02 | patch | Roadmap confirmation made deterministic: verify number/order/deps and fix the entry immediately if wrong. |
 | 1.2.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.2.0 | 2026-07-02 | minor | Added the Portability section; internal-step composition defined generically as running inline in the same conversation. |
 | 1.1.1 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
@@ -110,6 +112,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.2 | 2026-07-02 | patch | Rollback names the data cleanup or states "none"; L-effort escalation is a rule (propose via plan-feature; the user decides), not a "consider". |
 | 1.1.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.1.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.0.3 | 2026-06-27 | patch | Hand-off normalized to the canonical `→ Next:` recommendation block |
@@ -193,11 +196,14 @@ How pinning actually works, verified against the `skills` CLI:
 | `review-implementation` | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
 | | 1.0.1 | 2026-06-09 | patch | Description shortened 96 → 36 words (always-loaded context); body unchanged |
 | | 1.0.0 | 2026-06-05 | — | The findings engine + classification rubric `review-change` composes |
-| `plan-feature-interview` | 1.1.0 | 2026-06-09 | minor | Estimates size `XS/S/M/L`; asks for a UI design reference on UI features |
+| `plan-feature-interview` | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (dimensions resolved, open questions, tracking issue) |
+| 1.1.0 | 2026-06-09 | minor | Estimates size `XS/S/M/L`; asks for a UI design reference on UI features |
 | | 1.0.0 | 2026-06-05 | — | Interview a raw idea into a SPEC |
-| `plan-feature-from-issue` | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
+| `plan-feature-from-issue` | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
+| 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
-| `plan-feature-scaffold` | 1.1.1 | 2026-06-27 | patch | Phase naming pinned to `P1, P2, …` ("phases") across PLAN/TASKS/progress — never `S1`/"Steps" |
+| `plan-feature-scaffold` | 1.2.0 | 2026-07-02 | minor | Fixed completion report (artifacts written, roadmap registration, phase count, open questions) |
+| 1.1.1 | 2026-06-27 | patch | Phase naming pinned to `P1, P2, …` ("phases") across PLAN/TASKS/progress — never `S1`/"Steps" |
 | | 1.1.0 | 2026-06-09 | minor | Scales artifacts to size — XS/S → SPEC-only; M/L → full set ending in a hardening phase |
 | | 1.0.0 | 2026-06-05 | — | SPEC → full planning artifact set + roadmap entry |
 
