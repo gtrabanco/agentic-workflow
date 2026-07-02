@@ -210,6 +210,21 @@ tiers a la familia que uses y edita el `model:`/`effort:` de cada skill:
 | Sonnet + `medium` | **Workhorse medio** — un buen modelo de código con ajustes por defecto | ejecución mecánica según SPEC, checks de docs, logs de sesión |
 | Haiku | **Pequeño y barato** — cualquier modelo ligero y rápido | recolección opcional de evidencia tipo grep |
 
+**Recomendaciones concretas** (open-weight, a **julio de 2026** — este panorama
+se mueve rápido; contrástalo con un leaderboard actual antes de fijar nada):
+
+- **Razonamiento frontier** (⇔ Opus + `high`/`max`): **DeepSeek V4** (lidera
+  LiveCodeBench/Codeforces entre los abiertos), **Kimi K2.6** (el más fuerte en
+  coding agéntico/a nivel de repo y tool use), **GLM-5.x / GLM-4.7 Thinking**,
+  **Qwen3 235B-A22B** — en modo razonamiento/thinking. Equivalentes cerrados
+  no-Claude: el tier de razonamiento superior de GPT / Gemini.
+- **Workhorse medio** (⇔ Sonnet + `medium`): **DeepSeek V3.2** (la mejor
+  relación calidad/precio vía API), **Qwen3-Coder / Qwen3 32B**, **GLM-5.1**, o
+  cualquiera de los frontier con el modo razonamiento apagado.
+- **Pequeño y barato** (⇔ Haiku): **Qwen3 4–14B**, **Mistral Small 3.1**,
+  **Gemma 3 27B**, **Phi-4-mini** — corren en local, suficientes para trabajo
+  tipo grep.
+
 `effort:` se mapea al presupuesto de razonamiento/thinking de tu modelo (`high` →
 razonamiento máximo; `medium` → por defecto; sin ese control → respeta solo la
 división fuerte/barato de arriba). Dos invariantes sobreviven a cualquier mapeo:
