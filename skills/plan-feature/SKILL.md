@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.2.1
+version: 1.2.2
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -58,8 +58,10 @@ Pick the mode — first match wins:
    sized SPEC**; then invoke `plan-feature-scaffold`, which scales the artifacts
    to the SPEC's size (XS/S → SPEC-only; M/L → full set) and registers the
    roadmap. The scoped path runs `plan-feature-scaffold` directly.
-2. **Confirm roadmap.** Ensure the feature is in `docs/features/ROADMAP.md` with
-   the right number, ordering, and dependencies.
+2. **Confirm roadmap.** Verify the feature is registered in
+   `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
+   if any of the three is missing or wrong, fix the entry now — never leave
+   registration for later.
 3. **Print the next step:** `execute-phase <NN> P1` (M/L, phased) or
    `execute-phase <NN>` (XS/S, single-pass).
 
