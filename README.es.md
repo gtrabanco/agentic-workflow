@@ -157,6 +157,15 @@ skill; tu modelo/esfuerzo de sesión vuelven después. **Tú mandas:** para camb
 edita las líneas `model:` / `effort:` de la skill (o `model: inherit` para seguir tu
 sesión).
 
+**En agentes distintos de Claude Code** estos campos del frontmatter se ignoran —
+y está cubierto: toda skill de cara al usuario incluye una sección
+**Portability** con fallbacks explícitos (sin menú slash → seguir el `SKILL.md`
+objetivo en una conversación nueva; sin tiers de modelo → el modelo más fuerte
+para planificar/revisar/auditar, uno más barato para ejecutar; sin
+`/loop`/subagentes → re-invocación manual guiada por el bloque de cierre
+`→ Next:` de cada skill). El workflow es el contrato; las features de Claude Code
+son conveniencias.
+
 | Skill            | Tier de modelo | Esfuerzo | Por qué                                                                                                                                                                                                                     |
 | ---------------- | -------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Opus           | alto     | bootstrap del proyecto guiado por entrevista + adaptación                                                                                                                                                                   |

@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.0.5
+version: 1.1.0
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -74,6 +74,19 @@ say so.
 - Distinguish genuine drift from intentionally "scheduled/deferred" items —
   don't report deliberate tradeoffs as errors.
 - Keep changes surgical and within docs; no code or behavior changes.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  these are mostly mechanical cross-document checks — a mid-tier model is
+  enough; escalate to your strongest only for a deep audit.
 
 ## Relationship to other skills
 

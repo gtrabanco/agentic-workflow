@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -171,6 +171,19 @@ Before merge, a human should still verify:
 - Honor the project's **Workflow conventions** (gate, docs-language, evidence —
   every blocker cites file:line/check/criterion/issue — track-don't-inline:
   out-of-scope problems become issues/fix entries, never silent additions here).
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  the merge gate is the highest-stakes automated verdict — run it on your
+  **strongest** model, never on the cheap tier that wrote the code.
 
 ## Relationship to other skills
 

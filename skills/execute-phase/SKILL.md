@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.3.1
+version: 1.4.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
 model: sonnet
 effort: medium
@@ -142,7 +142,9 @@ exceptions.** It runs in its own turn (hand-off, not composed): a skill's model 
 effort are fixed at turn start, so invoking `review-change` from here would run it at
 execute-phase's `sonnet`/`medium` rather than its own `opus`/`high` — under-powering
 the review. So **suggest** it; don't compose it. (General rule: across a model/effort
-boundary, hand off; don't compose.)
+boundary, hand off; don't compose.) On agents without per-skill model config the same
+rule holds by hand: run the review as a **separate, fresh invocation** on your
+strongest model — never inline in the implementation run.
 
 **Cadence.** Feature mode: hand off after every **2 completed phases**, and always
 once more at the end so the final phase is never unreviewed. Single-pass and `--fix`
@@ -203,6 +205,27 @@ once (the mandatory final review) → `audit-pr`.
 Use this when the SPEC is solid and you want to review the whole branch at once
 rather than after every two phases. For incremental, phase-by-phase review,
 stick to the default (manual re-invocation + checkpoint hand-offs).
+
+**No `/loop` on your agent?** Run the same loop by hand: after each phase,
+re-invoke this skill with the next phase (`execute-phase <NN> <next>`) — the
+closing block always names the exact next command — and keep the mandatory end
+review. The sequence is identical; only the automation is missing.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  planning, review, and audit need your **strongest** model; mechanical
+  execution may run cheaper. Never review a change with a model weaker than
+  the one that wrote it.
+- **No `/loop`** — re-invoke the skill by hand per phase, following its closing
+  `→ Next:` block each time (see *Batch execution* above).
 
 ## Relationship to other skills
 

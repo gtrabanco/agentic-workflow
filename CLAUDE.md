@@ -94,6 +94,21 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > argument (`execute-phase NN P2`), so it must be stable and uniform — never emit
 > `S1`/`S2`/"Step N" into a `PLAN.md`, `TASKS.md`, `progress.md`, SPEC, or roadmap.
 
+> **Every user-facing skill carries a `## Portability` section.** The skills
+> install into 70+ agents via the `skills` CLI; Claude Code features (slash-command
+> menu, per-skill `model:`/`effort:`, `/loop`, subagents, hooks, `ultracode`) are
+> conveniences, **not the contract**. Every `user-invocable: true` skill includes a
+> short `## Portability (agents other than Claude Code)` section stating the
+> fallbacks that apply to it, drawn from these standards:
+> *no slash menu* → open the target skill's `SKILL.md` and follow it literally in a
+> fresh conversation; *no model tiers* → strongest model for planning/review/audit,
+> cheaper for mechanical execution, and never review a change with a model weaker
+> than the one that wrote it; *no `/loop`/subagents* → re-invoke manually and follow
+> the closing `→ Next:` block. Tailor per skill (e.g. hooks for `log-session`,
+> subagents for `ship-roadmap`). Additionally, whenever a skill body references a
+> Claude Code-specific feature, pair it **inline** with the generic fallback — the
+> instruction must be executable by an agent that has never heard of Claude Code.
+
 > **Version every change.** Each skill carries its own `version:` and evolves
 > independently. When you change a skill, bump its `version:` (major = rename or
 > contract/flag change; minor = backward-compatible capability; patch = wording/
