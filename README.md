@@ -334,8 +334,12 @@ npx skills list
 npx skills update
 npx skills remove plan-feature
 
+# No model pinning — every skill inherits YOUR session's model and effort
+# (same skills, auto-synced to latest; ideal for non-Claude agents):
+npx skills add gtrabanco/agentic-workflow#inheritance
+
 # Pin a version: install from a tagged release (or any tag/branch) with #<ref>:
-npx skills add gtrabanco/agentic-workflow#release-2026-06-19
+npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   …then `npx skills experimental_install` restores the exact set from skills-lock.json.
 #   See CHANGELOG.md → "Installing & pinning a version" for how pinning works.
 ```
