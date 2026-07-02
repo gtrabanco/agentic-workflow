@@ -204,6 +204,20 @@ whatever family you run and edit each skill's `model:`/`effort:` accordingly:
 | Sonnet + `medium` | **Mid workhorse** — a solid coding model at default settings | mechanical execution per SPEC, doc checks, session logs |
 | Haiku | **Small & cheap** — any fast lightweight model | optional grep-shaped evidence gathering |
 
+**Concrete picks** (open-weight, as of **July 2026** — this landscape moves
+fast; sanity-check against a current leaderboard before pinning):
+
+- **Frontier reasoning** (⇔ Opus + `high`/`max`): **DeepSeek V4** (tops
+  LiveCodeBench/Codeforces among open models), **Kimi K2.6** (strongest for
+  agentic/repo-level coding and tool use), **GLM-5.x / GLM-4.7 Thinking**,
+  **Qwen3 235B-A22B** — run in reasoning/thinking mode. Closed non-Claude
+  equivalents: the top GPT / Gemini reasoning tier.
+- **Mid workhorse** (⇔ Sonnet + `medium`): **DeepSeek V3.2** (the value pick
+  via API), **Qwen3-Coder / Qwen3 32B**, **GLM-5.1**, or any of the frontier
+  picks with reasoning mode off.
+- **Small & cheap** (⇔ Haiku): **Qwen3 4–14B**, **Mistral Small 3.1**,
+  **Gemma 3 27B**, **Phi-4-mini** — local-friendly, fine for grep-shaped work.
+
 `effort:` maps to your model's reasoning/thinking budget (`high` → maximum
 reasoning; `medium` → default; no such control → just honor the strong/cheap
 split above). Two invariants survive any mapping: **never review a change with a
