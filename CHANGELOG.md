@@ -58,6 +58,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `log-session`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-07-02 | minor | Added the Portability section (no hooks → this skill is the only journal writer); `/clear` references generalized to any agent's context reset. |
 | 1.0.1 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
 | 1.0.0 | 2026-06-19 | — | New session-journal skill. Appends a structured entry to `docs/LOGS.md` (summary, files, decisions + why, next step) on demand; `model: sonnet` (cheap by design). Ships with free, opt-in `template/.claude/` hooks: SessionEnd mechanical capture + SessionStart marker, and an opt-in SessionStart context-restore — all model-free |
 
@@ -66,6 +67,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `bump-skill`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
 | 1.1.0 | 2026-06-27 | minor | Lint step flags edited skills missing a `→ Next:` block or using `S1`/"Step" phase labels (warns, never auto-fixes) |
 | 1.0.0 | 2026-06-19 | — | New repo-maintenance skill. After editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skills and model tables in README.md + README.es.md |
 
@@ -74,6 +76,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-02 | minor | Added the Portability section: manual equivalents for `/loop`, subagents, the slash menu, and model routing on non-Claude-Code agents. |
 | 1.1.1 | 2026-06-27 | patch | Per-iteration and final-report closings use the canonical `→ Next:` shape; phase-naming consistency (`P1, P2, …`) |
 | 1.1.0 | 2026-06-19 | minor | Done-at-PR-open alignment: `done` flip rides the PR-stage commit; `SHIP: COMPLETE` requires PRs **merged** (not just `done`); dependents unblock on **merge**; REVIEW triages every non-fix-now finding |
 | 1.0.0 | 2026-06-10 | — | New autopilot. One upfront interview → founds the project → ships the roadmap feature-by-feature via `/loop` (plan → execute → review → PR → audit). Default human-merge; `--fullauto` dual-keyed with fail-closed safety floors; committed decision record + untracked run log |
@@ -81,6 +84,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-02 | minor | Added the Portability section; generic fallbacks inline for the review hand-off and a manual alternative to `/loop` batch execution. |
 | 1.3.1 | 2026-06-27 | patch | Phases pinned to `P1, P2, …` (never `S1`/"Steps"; normalize a handed-in plan); review hand-off blocks reshaped to the canonical `→ Next:` form |
 | 1.3.0 | 2026-06-19 | minor | A finished unit (single-pass, `--fix`, final phase) **always opens its PR** + **flips to `done` at PR-open** (built, not merged); end `review-change` hand-off now **mandatory**; fix-index entry kept until merge; next step printed in every mode |
 | 1.2.0 | 2026-06-09 | minor | Tests-first on core/orchestration phases; P1 commits planning artifacts separately; never-commit-red protocol (unfixable → `known-issues.md` + stop); plan-divergence rule; `progress.md` continuity |
@@ -92,6 +96,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-02 | minor | Added the Portability section; internal-step composition defined generically as running inline in the same conversation. |
 | 1.1.1 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
 | 1.1.0 | 2026-06-09 | minor | Sizes every feature `XS/S/M/L`; routes small ones to the single-pass path; prints the right next step |
 | 1.0.1 | 2026-06-05 | patch | `effort medium → high` (its in-turn planning steps need it) |
@@ -100,6 +105,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.0.3 | 2026-06-27 | patch | Hand-off normalized to the canonical `→ Next:` recommendation block |
 | 1.0.2 | 2026-06-19 | patch | Added `## Done when` — every skill ends by printing the next step |
 | 1.0.1 | 2026-06-09 | patch | Forge-agnostic phrasing ("forge CLI per Workflow conventions") |
@@ -108,6 +114,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-02 | minor | Added the Portability section; "compose in-turn" defined generically as running within the same conversation. |
 | 1.3.0 | 2026-06-27 | minor | Recommends `product-audit` when SPEC drift **recurs** across units (not a single finding); closing uses the canonical `→ Next:` block |
 | 1.2.0 | 2026-06-19 | minor | **Mandatory before every merge**; routes **every non-fix-now finding through `triage-issue`** (issue / documented decision / justified drop), never silently lost; prints next step |
 | 1.1.0 | 2026-06-09 | minor | SPEC-drift check (diff vs. the governing SPEC's scope + acceptance criteria) |
@@ -117,6 +124,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.2.0 | 2026-06-27 | minor | After-merge `→ Next:` block — MERGE-READY points the user at the next unit (`plan-feature --next` / `triage-issue`) so a finished feature never dead-ends at the merge |
 | 1.1.0 | 2026-06-19 | minor | Merge gate strengthened: **never merge with pending docs**; issue/fix-index entry must still be tracked (removed only after merge); `done` ≠ merge-ready; states next step |
 | 1.0.3 | 2026-06-09 | patch | Forge-agnostic phrasing |
@@ -127,6 +135,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-02 | minor | Added the Portability section; the ultracode tip now states the sequential fallback for agents without it. |
 | 1.2.2 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
 | 1.2.1 | 2026-06-19 | patch | Prints an explicit next step (batch `triage-issue` → `plan-feature`/`plan-fix`) |
 | 1.2.0 | 2026-06-14 | minor | `model: fable → opus` (Fable no longer available; Opus at `effort: max` is the equivalent sweep tier) |
@@ -139,6 +148,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.0.5 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
 | 1.0.4 | 2026-06-19 | patch | Prints an explicit next step |
 | 1.0.3 | 2026-06-09 | patch | Forge-agnostic phrasing |
@@ -149,6 +159,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.2.0 | 2026-06-27 | minor | Recommends `product-audit` when the **same inconsistency recurs** across issues; per-verdict closing uses the canonical `→ Next:` block |
 | 1.1.1 | 2026-06-19 | patch | Prints an explicit next step per verdict |
 | 1.1.0 | 2026-06-09 | minor | Batch triage (`triage-issue 12 14 17`) — independent verdicts, one summary table |
@@ -157,6 +168,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-02 | minor | Added the Portability section (hooks offer skipped on non-Claude-Code agents, `log-session` noted as the manual alternative). |
 | 1.1.2 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
 | 1.1.1 | 2026-06-19 | patch | `## Done when` prints the explicit next step |
 | 1.1.0 | 2026-06-09 | minor | Detects the **forge** from the remote URL and records it; suggests the platform's companion review skills |
@@ -179,6 +191,22 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-02 — portability hardening (agents beyond Claude Code).** New
+  `CLAUDE.md` authoring rule: every user-facing skill carries a
+  **`## Portability (agents other than Claude Code)`** section — the workflow is
+  the contract, Claude Code features (slash menu, per-skill `model:`/`effort:`,
+  `/loop`, subagents, hooks) are conveniences with explicit generic fallbacks
+  (no slash menu → follow the target `SKILL.md` in a fresh conversation; no model
+  tiers → strongest model for planning/review/audit, cheaper for execution, never
+  review with a weaker model than wrote the change; no `/loop`/subagents → manual
+  re-invocation guided by the closing `→ Next:` block). Claude Code-specific
+  references in skill bodies are now paired inline with their generic equivalent.
+  Minor bumps across the set: `execute-phase` 1.4.0, `review-change` 1.4.0,
+  `ship-roadmap` 1.2.0, `log-session` 1.1.0, `product-audit` 1.3.0,
+  `plan-feature` 1.2.0, `plan-fix` 1.1.0, `audit-pr` 1.3.0, `audit-docs` 1.1.0,
+  `triage-issue` 1.3.0, `init-workspace` 1.2.0; `bump-skill` 1.2.0 lints the new
+  rule.
 
 - **2026-06-27 — workflow hardening (canonical next-step + phase naming).** Two
   repo-wide authoring rules added to `CLAUDE.md` and applied across the set:

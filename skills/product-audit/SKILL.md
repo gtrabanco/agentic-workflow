@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.2.2
+version: 1.3.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus
 effort: max
@@ -51,7 +51,8 @@ coverage you didn't do.
 > effort with automatic multi-agent orchestration) so this sweep fans out across
 > parallel subagents instead of one context window. It's a research-preview feature
 > and a **session choice** — not something this skill declares (no skill can set
-> `effort: ultracode`).
+> `effort: ultracode`). On agents without it, run the audit as-is: sequential
+> passes over each dimension — only wall-clock changes, never coverage.
 
 ## Step 0 — Discover the project (always first)
 
@@ -150,6 +151,22 @@ security items to track first").
   multiple feature docs into one proposal.
 - Honor the project's **Workflow conventions** (docs-language, evidence): every
   finding/proposal cites a `file:line`/metric/doc/issue source; mark uncertainties *verify*.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — this is the widest, highest-stakes
+  sweep in the workflow: run it on your **strongest** model at its deepest
+  setting, as its own dedicated run — never squeezed into another task's
+  context.
+- **No `ultracode`/subagents** — sweep the dimensions sequentially (see the
+  tip above); state coverage honestly either way.
 
 ## Relationship to other skills
 

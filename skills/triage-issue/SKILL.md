@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
@@ -78,6 +78,19 @@ gh issue view <N> --json number,title,body,labels,state,comments
 - Keep issues, the fix index, and docs in sync with reality.
 - Otherwise per the project's **Workflow conventions** (docs-language, evidence):
   state exactly what you checked.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  verifying triggers against the code is a judgment call — run it on your
+  **strongest** model.
 
 ## Relationship to other skills
 

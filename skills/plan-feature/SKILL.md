@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.1.1
+version: 1.2.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -75,6 +75,23 @@ Pick the mode — first match wins:
 - `plan-feature-interview` — interview a raw idea into a SPEC.
 - `plan-feature-from-issue` — issue → scoped SPEC, `Closes #N`.
 - `plan-feature-scaffold` — SPEC → full artifact set + roadmap entry.
+
+These run **within this same conversation** (that's what "composing" means) —
+on any agent, just follow their `SKILL.md` inline as the routed step.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context. The
+  internal steps above are the exception — they run inline, in this one.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  planning is judgment work — run it on your **strongest** model. The
+  execution it hands off to may run cheaper.
 
 ## Relationship to other skills
 

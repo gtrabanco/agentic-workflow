@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.1.2
+version: 1.2.0
 argument-hint: <target-dir>
 model: opus
 effort: high
@@ -95,6 +95,22 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 - Honest placeholders over invented specifics; flag what's left to fill.
 - Honor the project's **Workflow conventions** once present; on an existing repo,
   don't work on its default branch and never commit/push unless asked.
+
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No slash-command menu** — where this skill says `/<skill>`, open that
+  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
+  literally, in a fresh conversation: hand-offs assume a clean context.
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+  the interview and adaptation are judgment work — run them on your
+  **strongest** model.
+- **No Claude Code hooks** — the template's `.claude/` auto-logging hooks are
+  Claude Code-specific; on other agents skip that offer and note that
+  `log-session` is the manual alternative.
 
 ## Relationship to other skills
 

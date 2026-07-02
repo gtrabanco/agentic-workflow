@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 1.0.1
+version: 1.1.0
 argument-hint: "[note to prepend to the entry]"
 model: sonnet
 effort: medium
@@ -28,8 +28,9 @@ judgment. It must never reach for an expensive model.
 
 ## When to use
 
-- **Before `/clear`** — you're about to wipe context; capture it first.
-- **Before closing Claude Code** for the day.
+- **Before `/clear`** (or your agent's context-reset equivalent) — you're about
+  to wipe context; capture it first.
+- **Before closing your agent** for the day.
 - **At a natural stopping point** — a feature paused mid-way, a thread you want
   to be able to resume cold.
 - **After a long session** with several decisions worth remembering.
@@ -108,6 +109,22 @@ the HEAD sha and start time at session open.
   artifacts.
 - **One file, append-only.** Don't fan session logs across files.
 
+## Portability (agents other than Claude Code)
+
+The workflow is the contract; Claude Code features are conveniences. On an
+agent that lacks one, apply the fallback — never skip the step the feature
+enables:
+
+- **No Claude Code hooks** — the template's auto-logging hooks (SessionStart
+  marker, SessionEnd entry) don't run on other agents, so there is no marker
+  file and no free mechanical entry: this skill is the **only** journal writer.
+  Run it before ending every session, and bound the session with git alone
+  (Process step 1's no-marker path).
+- **No `/clear`** — read it as your agent's context-reset / new-conversation
+  equivalent, in the triggers and in the closing block alike.
+- **No per-skill `model:`/`effort:`** — the intent stands: use a **cheap**
+  model for this. It's summarization, never judgment.
+
 ## Relationship to other skills
 
 - Complements the `template/`'s **SessionEnd hook** (free, mechanical, automatic
@@ -125,6 +142,6 @@ the HEAD sha and start time at session open.
 - **The closing `→ Next:` block is printed:**
 
   ```
-  → Next: /clear is now safe — the session is captured
+  → Next: /clear (or your agent's context reset) is now safe — the session is captured
     · resume later → the command named in the entry's **Next** line
   ```
