@@ -398,11 +398,14 @@ detected fine.
 npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
 #   → copies each skill to ~/.hermes/skills/<skill>/  ✔ detected by desktop & terminal
 
-# Update later:
-npx skills update --global
-#   …then start a NEW session (/reset in terminal, or restart the desktop app) —
-#   Hermes loads skills at session start; add --now in Hermes to bust the prompt
-#   cache immediately (costs extra tokens).
+# Update later — re-run the add per agent, NOT `skills update`:
+npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
+npx skills add gtrabanco/agentic-workflow --agent claude-code --global -y   # if you also install globally for Claude Code
+#   Why: the global lockfile tracks ONE ref per skill name (last install wins),
+#   so a blanket `skills update --global` can repoint every agent's copy to the
+#   same ref — re-running each add refreshes each copy from its own ref.
+#   Then start a NEW Hermes session (/reset in terminal, or restart the desktop
+#   app) — skills load at session start; --now busts the prompt cache (extra tokens).
 ```
 
 Per-project alternative: keep a project-local install and point Hermes at it in
