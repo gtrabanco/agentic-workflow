@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.5.0
+version: 1.6.0
 argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
@@ -29,6 +29,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ```
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
 ✓ Nothing deferred was implemented inline
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 
