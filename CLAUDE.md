@@ -107,6 +107,14 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > but every skill must run correctly on any agent and any model — see the README
 > model-equivalence table.
 
+> **Turn contract at the top.** Every user-facing skill opens with a
+> `## Turn contract` section: the 2–6 boxes every invocation must tick before
+> the turn may end (the deliverable in its fixed format; the closing `→ Next:`
+> block printed **last**; for executors: git/forge commands actually **RUN**
+> with sha/PR-URL pasted — describing an action is not performing it). Weaker
+> models drop end-of-document duties, so the contract goes first, and every
+> skill states that an about-to-end turn with an unchecked box is not done.
+
 > **Self-contained reviews — never depend on external skills.** The review axes
 > are covered by the repo's **own internal review pack**
 > (`skills/review-*`: code, security, verify, debt, design, a11y, brand, perf,

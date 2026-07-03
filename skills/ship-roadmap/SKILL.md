@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -36,6 +36,18 @@ where a wrong call is expensive to undo.
 > then fans out independent sub-work (review axes, report evidence gathering)
 > more aggressively. It is a session toggle only the user can set; this skill
 > cannot declare or enable it (`effort:` accepts only low/medium/high/xhigh/max).
+
+## Turn contract — verify before ending the turn
+
+```
+✓ Exactly ONE stage advanced (or a terminal banner printed) and ONE line appended to the run log
+✓ Nothing was merged outside the --fullauto floors; nothing asked mid-run
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: <target-dir>
 model: opus
 effort: high
@@ -23,6 +23,18 @@ description: >
 Turn an empty or existing repo into one that works with the agentic workflow:
 copy the generic scaffold, then **tailor it to this project** instead of leaving
 raw placeholders.
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The adapted scaffold is written (or the merge/abort decision was asked) and remaining placeholders are listed
+✓ Nothing was installed or overwritten without an explicit yes
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

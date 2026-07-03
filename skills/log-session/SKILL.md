@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 1.1.1
+version: 1.2.0
 argument-hint: "[note to prepend to the entry]"
 model: sonnet
 effort: medium
@@ -26,6 +26,18 @@ what you were trying to do, what you decided, and where to resume.
 
 Deliberately cheap (`sonnet`/`medium`): this is structured summarization, not
 judgment. It must never reach for an expensive model.
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The entry was APPENDED to docs/LOGS.md (file edited, not just drafted) with accurate git facts
+✓ No past entry was edited
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

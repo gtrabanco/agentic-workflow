@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.6.0
+version: 1.7.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 model: sonnet
 effort: medium
@@ -24,6 +24,29 @@ Three modes:
 - **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
 - **single-pass** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): implement it end-to-end in one pass.
 - **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`.
+
+## Turn contract — every invocation, verify before ending the turn
+
+```
+✓ 1. Branch verified FIRST: `git branch --show-current` was RUN and its output
+     pasted. Output = the default branch → `git switch -c <branch>` was RUN
+     before any edit. NEVER work on main/master.
+✓ 2. The gate was RUN (not assumed): commands + exit codes pasted.
+✓ 3. `git add <files>` and `git commit -m "<type>(<scope>): <summary>"` were
+     EXECUTED and the resulting sha is pasted. Describing a commit you did not
+     run counts as NOT committed.
+✓ 4. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
+     `gh pr create` were EXECUTED and the PR URL is pasted. The PR body is
+     NEVER empty: what it does, why, evidence, and `Closes #<n>` when
+     issue-born. Unit not finished? Then NOTHING was pushed.
+✓ 5. The closing `→ Next:` block is the LAST thing printed.
+```
+
+**Push policy: push happens exactly once — at the PR step. Never mid-phase,
+never unasked, never to the default branch.** If, about to end the turn, any
+box is unchecked: STOP and complete it now — a turn that ends with work
+implemented but uncommitted, or committed but missing its PR (finished units),
+is a FAILED turn, not a done one.
 
 ## Hard rules
 
