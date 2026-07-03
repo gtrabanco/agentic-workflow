@@ -241,6 +241,28 @@ Qwen-written code adds independence — the strength invariant still rules);
 Qwen3 Embedding and Flux 2 Klein are audio/retrieval/image models — not used by
 the workflow. Sign up via [this referral link](https://cloud.nan.builders/r/7GK06FX8).
 
+**If GLM-5.2 is down — fallback ladder, in order:**
+
+1. **GPT-5.4** (Copilot) — cross-family frontier: full replacement for every
+   GLM-5.2 slot, and for `review-change` it's actually a quality *gain*
+   (independence from the family that wrote the code).
+2. **Qwen3.6, Thinking on, High** — acceptable for `plan-feature`, `plan-fix`,
+   `init-workspace`, `triage-issue` and the `ship-roadmap` conductor: their
+   output is checked downstream by review/audit, so a shallower plan gets
+   caught. Caveat for `review-change`: if Qwen3.6 also wrote the code, the ≥
+   invariant holds (equal is allowed) but you lose reviewer independence —
+   prefer option 1 whenever Copilot is up.
+3. **DeepSeek V4 Flash — never for judgment.** A "Flash" tier writes fine but
+   its verdicts look complete while missing what matters. Mechanical slots only.
+
+**Two skills don't degrade — defer them instead of downgrading:**
+`audit-pr` (the merge gate: a false MERGE-READY is the most expensive automated
+mistake in the workflow — if no frontier model is up, the human gates manually
+or the PR waits) and `product-audit` (a Max-effort, product-wide sweep on a mid
+model returns a *plausible-looking but shallow* report, which is worse than no
+report — postpone it until GLM-5.2 or GPT-5.4 is back). Everything at the
+Qwen3.6/Flash tiers is unaffected by a GLM-5.2 outage.
+
 **Prefer no model pinning at all?** Install the **`#inheritance` variant** —
 the same skills, auto-synced to latest on every push, with every `model:` /
 `effort:` field stripped so each skill **inherits your session's model and
