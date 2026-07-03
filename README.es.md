@@ -395,6 +395,43 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   Ver CHANGELOG.es.md → "Instalar y pinear una versión" para cómo funciona el pinning.
 ```
 
+### Instalación en Hermes Agent (desktop y terminal)
+
+Hermes solo escanea **`~/.hermes/skills/`** (su "source of truth") más los
+`external_dirs` que añadas en `~/.hermes/config.yaml` — **no** escanea las
+rutas de proyecto que la CLI `skills` escribe por defecto (`./.hermes/skills/`,
+`./.agents/skills/`). Por eso un install de proyecto "no se detecta". La app de
+escritorio y la terminal comparten el mismo mecanismo. Las subcarpetas de
+categoría (`skills/devops/<skill>/`) son opcionales — las carpetas planas
+`<skill>/SKILL.md` se detectan sin problema.
+
+```sh
+# Instalar (usa la variante inheritance — Hermes ignora model:/effort: de todas
+# formas, así que deja que las skills hereden el modelo de tu sesión de Hermes):
+npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
+#   → copia cada skill a ~/.hermes/skills/<skill>/  ✔ detectado por desktop y terminal
+
+# Actualizar después:
+npx skills update --global
+#   …y arranca una sesión NUEVA (/reset en terminal, o reinicia la app de
+#   escritorio) — Hermes carga las skills al inicio de sesión; añade --now en
+#   Hermes para invalidar la caché de prompt al momento (cuesta tokens extra).
+```
+
+Alternativa por proyecto: mantén el install local del proyecto y apunta Hermes
+a él en `~/.hermes/config.yaml`:
+
+```yaml
+skills:
+  external_dirs:
+    - /ruta/a/tu-proyecto/.agents/skills
+```
+
+(En colisiones de nombre gana `~/.hermes/skills/`; los directorios inexistentes
+se ignoran en silencio.) Elige el modelo de sesión según la
+[tabla de equivalencia](#equivalencia-de-modelos-modelos-no-claude--de-libre-inferencia)
+— en NaN.builders, según los picks de arriba.
+
 Sin publicar en npm, sin registro, sin paso de build — `skills` clona el repo y
 copia (o enlaza con symlink) las carpetas de skills en el sitio correcto para
 cada agente. Las skills **descubren el proyecto destino en tiempo de ejecución**
