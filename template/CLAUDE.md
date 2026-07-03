@@ -63,8 +63,11 @@ this line; with `branches` declared, no skill may create a worktree.
   stack — see [PR & branch workflow](#pr--branch-workflow).
 - **Gate before commit:** the verification gate (type-check + tests + build) is
   green — see [Commands](#commands).
-- **Docs language:** every committed artifact in `<your docs language>`, whatever
-  language the work was requested in.
+- **Docs language:** every committed artifact (issues, PRs, commits, SPECs,
+  docs) in `<your docs language>`, whatever language the work was requested
+  in. Precedence: an explicit instruction in the prompt > this line > English.
+  **The conversation language never decides** — a request made in Spanish
+  still produces artifacts in the declared language.
 - **Evidence over reflex:** verify claims against the code (counts, repro,
   thresholds) and cite paths; don't assert from assumption.
 - **Track, don't inline:** deferred work becomes a tracked issue / known-issue,

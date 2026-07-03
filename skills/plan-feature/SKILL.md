@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -29,6 +29,7 @@ need runs (no fat single skill). **Docs only — no code, no branch.**
 ```
 ✓ SPEC + artifacts written and the roadmap entry registered (number, order, deps verified)
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 
