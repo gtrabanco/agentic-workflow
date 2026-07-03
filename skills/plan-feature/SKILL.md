@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.2.2
+version: 1.3.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -62,8 +62,16 @@ Pick the mode — first match wins:
    `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
    if any of the three is missing or wrong, fix the entry now — never leave
    registration for later.
-3. **Print the next step:** `execute-phase <NN> P1` (M/L, phased) or
-   `execute-phase <NN>` (XS/S, single-pass).
+3. **Dependency & blocker check (always, before recommending execution).**
+   - Walk the feature's `Depends on:` closure (transitively): every dependency
+     must be `done` **and merged**. Any unmet → the closing block recommends
+     building the deepest unmet dependency first, NOT this feature.
+   - Check the fix index + open issues (forge CLI) for fix-now items touching
+     the same modules this SPEC names. Any hit → the closing block recommends
+     `/plan-fix <n>` before execution ("building on a known defect bakes it in").
+   - Planning itself never blocks on either — the SPEC/artifacts are still
+     written; only the **recommended next step** changes.
+4. **Print the next step** per the check above (see Done when).
 
 ## Guardrails
 
@@ -104,10 +112,20 @@ enables:
 ## Done when
 
 - A planned feature with its full artifact set exists and is roadmap-registered.
-- **The closing `→ Next:` block is printed:**
+- The dependency & blocker check ran, and **the closing `→ Next:` block matches
+  its result** — clean:
 
   ```
   → Next: /execute-phase <NN> P1 — start phase 1 (M/L, phased)
     · XS/S feature → /execute-phase <NN> (single-pass)
     · adjust scope first → re-run /plan-feature   · audit the planning docs → /audit-docs
+  ```
+
+  unmet dependency and/or blocking fix-now issue:
+
+  ```
+  → Next: /plan-feature <deepest-unmet-dep> (or /execute-phase <dep> …) — build the
+    dependency chain first: <chain, deepest → NN>
+    · blocking fix-now issue #<n> in the same area → /plan-fix <n> before executing
+    · proceed anyway → /execute-phase <NN> P1 --force (the gate logs the override)
   ```
