@@ -218,6 +218,29 @@ fast; sanity-check against a current leaderboard before pinning):
 - **Small & cheap** (⇔ Haiku): **Qwen3 4–14B**, **Mistral Small 3.1**,
   **Gemma 3 27B**, **Phi-4-mini** — local-friendly, fine for grep-shaped work.
 
+#### <img src="docs/assets/nan-cloud.svg" alt="NaN Cloud logo" width="20" height="19"> Running on [NaN.builders](https://cloud.nan.builders/r/7GK06FX8)
+
+[NaN Cloud](https://cloud.nan.builders/r/7GK06FX8) serves the open-weight
+frontier (GLM-5.2, Qwen3.6, DeepSeek V4 Flash, Gemma4, Mimo V2.5 — plus
+GPT-5.4 via GitHub Copilot) with per-request **Thinking** toggle and **effort**
+control (Minimal → Max), which maps 1:1 onto this workflow's tiers. Our picks
+per skill:
+
+| Skill | NaN model | Thinking | Effort |
+|---|---|---|---|
+| `init-workspace`, `plan-feature`, `plan-fix`, `review-change`, `audit-pr`, `triage-issue` | **GLM-5.2** | on | High |
+| `product-audit` | **GLM-5.2** | on | **Max** |
+| `ship-roadmap` (conductor) | **GLM-5.2** | on | High |
+| `execute-phase` (+ ship-roadmap's execution runs), `audit-docs`, `bump-skill` | **Qwen3.6** | off | Medium |
+| `log-session`, evidence gathering | **DeepSeek V4 Flash** | off | Low |
+
+Alternates: subtle implementation logic → bump `execute-phase` to GLM-5.2/High;
+**GPT-5.4** works as a cross-family reviewer (a different family reviewing
+Qwen-written code adds independence — the strength invariant still rules);
+**Gemma4**/**Mimo V2.5** swap into the small tier. Whisper, Kokoro, Rerank,
+Qwen3 Embedding and Flux 2 Klein are audio/retrieval/image models — not used by
+the workflow. Sign up via [this referral link](https://cloud.nan.builders/r/7GK06FX8).
+
 **Prefer no model pinning at all?** Install the **`#inheritance` variant** —
 the same skills, auto-synced to latest on every push, with every `model:` /
 `effort:` field stripped so each skill **inherits your session's model and
