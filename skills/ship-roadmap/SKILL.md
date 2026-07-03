@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.6.0
+version: 1.7.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -244,7 +244,10 @@ turns:
    - **PR** — **flip the feature to `done`** (built, not merged; the flip rides
      this PR-bound commit), then push and `pr create` against the default branch
      with the PR template and `Closes #N` where issue-born (forge CLI per Workflow
-     conventions). The PR always opens — a unit never ends branch-only.
+     conventions). With the returned URL: **print it in the iteration output**,
+     update the roadmap row to `done · [#<pr>](<pr-url>)`, commit
+     (`docs: link PR #<n>`) and push — the stage is NOT complete until the row
+     carries its PR link. The PR always opens — a unit never ends branch-only.
    - **AUDIT** — compose `audit-pr` in-turn (equal tier); bind the verdict to
      the PR's head SHA in the run log. MERGE-READY → default mode logs and
      moves on; `--fullauto` checks the floors, **records the merge intent in

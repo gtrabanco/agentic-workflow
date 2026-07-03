@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.2.0
+version: 1.3.0
 model: opus
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -61,7 +61,12 @@ the agent guide and state the assumption.
        phase**: edge cases and the SPEC's dev-scenario failure modes
        (empty/degraded states, races, outages), implemented and tested — not just
        documented.
-     - `TASKS.md` — per-phase checklists the executor ticks off.
+     - `TASKS.md` — per-phase checklists the executor ticks off. **The final
+       phase's checklist always ends with these literal close-out tasks**:
+       "[ ] open the PR (`gh pr create` with full body) and PRINT THE PR URL
+       in the chat", "[ ] update the roadmap row to `done · [#<pr>](<pr-url>)`",
+       "[ ] commit `docs: link PR #<n>` and push" — so the close-out is a
+       ticked task, not an assumed behavior.
      - `progress.md` — running log, one entry per phase.
      - `testing.md` — what is tested at which layer (prefer integration).
      - `known-issues.md` — deferred items, each linked to (or destined for) an
