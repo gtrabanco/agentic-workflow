@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.5.0
+version: 2.0.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -13,7 +13,11 @@ description: >
   updated per the doc map, Closes #N present when issue-born, tests added at the
   right layer, CI green, branch off the default branch and independently mergeable,
   and the review-change axes clean (or consciously deferred to tracked issues).
-  Verdict: merge-ready, or a ranked list of blockers — never merges, never edits.
+  Verdict: merge-ready, or a ranked list of blockers — always with the PR's full
+  URL printed. Never edits; never merges by default — with a documented auto-merge
+  policy (or an explicit user instruction) it merges a MERGE-READY PR after a
+  fail-closed pre-merge checklist (clean tree, nothing unpushed/unpulled, fresh
+  green CI on the audited SHA).
   Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
   Triggers: "is this PR ready to merge", "audit the PR", "merge gate for #N",
   "can this ship", "pre-merge review", "audit-pr".
@@ -23,14 +27,20 @@ description: >
 
 The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR —
 its SPEC, all phases, docs, tests, CI, and review axes — that returns a single
-verdict: **merge-ready** or a ranked list of **blockers**. **Findings only — never
-merges, never edits, never refactors.** The human decides and merges.
+verdict: **merge-ready** or a ranked list of **blockers**. **Never edits, never
+refactors.** By default it never merges either — the human decides and merges.
+The one exception is the **opt-in auto-merge** below: a documented policy (or an
+explicit user instruction) plus a fail-closed pre-merge checklist.
 
 ## Turn contract — verify before ending the turn
 
 ```
 ✓ The verdict block was printed in the fixed format: `VERDICT: MERGE-READY | BLOCKED` with ranked, evidenced blockers
-✓ Nothing was merged, pushed, edited, or refactored
+✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
+  several projects and agents without a CI monitor — the link in the chat is
+  the contract, never "PR #N" alone)
+✓ Nothing was edited or refactored; nothing was merged UNLESS the auto-merge
+  policy applied AND the pre-merge checklist was RUN with its output pasted
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 
@@ -112,13 +122,58 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
    - **MERGE-READY** — every applicable gate passes; list the few things the human
      should still eyeball (the manual-verification items `review-change` surfaced).
    - **BLOCKED** — one or more gates fail; output the ranked blocker list.
-5. **Report** — the verdict block below. Findings only; never merge or edit.
+5. **Auto-merge check (only on MERGE-READY)** — evaluate the opt-in auto-merge
+   section below. Policy present + pre-merge checklist green → merge and report
+   the merge evidence. Otherwise the human merges — say so explicitly.
+6. **Report** — the verdict block below, always headed by the PR's full URL.
+
+## Auto-merge (opt-in — default is the human merges)
+
+By default this skill **never merges**. It merges a MERGE-READY PR only when
+**both** keys hold:
+
+1. **Written authorization.** The project's docs state the policy — e.g.
+   `merge: auto` / `merge: fullauto` in the agent guide's Workflow conventions
+   or the committed decision record (`docs/features/SHIP_DECISIONS.md`) — **or**
+   the user explicitly instructed it in this conversation ("merge it if
+   merge-ready"). An inferred preference, a past session, or convenience is
+   never authorization.
+2. **Pre-merge checklist — RUN it fresh, paste the outputs; fail-closed** (any
+   box that cannot be evaluated counts as failed):
+
+   ```
+   ✓ VERDICT is MERGE-READY, issued in THIS turn, bound to the PR's current
+     head SHA (re-check the head via the forge — any later commit voids it)
+   ✓ `git status --porcelain` → empty (nothing uncommitted — code or docs)
+   ✓ `git fetch` + `git status -sb` (on the PR branch) → neither ahead nor
+     behind its remote (nothing unpushed, nothing unpulled)
+   ✓ Remote head SHA == the SHA this audit evaluated
+   ✓ CI re-checked green on that exact SHA via the forge at merge time (no-CI
+     project: a fresh local gate run on that SHA, output pasted)
+   ✓ The PR touches no declared sensitive area and contains no destructive
+     (data-deleting / schema-destructive) diff
+   ✓ The forge accepts the merge (a refusal — branch protection, conflicts —
+     parks the PR; never bypass, never force)
+   ```
+
+3. **Anything pending → do NOT merge, even with authorization.** Uncommitted or
+   unpushed work would make the PR's CI result stale the moment it lands.
+   The sequence is fixed: route the pending work (commit + push via
+   `execute-phase`'s fold cycle) → wait for CI on the new head → **re-run
+   `audit-pr`** → only a fresh MERGE-READY on the new SHA may merge. Never
+   merge on a stale verdict.
+
+After a successful merge: print the merged PR URL + merge SHA, and route the
+post-merge close-out (pull the default branch; remove/archive the fix-index
+entry per the project's convention — only now, never before).
 
 ## Verdict format
 
 ```
 PR #<N> — <title>
-Base: <default> ← Head: <branch>   CI: <green|failing|pending>
+URL: <full PR URL — always printed; the user works across several projects
+     and not every agent shows a CI monitor or PR list>
+Base: <default> ← Head: <branch> @ <head SHA>   CI: <green|failing|pending>
 
 VERDICT: MERGE-READY | BLOCKED (<count> blockers)
 
@@ -134,14 +189,19 @@ Before merge, a human should still verify:
   - <manual-verification item from review-change>
 
 → Next:
-  · MERGE-READY → you merge, then /plan-feature --next (the next roadmap unit)
-    or pick an issue with /triage-issue
+  · MERGE-READY, no auto-merge policy → you merge: <full PR URL>, then
+    /plan-feature --next (the next roadmap unit) or pick an issue with /triage-issue
+  · MERGE-READY, auto-merge authorized → merged (URL + merge SHA above), then
+    /plan-feature --next or /triage-issue
+  · MERGE-READY but pending commit/push/pull found → NOT merged: commit + push,
+    wait for CI, re-run /audit-pr (a fresh verdict on the new SHA decides)
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
 ```
 
 If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge.
-The `→ Next:` block is always printed — on MERGE-READY it points the user at the
-next concrete unit so a finished feature never dead-ends at the merge.
+The `→ Next:` block is always printed — on MERGE-READY it repeats the **full PR
+URL** (merge it yourself, or the merged link) and points the user at the next
+concrete unit so a finished feature never dead-ends at the merge.
 
 Example (generic — substitute your project's numbers and gates):
 
@@ -177,7 +237,13 @@ Before merge, a human should still verify:
 
 ## Guardrails
 
-- **Read-first verdict only. Never merge, push, edit, or refactor.** The human ships.
+- **Read-first verdict. Never push, edit, or refactor.** Merging is forbidden by
+  default; the sole exception is the opt-in auto-merge section — written policy or
+  explicit instruction, MERGE-READY on the current SHA, pre-merge checklist green,
+  outputs pasted. One key missing → the human ships.
+- **Never merge with anything uncommitted, unpushed, or unpulled** — even when
+  auto-merge is authorized. Pending work makes the CI evidence stale: commit +
+  push, wait for CI, re-audit, and only the fresh verdict may merge.
 - Never report MERGE-READY on an unconfirmed gate — absence of evidence is a blocker.
 - Don't re-run the full review from scratch; compose `review-change` and verify its
   open findings are resolved or tracked.
@@ -217,8 +283,12 @@ execute-phase (all phases done) ─▶ review-change (axes clean) ─▶ audit-p
 
 - Every applicable gate has a pass / blocker / n-a verdict backed by cited evidence.
 - A single top-line verdict (**MERGE-READY** or **BLOCKED** with ranked blockers) is
-  reported, each blocker routed, with the human's manual-verification list explicit.
-- The **closing `→ Next:` block is printed** (MERGE-READY → human merges, then the
-  next unit via `/plan-feature --next` or `/triage-issue`; BLOCKED → the routed fix,
-  then re-audit).
-- Nothing was merged, edited, or refactored.
+  reported **with the PR's full URL in the header**, each blocker routed, with the
+  human's manual-verification list explicit.
+- On MERGE-READY the auto-merge check was evaluated explicitly: merged with the
+  checklist output pasted (authorized + clean), or handed to the human with the URL,
+  or held back pending commit/push/pull with the re-audit sequence printed.
+- The **closing `→ Next:` block is printed** (merge link → then the next unit via
+  `/plan-feature --next` or `/triage-issue`; BLOCKED → the routed fix, then re-audit).
+- Nothing was edited or refactored; any merge is traceable to the policy key and
+  the pasted checklist.

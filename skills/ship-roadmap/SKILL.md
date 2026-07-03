@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -11,7 +11,10 @@ description: >
   End-to-end autopilot: found the project if needed (one upfront interview — product, features,
   stack, architecture, quality bars, ops, autonomy, budget), create or adopt the complete roadmap,
   then ship it feature by feature through the full workflow (plan → execute → review → PR → merge
-  gate) driven by /loop, with no further questions. Default: opens PRs, the human merges;
+  gate) driven by /loop, with no further questions. Features exhausted ≠ run over: an issue sweep
+  then inventories open issues plus the run's own documented residue (known-issues, trade-offs,
+  postponed findings), triages everything, and ships the fix-now issues through the same stages.
+  Default: opens PRs, the human merges;
   --fullauto merges MERGE-READY PRs under non-negotiable safety floors. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
   Triggers: "ship the
   roadmap", "build the whole app from the roadmap", "run the full workflow on autopilot",
@@ -23,7 +26,10 @@ description: >
 Run the entire agentic workflow unattended between human decision points: one
 interactive founding turn that asks **everything**, then a `/loop`-driven build
 loop that plans, implements, reviews, opens and (optionally) merges one PR per
-feature until the roadmap is done — ending in a final report that recommends
+feature until the roadmap is done — then keeps going: an **issue sweep**
+inventories open issues and the run's own documented residue (known-issues,
+trade-offs, postponed findings), triages it all, and ships what's fix-now —
+ending in a final report that recommends
 issues, newly discovered features, and the product-audit cadence.
 
 This is the **expensive** skill: a full run burns planning, implementation and
@@ -203,7 +209,27 @@ turns:
       dependencies aren't merged means the roadmap's statuses are inconsistent
       → `SHIP: STOPPED` (substrate invariant broken), never build on top of it.
       → PLAN.
-   4. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
+   4. **Issue sweep — features exhausted, run NOT over.** Every roadmap feature
+      is `done` **and merged** but the sweep hasn't completed → the run
+      continues with issues; finishing the features is not finishing the run:
+      1. **INVENTORY (once per run, its own iteration).** Enumerate (a) every
+         open forge issue and fix-index entry; (b) every *documented residue*
+         the run itself generated — each feature's `known-issues.md`, the
+         trade-offs in `decisions.md`, and every review report's
+         postponed/intentional-tradeoff findings. For residue items that are
+         real defects/gaps but have no tracked issue yet, **file the issue
+         now** (forge CLI; body cites the doc + trigger). Log the full
+         inventory (issue #s + sources) to the run log.
+      2. **TRIAGE (compose `triage-issue` in-turn, equal tier).** Classify
+         each inventoried issue against the CURRENT codebase. fix-now → it
+         becomes a selectable unit; postpone / wontfix / promote-to-feature →
+         the dated verdict is recorded on the issue and carried into the
+         report (promotions become report feature-proposals, never in-run
+         scope).
+      3. **SHIP the fix-now issues** one unit at a time through the normal
+         stages (`plan-fix` → EXECUTE (`--fix`) → REVIEW → PR → AUDIT), same
+         budget caps, floors, and merge policy as features.
+   5. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
       #12 unblocks 05 and 07") and the resume command.
 
    `execute-phase`'s own dependency gate stays active inside every subagent —
@@ -238,7 +264,8 @@ turns:
      review at branch end (matching execute-phase's documented batch pattern);
      L or sensitive-flagged features get a checkpoint every 2 phases. Persist
      the review report into the feature's docs folder. fix-now findings → one
-     sonnet fixer subagent + gate + commit (max 2 review-fix cycles); every
+     sonnet fixer subagent + gate + commit **+ push (when the PR exists) +
+     clean-tree check (step 5)** (max 2 review-fix cycles); every
      **non-fix-now finding is triaged** (review-change composes `triage-issue`)
      → tracked forge issue / documented decision, never inlined.
    - **PR** — **flip the feature to `done`** (built, not merged; the flip rides
@@ -249,17 +276,34 @@ turns:
      (`docs: link PR #<n>`) and push — the stage is NOT complete until the row
      carries its PR link. The PR always opens — a unit never ends branch-only.
    - **AUDIT** — compose `audit-pr` in-turn (equal tier); bind the verdict to
-     the PR's head SHA in the run log. MERGE-READY → default mode logs and
-     moves on; `--fullauto` checks the floors, **records the merge intent in
-     the run log first**, then merges. BLOCKED → in-scope blockers go to a
+     the PR's head SHA in the run log, and **print the PR's full URL next to
+     the verdict in the iteration output** (the human merging works from the
+     chat, not from a CI monitor). MERGE-READY → default mode logs and
+     moves on; `--fullauto` checks the floors **including audit-pr's pre-merge
+     cleanliness checklist (nothing uncommitted/unpushed/unpulled — pending
+     work means: push, wait for CI, re-audit; never merge on a stale
+     verdict)**, **records the merge intent in the run log first**, then
+     merges. BLOCKED → in-scope blockers go to a
      sonnet subagent next iteration (max 2 audit cycles, then the feature is
-     parked and the loop moves on).
+     parked and the loop moves on); the fixer's cycle ends committed AND
+     pushed (step 5), so the re-audit judges the real branch.
 
    The stage sequence is per-feature and size-dependent — always **one stage
    per iteration**: XS/S/M → PLAN → EXECUTE (all phases / single pass) →
    REVIEW → PR → AUDIT; L or sensitive-flagged → PLAN → EXECUTE (≤2 phases) →
    REVIEW → EXECUTE (next ≤2) → REVIEW → … → PR → AUDIT.
-5. **LOG** one line to `.ship-run.log`; print `→ Next: <unit> (CONTINUE)` as the
+5. **CLEAN CLOSE-OUT — verify before logging the stage complete.** A stage
+   only counts as advanced when the conductor has RUN and checked, on the
+   unit's branch: `git status --porcelain` → empty (no tracked modification
+   left behind — **docs included**: progress/testing/known-issues/roadmap
+   edits ride the stage's commit, never linger), and — once the unit's PR
+   exists — `git status -sb` after `git fetch` → not ahead of the remote
+   (every commit pushed; the PR and CI must see what was actually done).
+   A subagent that "finished" but left the tree dirty or the branch unpushed
+   did NOT finish: the conductor commits/pushes the remainder itself (same
+   stage, same iteration) or marks the stage partial. This check is
+   unconditional for EXECUTE, REVIEW fix cycles, PR, and AUDIT fix cycles.
+6. **LOG** one line to `.ship-run.log`; print `→ Next: <unit> (CONTINUE)` as the
    last line (the canonical next-step shape; `CONTINUE` stays the loop's
    keep-going signal).
 
@@ -319,7 +363,7 @@ Non-negotiable floors, evaluated fresh immediately before every merge —
 
 | Banner | Fires when |
 |---|---|
-| `SHIP: COMPLETE` | Every roadmap feature is `done` **and its PR merged** (default mode: the human merged them all; `--fullauto`: merged under the floors) — `done` alone is not enough, since it only means *built + PR open*. Report written, report PR open. |
+| `SHIP: COMPLETE` | Every roadmap feature is `done` **and its PR merged** (default mode: the human merged them all; `--fullauto`: merged under the floors) — `done` alone is not enough, since it only means *built + PR open* — **AND the issue sweep ran to completion**: inventory logged, every inventoried issue triaged, every fix-now issue shipped (PR merged / open-awaiting-merge) or parked with its reason. Features merged but sweep pending → the run is NOT complete; keep iterating. Report written, report PR open. |
 | `SHIP: BLOCKED` | Everything remaining is `done`-but-pr-open awaiting human merges, or planned with unmerged deps (default mode); or a parked feature transitively blocks the rest. Always includes the unblock map. |
 | `SHIP: STOPPED` | Budget/iteration cap; a Round-5 milestone stop line; substrate invariant broken (gate unrunnable, roadmap unparseable, unexplained dirty default branch, decision record missing); forge unavailable (no stage that depends on PR state may proceed on guesses). |
 | (feature parked, run continues) | Repeated red gate (retry cap), review ping-pong (2 cycles), audit ping-pong (2 cycles), capacity guard (3 partials), planning contradiction. |
@@ -336,9 +380,11 @@ audit-gated like any PR), and printed in full under the banner:
 2. **Per-feature outcomes** — size planned vs final, phases, gate history,
    review findings folded vs postponed, audit verdict + SHA, PR + final state,
    merged by human or autopilot.
-3. **Issues** — opened during the run, each with a suggested triage verdict
-   **and the trigger that should reopen it** (feeds `triage-issue`'s
-   verification model); suggested next command: one batch `/triage-issue`.
+3. **Issues** — the sweep's full inventory and outcomes: fix-now issues
+   shipped (PR links), postponed/wontfix verdicts with the trigger that
+   should reopen each (feeds `triage-issue`'s verification model), and
+   anything the sweep could not finish (budget/parked) as the explicit
+   remaining triage batch.
 4. **New feature proposals** — capabilities discovered during the build that
    serve the product goal (Round 1 quoted as the yardstick), each sized with a
    suggested roadmap slot. Recommend-only.
@@ -364,6 +410,11 @@ Closing line, verbatim policy: **this report recommends; the human decides.**
   ride PR-bound commits only.
 - **Never commit red; never merge red.** The gate and the floors are
   unconditional — no flag, mode, or interview answer disables them.
+- **No stage ends dirty or unpushed.** The clean close-out check (Mode B
+  step 5) is part of every stage: tracked modifications — docs included — are
+  committed with the stage, and a PR-backed branch is pushed before the
+  iteration logs the stage complete. Merging while anything is uncommitted,
+  unpushed, or unpulled is forbidden: push, wait for CI, re-audit, then merge.
 - **The conductor never writes application code.** All implementation flows
   through sonnet execute-phase subagents, one phase per subagent — that keeps
   the cost model honest and `execute-phase` the single implementation pathway.
@@ -433,7 +484,8 @@ leans on them harder than any other — here is the manual equivalent of each:
 
 - The run reached a terminal banner with the final report written and its PR
   open; the roadmap's statuses are true; every PR is merged, open-and-audited,
-  or parked with its reason recorded.
+  or parked with its reason recorded; on `SHIP: COMPLETE` the issue sweep is
+  accounted for — inventory, triage verdicts, fix-now issues shipped or parked.
 - Every decision of the run is traceable: locked answers in
   `SHIP_DECISIONS.md`, iteration evidence in the run log, outcomes and
   recommendations in the report.

@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.9.0
+version: 1.10.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 model: sonnet
 effort: medium
@@ -44,18 +44,30 @@ Three modes:
      `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
      without its PR link is an UNFINISHED unit. Unit not finished? Then
      NOTHING was pushed.
-✓ 5. Artifact language: explicit user instruction > the project's declared
+✓ 5. Clean-tree check LAST: `git status --porcelain` was RUN and its output
+     pasted immediately before ending the turn. Any tracked modification —
+     CODE OR DOCS (`docs/**` counts; doc updates left uncommitted are the #1
+     close-out failure) — was committed before the turn ended. AND if the
+     branch has an open PR: `git status -sb` shows the branch is NOT ahead of
+     its remote (every commit pushed). A dirty tree or an unpushed commit on a
+     PR-backed branch = the turn is NOT done.
+✓ 6. Artifact language: explicit user instruction > the project's declared
      docs language > English. The CONVERSATION language never decides — a
      Spanish prompt still produces English commits/PRs/issues unless one of
      the first two says otherwise.
-✓ 6. The closing `→ Next:` block is the LAST thing printed.
+✓ 7. The closing `→ Next:` block is the LAST thing printed.
 ```
 
-**Push policy: push happens exactly once — at the PR step. Never mid-phase,
-never unasked, never to the default branch.** If, about to end the turn, any
-box is unchecked: STOP and complete it now — a turn that ends with work
-implemented but uncommitted, or committed but missing its PR (finished units),
-is a FAILED turn, not a done one.
+**Push policy — two regimes, by whether the PR exists yet.** Before the PR:
+push happens exactly once, at the PR step — never mid-phase, never unasked,
+never to the default branch. **After the PR exists:** every subsequent commit
+on that branch (folded review findings, audit-blocker fixes, doc updates, the
+`docs: link PR` commit) is pushed **immediately after committing** — an open
+PR must always show the branch's latest state; CI and the merge gate judge
+the remote, not your working copy. If, about to end the turn, any box is
+unchecked: STOP and complete it now — a turn that ends with work implemented
+but uncommitted, committed but unpushed (PR open), or committed but missing
+its PR (finished units), is a FAILED turn, not a done one.
 
 ## Hard rules
 
@@ -137,6 +149,9 @@ Something forbidden looks necessary → stop, record it in `decisions.md` or
 ✓ Docs updated — at minimum verify each of: TASKS.md (checkboxes),
   progress.md, testing.md, known-issues.md, decisions.md (if any decision was
   taken), SPEC.md (only if scope/acceptance changed — with the change logged)
+✓ Docs COMMITTED with the phase — after the phase commit,
+  `git status --porcelain -- docs/` returns nothing. Doc updates ride the
+  phase commit (same `git add`), never sit uncommitted "for later"
 ```
 
 A phase that cannot tick every box is **not done**: fix within the phase's
@@ -286,6 +301,28 @@ Phase <N> done and committed. Review checkpoint.
   · findings → fold fix-now into the branch; non-fix-now → /triage-issue; then re-review
 ```
 
+### Folding review / audit findings (a first-class mini-cycle)
+
+When `review-change` findings (fix-now) or `audit-pr` blockers are folded back
+into a branch that already has an open PR, the fold is complete **only** when
+every step below ran — fixing the code and stopping is the classic way findings
+end up "solved" locally but absent from the merged PR:
+
+```
+✓ Fixes implemented (scope: only the routed findings — nothing extra)
+✓ Gate RUN and green (exit codes pasted)
+✓ Per-phase / unit docs updated where the finding touched them
+  (known-issues.md entry resolved? progress.md notes the fold)
+✓ `git add` + `git commit` RUN (sha pasted) — e.g.
+  `fix(<scope>): fold review findings — <summary>`
+✓ `git push` RUN (PR is open → every commit pushes immediately)
+✓ `git status --porcelain` RUN → empty; `git status -sb` → not ahead of remote
+```
+
+Then hand back to the gate that sent you (`/review-change` re-review, or
+`/audit-pr` re-audit). Never report findings as resolved while any box is
+unchecked — an unpushed fix does not exist for CI, the reviewer, or the merge.
+
 Final-phase / single-pass / fix hand-off:
 
 ```
@@ -372,5 +409,8 @@ enables:
   single-pass/`--fix`), the project's gate is green, per-phase docs are updated, and
   the work is committed on the correct branch — nothing bundled beyond the requested
   scope.
+- **The tree is clean and the remote current:** `git status --porcelain` is empty
+  (docs included) and, when the branch has an open PR, nothing is left unpushed.
 - **A finished unit additionally:** is flipped to `done`, has its PR opened (never
-  branch-only), and prints the mandatory `/review-change` hand-off as the next step.
+  branch-only) with **the PR URL printed in the chat**, and prints the mandatory
+  `/review-change` hand-off as the next step.
