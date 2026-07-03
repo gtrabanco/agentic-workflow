@@ -411,11 +411,15 @@ categoría (`skills/devops/<skill>/`) son opcionales — las carpetas planas
 npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
 #   → copia cada skill a ~/.hermes/skills/<skill>/  ✔ detectado por desktop y terminal
 
-# Actualizar después:
-npx skills update --global
-#   …y arranca una sesión NUEVA (/reset en terminal, o reinicia la app de
-#   escritorio) — Hermes carga las skills al inicio de sesión; añade --now en
-#   Hermes para invalidar la caché de prompt al momento (cuesta tokens extra).
+# Actualizar después — repite el add por agente, NO `skills update`:
+npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
+npx skills add gtrabanco/agentic-workflow --agent claude-code --global -y   # si también instalas global para Claude Code
+#   Por qué: el lockfile global guarda UN ref por nombre de skill (gana el último
+#   install), así que un `skills update --global` a ciegas puede reapuntar la
+#   copia de todos los agentes al mismo ref — repetir cada add refresca cada
+#   copia desde su propio ref. Luego arranca una sesión NUEVA de Hermes (/reset
+#   en terminal o reinicia la app) — las skills cargan al inicio de sesión;
+#   --now invalida la caché de prompt (tokens extra).
 ```
 
 Alternativa por proyecto: mantén el install local del proyecto y apunta Hermes
