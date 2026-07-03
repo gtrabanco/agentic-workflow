@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -100,8 +100,14 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    commits follow `<type>(<scope>): <summary>`; phase labels in touched
    planning docs are `P1, P2, …` (never `S1`/"Steps"); the phase's per-phase
    docs were updated (TASKS ticks, progress entry); no commit landed on the
-   default branch; artifacts are in the project's declared docs language.
-   Run the greps/`git log` — don't infer compliance.
+   default branch; artifacts are in the project's declared docs language;
+   **the tree is clean and the remote current** — run `git status --porcelain`
+   (any tracked modification, code or docs, = a `workflow` finding: work is
+   sitting outside the commits under review) and, when the branch has an open
+   PR, `git fetch` + `git status -sb` (commits ahead of the remote = a
+   `workflow` finding: the PR and CI are judging a stale branch). Both are
+   **fix-now** — a review verdict on a branch whose real state isn't pushed
+   is worthless. Run the greps/`git log`/`git status` — don't infer compliance.
 4. **Applicable pack passes.** For each axis the matrix + footprint mark as
    relevant, run the workflow's own internal skill for it (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
@@ -150,7 +156,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
    ```
    → Next: /audit-pr — merge gate (when the table is clean)
-     · fix-now findings → fold into the branch, then re-review
+     · fix-now findings → fold into the branch — gate green, COMMIT and PUSH
+       (execute-phase's fold cycle; an unpushed fix doesn't exist for CI or
+       the PR), then re-review
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
      · SPEC drift flagged here AND on a prior unit → /product-audit (the founding
        assumptions are probably stale — don't keep patching a compounding error)
