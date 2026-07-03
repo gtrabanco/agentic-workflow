@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <issue-number> [more issue numbers…]
 model: opus
 effort: high
@@ -23,6 +23,18 @@ description: >
 Decide what happens to an issue, grounded in evidence — not vibes. Prevents both
 premature work (acting on a deferred item whose trigger is unmet) and silent rot
 (a fix-now bug left to drift).
+
+## Turn contract — verify before ending the turn
+
+```
+✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
+✓ Nothing deferred was implemented inline
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

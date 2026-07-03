@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 model: opus
 effort: high
@@ -23,6 +23,18 @@ description: >
 One door to turn anything — an idea, an issue, or a scoped slug — into a planned,
 roadmap-registered feature. Routes to a focused internal step so only the work you
 need runs (no fat single skill). **Docs only — no code, no branch.**
+
+## Turn contract — verify before ending the turn
+
+```
+✓ SPEC + artifacts written and the roadmap entry registered (number, order, deps verified)
+✓ The dependency & blocker check was RUN and its result decides which closing block is printed
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## Step 0 — Discover the project (always first)
 

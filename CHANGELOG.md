@@ -58,6 +58,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `log-session`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-03 | minor | Turn contract at the top (entry actually APPENDED with accurate git facts; no past entry edited; → Next: printed last). |
 | 1.1.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.1.0 | 2026-07-02 | minor | Added the Portability section (no hooks → this skill is the only journal writer); `/clear` references generalized to any agent's context reset. |
 | 1.0.1 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
@@ -68,6 +69,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `bump-skill`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-03 | minor | Lint also checks the new `## Turn contract` section on user-facing skills. |
 | 1.2.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
 | 1.1.0 | 2026-06-27 | minor | Lint step flags edited skills missing a `→ Next:` block or using `S1`/"Step" phase labels (warns, never auto-fixes) |
@@ -78,6 +80,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.0 | 2026-07-03 | minor | Turn contract at the top (exactly one stage advanced + one run-log line; floors honored; → Next:/banner printed last). |
 | 1.4.0 | 2026-07-03 | minor | SELECT is now a fixed priority list: blocking fix-now fixes first, then in-progress stages, then features with a transitively-merged dependency closure (inconsistent statuses → SHIP: STOPPED); the autopilot never passes --force. |
 | 1.3.0 | 2026-07-02 | minor | Interview Round 5 locks the project's Git workflow (branches default / worktrees); model-equivalence note. |
 | 1.2.0 | 2026-07-02 | minor | Added the Portability section: manual equivalents for `/loop`, subagents, the slash menu, and model routing on non-Claude-Code agents. |
@@ -88,6 +91,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.7.0 | 2026-07-03 | minor | Turn contract at the top: branch check, gate, commit sha, push+PR (with mandatory body) actually RUN and pasted — a turn ending without them is failed; push happens exactly once, at the PR step. |
 | 1.6.0 | 2026-07-03 | minor | Dependency gate: transitive `Depends on:` closure must be MERGED before any work — fixed BLOCKED block with the unmet chain and build order; new `--force` flag skips the stop (never the check) and logs the override in decisions.md. |
 | 1.5.1 | 2026-07-02 | patch | Two conditional phrasings made deterministic (translate-if-not-English; verify-then-create the fix issue). |
 | 1.5.0 | 2026-07-02 | minor | Fixed Allowed/Forbidden lists and a "pass only if" phase-completion gate checklist (explicit minimum doc set); honors the declared Git workflow (branches default — never worktrees unless declared); model-equivalence note. |
@@ -103,6 +107,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | minor | Turn contract at the top (artifacts + roadmap registered; dependency check decides the closing block; → Next: printed last). |
 | 1.3.0 | 2026-07-03 | minor | Dependency & blocker check after planning: unmet (transitive) deps or fix-now issues in the same area change the closing → Next: block to recommend the dependency chain / plan-fix first. |
 | 1.2.2 | 2026-07-02 | patch | Roadmap confirmation made deterministic: verify number/order/deps and fix the entry immediately if wrong. |
 | 1.2.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
@@ -115,6 +120,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-03 | minor | Turn contract at the top (SPEC committed on the fix branch with sha pasted, not pushed; hand-off printed; → Next: last). |
 | 1.1.2 | 2026-07-02 | patch | Rollback names the data cleanup or states "none"; L-effort escalation is a rule (propose via plan-feature; the user decides), not a "consider". |
 | 1.1.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.1.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
@@ -126,6 +132,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.6.0 | 2026-07-03 | minor | Turn contract at the top (fixed-format report + PASS|FAIL + every finding routed + → Next: printed last). |
 | 1.5.0 | 2026-07-02 | minor | Composes the workflow's own internal review pack (`review-*`) — external skills are now optional extras, never dependencies; fixed "Return exactly" output contract ending in PASS|FAIL; model-equivalence note in the description. |
 | 1.4.0 | 2026-07-02 | minor | Added the Portability section; "compose in-turn" defined generically as running within the same conversation. |
 | 1.3.0 | 2026-06-27 | minor | Recommends `product-audit` when SPEC drift **recurs** across units (not a single finding); closing uses the canonical `→ Next:` block |
@@ -137,6 +144,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | minor | Turn contract at the top (fixed verdict block; nothing merged/edited; → Next: printed last). |
 | 1.3.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.3.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.2.0 | 2026-06-27 | minor | After-merge `→ Next:` block — MERGE-READY points the user at the next unit (`plan-feature --next` / `triage-issue`) so a finished feature never dead-ends at the merge |
@@ -149,6 +157,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.0 | 2026-07-03 | minor | Turn contract at the top (full fixed-format report; report-only; → Next: printed last). |
 | 1.4.0 | 2026-07-02 | minor | Sweeps every axis via the internal review pack (no external skill dependencies); model-equivalence note in the description. |
 | 1.3.0 | 2026-07-02 | minor | Added the Portability section; the ultracode tip now states the sequential fallback for agents without it. |
 | 1.2.2 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
@@ -163,6 +172,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-03 | minor | Turn contract at the top (fixed report + PASS|FAIL; no unrequested rewrites; → Next: printed last). |
 | 1.2.0 | 2026-07-02 | minor | Fixed report format (findings table + checks-run count + PASS|FAIL decision); model-equivalence note. |
 | 1.1.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.0.5 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
@@ -175,6 +185,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.0 | 2026-07-03 | minor | Turn contract at the top (per-issue fixed verdict; nothing deferred implemented; → Next: printed last). |
 | 1.4.0 | 2026-07-02 | minor | Fixed per-issue verdict format (trigger / checked / evidence / VERDICT / action); model-equivalence note. |
 | 1.3.0 | 2026-07-02 | minor | Added the Portability section with the standard non-Claude-Code fallbacks. |
 | 1.2.0 | 2026-06-27 | minor | Recommends `product-audit` when the **same inconsistency recurs** across issues; per-verdict closing uses the canonical `→ Next:` block |
@@ -185,6 +196,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | minor | Turn contract at the top (scaffold written or decision asked; nothing installed without a yes; → Next: printed last). |
 | 1.3.0 | 2026-07-02 | minor | Interview asks the project's Git workflow (branches default / worktrees); reviews declared self-contained — external review skills become optional extras; model-equivalence note. |
 | 1.2.0 | 2026-07-02 | minor | Added the Portability section (hooks offer skipped on non-Claude-Code agents, `log-session` noted as the manual alternative). |
 | 1.1.2 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
@@ -222,6 +234,19 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-03 (2) — turn contracts (weak-model reliability).** Field testing on
+  open models surfaced dropped end-of-turn duties: implemented-but-uncommitted
+  work, PRs not opened or opened without a body, work on the default branch,
+  missing closing blocks. Every user-facing skill now OPENS with a
+  **`## Turn contract`** — the boxes each invocation must tick before the turn
+  may end; `execute-phase` 1.7.0's is the strictest (branch check → gate →
+  commit sha → push+PR with mandatory body, all actually RUN and pasted; push
+  exactly once, at the PR step). New CLAUDE.md authoring rule + bump-skill lint.
+  Minor bumps: execute-phase 1.7.0, review-change 1.6.0, audit-pr 1.4.0,
+  product-audit 1.5.0, audit-docs 1.3.0, triage-issue 1.5.0, plan-feature 1.4.0,
+  plan-fix 1.2.0, init-workspace 1.4.0, log-session 1.2.0, ship-roadmap 1.5.0,
+  bump-skill 1.3.0.
 
 - **2026-07-03 — dependency safety.** `execute-phase` 1.6.0 gains a hard
   **dependency gate**: the transitive `Depends on:` closure must be merged

@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.5.0
+version: 1.6.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -27,6 +27,18 @@ description: >
 The quality gate for a change: get every review that *applies* — and skip the ones
 that don't — in one synthesized, classified report. **Findings only; never edits
 or refactors.**
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The synthesized decision table + manual-verification checklist + `Decision: PASS | FAIL` were returned in the fixed output format
+✓ Every non-fix-now finding got a destination (triaged — issue / decision / drop)
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

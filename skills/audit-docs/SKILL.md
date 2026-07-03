@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -21,6 +21,18 @@ description: >
 
 A read-first audit answering "do the docs still match reality?" Produces a
 findings report; it does not silently rewrite docs.
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The AUDIT DOCS fixed-format report was printed, ending in `Decision: PASS | FAIL`
+✓ No doc was rewritten without explicit --fix / user go-ahead
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 
