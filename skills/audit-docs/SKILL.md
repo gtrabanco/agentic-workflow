@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -67,6 +67,12 @@ Run these and collect findings (cite paths/lines/issue numbers each):
    kebab-case TS files, PascalCase components).
 8. **Invariant tags.** If the project uses invariant/decision IDs (e.g.
    INV-/D-/KI-), spot-check that referenced IDs exist where claimed.
+9. **PR-link integrity on `done` rows.** Every roadmap row (and fix-index
+   entry) with status `done` carries a linked PR reference —
+   `done · [#<pr>](<pr-url>)`. For each bare `done`, find its PR in the forge
+   (`gh pr list --state all --head feat/<NN>-<slug>` or by title) and propose
+   the row update; a `done` with no PR found at all is HIGH severity (the unit
+   may never have been closed out).
 
 Adapt the list to what the project has; skip checks for absent structures and
 say so.
@@ -80,11 +86,11 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-8) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-9) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/8 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/9 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```
@@ -92,7 +98,7 @@ say so.
    Sev: **high** = misleading or broken; **low** = cosmetic.
 3. **Fix only on request.** With explicit `--fix` (or user go-ahead), apply the
    low-risk corrections (remove a merged fix-index row, fix a dead link, register
-   a missing roadmap entry). Leave judgment calls to the user.
+   a missing roadmap entry, add a verified PR link to a bare `done` row). Leave judgment calls to the user.
 
 ## Guardrails
 
