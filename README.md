@@ -382,6 +382,42 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   See CHANGELOG.md → "Installing & pinning a version" for how pinning works.
 ```
 
+### Installing on Hermes Agent (desktop & terminal)
+
+Hermes only scans **`~/.hermes/skills/`** (its "source of truth") plus any
+`external_dirs` you add in `~/.hermes/config.yaml` — it does **not** scan the
+project-scope paths the `skills` CLI writes by default (`./.hermes/skills/`,
+`./.agents/skills/`). That's why a plain project install "isn't detected".
+Desktop app and terminal share the same mechanism. Category subfolders
+(`skills/devops/<skill>/`) are optional — flat `<skill>/SKILL.md` folders are
+detected fine.
+
+```sh
+# Install (use the inheritance variant — Hermes ignores model:/effort: anyway,
+# so let the skills inherit whatever model your Hermes session runs):
+npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
+#   → copies each skill to ~/.hermes/skills/<skill>/  ✔ detected by desktop & terminal
+
+# Update later:
+npx skills update --global
+#   …then start a NEW session (/reset in terminal, or restart the desktop app) —
+#   Hermes loads skills at session start; add --now in Hermes to bust the prompt
+#   cache immediately (costs extra tokens).
+```
+
+Per-project alternative: keep a project-local install and point Hermes at it in
+`~/.hermes/config.yaml`:
+
+```yaml
+skills:
+  external_dirs:
+    - /path/to/your-project/.agents/skills
+```
+
+(Local `~/.hermes/skills/` wins on name collisions; missing dirs are silently
+skipped.) Pick your session model per the [model-equivalence table](#model-equivalence-non-claude--free-inference-models)
+— on NaN.builders, per the picks above.
+
 No npm publish, no registry, no build step — `skills` clones the repo and copies
 (or symlinks) the skill folders into the right place for each agent. The skills
 **discover the target project at runtime** (agent guide, documentation map,
