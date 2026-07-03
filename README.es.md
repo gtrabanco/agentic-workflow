@@ -228,10 +228,10 @@ se mueve rápido; contrástalo con un leaderboard actual antes de fijar nada):
 #### <img src="docs/assets/nan-cloud.svg" alt="Logo de NaN Cloud" width="20" height="19"> Ejecutar sobre [NaN.builders](https://cloud.nan.builders/r/7GK06FX8)
 
 [NaN Cloud](https://cloud.nan.builders/r/7GK06FX8) sirve la frontera open-weight
-(GLM-5.2, Qwen3.6, DeepSeek V4 Flash, Gemma4, Mimo V2.5 — más GPT-5.4 vía
-GitHub Copilot) con toggle de **Thinking** y control de **effort** por petición
-(Minimal → Max), que mapea 1:1 con los tiers de este workflow. Nuestros picks
-por skill:
+([catálogo completo](https://nan.builders/docs/models): GLM-5.2 ~753B MoE ·
+Mimo V2.5 310B · DeepSeek V4 Flash 284B · Qwen3.6 35B · Gemma4 26B) con toggle
+de **Thinking** y control de **effort** por petición (Minimal → Max), que mapea
+1:1 con los tiers de este workflow. Nuestros picks por skill:
 
 | Skill | Modelo NaN | Thinking | Effort |
 |---|---|---|---|
@@ -242,35 +242,27 @@ por skill:
 | `log-session`, recolección de evidencia | **DeepSeek V4 Flash** | off | Low |
 
 Alternativas: lógica de implementación sutil → sube `execute-phase` a
-GLM-5.2/High; **GPT-5.4** funciona como revisor de familia cruzada (que una
-familia distinta revise código escrito por Qwen añade independencia — el
-invariante de fuerza sigue mandando); **Gemma4**/**Mimo V2.5** valen para el
-tier pequeño. Whisper, Kokoro, Rerank, Qwen3 Embedding y Flux 2 Klein son
-modelos de audio/retrieval/imagen — el workflow no los usa. Regístrate con
+GLM-5.2/High; **Mimo V2.5** (familia distinta) revisando código escrito por
+Qwen añade independencia del revisor; **Gemma4** vale para el tier pequeño.
+Whisper, Kokoro, Rerank, Qwen3 Embedding y Flux 2 Klein son modelos de
+audio/retrieval/imagen — el workflow no los usa. Regístrate con
 [este enlace de referido](https://cloud.nan.builders/r/7GK06FX8).
 
-**Si GLM-5.2 está caído — escalera de fallback, en orden:**
+**Si GLM-5.2 está caído — escalera de fallback:**
 
-1. **GPT-5.4** (Copilot) — frontier de familia cruzada: sustituto completo de
-   cada hueco de GLM-5.2, y en `review-change` es de hecho una *ganancia* de
-   calidad (independencia respecto a la familia que escribió el código).
-2. **Qwen3.6, Thinking on, High** — aceptable para `plan-feature`, `plan-fix`,
-   `init-workspace`, `triage-issue` y el conductor de `ship-roadmap`: su salida
-   la comprueban después la revisión y la auditoría, así que un plan menos
-   profundo se detecta. Matiz en `review-change`: si Qwen3.6 también escribió el
-   código, el invariante ≥ se cumple (igual está permitido) pero pierdes la
-   independencia del revisor — prefiere la opción 1 si Copilot está disponible.
-3. **DeepSeek V4 Flash — nunca para juicio.** Un tier "Flash" escribe bien,
-   pero sus veredictos parecen completos mientras se dejan lo importante. Solo
-   huecos mecánicos.
+| # | Fallback | Config | Vale para | Nunca para |
+|---|---|---|---|---|
+| 1 | **Mimo V2.5** (310B, reasoning, 1M ctx) | Thinking on, High (Max para `product-audit`) | **todos** los huecos de GLM-5.2, incluidos `audit-pr` y `product-audit`; como revisor de familia cruzada incluso añade independencia | — |
+| 2 | **Qwen3.6** (35B) | Thinking on, High | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, conductor de `ship-roadmap` — su salida la re-comprueban después revisión y auditoría | `audit-pr` · `product-audit` · revisar código que el propio Qwen3.6 escribió (el ≥ se cumple, la independencia no) |
+| 3 | **DeepSeek V4 Flash** (284B·21B activos) | Thinking on, High | planificación/triage de último recurso si 1–2 caen | cualquier veredicto que gatee un merge |
+| — | **Gemma4** (26B) | — | solo tier pequeño mecánico | juicio, jamás |
 
-**Dos skills no se degradan — pospónlas en vez de bajarles el modelo:**
-`audit-pr` (el gate de fusión: un falso MERGE-READY es el error automatizado
-más caro del workflow — sin modelo frontier disponible, el humano hace el gate
-a mano o el PR espera) y `product-audit` (un barrido de producto a effort Max
-en un modelo medio devuelve un informe *aparentemente completo pero
-superficial*, que es peor que ningún informe — pospónlo hasta que vuelva
-GLM-5.2 o GPT-5.4). Todo lo que corre en los tiers Qwen3.6/Flash no se ve
+**Los dos veredictos que gatean merges solo corren con calidad de tier 1:**
+`audit-pr` y `product-audit` pueden caer a **Mimo V2.5** (effort Max), pero
+nunca más abajo — un barrido en un modelo medio devuelve un informe
+*aparentemente completo pero superficial*, peor que ningún informe. ¿GLM-5.2
+**y** Mimo V2.5 caídos a la vez? → pospón: el humano gatea el merge a mano y el
+product-audit espera. Todo lo que ya corre en los tiers Qwen3.6/Flash no se ve
 afectado por una caída de GLM-5.2.
 
 **¿Prefieres no fijar modelos en absoluto?** Instala la **variante
