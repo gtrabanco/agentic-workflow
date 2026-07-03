@@ -249,6 +249,30 @@ tier pequeño. Whisper, Kokoro, Rerank, Qwen3 Embedding y Flux 2 Klein son
 modelos de audio/retrieval/imagen — el workflow no los usa. Regístrate con
 [este enlace de referido](https://cloud.nan.builders/r/7GK06FX8).
 
+**Si GLM-5.2 está caído — escalera de fallback, en orden:**
+
+1. **GPT-5.4** (Copilot) — frontier de familia cruzada: sustituto completo de
+   cada hueco de GLM-5.2, y en `review-change` es de hecho una *ganancia* de
+   calidad (independencia respecto a la familia que escribió el código).
+2. **Qwen3.6, Thinking on, High** — aceptable para `plan-feature`, `plan-fix`,
+   `init-workspace`, `triage-issue` y el conductor de `ship-roadmap`: su salida
+   la comprueban después la revisión y la auditoría, así que un plan menos
+   profundo se detecta. Matiz en `review-change`: si Qwen3.6 también escribió el
+   código, el invariante ≥ se cumple (igual está permitido) pero pierdes la
+   independencia del revisor — prefiere la opción 1 si Copilot está disponible.
+3. **DeepSeek V4 Flash — nunca para juicio.** Un tier "Flash" escribe bien,
+   pero sus veredictos parecen completos mientras se dejan lo importante. Solo
+   huecos mecánicos.
+
+**Dos skills no se degradan — pospónlas en vez de bajarles el modelo:**
+`audit-pr` (el gate de fusión: un falso MERGE-READY es el error automatizado
+más caro del workflow — sin modelo frontier disponible, el humano hace el gate
+a mano o el PR espera) y `product-audit` (un barrido de producto a effort Max
+en un modelo medio devuelve un informe *aparentemente completo pero
+superficial*, que es peor que ningún informe — pospónlo hasta que vuelva
+GLM-5.2 o GPT-5.4). Todo lo que corre en los tiers Qwen3.6/Flash no se ve
+afectado por una caída de GLM-5.2.
+
 **¿Prefieres no fijar modelos en absoluto?** Instala la **variante
 `#inheritance`** — las mismas skills, auto-sincronizada con latest en cada push,
 con todos los campos `model:` / `effort:` eliminados para que cada skill
