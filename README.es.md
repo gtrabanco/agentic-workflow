@@ -436,12 +436,25 @@ se ignoran en silencio.) Elige el modelo de sesión según la
 [tabla de equivalencia](#equivalencia-de-modelos-modelos-no-claude--de-libre-inferencia)
 — en NaN.builders, según los picks de arriba.
 
-**Invocación:** Hermes soporta la misma sintaxis slash — `/execute-phase 14 P1`,
-`/review-change` — **pero solo en sesiones arrancadas después del install**. Si
-ves `error: not a quick/plugin/skill command`, la sesión es anterior al
-install: `/reset` (terminal) o reinicia la app de escritorio, y comprueba con
-`/bundles` o "What skills do you have?". El lenguaje natural también funciona
-siempre: "use the execute-phase skill to implement fix #243".
+**Invocación:** en Hermes, `/<nombre>` carga **bundles**, no skills
+individuales — `/execute-phase` devuelve `error: not a quick/plugin/skill
+command` aunque la skill aparezca como enabled. Tres vías que funcionan:
+
+```sh
+# 1. Una vez: crea un bundle → /workflow pasa a ser el punto de entrada slash
+hermes bundles create workflow \
+  -s init-workspace -s plan-feature -s plan-fix -s execute-phase \
+  -s review-change -s audit-pr -s product-audit -s audit-docs \
+  -s triage-issue -s log-session -s ship-roadmap \
+  -d "agentic-workflow: plan → execute → review → audit → merge"
+#    después, en cualquier sesión:  /workflow execute-phase --fix #243
+
+# 2. Terminal: precarga skills para una sesión
+hermes chat -s execute-phase
+
+# 3. Cualquier sesión, sin setup: lenguaje natural — las skills se seleccionan
+#    por descripción: "use the execute-phase skill to implement fix #243"
+```
 
 Sin publicar en npm, sin registro, sin paso de build — `skills` clona el repo y
 copia (o enlaza con symlink) las carpetas de skills en el sitio correcto para

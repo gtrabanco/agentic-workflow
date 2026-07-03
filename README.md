@@ -421,12 +421,25 @@ skills:
 skipped.) Pick your session model per the [model-equivalence table](#model-equivalence-non-claude--free-inference-models)
 — on NaN.builders, per the picks above.
 
-**Invoking:** Hermes supports the same slash syntax — `/execute-phase 14 P1`,
-`/review-change` — **but only in sessions started after the install**. If you
-get `error: not a quick/plugin/skill command`, the session predates the
-install: `/reset` (terminal) or restart the desktop app, then check with
-`/bundles` or "What skills do you have?". Natural language always works too:
-"use the execute-phase skill to implement fix #243".
+**Invoking:** in Hermes, `/<name>` loads **bundles**, not individual skills —
+`/execute-phase` returns `error: not a quick/plugin/skill command` even when
+the skill shows as enabled. Three working ways:
+
+```sh
+# 1. One-time: create a bundle → /workflow becomes the slash entry point
+hermes bundles create workflow \
+  -s init-workspace -s plan-feature -s plan-fix -s execute-phase \
+  -s review-change -s audit-pr -s product-audit -s audit-docs \
+  -s triage-issue -s log-session -s ship-roadmap \
+  -d "agentic-workflow: plan → execute → review → audit → merge"
+#    then, in any session:  /workflow execute-phase --fix #243
+
+# 2. Terminal: preload skills for a session
+hermes chat -s execute-phase
+
+# 3. Any session, no setup: natural language — skills are matched by description
+#    "use the execute-phase skill to implement fix #243"
+```
 
 No npm publish, no registry, no build step — `skills` clones the repo and copies
 (or symlinks) the skill folders into the right place for each agent. The skills
