@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 model: sonnet
 effort: medium
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -74,6 +74,31 @@ Run these and collect findings (cite paths/lines/issue numbers each):
    the row update; a `done` with no PR found at all is HIGH severity (the unit
    may never have been closed out).
 
+**Workflow discipline (checks 10–13)** — the executor skills enforce these at
+write time; this audit verifies they actually held. Each check is mechanical:
+run the command shown, don't infer.
+
+10. **Phase naming.** `grep -rnE '\bS[0-9]+\b|\bStep [0-9]' docs/features/*/{PLAN,TASKS,progress}.md`
+    must return nothing — plans use `P1, P2, …` ("phases") only. Any hit: LOW
+    (rename), plus check the executor argument still resolves.
+11. **Per-phase doc discipline.** For every M/L feature `in-progress`/`done`:
+    completed phases are ticked in `TASKS.md`, `progress.md` has one entry per
+    completed phase, and (features planned under the current template) the
+    final phase ends with the literal close-out tasks (open PR + print URL,
+    link roadmap row, push the link commit). A `done` feature with unticked
+    tasks or a phase missing from `progress.md`: HIGH.
+12. **Branch & PR discipline vs the forge.** For every `done` unit: its PR
+    exists, targets the default branch, has a non-empty body, and carries
+    `Closes #<n>` when the unit is issue-born (SPEC references an issue).
+    Also scan recent default-branch history (`git log --first-parent`) for
+    feature/fix-scoped changes committed directly without a PR: HIGH.
+13. **Commit format & dependency discipline.** Sample the unit branches'
+    commits: `<type>(<scope>): <summary>` conventional format (violations:
+    LOW). Every `in-progress`/`done` row's `Depends on:` closure was merged —
+    a unit built on unmerged deps is HIGH unless `decisions.md` records a
+    user-forced override (`--force`), which downgrades it to LOW (documented
+    risk).
+
 Adapt the list to what the project has; skip checks for absent structures and
 say so.
 
@@ -86,11 +111,11 @@ say so.
    ```
    AUDIT DOCS — scope: <docs tree / roadmap / fix index / issues checked>
 
-   | # | Check (1-9) | Finding | Sev | Evidence | Proposed fix |
+   | # | Check (1-13) | Finding | Sev | Evidence | Proposed fix |
    |---|-------------|---------|-----|----------|--------------|
    | 1 | <which>     | <what>  | high|low | <path:line / #issue> | <smallest action> |
 
-   Checks run: <n>/9 (skipped: <which + why — absent structures only>)
+   Checks run: <n>/13 (skipped: <which + why — absent structures only>)
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL if any high-severity finding is open)
    ```

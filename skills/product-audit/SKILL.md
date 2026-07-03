@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.5.0
+version: 1.6.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus
 effort: max
@@ -91,6 +91,7 @@ pack covers every axis).
 | **Brand / voice** | User-facing copy vs. the brand guide | surfaces with copy |
 | **Tech debt** | Accumulated shortcuts, TODO/FIXME, stale abstractions | all |
 | **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs | all |
+| **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks 1–13 mechanically** (compose it); never assume a rule held because it "should" | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
