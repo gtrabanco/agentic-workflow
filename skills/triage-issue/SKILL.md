@@ -1,10 +1,8 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.6.0
+version: 1.6.1
 argument-hint: <issue-number> [more issue numbers…]
-model: opus
-effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -12,7 +10,7 @@ description: >
   (deferred/trigger-based), wontfix, or promote-to-feature. Reads the issue's own
   "when to fix"/trigger and severity, verifies the trigger against the CURRENT
   codebase (counts consumers, checks thresholds, measures), then routes or
-  reports with a dated, auditable comment. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  reports with a dated, auditable comment. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "triage issue N", "should we
   fix #N now", "classify this issue", "is #N's trigger met", "what do we do with
   #N".
@@ -113,7 +111,7 @@ enables:
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   verifying triggers against the code is a judgment call — run it on your
   **strongest** model.
 

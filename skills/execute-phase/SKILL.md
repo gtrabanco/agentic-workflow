@@ -1,10 +1,8 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.10.0
+version: 1.10.1
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
-model: sonnet
-effort: medium
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -12,7 +10,7 @@ description: >
   Implement one phase of a feature (default), a small feature end-to-end in a
   single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces
   branch safety, issue policy, the project's verification gate, and per-phase doc
-  discipline. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  discipline. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "execute phase P1 of NN", "implement the NN feature",
   "build NN from its spec", "execute-phase NN P2", "execute-phase --fix".
 ---
@@ -384,7 +382,7 @@ enables:
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   planning, review, and audit need your **strongest** model; mechanical
   execution may run cheaper. Never review a change with a model weaker than
   the one that wrote it.
