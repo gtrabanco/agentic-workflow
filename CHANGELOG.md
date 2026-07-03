@@ -19,9 +19,26 @@ Renames are **major** and ship with a note in
 
 ## Installing & pinning a version
 
+> **⚠️ Breaking change (v3, 2026-07-04):** the default branch (`main`) is now
+> **model-agnostic** — no skill carries `model:`/`effort:` frontmatter; every
+> skill inherits whatever model and effort your agent session is already
+> using. **If you're on Claude Code and want the hand-tuned, per-skill
+> Opus/Sonnet + effort tiers this project shipped by default before v3,
+> install the `#claude` branch instead** (`...#claude` below) — the plain
+> install command no longer gives you those tiers. `#inheritance` still
+> works, kept as an exact alias of the (now model-agnostic) default branch.
+> See [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md).
+
 ```sh
-# Latest (tracks the repo's default branch):
+# Latest (tracks the repo's default branch — model-agnostic, inherits your
+# session's model/effort):
 npx skills add gtrabanco/agentic-workflow
+
+# On Claude Code and want the Claude-optimized, hand-tuned per-skill tiers?
+npx skills add gtrabanco/agentic-workflow#claude
+
+# Already pinned #inheritance before v3? Still works, unchanged:
+npx skills add gtrabanco/agentic-workflow#inheritance
 
 # Pin to a tagged release (reproducible — recommended for pinning):
 npx skills add gtrabanco/agentic-workflow#release-2026-06-19
@@ -58,6 +75,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `log-session`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-04 | minor | `main` no longer carries `model:`/`effort:` frontmatter (moved to `docs/workflow/model-routing.yml`, source of truth for the `#claude` branch); step 7b now points at that file instead of frontmatter that no longer exists on `main`; description's non-Claude guidance replaced with a pointer to `#claude`. |
 | 1.3.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract. |
 | 1.2.0 | 2026-07-03 | minor | Turn contract at the top (entry actually APPENDED with accurate git facts; no past entry edited; → Next: printed last). |
 | 1.1.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
@@ -70,6 +88,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `bump-skill`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.3.0 | 2026-07-03 | minor | Lint also checks the new `## Turn contract` section on user-facing skills. |
 | 1.2.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
 | 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
@@ -81,6 +100,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.8.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.8.0 | 2026-07-04 | minor | Issue sweep after the last feature: inventory open issues + the run's documented residue (known-issues, trade-offs, postponed findings), triage everything, ship fix-now issues through the same stages — `SHIP: COMPLETE` requires the sweep; clean close-out check (no stage ends with a dirty tree or unpushed commits); AUDIT prints the PR URL next to the verdict. |
 | 1.7.0 | 2026-07-03 | minor | PR stage is not complete until the roadmap row carries its linked PR number and the URL is printed in the iteration output. |
 | 1.6.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract. |
@@ -95,6 +115,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.10.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.10.0 | 2026-07-04 | minor | Clean-tree turn-contract box (`git status --porcelain` pasted before ending; docs count); two-regime push policy (after the PR exists, every commit pushes immediately); explicit fold cycle for review/audit findings (gate → commit → push → clean tree, or the fold didn't happen); docs must ride the phase commit. |
 | 1.9.0 | 2026-07-03 | minor | PR close-out made explicit: print the PR URL in the chat (not every agent shows open PRs) and record `done · #<pr>` (linked) on the roadmap/fix-index row via a `docs: link PR` commit — a done row without its PR link is an unfinished unit. |
 | 1.8.0 | 2026-07-03 | minor | Artifact-language precedence pinned (explicit user instruction > declared docs language > English; conversation language never decides) — turn-contract box + Issue-policy rule. |
@@ -114,6 +135,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.5.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract. |
 | 1.4.0 | 2026-07-03 | minor | Turn contract at the top (artifacts + roadmap registered; dependency check decides the closing block; → Next: printed last). |
 | 1.3.0 | 2026-07-03 | minor | Dependency & blocker check after planning: unmet (transitive) deps or fix-now issues in the same area change the closing → Next: block to recommend the dependency chain / plan-fix first. |
@@ -128,6 +150,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.3.0 | 2026-07-03 | minor | Artifact-language precedence pinned in the turn contract and Hard rules. |
 | 1.2.0 | 2026-07-03 | minor | Turn contract at the top (SPEC committed on the fix branch with sha pasted, not pushed; hand-off printed; → Next: last). |
 | 1.1.2 | 2026-07-02 | patch | Rollback names the data cleanup or states "none"; L-effort escalation is a rule (propose via plan-feature; the user decides), not a "consider". |
@@ -141,6 +164,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.8.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.8.0 | 2026-07-04 | minor | Workflow-discipline check also verifies git hygiene: a dirty tree (docs included) or commits unpushed to an open PR are fix-now `workflow` findings; the fold route says commit AND push before re-review. |
 | 1.7.0 | 2026-07-03 | minor | Mechanical workflow-discipline check at every review (axis `workflow`): commit format, phase labels, per-phase docs, no default-branch commits, artifact language. |
 | 1.6.0 | 2026-07-03 | minor | Turn contract at the top (fixed-format report + PASS|FAIL + every finding routed + → Next: printed last). |
@@ -155,6 +179,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 2.0.0 | 2026-07-04 | major | Contract change: opt-in auto-merge — with a documented policy (or explicit user instruction) a MERGE-READY PR is merged after a fail-closed pre-merge checklist (clean tree, nothing unpushed/unpulled, fresh green CI on the audited SHA); anything pending → commit+push, wait for CI, re-audit — never merge on a stale verdict. Verdict header now always prints the PR's full URL. Default behavior unchanged: without the opt-in it still never merges. |
 | 1.5.0 | 2026-07-03 | minor | Traceability gate also blocks on a done row missing its linked PR reference. |
 | 1.4.0 | 2026-07-03 | minor | Turn contract at the top (fixed verdict block; nothing merged/edited; → Next: printed last). |
@@ -170,6 +195,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.6.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.6.0 | 2026-07-03 | minor | Explicit Workflow discipline dimension — composes audit-docs checks 1-13 mechanically; never assumes a rule held. |
 | 1.5.0 | 2026-07-03 | minor | Turn contract at the top (full fixed-format report; report-only; → Next: printed last). |
 | 1.4.0 | 2026-07-02 | minor | Sweeps every axis via the internal review pack (no external skill dependencies); model-equivalence note in the description. |
@@ -186,6 +212,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.5.0 | 2026-07-03 | minor | Workflow-discipline checks 10-13 (mechanical commands, not inference): phase naming, per-phase doc discipline, branch/PR discipline vs the forge, commit format + dependency closures. |
 | 1.4.0 | 2026-07-03 | minor | New check 9: PR-link integrity on `done` rows — every done roadmap/fix-index row carries `done · [#<pr>](url)`; a done with no findable PR is high severity. product-audit inherits it by composing this skill. |
 | 1.3.0 | 2026-07-03 | minor | Turn contract at the top (fixed report + PASS|FAIL; no unrequested rewrites; → Next: printed last). |
@@ -201,6 +228,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.6.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.6.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract (issue comments included). |
 | 1.5.0 | 2026-07-03 | minor | Turn contract at the top (per-issue fixed verdict; nothing deferred implemented; → Next: printed last). |
 | 1.4.0 | 2026-07-02 | minor | Fixed per-issue verdict format (trigger / checked / evidence / VERDICT / action); model-equivalence note. |
@@ -213,6 +241,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.5.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract; template's Docs language rule now states the precedence. |
 | 1.4.0 | 2026-07-03 | minor | Turn contract at the top (scaffold written or decision asked; nothing installed without a yes; → Next: printed last). |
 | 1.3.0 | 2026-07-02 | minor | Interview asks the project's Git workflow (branches default / worktrees); reviews declared self-contained — external review skills become optional extras; model-equivalence note. |
@@ -226,33 +255,63 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
-| `review-implementation` | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
+| `review-implementation` | 1.0.3 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
 | | 1.0.1 | 2026-06-09 | patch | Description shortened 96 → 36 words (always-loaded context); body unchanged |
 | | 1.0.0 | 2026-06-05 | — | The findings engine + classification rubric `review-change` composes |
-| `plan-feature-interview` | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (dimensions resolved, open questions, tracking issue) |
+| `plan-feature-interview` | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (dimensions resolved, open questions, tracking issue) |
 | 1.1.0 | 2026-06-09 | minor | Estimates size `XS/S/M/L`; asks for a UI design reference on UI features |
 | | 1.0.0 | 2026-06-05 | — | Interview a raw idea into a SPEC |
-| `plan-feature-from-issue` | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
+| `plan-feature-from-issue` | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
-| `plan-feature-scaffold` | 1.3.0 | 2026-07-03 | minor | Generated TASKS.md final phase ends with literal close-out tasks: open PR + print URL in chat, link the roadmap row, commit & push the link. |
+| `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.3.0 | 2026-07-03 | minor | Generated TASKS.md final phase ends with literal close-out tasks: open PR + print URL in chat, link the roadmap row, commit & push the link. |
 | 1.2.0 | 2026-07-02 | minor | Fixed completion report (artifacts written, roadmap registration, phase count, open questions) |
 | 1.1.1 | 2026-06-27 | patch | Phase naming pinned to `P1, P2, …` ("phases") across PLAN/TASKS/progress — never `S1`/"Steps" |
 | | 1.1.0 | 2026-06-09 | minor | Scales artifacts to size — XS/S → SPEC-only; M/L → full set ending in a hardening phase |
 | | 1.0.0 | 2026-06-05 | — | SPEC → full planning artifact set + roadmap entry |
 
-| `review-code` | 1.0.0 | 2026-07-02 | — | Internal review pack: correctness + simplification checklist pass (fixed findings table + PASS|FAIL) |
-| `review-security` | 1.0.0 | 2026-07-02 | — | Internal review pack: security checklist pass (secrets, injection, authn/authz, PII, deps) |
-| `review-verify` | 1.0.0 | 2026-07-02 | — | Internal review pack: run-it verification — gate + real behavior executed, manual items listed |
-| `review-debt` | 1.0.0 | 2026-07-02 | — | Internal review pack: tech-debt inventory, every finding with a re-trigger condition |
-| `review-design` | 1.0.0 | 2026-07-02 | — | Internal review pack: UI/UX checklist vs the project's design doc (states, reuse, responsive) |
-| `review-a11y` | 1.0.0 | 2026-07-02 | — | Internal review pack: accessibility checklist (semantics, keyboard, focus, contrast, ARIA) |
-| `review-brand` | 1.0.0 | 2026-07-02 | — | Internal review pack: brand & copy checklist (voice, glossary, honest claims) |
-| `review-perf` | 1.0.0 | 2026-07-02 | — | Internal review pack: performance checklist (N+1s, complexity, leaks, asset weight) |
-| `review-seo` | 1.0.0 | 2026-07-02 | — | Internal review pack: SEO checklist (metadata, canonical, indexability, structured data) |
+| `review-code` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: correctness + simplification checklist pass (fixed findings table + PASS|FAIL) |
+| `review-security` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: security checklist pass (secrets, injection, authn/authz, PII, deps) |
+| `review-verify` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: run-it verification — gate + real behavior executed, manual items listed |
+| `review-debt` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: tech-debt inventory, every finding with a re-trigger condition |
+| `review-design` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: UI/UX checklist vs the project's design doc (states, reuse, responsive) |
+| `review-a11y` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: accessibility checklist (semantics, keyboard, focus, contrast, ARIA) |
+| `review-brand` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: brand & copy checklist (voice, glossary, honest claims) |
+| `review-perf` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: performance checklist (N+1s, complexity, leaks, asset weight) |
+| `review-seo` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| | 1.0.0 | 2026-07-02 | — | Internal review pack: SEO checklist (metadata, canonical, indexability, structured data) |
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-04 — v3: the default branch becomes model-agnostic.** Breaking
+  distribution change. `main` (default install, no `#ref`) is now what used
+  to be `#inheritance`: no skill carries `model:`/`effort:` frontmatter, so
+  every skill inherits the host agent session's model and effort. The
+  previous opinionated, hand-tuned-per-skill distribution moves to a new
+  **`#claude`** branch (a frozen snapshot of the pre-v3 `main`, kept current
+  by CI from `docs/workflow/model-routing.yml`, the new source of truth for
+  its tiers). `#inheritance` keeps working, force-pushed as an exact mirror
+  of `main` on every push (`.github/workflows/sync-derived-branches.yml`,
+  replacing `sync-inheritance.yml`). Rationale: using this workflow shouldn't
+  lock a project into one vendor's model lineup — the user picks the model,
+  the skills apply the discipline. All 25 skills bumped (patch, mechanical:
+  frontmatter moved + non-Claude description guidance replaced with a
+  `#claude` pointer); `bump-skill` 1.4.0 (minor: step 7b now maintains
+  `model-routing.yml` instead of frontmatter that no longer exists on
+  `main`). See `docs/workflow/MIGRATION.md` for the full upgrade note.
 
 - **2026-07-04 — close-out discipline + issue continuity.** Field evidence:
   runs left review-finding fixes uncommitted/unpushed (found after merge), end-of-unit

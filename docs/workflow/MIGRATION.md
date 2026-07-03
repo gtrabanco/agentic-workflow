@@ -1,5 +1,51 @@
 # Migration notes
 
+## 2026-07-04 — v3: the default branch becomes model-agnostic
+
+**Breaking change to how you install this workflow** (not to any skill's
+behavior). Before v3, `npx skills add gtrabanco/agentic-workflow` (no `#ref`)
+installed the opinionated distribution: every skill pinned its own
+`model:`/`effort:` frontmatter (Opus/high for judgment skills, Sonnet/medium
+for mechanical ones, etc. — see the README's "Recommended model & effort"
+table). A separate `#inheritance` branch, auto-synced by CI, stripped those
+two lines from every skill so it could be installed model-agnostic instead.
+
+**v3 flips which branch is the default:**
+
+| Ref | Before v3 | From v3 |
+|---|---|---|
+| *(none)* — `npx skills add gtrabanco/agentic-workflow` | opinionated, per-skill Claude tiers pinned | **model-agnostic** — no skill pins a tier; each inherits the host session's model/effort |
+| `#claude` | did not exist | **new** — the opinionated, per-skill-tuned distribution that used to be the default; a frozen snapshot of pre-v3 `main`, kept current by CI from `docs/workflow/model-routing.yml` |
+| `#inheritance` | model-agnostic (stripped from `main` by CI) | **unchanged in content**, now force-pushed as an exact mirror of the (already model-agnostic) default branch — kept only as a stable alias for anyone who pinned it before v3 |
+
+**Why:** using this workflow shouldn't lock a project into one AI vendor's
+model lineup. The discipline (docs, SPECs, phases, review, the merge gate) is
+the product; which model executes it shouldn't be a hidden default. Moving
+the responsibility of picking the right model to the user, with `#claude`
+still available for anyone who wants Claude's tiers hand-tuned per skill,
+reduces that lock-in cost without removing the option.
+
+**Action needed:**
+
+- **On Claude Code and relying on the default install's per-skill tiers?**
+  Re-install with `#claude`: `npx skills add gtrabanco/agentic-workflow#claude`.
+  Nothing else changes — same skills, same behavior, just the tiers you had
+  before v3.
+- **Already pinned `#inheritance`?** Nothing to do. It still resolves, with
+  identical content to what it always had (now it's simply also what `main`
+  serves by default).
+- **On any other agent, or happy choosing the model yourself?** Nothing to
+  do — the plain install command already gives you this branch.
+- **Maintaining a fork or a similar split for your own project?** See
+  `.github/workflows/sync-derived-branches.yml` for the CI pattern (mirror +
+  frontmatter-injection-from-config), and `docs/workflow/model-routing.yml`
+  for the per-skill tier source of truth.
+
+No skill's instructions, checklists, or output contracts changed in this
+release (see the per-skill patch-bump rows dated 2026-07-04 in
+[`CHANGELOG.md`](../../CHANGELOG.md) — mechanical frontmatter/description
+changes only). This is a distribution-model change, not a behavior change.
+
 ## 2026-07-04 — `audit-pr` 2.0.0: opt-in auto-merge
 
 `audit-pr`'s contract changed from an unconditional **"never merges"** to

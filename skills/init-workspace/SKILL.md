@@ -1,10 +1,8 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.5.0
+version: 1.5.1
 argument-hint: <target-dir>
-model: opus
-effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -12,7 +10,7 @@ description: >
   scaffold (template/) and adapt it to THIS project by interview — fill the
   CLAUDE.md documentation map, gate commands and architecture, prune doc folders
   that don't apply, keep the SPEC/feature/fix and GitHub templates — then offer to
-  install the skills. The adaptive counterpart to a raw `npx degit` copy. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  install the skills. The adaptive counterpart to a raw `npx degit` copy. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers:
   "set up the agentic workflow here", "init-workspace", "scaffold this project's
   docs", "adapt the workflow template to this repo", "bootstrap the way of working".
@@ -122,7 +120,7 @@ enables:
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   the interview and adaptation are judgment work — run them on your
   **strongest** model.
 - **No Claude Code hooks** — the template's `.claude/` auto-logging hooks are
