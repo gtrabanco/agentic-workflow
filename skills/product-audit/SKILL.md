@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 model: opus
 effort: max
@@ -28,6 +28,18 @@ The **CTO health check**: run every few features, before a release, or when the
 product is "done", to answer *"where do we actually stand, and what should we do
 next?"* across the entire product. **Read-only and recommend-only — it never
 fixes, opens issues, or edits the roadmap. It proposes; the human decides.**
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, ranked findings, three proposal streams)
+✓ Nothing was fixed, filed, or changed — report only
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

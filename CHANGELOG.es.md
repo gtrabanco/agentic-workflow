@@ -60,6 +60,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `log-session`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-07-03 | menor | Contrato de turno al inicio (entrada realmente AÑADIDA con datos git exactos; ninguna entrada pasada editada; → Next: impreso al final). |
 | 1.1.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
 | 1.1.0 | 2026-07-02 | minor | Añadida la sección Portability (sin hooks → esta skill es el único escritor del journal); referencias a `/clear` generalizadas al reset de contexto de cualquier agente. |
 | 1.0.1 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
@@ -70,6 +71,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `bump-skill`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.0 | 2026-07-03 | menor | El lint comprueba también la nueva sección `## Turn contract` en las skills de cara al usuario. |
 | 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
 | 1.2.0 | 2026-07-02 | minor | El lint ahora comprueba también que las skills de cara al usuario llevan la sección `## Portability`; añadida su propia nota de Portability. |
 | 1.1.0 | 2026-06-27 | menor | Paso de lint que marca las skills editadas sin bloque `→ Next:` o con etiquetas de fase `S1`/"Step" (avisa, nunca corrige solo) |
@@ -80,6 +82,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (exactamente una etapa avanzada + una línea de run-log; suelos respetados; → Next:/banner impreso al final). |
 | 1.4.0 | 2026-07-03 | menor | SELECT es ahora una lista de prioridad fija: primero fixes fix-now bloqueantes, luego etapas en curso, luego features con el cierre de dependencias fusionado transitivamente (estados inconsistentes → SHIP: STOPPED); el autopilot nunca pasa --force. |
 | 1.3.0 | 2026-07-02 | menor | La Ronda 5 de la entrevista fija el workflow de git del proyecto (branches por defecto / worktrees); nota de equivalencia de modelos. |
 | 1.2.0 | 2026-07-02 | minor | Añadida la sección Portability: equivalentes manuales de `/loop`, subagentes, el menú slash y el enrutado de modelos en agentes distintos de Claude Code. |
@@ -90,6 +93,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.7.0 | 2026-07-03 | menor | Contrato de turno al inicio: check de rama, gate, sha del commit, push+PR (con cuerpo obligatorio) realmente EJECUTADOS y pegados — un turno que termina sin ellos es fallido; el push ocurre exactamente una vez, en el paso del PR. |
 | 1.6.0 | 2026-07-03 | menor | Gate de dependencias: el cierre transitivo de `Depends on:` debe estar FUSIONADO antes de trabajar — bloque BLOCKED fijo con la cadena no cumplida y el orden de construcción; nuevo flag `--force` que salta la parada (nunca el check) y registra el override en decisions.md. |
 | 1.5.1 | 2026-07-02 | parche | Dos formulaciones condicionales hechas deterministas (traducir-si-no-es-inglés; verificar-y-crear el issue del fix). |
 | 1.5.0 | 2026-07-02 | menor | Listas fijas Allowed/Forbidden y checklist de cierre de fase "pass only if" (set mínimo de docs explícito); respeta el workflow de git declarado (branches por defecto — nunca worktrees salvo declaración); nota de equivalencia de modelos. |
@@ -105,6 +109,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (artefactos + roadmap registrado; el check de dependencias decide el bloque de cierre; → Next: impreso al final). |
 | 1.3.0 | 2026-07-03 | menor | Check de dependencias y bloqueantes tras planificar: deps (transitivas) sin cumplir o issues fix-now en la misma área cambian el bloque de cierre → Next: para recomendar primero la cadena de dependencias / plan-fix. |
 | 1.2.2 | 2026-07-02 | parche | La confirmación del roadmap se hace determinista: verificar número/orden/deps y corregir la entrada de inmediato si está mal. |
 | 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
@@ -117,6 +122,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-07-03 | menor | Contrato de turno al inicio (SPEC commiteado en la rama fix con sha pegado, sin push; hand-off impreso; → Next: al final). |
 | 1.1.2 | 2026-07-02 | parche | El rollback nombra la limpieza de datos o declara "none"; la escalada en esfuerzo L es regla (proponer vía plan-feature; decide el usuario), no un "consider". |
 | 1.1.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
 | 1.1.0 | 2026-07-02 | minor | Añadida la sección Portability con los fallbacks estándar para agentes distintos de Claude Code. |
@@ -128,6 +134,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe en formato fijo + PASS|FAIL + todo hallazgo enrutado + → Next: impreso al final). |
 | 1.5.0 | 2026-07-02 | menor | Compone el pack de revisión interno propio (`review-*`) — las skills externas pasan a extras opcionales, nunca dependencias; contrato de salida fijo "Return exactly" que termina en PASS|FAIL; nota de equivalencia de modelos en la descripción. |
 | 1.4.0 | 2026-07-02 | minor | Añadida la sección Portability; "componer in-turn" definido genéricamente como ejecutar dentro de la misma conversación. |
 | 1.3.0 | 2026-06-27 | menor | Recomienda `product-audit` cuando la deriva del SPEC **se repite** entre unidades (no un hallazgo aislado); el cierre usa el bloque canónico `→ Next:` |
@@ -139,6 +146,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (bloque de veredicto fijo; nada fusionado/editado; → Next: impreso al final). |
 | 1.3.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
 | 1.3.0 | 2026-07-02 | minor | Añadida la sección Portability con los fallbacks estándar para agentes distintos de Claude Code. |
 | 1.2.0 | 2026-06-27 | menor | Bloque `→ Next:` post-merge — MERGE-READY apunta a la siguiente unidad (`plan-feature --next` / `triage-issue`) para que una feature terminada no muera en el merge |
@@ -151,6 +159,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe completo en formato fijo; solo informe; → Next: impreso al final). |
 | 1.4.0 | 2026-07-02 | menor | Barre todos los ejes con el pack de revisión interno (sin dependencias de skills externas); nota de equivalencia de modelos en la descripción. |
 | 1.3.0 | 2026-07-02 | minor | Añadida la sección Portability; el tip de ultracode ahora indica el fallback secuencial para agentes sin él. |
 | 1.2.2 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
@@ -165,6 +174,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe fijo + PASS|FAIL; sin reescrituras no pedidas; → Next: impreso al final). |
 | 1.2.0 | 2026-07-02 | menor | Formato de informe fijo (tabla de hallazgos + conteo de checks + decisión PASS|FAIL); nota de equivalencia de modelos. |
 | 1.1.0 | 2026-07-02 | minor | Añadida la sección Portability con los fallbacks estándar para agentes distintos de Claude Code. |
 | 1.0.5 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
@@ -177,6 +187,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (veredicto fijo por issue; nada diferido implementado; → Next: impreso al final). |
 | 1.4.0 | 2026-07-02 | menor | Formato de veredicto fijo por issue (trigger / comprobado / evidencia / VERDICT / acción); nota de equivalencia de modelos. |
 | 1.3.0 | 2026-07-02 | minor | Añadida la sección Portability con los fallbacks estándar para agentes distintos de Claude Code. |
 | 1.2.0 | 2026-06-27 | menor | Recomienda `product-audit` cuando la **misma inconsistencia se repite** entre issues; el cierre por veredicto usa el bloque canónico `→ Next:` |
@@ -187,6 +198,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (scaffold escrito o decisión preguntada; nada instalado sin un sí; → Next: impreso al final). |
 | 1.3.0 | 2026-07-02 | menor | La entrevista pregunta el workflow de git del proyecto (branches por defecto / worktrees); las revisiones se declaran autocontenidas — las skills externas pasan a extras opcionales; nota de equivalencia de modelos. |
 | 1.2.0 | 2026-07-02 | minor | Añadida la sección Portability (la oferta de hooks se omite en agentes distintos de Claude Code; `log-session` como alternativa manual). |
 | 1.1.2 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
@@ -224,6 +236,20 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-03 (2) — contratos de turno (fiabilidad en modelos débiles).** Las
+  pruebas de campo con modelos abiertos destaparon deberes de fin de turno
+  omitidos: trabajo implementado sin commitear, PRs sin abrir o sin cuerpo,
+  trabajo en la rama por defecto, bloques de cierre ausentes. Toda skill de cara
+  al usuario ABRE ahora con un **`## Turn contract`** — las casillas que cada
+  invocación debe marcar antes de poder terminar el turno; el de `execute-phase`
+  1.7.0 es el más estricto (check de rama → gate → sha del commit → push+PR con
+  cuerpo obligatorio, todo realmente EJECUTADO y pegado; push exactamente una
+  vez, en el paso del PR). Nueva regla de autoría en CLAUDE.md + lint en
+  bump-skill. Bumps menores: execute-phase 1.7.0, review-change 1.6.0, audit-pr
+  1.4.0, product-audit 1.5.0, audit-docs 1.3.0, triage-issue 1.5.0, plan-feature
+  1.4.0, plan-fix 1.2.0, init-workspace 1.4.0, log-session 1.2.0, ship-roadmap
+  1.5.0, bump-skill 1.3.0.
 
 - **2026-07-03 — seguridad de dependencias.** `execute-phase` 1.6.0 gana un
   **gate de dependencias** duro: el cierre transitivo de `Depends on:` debe

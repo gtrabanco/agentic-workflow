@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: true
-version: 1.2.1
+version: 1.3.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
@@ -14,6 +14,17 @@ description: >
 model: sonnet
 effort: medium
 ---
+
+## Turn contract — verify before ending the turn
+
+```
+✓ Every changed skill's version: was bumped and BOTH changelogs got their rows
+✓ The lint results (all 4 authoring rules) were reported
+✓ The git add + commit command block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first.
 
 ## When to use
 
@@ -76,6 +87,10 @@ reports — it does not auto-correct):
   `## Portability` section with the standard non-Claude-Code fallbacks.
   `grep -L '^## Portability' skills/<name>/SKILL.md` flags a miss (skip this check
   for internal skills).
+- **Turn contract.** Every user-facing skill opens with a `## Turn contract`
+  section (deliverable in fixed format; `→ Next:` printed last; executors run
+  commands, never describe them). `grep -L '^## Turn contract' skills/<name>/SKILL.md`
+  flags a miss (skip for internal skills).
 
 Report violations in the summary; do not block the bump on them.
 

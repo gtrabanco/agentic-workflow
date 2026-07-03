@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.3.1
+version: 1.4.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -25,6 +25,18 @@ The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR
 its SPEC, all phases, docs, tests, CI, and review axes — that returns a single
 verdict: **merge-ready** or a ranked list of **blockers**. **Findings only — never
 merges, never edits, never refactors.** The human decides and merges.
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The verdict block was printed in the fixed format: `VERDICT: MERGE-READY | BLOCKED` with ranked, evidenced blockers
+✓ Nothing was merged, pushed, edited, or refactored
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## When to use
 

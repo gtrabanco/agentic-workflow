@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.1.2
+version: 1.2.0
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -21,6 +21,18 @@ description: >
 
 The fix-flow counterpart of `plan-feature`: draft the fix SPEC and **stop for
 review**, then `execute-phase --fix` implements it (`plan-* → execute-*`).
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The fix SPEC is committed on its `fix/<n>-<topic>` branch (commit sha pasted) — NOT pushed, NO PR
+✓ The Hand-off block was printed exactly as specified
+✓ The closing `→ Next:` block is the LAST thing printed
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete
+the missing box first (weak models drop end-of-document duties; this list is
+first on purpose).
 
 ## Persona
 
