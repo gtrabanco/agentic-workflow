@@ -436,6 +436,13 @@ se ignoran en silencio.) Elige el modelo de sesión según la
 [tabla de equivalencia](#equivalencia-de-modelos-modelos-no-claude--de-libre-inferencia)
 — en NaN.builders, según los picks de arriba.
 
+**Invocación:** Hermes soporta la misma sintaxis slash — `/execute-phase 14 P1`,
+`/review-change` — **pero solo en sesiones arrancadas después del install**. Si
+ves `error: not a quick/plugin/skill command`, la sesión es anterior al
+install: `/reset` (terminal) o reinicia la app de escritorio, y comprueba con
+`/bundles` o "What skills do you have?". El lenguaje natural también funciona
+siempre: "use the execute-phase skill to implement fix #243".
+
 Sin publicar en npm, sin registro, sin paso de build — `skills` clona el repo y
 copia (o enlaza con symlink) las carpetas de skills en el sitio correcto para
 cada agente. Las skills **descubren el proyecto destino en tiempo de ejecución**

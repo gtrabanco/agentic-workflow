@@ -421,6 +421,13 @@ skills:
 skipped.) Pick your session model per the [model-equivalence table](#model-equivalence-non-claude--free-inference-models)
 — on NaN.builders, per the picks above.
 
+**Invoking:** Hermes supports the same slash syntax — `/execute-phase 14 P1`,
+`/review-change` — **but only in sessions started after the install**. If you
+get `error: not a quick/plugin/skill command`, the session predates the
+install: `/reset` (terminal) or restart the desktop app, then check with
+`/bundles` or "What skills do you have?". Natural language always works too:
+"use the execute-phase skill to implement fix #243".
+
 No npm publish, no registry, no build step — `skills` clones the repo and copies
 (or symlinks) the skill folders into the right place for each agent. The skills
 **discover the target project at runtime** (agent guide, documentation map,
