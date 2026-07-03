@@ -29,6 +29,27 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 > The examples in `docs/` are generic and illustrative; the skills
 > themselves are stack-agnostic and architecture-agnostic.
 
+> ## ⚠️ Breaking change (v3, 2026-07-04): the default branch is now model-agnostic
+>
+> `npx skills add gtrabanco/agentic-workflow` (no `#ref`) now installs what used
+> to be the **`#inheritance`** variant: no skill carries `model:`/`effort:`
+> frontmatter, so every skill simply **inherits whatever model and effort your
+> agent session is already using**. The goal: using this workflow should never
+> lock you into one vendor's model lineup — you pick the model, the skills just
+> run the discipline.
+>
+> - **On Claude Code and want the hand-tuned, per-skill Opus/Sonnet + effort
+>   tiers this project used to ship by default?** Install the **`#claude`**
+>   branch instead: `npx skills add gtrabanco/agentic-workflow#claude`.
+> - **Already pinned `#inheritance`?** Nothing to do — `#inheritance` keeps
+>   working, kept in sync as an exact alias of the default branch.
+> - **Everyone else** (any other agent, or you'd rather choose tiers yourself):
+>   the plain install command below already gives you this branch — no action
+>   needed.
+>
+> See [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) for the full
+> rationale and upgrade notes.
+
 ## What's inside
 
 ```
@@ -151,20 +172,29 @@ never as a dependency. See `docs/workflow/RECOMMENDED_SKILLS.md`.
 
 ## Recommended model & effort
 
-Each skill **pre-sets its model and effort** in frontmatter (table below). The
+**This section documents the `#claude` branch** —
+`npx skills add gtrabanco/agentic-workflow#claude`. The **default branch**
+(`main`, aliased as `#inheritance`) carries none of this: every skill simply
+inherits whatever model and effort your agent session is already using, so
+there's nothing to configure and nothing to go stale.
+
+On the `#claude` branch, each skill **pre-sets its model and effort** in
+frontmatter (table below), sourced from
+[`docs/workflow/model-routing.yml`](docs/workflow/model-routing.yml). The
 model uses a floating tier alias (`opus`/`sonnet`/`haiku`) that auto-updates to the
 latest version — so it never goes stale. Both apply only for that skill's turn;
 your session model/effort resume afterward. **You stay in control:** to change
-them, edit the skill's `model:` / `effort:` lines (or `model: inherit` to follow
-your session).
+them, edit `model-routing.yml` (the source CI reads to rebuild the `claude`
+branch — never edit the `claude` branch's frontmatter directly, it's
+force-pushed on every change to `main`).
 
-**On agents other than Claude Code** these frontmatter fields are ignored — and
-that's covered: every user-facing skill ships a **Portability** section with
-explicit fallbacks (no slash menu → follow the target `SKILL.md` in a fresh
-conversation; no model tiers → strongest model for planning/review/audit,
-cheaper for execution; no `/loop`/subagents → manual re-invocation guided by
-each skill's closing `→ Next:` block). The workflow is the contract; the Claude
-Code features are conveniences.
+**On agents other than Claude Code**, or on the default branch, these tiers
+don't apply — and that's covered: every user-facing skill ships a
+**Portability** section with explicit fallbacks (no slash menu → follow the
+target `SKILL.md` in a fresh conversation; no model tiers → strongest model
+for planning/review/audit, cheaper for execution; no `/loop`/subagents →
+manual re-invocation guided by each skill's closing `→ Next:` block). The
+workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 
 | Skill            | Model tier | Effort | Why                                                                                                                                                                                      |
 | ---------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -194,9 +224,13 @@ Code features are conveniences.
 
 ### Model equivalence (non-Claude / free-inference models)
 
-Claude tiers are the **default** (they set the reference bar), but nothing in the
-workflow depends on them — the skills are model-agnostic. Map the tiers to
-whatever family you run and edit each skill's `model:`/`effort:` accordingly:
+The Claude tiers above (the `#claude` branch) set a reference bar, but nothing
+in the workflow depends on them — the skills are model-agnostic by design
+(that's the point of the default branch). If you're on the default branch,
+this table is just a mental-model guide for which "kind" of model to point
+each skill at yourself; if you installed `#claude` anyway and want to swap
+its pinned tiers for a different vendor, edit `docs/workflow/model-routing.yml`
+accordingly:
 
 | Claude default | Capability class | Use it for |
 |---|---|---|
@@ -256,14 +290,19 @@ worse than no report. Both GLM-5.2 **and** Mimo V2.5 down → defer: the human
 gates the merge manually, the product audit waits. Everything already at the
 Qwen3.6/Flash tiers is unaffected by a GLM-5.2 outage.
 
-**Prefer no model pinning at all?** Install the **`#inheritance` variant** —
-the same skills, auto-synced to latest on every push, with every `model:` /
-`effort:` field stripped so each skill **inherits your session's model and
-effort**. Ideal for non-Claude agents or when you drive the model choice
-yourself:
+**Already on the default branch (or `#inheritance`)?** No pinning to remove —
+that's the point. Every skill already **inherits your session's model and
+effort**; the plain install command gives you this:
 
 ```sh
-npx skills add gtrabanco/agentic-workflow#inheritance
+npx skills add gtrabanco/agentic-workflow
+```
+
+**Want the Claude-tuned tiers pinned per skill instead?** Install `#claude`
+(see the breaking-change note near the top of this README):
+
+```sh
+npx skills add gtrabanco/agentic-workflow#claude
 ```
 
 `effort:` maps to your model's reasoning/thinking budget (`high` → maximum
@@ -357,8 +396,13 @@ you use (it auto-detects Claude Code, Cursor, Codex, OpenCode, Cline, and
 [70+ more](https://skills.sh)).
 
 ```sh
-# From the root of the TARGET repository — install all the skills:
+# From the root of the TARGET repository — install all the skills.
+# Default branch: model-agnostic, every skill inherits YOUR session's model
+# and effort. On Claude Code and want the hand-tuned per-skill tiers this
+# project shipped by default before v3? Add #claude — see the breaking-change
+# note above.
 npx skills add gtrabanco/agentic-workflow
+npx skills add gtrabanco/agentic-workflow#claude          # Claude-optimized tiers
 
 # Pick specific skills, or target a specific agent:
 npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
@@ -372,8 +416,8 @@ npx skills list
 npx skills update
 npx skills remove plan-feature
 
-# No model pinning — every skill inherits YOUR session's model and effort
-# (same skills, auto-synced to latest; ideal for non-Claude agents):
+# Already pinned #inheritance before v3? It still works — kept as an exact
+# alias of the (now model-agnostic) default branch:
 npx skills add gtrabanco/agentic-workflow#inheritance
 
 # Pin a version: install from a tagged release (or any tag/branch) with #<ref>:
@@ -393,14 +437,15 @@ Desktop app and terminal share the same mechanism. Category subfolders
 detected fine.
 
 ```sh
-# Install (use the inheritance variant — Hermes ignores model:/effort: anyway,
-# so let the skills inherit whatever model your Hermes session runs):
-npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
+# Install (Hermes ignores model:/effort: anyway, so the default branch's
+# model-agnostic skills — inheriting whatever model your Hermes session
+# runs — are the right pick here, not #claude):
+npx skills add gtrabanco/agentic-workflow --agent hermes-agent --global -y
 #   → copies each skill to ~/.hermes/skills/<skill>/  ✔ detected by desktop & terminal
 
 # Update later — re-run the add per agent, NOT `skills update`:
-npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
-npx skills add gtrabanco/agentic-workflow --agent claude-code --global -y   # if you also install globally for Claude Code
+npx skills add gtrabanco/agentic-workflow --agent hermes-agent --global -y
+npx skills add gtrabanco/agentic-workflow#claude --agent claude-code --global -y   # if you also install globally for Claude Code
 #   Why: the global lockfile tracks ONE ref per skill name (last install wins),
 #   so a blanket `skills update --global` can repoint every agent's copy to the
 #   same ref — re-running each add refreshes each copy from its own ref.

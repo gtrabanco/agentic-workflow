@@ -1,10 +1,8 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.8.0
+version: 1.8.1
 argument-hint: <path-or-glob>
-model: opus
-effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -16,10 +14,13 @@ description: >
   a11y/SEO/brand for a CLI, library, or infra change). Self-contained: no external
   review skills required; installed platform skills run as optional extras.
   Synthesizes one classified report plus an explicit manual-verification checklist.
-  Findings only — never refactors. Using a non-Claude / free-inference model? Edit
-  model:/effort: in this frontmatter to your equivalent tier (see the README model
-  equivalence table). Triggers: "review this change", "full review before merge",
-  "review-change", "run the right reviews for this", "what should I check before PR".
+  Findings only — never refactors. On Claude Code and want hand-tuned per-skill
+  model/effort tiers? Install the `#claude` branch instead
+  (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This
+  branch is model-agnostic: the skill inherits whatever model and effort your
+  agent session is already using. Triggers: "review this change", "full review
+  before merge", "review-change", "run the right reviews for this", "what
+  should I check before PR".
 ---
 
 # Review Change
@@ -214,7 +215,7 @@ enables:
   literally, in a fresh conversation: hand-offs assume a clean context.
   "Compose in-turn" means the opposite: run that step within this same
   conversation, as part of this review.
-- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   this review needs your **strongest** model. Never review a change with a
   model weaker than the one that wrote it.
 

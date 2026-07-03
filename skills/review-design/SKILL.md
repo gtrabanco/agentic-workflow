@@ -1,9 +1,7 @@
 ---
 name: review-design
 user-invocable: false
-version: 1.0.0
-model: sonnet
-effort: medium
+version: 1.0.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
