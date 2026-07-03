@@ -221,10 +221,10 @@ fast; sanity-check against a current leaderboard before pinning):
 #### <img src="docs/assets/nan-cloud.svg" alt="NaN Cloud logo" width="20" height="19"> Running on [NaN.builders](https://cloud.nan.builders/r/7GK06FX8)
 
 [NaN Cloud](https://cloud.nan.builders/r/7GK06FX8) serves the open-weight
-frontier (GLM-5.2, Qwen3.6, DeepSeek V4 Flash, Gemma4, Mimo V2.5 — plus
-GPT-5.4 via GitHub Copilot) with per-request **Thinking** toggle and **effort**
-control (Minimal → Max), which maps 1:1 onto this workflow's tiers. Our picks
-per skill:
+frontier ([full catalog](https://nan.builders/docs/models): GLM-5.2 ~753B MoE ·
+Mimo V2.5 310B · DeepSeek V4 Flash 284B · Qwen3.6 35B · Gemma4 26B) with
+per-request **Thinking** toggle and **effort** control (Minimal → Max), which
+maps 1:1 onto this workflow's tiers. Our picks per skill:
 
 | Skill | NaN model | Thinking | Effort |
 |---|---|---|---|
@@ -235,32 +235,25 @@ per skill:
 | `log-session`, evidence gathering | **DeepSeek V4 Flash** | off | Low |
 
 Alternates: subtle implementation logic → bump `execute-phase` to GLM-5.2/High;
-**GPT-5.4** works as a cross-family reviewer (a different family reviewing
-Qwen-written code adds independence — the strength invariant still rules);
-**Gemma4**/**Mimo V2.5** swap into the small tier. Whisper, Kokoro, Rerank,
+**Mimo V2.5** (a different family) reviewing Qwen-written code adds reviewer
+independence; **Gemma4** swaps into the small tier. Whisper, Kokoro, Rerank,
 Qwen3 Embedding and Flux 2 Klein are audio/retrieval/image models — not used by
 the workflow. Sign up via [this referral link](https://cloud.nan.builders/r/7GK06FX8).
 
-**If GLM-5.2 is down — fallback ladder, in order:**
+**If GLM-5.2 is down — fallback ladder:**
 
-1. **GPT-5.4** (Copilot) — cross-family frontier: full replacement for every
-   GLM-5.2 slot, and for `review-change` it's actually a quality *gain*
-   (independence from the family that wrote the code).
-2. **Qwen3.6, Thinking on, High** — acceptable for `plan-feature`, `plan-fix`,
-   `init-workspace`, `triage-issue` and the `ship-roadmap` conductor: their
-   output is checked downstream by review/audit, so a shallower plan gets
-   caught. Caveat for `review-change`: if Qwen3.6 also wrote the code, the ≥
-   invariant holds (equal is allowed) but you lose reviewer independence —
-   prefer option 1 whenever Copilot is up.
-3. **DeepSeek V4 Flash — never for judgment.** A "Flash" tier writes fine but
-   its verdicts look complete while missing what matters. Mechanical slots only.
+| # | Fallback | Config | Good for | Never for |
+|---|---|---|---|---|
+| 1 | **Mimo V2.5** (310B, reasoning, 1M ctx) | Thinking on, High (Max for `product-audit`) | **every** GLM-5.2 slot, including `audit-pr` and `product-audit`; as a cross-family reviewer it even adds independence | — |
+| 2 | **Qwen3.6** (35B) | Thinking on, High | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `ship-roadmap` conductor — their output is re-checked downstream by review/audit | `audit-pr` · `product-audit` · reviewing code Qwen3.6 itself wrote (≥ holds, independence doesn't) |
+| 3 | **DeepSeek V4 Flash** (284B·21B active) | Thinking on, High | last-resort planning/triage when 1–2 are down | any verdict that gates a merge |
+| — | **Gemma4** (26B) | — | small mechanical tier only | judgment, ever |
 
-**Two skills don't degrade — defer them instead of downgrading:**
-`audit-pr` (the merge gate: a false MERGE-READY is the most expensive automated
-mistake in the workflow — if no frontier model is up, the human gates manually
-or the PR waits) and `product-audit` (a Max-effort, product-wide sweep on a mid
-model returns a *plausible-looking but shallow* report, which is worse than no
-report — postpone it until GLM-5.2 or GPT-5.4 is back). Everything at the
+**The two merge-gating verdicts only run on tier 1 quality:** `audit-pr` and
+`product-audit` may fall back to **Mimo V2.5** (Max effort), but never further
+down — a mid-model sweep returns a *plausible-looking but shallow* report,
+worse than no report. Both GLM-5.2 **and** Mimo V2.5 down → defer: the human
+gates the merge manually, the product audit waits. Everything already at the
 Qwen3.6/Flash tiers is unaffected by a GLM-5.2 outage.
 
 **Prefer no model pinning at all?** Install the **`#inheritance` variant** —
