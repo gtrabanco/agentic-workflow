@@ -20,9 +20,26 @@ Los renombrados son **mayores** y llevan nota en
 
 ## Instalar y pinear una versión
 
+> **⚠️ Cambio incompatible (v3, 2026-07-04):** la rama por defecto (`main`)
+> ahora es **agnóstica de modelo** — ninguna skill lleva frontmatter
+> `model:`/`effort:`; cada skill hereda el modelo y el effort que ya use tu
+> sesión de agente. **Si usas Claude Code y quieres los tiers Opus/Sonnet +
+> effort ajustados por skill que este proyecto traía por defecto antes de v3,
+> instala la rama `#claude`** (`...#claude` abajo) — el comando de
+> instalación normal ya no te da esos tiers. `#inheritance` sigue funcionando,
+> mantenida como alias exacto de la rama por defecto (ahora agnóstica de
+> modelo). Ver [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md).
+
 ```sh
-# Última (sigue la rama por defecto del repo):
+# Última (sigue la rama por defecto del repo — agnóstica de modelo, hereda el
+# modelo/effort de tu sesión):
 npx skills add gtrabanco/agentic-workflow
+
+# ¿Usas Claude Code y quieres los tiers optimizados y ajustados por skill?
+npx skills add gtrabanco/agentic-workflow#claude
+
+# ¿Ya tenías fijado #inheritance antes de v3? Sigue funcionando, sin cambios:
+npx skills add gtrabanco/agentic-workflow#inheritance
 
 # Pinear a un release etiquetado (reproducible — recomendado para pinear):
 npx skills add gtrabanco/agentic-workflow#release-2026-06-19
@@ -60,6 +77,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `log-session`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-04 | menor | `main` ya no lleva frontmatter `model:`/`effort:` (trasladado a `docs/workflow/model-routing.yml`, fuente de verdad de la rama `#claude`); el paso 7b ahora apunta a ese archivo en vez de a un frontmatter que ya no existe en `main`; la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.3.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
 | 1.2.0 | 2026-07-03 | menor | Contrato de turno al inicio (entrada realmente AÑADIDA con datos git exactos; ninguna entrada pasada editada; → Next: impreso al final). |
 | 1.1.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
@@ -72,6 +90,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `bump-skill`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.3.0 | 2026-07-03 | menor | El lint comprueba también la nueva sección `## Turn contract` en las skills de cara al usuario. |
 | 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
 | 1.2.0 | 2026-07-02 | minor | El lint ahora comprueba también que las skills de cara al usuario llevan la sección `## Portability`; añadida su propia nota de Portability. |
@@ -83,6 +102,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.8.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.8.0 | 2026-07-04 | menor | Barrido de issues tras la última feature: inventaría issues abiertas + el residuo documentado del propio run (known-issues, trade-offs, hallazgos pospuestos), lo triagea todo y entrega las issues fix-now por las mismas etapas — `SHIP: COMPLETE` exige el barrido; check de cierre limpio (ninguna etapa termina con árbol sucio o commits sin push); AUDIT imprime la URL del PR junto al veredicto. |
 | 1.7.0 | 2026-07-03 | menor | La etapa PR no está completa hasta que la fila del roadmap lleva su número de PR enlazado y la URL se imprime en la salida de la iteración. |
 | 1.6.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
@@ -97,6 +117,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.10.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.10.0 | 2026-07-04 | menor | Casilla de árbol limpio en el contrato de turno (`git status --porcelain` pegado antes de terminar; las docs cuentan); política de push en dos regímenes (con el PR abierto, cada commit se pushea inmediatamente); ciclo explícito para plegar hallazgos de review/audit (gate → commit → push → árbol limpio, o el plegado no ocurrió); las docs viajan en el commit de la fase. |
 | 1.9.0 | 2026-07-03 | menor | Cierre de PR explícito: imprimir la URL del PR en el chat (no todos los agentes muestran PRs abiertas) y registrar `done · #<pr>` (enlazado) en la fila del roadmap/índice de fixes con un commit `docs: link PR` — una fila done sin su enlace de PR es una unidad sin terminar. |
 | 1.8.0 | 2026-07-03 | menor | Precedencia de idioma de artefactos fijada (instrucción explícita del usuario > idioma de docs declarado > inglés; el idioma de la conversación nunca decide) — casilla en el contrato de turno + regla en Issue policy. |
@@ -116,6 +137,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
 | 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (artefactos + roadmap registrado; el check de dependencias decide el bloque de cierre; → Next: impreso al final). |
 | 1.3.0 | 2026-07-03 | menor | Check de dependencias y bloqueantes tras planificar: deps (transitivas) sin cumplir o issues fix-now en la misma área cambian el bloque de cierre → Next: para recomendar primero la cadena de dependencias / plan-fix. |
@@ -130,6 +152,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.3.0 | 2026-07-03 | menor | Precedencia de idioma de artefactos fijada en el contrato de turno y las Hard rules. |
 | 1.2.0 | 2026-07-03 | menor | Contrato de turno al inicio (SPEC commiteado en la rama fix con sha pegado, sin push; hand-off impreso; → Next: al final). |
 | 1.1.2 | 2026-07-02 | parche | El rollback nombra la limpieza de datos o declara "none"; la escalada en esfuerzo L es regla (proponer vía plan-feature; decide el usuario), no un "consider". |
@@ -143,6 +166,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.8.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.8.0 | 2026-07-04 | menor | El check de disciplina del workflow también verifica la higiene git: un árbol sucio (docs incluidas) o commits sin push a un PR abierto son hallazgos `workflow` fix-now; la ruta de plegado dice commit Y push antes de re-revisar. |
 | 1.7.0 | 2026-07-03 | menor | Check mecánico de disciplina del workflow en cada revisión (eje `workflow`): formato de commits, etiquetas de fase, docs por fase, sin commits en la rama por defecto, idioma de artefactos. |
 | 1.6.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe en formato fijo + PASS|FAIL + todo hallazgo enrutado + → Next: impreso al final). |
@@ -157,6 +181,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 2.0.0 | 2026-07-04 | mayor | Cambio de contrato: auto-merge opt-in — con una política documentada (o instrucción explícita del usuario) fusiona un PR MERGE-READY tras un checklist pre-merge fail-closed (árbol limpio, nada sin push/pull, CI verde fresco sobre el SHA auditado); algo pendiente → commit+push, esperar CI, re-auditar — nunca fusionar con un veredicto obsoleto. La cabecera del veredicto imprime siempre la URL completa del PR. Sin el opt-in el comportamiento no cambia: sigue sin fusionar. |
 | 1.5.0 | 2026-07-03 | menor | El gate de Traceability también bloquea si la fila done no lleva su referencia de PR enlazada. |
 | 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (bloque de veredicto fijo; nada fusionado/editado; → Next: impreso al final). |
@@ -172,6 +197,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.6.0 | 2026-07-03 | menor | Dimensión explícita de disciplina del workflow — compone los checks 1-13 de audit-docs mecánicamente; nunca asume que una regla se cumplió. |
 | 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe completo en formato fijo; solo informe; → Next: impreso al final). |
 | 1.4.0 | 2026-07-02 | menor | Barre todos los ejes con el pack de revisión interno (sin dependencias de skills externas); nota de equivalencia de modelos en la descripción. |
@@ -188,6 +214,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Checks de disciplina del workflow 10-13 (comandos mecánicos, no inferencia): nombrado de fases, disciplina de docs por fase, disciplina de rama/PR contra el forge, formato de commits + cierres de dependencias. |
 | 1.4.0 | 2026-07-03 | menor | Nuevo check 9: integridad de enlaces de PR en filas `done` — toda fila done del roadmap/índice lleva `done · [#<pr>](url)`; un done sin PR localizable es severidad alta. product-audit lo hereda al componer esta skill. |
 | 1.3.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe fijo + PASS|FAIL; sin reescrituras no pedidas; → Next: impreso al final). |
@@ -203,6 +230,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.6.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno (incluye comentarios de issues). |
 | 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (veredicto fijo por issue; nada diferido implementado; → Next: impreso al final). |
 | 1.4.0 | 2026-07-02 | menor | Formato de veredicto fijo por issue (trigger / comprobado / evidencia / VERDICT / acción); nota de equivalencia de modelos. |
@@ -215,6 +243,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno; la regla Docs language de la plantilla enuncia ahora la precedencia. |
 | 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (scaffold escrito o decisión preguntada; nada instalado sin un sí; → Next: impreso al final). |
 | 1.3.0 | 2026-07-02 | menor | La entrevista pregunta el workflow de git del proyecto (branches por defecto / worktrees); las revisiones se declaran autocontenidas — las skills externas pasan a extras opcionales; nota de equivalencia de modelos. |
@@ -228,33 +257,66 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
-| `review-implementation` | 1.0.2 | 2026-07-02 | parche | La referencia a revisiones companion ahora apunta al pack de revisión interno (`review-*`) |
+| `review-implementation` | 1.0.3 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.2 | 2026-07-02 | parche | La referencia a revisiones companion ahora apunta al pack de revisión interno (`review-*`) |
 | | 1.0.1 | 2026-06-09 | parche | Descripción acortada 96 → 36 palabras (contexto siempre cargado); cuerpo sin cambios |
 | | 1.0.0 | 2026-06-05 | — | El motor de hallazgos + rúbrica de clasificación que compone `review-change` |
-| `plan-feature-interview` | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (dimensiones resueltas, preguntas abiertas, issue de tracking) |
+| `plan-feature-interview` | 1.2.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (dimensiones resueltas, preguntas abiertas, issue de tracking) |
 | 1.1.0 | 2026-06-09 | menor | Estima el tamaño `XS/S/M/L`; pide una referencia de diseño UI en features con UI |
 | | 1.0.0 | 2026-06-05 | — | Entrevista una idea en crudo hasta un SPEC |
-| `plan-feature-from-issue` | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
+| `plan-feature-from-issue` | 1.2.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
-| `plan-feature-scaffold` | 1.3.0 | 2026-07-03 | menor | La fase final del TASKS.md generado termina con tareas literales de cierre: abrir PR + imprimir URL en el chat, enlazar la fila del roadmap, commitear y pushear el enlace. |
+| `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.3.0 | 2026-07-03 | menor | La fase final del TASKS.md generado termina con tareas literales de cierre: abrir PR + imprimir URL en el chat, enlazar la fila del roadmap, commitear y pushear el enlace. |
 | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo (artefactos escritos, registro en roadmap, nº de fases, preguntas abiertas) |
 | 1.1.1 | 2026-06-27 | parche | Nombrado de fases fijado a `P1, P2, …` ("fases") en PLAN/TASKS/progress — nunca `S1`/"Steps" |
 | | 1.1.0 | 2026-06-09 | menor | Escala los artefactos al tamaño — XS/S → solo SPEC; M/L → set completo que acaba en fase de hardening |
 | | 1.0.0 | 2026-06-05 | — | SPEC → set completo de artefactos de planificación + entrada de roadmap |
 
-| `review-code` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: pasada de checklist de corrección + simplificación (tabla de hallazgos fija + PASS|FAIL) |
-| `review-security` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: pasada de checklist de seguridad (secretos, inyección, authn/authz, PII, dependencias) |
-| `review-verify` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: verificación ejecutando de verdad — gate + comportamiento real, ítems manuales listados |
-| `review-debt` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: inventario de deuda técnica, cada hallazgo con condición de re-disparo |
-| `review-design` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist UI/UX contra el doc de diseño del proyecto (estados, reutilización, responsive) |
-| `review-a11y` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de accesibilidad (semántica, teclado, foco, contraste, ARIA) |
-| `review-brand` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de marca y copy (voz, glosario, claims honestos) |
-| `review-perf` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de rendimiento (N+1, complejidad, fugas, peso de assets) |
-| `review-seo` | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist SEO (metadatos, canonical, indexabilidad, datos estructurados) |
+| `review-code` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: pasada de checklist de corrección + simplificación (tabla de hallazgos fija + PASS|FAIL) |
+| `review-security` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: pasada de checklist de seguridad (secretos, inyección, authn/authz, PII, dependencias) |
+| `review-verify` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: verificación ejecutando de verdad — gate + comportamiento real, ítems manuales listados |
+| `review-debt` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: inventario de deuda técnica, cada hallazgo con condición de re-disparo |
+| `review-design` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist UI/UX contra el doc de diseño del proyecto (estados, reutilización, responsive) |
+| `review-a11y` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de accesibilidad (semántica, teclado, foco, contraste, ARIA) |
+| `review-brand` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de marca y copy (voz, glosario, claims honestos) |
+| `review-perf` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de rendimiento (N+1, complejidad, fugas, peso de assets) |
+| `review-seo` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist SEO (metadatos, canonical, indexabilidad, datos estructurados) |
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-04 — v3: la rama por defecto pasa a ser agnóstica de modelo.**
+  Cambio incompatible de distribución. `main` (instalación por defecto, sin
+  `#ref`) es ahora lo que antes era `#inheritance`: ninguna skill lleva
+  frontmatter `model:`/`effort:`, así que cada skill hereda el modelo y el
+  effort de la sesión del agente anfitrión. La distribución opinionada
+  anterior, ajustada a mano por skill, se traslada a una nueva rama
+  **`#claude`** (una instantánea congelada del `main` pre-v3, mantenida al
+  día por la CI desde `docs/workflow/model-routing.yml`, la nueva fuente de
+  verdad de sus tiers). `#inheritance` sigue funcionando, con force-push como
+  espejo exacto de `main` en cada push
+  (`.github/workflows/sync-derived-branches.yml`, sustituyendo a
+  `sync-inheritance.yml`). Motivo: usar este workflow no debería atar un
+  proyecto al catálogo de modelos de un único proveedor — el usuario elige el
+  modelo, las skills aplican la disciplina. Las 25 skills recibieron un bump
+  (parche, mecánico: frontmatter trasladado + la guía sobre modelos no-Claude
+  en la descripción sustituida por un puntero a `#claude`); `bump-skill`
+  1.4.0 (menor: el paso 7b ahora mantiene `model-routing.yml` en vez de un
+  frontmatter que ya no existe en `main`). Ver `docs/workflow/MIGRATION.md`
+  para la nota de actualización completa.
 
 - **2026-07-04 — disciplina de cierre + continuidad con issues.** Evidencia de
   campo: runs que dejaban fixes de hallazgos sin commitear/pushear (descubiertos

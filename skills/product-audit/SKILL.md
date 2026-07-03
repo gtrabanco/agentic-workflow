@@ -1,10 +1,8 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.6.0
+version: 1.6.1
 argument-hint: <path-or-area> (optional — defaults to the whole product)
-model: opus
-effort: max
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -16,7 +14,7 @@ description: >
   coherence. Mines accumulated suggestions from feature docs. Output: a
   severity-ranked report and concrete PROPOSALS — issues to open, roadmap features
   to add or remove. NEVER auto-fixes; the user decides what to act on.
-  Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "audit the product", "full health check", "are we product-ready",
   "product-audit", "what's the state of the codebase", "CTO review", "tech-debt
   and roadmap sweep".

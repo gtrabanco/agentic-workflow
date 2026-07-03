@@ -30,6 +30,27 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 > Los ejemplos en `docs/` son genéricos e ilustrativos; las skills en sí
 > son agnósticas del stack y de la arquitectura.
 
+> ## ⚠️ Cambio incompatible (v3, 2026-07-04): la rama por defecto ahora es agnóstica de modelo
+>
+> `npx skills add gtrabanco/agentic-workflow` (sin `#ref`) instala ahora lo que
+> antes era la variante **`#inheritance`**: ninguna skill lleva frontmatter
+> `model:`/`effort:`, así que cada skill simplemente **hereda el modelo y el
+> effort que ya esté usando tu sesión de agente**. El objetivo: usar este
+> workflow nunca debería atarte al catálogo de modelos de un único proveedor —
+> tú eliges el modelo, las skills solo aplican la disciplina.
+>
+> - **¿Usas Claude Code y quieres los niveles Opus/Sonnet + effort ajustados
+>   por skill que este proyecto traía por defecto?** Instala la rama
+>   **`#claude`**: `npx skills add gtrabanco/agentic-workflow#claude`.
+> - **¿Ya tenías fijado `#inheritance`?** No hay que hacer nada — `#inheritance`
+>   sigue funcionando, mantenida como alias exacto de la rama por defecto.
+> - **Todo el resto** (cualquier otro agente, o si prefieres elegir tú los
+>   niveles): el comando de instalación normal de abajo ya te da esta rama —
+>   no hace falta nada más.
+>
+> Ver [`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md) para la
+> justificación completa y las notas de actualización.
+
 ## Qué incluye
 
 ```
@@ -156,21 +177,30 @@ linter del stack) son opcionales — `review-change` y `product-audit` los ejecu
 
 ## Modelo y esfuerzo recomendados
 
-Cada skill **fija su modelo y su esfuerzo** en el frontmatter (tabla abajo). El
+**Esta sección documenta la rama `#claude`** —
+`npx skills add gtrabanco/agentic-workflow#claude`. La **rama por defecto**
+(`main`, con alias `#inheritance`) no lleva nada de esto: cada skill
+simplemente hereda el modelo y el effort que ya use tu sesión de agente, así
+que no hay nada que configurar ni que pueda caducar.
+
+En la rama `#claude`, cada skill **fija su modelo y su esfuerzo** en el
+frontmatter (tabla abajo), tomados de
+[`docs/workflow/model-routing.yml`](docs/workflow/model-routing.yml). El
 modelo usa un alias de tier flotante (`opus`/`sonnet`/`haiku`) que se auto-actualiza
 a la última versión — así no caduca. Ambos aplican solo durante el turno de esa
 skill; tu modelo/esfuerzo de sesión vuelven después. **Tú mandas:** para cambiarlos,
-edita las líneas `model:` / `effort:` de la skill (o `model: inherit` para seguir tu
-sesión).
+edita `model-routing.yml` (la fuente que lee la CI para reconstruir la rama
+`claude` — nunca edites el frontmatter de la rama `claude` directamente, se
+sobrescribe con force-push en cada cambio a `main`).
 
-**En agentes distintos de Claude Code** estos campos del frontmatter se ignoran —
-y está cubierto: toda skill de cara al usuario incluye una sección
+**En agentes distintos de Claude Code, o en la rama por defecto**, estos tiers
+no aplican — y está cubierto: toda skill de cara al usuario incluye una sección
 **Portability** con fallbacks explícitos (sin menú slash → seguir el `SKILL.md`
 objetivo en una conversación nueva; sin tiers de modelo → el modelo más fuerte
 para planificar/revisar/auditar, uno más barato para ejecutar; sin
 `/loop`/subagentes → re-invocación manual guiada por el bloque de cierre
-`→ Next:` de cada skill). El workflow es el contrato; las features de Claude Code
-son conveniencias.
+`→ Next:` de cada skill). El workflow es el contrato; los tiers por skill son
+una conveniencia de la rama `#claude`.
 
 | Skill            | Tier de modelo | Esfuerzo | Por qué                                                                                                                                                                                                                     |
 | ---------------- | -------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -200,9 +230,13 @@ son conveniencias.
 
 ### Equivalencia de modelos (modelos no-Claude / de libre inferencia)
 
-Los tiers de Claude son el **default** (marcan el listón de referencia), pero nada
-en el workflow depende de ellos — las skills son agnósticas del modelo. Mapea los
-tiers a la familia que uses y edita el `model:`/`effort:` de cada skill:
+Los tiers de Claude de arriba (la rama `#claude`) marcan un listón de
+referencia, pero nada en el workflow depende de ellos — las skills son
+agnósticas del modelo por diseño (ese es justo el sentido de la rama por
+defecto). Si estás en la rama por defecto, esta tabla es solo una guía mental
+de qué "tipo" de modelo apuntar tú mismo a cada skill; si instalaste
+`#claude` de todos modos y quieres cambiar sus tiers fijados por los de otro
+proveedor, edita `docs/workflow/model-routing.yml`:
 
 | Default Claude | Clase de capacidad | Úsalo para |
 |---|---|---|
@@ -265,14 +299,19 @@ nunca más abajo — un barrido en un modelo medio devuelve un informe
 product-audit espera. Todo lo que ya corre en los tiers Qwen3.6/Flash no se ve
 afectado por una caída de GLM-5.2.
 
-**¿Prefieres no fijar modelos en absoluto?** Instala la **variante
-`#inheritance`** — las mismas skills, auto-sincronizada con latest en cada push,
-con todos los campos `model:` / `effort:` eliminados para que cada skill
-**herede el modelo y esfuerzo de tu sesión**. Ideal para agentes no-Claude o si
-prefieres controlar tú el modelo:
+**¿Ya estás en la rama por defecto (o en `#inheritance`)?** No hay nada que
+quitar — es justo el punto. Cada skill ya **hereda el modelo y esfuerzo de tu
+sesión**; el comando de instalación normal te da esto:
 
 ```sh
-npx skills add gtrabanco/agentic-workflow#inheritance
+npx skills add gtrabanco/agentic-workflow
+```
+
+**¿Prefieres los tiers de Claude fijados por skill?** Instala `#claude` (ver
+la nota de cambio incompatible cerca del principio de este README):
+
+```sh
+npx skills add gtrabanco/agentic-workflow#claude
 ```
 
 `effort:` se mapea al presupuesto de razonamiento/thinking de tu modelo (`high` →
@@ -370,8 +409,13 @@ Usa la CLI [`skills`](https://github.com/vercel-labs/skills) — lee los fichero
 [más de 70](https://skills.sh)).
 
 ```sh
-# Desde la raíz del repositorio DESTINO — instala todas las skills:
+# Desde la raíz del repositorio DESTINO — instala todas las skills.
+# Rama por defecto: agnóstica de modelo, cada skill hereda el modelo y
+# esfuerzo de TU sesión. ¿Usas Claude Code y quieres los tiers ajustados por
+# skill que este proyecto traía por defecto antes de v3? Añade #claude — ver
+# la nota de cambio incompatible más arriba.
 npx skills add gtrabanco/agentic-workflow
+npx skills add gtrabanco/agentic-workflow#claude          # tiers optimizados para Claude
 
 # Elige skills concretas, o un agente concreto:
 npx skills add gtrabanco/agentic-workflow --skill plan-feature --skill triage-issue
@@ -385,8 +429,8 @@ npx skills list
 npx skills update
 npx skills remove plan-feature
 
-# Sin fijar modelos — cada skill hereda el modelo y esfuerzo de TU sesión
-# (mismas skills, auto-sincronizada con latest; ideal para agentes no-Claude):
+# ¿Ya tenías fijado #inheritance antes de v3? Sigue funcionando — se mantiene
+# como alias exacto de la rama por defecto (ahora agnóstica de modelo):
 npx skills add gtrabanco/agentic-workflow#inheritance
 
 # Pinear una versión: instala desde un release etiquetado (o cualquier tag/rama) con #<ref>:
@@ -406,14 +450,15 @@ categoría (`skills/devops/<skill>/`) son opcionales — las carpetas planas
 `<skill>/SKILL.md` se detectan sin problema.
 
 ```sh
-# Instalar (usa la variante inheritance — Hermes ignora model:/effort: de todas
-# formas, así que deja que las skills hereden el modelo de tu sesión de Hermes):
-npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
+# Instalar (Hermes ignora model:/effort: de todas formas, así que la rama por
+# defecto — agnóstica de modelo, hereda el de tu sesión de Hermes — es la
+# elección correcta aquí, no #claude):
+npx skills add gtrabanco/agentic-workflow --agent hermes-agent --global -y
 #   → copia cada skill a ~/.hermes/skills/<skill>/  ✔ detectado por desktop y terminal
 
 # Actualizar después — repite el add por agente, NO `skills update`:
-npx skills add gtrabanco/agentic-workflow#inheritance --agent hermes-agent --global -y
-npx skills add gtrabanco/agentic-workflow --agent claude-code --global -y   # si también instalas global para Claude Code
+npx skills add gtrabanco/agentic-workflow --agent hermes-agent --global -y
+npx skills add gtrabanco/agentic-workflow#claude --agent claude-code --global -y   # si también instalas global para Claude Code
 #   Por qué: el lockfile global guarda UN ref por nombre de skill (gana el último
 #   install), así que un `skills update --global` a ciegas puede reapuntar la
 #   copia de todos los agentes al mismo ref — repetir cada add refresca cada

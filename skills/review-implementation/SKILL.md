@@ -1,10 +1,8 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.0.2
+version: 1.0.3
 argument-hint: <path-or-glob>
-model: opus
-effort: high
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT

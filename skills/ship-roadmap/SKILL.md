@@ -1,9 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.8.0
-model: opus
-effort: high
+version: 1.8.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -15,7 +13,7 @@ description: >
   then inventories open issues plus the run's own documented residue (known-issues, trade-offs,
   postponed findings), triages everything, and ships the fix-now issues through the same stages.
   Default: opens PRs, the human merges;
-  --fullauto merges MERGE-READY PRs under non-negotiable safety floors. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  --fullauto merges MERGE-READY PRs under non-negotiable safety floors. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "ship the
   roadmap", "build the whole app from the roadmap", "run the full workflow on autopilot",
   "ship-roadmap", "autopilot this project".
@@ -460,7 +458,7 @@ leans on them harder than any other — here is the manual equivalent of each:
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally in the conversation the routing table assigns it (in-turn = this
   conversation; subagent/hand-off = a fresh one).
-- **No per-skill `model:`/`effort:`** — the routing table's tiers state intent:
+- **No per-skill `model:`/`effort:`** — the `#claude` branch's routing table pins these tiers; here, pick tiers yourself:
   judgment stages on your **strongest** model, implementation on a cheaper one,
   and `product-audit` always as its own maximum-effort run.
 
