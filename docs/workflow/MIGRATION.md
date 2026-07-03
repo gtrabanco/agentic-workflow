@@ -1,3 +1,28 @@
+# Migration notes
+
+## 2026-07-04 — `audit-pr` 2.0.0: opt-in auto-merge
+
+`audit-pr`'s contract changed from an unconditional **"never merges"** to
+**"never merges by default"**. Nothing changes for existing setups — without the
+opt-in it behaves exactly as before (read-only verdict, the human merges). What's
+new:
+
+- The verdict header now always prints the **PR's full URL** (not just `#N`).
+- If the project's docs declare an auto-merge policy (e.g. `merge: auto` /
+  `merge: fullauto` in the Workflow conventions or `SHIP_DECISIONS.md`), **or**
+  the user explicitly instructs it in the conversation, a MERGE-READY verdict
+  proceeds to merge — but only after a fail-closed pre-merge checklist: clean
+  tree, nothing unpushed/unpulled, remote head == audited SHA, fresh green CI on
+  that SHA, no sensitive/destructive diff. Anything pending → it does **not**
+  merge; it routes commit+push, waits for CI, and requires a fresh re-audit.
+
+**Action needed:** none, unless you *want* auto-merge — then write the policy
+into your project's Workflow conventions. If your project's docs quote the old
+"never merges, never edits" phrasing, update it to "never edits; merges only
+under a documented auto-merge policy".
+
+---
+
 # Migration — upgrading to the v2 skill set
 
 If you installed these skills **before the v2 redesign** (the 9-skill set), this
