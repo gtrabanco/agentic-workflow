@@ -1,8 +1,8 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.5.1
-argument-hint: <NN> <phase> | <NN> (single-pass) | --fix
+version: 1.6.0
+argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 model: sonnet
 effort: medium
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
@@ -33,6 +33,40 @@ Three modes:
 - Stop after the gate passes; keep commits small and reviewable.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
 - **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
+- **Dependency gate before any work** — see the section below. No edit, no branch, no commit happens for a unit whose dependency closure isn't merged, unless the user passed `--force`.
+
+## Dependency gate (always, before any other step)
+
+Run this check for **every** mode (feature phase, single-pass, and `--fix`)
+before touching anything:
+
+1. Read the unit's `Depends on:` (SPEC) and its roadmap/fix-index row.
+2. Build the **transitive closure**: for each dependency, read *its* roadmap
+   row and collect its dependencies too, until none remain.
+3. For each entry in the closure, its status must be **merged in the forge**
+   (`gh pr view` on its PR, or the row's PR reference) — `done`-but-PR-open is
+   NOT met (its code isn't on the default branch), and a missing folder/row is
+   NOT met.
+4. **All met** → proceed to the normal workflow.
+5. **Any unmet → STOP before any edit** and print exactly:
+
+   ```
+   DEPENDENCY GATE — <NN>-<slug> BLOCKED
+   Unmet chain (deepest first is the one to start):
+     <NN> ← <dep> (<status>) [← <dep-of-dep> (<status>) …]
+   Build order to unblock: <deepest> → … → <NN>
+
+   → Next: /execute-phase <deepest> P1 — the deepest unmet dependency (plan it
+     first with /plan-feature <deepest> if it has no SPEC)
+     · fix-type dependency → /plan-fix then /execute-phase --fix
+     · proceed anyway, at your own risk → /execute-phase <NN> <phase> --force
+       (the override is recorded in decisions.md — never silent)
+   ```
+
+6. **`--force`** skips the stop (never the check): the gate still runs and its
+   result is **recorded in `decisions.md`** ("started with unmet deps: <list>,
+   user-forced <date>") before implementation begins. `--force` is a
+   user-only escape hatch — the autopilot (`ship-roadmap`) must never pass it.
 
 ## Allowed & forbidden (fixed lists — no interpretation)
 
@@ -160,7 +194,8 @@ examples use `gh`; translate if the project declares another forge).
 9. **After merge only:** remove the `docs/fix/README.md` entry (or archive it to the
    project's fix history per its convention) — never before the merge.
 
-If the SPEC declares `Depends on:` other fixes, verify they're merged first; block if not.
+(The `Depends on:` check for fixes is the same Dependency gate above — it runs
+before step 1, transitively, and blocks unless `--force`.)
 
 ## Implementation guidance (single-pass & per-phase)
 
