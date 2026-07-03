@@ -81,6 +81,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.7.0 | 2026-07-03 | minor | PR stage is not complete until the roadmap row carries its linked PR number and the URL is printed in the iteration output. |
 | 1.6.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract. |
 | 1.5.0 | 2026-07-03 | minor | Turn contract at the top (exactly one stage advanced + one run-log line; floors honored; → Next:/banner printed last). |
 | 1.4.0 | 2026-07-03 | minor | SELECT is now a fixed priority list: blocking fix-now fixes first, then in-progress stages, then features with a transitively-merged dependency closure (inconsistent statuses → SHIP: STOPPED); the autopilot never passes --force. |
@@ -93,6 +94,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.9.0 | 2026-07-03 | minor | PR close-out made explicit: print the PR URL in the chat (not every agent shows open PRs) and record `done · #<pr>` (linked) on the roadmap/fix-index row via a `docs: link PR` commit — a done row without its PR link is an unfinished unit. |
 | 1.8.0 | 2026-07-03 | minor | Artifact-language precedence pinned (explicit user instruction > declared docs language > English; conversation language never decides) — turn-contract box + Issue-policy rule. |
 | 1.7.0 | 2026-07-03 | minor | Turn contract at the top: branch check, gate, commit sha, push+PR (with mandatory body) actually RUN and pasted — a turn ending without them is failed; push happens exactly once, at the PR step. |
 | 1.6.0 | 2026-07-03 | minor | Dependency gate: transitive `Depends on:` closure must be MERGED before any work — fixed BLOCKED block with the unmet chain and build order; new `--force` flag skips the stop (never the check) and logs the override in decisions.md. |
@@ -224,7 +226,8 @@ How pinning actually works, verified against the `skills` CLI:
 | `plan-feature-from-issue` | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
-| `plan-feature-scaffold` | 1.2.0 | 2026-07-02 | minor | Fixed completion report (artifacts written, roadmap registration, phase count, open questions) |
+| `plan-feature-scaffold` | 1.3.0 | 2026-07-03 | minor | Generated TASKS.md final phase ends with literal close-out tasks: open PR + print URL in chat, link the roadmap row, commit & push the link. |
+| 1.2.0 | 2026-07-02 | minor | Fixed completion report (artifacts written, roadmap registration, phase count, open questions) |
 | 1.1.1 | 2026-06-27 | patch | Phase naming pinned to `P1, P2, …` ("phases") across PLAN/TASKS/progress — never `S1`/"Steps" |
 | | 1.1.0 | 2026-06-09 | minor | Scales artifacts to size — XS/S → SPEC-only; M/L → full set ending in a hardening phase |
 | | 1.0.0 | 2026-06-05 | — | SPEC → full planning artifact set + roadmap entry |
@@ -241,6 +244,14 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-03 (4) — explicit PR close-out.** Field evidence (Hermes runs left
+  roadmap rows as bare `done` while Claude runs produced `done · #51`): opening
+  the PR now has a spelled-out close-out — **print the PR URL in the chat**
+  (not every agent shows open PRs) and **link the roadmap/fix-index row**
+  (`done · [#<pr>](url)` via a `docs: link PR` commit). Generated TASKS.md ends
+  with these as literal ticked tasks. execute-phase 1.9.0,
+  plan-feature-scaffold 1.3.0, ship-roadmap 1.7.0.
 
 - **2026-07-03 (3) — artifact-language precedence.** Open models writing PRs and
   issues in the conversation's language (Spanish prompt → Spanish PR) is now

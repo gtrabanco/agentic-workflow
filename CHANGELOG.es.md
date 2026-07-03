@@ -83,6 +83,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.7.0 | 2026-07-03 | menor | La etapa PR no está completa hasta que la fila del roadmap lleva su número de PR enlazado y la URL se imprime en la salida de la iteración. |
 | 1.6.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
 | 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (exactamente una etapa avanzada + una línea de run-log; suelos respetados; → Next:/banner impreso al final). |
 | 1.4.0 | 2026-07-03 | menor | SELECT es ahora una lista de prioridad fija: primero fixes fix-now bloqueantes, luego etapas en curso, luego features con el cierre de dependencias fusionado transitivamente (estados inconsistentes → SHIP: STOPPED); el autopilot nunca pasa --force. |
@@ -95,6 +96,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.9.0 | 2026-07-03 | menor | Cierre de PR explícito: imprimir la URL del PR en el chat (no todos los agentes muestran PRs abiertas) y registrar `done · #<pr>` (enlazado) en la fila del roadmap/índice de fixes con un commit `docs: link PR` — una fila done sin su enlace de PR es una unidad sin terminar. |
 | 1.8.0 | 2026-07-03 | menor | Precedencia de idioma de artefactos fijada (instrucción explícita del usuario > idioma de docs declarado > inglés; el idioma de la conversación nunca decide) — casilla en el contrato de turno + regla en Issue policy. |
 | 1.7.0 | 2026-07-03 | menor | Contrato de turno al inicio: check de rama, gate, sha del commit, push+PR (con cuerpo obligatorio) realmente EJECUTADOS y pegados — un turno que termina sin ellos es fallido; el push ocurre exactamente una vez, en el paso del PR. |
 | 1.6.0 | 2026-07-03 | menor | Gate de dependencias: el cierre transitivo de `Depends on:` debe estar FUSIONADO antes de trabajar — bloque BLOCKED fijo con la cadena no cumplida y el orden de construcción; nuevo flag `--force` que salta la parada (nunca el check) y registra el override en decisions.md. |
@@ -226,7 +228,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | `plan-feature-from-issue` | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
-| `plan-feature-scaffold` | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo (artefactos escritos, registro en roadmap, nº de fases, preguntas abiertas) |
+| `plan-feature-scaffold` | 1.3.0 | 2026-07-03 | menor | La fase final del TASKS.md generado termina con tareas literales de cierre: abrir PR + imprimir URL en el chat, enlazar la fila del roadmap, commitear y pushear el enlace. |
+| 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo (artefactos escritos, registro en roadmap, nº de fases, preguntas abiertas) |
 | 1.1.1 | 2026-06-27 | parche | Nombrado de fases fijado a `P1, P2, …` ("fases") en PLAN/TASKS/progress — nunca `S1`/"Steps" |
 | | 1.1.0 | 2026-06-09 | menor | Escala los artefactos al tamaño — XS/S → solo SPEC; M/L → set completo que acaba en fase de hardening |
 | | 1.0.0 | 2026-06-05 | — | SPEC → set completo de artefactos de planificación + entrada de roadmap |
@@ -243,6 +246,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-03 (4) — cierre de PR explícito.** Evidencia de campo (runs de
+  Hermes dejaban filas del roadmap como `done` a secas mientras Claude producía
+  `done · #51`): abrir el PR tiene ahora un cierre deletreado — **imprimir la
+  URL del PR en el chat** (no todos los agentes muestran PRs abiertas) y
+  **enlazar la fila del roadmap/índice** (`done · [#<pr>](url)` con un commit
+  `docs: link PR`). El TASKS.md generado termina con estas tareas literales.
+  execute-phase 1.9.0, plan-feature-scaffold 1.3.0, ship-roadmap 1.7.0.
 
 - **2026-07-03 (3) — precedencia de idioma de artefactos.** Que los modelos
   abiertos escriban PRs e issues en el idioma de la conversación (prompt en
