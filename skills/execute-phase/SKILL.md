@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.8.0
+version: 1.9.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 model: sonnet
 effort: medium
@@ -36,9 +36,14 @@ Three modes:
      EXECUTED and the resulting sha is pasted. Describing a commit you did not
      run counts as NOT committed.
 ✓ 4. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
-     `gh pr create` were EXECUTED and the PR URL is pasted. The PR body is
-     NEVER empty: what it does, why, evidence, and `Closes #<n>` when
-     issue-born. Unit not finished? Then NOTHING was pushed.
+     `gh pr create` were EXECUTED and **the PR URL is printed in the chat**
+     (not every agent shows open PRs — the link in the chat is the contract).
+     The PR body is NEVER empty: what it does, why, evidence, and
+     `Closes #<n>` when issue-born. AND the roadmap row (or fix-index entry)
+     was updated to `done · [#<pr>](<pr-url>)` in a follow-up
+     `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
+     without its PR link is an UNFINISHED unit. Unit not finished? Then
+     NOTHING was pushed.
 ✓ 5. Artifact language: explicit user instruction > the project's declared
      docs language > English. The CONVERSATION language never decides — a
      Spanish prompt still produces English commits/PRs/issues unless one of
@@ -197,8 +202,12 @@ examples use `gh`; translate if the project declares another forge).
    row to `done` (it's *built*; merge state lives in the forge, not the status —
    see *Marking done*), commit that flip, then `git push` and open the PR:
    `gh pr create --base main --title "<type>(<scope>): <summary>" --body "<summary>"`
-   (add `Closes #<n>` when issue-born). A single-pass unit **never ends branch-only** —
-   it always leaves an open PR, regardless of the review/audit still to come.
+   (add `Closes #<n>` when issue-born). Then, with the URL `gh pr create`
+   returned: **print it in the chat**, update the roadmap row to
+   `done · [#<pr>](<pr-url>)`, commit (`docs: link PR #<n>`), and push again —
+   the link commit rides the same open PR. A single-pass unit **never ends
+   branch-only** — it always leaves an open, chat-linked PR, regardless of the
+   review/audit still to come.
 8. **Mandatory review hand-off** → `/review-change` (the required final quality step;
    see *Review checkpoint*), then `audit-pr` as the merge gate. Print the next step.
 
@@ -214,7 +223,10 @@ examples use `gh`; translate if the project declares another forge).
 7. **Mark done + open the PR — always (this is the last step).** Set the
    `docs/fix/README.md` entry's status to `done` (built, not yet merged), commit,
    `git push`, then open the PR: `gh pr create --base main --title "fix(<scope>): <summary>" --body "Closes #<n>"`.
-   Run the commands. A fix **never ends branch-only** — it always leaves an open PR.
+   Run the commands. Then, with the returned URL: **print it in the chat**,
+   set the `docs/fix/README.md` entry to `done · [#<pr>](<pr-url>)`, commit
+   (`docs: link PR #<n>`), and push again. A fix **never ends branch-only** —
+   it always leaves an open, chat-linked PR.
 8. **Mandatory review hand-off** → `/review-change`, then `audit-pr` as the merge gate.
    Print the next step. **Keep the fix-index entry** until the PR is actually merged
    (don't drop issue tracking early; the merge gate also blocks on pending docs).
@@ -277,7 +289,9 @@ Phase <N> done and committed. Review checkpoint.
 Final-phase / single-pass / fix hand-off:
 
 ```
-<unit> implemented, gate green, marked done, PR #<n> opened.
+<unit> implemented, gate green, marked done.
+PR opened: <FULL PR URL — always printed here; not every agent shows open PRs>
+Roadmap/fix-index row: done · #<n> (linked and pushed)
 → Next: /review-change (mandatory final review)
   · clean    → /audit-pr (merge gate) → human merges
   · findings → fold fix-now into this PR; non-fix-now → /triage-issue; re-review
@@ -290,7 +304,10 @@ human in the loop, gate enforced each phase, every unit reviewed before merge.
 
 A unit flips to **`done` when its last step runs — opening the PR — even though it
 isn't merged yet.** `done` means *built and PR-open*; merge state lives in the forge
-(the open/merged PR), not in the status. The flip is a doc change, so it rides the
+(the open/merged PR), not in the status. **A `done` row always carries its PR
+reference** — `done · [#<pr>](<pr-url>)` — added right after `gh pr create`
+returns the URL (follow-up `docs: link PR #<n>` commit on the same branch);
+`done` without a PR link is the tell-tale of an unfinished close-out. The flip is a doc change, so it rides the
 PR-bound commit (never a lone commit on the default branch). **Never merge with docs
 still pending, and never drop the issue / fix-index entry before merge** — those are
 `audit-pr`'s gates, not removed at done-time.
