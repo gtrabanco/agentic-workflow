@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -176,12 +176,28 @@ turns:
 2. **STOP-CHECK.** Evaluate the stop conditions (below). Terminal → write or
    refresh the final report, open the report PR, print the `SHIP:` banner +
    status table, end the turn.
-3. **SELECT one unit.** An in-progress feature's next pending stage; else the
-   next `planned` feature whose depends-on rows are all **merged** (forge state,
-   not merely `done` — a `done` dep with an open PR isn't on the default branch
-   yet, so a dependent cut from it would lack its code) → PLAN; else nothing
-   startable → `SHIP: BLOCKED` with the **unblock map** ("merging #12 unblocks
-   05 and 07") and the resume command.
+3. **SELECT one unit.** Priority order, first match wins:
+   1. **Blocking fixes first.** A fix-index entry classified fix-now whose
+      subject blocks the next startable feature (same module, a dependency's
+      defect, or a red gate cause) → its fix is the selected unit
+      (`plan-fix` → `execute-phase --fix` through the normal stages). Fixes
+      that block nothing wait for the report's triage batch.
+   2. An in-progress feature's next pending stage.
+   3. The next `planned` feature whose depends-on rows are all **merged**
+      (forge state, not merely `done` — a `done` dep with an open PR isn't on
+      the default branch yet, so a dependent cut from it would lack its code).
+      **Verify the closure transitively:** a dep row marked merged whose own
+      dependencies aren't merged means the roadmap's statuses are inconsistent
+      → `SHIP: STOPPED` (substrate invariant broken), never build on top of it.
+      → PLAN.
+   4. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
+      #12 unblocks 05 and 07") and the resume command.
+
+   `execute-phase`'s own dependency gate stays active inside every subagent —
+   it's the belt to this braces. **The autopilot never passes `--force`:** a
+   gate stop inside a subagent parks the feature with the unmet chain recorded;
+   forcing through unmet dependencies is a human-only decision, made outside
+   the loop.
 4. **ADVANCE exactly one stage:**
    - **PLAN** — compose `plan-feature` in-turn via its scoped path (equal
      tier). The interview path is **forbidden** mid-run: SPEC gaps are resolved

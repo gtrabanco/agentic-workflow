@@ -80,6 +80,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-03 | menor | SELECT es ahora una lista de prioridad fija: primero fixes fix-now bloqueantes, luego etapas en curso, luego features con el cierre de dependencias fusionado transitivamente (estados inconsistentes → SHIP: STOPPED); el autopilot nunca pasa --force. |
 | 1.3.0 | 2026-07-02 | menor | La Ronda 5 de la entrevista fija el workflow de git del proyecto (branches por defecto / worktrees); nota de equivalencia de modelos. |
 | 1.2.0 | 2026-07-02 | minor | Añadida la sección Portability: equivalentes manuales de `/loop`, subagentes, el menú slash y el enrutado de modelos en agentes distintos de Claude Code. |
 | 1.1.1 | 2026-06-27 | parche | El cierre por iteración y el del informe final usan la forma canónica `→ Next:`; consistencia de nombrado de fases (`P1, P2, …`) |
@@ -89,6 +90,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.0 | 2026-07-03 | menor | Gate de dependencias: el cierre transitivo de `Depends on:` debe estar FUSIONADO antes de trabajar — bloque BLOCKED fijo con la cadena no cumplida y el orden de construcción; nuevo flag `--force` que salta la parada (nunca el check) y registra el override en decisions.md. |
 | 1.5.1 | 2026-07-02 | parche | Dos formulaciones condicionales hechas deterministas (traducir-si-no-es-inglés; verificar-y-crear el issue del fix). |
 | 1.5.0 | 2026-07-02 | menor | Listas fijas Allowed/Forbidden y checklist de cierre de fase "pass only if" (set mínimo de docs explícito); respeta el workflow de git declarado (branches por defecto — nunca worktrees salvo declaración); nota de equivalencia de modelos. |
 | 1.4.0 | 2026-07-02 | minor | Añadida la sección Portability; fallbacks genéricos inline para el hand-off de revisión y alternativa manual a la ejecución por lotes con `/loop`. |
@@ -103,6 +105,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.0 | 2026-07-03 | menor | Check de dependencias y bloqueantes tras planificar: deps (transitivas) sin cumplir o issues fix-now en la misma área cambian el bloque de cierre → Next: para recomendar primero la cadena de dependencias / plan-fix. |
 | 1.2.2 | 2026-07-02 | parche | La confirmación del roadmap se hace determinista: verificar número/orden/deps y corregir la entrada de inmediato si está mal. |
 | 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
 | 1.2.0 | 2026-07-02 | minor | Añadida la sección Portability; la composición de pasos internos definida genéricamente como ejecución inline en la misma conversación. |
@@ -221,6 +224,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-03 — seguridad de dependencias.** `execute-phase` 1.6.0 gana un
+  **gate de dependencias** duro: el cierre transitivo de `Depends on:` debe
+  estar fusionado antes de empezar — las cadenas sin cumplir imprimen un bloque
+  BLOCKED fijo con el orden de construcción, y el nuevo flag `--force` salta la
+  parada (registrado en `decisions.md`, nunca silencioso). El SELECT de
+  `ship-roadmap` 1.4.0 pasa a lista de prioridad fija (fixes fix-now
+  bloqueantes → etapas en curso → features con cierre fusionado transitivamente;
+  estados de roadmap inconsistentes detienen el run; `--force` prohibido para el
+  autopilot). `plan-feature` 1.3.0 comprueba deps e issues fix-now bloqueantes
+  tras planificar y enruta el bloque de cierre a la cadena de dependencias /
+  `plan-fix` primero.
 
 - **2026-07-02 — workflow estricto y agnóstico del modelo + pack de revisión propio.**
   Tres reglas de autoría nuevas en `CLAUDE.md`: **checklists sobre heurísticas +
