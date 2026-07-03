@@ -1,10 +1,8 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.5.0
+version: 1.5.1
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
-model: opus
-effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -12,7 +10,7 @@ description: >
   GitHub issue #N (issue → scoped SPEC), or an already-scoped slug/SPEC (straight
   to scaffolding) — routes to the right internal step, then ensures the roadmap
   entry and prints the next step. Force a path with flags to skip detection;
-  `--next` plans the next planned feature from the roadmap. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  `--next` plans the next planned feature from the roadmap. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "plan a
   feature", "plan the feature from issue N", "plan the next roadmap feature",
   "scaffold feature NN", "I have an idea, plan it", "create SPEC and TASKS for NN".
@@ -113,7 +111,7 @@ enables:
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context. The
   internal steps above are the exception — they run inline, in this one.
-- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   planning is judgment work — run it on your **strongest** model. The
   execution it hands off to may run cheaper.
 

@@ -1,0 +1,58 @@
+name: Sync derived branches
+
+# main is the model-agnostic default: no skill carries `model:`/`effort:`
+# frontmatter, so an installed skill inherits whatever model/effort the host
+# agent session is already using. This workflow regenerates the two branches
+# derived from main on every push:
+#
+#   inheritance  — an exact mirror of main. Kept only as a stable alias for
+#                  anyone who already pinned `#inheritance` before main itself
+#                  became the model-agnostic branch.
+#                    npx skills add gtrabanco/agentic-workflow#inheritance
+#
+#   claude       — main with per-skill `model:`/`effort:` frontmatter injected
+#                  back in, from docs/workflow/model-routing.yml. The
+#                  Claude-optimized, hand-tuned distribution.
+#                    npx skills add gtrabanco/agentic-workflow#claude
+#
+# To change a skill's Claude-branch tier, edit model-routing.yml on main (never
+# the claude branch directly — it is force-pushed and any direct edit is lost
+# on the next push to main).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  sync-inheritance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Force-push main as-is to inheritance
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git push -f origin HEAD:inheritance
+
+  sync-claude:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: pip install --quiet pyyaml
+
+      - name: Inject model/effort frontmatter from model-routing.yml
+        run: python3 .github/scripts/inject_claude_frontmatter.py
+
+      - name: Commit and force-push to claude
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore(claude): inject model/effort from model-routing.yml [auto-synced from $GITHUB_SHA]"
+          git push -f origin HEAD:claude

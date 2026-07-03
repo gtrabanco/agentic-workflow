@@ -1,0 +1,85 @@
+# Claude-branch model routing
+#
+# Source of truth for the `claude` branch's per-skill model:/effort: frontmatter.
+# The default branch (`main`, aliased as `inheritance`) carries none of this —
+# skills there inherit the host agent's configured model/effort. This file is
+# read by .github/workflows/sync-derived-branches.yml to inject the two lines
+# back into each skill's frontmatter when regenerating the `claude` branch.
+# Edit this file (never the `claude` branch directly) to change a tier;
+# bump-skill keeps it, the README table, and CHANGELOG in sync.
+
+audit-docs:
+  model: sonnet
+  effort: medium
+audit-pr:
+  model: opus
+  effort: high
+bump-skill:
+  model: sonnet
+  effort: medium
+execute-phase:
+  model: sonnet
+  effort: medium
+init-workspace:
+  model: opus
+  effort: high
+log-session:
+  model: sonnet
+  effort: medium
+plan-feature:
+  model: opus
+  effort: high
+plan-feature-from-issue:
+  model: opus
+  effort: high
+plan-feature-interview:
+  model: opus
+  effort: high
+plan-feature-scaffold:
+  model: opus
+  effort: medium
+plan-fix:
+  model: opus
+  effort: high
+product-audit:
+  model: opus
+  effort: max
+review-a11y:
+  model: sonnet
+  effort: medium
+review-brand:
+  model: sonnet
+  effort: medium
+review-change:
+  model: opus
+  effort: high
+review-code:
+  model: opus
+  effort: high
+review-debt:
+  model: sonnet
+  effort: medium
+review-design:
+  model: sonnet
+  effort: medium
+review-implementation:
+  model: opus
+  effort: high
+review-perf:
+  model: sonnet
+  effort: medium
+review-security:
+  model: opus
+  effort: high
+review-seo:
+  model: sonnet
+  effort: medium
+review-verify:
+  model: sonnet
+  effort: medium
+ship-roadmap:
+  model: opus
+  effort: high
+triage-issue:
+  model: opus
+  effort: high

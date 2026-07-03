@@ -1,9 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.5.0
-model: sonnet
-effort: medium
+version: 1.5.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -12,7 +10,7 @@ description: >
   entries already merged/closed, broken documentation-map links, dependency
   cycles, artifacts in the wrong language, naming-convention violations — and
   reports them ranked by severity, fixing only low-risk items on request.
-  Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "check doc consistency", "are the docs in sync", "audit the docs",
   "doc coherence review", "did the docs drift", "validate the roadmap".
 ---
@@ -141,7 +139,7 @@ enables:
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
+- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   these are mostly mechanical cross-document checks — a mid-tier model is
   enough; escalate to your strongest only for a deep audit.
 

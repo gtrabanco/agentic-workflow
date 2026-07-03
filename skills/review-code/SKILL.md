@@ -1,9 +1,7 @@
 ---
 name: review-code
 user-invocable: false
-version: 1.0.0
-model: opus
-effort: high
+version: 1.0.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
