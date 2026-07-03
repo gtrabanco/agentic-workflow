@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.6.0
+version: 1.7.0
 argument-hint: <path-or-glob>
 model: opus
 effort: high
@@ -95,25 +95,32 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    Findings get axis `spec-drift` in the table. Catching drift at a phase
    checkpoint is far cheaper than at the `audit-pr` merge gate. (No SPEC found →
    note it and skip.)
-3. **Applicable pack passes.** For each axis the matrix + footprint mark as
+3. **Workflow-discipline check (mechanical, every review).** On the branch
+   under review, verify and file findings under axis `workflow`:
+   commits follow `<type>(<scope>): <summary>`; phase labels in touched
+   planning docs are `P1, P2, …` (never `S1`/"Steps"); the phase's per-phase
+   docs were updated (TASKS ticks, progress entry); no commit landed on the
+   default branch; artifacts are in the project's declared docs language.
+   Run the greps/`git log` — don't infer compliance.
+4. **Applicable pack passes.** For each axis the matrix + footprint mark as
    relevant, run the workflow's own internal skill for it (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — composed in-turn
    (this same conversation), each returning its fixed-format table + PASS|FAIL.
    **Skip the rest** and say which you skipped and why. The pack ships with the
    workflow, so an applicable pass can never be "missing".
-4. **Optional extras.** If the project recorded additional platform review skills
+5. **Optional extras.** If the project recorded additional platform review skills
    (stack-specific linters, framework skills) and they are installed, run them
    **in addition** — their findings merge into the same table. Never treat an
    absent extra as a gap; the pack already covered the axis.
-5. **Synthesize.** Merge all findings into **one** decision table, deduped by
+6. **Synthesize.** Merge all findings into **one** decision table, deduped by
    `file:line`. Keep `review-implementation`'s columns (Sev, Class, WHY, impl risk,
    long-term impact, premature-opt?, route) and add an **Axis** column.
-6. **Manual-verification checklist.** List what automated review **cannot** confirm
+7. **Manual-verification checklist.** List what automated review **cannot** confirm
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
-7. **Triage everything not fixed now.** For **every** finding you don't route to
+8. **Triage everything not fixed now.** For **every** finding you don't route to
    `fix-now` (postpone / ignore / intentional-tradeoff), run it through
    `triage-issue` (compose in-turn — i.e. within this same conversation/run; equal
    tier) to decide and record its home: a
@@ -121,25 +128,25 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    or a justified drop. **No non-fix-now finding may end without a destination** — the
    point is to never silently lose one, and to catch the few that actually deserve an
    issue or a doc note.
-8. **Report — return exactly this structure** (fixed output contract; nothing
+9. **Report — return exactly this structure** (fixed output contract; nothing
    more, nothing less):
 
    ```
    REVIEW CHANGE — scope: <scope>
    Axes run: <list>   Skipped: <list + why>
 
-   <the synthesized decision table (step 5)>
+   <the synthesized decision table (step 6)>
 
    Manual verification (a human must check):
    - <item> …
 
-   Non-fix-now destinations (step 7): <n> triaged — <issue #s / decisions / drops>
+   Non-fix-now destinations (step 8): <n> triaged — <issue #s / decisions / drops>
 
    Summary: <1-2 sentences>
    Decision: PASS | FAIL   (FAIL while any fix-now finding is open)
    ```
 
-9. **Next step.** Close with the `→ Next:` block:
+10. **Next step.** Close with the `→ Next:` block:
 
    ```
    → Next: /audit-pr — merge gate (when the table is clean)
@@ -171,7 +178,7 @@ For a change to a backend export module (no UI surface):
 
 ## Routing
 
-Every non-`fix-now` finding is routed **through `triage-issue`** (step 7) so its
+Every non-`fix-now` finding is routed **through `triage-issue`** (step 8) so its
 disposition is a decision, not a default:
 
 - **fix-now** → `plan-fix` → `execute-phase --fix`, or fold into the current phase

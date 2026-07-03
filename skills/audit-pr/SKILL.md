@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 model: opus
 effort: high
@@ -84,7 +84,7 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **All phases complete** | Feature: every phase in `PLAN.md`/`TASKS.md` is done and logged in `progress.md`. Fix: the SPEC is fully implemented. | Any unchecked task or unimplemented phase without an explicit, tracked deferral. |
 | **Scope integrity** | The PR implements the SPEC and no more; out-of-scope work was split out. | Undocumented scope creep, or in-scope work missing. |
 | **Docs updated** | Every "Affected docs" criterion is satisfied; per-phase docs (`progress`/`testing`/`known-issues`/`decisions`) reflect reality; the doc map still resolves. **Never merge with documentation still pending.** | A doc the map or SPEC requires is stale, missing, pending, or contradicts the code. |
-| **Traceability** | `Closes #N` is in the PR body when the work is issue-born (from `plan-feature-from-issue` or `plan-fix`); the roadmap/fix-index entry matches and is **still present** (the issue/fix-index entry is removed only *after* merge, never before). | Issue-born work without `Closes #N`; a roadmap/index entry out of sync; or the issue/fix-index entry dropped before merge. |
+| **Traceability** | `Closes #N` is in the PR body when the work is issue-born (from `plan-feature-from-issue` or `plan-fix`); the roadmap/fix-index entry matches, is **still present** (removed only *after* merge, never before), and carries the linked PR reference (`done · [#<pr>](<pr-url>)`). | Issue-born work without `Closes #N`; a roadmap/index entry out of sync; the entry dropped before merge; or a `done` row without its PR link. |
 | **Tests** | New behavior is covered at the right layer (prefer integration); acceptance criteria map to tests; no regression-risk tests left red. | New behavior untested, or tests assert nothing meaningful. |
 | **Verification gate / CI** | The project's gate passes — type-check, tests, build — and `statusCheckRollup` is green. | Any required check failing, pending, or absent where the project requires one. |
 | **Mergeability** | Branch is off the default base, independently mergeable (no conflicts), not stacked on another PR, not draft. | Wrong base, conflicts, stacked dependency, or still draft. |
