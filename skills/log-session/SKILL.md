@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: "[note to prepend to the entry]"
 model: sonnet
 effort: medium
@@ -32,6 +32,7 @@ judgment. It must never reach for an expensive model.
 ```
 ✓ The entry was APPENDED to docs/LOGS.md (file edited, not just drafted) with accurate git facts
 ✓ No past entry was edited
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 

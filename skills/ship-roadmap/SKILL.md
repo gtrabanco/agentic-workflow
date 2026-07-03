@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.5.0
+version: 1.6.0
 model: opus
 effort: high
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -42,6 +42,7 @@ where a wrong call is expensive to undo.
 ```
 ✓ Exactly ONE stage advanced (or a terminal banner printed) and ONE line appended to the run log
 ✓ Nothing was merged outside the --fullauto floors; nothing asked mid-run
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 

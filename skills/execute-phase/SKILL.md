@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 model: sonnet
 effort: medium
@@ -39,7 +39,11 @@ Three modes:
      `gh pr create` were EXECUTED and the PR URL is pasted. The PR body is
      NEVER empty: what it does, why, evidence, and `Closes #<n>` when
      issue-born. Unit not finished? Then NOTHING was pushed.
-✓ 5. The closing `→ Next:` block is the LAST thing printed.
+✓ 5. Artifact language: explicit user instruction > the project's declared
+     docs language > English. The CONVERSATION language never decides — a
+     Spanish prompt still produces English commits/PRs/issues unless one of
+     the first two says otherwise.
+✓ 6. The closing `→ Next:` block is the LAST thing printed.
 ```
 
 **Push policy: push happens exactly once — at the PR step. Never mid-phase,
@@ -157,7 +161,7 @@ examples use `gh`; translate if the project declares another forge).
 
 - **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml` if missing, populating the body from the SPEC. Use the returned number for branch and folder.
 - **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
-- All issues, specs, code, commits, and PRs in English; if the source material isn't English, translate it first.
+- **Language precedence for every artifact** (issues, PRs, commits, SPECs, docs): (1) an explicit user instruction in the prompt, else (2) the project's declared docs language (Workflow conventions), else (3) English. The conversation language is NOT a signal — being asked in Spanish never makes the PR Spanish. Non-matching source material gets translated first.
 
 ## Workflows
 

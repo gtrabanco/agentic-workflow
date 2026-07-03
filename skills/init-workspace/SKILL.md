@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: <target-dir>
 model: opus
 effort: high
@@ -29,6 +29,7 @@ raw placeholders.
 ```
 ✓ The adapted scaffold is written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 

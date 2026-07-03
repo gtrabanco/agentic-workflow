@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <issue-number>
 model: opus
 effort: high
@@ -27,6 +27,7 @@ review**, then `execute-phase --fix` implements it (`plan-* → execute-*`).
 ```
 ✓ The fix SPEC is committed on its `fix/<n>-<topic>` branch (commit sha pasted) — NOT pushed, NO PR
 ✓ The Hand-off block was printed exactly as specified
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is the LAST thing printed
 ```
 
@@ -52,7 +53,7 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 ## Hard rules
 
 - Honor the project's **Workflow conventions** (branch/PR — create the `fix/<n>-<topic>` branch first, never `main`; gate; docs-language; evidence — every codebase claim cites a file path, every doc claim its section; track-don't-inline — new problems found become separate `docs/fix/` entries or roadmap items, never part of this SPEC).
-- If the issue body isn't English, translate silently; if translation is ambiguous, inconsistent, or technically nonsensical, ask the user before committing to a meaning.
+- **Language precedence for every artifact**: explicit user instruction > the project's declared docs language > English — the conversation language never decides. If the issue body isn't in the artifact language, translate silently; if translation is ambiguous, inconsistent, or technically nonsensical, ask the user before committing to a meaning.
 - Never push, never open the PR — that's `execute-phase --fix`.
 
 ## Algorithm
