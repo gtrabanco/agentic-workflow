@@ -1,18 +1,16 @@
 ---
 name: bump-skill
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
   documentation in the repo that must stay in sync: CHANGELOG.md,
   CHANGELOG.es.md, README.md, and README.es.md. Run before committing any
-  skill change. Using a non-Claude / free-inference model? Edit model:/effort: in this frontmatter to your closest equivalent tier (see the README model-equivalence table).
+  skill change. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Trigger phrases: "bump the skill version", "update the
   version", "update the changelog", "I just changed a skill", "log this
   change", "version bump".
-model: sonnet
-effort: medium
 ---
 
 ## Turn contract — verify before ending the turn
@@ -157,8 +155,13 @@ If the skill's description or primary behavior changed (minor or major bump),
 rewrite the "What it does" cell to reflect the current state. For patch bumps,
 no change is needed unless the cell is already inaccurate.
 
-**b) Model & effort table** (under `## Recommended model & effort`): if the
-skill's `model:` or `effort:` frontmatter changed, update that row.
+**b) Model & effort table** (under `## Recommended model & effort`): `main`
+carries no `model:`/`effort:` frontmatter — this table documents the
+`#claude` branch's tiers, sourced from `docs/workflow/model-routing.yml`. If
+the user asks to change this skill's tier, update `model-routing.yml` (never
+the `claude` branch directly — it's force-pushed by CI on every push to
+`main` and a direct edit is lost) and mirror the new value into this table
+row.
 
 Make no other changes to README.md.
 
@@ -166,6 +169,15 @@ Make no other changes to README.md.
 
 Apply the same checks as step 7 to `README.es.md`, translating any updated
 text to Spanish.
+
+### 8b. `docs/workflow/model-routing.yml` (only when a tier changed)
+
+If step 7b changed a model/effort tier, this file must already reflect it
+(step 7b is where the edit happens — this is a reminder to not skip it, not a
+separate edit). Verify the skill's block matches what you just wrote to the
+README table. `sync-derived-branches.yml` reads this file on every push to
+`main` to regenerate the `claude` branch — a mismatch here means the next
+CI run rewrites `claude` with a value the README doesn't document.
 
 ### 9. Handle major bumps — migration note
 
