@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.6.1
+version: 1.7.0
 argument-hint: <issue-number> [more issue numbers…]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -79,7 +79,15 @@ gh issue view <N> --json number,title,body,labels,state,comments
    judgment rather than evidence, present the verdict and options and let the
    user choose before acting.
 5. **Report and keep docs coherent.** Post the decision as a dated issue comment
-   with evidence. If it becomes an active fix, register it in the fix index; if
+   with evidence. **The comment is Markdown, not shell — never hand-escape it:**
+   backticks / `*` / `_` in the body are formatting; a `\` before them renders
+   literally (`` \`code\` `` instead of `` `code` ``). Write the comment body to
+   a file with the Write tool (plain Markdown, real backticks, zero backslashes)
+   and post it with **`gh issue comment <n> --body-file <path>`** (or the
+   declared forge's equivalent) — never an inline `--body "…"` or a quoted
+   heredoc, which mangle backticks. After posting, `gh issue view <n> --json
+   comments` must show the backticks rendering, no literal `` \` ``. If it
+   becomes an active fix, register it in the fix index; if
    closed, remove any stale index entry. Never mutate GitHub state (labels,
    close) without confirmation when ambiguous.
 6. **Return exactly, per issue** (fixed verdict format — batch runs repeat it,
