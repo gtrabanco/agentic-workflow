@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.3.1
+version: 1.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -61,8 +61,10 @@ the agent guide and state the assumption.
        documented.
      - `TASKS.md` — per-phase checklists the executor ticks off. **The final
        phase's checklist always ends with these literal close-out tasks**:
-       "[ ] open the PR (`gh pr create` with full body) and PRINT THE PR URL
-       in the chat", "[ ] update the roadmap row to `done · [#<pr>](<pr-url>)`",
+       "[ ] open the PR (`gh pr create --body-file <path>` — body written as a
+       Markdown file, real backticks, never inline `--body`/heredoc that leaves
+       `\`-escaped backticks) and PRINT THE PR URL in the chat",
+       "[ ] update the roadmap row to `done · [#<pr>](<pr-url>)`",
        "[ ] commit `docs: link PR #<n>` and push" — so the close-out is a
        ticked task, not an assumed behavior.
      - `progress.md` — running log, one entry per phase.
