@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.8.1
+version: 1.9.0
 argument-hint: <path-or-glob>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -203,6 +203,12 @@ disposition is a decision, not a default:
   CLI/lib/infra). Always report what was skipped and why.
 - Honor the project's **Workflow conventions** (docs-language, evidence): cite
   `file:line`, mark uncertainties *verify*.
+- **Any forge body this review causes (issues/comments filed via `triage-issue`)
+  is Markdown, not shell — never hand-escape.** A `\` before a backtick/`*`/`_`
+  renders literally (`` \`code\` `` instead of `` `code` ``); bodies go through
+  `--body-file <path>`, never an inline `--body "…"`/heredoc. `triage-issue`
+  enforces this for the comments it posts — don't undercut it by pre-escaping
+  finding text you hand it.
 
 ## Portability (agents other than Claude Code)
 

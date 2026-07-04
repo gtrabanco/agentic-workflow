@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.10.1
+version: 1.11.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -37,7 +37,8 @@ Three modes:
      `gh pr create` were EXECUTED and **the PR URL is printed in the chat**
      (not every agent shows open PRs — the link in the chat is the contract).
      The PR body is NEVER empty: what it does, why, evidence, and
-     `Closes #<n>` when issue-born. AND the roadmap row (or fix-index entry)
+     `Closes #<n>` when issue-born. The body is passed with `--body-file`
+     (real Markdown, NO `\`-escaped backticks — see Issue policy). AND the roadmap row (or fix-index entry)
      was updated to `done · [#<pr>](<pr-url>)` in a follow-up
      `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
      without its PR link is an UNFINISHED unit. Unit not finished? Then
@@ -177,7 +178,23 @@ checkout — and then one worktree per unit, removed after merge.
 Forge operations use the project's declared forge CLI (Workflow conventions —
 examples use `gh`; translate if the project declares another forge).
 
-- **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml` if missing, populating the body from the SPEC. Use the returned number for branch and folder.
+> **Forge bodies are Markdown, not shell — never hand-escape them.** Backticks,
+> `*`, `_`, `#`, `|` in an issue / PR / comment body are **formatting**; a `\`
+> before them renders **literally** (`` \`code\` `` instead of `` `code` ``) —
+> the #1 forge-formatting bug (worse on some agents than others). Fix it at the
+> source: **never pass a Markdown body inline** (`--body "…"`, a quoted
+> `<<'EOF'` heredoc, or single quotes — all of these preserve a stray `\` or
+> mangle backticks). Instead **write the body to a file with the Write tool**
+> (plain Markdown — real backticks, zero backslashes; scratchpad is fine) and
+> pass **`--body-file <path>`**: `gh issue create --body-file <path>`,
+> `gh pr create --body-file <path>`, `gh issue comment <n> --body-file <path>`
+> (or the declared forge's equivalent). Short one-liners with no Markdown (e.g.
+> a bare `Closes #12`) may stay inline. **Verify after creating:**
+> `gh issue view <n> --json body` / `gh pr view <n> --json body` must show
+> backticks rendering — a literal `` \` `` in the output means redo it with
+> `--body-file`.
+
+- **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml --body-file <path>` if missing, populating the body from the SPEC (body as a Markdown file — see the Markdown rule above). Use the returned number for branch and folder.
 - **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
 - **Language precedence for every artifact** (issues, PRs, commits, SPECs, docs): (1) an explicit user instruction in the prompt, else (2) the project's declared docs language (Workflow conventions), else (3) English. The conversation language is NOT a signal — being asked in Spanish never makes the PR Spanish. Non-matching source material gets translated first.
 
@@ -213,9 +230,10 @@ examples use `gh`; translate if the project declares another forge).
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"`.
 7. **Mark done + open the PR — always (this is the last step).** Flip the roadmap
    row to `done` (it's *built*; merge state lives in the forge, not the status —
-   see *Marking done*), commit that flip, then `git push` and open the PR:
-   `gh pr create --base main --title "<type>(<scope>): <summary>" --body "<summary>"`
-   (add `Closes #<n>` when issue-born). Then, with the URL `gh pr create`
+   see *Marking done*), commit that flip, then `git push` and open the PR
+   (body written to a file as Markdown, per the Markdown rule above):
+   `gh pr create --base main --title "<type>(<scope>): <summary>" --body-file <path>`
+   (put `Closes #<n>` in that body when issue-born). Then, with the URL `gh pr create`
    returned: **print it in the chat**, update the roadmap row to
    `done · [#<pr>](<pr-url>)`, commit (`docs: link PR #<n>`), and push again —
    the link commit rides the same open PR. A single-pass unit **never ends
@@ -227,7 +245,8 @@ examples use `gh`; translate if the project declares another forge).
 **`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
 
 1. Verify the issue exists (`gh issue view <n>`); if it doesn't, create it
-   (`gh issue create --template fix.yml`, body from the SPEC).
+   (`gh issue create --template fix.yml --body-file <path>`, body from the SPEC
+   written to a Markdown file — per the Markdown rule above).
 2. **If `docs/fix/<n>-<topic>/SPEC.md` already exists (e.g. from `plan-fix`), use it — do not re-draft.** Otherwise copy the template, fill every section, and register the entry in `docs/fix/README.md`.
 3. Verify branch (`fix/<n>-<topic>`).
 4. Implement the fix (no planning artifacts; the SPEC is enough).
@@ -235,8 +254,9 @@ examples use `gh`; translate if the project declares another forge).
 6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`.
 7. **Mark done + open the PR — always (this is the last step).** Set the
    `docs/fix/README.md` entry's status to `done` (built, not yet merged), commit,
-   `git push`, then open the PR: `gh pr create --base main --title "fix(<scope>): <summary>" --body "Closes #<n>"`.
-   Run the commands. Then, with the returned URL: **print it in the chat**,
+   `git push`, then open the PR with the body written to a Markdown file (per the
+   Markdown rule above): `gh pr create --base main --title "fix(<scope>): <summary>" --body-file <path>`
+   (the body includes `Closes #<n>`). Run the commands. Then, with the returned URL: **print it in the chat**,
    set the `docs/fix/README.md` entry to `done · [#<pr>](<pr-url>)`, commit
    (`docs: link PR #<n>`), and push again. A fix **never ends branch-only** —
    it always leaves an open, chat-linked PR.
