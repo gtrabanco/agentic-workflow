@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.8.1
+version: 1.9.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -216,8 +216,10 @@ turns:
          trade-offs in `decisions.md`, and every review report's
          postponed/intentional-tradeoff findings. For residue items that are
          real defects/gaps but have no tracked issue yet, **file the issue
-         now** (forge CLI; body cites the doc + trigger). Log the full
-         inventory (issue #s + sources) to the run log.
+         now** (forge CLI; body cites the doc + trigger). **The issue body is
+         Markdown — write it to a file and pass `--body-file`, never an inline
+         `--body "…"`/heredoc that leaves `\`-escaped backticks** (see
+         Guardrails). Log the full inventory (issue #s + sources) to the run log.
       2. **TRIAGE (compose `triage-issue` in-turn, equal tier).** Classify
          each inventoried issue against the CURRENT codebase. fix-now → it
          becomes a selectable unit; postpone / wontfix / promote-to-feature →
@@ -406,6 +408,15 @@ Closing line, verbatim policy: **this report recommends; the human decides.**
 - **Never work on the default branch** — the empty-repo initial scaffold commit
   is the single exception. One PR per unit, never stacked; roadmap status flips
   ride PR-bound commits only.
+- **Forge bodies are Markdown, not shell — never hand-escape.** Every issue,
+  PR, or comment the run creates (the sweep's issues, subagent PRs, triage
+  comments) carries a body of **real Markdown**: backticks / `*` / `_` are
+  formatting, and a `\` before them renders literally (`` \`code\` `` instead
+  of `` `code` ``). Write the body to a file and pass **`--body-file <path>`**
+  to `gh issue create` / `gh pr create` / `gh issue comment` (or the declared
+  forge's equivalent) — never inline `--body "…"` or a quoted heredoc. Verify
+  with `gh … --json body` that no literal `` \` `` survived. (execute-phase
+  subagents already follow this; the conductor must too for the sweep.)
 - **Never commit red; never merge red.** The gate and the floors are
   unconditional — no flag, mode, or interview answer disables them.
 - **No stage ends dirty or unpushed.** The clean close-out check (Mode B
