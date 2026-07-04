@@ -51,6 +51,19 @@ CLI the skills use for issues and PRs. Skill examples are written with `gh`; whe
 this project declares a different forge, run the equivalent command with its CLI.
 The auto-close convention (`Closes #N` in the PR/MR body) must hold either way.
 
+**Forge bodies are Markdown, not shell — never hand-escape them.** An issue, PR,
+or comment body renders as Markdown: backticks, `*`, `_`, `#`, `|` are
+formatting, **not** shell syntax, so **never put a `\` before them**. A stray
+`\` renders literally (`` \`code\` `` instead of `` `code` ``) — the most common
+forge-formatting bug. Always **write the body to a file** (plain Markdown, real
+backticks, zero backslashes) and pass **`--body-file <path>`**
+(`gh issue create --body-file`, `gh pr create --body-file`,
+`gh issue comment --body-file`, or the forge's equivalent) — **never** an inline
+`--body "…"` or a quoted `<<'EOF'` heredoc, both of which mangle backticks or
+preserve the stray `\`. A bare non-Markdown one-liner (e.g. `Closes #12`) may
+stay inline. Verify after: `gh issue view <n> --json body` shows backticks
+rendering, no literal `` \` ``.
+
 **Git workflow:** `<branches | worktrees>` — how parallel work is handled.
 **`branches`** (default): plain feature/fix branches via `git switch -c`, **one
 active unit at a time**, sequential — slower, but the working tree is always the
