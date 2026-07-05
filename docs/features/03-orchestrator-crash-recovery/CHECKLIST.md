@@ -45,3 +45,15 @@ a trivial CHANGELOG rebase if merged out of order.
 - `workflow-status` bumped 1.1.0 → 1.1.1 (patch — contract tightening, no new
   capability); CHANGELOG.md/.es.md rows added.
 - Gate re-run after the fold: `npx skills add . --list` exit 0.
+
+## User-requested scope addition (2026-07-05, folded into this PR)
+
+Explicitly requested by the project owner during the merge of this PR (not in
+the 03 SPEC — documented here so the merge gate sees deliberate scope, not
+creep): the **every-2-phases review checkpoint becomes a recommendation, not a
+blocking stop** — `execute-phase` 1.14.0 recommends `/review-change` at the
+checkpoint with "continue to the next phase" as a listed alternative, envelope
+stays `CONTINUE` (advisory); the **end-of-unit review remains mandatory** and
+the **dependency gate is unchanged** (still blocks; `--force` to override).
+`review-change` 1.10.1 cross-references updated; README EN/ES + SKILLS.md rows
+and diagrams updated; CHANGELOG EN/ES rows added.

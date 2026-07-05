@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.13.1
+version: 1.14.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -219,7 +219,7 @@ examples use `gh`; translate if the project declares another forge).
    uncommitted, and stop with a clear report.
 5. Update the per-phase docs.
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"` — one commit per phase, conventional format. Run this; don't just describe what should be committed.
-7. **Review checkpoint** — every 2 phases (and before the PR), **stop and hand off** to `/review-change` (see below) before the next phase. Don't run it in this skill's turn.
+7. **Review checkpoint (recommended, not blocking)** — every 2 phases, **recommend** a hand-off to `/review-change` in the closing block (see below). The user decides: review now, or continue straight to the next phase — the skill never forces the intermediate stop. The **end-of-unit review stays mandatory** (it feeds `audit-pr`, the merge gate). Never run the review in this skill's turn.
 
 **Resuming an interrupted phase (stated contract — any agent must honor it).**
 If, on entry, the unit branch already carries dirty files or commits belonging
@@ -313,22 +313,27 @@ boundary, hand off; don't compose.) On agents without per-skill model config the
 rule holds by hand: run the review as a **separate, fresh invocation** on your
 strongest model — never inline in the implementation run.
 
-**Cadence.** Feature mode: hand off after every **2 completed phases**, and always
-once more at the end so the final phase is never unreviewed. Single-pass and `--fix`
-have no intermediate phases — they get the one mandatory end review.
+**Cadence.** Feature mode: after every **2 completed phases**, the closing block
+**recommends** the hand-off — a suggestion the user may skip to keep executing
+phases; the skill never blocks on an intermediate review. What is **never
+optional** is the end: every unit gets one `review-change` pass before merge
+(single-pass and `--fix` included — they have no intermediate phases, so the
+end review is their only one).
 
 **Finishing a unit (single-pass, `--fix`, or a feature's final phase): the last step
 is always an open PR.** Mark the unit `done`, commit the flip, push, and `gh pr create`
 (see the mode steps above) — regardless of the review/audit still to come. Then hand
 off to `/review-change` (mandatory), which feeds `audit-pr` (the merge gate).
 
-Checkpoint hand-off (print it — every invocation ends by suggesting the next step):
+Checkpoint hand-off (print it — every invocation ends by suggesting the next
+step; at the 2-phase mark the review is the recommendation, continuing is a
+listed alternative — the user picks):
 
 ```
-Phase <N> done and committed. Review checkpoint.
-→ Next: /review-change — it reviews the branch at its own model/effort
-  · clean    → continue with /execute-phase <NN> <next phase>
-  · findings → fold fix-now into the branch; non-fix-now → /triage-issue; then re-review
+Phase <N> done and committed. Review checkpoint (recommended).
+→ Next: /review-change — 2 phases unreviewed; it reviews the branch at its own model/effort
+  · skip the checkpoint → /execute-phase <NN> <next phase> (the mandatory end review still covers everything)
+  · findings (if you review) → fold fix-now into the branch; non-fix-now → /triage-issue; then re-review
 ```
 
 ### Folding review / audit findings (a first-class mini-cycle)
@@ -429,13 +434,16 @@ present; values only from verified command output, never invented.
 This skill emits:
 
 - **`state`:**
-  - `CONTINUE` — phase done + committed, next phase exists, no review
-    checkpoint due yet → `next.recommended: "/execute-phase <NN> <next-P>"`,
-    `tier: "cheap"`.
-  - `READY_FOR_REVIEW` — checkpoint (every 2 phases) or unit finished
-    (single-pass / `--fix` / final phase: PR open, URL in `pr`) →
-    `gates.review_pending: true`, `next.recommended: "/review-change"`,
-    `tier: "strong"`.
+  - `CONTINUE` — phase done + committed, next phase exists →
+    `next.recommended: "/execute-phase <NN> <next-P>"`, `tier: "cheap"`. At
+    the 2-phase checkpoint the recommendation flips (`next.recommended:
+    "/review-change"`, `tier: "strong"`, the next phase in
+    `next.alternatives`) but the state stays `CONTINUE` — the checkpoint is
+    advisory, an orchestrator may proceed with the alternative.
+  - `READY_FOR_REVIEW` — unit finished (single-pass / `--fix` / final phase:
+    PR open, URL in `pr`) → `gates.review_pending: true`,
+    `next.recommended: "/review-change"`, `tier: "strong"`. This one is the
+    mandatory review before the merge gate.
   - `BLOCKED` — the dependency gate stopped before any edit →
     `dependencies.unmet` + `dependencies.build_order` (deepest first, same
     order as the printed gate block), `blockers[]` kind `dependency`.
@@ -482,10 +490,10 @@ enables:
 ## Relationship to other skills
 
 - Planned by `plan-feature` (features) or `plan-fix` (fixes); executes their SPEC.
-- **Hands off** to `review-change` (mandatory final review) at the checkpoint (every
-  2 phases) and when finishing a unit — it runs at its own model/effort, not composed
-  in this skill's turn. `fix-now` findings fold back here; non-fix-now routes through
-  `triage-issue`.
+- **Hands off** to `review-change` — recommended at the 2-phase checkpoint
+  (skippable), **mandatory** when finishing a unit — it runs at its own
+  model/effort, not composed in this skill's turn. `fix-now` findings fold
+  back here; non-fix-now routes through `triage-issue`.
 - A finished unit (single-pass, `--fix`, or final phase) **always opens its PR and
   flips to `done`**; `audit-pr` then gates the merge (it blocks on pending docs or a
   prematurely-dropped issue entry).

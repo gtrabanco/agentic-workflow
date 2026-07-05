@@ -99,7 +99,7 @@ path: **plan → execute → review → audit → merge.**
 
 | Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `execute-phase` | Implements one phase of a feature (default), a small `XS/S` feature in a single pass, or a fix (`--fix`). **Dependency gate first**: the unit's transitive `Depends on:` closure must be merged, or it stops with the unmet chain and build order (`--force` overrides, logged). **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **hands off to `review-change` every 2 phases and once at the end (mandatory)**. A finished unit **always opens its PR, prints the PR URL in the chat, and flips to `done`** (built, not merged); no turn ends with a dirty tree, and once the PR exists every commit is pushed immediately. |
+| `execute-phase` | Implements one phase of a feature (default), a small `XS/S` feature in a single pass, or a fix (`--fix`). **Dependency gate first**: the unit's transitive `Depends on:` closure must be merged, or it stops with the unmet chain and build order (`--force` overrides, logged). **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **recommends a `review-change` checkpoint every 2 phases (skippable) and hands off once at the end (mandatory)**. A finished unit **always opens its PR, prints the PR URL in the chat, and flips to `done`** (built, not merged); no turn ends with a dirty tree, and once the PR exists every commit is pushed immediately. |
 
 ### Review & audit — _change → PR → product_
 
@@ -349,7 +349,7 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
         → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
         → fills the SPEC + PLAN + TASKS + … and registers the roadmap entry
 /execute-phase <NN> <phase>     # one phase at a time, gate-verified, one commit each
-        → review checkpoint every 2 phases (and mandatory at the end)
+        → review checkpoint recommended every 2 phases (mandatory at the end)
         → a finished unit always opens its PR + flips to `done` (built, not merged)
 /review-change                  # mandatory: applicable reviews, classified; non-fix-now → triage-issue
 /audit-pr                       # merge gate: merge-ready or blockers (never merge with pending docs)
