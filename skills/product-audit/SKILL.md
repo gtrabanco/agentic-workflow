@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.6.1
+version: 1.7.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -32,7 +32,7 @@ fixes, opens issues, or edits the roadmap. It proposes; the human decides.**
 ```
 ✓ The full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, ranked findings, three proposal streams)
 ✓ Nothing was fixed, filed, or changed — report only
-✓ The closing `→ Next:` block is the LAST thing printed
+✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -167,6 +167,24 @@ security items to track first").
   multiple feature docs into one proposal.
 - Honor the project's **Workflow conventions** (docs-language, evidence): every
   finding/proposal cites a `file:line`/metric/doc/issue source; mark uncertainties *verify*.
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:** `OK` (report delivered — proposals await the human) or `HALT`
+  (a critical finding that must stop all in-flight work — scope `run`).
+- **Fields:** `findings` aggregates the report (fix_now = critical items;
+  untriaged = proposals not yet accepted); `recommendations.product_audit:
+  false` (it just ran) with `reason` = the suggested next cadence.
+- `detail`: `{"proposed_issues": [...], "proposed_features": [...], "axes": {"<axis>": "PASS|FAIL|n/a"}}`.
 
 ## Portability (agents other than Claude Code)
 
