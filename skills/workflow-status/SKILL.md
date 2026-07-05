@@ -1,10 +1,10 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
-argument-hint: "[--json-only]"
+argument-hint: "[--json-only] [--last-envelope <json|path>]"
 description: >
   Read-only sensor for orchestrating the workflow programmatically: computes the
   full state of the project — every feature and fix with its dependency closure
@@ -83,16 +83,71 @@ ship-roadmap run exists.
 8. **Product-audit recommendation.** Recommend when ≥3 features merged since
    the last `SHIP_REPORT`/product-audit artifact, or when the same drift kind
    appears in ≥2 units' docs. State the reason; never run it.
-9. **Report.** Print a short human summary (table: unit | status | deps unmet |
-   PR | next gate), then the envelope. With `--json-only`, envelope only.
+9. **Crash recovery (run every invocation — cheap, see the section below).**
+   Classify whether an interrupted turn is in evidence and append the fixed
+   `CRASH RECOVERY` sub-block to the report.
+10. **Report.** Print a short human summary (table: unit | status | deps unmet |
+    PR | next gate) plus the `CRASH RECOVERY` sub-block, then the envelope.
+    With `--json-only`, envelope only.
+
+## Crash recovery (run every invocation)
+
+A driver process can die mid-turn; on restart, the persisted state it holds is
+a **hint, never a source** — everything below is recomputed from git, the
+forge, and the docs. Nothing is cleaned up here (read-only stands): this
+section *classifies*; the resume command it recommends does the acting.
+
+**Checklist:**
+
+- ✓ **Working tree per unit branch.** A dirty tree (`git status --porcelain`)
+  or unpushed commits (`git status -sb` / `git log @{u}..`) on a
+  `feat/*`/`fix/*` branch → interrupted-turn candidate. Cite branch + files.
+- ✓ **Phase-ledger coherence.** Compare the unit's `progress.md`/`TASKS.md`
+  against the branch's actual commits: commits after the last closed phase
+  entry, or ticked tasks with no matching commit, are cited as evidence.
+- ✓ **Hint envelope (optional).** With `--last-envelope <json|path>`, diff the
+  caller's persisted envelope against the recomputed state and report the
+  divergence in one line. The hint never overrides recomputed state.
+
+**Classification (decision table — every row independently checkable; first
+matching row wins per branch):**
+
+| Evidence | Verdict |
+|---|---|
+| Clean tree, ledger coherent with commits | `CLEAN` |
+| Dirty/unpushed on a unit branch AND the ledger points to a unique next task/phase | `RESUMABLE` — resume command: `execute-phase <NN> <phase>` |
+| Dirty/unpushed AND ledger contradiction (ticks ahead of commits, unknown branch, detached HEAD) | `AMBIGUOUS` — a human looks first |
+
+**Return exactly (appended to the report):**
+
+```
+CRASH RECOVERY — verdict: CLEAN | RESUMABLE | AMBIGUOUS
+| Branch | Evidence | Classification | Resume command |
+|---|---|---|---|
+| <branch> | <dirty: n files; ledger: <state>> | RESUMABLE | execute-phase <NN> <phase> |
+Hint envelope: matched | diverged: <one line> | not provided
+```
+
+(`CLEAN` with no unit branches in play → the table body is a single
+`| — | clean tree, coherent ledgers | CLEAN | — |` row.)
 
 ## Machine envelope
 
-Schema and placement per the installed `orchestration-envelope` skill. This
-skill emits `state: OK` always (it is a sensor — even a broken substrate is
-*reported*, as `blockers` with `kind: substrate`, while the envelope itself
-stays OK), fills `next` with the single best command for the project right
-now, and carries the full tree in `detail`:
+Schema and placement per the installed `orchestration-envelope` skill. The
+`state` maps 1:1 from the crash-recovery verdict — **no new schema fields or
+states** (the schema package needs no release):
+
+- `CLEAN` → `state: OK` (the sensor default — even a broken substrate is
+  *reported*, as `blockers` with `kind: substrate`, while the envelope stays
+  OK).
+- `RESUMABLE` → `state: CONTINUE`, `next.recommended` = the resume command
+  from the decision table.
+- `AMBIGUOUS` → `state: NEEDS_INPUT`, `needs_input.question` = what is
+  contradictory, `needs_input.options` = the concrete choices (resume / redo
+  the phase / discard the dirty work), evidence in `detail.crash_recovery`.
+
+`next` always carries the single best command for the project right now, and
+`detail` the full tree (plus `crash_recovery: {verdict, branches: [...]}`):
 
 ```json
 {
@@ -154,6 +209,9 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
   `docs/workflow/ORCHESTRATION.md` for per-agent invocation patterns).
 - **No per-skill `model:`/`effort:`** — this is mechanical reading and
   counting: a **cheap** tier is enough; never spend a strong model here.
+- **No argument passing (`--last-envelope`)** — paste the persisted envelope
+  JSON into the invocation message: the skill treats the last fenced json
+  block of the *request* as the hint.
 
 ## Relationship to other skills
 
@@ -171,6 +229,9 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
 - Every roadmap/fix row, open PR, and in-flight folder was actually read, the
   dependency closures are computed transitively, and inconsistencies are
   reported (never repaired).
+- The `CRASH RECOVERY` sub-block was printed with a verdict from the decision
+  table, and the envelope `state` matches it (CLEAN→OK, RESUMABLE→CONTINUE,
+  AMBIGUOUS→NEEDS_INPUT).
 - The human summary (unless `--json-only`) and the envelope — with `detail`
   carrying features, fixes, startable_now, blocked_units, open_prs and
   pending_triage — are printed, envelope last.
