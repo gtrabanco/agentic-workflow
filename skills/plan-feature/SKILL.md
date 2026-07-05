@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.5.1
+version: 1.6.0
 argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -28,7 +28,7 @@ need runs (no fat single skill). **Docs only — no code, no branch.**
 ✓ SPEC + artifacts written and the roadmap entry registered (number, order, deps verified)
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is the LAST thing printed
+✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -100,6 +100,28 @@ Pick the mode — first match wins:
 
 These run **within this same conversation** (that's what "composing" means) —
 on any agent, just follow their `SKILL.md` inline as the routed step.
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:** `OK` (planned — artifacts written, roadmap registered),
+  `BLOCKED` (the dependency check found unmet deps: `dependencies.unmet` +
+  `build_order` filled, `blockers[]` kind `dependency`), or `NEEDS_INPUT`
+  (interview path question — `needs_input` filled, nothing guessed).
+- **Fields:** `unit` = the planned feature (`type: "feature"`, id, branch from
+  the SPEC); `phase.total` = planned phase count (`null` for XS/S
+  single-pass); `next.recommended` = `/execute-phase <NN> P1` (or single-pass)
+  with `tier: "cheap"` — or the deepest unmet dependency's command when
+  BLOCKED, `tier: "strong"`.
+- `detail`: `{"size": "XS|S|M|L", "artifacts": [paths]}`.
 
 ## Portability (agents other than Claude Code)
 

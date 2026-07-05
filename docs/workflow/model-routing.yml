@@ -83,3 +83,9 @@ ship-roadmap:
 triage-issue:
   model: opus
   effort: high
+orchestration-envelope:
+  model: sonnet
+  effort: medium
+workflow-status:
+  model: sonnet
+  effort: medium

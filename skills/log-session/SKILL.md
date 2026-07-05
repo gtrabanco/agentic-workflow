@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 1.3.1
+version: 1.4.0
 argument-hint: "[note to prepend to the entry]"
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -31,7 +31,7 @@ judgment. It must never reach for an expensive model.
 ✓ The entry was APPENDED to docs/LOGS.md (file edited, not just drafted) with accurate git facts
 ✓ No past entry was edited
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is the LAST thing printed
+✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -120,6 +120,22 @@ the HEAD sha and start time at session open.
   or "tidy" them. Same reasoning as not rewriting a delivered feature's planning
   artifacts.
 - **One file, append-only.** Don't fan session logs across files.
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:** `OK` — the entry was appended.
+- **Fields:** `unit.type: "docs"`; `next.recommended` = the logged next step
+  (so an orchestrator can resume a fresh session from the journal alone).
+- `detail`: `{"log": "docs/LOGS.md", "next_step_logged": "<the entry's next step>"}`.
 
 ## Portability (agents other than Claude Code)
 
