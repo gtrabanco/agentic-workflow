@@ -1,0 +1,35 @@
+{
+  "name": "@gtrabanco/agentic-workflow-schema",
+  "version": "1.0.0",
+  "description": "Types, JSON Schema, and parser/validator for the agentic-workflow machine envelope — the fixed JSON block every user-facing skill prints as its last output, for programmatic orchestration.",
+  "keywords": ["agentic-workflow", "agent", "orchestration", "skills", "schema", "envelope"],
+  "license": "MIT",
+  "author": "Gabriel Trabanco <gtrabanco@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtrabanco/agentic-workflow.git",
+    "directory": "packages/agentic-workflow-schema"
+  },
+  "homepage": "https://github.com/gtrabanco/agentic-workflow/blob/main/docs/workflow/ORCHESTRATION.md",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./envelope.schema.json": "./envelope.schema.json"
+  },
+  "files": ["dist", "envelope.schema.json", "README.md"],
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test test/index.test.mjs",
+    "prepublishOnly": "npm test"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

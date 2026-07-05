@@ -31,6 +31,24 @@ Full schema in [`skills/orchestration-envelope/SKILL.md`](../../skills/orchestra
 Contract in one line: **the last fenced ```json block of the final message is
 the envelope; exactly one per turn; all top-level keys always present.**
 
+### Parsing with the official package
+
+**`@gtrabanco/agentic-workflow-schema`** (npm) implements the contract:
+`parseEnvelope(text)` extracts the last fenced ```json block, validates it,
+and returns a fully-typed envelope; helpers `isTerminal(state)` and
+`isRunHalt(envelope)` cover the two stop rules; the raw JSON Schema is
+exported for non-JS drivers. Source lives in
+[`packages/agentic-workflow-schema/`](../../packages/agentic-workflow-schema/)
+and is version-locked to this contract (see its README).
+
+```ts
+import { parseEnvelope, isRunHalt, isTerminal } from "@gtrabanco/agentic-workflow-schema";
+const r = parseEnvelope(agentOutput);
+if (!r.ok) throw new Error(r.errors.join("; "));
+if (isRunHalt(r.envelope)) stopRun(r.envelope.blockers);
+else if (!isTerminal(r.envelope.state)) invoke(r.envelope.next.recommended, r.envelope.next.tier);
+```
+
 ## The state machine (route on `state`)
 
 | `state` | Meaning | Orchestrator action | Suggested tier |

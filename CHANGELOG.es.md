@@ -335,7 +335,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   2.1.0 además publica un **comentario MERGE-READY datado y ligado al SHA en
   el PR** (nunca una etiqueta en el mensaje de commit). `ship-roadmap` 1.10.0
   se vuelve neutral de driver y dice POR QUÉ termina cada iteración. 12 skills
-  con bump menor + 2 skills nuevas.
+  con bump menor + 2 skills nuevas. El contrato también se distribuye como el
+  paquete npm **`@gtrabanco/agentic-workflow-schema`** (tipos + JSON Schema +
+  `parseEnvelope()`), publicado automáticamente por CI (`publish-schema.yml`)
+  cuando su versión sube — el esquema y el paquete cambian en la misma PR,
+  siempre.
 
 - **2026-07-04 — los cuerpos del forge son Markdown, no shell.** Evidencia de
   campo (gtrabanco/webs#198): issues/PRs/comentarios generados llegaban con

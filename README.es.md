@@ -337,7 +337,10 @@ Code: el mismo bucle que `ship-roadmap` ejecuta dentro del agente, alojado
 fuera de cualquier agente. `workflow-status` es el sensor de solo lectura que
 reporta el árbol de dependencias completo y qué es arrancable. Protocolo,
 máquina de estados y esqueleto de driver:
-**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**.
+**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. Para
+drivers JS/TS, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
+(npm) trae los tipos, el JSON Schema y `parseEnvelope()` implementando el
+contrato de parseo — publicado automáticamente por CI en cada cambio del esquema.
 
 ## Cómo usarlas
 
