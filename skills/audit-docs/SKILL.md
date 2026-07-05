@@ -1,7 +1,7 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 1.6.0
+version: 1.7.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -72,7 +72,7 @@ Run these and collect findings (cite paths/lines/issue numbers each):
    the row update; a `done` with no PR found at all is HIGH severity (the unit
    may never have been closed out).
 
-**Workflow discipline (checks 10–13)** — the executor skills enforce these at
+**Workflow discipline (checks 10–14)** — the executor skills enforce these at
 write time; this audit verifies they actually held. Each check is mechanical:
 run the command shown, don't infer.
 
@@ -90,7 +90,15 @@ run the command shown, don't infer.
     `Closes #<n>` when the unit is issue-born (SPEC references an issue).
     Also scan recent default-branch history (`git log --first-parent`) for
     feature/fix-scoped changes committed directly without a PR: HIGH.
-13. **Commit format & dependency discipline.** Sample the unit branches'
+13. **Generated-docs provenance (only when the documentation map declares a
+    `Docs site` block; otherwise state n/a).** Scan the declared content dir
+    for pages carrying `generated-by: agentic-workflow/generate-docs`. For
+    each: (a) its `source-unit` exists in the roadmap or fix index — no match
+    is an **orphan** (MEDIUM: propose deletion or re-attribution); (b) the
+    unit's PR merged **after** the page's `updated` date with commits touching
+    the page's subject paths — that page is **stale** (LOW: propose
+    `/generate-docs <unit>` to refresh). Cite page path + unit per finding.
+14. **Commit format & dependency discipline.** Sample the unit branches'
     commits: `<type>(<scope>): <summary>` conventional format (violations:
     LOW). Every `in-progress`/`done` row's `Depends on:` closure was merged —
     a unit built on unmerged deps is HIGH unless `decisions.md` records a

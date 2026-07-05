@@ -55,6 +55,12 @@ findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
 |---|---|---|
 | `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code; accepts several issues in one batch | `plan-fix`, `plan-feature`, or a dated comment |
 
+## Document
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `generate-docs` | Turn a unit's diff into developer docs on the project's own docs site: incremental how-to guides via a discovered adapter (Starlight MDX reference, plain-markdown fallback), a knowledge/call map rendered from a project-declared deterministic command (never model-inferred), opt-in `--review` export of review reports. Provenance frontmatter (`generated-by`/`source-unit`) lets `audit-docs` catch orphan/stale pages | the unit's close-out commit (pages ride the unit's PR); `audit-docs` for drift |
+
 ## Autopilot — the whole flow, end to end
 
 | Skill | Role | Hands off to |

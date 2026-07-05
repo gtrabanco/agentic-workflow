@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 27 skills (13 user-facing + 14 internal) — the installable source
+skills/                  the 28 skills (14 user-facing + 14 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -70,7 +70,7 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**13 user-facing skills** (one menu entry each) + **14 internal** ones composed
+**14 user-facing skills** (one menu entry each) + **14 internal** ones composed
 for you: the `plan-feature` router's three planning steps, the `review-change`
 engine, the `orchestration-envelope` contract, and the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
@@ -121,6 +121,12 @@ path: **plan → execute → review → audit → merge.**
 | Skill          | What it does                                                                                               |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
 | `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
+
+### Document
+
+| Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generate-docs` | Turns a unit's diff into **developer documentation on the project's own docs site** — incremental how-to guides through a discovered adapter (Starlight MDX first-class, plain markdown fallback), a **knowledge/call map** rendered from a project-declared deterministic command (the model never infers graph edges), and opt-in `--review` export of review reports. Provenance frontmatter lets `audit-docs` catch orphan/stale pages; never scaffolds a site, never edits code. |
 
 ### Session
 
@@ -210,6 +216,7 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `triage-issue`   | Opus       | high   | verify triggers against the code; judgement call                                                                                                                                         |
 | `log-session`    | Sonnet     | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free)                                              |
 | `workflow-status`| Sonnet     | medium | mechanical state reading + dependency-closure computation — a sensor, never judgment                                                                                                     |
+| `generate-docs`  | Sonnet     | medium | structured summarization of a diff into guide pages; the graph is tool-generated, never model-inferred (Opus never needed)                                                               |
 | `ship-roadmap`   | Opus       | high   | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
 > The 13 internal skills aren't selected directly. Because they're composed
