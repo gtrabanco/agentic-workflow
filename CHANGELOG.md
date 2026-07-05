@@ -107,6 +107,11 @@ How pinning actually works, verified against the `skills` CLI:
 
 ### User-facing
 
+#### `generate-docs`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-07-05 | — | New skill: incremental, diff-driven developer docs into the target project's docs site through a discovered adapter (declaration → Starlight → Docusaurus → plain-markdown fallback; NOT-CONFIGURED → NEEDS_INPUT, never guesses). Fixed page shape + provenance frontmatter (`generated-by`/`source-unit`/`updated`), knowledge map from a project-declared deterministic command only (model never infers edges), opt-in `--review` export of `review-change` reports, verify step (docs build or link check). Never scaffolds a site, never edits source, never commits. |
+
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
@@ -132,6 +137,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.13.0 | 2026-07-05 | minor | Unit close-out hand-off gains a `/generate-docs` alternative — printed only when the project's documentation map declares a `Docs site` block; generated pages ride the unit's PR. |
 | 1.12.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. The dependency-gate stop and review checkpoints are now machine-readable (BLOCKED/READY_FOR_REVIEW); batch section gains the external-driver alternative to `/loop`. |
 | 1.11.0 | 2026-07-04 | minor | PR/issue bodies passed with `--body-file` (Markdown file), never inline `--body`/heredoc — fixes literal `\`-escaped backticks in generated issues/PRs; turn-contract box 4 + Issue policy rule; commands updated. |
 | 1.10.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -237,6 +243,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.7.0 | 2026-07-05 | minor | New check 13 — generated-docs provenance (only when a `Docs site` block is declared): pages carrying `generated-by: agentic-workflow/generate-docs` whose `source-unit` no longer exists are orphans (MEDIUM); pages whose unit merged after their `updated` date with commits on their subject paths are stale (LOW). Workflow-discipline block renumbered to 10–14. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.5.0 | 2026-07-03 | minor | Workflow-discipline checks 10-13 (mechanical commands, not inference): phase naming, per-phase doc discipline, branch/PR discipline vs the forge, commit format + dependency closures. |
@@ -270,6 +277,7 @@ How pinning actually works, verified against the `skills` CLI:
 | Version | Date | Type | What changed |
 |---|---|---|---|
 | 1.8.0 | 2026-07-05 | minor | Interview gains a **Performance tooling** round: per-slot detection checklist (complexity lint / benchmark harness / profiler — TS/JS adapter examples: Biome complexity group or sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), user-confirmed installation, and registration in the template's new `Performance commands` block so `review-perf` can measure instead of guess. |
+| 1.7.0 | 2026-07-05 | minor | Interview gains a **Docs site** round: record the project's docs website (format/content-dir/build/map commands) in the template's new `Docs site` block so `generate-docs` can write into it; leave it commented out when there is none. Never scaffolds the website. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.5.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract; template's Docs language rule now states the precedence. |
@@ -338,6 +346,19 @@ How pinning actually works, verified against the `skills` CLI:
   both numbers, with an explicit noise band and an explicit
   `n/a — no declared perf commands` when nothing is declared. Feature
   `02-measured-perf-review`.
+
+- **2026-07-05 — `generate-docs`: the workflow now produces developer
+  documentation, not just process artifacts.** New user-facing skill that
+  turns a unit's diff into how-to guides on the project's own docs site
+  (adapter-discovered; Starlight MDX is the reference, plain markdown the
+  fallback), renders a knowledge/call map from a project-declared
+  deterministic command (the model never infers graph edges), and can export
+  `review-change` reports as pages (`--review`, opt-in). Drift-proofing ships
+  with it: `execute-phase` 1.13.0 recommends `/generate-docs` at unit
+  close-out when a `Docs site` block is declared, `audit-docs` 1.7.0 detects
+  orphan/stale generated pages via provenance frontmatter, and
+  `init-workspace` 1.7.0 interviews for the declaration. Feature
+  `01-generate-docs`.
 
 - **2026-07-05 — `@gtrabanco/agentic-workflow-schema` 1.0.1: review fixes
   before anyone builds on 1.0.0.** A `review-change` pass on the freshly

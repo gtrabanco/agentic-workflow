@@ -97,6 +97,14 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
      dependency; never install silently** — and register the outcome in the
      template's `Performance commands` block next to the verification gate,
      so `review-perf` can measure instead of guess.
+   - **Docs site** — does the project have (or want) a developer docs website
+     the `generate-docs` skill can write into? If yes, fill the template's
+     `Docs site` block in `CLAUDE.md` (format: starlight/docusaurus/markdown,
+     content dir, build command, optional knowledge-map command — proposed
+     from discovery: an `astro.config.*` + `@astrojs/starlight` dependency
+     means Starlight). If no, leave the block commented out — `generate-docs`
+     then reports NOT-CONFIGURED instead of guessing. Never scaffold the
+     website itself.
    - **Naming conventions** and **MCP servers**, if any.
 4. **Write the adapted scaffold.** Fill the `CLAUDE.md` placeholders (commands,
    the documentation map rows, architecture); keep `AGENTS.md`, the
