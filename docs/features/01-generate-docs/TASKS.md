@@ -2,20 +2,24 @@
 
 ## P1 — Core skill
 
-- [ ] Create `skills/generate-docs/SKILL.md` with frontmatter
+- [x] Create `skills/generate-docs/SKILL.md` with frontmatter
       (`user-invocable: true`, `version: 1.0.0`, trigger-rich description)
-- [ ] `## Turn contract` section (first body section)
-- [ ] Step 0 adapter-detection checklist (fixed order: declaration → Starlight
+      — `skills/generate-docs/SKILL.md`
+- [x] `## Turn contract` section (first body section)
+- [x] Step 0 adapter-detection checklist (fixed order: declaration → Starlight
       → Docusaurus → plain-markdown fallback; evidence required per match)
-- [ ] Incrementality checklist + page taxonomy + provenance frontmatter spec
-- [ ] Adapter conventions table (Starlight reference + fallback)
-- [ ] Allowed / Forbidden lists
-- [ ] Fixed output report block + `→ Next:` example + envelope rule +
+- [x] Incrementality checklist + page taxonomy + provenance frontmatter spec
+      — Process steps 2–3 (guides taxonomy; `map/` and `reviews/` land in P2)
+- [x] Adapter conventions table (Starlight reference + fallback)
+- [x] Allowed / Forbidden lists
+- [x] Fixed output report block + `→ Next:` example + envelope rule +
       `## Portability` + `Done when`
-- [ ] Commit planning artifacts (`docs/features/01-generate-docs/`,
+- [x] Commit planning artifacts (`docs/features/01-generate-docs/`,
       `docs/features/ROADMAP.md`) and the new SKILL.md on `feat/01-generate-docs`
-- [ ] Run the repo verification gate (`npx skills add . --list`)
-- [ ] progress.md entry for P1
+      — commit d503e47 (planning) + P1 commit
+- [x] Run the repo verification gate (`npx skills add . --list`) — exit 0,
+      `generate-docs` listed
+- [x] progress.md entry for P1
 
 ## P2 — Integrations
 
