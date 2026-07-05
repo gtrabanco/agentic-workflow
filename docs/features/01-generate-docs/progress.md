@@ -4,9 +4,9 @@ One entry per phase, appended by `execute-phase`.
 
 ## 2026-07-05 — P1 — Core skill
 
-- Wrote `skills/generate-docs/SKILL.md` v1.0.0: turn contract, Step 0 adapter
-  detection (declaration → Starlight → Docusaurus → markdown fallback →
-  NOT-CONFIGURED/NEEDS_INPUT), scope resolution, incrementality checklist,
+- Wrote `skills/generate-docs/SKILL.md` v1.0.0: turn contract, discovery-step
+  adapter detection (declaration → Starlight → Docusaurus → markdown fallback
+  → NOT-CONFIGURED/NEEDS_INPUT), scope resolution, incrementality checklist,
   fixed page shape + provenance frontmatter, adapter table, Allowed/Forbidden,
   fixed report block, envelope mapping, Portability.
 - Scope note: P1 ships the `guides/` taxonomy only; `map/` and `reviews/`
@@ -38,11 +38,23 @@ One entry per phase, appended by `execute-phase`.
 ## 2026-07-05 — P3 — Hardening
 
 - Verified every SPEC dev scenario has an explicit branch in the SKILL.md:
-  `docs:not-configured` (Step 0.5), `docs:map-command-missing` (step 4 n/a),
-  `docs:map-output-invalid` (step 4 FAIL), `docs:orphan-page` (audit-docs
-  check 13), `docs:starlight-detected` (Step 0.2).
+  `docs:not-configured` (discovery outcome 5), `docs:map-command-missing`
+  (knowledge-map n/a rule), `docs:map-output-invalid` (knowledge-map FAIL),
+  `docs:orphan-page` (audit-docs check 13), `docs:starlight-detected`
+  (discovery outcome 2).
 - Cross-reference sweep green: generate-docs referenced in README (EN/ES),
   CHANGELOG (EN/ES), SKILLS.md; `Docs site` block consistent in
   generate-docs / execute-phase / audit-docs / init-workspace / template.
-- Gate: `npx skills add . --list` exit 0. No S1/"Step N" labels.
+- Gate: `npx skills add . --list` exit 0. No stray phase-label tokens.
 - Close-out: roadmap row 01 → done, PR opened (URL linked in the roadmap row).
+
+## 2026-07-05 — review fold (review-change on PRs #8/#9)
+
+- F1: reworded planning-doc wording that tripped audit-docs check 10's exact
+  grep (9 false-positive matches in PLAN/TASKS/progress — "discovery step" /
+  "discovery outcome N" now, check verified clean).
+- F2: ROADMAP.md gains the merge-order & shared-file coupling note (#8 → #9 →
+  #10; keep-both-sides conflict resolution) — the independence claim was
+  misleading without it.
+- F3 (stack-named tools in the marked adapter sections): intentional-tradeoff,
+  already documented in decisions.md D6 and the 02 SPEC — no change.
