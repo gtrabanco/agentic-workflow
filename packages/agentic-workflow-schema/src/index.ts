@@ -170,6 +170,32 @@ function isObj(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
+function isIntOrNull(v: unknown): boolean {
+  return v === null || (typeof v === "number" && Number.isInteger(v));
+}
+
+function isStringOrNull(v: unknown): boolean {
+  return v === null || typeof v === "string";
+}
+
+function isStringArray(v: unknown): boolean {
+  return Array.isArray(v) && v.every((x) => typeof x === "string");
+}
+
+const UNIT_TYPES = ["feature", "fix", "docs", "none"];
+const PR_STATES = ["open", "merged", "none"];
+const CI_STATES = ["green", "red", "pending", "none"];
+const VERIFICATION_STATES = ["green", "red", "not-run"];
+const BLOCKER_KINDS = [
+  "dependency",
+  "issue",
+  "gate",
+  "merge-conflict",
+  "substrate",
+  "input",
+];
+const BLOCKER_SCOPES = ["unit", "run"];
+
 const REQUIRED_KEYS = [
   "skill",
   "state",
@@ -210,59 +236,157 @@ export function validateEnvelope(value: unknown): ValidationResult {
   if (typeof value.summary !== "string") {
     errors.push("summary must be a string");
   }
-  if (!isObj(value.unit)) errors.push("unit must be an object");
-  if (!isObj(value.phase)) errors.push("phase must be an object");
-  if (!isObj(value.pr)) errors.push("pr must be an object");
-  if (!isObj(value.gates)) errors.push("gates must be an object");
+
+  if (!isObj(value.unit)) {
+    errors.push("unit must be an object");
+  } else {
+    const unit = value.unit;
+    if (!UNIT_TYPES.includes(unit.type as string)) {
+      errors.push(`unit.type must be one of ${UNIT_TYPES.join("|")} (got: ${String(unit.type)})`);
+    }
+    if (!isStringOrNull(unit.id)) errors.push("unit.id must be a string or null");
+    if (!isIntOrNull(unit.issue)) errors.push("unit.issue must be an integer or null");
+    if (!isStringOrNull(unit.branch)) errors.push("unit.branch must be a string or null");
+  }
+
+  if (!isObj(value.phase)) {
+    errors.push("phase must be an object");
+  } else {
+    const phase = value.phase;
+    if (!isStringOrNull(phase.current)) errors.push("phase.current must be a string or null");
+    if (!isIntOrNull(phase.total)) errors.push("phase.total must be an integer or null");
+    if (!isIntOrNull(phase.completed)) errors.push("phase.completed must be an integer or null");
+  }
+
+  if (!isObj(value.pr)) {
+    errors.push("pr must be an object");
+  } else {
+    const pr = value.pr;
+    if (!isIntOrNull(pr.number)) errors.push("pr.number must be an integer or null");
+    if (!isStringOrNull(pr.url)) errors.push("pr.url must be a string or null");
+    if (!PR_STATES.includes(pr.state as string)) {
+      errors.push(`pr.state must be one of ${PR_STATES.join("|")} (got: ${String(pr.state)})`);
+    }
+    if (!isStringOrNull(pr.head_sha)) errors.push("pr.head_sha must be a string or null");
+    if (pr.merge_ready !== null && typeof pr.merge_ready !== "boolean") {
+      errors.push("pr.merge_ready must be a boolean or null");
+    }
+    if (pr.ci !== null && !CI_STATES.includes(pr.ci as string)) {
+      errors.push(`pr.ci must be one of ${CI_STATES.join("|")} or null (got: ${String(pr.ci)})`);
+    }
+  }
+
+  if (!isObj(value.gates)) {
+    errors.push("gates must be an object");
+  } else {
+    const gates = value.gates;
+    if (gates.verification !== null && !VERIFICATION_STATES.includes(gates.verification as string)) {
+      errors.push(
+        `gates.verification must be one of ${VERIFICATION_STATES.join("|")} or null (got: ${String(gates.verification)})`
+      );
+    }
+    if (gates.review_pending !== null && typeof gates.review_pending !== "boolean") {
+      errors.push("gates.review_pending must be a boolean or null");
+    }
+    if (gates.audit_pending !== null && typeof gates.audit_pending !== "boolean") {
+      errors.push("gates.audit_pending must be a boolean or null");
+    }
+  }
+
   if (!Array.isArray(value.blockers)) {
     errors.push("blockers must be an array");
   } else {
     value.blockers.forEach((b, i) => {
-      if (!isObj(b) || typeof b.kind !== "string" || typeof b.id !== "string") {
-        errors.push(`blockers[${i}] must be {kind, id, scope, detail}`);
+      if (!isObj(b)) {
+        errors.push(`blockers[${i}] must be an object`);
+        return;
       }
+      if (!BLOCKER_KINDS.includes(b.kind as string)) {
+        errors.push(`blockers[${i}].kind must be one of ${BLOCKER_KINDS.join("|")} (got: ${String(b.kind)})`);
+      }
+      if (typeof b.id !== "string") errors.push(`blockers[${i}].id must be a string`);
+      if (!BLOCKER_SCOPES.includes(b.scope as string)) {
+        errors.push(`blockers[${i}].scope must be one of ${BLOCKER_SCOPES.join("|")} (got: ${String(b.scope)})`);
+      }
+      if (typeof b.detail !== "string") errors.push(`blockers[${i}].detail must be a string`);
     });
   }
+
   if (!isObj(value.dependencies)) {
     errors.push("dependencies must be an object");
   } else {
-    if (!Array.isArray(value.dependencies.unmet)) {
-      errors.push("dependencies.unmet must be an array");
+    if (!isStringArray(value.dependencies.unmet)) {
+      errors.push("dependencies.unmet must be an array of strings");
     }
-    if (!Array.isArray(value.dependencies.build_order)) {
-      errors.push("dependencies.build_order must be an array");
+    if (!isStringArray(value.dependencies.build_order)) {
+      errors.push("dependencies.build_order must be an array of strings");
     }
   }
+
+  if (!isObj(value.recommendations)) {
+    errors.push("recommendations must be an object");
+  } else {
+    if (typeof value.recommendations.product_audit !== "boolean") {
+      errors.push("recommendations.product_audit must be a boolean");
+    }
+    if (!isStringOrNull(value.recommendations.reason)) {
+      errors.push("recommendations.reason must be a string or null");
+    }
+  }
+
   if (!isObj(value.findings)) {
     errors.push("findings must be an object");
   } else {
-    if (!Array.isArray(value.findings.fix_now)) {
+    const findings = value.findings;
+    if (!Array.isArray(findings.fix_now)) {
       errors.push("findings.fix_now must be an array");
+    } else {
+      findings.fix_now.forEach((f, i) => {
+        if (!isObj(f) || typeof f.ref !== "string" || typeof f.title !== "string") {
+          errors.push(`findings.fix_now[${i}] must be {ref, title, file?}`);
+        }
+      });
     }
     if (
-      !Array.isArray(value.findings.issues_filed) ||
-      !(value.findings.issues_filed as unknown[]).every(
+      !Array.isArray(findings.issues_filed) ||
+      !(findings.issues_filed as unknown[]).every(
         (n) => typeof n === "number" && Number.isInteger(n)
       )
     ) {
       errors.push("findings.issues_filed must be an array of integers");
     }
+    if (typeof findings.untriaged !== "number" || !Number.isInteger(findings.untriaged)) {
+      errors.push("findings.untriaged must be an integer");
+    }
+    if (typeof findings.decisions_recorded !== "number" || !Number.isInteger(findings.decisions_recorded)) {
+      errors.push("findings.decisions_recorded must be an integer");
+    }
   }
+
   if (!isObj(value.next)) {
     errors.push("next must be an object");
   } else {
     if (typeof value.next.recommended !== "string") {
       errors.push("next.recommended must be a string");
     }
+    if (!isStringArray(value.next.alternatives)) {
+      errors.push("next.alternatives must be an array of strings");
+    }
     if (value.next.tier !== "strong" && value.next.tier !== "cheap") {
       errors.push(`next.tier must be strong|cheap (got: ${String(value.next.tier)})`);
     }
   }
+
   if (value.needs_input !== null && value.needs_input !== undefined) {
-    if (!isObj(value.needs_input) || typeof value.needs_input.question !== "string") {
-      errors.push("needs_input must be null or {question, options}");
+    if (
+      !isObj(value.needs_input) ||
+      typeof value.needs_input.question !== "string" ||
+      !isStringArray(value.needs_input.options)
+    ) {
+      errors.push("needs_input must be null or {question: string, options: string[]}");
     }
   }
+
   if (errors.length > 0) return { ok: false, errors };
   return { ok: true, envelope: value as unknown as Envelope };
 }

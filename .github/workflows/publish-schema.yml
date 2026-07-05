@@ -4,11 +4,15 @@ name: Publish schema package
 # touches the package AND its package.json version is newer than the one on
 # the registry (same-version pushes are a safe no-op).
 #
+# Bun installs deps and runs the test gate (bun.lock is the source of truth —
+# there is no package-lock.json); npm still does the actual `publish` step,
+# since npm's --provenance attestation is npm-CLI-specific tooling Bun
+# doesn't replicate.
+#
 # One-time setup (manual, by the repo owner — CI cannot do this for you):
-#   1. First publish must be manual (npm requires it for a new package):
-#        cd packages/agentic-workflow-schema
-#        npm login                      # as the @gtrabanco owner
-#        npm publish --access public    # scoped packages default to private
+#   1. First publish is manual (npm requires it for a brand-new package) —
+#      already done for 1.0.0. Any later version still publishes via this
+#      workflow automatically once the token below is configured.
 #   2. Create an npm token for CI: npmjs.com → avatar → Access Tokens →
 #      Generate New Token → **Granular Access Token** → Packages & scopes:
 #      Read and write, only @gtrabanco/agentic-workflow-schema.
@@ -37,16 +41,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install
-        run: npm install --no-fund --no-audit
+      - name: Install (bun, frozen lockfile)
+        run: bun install --frozen-lockfile
 
       - name: Build + test (the gate — never publish red)
-        run: npm test
+        run: bun run test
 
       - name: Skip when the version is already published
         id: version

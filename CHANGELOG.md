@@ -70,6 +70,14 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Per-skill version history
 
+### Companion npm packages
+
+#### [`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.1 | 2026-07-05 | patch | `validateEnvelope()` now checks every enum/type the JSON Schema declares (`unit.type`, `pr.state`/`.ci`, `gates.verification`, `blockers[].kind`/`.scope`, array-item types) — previously looser than `envelope.schema.json`, so a malformed value like `blockers[].scope: "planet"` passed silently. Tests added for the structural-validation-failure path through `parseEnvelope()` and CRLF fences. CI (`publish-schema.yml`) migrated to Bun for install/test (`bun install --frozen-lockfile`; `package-lock.json` dropped, `bun.lock` is the sole lockfile) — npm is kept only for the final `npm publish --provenance` step. `LICENSE` added inside the package directory (npm's auto-include only picks up a LICENSE from the published package's own folder). README's JSON-Schema import example fixed to work on the declared `engines.node: ">=18"` (was Node 20.10+/22-only). |
+| 1.0.0 | 2026-07-05 | — | First published release. Types, JSON Schema, and `parseEnvelope()`/`validateEnvelope()`/`isTerminal()`/`isRunHalt()` for the agentic-workflow machine envelope. |
+
 ### Session
 
 #### `log-session`
@@ -318,6 +326,23 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-05 — `@gtrabanco/agentic-workflow-schema` 1.0.1: review fixes
+  before anyone builds on 1.0.0.** A `review-change` pass on the freshly
+  published package found the hand-rolled `validateEnvelope()` was strictly
+  weaker than `envelope.schema.json` (missing enum/type checks — a value
+  like `blockers[].scope: "planet"` passed silently), plus packaging/CI
+  debt: two committed lockfiles with only npm wired into CI, a devDependency
+  range that didn't actually pin despite its commit message saying so, a
+  missing in-package `LICENSE`, and a README example incompatible with the
+  package's own declared `engines.node`. Fixed all of it rather than
+  shipping known gaps: full enum/type validation now matches the JSON
+  Schema exactly (with tests through the public `parseEnvelope()` API, not
+  just the internal validator); CI migrated to Bun for install/test
+  (`bun.lock` is now the sole lockfile; npm is kept only for the
+  provenance-attested `publish` step); `LICENSE` added inside the package
+  directory; README fixed to work on Node 18. Issues #5, #6, #7 closed by
+  this fix.
 
 - **2026-07-05 — programmatic orchestration: the machine envelope.** The
   workflow becomes drivable from OUTSIDE any agent — the vendor-neutral
