@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.12.0
+version: 1.13.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -351,7 +351,14 @@ Roadmap/fix-index row: done · #<n> (linked and pushed)
 → Next: /review-change (mandatory final review)
   · clean    → /audit-pr (merge gate) → human merges
   · findings → fold fix-now into this PR; non-fix-now → /triage-issue; re-review
+  · docs site declared (documentation map has a `Docs site` block) →
+    /generate-docs <unit> — document what this unit changed; the generated
+    pages ride this same PR (commit + push them before the merge gate)
 ```
+
+The `/generate-docs` line appears **only** when the project's documentation
+map declares a `Docs site` block — never suggest it otherwise (a project
+without a docs site has nowhere to publish).
 
 This never auto-merges and never skips the per-phase stop: one phase at a time,
 human in the loop, gate enforced each phase, every unit reviewed before merge.
