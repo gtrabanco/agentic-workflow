@@ -101,7 +101,7 @@ con ningún modelo. Un único camino disciplinado:
 
 | Skill           | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                            |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña `XS/S` de una pasada, o un fix (`--fix`). **Gate de dependencias primero**: el cierre transitivo de `Depends on:` debe estar fusionado, o se detiene con la cadena incumplida y el orden de construcción (`--force` lo salta, registrado). **Tests primero** en trabajo de dominio/orquestación, nunca commitea en rojo, verificada por el gate, un commit por fase; **hace hand-off a `review-change` cada 2 fases y una vez al final (obligatorio)**. Una unidad terminada **siempre abre su PR, imprime la URL del PR en el chat y pasa a `done`** (construida, no mergeada); ningún turno acaba con el árbol sucio, y con el PR abierto cada commit se pushea inmediatamente. |
+| `execute-phase` | Implementa una fase de una feature (por defecto), una feature pequeña `XS/S` de una pasada, o un fix (`--fix`). **Gate de dependencias primero**: el cierre transitivo de `Depends on:` debe estar fusionado, o se detiene con la cadena incumplida y el orden de construcción (`--force` lo salta, registrado). **Tests primero** en trabajo de dominio/orquestación, nunca commitea en rojo, verificada por el gate, un commit por fase; **recomienda un checkpoint de `review-change` cada 2 fases (omitible) y hace hand-off una vez al final (obligatorio)**. Una unidad terminada **siempre abre su PR, imprime la URL del PR en el chat y pasa a `done`** (construida, no mergeada); ningún turno acaba con el árbol sucio, y con el PR abierto cada commit se pushea inmediatamente. |
 
 ### Revisión y auditoría — _cambio → PR → producto_
 
@@ -360,7 +360,7 @@ Tutorial completo en **[`docs/workflow/`](docs/workflow/README.md)**. En resumen
         → el router detecta idea / issue / slug acotado → entrevista · análisis del issue · scaffold
         → rellena el SPEC + PLAN + TASKS + … y registra la entrada en el roadmap
 /execute-phase <NN> <phase>     # una fase cada vez, verificada por el gate, un commit cada una
-        → checkpoint de revisión cada 2 fases (y obligatorio al final)
+        → checkpoint de revisión recomendado cada 2 fases (obligatorio al final)
         → una unidad terminada siempre abre su PR + pasa a `done` (construida, no mergeada)
 /review-change                  # obligatorio: revisiones aplicables, clasificadas; no-fix-now → triage-issue
 /audit-pr                       # gate de fusión: listo o bloqueantes (nunca fusionar con docs pendientes)
