@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.11.0
+version: 1.12.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -54,7 +54,8 @@ Three modes:
      docs language > English. The CONVERSATION language never decides — a
      Spanish prompt still produces English commits/PRs/issues unless one of
      the first two says otherwise.
-✓ 7. The closing `→ Next:` block is the LAST thing printed.
+✓ 7. The closing `→ Next:` block is printed, then the machine envelope
+     (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output.
 ```
 
 **Push policy — two regimes, by whether the PR exists yet.** Before the PR:
@@ -388,10 +389,61 @@ Use this when the SPEC is solid and you want to review the whole branch at once
 rather than after every two phases. For incremental, phase-by-phase review,
 stick to the default (manual re-invocation + checkpoint hand-offs).
 
-**No `/loop` on your agent?** Run the same loop by hand: after each phase,
-re-invoke this skill with the next phase (`execute-phase <NN> <next>`) — the
-closing block always names the exact next command — and keep the mandatory end
-review. The sequence is identical; only the automation is missing.
+**No `/loop` on your agent?** Two vendor-neutral equivalents: (a) an
+**external orchestrator** loops this skill headless — every invocation ends
+with a machine envelope whose `state`/`next.recommended` say exactly what to
+run next (`CONTINUE` → next phase on a cheap tier, `READY_FOR_REVIEW` →
+review on a strong tier); protocol + driver skeleton in
+`docs/workflow/ORCHESTRATION.md`. (b) Run the same loop by hand: after each
+phase, re-invoke this skill with the next phase (`execute-phase <NN> <next>`)
+— the closing block always names the exact next command — and keep the
+mandatory end review. The sequence is identical; only the automation differs.
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:**
+  - `CONTINUE` — phase done + committed, next phase exists, no review
+    checkpoint due yet → `next.recommended: "/execute-phase <NN> <next-P>"`,
+    `tier: "cheap"`.
+  - `READY_FOR_REVIEW` — checkpoint (every 2 phases) or unit finished
+    (single-pass / `--fix` / final phase: PR open, URL in `pr`) →
+    `gates.review_pending: true`, `next.recommended: "/review-change"`,
+    `tier: "strong"`.
+  - `BLOCKED` — the dependency gate stopped before any edit →
+    `dependencies.unmet` + `dependencies.build_order` (deepest first, same
+    order as the printed gate block), `blockers[]` kind `dependency`.
+  - `FAILED` — red gate not fixable within the phase's scope (recorded in
+    known-issues.md, work left uncommitted).
+  - `NEEDS_INPUT` — single-pass SPEC ambiguity (one question).
+  - `HALT` — a discovery that invalidates continuing any unit (scope `run`).
+- **Fields:** `unit`, `phase` (current/total/completed), `pr` (filled from the
+  real `gh pr create` output when the unit finished), `gates.verification`.
+
+Example (unit finished — abbreviated; every top-level key still present):
+
+```json
+{"skill": "execute-phase", "state": "READY_FOR_REVIEW",
+ "summary": "Fix 43 implemented, gate green, PR #14 opened and linked.",
+ "unit": {"type": "fix", "id": "43-null-crash", "issue": 43, "branch": "fix/43-null-crash"},
+ "phase": {"current": null, "total": null, "completed": null},
+ "pr": {"number": 14, "url": "https://github.com/o/r/pull/14", "state": "open",
+        "head_sha": "abc123", "merge_ready": null, "ci": "pending"},
+ "gates": {"verification": "green", "review_pending": true, "audit_pending": true},
+ "findings": {"fix_now": [], "issues_filed": [], "untriaged": 0, "decisions_recorded": 0},
+ "blockers": [], "dependencies": {"unmet": [], "build_order": []},
+ "recommendations": {"product_audit": false, "reason": null}, "needs_input": null,
+ "next": {"recommended": "/review-change", "alternatives": [], "tier": "strong"},
+ "detail": null}
+```
 
 ## Portability (agents other than Claude Code)
 
