@@ -77,6 +77,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `log-session`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. El siguiente paso registrado viaja en el envelope para que un orquestador retome desde el journal. |
 | 1.4.0 | 2026-07-04 | menor | `main` ya no lleva frontmatter `model:`/`effort:` (trasladado a `docs/workflow/model-routing.yml`, fuente de verdad de la rama `#claude`); el paso 7b ahora apunta a ese archivo en vez de a un frontmatter que ya no existe en `main`; la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.3.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
 | 1.2.0 | 2026-07-03 | menor | Contrato de turno al inicio (entrada realmente AÑADIDA con datos git exactos; ninguna entrada pasada editada; → Next: impreso al final). |
@@ -90,6 +91,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `bump-skill`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. El lint gana una 5ª regla: las skills de cara al usuario deben llevar la sección `## Machine envelope`. |
 | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.3.0 | 2026-07-03 | menor | El lint comprueba también la nueva sección `## Turn contract` en las skills de cara al usuario. |
 | 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
@@ -99,9 +101,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ### De cara al usuario
 
+#### `workflow-status`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-07-05 | — | Nuevo sensor de solo lectura para orquestación programática: árbol de dependencias completo de features/fixes (transitivo, cumplido/incumplido), unidades arrancables con orden de construcción, PRs abiertas + estado de auditoría, hallazgos pendientes de triaje, recomendación de product-audit — todo en un envelope máquina. |
+
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.10.0 | 2026-07-05 | menor | Autopilot neutral de driver: `/loop`, un orquestador externo (enrutado por envelope) o la re-invocación manual son drivers equivalentes de primera clase; EXECUTE funciona sin subagentes con una invocación headless por fase; cada fin de iteración dice POR QUÉ (parada normal de una etapa vs el tope exacto alcanzado). Más el envelope máquina (mapeo banner ↔ state). |
 | 1.9.0 | 2026-07-04 | minor | Las issues del barrido + PRs de subagentes + comentarios de triaje usan `--body-file` (Markdown), nunca `--body`/heredoc inline; guardrail añadido. |
 | 1.8.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.8.0 | 2026-07-04 | menor | Barrido de issues tras la última feature: inventaría issues abiertas + el residuo documentado del propio run (known-issues, trade-offs, hallazgos pospuestos), lo triagea todo y entrega las issues fix-now por las mismas etapas — `SHIP: COMPLETE` exige el barrido; check de cierre limpio (ninguna etapa termina con árbol sucio o commits sin push); AUDIT imprime la URL del PR junto al veredicto. |
@@ -118,6 +126,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.12.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. La parada del gate de dependencias y los checkpoints de revisión son ahora legibles por máquina (BLOCKED/READY_FOR_REVIEW); la sección batch gana la alternativa de driver externo a `/loop`. |
 | 1.11.0 | 2026-07-04 | minor | Los cuerpos de PR/issue se pasan con `--body-file` (fichero Markdown), nunca `--body`/heredoc inline — arregla los backticks escapados con `\` literales en issues/PRs generados; casilla 4 del contrato de turno + regla en Issue policy; comandos actualizados. |
 | 1.10.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.10.0 | 2026-07-04 | menor | Casilla de árbol limpio en el contrato de turno (`git status --porcelain` pegado antes de terminar; las docs cuentan); política de push en dos regímenes (con el PR abierto, cada commit se pushea inmediatamente); ciclo explícito para plegar hallazgos de review/audit (gate → commit → push → árbol limpio, o el plegado no ocurrió); las docs viajan en el commit de la fase. |
@@ -139,6 +148,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. BLOCKED lleva la cadena de dependencias incumplida y el orden de construcción. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
 | 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (artefactos + roadmap registrado; el check de dependencias decide el bloque de cierre; → Next: impreso al final). |
@@ -154,6 +164,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.3.0 | 2026-07-03 | menor | Precedencia de idioma de artefactos fijada en el contrato de turno y las Hard rules. |
 | 1.2.0 | 2026-07-03 | menor | Contrato de turno al inicio (SPEC commiteado en la rama fix con sha pegado, sin push; hand-off impreso; → Next: al final). |
@@ -168,6 +179,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.10.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Los hallazgos fix-now y los números de issue creados viajan en el envelope; la deriva de SPEC recurrente activa el flag de recomendación de product-audit. |
 | 1.9.0 | 2026-07-04 | minor | Guardrail: los cuerpos del forge creados vía triage-issue son Markdown — no pre-escapes el texto de los hallazgos; los cuerpos van por `--body-file`, nunca inline. |
 | 1.8.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.8.0 | 2026-07-04 | menor | El check de disciplina del workflow también verifica la higiene git: un árbol sucio (docs incluidas) o commits sin push a un PR abierto son hallazgos `workflow` fix-now; la ruta de plegado dice commit Y push antes de re-revisar. |
@@ -184,6 +196,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-05 | menor | Con MERGE-READY, publica un **comentario datado y ligado al SHA en el propio PR** (`gh pr comment --body-file`, idempotente por marcador HTML; nunca una etiqueta en el mensaje de commit; nada se publica en BLOCKED). Más el envelope máquina (estados MERGE_READY/MERGED/NEEDS_FIXES/BLOCKED, veredicto + checks manuales en `detail`). |
 | 2.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 2.0.0 | 2026-07-04 | mayor | Cambio de contrato: auto-merge opt-in — con una política documentada (o instrucción explícita del usuario) fusiona un PR MERGE-READY tras un checklist pre-merge fail-closed (árbol limpio, nada sin push/pull, CI verde fresco sobre el SHA auditado); algo pendiente → commit+push, esperar CI, re-auditar — nunca fusionar con un veredicto obsoleto. La cabecera del veredicto imprime siempre la URL completa del PR. Sin el opt-in el comportamiento no cambia: sigue sin fusionar. |
 | 1.5.0 | 2026-07-03 | menor | El gate de Traceability también bloquea si la fila done no lleva su referencia de PR enlazada. |
@@ -200,6 +213,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.7.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Estado HALT para hallazgos críticos que paran todo. |
 | 1.6.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.6.0 | 2026-07-03 | menor | Dimensión explícita de disciplina del workflow — compone los checks 1-13 de audit-docs mecánicamente; nunca asume que una regla se cumplió. |
 | 1.5.0 | 2026-07-03 | menor | Contrato de turno al inicio (informe completo en formato fijo; solo informe; → Next: impreso al final). |
@@ -217,6 +231,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Checks de disciplina del workflow 10-13 (comandos mecánicos, no inferencia): nombrado de fases, disciplina de docs por fase, disciplina de rama/PR contra el forge, formato de commits + cierres de dependencias. |
 | 1.4.0 | 2026-07-03 | menor | Nuevo check 9: integridad de enlaces de PR en filas `done` — toda fila done del roadmap/índice lleva `done · [#<pr>](url)`; un done sin PR localizable es severidad alta. product-audit lo hereda al componer esta skill. |
@@ -233,6 +248,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.8.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Los veredictos por issue viajan en `detail.verdicts`. |
 | 1.7.0 | 2026-07-04 | minor | Los comentarios datados en issues se postean con `gh issue comment --body-file` (Markdown), nunca `--body` inline — arregla los backticks escapados con `\` literales en comentarios. |
 | 1.6.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.6.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno (incluye comentarios de issues). |
@@ -247,6 +263,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno; la regla Docs language de la plantilla enuncia ahora la precedencia. |
 | 1.4.0 | 2026-07-03 | menor | Contrato de turno al inicio (scaffold escrito o decisión preguntada; nada instalado sin un sí; → Next: impreso al final). |
@@ -261,6 +278,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `orchestration-envelope` | 1.0.0 | 2026-07-05 | — | Nuevo contrato interno: el esquema JSON del envelope máquina (11 estados, claves fijas, regla de parseo último-json-cercado) que toda skill de cara al usuario emite como su salida final absoluta. |
 | `review-implementation` | 1.0.3 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.2 | 2026-07-02 | parche | La referencia a revisiones companion ahora apunta al pack de revisión interno (`review-*`) |
 | | 1.0.1 | 2026-06-09 | parche | Descripción acortada 96 → 36 palabras (contexto siempre cargado); cuerpo sin cambios |
@@ -302,6 +320,22 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-05 — orquestación programática: el envelope máquina.** El workflow
+  pasa a poder dirigirse desde FUERA de cualquier agente — la sustitución
+  neutral de proveedor del `/loop` y los subagentes de Claude Code. Toda skill
+  de cara al usuario termina ahora con un **envelope máquina** JSON fijo (11
+  estados, unit/phase/pr/findings/blockers/dependencies/next + pista de tier
+  de modelo; esquema en la nueva skill interna `orchestration-envelope`); un
+  driver lo parsea y elige el siguiente comando y modelo por paso
+  (`docs/workflow/ORCHESTRATION.md` — máquina de estados, esqueleto de driver,
+  sustitución de subagentes). Nueva skill sensor **`workflow-status`**: árbol
+  de dependencias completo de features/fixes, unidades arrancables con orden
+  de construcción, fixes/triaje pendientes, estados de auditoría. `audit-pr`
+  2.1.0 además publica un **comentario MERGE-READY datado y ligado al SHA en
+  el PR** (nunca una etiqueta en el mensaje de commit). `ship-roadmap` 1.10.0
+  se vuelve neutral de driver y dice POR QUÉ termina cada iteración. 12 skills
+  con bump menor + 2 skills nuevas.
 
 - **2026-07-04 — los cuerpos del forge son Markdown, no shell.** Evidencia de
   campo (gtrabanco/webs#198): issues/PRs/comentarios generados llegaban con

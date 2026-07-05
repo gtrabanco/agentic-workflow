@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 25 skills (12 user-facing + 13 internal) — the installable source
+skills/                  the 27 skills (13 user-facing + 14 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -70,9 +70,9 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**12 user-facing skills** (one menu entry each) + **13 internal** ones composed
+**13 user-facing skills** (one menu entry each) + **14 internal** ones composed
 for you: the `plan-feature` router's three planning steps, the `review-change`
-engine, and the workflow's **own 9-skill internal review pack** (`review-code`,
+engine, the `orchestration-envelope` contract, and the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — so **no external
 review skill is ever required**, on any agent, with any model. One disciplined
@@ -106,7 +106,7 @@ path: **plan → execute → review → audit → merge.**
 | Skill           | Scope           | What it does                                                                                                                                                                                   |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits on the PR branch are fix-now `workflow` findings |
-| `audit-pr`      | the **PR**      | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers**, always with the PR's full URL. Opt-in auto-merge: with a documented policy it merges MERGE-READY PRs after a fail-closed cleanliness checklist (anything pending → push, wait for CI, re-audit) |
+| `audit-pr`      | the **PR**      | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers**, always with the PR's full URL; on MERGE-READY it posts a dated, SHA-bound comment on the PR itself. Opt-in auto-merge: with a documented policy it merges MERGE-READY PRs after a fail-closed cleanliness checklist (anything pending → push, wait for CI, re-audit) |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (**never auto-fixes**)                                                                          |
 | `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
 
@@ -127,6 +127,7 @@ path: **plan → execute → review → audit → merge.**
 | Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
+| `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), what is startable right now and in which build order, open PRs + audit state, pending fixes and findings awaiting triage — and emits it as one fixed JSON machine envelope. The piece an external driver calls between steps (see [Programmatic orchestration](#programmatic-orchestration)). Never edits anything. |
 
 ### Repo maintenance
 
@@ -138,7 +139,7 @@ path: **plan → execute → review → audit → merge.**
 
 | Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ship-roadmap` | **Builds the whole app from the roadmap.** One upfront interview (product, features, stack, architecture — recommended _proportionally_, never defaulting to a named pattern — quality bars, ops, autonomy, budget), founds the project if needed, creates or adopts the complete roadmap, then a `/loop`-driven build loop ships it feature by feature through the skills above — **with no further questions**. After the last feature it keeps going: an **issue sweep** inventories open issues plus the run's documented residue (known-issues, trade-offs, postponed findings), triages everything, and ships the fix-now issues through the same stages. Default: opens PRs, you merge; `--fullauto` merges MERGE-READY PRs under non-negotiable safety floors. Ends with a final report: issues to open, discovered feature proposals, manual checks, product-audit cadence. |
+| `ship-roadmap` | **Builds the whole app from the roadmap.** One upfront interview (product, features, stack, architecture — recommended _proportionally_, never defaulting to a named pattern — quality bars, ops, autonomy, budget), founds the project if needed, creates or adopts the complete roadmap, then a driver-fired build loop (`/loop` on Claude Code, an external orchestrator, or manual re-invocation — every iteration says why it ended) ships it feature by feature through the skills above — **with no further questions**. After the last feature it keeps going: an **issue sweep** inventories open issues plus the run's documented residue (known-issues, trade-offs, postponed findings), triages everything, and ships the fix-now issues through the same stages. Default: opens PRs, you merge; `--fullauto` merges MERGE-READY PRs under non-negotiable safety floors. Ends with a final report: issues to open, discovered feature proposals, manual checks, product-audit cadence. |
 
 How the autopilot runs the workflow — one interview in, reviewed PRs out, and
 you only step in to merge (amber):
@@ -208,6 +209,7 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `audit-docs`     | Sonnet     | medium | mostly mechanical cross-document checks (Opus for deep audits)                                                                                                                           |
 | `triage-issue`   | Opus       | high   | verify triggers against the code; judgement call                                                                                                                                         |
 | `log-session`    | Sonnet     | medium | structured summarization, not judgement — deliberately the cheap tier, never Opus (the `.claude/` hooks do the mechanical capture for free)                                              |
+| `workflow-status`| Sonnet     | medium | mechanical state reading + dependency-closure computation — a sensor, never judgment                                                                                                     |
 | `ship-roadmap`   | Opus       | high   | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
 > The 13 internal skills aren't selected directly. Because they're composed
@@ -312,6 +314,19 @@ model weaker than the one that wrote it**, and **audit verdicts (the merge gate)
 get the strongest model you have**. Expect weaker models to follow the workflow
 correctly — the skills are written as checklists and fixed output formats — but
 produce shallower judgment; the discipline holds, the ceiling moves.
+
+## Programmatic orchestration
+
+Every user-facing skill ends with a **machine envelope** — one fixed, fenced
+JSON block (state, unit, phase, PR, findings, blockers, dependency build
+order, recommended next command + model-tier hint). An external driver — a
+shell loop, CI, your own program — parses it and invokes the next skill on
+the model you choose per step. This is the vendor-neutral replacement for
+Claude Code's `/loop` and subagents: the same loop `ship-roadmap` runs
+in-agent, hosted outside any agent. `workflow-status` is the read-only sensor
+that reports the full dependency tree and what's startable. Protocol, state
+machine, and a driver skeleton:
+**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**.
 
 ## How to use them
 
