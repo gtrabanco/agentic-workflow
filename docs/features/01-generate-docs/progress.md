@@ -34,3 +34,15 @@ One entry per phase, appended by `execute-phase`.
 - Noted pre-existing drift (NOT this unit's scope): docs/workflow/SKILLS.md
   intro still says "12 user-facing + 4 internal" and lacks workflow-status —
   see known-issues.md.
+
+## 2026-07-05 — P3 — Hardening
+
+- Verified every SPEC dev scenario has an explicit branch in the SKILL.md:
+  `docs:not-configured` (Step 0.5), `docs:map-command-missing` (step 4 n/a),
+  `docs:map-output-invalid` (step 4 FAIL), `docs:orphan-page` (audit-docs
+  check 13), `docs:starlight-detected` (Step 0.2).
+- Cross-reference sweep green: generate-docs referenced in README (EN/ES),
+  CHANGELOG (EN/ES), SKILLS.md; `Docs site` block consistent in
+  generate-docs / execute-phase / audit-docs / init-workspace / template.
+- Gate: `npx skills add . --list` exit 0. No S1/"Step N" labels.
+- Close-out: roadmap row 01 → done, PR opened (URL linked in the roadmap row).
