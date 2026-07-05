@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 25 skills (12 de cara al usuario + 13 internas) — la fuente instalable
+skills/                  las 27 skills (13 de cara al usuario + 14 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -71,9 +71,9 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**12 skills de cara al usuario** (una entrada de menú cada una) + **13 internas**
+**13 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
 que se componen por ti: los tres pasos de planificación del router `plan-feature`,
-el motor de `review-change`, y el **pack de revisión interno propio de 9 skills**
+el motor de `review-change`, el contrato `orchestration-envelope`, y el **pack de revisión interno propio de 9 skills**
 (`review-code`, `review-security`, `review-verify`, `review-debt`,
 `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`) —
 así que **nunca se requiere una skill de revisión externa**, en ningún agente y
@@ -108,7 +108,7 @@ con ningún modelo. Un único camino disciplinado:
 | Skill           | Alcance         | Qué hace                                                                                                                                                                                                            |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review-change` | el **cambio**   | Ejecuta solo las revisiones que **aplican a tu plataforma** (código, seguridad, verify, diseño, a11y, marca, rendimiento, SEO) y clasifica → una tabla de decisión + una checklist explícita de verificación manual; un árbol sucio o commits sin push en la rama del PR son hallazgos `workflow` fix-now |
-| `audit-pr`      | el **PR**       | Gate de fusión: criterios de aceptación cumplidos, todas las fases hechas, docs/tests/CI en verde, `Closes #N`, ejes de revisión limpios → **listo para fusionar o una lista de bloqueantes**, siempre con la URL completa del PR. Auto-merge opt-in: con una política documentada fusiona PRs MERGE-READY tras un checklist de limpieza fail-closed (algo pendiente → push, esperar CI, re-auditar) |
+| `audit-pr`      | el **PR**       | Gate de fusión: criterios de aceptación cumplidos, todas las fases hechas, docs/tests/CI en verde, `Closes #N`, ejes de revisión limpios → **listo para fusionar o una lista de bloqueantes**, siempre con la URL completa del PR; con MERGE-READY publica un comentario datado y ligado al SHA en el propio PR. Auto-merge opt-in: con una política documentada fusiona PRs MERGE-READY tras un checklist de limpieza fail-closed (algo pendiente → push, esperar CI, re-auditar) |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; mina las docs de features → propone issues + altas/bajas en el roadmap (**nunca arregla automáticamente**)                                                         |
 | `audit-docs`    | las **docs**    | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones                                                                                                                                           |
 
@@ -130,6 +130,7 @@ con ningún modelo. Un único camino disciplinado:
 | Skill         | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `log-session` | Añade una entrada estructurada a `docs/LOGS.md` — qué hizo la sesión, archivos tocados, decisiones + _por qué_, y el siguiente paso — para que tú (o cualquiera) retome en frío. Ejecútala antes de `/clear` o de cerrar. El `template/` además trae **hooks gratuitos y opt-in** que añaden una entrada mecánica automáticamente en cada `/clear`/salida y pueden reinyectar la última entrada al arrancar. |
+| `workflow-status` | **Sensor de solo lectura para orquestación programática.** Calcula el estado completo del proyecto — cada feature/fix con su cierre de dependencias transitivo (cumplido/incumplido), qué es arrancable ahora mismo y en qué orden de construcción, PRs abiertas + estado de auditoría, fixes pendientes y hallazgos a la espera de triaje — y lo emite como un envelope máquina JSON fijo. La pieza que un driver externo llama entre pasos (ver [Orquestación programática](#orquestación-programática)). Nunca edita nada. |
 
 ### Mantenimiento del repo
 
@@ -141,7 +142,7 @@ con ningún modelo. Un único camino disciplinado:
 
 | Skill          | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ship-roadmap` | **Construye la app entera desde el roadmap.** Una entrevista inicial (producto, features, stack, arquitectura — recomendada _proporcionalmente_, nunca por defecto a un patrón con nombre —, calidad, ops, autonomía, presupuesto), funda el proyecto si hace falta, crea o adopta el roadmap completo, y un bucle con `/loop` lo entrega feature a feature a través de las skills de arriba — **sin más preguntas**. Tras la última feature sigue: un **barrido de issues** inventaría las issues abiertas más el residuo documentado del run (known-issues, trade-offs, hallazgos pospuestos), lo triagea todo y entrega las fix-now por las mismas etapas. Por defecto: abre PRs y tú fusionas; `--fullauto` fusiona los PRs MERGE-READY bajo suelos de seguridad innegociables. Termina con un informe final: issues a abrir, propuestas de features descubiertas, checks manuales, cadencia de product-audit. |
+| `ship-roadmap` | **Construye la app entera desde el roadmap.** Una entrevista inicial (producto, features, stack, arquitectura — recomendada _proporcionalmente_, nunca por defecto a un patrón con nombre —, calidad, ops, autonomía, presupuesto), funda el proyecto si hace falta, crea o adopta el roadmap completo, y un bucle disparado por un driver (`/loop` en Claude Code, un orquestador externo o re-invocación manual — cada iteración dice por qué termina) lo entrega feature a feature a través de las skills de arriba — **sin más preguntas**. Tras la última feature sigue: un **barrido de issues** inventaría las issues abiertas más el residuo documentado del run (known-issues, trade-offs, hallazgos pospuestos), lo triagea todo y entrega las fix-now por las mismas etapas. Por defecto: abre PRs y tú fusionas; `--fullauto` fusiona los PRs MERGE-READY bajo suelos de seguridad innegociables. Termina con un informe final: issues a abrir, propuestas de features descubiertas, checks manuales, cadencia de product-audit. |
 
 Cómo el autopilot ejecuta el flujo — una entrevista al entrar, PRs revisadas al
 salir, y tú solo apareces para fusionar (ámbar):
@@ -214,6 +215,7 @@ una conveniencia de la rama `#claude`.
 | `audit-docs`     | Sonnet         | medio    | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas)                                                                                                                                               |
 | `triage-issue`   | Opus           | alto     | verificar disparadores contra el código; decisión con criterio                                                                                                                                                              |
 | `log-session`    | Sonnet         | medio    | resumen estructurado, no criterio — deliberadamente el tier barato, nunca Opus (los hooks de `.claude/` hacen la captura mecánica gratis)                                                                                   |
+| `workflow-status`| Sonnet         | medio    | lectura mecánica de estado + cálculo de cierres de dependencias — un sensor, nunca juicio                                                                                                  |
 | `ship-roadmap`   | Opus           | alto     | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
 
 > Las 13 skills internas no se seleccionan directamente. Como se componen **dentro
@@ -322,6 +324,23 @@ división fuerte/barato de arriba). Dos invariantes sobreviven a cualquier mapeo
 tengas**. Espera que los modelos más débiles sigan el workflow correctamente —
 las skills están escritas como checklists y formatos de salida fijos — pero con
 un juicio menos profundo: la disciplina se mantiene, el techo se mueve.
+
+## Orquestación programática
+
+Toda skill de cara al usuario termina con un **envelope máquina** — un bloque
+JSON fijo y cercado (state, unit, phase, PR, findings, blockers, orden de
+construcción de dependencias, siguiente comando recomendado + pista de tier de
+modelo). Un driver externo — un bucle de shell, CI, tu propio programa — lo
+parsea e invoca la siguiente skill con el modelo que tú elijas en cada paso.
+Es la sustitución neutral de proveedor del `/loop` y los subagentes de Claude
+Code: el mismo bucle que `ship-roadmap` ejecuta dentro del agente, alojado
+fuera de cualquier agente. `workflow-status` es el sensor de solo lectura que
+reporta el árbol de dependencias completo y qué es arrancable. Protocolo,
+máquina de estados y esqueleto de driver:
+**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. Para
+drivers JS/TS, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
+(npm) trae los tipos, el JSON Schema y `parseEnvelope()` implementando el
+contrato de parseo — publicado automáticamente por CI en cada cambio del esquema.
 
 ## Cómo usarlas
 

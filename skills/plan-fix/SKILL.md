@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 1.3.1
+version: 1.4.0
 argument-hint: <issue-number>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -26,7 +26,7 @@ review**, then `execute-phase --fix` implements it (`plan-* → execute-*`).
 ✓ The fix SPEC is committed on its `fix/<n>-<topic>` branch (commit sha pasted) — NOT pushed, NO PR
 ✓ The Hand-off block was printed exactly as specified
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is the LAST thing printed
+✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -104,6 +104,25 @@ Commit: <short hash>
 ```
 
 Then end in the user's language with a 2-3 sentence summary: what the SPEC ships, the biggest risk identified, and any open decisions left for the implementer.
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:** `OK` (fix SPEC committed on the fix branch, hand-off printed),
+  `BLOCKED` (a prerequisite issue/PR must land first — `blockers[]` +
+  `dependencies` filled), or `NEEDS_INPUT` (scope ambiguity only the user can
+  resolve).
+- **Fields:** `unit` = the fix (`type: "fix"`, id `<n>-<topic>`, `issue: n`,
+  branch); `next.recommended` = `/execute-phase --fix <n>`, `tier: "cheap"`.
+- `detail`: `{"spec": "docs/fix/<n>-<topic>/SPEC.md", "risks": <count>}`.
 
 ## Portability (agents other than Claude Code)
 
