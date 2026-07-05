@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.6.0
+version: 1.8.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -79,6 +79,24 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    - **Doc domains** — which of `providers/ brand/ domain/ business/
      infrastructure/ legal/ frontend/` apply. **Delete the folders that don't**
      (e.g. `frontend/` for a non-UI project).
+   - **Performance tooling** — detect what the stack offers, one slot at a
+     time (fixed checklist, first match per slot; record `none` explicitly
+     when nothing fits — never leave the slot undiscussed):
+     - *Static complexity lint*: Biome present → enable its `complexity`
+       group (incl. `noExcessiveCognitiveComplexity`); ESLint present →
+       suggest `eslint-plugin-sonarjs` + `eslint-plugin-unicorn`; neither →
+       ask for the stack's equivalent or record `none`.
+     - *Benchmark harness*: Vitest → `vitest bench`; Bun runtime → `mitata`;
+       Node → `tinybench`/`mitata`; other stacks → ask for the project's
+       benchmark command or record `none`.
+     - *Profiler*: Node → `node --cpu-prof` (zero-dependency default) or `0x`
+       via the project's package runner; Bun → `bun --inspect` CPU profiling;
+       other → ask or record `none`.
+     (The named tools are the TS/JS **adapter examples**; the contract is the
+     generic block below.) Offer installation — **the user confirms each
+     dependency; never install silently** — and register the outcome in the
+     template's `Performance commands` block next to the verification gate,
+     so `review-perf` can measure instead of guess.
    - **Naming conventions** and **MCP servers**, if any.
 4. **Write the adapted scaffold.** Fill the `CLAUDE.md` placeholders (commands,
    the documentation map rows, architecture); keep `AGENTS.md`, the

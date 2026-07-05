@@ -1,7 +1,7 @@
 ---
 name: review-perf
 user-invocable: false
-version: 1.0.1
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -40,6 +40,19 @@ default branch. State the scope at the top of the returned table.
 - ✓ Pagination/limits on any new listing that reads user-scaled data
 - ✓ No premature optimization either: complexity added for speed without a
   cited measurement is a finding (the repo forbids overengineering)
+- ✓ **Measured evidence when declared** — the project's agent guide declares a
+  `Performance commands` block with a `bench` command AND the diff touches
+  paths its benchmarks cover: RUN the benchmark on the base branch and on the
+  change, and cite both numbers in Evidence as
+  `<cmd> → base <x> / change <y> (<±z%>)`. A regression beyond the noise band
+  (the project's declared band, else ±5%) is a **major** finding; a delta
+  inside the band is no finding. The declared command failing (non-zero exit)
+  is itself a finding (the gate can't measure) — never silently skipped.
+- ✓ **No declared perf commands** → state exactly
+  `n/a — no declared perf commands` for the item above (never skip it
+  silently), and if the diff adds algorithmic code on input that can grow,
+  add a **minor** finding recommending the project adopt the tooling via
+  `init-workspace`'s Performance tooling round.
 
 ## Return exactly
 
@@ -48,7 +61,7 @@ REVIEW PERF — scope: <scope>
 
 | # | Finding | Sev | Evidence | Suggested fix |
 |---|---------|-----|----------|---------------|
-| 1 | <what>  | critical|major|minor | <file:line> | <smallest action> |
+| 1 | <what>  | critical|major|minor | <file:line — or, for measured findings, `<cmd> → base <x> / change <y> (<±z%>)`> | <smallest action> |
 
 Checklist: <n> evaluated, <n> pass, <n> findings, <n> n/a (<which + why>)
 Summary: <1-2 sentences>
