@@ -109,6 +109,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ### De cara al usuario
 
+#### `generate-docs`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-07-05 | — | Skill nueva: documentación de desarrollador incremental, guiada por diff, escrita en el sitio de docs del propio proyecto mediante un adaptador descubierto (declaración → Starlight → Docusaurus → fallback markdown; NOT-CONFIGURED → NEEDS_INPUT, nunca adivina). Forma de página fija + frontmatter de procedencia (`generated-by`/`source-unit`/`updated`), mapa de conocimiento solo desde un comando determinista declarado por el proyecto (el modelo nunca infiere aristas), export opt-in `--review` de informes de `review-change`, paso de verificación (build de docs o chequeo de enlaces). Nunca crea el sitio, nunca edita código, nunca commitea. |
+
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
@@ -137,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
 | 1.13.1 | 2026-07-05 | parche | "Reanudar una fase interrumpida" enunciado como contrato explícito: al entrar en una rama con trabajo previo de la fase pedida, reconciliar los ticks de `TASKS.md` contra la evidencia y continuar desde la primera tarea sin marcar (reentrada idempotente — de la que depende el veredicto `RESUMABLE` de `workflow-status`); un libro sin siguiente tarea única → parar e informar, nunca adivinar. El comportamiento ya era práctica del Step 0; ahora está escrito. |
+| 1.13.0 | 2026-07-05 | menor | El hand-off de cierre de unidad gana una alternativa `/generate-docs` — impresa solo cuando el mapa de documentación del proyecto declara un bloque `Docs site`; las páginas generadas viajan en el PR de la unidad. |
 | 1.12.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. La parada del gate de dependencias y los checkpoints de revisión son ahora legibles por máquina (BLOCKED/READY_FOR_REVIEW); la sección batch gana la alternativa de driver externo a `/loop`. |
 | 1.11.0 | 2026-07-04 | minor | Los cuerpos de PR/issue se pasan con `--body-file` (fichero Markdown), nunca `--body`/heredoc inline — arregla los backticks escapados con `\` literales en issues/PRs generados; casilla 4 del contrato de turno + regla en Issue policy; comandos actualizados. |
 | 1.10.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -242,6 +248,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.7.0 | 2026-07-05 | menor | Nuevo check 13 — procedencia de docs generadas (solo cuando hay bloque `Docs site` declarado): las páginas con `generated-by: agentic-workflow/generate-docs` cuya `source-unit` ya no existe son huérfanas (MEDIA); las páginas cuya unidad mergeó después de su fecha `updated` con commits en sus rutas son obsoletas (BAJA). Bloque de disciplina del workflow renumerado a 10–14. |
 | 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Checks de disciplina del workflow 10-13 (comandos mecánicos, no inferencia): nombrado de fases, disciplina de docs por fase, disciplina de rama/PR contra el forge, formato de commits + cierres de dependencias. |
@@ -274,6 +281,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.8.0 | 2026-07-05 | menor | La entrevista gana una ronda de **Tooling de rendimiento**: checklist de detección por slot (lint de complejidad / harness de benchmarks / profiler — ejemplos del adaptador TS/JS: grupo complexity de Biome o sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), instalación confirmada por el usuario y registro en el nuevo bloque `Performance commands` de la plantilla para que `review-perf` mida en vez de estimar. |
+| 1.7.0 | 2026-07-05 | menor | La entrevista gana una ronda **Docs site**: registra el sitio de docs del proyecto (formato/directorio de contenido/comandos de build y mapa) en el nuevo bloque `Docs site` de la plantilla para que `generate-docs` pueda escribir en él; se deja comentado cuando no hay sitio. Nunca crea el sitio web. |
 | 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno; la regla Docs language de la plantilla enuncia ahora la precedencia. |
@@ -324,7 +333,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de accesibilidad (semántica, teclado, foco, contraste, ARIA) |
 | `review-brand` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de marca y copy (voz, glosario, claims honestos) |
-| `review-perf` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| `review-perf` | 1.1.0 | 2026-07-05 | menor | Evidencia medida: cuando la guía del proyecto declara un bloque `Performance commands` y el diff toca rutas con benchmarks, el comando bench declarado se EJECUTA en base y cambio y se citan ambos números (`<cmd> → base <x> / change <y> (<±z%>)`); las regresiones más allá de la banda de ruido (declarada, si no ±5%) son mayores; un comando bench que falla es en sí un hallazgo. Sin comandos declarados → `n/a — no declared perf commands` explícito + hallazgo menor de adoptar tooling cuando el diff añade código algorítmico sobre input que crece. |
+| | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de rendimiento (N+1, complejidad, fugas, peso de assets) |
 | `review-seo` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist SEO (metadatos, canonical, indexabilidad, datos estructurados) |
@@ -342,6 +352,30 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   contrato explícito; `docs/workflow/ORCHESTRATION.md` gana el protocolo de
   reinicio del driver (journal de envelopes append-only → sensor → enrutar).
   Feature `03-orchestrator-crash-recovery`.
+
+- **2026-07-05 — revisión de rendimiento medida.** Los hallazgos de
+  rendimiento pasan de "plausibles" a "medidos": `init-workspace` 1.8.0
+  entrevista por el tooling de rendimiento del stack (lint de complejidad,
+  harness de benchmarks, profiler — ejemplos TS/JS nombrados, contrato
+  genérico para el resto) y registra los comandos en el nuevo bloque
+  `Performance commands` de la plantilla; `review-perf` 1.1.0 ejecuta el
+  bench declarado en base y cambio y cita ambos números, con banda de ruido
+  explícita y un `n/a — no declared perf commands` explícito cuando no hay
+  nada declarado. Feature `02-measured-perf-review`.
+
+- **2026-07-05 — `generate-docs`: el workflow ahora produce documentación de
+  desarrollador, no solo artefactos de proceso.** Skill nueva de cara al
+  usuario que convierte el diff de una unidad en guías how-to en el sitio de
+  docs del propio proyecto (adaptador descubierto; Starlight MDX como
+  referencia, markdown plano como fallback), renderiza un mapa de
+  conocimiento/llamadas desde un comando determinista declarado por el
+  proyecto (el modelo nunca infiere aristas) y puede exportar informes de
+  `review-change` como páginas (`--review`, opt-in). La protección anti-drift
+  llega con ella: `execute-phase` 1.13.0 recomienda `/generate-docs` al
+  cierre de unidad cuando hay bloque `Docs site` declarado, `audit-docs`
+  1.7.0 detecta páginas generadas huérfanas/obsoletas por su frontmatter de
+  procedencia, e `init-workspace` 1.7.0 pregunta por la declaración en la
+  entrevista. Feature `01-generate-docs`.
 
 - **2026-07-05 — `@gtrabanco/agentic-workflow-schema` 1.0.1: arreglos de
   review antes de que nadie construya sobre 1.0.0.** Una pasada de
