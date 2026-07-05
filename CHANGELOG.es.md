@@ -72,6 +72,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Histórico de versiones por skill
 
+### Paquetes npm complementarios
+
+#### [`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.1 | 2026-07-05 | parche | `validateEnvelope()` ahora comprueba todos los enums/tipos que declara el JSON Schema (`unit.type`, `pr.state`/`.ci`, `gates.verification`, `blockers[].kind`/`.scope`, tipos de los elementos de arrays) — antes era más laxo que `envelope.schema.json`, así que un valor malformado como `blockers[].scope: "planet"` pasaba en silencio. Tests añadidos para la ruta de fallo de validación estructural a través de `parseEnvelope()` y para fences con CRLF. La CI (`publish-schema.yml`) migró a Bun para instalar/testear (`bun install --frozen-lockfile`; se elimina `package-lock.json`, `bun.lock` es el único lockfile) — npm se mantiene solo para el paso final `npm publish --provenance`. Se añadió `LICENSE` dentro del directorio del paquete (el auto-include de npm solo recoge una LICENSE de la propia carpeta del paquete publicado). El ejemplo de importación del JSON Schema en el README se corrigió para funcionar en el `engines.node: ">=18"` declarado (antes solo funcionaba en Node 20.10+/22). |
+| 1.0.0 | 2026-07-05 | — | Primer release publicado. Tipos, JSON Schema y `parseEnvelope()`/`validateEnvelope()`/`isTerminal()`/`isRunHalt()` para el envelope máquina de agentic-workflow. |
+
 ### Sesión
 
 #### `log-session`
@@ -320,6 +328,25 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-05 — `@gtrabanco/agentic-workflow-schema` 1.0.1: arreglos de
+  review antes de que nadie construya sobre 1.0.0.** Una pasada de
+  `review-change` sobre el paquete recién publicado encontró que el
+  `validateEnvelope()` hecho a mano era estrictamente más laxo que
+  `envelope.schema.json` (le faltaban checks de enum/tipo — un valor como
+  `blockers[].scope: "planet"` pasaba en silencio), además de deuda de
+  empaquetado/CI: dos lockfiles commiteados con solo npm cableado en la CI,
+  un rango de devDependency que no fijaba nada de verdad pese a que su
+  mensaje de commit decía lo contrario, una `LICENSE` ausente dentro del
+  paquete, y un ejemplo del README incompatible con el propio
+  `engines.node` declarado. Se arregló todo en vez de publicar con huecos
+  conocidos: la validación de enum/tipo ahora coincide exactamente con el
+  JSON Schema (con tests a través de la API pública `parseEnvelope()`, no
+  solo del validador interno); la CI migró a Bun para instalar/testear
+  (`bun.lock` es ahora el único lockfile; npm se mantiene solo para el paso
+  de `publish` con provenance); se añadió `LICENSE` dentro del directorio
+  del paquete; el README se arregló para funcionar en Node 18. Cierra las
+  issues #5, #6, #7.
 
 - **2026-07-05 — orquestación programática: el envelope máquina.** El workflow
   pasa a poder dirigirse desde FUERA de cualquier agente — la sustitución

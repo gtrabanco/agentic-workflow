@@ -43,7 +43,15 @@ one per turn, all top-level keys always present.
 
 Also exported: `extractLastJsonBlock(text)`, `validateEnvelope(value)`,
 `ENVELOPE_STATES` (the 11-state enum), `TERMINAL_STATES`, and every field
-type. A language-agnostic **JSON Schema** ships too:
+type. A language-agnostic **JSON Schema** ships too — works on the
+`engines.node` minimum (>=18):
+
+```ts
+import { createRequire } from "node:module";
+const schema = createRequire(import.meta.url)("@gtrabanco/agentic-workflow-schema/envelope.schema.json");
+```
+
+On Node 20.10+/22, the newer import-attributes form also works:
 
 ```ts
 import schema from "@gtrabanco/agentic-workflow-schema/envelope.schema.json" with { type: "json" };
