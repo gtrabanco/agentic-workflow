@@ -30,7 +30,8 @@ jobs:
   sync-inheritance:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
 
       - name: Force-push main as-is to inheritance
         run: |
@@ -41,7 +42,8 @@ jobs:
   sync-claude:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
 
       - name: Install PyYAML
         run: pip install --quiet pyyaml
