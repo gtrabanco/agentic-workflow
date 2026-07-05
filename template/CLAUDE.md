@@ -33,6 +33,18 @@ your domains.
 | Domain / business rules | `docs/domain/*`, `docs/business/*` |
 | Legal / compliance | `docs/legal/*` |
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
+| Generated developer docs | the `Docs site` block below *(read by `/generate-docs`)* |
+
+## Docs site *(optional — uncomment and fill to enable `/generate-docs`)*
+
+<!--
+- format: starlight | docusaurus | markdown
+- content-dir: src/content/docs/
+- build: npx astro check   # or `none`
+- map: npm run docs:graph  # a script emitting a nodes[]/edges[] JSON via
+                           # deterministic tooling (dependency-cruiser, madge,
+                           # TypeDoc, tree-sitter, LSP…); or `none`
+-->
 
 ---
 
