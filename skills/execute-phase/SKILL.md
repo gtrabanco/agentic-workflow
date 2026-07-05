@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.12.0
+version: 1.13.1
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -220,6 +220,17 @@ examples use `gh`; translate if the project declares another forge).
 5. Update the per-phase docs.
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"` — one commit per phase, conventional format. Run this; don't just describe what should be committed.
 7. **Review checkpoint** — every 2 phases (and before the PR), **stop and hand off** to `/review-change` (see below) before the next phase. Don't run it in this skill's turn.
+
+**Resuming an interrupted phase (stated contract — any agent must honor it).**
+If, on entry, the unit branch already carries dirty files or commits belonging
+to the requested phase (a prior run died mid-turn — e.g. the driver process
+restarted), do **not** restart the phase from scratch: reconcile against
+`TASKS.md` first — verify each ticked task's evidence actually exists (code
+path / test present), untick any tick without evidence, then continue from the
+first unticked task. Idempotent re-entry is the contract `workflow-status`'s
+crash-recovery verdict `RESUMABLE` relies on. If the ledger contradicts the
+commits in a way that has no unique next task, stop and report instead of
+guessing (that is its `AMBIGUOUS` verdict — a human decides).
 
 **Single-pass** — small feature with only a `SPEC.md`, no planning artifacts:
 
