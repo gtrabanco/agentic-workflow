@@ -71,6 +71,41 @@ test("reports invalid JSON in the last block", () => {
   assert.ok(result.errors[0].startsWith("invalid JSON"));
 });
 
+test("parseEnvelope rejects a structurally invalid envelope (not just invalid JSON)", () => {
+  const bad = { ...VALID, unit: { ...VALID.unit, type: "nonsense" } };
+  const result = parseEnvelope(wrap(bad));
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.startsWith("unit.type must be")));
+  assert.equal(result.raw !== null, true); // raw is still returned for debugging
+});
+
+test("extracts the last block across CRLF line endings", () => {
+  const text = "```json\r\n" + JSON.stringify(VALID) + "\r\n```\r\n";
+  const raw = extractLastJsonBlock(text);
+  assert.ok(JSON.parse(raw).skill === "execute-phase");
+});
+
+test("rejects out-of-enum values throughout the envelope", () => {
+  const cases = [
+    { ...VALID, pr: { ...VALID.pr, state: "closed" } },
+    { ...VALID, pr: { ...VALID.pr, ci: "purple" } },
+    { ...VALID, gates: { ...VALID.gates, verification: "yellow" } },
+    { ...VALID, blockers: [{ kind: "planet", id: "x", scope: "unit", detail: "d" }] },
+    { ...VALID, blockers: [{ kind: "gate", id: "x", scope: "galaxy", detail: "d" }] },
+    { ...VALID, dependencies: { unmet: [123], build_order: [] } },
+  ];
+  for (const bad of cases) {
+    const result = validateEnvelope(bad);
+    assert.equal(result.ok, false, `expected rejection for ${JSON.stringify(bad)}`);
+  }
+});
+
+test("accepts every documented enum value (no false positives)", () => {
+  for (const state of ENVELOPE_STATES) {
+    assert.equal(validateEnvelope({ ...VALID, state }).ok, true, state);
+  }
+});
+
 test("terminal + run-halt helpers", () => {
   assert.equal(isTerminal("HALT"), true);
   assert.equal(isTerminal("CONTINUE"), false);

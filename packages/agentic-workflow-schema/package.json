@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Types, JSON Schema, and parser/validator for the agentic-workflow machine envelope — the fixed JSON block every user-facing skill prints as its last output, for programmatic orchestration.",
   "keywords": [
     "agentic-workflow",
@@ -31,7 +31,8 @@
   "files": [
     "dist",
     "envelope.schema.json",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18"
@@ -41,7 +42,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && node --test test/index.test.mjs",
+    "test": "tsc && node --test test/index.test.mjs",
     "prepublishOnly": "npm test"
   },
   "devDependencies": {
