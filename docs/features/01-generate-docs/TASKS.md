@@ -39,11 +39,15 @@
 
 ## P3 — Hardening
 
-- [ ] Failure-mode branches written into the SKILL.md (not-configured, invalid
-      map JSON, missing map command, monorepo limitation)
-- [ ] Cross-reference sweep (SKILLS.md, READMEs, CHANGELOGs)
-- [ ] Verification gate green (`npx skills add . --list`; links resolve)
-- [ ] progress.md entry for P3
+- [x] Failure-mode branches written into the SKILL.md (not-configured →
+      NEEDS_INPUT + snippet in Step 0.5; invalid map JSON → FAIL in Process
+      step 4; missing map command → n/a rule; monorepo limitation → Step 0
+      note + known-issues #1)
+- [x] Cross-reference sweep (SKILLS.md, READMEs, CHANGELOGs — all reference
+      generate-docs; `Docs site` block consistent across 5 files; no
+      S1/"Step N" phase labels in planning artifacts)
+- [x] Verification gate green (`npx skills add . --list` exit 0)
+- [x] progress.md entry for P3
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc that leaves
       `\`-escaped backticks) and PRINT THE PR URL in the chat
