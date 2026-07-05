@@ -11,8 +11,8 @@ Write `skills/generate-docs/SKILL.md` in full:
   "document this unit", "export the review to the docs", "generate-docs").
 - `## Turn contract` first (report block printed; `→ Next:` last before the
   envelope; envelope absolute last; files actually WRITTEN, paths listed).
-- Step 0: project discovery + **adapter detection checklist** (fixed order,
-  first match wins; the four outcomes and their required evidence).
+- Discovery step: project discovery + **adapter detection checklist** (fixed
+  order, first match wins; the four outcomes and their required evidence).
 - Process: scope resolution (diff vs default branch | explicit unit/path),
   incrementality checklist, page taxonomy (`guides/`, `map/`, `reviews/`),
   provenance frontmatter, per-adapter file conventions table (Starlight
