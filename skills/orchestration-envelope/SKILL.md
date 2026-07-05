@@ -91,6 +91,19 @@ Field rules — checkable, no interpretation:
 - **Placement:** fenced ```json, ONE object, absolute last output — nothing
   after it, not even a sign-off line.
 
+## Companion npm package (keep it in sync)
+
+The schema ships as **`@gtrabanco/agentic-workflow-schema`**
+(`packages/agentic-workflow-schema/` in this repo): TypeScript types, a JSON
+Schema, and `parseEnvelope()` implementing the last-fenced-json parse
+contract. **Any change to the schema in this file changes the package in the
+same PR** — update `src/index.ts` + `envelope.schema.json` + tests, and bump
+the package version by the contract's own semver (key/state removed or
+renamed → major; additive key/state → minor; fixes → patch). CI
+(`.github/workflows/publish-schema.yml`) publishes to npm automatically on
+merge when the version is new. A schema change that skips the package is an
+incomplete change.
+
 ## Relationship to other skills
 
 - Every `user-invocable: true` skill of the pack carries a `## Machine

@@ -200,6 +200,10 @@ This repo has no application build. "Green" means:
 - The `skills` CLI discovers every skill: `npx skills add . --list` lists them all.
 - Markdown is well-formed; cross-references between docs resolve.
 - No stack/real-project references leaked into the skills or shared docs.
+- If `packages/agentic-workflow-schema/` was touched: `npm test` passes there,
+  and any change to the envelope schema in
+  `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
+  `envelope.schema.json` + version bump) — same PR, always.
 
 ---
 
