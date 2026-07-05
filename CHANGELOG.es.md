@@ -117,6 +117,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.1 | 2026-07-05 | parche | Fold de revisión sobre la recuperación de caídas de 1.1.0 (sin publicar): precedencia explícita del estado del envelope con varias ramas (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, gana el peor); la comprobación de commits sin push ahora protege el caso sin upstream (justamente el caso de crash-nunca-pusheado) en vez de fallar en `git log @{u}..`; el envelope de ejemplo ya muestra en `detail` la clave `crash_recovery` que la prosa ya exigía. |
+| 1.1.0 | 2026-07-05 | menor | Recuperación de caídas: cada invocación clasifica los turnos interrumpidos desde la verdad del sustrato (ramas de unidad sucias/sin push, libro de fases vs commits) en un veredicto cerrado — `CLEAN`→OK, `RESUMABLE`→CONTINUE con el comando de reanudación, `AMBIGUOUS`→NEEDS_INPUT con opciones — en un sub-bloque `CRASH RECOVERY` fijo. Nuevo hint `--last-envelope <json|ruta>` (con fallback de pegarlo en el mensaje documentado): se contrasta con el estado recalculado, nunca es autoritativo. Sin cambio en el esquema del envelope — solo estados existentes. |
 | 1.0.0 | 2026-07-05 | — | Nuevo sensor de solo lectura para orquestación programática: árbol de dependencias completo de features/fixes (transitivo, cumplido/incumplido), unidades arrancables con orden de construcción, PRs abiertas + estado de auditoría, hallazgos pendientes de triaje, recomendación de product-audit — todo en un envelope máquina. |
 
 #### `ship-roadmap`
@@ -139,6 +141,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.14.0 | 2026-07-05 | menor | El checkpoint de revisión cada 2 fases es ahora una **recomendación, no una parada obligatoria**: el bloque de cierre recomienda `/review-change` con "continuar a la siguiente fase" como alternativa listada, y el envelope mantiene `state: CONTINUE` en los checkpoints (consultivo) — `READY_FOR_REVIEW` queda reservado a la unidad terminada. La **revisión de fin de unidad sigue siendo obligatoria** (alimenta `audit-pr`), y el gate de dependencias no cambia (sigue bloqueando y exigiendo `--force`). Referencias cruzadas de `review-change` 1.10.1 actualizadas. |
+| 1.13.1 | 2026-07-05 | parche | "Reanudar una fase interrumpida" enunciado como contrato explícito: al entrar en una rama con trabajo previo de la fase pedida, reconciliar los ticks de `TASKS.md` contra la evidencia y continuar desde la primera tarea sin marcar (reentrada idempotente — de la que depende el veredicto `RESUMABLE` de `workflow-status`); un libro sin siguiente tarea única → parar e informar, nunca adivinar. El comportamiento ya era práctica del Step 0; ahora está escrito. |
 | 1.13.0 | 2026-07-05 | menor | El hand-off de cierre de unidad gana una alternativa `/generate-docs` — impresa solo cuando el mapa de documentación del proyecto declara un bloque `Docs site`; las páginas generadas viajan en el PR de la unidad. |
 | 1.12.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. La parada del gate de dependencias y los checkpoints de revisión son ahora legibles por máquina (BLOCKED/READY_FOR_REVIEW); la sección batch gana la alternativa de driver externo a `/loop`. |
 | 1.11.0 | 2026-07-04 | minor | Los cuerpos de PR/issue se pasan con `--body-file` (fichero Markdown), nunca `--body`/heredoc inline — arregla los backticks escapados con `\` literales en issues/PRs generados; casilla 4 del contrato de turno + regla en Issue policy; comandos actualizados. |
@@ -193,6 +197,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.10.1 | 2026-07-05 | parche | Referencias cruzadas actualizadas para `execute-phase` 1.14.0: el hand-off cada 2 fases se describe ahora como checkpoint recomendado y omitible; la revisión final obligatoria antes del merge no cambia. |
 | 1.10.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Los hallazgos fix-now y los números de issue creados viajan en el envelope; la deriva de SPEC recurrente activa el flag de recomendación de product-audit. |
 | 1.9.0 | 2026-07-04 | minor | Guardrail: los cuerpos del forge creados vía triage-issue son Markdown — no pre-escapes el texto de los hallazgos; los cuerpos van por `--body-file`, nunca inline. |
 | 1.8.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -338,6 +343,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-05 — recuperación de caídas del orquestador.** Los drivers
+  externos (incluidos servidores Node/opencode solo-REST) ganan una ruta de
+  reinicio segura: `workflow-status` 1.1.0 clasifica los turnos
+  interrumpidos desde la verdad del sustrato en `CLEAN | RESUMABLE |
+  AMBIGUOUS` (mapeado a estados existentes del envelope — sin release del
+  esquema) con un hint `--last-envelope` opcional y nunca autoritativo;
+  `execute-phase` 1.13.1 enuncia la reentrada idempotente de fase como
+  contrato explícito; `docs/workflow/ORCHESTRATION.md` gana el protocolo de
+  reinicio del driver (journal de envelopes append-only → sensor → enrutar).
+  Feature `03-orchestrator-crash-recovery`.
 
 - **2026-07-05 — revisión de rendimiento medida.** Los hallazgos de
   rendimiento pasan de "plausibles" a "medidos": `init-workspace` 1.8.0

@@ -33,7 +33,7 @@ findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **hands off to `review-change` every 2 phases and once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
+| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **recommends a `review-change` checkpoint every 2 phases (skippable) and hands off once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
 
 ## Review & audit — *change → PR → product*
 
@@ -98,7 +98,7 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
                    ┌──────────────── plan-feature (router) ────────────────┐
 IDEA ──────────────┤  --interview → plan-feature-interview                 │
 ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue          ├─▶ execute-phase ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
-SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (review-change every 2 phases + mandatory at the end; PR opens at execute's last step)
+SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (review-change recommended every 2 phases + mandatory at the end; PR opens at execute's last step)
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step    │
 
 ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge

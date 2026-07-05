@@ -115,6 +115,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.1 | 2026-07-05 | patch | Review fold on 1.1.0's crash recovery (unreleased): multi-branch envelope-state precedence made explicit (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, worst wins); the unpushed-commits check now guards for no-upstream branches (the exact mid-crash never-pushed case) instead of erroring on `git log @{u}..`; the example envelope's `detail` now shows the `crash_recovery` key the prose already required. |
+| 1.1.0 | 2026-07-05 | minor | Crash recovery: every invocation classifies interrupted turns from ground truth (dirty/unpushed unit branches, phase-ledger vs commits) into a closed verdict — `CLEAN`→OK, `RESUMABLE`→CONTINUE with the resume command, `AMBIGUOUS`→NEEDS_INPUT with options — in a fixed `CRASH RECOVERY` sub-block. New `--last-envelope <json|path>` hint (paste-in-message fallback documented): diffed against recomputed state, never authoritative. No envelope-schema change — existing states only. |
 | 1.0.0 | 2026-07-05 | — | New read-only sensor for programmatic orchestration: full feature/fix dependency tree (transitive, met/unmet), startable-now units with build orders, open PRs + audit state, findings pending triage, product-audit recommendation — all in one machine envelope. |
 
 #### `ship-roadmap`
@@ -137,6 +139,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.14.0 | 2026-07-05 | minor | The every-2-phases review checkpoint is now a **recommendation, not a blocking stop**: the closing block recommends `/review-change` with "continue to the next phase" as a listed alternative, and the envelope keeps `state: CONTINUE` at checkpoints (advisory) — `READY_FOR_REVIEW` is reserved for the finished unit. The **end-of-unit review stays mandatory** (feeds `audit-pr`), and the dependency gate is unchanged (still blocks, still requires `--force` to override). `review-change` 1.10.1 cross-references updated. |
+| 1.13.1 | 2026-07-05 | patch | "Resuming an interrupted phase" stated as an explicit contract: on entry to a branch with prior work for the requested phase, reconcile `TASKS.md` ticks against evidence and continue from the first unticked task (idempotent re-entry — what `workflow-status`'s `RESUMABLE` verdict relies on); a ledger with no unique next task → stop and report, never guess. Behavior was already Step-0 practice; now it is written. |
 | 1.13.0 | 2026-07-05 | minor | Unit close-out hand-off gains a `/generate-docs` alternative — printed only when the project's documentation map declares a `Docs site` block; generated pages ride the unit's PR. |
 | 1.12.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. The dependency-gate stop and review checkpoints are now machine-readable (BLOCKED/READY_FOR_REVIEW); batch section gains the external-driver alternative to `/loop`. |
 | 1.11.0 | 2026-07-04 | minor | PR/issue bodies passed with `--body-file` (Markdown file), never inline `--body`/heredoc — fixes literal `\`-escaped backticks in generated issues/PRs; turn-contract box 4 + Issue policy rule; commands updated. |
@@ -191,6 +195,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.10.1 | 2026-07-05 | patch | Cross-references updated for `execute-phase` 1.14.0: the every-2-phases hand-off is now described as a recommended, skippable checkpoint; the mandatory-before-merge end review is unchanged. |
 | 1.10.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. fix-now findings and filed issue numbers ride the envelope; recurring SPEC drift sets the product-audit recommendation flag. |
 | 1.9.0 | 2026-07-04 | minor | Guardrail: forge bodies filed via triage-issue are Markdown — don't pre-escape finding text; bodies go through `--body-file`, never inline. |
 | 1.8.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -336,6 +341,16 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-05 — orchestrator crash recovery.** External drivers (REST-only
+  Node/opencode servers included) get a safe restart path: `workflow-status`
+  1.1.0 classifies interrupted turns from ground truth into
+  `CLEAN | RESUMABLE | AMBIGUOUS` (mapped onto existing envelope states — no
+  schema release needed) with an optional never-authoritative
+  `--last-envelope` hint; `execute-phase` 1.13.1 states idempotent phase
+  re-entry as an explicit contract; `docs/workflow/ORCHESTRATION.md` gains
+  the Driver restart protocol (append-only envelope journal → sensor →
+  route). Feature `03-orchestrator-crash-recovery`.
 
 - **2026-07-05 — measured performance review.** Perf findings graduate from
   "plausible" to "measured": `init-workspace` 1.8.0 interviews for the
