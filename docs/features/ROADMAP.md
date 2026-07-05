@@ -8,7 +8,7 @@ every row must have a folder (or be explicitly marked "scheduled").
 
 | NN | Slug | Status | Depends on | Summary |
 |----|------|--------|------------|---------|
-| 01 | `generate-docs` | done | — | New user-invocable skill: incremental, diff-driven developer docs into the target project's docs site (Starlight MDX first-class adapter), deterministic knowledge/call map, optional review-report export, drift protection via execute-phase and audit-docs |
+| 01 | `generate-docs` | done · [#8](https://github.com/gtrabanco/agentic-workflow/pull/8) | — | New user-invocable skill: incremental, diff-driven developer docs into the target project's docs site (Starlight MDX first-class adapter), deterministic knowledge/call map, optional review-report export, drift protection via execute-phase and audit-docs |
 | 02 | `measured-perf-review` | planned | — | init-workspace discovers/installs performance tooling (lint complexity rules, benchmark harness, profiler) and registers its commands; review-perf runs them when declared so perf findings cite real measurements |
 | 03 | `orchestrator-crash-recovery` | planned | — | workflow-status gains a crash-recovery reconcile section (dirty tree, half-closed phase, stale envelope) so an external driver (opencode REST server) can restart safely from ground truth |
 
