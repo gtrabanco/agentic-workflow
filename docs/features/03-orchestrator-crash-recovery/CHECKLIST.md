@@ -57,3 +57,17 @@ stays `CONTINUE` (advisory); the **end-of-unit review remains mandatory** and
 the **dependency gate is unchanged** (still blocks; `--force` to override).
 `review-change` 1.10.1 cross-references updated; README EN/ES + SKILLS.md rows
 and diagrams updated; CHANGELOG EN/ES rows added.
+
+Review fold 2 (2026-07-05, re-review of this PR):
+
+- F1 (fix-now): `docs/workflow/FEATURE_WORKFLOW.md` Stage 4 prose and ASCII
+  flow still described the 2-phase checkpoint as a forced hand-off — reworded
+  to "recommended, skippable checkpoint; mandatory end review" (lines 123,
+  174).
+- F2 (intentional-tradeoff — documented decision, no issue): `ship-roadmap`
+  DELIBERATELY keeps a hard checkpoint every 2 phases for L/sensitive
+  features. Rationale: the autopilot runs unattended, so there is no human
+  present to accept or skip a recommendation — a risk-proportional review
+  floor replaces that judgment. The interactive advisory checkpoint
+  (execute-phase 1.14.0) and the autopilot's fixed cadence are two different
+  policies on purpose; do not "align" them.
