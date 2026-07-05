@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -100,8 +100,14 @@ section *classifies*; the resume command it recommends does the acting.
 **Checklist:**
 
 - ✓ **Working tree per unit branch.** A dirty tree (`git status --porcelain`)
-  or unpushed commits (`git status -sb` / `git log @{u}..`) on a
-  `feat/*`/`fix/*` branch → interrupted-turn candidate. Cite branch + files.
+  or unpushed commits on a `feat/*`/`fix/*` branch → interrupted-turn
+  candidate. Cite branch + files. Checking unpushed commits: **first check
+  the branch has an upstream** (`git rev-parse --abbrev-ref <branch>@{u}` —
+  non-zero exit = no upstream). No upstream → **every commit on the branch is
+  unpushed by definition**, don't run `git log @{u}..` (it errors with
+  `fatal: no upstream configured`, which is exactly the mid-crash
+  never-pushed case, not an error to surface). Has an upstream → use
+  `git log @{u}.. --oneline` / `git status -sb` as usual.
 - ✓ **Phase-ledger coherence.** Compare the unit's `progress.md`/`TASKS.md`
   against the branch's actual commits: commits after the last closed phase
   entry, or ticked tasks with no matching commit, are cited as evidence.
@@ -130,6 +136,12 @@ Hint envelope: matched | diverged: <one line> | not provided
 
 (`CLEAN` with no unit branches in play → the table body is a single
 `| — | clean tree, coherent ledgers | CLEAN | — |` row.)
+
+**Multiple unit branches, multiple verdicts → one envelope `state` (fixed
+precedence, worst wins):** `AMBIGUOUS` > `RESUMABLE` > `CLEAN`. A human
+decision pending on ANY branch outranks a mechanical resume on another, which
+outranks an all-clean state. The report's per-branch table still lists every
+verdict; only the envelope's single `state` is reduced to the worst one.
 
 ## Machine envelope
 
@@ -177,7 +189,13 @@ states** (the schema package needs no release):
     "blocked_units": {"09-billing": {"unmet": ["05-auth"], "build_order": ["05-auth", "09-billing"]}},
     "open_prs": [{"number": 13, "unit": "07-csv-export", "ci": "green", "merge_ready": false}],
     "pending_triage": [{"source": "docs/features/07-csv-export/known-issues.md", "title": "empty-file edge"}],
-    "workflow_observations": ["branch feat/07-csv-export is 1 commit ahead of origin"]
+    "workflow_observations": ["branch feat/07-csv-export is 1 commit ahead of origin"],
+    "crash_recovery": {
+      "verdict": "CLEAN",
+      "branches": [
+        {"branch": "feat/07-csv-export", "evidence": "1 commit ahead of origin; ledger coherent", "verdict": "CLEAN", "resume_command": null}
+      ]
+    }
   }
 }
 ```
