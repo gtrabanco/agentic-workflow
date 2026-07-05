@@ -23,15 +23,19 @@
 
 ## P2 — Integrations
 
-- [ ] Knowledge-map section (command contract, JSON shape, per-tool recipes,
-      wrapper-page rules, n/a rule)
-- [ ] `--review` export mode section
-- [ ] Edit `skills/execute-phase/SKILL.md` close-out hand-off
-- [ ] Edit `skills/audit-docs/SKILL.md` orphan/stale checklist item
-- [ ] Add `Docs site` block to the template doc map; reference it in
-      `skills/init-workspace/SKILL.md` interview
-- [ ] Run `bump-skill` (all touched skills; CHANGELOG EN/ES; README tables EN/ES)
-- [ ] progress.md entry for P2
+- [x] Knowledge-map section (command contract, JSON shape, per-tool recipes,
+      wrapper-page rules, n/a rule) — Process step 4 + report `Map:` line
+- [x] `--review` export mode section — Process step 5 + report line
+- [x] Edit `skills/execute-phase/SKILL.md` close-out hand-off — v1.13.0,
+      `/generate-docs` line gated on the `Docs site` block
+- [x] Edit `skills/audit-docs/SKILL.md` orphan/stale checklist item — v1.7.0,
+      new check 13, block renumbered 10–14
+- [x] Add `Docs site` block to the template doc map (commented, optional);
+      referenced in `skills/init-workspace/SKILL.md` interview — v1.7.0
+- [x] Run `bump-skill` (all touched skills; CHANGELOG EN/ES rows +
+      release-log entries; README EN/ES: counts 28/14, Document section,
+      model-table row; docs/workflow/SKILLS.md Document section)
+- [x] progress.md entry for P2
 
 ## P3 — Hardening
 
