@@ -326,7 +326,10 @@ Claude Code's `/loop` and subagents: the same loop `ship-roadmap` runs
 in-agent, hosted outside any agent. `workflow-status` is the read-only sensor
 that reports the full dependency tree and what's startable. Protocol, state
 machine, and a driver skeleton:
-**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**.
+**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. For
+JS/TS drivers, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
+(npm) ships the types, the JSON Schema, and `parseEnvelope()` implementing the
+parse contract — auto-published by CI on every schema change.
 
 ## How to use them
 

@@ -331,7 +331,11 @@ How pinning actually works, verified against the `skills` CLI:
   build orders, pending fixes/triage, audit states. `audit-pr` 2.1.0 also
   posts a dated, SHA-bound **MERGE-READY comment on the PR** (never a
   commit-message tag). `ship-roadmap` 1.10.0 goes driver-neutral and states
-  WHY every iteration ends. 12 skills bumped minor + 2 new skills.
+  WHY every iteration ends. 12 skills bumped minor + 2 new skills. The
+  contract also ships as the **`@gtrabanco/agentic-workflow-schema`** npm
+  package (types + JSON Schema + `parseEnvelope()`), auto-published by CI
+  (`publish-schema.yml`) whenever its version bumps — the schema and the
+  package change in the same PR, always.
 
 - **2026-07-04 — forge bodies are Markdown, not shell.** Field evidence
   (gtrabanco/webs#198): generated issues/PRs/comments arrived with literal
