@@ -29,3 +29,19 @@ micro-skill) and D2 (no schema change) implemented as specified.
 Version note: `execute-phase` jumps 1.12.0 → 1.13.1 on this branch because
 1.13.0 belongs to feature 01's PR #8. Merge order: #8 → #9 → this PR; expect
 a trivial CHANGELOG rebase if merged out of order.
+
+## Review fold (2026-07-05, review-change on PR #10)
+
+- F1 (fix-now): multi-branch envelope-state precedence was unspecified —
+  fixed: `AMBIGUOUS` > `RESUMABLE` > `CLEAN`, worst verdict wins the single
+  envelope `state`; the per-branch report table is unaffected.
+- F2 (fix-now): the unpushed-commits check used `git log @{u}..`, which
+  errors when the branch has no upstream — exactly the mid-crash
+  never-pushed case. Fixed: guard on upstream existence first; no upstream ⇒
+  every commit is unpushed by definition.
+- F3 (fix-now): the example envelope's `detail` didn't show the
+  `crash_recovery` key the prose required. Fixed: example now includes
+  `crash_recovery: {verdict, branches: [...]}`.
+- `workflow-status` bumped 1.1.0 → 1.1.1 (patch — contract tightening, no new
+  capability); CHANGELOG.md/.es.md rows added.
+- Gate re-run after the fold: `npx skills add . --list` exit 0.
