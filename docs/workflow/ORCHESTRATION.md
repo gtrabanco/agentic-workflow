@@ -78,6 +78,40 @@ closure** (met/unmet), `startable_now`, `blocked_units` with build orders,
 open PRs with audit state, and findings pending triage. Route on
 `detail.startable_now` and `next.recommended`. It is read-only and cheap-tier.
 
+## Driver restart protocol (crash recovery)
+
+A driver process will eventually die mid-turn. The recovery rule: **the
+driver's persisted state is a hint; ground truth (git, forge, docs) is the
+source** — never "repair" your journal, recompute from reality.
+
+1. **Journal (recommended shape).** Persist every envelope **append-only**,
+   one entry per turn with a timestamp and the current head SHA — never
+   overwrite a single state file. The last entry is your *hypothesis* on
+   restart; the full log is your audit trail.
+2. **On restart**, call the sensor with the hypothesis:
+   `workflow-status --json-only --last-envelope <last-entry.json>` (agents
+   without argument passing: paste the JSON into the invocation message —
+   the skill reads the last fenced json block of the request as the hint).
+3. **Route on the recomputed envelope** — three cases:
+   - `state: OK` (verdict `CLEAN`) — no interruption; follow
+     `next.recommended` as on any normal tick.
+   - `state: CONTINUE` (verdict `RESUMABLE`) — a turn died mid-phase but the
+     ledger points to a unique next task; `next.recommended` is the resume
+     command (`execute-phase <NN> <phase>` re-enters idempotently — it
+     reconciles `TASKS.md` ticks against evidence and continues from the
+     first unticked task).
+   - `state: NEEDS_INPUT` (verdict `AMBIGUOUS`) — the ledger contradicts the
+     commits (ticks without evidence, unknown branch); surface
+     `needs_input.question` + `options` to a human. Do not auto-pick.
+4. **Divergence line.** The report's `Hint envelope: matched | diverged: …`
+   tells you whether work completed after your last journal entry (reality
+   ahead of the journal is normal — a skill finished and pushed before the
+   crash); adopt the recomputed state and append it to the journal.
+
+Nothing above requires filesystem or git access in the driver itself — the
+sensor does the reading; the driver only parses envelopes, which is the point
+for REST-API-only drivers (e.g. a Node server talking to an agent's HTTP API).
+
 ## Replacing `/loop` (the driver loop)
 
 Invoke the agent headless, one skill per invocation, and loop. Invocation is
