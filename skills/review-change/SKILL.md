@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.10.0
+version: 1.10.1
 argument-hint: <path-or-glob>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -44,8 +44,9 @@ first on purpose).
 ## When to use
 
 - **Mandatory before every merge** — every unit (feature, single-pass, or fix) gets a
-  `review-change` pass; it's never skipped. `execute-phase` hands off to it every 2
-  phases and once more at the end.
+  `review-change` pass before its merge gate; that end review is never skipped.
+  `execute-phase` additionally **recommends** a hand-off every 2 phases — an
+  optional checkpoint the user may skip.
 - When you want the *right* reviews for this change without running irrelevant
   passes (e.g. accessibility on a backend change).
 
@@ -254,9 +255,10 @@ enables:
   `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`),
   `triage-issue` (every non-fix-now finding — equal tier, in-turn), and — as
   optional extras only — any platform review skills the project installed.
-- Sits in Stage 4 of the feature workflow; `execute-phase` hands off to it every 2
-  phases and for the mandatory end review (it runs in its own turn). `fix-now` →
-  `plan-fix`; everything else → `triage-issue`.
+- Sits in Stage 4 of the feature workflow; `execute-phase` recommends it every 2
+  phases (optional checkpoint) and hands off for the **mandatory end review**
+  (it runs in its own turn). `fix-now` → `plan-fix`; everything else →
+  `triage-issue`.
 - `audit-pr` is the PR-level gate it feeds; `product-audit` the periodic full sweep.
 
 ## Done when
