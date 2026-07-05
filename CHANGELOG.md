@@ -276,6 +276,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.8.0 | 2026-07-05 | minor | Interview gains a **Performance tooling** round: per-slot detection checklist (complexity lint / benchmark harness / profiler — TS/JS adapter examples: Biome complexity group or sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), user-confirmed installation, and registration in the template's new `Performance commands` block so `review-perf` can measure instead of guess. |
 | 1.7.0 | 2026-07-05 | minor | Interview gains a **Docs site** round: record the project's docs website (format/content-dir/build/map commands) in the template's new `Docs site` block so `generate-docs` can write into it; leave it commented out when there is none. Never scaffolds the website. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -327,13 +328,24 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.0.0 | 2026-07-02 | — | Internal review pack: accessibility checklist (semantics, keyboard, focus, contrast, ARIA) |
 | `review-brand` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.0 | 2026-07-02 | — | Internal review pack: brand & copy checklist (voice, glossary, honest claims) |
-| `review-perf` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| `review-perf` | 1.1.0 | 2026-07-05 | minor | Measured evidence: when the project's agent guide declares a `Performance commands` block and the diff touches benchmarked paths, the declared bench command is RUN on base and change and both numbers are cited (`<cmd> → base <x> / change <y> (<±z%>)`); regressions beyond the noise band (declared, else ±5%) are major; a failing bench command is itself a finding. No declared commands → explicit `n/a — no declared perf commands` + a minor adopt-tooling finding when the diff adds algorithmic code on growable input. |
+| | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.0 | 2026-07-02 | — | Internal review pack: performance checklist (N+1s, complexity, leaks, asset weight) |
 | `review-seo` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.0 | 2026-07-02 | — | Internal review pack: SEO checklist (metadata, canonical, indexability, structured data) |
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-05 — measured performance review.** Perf findings graduate from
+  "plausible" to "measured": `init-workspace` 1.8.0 interviews for the
+  stack's performance tooling (complexity lint, benchmark harness, profiler —
+  TS/JS adapter examples named, generic contract for everything else) and
+  registers the commands in the template's new `Performance commands` block;
+  `review-perf` 1.1.0 runs the declared bench on base and change and cites
+  both numbers, with an explicit noise band and an explicit
+  `n/a — no declared perf commands` when nothing is declared. Feature
+  `02-measured-perf-review`.
 
 - **2026-07-05 — `generate-docs`: the workflow now produces developer
   documentation, not just process artifacts.** New user-facing skill that

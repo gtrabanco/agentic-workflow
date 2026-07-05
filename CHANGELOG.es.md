@@ -278,6 +278,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.8.0 | 2026-07-05 | menor | La entrevista gana una ronda de **Tooling de rendimiento**: checklist de detección por slot (lint de complejidad / harness de benchmarks / profiler — ejemplos del adaptador TS/JS: grupo complexity de Biome o sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), instalación confirmada por el usuario y registro en el nuevo bloque `Performance commands` de la plantilla para que `review-perf` mida en vez de estimar. |
 | 1.7.0 | 2026-07-05 | menor | La entrevista gana una ronda **Docs site**: registra el sitio de docs del proyecto (formato/directorio de contenido/comandos de build y mapa) en el nuevo bloque `Docs site` de la plantilla para que `generate-docs` pueda escribir en él; se deja comentado cuando no hay sitio. Nunca crea el sitio web. |
 | 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -329,13 +330,24 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de accesibilidad (semántica, teclado, foco, contraste, ARIA) |
 | `review-brand` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de marca y copy (voz, glosario, claims honestos) |
-| `review-perf` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| `review-perf` | 1.1.0 | 2026-07-05 | menor | Evidencia medida: cuando la guía del proyecto declara un bloque `Performance commands` y el diff toca rutas con benchmarks, el comando bench declarado se EJECUTA en base y cambio y se citan ambos números (`<cmd> → base <x> / change <y> (<±z%>)`); las regresiones más allá de la banda de ruido (declarada, si no ±5%) son mayores; un comando bench que falla es en sí un hallazgo. Sin comandos declarados → `n/a — no declared perf commands` explícito + hallazgo menor de adoptar tooling cuando el diff añade código algorítmico sobre input que crece. |
+| | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist de rendimiento (N+1, complejidad, fugas, peso de assets) |
 | `review-seo` | 1.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.0 | 2026-07-02 | — | Pack de revisión interno: checklist SEO (metadatos, canonical, indexabilidad, datos estructurados) |
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-05 — revisión de rendimiento medida.** Los hallazgos de
+  rendimiento pasan de "plausibles" a "medidos": `init-workspace` 1.8.0
+  entrevista por el tooling de rendimiento del stack (lint de complejidad,
+  harness de benchmarks, profiler — ejemplos TS/JS nombrados, contrato
+  genérico para el resto) y registra los comandos en el nuevo bloque
+  `Performance commands` de la plantilla; `review-perf` 1.1.0 ejecuta el
+  bench declarado en base y cambio y cita ambos números, con banda de ruido
+  explícita y un `n/a — no declared perf commands` explícito cuando no hay
+  nada declarado. Feature `02-measured-perf-review`.
 
 - **2026-07-05 — `generate-docs`: el workflow ahora produce documentación de
   desarrollador, no solo artefactos de proceso.** Skill nueva de cara al

@@ -122,6 +122,19 @@ Fill in your project's real commands. The agentic workflow refers to the
 <type-check> && <test> && <build>
 ```
 
+## Performance commands *(optional — filled by `init-workspace`; read by `review-perf`)*
+
+When declared, the workflow's performance review **runs** these and cites real
+numbers instead of estimating from the diff. Use `none` explicitly for a slot
+the project doesn't have; delete the block only if none apply.
+
+```
+- bench: <command | none>            # e.g. vitest bench, bun run bench.ts
+- profile: <command | none>          # e.g. node --cpu-prof <entry>
+- complexity-lint: <command | none>  # e.g. the linter's complexity ruleset
+- noise-band: ±5%                    # deltas inside the band are not findings
+```
+
 ---
 
 ## Architecture
