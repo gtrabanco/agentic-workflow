@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 2.0.1
+version: 2.1.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -12,7 +12,8 @@ description: >
   right layer, CI green, branch off the default branch and independently mergeable,
   and the review-change axes clean (or consciously deferred to tracked issues).
   Verdict: merge-ready, or a ranked list of blockers — always with the PR's full
-  URL printed. Never edits; never merges by default — with a documented auto-merge
+  URL printed, and on MERGE-READY a dated, SHA-bound comment posted on the PR
+  itself. Never edits; never merges by default — with a documented auto-merge
   policy (or an explicit user instruction) it merges a MERGE-READY PR after a
   fail-closed pre-merge checklist (clean tree, nothing unpushed/unpulled, fresh
   green CI on the audited SHA).
@@ -37,9 +38,12 @@ explicit user instruction) plus a fail-closed pre-merge checklist.
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is
   the contract, never "PR #N" alone)
+✓ MERGE-READY verdict? Then the MERGE-READY comment was POSTED on the PR
+  (`gh pr comment --body-file` RUN, idempotent by SHA marker) — a comment,
+  never a commit-message tag. BLOCKED → no comment posted
 ✓ Nothing was edited or refactored; nothing was merged UNLESS the auto-merge
   policy applied AND the pre-merge checklist was RUN with its output pasted
-✓ The closing `→ Next:` block is the LAST thing printed
+✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -120,10 +124,35 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
    - **MERGE-READY** — every applicable gate passes; list the few things the human
      should still eyeball (the manual-verification items `review-change` surfaced).
    - **BLOCKED** — one or more gates fail; output the ranked blocker list.
-5. **Auto-merge check (only on MERGE-READY)** — evaluate the opt-in auto-merge
+5. **Post the MERGE-READY comment on the PR (MERGE-READY only).** The verdict
+   must be visible on the PR itself — as a **comment**, never in a commit
+   message (a commit trailing "MERGE-READY" pollutes history and goes stale
+   the moment the branch moves). Write the body to a file (Markdown rule —
+   see Guardrails) and run
+   `gh pr comment <N> --body-file <path>` with exactly this body:
+
+   ```markdown
+   <!-- audit-pr:merge-ready sha=<head SHA> -->
+   ## ✅ audit-pr: MERGE-READY
+
+   - **Audited head:** `<head SHA>` · CI: <green|local-gate-green>
+   - **Date:** <YYYY-MM-DD>
+   - **Before merge, a human should still verify:**
+     - <manual-verification item — or "nothing">
+
+   Any commit after `<head SHA>` voids this verdict — re-run `audit-pr`.
+   ```
+
+   **Idempotent:** first check the existing comments
+   (`gh pr view <N> --json comments`) for the `<!-- audit-pr:merge-ready -->`
+   marker — same SHA already commented → skip (say so); older SHA → post the
+   new comment (the newest marker wins). Never post a comment for a BLOCKED
+   verdict — blockers go in the chat report only, so the PR page never shows
+   a stale green flag.
+6. **Auto-merge check (only on MERGE-READY)** — evaluate the opt-in auto-merge
    section below. Policy present + pre-merge checklist green → merge and report
    the merge evidence. Otherwise the human merges — say so explicitly.
-6. **Report** — the verdict block below, always headed by the PR's full URL.
+7. **Report** — the verdict block below, always headed by the PR's full URL.
 
 ## Auto-merge (opt-in — default is the human merges)
 
@@ -235,10 +264,17 @@ Before merge, a human should still verify:
 
 ## Guardrails
 
-- **Read-first verdict. Never push, edit, or refactor.** Merging is forbidden by
-  default; the sole exception is the opt-in auto-merge section — written policy or
-  explicit instruction, MERGE-READY on the current SHA, pre-merge checklist green,
-  outputs pasted. One key missing → the human ships.
+- **Read-first verdict. Never push, edit, or refactor.** The only forge writes
+  this skill may perform: (1) the **MERGE-READY comment** (Process step 5 —
+  idempotent, comment-only, never a commit tag), and (2) the opt-in
+  **auto-merge** — written policy or explicit instruction, MERGE-READY on the
+  current SHA, pre-merge checklist green, outputs pasted. One key missing →
+  the human ships.
+- **Forge bodies are Markdown, not shell — never hand-escape.** The comment's
+  backticks are formatting; a `\` before them renders literally. Write the
+  body to a file and pass `--body-file <path>` — never inline `--body "…"` or
+  a quoted heredoc. Verify with `gh pr view <N> --json comments` that no
+  literal `` \` `` survived.
 - **Never merge with anything uncommitted, unpushed, or unpulled** — even when
   auto-merge is authorized. Pending work makes the CI evidence stale: commit +
   push, wait for CI, re-audit, and only the fresh verdict may merge.
@@ -248,6 +284,46 @@ Before merge, a human should still verify:
 - Honor the project's **Workflow conventions** (gate, docs-language, evidence —
   every blocker cites file:line/check/criterion/issue — track-don't-inline:
   out-of-scope problems become issues/fix entries, never silent additions here).
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:** `MERGE_READY` (verdict MERGE-READY; the PR comment below was
+  posted; `pr.merge_ready: true`), `MERGED` (opt-in auto-merge executed —
+  merge SHA in `detail`), `NEEDS_FIXES` (in-scope blockers → fold on-branch,
+  re-audit; `blockers[]` mirrors the ranked list), or `BLOCKED` (external
+  cause: wrong base, conflicts, a dependency PR).
+- **Fields:** `pr` fully filled (number, url, head_sha, ci, merge_ready);
+  `gates.audit_pending: false` after a verdict; `findings.issues_filed` =
+  issues opened for deferrals lacking a home.
+- `detail`: `{"verdict": "MERGE-READY|BLOCKED", "blockers_ranked": [...],
+  "manual_verification": [...], "merge_sha": "<sha|null>"}`.
+
+Example (MERGE-READY, default mode — abbreviated):
+
+```json
+{"skill": "audit-pr", "state": "MERGE_READY",
+ "summary": "PR #14 passes every gate; comment posted; human merges.",
+ "unit": {"type": "fix", "id": "43-null-crash", "issue": 43, "branch": "fix/43-null-crash"},
+ "phase": {"current": null, "total": null, "completed": null},
+ "pr": {"number": 14, "url": "https://github.com/o/r/pull/14", "state": "open",
+        "head_sha": "abc123", "merge_ready": true, "ci": "green"},
+ "gates": {"verification": "green", "review_pending": false, "audit_pending": false},
+ "findings": {"fix_now": [], "issues_filed": [], "untriaged": 0, "decisions_recorded": 0},
+ "blockers": [], "dependencies": {"unmet": [], "build_order": []},
+ "recommendations": {"product_audit": false, "reason": null}, "needs_input": null,
+ "next": {"recommended": "merge, then /plan-feature --next", "alternatives": ["/triage-issue"], "tier": "strong"},
+ "detail": {"verdict": "MERGE-READY", "blockers_ranked": [],
+            "manual_verification": ["export opens in a spreadsheet app"], "merge_sha": null}}
+```
 
 ## Portability (agents other than Claude Code)
 

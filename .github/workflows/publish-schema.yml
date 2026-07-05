@@ -1,0 +1,82 @@
+name: Publish schema package
+
+# Publishes @gtrabanco/agentic-workflow-schema to npm whenever a push to main
+# touches the package AND its package.json version is newer than the one on
+# the registry (same-version pushes are a safe no-op). Also runnable by hand
+# (workflow_dispatch) — e.g. right after a merge, or to retry a failed run.
+#
+# Bun installs deps and runs the test gate (bun.lock is the source of truth —
+# there is no package-lock.json); npm still does the actual `publish` step,
+# since Trusted Publishing + --provenance are npm-CLI-specific tooling Bun
+# doesn't replicate.
+#
+# Auth: npm Trusted Publishing (OIDC) — no NPM_TOKEN secret at all. npm
+# exchanges this job's GitHub OIDC token (the id-token: write permission
+# below) for a short-lived publish token at publish time, scoped to exactly
+# this repo + workflow file.
+#
+# One-time setup (manual, by the repo owner — CI cannot do this for you):
+#   1. First publish is manual (npm requires it for a brand-new package) —
+#      already done for 1.0.0.
+#   2. npmjs.com → the package's page → Settings → Trusted Publisher →
+#      GitHub Actions → Organization or user: gtrabanco → Repository:
+#      agentic-workflow → Workflow filename: publish-schema.yml → (leave
+#      Environment name blank unless this job later runs under one) → Add.
+#   That's it — no secret to create or rotate. Requires npm CLI >= 11.5.1,
+#   which the "Install npm" step below ensures regardless of what Node 22
+#   bundles.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/agentic-workflow-schema/**"
+      - ".github/workflows/publish-schema.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # required for npm Trusted Publishing + --provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agentic-workflow-schema
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Install (bun, frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Build + test (the gate — never publish red)
+        run: bun run test
+
+      - name: Skip when the version is already published
+        id: version
+        run: |
+          LOCAL=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view "$(node -p "require('./package.json').name")" version 2>/dev/null || echo "none")
+          echo "local=$LOCAL published=$PUBLISHED"
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm (Trusted Publishing — no token)
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --provenance

@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.9.0
+version: 1.10.0
 argument-hint: <path-or-glob>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -34,7 +34,7 @@ or refactors.**
 ```
 ✓ The synthesized decision table + manual-verification checklist + `Decision: PASS | FAIL` were returned in the fixed output format
 ✓ Every non-fix-now finding got a destination (triaged — issue / decision / drop)
-✓ The closing `→ Next:` block is the LAST thing printed
+✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -209,6 +209,28 @@ disposition is a decision, not a default:
   `--body-file <path>`, never an inline `--body "…"`/heredoc. `triage-issue`
   enforces this for the comments it posts — don't undercut it by pre-escaping
   finding text you hand it.
+
+## Machine envelope
+
+Every invocation ends with the **machine envelope** — schema, field rules and
+placement per the installed `orchestration-envelope` skill: one fenced
+```json block, printed **after** the closing block above, as the **absolute
+last output** of the turn (external orchestrators parse the LAST fenced json
+block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
+present; values only from verified command output, never invented.
+
+This skill emits:
+
+- **`state`:** `READY_FOR_AUDIT` (Decision: PASS — table clean),
+  `NEEDS_FIXES` (Decision: FAIL — `findings.fix_now` non-empty; fold via
+  execute-phase's fold cycle — commit AND push — then re-review), or `HALT`
+  (a critical finding that invalidates continuing any unit — scope `run`).
+- **Fields:** `findings.fix_now` = the fix-now rows (`ref`/`title`/`file`);
+  `findings.issues_filed` = issue numbers `triage-issue` created this turn
+  (integers); `findings.untriaged` MUST be 0 (this skill's own contract routes
+  every non-fix-now finding); `recommendations.product_audit: true` when SPEC
+  drift recurred across units (with the reason).
+- `detail`: `{"axes_run": [...], "axes_skipped": [...], "decision": "PASS|FAIL"}`.
 
 ## Portability (agents other than Claude Code)
 

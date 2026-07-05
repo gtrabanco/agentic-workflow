@@ -1,0 +1,156 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/envelope.schema.json",
+  "title": "agentic-workflow machine envelope",
+  "description": "The fixed JSON block every user-facing agentic-workflow skill prints as the absolute last output of its turn. Source of truth: skills/orchestration-envelope/SKILL.md.",
+  "type": "object",
+  "required": [
+    "skill",
+    "state",
+    "summary",
+    "unit",
+    "phase",
+    "pr",
+    "gates",
+    "findings",
+    "blockers",
+    "dependencies",
+    "recommendations",
+    "needs_input",
+    "next"
+  ],
+  "properties": {
+    "skill": { "type": "string", "minLength": 1 },
+    "state": {
+      "enum": [
+        "OK",
+        "CONTINUE",
+        "READY_FOR_REVIEW",
+        "READY_FOR_AUDIT",
+        "MERGE_READY",
+        "MERGED",
+        "NEEDS_FIXES",
+        "BLOCKED",
+        "NEEDS_INPUT",
+        "FAILED",
+        "HALT"
+      ]
+    },
+    "summary": { "type": "string" },
+    "unit": {
+      "type": "object",
+      "required": ["type", "id", "issue", "branch"],
+      "properties": {
+        "type": { "enum": ["feature", "fix", "docs", "none"] },
+        "id": { "type": ["string", "null"] },
+        "issue": { "type": ["integer", "null"] },
+        "branch": { "type": ["string", "null"] }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "required": ["current", "total", "completed"],
+      "properties": {
+        "current": { "type": ["string", "null"] },
+        "total": { "type": ["integer", "null"] },
+        "completed": { "type": ["integer", "null"] }
+      }
+    },
+    "pr": {
+      "type": "object",
+      "required": ["number", "url", "state", "head_sha", "merge_ready", "ci"],
+      "properties": {
+        "number": { "type": ["integer", "null"] },
+        "url": { "type": ["string", "null"] },
+        "state": { "enum": ["open", "merged", "none"] },
+        "head_sha": { "type": ["string", "null"] },
+        "merge_ready": { "type": ["boolean", "null"] },
+        "ci": { "enum": ["green", "red", "pending", "none", null] }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["verification", "review_pending", "audit_pending"],
+      "properties": {
+        "verification": { "enum": ["green", "red", "not-run", null] },
+        "review_pending": { "type": ["boolean", "null"] },
+        "audit_pending": { "type": ["boolean", "null"] }
+      }
+    },
+    "findings": {
+      "type": "object",
+      "required": ["fix_now", "issues_filed", "untriaged", "decisions_recorded"],
+      "properties": {
+        "fix_now": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ref", "title"],
+            "properties": {
+              "ref": { "type": "string" },
+              "title": { "type": "string" },
+              "file": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "issues_filed": { "type": "array", "items": { "type": "integer" } },
+        "untriaged": { "type": "integer", "minimum": 0 },
+        "decisions_recorded": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "id", "scope", "detail"],
+        "properties": {
+          "kind": {
+            "enum": ["dependency", "issue", "gate", "merge-conflict", "substrate", "input"]
+          },
+          "id": { "type": "string" },
+          "scope": { "enum": ["unit", "run"] },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "required": ["unmet", "build_order"],
+      "properties": {
+        "unmet": { "type": "array", "items": { "type": "string" } },
+        "build_order": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "recommendations": {
+      "type": "object",
+      "required": ["product_audit", "reason"],
+      "properties": {
+        "product_audit": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] }
+      }
+    },
+    "needs_input": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["question", "options"],
+          "properties": {
+            "question": { "type": "string" },
+            "options": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "next": {
+      "type": "object",
+      "required": ["recommended", "alternatives", "tier"],
+      "properties": {
+        "recommended": { "type": "string" },
+        "alternatives": { "type": "array", "items": { "type": "string" } },
+        "tier": { "enum": ["strong", "cheap"] }
+      }
+    },
+    "detail": {}
+  }
+}
