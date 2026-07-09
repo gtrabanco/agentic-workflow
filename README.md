@@ -317,7 +317,9 @@ npx skills add gtrabanco/agentic-workflow#claude
 `effort:` maps to your model's reasoning/thinking budget (`high` → maximum
 reasoning; `medium` → default; no such control → just honor the strong/cheap
 split above). Two invariants survive any mapping: **never review a change with a
-model weaker than the one that wrote it**, and **audit verdicts (the merge gate)
+model weaker than the one that wrote it — and prefer a different model family
+than the writer's** (same-family instances share training blind spots,
+cross-family decorrelates errors), and **audit verdicts (the merge gate)
 get the strongest model you have**. Expect weaker models to follow the workflow
 correctly — the skills are written as checklists and fixed output formats — but
 produce shallower judgment; the discipline holds, the ceiling moves.

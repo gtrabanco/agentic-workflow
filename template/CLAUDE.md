@@ -223,6 +223,15 @@ optional:
   and exit; an opt-in hook re-injects the last entry to resume context. Copy
   `.claude/settings.json.example` to enable; see `.claude/README.md`.
 
+**Context hygiene rule:** end of a unit or phase → `/log-session` then a NEW
+conversation, never compact — compaction re-reads the whole transcript with
+the current session model, right when the context is most expensive to
+re-read; a fresh conversation is ~free because this SPEC/TASKS/progress + the
+session log already are the persistent memory. Compact only mid-phase, for
+unpersisted state you can't afford to lose, and prefer committing WIP + a
+`progress.md` note instead. Details: `docs/workflow/FEATURE_WORKFLOW.md` →
+*Context hygiene & cost*.
+
 ---
 
 ## PR & branch workflow
