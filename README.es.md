@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 28 skills (14 de cara al usuario + 14 internas) — la fuente instalable
+skills/                  las 28 skills (15 de cara al usuario + 13 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -71,14 +71,14 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**14 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
-que se componen por ti: los tres pasos de planificación del router `plan-feature`,
+**15 skills de cara al usuario** (una entrada de menú cada una) + **13 internas**
+que se componen por ti: los dos pasos de planificación del router `plan-feature`,
 el motor de `review-change`, el contrato `orchestration-envelope`, y el **pack de revisión interno propio de 9 skills**
 (`review-code`, `review-security`, `review-verify`, `review-debt`,
 `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`) —
 así que **nunca se requiere una skill de revisión externa**, en ningún agente y
 con ningún modelo. Un único camino disciplinado:
-**plan → execute → review → audit → merge.**
+**design → plan → execute → review → audit → merge.**
 
 ### Configuración inicial
 
@@ -86,16 +86,25 @@ con ningún modelo. Un único camino disciplinado:
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills |
 
+### Diseño
+
+| Skill            | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `design-feature` | **Definición de producto.** Incorpora la entrevista de idea en crudo y luego recorre un checklist fijo de **cierre de capacidades** — por entidad: CRUD + transiciones de estado, cada una con punto de entrada UI + superficie API + test, o un `n/a: <razón>` explícito; por capacidad: punto de entrada + quién puede ejecutarla; por rol: asignado/revocado/visto dónde — hacia criterios de aceptación exhaustivos. Escribe la **mitad de producto** del SPEC y sella `## Design status: designed`. Hace upsert al reejecutarse; nunca destruye decisiones registradas. |
+
 ### Planificación
 
 | Skill          | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plan-feature` | **Un único punto de entrada para planificar una feature.** Detecta la entrada — una idea en crudo (entrevista), un issue `#N` (issue → SPEC acotado) o un slug/SPEC ya acotado (directo al scaffolding) — enruta al paso correcto y registra la entrada en el roadmap. `--next` planifica el siguiente elemento del roadmap. **Dimensiona cada feature** (`XS/S/M/L`): las pequeñas van por la vía SPEC-only de una pasada — sin ceremonia de artefactos; las M/L llevan el set completo con fase de hardening obligatoria. |
+| `plan-feature` | **Router de planificación de ingeniería para una feature ya diseñada.** Ante una feature sin diseñar, PARA y redirige a `design-feature` (sin flag de bypass). Ante una feature diseñada, un issue `#N` (issue → mitad de producto acotada) o un slug/SPEC ya acotado (directo al scaffolding de la mitad de ingeniería), enruta al paso correcto y registra la entrada en el roadmap. `--next` planifica el siguiente elemento del roadmap. **Dimensiona cada feature** (`XS/S/M/L`): las pequeñas van por la vía SPEC-only de una pasada — sin ceremonia de artefactos; las M/L llevan el set completo con fase de hardening obligatoria. |
 | `plan-fix`     | El equivalente del flujo de fix: como arquitecto redacta un SPEC de fix acotado a partir de un issue, commitea en una rama de fix y **se detiene para revisión**.                                                                                                                                                                                                                                                                                                                                                           |
 
-> Solo llamas a `plan-feature`; este compone los pasos internos
-> `plan-feature-interview`, `plan-feature-from-issue` y `plan-feature-scaffold`
-> (ocultos del menú).
+> `design-feature` (definición de producto, incorpora la entrevista de idea en
+> crudo) debe marcar una feature como `designed` antes de que `plan-feature` la
+> planifique — si no, `plan-feature` se detiene y redirige, sin flag de bypass.
+> Una vez diseñada, solo llamas a `plan-feature`; este compone los pasos
+> internos `plan-feature-from-issue` y `plan-feature-scaffold` (ocultos del
+> menú).
 
 ### Ejecución
 
@@ -212,7 +221,8 @@ una conveniencia de la rama `#claude`.
 | Skill            | Tier de modelo | Esfuerzo | Por qué                                                                                                                                                                                                                     |
 | ---------------- | -------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Opus           | alto     | bootstrap del proyecto guiado por entrevista + adaptación                                                                                                                                                                   |
-| `plan-feature`   | Opus           | alto     | router + planificación: sus pasos internos de entrevista/scoping corren **en su turno**, así que el router debe llevar el effort (las skills compuestas heredan el effort del turno)                                        |
+| `design-feature` | Opus           | alto     | juicio de definición de producto: entrevista de idea en crudo + cierre de capacidades, compuesta por quien la llame solo a tier ≥                                                                                          |
+| `plan-feature`   | Opus           | alto     | router + planificación de ingeniería: sus pasos internos de scoping corren **en su turno**, así que el router debe llevar el effort (las skills compuestas heredan el effort del turno)                                     |
 | `plan-fix`       | Opus           | alto     | scoping de arquitecto + análisis de riesgo                                                                                                                                                                                  |
 | `execute-phase`  | Sonnet         | medio    | implementación mecánica según el SPEC — una fase o de una pasada (Opus si la lógica es sutil)                                                                                                                               |
 | `review-change`  | Opus           | alto     | orquestación de revisión adaptativa a la plataforma + síntesis                                                                                                                                                              |
@@ -225,12 +235,12 @@ una conveniencia de la rama `#claude`.
 | `generate-docs`  | Sonnet         | medio    | resumen estructurado de un diff en páginas de guía; el grafo lo genera tooling, nunca lo infiere el modelo (Opus nunca es necesario)                                                       |
 | `ship-roadmap`   | Opus           | alto     | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
 
-> Las 13 skills internas no se seleccionan directamente. Como se componen **dentro
+> Las skills internas no se seleccionan directamente. Como se componen **dentro
 > del turno del caller**, heredan su modelo/effort (el `model`/`effort` de una skill
 > se fija al inicio del turno) — los valores de su frontmatter
-> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue`,
-> `review-code`, `review-security` alto; `plan-feature-scaffold` y el resto del pack
-> de revisión medio) son defaults para una ejecución directa, y por eso los
+> (`review-implementation`, `plan-feature-from-issue`, `review-code`,
+> `review-security` alto; `plan-feature-scaffold` y el resto del pack de
+> revisión medio) son defaults para una ejecución directa, y por eso los
 > orquestadores `plan-feature` y `review-change` llevan `high`.
 >
 > Regla general: **planificar, decidir, revisar y auditar → Opus** (alto, o máx para

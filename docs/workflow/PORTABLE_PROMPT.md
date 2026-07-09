@@ -1,8 +1,8 @@
 # Portable prompt — install the agentic workflow skill system
 
 Paste the prompt below into Claude Code (or any capable coding agent) **from the
-root of the target repository**. It regenerates the agentic workflow — **10
-user-facing skills + 4 internal steps** (minus `init-workspace`, which this
+root of the target repository**. It regenerates the agentic workflow — **11
+user-facing skills + 3 internal steps** (minus `init-workspace`, which this
 prompt itself replaces as the bootstrap) — **adapted to that project's**
 architecture, documentation, and conventions, rather than copying this repo's
 specifics verbatim.
@@ -51,28 +51,39 @@ Each file: YAML frontmatter (`name`, `user-invocable`, a trigger-rich
 `Relationship to other skills`, `Done when`. Make every skill discover-first and
 reference THIS project's real paths/commands/language.
 
+**Design**
+1. `design-feature` — product definition. Fold in a raw-idea interview
+   (proactively ask, small batched rounds, recommended defaults) when starting
+   from zero, then walk the **capability-closure** checklist: for each entity
+   introduced/touched, CRUD + state transitions, each with a UI entry point +
+   API surface + test, or an explicit `n/a: <reason>`; for each capability, its
+   entry point + who may execute it; for each role, where it's
+   assigned/revoked/viewed. The filled rows become the acceptance criteria.
+   Estimate the feature's **size** (`XS/S/M/L`); offer to open a tracking
+   issue. Writes the SPEC's **product half** and stamps `## Design status:
+   designed`. Upserts on re-run (never destroys recorded decisions).
+
 **Plan**
-1. `plan-feature` — the ROUTER and the only planning entry in the menu. Detect the
-   input — a raw idea, an issue `#N`, a scoped slug/SPEC, or `--next` (next roadmap
-   item) — dispatch to the right internal step below, then ensure the roadmap entry
-   and print the next step: `execute-phase NN P1` (M/L) or `execute-phase NN`
-   single-pass (XS/S).
-2. `plan-fix` — architect-draft a tightly-scoped fix SPEC from an issue, register
+2. `plan-feature` — the ROUTER and the only engineering-planning entry in the
+   menu. Given an undesigned feature (no `## Design status: designed`),
+   **STOP and redirect** to `/design-feature <slug>` (no bypass flag). Given a
+   designed feature, an issue `#N`, a scoped slug/SPEC, or `--next` (next
+   roadmap item), dispatch to the right internal step below, then ensure the
+   roadmap entry and print the next step: `execute-phase NN P1` (M/L) or
+   `execute-phase NN` single-pass (XS/S).
+3. `plan-fix` — architect-draft a tightly-scoped fix SPEC from an issue, register
    it in the fix index, commit on a fix branch, and STOP for review.
 
 **Internal planning steps** (`user-invocable: false` — invoked only by the router)
-3. `plan-feature-interview` — interactive interview from a raw idea; proactively
-   ask (small batched rounds, recommended defaults) to fill every SPEC dimension,
-   including failure-mode dev scenarios and — when the feature has a UI surface —
-   a UI design reference (or flag a design pass); estimate the feature's **size**
-   (`XS/S/M/L`); offer to open a tracking issue.
 4. `plan-feature-from-issue` — convert a feature-request issue into a scoped,
-   **sized** SPEC (confirm it's a feature, not a bug/debt; translate to docs
-   language; map to roadmap; close gaps by asking; wire `Closes #N`).
-5. `plan-feature-scaffold` — scaffold the SPEC + planning artifacts **scaled to
-   the size**: XS/S → SPEC-only (single-pass path, no ceremony); M/L → the full
-   set, whose plan always ends in a **hardening phase** (edge cases + the SPEC's
-   failure modes). Register in the roadmap. Docs only; no code, no branch.
+   **sized** SPEC product half (confirm it's a feature, not a bug/debt; translate
+   to docs language; map to roadmap; close gaps by asking, or hand a thin issue
+   to `design-feature`; wire `Closes #N`; satisfy capability closure).
+5. `plan-feature-scaffold` — fill the **engineering half** + scaffold planning
+   artifacts **scaled to the size**: XS/S → SPEC-only (single-pass path, no
+   ceremony); M/L → the full set, whose plan always ends in a **hardening
+   phase** (edge cases + the SPEC's failure modes). Register in the roadmap.
+   Docs only; no code, no branch.
 
 **Execute**
 6. `execute-phase` — implement one phase (default), a small `XS/S` feature in a
