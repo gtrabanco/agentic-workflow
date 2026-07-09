@@ -108,7 +108,7 @@ sweep — that is `product-audit`'s job). n/a if none apply.
 Product-definition decisions the project lead must make (or has made) before
 implementation starts. Record the chosen option and the rationale.
 
-### Design status
+## Design status
 
 `not designed` — capability closure not yet complete. `design-feature` sets
 this to `designed` once every closure row is filled or explicitly `n/a`.
