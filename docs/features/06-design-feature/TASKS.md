@@ -66,18 +66,18 @@ Run `execute-phase 06 P1`, then `P2`, `P3`, `P4`.
 
 ## P4 — Hardening + bookkeeping (last phase)
 
-- [ ] Run `bump-skill`: design-feature 1.0.0 row, plan-feature major, interview
+- [x] Run `bump-skill`: design-feature 1.0.0 row, plan-feature major, interview
       removal, from-issue/scaffold minors → `CHANGELOG.md` + `CHANGELOG.es.md`.
-- [ ] Verify README skills + model tables (EN/ES) list `design-feature` and drop
+- [x] Verify README skills + model tables (EN/ES) list `design-feature` and drop
       `plan-feature-interview`.
-- [ ] Run `npx skills add . --list` (all parse; interview gone).
-- [ ] Run every acceptance-criteria command (AC1–AC11).
-- [ ] Run `/audit-docs`; reconcile any drift it reports.
-- [ ] Weak-model read-through of `design-feature`: every closure row checkable, no
+- [x] Run `npx skills add . --list` (all parse; interview gone).
+- [x] Run every acceptance-criteria command (AC1–AC11).
+- [x] Run `/audit-docs`; reconcile any drift it reports.
+- [x] Weak-model read-through of `design-feature`: every closure row checkable, no
       "if needed", fixed output formats, `## Portability` intact.
-- [ ] Confirm closure gate rejects a blank row (NEEDS_INPUT/BLOCKED, not silent
+- [x] Confirm closure gate rejects a blank row (NEEDS_INPUT/BLOCKED, not silent
       pass); confirm `design-feature <existing-slug>` upsert destroys nothing.
-- [ ] Confirm no stack/product references leaked into new skill or shared docs.
+- [x] Confirm no stack/product references leaked into new skill or shared docs.
 - [ ] **Close-out — open the PR** (`gh pr create --body-file <path>` — body as a
       Markdown file, real backticks, never inline `--body`/heredoc) with
       `Closes #13` and **PRINT THE PR URL in the chat**.
