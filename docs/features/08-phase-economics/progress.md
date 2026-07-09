@@ -49,3 +49,20 @@ the equivalent `## Feature workflow` section of `template/CLAUDE.md` instead
 numbers only — the changelog/README bookkeeping via `bump-skill` is a P3 task).
 All P2 acceptance-criteria greps (AC3–AC7) pass; `npx skills add . --list` exits 0
 with both skills parsed.
+
+## P3 — 2026-07-10
+
+Hardening: all five dev-scenario read-throughs confirmed (`plan:split-oversize`,
+`plan:split-multilayer`, `plan:open-decision`, `plan:criteria-as-commands`,
+`exec:one-phase-session` — each rule present and independently checkable, no
+prose-only heuristics). `/audit-docs` ran clean — PASS, no drift in the
+roadmap↔folder mapping, fix index, phase naming, or TASKS/progress consistency
+for this feature; the one "Step 0" grep hit in feature 06 is a known pre-existing
+false positive (fixed section header), already documented there. `bump-skill`
+added `CHANGELOG.md`/`CHANGELOG.es.md` rows + a release-log entry for both
+touched skills and updated the `execute-phase` README cell (EN/ES) — no
+model/effort tier changed, so `model-routing.yml` untouched. All 9 structural/AC
+greps (AC1–AC9) pass; `npx skills add . --list` exits 0. No stack/framework
+leakage found in the diff; `execute-phase` retains its `## Portability` section
+and closing `→ Next:` blocks. Ready to open the PR (`Closes #15`), flip the
+roadmap row to `done`, and hand off to the mandatory `/review-change`.
