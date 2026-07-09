@@ -98,4 +98,29 @@ README.es skills-table cell. AC8 grep checks (`JIT`/`just-in-time` and
 `NEEDS_INPUT`) pass; `npx skills add . --list` still discovers and parses
 every skill.
 
-## P5 — _pending_
+## P5 — 2026-07-09
+
+Hardening + bookkeeping sweep (bump-skill bookkeeping itself was already done
+incrementally per phase, P1–P4):
+
+- Verified all four dev-scenario failure modes by read-through against the
+  edited skills (see `testing.md` → P5 verification): `execute:redirect-idea`,
+  `execute:redirect-defined`, `legacy:planned-compat`, `ship:undesignable`
+  (plus `ship:jit-design`, `status:idea-candidate`, `status:defined-startable`
+  covered structurally in earlier phases).
+- Ran every acceptance-criteria grep command (AC1, AC2, AC3, AC5, AC6, AC8,
+  AC9) — all pass. AC4 (envelope sample) and AC7 (plan-feature roadmap-status-
+  first gate) verified by read.
+- `npx skills add . --list` — all skills discovered and parse.
+- `/audit-docs` — PASS, 0 findings, 12/14 checks applicable (8: no
+  invariant-ID convention in this repo; 13: no `Docs site` block declared).
+- Confirmed no stack/framework leakage in the touched skills/docs (one
+  false-positive grep hit on "express yet", not the framework).
+- Confirmed every touched user-facing skill (`workflow-status`,
+  `execute-phase`, `design-feature`, `plan-feature`, `ship-roadmap`) still
+  carries `## Portability` and a closing `→ Next:` block; the two internal
+  skills (`plan-feature-from-issue`, `plan-feature-scaffold`) correctly have
+  neither (not user-invocable).
+
+Feature 07 (backlog U4) is now complete — every phase's dev-scenario and
+acceptance-criteria coverage is accounted for. Opening the PR next.

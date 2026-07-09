@@ -55,17 +55,17 @@ Per-phase checklists the executor ticks off. Labels are fixed `P1, P2, …`.
 
 ## P5 — Hardening + bookkeeping
 
-- [ ] Verify dev-scenario failure modes: `ship:undesignable`,
+- [x] Verify dev-scenario failure modes: `ship:undesignable`,
       `legacy:planned-compat`, `execute:redirect-idea`, `execute:redirect-defined`
-- [ ] Run `bump-skill` → `CHANGELOG.md` + `CHANGELOG.es.md` rows for every touched
+- [x] Run `bump-skill` → `CHANGELOG.md` + `CHANGELOG.es.md` rows for every touched
       skill + README skills+model tables (EN/ES)
-- [ ] `npx skills add . --list` lists every skill (all parse)
-- [ ] Run every acceptance-criteria `grep`/`test` command (AC 1,2,3,5,6,8,9)
-- [ ] `/audit-docs` — cross-doc consistency clean
-- [ ] Weak-model read-through of every edited skill (status precondition,
+- [x] `npx skills add . --list` lists every skill (all parse)
+- [x] Run every acceptance-criteria `grep`/`test` command (AC 1,2,3,5,6,8,9)
+- [x] `/audit-docs` — cross-doc consistency clean
+- [x] Weak-model read-through of every edited skill (status precondition,
       `startable_now ≥ defined`, JIT no-questions contract each independently
       checkable)
-- [ ] Confirm no stack leakage; `## Portability` + closing `→ Next:` intact in
+- [x] Confirm no stack leakage; `## Portability` + closing `→ Next:` intact in
       every touched user-facing skill
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves
