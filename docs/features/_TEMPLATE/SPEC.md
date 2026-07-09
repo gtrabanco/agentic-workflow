@@ -100,7 +100,10 @@ For EACH role / permission:
 
 Objective, verifiable conditions for "done". Each must be checkable
 without judgement — the filled rows of Capability closure above, plus any
-criteria the Engineering half adds once phased.
+criteria the Engineering half adds once phased. Emit command-checkable
+criteria as runnable commands where possible (a `grep`, a test invocation, a
+build) — not as prose; genuinely judgement-only criteria stay prose, labelled
+`read-verified`.
 
 ### Tooling
 

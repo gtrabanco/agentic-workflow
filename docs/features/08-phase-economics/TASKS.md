@@ -27,23 +27,27 @@ rule); judgement-only items are prose labelled read-verified.
 
 ## P2 — Criteria-as-commands + one-phase-one-session
 
-- [ ] `plan-feature-scaffold`: instruct emitting command-checkable acceptance
+- [x] `plan-feature-scaffold`: instruct emitting command-checkable acceptance
       criteria as commands in `TASKS.md`/`testing.md` (prose only for
       judgement-only, labelled read-verified; reference feature 07's `testing.md`)
       → `grep -iq 'runnable command\|as the command\|command-checkable' skills/plan-feature-scaffold/SKILL.md`
-- [ ] `docs/features/_TEMPLATE/SPEC.md`: add the criteria-as-commands convention to
+- [x] `docs/features/_TEMPLATE/SPEC.md`: add the criteria-as-commands convention to
       the Acceptance-criteria section — read-verified
-- [ ] `template/docs/features/_TEMPLATE/SPEC.md`: mirror the convention —
+- [x] `template/docs/features/_TEMPLATE/SPEC.md`: mirror the convention —
       read-verified
-- [ ] `execute-phase`: add the one-phase-one-session rule to the Batch-execution
+- [x] `execute-phase`: add the one-phase-one-session rule to the Batch-execution
       section (never two phases/conversation on non-frontier models; `/loop`
       already re-invokes per phase; Portability fallback paired) →
       `grep -iq 'one phase = one session\|one phase per session\|one session' skills/execute-phase/SKILL.md`
-- [ ] `docs/workflow/FEATURE_WORKFLOW.md`: add the one-phase-one-session convention
+- [x] `docs/workflow/FEATURE_WORKFLOW.md`: add the one-phase-one-session convention
       → `grep -iq 'one phase' docs/workflow/FEATURE_WORKFLOW.md`
-- [ ] `template/` mirror of `FEATURE_WORKFLOW` updated if present; else record the
-      assumption in `decisions.md` — read-verified
-- [ ] Bump `plan-feature-scaffold` + `execute-phase` `version:` (minor)
+- [x] `template/` mirror of `FEATURE_WORKFLOW` updated if present; else record the
+      assumption in `decisions.md` — read-verified. No standalone
+      `template/docs/workflow/FEATURE_WORKFLOW.md` exists; the rule was added to
+      the equivalent `## Feature workflow` section in `template/CLAUDE.md`
+      instead (recorded in `decisions.md`).
+- [x] Bump `plan-feature-scaffold` (1.6.0 → 1.7.0) + `execute-phase`
+      (1.15.0 → 1.16.0) `version:` (minor)
 
 ## P3 — Hardening + bookkeeping
 
