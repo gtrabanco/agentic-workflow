@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.5.0
+version: 1.6.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -89,7 +89,13 @@ the agent guide and state the assumption.
        issue. Do **not** plan to implement deferred work inline.
      - `decisions.md` — architecture/scope decisions + open questions.
      - `architecture-notes.md` — layer impact, ports, schema, bindings touched.
-5. **Register in the roadmap** with number, ordering, dependencies.
+5. **Register in the roadmap** with number, ordering, dependencies, **and set
+   the row's status to `planned`** — the `defined → planned` transition this
+   skill owns (see the roadmap's Status legend). The row must already read
+   `defined` on entry (step 1 confirmed the product half is `designed`); if
+   the row is missing entirely (an already-scoped SPEC with no prior roadmap
+   entry), add it directly at `planned` since the SPEC + artifacts this step
+   produces satisfy that state in the same edit.
 6. **Do not branch or code.** That belongs to `execute-phase`; record the branch
    name in the SPEC only.
 7. **Hand off — return exactly** (fixed completion report):
@@ -125,5 +131,6 @@ already-designed scoped slug/SPEC). Hands off to `execute-phase` for P1;
 - `docs/features/<NN>-<slug>/` exists with the SPEC's engineering half +
   every planning artifact filled — the product half untouched from what
   `design-feature` / `plan-feature-from-issue` wrote.
-- The roadmap lists the feature with correct number, order, dependencies.
+- The roadmap lists the feature with correct number, order, dependencies, and
+  **status `planned`** (the `defined → planned` write this skill owns).
 - No code changed; open questions captured in `decisions.md`.

@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 2.0.0
+version: 2.1.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -51,23 +51,32 @@ and roadmap registration match the project's real layout.
 
 ## Redirect gate (always, before routing)
 
-Before any other step, resolve the target slug/issue and check its SPEC (if a
-`SPEC.md` exists for it):
+Before any other step, resolve the target slug/issue and read **the roadmap
+status** (`docs/features/ROADMAP.md` → the five-state machine
+`idea/defined/planned/in-progress/done`) — the **primary** gate signal. The
+SPEC's `## Design status` marker is the SPEC-local record and the
+**legacy-compat fallback** only (see step 3 below), never the primary check:
 
-- **No `SPEC.md`**, or **`## Design status` is missing or not `designed`**, or
-  the **Capability closure** section is empty → **STOP**. Print exactly:
+1. **Roadmap row status `defined` or higher** → proceed to Routing below (the
+   product half is designed; no need to re-check the SPEC marker).
+2. **Roadmap row status `idea`, or no row at all** → **STOP**. Print exactly:
 
-  ```
-  → Next: /design-feature <slug> — this feature has no completed product design yet
-    (capability closure not done). Design it first; then re-run /plan-feature <slug>.
-  ```
+   ```
+   → Next: /design-feature <slug> — this feature has no completed product design yet
+     (capability closure not done). Design it first; then re-run /plan-feature <slug>.
+   ```
 
-  No bypass flag exists for this gate — an undesigned feature is never planned
-  by this skill, under any flag or instruction.
-- **`## Design status: designed`** and Capability closure filled → proceed to
-  Routing below.
-- **A raw idea with no slug at all** (nothing to check) → the same STOP applies:
-  print the block above pointing at `/design-feature "<idea>"` instead of a slug.
+   No bypass flag exists for this gate — an undesigned feature is never
+   planned by this skill, under any flag or instruction.
+3. **Legacy compat.** A roadmap row still reading a plain `planned` with no
+   five-state history (predates this repo's roadmap-status-machine feature):
+   fall back to the SPEC marker — `## Design status: designed` and Capability
+   closure filled → treat as `defined`+`planned`, proceed to Routing (no
+   redirect, no relabelling required). Marker missing/`not designed`/closure
+   empty → treat as `idea`, STOP per step 2. See `docs/workflow/MIGRATION.md`.
+4. **A raw idea with no slug at all** (nothing to check) → the same STOP
+   applies: print the block above pointing at `/design-feature "<idea>"`
+   instead of a slug.
 
 ## Routing
 

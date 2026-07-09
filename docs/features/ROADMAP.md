@@ -14,6 +14,7 @@ every row must have a folder (or be explicitly marked "scheduled").
 | 04 | `running-economically` | done · [#22](https://github.com/gtrabanco/agentic-workflow/pull/22) | — | Docs-only cost pack (backlog U1, closes #11): a Context hygiene & cost section (clear + log-session over compaction, with the compaction cost mechanism stated) in FEATURE_WORKFLOW/template; a cross-family review line extending the "never review with a weaker model" invariant to prefer a different model *family*; driver prompt-cache guidance (byte-stable prefixes, short window, no mid-unit model switch) in ORCHESTRATION |
 | 05 | `adversarial-context-clean-review` | done · [#23](https://github.com/gtrabanco/agentic-workflow/pull/23) | — | Backlog U2 (closes #12): harden the mandatory end-of-unit review. `review-implementation`'s find phase becomes adversarial by default ("assume the diff is WRONG; prove it does not work"); `review-change` gains a mandatory context-clean turn-contract box (the end review MUST run in a conversation that did NOT write the diff — else STOP and hand off). References feature 04's cross-family preference; does NOT build `--adversarial N` (that is U8/#18, which depends on this). Minor bumps for both skills |
 | 06 | `design-feature` | done · [#24](https://github.com/gtrabanco/agentic-workflow/pull/24) | — | Backlog U3 (closes #13, major): new user-facing `design-feature` skill owning product definition via **capability closure** (per entity → CRUD + state transitions + UI entry + API + test, or explicit `n/a`; per capability → entry point + ACL; per role → assign/revoke/view) → exhaustive acceptance criteria — the fix for weak executor models omitting implicit work. **One SPEC in two halves** (design writes product half, plan writes engineering half; `## Design status` marker). `plan-feature` slims to engineering planning (**major**) and STOPS+redirects to `/design-feature` when a feature is undesigned (no bypass flag); `plan-feature-interview` is retired into `design-feature`. Roadmap `defined` state + workflow-status/ship-roadmap wiring are **U4/#14** (depends on this) |
+| 07 | `roadmap-status-machine` | done · [#25](https://github.com/gtrabanco/agentic-workflow/pull/25) | 06 | Backlog U4 (closes #14, M): promote the roadmap status column to the pipeline's state machine `idea → defined → planned → in-progress → done` (repo + `template/` legend). `workflow-status` reports `idea` rows as **design candidates** and only calls `defined`+ units startable (new `design_candidates` envelope field); `execute-phase`'s gate redirects a sub-`planned` unit (`idea`→`/design-feature`, `defined`→`/plan-feature`); the authoring skills **set** the statuses (`defined` by design-feature/from-issue, `planned` by scaffold) and `plan-feature`'s gate keys on the roadmap status (SPEC `## Design status` retained as legacy fallback); `ship-roadmap` complies via **batch design (founding) + JIT design from locked decisions (mid-run, no new questions)**, undesignable → `NEEDS_INPUT`+park. Legacy `planned`-with-designed-SPEC = `defined`+`planned` (MIGRATION.md). Minor bumps across the touched skills |
 
 > **Merge order & shared-file coupling (2026-07-05).** Features 01–03 are
 > functionally independent (no `Depends on:`), but their PRs edit overlapping
@@ -29,15 +30,53 @@ every row must have a folder (or be explicitly marked "scheduled").
 
 ## Status legend
 
-- `planned` — in the roadmap, not started
-- `in-progress` — branch open, phases executing
-- `done` — built and its PR open (the last step opened the PR); **merge state lives
-  in the forge**, not the status — a `done` row may still be awaiting a human merge
+The pipeline's single ground-truth state machine — every sensor and executor
+reads this column, not a SPEC-local marker:
+
+```
+idea ──design-feature / plan-feature-from-issue──▶ defined
+        (stamps ## Design status: designed)
+                                                     │
+                        plan-feature-scaffold        │
+             (fills engineering half + artifacts)    ▼
+                                                   planned
+                                                     │
+                     execute-phase P1                │
+              (branch open; row → in-progress)       ▼
+                                                 in-progress
+                                                     │
+                        PR-open step                 │
+              (row → done; merge state in forge)     ▼
+                                                    done
+```
+
+- `idea` — a roadmap row exists (the wishlist); no completed product design.
+  **No new file** — a thin row *is* the idea. Next action: `/design-feature
+  <slug>`. Set by whoever adds the row (human or `ship-roadmap` founding).
+- `defined` — `SPEC.md` exists with the **product half complete** (`## Design
+  status: designed`, capability closure filled). Next action: `/plan-feature
+  <slug>`. Set by `design-feature` or `plan-feature-from-issue`.
+- `planned` — full SPEC (**engineering half filled**) + planning artifacts
+  exist. Next action: `/execute-phase <NN> P1`. Set by `plan-feature-scaffold`
+  (XS/S SPEC-only sizes included — scaffold still runs and lands here).
+- `in-progress` — branch open, phases executing. Set by `execute-phase` P1.
+- `done` — built and its PR open (the last step opened the PR); **merge state
+  lives in the forge**, not the status — a `done` row may still be awaiting a
+  human merge. Set by the PR-open step.
+
+Each transition is owned by exactly one skill (a write) — no status is ever
+inferred, and no second skill writes the same edge.
 
 ## Conventions
 
 - Numbers are assigned in order and never reused.
 - A feature that depends on another cannot start until its dependency is **merged**
   (not merely `done` — a `done` dep with an open PR isn't on `main` yet).
+- A unit is **executable only when `planned`** (or above). `execute-phase`'s
+  dependency gate STOPs and redirects a sub-`planned` unit: `idea` →
+  `/design-feature <slug>`, `defined` → `/plan-feature <slug>`.
+- **Legacy compat:** a pre-U4 roadmap row still reading a plain `planned` with
+  no five-state history, whose SPEC's product half is complete, is treated as
+  `defined`+`planned` (no redirect) — see `docs/workflow/MIGRATION.md`.
 - Keep this table consistent with the feature folders (the `audit-docs` skill
   checks for drift).

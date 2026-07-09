@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.14.1
+version: 1.15.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -91,7 +91,7 @@ before touching anything:
    (`gh pr view` on its PR, or the row's PR reference) — `done`-but-PR-open is
    NOT met (its code isn't on the default branch), and a missing folder/row is
    NOT met.
-4. **All met** → proceed to the normal workflow.
+4. **All met** → proceed to the **own-status precondition** below.
 5. **Any unmet → STOP before any edit** and print exactly:
 
    ```
@@ -111,6 +111,46 @@ before touching anything:
    result is **recorded in `decisions.md`** ("started with unmet deps: <list>,
    user-forced <date>") before implementation begins. `--force` is a
    user-only escape hatch — the autopilot (`ship-roadmap`) must never pass it.
+
+### Own-status precondition (runs after the dependency closure is met, still before any edit)
+
+Feature mode only (a fix has no roadmap-status equivalent — its own state is
+the fix-index entry, unaffected). Read this unit's own roadmap row status
+(the five-state machine — `docs/features/ROADMAP.md` → Status legend):
+
+1. **`idea`** (or no `SPEC.md` with `## Design status: designed`) → STOP,
+   before any edit:
+
+   ```
+   OWN-STATUS GATE — <NN>-<slug> BLOCKED (idea)
+   This unit has no completed product design yet.
+
+   → Next: /design-feature <slug> — write the product half first
+     · proceed anyway, at your own risk → /execute-phase <NN> <phase> --force
+       (the override is recorded in decisions.md — never silent)
+   ```
+
+2. **`defined`** (product half designed, engineering half / planning
+   artifacts not yet scaffolded) → STOP:
+
+   ```
+   OWN-STATUS GATE — <NN>-<slug> BLOCKED (defined)
+   Product half designed; engineering half + planning artifacts not yet scaffolded.
+
+   → Next: /plan-feature <slug> — scaffold the engineering half + TASKS.md
+     · proceed anyway, at your own risk → /execute-phase <NN> <phase> --force
+       (the override is recorded in decisions.md — never silent)
+   ```
+
+3. **`planned`+** → proceed to the normal workflow.
+4. **Legacy compat.** A row still reading a plain `planned` with no
+   five-state history: check its `SPEC.md` product half. Complete
+   (`## Design status: designed`) → treat as `defined`+`planned`, no
+   redirect. Incomplete/absent → treat as `idea`, redirect per step 1. See
+   `docs/workflow/MIGRATION.md`.
+5. **`--force`** skips the STOP (never the check), same rule as the
+   dependency gate: recorded in `decisions.md` before implementation begins;
+   the autopilot (`ship-roadmap`) must never pass it.
 
 ## Allowed & forbidden (fixed lists — no interpretation)
 
@@ -446,7 +486,10 @@ This skill emits:
     mandatory review before the merge gate.
   - `BLOCKED` — the dependency gate stopped before any edit →
     `dependencies.unmet` + `dependencies.build_order` (deepest first, same
-    order as the printed gate block), `blockers[]` kind `dependency`.
+    order as the printed gate block), `blockers[]` kind `dependency`. The
+    own-status gate stopping (`idea`/`defined`) → same `state: BLOCKED`,
+    `blockers[]` kind `own-status`, `next.recommended` = `/design-feature
+    <slug>` (idea) or `/plan-feature <slug>` (defined).
   - `FAILED` — red gate not fixable within the phase's scope (recorded in
     known-issues.md, work left uncommitted).
   - `NEEDS_INPUT` — single-pass SPEC ambiguity (one question).

@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.1.1
+version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -63,32 +63,46 @@ ship-roadmap run exists.
    `gh pr list --state open --json number,title,headRefName,url,statusCheckRollup`,
    `gh pr list --state merged --limit 20 --json number,headRefName`,
    `gh issue list --state open --json number,title,labels`.
-3. **Roadmap + fix index.** Parse every row: id, slug, status
-   (planned / in-progress / done), depends-on, linked PR.
+3. **Roadmap + fix index.** Parse every row: id, slug, status — the
+   five-state machine `idea / defined / planned / in-progress / done` (see
+   `docs/features/ROADMAP.md` → Status legend) — depends-on, linked PR. A
+   legacy row reading a plain `planned` with no five-state history: check its
+   `SPEC.md` product half; complete (`## Design status: designed`) → treat as
+   `defined`+`planned` (no redirect, per `docs/workflow/MIGRATION.md`);
+   otherwise treat as `idea`.
 4. **Compute the dependency tree.** For every non-merged unit, build the
    **transitive** depends-on closure and mark each edge met (dep's PR merged)
    or unmet — same rule as execute-phase's dependency gate: `done`-with-open-PR
    is NOT met. Detect inconsistencies (a "merged" row whose own deps aren't
    merged; cycles) and report them as `substrate` blockers.
-5. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
+5. **Classify readiness — `startable_now` requires status ≥ `defined` AND deps
+   met.** For every unit in the roadmap/fix index:
+   - status `idea` → list under **`design_candidates`**, next command
+     `/design-feature <slug>`. Never `startable_now`, regardless of deps.
+   - status `defined` or `planned`, deps met → `startable_now`, with the next
+     command matched to the exact status: `defined` → `/plan-feature <slug>`,
+     `planned` → `/execute-phase <NN> P1`.
+   - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
+6. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
    phase, total phases, per-phase checkbox completion.
-6. **Pending quality gates.** For each unit with commits: has the mandatory
+7. **Pending quality gates.** For each unit with commits: has the mandatory
    `review-change` for its current state run (review report present in the
    feature folder)? Has `audit-pr` a MERGE-READY bound to the PR's current
    head SHA (look for the audit comment marker on the PR)? Derive
    `review_pending` / `audit_pending` / `merge_ready` per unit.
-7. **Findings awaiting a destination.** Scan the in-flight folders'
+8. **Findings awaiting a destination.** Scan the in-flight folders'
    `known-issues.md` for entries with no linked issue, and open issues labeled
    or titled as postponed findings. Count + list them.
-8. **Product-audit recommendation.** Recommend when ≥3 features merged since
+9. **Product-audit recommendation.** Recommend when ≥3 features merged since
    the last `SHIP_REPORT`/product-audit artifact, or when the same drift kind
    appears in ≥2 units' docs. State the reason; never run it.
-9. **Crash recovery (run every invocation — cheap, see the section below).**
-   Classify whether an interrupted turn is in evidence and append the fixed
-   `CRASH RECOVERY` sub-block to the report.
-10. **Report.** Print a short human summary (table: unit | status | deps unmet |
-    PR | next gate) plus the `CRASH RECOVERY` sub-block, then the envelope.
-    With `--json-only`, envelope only.
+10. **Crash recovery (run every invocation — cheap, see the section below).**
+    Classify whether an interrupted turn is in evidence and append the fixed
+    `CRASH RECOVERY` sub-block to the report.
+11. **Report.** Print a short human summary (table: unit | status | deps unmet |
+    PR | next gate) plus a **design candidates** line (`idea` units and their
+    `/design-feature` next command) plus the `CRASH RECOVERY` sub-block, then
+    the envelope. With `--json-only`, envelope only.
 
 ## Crash recovery (run every invocation)
 
@@ -159,13 +173,16 @@ states** (the schema package needs no release):
   the phase / discard the dirty work), evidence in `detail.crash_recovery`.
 
 `next` always carries the single best command for the project right now, and
-`detail` the full tree (plus `crash_recovery: {verdict, branches: [...]}`):
+`detail` the full tree (plus `crash_recovery: {verdict, branches: [...]}`).
+**`design_candidates`** is a top-level array beside `startable_now` /
+`blocked_units` — every `idea`-status unit, deps-agnostic (design happens
+before dependency startability matters):
 
 ```json
 {
   "skill": "workflow-status",
   "state": "OK",
-  "summary": "2 features merged, 07 in-progress at P2/4 awaiting review, 05 startable, fix #43 pending triage.",
+  "summary": "2 features merged, 07 in-progress at P2/4 awaiting review, 05 startable, fix #43 pending triage, 08 needs design.",
   "unit": {"type": "none", "id": null, "issue": null, "branch": "main"},
   "phase": {"current": null, "total": null, "completed": null},
   "pr": {"number": null, "url": null, "state": "none", "head_sha": null, "merge_ready": null, "ci": null},
@@ -173,6 +190,7 @@ states** (the schema package needs no release):
   "findings": {"fix_now": [], "issues_filed": [], "untriaged": 2, "decisions_recorded": 0},
   "blockers": [],
   "dependencies": {"unmet": [], "build_order": []},
+  "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/design-feature 08-billing-webhooks"}],
   "recommendations": {"product_audit": false, "reason": null},
   "needs_input": null,
   "next": {"recommended": "/review-change", "alternatives": ["/plan-feature 05"], "tier": "strong"},
@@ -180,7 +198,10 @@ states** (the schema package needs no release):
     "features": [
       {"id": "07-csv-export", "status": "in-progress", "deps": ["01"], "deps_unmet": [],
        "phase": {"current": "P2", "total": 4}, "pr": null,
-       "review_pending": true, "audit_pending": null, "merge_ready": null}
+       "review_pending": true, "audit_pending": null, "merge_ready": null},
+      {"id": "05-auth", "status": "defined", "deps": [], "deps_unmet": [],
+       "phase": {"current": null, "total": null}, "pr": null,
+       "review_pending": null, "audit_pending": null, "merge_ready": null}
     ],
     "fixes": [
       {"id": "43-null-crash", "issue": 43, "status": "planned", "deps_unmet": [], "pr": null}
@@ -200,9 +221,14 @@ states** (the schema package needs no release):
 }
 ```
 
-`startable_now`, `blocked_units` (with build orders) and `pending_triage` are
-the keys an orchestrator routes on; every id in them must appear fully in
-`features`/`fixes`.
+`startable_now`, `blocked_units` (with build orders), `design_candidates` and
+`pending_triage` are the keys an orchestrator routes on; every id in
+`startable_now`/`blocked_units` must appear fully in `features`/`fixes` — an
+`idea` unit appears ONLY in `design_candidates` (and `detail.features`), never
+in `startable_now`, since it has no deps-met check to pass (design precedes
+dependency startability). `05-auth` above illustrates `defined` (not yet
+`planned`): startable, next `/plan-feature`, `phase` fields null (no planning
+artifacts yet).
 
 ## Guardrails
 
@@ -250,9 +276,10 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
 - The `CRASH RECOVERY` sub-block was printed with a verdict from the decision
   table, and the envelope `state` matches it (CLEAN→OK, RESUMABLE→CONTINUE,
   AMBIGUOUS→NEEDS_INPUT).
-- The human summary (unless `--json-only`) and the envelope — with `detail`
-  carrying features, fixes, startable_now, blocked_units, open_prs and
-  pending_triage — are printed, envelope last.
+- The human summary (unless `--json-only`) and the envelope — with
+  `design_candidates` top-level and `detail` carrying features, fixes,
+  startable_now, blocked_units, open_prs and pending_triage — are printed,
+  envelope last.
 - Nothing was modified anywhere.
 
 → Next: the envelope's `next.recommended` command — it is computed from the
