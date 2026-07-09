@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -42,6 +42,9 @@ planning happens. **Docs only — no code, no branch.**
   or an explicit `n/a: <reason>` — a blank row is not a valid end state
 ✓ `## Design status` is set to `designed` only when closure is complete;
   otherwise it stays `not designed` and the turn reports what's missing
+✓ The roadmap row's status is set to `defined` in lockstep with `designed`
+  (added at `idea` first if it didn't exist) — never `defined` with an
+  incomplete closure, never `designed` with the roadmap row left at `idea`
 ✓ Upsert discipline honored: an existing SPEC/decisions.md was re-read first;
   nothing recorded there was destroyed; revisions were appended, not overwritten
 ✓ Artifact language: explicit user instruction > the project's declared docs
@@ -149,14 +152,22 @@ research is the Engineering half's job, not this one.
    `Product decisions` in the SPEC. Record every non-obvious call in `Product
    decisions` with its rationale, and log any residual unknown as an open
    question in `decisions.md` rather than guessing.
-9. **Stamp `## Design status`.** Every closure row filled or explicit `n/a` →
-   set the marker to `designed`. Any row still blank, or an unresolved
-   question blocking closure → leave it `not designed` and end the turn with
-   `NEEDS_INPUT` (see *Machine envelope*) instead of a false `designed` stamp.
-10. **Register / confirm the roadmap row.** If this is a brand-new feature,
-    add its `docs/features/ROADMAP.md` row (number, slug, status `planned`,
-    dependencies). If the row already exists, leave it untouched — status
-    transitions beyond `planned` are `plan-feature`'s and `execute-phase`'s job.
+9. **Stamp `## Design status` and set the roadmap row to `defined`.** Every
+   closure row filled or explicit `n/a` → set the marker to `designed` **and**
+   set this feature's `docs/features/ROADMAP.md` row status to `defined` (the
+   `idea → defined` transition this skill owns — see the roadmap's Status
+   legend). If the row doesn't exist yet (brand-new feature, no prior `idea`
+   row), add it first at `idea` (number, slug, dependencies), then promote it
+   to `defined` in the same edit — no feature is ever registered directly at
+   `defined` without passing through `idea`. Any closure row still blank, or
+   an unresolved question blocking closure → leave `## Design status` at `not
+   designed`, leave the roadmap row at `idea` (or unadded), and end the turn
+   with `NEEDS_INPUT` (see *Machine envelope*) instead of a false `designed`
+   stamp or a premature `defined` write.
+10. **Confirm the roadmap row.** The row from step 9 carries the right number,
+    slug, dependencies, and status (`defined`). Beyond `defined`, status
+    transitions (`planned`, `in-progress`, `done`) are `plan-feature-scaffold`'s
+    and `execute-phase`'s job — this skill never writes past `defined`.
 11. **Upsert semantics (never destroy).** Re-running on an existing slug
     re-reads the SPEC and `decisions.md` first; a revision **appends** to
     `decisions.md` (dated, with what changed and why) — it never rewrites or
@@ -249,7 +260,9 @@ enables:
   resolved (filled surface or explicit `n/a`).
 - `## Design status` accurately reflects the outcome (`designed` only when
   closure is complete).
-- The roadmap row exists (created if this was a brand-new feature).
+- The roadmap row exists (created at `idea` if this was a brand-new feature)
+  and its status matches the outcome — `defined` when `designed`, left at
+  `idea` on `NEEDS_INPUT`.
 - **The closing `→ Next:` block is printed:**
 
   ```
