@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.6.0
+version: 1.7.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -98,9 +98,15 @@ the agent guide and state the assumption.
        `\`-escaped backticks) and PRINT THE PR URL in the chat",
        "[ ] update the roadmap row to `done · [#<pr>](<pr-url>)`",
        "[ ] commit `docs: link PR #<n>` and push" — so the close-out is a
-       ticked task, not an assumed behavior.
+       ticked task, not an assumed behavior. **Emit each command-checkable
+       acceptance criterion as the command** (a `grep`, a test invocation, a
+       build) **— not as prose**; only genuinely judgement-only criteria stay
+       prose, labelled `read-verified` (feature 07's `testing.md` is the
+       reference shape). A weak executor verifies by *running* the command, not
+       by judging prose.
      - `progress.md` — running log, one entry per phase.
-     - `testing.md` — what is tested at which layer (prefer integration).
+     - `testing.md` — what is tested at which layer (prefer integration); same
+       command-checkable-as-command rule as `TASKS.md` above.
      - `known-issues.md` — deferred items, each linked to (or destined for) an
        issue. Do **not** plan to implement deferred work inline.
      - `decisions.md` — architecture/scope decisions + open questions.

@@ -53,6 +53,14 @@ SPEC's Product half; this file records engineering decisions and their rationale
   checklist: a phase with an open decision must be split, so the SPEC carries no
   unresolved engineering decision.
 
-- **`FEATURE_WORKFLOW` template mirror.** If `template/docs/workflow/FEATURE_WORKFLOW.md`
-  does not exist, the executor records that here at P2 and adds the rule only to
-  the repo copy (no mirror to update). Not a blocker — a P2 verification note.
+## P2 note
+
+- **`FEATURE_WORKFLOW` template mirror — resolved.** `template/docs/workflow/FEATURE_WORKFLOW.md`
+  does not exist; `template/` has no standalone workflow-convention doc. Its
+  closest equivalent is the **`## Feature workflow` section in `template/CLAUDE.md`**
+  (the scaffolded project's single convention doc), so the one-phase-one-session
+  rule was added there instead — same substance, different location, keeping the
+  "a scaffolded project inherits the same economics" invariant from the SPEC's
+  Architecture impact section. Not a gap: the repo's `docs/workflow/FEATURE_WORKFLOW.md`
+  and `template/CLAUDE.md`'s `## Feature workflow` section are the two projects'
+  respective single sources for this convention.

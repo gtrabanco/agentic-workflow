@@ -31,3 +31,21 @@ No design decisions were needed (all resolved in the SPEC already). Version bump
 for `plan-feature-scaffold` is a P2 task per `TASKS.md` (it edits the skill again
 for criteria-as-commands); not bumped here to avoid a throwaway intermediate
 version between P1 and P2 edits to the same file.
+
+## P2 — 2026-07-10
+
+`plan-feature-scaffold`'s `TASKS.md`/`testing.md` generation bullets now instruct
+emitting command-checkable acceptance criteria as the command, prose only for
+judgement-only criteria (labelled `read-verified`), referencing feature 07's
+`testing.md` as the shape. Both SPEC templates' Acceptance-criteria sections got
+the same convention. `execute-phase` gained the **one phase = one session** rule
+right before its Batch-execution section, paired with the Portability fallback
+already present ("No `/loop`" bullet). `FEATURE_WORKFLOW.md` (Stage 2) carries the
+same rule. `template/docs/workflow/FEATURE_WORKFLOW.md` does not exist — no
+standalone workflow-convention doc in `template/` — so the rule was mirrored into
+the equivalent `## Feature workflow` section of `template/CLAUDE.md` instead
+(decision recorded in `decisions.md`). Both touched skills bumped minor:
+`plan-feature-scaffold` 1.6.0 → 1.7.0, `execute-phase` 1.15.0 → 1.16.0 (version
+numbers only — the changelog/README bookkeeping via `bump-skill` is a P3 task).
+All P2 acceptance-criteria greps (AC3–AC7) pass; `npx skills add . --list` exits 0
+with both skills parsed.

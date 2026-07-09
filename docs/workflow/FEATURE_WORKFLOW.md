@@ -143,6 +143,13 @@ dependencies). It does **not** create the branch or write code.
    flips the roadmap row to `done` and opens the PR** (never branch-only) — see
    Stage 5 — then the mandatory `/review-change` → `/audit-pr`.
 
+**One phase = one session.** Never execute two phases in one conversation on a
+non-frontier model — models degrade over long horizons, and a fresh session per
+phase is what preserves the cheap-execution guarantee (the "expensive, closed
+SPEC buys unlimited cheap execution" economics). The `/loop` batch shape already
+clears and re-invokes per phase; on an agent without `/loop`, re-invoke
+`execute-phase` by hand for each phase in a fresh conversation instead.
+
 Repeat for each phase (P1, P2, …). Small features (`Size: XS/S`) are handled by
 `execute-phase <NN>` in a single pass — no separate skill; the single pass ends by
 flipping the roadmap row to `done` and opening the PR, then the mandatory
