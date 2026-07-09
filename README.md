@@ -70,13 +70,13 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**14 user-facing skills** (one menu entry each) + **14 internal** ones composed
-for you: the `plan-feature` router's three planning steps, the `review-change`
+**15 user-facing skills** (one menu entry each) + **13 internal** ones composed
+for you: the `plan-feature` router's two planning steps, the `review-change`
 engine, the `orchestration-envelope` contract, and the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — so **no external
 review skill is ever required**, on any agent, with any model. One disciplined
-path: **plan → execute → review → audit → merge.**
+path: **design → plan → execute → review → audit → merge.**
 
 ### Setup
 
@@ -84,11 +84,17 @@ path: **plan → execute → review → audit → merge.**
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills |
 
+### Design
+
+| Skill            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `design-feature` | **Product definition.** Folds in the raw-idea interview, then walks a fixed **capability-closure** checklist — for each entity: CRUD + state transitions, each with a UI entry point + API surface + test, or an explicit `n/a: <reason>`; for each capability: entry point + who may execute it; for each role: assigned/revoked/viewed where — into exhaustive acceptance criteria. Writes the SPEC's **product half** and stamps `## Design status: designed`. Upserts on re-run; never destroys recorded decisions. |
+
 ### Plan
 
 | Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `plan-feature` | **One entry point to plan a feature.** Detects the input — a raw idea (interview), an issue `#N` (issue → scoped SPEC), or a scoped slug/SPEC (straight to scaffolding) — routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only, single-pass path — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
+| `plan-feature` | **Engineering-planning router for an already-designed feature.** Given an undesigned feature, STOPS and redirects to `design-feature` (no bypass flag). Given a designed feature, an issue `#N` (issue → scoped product half), or a scoped slug/SPEC (straight to engineering-half scaffolding), routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only, single-pass path — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
 | `plan-fix`     | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from an issue, commits on a fix branch, **stops for review**.                                                                                                                                                                                                                                                                                                            |
 
 > `design-feature` (product definition, folds in the raw-idea interview) must
@@ -208,7 +214,8 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | Skill            | Model tier | Effort | Why                                                                                                                                                                                      |
 | ---------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Opus       | high   | interview-driven project bootstrap + adaptation                                                                                                                                          |
-| `plan-feature`   | Opus       | high   | router + planning: its internal interview/scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                             |
+| `design-feature` | Opus       | high   | product-definition judgement: raw-idea interview + capability closure, composed by callers only at ≥ this tier                                                                          |
+| `plan-feature`   | Opus       | high   | router + engineering planning: its internal scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                           |
 | `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |
 | `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — one phase or single-pass (Opus if the logic is subtle)                                                                                              |
 | `review-change`  | Opus       | high   | platform-adaptive review orchestration + synthesis                                                                                                                                       |
