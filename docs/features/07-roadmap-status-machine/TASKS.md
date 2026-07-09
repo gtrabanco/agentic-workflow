@@ -67,8 +67,8 @@ Per-phase checklists the executor ticks off. Labels are fixed `P1, P2, …`.
       checkable)
 - [x] Confirm no stack leakage; `## Portability` + closing `→ Next:` intact in
       every touched user-facing skill
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves
       `\`-escaped backticks) with `Closes #14` and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push
