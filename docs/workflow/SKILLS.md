@@ -11,22 +11,27 @@ findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `plan-feature` |
+| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `design-feature` |
+
+## Design
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `design-feature` | **Product definition.** Folds in the raw-idea interview, runs proportional research, and walks the **capability-closure** checklist (per entity → CRUD + state transitions + UI + API + test or explicit `n/a`; per capability → entry point + ACL; per role → assign/revoke/view) into exhaustive acceptance criteria. Writes the SPEC's **product half** and stamps `## Design status: designed`. Upserts on re-run; never destroys recorded decisions | `plan-feature <slug>` |
 
 ## Plan
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `plan-feature` | **Router.** Detects the input — raw idea (interview), issue `#N` (issue → scoped SPEC), or scoped slug/SPEC (scaffold) — routes, **sizes the feature** (`XS/S/M/L`), then registers the roadmap entry | `execute-phase <NN> P1` (M/L) or `execute-phase <NN>` single-pass (XS/S) |
+| `plan-feature` | **Router, engineering-planning only.** Given an undesigned feature (no `## Design status: designed`), **STOPS and redirects** to `/design-feature <slug>` (no bypass flag). Given a designed feature or issue `#N` (issue → scoped product half → `design-feature` for thin issues), routes to fill the **engineering half**, **sizes the feature** (`XS/S/M/L`), then registers the roadmap entry | `execute-phase <NN> P1` (M/L) or `execute-phase <NN>` single-pass (XS/S) |
 | `plan-fix` | Architect-drafts a tightly-scoped fix SPEC from an issue; commits on a fix branch; stops for review | `execute-phase --fix` |
 
 ### Internal steps (hidden from the menu; composed for you)
 
 | Skill | Role |
 |---|---|
-| `plan-feature-interview` | Interactive interview from a raw idea; proactively asks to fill the SPEC (invoked by `plan-feature`) |
-| `plan-feature-from-issue` | Feature-request issue → scoped SPEC, with `Closes #N` (invoked by `plan-feature`) |
-| `plan-feature-scaffold` | Scaffolds SPEC + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
+| `plan-feature-from-issue` | Feature-request issue → scoped SPEC product half (satisfies capability closure), with `Closes #N` (invoked by `plan-feature`) |
+| `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
 | `review-implementation` | Two-phase find → classify → decision table (fix-now / postpone / ignore / intentional-tradeoff); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
 
 ## Execute
@@ -95,11 +100,13 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
 ## How they compose
 
 ```
-                   ┌──────────────── plan-feature (router) ────────────────┐
-IDEA ──────────────┤  --interview → plan-feature-interview                 │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue          ├─▶ execute-phase ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
-SCOPED slug/SPEC ──┤  --scaffold → plan-feature-scaffold                   │      (review-change recommended every 2 phases + mandatory at the end; PR opens at execute's last step)
-ROADMAP --next ────┘  registers the roadmap entry, prints the next step    │
+IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
+                          → `## Design status: designed` ─┐
+                   ┌──────────────── plan-feature (router, engineering-planning only) ─┐
+DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
+                       (undesigned input → STOP, redirect to /design-feature, no bypass)
 
 ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)

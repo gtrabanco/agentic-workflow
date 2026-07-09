@@ -41,6 +41,23 @@ mirror).
   it hands off. *(CLAUDE.md "Hand off, don't compose across a model/effort
   boundary")*
 
+## Revisions (execution-time)
+
+- **D11 — Template layout: `Goal`/`Branch`/`Size`/`Dependencies` stay as meta
+  sections before the two halves, not folded into `## Product half`.** SPEC's
+  P1 task list groups `Goal` under the Product half, but `Branch`/`Size`/
+  `Dependencies` are not listed in either half and are read before a SPEC's
+  content exists (routing/sizing metadata, not product or engineering content).
+  Keeping all four together above `## Product half` preserves the template's
+  existing top-of-file convention and avoids a half-in/half-out Goal section.
+  Resolved during `execute-phase 06 P1`, 2026-07-09.
+- **Q2 resolved — marker token is `## Design status`, value line reads
+  `designed` (bold, first word) vs. `not designed`.** `plan-feature`'s gate
+  (P3) greps for `## Design status` followed by `` `designed` `` on the next
+  content line; `design-feature` (P2) is responsible for writing exactly that
+  string when closure is complete. Confirmed in the template at
+  `docs/features/_TEMPLATE/SPEC.md` during P1, 2026-07-09.
+
 ## Open questions
 
 - **Q1 — Does U4 absorb the full issue-path unification (D5 deferral), or does it
