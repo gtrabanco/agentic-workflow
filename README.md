@@ -91,9 +91,11 @@ path: **plan → execute → review → audit → merge.**
 | `plan-feature` | **One entry point to plan a feature.** Detects the input — a raw idea (interview), an issue `#N` (issue → scoped SPEC), or a scoped slug/SPEC (straight to scaffolding) — routes to the right step, then registers the roadmap entry. `--next` plans the next roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only, single-pass path — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
 | `plan-fix`     | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from an issue, commits on a fix branch, **stops for review**.                                                                                                                                                                                                                                                                                                            |
 
-> You only ever call `plan-feature`; it composes the internal steps
-> `plan-feature-interview`, `plan-feature-from-issue`, and `plan-feature-scaffold`
-> (hidden from the menu).
+> `design-feature` (product definition, folds in the raw-idea interview) must
+> mark a feature `designed` before `plan-feature` will plan it — `plan-feature`
+> refuses and redirects otherwise, no bypass flag. Once designed, you only ever
+> call `plan-feature`; it composes the internal steps `plan-feature-from-issue`
+> and `plan-feature-scaffold` (hidden from the menu).
 
 ### Execute
 
@@ -219,13 +221,13 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `generate-docs`  | Sonnet     | medium | structured summarization of a diff into guide pages; the graph is tool-generated, never model-inferred (Opus never needed)                                                               |
 | `ship-roadmap`   | Opus       | high   | the autopilot conductor: composes the planning/review/audit skills in-turn (equal tier) and delegates implementation to Sonnet subagents — judgment stays strong, bulk tokens stay cheap |
 
-> The 13 internal skills aren't selected directly. Because they're composed
+> The internal skills aren't selected directly. Because they're composed
 > **within a caller's turn**, they inherit that turn's model/effort (a skill's
 > `model`/`effort` is fixed at turn start) — the values in their frontmatter
-> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue`,
-> `review-code`, `review-security` high; `plan-feature-scaffold` and the rest of
-> the review pack medium) are declared defaults for a direct run, which is why
-> the `plan-feature` and `review-change` orchestrators themselves carry `high`.
+> (`review-implementation`, `plan-feature-from-issue`, `review-code`,
+> `review-security` high; `plan-feature-scaffold` and the rest of the review
+> pack medium) are declared defaults for a direct run, which is why the
+> `plan-feature` and `review-change` orchestrators themselves carry `high`.
 >
 > Rule of thumb: **planning, judgement, review and audit → Opus** (high, or max for
 > the product-wide sweep); **mechanical execution → Sonnet, medium** (bump to Opus

@@ -58,6 +58,30 @@ mirror).
   string when closure is complete. Confirmed in the template at
   `docs/features/_TEMPLATE/SPEC.md` during P1, 2026-07-09.
 
+- **D12 — AC7's grep (`! grep -rq "plan-feature-interview" skills docs
+  README.md README.es.md`) is scoped to LIVE/operational references, not every
+  historical mention.** As written, the literal command can never return zero
+  hits: this feature's own planning docs
+  (`docs/features/06-design-feature/{SPEC,TASKS,PLAN,decisions,
+  architecture-notes,progress,testing}.md`) necessarily name the retired skill
+  to document its own retirement, `docs/features/ROADMAP.md`'s row 06
+  describes this unit's scope the same way every other row describes its own,
+  and `docs/workflow/MIGRATION.md`'s **existing** (pre-U3) v2 history section
+  already keeps other removed skill names (`design-feature` (old, different
+  meaning), `feature-from-issue`, `draft-fix-spec`) for historical accuracy —
+  the same precedent now covers `plan-feature-interview`'s two mentions there.
+  `docs/design/REDESIGN.md` and `docs/LOGS.md` are frozen historical records,
+  never rewritten after the fact. **Every skill file under `skills/` and every
+  currently-operative workflow doc** (`docs/workflow/FEATURE_WORKFLOW.md`,
+  `docs/workflow/SKILLS.md`, `docs/workflow/PORTABLE_PROMPT.md`,
+  `docs/workflow/RECOMMENDED_SKILLS.md`, `docs/workflow/REPLICATE.md`,
+  `docs/workflow/model-routing.yml`, `README.md`, `README.es.md`) had every
+  reference repointed to `design-feature` during P3 — verified individually,
+  file by file, not by the blanket grep. `testing.md`'s AC7 command is kept
+  verbatim (matches the SPEC), with this note as the documented interpretation
+  a P4 hardening pass should apply rather than treating a nonzero grep as a
+  failure. Resolved during `execute-phase 06 P3`, 2026-07-09.
+
 ## Open questions
 
 - **Q1 — Does U4 absorb the full issue-path unification (D5 deferral), or does it

@@ -93,9 +93,12 @@ con ningún modelo. Un único camino disciplinado:
 | `plan-feature` | **Un único punto de entrada para planificar una feature.** Detecta la entrada — una idea en crudo (entrevista), un issue `#N` (issue → SPEC acotado) o un slug/SPEC ya acotado (directo al scaffolding) — enruta al paso correcto y registra la entrada en el roadmap. `--next` planifica el siguiente elemento del roadmap. **Dimensiona cada feature** (`XS/S/M/L`): las pequeñas van por la vía SPEC-only de una pasada — sin ceremonia de artefactos; las M/L llevan el set completo con fase de hardening obligatoria. |
 | `plan-fix`     | El equivalente del flujo de fix: como arquitecto redacta un SPEC de fix acotado a partir de un issue, commitea en una rama de fix y **se detiene para revisión**.                                                                                                                                                                                                                                                                                                                                                           |
 
-> Solo llamas a `plan-feature`; este compone los pasos internos
-> `plan-feature-interview`, `plan-feature-from-issue` y `plan-feature-scaffold`
-> (ocultos del menú).
+> `design-feature` (definición de producto, incorpora la entrevista de idea en
+> crudo) debe marcar una feature como `designed` antes de que `plan-feature` la
+> planifique — si no, `plan-feature` se detiene y redirige, sin flag de bypass.
+> Una vez diseñada, solo llamas a `plan-feature`; este compone los pasos
+> internos `plan-feature-from-issue` y `plan-feature-scaffold` (ocultos del
+> menú).
 
 ### Ejecución
 
@@ -225,12 +228,12 @@ una conveniencia de la rama `#claude`.
 | `generate-docs`  | Sonnet         | medio    | resumen estructurado de un diff en páginas de guía; el grafo lo genera tooling, nunca lo infiere el modelo (Opus nunca es necesario)                                                       |
 | `ship-roadmap`   | Opus           | alto     | el conductor del autopilot: compone en su turno las skills de planificación/revisión/auditoría (mismo tier) y delega la implementación a subagentes Sonnet — el juicio se mantiene fuerte, los tokens masivos salen baratos |
 
-> Las 13 skills internas no se seleccionan directamente. Como se componen **dentro
+> Las skills internas no se seleccionan directamente. Como se componen **dentro
 > del turno del caller**, heredan su modelo/effort (el `model`/`effort` de una skill
 > se fija al inicio del turno) — los valores de su frontmatter
-> (`review-implementation`, `plan-feature-interview`, `plan-feature-from-issue`,
-> `review-code`, `review-security` alto; `plan-feature-scaffold` y el resto del pack
-> de revisión medio) son defaults para una ejecución directa, y por eso los
+> (`review-implementation`, `plan-feature-from-issue`, `review-code`,
+> `review-security` alto; `plan-feature-scaffold` y el resto del pack de
+> revisión medio) son defaults para una ejecución directa, y por eso los
 > orquestadores `plan-feature` y `review-change` llevan `high`.
 >
 > Regla general: **planificar, decidir, revisar y auditar → Opus** (alto, o máx para
