@@ -25,20 +25,23 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 14 skills (10 user-facing + 4 internal) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
-| **Portable prompt** | The 14 skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
+| **`skills` CLI** | The 15 skills (11 user-facing + 3 internal, plus the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **Portable prompt** | The skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
 
-The set is **14 skills — 10 user-facing + 4 internal**:
+The core set is **11 user-facing + 3 internal**:
 
-- **User-facing (10):** `init-workspace`, `plan-feature`, `plan-fix`,
-  `execute-phase`, `review-change`, `audit-pr`, `audit-docs`, `product-audit`,
-  `triage-issue`, `ship-roadmap`.
-- **Internal (4):** `plan-feature-interview`, `plan-feature-from-issue`,
-  `plan-feature-scaffold` — hidden from the menu and invoked by the
-  `plan-feature` router, which detects the input (raw idea → interview, issue →
-  from-issue, scoped slug/SPEC → scaffold) and dispatches to the right engine —
-  plus `review-implementation`, the two-phase find → classify findings engine
-  that `review-change` composes (and `audit-pr` / `product-audit` reuse).
+- **User-facing (11):** `init-workspace`, `design-feature`, `plan-feature`,
+  `plan-fix`, `execute-phase`, `review-change`, `audit-pr`, `audit-docs`,
+  `product-audit`, `triage-issue`, `ship-roadmap`.
+- **Internal (3):** `plan-feature-from-issue`, `plan-feature-scaffold` —
+  hidden from the menu and invoked by the `plan-feature` router, which (once a
+  feature is designed) detects the input (issue → from-issue, scoped
+  slug/SPEC → scaffold) and dispatches to the right engine — plus
+  `review-implementation`, the two-phase find → classify findings engine that
+  `review-change` composes (and `audit-pr` / `product-audit` reuse). The
+  raw-idea interview that used to be an internal `plan-feature` step is now
+  folded into `design-feature` itself (user-facing, since product definition
+  is its own stage).
 
 > **Versioning.** Each skill carries its own `version:` (semver) in frontmatter;
 > changes are logged in [`../../CHANGELOG.md`](../../CHANGELOG.md). Upgrade an
@@ -54,7 +57,7 @@ directory — `.claude/skills/` for Claude Code, `.agents/skills/` for the
 universal set, etc.
 
 ```sh
-# From the root of the TARGET repository — install all 14 skills:
+# From the root of the TARGET repository — install all skills:
 npx skills add gtrabanco/agentic-workflow
 
 # This repo is PRIVATE. The shorthand above can fail under bunx; use the SSH URL:

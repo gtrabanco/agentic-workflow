@@ -164,9 +164,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | 1.1.0 | 2026-06-05 | menor | La revisión cada 2 fases pasa de auto-ejecución en turno a **hand-off** (corre en su propio tier) |
 | 1.0.0 | 2026-06-05 | — | Primer release versionado |
 
+#### `design-feature`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-07-09 | — | Nueva skill: definición de producto, separada de `plan-feature`. Incorpora la entrevista de idea en crudo y recorre un checklist fijo de **cierre de capacidades** (por entidad: CRUD + transiciones de estado, cada una con UI + API + test, o `n/a: <razón>` explícito; por capacidad: punto de entrada + ACL; por rol: asignado/revocado/visto dónde) hacia la mitad de producto del SPEC + criterios de aceptación, sellando `## Design status: designed`. Hace upsert al reejecutarse (nunca destruye `decisions.md`); `<slug>` sin más revisa y pregunta, `<slug> "<instrucción>"` aplica directamente. |
+
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.0 | 2026-07-09 | mayor | **Cambio incompatible:** la definición de producto (entrevista de idea en crudo + cierre de capacidades) se traslada a la nueva skill `design-feature`. `plan-feature` ahora es solo planificación de ingeniería, elimina el flag `--interview` y el paso interno `plan-feature-interview` (borrado), y añade una **puerta de redirección sin flag de bypass**: una feature sin diseñar (sin `SPEC.md`, `## Design status` no `designed`, o Cierre de capacidades vacío) PARA y señala `/design-feature <slug>`. Nota de migración en `docs/workflow/MIGRATION.md`. |
 | 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. BLOCKED lleva la cadena de dependencias incumplida y el orden de construcción. |
 | 1.5.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
 | 1.5.0 | 2026-07-03 | menor | Casilla de precedencia de idioma de artefactos añadida al contrato de turno. |
@@ -309,15 +315,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.0.2 | 2026-07-02 | parche | La referencia a revisiones companion ahora apunta al pack de revisión interno (`review-*`) |
 | | 1.0.1 | 2026-06-09 | parche | Descripción acortada 96 → 36 palabras (contexto siempre cargado); cuerpo sin cambios |
 | | 1.0.0 | 2026-06-05 | — | El motor de hallazgos + rúbrica de clasificación que compone `review-change` |
-| `plan-feature-interview` | 1.2.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| `plan-feature-interview` | — | 2026-07-09 | eliminada | **Retirada.** Su lógica de entrevista de idea en crudo se trasladó a la nueva skill de cara al usuario `design-feature` (la definición de producto es ahora su propia etapa del pipeline, no un detalle interno de enrutado de `plan-feature`). `skills/plan-feature-interview/` borrado. Ver `docs/workflow/MIGRATION.md`. |
+| | 1.2.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (dimensiones resueltas, preguntas abiertas, issue de tracking) |
 | 1.1.0 | 2026-06-09 | menor | Estima el tamaño `XS/S/M/L`; pide una referencia de diseño UI en features con UI |
 | | 1.0.0 | 2026-06-05 | — | Entrevista una idea en crudo hasta un SPEC |
-| `plan-feature-from-issue` | 1.2.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| `plan-feature-from-issue` | 1.3.0 | 2026-07-09 | menor | Ahora escribe la **mitad de producto** del SPEC (convención de dos mitades) y debe satisfacer el **cierre de capacidades** antes de entregar — un issue delgado sin suficiente contenido para completarlo se entrega a `design-feature` (compuesta en el mismo turno solo si es de tier ≥) en vez de simular `## Design status: designed`. |
+| | 1.2.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
-| `plan-feature-scaffold` | 1.4.0 | 2026-07-04 | menor | La tarea de cierre del TASKS.md generado ahora dice `gh pr create --body-file <path>` (fichero Markdown), nunca `--body`/heredoc inline — para que los ejecutores no emitan backticks escapados con `\` literales en el cuerpo del PR. |
+| `plan-feature-scaffold` | 1.5.0 | 2026-07-09 | menor | Ahora completa solo la **mitad de ingeniería** del SPEC — la mitad de producto (objetivo, contexto, alcance, cierre de capacidades) la escribe `design-feature` / `plan-feature-from-issue` y se verifica `designed` antes de que esta skill se ejecute; para en vez de editar una mitad de producto sin diseñar o ausente. |
+| | 1.4.0 | 2026-07-04 | menor | La tarea de cierre del TASKS.md generado ahora dice `gh pr create --body-file <path>` (fichero Markdown), nunca `--body`/heredoc inline — para que los ejecutores no emitan backticks escapados con `\` literales en el cuerpo del PR. |
 | `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.3.0 | 2026-07-03 | menor | La fase final del TASKS.md generado termina con tareas literales de cierre: abrir PR + imprimir URL en el chat, enlazar la fila del roadmap, commitear y pushear el enlace. |
 | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo (artefactos escritos, registro en roadmap, nº de fases, preguntas abiertas) |
@@ -347,6 +356,22 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-09 — la definición de producto se separa en `design-feature`.**
+  Nueva skill de cara al usuario `design-feature` 1.0.0 asume la definición de
+  producto: incorpora la entrevista de idea en crudo, recorre un checklist fijo
+  de **cierre de capacidades** (por entidad → CRUD + transiciones de estado +
+  UI + API + test, o `n/a` explícito; por capacidad → punto de entrada + ACL;
+  por rol → asignado/revocado/visto) hacia criterios de aceptación exhaustivos,
+  y escribe la **mitad de producto** del SPEC (`docs/features/_TEMPLATE/SPEC.md`
+  es ahora un único SPEC en dos mitades). `plan-feature` 2.0.0 (**mayor**,
+  incompatible) pasa a ser solo planificación de ingeniería: elimina el flag
+  `--interview`, añade una **puerta de redirección sin flag de bypass**
+  (feature sin diseñar → PARA → `/design-feature <slug>`), y se borra el paso
+  interno `plan-feature-interview`. `plan-feature-from-issue` 1.3.0 y
+  `plan-feature-scaffold` 1.5.0 se alinean a la convención de dos mitades. Nota
+  de migración en `docs/workflow/MIGRATION.md`. Feature `06-design-feature`
+  (backlog U3, cierra #13).
 
 - **2026-07-09 — revisión adversarial con contexto limpio.** Endurece la
   revisión final obligatoria de fin de unidad contra el fallo de compartir

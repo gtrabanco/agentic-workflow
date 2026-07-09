@@ -1,5 +1,67 @@
 # Migration notes
 
+## 2026-07-09 — `plan-feature` 2.0.0: product definition splits into `design-feature`
+
+**Breaking change to `plan-feature`'s contract.** Product definition (the
+raw-idea interview, and the new **capability-closure** checklist that forces
+every entity/capability/role a feature introduces to its full surface — CRUD +
+state transitions + UI + API + test, or an explicit design-time `n/a`) moved
+out of `plan-feature` into a new user-facing skill, **`design-feature`**.
+`plan-feature` is now **engineering-planning only**.
+
+**What changed:**
+
+- **New skill `design-feature`** (v1.0.0, `user-invocable: true`). Folds in the
+  raw-idea interview, walks capability closure, writes the SPEC's **product
+  half**, and stamps `## Design status: designed`. Trigger phrases "add
+  feature" / "add a feature" / "new feature" now land here, not on
+  `plan-feature`.
+- **`plan-feature` gains a redirect gate, no bypass flag.** Given a feature
+  whose SPEC is missing, or whose `## Design status` isn't `designed`, or whose
+  Capability closure section is empty, `plan-feature` **STOPS** and prints
+  `run /design-feature <slug>` instead of planning it. There is no flag to
+  skip this — an undesigned feature is never engineering-planned.
+- **The internal raw-idea-interview step that used to live inside
+  `plan-feature`'s routing is retired** and deleted from the skill set; its
+  logic now lives in `design-feature` (see above). `plan-feature`'s
+  `--interview` flag no longer exists — pass a raw idea straight to
+  `design-feature` instead.
+- **`docs/features/_TEMPLATE/SPEC.md`** is now **one SPEC in two halves**: a
+  **Product half** (`design-feature` writes: Context, Business goals, Scope,
+  Capability closure → Acceptance criteria, Tooling, Product decisions,
+  `## Design status`) and an **Engineering half** (`plan-feature-scaffold`
+  writes: Technical goals, Architecture impact, Design, Decisions to confirm,
+  Testing requirements, Dev scenarios, Phases, Deploy & rollback,
+  Deliverables). No separate `DESIGN.md` — this was a deliberate rejection to
+  avoid two documents drifting apart.
+- **`plan-feature-from-issue`** now writes the SPEC's product half and must
+  satisfy capability closure — a thin issue is hand-off to `design-feature`,
+  not a shortcut around the gate.
+
+**Command muscle-memory:**
+
+| Old | New |
+|---|---|
+| `plan-feature "<idea>"` / `--interview` | `design-feature "<idea>"`, then `plan-feature <slug>` once `## Design status: designed` |
+| `plan-feature <slug>` (undesigned) | `plan-feature <slug>` now **stops and redirects** to `design-feature <slug>` — run that first |
+| `plan-feature <slug>` (already designed) | unchanged — routes straight to engineering-half scaffolding |
+| `plan-feature <N>` / `--from-issue N` | unchanged entry point; internally it now writes the product half and satisfies capability closure before scaffolding |
+
+**Action needed:**
+
+- If you had muscle memory for `plan-feature "<idea>" --interview`, switch to
+  `design-feature "<idea>"` — `plan-feature` will refuse the old flag pattern
+  (it no longer routes an interview).
+- If a project has features whose `SPEC.md` predates this change (single-half
+  layout, no `## Design status`), they read as "undesigned" under the new gate
+  the next time `plan-feature` is invoked on them. Run `design-feature <slug>`
+  once to backfill the Product half sections (Capability closure can be
+  written retroactively from the existing Acceptance criteria) before
+  continuing to plan or execute — see `docs/features/_TEMPLATE/SPEC.md` for
+  the exact section layout to backfill against.
+- Re-run `bump-skill` bookkeeping is already reflected in `CHANGELOG.md` /
+  `CHANGELOG.es.md` and the README skills + model tables for this change.
+
 ## 2026-07-04 — v3: the default branch becomes model-agnostic
 
 **Breaking change to how you install this workflow** (not to any skill's
