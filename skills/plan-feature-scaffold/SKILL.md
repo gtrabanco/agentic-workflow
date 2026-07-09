@@ -1,28 +1,35 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.4.0
+version: 1.5.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal step of plan-feature: from a scoped SPEC, generate the planning
+  Internal step of plan-feature: from an already-designed SPEC (product half
+  `designed`), fill the **engineering half** and generate the planning
   artifact set scaled to the feature's size (XS/S → SPEC-only; M/L → full set
   with a hardening phase) and register the roadmap entry. Docs only — never code.
 ---
 
 # Plan Feature — Scaffold (internal)
 
-Turn a scoped feature into the project's complete planning artifact set, ready
-for phase-by-phase execution. **Docs only — never code.**
+Turn a designed feature into the project's complete planning artifact set,
+ready for phase-by-phase execution. Fills only the SPEC's **engineering half**
+— the product half (goal, context, scope, capability closure) already exists
+and is marked `designed` before this skill ever runs (`plan-feature`'s
+redirect gate guarantees it). **Docs only — never code.**
 
 ## When to use
 
-- The `plan-feature` router calls this once a feature is scoped — from an
-  interview, an issue, or an already-scoped slug/SPEC — to fill out its
-  `docs/features/<NN>-<slug>/` folder and update the roadmap.
+- The `plan-feature` router calls this once a feature's product half is
+  `designed` — from `design-feature`, `plan-feature-from-issue`, or an
+  already-scoped slug/SPEC — to fill the engineering half of its
+  `docs/features/<NN>-<slug>/SPEC.md` and the rest of the folder, then update
+  the roadmap.
 
-Not for writing code (that is `execute-phase`) or deciding *whether* to build
-(that is the `plan-feature` router / `triage-issue`).
+Not for product definition (that is `design-feature`) or writing code (that is
+`execute-phase`) or deciding *whether* to build (that is the `plan-feature`
+router / `triage-issue`).
 
 ## Step 0 — Discover the project (always first)
 
@@ -34,18 +41,27 @@ the agent guide and state the assumption.
 
 ## Process
 
-1. **Resolve identity.** From the roadmap, pick the next free number and a
-   kebab-case slug. Record dependencies (features that must land first) and note
-   ordering conflicts.
-2. **Fill the SPEC.** Copy the template to `docs/features/<NN>-<slug>/SPEC.md`
-   and complete *every* section — goals, architecture impact, acceptance,
-   branch name (`feat/<NN>-<slug>` or per project convention), **size**
-   (`XS/S/M/L` per the template's scale; estimate it if planning didn't),
-   dependencies, testing, and **dev scenarios** (happy path **and** failure
+1. **Verify the product half is designed.** The SPEC's `## Design status` must
+   read `designed` and Capability closure must be filled — `plan-feature`'s
+   redirect gate already checked this before calling this skill, but confirm
+   before writing: an undesigned SPEC here is a caller bug, not something to
+   silently patch over.
+2. **Resolve identity.** From the roadmap, confirm the number and kebab-case
+   slug the product half already used (or, for an already-scoped SPEC with no
+   prior roadmap entry, pick the next free number). Record dependencies
+   (features that must land first) and note ordering conflicts.
+3. **Fill the engineering half of the SPEC.** In the existing
+   `docs/features/<NN>-<slug>/SPEC.md`, complete every Engineering-half
+   section — technical goals, architecture impact, design, decisions to
+   confirm, branch name (`feat/<NN>-<slug>` or per project convention), phases,
+   testing requirements, and **dev scenarios** (happy path **and** failure
    modes: empty/degraded state, races, outages — plus how to reproduce each
-   locally). No unfilled placeholders; record genuinely-unknown values as open
-   questions in `decisions.md`, not blanks.
-3. **Scale the artifacts to the size.**
+   locally). Never touch the Product half (goal, context, scope, capability
+   closure, `## Design status`) — that is `design-feature`'s content; if it
+   looks wrong or incomplete, stop and redirect rather than editing it here.
+   No unfilled placeholders; record genuinely-unknown values as open questions
+   in `decisions.md`, not blanks.
+4. **Scale the artifacts to the size.**
    - **XS/S** → the SPEC is the only planning artifact. Skip the set below,
      register the roadmap entry, and hand off to `execute-phase <NN>`
      (single-pass). Don't generate ceremony the feature doesn't need.
@@ -73,10 +89,10 @@ the agent guide and state the assumption.
        issue. Do **not** plan to implement deferred work inline.
      - `decisions.md` — architecture/scope decisions + open questions.
      - `architecture-notes.md` — layer impact, ports, schema, bindings touched.
-4. **Register in the roadmap** with number, ordering, dependencies.
-5. **Do not branch or code.** That belongs to `execute-phase`; record the branch
+5. **Register in the roadmap** with number, ordering, dependencies.
+6. **Do not branch or code.** That belongs to `execute-phase`; record the branch
    name in the SPEC only.
-6. **Hand off — return exactly** (fixed completion report):
+7. **Hand off — return exactly** (fixed completion report):
 
    ```
    SCAFFOLD <NN>-<slug> — size: <XS|S|M|L>
@@ -99,12 +115,15 @@ the agent guide and state the assumption.
 
 ## Relationship to other skills
 
-Invoked by the `plan-feature` router (after `plan-feature-interview` /
-`plan-feature-from-issue`, or directly for a scoped slug/SPEC). Hands off to
-`execute-phase` for P1; `audit-docs` audits anytime.
+Invoked by the `plan-feature` router (after `design-feature` /
+`plan-feature-from-issue` designed the product half, or directly for an
+already-designed scoped slug/SPEC). Hands off to `execute-phase` for P1;
+`audit-docs` audits anytime.
 
 ## Done when
 
-- `docs/features/<NN>-<slug>/` exists with SPEC + every planning artifact filled.
+- `docs/features/<NN>-<slug>/` exists with the SPEC's engineering half +
+  every planning artifact filled — the product half untouched from what
+  `design-feature` / `plan-feature-from-issue` wrote.
 - The roadmap lists the feature with correct number, order, dependencies.
 - No code changed; open questions captured in `decisions.md`.

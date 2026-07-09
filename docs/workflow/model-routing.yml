@@ -17,6 +17,9 @@ audit-pr:
 bump-skill:
   model: sonnet
   effort: medium
+design-feature:
+  model: opus
+  effort: high
 execute-phase:
   model: sonnet
   effort: medium
@@ -30,9 +33,6 @@ plan-feature:
   model: opus
   effort: high
 plan-feature-from-issue:
-  model: opus
-  effort: high
-plan-feature-interview:
   model: opus
   effort: high
 plan-feature-scaffold:
