@@ -1,51 +1,102 @@
 # Feature workflow (end-to-end)
 
 From an idea or a feature-request issue to a merged PR — every step and the skill
-that drives it. The lifecycle, per `CLAUDE.md`, is:
+that drives it. The lifecycle, per `CLAUDE.md`, is the **five-stage pipeline**:
 
 ```
-SPEC → PLAN → TASKS → execution by phase → hardening → verification → PR
+design (design-feature) → plan (plan-feature) → execute (execute-phase)
+  → review (review-change) → audit (audit-pr / product-audit)
 ```
 
-## Stage 0 — Decide what you're building
+Each feature is carried by **one `SPEC.md`, written in two halves**: `design-feature`
+writes the **Product half** (goal, context, scope, capability closure →
+acceptance criteria, tooling, product decisions) and stamps `## Design status`;
+`plan-feature` refuses to plan a feature whose product half isn't marked
+`designed`, then writes the **Engineering half** (architecture impact, design,
+phases, testing, dev scenarios, deploy & rollback, deliverables). See
+`docs/features/_TEMPLATE/SPEC.md` for the exact section layout.
+
+## Stage 0 — Design (`design-feature`)
+
+**Product definition and capability closure** — the stage that turns an idea or
+a feature request into an exhaustive, checkable set of acceptance criteria, so
+non-frontier executor models don't silently omit the implicit work (e.g. "auth
+with dashboard management and ACLs" must not collapse to a users table + a list
+view).
+
+`design-feature <slug>`:
+
+- Folds in the raw-idea interview (problem & goal, scope in/out, architecture
+  hints, cross-cutting concerns) when starting from zero.
+- Runs **proportional research**: the capability-closure checklist first
+  (cheap), external/domain research only when the domain is new to the project
+  — no systematic per-feature market research.
+- Walks the **capability-closure checklist**: for each entity introduced or
+  touched, CRUD + state transitions, each with a UI entry point + API surface +
+  test, or an explicit `n/a: <reason>`; for each capability, its entry point and
+  who may execute it; for each role/permission, where it's assigned, revoked,
+  and viewed. A blank row fails the gate; the filled rows become the Acceptance
+  criteria.
+- Records per-feature tooling notes (installed skills/MCPs relevant to *this*
+  feature — a global sweep is `product-audit`'s job, not this).
+- **Upserts**: re-running on an existing slug re-reads the SPEC + `decisions.md`
+  and never destroys recorded decisions — revisions append to `decisions.md`.
+- **Interaction rule**: bare `design-feature <slug>` prints a summary and asks
+  what to add/remove/change (review mode); `design-feature <slug> <instruction>`
+  applies the change directly, no questions.
+- Scales down for XS features: the interview may be a single question and most
+  closure rows resolve to `n/a` — the gate stays uniform, but passing it is
+  cheap.
+
+Once every closure row is filled or explicitly `n/a`, `design-feature` sets
+`## Design status` to `designed` and hands off to `/plan-feature <slug>`.
+
+### The redirect gate
+
+`plan-feature` keys its gate on the SPEC's `## Design status` marker: no
+`SPEC.md`, or the marker missing/not `designed`, or the Capability closure
+section empty → **STOP**, no bypass flag:
+
+```
+→ Next: /design-feature <slug> — this feature has no completed product design yet
+  (capability closure not done). Design it first; then re-run /plan-feature <slug>.
+```
+
+Marker `designed` and closure present → `plan-feature` proceeds to scaffold the
+Engineering half.
+
+## Stage 1 — Plan: which path, then SPEC + artifacts
 
 **One entry point** — `plan-feature` — detects where the work comes from and
 routes to the right internal step:
 
 | You have… | Invoke | The router runs | Result |
 |---|---|---|---|
-| A rough idea, no issue | `plan-feature "<idea>"` (or `--interview`) | `plan-feature-interview` | An interview that fills the SPEC |
-| A GitHub issue requesting a feature | `plan-feature <N>` (or `--from-issue N`) | `plan-feature-from-issue` | Issue → filled SPEC, with `Closes #N` |
-| An already-scoped feature/SPEC | `plan-feature <slug>` (or `--scaffold`) | `plan-feature-scaffold` | Straight to artifact scaffolding |
-| Nothing — take the next roadmap item | `plan-feature --next` | picks the next `planned` entry | Scaffolds it (interviews if it's thin) |
+| An undesigned feature (no `SPEC.md`, or `## Design status` not `designed`) | `plan-feature <slug>` | — | **STOP**, redirect to `/design-feature <slug>` (see above) |
+| A GitHub issue requesting a feature | `plan-feature <N>` (or `--from-issue N`) | `plan-feature-from-issue` | Issue → filled SPEC product half (satisfies closure), with `Closes #N` |
+| An already-designed feature/SPEC (`## Design status: designed`) | `plan-feature <slug>` (or `--scaffold`) | `plan-feature-scaffold` | Engineering half filled + artifact scaffolding |
+| Nothing — take the next roadmap item | `plan-feature --next` | picks the next `planned` entry | Scaffolds it (redirects to `design-feature` first if it's undesigned) |
 
 All paths **read the project first** (agent guide, documentation map,
 architecture, roadmap, domain/style docs) so the feature respects the codebase's
 real constraints. You only ever call `plan-feature`; the internal steps below are
-invoked for you (they never appear in the menu).
-
-### The idea path — `plan-feature-interview`
-
-Restates your idea, then proactively asks — in small batched rounds, each with a
-recommended default — about: problem & goal, scope (and what's OUT), architecture
-impact (layers, ports, use-cases, adapters), data/schema, cross-cutting concerns
-(i18n, SEO, a11y, domain rules, security), a **UI design reference** when the
-feature has a UI surface (build against a design, or flag a design pass before
-coding), **dev scenarios** (happy path *and* failure modes), acceptance criteria,
-dependencies, risks, non-goals, and a **size estimate** (`XS/S/M/L`) that decides
-how much ceremony follows. It only asks what the docs don't already answer, and
-offers to open a tracking issue.
+invoked for you (they never appear in the menu). The raw-idea interview
+previously run by `plan-feature` now lives in `design-feature` (Stage 0) —
+`plan-feature` is engineering-planning only.
 
 ### The issue path — `plan-feature-from-issue`
 
 Reads the issue, **confirms it's actually a feature** (a bug/tech-debt gets
 routed to `triage-issue`), translates to the docs language if needed, maps it to
 the roadmap (number, slug, dependencies, conflicts), closes scope gaps with you,
-and wires `Closes #N` for the eventual PR.
+writes the SPEC's product half (satisfying capability closure — handing thin
+issues to `design-feature` when needed), and wires `Closes #N` for the eventual
+PR.
 
-## Stage 1 — Plan: SPEC + artifacts (`plan-feature-scaffold`)
+## Stage 1b — Plan: SPEC + artifacts (`plan-feature-scaffold`)
 
-Once the feature is scoped, the router runs `plan-feature-scaffold`, which writes
+Once the feature is designed (`## Design status: designed`), the router runs
+`plan-feature-scaffold`, which fills the **Engineering half** and writes
 **docs only** into `docs/features/<NN>-<slug>/`. **The artifact set scales to the
 SPEC's `Size`:**
 
@@ -188,9 +239,10 @@ Re-run the gate (type-check, tests, build) green.
 ## Worked example
 
 ```
-/plan-feature  "<your feature>"     → router detects an idea → interview
-   → SPEC dimensions resolved (offers to open a tracking issue)
-   → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
+/design-feature  "<your feature>"   → interview + capability closure
+   → product half of SPEC filled, `## Design status: designed` (offers to open a tracking issue)
+/plan-feature  NN                   → gate reads `designed` → proceeds (no redirect)
+   → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN  P1              → data/domain layer, gate green, commit
 /execute-phase  NN  P2              → orchestration + adapter, gate green, commit
    → recommended review checkpoint (every 2 phases, skippable): /review-change → classified table + manual checks

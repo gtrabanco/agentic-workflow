@@ -53,12 +53,12 @@ sharpen our workflow skills.
 | Skill | Why | Pairs with (ours) |
 |---|---|---|
 | `engineering:architecture` | Architecture guidance & decisions. | `plan-feature`, `review-implementation` (arch axis) |
-| `engineering:system-design` | System design for non-trivial features. | `plan-feature`, `plan-feature-interview` |
+| `engineering:system-design` | System design for non-trivial features. | `design-feature`, `plan-feature` |
 | `engineering:testing-strategy` | What to test, at which layer, how much. | `review-implementation` test axes, `execute-phase` testing |
 | `engineering:tech-debt` | Identify & manage debt deliberately. | `triage-issue`, `audit-docs` |
 | `engineering:debug` | Systematic debugging methodology. | any bug work |
 | `engineering:documentation` | Documentation practice. | `plan-feature`, `audit-docs` |
-| `doc-coauthoring` (anthropic) | Structured long-form docs: specs, proposals, decision docs. | `plan-feature`, `plan-feature-interview` |
+| `doc-coauthoring` (anthropic) | Structured long-form docs: specs, proposals, decision docs. | `design-feature`, `plan-feature` |
 
 > **Architecture-pattern skill:** keep one that encodes *your* chosen pattern
 > (ports-and-adapters, clean architecture, layered, MVC…). The pattern is
