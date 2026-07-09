@@ -45,7 +45,30 @@ rows + release-log entries added, README/README.es skills table cells
 updated. AC3, AC5 grep checks pass; `npx skills add . --list` still discovers
 and parses every skill.
 
-## P3 — _pending_
+## P3 — 2026-07-09
+
+The authoring skills now **write** the status transitions instead of only the
+sensor/executor reading them:
+
+- `design-feature` 1.1.0 — stamping `## Design status: designed` also sets
+  the feature's roadmap row to `defined` (added at `idea` first if the row
+  didn't exist); `NEEDS_INPUT` leaves both the marker and the row unchanged.
+  Turn contract + Done when gained matching boxes.
+- `plan-feature-from-issue` 1.4.0 — same `idea → defined` write, performed
+  when this skill (not `design-feature`) is the one satisfying closure for an
+  issue-born feature.
+- `plan-feature-scaffold` 1.6.0 — "Register in the roadmap" now sets the row
+  to `planned` (promoting an existing `defined` row, or adding a wholly new
+  row directly at `planned` for an already-scoped SPEC with no prior entry).
+- `plan-feature` 2.1.0 — the redirect gate now reads the **roadmap status**
+  first (`defined`+ proceeds, `idea`/absent STOPs); the SPEC `## Design
+  status` marker is retained only as the legacy-compat fallback for a
+  pre-migration plain-`planned` row (per `docs/workflow/MIGRATION.md`).
+
+`bump-skill` ran for all four: CHANGELOG/CHANGELOG.es rows + release-log
+updates, README/README.es skills-table cells for `design-feature` and
+`plan-feature`. AC6 grep checks pass; `npx skills add . --list` still
+discovers and parses every skill.
 
 ## P4 — _pending_
 
