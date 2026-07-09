@@ -11,7 +11,16 @@ satisfied, `## Design status: designed`); engineering half + this artifact set b
 `06-design-feature` (#13 / PR #24) confirmed **merged**. Fix index empty; no
 blocking fix-now issue. Roadmap row 07 registered.
 
-## P1 — _pending_
+## P1 — 2026-07-09
+
+Rewrote `## Status legend` and `## Conventions` in `docs/features/ROADMAP.md`
+and `template/docs/features/ROADMAP.md` to the five-state machine (`idea →
+defined → planned → in-progress → done`), each state naming its owning skill
+and next-action command, plus a state-transition diagram. Added the legacy
+`planned`-with-designed-SPEC = `defined`+`planned` equivalence rule to
+`docs/workflow/MIGRATION.md`. Registered roadmap row 07 as `in-progress`
+(branch now open). Planning artifacts committed separately before this phase's
+doc edits. AC1/AC2/AC9 grep checks pass (verified below).
 
 ## P2 — _pending_
 

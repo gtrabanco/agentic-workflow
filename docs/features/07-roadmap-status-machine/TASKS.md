@@ -4,17 +4,17 @@ Per-phase checklists the executor ticks off. Labels are fixed `P1, P2, …`.
 
 ## P1 — Status vocabulary + legacy-compat note
 
-- [ ] `docs/features/ROADMAP.md`: rewrite `## Status legend` to five states
+- [x] `docs/features/ROADMAP.md`: rewrite `## Status legend` to five states
       (`idea → defined → planned → in-progress → done`) with meanings + owning
       skill per transition
-- [ ] `docs/features/ROADMAP.md`: update `## Conventions` — executable only when
+- [x] `docs/features/ROADMAP.md`: update `## Conventions` — executable only when
       `planned`; dependency-must-be-merged unchanged
-- [ ] `template/docs/features/ROADMAP.md`: mirror the same legend + conventions
+- [x] `template/docs/features/ROADMAP.md`: mirror the same legend + conventions
       rewrite
-- [ ] `docs/workflow/MIGRATION.md`: add legacy `planned`-with-designed-SPEC =
+- [x] `docs/workflow/MIGRATION.md`: add legacy `planned`-with-designed-SPEC =
       `defined`+`planned` (no redirect) rule
-- [ ] Register roadmap row `07 | roadmap-status-machine | in-progress | 06 | …`
-- [ ] Commit planning artifacts (SPEC + PLAN + TASKS + progress + testing +
+- [x] Register roadmap row `07 | roadmap-status-machine | in-progress | 06 | …`
+- [x] Commit planning artifacts (SPEC + PLAN + TASKS + progress + testing +
       known-issues + decisions + architecture-notes)
 
 ## P2 — Sensor + executor read the machine
