@@ -162,9 +162,15 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.1.0 | 2026-06-05 | minor | Every-2-phases review changed from in-turn auto-run to **hand-off** (runs at its own tier) |
 | 1.0.0 | 2026-06-05 | — | First versioned release |
 
+#### `design-feature`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-07-09 | — | New skill: product definition, split out of `plan-feature`. Folds in the raw-idea interview and walks a fixed **capability-closure** checklist (per entity: CRUD + state transitions, each with UI + API + test, or explicit `n/a: <reason>`; per capability: entry point + ACL; per role: assigned/revoked/viewed) into the SPEC's Product half + Acceptance criteria, stamping `## Design status: designed`. Upserts on re-run (never destroys `decisions.md`); bare `<slug>` reviews and asks, `<slug> "<instruction>"` applies directly. |
+
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-09 | major | **Breaking:** product definition (raw-idea interview + capability closure) moves to the new `design-feature` skill. `plan-feature` is engineering-planning only, drops the `--interview` flag and the internal `plan-feature-interview` step (deleted), and gains a **redirect gate with no bypass flag**: an undesigned feature (no `SPEC.md`, `## Design status` not `designed`, or empty Capability closure) STOPS and points at `/design-feature <slug>`. Migration note in `docs/workflow/MIGRATION.md`. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. BLOCKED carries the unmet dependency chain and build order. |
 | 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.5.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract. |
@@ -307,15 +313,18 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
 | | 1.0.1 | 2026-06-09 | patch | Description shortened 96 → 36 words (always-loaded context); body unchanged |
 | | 1.0.0 | 2026-06-05 | — | The findings engine + classification rubric `review-change` composes |
-| `plan-feature-interview` | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| `plan-feature-interview` | — | 2026-07-09 | removed | **Retired.** Its raw-idea-interview logic moved into the new user-facing `design-feature` skill (product definition is now its own pipeline stage, not an internal `plan-feature` routing detail). `skills/plan-feature-interview/` deleted. See `docs/workflow/MIGRATION.md`. |
+| | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (dimensions resolved, open questions, tracking issue) |
 | 1.1.0 | 2026-06-09 | minor | Estimates size `XS/S/M/L`; asks for a UI design reference on UI features |
 | | 1.0.0 | 2026-06-05 | — | Interview a raw idea into a SPEC |
-| `plan-feature-from-issue` | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| `plan-feature-from-issue` | 1.3.0 | 2026-07-09 | minor | Now writes the SPEC's **product half** (two-halves convention) and must satisfy **capability closure** before handing off — a thin issue without enough to fill it is handed to `design-feature` (composed in-turn only at ≥ its tier) rather than faking `## Design status: designed`. |
+| | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
-| `plan-feature-scaffold` | 1.4.0 | 2026-07-04 | minor | Generated TASKS.md close-out task now says `gh pr create --body-file <path>` (Markdown file), never inline `--body`/heredoc — so executors don't emit literal `\`-escaped backticks in the PR body. |
+| `plan-feature-scaffold` | 1.5.0 | 2026-07-09 | minor | Fills only the SPEC's **engineering half** now — the product half (goal, context, scope, capability closure) is written by `design-feature` / `plan-feature-from-issue` and verified `designed` before this skill ever runs; it stops rather than editing an undesigned or missing product half. |
+| | 1.4.0 | 2026-07-04 | minor | Generated TASKS.md close-out task now says `gh pr create --body-file <path>` (Markdown file), never inline `--body`/heredoc — so executors don't emit literal `\`-escaped backticks in the PR body. |
 | `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.3.0 | 2026-07-03 | minor | Generated TASKS.md final phase ends with literal close-out tasks: open PR + print URL in chat, link the roadmap row, commit & push the link. |
 | 1.2.0 | 2026-07-02 | minor | Fixed completion report (artifacts written, roadmap registration, phase count, open questions) |
@@ -345,6 +354,21 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-09 — product definition splits into `design-feature`.** New
+  user-facing skill `design-feature` 1.0.0 owns product definition: folds in
+  the raw-idea interview, walks a fixed **capability-closure** checklist (per
+  entity → CRUD + state transitions + UI + API + test, or explicit `n/a`; per
+  capability → entry point + ACL; per role → assigned/revoked/viewed) into
+  exhaustive acceptance criteria, and writes the SPEC's **product half**
+  (`docs/features/_TEMPLATE/SPEC.md` is now one SPEC in two halves). `plan-feature`
+  2.0.0 (**major**, breaking) becomes engineering-planning only: it drops the
+  `--interview` flag, gains a **redirect gate with no bypass flag** (undesigned
+  feature → STOP → `/design-feature <slug>`), and the internal
+  `plan-feature-interview` step is deleted. `plan-feature-from-issue` 1.3.0 and
+  `plan-feature-scaffold` 1.5.0 align to the two-halves convention. Migration
+  note in `docs/workflow/MIGRATION.md`. Feature `06-design-feature`
+  (backlog U3, closes #13).
 
 - **2026-07-09 — adversarial context-clean review.** Hardens the mandatory
   end-of-unit review against the context-sharing failure mode where the

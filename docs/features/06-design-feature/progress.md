@@ -7,7 +7,7 @@ Running log, one entry per phase. Executors append; do not rewrite history.
 | P1 — SPEC two-halves + template + pipeline docs | done | 2026-07-09 | Template + FEATURE_WORKFLOW.md + SKILLS.md updated |
 | P2 — design-feature skill (core) | done | 2026-07-09 | `skills/design-feature/SKILL.md` v1.0.0 authored |
 | P3 — plan-feature slim (major) + interview retirement + alignment | done | 2026-07-09 | `plan-feature` 2.0.0, redirect gate; interview retired; from-issue/scaffold aligned |
-| P4 — Hardening + bookkeeping | not started | — | |
+| P4 — Hardening + bookkeeping | done | 2026-07-09 | bump-skill run; all ACs + audit-docs verified; PR opened |
 
 ## Log
 
@@ -70,3 +70,23 @@ Running log, one entry per phase. Executors append; do not rewrite history.
   absent, `design-feature`/`plan-feature`/`plan-feature-from-issue`/
   `plan-feature-scaffold` all discovered with their new descriptions. AC6/AC7/AC9
   verified. Next: `execute-phase 06 P4`.
+- **P4 (execute-phase 06 P4)** — Ran `bump-skill`: new `design-feature` 1.0.0
+  row, `plan-feature` major-bump row, `plan-feature-interview` removal row,
+  `plan-feature-from-issue`/`plan-feature-scaffold` minor rows added to
+  `CHANGELOG.md` + `CHANGELOG.es.md` (per-skill tables + release log, both
+  languages); README.md/README.es.md gained a `## Design`/`### Diseño` section
+  and an updated `plan-feature` row/description and model-tier table row; lint
+  (5 authoring rules) found no genuine violations (the "Step 0" / phase-naming
+  regex hits are the fixed section header, not `S1`/`S2` labels — false
+  positive, confirmed). Ran the full AC sweep: AC1–AC11 all pass (`npx skills
+  add . --list` discovers all 28 skills cleanly, no parse errors,
+  `plan-feature-interview` fully absent from `skills/`). Ran `/audit-docs`:
+  Decision PASS — no genuine drift (roadmap row 06 still `planned` is expected
+  mid-phase state, resolved by this phase's close-out below; the "Step 0" hits
+  are the same false positive). Weak-model read-through of `design-feature`:
+  every closure row independently checkable, no "if needed", `## Portability`
+  intact, closure gate rejects a blank row (`NEEDS_INPUT`), upsert destroys
+  nothing (append-only to `decisions.md`). No stack/product leakage confirmed
+  by spot-grep (only false-positive substring hits inside "Guardrails").
+  Close-out: PR opened (see PR reference below), roadmap row flipped to
+  `done`, `docs: link PR` commit pushed.
