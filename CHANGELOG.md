@@ -123,6 +123,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.11.0 | 2026-07-09 | minor | Complies with the roadmap status machine instead of exempting itself: founding is documented as **batch design** (interview rounds 2–4 are the product-definition answers), so founding writes feature rows at `idea` (the founding-scaffolded feature 01 lands directly at `planned`). New **DESIGN** stage: a mid-run `idea`/`defined` unit gets JIT design composing `design-feature` + `plan-feature-scaffold` in-turn, **derived strictly from the locked `SHIP_DECISIONS.md` record — no new questions** — promoting `idea → defined → planned` before PLAN. Undesignable-from-record → parked (`blockers[]` kind `undesignable`, `needs_input` records the gap), `state` stays `CONTINUE` (a per-unit park, not a run halt); SELECT moves to the next startable unit. Stage sequence, model routing, and stop-conditions tables updated to include DESIGN. |
 | 1.10.0 | 2026-07-05 | minor | Driver-neutral autopilot: `/loop`, an external orchestrator (envelope-routed), or manual re-invocation are first-class equivalent drivers; EXECUTE runs without subagents via one headless invocation per phase; every iteration ending states WHY (normal one-stage stop vs the exact cap hit). Plus the machine envelope (banner ↔ state mapping). |
 | 1.9.0 | 2026-07-04 | minor | Sweep issues + subagent PRs + triage comments use `--body-file` (Markdown), never inline `--body`/heredoc; guardrail added. |
 | 1.8.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -361,7 +362,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
-- **2026-07-09 — roadmap status becomes the pipeline's state machine (P1–P3 so
+- **2026-07-09 — roadmap status becomes the pipeline's state machine (P1–P4 so
   far).** The roadmap `Status` column is promoted to a five-state machine
   (`idea → defined → planned → in-progress → done`), rewritten in
   `docs/features/ROADMAP.md` and `template/docs/features/ROADMAP.md` with a
@@ -376,8 +377,15 @@ How pinning actually works, verified against the `skills` CLI:
   defined` when they stamp `## Design status: designed`; `plan-feature-scaffold`
   1.6.0 writes `defined → planned` when it registers the full artifact set;
   `plan-feature` 2.1.0's redirect gate now keys on the roadmap status first,
-  with the SPEC marker retained as the legacy-compat fallback. Feature
-  `07-roadmap-status-machine` (backlog U4, closes #14) — in progress.
+  with the SPEC marker retained as the legacy-compat fallback. `ship-roadmap`
+  1.11.0 complies with the machine rather than exempting itself: founding is
+  documented as batch design (writes feature rows at `idea`, except the
+  founding-scaffolded feature 01 which lands at `planned`); a new DESIGN
+  stage JIT-designs a mid-run `idea`/`defined` unit strictly from the locked
+  `SHIP_DECISIONS.md` record — no new questions — promoting it to `planned`
+  before PLAN; undesignable units are parked (`state: CONTINUE`, run keeps
+  going), never guessed or re-asked. Feature `07-roadmap-status-machine`
+  (backlog U4, closes #14) — in progress.
 
 - **2026-07-09 — product definition splits into `design-feature`.** New
   user-facing skill `design-feature` 1.0.0 owns product definition: folds in
