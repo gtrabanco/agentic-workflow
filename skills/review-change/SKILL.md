@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.10.1
+version: 1.10.2
 argument-hint: <path-or-glob>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -246,7 +246,9 @@ enables:
   conversation, as part of this review.
 - **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   this review needs your **strongest** model. Never review a change with a
-  model weaker than the one that wrote it.
+  model weaker than the one that wrote it — and prefer a different model
+  **family** than the writer's: same-family instances share training blind
+  spots, cross-family decorrelates errors.
 
 ## Relationship to other skills
 

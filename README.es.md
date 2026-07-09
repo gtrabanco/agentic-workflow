@@ -326,9 +326,11 @@ npx skills add gtrabanco/agentic-workflow#claude
 `effort:` se mapea al presupuesto de razonamiento/thinking de tu modelo (`high` →
 razonamiento máximo; `medium` → por defecto; sin ese control → respeta solo la
 división fuerte/barato de arriba). Dos invariantes sobreviven a cualquier mapeo:
-**nunca revises un cambio con un modelo más débil que el que lo escribió**, y
-**los veredictos de auditoría (el gate de fusión) van al modelo más fuerte que
-tengas**. Espera que los modelos más débiles sigan el workflow correctamente —
+**nunca revises un cambio con un modelo más débil que el que lo escribió — y
+prefiere una familia de modelo distinta a la del autor** (instancias de la
+misma familia comparten puntos ciegos de entrenamiento; una familia cruzada
+descorrelaciona errores), y **los veredictos de auditoría (el gate de fusión)
+van al modelo más fuerte que tengas**. Espera que los modelos más débiles sigan el workflow correctamente —
 las skills están escritas como checklists y formatos de salida fijos — pero con
 un juicio menos profundo: la disciplina se mantiene, el techo se mueve.
 
