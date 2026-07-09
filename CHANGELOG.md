@@ -196,6 +196,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.11.0 | 2026-07-09 | minor | Turn contract gains a mandatory context-clean box: the mandatory end-of-unit review must run in a conversation that did NOT implement the change — if it did, STOP and hand off to a fresh one. "When to use" reworded to state the requirement in prose, referencing feature 04's cross-family model-preference line. |
 | 1.10.2 | 2026-07-09 | patch | Portability's model invariant extended: "never review with a weaker model — and prefer a different model **family** than the writer's" (same-family instances share training blind spots; cross-family decorrelates errors). Wording-only. |
 | 1.10.1 | 2026-07-05 | patch | Cross-references updated for `execute-phase` 1.14.0: the every-2-phases hand-off is now described as a recommended, skippable checkpoint; the mandatory-before-merge end review is unchanged. |
 | 1.10.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. fix-now findings and filed issue numbers ride the envelope; recurring SPEC drift sets the product-audit recommendation flag. |
@@ -301,7 +302,8 @@ How pinning actually works, verified against the `skills` CLI:
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
 | `orchestration-envelope` | 1.0.0 | 2026-07-05 | — | New internal contract: the machine-envelope JSON schema (11 states, fixed keys, last-fenced-json parse rule) every user-facing skill emits as its absolute last output. |
-| `review-implementation` | 1.0.3 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
+| `review-implementation` | 1.1.0 | 2026-07-09 | minor | Phase 1 ("Find") stance is now adversarial by default: "assume the diff is WRONG — your job is to prove it does not work." The axis table and the Phase 2 classification rubric are unchanged. |
+| | 1.0.3 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
 | | 1.0.1 | 2026-06-09 | patch | Description shortened 96 → 36 words (always-loaded context); body unchanged |
 | | 1.0.0 | 2026-06-05 | — | The findings engine + classification rubric `review-change` composes |
@@ -343,6 +345,17 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-09 — adversarial context-clean review.** Hardens the mandatory
+  end-of-unit review against the context-sharing failure mode where the
+  conversation that wrote a change also reviews it: `review-implementation`
+  1.1.0's Phase 1 stance is now adversarial by default ("assume the diff is
+  WRONG — prove it does not work"), and `review-change` 1.11.0 gains a
+  mandatory turn-contract box requiring the end review to run in a
+  conversation that did not implement the change (STOP and hand off
+  otherwise). References feature `04-running-economically`'s cross-family
+  model-preference line rather than restating it. Feature
+  `05-adversarial-context-clean-review`.
 
 - **2026-07-05 — orchestrator crash recovery.** External drivers (REST-only
   Node/opencode servers included) get a safe restart path: `workflow-status`

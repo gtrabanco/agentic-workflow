@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.0.3
+version: 1.1.0
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -44,7 +44,9 @@ default; the project's docs refine it.
 
 ## Phase 1 — Find (no refactor)
 
-Scan the scope and record findings across these axes. Fix nothing.
+**Assume the diff is WRONG — your job is to prove it does not work.** Scan the
+scope adversarially and record every finding across these axes. Fix nothing; the
+classification in Phase 2 decides what matters.
 
 | # | Axis | Looks for |
 |---|---|---|

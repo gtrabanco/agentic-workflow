@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 1.10.2
+version: 1.11.0
 argument-hint: <path-or-glob>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -32,6 +32,7 @@ or refactors.**
 ## Turn contract — verify before ending the turn
 
 ```
+✓ This review runs in a conversation that did NOT implement the change; if this conversation wrote the diff, STOP and hand off to a fresh one (the reviewer works from the diff + the SPEC, not the author's mental state).
 ✓ The synthesized decision table + manual-verification checklist + `Decision: PASS | FAIL` were returned in the fixed output format
 ✓ Every non-fix-now finding got a destination (triaged — issue / decision / drop)
 ✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
@@ -44,7 +45,13 @@ first on purpose).
 ## When to use
 
 - **Mandatory before every merge** — every unit (feature, single-pass, or fix) gets a
-  `review-change` pass before its merge gate; that end review is never skipped.
+  `review-change` pass before its merge gate; that end review is never skipped, and
+  it must run in a conversation that did **not** implement the change — the
+  conversation that wrote a diff shares the author's mental model and tends to
+  catch only mechanical issues, missing design defects a context-clean,
+  adversarial reviewer would find (see the turn-contract box above). If the
+  reviewing conversation authored the diff, stop and hand off to a fresh one
+  before reviewing.
   `execute-phase` additionally **recommends** a hand-off every 2 phases — an
   optional checkpoint the user may skip.
 - When you want the *right* reviews for this change without running irrelevant
