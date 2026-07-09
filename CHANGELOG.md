@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.16.0 | 2026-07-10 | minor | New **one phase = one session** rule, stated right before the Batch-execution section: never execute two phases in one conversation on a non-frontier model — the `/loop` batch shape already clears and re-invokes per phase; this is the rule it enforces, paired with the existing manual-re-invoke Portability fallback. |
 | 1.15.0 | 2026-07-09 | minor | Dependency gate gains an **own-status precondition**, checked after the dependency closure is met and still before any edit: a unit whose roadmap row is `idea` STOPs and redirects to `/design-feature <slug>`; `defined` STOPs and redirects to `/plan-feature <slug>`; `planned`+ proceeds. `--force` skips the STOP (never the check), recorded in `decisions.md`, same rule as the dependency gate. Legacy plain-`planned` rows with a complete SPEC product half are treated as `defined`+`planned` (no redirect) per `MIGRATION.md`. Machine envelope: `BLOCKED` now also covers the own-status gate, `blockers[]` kind `own-status`. |
 | 1.14.1 | 2026-07-09 | patch | Portability's model invariant extended: "never review with a weaker model — and prefer a different model **family** than the writer's" (same-family instances share training blind spots; cross-family decorrelates errors). Wording-only. |
 | 1.14.0 | 2026-07-05 | minor | The every-2-phases review checkpoint is now a **recommendation, not a blocking stop**: the closing block recommends `/review-change` with "continue to the next phase" as a listed alternative, and the envelope keeps `state: CONTINUE` at checkpoints (advisory) — `READY_FOR_REVIEW` is reserved for the finished unit. The **end-of-unit review stays mandatory** (feeds `audit-pr`), and the dependency gate is unchanged (still blocks, still requires `--force` to override). `review-change` 1.10.1 cross-references updated. |
@@ -329,7 +330,8 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
-| `plan-feature-scaffold` | 1.6.0 | 2026-07-09 | minor | "Register in the roadmap" now **sets** the row's status to `planned` (the `defined → planned` transition this skill owns) alongside number/ordering/dependencies — an already-`defined` row is promoted; a wholly new row (already-scoped SPEC with no prior entry) is added directly at `planned`. |
+| `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | minor | Phase-cutting is now a **hard gate**, not advisory: an M/L feature MUST split into `Depends on:`-chained features on >~5 phases, a multi-layer/concern phase, or an unresolved design decision, and every emitted phase must pass a four-box cheap-executability checklist (independently checkable · zero open decisions · one concern · gate runs locally). `TASKS.md`/`testing.md` generation now emits command-checkable acceptance criteria as the runnable command, not prose. |
+| | 1.6.0 | 2026-07-09 | minor | "Register in the roadmap" now **sets** the row's status to `planned` (the `defined → planned` transition this skill owns) alongside number/ordering/dependencies — an already-`defined` row is promoted; a wholly new row (already-scoped SPEC with no prior entry) is added directly at `planned`. |
 | | 1.5.0 | 2026-07-09 | minor | Fills only the SPEC's **engineering half** now — the product half (goal, context, scope, capability closure) is written by `design-feature` / `plan-feature-from-issue` and verified `designed` before this skill ever runs; it stops rather than editing an undesigned or missing product half. |
 | | 1.4.0 | 2026-07-04 | minor | Generated TASKS.md close-out task now says `gh pr create --body-file <path>` (Markdown file), never inline `--body`/heredoc — so executors don't emit literal `\`-escaped backticks in the PR body. |
 | `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
@@ -361,6 +363,19 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-10 — phase-cutting economics: hard split rule + cheap-executability
+  checklist + criteria-as-commands + one-phase-one-session (P1–P2 of feature
+  08).** `plan-feature-scaffold` 1.7.0 replaces the soft "consider splitting"
+  with a mandatory split trigger (>~5 phases, multi-layer/concern phase, or an
+  unresolved design decision) and a four-box per-phase cheap-executability
+  checklist, and now emits command-checkable acceptance criteria as runnable
+  commands in `TASKS.md`/`testing.md` instead of prose. Both SPEC templates
+  (`docs/features/_TEMPLATE/SPEC.md` + `template/` mirror) carry the same hard
+  split rule and criteria-as-commands convention. `execute-phase` 1.16.0 and
+  `docs/workflow/FEATURE_WORKFLOW.md` (+ `template/CLAUDE.md`'s Feature
+  workflow section, standing in for a nonexistent `template/` mirror) state the
+  **one phase = one session** rule for non-frontier executor models.
 
 - **2026-07-09 — roadmap status becomes the pipeline's state machine (P1–P4 so
   far).** The roadmap `Status` column is promoted to a five-state machine
