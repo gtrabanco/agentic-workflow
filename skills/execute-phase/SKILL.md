@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.14.0
+version: 1.14.1
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -483,7 +483,9 @@ enables:
 - **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   planning, review, and audit need your **strongest** model; mechanical
   execution may run cheaper. Never review a change with a model weaker than
-  the one that wrote it.
+  the one that wrote it — and prefer a different model **family** than the
+  writer's: same-family instances share training blind spots, cross-family
+  decorrelates errors.
 - **No `/loop`** — re-invoke the skill by hand per phase, following its closing
   `→ Next:` block each time (see *Batch execution* above).
 
