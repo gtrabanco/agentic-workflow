@@ -47,21 +47,21 @@ Run `execute-phase 06 P1`, then `P2`, `P3`, `P4`.
 
 ## P3 — plan-feature slim (MAJOR) + interview retirement + alignment
 
-- [ ] Slim `skills/plan-feature/SKILL.md`: remove raw-idea interview routing row.
-- [ ] Add the redirect gate (undesigned → STOP → fixed `/design-feature <slug>`
+- [x] Slim `skills/plan-feature/SKILL.md`: remove raw-idea interview routing row.
+- [x] Add the redirect gate (undesigned → STOP → fixed `/design-feature <slug>`
       block; **no bypass flag**). Update Turn contract / Routing / Done when.
-- [ ] Bump `plan-feature` **major**.
-- [ ] `rm -r skills/plan-feature-interview/` and repoint every reference
+- [x] Bump `plan-feature` **major**.
+- [x] `rm -r skills/plan-feature-interview/` and repoint every reference
       (`grep -rl plan-feature-interview` across skills/docs/READMEs) to
       `design-feature`.
-- [ ] Adapt `skills/plan-feature-from-issue/SKILL.md`: emit two-halves SPEC,
+- [x] Adapt `skills/plan-feature-from-issue/SKILL.md`: emit two-halves SPEC,
       satisfy closure / hand thin issues to design-feature; respect ≥-tier rule;
       minor bump.
-- [ ] Adapt `skills/plan-feature-scaffold/SKILL.md`: fill engineering half only;
+- [x] Adapt `skills/plan-feature-scaffold/SKILL.md`: fill engineering half only;
       minor bump if body changes.
-- [ ] Add `docs/workflow/MIGRATION.md` notes (plan-feature major slim + redirect;
+- [x] Add `docs/workflow/MIGRATION.md` notes (plan-feature major slim + redirect;
       interview removed → `/design-feature`).
-- [ ] Verify AC6 (`/design-feature` present, no bypass flag), AC7
+- [x] Verify AC6 (`/design-feature` present, no bypass flag), AC7
       (`test ! -e skills/plan-feature-interview` + no references), AC9 (MIGRATION).
 
 ## P4 — Hardening + bookkeeping (last phase)

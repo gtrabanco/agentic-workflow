@@ -1,31 +1,39 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 1.6.0
-argument-hint: <idea | #N | NN-slug> | --interview | --from-issue N | --scaffold <slug> | --next
+version: 2.0.0
+argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  One entry point to plan a feature. Detects the input — a raw idea (interview), a
-  GitHub issue #N (issue → scoped SPEC), or an already-scoped slug/SPEC (straight
-  to scaffolding) — routes to the right internal step, then ensures the roadmap
-  entry and prints the next step. Force a path with flags to skip detection;
-  `--next` plans the next planned feature from the roadmap. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  Engineering-planning router for an already-designed feature. Given a feature
+  whose SPEC product half is not marked `designed`, STOPS and redirects to
+  `/design-feature <slug>` — no bypass flag. Given a designed feature, a GitHub
+  issue #N (issue → scoped product half, satisfying capability closure), or an
+  already-scoped slug/SPEC (straight to engineering-half scaffolding), routes
+  to the right internal step, then ensures the roadmap entry and prints the
+  next step. Force a path with flags to skip detection; `--next` plans the
+  next planned feature from the roadmap. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "plan a
   feature", "plan the feature from issue N", "plan the next roadmap feature",
-  "scaffold feature NN", "I have an idea, plan it", "create SPEC and TASKS for NN".
+  "scaffold feature NN", "create SPEC and TASKS for NN".
 ---
 
 # Plan Feature (router)
 
-One door to turn anything — an idea, an issue, or a scoped slug — into a planned,
-roadmap-registered feature. Routes to a focused internal step so only the work you
-need runs (no fat single skill). **Docs only — no code, no branch.**
+The engineering-planning door for a feature whose product definition already
+exists. Routes to a focused internal step so only the work you need runs (no
+fat single skill). **Docs only — no code, no branch.** Product definition
+(raw-idea interview, capability closure) is `design-feature`'s job, not this
+one — see the redirect gate below.
 
 ## Turn contract — verify before ending the turn
 
 ```
-✓ SPEC + artifacts written and the roadmap entry registered (number, order, deps verified)
+✓ The redirect gate ran FIRST, before any SPEC edit: undesigned input → STOP,
+  print the fixed `/design-feature <slug>` block, do nothing else this turn
+✓ Designed input only: engineering half filled, artifacts written, and the
+  roadmap entry registered (number, order, deps verified)
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
@@ -41,39 +49,61 @@ Per the agent guide's **Workflow conventions** + **documentation map**, then rea
 what THIS skill needs: the **roadmap** (`docs/features/ROADMAP.md`), so routing
 and roadmap registration match the project's real layout.
 
+## Redirect gate (always, before routing)
+
+Before any other step, resolve the target slug/issue and check its SPEC (if a
+`SPEC.md` exists for it):
+
+- **No `SPEC.md`**, or **`## Design status` is missing or not `designed`**, or
+  the **Capability closure** section is empty → **STOP**. Print exactly:
+
+  ```
+  → Next: /design-feature <slug> — this feature has no completed product design yet
+    (capability closure not done). Design it first; then re-run /plan-feature <slug>.
+  ```
+
+  No bypass flag exists for this gate — an undesigned feature is never planned
+  by this skill, under any flag or instruction.
+- **`## Design status: designed`** and Capability closure filled → proceed to
+  Routing below.
+- **A raw idea with no slug at all** (nothing to check) → the same STOP applies:
+  print the block above pointing at `/design-feature "<idea>"` instead of a slug.
+
 ## Routing
 
-Pick the mode — first match wins:
+Once the gate passes, pick the mode — first match wins:
 
-1. **Flag forces it** (skip detection): `--interview`, `--from-issue <N>`,
-   `--scaffold <slug>`, `--next`.
+1. **Flag forces it** (skip detection): `--from-issue <N>`, `--scaffold <slug>`,
+   `--next`.
 2. **Issue** — an issue number or issue URL → `plan-feature-from-issue`.
-3. **Scoped** — an existing roadmap slug or a filled `SPEC.md` → `plan-feature-scaffold`.
-4. **Raw idea** — a vague description → `plan-feature-interview`.
-5. **`--next` / no input** — read the roadmap, take the next `planned` entry; if
-   it's a thin line → `plan-feature-interview`, if scoped → `plan-feature-scaffold`.
-6. **Ambiguous** — ask one question, then route.
+3. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
+   `plan-feature-scaffold`.
+4. **`--next` / no input** — read the roadmap, take the next `planned` entry;
+   apply the redirect gate to it, then scaffold if designed.
+5. **Ambiguous** — ask one question, then route.
 
 ### Example (routing)
 
 | You run | Detected | Routes to | Then |
 |---|---|---|---|
-| `plan-feature "add CSV export"` | raw idea | `plan-feature-interview` → `plan-feature-scaffold` | `execute-phase NN P1` |
+| `plan-feature 14-csv-export` (not designed) | undesigned slug | — | STOP → `/design-feature 14-csv-export` |
 | `plan-feature 131` | issue #131 | `plan-feature-from-issue` → `plan-feature-scaffold` | PR carries `Closes #131` |
-| `plan-feature 14-csv-export` | scoped slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
-| `plan-feature --next` | next `planned` roadmap entry | scaffold (interview if thin) | `execute-phase NN P1` |
+| `plan-feature 14-csv-export` (designed) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
+| `plan-feature --next` | next `planned` roadmap entry | gate, then scaffold | `execute-phase NN P1` |
 
 ## Process
 
-1. **Route** per above. The interview / from-issue internals produce a **filled,
-   sized SPEC**; then invoke `plan-feature-scaffold`, which scales the artifacts
-   to the SPEC's size (XS/S → SPEC-only; M/L → full set) and registers the
-   roadmap. The scoped path runs `plan-feature-scaffold` directly.
-2. **Confirm roadmap.** Verify the feature is registered in
+1. **Redirect gate** per above — always first.
+2. **Route** per above. The from-issue internal produces a **filled, sized SPEC
+   product half**; then invoke `plan-feature-scaffold`, which fills the
+   engineering half and scales the artifacts to the SPEC's size (XS/S →
+   SPEC-only; M/L → full set) and registers the roadmap. The already-designed
+   scoped path runs `plan-feature-scaffold` directly.
+3. **Confirm roadmap.** Verify the feature is registered in
    `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
    if any of the three is missing or wrong, fix the entry now — never leave
    registration for later.
-3. **Dependency & blocker check (always, before recommending execution).**
+4. **Dependency & blocker check (always, before recommending execution).**
    - Walk the feature's `Depends on:` closure (transitively): every dependency
      must be `done` **and merged**. Any unmet → the closing block recommends
      building the deepest unmet dependency first, NOT this feature.
@@ -82,11 +112,13 @@ Pick the mode — first match wins:
      `/plan-fix <n>` before execution ("building on a known defect bakes it in").
    - Planning itself never blocks on either — the SPEC/artifacts are still
      written; only the **recommended next step** changes.
-4. **Print the next step** per the check above (see Done when).
+5. **Print the next step** per the check above (see Done when).
 
 ## Guardrails
 
 - Docs only — no code, no branch (that is `execute-phase`).
+- **Never plan an undesigned feature** — the redirect gate has no bypass flag,
+  ever. Do not add one, even if asked; point at `/design-feature` instead.
 - Don't re-ask what a flag, the issue, or the docs already settle.
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
@@ -94,12 +126,16 @@ Pick the mode — first match wins:
 
 ## Internal steps (not user-invocable)
 
-- `plan-feature-interview` — interview a raw idea into a SPEC.
-- `plan-feature-from-issue` — issue → scoped SPEC, `Closes #N`.
-- `plan-feature-scaffold` — SPEC → full artifact set + roadmap entry.
+- `plan-feature-from-issue` — issue → scoped SPEC product half, `Closes #N`.
+- `plan-feature-scaffold` — SPEC → engineering half + full artifact set +
+  roadmap entry.
 
 These run **within this same conversation** (that's what "composing" means) —
-on any agent, just follow their `SKILL.md` inline as the routed step.
+on any agent, just follow their `SKILL.md` inline as the routed step. The
+raw-idea interview that used to be an internal step of this router is retired
+— see `docs/workflow/MIGRATION.md`; that logic now lives in `design-feature`,
+a user-facing skill in its own right (product definition is its own pipeline
+stage, not an internal routing detail of this one).
 
 ## Machine envelope
 
@@ -112,15 +148,18 @@ present; values only from verified command output, never invented.
 
 This skill emits:
 
-- **`state`:** `OK` (planned — artifacts written, roadmap registered),
-  `BLOCKED` (the dependency check found unmet deps: `dependencies.unmet` +
-  `build_order` filled, `blockers[]` kind `dependency`), or `NEEDS_INPUT`
-  (interview path question — `needs_input` filled, nothing guessed).
+- **`state`:** `OK` (planned — engineering half filled, artifacts written,
+  roadmap registered), `BLOCKED` (either the redirect gate stopped on an
+  undesigned feature — `blockers[]` kind `undesigned`, `next.recommended:
+  "/design-feature <slug>"` — or the dependency check found unmet deps:
+  `dependencies.unmet` + `build_order` filled, `blockers[]` kind
+  `dependency`), or `NEEDS_INPUT` (an ambiguous routing input — `needs_input`
+  filled, nothing guessed).
 - **Fields:** `unit` = the planned feature (`type: "feature"`, id, branch from
   the SPEC); `phase.total` = planned phase count (`null` for XS/S
   single-pass); `next.recommended` = `/execute-phase <NN> P1` (or single-pass)
-  with `tier: "cheap"` — or the deepest unmet dependency's command when
-  BLOCKED, `tier: "strong"`.
+  with `tier: "cheap"` — or `/design-feature <slug>` / the deepest unmet
+  dependency's command when BLOCKED, `tier: "strong"`.
 - `detail`: `{"size": "XS|S|M|L", "artifacts": [paths]}`.
 
 ## Portability (agents other than Claude Code)
@@ -139,19 +178,32 @@ enables:
 
 ## Relationship to other skills
 
-- `triage-issue` routes here to promote an issue to a feature.
+- **Redirects to** `design-feature` when the redirect gate stops on an
+  undesigned feature — never composed in-turn (planning-class, ≥-tier hand-off).
+- `triage-issue` routes here to promote an issue to a feature (still subject to
+  the redirect gate if the promoted issue is undesigned).
 - `execute-phase` executes the phases afterward (`audit-docs` audits anytime).
 
 ## Done when
 
-- A planned feature with its full artifact set exists and is roadmap-registered.
+- The redirect gate ran, and if it stopped, nothing else in this turn touched
+  the SPEC.
+- Designed input only: a planned feature with its full artifact set exists and
+  is roadmap-registered.
 - The dependency & blocker check ran, and **the closing `→ Next:` block matches
   its result** — clean:
 
   ```
   → Next: /execute-phase <NN> P1 — start phase 1 (M/L, phased)
     · XS/S feature → /execute-phase <NN> (single-pass)
-    · adjust scope first → re-run /plan-feature   · audit the planning docs → /audit-docs
+    · adjust scope first → re-run /design-feature <slug>   · audit the planning docs → /audit-docs
+  ```
+
+  undesigned feature (redirect gate stopped):
+
+  ```
+  → Next: /design-feature <slug> — this feature has no completed product design yet
+    (capability closure not done). Design it first; then re-run /plan-feature <slug>.
   ```
 
   unmet dependency and/or blocking fix-now issue:

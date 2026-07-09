@@ -6,7 +6,7 @@ Running log, one entry per phase. Executors append; do not rewrite history.
 |---|---|---|---|
 | P1 — SPEC two-halves + template + pipeline docs | done | 2026-07-09 | Template + FEATURE_WORKFLOW.md + SKILLS.md updated |
 | P2 — design-feature skill (core) | done | 2026-07-09 | `skills/design-feature/SKILL.md` v1.0.0 authored |
-| P3 — plan-feature slim (major) + interview retirement + alignment | not started | — | |
+| P3 — plan-feature slim (major) + interview retirement + alignment | done | 2026-07-09 | `plan-feature` 2.0.0, redirect gate; interview retired; from-issue/scaffold aligned |
 | P4 — Hardening + bookkeeping | not started | — | |
 
 ## Log
@@ -43,3 +43,30 @@ Running log, one entry per phase. Executors append; do not rewrite history.
   AC4 (`capability closure`), `npx skills add . --list` discovers it alongside
   every existing skill with no parse errors. `plan-feature` itself is not yet
   edited to redirect here — that's P3. Next: `execute-phase 06 P3`.
+- **P3 (execute-phase 06 P3)** — Slimmed `skills/plan-feature/SKILL.md` to
+  2.0.0 (major): dropped the `--interview` flag and the raw-idea routing row,
+  added the **redirect gate** (no `SPEC.md`, `## Design status` not
+  `designed`, or empty Capability closure → STOP, print the fixed
+  `/design-feature <slug>` block, no bypass flag — confirmed no
+  `--force-plan`/`--skip-design`/`--no-design` flag exists), updated Turn
+  contract / Routing / Machine envelope (`BLOCKED` now covers the redirect,
+  kind `undesigned`) / Relationship / Done when. Deleted
+  `skills/plan-feature-interview/` (`git rm -r`) and repointed every **live**
+  reference to `design-feature`: `skills/plan-feature-from-issue/SKILL.md`
+  (1.3.0 — writes the product half, satisfies capability closure, hands thin
+  issues to `design-feature` respecting the ≥-tier rule),
+  `skills/plan-feature-scaffold/SKILL.md` (1.5.0 — fills only the engineering
+  half, verifies `designed` before writing), `docs/workflow/PORTABLE_PROMPT.md`,
+  `docs/workflow/RECOMMENDED_SKILLS.md`, `docs/workflow/REPLICATE.md`,
+  `docs/workflow/model-routing.yml` (design-feature tier row added,
+  plan-feature-interview row dropped), `README.md`, `README.es.md`. Added the
+  `docs/workflow/MIGRATION.md` section (plan-feature 2.0.0, command
+  muscle-memory table, backfill guidance for pre-existing single-half SPECs).
+  **D12 recorded**: AC7's blanket grep can't literally return zero (this
+  feature's own planning docs, `ROADMAP.md`'s row 06, and MIGRATION.md's
+  pre-existing v2 historical section all legitimately keep the name) — verified
+  file-by-file instead that every live/operational doc was repointed; see
+  `decisions.md`. `npx skills add . --list` — no errors, `plan-feature-interview`
+  absent, `design-feature`/`plan-feature`/`plan-feature-from-issue`/
+  `plan-feature-scaffold` all discovered with their new descriptions. AC6/AC7/AC9
+  verified. Next: `execute-phase 06 P4`.
