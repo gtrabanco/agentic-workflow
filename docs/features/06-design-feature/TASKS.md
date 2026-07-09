@@ -5,22 +5,26 @@ Run `execute-phase 06 P1`, then `P2`, `P3`, `P4`.
 
 ## P1 — SPEC two-halves convention + template + pipeline docs
 
-- [ ] Commit this planning artifact set (P1 commits the planning docs).
-- [ ] Edit `docs/features/_TEMPLATE/SPEC.md`: add a **Product half** grouping
+- [x] Commit this planning artifact set (P1 commits the planning docs). —
+      `docs(06-design-feature): planning artifacts`
+- [x] Edit `docs/features/_TEMPLATE/SPEC.md`: add a **Product half** grouping
       (Goal, Context, Business goals, Scope, Capability closure → Acceptance
-      criteria, Tooling, product Decisions, `## Design status`).
-- [ ] Edit the same template: add an **Engineering half** grouping (Architecture
+      criteria, Tooling, product Decisions, `## Design status`). — Goal stays a
+      meta section before the halves per the existing template convention
+      (alongside Branch/Size/Dependencies); Context onward is grouped under
+      `## Product half`.
+- [x] Edit the same template: add an **Engineering half** grouping (Architecture
       impact, Design, Phases, Testing, Dev scenarios, Deploy & rollback,
       Deliverables).
-- [ ] Add the `## Design status` marker line to the template with its
+- [x] Add the `## Design status` marker line to the template with its
       `designed`/not-yet semantics.
-- [ ] Add a `## Capability closure` section skeleton to the template (per-entity
+- [x] Add a `## Capability closure` section skeleton to the template (per-entity
       CRUD + state / per-capability / per-role, with explicit `n/a`).
-- [ ] Edit `docs/workflow/FEATURE_WORKFLOW.md`: name design → plan → execute →
+- [x] Edit `docs/workflow/FEATURE_WORKFLOW.md`: name design → plan → execute →
       review → audit; describe two-halves SPEC + redirect gate.
-- [ ] Edit `docs/workflow/SKILLS.md`: add `design-feature`; note `plan-feature`
+- [x] Edit `docs/workflow/SKILLS.md`: add `design-feature`; note `plan-feature`
       is now engineering-planning only.
-- [ ] Verify `grep -q "## Design status" docs/features/_TEMPLATE/SPEC.md`.
+- [x] Verify `grep -q "## Design status" docs/features/_TEMPLATE/SPEC.md`.
 
 ## P2 — design-feature skill (core)
 
