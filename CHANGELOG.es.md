@@ -198,6 +198,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.11.0 | 2026-07-09 | menor | El turn contract gana una casilla obligatoria de contexto limpio: la revisión final obligatoria de fin de unidad debe correr en una conversación que NO implementó el cambio — si lo hizo, PARAR y hacer hand-off a una nueva. "When to use" reescrito para exponer el requisito en prosa (la sección Portability ya existente referencia la línea de preferencia de familia de modelo cruzada de la feature 04; sin cambios aquí). |
 | 1.10.2 | 2026-07-09 | parche | El invariante de modelo en Portability se extiende: "nunca revises con un modelo más débil — y prefiere una familia de modelo distinta a la del autor" (instancias de la misma familia comparten puntos ciegos de entrenamiento; una familia cruzada descorrelaciona errores). Solo redacción. |
 | 1.10.1 | 2026-07-05 | parche | Referencias cruzadas actualizadas para `execute-phase` 1.14.0: el hand-off cada 2 fases se describe ahora como checkpoint recomendado y omitible; la revisión final obligatoria antes del merge no cambia. |
 | 1.10.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Los hallazgos fix-now y los números de issue creados viajan en el envelope; la deriva de SPEC recurrente activa el flag de recomendación de product-audit. |
@@ -303,7 +304,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
 | `orchestration-envelope` | 1.0.0 | 2026-07-05 | — | Nuevo contrato interno: el esquema JSON del envelope máquina (11 estados, claves fijas, regla de parseo último-json-cercado) que toda skill de cara al usuario emite como su salida final absoluta. |
-| `review-implementation` | 1.0.3 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
+| `review-implementation` | 1.1.0 | 2026-07-09 | menor | La postura de la Fase 1 ("Find") ahora es adversarial por defecto: "asume que el diff está MAL — tu trabajo es probar que no funciona". La tabla de ejes y la rúbrica de clasificación de la Fase 2 no cambian. |
+| | 1.0.3 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.2 | 2026-07-02 | parche | La referencia a revisiones companion ahora apunta al pack de revisión interno (`review-*`) |
 | | 1.0.1 | 2026-06-09 | parche | Descripción acortada 96 → 36 palabras (contexto siempre cargado); cuerpo sin cambios |
 | | 1.0.0 | 2026-06-05 | — | El motor de hallazgos + rúbrica de clasificación que compone `review-change` |
@@ -345,6 +347,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-09 — revisión adversarial con contexto limpio.** Endurece la
+  revisión final obligatoria de fin de unidad contra el fallo de compartir
+  contexto, donde la conversación que escribió un cambio también lo revisa:
+  la postura de la Fase 1 de `review-implementation` 1.1.0 ahora es
+  adversarial por defecto ("asume que el diff está MAL — prueba que no
+  funciona"), y `review-change` 1.11.0 gana una casilla obligatoria en su
+  turn contract que exige que la revisión final corra en una conversación
+  que no implementó el cambio (si lo hizo, PARAR y hacer hand-off). Referencia
+  la línea de preferencia de familia de modelo cruzada de la feature
+  `04-running-economically` en lugar de repetirla. Feature
+  `05-adversarial-context-clean-review`.
 
 - **2026-07-05 — recuperación de caídas del orquestador.** Los drivers
   externos (incluidos servidores Node/opencode solo-REST) ganan una ruta de
