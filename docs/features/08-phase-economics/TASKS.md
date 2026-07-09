@@ -70,8 +70,9 @@ rule); judgement-only items are prose labelled read-verified.
       new rule a fixed checklist item, not a heuristic)
 - [x] Confirm no stack leakage; `## Portability` + closing `→ Next:` intact on
       `execute-phase`
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves
       `\`-escaped backticks) with `Closes #15` and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+      → https://github.com/gtrabanco/agentic-workflow/pull/26
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push
