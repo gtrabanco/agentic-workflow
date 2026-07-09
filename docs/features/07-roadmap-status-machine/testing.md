@@ -64,3 +64,29 @@ Re-read each edited skill as the fleet's weakest model would execute it:
 2. `execute-phase` on a `defined` unit → `/plan-feature` redirect fires;
    on an `idea` unit → `/design-feature` redirect fires.
 3. A legacy `planned`-with-designed-SPEC row → no redirect (treated `defined`+).
+
+## P5 verification (read-through, this repo has no runtime harness)
+
+- `status:idea-candidate` / `status:defined-startable` — `workflow-status`
+  SKILL.md step 5 (readiness classification) matches the SPEC's dev scenarios
+  verbatim: `idea` → `design_candidates` only, `defined`/`planned` + deps met
+  → `startable_now` with the status-matched next command.
+- `execute:redirect-idea` / `execute:redirect-defined` — `execute-phase`
+  SKILL.md's "Own-status precondition" section prints the fixed `idea`/
+  `defined` STOP blocks verbatim, `--force` recorded per the same rule as the
+  dependency gate.
+- `legacy:planned-compat` — `plan-feature`'s redirect gate step 3 and
+  `execute-phase`'s own-status step 4 both state the identical equivalence
+  rule (legacy plain-`planned` + designed SPEC → `defined`+`planned`, no
+  redirect), matching `docs/workflow/MIGRATION.md`.
+- `ship:jit-design` / `ship:undesignable` — `ship-roadmap`'s new DESIGN stage
+  composes `design-feature` + `plan-feature-scaffold` deriving only from
+  `SHIP_DECISIONS.md`, no new questions; an undesignable unit is parked
+  (`blockers[]` kind `undesignable`, `state: CONTINUE`) rather than asked —
+  matches the SPEC's "no further questions after the interview" contract.
+
+Verified 2026-07-09: AC1/AC2/AC3/AC5/AC6/AC8/AC9 grep commands all pass;
+`npx skills add . --list` discovers and parses every skill (115 lines of
+output, no parse errors); `/audit-docs` returned PASS with 0 findings across
+12/14 applicable checks (8 and 13 n/a — no invariant-ID convention, no
+`Docs site` block).
