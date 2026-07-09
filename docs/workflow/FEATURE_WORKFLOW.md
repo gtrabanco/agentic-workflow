@@ -109,6 +109,26 @@ During execution, domain knowledge skills auto-load as guardrails: the
 project's stack/domain guardrail skills (architecture pattern, domain rules,
 framework, ORM, runtime/platform).
 
+## Context hygiene & cost
+
+The cheap way to run this flow is also the documented way. Fixed rules:
+
+- **End of a unit or phase → `/log-session`, then a NEW conversation.** Never
+  compact to cross that boundary. The SPEC/TASKS/progress docs plus the
+  session log already ARE the persistent memory — a fresh conversation reloads
+  only those, not the whole prior transcript.
+- **Hand-offs to review/audit → always a fresh conversation.** Already the
+  contract (a skill's model/effort composes only within its own turn); this is
+  the same rule stated for its economics, not a new one.
+- **Compact only mid-phase**, and only when you hold unpersisted state you
+  cannot afford to lose. Even then, prefer committing WIP plus a `progress.md`
+  note and cutting to a new conversation over compacting.
+- **Why it's expensive:** compaction re-reads the **entire** conversation with
+  the **currently selected** session model (input cost) and writes the summary
+  (output cost). Auto-compact fires near the context limit — exactly when
+  re-reading is most expensive. A fresh conversation costs ~zero by comparison,
+  because the workflow's own docs are the memory, not the transcript.
+
 ## Stage 3 — Hardening
 
 **Always the last implementation phase in `PLAN.md`** (the scaffold puts it
