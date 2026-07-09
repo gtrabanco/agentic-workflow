@@ -51,13 +51,13 @@ rule); judgement-only items are prose labelled read-verified.
 
 ## P3 — Hardening + bookkeeping
 
-- [ ] Verify dev-scenario read-throughs: `plan:split-oversize`,
+- [x] Verify dev-scenario read-throughs: `plan:split-oversize`,
       `plan:split-multilayer`, `plan:open-decision`, `plan:criteria-as-commands`,
       `exec:one-phase-session` (each rule present + independently checkable)
-- [ ] Run `bump-skill` → `CHANGELOG.md` + `CHANGELOG.es.md` rows for each touched
+- [x] Run `bump-skill` → `CHANGELOG.md` + `CHANGELOG.es.md` rows for each touched
       skill + README skills+model tables (EN/ES)
-- [ ] `npx skills add . --list` lists every skill (all parse)
-- [ ] Run every acceptance-criteria command (AC1–AC9):
+- [x] `npx skills add . --list` lists every skill (all parse)
+- [x] Run every acceptance-criteria command (AC1–AC9):
       `grep -iq 'must' skills/plan-feature-scaffold/SKILL.md` ·
       `grep -iq 'cheap-executab' skills/plan-feature-scaffold/SKILL.md` ·
       `grep -iq 'runnable command\|as the command\|command-checkable' skills/plan-feature-scaffold/SKILL.md` ·
@@ -65,10 +65,10 @@ rule); judgement-only items are prose labelled read-verified.
       `grep -iq 'one phase' docs/workflow/FEATURE_WORKFLOW.md` ·
       `grep -iq 'one layer\|more than one\|independently shippable' docs/features/_TEMPLATE/SPEC.md` ·
       `grep -iq 'one layer\|more than one\|independently shippable' template/docs/features/_TEMPLATE/SPEC.md`
-- [ ] `/audit-docs` — cross-doc consistency clean (repo↔template mirror check)
-- [ ] Weak-model read-through of `plan-feature-scaffold` + `execute-phase` (each
+- [x] `/audit-docs` — cross-doc consistency clean (repo↔template mirror check) → PASS
+- [x] Weak-model read-through of `plan-feature-scaffold` + `execute-phase` (each
       new rule a fixed checklist item, not a heuristic)
-- [ ] Confirm no stack leakage; `## Portability` + closing `→ Next:` intact on
+- [x] Confirm no stack leakage; `## Portability` + closing `→ Next:` intact on
       `execute-phase`
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves
