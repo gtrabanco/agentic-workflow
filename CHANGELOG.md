@@ -167,11 +167,13 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-07-09 | minor | Now **sets** the roadmap row status, not just reads it: stamping `## Design status: designed` sets the feature's roadmap row to `defined` (the `idea → defined` transition this skill owns) — added at `idea` first if the row didn't exist. `NEEDS_INPUT` leaves both the marker and the row unchanged. Turn contract and Done when gained the matching boxes. |
 | 1.0.0 | 2026-07-09 | — | New skill: product definition, split out of `plan-feature`. Folds in the raw-idea interview and walks a fixed **capability-closure** checklist (per entity: CRUD + state transitions, each with UI + API + test, or explicit `n/a: <reason>`; per capability: entry point + ACL; per role: assigned/revoked/viewed) into the SPEC's Product half + Acceptance criteria, stamping `## Design status: designed`. Upserts on re-run (never destroys `decisions.md`); bare `<slug>` reviews and asks, `<slug> "<instruction>"` applies directly. |
 
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-09 | minor | Redirect gate now keys on the **roadmap status** (the five-state machine) as the primary signal — status `defined`+ proceeds, `idea`/absent STOPs — instead of the SPEC `## Design status` marker. The marker is retained as the **legacy-compat fallback** only, for a pre-migration roadmap row still reading a plain `planned` with no five-state history. See `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-09 | major | **Breaking:** product definition (raw-idea interview + capability closure) moves to the new `design-feature` skill. `plan-feature` is engineering-planning only, drops the `--interview` flag and the internal `plan-feature-interview` step (deleted), and gains a **redirect gate with no bypass flag**: an undesigned feature (no `SPEC.md`, `## Design status` not `designed`, or empty Capability closure) STOPS and points at `/design-feature <slug>`. Migration note in `docs/workflow/MIGRATION.md`. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. BLOCKED carries the unmet dependency chain and build order. |
 | 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -320,12 +322,14 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (dimensions resolved, open questions, tracking issue) |
 | 1.1.0 | 2026-06-09 | minor | Estimates size `XS/S/M/L`; asks for a UI design reference on UI features |
 | | 1.0.0 | 2026-06-05 | — | Interview a raw idea into a SPEC |
-| `plan-feature-from-issue` | 1.3.0 | 2026-07-09 | minor | Now writes the SPEC's **product half** (two-halves convention) and must satisfy **capability closure** before handing off — a thin issue without enough to fill it is handed to `design-feature` (composed in-turn only at ≥ its tier) rather than faking `## Design status: designed`. |
+| `plan-feature-from-issue` | 1.4.0 | 2026-07-09 | minor | Now **sets** the roadmap row to `defined` in the same edit that stamps `## Design status: designed` (added at `idea` first if the row didn't exist) — the `idea → defined` transition, performed here when this skill satisfies closure directly rather than handing off to `design-feature`. |
+| | 1.3.0 | 2026-07-09 | minor | Now writes the SPEC's **product half** (two-halves convention) and must satisfy **capability closure** before handing off — a thin issue without enough to fill it is handed to `design-feature` (composed in-turn only at ≥ its tier) rather than faking `## Design status: designed`. |
 | | 1.2.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
-| `plan-feature-scaffold` | 1.5.0 | 2026-07-09 | minor | Fills only the SPEC's **engineering half** now — the product half (goal, context, scope, capability closure) is written by `design-feature` / `plan-feature-from-issue` and verified `designed` before this skill ever runs; it stops rather than editing an undesigned or missing product half. |
+| `plan-feature-scaffold` | 1.6.0 | 2026-07-09 | minor | "Register in the roadmap" now **sets** the row's status to `planned` (the `defined → planned` transition this skill owns) alongside number/ordering/dependencies — an already-`defined` row is promoted; a wholly new row (already-scoped SPEC with no prior entry) is added directly at `planned`. |
+| | 1.5.0 | 2026-07-09 | minor | Fills only the SPEC's **engineering half** now — the product half (goal, context, scope, capability closure) is written by `design-feature` / `plan-feature-from-issue` and verified `designed` before this skill ever runs; it stops rather than editing an undesigned or missing product half. |
 | | 1.4.0 | 2026-07-04 | minor | Generated TASKS.md close-out task now says `gh pr create --body-file <path>` (Markdown file), never inline `--body`/heredoc — so executors don't emit literal `\`-escaped backticks in the PR body. |
 | `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.3.0 | 2026-07-03 | minor | Generated TASKS.md final phase ends with literal close-out tasks: open PR + print URL in chat, link the roadmap row, commit & push the link. |
@@ -357,7 +361,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
-- **2026-07-09 — roadmap status becomes the pipeline's state machine (P1–P2 so
+- **2026-07-09 — roadmap status becomes the pipeline's state machine (P1–P3 so
   far).** The roadmap `Status` column is promoted to a five-state machine
   (`idea → defined → planned → in-progress → done`), rewritten in
   `docs/features/ROADMAP.md` and `template/docs/features/ROADMAP.md` with a
@@ -367,8 +371,13 @@ How pinning actually works, verified against the `skills` CLI:
   and classifies `idea` rows as `design_candidates` instead of
   `startable_now`; `execute-phase` 1.15.0 gains an own-status precondition in
   its dependency gate, redirecting a sub-`planned` unit to `/design-feature`
-  or `/plan-feature`. Feature `07-roadmap-status-machine` (backlog U4, closes
-  #14) — in progress.
+  or `/plan-feature`. The authoring skills now **set** the statuses:
+  `design-feature` 1.1.0 and `plan-feature-from-issue` 1.4.0 write `idea →
+  defined` when they stamp `## Design status: designed`; `plan-feature-scaffold`
+  1.6.0 writes `defined → planned` when it registers the full artifact set;
+  `plan-feature` 2.1.0's redirect gate now keys on the roadmap status first,
+  with the SPEC marker retained as the legacy-compat fallback. Feature
+  `07-roadmap-status-machine` (backlog U4, closes #14) — in progress.
 
 - **2026-07-09 — product definition splits into `design-feature`.** New
   user-facing skill `design-feature` 1.0.0 owns product definition: folds in

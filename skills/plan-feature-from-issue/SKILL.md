@@ -1,7 +1,7 @@
 ---
 name: plan-feature-from-issue
 user-invocable: false
-version: 1.3.0
+version: 1.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -67,8 +67,12 @@ gh issue view <N> --json number,title,body,labels,state,comments
    and record it in the SPEC. XS/S → the SPEC is the only planning artifact
    (single-pass execution); M/L → full artifact set. If L, propose splitting.
 7. **Produce the SPEC product half.** Fill it and stamp `## Design status:
-   designed` once closure is complete; the `plan-feature` router then runs
-   `plan-feature-scaffold` for the engineering half + roadmap registration.
+   designed` once closure is complete; set the roadmap row (added at `idea`
+   first if it didn't exist) to `defined` in the same edit — the same
+   `idea → defined` transition `design-feature` owns, performed here when this
+   skill is the one that satisfies closure. The `plan-feature` router then runs
+   `plan-feature-scaffold` for the engineering half + `defined → planned`
+   roadmap promotion.
 8. **Wire traceability.** Record `#N` in the SPEC; the PR body must include
    `Closes #N` so the issue closes on merge.
 9. **Hand off — return exactly** (fixed completion report, back to the router):
@@ -110,5 +114,8 @@ gh issue view <N> --json number,title,body,labels,state,comments
 - A filled SPEC product half + planning artifacts exist, roadmap-registered.
 - Capability closure is satisfied (or the issue was handed off to
   `design-feature` instead of faking it) and `## Design status` is accurate.
+- The roadmap row status is `defined` (added at `idea` first if new) whenever
+  `## Design status: designed` was stamped — never `defined` on a hollow
+  closure, never left at `idea` once `designed` is stamped.
 - `#N` is recorded and the PR plan includes `Closes #N`.
 - Scope gaps were resolved with the user, not assumed.

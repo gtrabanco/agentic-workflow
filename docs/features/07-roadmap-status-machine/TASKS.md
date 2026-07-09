@@ -34,14 +34,14 @@ Per-phase checklists the executor ticks off. Labels are fixed `P1, P2, …`.
 
 ## P3 — Authoring skills set the status
 
-- [ ] `design-feature`: set roadmap row → `defined` when stamping `## Design
+- [x] `design-feature`: set roadmap row → `defined` when stamping `## Design
       status: designed` (add row as `idea` first if absent)
-- [ ] `plan-feature-from-issue`: set roadmap row → `defined` alongside `Closes #N`
-- [ ] `plan-feature-scaffold`: "Register in the roadmap" sets row `defined →
+- [x] `plan-feature-from-issue`: set roadmap row → `defined` alongside `Closes #N`
+- [x] `plan-feature-scaffold`: "Register in the roadmap" sets row `defined →
       planned`
-- [ ] `plan-feature`: redirect gate keys on roadmap status first; SPEC `## Design
+- [x] `plan-feature`: redirect gate keys on roadmap status first; SPEC `## Design
       status` as legacy fallback (legacy `planned`+designed-SPEC → no redirect)
-- [ ] Bump the four skills' `version:` (minor)
+- [x] Bump the four skills' `version:` (minor)
 
 ## P4 — ship-roadmap batch/JIT design
 
