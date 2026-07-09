@@ -6,20 +6,23 @@ rule); judgement-only items are prose labelled read-verified.
 
 ## P1 — Hard split rule + cheap-executability checklist
 
-- [ ] `plan-feature-scaffold`: add the **hard split rule** (mandatory SPLIT on
+- [x] `plan-feature-scaffold`: add the **hard split rule** (mandatory SPLIT on
       >~5 phases OR multi-layer/concern phase OR unresolved design decision; uses
       existing `Depends on:` infra; "more, smaller, slower is the accepted trade")
       — read-verified: rule uses `must`, all three triggers present
-- [ ] `plan-feature-scaffold`: add the **per-phase cheap-executability checklist**
+      (`skills/plan-feature-scaffold/SKILL.md` Process step 4)
+- [x] `plan-feature-scaffold`: add the **per-phase cheap-executability checklist**
       (4 boxes: independently checkable · zero open decisions · one concern · gate
       runs locally; `n/a` explicit) — read-verified
-- [ ] `docs/features/_TEMPLATE/SPEC.md`: replace soft "consider splitting" with the
+      (`skills/plan-feature-scaffold/SKILL.md` Process step 4)
+- [x] `docs/features/_TEMPLATE/SPEC.md`: replace soft "consider splitting" with the
       hard split-trigger rule → `grep -iq 'one layer\|more than one\|independently shippable' docs/features/_TEMPLATE/SPEC.md`
-- [ ] `template/docs/features/_TEMPLATE/SPEC.md`: mirror the same replacement →
+- [x] `template/docs/features/_TEMPLATE/SPEC.md`: mirror the same replacement →
       `grep -iq 'one layer\|more than one\|independently shippable' template/docs/features/_TEMPLATE/SPEC.md`
-- [ ] Confirm the old soft phrasing is gone in both templates — read-verified
-- [ ] Register roadmap row `08 | phase-economics | in-progress | — | …`
-- [ ] Commit planning artifacts (SPEC + PLAN + TASKS + progress + testing +
+- [x] Confirm the old soft phrasing is gone in both templates — read-verified
+      (`grep -rn "consider splitting" docs/features/_TEMPLATE/SPEC.md template/docs/features/_TEMPLATE/SPEC.md skills/plan-feature-scaffold/SKILL.md` → no matches)
+- [x] Register roadmap row `08 | phase-economics | in-progress | — | …`
+- [x] Commit planning artifacts (SPEC + PLAN + TASKS + progress + testing +
       known-issues + decisions + architecture-notes)
 
 ## P2 — Criteria-as-commands + one-phase-one-session
