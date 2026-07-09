@@ -125,6 +125,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.11.0 | 2026-07-09 | menor | Cumple con la máquina de estados del roadmap en vez de eximirse: la fundación se documenta como **diseño en lote** (las rondas 2–4 de la entrevista son las respuestas de definición de producto), así que la fundación escribe las filas de las features en `idea` (la feature 01, scaffoldeada por la fundación, aterriza directamente en `planned`). Nueva etapa **DESIGN**: una unidad `idea`/`defined` en mitad del run recibe diseño JIT componiendo `design-feature` + `plan-feature-scaffold` en el mismo turno, **derivado estrictamente del registro bloqueado `SHIP_DECISIONS.md` — sin preguntas nuevas** — promoviendo `idea → defined → planned` antes de PLAN. No diseñable desde el registro → se aparca (`blockers[]` tipo `undesignable`, `needs_input` registra el vacío), `state` se mantiene en `CONTINUE` (un aparcado por unidad, no una parada del run); SELECT pasa a la siguiente unidad arrancable. Tablas de secuencia de etapas, enrutado de modelos y condiciones de parada actualizadas para incluir DESIGN. |
 | 1.10.0 | 2026-07-05 | menor | Autopilot neutral de driver: `/loop`, un orquestador externo (enrutado por envelope) o la re-invocación manual son drivers equivalentes de primera clase; EXECUTE funciona sin subagentes con una invocación headless por fase; cada fin de iteración dice POR QUÉ (parada normal de una etapa vs el tope exacto alcanzado). Más el envelope máquina (mapeo banner ↔ state). |
 | 1.9.0 | 2026-07-04 | minor | Las issues del barrido + PRs de subagentes + comentarios de triaje usan `--body-file` (Markdown), nunca `--body`/heredoc inline; guardrail añadido. |
 | 1.8.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -364,7 +365,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ## Registro cronológico (más reciente primero)
 
 - **2026-07-09 — el estado del roadmap se convierte en la máquina de estados
-  del pipeline (P1–P3 hasta ahora).** La columna `Status` del roadmap se
+  del pipeline (P1–P4 hasta ahora).** La columna `Status` del roadmap se
   promueve a una máquina de cinco estados (`idea → defined → planned →
   in-progress → done`), reescrita en `docs/features/ROADMAP.md` y
   `template/docs/features/ROADMAP.md` con un diagrama de transición y la
@@ -380,8 +381,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   `plan-feature-scaffold` 1.6.0 escribe `defined → planned` al registrar el
   conjunto completo de artefactos; la puerta de redirección de `plan-feature`
   2.1.0 ahora se basa primero en el estado del roadmap, con el marcador del
-  SPEC conservado como fallback de compatibilidad legacy. Feature
-  `07-roadmap-status-machine` (backlog U4, cierra #14) — en curso.
+  SPEC conservado como fallback de compatibilidad legacy. `ship-roadmap`
+  1.11.0 cumple con la máquina en vez de eximirse: la fundación se documenta
+  como diseño en lote (escribe las filas de las features en `idea`, salvo la
+  feature 01 scaffoldeada por la fundación que aterriza en `planned`); una
+  nueva etapa DESIGN diseña JIT una unidad `idea`/`defined` en mitad del run
+  estrictamente desde el registro bloqueado `SHIP_DECISIONS.md` — sin
+  preguntas nuevas — promoviéndola a `planned` antes de PLAN; las unidades no
+  diseñables se aparcan (`state: CONTINUE`, el run sigue), nunca se adivinan
+  ni se vuelven a preguntar. Feature `07-roadmap-status-machine` (backlog U4,
+  cierra #14) — en curso.
 
 - **2026-07-09 — la definición de producto se separa en `design-feature`.**
   Nueva skill de cara al usuario `design-feature` 1.0.0 asume la definición de

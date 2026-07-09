@@ -45,13 +45,13 @@ Per-phase checklists the executor ticks off. Labels are fixed `P1, P2, …`.
 
 ## P4 — ship-roadmap batch/JIT design
 
-- [ ] `ship-roadmap`: document founding interview = batch design (locked
+- [x] `ship-roadmap`: document founding interview = batch design (locked
       `SHIP_DECISIONS.md` is the design record)
-- [ ] `ship-roadmap`: mid-run `idea` unit → JIT design from locked decisions,
+- [x] `ship-roadmap`: mid-run `idea` unit → JIT design from locked decisions,
       **no new questions** → promote `idea→defined→planned` → execute
-- [ ] `ship-roadmap`: undesignable-from-record unit → `NEEDS_INPUT` + park
+- [x] `ship-roadmap`: undesignable-from-record unit → `NEEDS_INPUT` + park
       (no silent guess, no mid-run interview)
-- [ ] Bump `ship-roadmap` `version:` (minor)
+- [x] Bump `ship-roadmap` `version:` (minor)
 
 ## P5 — Hardening + bookkeeping
 
