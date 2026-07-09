@@ -70,6 +70,32 @@ updates, README/README.es skills-table cells for `design-feature` and
 `plan-feature`. AC6 grep checks pass; `npx skills add . --list` still
 discovers and parses every skill.
 
-## P4 — _pending_
+## P4 — 2026-07-09
+
+`ship-roadmap` 1.11.0 now complies with the roadmap status machine instead of
+being exempted from it:
+
+- **Founding = batch design.** Documented that interview rounds 2–4 already
+  collect every product-definition answer `design-feature`'s capability
+  closure would ask. Founding writes feature rows at `idea` (locked decisions
+  are the design record, no per-feature SPEC yet); the founding-scaffolded
+  skeleton feature (01, greenfield) is scaffolded immediately and lands
+  directly at `planned`.
+- **New DESIGN stage.** SELECT now picks `idea`/`defined` units too (not only
+  `planned`); ADVANCE gains a DESIGN stage that composes `design-feature` +
+  `plan-feature-scaffold` in-turn, deriving strictly from `SHIP_DECISIONS.md`
+  — no new questions, preserving the "no further questions after the
+  interview" contract — promoting `idea → defined → planned` before PLAN.
+- **Undesignable → park.** A unit that contradicts a locked decision or needs
+  an unanswered question is parked (`blockers[]` kind `undesignable`,
+  `needs_input` records the specific gap), `state` stays `CONTINUE` (a
+  per-unit park, not a run halt) — SELECT moves on to the next startable unit.
+- Stage-sequence line, model-routing table, stop-conditions table, and
+  Relationship-to-skills updated to include DESIGN.
+
+`bump-skill` ran: CHANGELOG/CHANGELOG.es row + release-log update, README/
+README.es skills-table cell. AC8 grep checks (`JIT`/`just-in-time` and
+`NEEDS_INPUT`) pass; `npx skills add . --list` still discovers and parses
+every skill.
 
 ## P5 — _pending_

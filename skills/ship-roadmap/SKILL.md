@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.10.0
+version: 1.11.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -123,16 +123,26 @@ answers** so it asks nothing. Branch discipline:
   substrate would stack PRs). `--fullauto`: gate the founding PR with
   `audit-pr` like every other PR, then merge it.
 
-**3. The roadmap.** Adopt existing entries (never renumber), fill gaps the
-interview surfaced, append elicited features. If absent, write the complete
-table: NN in dependency-respecting order, slug, `status: planned`, depends-on,
-one-line summary with a **provisional XS/S/M/L size in the summary text** (the
-template's 3-status legend and column schema stay exactly as they are —
-`plan-feature` re-sizes authoritatively at planning time; a size change is
-logged silently). Greenfield: **feature 01 is always the project skeleton**
-(stack init, gate wiring, CI if requested), sized S — and **every other
-feature's depends-on closure must include 01** (directly or transitively), so
-SELECT can never start a feature on a default branch that lacks the skeleton.
+**3. The roadmap — founding IS batch design.** The interview's rounds 2–4
+(features, quality/ops, workflow) already collected every product-definition
+answer a `design-feature` capability closure would ask — founding is design
+for every feature it names, not a shortcut around it. Adopt existing entries
+(never renumber), fill gaps the interview surfaced, append elicited features.
+If absent, write the complete table: NN in dependency-respecting order, slug,
+**status `idea`** (the locked founding decisions are the design record, but
+no per-feature `SPEC.md`/capability-closure artifact exists yet — that gets
+written JIT per feature, see ADVANCE → DESIGN below), depends-on, one-line
+summary with a **provisional XS/S/M/L size in the summary text** (the
+template's five-state legend and column schema stay exactly as they are —
+`plan-feature`/`plan-feature-scaffold` re-size authoritatively at planning
+time; a size change is logged silently). Greenfield: **feature 01 is always
+the project skeleton** (stack init, gate wiring, CI if requested), sized S —
+founding scaffolds it immediately (composing `design-feature` +
+`plan-feature-scaffold` in-turn, pre-fed from the interview, no questions) so
+it lands directly at **status `planned`**, never left at `idea` — and **every
+other feature's depends-on closure must include 01** (directly or
+transitively), so SELECT can never start a feature on a default branch that
+lacks the skeleton.
 
 **4. The run state — two artifacts, deliberately split:**
 
@@ -218,13 +228,17 @@ turns:
       (`plan-fix` → `execute-phase --fix` through the normal stages). Fixes
       that block nothing wait for the report's triage batch.
    2. An in-progress feature's next pending stage.
-   3. The next `planned` feature whose depends-on rows are all **merged**
-      (forge state, not merely `done` — a `done` dep with an open PR isn't on
-      the default branch yet, so a dependent cut from it would lack its code).
+   3. The next feature at status `idea` **or** `planned` whose depends-on rows
+      are all **merged** (forge state, not merely `done` — a `done` dep with
+      an open PR isn't on the default branch yet, so a dependent cut from it
+      would lack its code). A `defined`-but-not-`planned` row is treated the
+      same as `idea` here — its design exists but its planning artifacts
+      don't, so it still needs a scaffold pass before PLAN.
       **Verify the closure transitively:** a dep row marked merged whose own
       dependencies aren't merged means the roadmap's statuses are inconsistent
       → `SHIP: STOPPED` (substrate invariant broken), never build on top of it.
-      → PLAN.
+      → `idea`/`defined`: DESIGN first (see ADVANCE). `planned`: → PLAN
+      directly.
    4. **Issue sweep — features exhausted, run NOT over.** Every roadmap feature
       is `done` **and merged** but the sweep hasn't completed → the run
       continues with issues; finishing the features is not finishing the run:
@@ -256,11 +270,34 @@ turns:
    forcing through unmet dependencies is a human-only decision, made outside
    the loop.
 4. **ADVANCE exactly one stage:**
+   - **DESIGN (mid-run `idea`/`defined` unit only)** — compose `design-feature`
+     in-turn (equal tier, opus/high — within the ≥ rule already stated for
+     founding), **deriving the product half strictly from the locked
+     `SHIP_DECISIONS.md` record — no new questions, ever** (the "no further
+     questions after the interview" contract this skill already enforces for
+     every other stage applies here identically). Walk capability closure
+     from what rounds 2–4 already answered for this feature; stamp `## Design
+     status: designed` and promote the roadmap row `idea → defined` on
+     success. Then compose `plan-feature-scaffold` in the same iteration to
+     promote `defined → planned` (both writes are the same JIT pass — a
+     feature never sits mid-promotion between iterations). **Undesignable
+     from the locked record** (the feature as scoped contradicts a locked
+     decision, or needs an answer rounds 2–4 never covered) → do **not**
+     guess and do **not** ask: emit `NEEDS_INPUT`, **park the unit** with the
+     specific gap recorded (mirrors a red-gate park — see Stop conditions),
+     and SELECT continues with the next startable unit this same run (or ends
+     the iteration per the capacity guard if none remain). A parked
+     undesignable unit is picked back up only by a human answering the
+     recorded question and re-running `/design-feature <slug> "<answer>"`
+     directly — the autopilot never re-asks it.
    - **PLAN** — compose `plan-feature` in-turn via its scoped path (equal
-     tier). The interview path is **forbidden** mid-run: SPEC gaps are resolved
-     silently from the decision record and logged. JIT planning that reveals
-     the feature's premise is wrong (obsolete, absorbed, impossible on this
-     stack) → mark it blocked with the contradiction recorded; never re-ask.
+     tier). Every unit reaching PLAN is already `planned`-bound (DESIGN ran
+     first for any `idea`/`defined` unit), so `plan-feature`'s own redirect
+     gate always passes here. The interview path is **forbidden** mid-run:
+     SPEC gaps are resolved silently from the decision record and logged. JIT
+     planning that reveals the feature's premise is wrong (obsolete, absorbed,
+     impossible on this stack) → mark it blocked with the contradiction
+     recorded; never re-ask.
    - **EXECUTE** — run each phase in a **fresh cheap-tier context**: on Claude
      Code, spawn one subagent per phase with `model: sonnet` (the override is
      the only mechanism that runs *below* the conductor's turn tier); on an
@@ -312,9 +349,12 @@ turns:
      pushed (step 5), so the re-audit judges the real branch.
 
    The stage sequence is per-feature and size-dependent — always **one stage
-   per iteration**: XS/S/M → PLAN → EXECUTE (all phases / single pass) →
-   REVIEW → PR → AUDIT; L or sensitive-flagged → PLAN → EXECUTE (≤2 phases) →
-   REVIEW → EXECUTE (next ≤2) → REVIEW → … → PR → AUDIT.
+   per iteration**: a feature starting at `idea`/`defined` gets a DESIGN stage
+   first; one already `planned` (including the founding-scaffolded feature 01)
+   skips straight to PLAN. XS/S/M → [DESIGN] → PLAN → EXECUTE (all phases /
+   single pass) → REVIEW → PR → AUDIT; L or sensitive-flagged → [DESIGN] →
+   PLAN → EXECUTE (≤2 phases) → REVIEW → EXECUTE (next ≤2) → REVIEW → … → PR
+   → AUDIT.
 5. **CLEAN CLOSE-OUT — verify before logging the stage complete.** A stage
    only counts as advanced when the conductor has RUN and checked, on the
    unit's branch: `git status --porcelain` → empty (no tracked modification
@@ -346,6 +386,7 @@ three consecutive partials on the same stage parks the feature as blocked.
 |---|---|---|
 | Interview, founding, roadmap creation | opus/high | this skill's frontmatter; composes `init-workspace` (equal tier), answers pre-fed |
 | Recovery, routing, logging | opus/high | in-turn (tiny token volume; a subagent would add cost, not save it) |
+| JIT feature design (mid-run `idea`/`defined` unit) | opus/high | compose `design-feature` + `plan-feature-scaffold` in-turn (equal tier, deriving only from `SHIP_DECISIONS.md` — no new questions) |
 | JIT feature planning | opus/high | compose `plan-feature` in-turn (its internals are opus/high–medium: ≥ holds) |
 | Phase execution, single-pass, fixes | **sonnet** | subagent per phase with explicit `model: sonnet` override, following `execute-phase`'s SKILL.md |
 | Review checkpoints | opus/high | compose `review-change` in-turn (equal tier — orchestrators compose what they synthesize) |
@@ -395,7 +436,7 @@ Non-negotiable floors, evaluated fresh immediately before every merge —
 | `SHIP: COMPLETE` | Every roadmap feature is `done` **and its PR merged** (default mode: the human merged them all; `--fullauto`: merged under the floors) — `done` alone is not enough, since it only means *built + PR open* — **AND the issue sweep ran to completion**: inventory logged, every inventoried issue triaged, every fix-now issue shipped (PR merged / open-awaiting-merge) or parked with its reason. Features merged but sweep pending → the run is NOT complete; keep iterating. Report written, report PR open. |
 | `SHIP: BLOCKED` | Everything remaining is `done`-but-pr-open awaiting human merges, or planned with unmerged deps (default mode); or a parked feature transitively blocks the rest. Always includes the unblock map. |
 | `SHIP: STOPPED` | Budget/iteration cap; a Round-5 milestone stop line; substrate invariant broken (gate unrunnable, roadmap unparseable, unexplained dirty default branch, decision record missing); forge unavailable (no stage that depends on PR state may proceed on guesses). |
-| (feature parked, run continues) | Repeated red gate (retry cap), review ping-pong (2 cycles), audit ping-pong (2 cycles), capacity guard (3 partials), planning contradiction. |
+| (feature parked, run continues) | Repeated red gate (retry cap), review ping-pong (2 cycles), audit ping-pong (2 cycles), capacity guard (3 partials), planning contradiction, **undesignable-from-record** (DESIGN stage `NEEDS_INPUT` — the recorded gap is a human-only unpark, never a mid-run re-ask). |
 | **Systemic drift stop** | `review-change` flags SPEC drift on **two consecutive features** → the locked founding assumptions are probably stale; the whole run stops rather than auto-merging a compounding error. |
 
 ### Final report
@@ -460,10 +501,13 @@ Closing line, verbatim policy: **this report recommends; the human decides.**
   implementation goes below the turn tier via explicit subagent model
   overrides; `product-audit` is never run by this skill. `ultracode` is a
   user-owned session setting — recommended, never claimed.
-- **Interview once, then silence.** Mid-run gaps are resolved from the decision
-  record and logged; contradictions park the feature with the evidence
-  recorded. Re-interviewing mid-run is forbidden — the recovery from a wrong
-  founding call is a reported stop and a human-restarted run.
+- **Interview once, then silence.** Mid-run gaps — including a mid-run
+  `idea`/`defined` unit's product-half gaps in the DESIGN stage — are resolved
+  from the decision record and logged; contradictions park the feature with
+  the evidence recorded. Re-interviewing mid-run is forbidden, in DESIGN as in
+  every other stage: an undesignable unit is parked (`NEEDS_INPUT` on that
+  unit, `state: CONTINUE` on the run), never asked about. The recovery from a
+  wrong founding call is a reported stop and a human-restarted run.
 - **Scope discipline.** Defects and ideas discovered mid-run become tracked
   issues or report proposals — never in-run side quests.
 - **Stack/architecture/forge agnostic; English artifacts** regardless of the
@@ -502,8 +546,15 @@ This skill emits (one envelope per iteration — the banner maps to `state`):
   outcome; `next.recommended`: `/ship-roadmap --continue` on CONTINUE (the
   driver's re-invoke signal — external orchestrators loop on exactly this, see
   `docs/workflow/ORCHESTRATION.md`).
-- `detail`: `{"banner": "<SHIP: …|null>", "stage": "PLAN|EXECUTE|REVIEW|PR|AUDIT|SWEEP",
-  "iteration": n, "unblock_map": {...}}`.
+- `detail`: `{"banner": "<SHIP: …|null>", "stage": "DESIGN|PLAN|EXECUTE|REVIEW|PR|AUDIT|SWEEP",
+  "iteration": n, "unblock_map": {...}}`. A DESIGN stage that finds the unit
+  undesignable from the locked record stays `state: CONTINUE` (the loop still
+  advances — SELECT moves to the next startable unit), with `blockers[]` kind
+  `undesignable` recording the parked unit and `needs_input.question` stating
+  the specific gap for a human to later answer directly via `/design-feature
+  <slug> "<answer>"` — this mirrors a red-gate park, not the run-level
+  `NEEDS_INPUT` state (which stays Mode-A-interview-only, per the "no further
+  questions after the interview" contract).
 
 ## Portability (agents other than Claude Code)
 
@@ -537,7 +588,9 @@ leans on them harder than any other — here is the manual equivalent of each:
 ## Relationship to other skills
 
 - **Composes in-turn** (all ≤ its tier): `init-workspace` (founding, answers
-  pre-fed), `plan-feature` (JIT planning, scoped path), `review-change`
+  pre-fed), `design-feature` + `plan-feature-scaffold` (JIT design for a
+  mid-run `idea`/`defined` unit, derive-only from the locked founding
+  decisions), `plan-feature` (JIT planning, scoped path), `review-change`
   (checkpoints), `audit-pr` (merge gate), `audit-docs` (docs-only founding /
   report PR coherence).
 - **Spawns as sonnet subagents:** `execute-phase` discipline — phases,
