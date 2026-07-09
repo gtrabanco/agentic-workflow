@@ -115,6 +115,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-07-09 | minor | Reads the roadmap's five-state machine (`idea / defined / planned / in-progress / done`): a new classification step splits units into `design_candidates` (`idea` rows, next `/design-feature`) vs `startable_now` (status ≥ `defined`, deps met, next command matched to the exact status); new top-level `design_candidates` envelope field alongside `startable_now`/`blocked_units`; legacy plain-`planned` rows with a complete SPEC product half treated as `defined`+`planned` per `MIGRATION.md`. Human summary gains a design-candidates line. |
 | 1.1.1 | 2026-07-05 | patch | Review fold on 1.1.0's crash recovery (unreleased): multi-branch envelope-state precedence made explicit (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, worst wins); the unpushed-commits check now guards for no-upstream branches (the exact mid-crash never-pushed case) instead of erroring on `git log @{u}..`; the example envelope's `detail` now shows the `crash_recovery` key the prose already required. |
 | 1.1.0 | 2026-07-05 | minor | Crash recovery: every invocation classifies interrupted turns from ground truth (dirty/unpushed unit branches, phase-ledger vs commits) into a closed verdict — `CLEAN`→OK, `RESUMABLE`→CONTINUE with the resume command, `AMBIGUOUS`→NEEDS_INPUT with options — in a fixed `CRASH RECOVERY` sub-block. New `--last-envelope <json|path>` hint (paste-in-message fallback documented): diffed against recomputed state, never authoritative. No envelope-schema change — existing states only. |
 | 1.0.0 | 2026-07-05 | — | New read-only sensor for programmatic orchestration: full feature/fix dependency tree (transitive, met/unmet), startable-now units with build orders, open PRs + audit state, findings pending triage, product-audit recommendation — all in one machine envelope. |
@@ -139,6 +140,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.15.0 | 2026-07-09 | minor | Dependency gate gains an **own-status precondition**, checked after the dependency closure is met and still before any edit: a unit whose roadmap row is `idea` STOPs and redirects to `/design-feature <slug>`; `defined` STOPs and redirects to `/plan-feature <slug>`; `planned`+ proceeds. `--force` skips the STOP (never the check), recorded in `decisions.md`, same rule as the dependency gate. Legacy plain-`planned` rows with a complete SPEC product half are treated as `defined`+`planned` (no redirect) per `MIGRATION.md`. Machine envelope: `BLOCKED` now also covers the own-status gate, `blockers[]` kind `own-status`. |
 | 1.14.1 | 2026-07-09 | patch | Portability's model invariant extended: "never review with a weaker model — and prefer a different model **family** than the writer's" (same-family instances share training blind spots; cross-family decorrelates errors). Wording-only. |
 | 1.14.0 | 2026-07-05 | minor | The every-2-phases review checkpoint is now a **recommendation, not a blocking stop**: the closing block recommends `/review-change` with "continue to the next phase" as a listed alternative, and the envelope keeps `state: CONTINUE` at checkpoints (advisory) — `READY_FOR_REVIEW` is reserved for the finished unit. The **end-of-unit review stays mandatory** (feeds `audit-pr`), and the dependency gate is unchanged (still blocks, still requires `--force` to override). `review-change` 1.10.1 cross-references updated. |
 | 1.13.1 | 2026-07-05 | patch | "Resuming an interrupted phase" stated as an explicit contract: on entry to a branch with prior work for the requested phase, reconcile `TASKS.md` ticks against evidence and continue from the first unticked task (idempotent re-entry — what `workflow-status`'s `RESUMABLE` verdict relies on); a ledger with no unique next task → stop and report, never guess. Behavior was already Step-0 practice; now it is written. |
@@ -354,6 +356,19 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-09 — roadmap status becomes the pipeline's state machine (P1–P2 so
+  far).** The roadmap `Status` column is promoted to a five-state machine
+  (`idea → defined → planned → in-progress → done`), rewritten in
+  `docs/features/ROADMAP.md` and `template/docs/features/ROADMAP.md` with a
+  transition diagram and owning skill per edge; legacy-compat rule
+  (plain `planned` + complete SPEC product half = `defined`+`planned`) added
+  to `docs/workflow/MIGRATION.md`. `workflow-status` 1.2.0 reads the machine
+  and classifies `idea` rows as `design_candidates` instead of
+  `startable_now`; `execute-phase` 1.15.0 gains an own-status precondition in
+  its dependency gate, redirecting a sub-`planned` unit to `/design-feature`
+  or `/plan-feature`. Feature `07-roadmap-status-machine` (backlog U4, closes
+  #14) — in progress.
 
 - **2026-07-09 — product definition splits into `design-feature`.** New
   user-facing skill `design-feature` 1.0.0 owns product definition: folds in
