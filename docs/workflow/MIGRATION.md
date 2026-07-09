@@ -1,5 +1,30 @@
 # Migration notes
 
+## 2026-07-09 — roadmap status becomes the pipeline's state machine
+
+**Non-breaking, backward-compatible.** The roadmap `Status` column is now the
+pipeline's single ground-truth state machine — `idea → defined → planned →
+in-progress → done` — and the primary gate signal every sensor/executor reads
+(`workflow-status`, `execute-phase`'s dependency gate, `plan-feature`'s
+redirect gate). Previously only `planned / in-progress / done` existed, which
+conflated a thin wishlist row with a fully-planned, execution-ready unit. The
+SPEC-local `## Design status` marker (introduced by the `design-feature`
+split above) is **retained** as the SPEC-local record and as the legacy-compat
+fallback described below — it is not removed.
+
+**Legacy-compat rule.** A roadmap row from before this change — a plain
+`planned` status with no `idea`/`defined` history — whose `SPEC.md` product
+half is complete (`## Design status: designed`, capability closure filled) is
+treated as **`defined`+`planned`**: it is fully executable, no redirect fires,
+and no relabelling is required. A legacy `planned` row whose SPEC has no
+completed product half (or no SPEC at all) is treated as `idea` and redirected
+to `/design-feature <slug>` on its next `execute-phase`/`plan-feature`
+invocation.
+
+**Action needed:** none. Existing rows keep working under the equivalence rule
+above. Projects that want the explicit five-state history on old rows may
+relabel them by hand, but nothing requires it.
+
 ## 2026-07-09 — `plan-feature` 2.0.0: product definition splits into `design-feature`
 
 **Breaking change to `plan-feature`'s contract.** Product definition (the
