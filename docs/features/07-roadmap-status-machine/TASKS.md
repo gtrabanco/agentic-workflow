@@ -19,18 +19,18 @@ Per-phase checklists the executor ticks off. Labels are fixed `P1, P2, …`.
 
 ## P2 — Sensor + executor read the machine
 
-- [ ] `workflow-status`: parse all five statuses in the roadmap-parse step
-- [ ] `workflow-status`: `startable_now` requires status ≥ `defined` AND deps met
-- [ ] `workflow-status`: `idea` rows → new `design_candidates` list, next
+- [x] `workflow-status`: parse all five statuses in the roadmap-parse step
+- [x] `workflow-status`: `startable_now` requires status ≥ `defined` AND deps met
+- [x] `workflow-status`: `idea` rows → new `design_candidates` list, next
       `/design-feature`; never `startable_now`
-- [ ] `workflow-status`: next-command per status (`defined`→`/plan-feature`,
+- [x] `workflow-status`: next-command per status (`defined`→`/plan-feature`,
       `planned`→`/execute-phase NN P1`)
-- [ ] `workflow-status`: add `design_candidates` to envelope + update sample
+- [x] `workflow-status`: add `design_candidates` to envelope + update sample
       envelope + human summary table
-- [ ] `execute-phase`: own-status precondition in the Dependency gate —
+- [x] `execute-phase`: own-status precondition in the Dependency gate —
       `idea`→`/design-feature`, `defined`→`/plan-feature`, `planned`+ proceeds
-- [ ] `execute-phase`: `--force` records the override; autopilot forbidden from it
-- [ ] Bump `workflow-status` + `execute-phase` `version:` (minor)
+- [x] `execute-phase`: `--force` records the override; autopilot forbidden from it
+- [x] Bump `workflow-status` + `execute-phase` `version:` (minor)
 
 ## P3 — Authoring skills set the status
 

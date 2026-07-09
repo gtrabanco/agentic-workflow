@@ -117,6 +117,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-07-09 | menor | Lee la máquina de estados de cinco valores del roadmap (`idea / defined / planned / in-progress / done`): un nuevo paso de clasificación separa las unidades en `design_candidates` (filas `idea`, siguiente `/design-feature`) frente a `startable_now` (estado ≥ `defined`, dependencias cumplidas, comando siguiente según el estado exacto); nuevo campo de envelope de nivel superior `design_candidates` junto a `startable_now`/`blocked_units`; las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` según `MIGRATION.md`. El resumen humano gana una línea de candidatos a diseño. |
 | 1.1.1 | 2026-07-05 | parche | Fold de revisión sobre la recuperación de caídas de 1.1.0 (sin publicar): precedencia explícita del estado del envelope con varias ramas (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, gana el peor); la comprobación de commits sin push ahora protege el caso sin upstream (justamente el caso de crash-nunca-pusheado) en vez de fallar en `git log @{u}..`; el envelope de ejemplo ya muestra en `detail` la clave `crash_recovery` que la prosa ya exigía. |
 | 1.1.0 | 2026-07-05 | menor | Recuperación de caídas: cada invocación clasifica los turnos interrumpidos desde la verdad del sustrato (ramas de unidad sucias/sin push, libro de fases vs commits) en un veredicto cerrado — `CLEAN`→OK, `RESUMABLE`→CONTINUE con el comando de reanudación, `AMBIGUOUS`→NEEDS_INPUT con opciones — en un sub-bloque `CRASH RECOVERY` fijo. Nuevo hint `--last-envelope <json|ruta>` (con fallback de pegarlo en el mensaje documentado): se contrasta con el estado recalculado, nunca es autoritativo. Sin cambio en el esquema del envelope — solo estados existentes. |
 | 1.0.0 | 2026-07-05 | — | Nuevo sensor de solo lectura para orquestación programática: árbol de dependencias completo de features/fixes (transitivo, cumplido/incumplido), unidades arrancables con orden de construcción, PRs abiertas + estado de auditoría, hallazgos pendientes de triaje, recomendación de product-audit — todo en un envelope máquina. |
@@ -141,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.15.0 | 2026-07-09 | menor | El gate de dependencias gana una **precondición de estado propio**, comprobada tras cumplir el cierre de dependencias y aún antes de cualquier edición: una unidad cuya fila del roadmap sea `idea` PARA y redirige a `/design-feature <slug>`; `defined` PARA y redirige a `/plan-feature <slug>`; `planned`+ continúa. `--force` salta la PARADA (nunca la comprobación), registrado en `decisions.md`, misma regla que el gate de dependencias. Las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` (sin redirección) según `MIGRATION.md`. Envelope máquina: `BLOCKED` ahora también cubre el gate de estado propio, `blockers[]` tipo `own-status`. |
 | 1.14.1 | 2026-07-09 | parche | El invariante de modelo en Portability se extiende: "nunca revises con un modelo más débil — y prefiere una familia de modelo distinta a la del autor" (instancias de la misma familia comparten puntos ciegos de entrenamiento; una familia cruzada descorrelaciona errores). Solo redacción. |
 | 1.14.0 | 2026-07-05 | menor | El checkpoint de revisión cada 2 fases es ahora una **recomendación, no una parada obligatoria**: el bloque de cierre recomienda `/review-change` con "continuar a la siguiente fase" como alternativa listada, y el envelope mantiene `state: CONTINUE` en los checkpoints (consultivo) — `READY_FOR_REVIEW` queda reservado a la unidad terminada. La **revisión de fin de unidad sigue siendo obligatoria** (alimenta `audit-pr`), y el gate de dependencias no cambia (sigue bloqueando y exigiendo `--force`). Referencias cruzadas de `review-change` 1.10.1 actualizadas. |
 | 1.13.1 | 2026-07-05 | parche | "Reanudar una fase interrumpida" enunciado como contrato explícito: al entrar en una rama con trabajo previo de la fase pedida, reconciliar los ticks de `TASKS.md` contra la evidencia y continuar desde la primera tarea sin marcar (reentrada idempotente — de la que depende el veredicto `RESUMABLE` de `workflow-status`); un libro sin siguiente tarea única → parar e informar, nunca adivinar. El comportamiento ya era práctica del Step 0; ahora está escrito. |
@@ -356,6 +358,20 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-09 — el estado del roadmap se convierte en la máquina de estados
+  del pipeline (P1–P2 hasta ahora).** La columna `Status` del roadmap se
+  promueve a una máquina de cinco estados (`idea → defined → planned →
+  in-progress → done`), reescrita en `docs/features/ROADMAP.md` y
+  `template/docs/features/ROADMAP.md` con un diagrama de transición y la
+  skill propietaria de cada arista; regla de compatibilidad legacy (`planned`
+  plano + mitad de producto del SPEC completa = `defined`+`planned`) añadida
+  a `docs/workflow/MIGRATION.md`. `workflow-status` 1.2.0 lee la máquina y
+  clasifica las filas `idea` como `design_candidates` en vez de
+  `startable_now`; `execute-phase` 1.15.0 gana una precondición de estado
+  propio en su gate de dependencias, que redirige una unidad por debajo de
+  `planned` a `/design-feature` o `/plan-feature`. Feature
+  `07-roadmap-status-machine` (backlog U4, cierra #14) — en curso.
 
 - **2026-07-09 — la definición de producto se separa en `design-feature`.**
   Nueva skill de cara al usuario `design-feature` 1.0.0 asume la definición de
