@@ -14,3 +14,20 @@ decisions). Soft dependencies `06-design-feature` (#13 / PR #24) and
 gates start; roadmap `Depends on` = `—`. Fix index empty; no blocking fix-now
 issue touches `plan-feature-scaffold`, `execute-phase`, the SPEC template, or
 `FEATURE_WORKFLOW.md`. Roadmap row 08 registered at `planned`.
+
+## P1 — 2026-07-10
+
+`plan-feature-scaffold` (Process step 4, before the XS/S→M/L split) gained the
+**hard split rule** ("Split — mandatory, not advisory": >~5 phases OR
+multi-layer/concern phase OR unresolved design decision → `Depends on:`-chained
+split, using the existing dependency infra) and the **per-phase
+cheap-executability checklist** (4 boxes: independently checkable · zero open
+decisions · one concern · gate runs locally; `n/a` explicit). Both SPEC templates
+(`docs/features/_TEMPLATE/SPEC.md` and `template/docs/features/_TEMPLATE/SPEC.md`)
+had their soft "**L**: consider splitting" line replaced with the same hard
+split-trigger wording — confirmed identical via `grep`; old phrasing confirmed
+gone from all three touched files. Roadmap row 08 flipped `planned → in-progress`.
+No design decisions were needed (all resolved in the SPEC already). Version bump
+for `plan-feature-scaffold` is a P2 task per `TASKS.md` (it edits the skill again
+for criteria-as-commands); not bumped here to avoid a throwaway intermediate
+version between P1 and P2 edits to the same file.

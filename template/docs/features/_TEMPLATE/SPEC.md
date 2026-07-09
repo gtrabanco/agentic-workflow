@@ -21,8 +21,12 @@ One paragraph: what this feature delivers and why it exists now.
 **XS/S** (≤ one commit / ≤ half a day): this SPEC is the only planning artifact —
 implement with `execute-phase <NN>` in a single pass. **M/L** (phased work): the
 full artifact set (`PLAN.md`, `TASKS.md`, …) is generated and execution goes phase
-by phase. **L** additionally: consider splitting into independently shippable
-features.
+by phase. **Split — mandatory, not advisory**: an M/L feature MUST be split into
+`Depends on:`-chained features if the plan would exceed ~5 phases, OR a single
+phase would touch more than one layer/concern, OR a phase would require a design
+decision not resolved in this SPEC. More, smaller, slower features is the
+accepted trade — a phase a weak executor cannot complete without judgement is not
+well-cut.
 
 ## Dependencies
 

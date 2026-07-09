@@ -65,6 +65,22 @@ the agent guide and state the assumption.
    - **XS/S** → the SPEC is the only planning artifact. Skip the set below,
      register the roadmap entry, and hand off to `execute-phase <NN>`
      (single-pass). Don't generate ceremony the feature doesn't need.
+   - **Split — mandatory, not advisory.** Before emitting the phase list for an
+     M/L feature, split this feature into `Depends on:`-chained features if
+     **any** holds: (a) the plan would exceed **~5 phases**; (b) a phase
+     touches **more than one layer/concern**; (c) a phase requires a **design
+     decision not resolved** in `SPEC.md`/`decisions.md`. Use the existing
+     dependency infrastructure (transitive dependency gate + `workflow-status`
+     build order) — never invent a new mechanism. More, smaller, slower
+     features is the accepted trade; a phase a weak model cannot execute
+     without judgement is not well-cut.
+   - **Per-phase cheap-executability checklist.** Each phase you emit passes
+     only if: ✓ every task is independently checkable **without judgement**;
+     ✓ **zero open design decisions** (all resolved in `SPEC.md`/
+     `decisions.md`); ✓ **one layer/concern**; ✓ its **verification gate runs
+     locally**. A phase failing any box is re-cut or split (feeds the split
+     rule above). State `n/a: <reason>` only where a box is genuinely
+     inapplicable.
    - **M/L** → generate the full set, mirroring the recent features':
      - `PLAN.md` — phased plan **labelled `P1, P2, …`** and called *phases*;
        phases are an *implementation* sequence, not a delivery boundary.
