@@ -330,9 +330,10 @@ división fuerte/barato de arriba). Dos invariantes sobreviven a cualquier mapeo
 prefiere una familia de modelo distinta a la del autor** (instancias de la
 misma familia comparten puntos ciegos de entrenamiento; una familia cruzada
 descorrelaciona errores), y **los veredictos de auditoría (el gate de fusión)
-van al modelo más fuerte que tengas**. Espera que los modelos más débiles sigan el workflow correctamente —
-las skills están escritas como checklists y formatos de salida fijos — pero con
-un juicio menos profundo: la disciplina se mantiene, el techo se mueve.
+van al modelo más fuerte que tengas**. Espera que los modelos más débiles sigan
+el workflow correctamente — las skills están escritas como checklists y
+formatos de salida fijos — pero con un juicio menos profundo: la disciplina se
+mantiene, el techo se mueve.
 
 ## Orquestación programática
 

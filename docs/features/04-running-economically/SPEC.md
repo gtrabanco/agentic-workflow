@@ -167,8 +167,11 @@ phrasing ("the session model", "a different model family", "the driver").
 - `docs/workflow/FEATURE_WORKFLOW.md` contains a `## Context hygiene & cost`
   section stating all four fixed rules and the compaction cost mechanism;
   `template/CLAUDE.md` `## Session log` carries the short fixed-rule pointer.
-- `grep -rniI "prefer a different model family" skills/ README.md README.es.md`
-  returns **four** hits (review-change, execute-phase, README, README.es).
+- `grep -rniI "prefer a different model family" skills/review-change/SKILL.md
+  skills/execute-phase/SKILL.md README.md` returns **three** hits — the English
+  copies carry the byte-identical clause; `README.es.md` carries the deliberately
+  Spanish-worded equivalent ("prefiere una familia de modelo distinta..."),
+  verified manually since it will never match an English-only grep.
 - `docs/workflow/ORCHESTRATION.md` contains a `## Prompt-cache economics`
   subsection covering byte-stable prefixes, the ~5-min-window grouping, the
   never-switch-model-mid-unit rule, and the one-invocation-per-step / no-compaction
