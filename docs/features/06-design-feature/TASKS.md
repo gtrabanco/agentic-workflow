@@ -28,22 +28,22 @@ Run `execute-phase 06 P1`, then `P2`, `P3`, `P4`.
 
 ## P2 — design-feature skill (core)
 
-- [ ] Create `skills/design-feature/SKILL.md` frontmatter: `name: design-feature`,
+- [x] Create `skills/design-feature/SKILL.md` frontmatter: `name: design-feature`,
       `user-invocable: true`, `version: 1.0.0`, author/license, description with
       "add feature"/"add a feature"/"new feature" triggers.
-- [ ] `## Turn contract` (product half + `designed` marker + `→ Next:` last +
+- [x] `## Turn contract` (product half + `designed` marker + `→ Next:` last +
       envelope last-of-all).
-- [ ] `Step 0 — Discover the project`.
-- [ ] `Process`: raw-idea interview (folded) → proportional research
+- [x] `Step 0 — Discover the project`.
+- [x] `Process`: raw-idea interview (folded) → proportional research
       (domain-gated) → capability-closure checklist → per-feature tooling notes →
       upsert semantics → interaction rule (bare vs `<instruction>`) → scale-down.
-- [ ] Capability-closure checklist written as independently-checkable rows with
+- [x] Capability-closure checklist written as independently-checkable rows with
       explicit `n/a: <reason>`; blank row = gate fail.
-- [ ] `Guardrails`, `## Portability`, `Relationship to other skills`, `Done when`,
+- [x] `Guardrails`, `## Portability`, `Relationship to other skills`, `Done when`,
       closing `→ Next:` block, `## Machine envelope`.
-- [ ] Verify AC1 `grep -q "^name: design-feature$"` + `^user-invocable: true$`.
-- [ ] Verify AC3 `grep -iq "add feature"`; AC4 `grep -iq "capability closure"`.
-- [ ] Verify `npx skills add . --list` lists `design-feature`.
+- [x] Verify AC1 `grep -q "^name: design-feature$"` + `^user-invocable: true$`.
+- [x] Verify AC3 `grep -iq "add feature"`; AC4 `grep -iq "capability closure"`.
+- [x] Verify `npx skills add . --list` lists `design-feature`.
 
 ## P3 — plan-feature slim (MAJOR) + interview retirement + alignment
 
