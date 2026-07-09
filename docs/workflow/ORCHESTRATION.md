@@ -148,6 +148,27 @@ The skeleton is deliberately minimal — a real driver adds per-state handling
 `MERGE_READY`) using the table above. The point: **nothing here is
 Claude Code-specific.**
 
+## Prompt-cache economics
+
+Each `run()` call above is a fresh headless invocation — cheap by design, but
+only if the driver doesn't fight the model provider's prompt cache:
+
+- **Keep the system prompt / preamble byte-stable across invocations.** Same
+  skill → same prefix, every time (no timestamp, run id, or other per-call
+  noise injected into the cached portion). A stable prefix is what makes a
+  cache hit possible at all; a single byte of drift invalidates it.
+- **Group a unit's invocations within a short window.** Cache TTL is
+  typically on the order of ~5 minutes — running a unit's steps back-to-back
+  keeps hitting the warm cache; leaving long gaps between steps lets it expire
+  and pay full price again.
+- **Never switch model mid-unit.** Beyond invalidating the cache (each
+  provider's cache is model-specific), it also breaks stylistic continuity
+  across the unit's steps — pick the tier per step (per the state table above)
+  but keep it fixed for that step's full lifetime, not swapped mid-way.
+- **A one-invocation-per-step driver never needs compaction at all** — see
+  `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost* for why a
+  fresh context per step is the cheap path, not just a safe one.
+
 ## Replacing subagents (per-phase cheap contexts)
 
 `ship-roadmap` spawns one Claude Code subagent per `execute-phase` phase to
