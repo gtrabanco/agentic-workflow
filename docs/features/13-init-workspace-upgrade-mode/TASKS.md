@@ -53,7 +53,7 @@ commands from the repo root.
       2.1.0, greps pass.
 - [x] `audit-docs` passes (no roadmap/folder/link drift, no leaked
       stack/real-project reference). `read-verified` — PASS, no findings.
-- [ ] Open the PR: `gh pr create --base main --body-file <path>` with `Closes #20`
-      in the body; **PRINT THE PR URL in the chat**.
-- [ ] Update roadmap row 13 → `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #<n>` and push.
+- [x] Open the PR: `gh pr create --base main --body-file <path>` with `Closes #20`
+      in the body; **PRINT THE PR URL in the chat**. — [#31](https://github.com/gtrabanco/agentic-workflow/pull/31).
+- [x] Update roadmap row 13 → `done · [#<pr>](<pr-url>)`.
+- [x] Commit `docs: link PR #<n>` and push. — commit `50f1c68`.
