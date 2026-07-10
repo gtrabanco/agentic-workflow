@@ -40,22 +40,24 @@ commands assume repo root.
 
 ## P2 — ship-roadmap floor + workflow doc
 
-- [ ] In `skills/ship-roadmap/SKILL.md` REVIEW step: enable `--adversarial 2` as
+- [x] In `skills/ship-roadmap/SKILL.md` REVIEW step: enable `--adversarial 2` as
       a hard floor for L/sensitive features; add the "deliberately does not mirror
       the interactive advisory checkpoint — do not align" note.
-- [ ] In `docs/workflow/REVIEW_AND_CLASSIFY.md`: add the "Adversarial
+- [x] In `docs/workflow/REVIEW_AND_CLASSIFY.md`: add the "Adversarial
       multi-reviewer (opt-in)" subsection (three spawn tiers, ≥1 inclusion rule,
       2–3× cost note → why opt-in).
-- [ ] Do NOT hand-edit `version:`.
-- [ ] Verify (all exit 0):
+- [x] Do NOT hand-edit `version:`.
+- [x] Verify (all exit 0):
       ```sh
       grep -qi -- "--adversarial" skills/ship-roadmap/SKILL.md
       grep -qi "floor" skills/ship-roadmap/SKILL.md
       grep -qi "adversarial" docs/workflow/REVIEW_AND_CLASSIFY.md
       ```
-- [ ] read-verified: the do-not-align rationale is present in ship-roadmap's
+      All 3 commands ran green.
+- [x] read-verified: the do-not-align rationale ("deliberately does **not
+      mirror** … must never be 'aligned' into one") is present in ship-roadmap's
       REVIEW step.
-- [ ] Commit `docs(ship-roadmap,workflow): adversarial multi-reviewer floor + review-stage doc`.
+- [x] Commit `docs(ship-roadmap,workflow): adversarial multi-reviewer floor + review-stage doc`.
 
 ## P3 — Release metadata
 

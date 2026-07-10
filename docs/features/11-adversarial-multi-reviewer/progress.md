@@ -27,7 +27,15 @@ appends as each phase completes.
 
 ## P2 — ship-roadmap floor + workflow doc
 
-- _pending_
+- `ship-roadmap`'s REVIEW step now runs `review-change --adversarial 2` as a
+  hard floor for L/sensitive features (checkpoint and end review alike), with
+  an explicit do-not-align note distinguishing it from the interactive
+  advisory. XS/S/non-sensitive-M stay single-reviewer.
+- `REVIEW_AND_CLASSIFY.md` gained an "Adversarial multi-reviewer (opt-in)"
+  subsection: three spawn tiers, default OFF + auto-recommend, ≥1 inclusion,
+  the 2–3× cost note, and the ship-roadmap floor.
+- `version:` left untouched on both skills (bump-skill's job, P3).
+- All 3 AC5/AC6 grep commands ran green.
 
 ## P3 — Release metadata
 
