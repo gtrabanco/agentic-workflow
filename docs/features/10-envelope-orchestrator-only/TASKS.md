@@ -116,8 +116,9 @@ emitted as the command to run — verify by running it, not by judging prose.
       56 skills listed, exit 0.
 - [x] Re-run every P1/P2/P3 verify command; all green (AC1–AC7 re-confirmed).
 - [x] `workflow-status` still emits (`## Machine envelope` present, line 160).
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
-      file, real backticks, never inline `--body`/heredoc; body includes
-      `Closes #17`) and PRINT THE PR URL in the chat.
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`.
-- [ ] commit `docs: link PR #<n>` and push.
+- [x] opened the PR (`gh pr create --body-file <path>`, body includes
+      `Closes #17`) — [PR #28](https://github.com/gtrabanco/agentic-workflow/pull/28).
+      Verified `gh pr view 28 --json body` renders backticks correctly (no
+      literal `\`).
+- [x] updated the roadmap row to `done · [#28](https://github.com/gtrabanco/agentic-workflow/pull/28)`.
+- [x] committed `docs: link PR #28` and pushed.
