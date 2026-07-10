@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/envelope.schema.json",
   "title": "agentic-workflow machine envelope",
-  "description": "The fixed JSON block every user-facing agentic-workflow skill prints as the absolute last output of its turn. Source of truth: skills/orchestration-envelope/SKILL.md.",
+  "description": "The fixed JSON block a driven agentic-workflow agent turn ends with (emitted by workflow-status always, and by any other skill when the driver injects the canonical system-prompt snippet). Source of truth: skills/orchestration-envelope/SKILL.md.",
   "type": "object",
   "required": [
     "skill",

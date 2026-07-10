@@ -2,8 +2,9 @@
  * @gtrabanco/agentic-workflow-schema
  *
  * Types, extraction, and validation for the agentic-workflow **machine
- * envelope** — the fixed JSON block every user-facing skill prints as the
- * absolute last output of its turn.
+ * envelope** — the fixed JSON block a driven agent turn ends with (emitted by
+ * workflow-status always, and by any other skill when the driver injects the
+ * canonical system-prompt snippet).
  *
  * Parse contract (mirrors skills/orchestration-envelope/SKILL.md):
  *   take the LAST fenced ```json block of the assistant's final message;
