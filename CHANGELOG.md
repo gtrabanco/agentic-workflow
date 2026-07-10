@@ -217,6 +217,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.1 | 2026-07-10 | patch | Clarified the N-semantics wording: distinguishes "`--adversarial` flag not passed at all" (single-reviewer, no message) from "`--adversarial` passed without a valid N" (no number, or `< 2` — usage error, falls back to single-reviewer). Fixes a contradiction with `decisions.md` D1, which required the usage error on both the missing-N and N<2 cases. No behavior change to the default no-flag path. |
 | 2.1.0 | 2026-07-10 | minor | New opt-in `--adversarial N` mode: N independent, context-clean, diff-only, adversarial reviewers run in parallel (Claude Code subagents / headless invocations / sequential fresh conversations), findings merged and deduped by `file:line`+axis into the existing decision table with a `Reviewers n/N` confidence column, inclusion threshold ≥1 (no quorum). Default OFF; auto-recommended (never forced) for `L`/sensitive-flagged changes. Default no-flag path unchanged. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Turn contract gains a mandatory context-clean box: the mandatory end-of-unit review must run in a conversation that did NOT implement the change — if it did, STOP and hand off to a fresh one. "When to use" reworded to state the requirement in prose (the pre-existing Portability section already points to feature 04's cross-family model-preference line; unchanged here). |
@@ -389,7 +390,10 @@ How pinning actually works, verified against the `skills` CLI:
   unattended REVIEW stage now enables `--adversarial 2` as a hard floor for
   `L`/sensitive features, deliberately not aligned with the interactive
   advisory). `docs/workflow/REVIEW_AND_CLASSIFY.md` documents the mode; no
-  change to `review-implementation`, the schema, or the npm package.
+  change to `review-implementation`, the schema, or the npm package. Follow-up
+  PATCH for `review-change` (2.1.1): fixed a wording contradiction with
+  `decisions.md` D1 — a bare `--adversarial` with no N now states the usage
+  error and falls back to single-reviewer, same as `N < 2`.
 - **2026-07-10 — envelope moves to the orchestration layer (feature 10).**
   MAJOR bump for the 14 user-facing skills that carried a `## Machine
   envelope` section (`audit-docs, audit-pr, bump-skill, design-feature,
