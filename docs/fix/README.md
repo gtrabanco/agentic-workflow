@@ -14,7 +14,7 @@ this table — history lives in git log + closed issues.
 
 | Folder                                                                                 | Topic                                                                                         | Status    | Depends on      | Issue                                                      |
 | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------- | --------------- | ---------------------------------------------------------- |
-| [33-stale-envelope-contract](33-stale-envelope-contract/SPEC.md) | Pre-feature-10 envelope contract still stated in orchestration-envelope's head + schema-package README | in-progress | — | [#33](https://github.com/gtrabanco/agentic-workflow/issues/33) |
+| [33-stale-envelope-contract](33-stale-envelope-contract/SPEC.md) | Pre-feature-10 envelope contract still stated in orchestration-envelope's head + schema-package README | done | — | [#33](https://github.com/gtrabanco/agentic-workflow/issues/33) |
 
 
 ---
