@@ -1,5 +1,40 @@
 # Migration notes
 
+## Upgrade path from a pre-2026-07-09 install
+
+The 2026-07-09/07-10 backlog (11 units) landed two **majors** plus several
+additive changes. If your install predates this backlog, follow this ordered
+path once — the dated notes below remain the detailed record of each step,
+this section is just the map.
+
+1. **`plan-feature` 2.0.0 — product definition splits into `design-feature`.**
+   The raw-idea interview and the capability-closure checklist moved out of
+   `plan-feature` into a new skill, `design-feature`. `plan-feature` is now
+   engineering-planning only and **refuses to plan an undesigned feature** (no
+   bypass flag) — it redirects to `/design-feature <slug>` instead. Any feature
+   whose `SPEC.md` predates this split reads as "undesigned" the next time
+   `plan-feature`/`execute-phase` touches it; run `design-feature <slug>` once
+   to backfill the product half. See [the dated note](#2026-07-09--plan-feature-200-product-definition-splits-into-design-feature)
+   below for the full command muscle-memory table.
+2. **The machine envelope moves to the orchestration layer.** 14 user-facing
+   skills (every one except `workflow-status`) stopped emitting the trailing
+   `## Machine envelope` JSON block unprompted. Interactive use is unaffected;
+   a driver/orchestrator now injects the canonical system-prompt snippet from
+   `orchestration-envelope` and implements the repair loop itself. See
+   [the dated note](#2026-07-10--the-machine-envelope-moves-to-the-orchestration-layer)
+   below for what a driver needs to change.
+3. **Update the skills, then the substrate.** `npx skills update` (or a fresh
+   `npx skills add …`) only ever refreshes skill *behavior*. Run
+   **`init-workspace`** afterward — it now detects an existing scaffold and
+   enters **upgrade mode**, proposing only the `template/` blocks your project
+   is missing (roadmap five-state machine, `--adversarial` review, etc.) —
+   never rewriting a block you've already tailored.
+4. **Optionally run `product-audit`** to see which newly-available
+   *capabilities* — not just docs blocks — now apply to your code.
+
+Everything below this point is the dated, detailed record — read a specific
+entry when the summary above isn't enough context to act.
+
 ## 2026-07-10 — `init-workspace` gains an upgrade mode for existing scaffolds
 
 **Additive, non-breaking.** `init-workspace` gains a second mode: on a repo
