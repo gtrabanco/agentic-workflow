@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.11.0
+version: 2.0.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -50,7 +50,7 @@ where a wrong call is expensive to undo.
 ✓ Exactly ONE stage advanced (or a terminal banner printed) and ONE line appended to the run log
 ✓ Nothing was merged outside the --fullauto floors; nothing asked mid-run
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -164,7 +164,7 @@ contract; who re-invokes it is an implementation detail):
 | Driver | When | Launch |
 |---|---|---|
 | **`/loop`** (Claude Code) | The agent has a self-re-invoking loop primitive | `/loop /ship-roadmap --continue` |
-| **External orchestrator** | Any agent invocable headless (a shell loop, CI, your own program) | loop: invoke `/ship-roadmap --continue`, parse the machine envelope, re-invoke while `state: "CONTINUE"` — see `docs/workflow/ORCHESTRATION.md` |
+| **External orchestrator** | Any agent invocable headless (a shell loop, CI, your own program) | loop: invoke `/ship-roadmap --continue` with the injected envelope requirement (see `orchestration-envelope`), parse the resulting envelope, re-invoke while `state: "CONTINUE"` — see `docs/workflow/ORCHESTRATION.md` |
 | **Manual** | Neither of the above | re-run `/ship-roadmap --continue` yourself after each iteration; each ends with the exact next command |
 
 Default launch contract text (adapt the first line to the detected driver):
@@ -174,7 +174,7 @@ Founded. Start the autopilot with:
 
   /loop /ship-roadmap --continue        (Claude Code)
   — or loop `/ship-roadmap --continue` from your orchestrator/by hand;
-    every iteration ends with a machine envelope: re-invoke while
+    with the driver-injected envelope requirement, re-invoke while
     state is CONTINUE (see docs/workflow/ORCHESTRATION.md)
 
 Stop when an iteration's first line is SHIP: COMPLETE, SHIP: BLOCKED, or
@@ -367,8 +367,8 @@ turns:
    stage, same iteration) or marks the stage partial. This check is
    unconditional for EXECUTE, REVIEW fix cycles, PR, and AUDIT fix cycles.
 6. **LOG** one line to `.ship-run.log`; print `→ Next: <unit> (CONTINUE)` (the
-   canonical next-step shape; `CONTINUE` stays the loop's keep-going signal),
-   then the machine envelope. **Say WHY the turn is ending** — one explicit
+   canonical next-step shape; `CONTINUE` stays the loop's keep-going signal).
+   **Say WHY the turn is ending** — one explicit
    line before the `→ Next:` block, always one of: "iteration complete — one
    stage advanced (normal; re-invoke to continue)", "parked <unit>: <exact cap
    hit — red-gate retries / review ping-pong / audit ping-pong / 3 partials /
@@ -526,44 +526,15 @@ persist in the run log and feature docs,
 but a crash between a review and its PR may re-run one review — accepted cost,
 never a correctness risk.
 
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits (one envelope per iteration — the banner maps to `state`):
-
-- **`state`:** `CONTINUE` (one stage advanced; the loop keeps going),
-  `OK` (`SHIP: COMPLETE`), `BLOCKED` (`SHIP: BLOCKED` — the unblock map rides
-  `blockers[]` + `dependencies`), `FAILED` (`SHIP: STOPPED` — budget/substrate;
-  human restarts), `HALT` (systemic drift stop — scope `run`), or
-  `NEEDS_INPUT` (Mode A interview only; never mid-run).
-- **Fields:** `unit`/`phase`/`pr` = the iteration's selected unit and stage
-  outcome; `next.recommended`: `/ship-roadmap --continue` on CONTINUE (the
-  driver's re-invoke signal — external orchestrators loop on exactly this, see
-  `docs/workflow/ORCHESTRATION.md`).
-- `detail`: `{"banner": "<SHIP: …|null>", "stage": "DESIGN|PLAN|EXECUTE|REVIEW|PR|AUDIT|SWEEP",
-  "iteration": n, "unblock_map": {...}}`. A DESIGN stage that finds the unit
-  undesignable from the locked record stays `state: CONTINUE` (the loop still
-  advances — SELECT moves to the next startable unit), with `blockers[]` kind
-  `undesignable` recording the parked unit and `needs_input.question` stating
-  the specific gap for a human to later answer directly via `/design-feature
-  <slug> "<answer>"` — this mirrors a red-gate park, not the run-level
-  `NEEDS_INPUT` state (which stays Mode-A-interview-only, per the "no further
-  questions after the interview" contract).
-
 ## Portability (agents other than Claude Code)
 
 The workflow is the contract; Claude Code features are conveniences. This skill
 leans on them harder than any other — here is the manual equivalent of each:
 
 - **No `/loop`** — two equivalent replacements, both vendor-neutral: (a) an
-  **external orchestrator** loops `/ship-roadmap --continue` headless and
-  routes on the machine envelope (`state: "CONTINUE"` → re-invoke; full
+  **external orchestrator** loops `/ship-roadmap --continue` headless,
+  injecting the envelope requirement (see `orchestration-envelope`) and
+  routing on the resulting `state` (`"CONTINUE"` → re-invoke; full
   protocol + driver skeleton in `docs/workflow/ORCHESTRATION.md`); (b) manual
   re-invocation after each iteration. Iterations are
   stateless-by-reconstruction, so any driver is exactly equivalent; stop when
@@ -602,8 +573,8 @@ leans on them harder than any other — here is the manual equivalent of each:
 - The manual flow (`plan-feature` → `execute-phase` → `review-change` →
   `audit-pr`, feature by feature) remains the default way of working —
   ship-roadmap is the same flow with the human moved to its edges.
-- **External-orchestration sibling:** `workflow-status` + the machine envelope
-  (see `docs/workflow/ORCHESTRATION.md`) run this same loop from OUTSIDE the
+- **External-orchestration sibling:** `workflow-status` + the driver-injected
+  envelope (see `docs/workflow/ORCHESTRATION.md`) run this same loop from OUTSIDE the
   agent — sensor → route → invoke the skill directly, choosing the model per
   step. Prefer that when you want per-step model control or your agent lacks
   `/loop`/subagents; ship-roadmap remains the in-agent packaging of the loop.

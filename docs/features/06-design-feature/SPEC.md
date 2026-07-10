@@ -222,6 +222,9 @@ Docs/skills-only change — the skills are the product here. Invariants to hold:
   `plan-feature` — `state` = `OK` (designed), `NEEDS_INPUT` (interview question
   pending), or `BLOCKED` (unresolvable capability gap). `next.recommended` =
   `/plan-feature <slug>`.
+  *(Superseded 2026-07-10 by feature 10: `design-feature` dropped its inline
+  `## Machine envelope` section; the contract moved to the orchestration
+  layer. See `docs/workflow/MIGRATION.md`.)*
 - **One-PR-per-unit, against `main`**; conventional commits.
 
 ## Design
@@ -445,8 +448,9 @@ this feature. This is the substrate later phases reference.
 contract`, `Step 0`, `Process` (raw-idea interview folded in + proportional
 research + capability-closure checklist + per-feature tooling notes + upsert +
 interaction rule + scale-down), `Guardrails`, `## Portability`, `Relationship to
-other skills`, `Done when`, `→ Next:` block, and the machine envelope. Writes the
-SPEC product half + stamps the `designed` marker.
+other skills`, `Done when`, `→ Next:` block, and the machine envelope
+*(superseded 2026-07-10 by feature 10 — see `docs/workflow/MIGRATION.md`)*.
+Writes the SPEC product half + stamps the `designed` marker.
 
 **P3 — `plan-feature` slim (MAJOR) + interview retirement + from-issue/scaffold
 alignment.** Slim the router (remove interview path; add the redirect gate on the

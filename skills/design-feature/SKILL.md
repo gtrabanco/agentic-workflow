@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 1.1.0
+version: 2.0.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -51,8 +51,7 @@ planning happens. **Docs only — no code, no branch.**
   language > English. The CONVERSATION language never decides — a Spanish
   prompt still produces an English SPEC/decisions unless one of the first two
   says otherwise
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced
-  ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -162,7 +161,7 @@ research is the Engineering half's job, not this one.
    `defined` without passing through `idea`. Any closure row still blank, or
    an unresolved question blocking closure → leave `## Design status` at `not
    designed`, leave the roadmap row at `idea` (or unadded), and end the turn
-   with `NEEDS_INPUT` (see *Machine envelope*) instead of a false `designed`
+   with the pending question asked plainly instead of a false `designed`
    stamp or a premature `defined` write.
 10. **Confirm the roadmap row.** The row from step 9 carries the right number,
     slug, dependencies, and status (`defined`). Beyond `defined`, status
@@ -203,28 +202,6 @@ design-feature <slug> "<instruction>" → apply directly, no questions, scoped t
 design-feature "<new idea>"           → interview from zero (no prior SPEC to review)
 design-feature <slug> "delete and redesign, <new direction>" → the only from-zero reset path
 ```
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (designed — every closure row filled or explicit `n/a`,
-  marker stamped `designed`), `NEEDS_INPUT` (an interview question or an
-  ambiguous instruction is pending — `needs_input` carries it, nothing
-  guessed), or `BLOCKED` (an unresolvable capability gap — e.g. the feature's
-  entities depend on a capability the project genuinely cannot express yet —
-  `blockers[]` states it).
-- **Fields:** `unit` = the designed feature (`type: "feature"`, id, branch from
-  the SPEC, `null` branch if not yet decided); `next.recommended` =
-  `/plan-feature <slug>` with `tier: "cheap"` when `OK`.
-- `detail`: `{"closure_rows_total": <n>, "closure_rows_na": <n>, "size": "XS|S|M|L|null"}`.
 
 ## Portability (agents other than Claude Code)
 

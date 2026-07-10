@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 1.8.0
+version: 2.0.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -28,7 +28,7 @@ raw placeholders.
 ✓ The adapted scaffold is written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -136,23 +136,6 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 - Honest placeholders over invented specifics; flag what's left to fill.
 - Honor the project's **Workflow conventions** once present; on an existing repo,
   don't work on its default branch and never commit/push unless asked.
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (scaffold adapted / installed per the user's answers) or
-  `NEEDS_INPUT` (an interview decision is pending — `needs_input` filled).
-- **Fields:** `unit.type: "docs"`; `next.recommended` = `/plan-feature` (or
-  `/ship-roadmap` when the user asked for the autopilot), `tier: "strong"`.
-- `detail`: `{"scaffold_written": [paths], "skills_installed": true|false}`.
 
 ## Portability (agents other than Claude Code)
 
