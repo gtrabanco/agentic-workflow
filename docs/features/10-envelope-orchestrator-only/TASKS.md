@@ -93,21 +93,29 @@ emitted as the command to run — verify by running it, not by judging prose.
 
 ## P4 — Hardening + PR
 
-- [ ] Dangling-ref sweep (AC10) — no stripped skill or workflow doc points at a
+- [x] Dangling-ref sweep (AC10) — no stripped skill or workflow doc points at a
       removed `## Machine envelope` section:
       ```sh
       grep -rin "machine envelope" skills/ docs/workflow/ | grep -v "skills/workflow-status/" | grep -v "orchestration-envelope"
-      # inspect any hits; the only legitimate references are the migration note + orchestration layer
       ```
-- [ ] Schema package untouched (expect NO output):
+      Found and fixed one real dangling reference: `docs/workflow/ORCHESTRATION.md`'s
+      opening paragraph claimed "every user-facing skill ends with a machine
+      envelope" (true pre-feature-10, false now) — rewritten to describe the
+      driver injecting the requirement instead. Re-ran: every remaining hit is
+      legitimate (the repair-loop prompt's literal quoted text, the
+      driver-facing definition, and the MIGRATION.md note).
+- [x] Schema package untouched (expect NO output):
       ```sh
       git diff --name-only origin/main...HEAD | grep '^packages/agentic-workflow-schema/'
       ```
-- [ ] Discovery intact:
+      confirmed — no output, exit 1.
+- [x] Discovery intact:
       ```sh
       npx skills add . --list
       ```
-- [ ] Re-run every P1/P2/P3 verify command; all green.
+      56 skills listed, exit 0.
+- [x] Re-run every P1/P2/P3 verify command; all green (AC1–AC7 re-confirmed).
+- [x] `workflow-status` still emits (`## Machine envelope` present, line 160).
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc; body includes
       `Closes #17`) and PRINT THE PR URL in the chat.
