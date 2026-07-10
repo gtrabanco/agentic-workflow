@@ -18,7 +18,7 @@ description: >
 ```
 ✓ Every changed skill's version: was bumped and BOTH changelogs got their rows
 ✓ The lint results (all 5 authoring rules) were reported
-✓ The git add + commit command block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -89,11 +89,6 @@ reports — it does not auto-correct):
   section (deliverable in fixed format; `→ Next:` printed last; executors run
   commands, never describe them). `grep -L '^## Turn contract' skills/<name>/SKILL.md`
   flags a miss (skip for internal skills).
-- **Machine envelope.** Every user-facing skill carries a `## Machine envelope`
-  section (states it emits + fields it owns, per the `orchestration-envelope`
-  contract) and its turn contract names the envelope as the absolute last
-  output. `grep -L '^## Machine envelope' skills/<name>/SKILL.md` flags a miss
-  (skip for internal skills).
 
 Report violations in the summary; do not block the bump on them.
 
@@ -227,23 +222,6 @@ Then print the next step:
   what changed.
 - For the README cells, prefer updating over rewriting: keep the existing tone
   and length; change only what is factually wrong or missing.
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (versions bumped, changelogs + READMEs updated) or
-  `NEEDS_INPUT` (ambiguous bump type — one question covering all skills).
-- **Fields:** `unit.type: "docs"`; `next.recommended` = the printed
-  `git add` + `git commit` block's intent (`commit the bump`).
-- `detail`: `{"bumps": [{"skill": "<name>", "from": "x.y.z", "to": "x.y.z", "type": "major|minor|patch"}], "lint_warnings": [...]}`.
 
 ## Portability (agents other than Claude Code)
 

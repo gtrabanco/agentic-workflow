@@ -40,8 +40,7 @@ create a domain event and where do I register its handler").
   pasted — never assumed
 ✓ Artifact language: explicit user instruction > the project's declared docs
   language > English. The CONVERSATION language never decides
-✓ The fixed report block is printed, then the closing `→ Next:` block, then
-  the machine envelope (fenced ```json — see ## Machine envelope) as the
+✓ The fixed report block is printed, then the closing `→ Next:` block, as the
   ABSOLUTE last output
 ```
 
@@ -238,23 +237,6 @@ Decision: PASS | FAIL | NOT-CONFIGURED
 `FAIL` only when the verify step is red or a written page had to be reverted;
 `NOT-CONFIGURED` per Step 0.5; `PASS` otherwise (including 0 pages).
 
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing `→ Next:` block, as the
-**absolute last output** of the turn. All top-level keys always present;
-values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (PASS — pages written or none needed) · `NEEDS_INPUT`
-  (NOT-CONFIGURED, with `needs_input.question` = add the Docs site block and
-  the snippet in `detail`) · `FAILED` (verify red past its fix attempt).
-- **Fields:** `unit.type: "docs"`; `detail`:
-  `{"adapter": "<name>", "pages": ["<paths>"]}` — the paths the orchestrator
-  must see committed by the unit's close-out.
-
 ## Portability (agents other than Claude Code)
 
 The workflow is the contract; Claude Code features are conveniences. On an
@@ -293,5 +275,3 @@ enables:
     · unit already closed → commit as docs(<unit>): generated guides on the unit's branch
     · adapter NOT CONFIGURED → add the Docs site block to the documentation map, then re-run /generate-docs
   ```
-
-- The machine envelope is the absolute last output.

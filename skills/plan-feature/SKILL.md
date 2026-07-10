@@ -36,7 +36,7 @@ one — see the redirect gate below.
   roadmap entry registered (number, order, deps verified)
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -145,31 +145,6 @@ raw-idea interview that used to be an internal step of this router is retired
 — see `docs/workflow/MIGRATION.md`; that logic now lives in `design-feature`,
 a user-facing skill in its own right (product definition is its own pipeline
 stage, not an internal routing detail of this one).
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (planned — engineering half filled, artifacts written,
-  roadmap registered), `BLOCKED` (either the redirect gate stopped on an
-  undesigned feature — `blockers[]` kind `undesigned`, `next.recommended:
-  "/design-feature <slug>"` — or the dependency check found unmet deps:
-  `dependencies.unmet` + `build_order` filled, `blockers[]` kind
-  `dependency`), or `NEEDS_INPUT` (an ambiguous routing input — `needs_input`
-  filled, nothing guessed).
-- **Fields:** `unit` = the planned feature (`type: "feature"`, id, branch from
-  the SPEC); `phase.total` = planned phase count (`null` for XS/S
-  single-pass); `next.recommended` = `/execute-phase <NN> P1` (or single-pass)
-  with `tier: "cheap"` — or `/design-feature <slug>` / the deepest unmet
-  dependency's command when BLOCKED, `tier: "strong"`.
-- `detail`: `{"size": "XS|S|M|L", "artifacts": [paths]}`.
 
 ## Portability (agents other than Claude Code)
 

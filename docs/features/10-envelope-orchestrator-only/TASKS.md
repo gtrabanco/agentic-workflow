@@ -26,25 +26,35 @@ emitted as the command to run — verify by running it, not by judging prose.
 
 ## P2 — Strip the 14 skills
 
-- [ ] For each of the 14, delete the `## Machine envelope` section, the
+- [x] For each of the 14, delete the `## Machine envelope` section, the
       turn-contract envelope box line(s), and any "then the machine envelope"
       clause in the closing block:
       `audit-docs, audit-pr, bump-skill, design-feature, execute-phase,
       generate-docs, init-workspace, log-session, plan-feature, plan-fix,
       product-audit, review-change, ship-roadmap, triage-issue`.
-- [ ] Do not touch `workflow-status` or `orchestration-envelope`.
-- [ ] Verify (expect NO output / exit 1):
+- [x] Do not touch `workflow-status` or `orchestration-envelope`.
+- [x] Additionally cleared residual `"machine envelope"` prose mentions found
+      by the AC2 grep outside the section/box (bump-skill's now-obsolete lint
+      bullet, design-feature's dangling self-reference, execute-phase's and
+      ship-roadmap's driver-loop descriptions rephrased to avoid the literal
+      phrase while keeping the meaning) — AC2 requires zero hits, not just the
+      turn-contract line.
+- [x] Verify (expect NO output / exit 1):
       ```sh
       grep -l "## Machine envelope" \
         skills/{audit-docs,audit-pr,bump-skill,design-feature,execute-phase,generate-docs,init-workspace,log-session,plan-feature,plan-fix,product-audit,review-change,ship-roadmap,triage-issue}/SKILL.md
       grep -il "machine envelope" \
         skills/{audit-docs,audit-pr,bump-skill,design-feature,execute-phase,generate-docs,init-workspace,log-session,plan-feature,plan-fix,product-audit,review-change,ship-roadmap,triage-issue}/SKILL.md
       ```
-- [ ] Verify sensor intact (expect exit 0):
+      both exit 1 (no output) — confirmed.
+- [x] Verify sensor intact (expect exit 0):
       ```sh
       grep -q "## Machine envelope" skills/workflow-status/SKILL.md
       ```
-- [ ] Commit `feat(skills)!: drop the machine envelope from user-facing skills (keep workflow-status)`.
+      confirmed.
+- [x] Discovery intact: `npx skills add . --list` — 56 skills listed, no
+      malformed frontmatter.
+- [x] Commit `feat(skills)!: drop the machine envelope from user-facing skills (keep workflow-status)`.
 
 ## P3 — Release metadata
 
