@@ -1,29 +1,39 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.1.0
+version: 1.1.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal contract of the agentic-workflow pack: the machine envelope — a fixed
-  JSON block every user-facing skill prints as its absolute last output, so an
-  external program can parse the outcome and orchestrate the next step (which
-  command, which model tier) without a human reading the chat. Not a menu entry;
-  the user-facing skills reference this schema, and docs/workflow/ORCHESTRATION.md
-  documents the driver loop that consumes it.
+  Internal contract of the agentic-workflow pack: the machine envelope — the
+  fixed JSON block an external orchestrator parses to route the next step
+  (which command, which model tier) without a human reading the chat. Skills
+  do NOT emit it on their own (except workflow-status, the sensor): a driver
+  that wants it injects the canonical system-prompt snippet defined here and
+  runs the repair loop on parse failure. Not a menu entry; this skill owns the
+  schema, and docs/workflow/ORCHESTRATION.md documents the driver loop that
+  consumes it.
 ---
 
 # Machine envelope (internal contract)
 
-Every **user-invocable** skill in this pack ends its turn with one fenced
-`json` block — the **envelope** — printed **after** the closing `→ Next:`
-block, as the **absolute last output** of the turn. Internal skills (the
-review pack, the plan-feature steps, this one) do NOT emit it: they return
-their fixed completion reports to the composing caller, and only the outermost
-user-facing skill emits the single envelope for the whole turn.
+The **envelope** is one fenced `json` block, the **absolute last output** of
+a turn, that lets an external orchestrator route on the outcome. **Who emits
+it** (since feature 10 — see `docs/workflow/MIGRATION.md`):
+
+- **`workflow-status` — always**, as part of its own contract (emitting the
+  envelope *is* the sensor's function).
+- **Every other skill — only when a driver asks for it**, by injecting the
+  canonical system-prompt snippet below into the headless invocation. In an
+  interactive/human session, no skill prints an envelope and none should be
+  expected.
+- Internal skills (the review pack, the planning steps, this one) never emit
+  it in any mode: they return their fixed completion reports to the composing
+  caller; at most one envelope exists per turn, for the whole turn.
 
 **Parse contract for orchestrators:** take the **last fenced ```json block**
-of the final assistant message. Exactly one envelope per turn.
+of the final assistant message. Exactly one envelope per turn; parse failure
+→ the repair loop below.
 
 ## Schema (all top-level keys ALWAYS present — use null / [] / 0 when n/a)
 
