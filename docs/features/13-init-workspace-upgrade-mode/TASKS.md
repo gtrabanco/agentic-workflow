@@ -6,25 +6,29 @@ commands from the repo root.
 
 ## P1 — Upgrade mode in `init-workspace`
 
-- [ ] Extend Step 0 detection in `skills/init-workspace/SKILL.md`: existing
+- [x] Extend Step 0 detection in `skills/init-workspace/SKILL.md`: existing
       agentic-workflow scaffold (marker: `CLAUDE.md` + `docs/features/ROADMAP.md`
-      or `docs/workflow/`) → offer **upgrade** as default. `read-verified`.
-- [ ] Add the **Upgrade mode** process section with the six ordered steps
+      or `docs/workflow/`) → offer **upgrade** as default. `read-verified` —
+      `skills/init-workspace/SKILL.md` Step 0, first bullet.
+- [x] Add the **Upgrade mode** process section with the six ordered steps
       (fetch current template · diff · read `MIGRATION.md` · propose-only-missing
-      short interview · additive write · report). `read-verified`.
-- [ ] Add the **additive-only, never-clobber** invariant to Guardrails.
-      `read-verified`.
-- [ ] `grep -qi "upgrade mode" skills/init-workspace/SKILL.md` exits 0.
-- [ ] `grep -qi "MIGRATION.md" skills/init-workspace/SKILL.md` exits 0.
-- [ ] `grep -qiE "diff|current template" skills/init-workspace/SKILL.md` exits 0
+      short interview · additive write · report). `read-verified` —
+      `skills/init-workspace/SKILL.md` `## Upgrade mode` section.
+- [x] Add the **additive-only, never-clobber** invariant to Guardrails.
+      `read-verified` — `skills/init-workspace/SKILL.md` `## Guardrails`,
+      second bullet.
+- [x] `grep -qi "upgrade mode" skills/init-workspace/SKILL.md` exits 0.
+- [x] `grep -qi "MIGRATION.md" skills/init-workspace/SKILL.md` exits 0.
+- [x] `grep -qiE "diff|current template" skills/init-workspace/SKILL.md` exits 0
       (diff-against-current-template contract present).
-- [ ] `grep -qiE "never (clobber|overwrite)|additive" skills/init-workspace/SKILL.md`
+- [x] `grep -qiE "never (clobber|overwrite)|additive" skills/init-workspace/SKILL.md`
       exits 0 (never-clobber invariant present).
-- [ ] Commit planning artifacts: `git add docs/features/13-init-workspace-upgrade-mode
-      && git commit -m "docs(13-init-workspace-upgrade-mode): planning artifacts"`.
-- [ ] Register roadmap row 13 in `docs/features/ROADMAP.md` (`planned`, deps
+- [x] Commit planning artifacts: `git add docs/features/13-init-workspace-upgrade-mode
+      && git commit -m "docs(13-init-workspace-upgrade-mode): planning artifacts"`
+      — commit `04f9edd`.
+- [x] Register roadmap row 13 in `docs/features/ROADMAP.md` (`planned`, deps
       `06 07 08`); `grep -q "13 | .init-workspace-upgrade-mode" docs/features/ROADMAP.md`
-      (row exists).
+      (row exists) — done in `04f9edd`.
 
 ## P2 — Documented recommendation + hardening
 
