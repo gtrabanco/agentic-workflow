@@ -52,4 +52,7 @@ One entry per phase.
   rewritten to describe the driver injecting the requirement per
   `orchestration-envelope` instead. AC8 (schema package untouched), AC9
   (discovery, 56 skills), and every P1–P3 verify command re-confirmed green.
-  `workflow-status` confirmed still emitting. PR opening next.
+  `workflow-status` confirmed still emitting. Marked `done`, pushed, opened
+  [PR #28](https://github.com/gtrabanco/agentic-workflow/pull/28) (`Closes
+  #17`), linked the roadmap row (`docs: link PR #28`). Unit finished — next
+  is the mandatory `/review-change` pass.
