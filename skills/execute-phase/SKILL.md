@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 1.15.0
+version: 1.16.0
 argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -430,6 +430,13 @@ returns the URL (follow-up `docs: link PR #<n>` commit on the same branch);
 PR-bound commit (never a lone commit on the default branch). **Never merge with docs
 still pending, and never drop the issue / fix-index entry before merge** — those are
 `audit-pr`'s gates, not removed at done-time.
+
+**One phase = one session.** Never execute two phases in one conversation on a
+non-frontier model — models degrade over long horizons; a fresh session per
+phase preserves the cheap-execution guarantee. The `/loop` batch shape below
+already clears and re-invokes per phase; this rule is *why* it does — an
+external orchestrator or a by-hand loop must honor it the same way (see
+*Portability*, "No `/loop`").
 
 ## Batch execution with `/loop`
 
