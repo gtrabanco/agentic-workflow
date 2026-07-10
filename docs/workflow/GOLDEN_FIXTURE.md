@@ -27,8 +27,19 @@ for that edit.
 ## The fixture
 
 A fixed toy feature — **"add a CSV export command"** — with a pre-written toy
-SPEC. Copy the block below to a scratch location (e.g. your scratchpad); do
-**not** commit it as a feature folder under `docs/features/`.
+SPEC and the one-line issue text it stands in for.
+
+For skills that take a raw idea or issue as input (`design-feature`,
+`plan-feature-from-issue`), use this one-liner instead of the SPEC below:
+
+> Add an `export-csv` command to the toy CLI that writes the current
+> in-memory record list to a CSV file at a given path.
+
+For every other executor-path skill (`execute-phase`, `plan-feature`,
+`plan-feature-scaffold`, the `review-*` pack), use the pre-written toy SPEC
+below — it's already `designed`, so those skills can run directly against it.
+Copy whichever block you need to a scratch location (e.g. your scratchpad);
+do **not** commit it as a feature folder under `docs/features/`.
 
 ```markdown
 # 99 — csv-export-command
