@@ -19,7 +19,8 @@ the default (no-flag) path beyond gating the findings-gathering step on the flag
     parallel headless invocations; neither → N sequential fresh conversations
     (inline fallback, documented).
   - Each reviewer is **context-clean, diff-only, adversarial** (reuses the
-    existing `review-implementation` engine + applicable pack — no new engine).
+    existing `review-implementation` engine **only** — no new engine; the
+    applicable pack runs once, over the merged table — see D4).
   - **Merge + dedupe by `file:line`+axis** into the one decision table; annotate
     each row with the reviewer count (`Reviewers n/N`); **inclusion threshold
     ≥1** (no quorum). Then the unchanged classification/synthesis/report runs
