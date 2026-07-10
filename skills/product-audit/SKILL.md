@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -30,7 +30,7 @@ fixes, opens issues, or edits the roadmap. It proposes; the human decides.**
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, ranked findings, three proposal streams)
+✓ The full PRODUCT AUDIT report was printed in the fixed output format (health by dimension, ranked findings, four proposal streams)
 ✓ Nothing was fixed, filed, or changed — report only
 ✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
 ```
@@ -91,6 +91,7 @@ pack covers every axis).
 | **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs | all |
 | **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks 1–13 mechanically** (compose it); never assume a rule held because it "should" | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | all |
+| **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope | all |
 
 Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
 **say which you skipped and why**. Every axis is covered by the workflow's own
@@ -112,13 +113,24 @@ internal review pack (`review-code`, `review-security`, `review-verify`,
 4. **Mine accumulated suggestions** — read every feature folder's `decisions.md`,
    `known-issues.md`, and `architecture-notes.md`; extract deferred items, open
    questions, and recorded debt. Cluster duplicates across features.
-5. **Synthesize proposals** — turn findings + mined items into three concrete,
+5. **Sweep installed tooling** — (a) inventory the installed skills and
+   connected MCP servers available to the agent; (b) cross-reference each
+   against the applicable review axes and the roadmap features; (c) classify
+   each as **register** (useful, not yet named in the project's `CLAUDE.md`),
+   **re-design** (would change a feature's definition/scope), or
+   **not-relevant**; (d) dedupe against what `CLAUDE.md` already registers —
+   only unregistered/relevant items survive into proposals. If the agent
+   cannot enumerate its installed skills / connected MCPs, say so plainly
+   (no silent caps) rather than inventing an inventory.
+6. **Synthesize proposals** — turn findings + mined items into four concrete,
    deduped, severity-ranked streams:
    - **Issues to open** — bugs, debt, security/perf items worth tracking.
    - **Roadmap: add** — features/capabilities the evidence now justifies.
    - **Roadmap: remove or revise** — features that are obsolete, superseded, or no
      longer make sense.
-6. **Report** — the format below. Recommend; do not act.
+   - **Tooling: register or re-design** — unregistered-but-useful tooling to add
+     to `CLAUDE.md`, or a discovered skill/MCP that would rescope a feature.
+7. **Report** — the format below. Recommend; do not act.
 
 ## Output format
 
@@ -129,6 +141,7 @@ Coverage: <dimensions run | sampled vs. exhaustive>
 Health by dimension:
   <dimension> .......... ✓ healthy | ⚠ concerns | ✗ at risk | n-a (why)
   ...
+  Installed tooling ....... ✓ | ⚠ | ✗ | n-a
 
 Top findings (severity-ranked):
   [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|postpone|tradeoff>
@@ -142,6 +155,9 @@ Proposals — the user decides which to act on:
     - <feature> — <rationale & opportunity> — route: plan-feature
   Roadmap — remove / revise:
     - <feature> — <why it no longer fits> — route: triage-issue / roadmap edit
+  Tooling — register / re-design:
+    - <skill|MCP> — register in CLAUDE.md (Optional review extras): <why> — route: user edits CLAUDE.md
+    - <skill|MCP> — would change <feature> scope: <why> — route: /design-feature <slug>
 
 Manual-verification checklist (what automation can't confirm):
   - <item> …
@@ -160,6 +176,10 @@ security items to track first").
   report + proposals; **every action is the user's decision.** When the user
   accepts, route: `triage-issue` files/classifies, `plan-feature` adds roadmap
   work, `plan-fix` scopes a concrete fix.
+- **Never registers tooling or edits `CLAUDE.md`.** The tooling sweep proposes a
+  skill/MCP to register, but the user (or a routed `design-feature` run)
+  performs the edit; a scope-affecting discovery routes to
+  `/design-feature <slug>`, which the user approves.
 - Platform-adaptive: run only applicable axes; always list what you skipped and why.
 - **No silent caps.** If you sampled, prioritized, or time-boxed a dimension, say
   so — never present partial coverage as exhaustive.
@@ -184,7 +204,9 @@ This skill emits:
 - **Fields:** `findings` aggregates the report (fix_now = critical items;
   untriaged = proposals not yet accepted); `recommendations.product_audit:
   false` (it just ran) with `reason` = the suggested next cadence.
-- `detail`: `{"proposed_issues": [...], "proposed_features": [...], "axes": {"<axis>": "PASS|FAIL|n/a"}}`.
+- `detail`: `{"proposed_issues": [...], "proposed_features": [...], "proposed_tooling": [...], "axes": {"<axis>": "PASS|FAIL|n/a"}}`.
+  `proposed_tooling` is additive (new field, nothing removed/retyped): each
+  entry `{"name": "<skill|MCP>", "action": "register"|"re-design", "why": "...", "route": "..."}`.
 
 ## Portability (agents other than Claude Code)
 
@@ -208,9 +230,11 @@ enables:
 product-audit (whole product, all axes, periodic)
    ├─ composes review-change axes (codebase-wide) + audit-docs (doc coherence)
    ├─ mines feature docs (decisions / known-issues / architecture-notes)
+   ├─ sweeps installed skills / connected MCP servers (product-wide, periodic)
    └─ proposes ─┬─ Issues to open ........ ▶ triage-issue / plan-fix
                 ├─ Roadmap: add .......... ▶ plan-feature
-                └─ Roadmap: remove/revise  ▶ triage-issue / roadmap edit   (user decides)
+                ├─ Roadmap: remove/revise  ▶ triage-issue / roadmap edit   (user decides)
+                └─ Tooling: register/re-design ▶ user edits CLAUDE.md / design-feature
 ```
 
 - Broader than `review-change` (one change) and `audit-pr` (one PR); subsumes
@@ -222,8 +246,9 @@ product-audit (whole product, all axes, periodic)
 
 - Every applicable dimension has a health verdict backed by cited evidence, and the
   skipped or sampled ones are stated.
-- A severity-ranked findings list plus three proposal streams (issues to open,
-  roadmap add, roadmap remove/revise) exist, deduped and each routed.
+- A severity-ranked findings list plus four proposal streams (issues to open,
+  roadmap add, roadmap remove/revise, tooling register/re-design) exist, deduped
+  and each routed.
 - Nothing was fixed, filed, or changed — the report is the deliverable; the user
   decides what to act on.
 - The **closing `→ Next:` block is printed** — typically a batch `/triage-issue` for
