@@ -82,7 +82,7 @@ path: **design → plan → execute → review → audit → merge.**
 
 | Skill            | What it does                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills |
+| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills. On a repo that already has the scaffold, detects it and switches to **upgrade mode** — diffs against the current template and proposes only the blocks you're missing, never clobbering a tailored one |
 
 ### Design
 
@@ -466,6 +466,24 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   …then `npx skills experimental_install` restores the exact set from skills-lock.json.
 #   See CHANGELOG.md → "Installing & pinning a version" for how pinning works.
 ```
+
+### Updating an existing install
+
+`npx skills add …` / `npx skills update` only refreshes the **skills**
+(behavior) — on a project that already has the documentation scaffold, run
+this ordered path to bring the **substrate** (`CLAUDE.md` + `docs/`) forward
+too:
+
+1. Update the skills: `npx skills update` (or a fresh `npx skills add …`).
+2. Read **[`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md)** — the
+   dated rationale for what changed and why.
+3. Run **`init-workspace`** — on a repo it recognizes as an existing
+   agentic-workflow scaffold it enters **upgrade mode**: it diffs your
+   substrate against the current `template/`, proposes only the blocks you're
+   missing (discovery-defaulted, one short interview), and never rewrites a
+   block you've already tailored.
+4. Optionally run **`product-audit`** to see which newly-available
+   *capabilities* (not just docs blocks) now apply to your code.
 
 ### Installing on Hermes Agent (desktop & terminal)
 
