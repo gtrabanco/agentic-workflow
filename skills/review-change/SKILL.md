@@ -134,7 +134,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    absent extra as a gap; the pack already covered the axis.
 6. **Synthesize.** Merge all findings into **one** decision table, deduped by
    `file:line`. Keep `review-implementation`'s columns (Sev, Class, WHY, impl risk,
-   long-term impact, premature-opt?, route) and add an **Axis** column.
+   long-term impact, premature-opt?, route) and add an **Axis** column — plus a
+   **`Reviewers n/N`** column when running in `--adversarial N` mode (omitted
+   entirely in the default single-reviewer case).
 7. **Manual-verification checklist.** List what automated review **cannot** confirm
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
