@@ -78,7 +78,8 @@ agentic-workflow pack itself.
      frontmatter key (`generated-by: agentic-workflow/generate-docs`,
      `source-unit: <NN-slug|fix-n>`), so audit-docs can find orphans.
    - Turn contract, fixed output contract (report block + `PASS | FAIL`-style
-     decision), closing `→ Next:` block, machine envelope (last output),
+     decision), closing `→ Next:` block, machine envelope (last output;
+     superseded 2026-07-10 by feature 10 — see `docs/workflow/MIGRATION.md`),
      `## Portability` section, Allowed/Forbidden lists.
 2. `execute-phase`: at unit close-out, when a docs adapter is declared, the
    closing `→ Next:` block recommends `/generate-docs` (docs regeneration is a

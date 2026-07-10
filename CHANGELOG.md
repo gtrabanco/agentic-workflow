@@ -83,6 +83,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `log-session`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop); `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.4.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. The logged next step rides the envelope so an orchestrator can resume from the journal. |
 | 1.4.0 | 2026-07-04 | minor | `main` no longer carries `model:`/`effort:` frontmatter (moved to `docs/workflow/model-routing.yml`, source of truth for the `#claude` branch); step 7b now points at that file instead of frontmatter that no longer exists on `main`; description's non-Claude guidance replaced with a pointer to `#claude`. |
 | 1.3.0 | 2026-07-03 | minor | Artifact-language precedence box added to the turn contract. |
@@ -97,6 +98,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `bump-skill`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also retired the now-obsolete "Machine envelope" lint rule (it required every user-facing skill to carry the section — no longer true). See `docs/workflow/MIGRATION.md`. |
 | 1.5.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Lint gains a 5th rule: user-facing skills must carry the `## Machine envelope` section. |
 | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.3.0 | 2026-07-03 | minor | Lint also checks the new `## Turn contract` section on user-facing skills. |
@@ -110,6 +112,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `generate-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.0.0 | 2026-07-05 | — | New skill: incremental, diff-driven developer docs into the target project's docs site through a discovered adapter (declaration → Starlight → Docusaurus → plain-markdown fallback; NOT-CONFIGURED → NEEDS_INPUT, never guesses). Fixed page shape + provenance frontmatter (`generated-by`/`source-unit`/`updated`), knowledge map from a project-declared deterministic command only (model never infers edges), opt-in `--review` export of `review-change` reports, verify step (docs build or link check). Never scaffolds a site, never edits source, never commits. |
 
 #### `workflow-status`
@@ -123,6 +126,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. Driver-loop prose rephrased to reference the driver-injected envelope generically. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Complies with the roadmap status machine instead of exempting itself: founding is documented as **batch design** (interview rounds 2–4 are the product-definition answers), so founding writes feature rows at `idea` (the founding-scaffolded feature 01 lands directly at `planned`). New **DESIGN** stage: a mid-run `idea`/`defined` unit gets JIT design composing `design-feature` + `plan-feature-scaffold` in-turn, **derived strictly from the locked `SHIP_DECISIONS.md` record — no new questions** — promoting `idea → defined → planned` before PLAN. Undesignable-from-record → parked (`blockers[]` kind `undesignable`, `needs_input` records the gap), `state` stays `CONTINUE` (a per-unit park, not a run halt); SELECT moves to the next startable unit. Stage sequence, model routing, and stop-conditions tables updated to include DESIGN. |
 | 1.10.0 | 2026-07-05 | minor | Driver-neutral autopilot: `/loop`, an external orchestrator (envelope-routed), or manual re-invocation are first-class equivalent drivers; EXECUTE runs without subagents via one headless invocation per phase; every iteration ending states WHY (normal one-stage stop vs the exact cap hit). Plus the machine envelope (banner ↔ state mapping). |
 | 1.9.0 | 2026-07-04 | minor | Sweep issues + subagent PRs + triage comments use `--body-file` (Markdown), never inline `--body`/heredoc; guardrail added. |
@@ -141,6 +145,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. The `/loop` batch-execution external-orchestrator description now references the driver-injected envelope generically instead of an inline emission. See `docs/workflow/MIGRATION.md`. |
 | 1.16.0 | 2026-07-10 | minor | New **one phase = one session** rule, stated right before the Batch-execution section: never execute two phases in one conversation on a non-frontier model — the `/loop` batch shape already clears and re-invokes per phase; this is the rule it enforces, paired with the existing manual-re-invoke Portability fallback. |
 | 1.15.0 | 2026-07-09 | minor | Dependency gate gains an **own-status precondition**, checked after the dependency closure is met and still before any edit: a unit whose roadmap row is `idea` STOPs and redirects to `/design-feature <slug>`; `defined` STOPs and redirects to `/plan-feature <slug>`; `planned`+ proceeds. `--force` skips the STOP (never the check), recorded in `decisions.md`, same rule as the dependency gate. Legacy plain-`planned` rows with a complete SPEC product half are treated as `defined`+`planned` (no redirect) per `MIGRATION.md`. Machine envelope: `BLOCKED` now also covers the own-status gate, `blockers[]` kind `own-status`. |
 | 1.14.1 | 2026-07-09 | patch | Portability's model invariant extended: "never review with a weaker model — and prefer a different model **family** than the writer's" (same-family instances share training blind spots; cross-family decorrelates errors). Wording-only. |
@@ -169,12 +174,14 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also removed a dangling self-reference to the deleted section (a `NEEDS_INPUT` cross-pointer). See `docs/workflow/MIGRATION.md`. |
 | 1.1.0 | 2026-07-09 | minor | Now **sets** the roadmap row status, not just reads it: stamping `## Design status: designed` sets the feature's roadmap row to `defined` (the `idea → defined` transition this skill owns) — added at `idea` first if the row didn't exist. `NEEDS_INPUT` leaves both the marker and the row unchanged. Turn contract and Done when gained the matching boxes. |
 | 1.0.0 | 2026-07-09 | — | New skill: product definition, split out of `plan-feature`. Folds in the raw-idea interview and walks a fixed **capability-closure** checklist (per entity: CRUD + state transitions, each with UI + API + test, or explicit `n/a: <reason>`; per capability: entry point + ACL; per role: assigned/revoked/viewed) into the SPEC's Product half + Acceptance criteria, stamping `## Design status: designed`. Upserts on re-run (never destroys `decisions.md`); bare `<slug>` reviews and asks, `<slug> "<instruction>"` applies directly. |
 
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-09 | minor | Redirect gate now keys on the **roadmap status** (the five-state machine) as the primary signal — status `defined`+ proceeds, `idea`/absent STOPs — instead of the SPEC `## Design status` marker. The marker is retained as the **legacy-compat fallback** only, for a pre-migration roadmap row still reading a plain `planned` with no five-state history. See `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-09 | major | **Breaking:** product definition (raw-idea interview + capability closure) moves to the new `design-feature` skill. `plan-feature` is engineering-planning only, drops the `--interview` flag and the internal `plan-feature-interview` step (deleted), and gains a **redirect gate with no bypass flag**: an undesigned feature (no `SPEC.md`, `## Design status` not `designed`, or empty Capability closure) STOPS and points at `/design-feature <slug>`. Migration note in `docs/workflow/MIGRATION.md`. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. BLOCKED carries the unmet dependency chain and build order. |
@@ -193,6 +200,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.4.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
 | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 1.3.0 | 2026-07-03 | minor | Artifact-language precedence pinned in the turn contract and Hard rules. |
@@ -208,6 +216,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Turn contract gains a mandatory context-clean box: the mandatory end-of-unit review must run in a conversation that did NOT implement the change — if it did, STOP and hand off to a fresh one. "When to use" reworded to state the requirement in prose (the pre-existing Portability section already points to feature 04's cross-family model-preference line; unchanged here). |
 | 1.10.2 | 2026-07-09 | patch | Portability's model invariant extended: "never review with a weaker model — and prefer a different model **family** than the writer's" (same-family instances share training blind spots; cross-family decorrelates errors). Wording-only. |
 | 1.10.1 | 2026-07-05 | patch | Cross-references updated for `execute-phase` 1.14.0: the every-2-phases hand-off is now described as a recommended, skippable checkpoint; the mandatory-before-merge end review is unchanged. |
@@ -228,6 +237,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-05 | minor | On MERGE-READY, posts a dated, SHA-bound **comment on the PR itself** (`gh pr comment --body-file`, idempotent by HTML marker; never a commit-message tag; nothing posted on BLOCKED). Plus the machine envelope (MERGE_READY/MERGED/NEEDS_FIXES/BLOCKED states, verdict + manual checks in `detail`). |
 | 2.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
 | 2.0.0 | 2026-07-04 | major | Contract change: opt-in auto-merge — with a documented policy (or explicit user instruction) a MERGE-READY PR is merged after a fail-closed pre-merge checklist (clean tree, nothing unpushed/unpulled, fresh green CI on the audited SHA); anything pending → commit+push, wait for CI, re-audit — never merge on a stale verdict. Verdict header now always prints the PR's full URL. Default behavior unchanged: without the opt-in it still never merges. |
@@ -245,6 +255,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-10 | minor | New "Installed tooling" dimension + process step: inventories installed skills and connected MCP servers, cross-references them against the applicable review axes and the roadmap, and adds a fourth proposal stream ("Tooling: register / re-design") — register a useful unregistered tool in `CLAUDE.md`, or route a scope-affecting discovery to `/design-feature`. Proposes only; never registers or edits `CLAUDE.md`. `detail.proposed_tooling` added to the machine envelope (additive). |
 | 1.7.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. HALT state for critical, stop-the-world findings. |
 | 1.6.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -264,6 +275,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.7.0 | 2026-07-05 | minor | New check 13 — generated-docs provenance (only when a `Docs site` block is declared): pages carrying `generated-by: agentic-workflow/generate-docs` whose `source-unit` no longer exists are orphans (MEDIUM); pages whose unit merged after their `updated` date with commits on their subject paths are stale (LOW). Workflow-discipline block renumbered to 10–14. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
 | 1.5.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -282,6 +294,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Per-issue verdicts ride `detail.verdicts`. |
 | 1.7.0 | 2026-07-04 | minor | Dated issue comments posted with `gh issue comment --body-file` (Markdown), never inline `--body` — fixes literal `\`-escaped backticks in comments. |
 | 1.6.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -297,6 +310,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Interview gains a **Performance tooling** round: per-slot detection checklist (complexity lint / benchmark harness / profiler — TS/JS adapter examples: Biome complexity group or sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), user-confirmed installation, and registration in the template's new `Performance commands` block so `review-perf` can measure instead of guess. |
 | 1.7.0 | 2026-07-05 | minor | Interview gains a **Docs site** round: record the project's docs website (format/content-dir/build/map commands) in the template's new `Docs site` block so `generate-docs` can write into it; leave it commented out when there is none. Never scaffolds the website. |
 | 1.6.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
@@ -314,7 +328,8 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
-| `orchestration-envelope` | 1.0.0 | 2026-07-05 | — | New internal contract: the machine-envelope JSON schema (11 states, fixed keys, last-fenced-json parse rule) every user-facing skill emits as its absolute last output. |
+| `orchestration-envelope` | 1.1.0 | 2026-07-10 | minor | New `## Driver system-prompt snippet + repair loop` section: the canonical driver-injected system-prompt snippet (verbatim, fenced) and the repair-loop protocol (parse-fail → re-invoke with "Emit only the machine envelope for the turn above.", one retry, then driver-level FAILED) — the envelope requirement moved here from the 14 user-facing skills' per-skill turn contracts. |
+| | 1.0.0 | 2026-07-05 | — | New internal contract: the machine-envelope JSON schema (11 states, fixed keys, last-fenced-json parse rule) every user-facing skill emits as its absolute last output. |
 | `review-implementation` | 1.1.0 | 2026-07-09 | minor | Phase 1 ("Find") stance is now adversarial by default: "assume the diff is WRONG — your job is to prove it does not work." The axis table and the Phase 2 classification rubric are unchanged. |
 | | 1.0.3 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
@@ -365,6 +380,18 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-10 — envelope moves to the orchestration layer (feature 10).**
+  MAJOR bump for the 14 user-facing skills that carried a `## Machine
+  envelope` section (`audit-docs, audit-pr, bump-skill, design-feature,
+  execute-phase, generate-docs, init-workspace, log-session, plan-feature,
+  plan-fix, product-audit, review-change, ship-roadmap, triage-issue`): the
+  section and its turn-contract emission clause are gone — every turn ends
+  cleanly for human readers, at the closing `→ Next:` block. `workflow-status`
+  is unchanged (still the sole inline emitter — emitting it is its function).
+  The contract's new home is `orchestration-envelope` (minor bump: adds the
+  canonical driver-injected system-prompt snippet + repair-loop protocol),
+  mirrored in `docs/workflow/ORCHESTRATION.md` and
+  `docs/workflow/PORTABLE_PROMPT.md`. See `docs/workflow/MIGRATION.md`.
 - **2026-07-10 — product-audit installed-tooling sweep (feature 09).**
   `product-audit` 1.8.0 adds an "Installed tooling" dimension: inventories
   installed skills and connected MCP servers, cross-references them against

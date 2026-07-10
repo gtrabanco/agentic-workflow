@@ -1,5 +1,52 @@
 # Migration notes
 
+## 2026-07-10 — the machine envelope moves to the orchestration layer
+
+**Breaking change to 14 skills' output contract.** Every user-facing skill
+except `workflow-status` — `audit-docs, audit-pr, bump-skill, design-feature,
+execute-phase, generate-docs, init-workspace, log-session, plan-feature,
+plan-fix, product-audit, review-change, ship-roadmap, triage-issue` — no
+longer ends its turn with the `## Machine envelope` fenced JSON block. The
+turn-contract box requiring that emission is also removed, and every closing
+`→ Next:` block is now the genuine last output of the turn.
+
+**Why.** The envelope's only consumer is an external driver/orchestrator; in
+interactive chat the trailing JSON was noise, and weak models — which drop
+end-of-document duties by the workflow's own stated reasoning for
+front-loading turn contracts — were penalized for omitting a duty a static
+`SKILL.md` instruction could never actually enforce or recover from.
+Enforcement now sits at the layer that reads the envelope: a driver can
+detect a missing envelope and re-ask, something a skill body cannot do for
+itself.
+
+**What changed:**
+
+- The `## Machine envelope` section and its turn-contract line are deleted
+  from the 14 skills listed above (MAJOR bump each — see `CHANGELOG.md`).
+- **`workflow-status` is unchanged** — emitting the envelope inline *is* its
+  function (`--json-only` is meaningless without it); it keeps the section.
+- **`orchestration-envelope`** (internal, `user-invocable: false`) is now the
+  contract's sole home: it gains the canonical **driver-injected
+  system-prompt snippet** (verbatim, fenced) and documents the **repair
+  loop** (`parseEnvelope()` fails → re-invoke the same session with `Emit
+  only the machine envelope for the turn above.`; one retry, then a
+  driver-level `FAILED`). Minor bump.
+- `docs/workflow/ORCHESTRATION.md` and `docs/workflow/PORTABLE_PROMPT.md`
+  mirror the snippet + repair-loop protocol for driver authors.
+- The envelope **JSON schema and the `@gtrabanco/agentic-workflow-schema`
+  npm package are unchanged** — `parseEnvelope()` and existing drivers keep
+  working; only *who* injects the requirement changed, not the schema
+  consumers parse.
+
+**Action needed for existing drivers.** A driver that relied on every skill
+emitting the envelope unprompted must now inject the canonical system-prompt
+snippet (from `orchestration-envelope`) into its invocations, and implement
+the repair loop for a turn that comes back without a valid envelope.
+`workflow-status` needs neither change — it still emits inline. Drivers that
+already inject their own system prompt lose nothing by adding this snippet;
+drivers with no prompt-injection mechanism should add one before upgrading
+past this point.
+
 ## 2026-07-09 — roadmap status becomes the pipeline's state machine
 
 **Non-breaking, backward-compatible.** The roadmap `Status` column is now the

@@ -1,7 +1,7 @@
 ---
 name: generate-docs
 user-invocable: true
-version: 1.0.0
+version: 2.0.0
 argument-hint: "[NN-slug | fix-n | path/glob] [--review]"
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -40,8 +40,7 @@ create a domain event and where do I register its handler").
   pasted — never assumed
 ✓ Artifact language: explicit user instruction > the project's declared docs
   language > English. The CONVERSATION language never decides
-✓ The fixed report block is printed, then the closing `→ Next:` block, then
-  the machine envelope (fenced ```json — see ## Machine envelope) as the
+✓ The fixed report block is printed, then the closing `→ Next:` block, as the
   ABSOLUTE last output
 ```
 
@@ -80,9 +79,8 @@ wins, evidence required for the match:
 4. **Plain-markdown fallback** — a `docs/` directory exists. → plain-markdown
    adapter (always available).
 5. **None of the above** → **NOT CONFIGURED**: write nothing. Print the report
-   with `Decision: NOT-CONFIGURED`, include this snippet for the user to add
-   to their documentation map, and emit the envelope with
-   `state: NEEDS_INPUT`:
+   with `Decision: NOT-CONFIGURED`, and include this snippet for the user to
+   add to their documentation map:
 
    ```markdown
    ## Docs site
@@ -182,10 +180,10 @@ found and say so in the report (see the feature's `known-issues.md`).
    count) in the report. A red build → fix the written pages or revert them;
    never leave the docs site broken.
 
-7. **Report** (fixed block), then the closing `→ Next:` block, then the
-   envelope. This skill does **not** commit — the pages ride the unit's
-   workflow (the executor or the user commits them with the unit's close-out;
-   an orchestrator sees the paths in the envelope).
+7. **Report** (fixed block), then the closing `→ Next:` block as the
+   ABSOLUTE last output. This skill does **not** commit — the pages ride the
+   unit's workflow (the executor or the user commits them with the unit's
+   close-out).
 
 ## Adapters (reference implementations)
 
@@ -238,23 +236,6 @@ Decision: PASS | FAIL | NOT-CONFIGURED
 `FAIL` only when the verify step is red or a written page had to be reverted;
 `NOT-CONFIGURED` per Step 0.5; `PASS` otherwise (including 0 pages).
 
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing `→ Next:` block, as the
-**absolute last output** of the turn. All top-level keys always present;
-values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (PASS — pages written or none needed) · `NEEDS_INPUT`
-  (NOT-CONFIGURED, with `needs_input.question` = add the Docs site block and
-  the snippet in `detail`) · `FAILED` (verify red past its fix attempt).
-- **Fields:** `unit.type: "docs"`; `detail`:
-  `{"adapter": "<name>", "pages": ["<paths>"]}` — the paths the orchestrator
-  must see committed by the unit's close-out.
-
 ## Portability (agents other than Claude Code)
 
 The workflow is the contract; Claude Code features are conveniences. On an
@@ -293,5 +274,3 @@ enables:
     · unit already closed → commit as docs(<unit>): generated guides on the unit's branch
     · adapter NOT CONFIGURED → add the Docs site block to the documentation map, then re-run /generate-docs
   ```
-
-- The machine envelope is the absolute last output.

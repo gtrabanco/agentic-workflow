@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 1.8.0
+version: 2.0.0
 argument-hint: <issue-number> [more issue numbers…]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -28,7 +28,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
 ✓ Nothing deferred was implemented inline
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -109,27 +109,6 @@ gh issue view <N> --json number,title,body,labels,state,comments
 - Keep issues, the fix index, and docs in sync with reality.
 - Otherwise per the project's **Workflow conventions** (docs-language, evidence):
   state exactly what you checked.
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (every requested issue got a recorded verdict) or
-  `NEEDS_INPUT` (the call is the user's — product/risk judgment; `needs_input`
-  carries the options).
-- **Fields:** `findings.issues_filed` = issue numbers touched (comment posted /
-  created) as integers; `next.recommended` follows the verdict (fix-now →
-  `/plan-fix <n>` `tier: "strong"`; promote → `/plan-feature <n>`; postpone /
-  wontfix → the next unit).
-- `detail`: `{"verdicts": [{"issue": <n>, "verdict": "fix-now|postpone|wontfix|promote", "action": "<what was recorded>"}]}` —
-  one entry per issue, batch runs included.
 
 ## Portability (agents other than Claude Code)
 

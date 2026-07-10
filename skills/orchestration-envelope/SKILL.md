@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.0.0
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -90,6 +90,37 @@ Field rules — checkable, no interpretation:
   verify is `null`, not a guess.
 - **Placement:** fenced ```json, ONE object, absolute last output — nothing
   after it, not even a sign-off line.
+
+## Driver system-prompt snippet + repair loop
+
+As of feature 10, user-facing skills (all except `workflow-status`) no longer
+print the envelope inline — the requirement moved to this layer, the one a
+driver can actually enforce. A driver that wants the envelope injects the
+following **canonical system-prompt snippet**, verbatim, into every headless
+invocation:
+
+```text
+Every turn you produce MUST end with exactly one fenced ```json block matching
+the orchestration envelope schema (all top-level keys present; values only
+from verified command output). Emit nothing after it.
+```
+
+**Repair loop (driver protocol).** If `parseEnvelope(lastTurn)` fails (no
+fenced json block, or it doesn't validate), do not treat the turn as failed:
+re-invoke the **same session** with the single-line prompt
+`Emit only the machine envelope for the turn above.` and parse that reply.
+Rationale: a weak model that won't spontaneously emit JSON at the end of a
+long document almost always can when it is the only thing being asked — this
+is why the snippet, not a per-skill turn-contract box, is the enforcement
+point. Bound the retry: **one repair attempt per turn**; a second parse
+failure is a driver-level `FAILED` for that step, surfaced to a human rather
+than looped indefinitely.
+
+`workflow-status` is the one exception: it still emits the envelope inline as
+part of its own output (emitting it *is* its function — `--json-only` is
+meaningless without it), so a driver polling it needs no repair loop for that
+call; the snippet above and the repair loop apply only to the other
+user-facing skills.
 
 ## Companion npm package (keep it in sync)
 
