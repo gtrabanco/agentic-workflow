@@ -74,6 +74,32 @@ destination — never silently lost:
 
 Then it prints the next step (clean → `/audit-pr`).
 
+## Adversarial multi-reviewer (opt-in)
+
+`review-change --adversarial N` runs **N independent, context-clean, diff-only
+reviewers** — each carrying the standard adversarial "assume the diff is
+wrong" stance — in parallel, then merges and dedupes their findings by
+`file:line` (+axis) into the same one classified decision table above. A
+finding raised by **≥1** reviewer is included; there is no majority/quorum
+gate, because the whole point is to catch what one reviewer would miss.
+
+- **Three spawn tiers**, platform-adaptive: Claude Code → N parallel
+  **subagents**; an agent with headless invocation → N parallel **headless
+  invocations**; neither → N **sequential fresh conversations** (slower, the
+  documented fallback of last resort).
+- **Default OFF.** No flag → today's single-reviewer behavior, unchanged.
+  `review-change` **auto-recommends** the mode (never forces it) for `L` or
+  sensitive-flagged changes (auth, payments, destructive migrations, secrets,
+  CI config) — the user decides whether the extra assurance is worth the cost.
+- **Cost note: 2–3× the most expensive review stage**, because N reviewers each
+  run the full findings engine. That cost is exactly why the mode stays
+  opt-in for interactive use.
+- **`ship-roadmap` enables it as a hard floor** — `--adversarial 2` for
+  `L`/sensitive-flagged features in its unattended REVIEW stage, because no
+  human is present to exercise the skip judgment the interactive advisory
+  relies on. This floor is deliberately **not aligned** with the interactive
+  advisory (which stays opt-in) — the two serve different contexts on purpose.
+
 ## Where it sits
 
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
