@@ -2,10 +2,14 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**12 user-facing skills** (one menu entry each) + **4 internal** steps composed for
-you (the `plan-feature` router's three planning steps + the `review-change`
-findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
-`log-session` journal helper, and the repo-only `bump-skill` maintenance helper.
+**15 user-facing skills** (one menu entry each) + **13 internal** steps composed
+for you (the `plan-feature` router's two planning steps, the `review-change`
+findings engine `review-implementation`, the `orchestration-envelope` contract,
+and the workflow's own 9-skill internal review pack: `review-code`,
+`review-security`, `review-verify`, `review-debt`, `review-design`,
+`review-a11y`, `review-brand`, `review-perf`, `review-seo`). Of the 15: 12 core
+workflow skills, a `log-session` journal helper, a `workflow-status` read-only
+sensor, and the repo-only `bump-skill` maintenance helper.
 
 ## Setup
 
@@ -33,6 +37,16 @@ findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
 | `plan-feature-from-issue` | Feature-request issue → scoped SPEC product half (satisfies capability closure), with `Closes #N` (invoked by `plan-feature`) |
 | `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
 | `review-implementation` | Two-phase find → classify → decision table (fix-now / postpone / ignore / intentional-tradeoff); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
+| `orchestration-envelope` | The machine-envelope contract: canonical driver-injected system-prompt snippet, repair loop, and JSON schema. `user-invocable: false` — the piece an external driver injects, not a menu entry |
+| `review-code` | Correctness + reuse/simplification/efficiency checklist over the diff. `user-invocable: false` — one axis of `review-change`'s internal review pack |
+| `review-security` | OWASP-shaped security checklist over the diff. `user-invocable: false` — internal review pack |
+| `review-verify` | Runtime-behavior verification checklist (does the change actually do what it claims). `user-invocable: false` — internal review pack |
+| `review-debt` | Tech-debt / TODO / dead-code checklist over the diff. `user-invocable: false` — internal review pack |
+| `review-design` | Architecture/layering-consistency checklist over the diff. `user-invocable: false` — internal review pack |
+| `review-a11y` | Accessibility checklist over UI changes. `user-invocable: false` — internal review pack |
+| `review-brand` | Brand/voice-consistency checklist over user-facing copy. `user-invocable: false` — internal review pack |
+| `review-perf` | Performance-regression checklist over the diff. `user-invocable: false` — internal review pack |
+| `review-seo` | SEO checklist over public-facing pages/routes. `user-invocable: false` — internal review pack |
 
 ## Execute
 
@@ -77,6 +91,7 @@ findings engine, `review-implementation`). Of the 12: 10 core workflow skills, a
 | Skill | Role | Hands off to |
 |---|---|---|
 | `log-session` | Append a structured entry to `docs/LOGS.md` — summary, files, decisions + *why*, next step — so a cold reader (or the next session) resumes without re-reading git. Manual + rich; `model: sonnet` (cheap). Complemented by free, opt-in `template/.claude/` hooks that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start | `/clear` (session captured) or the resume command in the entry's **Next** line |
+| `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine, what is startable now and in which build order, open PRs + audit state, pending fixes and findings awaiting triage — and emits it as one fixed JSON machine envelope. The piece an external driver calls between steps. Never edits anything | the driver's next invocation (it never hands off to another skill itself) |
 
 ## Repo maintenance (specific to the agentic-workflow repo)
 

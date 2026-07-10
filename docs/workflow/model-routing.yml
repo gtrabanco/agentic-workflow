@@ -23,6 +23,9 @@ design-feature:
 execute-phase:
   model: sonnet
   effort: medium
+generate-docs:
+  model: sonnet
+  effort: medium
 init-workspace:
   model: opus
   effort: high
