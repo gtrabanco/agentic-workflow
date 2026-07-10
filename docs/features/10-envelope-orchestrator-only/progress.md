@@ -46,4 +46,10 @@ One entry per phase.
   per-skill envelope contract; the actual repo file was already correct
   (committed in P2), so the manual pass followed it directly rather than the
   stale loaded instructions. AC6/AC7 greps green.
-- **P4 —** _pending_
+- **P4 (2026-07-10)** — Hardening sweep. AC10 dangling-ref grep caught one
+  real leftover: `docs/workflow/ORCHESTRATION.md`'s opening paragraph still
+  asserted "every user-facing skill ends with a machine envelope" —
+  rewritten to describe the driver injecting the requirement per
+  `orchestration-envelope` instead. AC8 (schema package untouched), AC9
+  (discovery, 56 skills), and every P1–P3 verify command re-confirmed green.
+  `workflow-status` confirmed still emitting. PR opening next.

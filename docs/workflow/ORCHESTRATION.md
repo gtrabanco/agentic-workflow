@@ -4,9 +4,10 @@ The workflow's skills are plain instructions any agent can follow — but two
 conveniences of Claude Code made the *autopilot* feel native there: **`/loop`**
 (auto re-invocation) and **subagents** (a fresh cheap-model context per phase).
 Neither is part of the contract. This document specifies the vendor-neutral
-replacement: every user-facing skill ends with a **machine envelope** (a fixed
-JSON block), and an **external driver** — a shell loop, a CI job, your own
-program — parses it and decides the next command and the model to run it on.
+replacement: an **external driver** — a shell loop, a CI job, your own
+program — injects the envelope requirement into every invocation (see below),
+parses the resulting **machine envelope** (a fixed JSON block) from each
+turn, and decides the next command and the model to run it on.
 
 ```
             ┌──────────────────────────────────────────────┐
