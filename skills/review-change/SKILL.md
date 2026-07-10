@@ -1,8 +1,8 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.0.0
-argument-hint: <path-or-glob>
+version: 2.1.1
+argument-hint: <path-or-glob> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -96,8 +96,12 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
 ## Process
 
-1. **Findings engine.** Run `review-implementation` over the scope → its classified
-   decision table (fix-now / postpone / ignore / intentional-tradeoff).
+1. **Findings engine.** No `--adversarial N` flag → run `review-implementation`
+   once over the scope → its classified decision table (fix-now / postpone /
+   ignore / intentional-tradeoff), unchanged from before this mode existed. With
+   `--adversarial N` → run the **adversarial multi-reviewer mode** below instead;
+   everything from step 2 onward runs once, over its merged table, exactly as in
+   the no-flag case.
 2. **SPEC drift check.** Locate the governing SPEC (feature or fix) and compare
    the diff against its scope and acceptance criteria: flag work that contradicts
    the SPEC, silently exceeds it, or leaves a claimed criterion untouched.
@@ -130,7 +134,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    absent extra as a gap; the pack already covered the axis.
 6. **Synthesize.** Merge all findings into **one** decision table, deduped by
    `file:line`. Keep `review-implementation`'s columns (Sev, Class, WHY, impl risk,
-   long-term impact, premature-opt?, route) and add an **Axis** column.
+   long-term impact, premature-opt?, route) and add an **Axis** column — plus a
+   **`Reviewers n/N`** column when running in `--adversarial N` mode (omitted
+   entirely in the default single-reviewer case).
 7. **Manual-verification checklist.** List what automated review **cannot** confirm
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
@@ -175,6 +181,57 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
    The `/product-audit` line fires **only on recurring drift** — the same kind of
    inconsistency surfacing a second time, not a single isolated finding.
+
+## Adversarial multi-reviewer mode (`--adversarial N`, opt-in)
+
+**Default OFF.** No `--adversarial N` flag → today's single-reviewer behavior,
+byte-for-byte unchanged (step 1 above). This mode only replaces the
+findings-gathering stage; steps 2–10 run once, over the merged table.
+
+**N semantics.** `--adversarial` flag not passed at all → single-reviewer mode,
+no message (today's default). `--adversarial` passed **without** a valid N
+(no number given, or a number `< 2`) → usage error: state that `--adversarial`
+needs an integer N≥2 and fall back to the single-reviewer path — never
+silently run 1. `ship-roadmap`'s hard floor always passes `N=2`.
+
+**Why N reviewers.** A single adversarial, context-clean reviewer (see the
+turn-contract box) decorrelates some blind spots; running N independent
+reviewers — ideally across **different model families** (a preference, not a
+requirement: an agent with one family runs N same-family reviewers and says so)
+— decorrelates more, at 2–3× the cost of the findings-gathering stage. That cost
+is why the mode stays opt-in and is only **auto-recommended, never forced**, for
+`L` or sensitive-flagged changes (auth, payments, destructive migrations,
+secrets, CI config) — this skill surfaces the recommendation in its report /
+`→ Next:` block but proceeds single-reviewer unless the user opts in.
+
+**Platform-adaptive spawn (three tiers).** Each of the N reviewers is a
+**context-clean, diff-only, adversarial** run of the existing findings engine
+(`review-implementation`), reviewing the same scope — none of them is the
+conversation that wrote the diff, and the orchestrating `review-change`
+conversation never reviews in the same breath as authoring either (the
+turn-contract box still applies to the orchestrator):
+
+1. **Claude Code** → spawn **N subagents in parallel**, one reviewer each.
+   Prefer assigning **different model families** across them where more than
+   one is available.
+2. **Another agent with headless invocation** → **N parallel headless
+   invocations**, each a fresh context reviewing the diff.
+3. **Neither** (inline fallback) → **N sequential fresh conversations** —
+   slower, the documented floor-of-last-resort so no agent is blocked from
+   using this mode.
+
+**Merge + dedupe.** Collect all N reviewers' classified findings and:
+
+- **Dedupe by `file:line` + axis** (two genuinely different findings on the
+  same line, different axis, stay separate). Identical findings from multiple
+  reviewers collapse into **one** row.
+- Annotate each merged row with a `Reviewers n/N` column — how many of the N
+  flagged it — as a confidence signal.
+- **Inclusion threshold = ≥1 reviewer.** A finding any single reviewer raised
+  enters classification normally; there is no majority/quorum gate to include a
+  finding — a real defect only one sharp reviewer caught must not be dropped.
+- The merged table then flows through the unchanged steps 2–10 above, producing
+  the same fixed-format report + `Decision: PASS | FAIL`.
 
 ## Example output (generic)
 
@@ -234,6 +291,11 @@ enables:
   model weaker than the one that wrote it — and prefer a different model family
   than the writer's: same-family instances share training blind spots,
   cross-family decorrelates errors.
+- **`--adversarial N` spawn tiers** — Claude Code subagents (tier 1) and
+  headless invocation (tier 2) are conveniences; an agent with neither runs the
+  tier-3 fallback of N **sequential fresh conversations**, each context-clean
+  and diff-only, then merges their findings by hand per the dedupe rule above —
+  slower, never a reason to skip the mode.
 
 ## Relationship to other skills
 
