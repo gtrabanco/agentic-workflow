@@ -18,6 +18,7 @@ Notion ("Agentic Workflow").
 | [RECOMMENDED_SKILLS.md](RECOMMENDED_SKILLS.md) | Agnostic software-quality & architecture skills for good agentic programming — universal vs. conditional-by-project-nature; stack/infra skills out of scope |
 | [REPLICATE.md](REPLICATE.md) | `npx skills` install + portable prompt to set this up in any project |
 | [MIGRATION.md](MIGRATION.md) | Upgrading an existing install from the previous skill set — what was renamed, what to delete |
+| [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Manual smoke test: after editing an executor-path skill, run it against a toy fixture with the weakest fleet model and check its contracted output still holds |
 
 ## Core principles
 
