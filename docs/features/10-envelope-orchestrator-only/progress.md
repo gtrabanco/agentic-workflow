@@ -33,5 +33,17 @@ One entry per phase.
   of the literal removed phrase). `workflow-status` and
   `orchestration-envelope` untouched. AC1/AC2/AC3 greps green; `npx skills add
   . --list` confirms discovery (56 skills, no malformed frontmatter).
-- **P3 —** _pending_
+- **P3 (2026-07-10)** — Version/release metadata for the P2 strip. MAJOR
+  bump × 14 stripped skills + MINOR for `orchestration-envelope` (its new
+  driver snippet + repair-loop section). Rows added to `CHANGELOG.md` +
+  `CHANGELOG.es.md` (per-skill tables + release log, both languages), the
+  Programmatic orchestration section of `README.md` + `README.es.md`
+  rewritten (driver-injection model instead of "every skill emits inline"),
+  and the `docs/workflow/MIGRATION.md` entry written. Ran the bump process
+  manually — invoking the `bump-skill` skill via the Skill tool surfaced a
+  stale globally-installed copy (`~/.claude/skills/bump-skill/`) that
+  predated this session's P2 edits and still described the retired
+  per-skill envelope contract; the actual repo file was already correct
+  (committed in P2), so the manual pass followed it directly rather than the
+  stale loaded instructions. AC6/AC7 greps green.
 - **P4 —** _pending_

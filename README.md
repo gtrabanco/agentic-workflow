@@ -335,15 +335,20 @@ produce shallower judgment; the discipline holds, the ceiling moves.
 
 ## Programmatic orchestration
 
-Every user-facing skill ends with a **machine envelope** — one fixed, fenced
-JSON block (state, unit, phase, PR, findings, blockers, dependency build
-order, recommended next command + model-tier hint). An external driver — a
-shell loop, CI, your own program — parses it and invokes the next skill on
-the model you choose per step. This is the vendor-neutral replacement for
-Claude Code's `/loop` and subagents: the same loop `ship-roadmap` runs
-in-agent, hosted outside any agent. `workflow-status` is the read-only sensor
-that reports the full dependency tree and what's startable. Protocol, state
-machine, and a driver skeleton:
+The skills read cleanly in interactive chat — no trailing JSON. A driver that
+wants to orchestrate them (a shell loop, CI, your own program) injects the
+canonical **system-prompt snippet** so each invocation ends with a **machine
+envelope** — one fixed, fenced JSON block (state, unit, phase, PR, findings,
+blockers, dependency build order, recommended next command + model-tier
+hint) — and runs a **repair loop** when a turn omits it (re-ask with a
+one-line prompt; one retry, then a driver-level failure). The driver then
+parses the envelope and invokes the next skill on the model you choose per
+step. This is the vendor-neutral replacement for Claude Code's `/loop` and
+subagents: the same loop `ship-roadmap` runs in-agent, hosted outside any
+agent. `workflow-status` is the one skill that still emits the envelope
+inline — it's a read-only sensor reporting the full dependency tree and
+what's startable, so emitting it is its whole job. Protocol, snippet, repair
+loop, state machine, and a driver skeleton:
 **[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. For
 JS/TS drivers, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
 (npm) ships the types, the JSON Schema, and `parseEnvelope()` implementing the
