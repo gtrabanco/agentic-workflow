@@ -164,7 +164,7 @@ salir, y tú solo apareces para fusionar (ámbar):
 
 ```mermaid
 flowchart LR
-    I([Entrevista]):::tu --> RM[Roadmap] --> P[Planificar]
+    I([Entrevista]):::tu --> RM[Roadmap] --> D[Diseño] --> P[Planificar]
     P --> X[Ejecutar] --> RV[Revisar] --> PR[Abrir PR] --> A[Auditar] --> M([Fusionar]):::tu
     M -->|siguiente feature| P
     M -.->|roadmap completo| REP[Informe final]

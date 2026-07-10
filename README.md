@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 28 skills (14 user-facing + 14 internal) — the installable source
+skills/                  the 28 skills (15 user-facing + 13 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -160,7 +160,7 @@ you only step in to merge (amber):
 
 ```mermaid
 flowchart LR
-    I([Interview]):::you --> RM[Roadmap] --> P[Plan]
+    I([Interview]):::you --> RM[Roadmap] --> D[Design] --> P[Plan]
     P --> X[Execute] --> RV[Review] --> PR[Open PR] --> A[Audit] --> M([Merge]):::you
     M -->|next feature| P
     M -.->|roadmap done| REP[Final report]
