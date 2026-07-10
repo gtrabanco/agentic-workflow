@@ -6,9 +6,9 @@ commands assume repo root.
 
 ## P1 — `review-change --adversarial N` mode
 
-- [ ] Add `--adversarial N` to the `argument-hint:` line in
+- [x] Add `--adversarial N` to the `argument-hint:` line in
       `skills/review-change/SKILL.md` frontmatter.
-- [ ] Add the "Adversarial multi-reviewer mode (`--adversarial N`, opt-in)"
+- [x] Add the "Adversarial multi-reviewer mode (`--adversarial N`, opt-in)"
       section covering: N≥2 semantics (N absent → single reviewer; N<2 → usage
       error + single-reviewer fallback); the three-tier platform-adaptive spawn
       (subagents / headless / sequential fresh conversations); each reviewer
@@ -16,10 +16,10 @@ commands assume repo root.
       merge/dedupe by `file:line`+axis with a `Reviewers n/N` column; inclusion
       threshold ≥1 (no quorum); default OFF; auto-recommend (never force) for
       L/sensitive.
-- [ ] Add the Portability fallback line for the three spawn tiers.
-- [ ] Do NOT weaken the context-clean turn-contract box; do NOT hand-edit
-      `version:`.
-- [ ] Verify (all exit 0):
+- [x] Add the Portability fallback line for the three spawn tiers.
+- [x] Do NOT weaken the context-clean turn-contract box; do NOT hand-edit
+      `version:` (bump deferred to P3/`bump-skill`, still MINOR-eligible).
+- [x] Verify (all exit 0):
       ```sh
       grep -q -- "--adversarial" skills/review-change/SKILL.md
       grep -qi "subagent" skills/review-change/SKILL.md
@@ -31,9 +31,11 @@ commands assume repo root.
       grep -qi "sensitive" skills/review-change/SKILL.md
       grep -qi "did NOT implement the change\|did not write the diff" skills/review-change/SKILL.md
       ```
-- [ ] read-verified: the default (no-flag) Process path is unchanged — the
-      `--adversarial N` behavior is additive and gated on the flag (AC8).
-- [ ] Commit the planning artifacts + this phase:
+      All 9 commands ran green.
+- [x] read-verified: Process step 1 now reads "No `--adversarial N` flag → run
+      `review-implementation` once … unchanged from before this mode existed" —
+      the default (no-flag) path is provably additive-gated (AC8).
+- [x] Commit the planning artifacts + this phase:
       `feat(skills): add review-change --adversarial N multi-reviewer mode`.
 
 ## P2 — ship-roadmap floor + workflow doc
