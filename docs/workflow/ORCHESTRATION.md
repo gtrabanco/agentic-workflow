@@ -49,6 +49,39 @@ if (isRunHalt(r.envelope)) stopRun(r.envelope.blockers);
 else if (!isTerminal(r.envelope.state)) invoke(r.envelope.next.recommended, r.envelope.next.tier);
 ```
 
+## Injecting the envelope requirement (system-prompt snippet + repair loop)
+
+As of feature 10, the envelope is no longer a per-skill turn-contract
+obligation — every user-facing skill except `workflow-status` dropped its
+inline `## Machine envelope` section, since the only consumer is a driver
+like this one, and a static `SKILL.md` instruction cannot detect or recover
+from an omission the way a driver can. The contract now lives here and in
+[`skills/orchestration-envelope/SKILL.md`](../../skills/orchestration-envelope/SKILL.md);
+a driver that wants the envelope must supply it itself:
+
+1. **Inject the canonical system-prompt snippet** into every headless
+   invocation (verbatim, from `orchestration-envelope/SKILL.md`):
+   ```text
+   Every turn you produce MUST end with exactly one fenced ```json block matching
+   the orchestration envelope schema (all top-level keys present; values only
+   from verified command output). Emit nothing after it.
+   ```
+2. **Repair loop on parse failure.** Call `parseEnvelope(lastTurn)`
+   (`@gtrabanco/agentic-workflow-schema`) after every invocation. If it fails —
+   no fenced json block, or it doesn't validate — do not treat the step as
+   failed yet: re-invoke the **same session** with the single-line prompt
+   `Emit only the machine envelope for the turn above.` and parse that reply.
+   Rationale: a weak model that drops JSON at the end of a long document
+   almost always produces it when asked for nothing else — repairing per-turn
+   at the driver layer is strictly more reliable than a static instruction the
+   model was always going to skip.
+3. **Retry bound.** One repair attempt per turn. If the repair reply also
+   fails to parse, treat the step as a driver-level `FAILED` and surface it to
+   a human — do not loop the repair prompt indefinitely.
+4. **`workflow-status` needs no repair loop.** It is the sole skill that still
+   emits the envelope inline (emitting it is its function), so polling it is a
+   normal call with no injected snippet or repair step required.
+
 ## The state machine (route on `state`)
 
 | `state` | Meaning | Orchestrator action | Suggested tier |

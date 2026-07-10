@@ -31,6 +31,13 @@ resolved (no blanks left in the SPEC).
   grep-verified set of user-facing `## Machine envelope`-bearing skills minus
   `workflow-status` is exactly 14. The SPEC's explicit list is authoritative.
 
+- **D9 — Driver gate force-overridden, 2026-07-10.** Asked the user directly
+  whether an external opencode/Node driver consuming the machine envelope
+  exists; answer: no such driver exists, so no automated consumer depends on
+  the envelope today. Started `execute-phase 10 P1` with the gate unmet
+  (`--force`), per the skill's user-only escape hatch. Effect: none in
+  practice — there is no external routing to break.
+
 ## Open questions
 
 - None blocking. (The only unknown — driver readiness — is an external gate, not a

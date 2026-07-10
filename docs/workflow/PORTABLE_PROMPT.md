@@ -161,6 +161,28 @@ Compose with (do not duplicate) the project's own companion review skills
 skills) — `review-change` and `product-audit` invoke only the applicable ones. If
 a needed one is absent, note the gap rather than failing.
 
+## 2b. The envelope is a driver-injected contract, not a per-skill duty
+
+Every user-facing skill except `workflow-status` stays clean for humans: no
+trailing JSON block, no turn-contract line about emitting one. The envelope
+requirement lives at the orchestration layer instead — a driver that wants
+machine-parseable turns injects this system-prompt snippet into every
+headless invocation:
+
+```text
+Every turn you produce MUST end with exactly one fenced ```json block matching
+the orchestration envelope schema (all top-level keys present; values only
+from verified command output). Emit nothing after it.
+```
+
+If a turn comes back without a valid envelope, the driver's repair loop
+re-invokes the same session with `Emit only the machine envelope for the turn
+above.` (one attempt; a second failure is a driver-level `FAILED`, surfaced to
+a human) — see `docs/workflow/ORCHESTRATION.md` for the full protocol.
+`workflow-status` is the one skill that keeps emitting the envelope inline
+(emitting it is its function), so it needs neither the snippet nor the repair
+loop.
+
 ## 3. Write a `docs/workflow/` copy
 Create
 `docs/workflow/{README,FEATURE_WORKFLOW,ISSUE_WORKFLOW,SKILLS,REVIEW_AND_CLASSIFY,REPLICATE}.md`
