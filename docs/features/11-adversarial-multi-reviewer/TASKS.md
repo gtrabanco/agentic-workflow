@@ -61,19 +61,22 @@ commands assume repo root.
 
 ## P3 — Release metadata
 
-- [ ] Run `bump-skill` for `review-change` + `ship-roadmap`: MINOR bump each,
+- [x] Run `bump-skill` for `review-change` + `ship-roadmap`: MINOR bump each,
       rows in `CHANGELOG.md` + `CHANGELOG.es.md`, both README skill/model tables
       refreshed. (No model/effort tier changes → `model-routing.yml` untouched.)
-- [ ] Add the `docs/workflow/MIGRATION.md` entry for feature 11 (additive
+- [x] Add the `docs/workflow/MIGRATION.md` entry for feature 11 (additive
       `--adversarial N`; default OFF; ship-roadmap L/sensitive floor).
-- [ ] Verify:
+- [x] Verify:
       ```sh
-      grep -c "adversarial\|multi-reviewer\|11-adversarial" CHANGELOG.md   # >= 1
+      grep -c "adversarial\|multi-reviewer\|11-adversarial" CHANGELOG.md   # >= 1 → got 10
       grep -qi "adversarial" docs/workflow/MIGRATION.md                    # exit 0
       ```
-- [ ] read-verified: `review-change` + `ship-roadmap` each MINOR-bumped vs their
-      pre-feature `version:`; mirrored in both CHANGELOGs and both README tables.
-- [ ] Commit `chore(release): minor bump — review-change --adversarial N`.
+- [x] read-verified: `review-change` 2.0.0 → 2.1.0, `ship-roadmap` 2.0.0 →
+      2.1.0 — mirrored in `CHANGELOG.md`, `CHANGELOG.es.md`, `README.md`
+      (skills table cell), `README.es.md` (skills table cell). No tier change,
+      so `model-routing.yml` and the model tables are untouched (correct — no
+      capability requires a different model/effort).
+- [x] Commit `chore(release): minor bump — review-change --adversarial N`.
 
 ## P4 — Hardening + PR
 
