@@ -301,8 +301,9 @@ Written by `plan-feature-scaffold`.
   manual-verify, triage, report, `→ Next:`) run once, over the **merged** table.
 
 **Spawning the N reviewers (platform-adaptive, three tiers).** Each reviewer is a
-**context-clean, diff-only, adversarial** run of the existing review path (the
-`review-implementation` engine + applicable pack), reviewing the same scope:
+**context-clean, diff-only, adversarial** run of the existing findings engine
+(`review-implementation` **only** — the applicable pack runs **once**, over the
+merged table, as part of the unchanged steps 2–10), reviewing the same scope:
 
 1. **Claude Code** → spawn **N subagents in parallel**, one reviewer each. Prefer
    assigning **different model families** across them where the environment offers

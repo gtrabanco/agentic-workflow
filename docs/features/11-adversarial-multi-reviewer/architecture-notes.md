@@ -24,9 +24,10 @@ Layer impact, surfaces touched. This repo has no application runtime — the
   diff-only + adversarial; the context-clean turn-contract box in `review-change`
   is not weakened (AC7). The mode multiplies reviewers; it does not relax the
   invariant.
-- **Engine untouched.** The N reviewers each run the existing
-  `review-implementation` engine + applicable pack — no parallel findings engine,
-  and `skills/review-implementation/SKILL.md` is not edited.
+- **Engine untouched — and the ONLY thing fanned out.** The N reviewers each run
+  the existing `review-implementation` engine only (the applicable pack runs
+  once, over the merged table — D4) — no parallel findings engine, and
+  `skills/review-implementation/SKILL.md` is not edited.
 - **Merge is orchestration.** `review-change` (the orchestrator) fans out the N
   reviewers and merges by `file:line`+axis into its one decision table — the same
   "orchestrator composes what it synthesizes" pattern it already uses for the
