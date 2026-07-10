@@ -84,7 +84,7 @@ con ningún modelo. Un único camino disciplinado:
 
 | Skill            | Qué hace                                                                                                                                                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills |
+| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills. En un repo que ya tiene el scaffold, lo detecta y pasa a **modo upgrade** — compara con el template actual y propone solo los bloques que te faltan, sin sobrescribir nunca un bloque personalizado |
 
 ### Diseño
 
@@ -483,6 +483,24 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   …luego `npx skills experimental_install` restaura el conjunto exacto desde skills-lock.json.
 #   Ver CHANGELOG.es.md → "Instalar y pinear una versión" para cómo funciona el pinning.
 ```
+
+### Actualizar una instalación existente
+
+`npx skills add …` / `npx skills update` solo refresca las **skills**
+(comportamiento) — en un proyecto que ya tiene el andamiaje de documentación,
+sigue esta ruta ordenada para traer también el **sustrato**
+(`CLAUDE.md` + `docs/`) al día:
+
+1. Actualiza las skills: `npx skills update` (o un `npx skills add …` nuevo).
+2. Lee **[`docs/workflow/MIGRATION.md`](docs/workflow/MIGRATION.md)** — la
+   justificación fechada de qué cambió y por qué.
+3. Ejecuta **`init-workspace`** — en un repo que reconoce como andamiaje
+   agentic-workflow existente entra en **modo upgrade**: compara tu sustrato
+   con el `template/` actual, propone solo los bloques que te faltan
+   (con valores por defecto de descubrimiento, en una entrevista corta) y
+   nunca reescribe un bloque que ya hayas personalizado.
+4. Opcionalmente ejecuta **`product-audit`** para ver qué *capacidades*
+   nuevas (no solo bloques de docs) aplican ya a tu código.
 
 ### Instalación en Hermes Agent (desktop y terminal)
 
