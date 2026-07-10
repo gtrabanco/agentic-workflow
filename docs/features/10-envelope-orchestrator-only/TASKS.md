@@ -8,20 +8,21 @@ emitted as the command to run — verify by running it, not by judging prose.
 
 ## P1 — Orchestration home
 
-- [ ] Add the canonical driver system-prompt snippet (fenced, verbatim) to
+- [x] Add the canonical driver system-prompt snippet (fenced, verbatim) to
       `skills/orchestration-envelope/SKILL.md`.
-- [ ] Document the repair loop in `docs/workflow/ORCHESTRATION.md`
+- [x] Document the repair loop in `docs/workflow/ORCHESTRATION.md`
       (parse-fail → re-invoke with `Emit only the machine envelope for the turn
       above.`; state rationale + retry bound).
-- [ ] Mirror the snippet into `docs/workflow/PORTABLE_PROMPT.md`.
-- [ ] Note `workflow-status` remains the inline emitter.
-- [ ] Verify:
+- [x] Mirror the snippet into `docs/workflow/PORTABLE_PROMPT.md`.
+- [x] Note `workflow-status` remains the inline emitter.
+- [x] Verify:
       ```sh
       grep -qi "system-prompt snippet" skills/orchestration-envelope/SKILL.md
       grep -qi "repair loop" docs/workflow/ORCHESTRATION.md
       grep -qi "system-prompt snippet\|every turn MUST end" docs/workflow/PORTABLE_PROMPT.md
       ```
-- [ ] Commit `docs(orchestration): envelope contract + repair loop move to driver layer`.
+      all three green.
+- [x] Commit `docs(orchestration): envelope contract + repair loop move to driver layer`.
 
 ## P2 — Strip the 14 skills
 
