@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.0.0
+version: 2.1.1
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -10,10 +10,16 @@ description: >
   scaffold (template/) and adapt it to THIS project by interview — fill the
   CLAUDE.md documentation map, gate commands and architecture, prune doc folders
   that don't apply, keep the SPEC/feature/fix and GitHub templates — then offer to
-  install the skills. The adaptive counterpart to a raw `npx degit` copy. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  install the skills. The adaptive counterpart to a raw `npx degit` copy. On a repo
+  that already has the scaffold, detects it and switches to **upgrade mode**: diffs
+  the project's substrate against the current template, reads
+  `docs/workflow/MIGRATION.md`, and proposes only the blocks the project is
+  missing — never clobbering a tailored one. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers:
   "set up the agentic workflow here", "init-workspace", "scaffold this project's
-  docs", "adapt the workflow template to this repo", "bootstrap the way of working".
+  docs", "adapt the workflow template to this repo", "bootstrap the way of working",
+  "upgrade my scaffold", "migrate my substrate to the current template", "bring my
+  CLAUDE.md up to date with the template".
 ---
 
 # Init Workspace
@@ -47,7 +53,13 @@ first on purpose).
 Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 
 - Existing `CLAUDE.md` / `AGENTS.md` / `docs/` / `.github/`? If so, **do not
-  clobber** — ask whether to merge, adapt in place, or abort.
+  clobber** — check first whether it's an **agentic-workflow scaffold**
+  (marker: `CLAUDE.md` present *and* either `docs/features/ROADMAP.md` or a
+  `docs/workflow/` dir). If both markers are present, offer **upgrade** as the
+  default action, alongside merge / adapt-in-place / abort — see **Upgrade
+  mode** below. If `CLAUDE.md`/`docs/` exist but the markers are absent (a
+  foreign scaffold), stay in bootstrap and ask merge / adapt in place / abort
+  as before.
 - Detect the stack from manifests (`package.json`, `pyproject.toml`, `go.mod`,
   `Cargo.toml`, `Gemfile`, …) to *propose* gate commands and naming conventions.
 - Note the git state (is it a repo, what's the default branch, and the **remote
@@ -128,9 +140,78 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    the companion skills recorded/installed, and the next step: `plan-feature` →
    `execute-phase`.
 
+## Upgrade mode
+
+Entered when Step 0 finds an existing **agentic-workflow scaffold** (not a
+bare or foreign repo). Bootstrap mode (the Process section above) never
+engages here — upgrade mode reuses the same discovery + interview machinery,
+scoped to **only the blocks the current template has that this project
+lacks**. Six ordered steps:
+
+1. **Locate the current template.** Fetch the current `template/` the same
+   way bootstrap does — `npx degit gtrabanco/agentic-workflow/template <temp-dir>`
+   (always into a temp dir here, never into the target); the SSH/local-path
+   variant applies verbatim for a private source.
+2. **Diff the substrate.** Compare the project's `CLAUDE.md` (and the `docs/`
+   blocks its documentation map references) against the fetched template.
+   Produce the list of blocks/conventions the template carries that this
+   project's substrate lacks, or still holds as a raw, unfilled placeholder —
+   e.g. a `Docs site` block, a `Performance commands` block, a `Git workflow`
+   line, the five-state roadmap `Status legend`. This is the diff-against-
+   current-template contract; it is the only source of *what's new*.
+3. **Read `docs/workflow/MIGRATION.md`.** For each missing block, pull its
+   dated migration note so the proposal explains *why* the block exists and
+   *what* it migrates. If `MIGRATION.md` is absent, proceed on the template
+   diff alone and say so in the report — never block on a missing note.
+4. **Propose only the missing blocks — one short, batched interview round.**
+   Each item is the block, a discovery-based default (the same detection
+   bootstrap mode already runs — e.g. `astro.config.*` + Starlight ⇒ `Docs
+   site` default, Biome ⇒ the complexity-lint slot, the remote URL ⇒ forge),
+   and the `MIGRATION.md` rationale when available. The user accepts, edits,
+   or skips each block. **Never re-ask what the project already answered** —
+   a block that's already filled is skipped, not re-interviewed.
+5. **Write additively.** Insert accepted blocks; fill raw, still-placeholder
+   blocks with the confirmed values. **Never rewrite a block the project has
+   already tailored, and never delete anything** — a tailored block the
+   template also changed is left untouched and listed as a residual, not
+   silently updated. Leave honest placeholders where the user skipped.
+6. **Report + hand off.** Summarize blocks added, filled, and skipped
+   (residuals), then print the recommendation to run `product-audit` next to
+   see which newly-available *capabilities* apply to the code (upgrade mode
+   migrates the substrate only, never the code).
+
+**Failure edges — handle each explicitly, never silently:**
+
+- **No drift.** The diff (step 2) finds nothing missing or placeholder-only →
+  skip the interview entirely and report **"substrate current, nothing to
+  migrate"**. Never fabricate a block to propose just to have something to
+  show.
+- **`MIGRATION.md` absent.** An older install may predate this file → proceed
+  on the template diff alone (step 3 already covers this) and say so plainly
+  in the proposal and the final report: rationale was unavailable, the block
+  list is still complete.
+- **A block the project already tailored.** If the current template also
+  changed a block the project customized, **do not merge, diff-patch, or
+  overwrite it** — leave it exactly as the project has it and list it as a
+  residual in the report (step 5's never-clobber invariant). The user decides
+  separately, via an explicit bootstrap adapt-in-place run, whether to
+  re-tailor it.
+- **Bootstrap stays unchanged on a bare or foreign repo.** If Step 0's
+  scaffold markers (`CLAUDE.md` + `docs/features/ROADMAP.md` or
+  `docs/workflow/`) are absent — no repo, an empty repo, or a `CLAUDE.md`
+  that isn't this workflow's — upgrade mode never engages; the existing
+  bootstrap Process (merge/adapt/abort) runs exactly as before this mode was
+  added.
+
 ## Guardrails
 
 - **Never overwrite an existing `CLAUDE.md` or `docs/` without explicit consent.**
+- **Additive-only, never clobber (upgrade mode).** Upgrade mode only adds
+  blocks the project lacks and fills raw placeholders — it never rewrites or
+  deletes a block the project already tailored, even if the current template
+  changed that block too. A genuine re-tailor is a separate, explicitly
+  requested bootstrap adapt-in-place run, never something upgrade mode does
+  on its own.
 - Docs-only scaffolding; no app code, no dependencies installed unprompted.
 - Architecture-agnostic: record the project's pattern, don't impose one.
 - Honest placeholders over invented specifics; flag what's left to fill.
