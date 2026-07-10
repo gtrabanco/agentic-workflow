@@ -43,7 +43,7 @@ explicit user instruction) plus a fail-closed pre-merge checklist.
   never a commit-message tag. BLOCKED → no comment posted
 ✓ Nothing was edited or refactored; nothing was merged UNLESS the auto-merge
   policy applied AND the pre-merge checklist was RUN with its output pasted
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -284,46 +284,6 @@ Before merge, a human should still verify:
 - Honor the project's **Workflow conventions** (gate, docs-language, evidence —
   every blocker cites file:line/check/criterion/issue — track-don't-inline:
   out-of-scope problems become issues/fix entries, never silent additions here).
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `MERGE_READY` (verdict MERGE-READY; the PR comment below was
-  posted; `pr.merge_ready: true`), `MERGED` (opt-in auto-merge executed —
-  merge SHA in `detail`), `NEEDS_FIXES` (in-scope blockers → fold on-branch,
-  re-audit; `blockers[]` mirrors the ranked list), or `BLOCKED` (external
-  cause: wrong base, conflicts, a dependency PR).
-- **Fields:** `pr` fully filled (number, url, head_sha, ci, merge_ready);
-  `gates.audit_pending: false` after a verdict; `findings.issues_filed` =
-  issues opened for deferrals lacking a home.
-- `detail`: `{"verdict": "MERGE-READY|BLOCKED", "blockers_ranked": [...],
-  "manual_verification": [...], "merge_sha": "<sha|null>"}`.
-
-Example (MERGE-READY, default mode — abbreviated):
-
-```json
-{"skill": "audit-pr", "state": "MERGE_READY",
- "summary": "PR #14 passes every gate; comment posted; human merges.",
- "unit": {"type": "fix", "id": "43-null-crash", "issue": 43, "branch": "fix/43-null-crash"},
- "phase": {"current": null, "total": null, "completed": null},
- "pr": {"number": 14, "url": "https://github.com/o/r/pull/14", "state": "open",
-        "head_sha": "abc123", "merge_ready": true, "ci": "green"},
- "gates": {"verification": "green", "review_pending": false, "audit_pending": false},
- "findings": {"fix_now": [], "issues_filed": [], "untriaged": 0, "decisions_recorded": 0},
- "blockers": [], "dependencies": {"unmet": [], "build_order": []},
- "recommendations": {"product_audit": false, "reason": null}, "needs_input": null,
- "next": {"recommended": "merge, then /plan-feature --next", "alternatives": ["/triage-issue"], "tier": "strong"},
- "detail": {"verdict": "MERGE-READY", "blockers_ranked": [],
-            "manual_verification": ["export opens in a spreadsheet app"], "merge_sha": null}}
-```
 
 ## Portability (agents other than Claude Code)
 

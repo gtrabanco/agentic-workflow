@@ -25,7 +25,7 @@ findings report; it does not silently rewrite docs.
 ```
 ✓ The AUDIT DOCS fixed-format report was printed, ending in `Decision: PASS | FAIL`
 ✓ No doc was rewritten without explicit --fix / user go-ahead
-✓ The closing `→ Next:` block is printed, then the machine envelope (fenced ```json — see ## Machine envelope) as the ABSOLUTE last output
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
 About to end the turn with any box unchecked? The turn is NOT done — complete
@@ -137,24 +137,6 @@ say so.
 - Distinguish genuine drift from intentionally "scheduled/deferred" items —
   don't report deliberate tradeoffs as errors.
 - Keep changes surgical and within docs; no code or behavior changes.
-
-## Machine envelope
-
-Every invocation ends with the **machine envelope** — schema, field rules and
-placement per the installed `orchestration-envelope` skill: one fenced
-```json block, printed **after** the closing block above, as the **absolute
-last output** of the turn (external orchestrators parse the LAST fenced json
-block; see `docs/workflow/ORCHESTRATION.md`). All top-level keys always
-present; values only from verified command output, never invented.
-
-This skill emits:
-
-- **`state`:** `OK` (docs coherent — nothing above informational) or
-  `NEEDS_FIXES` (drift found; the ranked findings are the work list).
-- **Fields:** `findings.fix_now` = the high-severity drift items;
-  `findings.untriaged` = findings awaiting a decision;
-  `recommendations.product_audit` when the drift is systemic.
-- `detail`: `{"checks_run": [...], "findings_by_severity": {"high": n, "medium": n, "low": n}, "auto_fixable": [refs]}`.
 
 ## Portability (agents other than Claude Code)
 
