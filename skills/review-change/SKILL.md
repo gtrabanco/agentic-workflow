@@ -227,7 +227,7 @@ turn-contract box still applies to the orchestrator):
 - **Inclusion threshold = ≥1 reviewer.** A finding any single reviewer raised
   enters classification normally; there is no majority/quorum gate to include a
   finding — a real defect only one sharp reviewer caught must not be dropped.
-- The merged table then flows through the unchanged steps 2–9 above, producing
+- The merged table then flows through the unchanged steps 2–10 above, producing
   the same fixed-format report + `Decision: PASS | FAIL`.
 
 ## Example output (generic)
