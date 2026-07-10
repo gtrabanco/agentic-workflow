@@ -80,28 +80,32 @@ commands assume repo root.
 
 ## P4 — Hardening + PR
 
-- [ ] Dangling-ref sweep — no doc points at a review-change behavior that doesn't
+- [x] Dangling-ref sweep — no doc points at a review-change behavior that doesn't
       exist; default-path description still coherent:
       ```sh
       grep -rin "adversarial" skills/ docs/workflow/ | grep -vi "context-clean"
       ```
-      (read the hits; every one must be a real, current behavior.)
-- [ ] Confirm untouched (expect NO output):
+      All 16 hits read and confirmed real/current (the one `review-implementation`
+      hit is the pre-existing U2 adversarial-stance baseline, not a dangling ref).
+- [x] Confirm untouched (expect NO output):
       ```sh
       git diff --name-only origin/main...HEAD | grep -E '^(packages/|skills/review-implementation/)'
       ```
-- [ ] Discovery intact:
+      No output — confirmed untouched.
+- [x] Discovery intact:
       ```sh
       npx skills add . --list
       ```
-      all skills listed, exit 0.
-- [ ] Re-read the merge/dedupe + ship-roadmap floor sections for internal
+      All skills listed (56 skill entries incl. `review-change` + `ship-roadmap`),
+      exit 0.
+- [x] Re-read the merge/dedupe + ship-roadmap floor sections for internal
       coherence (dev scenarios `adversarial:dedup`, `adversarial:sub-2`,
-      `adversarial:floor`).
-- [ ] Re-run every P1/P2/P3 verify command; all green.
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
+      `adversarial:floor`). Found and fixed a "steps 2–9" vs "steps 2–10"
+      inconsistency in the merge/dedupe bullet (Process has 10 steps, not 9).
+- [x] Re-run every P1/P2/P3 verify command; all green.
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves
       `\`-escaped backticks; body includes `Closes #18`) and PRINT THE PR URL in
       the chat.
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`.
-- [ ] commit `docs: link PR #<n>` and push.
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`.
+- [x] commit `docs: link PR #<n>` and push.

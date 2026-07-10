@@ -51,4 +51,10 @@ appends as each phase completes.
 
 ## P4 — Hardening + PR
 
-- _pending_
+- Dangling-ref sweep: 16 hits, all real/current behaviors (no stale refs).
+- Confirmed `packages/` and `skills/review-implementation/` untouched vs
+  `origin/main`.
+- `npx skills add . --list` — all skills discovered, exit 0.
+- Coherence re-read caught and fixed a "steps 2–9" vs "steps 2–10" mismatch in
+  the merge/dedupe section of `review-change` (Process has 10 steps).
+- Full P1–P3 AC re-run: all green.
