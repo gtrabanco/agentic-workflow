@@ -1,0 +1,100 @@
+# 11 — adversarial-multi-reviewer · TASKS
+
+Per-phase checklists the executor ticks off. Command-checkable criteria are
+emitted as the command to run — verify by running it, not by judging prose. All
+commands assume repo root.
+
+## P1 — `review-change --adversarial N` mode
+
+- [ ] Add `--adversarial N` to the `argument-hint:` line in
+      `skills/review-change/SKILL.md` frontmatter.
+- [ ] Add the "Adversarial multi-reviewer mode (`--adversarial N`, opt-in)"
+      section covering: N≥2 semantics (N absent → single reviewer; N<2 → usage
+      error + single-reviewer fallback); the three-tier platform-adaptive spawn
+      (subagents / headless / sequential fresh conversations); each reviewer
+      context-clean + diff-only + adversarial reusing `review-implementation`;
+      merge/dedupe by `file:line`+axis with a `Reviewers n/N` column; inclusion
+      threshold ≥1 (no quorum); default OFF; auto-recommend (never force) for
+      L/sensitive.
+- [ ] Add the Portability fallback line for the three spawn tiers.
+- [ ] Do NOT weaken the context-clean turn-contract box; do NOT hand-edit
+      `version:`.
+- [ ] Verify (all exit 0):
+      ```sh
+      grep -q -- "--adversarial" skills/review-change/SKILL.md
+      grep -qi "subagent" skills/review-change/SKILL.md
+      grep -qi "headless" skills/review-change/SKILL.md
+      grep -qi "sequential\|fresh conversation" skills/review-change/SKILL.md
+      grep -qi "dedup\|deduped\|deduplicat" skills/review-change/SKILL.md
+      grep -qi "file:line" skills/review-change/SKILL.md
+      grep -qi "default off\|off by default\|opt-in" skills/review-change/SKILL.md
+      grep -qi "sensitive" skills/review-change/SKILL.md
+      grep -qi "did NOT implement the change\|did not write the diff" skills/review-change/SKILL.md
+      ```
+- [ ] read-verified: the default (no-flag) Process path is unchanged — the
+      `--adversarial N` behavior is additive and gated on the flag (AC8).
+- [ ] Commit the planning artifacts + this phase:
+      `feat(skills): add review-change --adversarial N multi-reviewer mode`.
+
+## P2 — ship-roadmap floor + workflow doc
+
+- [ ] In `skills/ship-roadmap/SKILL.md` REVIEW step: enable `--adversarial 2` as
+      a hard floor for L/sensitive features; add the "deliberately does not mirror
+      the interactive advisory checkpoint — do not align" note.
+- [ ] In `docs/workflow/REVIEW_AND_CLASSIFY.md`: add the "Adversarial
+      multi-reviewer (opt-in)" subsection (three spawn tiers, ≥1 inclusion rule,
+      2–3× cost note → why opt-in).
+- [ ] Do NOT hand-edit `version:`.
+- [ ] Verify (all exit 0):
+      ```sh
+      grep -qi -- "--adversarial" skills/ship-roadmap/SKILL.md
+      grep -qi "floor" skills/ship-roadmap/SKILL.md
+      grep -qi "adversarial" docs/workflow/REVIEW_AND_CLASSIFY.md
+      ```
+- [ ] read-verified: the do-not-align rationale is present in ship-roadmap's
+      REVIEW step.
+- [ ] Commit `docs(ship-roadmap,workflow): adversarial multi-reviewer floor + review-stage doc`.
+
+## P3 — Release metadata
+
+- [ ] Run `bump-skill` for `review-change` + `ship-roadmap`: MINOR bump each,
+      rows in `CHANGELOG.md` + `CHANGELOG.es.md`, both README skill/model tables
+      refreshed. (No model/effort tier changes → `model-routing.yml` untouched.)
+- [ ] Add the `docs/workflow/MIGRATION.md` entry for feature 11 (additive
+      `--adversarial N`; default OFF; ship-roadmap L/sensitive floor).
+- [ ] Verify:
+      ```sh
+      grep -c "adversarial\|multi-reviewer\|11-adversarial" CHANGELOG.md   # >= 1
+      grep -qi "adversarial" docs/workflow/MIGRATION.md                    # exit 0
+      ```
+- [ ] read-verified: `review-change` + `ship-roadmap` each MINOR-bumped vs their
+      pre-feature `version:`; mirrored in both CHANGELOGs and both README tables.
+- [ ] Commit `chore(release): minor bump — review-change --adversarial N`.
+
+## P4 — Hardening + PR
+
+- [ ] Dangling-ref sweep — no doc points at a review-change behavior that doesn't
+      exist; default-path description still coherent:
+      ```sh
+      grep -rin "adversarial" skills/ docs/workflow/ | grep -vi "context-clean"
+      ```
+      (read the hits; every one must be a real, current behavior.)
+- [ ] Confirm untouched (expect NO output):
+      ```sh
+      git diff --name-only origin/main...HEAD | grep -E '^(packages/|skills/review-implementation/)'
+      ```
+- [ ] Discovery intact:
+      ```sh
+      npx skills add . --list
+      ```
+      all skills listed, exit 0.
+- [ ] Re-read the merge/dedupe + ship-roadmap floor sections for internal
+      coherence (dev scenarios `adversarial:dedup`, `adversarial:sub-2`,
+      `adversarial:floor`).
+- [ ] Re-run every P1/P2/P3 verify command; all green.
+- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown
+      file, real backticks, never inline `--body`/heredoc that leaves
+      `\`-escaped backticks; body includes `Closes #18`) and PRINT THE PR URL in
+      the chat.
+- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`.
+- [ ] commit `docs: link PR #<n>` and push.
