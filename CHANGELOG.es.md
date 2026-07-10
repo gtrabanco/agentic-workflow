@@ -143,6 +143,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.16.0 | 2026-07-10 | menor | Nueva regla **una fase = una sesión**, colocada justo antes de la sección de ejecución por lotes: nunca ejecutar dos fases en una misma conversación con un modelo no-frontera — el patrón por lotes de `/loop` ya limpia y reinvoca por fase; esta es la regla que aplica, emparejada con el fallback manual de reinvocación ya existente en Portability. |
 | 1.15.0 | 2026-07-09 | menor | El gate de dependencias gana una **precondición de estado propio**, comprobada tras cumplir el cierre de dependencias y aún antes de cualquier edición: una unidad cuya fila del roadmap sea `idea` PARA y redirige a `/design-feature <slug>`; `defined` PARA y redirige a `/plan-feature <slug>`; `planned`+ continúa. `--force` salta la PARADA (nunca la comprobación), registrado en `decisions.md`, misma regla que el gate de dependencias. Las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` (sin redirección) según `MIGRATION.md`. Envelope máquina: `BLOCKED` ahora también cubre el gate de estado propio, `blockers[]` tipo `own-status`. |
 | 1.14.1 | 2026-07-09 | parche | El invariante de modelo en Portability se extiende: "nunca revises con un modelo más débil — y prefiere una familia de modelo distinta a la del autor" (instancias de la misma familia comparten puntos ciegos de entrenamiento; una familia cruzada descorrelaciona errores). Solo redacción. |
 | 1.14.0 | 2026-07-05 | menor | El checkpoint de revisión cada 2 fases es ahora una **recomendación, no una parada obligatoria**: el bloque de cierre recomienda `/review-change` con "continuar a la siguiente fase" como alternativa listada, y el envelope mantiene `state: CONTINUE` en los checkpoints (consultivo) — `READY_FOR_REVIEW` queda reservado a la unidad terminada. La **revisión de fin de unidad sigue siendo obligatoria** (alimenta `audit-pr`), y el gate de dependencias no cambia (sigue bloqueando y exigiendo `--force`). Referencias cruzadas de `review-change` 1.10.1 actualizadas. |
@@ -331,7 +332,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
-| `plan-feature-scaffold` | 1.6.0 | 2026-07-09 | menor | "Registrar en el roadmap" ahora **escribe** el estado de la fila a `planned` (la transición `defined → planned` que esta skill posee) junto con número/orden/dependencias — una fila ya `defined` se promueve; una fila totalmente nueva (SPEC ya delimitado sin entrada previa) se añade directamente en `planned`. |
+| `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | menor | El corte de fases ahora es un **gate obligatorio**, no consultivo: una feature M/L DEBE dividirse en features encadenadas por `Depends on:` cuando supera ~5 fases, una fase toca más de una capa/asunto, o una fase requiere una decisión de diseño sin resolver, y cada fase emitida debe superar una checklist de cuatro casillas de ejecutabilidad-barata (comprobable sin juicio · cero decisiones abiertas · un solo asunto · el gate corre localmente). La generación de `TASKS.md`/`testing.md` ahora emite los criterios de aceptación comprobables por comando como el comando ejecutable, no como prosa. |
+| | 1.6.0 | 2026-07-09 | menor | "Registrar en el roadmap" ahora **escribe** el estado de la fila a `planned` (la transición `defined → planned` que esta skill posee) junto con número/orden/dependencias — una fila ya `defined` se promueve; una fila totalmente nueva (SPEC ya delimitado sin entrada previa) se añade directamente en `planned`. |
 | | 1.5.0 | 2026-07-09 | menor | Ahora completa solo la **mitad de ingeniería** del SPEC — la mitad de producto (objetivo, contexto, alcance, cierre de capacidades) la escribe `design-feature` / `plan-feature-from-issue` y se verifica `designed` antes de que esta skill se ejecute; para en vez de editar una mitad de producto sin diseñar o ausente. |
 | | 1.4.0 | 2026-07-04 | menor | La tarea de cierre del TASKS.md generado ahora dice `gh pr create --body-file <path>` (fichero Markdown), nunca `--body`/heredoc inline — para que los ejecutores no emitan backticks escapados con `\` literales en el cuerpo del PR. |
 | `plan-feature-scaffold` | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
@@ -363,6 +365,22 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-10 — economía del corte de fases: gate obligatorio de división +
+  checklist de ejecutabilidad-barata + criterios como comandos +
+  una-fase-una-sesión (P1–P2 de la feature 08).** `plan-feature-scaffold`
+  1.7.0 sustituye el "considera dividir" opcional por un disparador de
+  división obligatorio (>~5 fases, una fase multi-capa/asunto, o una decisión
+  de diseño sin resolver) y una checklist de cuatro casillas de
+  ejecutabilidad-barata por fase, y ahora emite los criterios de aceptación
+  comprobables por comando como comandos ejecutables en
+  `TASKS.md`/`testing.md` en lugar de prosa. Ambas plantillas de SPEC
+  (`docs/features/_TEMPLATE/SPEC.md` + el espejo en `template/`) llevan la
+  misma regla de división obligatoria y la convención de criterios-como-comandos.
+  `execute-phase` 1.16.0 y `docs/workflow/FEATURE_WORKFLOW.md` (+ la sección
+  Feature workflow de `template/CLAUDE.md`, en lugar de un espejo inexistente
+  en `template/`) declaran la regla **una fase = una sesión** para modelos
+  ejecutores no-frontera.
 
 - **2026-07-09 — el estado del roadmap se convierte en la máquina de estados
   del pipeline (P1–P4 hasta ahora).** La columna `Status` del roadmap se
