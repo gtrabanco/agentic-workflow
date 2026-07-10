@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 1.11.0
+version: 2.0.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"

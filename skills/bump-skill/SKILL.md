@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: true
-version: 1.5.0
+version: 2.0.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
