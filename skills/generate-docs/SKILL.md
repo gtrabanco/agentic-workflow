@@ -79,9 +79,8 @@ wins, evidence required for the match:
 4. **Plain-markdown fallback** — a `docs/` directory exists. → plain-markdown
    adapter (always available).
 5. **None of the above** → **NOT CONFIGURED**: write nothing. Print the report
-   with `Decision: NOT-CONFIGURED`, include this snippet for the user to add
-   to their documentation map, and emit the envelope with
-   `state: NEEDS_INPUT`:
+   with `Decision: NOT-CONFIGURED`, and include this snippet for the user to
+   add to their documentation map:
 
    ```markdown
    ## Docs site
@@ -181,10 +180,10 @@ found and say so in the report (see the feature's `known-issues.md`).
    count) in the report. A red build → fix the written pages or revert them;
    never leave the docs site broken.
 
-7. **Report** (fixed block), then the closing `→ Next:` block, then the
-   envelope. This skill does **not** commit — the pages ride the unit's
-   workflow (the executor or the user commits them with the unit's close-out;
-   an orchestrator sees the paths in the envelope).
+7. **Report** (fixed block), then the closing `→ Next:` block as the
+   ABSOLUTE last output. This skill does **not** commit — the pages ride the
+   unit's workflow (the executor or the user commits them with the unit's
+   close-out).
 
 ## Adapters (reference implementations)
 
