@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.1.0
+version: 2.1.1
 argument-hint: <path-or-glob> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -188,10 +188,11 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 byte-for-byte unchanged (step 1 above). This mode only replaces the
 findings-gathering stage; steps 2–10 run once, over the merged table.
 
-**N semantics.** `N` absent → single-reviewer mode. `N` given and `< 2` → usage
-error: state that `--adversarial` needs an integer N≥2 and fall back to the
-single-reviewer path — never silently run 1. `ship-roadmap`'s hard floor always
-passes `N=2`.
+**N semantics.** `--adversarial` flag not passed at all → single-reviewer mode,
+no message (today's default). `--adversarial` passed **without** a valid N
+(no number given, or a number `< 2`) → usage error: state that `--adversarial`
+needs an integer N≥2 and fall back to the single-reviewer path — never
+silently run 1. `ship-roadmap`'s hard floor always passes `N=2`.
 
 **Why N reviewers.** A single adversarial, context-clean reviewer (see the
 turn-contract box) decorrelates some blind spots; running N independent
