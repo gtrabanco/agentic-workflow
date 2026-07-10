@@ -198,6 +198,12 @@ Phases are labelled **`P1, P2, …`** ("phases") everywhere — `PLAN.md`, `TASK
 `progress.md`, commits — never `S1`/"Steps". The label is `execute-phase`'s
 argument (`execute-phase NN P2`), so it must stay uniform.
 
+**One phase = one session.** Never execute two phases in one conversation on a
+non-frontier model — models degrade over long horizons, and a fresh session per
+phase is what preserves the cheap-execution guarantee. With `/loop`, this is
+already how the batch shape re-invokes per phase; without it, re-invoke
+`execute-phase` by hand for each phase in a fresh conversation.
+
 Start a new feature by copying `docs/features/_TEMPLATE/SPEC.md` to
 `docs/features/<NN>-<slug>/SPEC.md` and registering it in
 `docs/features/ROADMAP.md` (the source of truth for numbering, order, and
