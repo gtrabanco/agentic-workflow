@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.1.0
+version: 2.1.1
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -10,10 +10,16 @@ description: >
   scaffold (template/) and adapt it to THIS project by interview — fill the
   CLAUDE.md documentation map, gate commands and architecture, prune doc folders
   that don't apply, keep the SPEC/feature/fix and GitHub templates — then offer to
-  install the skills. The adaptive counterpart to a raw `npx degit` copy. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  install the skills. The adaptive counterpart to a raw `npx degit` copy. On a repo
+  that already has the scaffold, detects it and switches to **upgrade mode**: diffs
+  the project's substrate against the current template, reads
+  `docs/workflow/MIGRATION.md`, and proposes only the blocks the project is
+  missing — never clobbering a tailored one. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers:
   "set up the agentic workflow here", "init-workspace", "scaffold this project's
-  docs", "adapt the workflow template to this repo", "bootstrap the way of working".
+  docs", "adapt the workflow template to this repo", "bootstrap the way of working",
+  "upgrade my scaffold", "migrate my substrate to the current template", "bring my
+  CLAUDE.md up to date with the template".
 ---
 
 # Init Workspace
