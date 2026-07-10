@@ -219,6 +219,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.1 | 2026-07-10 | parche | Aclarada la semántica de N: distingue "el flag `--adversarial` no se pasó en absoluto" (modo de un solo revisor, sin mensaje) de "`--adversarial` se pasó sin un N válido" (sin número, o un número `< 2` — error de uso, cae al modo de un solo revisor). Corrige una contradicción con la decisión D1 de `decisions.md`, que exigía el error de uso tanto para N ausente como para N<2. Sin cambio de comportamiento en la ruta por defecto sin flag. |
 | 2.1.0 | 2026-07-10 | menor | Nuevo modo opt-in `--adversarial N`: N revisores independientes, context-clean, solo-diff y adversariales corren en paralelo (subagentes de Claude Code / invocaciones headless / conversaciones nuevas secuenciales), hallazgos fusionados y deduplicados por `file:line`+eje en la misma tabla de decisión existente con una columna de confianza `Reviewers n/N`, umbral de inclusión ≥1 (sin quórum). Por defecto DESACTIVADO; auto-recomendado (nunca forzado) para cambios `L`/marcados como sensibles. La ruta por defecto sin flag no cambia. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | menor | El turn contract gana una casilla obligatoria de contexto limpio: la revisión final obligatoria de fin de unidad debe correr en una conversación que NO implementó el cambio — si lo hizo, PARAR y hacer hand-off a una nueva. "When to use" reescrito para exponer el requisito en prosa (la sección Portability ya existente referencia la línea de preferencia de familia de modelo cruzada de la feature 04; sin cambios aquí). |
@@ -392,7 +393,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   como piso obligatorio para features `L`/sensibles, deliberadamente no
   alineado con el advisory interactivo). `docs/workflow/REVIEW_AND_CLASSIFY.md`
   documenta el modo; sin cambios en `review-implementation`, el schema ni el
-  paquete npm.
+  paquete npm. Seguimiento PARCHE para `review-change` (2.1.1): corrige una
+  contradicción de redacción con la decisión D1 — un `--adversarial` sin N
+  ahora indica el error de uso y cae al modo de un solo revisor, igual que
+  `N < 2`.
 - **2026-07-10 — el envelope se traslada a la capa de orquestación (feature 10).**
   Bump MAYOR para las 14 skills de cara al usuario que llevaban una sección
   `## Machine envelope` (`audit-docs, audit-pr, bump-skill, design-feature,
