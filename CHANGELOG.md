@@ -313,6 +313,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.1 | 2026-07-10 | patch | `description:` now names upgrade mode and adds its trigger phrases ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — the loader metadata was silent about the mode 2.1.0 added, so it wasn't reliably discoverable by natural-language request. No behavior change. |
+| 2.1.0 | 2026-07-10 | minor | Adds an **upgrade mode**: on a repo Step 0 recognizes as an existing agentic-workflow scaffold, offers upgrade alongside merge/adapt/abort — diffs the substrate against the current `template/`, reads `docs/workflow/MIGRATION.md`, proposes only the missing blocks via a short discovery-defaulted interview, and never rewrites a tailored block (additive-only, never-clobber). Hardens the four failure edges (no-drift, `MIGRATION.md`-absent, tailored-block, bootstrap-unchanged). Bootstrap mode is byte-for-byte unchanged. See `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Interview gains a **Performance tooling** round: per-slot detection checklist (complexity lint / benchmark harness / profiler — TS/JS adapter examples: Biome complexity group or sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), user-confirmed installation, and registration in the template's new `Performance commands` block so `review-perf` can measure instead of guess. |
 | 1.7.0 | 2026-07-05 | minor | Interview gains a **Docs site** round: record the project's docs website (format/content-dir/build/map commands) in the template's new `Docs site` block so `generate-docs` can write into it; leave it commented out when there is none. Never scaffolds the website. |
@@ -383,6 +385,16 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-10 — init-workspace upgrade mode (feature 13).** MINOR bump for
+  `init-workspace` (2.1.0): a repo Step 0 recognizes as an existing
+  agentic-workflow scaffold now gets an **upgrade** option alongside
+  merge/adapt/abort — diff the substrate against the current `template/`,
+  read `docs/workflow/MIGRATION.md`, propose only the missing blocks via a
+  short discovery-defaulted interview, never rewrite a tailored block. Four
+  failure edges hardened explicitly (no-drift, `MIGRATION.md`-absent,
+  tailored-block, bootstrap-unchanged). Bootstrap mode unchanged. Documented
+  "updating an existing install" recommendation added to `README.md`,
+  `README.es.md`, and `docs/workflow/MIGRATION.md`. Closes #20.
 - **2026-07-10 — adversarial multi-reviewer mode (feature 11).** MINOR bump
   for `review-change` (new opt-in `--adversarial N`: N parallel context-clean
   adversarial reviewers, merged/deduped by `file:line`+axis, inclusion ≥1,
