@@ -144,6 +144,15 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > examples) and add a line to [`CHANGELOG.md`](CHANGELOG.md). Renames are major and
 > need a note in `docs/workflow/MIGRATION.md`.
 
+> **Smoke-test wording changes to executor-path skills.** After editing
+> `execute-phase`, `plan-feature`, `plan-feature-scaffold`,
+> `plan-feature-from-issue`, `design-feature`, or a `review-*` skill, run the
+> manual procedure in
+> [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) — it
+> drives a fixed toy fixture through the changed skill with the weakest model
+> in your fleet to catch wording a frontier model absorbs silently but a weak
+> model misreads.
+
 ### Hand off, don't compose across a model/effort boundary
 
 A skill's `model` and `effort` are **fixed at the start of its turn** and do **not**
