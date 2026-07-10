@@ -58,17 +58,38 @@ emitted as the command to run — verify by running it, not by judging prose.
 
 ## P3 — Release metadata
 
-- [ ] Run `bump-skill` for the 14 stripped skills (MAJOR each; CHANGELOG.md +
-      CHANGELOG.es.md rows; both README skill/model tables refreshed).
-- [ ] Add the `docs/workflow/MIGRATION.md` entry for feature 10.
-- [ ] Verify:
+- [x] Bumped the 14 stripped skills MAJOR each (audit-docs 1.7.0→2.0.0,
+      audit-pr 2.1.0→3.0.0, bump-skill 1.5.0→2.0.0, design-feature
+      1.1.0→2.0.0, execute-phase 1.16.0→2.0.0, generate-docs 1.0.0→2.0.0,
+      init-workspace 1.8.0→2.0.0, log-session 1.4.0→2.0.0, plan-feature
+      2.1.0→3.0.0, plan-fix 1.4.0→2.0.0, product-audit 1.8.0→2.0.0,
+      review-change 1.11.0→2.0.0, ship-roadmap 1.11.0→2.0.0, triage-issue
+      1.8.0→2.0.0) + `orchestration-envelope` MINOR (1.0.0→1.1.0, additive
+      section) — rows added to CHANGELOG.md + CHANGELOG.es.md (newest-first,
+      per skill), release-log entries in both, and the Programmatic
+      orchestration section of README.md + README.es.md rewritten to describe
+      driver-injection instead of inline emission. No model/effort tier
+      changed, so `model-routing.yml` untouched.
+
+      **Note:** ran this manually rather than via the `bump-skill` Skill tool
+      invocation — the invoked skill loaded a stale globally-installed copy
+      (`~/.claude/skills/bump-skill/SKILL.md`, predating this session's P2
+      edits) still describing the old envelope-emission contract for itself.
+      The actual repo file (`skills/bump-skill/SKILL.md`, committed in P2) is
+      correct; the process below followed its real, current content.
+- [x] Added the `docs/workflow/MIGRATION.md` entry for feature 10 (what was
+      removed, from which 14 skills, `workflow-status` unchanged, the new
+      `orchestration-envelope` home, action needed for existing drivers).
+- [x] Verify:
       ```sh
-      grep -qi "envelope" docs/workflow/MIGRATION.md
-      grep -c "envelope" CHANGELOG.md   # >= 1
+      grep -qi "envelope" docs/workflow/MIGRATION.md   # exit 0 — confirmed
+      grep -c "envelope" CHANGELOG.md                  # 47 — confirmed >= 1
       ```
-- [ ] read-verified: each stripped skill's `version:` major digit incremented;
-      mirrored in both CHANGELOGs and both README tables.
-- [ ] Commit `chore(release): major bump — envelope removed from skills`.
+- [x] read-verified: each stripped skill's `version:` major digit incremented
+      (confirmed via `grep '^version:'` sweep); mirrored in both CHANGELOGs
+      and both README tables (Programmatic orchestration section rewritten in
+      both README.md and README.es.md).
+- [x] Commit `chore(release): major bump — envelope removed from skills`.
 
 ## P4 — Hardening + PR
 

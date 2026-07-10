@@ -347,16 +347,22 @@ mantiene, el techo se mueve.
 
 ## Orquestación programática
 
-Toda skill de cara al usuario termina con un **envelope máquina** — un bloque
-JSON fijo y cercado (state, unit, phase, PR, findings, blockers, orden de
-construcción de dependencias, siguiente comando recomendado + pista de tier de
-modelo). Un driver externo — un bucle de shell, CI, tu propio programa — lo
+Las skills se leen limpias en el chat interactivo — sin JSON al final. Un
+driver que quiera orquestarlas (un bucle de shell, CI, tu propio programa)
+inyecta el **snippet canónico de system-prompt** para que cada invocación
+termine con un **envelope máquina** — un bloque JSON fijo y cercado (state,
+unit, phase, PR, findings, blockers, orden de construcción de dependencias,
+siguiente comando recomendado + pista de tier de modelo) — y ejecuta un
+**bucle de reparación** cuando un turno lo omite (reintenta con un prompt de
+una línea; un reintento, luego un fallo a nivel de driver). El driver lo
 parsea e invoca la siguiente skill con el modelo que tú elijas en cada paso.
 Es la sustitución neutral de proveedor del `/loop` y los subagentes de Claude
 Code: el mismo bucle que `ship-roadmap` ejecuta dentro del agente, alojado
-fuera de cualquier agente. `workflow-status` es el sensor de solo lectura que
-reporta el árbol de dependencias completo y qué es arrancable. Protocolo,
-máquina de estados y esqueleto de driver:
+fuera de cualquier agente. `workflow-status` es la única skill que sigue
+emitiendo el envelope en línea — es un sensor de solo lectura que reporta el
+árbol de dependencias completo y qué es arrancable, así que emitirlo es toda
+su función. Protocolo, snippet, bucle de reparación, máquina de estados y
+esqueleto de driver:
 **[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. Para
 drivers JS/TS, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
 (npm) trae los tipos, el JSON Schema y `parseEnvelope()` implementando el
