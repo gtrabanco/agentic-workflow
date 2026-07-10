@@ -13,7 +13,17 @@ appends as each phase completes.
 
 ## P1 — review-change --adversarial N mode
 
-- _pending_
+- Added `--adversarial N` to `argument-hint:` and a full "Adversarial
+  multi-reviewer mode" section: N≥2 semantics, three-tier platform-adaptive
+  spawn (subagents / headless / sequential fresh conversations), merge/dedupe
+  by `file:line`+axis with a `Reviewers n/N` column, inclusion threshold ≥1,
+  default OFF, auto-recommend (never force) for L/sensitive. Added the
+  Portability fallback line for the three spawn tiers. Process step 1 gates
+  the findings-gathering stage on the flag; steps 2–10 unchanged.
+- `version:` left at `2.0.0` — the MINOR bump is `bump-skill`'s job in P3, not
+  hand-edited here.
+- All 9 AC1–AC4 + AC7 grep commands ran green (pasted in `TASKS.md`). AC8
+  read-verified against the new step 1 wording.
 
 ## P2 — ship-roadmap floor + workflow doc
 
