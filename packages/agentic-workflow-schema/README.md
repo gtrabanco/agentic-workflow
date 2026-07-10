@@ -2,9 +2,11 @@
 
 Types, JSON Schema, and parser/validator for the
 [agentic-workflow](https://github.com/gtrabanco/agentic-workflow) **machine
-envelope** — the fixed JSON block every user-facing skill prints as the
-absolute last output of its turn, so external orchestrators can route the
-workflow programmatically (which command next, on which model tier).
+envelope** — the fixed JSON block a driven agent turn ends with (emitted by
+`workflow-status` always, and by any other skill when the driver injects the
+canonical system-prompt snippet — see the driver protocol below), so external
+orchestrators can route the workflow programmatically (which command next, on
+which model tier).
 
 Zero runtime dependencies. Source of truth for the contract:
 [`skills/orchestration-envelope/SKILL.md`](https://github.com/gtrabanco/agentic-workflow/blob/main/skills/orchestration-envelope/SKILL.md);
