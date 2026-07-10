@@ -126,6 +126,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-10 | minor | REVIEW stage: for `L`/sensitive-flagged features, every `review-change` invocation (checkpoint or end review) now runs with `--adversarial 2` — a hard floor, unattended, deliberately **not** aligned with `review-change`'s own interactive advisory checkpoint. XS/S/non-sensitive-M unchanged (single-reviewer). |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. Driver-loop prose rephrased to reference the driver-injected envelope generically. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Complies with the roadmap status machine instead of exempting itself: founding is documented as **batch design** (interview rounds 2–4 are the product-definition answers), so founding writes feature rows at `idea` (the founding-scaffolded feature 01 lands directly at `planned`). New **DESIGN** stage: a mid-run `idea`/`defined` unit gets JIT design composing `design-feature` + `plan-feature-scaffold` in-turn, **derived strictly from the locked `SHIP_DECISIONS.md` record — no new questions** — promoting `idea → defined → planned` before PLAN. Undesignable-from-record → parked (`blockers[]` kind `undesignable`, `needs_input` records the gap), `state` stays `CONTINUE` (a per-unit park, not a run halt); SELECT moves to the next startable unit. Stage sequence, model routing, and stop-conditions tables updated to include DESIGN. |
 | 1.10.0 | 2026-07-05 | minor | Driver-neutral autopilot: `/loop`, an external orchestrator (envelope-routed), or manual re-invocation are first-class equivalent drivers; EXECUTE runs without subagents via one headless invocation per phase; every iteration ending states WHY (normal one-stage stop vs the exact cap hit). Plus the machine envelope (banner ↔ state mapping). |
@@ -216,6 +217,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-10 | minor | New opt-in `--adversarial N` mode: N independent, context-clean, diff-only, adversarial reviewers run in parallel (Claude Code subagents / headless invocations / sequential fresh conversations), findings merged and deduped by `file:line`+axis into the existing decision table with a `Reviewers n/N` confidence column, inclusion threshold ≥1 (no quorum). Default OFF; auto-recommended (never forced) for `L`/sensitive-flagged changes. Default no-flag path unchanged. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Turn contract gains a mandatory context-clean box: the mandatory end-of-unit review must run in a conversation that did NOT implement the change — if it did, STOP and hand off to a fresh one. "When to use" reworded to state the requirement in prose (the pre-existing Portability section already points to feature 04's cross-family model-preference line; unchanged here). |
 | 1.10.2 | 2026-07-09 | patch | Portability's model invariant extended: "never review with a weaker model — and prefer a different model **family** than the writer's" (same-family instances share training blind spots; cross-family decorrelates errors). Wording-only. |
@@ -380,6 +382,14 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-10 — adversarial multi-reviewer mode (feature 11).** MINOR bump
+  for `review-change` (new opt-in `--adversarial N`: N parallel context-clean
+  adversarial reviewers, merged/deduped by `file:line`+axis, inclusion ≥1,
+  default OFF, auto-recommended for `L`/sensitive) and `ship-roadmap` (its
+  unattended REVIEW stage now enables `--adversarial 2` as a hard floor for
+  `L`/sensitive features, deliberately not aligned with the interactive
+  advisory). `docs/workflow/REVIEW_AND_CLASSIFY.md` documents the mode; no
+  change to `review-implementation`, the schema, or the npm package.
 - **2026-07-10 — envelope moves to the orchestration layer (feature 10).**
   MAJOR bump for the 14 user-facing skills that carried a `## Machine
   envelope` section (`audit-docs, audit-pr, bump-skill, design-feature,

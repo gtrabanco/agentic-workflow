@@ -1,5 +1,24 @@
 # Migration notes
 
+## 2026-07-10 — `review-change` gains opt-in `--adversarial N`
+
+**Additive, non-breaking.** `review-change` adds an opt-in `--adversarial N`
+flag: N independent, context-clean, diff-only, adversarial reviewers run in
+parallel (Claude Code subagents / headless invocations / sequential
+fresh-conversation fallback), and their findings are merged and deduped by
+`file:line`+axis into the same one decision table the skill already produced,
+with a `Reviewers n/N` confidence column and an inclusion threshold of ≥1
+reviewer (no quorum). **No flag → nothing changes** — the default single-reviewer
+path is byte-for-byte the same as before this capability existed. The mode is
+also **auto-recommended (never forced)** in `review-change`'s own output when
+a change is `L` or sensitive-flagged, and `ship-roadmap`'s unattended REVIEW
+stage now **enables `--adversarial 2` as a hard floor** for `L`/sensitive
+features — a policy deliberately distinct from (and not aligned with) that
+interactive recommendation, since an unattended run has no human to exercise
+skip judgment. Nothing to migrate: no flag removed, no output shape changed,
+no action required to keep existing usage working. See
+`docs/workflow/REVIEW_AND_CLASSIFY.md` for the practical how/when.
+
 ## 2026-07-10 — the machine envelope moves to the orchestration layer
 
 **Breaking change to 14 skills' output contract.** Every user-facing skill

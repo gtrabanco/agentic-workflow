@@ -39,7 +39,15 @@ appends as each phase completes.
 
 ## P3 — Release metadata
 
-- _pending_
+- `review-change` and `ship-roadmap` both MINOR-bumped 2.0.0 → 2.1.0 (new
+  backward-compatible capability, default off / hard floor respectively).
+- Rows added to `CHANGELOG.md` + `CHANGELOG.es.md` (per-skill tables and the
+  chronological release log); `README.md` + `README.es.md` skills-table cells
+  refreshed for `review-change` to mention `--adversarial N`. No model/effort
+  tier changed, so `model-routing.yml` and the model tables are untouched.
+- `docs/workflow/MIGRATION.md` gained a non-breaking, additive-only entry.
+- Both P3 grep checks ran green (`CHANGELOG.md` hit count 10; `MIGRATION.md`
+  adversarial hit found).
 
 ## P4 — Hardening + PR
 
