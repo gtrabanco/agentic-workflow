@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.0.0
+version: 2.1.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -173,6 +173,29 @@ lacks**. Six ordered steps:
    (residuals), then print the recommendation to run `product-audit` next to
    see which newly-available *capabilities* apply to the code (upgrade mode
    migrates the substrate only, never the code).
+
+**Failure edges — handle each explicitly, never silently:**
+
+- **No drift.** The diff (step 2) finds nothing missing or placeholder-only →
+  skip the interview entirely and report **"substrate current, nothing to
+  migrate"**. Never fabricate a block to propose just to have something to
+  show.
+- **`MIGRATION.md` absent.** An older install may predate this file → proceed
+  on the template diff alone (step 3 already covers this) and say so plainly
+  in the proposal and the final report: rationale was unavailable, the block
+  list is still complete.
+- **A block the project already tailored.** If the current template also
+  changed a block the project customized, **do not merge, diff-patch, or
+  overwrite it** — leave it exactly as the project has it and list it as a
+  residual in the report (step 5's never-clobber invariant). The user decides
+  separately, via an explicit bootstrap adapt-in-place run, whether to
+  re-tailor it.
+- **Bootstrap stays unchanged on a bare or foreign repo.** If Step 0's
+  scaffold markers (`CLAUDE.md` + `docs/features/ROADMAP.md` or
+  `docs/workflow/`) are absent — no repo, an empty repo, or a `CLAUDE.md`
+  that isn't this workflow's — upgrade mode never engages; the existing
+  bootstrap Process (merge/adapt/abort) runs exactly as before this mode was
+  added.
 
 ## Guardrails
 

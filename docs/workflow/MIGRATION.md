@@ -1,5 +1,35 @@
 # Migration notes
 
+## 2026-07-10 — `init-workspace` gains an upgrade mode for existing scaffolds
+
+**Additive, non-breaking.** `init-workspace` gains a second mode: on a repo
+Step 0 recognizes as an existing agentic-workflow scaffold (marker:
+`CLAUDE.md` + `docs/features/ROADMAP.md` or `docs/workflow/`), it now offers
+**upgrade** alongside the existing merge/adapt/abort choices. Upgrade mode
+fetches the current `template/`, diffs the project's `CLAUDE.md`/`docs/`
+substrate against it, reads this file (`MIGRATION.md`) for the rationale
+behind each missing block, and proposes **only the blocks the project
+lacks** through one short, discovery-defaulted interview — never rewriting a
+block the project has already tailored, and never deleting anything.
+Bootstrap mode (a bare or foreign repo) is byte-for-byte unchanged.
+
+**Why.** Updating the skills (`npx skills add …` / `npx skills update`) only
+ever refreshed *behavior*. Nothing migrated a project's *substrate* — the
+`Docs site` block (feature 01), `Performance commands` (02), the five-state
+roadmap status machine (07), and every other block a later feature added to
+`template/` stayed absent from projects that adopted the workflow earlier.
+`product-audit` could detect that drift but never fix it (proposes-only).
+Upgrade mode closes that gap.
+
+**Action needed for existing installs.** After updating the skills, run
+`init-workspace` once — it now detects your existing scaffold and proposes
+the blocks you're missing instead of re-bootstrapping. See the "Updating an
+existing install" section in `README.md` / `README.es.md` for the full
+ordered path (update skills → read this file → `init-workspace` upgrade →
+optional `product-audit`). Nothing is applied without confirmation; skipping
+the run leaves your substrate exactly as it is today — no regression, just
+missing the newer blocks until you opt in.
+
 ## 2026-07-10 — `review-change` gains opt-in `--adversarial N`
 
 **Additive, non-breaking.** `review-change` adds an opt-in `--adversarial N`

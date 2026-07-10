@@ -32,23 +32,27 @@ commands from the repo root.
 
 ## P2 — Documented recommendation + hardening
 
-- [ ] Add the "updating an existing install" recommendation to `README.md`:
+- [x] Add the "updating an existing install" recommendation to `README.md`:
       `grep -q "init-workspace" README.md` exits 0 and the ordered path
       (update skills → `MIGRATION.md` → `init-workspace` upgrade → optional
-      `product-audit`) is present — `read-verified`.
-- [ ] Same recommendation in `README.es.md`: `grep -q "init-workspace" README.es.md`
-      exits 0; wording is the ES translation — `read-verified`.
-- [ ] Same recommendation in `docs/workflow/MIGRATION.md` (dated note).
-      `read-verified`.
-- [ ] Harden the four failure edges in `skills/init-workspace/SKILL.md`
+      `product-audit`) is present — `read-verified` — `README.md`
+      `### Updating an existing install`.
+- [x] Same recommendation in `README.es.md`: `grep -q "init-workspace" README.es.md`
+      exits 0; wording is the ES translation — `read-verified` — `README.es.md`
+      `### Actualizar una instalación existente`.
+- [x] Same recommendation in `docs/workflow/MIGRATION.md` (dated note).
+      `read-verified` — `docs/workflow/MIGRATION.md`, 2026-07-10 entry.
+- [x] Harden the four failure edges in `skills/init-workspace/SKILL.md`
       (`no-drift`, `no-migration`, `tailored-block`, `bootstrap-unchanged`) —
-      each stated explicitly. `read-verified`.
-- [ ] Run `bump-skill` for `init-workspace` (minor). Verify:
+      each stated explicitly. `read-verified` — "Failure edges" list under
+      `## Upgrade mode`.
+- [x] Run `bump-skill` for `init-workspace` (minor). Verify:
       `grep -q "^version: 2\.[1-9]" skills/init-workspace/SKILL.md` (bumped above
       2.0.0); a new `init-workspace` row exists in `CHANGELOG.md` and
-      `CHANGELOG.es.md`; README skill tables updated — `read-verified`.
-- [ ] `audit-docs` passes (no roadmap/folder/link drift, no leaked
-      stack/real-project reference). `read-verified`.
+      `CHANGELOG.es.md`; README skill tables updated — `read-verified` —
+      2.1.0, greps pass.
+- [x] `audit-docs` passes (no roadmap/folder/link drift, no leaked
+      stack/real-project reference). `read-verified` — PASS, no findings.
 - [ ] Open the PR: `gh pr create --base main --body-file <path>` with `Closes #20`
       in the body; **PRINT THE PR URL in the chat**.
 - [ ] Update roadmap row 13 → `done · [#<pr>](<pr-url>)`.

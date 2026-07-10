@@ -315,6 +315,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-10 | menor | Añade un **modo upgrade**: en un repo que el Step 0 reconoce como andamiaje agentic-workflow existente, ahora se ofrece upgrade junto a merge/adapt/abort — compara el sustrato con el `template/` actual, lee `docs/workflow/MIGRATION.md`, propone solo los bloques que faltan mediante una entrevista corta con valores por defecto de descubrimiento, y nunca reescribe un bloque personalizado (aditivo, nunca sobrescribe). Refuerza los cuatro casos límite (sin deriva, `MIGRATION.md` ausente, bloque personalizado, bootstrap sin cambios). El modo bootstrap queda igual. Ver `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | menor | La entrevista gana una ronda de **Tooling de rendimiento**: checklist de detección por slot (lint de complejidad / harness de benchmarks / profiler — ejemplos del adaptador TS/JS: grupo complexity de Biome o sonarjs+unicorn, vitest bench / mitata / tinybench, `node --cpu-prof` / 0x / `bun --inspect`), instalación confirmada por el usuario y registro en el nuevo bloque `Performance commands` de la plantilla para que `review-perf` mida en vez de estimar. |
 | 1.7.0 | 2026-07-05 | menor | La entrevista gana una ronda **Docs site**: registra el sitio de docs del proyecto (formato/directorio de contenido/comandos de build y mapa) en el nuevo bloque `Docs site` de la plantilla para que `generate-docs` pueda escribir en él; se deja comentado cuando no hay sitio. Nunca crea el sitio web. |
@@ -385,6 +386,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-10 — modo upgrade de init-workspace (feature 13).** Bump MENOR
+  para `init-workspace` (2.1.0): un repo que el Step 0 reconoce como
+  andamiaje agentic-workflow existente obtiene ahora una opción **upgrade**
+  junto a merge/adapt/abort — compara el sustrato con el `template/` actual,
+  lee `docs/workflow/MIGRATION.md`, propone solo los bloques que faltan
+  mediante una entrevista corta con valores por defecto de descubrimiento,
+  nunca reescribe un bloque personalizado. Cuatro casos límite reforzados
+  explícitamente (sin deriva, `MIGRATION.md` ausente, bloque personalizado,
+  bootstrap sin cambios). Modo bootstrap sin cambios. Se añade la
+  recomendación documentada "actualizar una instalación existente" en
+  `README.md`, `README.es.md` y `docs/workflow/MIGRATION.md`. Cierra #20.
 - **2026-07-10 — modo adversarial multi-revisor (feature 11).** Bump MENOR para
   `review-change` (nuevo `--adversarial N` opt-in: N revisores paralelos,
   context-clean y adversariales, fusionados/deduplicados por `file:line`+eje,
