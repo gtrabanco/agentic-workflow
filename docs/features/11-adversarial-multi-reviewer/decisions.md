@@ -22,10 +22,19 @@ in `SPEC.md` → Product decisions; these are the engineering ones.
   line (different axis) stay separate. Rationale: `file:line` alone would merge a
   security finding and a perf finding that happen to share a line.
 
-- **D4 — Reuse `review-implementation`; no new engine.** Each of the N reviewers
-  runs the existing findings engine + applicable pack. This feature only adds the
-  fan-out/merge around the existing review path. Rationale: a parallel engine
-  would drift from the single-reviewer one.
+- **D4 — Fan out the findings engine ONLY; the pack runs once.** Each of the N
+  reviewers runs the existing findings engine (`review-implementation`) — and
+  **only** the engine. The applicable pack (Process steps 2–10) runs **once**,
+  over the merged table, exactly as in the single-reviewer case. This feature
+  only adds the fan-out/merge around the engine — no new engine. Rationale:
+  (a) a parallel engine would drift from the single-reviewer one; (b) the
+  decorrelation N reviewers buy lives in the open-ended find phase — the pack
+  passes are closed checklists that converge across models, so multiplying them
+  yields near-duplicate findings at N× cost; (c) additional independent passes
+  already come from the workflow itself: fix-now findings are folded and the
+  re-review runs in a **fresh, context-clean conversation** (on any model), so
+  every fix cycle is itself another independent pass — no need to multiply
+  passes inside a single invocation.
 
 - **D5 — Platform-adaptive spawn, three tiers.** Claude Code → N subagents;
   headless-capable agent → N headless invocations; neither → N sequential fresh
