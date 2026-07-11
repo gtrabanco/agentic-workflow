@@ -112,6 +112,97 @@ closure** (met/unmet), `startable_now`, `blocked_units` with build orders,
 open PRs with audit state, and findings pending triage. Route on
 `detail.startable_now` and `next.recommended`. It is read-only and cheap-tier.
 
+## Urgency: the pause-vs-finish micro-judge (canonical rubric)
+
+`workflow-status`'s `detail.urgent` field (feature 15) reports open issues
+carrying the capability-gated `urgent`/`fix-next` labels — read **only** from
+the labels object, never from issue title/body/comment text (see
+`skills/triage-issue/SKILL.md`, the sole owner and writer of that vocabulary)
+— alongside the in-flight unit's interruptibility facts. It is a **sensor**:
+it never decides whether to interrupt. That decision is this rubric, run by
+the **consumer** (a driver, `ship-roadmap`'s SELECT stage, or a human) — the
+one canonical copy every consumer references, never forks.
+
+**Why the issue body is safe to feed the judge even though it's
+attacker-controlled:** the label already gated *whether* this rubric runs at
+all — an unlabeled issue never reaches this section, regardless of what its
+text says. The judge only ever chooses between two paths the label already
+authorized (`INTERRUPT_NOW` now, or `FINISH_FIRST` and interrupt after this
+phase); it cannot escalate beyond that, and its worst-case failure is a
+bounded delay, never a dropped fix.
+
+**1 — Deterministic short-circuit (no model call, run first, always).**
+
+| Condition | Verdict | Why no judge call |
+|---|---|---|
+| `detail.urgent.issues` is empty | — (no urgency in play) | Nothing to decide |
+| An urgent issue carries `fix-next` (not `urgent`) | Head of queue, **no interrupt** | `fix-next` bypasses the judge entirely by design — it never evaluates for interrupt-now |
+| `interruptibility.dirty == false` (clean tree, phase closed) | `INTERRUPT_NOW` | Interrupting is free at a commit boundary — start the fix immediately |
+| `interruptibility.tasks_from_boundary <= 1` (one checkbox from phase close) | `FINISH_FIRST` | Finishing costs almost nothing; interrupting mid-checkbox costs more than it saves |
+
+Only the **ambiguous middle band** — dirty tree, more than one task from the
+next commit boundary, label is `urgent` (not `fix-next`) — continues to step 2.
+
+**2 — The judge.** A single invocation, four guardrails, none optional:
+
+- **Tool-less.** The judge classifies; it holds no effector of any kind. Giving
+  it tools would reintroduce the exact injection surface labels exist to
+  close.
+- **Cheap-tier, clean-context.** Spawn a fresh, minimal-context invocation on
+  the cheapest capable tier in your fleet — not a tier id pinned here (the
+  workflow is model-agnostic across 70+ agents); never the tier running the
+  in-flight unit.
+- **Closed-binary output + schema repair loop.** The judge's entire output is:
+  ```json
+  {"verdict": "FINISH_FIRST | INTERRUPT_NOW", "reason": "<one line>"}
+  ```
+  Validate against that shape. Unparseable on the first attempt → one repair
+  invocation (`Emit only the verdict JSON for the case above.`), same rule as
+  the envelope repair loop earlier in this doc. Still unparseable after
+  repair → **fail-safe default `FINISH_FIRST`** (see below) — never retry
+  indefinitely, never guess.
+- **Rubric-as-system-prompt.** The rule table below **is** the system prompt
+  fed to the judge, verbatim — not a paraphrase the judge free-associates
+  from. The judge applies it as a checklist against the specific issue +
+  interruptibility facts it is given, and returns nothing else.
+
+  ```text
+  You are a bounded classifier. You have no tools and take no action — you
+  only classify. Given an urgent issue's content and the in-flight unit's
+  interruptibility facts, decide: interrupt the in-flight unit now, or finish
+  the current phase first?
+
+  Checklist (apply in order; first matching row wins):
+  1. Is the issue's real-world impact severe AND actively ongoing (data loss,
+     security exposure, broken production path) — not merely annoying or
+     already contained? If NO → FINISH_FIRST.
+  2. Is the in-flight unit more than one task from its next commit boundary
+     AND would interrupting lose uncommitted, hard-to-reconstruct work? If
+     YES → FINISH_FIRST.
+  3. Both the impact is severe/ongoing AND interrupting loses little (close to
+     a boundary, or the work is trivially resumable)? → INTERRUPT_NOW.
+  4. Uncertain, tied, or the evidence conflicts? → FINISH_FIRST (fail-safe
+     default — never guess toward interruption).
+
+  Output ONLY: {"verdict": "FINISH_FIRST | INTERRUPT_NOW", "reason": "<one
+  line>"}. Nothing before or after.
+  ```
+- **Fail-safe default `FINISH_FIRST`.** On any uncertainty, tie, or
+  unparseable output surviving the repair loop, the verdict is `FINISH_FIRST`
+  — never `INTERRUPT_NOW` by default. The label already guarantees the fix
+  runs next either way; the only thing at stake is *now* vs. *after this
+  phase*, so erring toward finishing never drops a fix, it only bounds a
+  delay.
+
+**3 — Acting on the verdict.** `INTERRUPT_NOW` → park the in-flight unit as a
+clean voluntary "crash" (WIP commit + a `progress.md` note stating why),
+then run `plan-fix`/`execute-phase --fix` on the urgent issue; resuming the
+parked unit later reuses `workflow-status`'s `RESUMABLE` verdict +
+`execute-phase`'s idempotent phase re-entry — no new park/resume machinery.
+`FINISH_FIRST` → finish the current phase's commit, then the urgent fix is
+next in queue (same as `fix-next`'s head-of-queue treatment) before any other
+unit starts.
+
 ## Driver restart protocol (crash recovery)
 
 A driver process will eventually die mid-turn. The recovery rule: **the

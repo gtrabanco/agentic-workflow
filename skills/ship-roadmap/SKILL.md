@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 2.1.0
+version: 2.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -222,13 +222,33 @@ turns:
    refresh the final report, open the report PR, print the `SHIP:` banner +
    status table, end the turn.
 3. **SELECT one unit.** Priority order, first match wins:
-   1. **Blocking fixes first.** A fix-index entry classified fix-now whose
+   1. **Urgency labels first (feature 15, injection-safe).** Read
+      `workflow-status`'s `detail.urgent` (labels-only, presence-only —
+      never derived from issue text; see `skills/triage-issue/SKILL.md`, the
+      sole owner of the `urgent`/`fix-next` vocabulary):
+      - Any open issue labeled **`fix-next`** → its fix jumps to the head of
+        the queue exactly like a blocking fix below (`plan-fix` →
+        `execute-phase --fix`), **no interrupt** of the in-flight unit — it
+        waits for the current stage to finish this iteration, then is
+        SELECTed next.
+      - Any open issue labeled **`urgent`** → run the canonical pause-vs-finish
+        rubric in `docs/workflow/ORCHESTRATION.md` **by reference, never
+        forked here** — feed it the issue content plus `detail.urgent
+        .interruptibility` for the current in-flight unit.
+        `INTERRUPT_NOW` → park the in-flight unit (WIP commit + `progress.md`
+        note, same as any voluntary park) and SELECT the urgent issue's fix as
+        this iteration's unit instead. `FINISH_FIRST` → this iteration
+        proceeds normally (steps below); the urgent fix is queued head-of-line
+        for the **next** iteration, same as `fix-next`.
+      - No `urgent`/`fix-next` issues in `detail.urgent` → fall through to the
+        normal priority order below.
+   2. **Blocking fixes first.** A fix-index entry classified fix-now whose
       subject blocks the next startable feature (same module, a dependency's
       defect, or a red gate cause) → its fix is the selected unit
       (`plan-fix` → `execute-phase --fix` through the normal stages). Fixes
       that block nothing wait for the report's triage batch.
-   2. An in-progress feature's next pending stage.
-   3. The next feature at status `idea` **or** `planned` whose depends-on rows
+   3. An in-progress feature's next pending stage.
+   4. The next feature at status `idea` **or** `planned` whose depends-on rows
       are all **merged** (forge state, not merely `done` — a `done` dep with
       an open PR isn't on the default branch yet, so a dependent cut from it
       would lack its code). A `defined`-but-not-`planned` row is treated the
@@ -239,7 +259,7 @@ turns:
       → `SHIP: STOPPED` (substrate invariant broken), never build on top of it.
       → `idea`/`defined`: DESIGN first (see ADVANCE). `planned`: → PLAN
       directly.
-   4. **Issue sweep — features exhausted, run NOT over.** Every roadmap feature
+   5. **Issue sweep — features exhausted, run NOT over.** Every roadmap feature
       is `done` **and merged** but the sweep hasn't completed → the run
       continues with issues; finishing the features is not finishing the run:
       1. **INVENTORY (once per run, its own iteration).** Enumerate (a) every
@@ -261,7 +281,7 @@ turns:
       3. **SHIP the fix-now issues** one unit at a time through the normal
          stages (`plan-fix` → EXECUTE (`--fix`) → REVIEW → PR → AUDIT), same
          budget caps, floors, and merge policy as features.
-   5. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
+   6. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
       #12 unblocks 05 and 07") and the resume command.
 
    `execute-phase`'s own dependency gate stays active inside every subagent —
