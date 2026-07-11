@@ -95,3 +95,21 @@ CHANGELOG.md/es rows + README/README.es cells updated, release-log entries
 added (commit `ff34505`). No open decisions or deviations from the SPEC. Four
 phases complete (P1–P4); only P5 (Hardening & PR) remains. Next:
 `execute-phase 15 P5`.
+
+## P5 — Hardening & PR — 2026-07-11
+
+Cross-checked all seven SPEC Dev-scenario failure edges against the touched
+skills — six were already stated (P1–P4); `status:issue-closed` needed one
+clarifying addition to `workflow-status`'s `detail.urgent` description: the
+open-issue list is scoped `--state open`, so a shipped fix's issue drops out
+automatically on the next poll, no manual label strip. Ran the full gate:
+`npx skills add . --list` exit 0, all skills discovered including the four at
+their new versions. Ran `audit-docs` in-turn (11/14 checks; 3 skipped as
+genuinely n/a — no fix touched, no Docs site block, PR not yet open) — PASS,
+no findings. `git status --porcelain -- docs/` empty. Flipped roadmap row 15
+to `done`, committed, pushed, opened PR `Closes #42` with a Markdown body
+(written to a file, real backticks, verified via `gh pr view --json body`),
+printed the URL, updated the roadmap row to
+`done · [#<pr>](<pr-url>)`, and pushed the link commit. Feature 15 complete —
+all 5 phases shipped, no open decisions, no deferred work. Next:
+`/review-change` (mandatory final review) → `/audit-pr` (merge gate).
