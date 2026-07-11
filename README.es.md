@@ -291,7 +291,7 @@ de **Thinking** y control de **effort** por petición (Minimal → Max), que map
 | `init-workspace`, `plan-feature`, `plan-fix`, `review-change`, `audit-pr`, `triage-issue` | **GLM-5.2** | on | High |
 | `product-audit` | **GLM-5.2** | on | **Max** |
 | `ship-roadmap` (conductor) | **GLM-5.2** | on | High |
-| `execute-phase` (+ la ejecución de ship-roadmap), `audit-docs`, `bump-skill` | **Qwen3.6** | off | Medium |
+| `execute-phase` (+ la ejecución de ship-roadmap), `audit-docs`, `bump-skill`, `workflow-status` | **Qwen3.6** | off | Medium |
 | `log-session`, recolección de evidencia | **DeepSeek V4 Flash** | off | Low |
 
 Alternativas: lógica de implementación sutil → sube `execute-phase` a
