@@ -95,15 +95,15 @@ Objective conditions. Git-side criteria are checkable by the implementer;
 manual criteria are owner-only (no npm registry access from CI or the agent)
 and must be recorded as required manual verification.
 
-- [ ] **[git]** `.github/workflows/publish-schema.yml` header contains a
+- [x] **[git]** `.github/workflows/publish-schema.yml` header contains a
       `Troubleshooting` note that names the `E403 … OIDC permission denied`
       symptom, the Trusted Publisher fields to verify (provider GitHub Actions,
       org/user `gtrabanco`, repo `agentic-workflow`, workflow filename
       `publish-schema.yml`, environment name blank), and the re-run command.
-- [ ] **[git]** The `publish` job has an `if: failure()` step that echoes the
+- [x] **[git]** The `publish` job has an `if: failure()` step that echoes the
       troubleshooting pointer to the run log; YAML is valid
       (`gh workflow view publish-schema.yml` / a local YAML lint parses it).
-- [ ] **[git]** The workflow still triggers only on
+- [x] **[git]** The workflow still triggers only on
       `packages/agentic-workflow-schema/**` and the workflow file (trigger
       scope unchanged — this fix does not touch `on:`).
 - [ ] **[manual · owner]** On npmjs.com →
@@ -144,15 +144,15 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #39`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #39` and push
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #39` and push
 
 ## Impact
 
@@ -276,4 +276,4 @@ being manual and external, is unaffected by a git revert.
 
 ## Status
 
-`pending`
+`done`
