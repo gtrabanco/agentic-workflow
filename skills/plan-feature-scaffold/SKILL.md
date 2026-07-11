@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.7.0
+version: 1.8.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >

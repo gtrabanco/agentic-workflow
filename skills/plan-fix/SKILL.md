@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.0.0
+version: 2.1.0
 argument-hint: <issue-number>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
