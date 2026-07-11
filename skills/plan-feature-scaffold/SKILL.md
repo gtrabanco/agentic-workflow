@@ -7,8 +7,9 @@ license: MIT
 description: >
   Internal step of plan-feature: from an already-designed SPEC (product half
   `designed`), fill the **engineering half** and generate the planning
-  artifact set scaled to the feature's size (XS/S → SPEC-only; M/L → full set
-  with a hardening phase) and register the roadmap entry. Docs only — never code.
+  artifact set scaled to the feature's size (XS/S → SPEC-only with ≥ 2 phases
+  in the SPEC, last = Hardening & PR; M/L → full set with a hardening phase)
+  and register the roadmap entry. Docs only — never code.
 ---
 
 # Plan Feature — Scaffold (internal)
@@ -62,9 +63,15 @@ the agent guide and state the assumption.
    No unfilled placeholders; record genuinely-unknown values as open questions
    in `decisions.md`, not blanks.
 4. **Scale the artifacts to the size.**
-   - **XS/S** → the SPEC is the only planning artifact. Skip the set below,
-     register the roadmap entry, and hand off to `execute-phase <NN>`
-     (single-pass). Don't generate ceremony the feature doesn't need.
+   - **XS/S** → the SPEC is the only planning artifact (skip the set below —
+     don't generate ceremony the feature doesn't need), but its `### Phases`
+     section must list **≥ 2 phases with checkbox tasks**: `P1` implementation
+     (cut by the per-phase cheap-executability checklist below), final phase
+     `P2 — Hardening & PR` carrying the **literal close-out tasks** (fixed
+     wording — copy them from `docs/fix/_TEMPLATE/SPEC.md` `## Phases`, never
+     paraphrase). Register the roadmap entry and hand off to
+     `execute-phase <NN>` (it runs one phase per invocation, ticking the
+     SPEC's `### Phases` checkboxes as its ledger).
    - **Split — mandatory, not advisory.** Before emitting the phase list for an
      M/L feature, split this feature into `Depends on:`-chained features if
      **any** holds: (a) the plan would exceed **~5 phases**; (b) a phase
@@ -126,7 +133,7 @@ the agent guide and state the assumption.
    SCAFFOLD <NN>-<slug> — size: <XS|S|M|L>
    Artifacts written: <SPEC.md [+ PLAN.md TASKS.md progress.md testing.md
      known-issues.md decisions.md architecture-notes.md for M/L]>
-   Roadmap: registered as <NN> (deps: <list|none>)   Phases: <n> (P1…P<n>, last = hardening) | single-pass
+   Roadmap: registered as <NN> (deps: <list|none>)   Phases: <n> (P1…P<n>, last = <hardening (M/L) | Hardening & PR (XS/S)>)
    Open questions: <n> (in decisions.md) | none
    ```
 
