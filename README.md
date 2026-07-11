@@ -283,7 +283,7 @@ maps 1:1 onto this workflow's tiers. Our picks per skill:
 | `init-workspace`, `plan-feature`, `plan-fix`, `review-change`, `audit-pr`, `triage-issue` | **GLM-5.2** | on | High |
 | `product-audit` | **GLM-5.2** | on | **Max** |
 | `ship-roadmap` (conductor) | **GLM-5.2** | on | High |
-| `execute-phase` (+ ship-roadmap's execution runs), `audit-docs`, `bump-skill` | **Qwen3.6** | off | Medium |
+| `execute-phase` (+ ship-roadmap's execution runs), `audit-docs`, `bump-skill`, `workflow-status` | **Qwen3.6** | off | Medium |
 | `log-session`, evidence gathering | **DeepSeek V4 Flash** | off | Low |
 
 Alternates: subtle implementation logic → bump `execute-phase` to GLM-5.2/High;
