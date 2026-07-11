@@ -93,20 +93,6 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.0.1 | 2026-06-27 | patch | Closing normalized to the canonical `→ Next:` recommendation block |
 | 1.0.0 | 2026-06-19 | — | New session-journal skill. Appends a structured entry to `docs/LOGS.md` (summary, files, decisions + why, next step) on demand; `model: sonnet` (cheap by design). Ships with free, opt-in `template/.claude/` hooks: SessionEnd mechanical capture + SessionStart marker, and an opt-in SessionStart context-restore — all model-free |
 
-### Repo maintenance
-
-#### `bump-skill`
-| Version | Date | Type | What changed |
-|---|---|---|---|
-| 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also retired the now-obsolete "Machine envelope" lint rule (it required every user-facing skill to carry the section — no longer true). See `docs/workflow/MIGRATION.md`. |
-| 1.5.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Lint gains a 5th rule: user-facing skills must carry the `## Machine envelope` section. |
-| 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
-| 1.3.0 | 2026-07-03 | minor | Lint also checks the new `## Turn contract` section on user-facing skills. |
-| 1.2.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
-| 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
-| 1.1.0 | 2026-06-27 | minor | Lint step flags edited skills missing a `→ Next:` block or using `S1`/"Step" phase labels (warns, never auto-fixes) |
-| 1.0.0 | 2026-06-19 | — | New repo-maintenance skill. After editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skills and model tables in README.md + README.es.md |
-
 ### User-facing
 
 #### `generate-docs`
@@ -336,6 +322,15 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `bump-skill` | 2.1.0 | 2026-07-11 | minor | Fix #40: reclassified `user-invocable: false` — the skill is repo-maintenance for `agentic-workflow` itself and its `/bump-skill` menu entry was pure noise for the ~99% of consumers who don't author this pack's `SKILL.md` files. Behavior unchanged; still run via the Skill tool or by following `SKILL.md` directly. Per-skill table moved from "Repo maintenance" (User-facing-adjacent) to this Internal section. |
+| | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also retired the now-obsolete "Machine envelope" lint rule (it required every user-facing skill to carry the section — no longer true). See `docs/workflow/MIGRATION.md`. |
+| | 1.5.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Lint gains a 5th rule: user-facing skills must carry the `## Machine envelope` section. |
+| | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
+| | 1.3.0 | 2026-07-03 | minor | Lint also checks the new `## Turn contract` section on user-facing skills. |
+| | 1.2.1 | 2026-07-02 | patch | Model-equivalence note in the description (edit model:/effort: for non-Claude / free-inference models). |
+| | 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
+| | 1.1.0 | 2026-06-27 | minor | Lint step flags edited skills missing a `→ Next:` block or using `S1`/"Step" phase labels (warns, never auto-fixes) |
+| | 1.0.0 | 2026-06-19 | — | New repo-maintenance skill. After editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skills and model tables in README.md + README.es.md |
 | `orchestration-envelope` | 1.1.1 | 2026-07-10 | patch | Fix #33: the frontmatter description and opening section still stated the pre-feature-10 contract ("every user-facing skill prints the envelope") ABOVE the feature-10 correction — rewritten head-first to the current contract (schema + last-fenced-json parse rule as the core; emission = `workflow-status` always, other skills only under the driver-injected snippet, nothing in interactive sessions). Same stale sentence fixed in `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts`, and `envelope.schema.json` (description/comment/metadata text only, no schema-shape or code-behavior change, no package release needed). |
 | | 1.1.0 | 2026-07-10 | minor | New `## Driver system-prompt snippet + repair loop` section: the canonical driver-injected system-prompt snippet (verbatim, fenced) and the repair-loop protocol (parse-fail → re-invoke with "Emit only the machine envelope for the turn above.", one retry, then driver-level FAILED) — the envelope requirement moved here from the 14 user-facing skills' per-skill turn contracts. |
 | | 1.0.0 | 2026-07-05 | — | New internal contract: the machine-envelope JSON schema (11 states, fixed keys, last-fenced-json parse rule) every user-facing skill emits as its absolute last output. |
@@ -390,6 +385,15 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-11 — bump-skill reclassified internal (fix #40).** MINOR bump for
+  `bump-skill` (2.1.0): `user-invocable: false` and dropped from
+  `.claude-plugin/plugin.json`'s `skills` array — the skill is
+  repo-maintenance for `agentic-workflow` itself, so its `/bump-skill` menu
+  entry was noise for the ~99% of consumers who don't author this pack's
+  `SKILL.md` files. No behavior change; still run via the Skill tool. Skill
+  counts reconciled across `README.md`, `README.es.md`, and
+  `docs/workflow/SKILLS.md` (15 user-facing + 13 internal → 14 + 14). Closes
+  #40.
 - **2026-07-11 — phased close-out for single-pass units (fix #35).** MINOR
   bumps for `plan-fix` (2.1.0), `plan-feature-scaffold` (1.8.0), and
   `execute-phase` (2.1.0): every fix SPEC and XS/S feature SPEC now carries a
