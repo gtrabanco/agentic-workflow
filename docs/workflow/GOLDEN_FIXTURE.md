@@ -55,7 +55,7 @@ record list to a CSV file at a given path.
 
 ## Size
 
-`XS` — single command, no new dependencies, single-pass.
+`XS` — single command, no new dependencies, 2 phases.
 
 ## Dependencies
 
@@ -96,7 +96,22 @@ if one exists.
 
 ### Phases
 
-**Single-pass (size XS)**.
+#### P1 — implement `export-csv`
+
+- [ ] Command handler writes a header row + one row per record to `<path>`
+- [ ] Empty record set → header-only file, exit 0
+
+#### P2 — Hardening & PR
+
+- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Set the roadmap row status to `done` and commit the flip
+- [ ] `git push`
+- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+      Markdown file, real backticks, never inline `--body`/heredoc) and
+      PRINT THE PR URL in the chat
+- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [ ] Commit `docs: link PR #<n>` and push
 ```
 
 ## The procedure

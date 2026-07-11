@@ -69,8 +69,8 @@ reference THIS project's real paths/commands/language.
    **STOP and redirect** to `/design-feature <slug>` (no bypass flag). Given a
    designed feature, an issue `#N`, a scoped slug/SPEC, or `--next` (next
    roadmap item), dispatch to the right internal step below, then ensure the
-   roadmap entry and print the next step: `execute-phase NN P1` (M/L) or
-   `execute-phase NN` single-pass (XS/S).
+   roadmap entry and print the next step: `execute-phase NN P1` (M/L and
+   XS/S alike — XS/S phases live in the SPEC).
 3. `plan-fix` — architect-draft a tightly-scoped fix SPEC from an issue, register
    it in the fix index, commit on a fix branch, and STOP for review.
 
@@ -80,14 +80,19 @@ reference THIS project's real paths/commands/language.
    to docs language; map to roadmap; close gaps by asking, or hand a thin issue
    to `design-feature`; wire `Closes #N`; satisfy capability closure).
 5. `plan-feature-scaffold` — fill the **engineering half** + scaffold planning
-   artifacts **scaled to the size**: XS/S → SPEC-only (single-pass path, no
-   ceremony); M/L → the full set, whose plan always ends in a **hardening
-   phase** (edge cases + the SPEC's failure modes). Register in the roadmap.
+   artifacts **scaled to the size**: XS/S → SPEC-only (no ceremony), with
+   **≥ 2 phases in the SPEC** (`P1` implementation, final
+   `P2 — Hardening & PR` = the close-out); M/L → the full set, whose plan
+   always ends in a **hardening phase** (edge cases + the SPEC's failure
+   modes). Register in the roadmap.
    Docs only; no code, no branch.
 
 **Execute**
-6. `execute-phase` — implement one phase (default), a small `XS/S` feature in a
-   single pass, or a fix (`--fix`). Branch safety; on P1 commit the planning
+6. `execute-phase` — implement one phase per invocation: of a feature
+   (default), of a small `XS/S` feature, or of a fix (`--fix`) — XS/S and fix
+   phases live in the SPEC's `## Phases` (their final phase is always
+   `Hardening & PR`, the close-out); a legacy SPEC without `## Phases` runs
+   end-to-end in one pass. Branch safety; on P1 commit the planning
    artifacts separately before any code. **Tests-first** on core/domain and
    orchestration work (the SPEC's dev scenarios are the test list, red → green).
    The project's verification gate before every commit — **never commit red**
@@ -95,7 +100,8 @@ reference THIS project's real paths/commands/language.
    the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
    doc discipline; hand off to `review-change` every 2 phases AND for the
    **mandatory** end review (suggest it rather than composing it, so it runs at its
-   own model/effort). A finished unit (single-pass, `--fix`, or final phase)
+   own model/effort). A finished unit (the final `Hardening & PR` phase for
+   XS/S and fixes, a feature's final phase, or a legacy single pass)
    **always opens its PR** (never branch-only) and **flips to `done` at PR-open**
    (built, not merged — merge state lives in the forge). Print the next step.
 

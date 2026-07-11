@@ -53,7 +53,7 @@ Cite the evidence (paths, counts, line refs) in the decision.
 | Verdict | When | Route |
 |---|---|---|
 | **fix-now** | Defect, or the trigger is met | `plan-fix` → `execute-phase --fix`; add to fix index |
-| **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped, **sized** SPEC; small `XS/S` features go SPEC-only → `execute-phase <NN>` single-pass) |
+| **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped, **sized** SPEC; small `XS/S` features go SPEC-only with ≥ 2 phases in the SPEC → `execute-phase <NN>`) |
 | **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment; **don't implement inline** |
 | **wontfix** | Obsolete or explicitly bounded | Propose closing with rationale |
 
