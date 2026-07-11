@@ -104,12 +104,12 @@ ticks tasks here.
 - [x] Re-run the project's full verification gate (commands + exit codes pasted) — `npx skills add . --list` exit 0; `bun run test` 13/13 pass, exit 0
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty — confirmed
 - [x] Set the fix-index row status to `done` and commit the flip — `docs/fix/README.md:17`
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push` — pushed, tracking `origin/fix/38-schema-package-republish`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #38`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #38` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #38` — https://github.com/gtrabanco/agentic-workflow/pull/48
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)` — `docs/fix/README.md:17`
+- [x] Commit `docs: link PR #38` and push
 
 ## Testing
 
@@ -130,7 +130,7 @@ data-side cleanup (docs-only artifact).
 
 ## Status
 
-`pending`
+`done` · [#48](https://github.com/gtrabanco/agentic-workflow/pull/48)
 
 ---
 
