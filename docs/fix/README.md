@@ -17,7 +17,6 @@ this table — history lives in git log + closed issues.
 | [33-stale-envelope-contract](33-stale-envelope-contract/SPEC.md) | Pre-feature-10 envelope contract still stated in orchestration-envelope's head + schema-package README | done | — | [#33](https://github.com/gtrabanco/agentic-workflow/issues/33) |
 | [35-single-pass-closeout-phase](35-single-pass-closeout-phase/SPEC.md) | Single-pass units drop the close-out chain — always emit a final Hardening & PR phase (≥ 2 phases) | done · [#36](https://github.com/gtrabanco/agentic-workflow/pull/36) | — | [#35](https://github.com/gtrabanco/agentic-workflow/issues/35) |
 | [39-publish-schema-oidc-403](39-publish-schema-oidc-403/SPEC.md) | `publish-schema.yml` E403 OIDC — make the failure self-serve in-repo; authorization repair is a manual npm Trusted Publisher step (blocks #38) | done · [#41](https://github.com/gtrabanco/agentic-workflow/pull/41) | — | [#39](https://github.com/gtrabanco/agentic-workflow/issues/39) |
-| [40-bump-skill-internal-only](40-bump-skill-internal-only/SPEC.md) | Reclassify `bump-skill` as internal (`user-invocable: false` + drop from plugin manifest) so the `/bump-skill` menu entry stops leaking into every consumer install; reconcile the 15+13 → 14+14 skill-count docs | done · [#45](https://github.com/gtrabanco/agentic-workflow/pull/45) | — | [#40](https://github.com/gtrabanco/agentic-workflow/issues/40) |
 
 
 ---
