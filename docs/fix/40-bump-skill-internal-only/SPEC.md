@@ -134,13 +134,13 @@ ticks tasks here.
 
 ### P1 — Reclassify bump-skill as internal (flag + manifest + count docs)
 
-- [ ] `skills/bump-skill/SKILL.md`: change frontmatter `user-invocable: true`
+- [x] `skills/bump-skill/SKILL.md`: change frontmatter `user-invocable: true`
       → `user-invocable: false`. Touch nothing else in the file. Verify:
       `grep -n '^user-invocable:' skills/bump-skill/SKILL.md` → `false`.
-- [ ] `.claude-plugin/plugin.json`: remove the `"./skills/bump-skill",` line
+- [x] `.claude-plugin/plugin.json`: remove the `"./skills/bump-skill",` line
       from the `skills` array; keep valid JSON. Verify with the acceptance
       one-liner (parses, 27 entries, `./skills/bump-skill` absent).
-- [ ] `docs/workflow/SKILLS.md`: (a) delete the
+- [x] `docs/workflow/SKILLS.md`: (a) delete the
       `| \`bump-skill\` | \`/bump-skill\` | … |` row from the invocation-forms
       table; (b) update the count sentence `**15 user-facing skills** … + **13
       internal**` → `**14 user-facing skills** … + **14 internal**`; (c) in the
@@ -150,17 +150,17 @@ ticks tasks here.
       maintenance helper (adjust the "Of the 15" wording to "Of the 14"
       accordingly). Verify: `grep -rn '/bump-skill' docs/workflow/SKILLS.md`
       returns nothing.
-- [ ] `README.md`: update both count occurrences (layout block line ~56 and
+- [x] `README.md`: update both count occurrences (layout block line ~56 and
       prose line ~73) `15 user-facing + 13 internal` → `14 user-facing +
       14 internal`.
-- [ ] `README.es.md`: update both count occurrences (layout block line ~57 and
+- [x] `README.es.md`: update both count occurrences (layout block line ~57 and
       prose line ~74) `15 de cara al usuario + 13 internas` → `14 de cara al
       usuario + 14 internas`.
-- [ ] `CLAUDE.md`: in the "Repo maintenance skill (specific to this repo)"
+- [x] `CLAUDE.md`: in the "Repo maintenance skill (specific to this repo)"
       block, add a clause that `bump-skill` is now `user-invocable: false` —
       invoked via the Skill tool / by following its `SKILL.md`, not the slash
       menu.
-- [ ] Gate for this phase: JSON validity + the grep checks above all pass;
+- [x] Gate for this phase: JSON validity + the grep checks above all pass;
       `npx skills add . --list` still reports 28 skills.
 
 ### P2 — Hardening & PR

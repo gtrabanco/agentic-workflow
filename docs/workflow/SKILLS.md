@@ -2,14 +2,14 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**15 user-facing skills** (one menu entry each) + **13 internal** steps composed
+**14 user-facing skills** (one menu entry each) + **14 internal** steps composed
 for you (the `plan-feature` router's two planning steps, the `review-change`
 findings engine `review-implementation`, the `orchestration-envelope` contract,
-and the workflow's own 9-skill internal review pack: `review-code`,
+the workflow's own 9-skill internal review pack: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
-`review-a11y`, `review-brand`, `review-perf`, `review-seo`). Of the 15: 12 core
-workflow skills, a `log-session` journal helper, a `workflow-status` read-only
-sensor, and the repo-only `bump-skill` maintenance helper.
+`review-a11y`, `review-brand`, `review-perf`, `review-seo`, and the repo-only
+`bump-skill` maintenance helper). Of the 14: 12 core workflow skills, a
+`log-session` journal helper, and a `workflow-status` read-only sensor.
 
 ## Setup
 
@@ -110,7 +110,6 @@ with no arguments uses the default stated here.
 |---|---|---|
 | `audit-docs` | `/audit-docs [--fix]` | No args: report-only, findings ranked by severity. `--fix`: additionally applies the **low-risk** fixes — docs are never rewritten without it (or an explicit user go-ahead). |
 | `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |
-| `bump-skill` | `/bump-skill` | No arguments — detects the edited `SKILL.md` files itself. Repo-maintenance only. |
 | `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | A raw idea → interview from zero. A bare existing `NN-slug` → **review mode**: prints a summary of what the feature will do and asks what to add/remove/change. `NN-slug + instruction` → applies the change directly, no questions, scoped to the instruction. Upsert always — the only from-zero reset is an explicit "delete and redesign" in the instruction. |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` alone → single-pass (XS/S SPEC-only features). `NN P<k>` → exactly one phase of an M/L feature. `--fix <n>` → implement the fix unit `docs/fix/<n>-*`. `--force` → override the dependency/status gate (user-only escape hatch; the override is recorded in `decisions.md`; the autopilot never passes it). |
 | `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | Scope defaults to the current branch's diff vs the default branch; a slug/fix/path narrows or redirects it. `--review` → additionally export the most recent `review-change` report as a docs page (opt-in, never automatic). |
