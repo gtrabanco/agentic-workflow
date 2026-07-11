@@ -197,11 +197,15 @@ states** (the schema package needs no release):
 before dependency startability matters).
 
 **`detail.urgent`** — the injection-safe urgency channel (feature 15):
-`{issues: [...], interruptibility: {...}}`. `issues` lists every open issue
-carrying `urgent` or `fix-next`, read **only** from the `labels` object
-returned in step 2/3's `gh issue list … --json … ,labels` call — never from
-title, body, or comments; an issue with "URGENT" only in its text never
-appears here (`urgent` wins when an issue somehow carries both labels).
+`{issues: [...], interruptibility: {...}}`. `issues` lists every **open**
+issue carrying `urgent` or `fix-next`, read **only** from the `labels` object
+returned in step 2/3's `gh issue list --state open … --json … ,labels` call —
+never from title, body, or comments; an issue with "URGENT" only in its text
+never appears here (`urgent` wins when an issue somehow carries both labels).
+Scoping the list to `--state open` means a shipped fix's issue drops out of
+`detail.urgent` the moment it closes — automatically, on the next poll, with
+no manual label strip required (there is nothing to reconcile: this field is
+recomputed fresh every invocation, never persisted).
 `interruptibility` carries the in-flight unit's facts — `phase`, `dirty`
 (bool), `tasks_from_boundary` (count of unticked tasks left in the current
 phase) — reusing the same phase-progress and crash-recovery reconcile, not a
