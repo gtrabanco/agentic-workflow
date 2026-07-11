@@ -238,3 +238,5 @@ reusable operational knowledge as a skill under `skills/`.
   It bumps `version:`, adds changelog rows to `CHANGELOG.md` and
   `CHANGELOG.es.md`, and updates the skills and model tables in both READMEs.
   This is the mechanical enforcement of the "Version every change" rule above.
+  `bump-skill` itself is `user-invocable: false` — invoke it via the Skill
+  tool / by following its `SKILL.md` directly, not the slash-command menu.

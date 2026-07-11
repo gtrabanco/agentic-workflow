@@ -95,20 +95,6 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | 1.0.1 | 2026-06-27 | parche | Cierre normalizado al bloque canónico `→ Next:` |
 | 1.0.0 | 2026-06-19 | — | Nueva skill de diario de sesión. Añade una entrada estructurada a `docs/LOGS.md` (resumen, archivos, decisiones + por qué, siguiente paso) bajo demanda; `model: sonnet` (barato por diseño). Incluye hooks gratuitos y opt-in en `template/.claude/`: captura mecánica en SessionEnd + marcador en SessionStart, y restauración de contexto opt-in en SessionStart — todos sin modelo |
 
-### Mantenimiento del repo
-
-#### `bump-skill`
-| Versión | Fecha | Tipo | Qué cambió |
-|---|---|---|---|
-| 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Además se retira la regla de lint "Machine envelope", ya obsoleta (exigía que toda skill de cara al usuario llevara la sección — ya no es cierto). Ver `docs/workflow/MIGRATION.md`. |
-| 1.5.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. El lint gana una 5ª regla: las skills de cara al usuario deben llevar la sección `## Machine envelope`. |
-| 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
-| 1.3.0 | 2026-07-03 | menor | El lint comprueba también la nueva sección `## Turn contract` en las skills de cara al usuario. |
-| 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
-| 1.2.0 | 2026-07-02 | minor | El lint ahora comprueba también que las skills de cara al usuario llevan la sección `## Portability`; añadida su propia nota de Portability. |
-| 1.1.0 | 2026-06-27 | menor | Paso de lint que marca las skills editadas sin bloque `→ Next:` o con etiquetas de fase `S1`/"Step" (avisa, nunca corrige solo) |
-| 1.0.0 | 2026-06-19 | — | Nueva skill de mantenimiento del repo. Tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md |
-
 ### De cara al usuario
 
 #### `generate-docs`
@@ -338,6 +324,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `bump-skill` | 2.1.0 | 2026-07-11 | menor | Fix #40: reclasificada como `user-invocable: false` — la skill es mantenimiento del propio repo `agentic-workflow` y su entrada de menú `/bump-skill` era ruido para el ~99% de quienes consumen el paquete sin autorar sus `SKILL.md`. Sin cambio de comportamiento; se sigue ejecutando vía la herramienta Skill o siguiendo `SKILL.md` directamente. Su tabla por skill se traslada de "Mantenimiento del repo" a esta sección Interna. |
+| | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Además se retira la regla de lint "Machine envelope", ya obsoleta (exigía que toda skill de cara al usuario llevara la sección — ya no es cierto). Ver `docs/workflow/MIGRATION.md`. |
+| | 1.5.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. El lint gana una 5ª regla: las skills de cara al usuario deben llevar la sección `## Machine envelope`. |
+| | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
+| | 1.3.0 | 2026-07-03 | menor | El lint comprueba también la nueva sección `## Turn contract` en las skills de cara al usuario. |
+| | 1.2.1 | 2026-07-02 | parche | Nota de equivalencia de modelos en la descripción (edita model:/effort: para modelos no-Claude / de libre inferencia). |
+| | 1.2.0 | 2026-07-02 | minor | El lint ahora comprueba también que las skills de cara al usuario llevan la sección `## Portability`; añadida su propia nota de Portability. |
+| | 1.1.0 | 2026-06-27 | menor | Paso de lint que marca las skills editadas sin bloque `→ Next:` o con etiquetas de fase `S1`/"Step" (avisa, nunca corrige solo) |
+| | 1.0.0 | 2026-06-19 | — | Nueva skill de mantenimiento del repo. Tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md |
 | `orchestration-envelope` | 1.1.1 | 2026-07-10 | parche | Fix #33: la descripción del frontmatter y la sección de apertura aún enunciaban el contrato previo a la feature 10 ("toda skill de cara al usuario imprime el envelope") POR ENCIMA de la corrección de la feature 10 — reescritas de cabeza al contrato vigente (esquema + regla de parseo último-json-cercado como núcleo; emisión = `workflow-status` siempre, el resto de skills solo bajo el snippet inyectado por el driver, nada en sesiones interactivas). La misma frase obsoleta corregida en `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts` y `envelope.schema.json` (solo texto de descripción/comentario/metadatos, sin cambio de forma del esquema ni de comportamiento, sin release del paquete). |
 | | 1.1.0 | 2026-07-10 | menor | Nueva sección `## Driver system-prompt snippet + repair loop`: el snippet canónico de system-prompt inyectado por el driver (verbatim, cercado) y el protocolo de bucle de reparación (fallo de parseo → reinvocar con "Emit only the machine envelope for the turn above.", un reintento, luego FAILED del driver) — el requisito del envelope se traslada aquí desde los contratos de turno por skill de las 14 skills de cara al usuario. |
 | | 1.0.0 | 2026-07-05 | — | Nuevo contrato interno: el esquema JSON del envelope máquina (11 estados, claves fijas, regla de parseo último-json-cercado) que toda skill de cara al usuario emite como su salida final absoluta. |
@@ -392,6 +387,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-11 — bump-skill reclasificada como interna (fix #40).** Bump
+  MENOR para `bump-skill` (2.1.0): `user-invocable: false` y eliminada del
+  array `skills` de `.claude-plugin/plugin.json` — la skill es mantenimiento
+  del propio repo `agentic-workflow`, así que su entrada de menú
+  `/bump-skill` era ruido para el ~99% de quienes solo consumen el paquete.
+  Sin cambio de comportamiento; se sigue ejecutando vía la herramienta Skill.
+  Conteos de skills reconciliados en `README.md`, `README.es.md` y
+  `docs/workflow/SKILLS.md` (15 de cara al usuario + 13 internas → 14 + 14).
+  Cierra #40.
 - **2026-07-11 — cierre por fases para unidades de pase único (fix #35).**
   Bumps MENORES de `plan-fix` (2.1.0), `plan-feature-scaffold` (1.8.0) y
   `execute-phase` (2.1.0): todo SPEC de fix y de feature XS/S lleva ahora un
