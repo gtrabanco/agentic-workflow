@@ -25,6 +25,19 @@ name: Publish schema package
 #   That's it — no secret to create or rotate. Requires npm CLI >= 11.5.1,
 #   which the "Install npm" step below ensures regardless of what Node 22
 #   bundles.
+#
+# Troubleshooting — "npm error 403 … OIDC permission denied for this action":
+#   Cause: the npm-side Trusted Publisher record for this package is missing
+#   or one field doesn't match what this workflow presents (the OIDC exchange
+#   itself succeeded — npm rejects the publish PUT, not the token).
+#   Verify on npmjs.com → the package's page → Settings → Trusted Publisher:
+#     - Provider: GitHub Actions
+#     - Organization or user: gtrabanco
+#     - Repository: agentic-workflow
+#     - Workflow filename: publish-schema.yml
+#     - Environment name: blank
+#   Diagnose: gh run view --log-failed <run-id>
+#   Re-run once the config is fixed: gh workflow run publish-schema.yml
 
 on:
   push:
@@ -81,5 +94,10 @@ jobs:
           fi
 
       - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance
+
+      - name: Troubleshooting pointer on failure
+        if: failure() && steps.publish.outcome == 'failure'
+        run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
