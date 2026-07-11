@@ -75,14 +75,17 @@ commands from the repo root.
 
 ## P4 — `init-workspace`: seed both labels
 
-- [ ] Scaffold mode creates `urgent` + `fix-next` (name + color) in the target
-      repo. `read-verified` — scaffold step.
-- [ ] Upgrade mode adds them additively (never-clobber). `read-verified`.
-- [ ] `grep -Eqi "urgent|fix-next" skills/init-workspace/SKILL.md` exits 0.
-- [ ] `grep -qi "gh label create" skills/init-workspace/SKILL.md` exits 0.
-- [ ] Run `bump-skill` for `init-workspace` (minor). Verify:
+- [x] Scaffold mode creates `urgent` + `fix-next` (name + color) in the target
+      repo. `read-verified` — Process step 7,
+      `skills/init-workspace/SKILL.md:139-150`.
+- [x] Upgrade mode adds them additively (never-clobber). `read-verified` —
+      Upgrade mode step 6, `skills/init-workspace/SKILL.md:172-179`.
+- [x] `grep -Eqi "urgent|fix-next" skills/init-workspace/SKILL.md` exits 0.
+- [x] `grep -qi "gh label create" skills/init-workspace/SKILL.md` exits 0.
+- [x] Run `bump-skill` for `init-workspace` (minor). Verify:
       `grep -qE "^version: 2\.[2-9]" skills/init-workspace/SKILL.md` (bumped above
-      2.1.1); CHANGELOG (EN/ES) + README rows updated. `read-verified`.
+      2.1.1 → 2.2.0); CHANGELOG (EN/ES) + README rows updated. `read-verified` —
+      commit `ff34505`.
 
 ## P5 — Hardening & PR
 
