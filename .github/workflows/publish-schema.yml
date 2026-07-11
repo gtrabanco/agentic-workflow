@@ -94,9 +94,10 @@ jobs:
           fi
 
       - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
         if: steps.version.outputs.publish == 'true'
         run: npm publish --access public --provenance
 
       - name: Troubleshooting pointer on failure
-        if: failure()
+        if: failure() && steps.publish.outcome == 'failure'
         run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"

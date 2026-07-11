@@ -132,12 +132,17 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
       `gh run view --log-failed` diagnostic; the `gh workflow run
       publish-schema.yml` re-run. (Independently checkable: the block names the
       symptom string and all five Trusted Publisher fields.)
-- [x] Add a diagnostic step to the `publish` job guarded by `if: failure()`
-      that echoes a one-line pointer ("publish failed — if E403 OIDC, verify
-      the npm Trusted Publisher config; see this file's header") to the run
-      log. (Independently checkable: the step exists, is guarded by
-      `if: failure()`, and does not change the `on:` trigger or the publish
-      command.)
+- [x] Add a diagnostic step to the `publish` job, guarded by
+      `if: failure() && steps.publish.outcome == 'failure'` (scoped to the
+      publish step itself, not any earlier step such as the test gate — a
+      bare `if: steps.publish.outcome == 'failure'` would never fire, since
+      GitHub Actions implicitly ANDs a custom `if` with `success()` unless a
+      status-check function like `failure()` is present), that echoes a
+      one-line pointer ("publish failed — if E403 OIDC, verify the npm
+      Trusted Publisher config; see this file's header") to the run log.
+      (Independently checkable: the step exists, the `publish` step carries
+      `id: publish`, and the guard does not change the `on:` trigger or the
+      publish command.)
 - [x] Verify YAML validity: the file parses (`gh workflow view
       publish-schema.yml` after push, or a local YAML parse before) and the
       `on.push.paths` block is byte-for-byte unchanged from `main`.
