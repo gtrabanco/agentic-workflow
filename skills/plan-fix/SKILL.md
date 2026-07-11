@@ -7,9 +7,11 @@ author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Plan a fix: a senior-architect persona that drafts docs/fix/<n>-<topic>/SPEC.md
-  from a GitHub issue, scopes it tightly, surfaces blockers and risks, then commits
-  locally on a fix branch and stops for review. The fix-flow analogue of
-  plan-feature → execute-phase: hands implementation off to execute-phase --fix.
+  from a GitHub issue, scopes it tightly, surfaces blockers and risks — always
+  with a phased execution ledger (≥ 2 phases; the final one is Hardening & PR) —
+  then commits locally on a fix branch and stops for review. The fix-flow
+  analogue of plan-feature → execute-phase: hands implementation off to
+  execute-phase --fix.
   On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "plan a fix for issue N", "draft the fix spec for #N", "scope fix #N",
   "plan-fix N".
@@ -43,7 +45,7 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 
 ## Output
 
-- `docs/fix/<issue-number>-<topic>/SPEC.md` — filled from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections below.
+- `docs/fix/<issue-number>-<topic>/SPEC.md` — filled from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections below, including its `## Phases` execution ledger (**always ≥ 2 phases**; final = `Hardening & PR`).
 - Branch `fix/<issue-number>-<topic>` created from `main`.
 - One commit on that branch with the SPEC and the updated `docs/fix/README.md` entry (status `pending`).
 - **Stop. Do not push. Do not open the PR.** Hand off to `execute-phase --fix`.
@@ -67,8 +69,9 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 9. **Affected docs.** Use the CLAUDE.md docs map; for each doc needing update, add an acceptance criterion: "Updated `<doc-path>` section `<section>`".
 10. **Rollback.** Single command or PR-revert flow; name the data-side cleanup or state "none" explicitly (e.g. orphan rows after schema rollback); what's preserved (archives, audit logs) and what's lost.
 11. **Effort.** T-shirt size: XS (1 commit, ≤ 1h), S (1 commit, ≤ 4h), M (multi-commit, ≤ 1 day), L (multi-commit, > 1 day → propose escalating to a feature via `plan-feature`; the user decides).
-12. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; all English.
-13. **Commit.** Verify branch with `git branch --show-current`. If `main`, `git switch -c fix/<n>-<topic>`. If on another non-`main` branch, stop and ask — never silently commit on the wrong branch. Stage `docs/fix/<n>-<topic>/SPEC.md` and the updated `docs/fix/README.md`. Commit: `docs(fix): draft SPEC for #<n> — <topic>`. **Do not push or open the PR.** Print branch name + commit hash and the hand-off below.
+12. **Phases.** Fill the SPEC's `## Phases` section — the execution ledger `execute-phase --fix` runs one phase per invocation: `P1..Pn` implementation phases (minimum 1; each task independently checkable **without judgement**, zero open design decisions, one layer/concern, gate runnable locally — split the phase if any box fails), plus the final `P(n+1) — Hardening & PR` phase. Keep the template's pre-written `Hardening & PR` tasks **literally** — never paraphrase them, never merge them into an implementation phase. The total is **always ≥ 2 phases**, even for an XS one-line fix.
+13. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; the `## Phases` section has ≥ 2 phases and ends with the literal `Hardening & PR` tasks; all English.
+14. **Commit.** Verify branch with `git branch --show-current`. If `main`, `git switch -c fix/<n>-<topic>`. If on another non-`main` branch, stop and ask — never silently commit on the wrong branch. Stage `docs/fix/<n>-<topic>/SPEC.md` and the updated `docs/fix/README.md`. Commit: `docs(fix): draft SPEC for #<n> — <topic>`. **Do not push or open the PR.** Print branch name + commit hash and the hand-off below.
 
 ## Question protocol
 
@@ -98,8 +101,8 @@ SPEC drafted: docs/fix/<n>-<topic>/SPEC.md
 Branch: fix/<n>-<topic> (local, not pushed)
 Commit: <short hash>
 
-→ Next: review the SPEC, then /execute-phase --fix — implement the fix
-  · execution pushes and opens the PR with `Closes #<n>`
+→ Next: review the SPEC, then /execute-phase --fix <n> — execute P1 (one phase per invocation)
+  · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<n>`
   · scope looks wrong → adjust the SPEC and re-run /plan-fix
 ```
 
