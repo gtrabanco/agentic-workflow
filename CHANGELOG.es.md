@@ -148,6 +148,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | menor | Fix #35: las unidades de pase único (features XS/S y fixes) ahora son **por fases** — cuando el SPEC lleva `## Phases` (emitido por `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), se ejecuta **una fase por invocación** (`[P<k>]` opcional, por defecto la primera fase con tareas sin marcar), marcando los checkboxes del SPEC como ledger de ejecución; la fase final `Hardening & PR` ejecuta la cadena de cierre (flip de estado, push, PR, commit del enlace, push) en su propia invocación — la cadena que los modelos débiles truncaban al final del turno de implementación. Un SPEC sin `## Phases` ejecuta el pase único legacy sin cambios (el fallback que mantiene esto como menor). Las dos cabeceras "this is the last step" reescritas a la forma de fase final. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación (snippet de system-prompt inyectado por el driver + bucle de reparación, ver `orchestration-envelope`); `workflow-status` sigue siendo el único emisor en línea. La descripción del orquestador externo en la ejecución por lotes ahora referencia el envelope inyectado de forma genérica en vez de una emisión inline. Ver `docs/workflow/MIGRATION.md`. |
 | 1.16.0 | 2026-07-10 | menor | Nueva regla **una fase = una sesión**, colocada justo antes de la sección de ejecución por lotes: nunca ejecutar dos fases en una misma conversación con un modelo no-frontera — el patrón por lotes de `/loop` ya limpia y reinvoca por fase; esta es la regla que aplica, emparejada con el fallback manual de reinvocación ya existente en Portability. |
 | 1.15.0 | 2026-07-09 | menor | El gate de dependencias gana una **precondición de estado propio**, comprobada tras cumplir el cierre de dependencias y aún antes de cualquier edición: una unidad cuya fila del roadmap sea `idea` PARA y redirige a `/design-feature <slug>`; `defined` PARA y redirige a `/plan-feature <slug>`; `planned`+ continúa. `--force` salta la PARADA (nunca la comprobación), registrado en `decisions.md`, misma regla que el gate de dependencias. Las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` (sin redirección) según `MIGRATION.md`. Envelope máquina: `BLOCKED` ahora también cubre el gate de estado propio, `blockers[]` tipo `own-status`. |
@@ -203,6 +204,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | menor | Fix #35: todo SPEC de fix lleva ahora un ledger de ejecución `## Phases` — **siempre ≥ 2 fases**: `P1..Pn` de implementación (cada fase cortada por la checklist de ejecutabilidad-barata) + la final `P(n+1) — Hardening & PR` con las tareas de cierre literales de la plantilla, nunca parafraseadas. Nuevo paso 12 del algoritmo (self-review y hand-off actualizados); el hand-off ahora apunta a `execute-phase --fix <n>` ejecutando `P1`. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.4.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
 | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -354,6 +356,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
+| `plan-feature-scaffold` | 1.8.0 | 2026-07-11 | menor | Fix #35: XS/S sigue siendo solo-SPEC, pero su `### Phases` debe listar **≥ 2 fases con tareas checkbox** — `P1` implementación + la final `P2 — Hardening & PR` con las tareas de cierre literales copiadas de la plantilla de fix; el informe fijo de finalización siempre indica el número de fases (la variante `| single-pass` desaparece). |
 | `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | menor | El corte de fases ahora es un **gate obligatorio**, no consultivo: una feature M/L DEBE dividirse en features encadenadas por `Depends on:` cuando supera ~5 fases, una fase toca más de una capa/asunto, o una fase requiere una decisión de diseño sin resolver, y cada fase emitida debe superar una checklist de cuatro casillas de ejecutabilidad-barata (comprobable sin juicio · cero decisiones abiertas · un solo asunto · el gate corre localmente). La generación de `TASKS.md`/`testing.md` ahora emite los criterios de aceptación comprobables por comando como el comando ejecutable, no como prosa. |
 | | 1.6.0 | 2026-07-09 | menor | "Registrar en el roadmap" ahora **escribe** el estado de la fila a `planned` (la transición `defined → planned` que esta skill posee) junto con número/orden/dependencias — una fila ya `defined` se promueve; una fila totalmente nueva (SPEC ya delimitado sin entrada previa) se añade directamente en `planned`. |
 | | 1.5.0 | 2026-07-09 | menor | Ahora completa solo la **mitad de ingeniería** del SPEC — la mitad de producto (objetivo, contexto, alcance, cierre de capacidades) la escribe `design-feature` / `plan-feature-from-issue` y se verifica `designed` antes de que esta skill se ejecute; para en vez de editar una mitad de producto sin diseñar o ausente. |
@@ -388,6 +391,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-11 — cierre por fases para unidades de pase único (fix #35).**
+  Bumps MENORES de `plan-fix` (2.1.0), `plan-feature-scaffold` (1.8.0) y
+  `execute-phase` (2.1.0): todo SPEC de fix y de feature XS/S lleva ahora un
+  ledger `## Phases` (≥ 2 fases; la final es siempre `Hardening & PR` con
+  tareas de cierre literales), y `execute-phase` lo consume una fase por
+  invocación, de modo que la cadena de cierre (push → PR → commit del enlace
+  → push) corre en un turno fresco que los modelos débiles no pueden truncar.
+  Los SPECs legacy sin `## Phases` conservan el flujo de pase único
+  (retrocompatible). Ambas plantillas de SPEC (repo + `template/`)
+  pre-escriben la fase final; docs del workflow y el SPEC de juguete del
+  golden fixture actualizados a la forma de 2 fases. Cierra #35.
 - **2026-07-10 — modo upgrade de init-workspace (feature 13).** Bump MENOR
   para `init-workspace` (2.1.0): un repo que el Step 0 reconoce como
   andamiaje agentic-workflow existente obtiene ahora una opción **upgrade**

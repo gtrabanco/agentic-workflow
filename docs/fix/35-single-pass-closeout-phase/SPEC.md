@@ -250,22 +250,29 @@ weak-model fixture run; ≤ 1 day, more than one commit.
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the full gate: `npx skills add . --list` exit 0.
-- [ ] Acceptance greps below all pass (run each, paste output).
-- [ ] Workflow docs synced (`FEATURE_WORKFLOW`, `ISSUE_WORKFLOW`, `SKILLS`,
-      `PORTABLE_PROMPT`, `GOLDEN_FIXTURE` fixture SPEC).
-- [ ] `bump-skill` run: versions + CHANGELOG EN/ES rows + README tables.
+- [x] Re-run the full gate: `npx skills add . --list` exit 0. — 2026-07-11.
+- [x] Acceptance greps below all pass (run each, paste output). — all green
+      2026-07-11; outputs in the P2 session log / PR evidence.
+- [x] Workflow docs synced (`FEATURE_WORKFLOW`, `ISSUE_WORKFLOW`, `SKILLS`,
+      `PORTABLE_PROMPT`, `GOLDEN_FIXTURE` fixture SPEC). — zero `single-pass`
+      mentions remain in the four docs; fixture SPEC now 2-phase.
+- [x] `bump-skill` run: versions + CHANGELOG EN/ES rows + README tables. —
+      plan-fix 2.1.0, plan-feature-scaffold 1.8.0, execute-phase 2.1.0;
+      rows + release-log entries EN/ES; both README skill/model tables.
 - [ ] GOLDEN_FIXTURE procedure run with the weakest fleet model over
       `execute-phase` (and `plan-fix` if runnable); row appended to the run
-      log. If no weak model is available this session, record the pending
-      run in the PR body as the human's manual-verification item.
-- [ ] Pending-docs check: `git status --porcelain` shows no uncommitted
-      `docs/**`.
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+      log. — PENDING: no weak model available in this session; recorded in
+      the PR body as the human's manual-verification item (allowed by
+      Acceptance below).
+- [x] Pending-docs check: `git status --porcelain` shows no uncommitted
+      `docs/**`. — verified before the close-out commit.
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat. Body includes `Closes #35`.
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #35` and push.
+      PRINT THE PR URL in the chat. Body includes `Closes #35`. — PR #36
+      opened earlier on user request (SPEC + plugin manifest); body updated
+      with the execution evidence instead of re-creating.
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`.
+- [x] Commit `docs: link PR #36` and push.
 
 ## Acceptance
 

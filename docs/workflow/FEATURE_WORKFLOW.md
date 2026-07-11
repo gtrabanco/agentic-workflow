@@ -101,7 +101,9 @@ Once the feature is designed (`## Design status: designed`), the router runs
 SPEC's `Size`:**
 
 - **XS/S** (≤ one commit / ≤ half a day) — `SPEC.md` is the **only** planning
-  artifact; no PLAN/TASKS ceremony. Next step: `execute-phase <NN>` (single-pass).
+  artifact; no PLAN/TASKS ceremony, but its `### Phases` section lists **≥ 2
+  phases** (`P1` implementation, `P2 — Hardening & PR` = the close-out).
+  Next step: `execute-phase <NN>` (runs `P1`; one phase per invocation).
 - **M/L** (phased work) — the full set:
   - `SPEC.md` — every section filled (goals, architecture impact, acceptance,
     branch, size, dependencies, testing, dev scenarios).
@@ -139,9 +141,10 @@ dependencies). It does **not** create the branch or write code.
    `TASKS.md`/`PLAN.md` are updated and the why recorded in `decisions.md` —
    never a silent divergence.
 6. Commits in conventional format — one commit per phase.
-7. Stops for review (intermediate phases). The **final phase / single-pass instead
-   flips the roadmap row to `done` and opens the PR** (never branch-only) — see
-   Stage 5 — then the mandatory `/review-change` → `/audit-pr`.
+7. Stops for review (intermediate phases). The **final phase (for XS/S, its
+   `P2 — Hardening & PR`) instead flips the roadmap row to `done` and opens
+   the PR** (never branch-only) — see Stage 5 — then the mandatory
+   `/review-change` → `/audit-pr`.
 
 **One phase = one session.** Never execute two phases in one conversation on a
 non-frontier model — models degrade over long horizons, and a fresh session per
@@ -232,7 +235,7 @@ Re-run the gate (type-check, tests, build) green.
 
 ## Stage 5 — PR
 
-- **The PR always opens — every unit, including a single-pass `XS/S` feature or a
+- **The PR always opens — every unit, including an `XS/S` feature or a
   fix, never ends branch-only.** Opening the PR is the unit's last step and flips its
   roadmap/fix-index status to `done` (built, not merged).
 - Base **always** `main`; the branch must be **independently mergeable**.
@@ -260,5 +263,8 @@ Re-run the gate (type-check, tests, build) green.
    → human merges
 ```
 
-(For a single-pass `XS/S` feature or a `--fix`, `execute-phase` does the implement →
-mark-done → open-PR in one go, then the same mandatory `/review-change` → `/audit-pr`.)
+(For an `XS/S` feature or a `--fix`, `execute-phase` runs the SPEC's `## Phases`
+one per invocation — the final `Hardening & PR` phase does the mark-done →
+open-PR close-out. A legacy SPEC without `## Phases` runs implement →
+mark-done → open-PR in one pass. Either way, the same mandatory
+`/review-change` → `/audit-pr` follows.)
