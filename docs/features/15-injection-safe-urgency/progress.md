@@ -33,3 +33,22 @@ it). All P1 command-checkable criteria pass (label vocab, `gh label create`,
 release-log entries added (commit `ba3648f`). No open decisions or deviations
 from the SPEC. Next: `execute-phase 15 P2` (`workflow-status`
 `detail.urgent`).
+
+## P2 — `workflow-status`: `detail.urgent` + interruptibility facts — 2026-07-11
+
+Added Process step 3 (renumbered subsequent steps 4→13): scans the open-issue
+list already fetched in step 2 (`gh issue list … --json …,labels`) for the
+`urgent`/`fix-next` labels — labels object only, never title/body/comment —
+and pairs it with the in-flight unit's interruptibility facts (phase,
+dirty/clean, tasks left to the next commit boundary), reusing the existing
+phase-progress (step 8) and crash-recovery dirty-tree reconcile rather than
+adding new git calls. `urgent` wins when an issue carries both labels. Added
+the `detail.urgent` field to the Machine envelope section (description +
+worked example) and a Guardrails bullet restating presence-only/read-only.
+All P2 command-checkable criteria pass (`urgent`, `json labels` greps).
+`bump-skill` ran for `workflow-status` 1.2.0 → 1.3.0 (minor): CHANGELOG.md/es
+rows + README/README.es cells updated, release-log entries added (commit
+`f9cec3b`). No open decisions or deviations from the SPEC. Two phases
+complete (P1, P2) — review checkpoint recommended, not mandatory. Next:
+`execute-phase 15 P3` (`ORCHESTRATION.md` judge rubric + `ship-roadmap`
+SELECT).

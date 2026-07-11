@@ -33,18 +33,23 @@ commands from the repo root.
 
 ## P2 — `workflow-status`: `detail.urgent` + interruptibility facts
 
-- [ ] Add the `detail.urgent` field (open issues with `urgent`/`fix-next`, read
-      **only** from the labels object). `read-verified` — labels-only, no
-      text/timeline parse.
-- [ ] Carry the interruptibility facts (phase · dirty/clean · distance to commit
-      boundary), reusing the crash-recovery reconcile. `read-verified`.
-- [ ] State: sensor reports facts, never a pause-vs-finish decision; `urgent`
-      wins over `fix-next` on one issue. `read-verified`.
-- [ ] `grep -qi "urgent" skills/workflow-status/SKILL.md` exits 0.
-- [ ] `grep -qi "json labels" skills/workflow-status/SKILL.md` exits 0.
-- [ ] Run `bump-skill` for `workflow-status` (minor). Verify:
+- [x] Add the `detail.urgent` field (open issues with `urgent`/`fix-next`, read
+      **only** from the labels object). `read-verified` — Process step 3 +
+      Machine envelope `detail.urgent` description,
+      `skills/workflow-status/SKILL.md:67-82,197-211`.
+- [x] Carry the interruptibility facts (phase · dirty/clean · distance to commit
+      boundary), reusing the crash-recovery reconcile. `read-verified` —
+      `interruptibility: {phase, dirty, tasks_from_boundary}`, reuses step 8 +
+      crash recovery, no new git calls (`skills/workflow-status/SKILL.md:75-82`).
+- [x] State: sensor reports facts, never a pause-vs-finish decision; `urgent`
+      wins over `fix-next` on one issue. `read-verified` —
+      `skills/workflow-status/SKILL.md:71-82,197-211,278-285` (Guardrails).
+- [x] `grep -qi "urgent" skills/workflow-status/SKILL.md` exits 0.
+- [x] `grep -qi "json labels" skills/workflow-status/SKILL.md` exits 0.
+- [x] Run `bump-skill` for `workflow-status` (minor). Verify:
       `grep -qE "^version: 1\.[3-9]" skills/workflow-status/SKILL.md` (bumped above
-      1.2.0); CHANGELOG (EN/ES) + README rows updated. `read-verified`.
+      1.2.0 → 1.3.0); CHANGELOG (EN/ES) + README rows updated. `read-verified` —
+      commit `f9cec3b`.
 
 ## P3 — Consumer judge: `ORCHESTRATION.md` rubric + `ship-roadmap` SELECT
 
