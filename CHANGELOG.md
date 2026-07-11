@@ -104,6 +104,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-11 | minor | New `detail.urgent` envelope field: open issues carrying the `urgent`/`fix-next` labels (read only from the JSON `labels` object, never title/body/comment) alongside the in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to the next commit boundary) — reused from the existing phase-progress/crash-recovery reconcile, no new git calls. Presence-only, reports facts, never decides pause-vs-finish. |
 | 1.2.0 | 2026-07-09 | minor | Reads the roadmap's five-state machine (`idea / defined / planned / in-progress / done`): a new classification step splits units into `design_candidates` (`idea` rows, next `/design-feature`) vs `startable_now` (status ≥ `defined`, deps met, next command matched to the exact status); new top-level `design_candidates` envelope field alongside `startable_now`/`blocked_units`; legacy plain-`planned` rows with a complete SPEC product half treated as `defined`+`planned` per `MIGRATION.md`. Human summary gains a design-candidates line. |
 | 1.1.1 | 2026-07-05 | patch | Review fold on 1.1.0's crash recovery (unreleased): multi-branch envelope-state precedence made explicit (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, worst wins); the unpushed-commits check now guards for no-upstream branches (the exact mid-crash never-pushed case) instead of erroring on `git log @{u}..`; the example envelope's `detail` now shows the `crash_recovery` key the prose already required. |
 | 1.1.0 | 2026-07-05 | minor | Crash recovery: every invocation classifies interrupted turns from ground truth (dirty/unpushed unit branches, phase-ledger vs commits) into a closed verdict — `CLEAN`→OK, `RESUMABLE`→CONTINUE with the resume command, `AMBIGUOUS`→NEEDS_INPUT with options — in a fixed `CRASH RECOVERY` sub-block. New `--last-envelope <json|path>` hint (paste-in-message fallback documented): diffed against recomputed state, never authoritative. No envelope-schema change — existing states only. |
@@ -386,6 +387,13 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-11 — urgency + interruptibility envelope field (feature 15, #42,
+  P2).** MINOR bump for `workflow-status` (1.3.0): new `detail.urgent`
+  envelope field lists open issues carrying `urgent`/`fix-next` — read only
+  from the JSON `labels` object, never title/body/comment — alongside the
+  in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to
+  the next commit boundary). Presence-only, reports facts, never decides
+  pause-vs-finish (that stays the consumer's bounded judge).
 - **2026-07-11 — injection-safe urgency label vocabulary (feature 15, #42,
   P1).** MINOR bump for `triage-issue` (2.1.0): owns and applies two
   capability-gated GitHub labels — `urgent` (`#B60205`, evaluate for
