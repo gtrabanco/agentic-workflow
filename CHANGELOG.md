@@ -146,6 +146,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | minor | Fix #35: single-pass units (XS/S features and fixes) are now **phased** — when the SPEC carries `## Phases` (emitted by `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), run **one phase per invocation** (`[P<k>]` optional, defaults to the first phase with an unticked task), ticking the SPEC's checkboxes as the execution ledger; the final `Hardening & PR` phase runs the close-out chain (status flip, push, PR, link commit, push) in its own invocation — the chain weak models kept truncating at the tail of the implementation turn. A SPEC without `## Phases` runs the legacy single pass unchanged (the fallback that keeps this minor). Both "this is the last step" step headers reworded to the final-phase shape. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. The `/loop` batch-execution external-orchestrator description now references the driver-injected envelope generically instead of an inline emission. See `docs/workflow/MIGRATION.md`. |
 | 1.16.0 | 2026-07-10 | minor | New **one phase = one session** rule, stated right before the Batch-execution section: never execute two phases in one conversation on a non-frontier model — the `/loop` batch shape already clears and re-invokes per phase; this is the rule it enforces, paired with the existing manual-re-invoke Portability fallback. |
 | 1.15.0 | 2026-07-09 | minor | Dependency gate gains an **own-status precondition**, checked after the dependency closure is met and still before any edit: a unit whose roadmap row is `idea` STOPs and redirects to `/design-feature <slug>`; `defined` STOPs and redirects to `/plan-feature <slug>`; `planned`+ proceeds. `--force` skips the STOP (never the check), recorded in `decisions.md`, same rule as the dependency gate. Legacy plain-`planned` rows with a complete SPEC product half are treated as `defined`+`planned` (no redirect) per `MIGRATION.md`. Machine envelope: `BLOCKED` now also covers the own-status gate, `blockers[]` kind `own-status`. |
@@ -201,6 +202,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | minor | Fix #35: every fix SPEC now carries a `## Phases` execution ledger — **always ≥ 2 phases**: `P1..Pn` implementation (each phase cut by the cheap-executability checklist) + final `P(n+1) — Hardening & PR` with the template's literal close-out tasks, never paraphrased. New algorithm step 12 (self-review and hand-off updated); hand-off now points to `execute-phase --fix <n>` executing `P1`. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.4.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
 | 1.3.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch); the description's non-Claude guidance was replaced with a pointer to `#claude`. |
@@ -352,6 +354,7 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
+| `plan-feature-scaffold` | 1.8.0 | 2026-07-11 | minor | Fix #35: XS/S stays SPEC-only, but the SPEC's `### Phases` must list **≥ 2 phases with checkbox tasks** — `P1` implementation + final `P2 — Hardening & PR` carrying the literal close-out tasks copied from the fix template; the fixed completion report always states the phase count (the `| single-pass` variant is gone). |
 | `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | minor | Phase-cutting is now a **hard gate**, not advisory: an M/L feature MUST split into `Depends on:`-chained features on >~5 phases, a multi-layer/concern phase, or an unresolved design decision, and every emitted phase must pass a four-box cheap-executability checklist (independently checkable · zero open decisions · one concern · gate runs locally). `TASKS.md`/`testing.md` generation now emits command-checkable acceptance criteria as the runnable command, not prose. |
 | | 1.6.0 | 2026-07-09 | minor | "Register in the roadmap" now **sets** the row's status to `planned` (the `defined → planned` transition this skill owns) alongside number/ordering/dependencies — an already-`defined` row is promoted; a wholly new row (already-scoped SPEC with no prior entry) is added directly at `planned`. |
 | | 1.5.0 | 2026-07-09 | minor | Fills only the SPEC's **engineering half** now — the product half (goal, context, scope, capability closure) is written by `design-feature` / `plan-feature-from-issue` and verified `designed` before this skill ever runs; it stops rather than editing an undesigned or missing product half. |
@@ -386,6 +389,16 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-11 — phased close-out for single-pass units (fix #35).** MINOR
+  bumps for `plan-fix` (2.1.0), `plan-feature-scaffold` (1.8.0), and
+  `execute-phase` (2.1.0): every fix SPEC and XS/S feature SPEC now carries a
+  `## Phases` execution ledger (≥ 2 phases; the final one is always
+  `Hardening & PR` with literal close-out tasks), and `execute-phase` consumes
+  it one phase per invocation so the close-out chain (push → PR → link commit
+  → push) runs in a fresh turn weak models cannot truncate. Legacy SPECs
+  without `## Phases` keep the single-pass flow (backward-compatible). Both
+  SPEC templates (repo + `template/`) pre-write the final phase; workflow docs
+  and the golden-fixture toy SPEC updated to the 2-phase shape. Closes #35.
 - **2026-07-10 — init-workspace upgrade mode (feature 13).** MINOR bump for
   `init-workspace` (2.1.0): a repo Step 0 recognizes as an existing
   agentic-workflow scaffold now gets an **upgrade** option alongside
