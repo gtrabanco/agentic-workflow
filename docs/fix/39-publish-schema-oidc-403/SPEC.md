@@ -123,7 +123,7 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
 
 ### P1 — Make the 403 self-serve in the workflow
 
-- [ ] In `.github/workflows/publish-schema.yml`, extend the header comment with
+- [x] In `.github/workflows/publish-schema.yml`, extend the header comment with
       a `Troubleshooting` block: symptom `npm error 403 … OIDC permission
       denied for this action`; cause = Trusted Publisher record on npm is
       missing or a field mismatches; the exact fields to verify (provider
@@ -132,13 +132,13 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
       `gh run view --log-failed` diagnostic; the `gh workflow run
       publish-schema.yml` re-run. (Independently checkable: the block names the
       symptom string and all five Trusted Publisher fields.)
-- [ ] Add a diagnostic step to the `publish` job guarded by `if: failure()`
+- [x] Add a diagnostic step to the `publish` job guarded by `if: failure()`
       that echoes a one-line pointer ("publish failed — if E403 OIDC, verify
       the npm Trusted Publisher config; see this file's header") to the run
       log. (Independently checkable: the step exists, is guarded by
       `if: failure()`, and does not change the `on:` trigger or the publish
       command.)
-- [ ] Verify YAML validity: the file parses (`gh workflow view
+- [x] Verify YAML validity: the file parses (`gh workflow view
       publish-schema.yml` after push, or a local YAML parse before) and the
       `on.push.paths` block is byte-for-byte unchanged from `main`.
 
