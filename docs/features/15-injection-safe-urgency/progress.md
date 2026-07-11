@@ -113,3 +113,18 @@ printed the URL, updated the roadmap row to
 `done · [#<pr>](<pr-url>)`, and pushed the link commit. Feature 15 complete —
 all 5 phases shipped, no open decisions, no deferred work. Next:
 `/review-change` (mandatory final review) → `/audit-pr` (merge gate).
+
+## Review-change fold — 2026-07-11
+
+`/review-change` flagged one fix-now finding: the P2 renumbering (step 3
+inserted, "renumbered subsequent steps 4→13" per that entry above) actually
+left a **gap** — headers ran `1, 2, 3, 5, 6, … 13`, no step 4 — a weak-model
+executor following the numbered list step-by-step could stall on the jump.
+Folded: renumbered `skills/workflow-status/SKILL.md` steps 5→4 through
+13→12 (contiguous 1–12, no gap), and fixed the in-text cross-reference in
+step 3 ("reusing the same reconcile step 8 (phase progress)" → "step 7",
+phase progress's new number). Updated the matching `TASKS.md` P2 evidence
+citation (`step 8` → `step 7`) to keep it read-verifiable; left this file's
+P2 narrative above as written (accurate to what P2 actually produced at the
+time). No other file referenced the stale numbers. Re-run `/review-change`
+to confirm green, then `/audit-pr`.
