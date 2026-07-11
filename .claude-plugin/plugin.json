@@ -20,7 +20,6 @@
   "skills": [
     "./skills/audit-docs",
     "./skills/audit-pr",
-    "./skills/bump-skill",
     "./skills/design-feature",
     "./skills/execute-phase",
     "./skills/generate-docs",
