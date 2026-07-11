@@ -90,7 +90,7 @@ con ningún modelo. Un único camino disciplinado:
 
 | Skill            | Qué hace                                                                                                                                                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills. En un repo que ya tiene el scaffold, lo detecta y pasa a **modo upgrade** — compara con el template actual y propone solo los bloques que te faltan, sin sobrescribir nunca un bloque personalizado |
+| `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills; siembra las etiquetas `urgent`/`fix-next` a prueba de inyección. En un repo que ya tiene el scaffold, lo detecta y pasa a **modo upgrade** — compara con el template actual y propone solo los bloques que te faltan (más cualquier etiqueta de urgencia que falte), sin sobrescribir nunca un bloque personalizado |
 
 ### Diseño
 
