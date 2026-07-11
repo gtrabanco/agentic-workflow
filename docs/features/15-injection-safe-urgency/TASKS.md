@@ -6,24 +6,28 @@ commands from the repo root.
 
 ## P1 — `triage-issue`: label vocabulary + apply
 
-- [ ] Define the `urgent` + `fix-next` vocabulary (names + colors `#B60205` /
+- [x] Define the `urgent` + `fix-next` vocabulary (names + colors `#B60205` /
       `#D93F0B`) in `skills/triage-issue/SKILL.md` as the sole owner.
-      `read-verified` — label vocabulary section.
-- [ ] Apply-on-verdict: on **fix-now + high-severity** only, the dated verdict
+      `read-verified` — new `## Urgency label vocabulary (owned here)` section,
+      `skills/triage-issue/SKILL.md:47-88`.
+- [x] Apply-on-verdict: on **fix-now + high-severity** only, the dated verdict
       comment states + applies the label (`gh label create` if missing →
-      `gh issue edit --add-label`). `read-verified` — apply rule is verdict-gated.
-- [ ] State the injection-safety invariant (label is capability-gated; never read
-      urgency from issue title/body/comment). `read-verified`.
-- [ ] `grep -Eqi "urgent|fix-next" skills/triage-issue/SKILL.md` exits 0.
-- [ ] `grep -qi "gh label create" skills/triage-issue/SKILL.md` exits 0.
-- [ ] `grep -qi "add-label" skills/triage-issue/SKILL.md` exits 0.
-- [ ] Run `bump-skill` for `triage-issue` (minor). Verify:
+      `gh issue edit --add-label`). `read-verified` — *Apply-on-verdict*
+      subsection + Process step 3/5, `skills/triage-issue/SKILL.md:71-88,111-117,124-137`.
+- [x] State the injection-safety invariant (label is capability-gated; never read
+      urgency from issue title/body/comment). `read-verified` —
+      `skills/triage-issue/SKILL.md:59-69`.
+- [x] `grep -Eqi "urgent|fix-next" skills/triage-issue/SKILL.md` exits 0.
+- [x] `grep -qi "gh label create" skills/triage-issue/SKILL.md` exits 0.
+- [x] `grep -qi "add-label" skills/triage-issue/SKILL.md` exits 0.
+- [x] Run `bump-skill` for `triage-issue` (minor). Verify:
       `grep -qE "^version: 2\.[1-9]" skills/triage-issue/SKILL.md` (bumped above
-      2.0.0); new `triage-issue` rows in `CHANGELOG.md` + `CHANGELOG.es.md`;
-      README skill tables updated. `read-verified`.
-- [ ] Commit planning artifacts: `git add docs/features/15-injection-safe-urgency
+      2.0.0 → 2.1.0); new `triage-issue` rows in `CHANGELOG.md` + `CHANGELOG.es.md`;
+      README/README.es skill tables updated. `read-verified` — commit `ba3648f`.
+- [x] Commit planning artifacts: `git add docs/features/15-injection-safe-urgency
       && git commit -m "docs(15-injection-safe-urgency): planning artifacts"`.
-- [ ] Confirm roadmap row 15 reads `planned`:
+      Commit `fd472e9`.
+- [x] Confirm roadmap row 15 reads `planned`:
       `grep -qE "^\| 15 \| .injection-safe-urgency. \| planned" docs/features/ROADMAP.md`
       exits 0.
 
