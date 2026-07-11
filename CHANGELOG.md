@@ -286,6 +286,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | minor | Owns the injection-safe urgency label vocabulary (`urgent` `#B60205`, `fix-next` `#D93F0B`): applies the correct label — creating it via `gh label create` if missing — as part of a fix-now + high-severity verdict, never from issue title/body/comment text. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Per-issue verdicts ride `detail.verdicts`. |
 | 1.7.0 | 2026-07-04 | minor | Dated issue comments posted with `gh issue comment --body-file` (Markdown), never inline `--body` — fixes literal `\`-escaped backticks in comments. |
@@ -385,6 +386,14 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-11 — injection-safe urgency label vocabulary (feature 15, #42,
+  P1).** MINOR bump for `triage-issue` (2.1.0): owns and applies two
+  capability-gated GitHub labels — `urgent` (`#B60205`, evaluate for
+  interrupt-now) and `fix-next` (`#D93F0B`, head of the fix queue, never
+  interrupts) — on a fix-now + high-severity verdict only, creating the label
+  via `gh label create` if the repo lacks it. Urgency is derived exclusively
+  from the verdict this skill reaches, never from issue title/body/comment
+  text (the injection-safety invariant this feature exists to establish).
 - **2026-07-11 — bump-skill reclassified internal (fix #40).** MINOR bump for
   `bump-skill` (2.1.0): `user-invocable: false` and dropped from
   `.claude-plugin/plugin.json`'s `skills` array — the skill is

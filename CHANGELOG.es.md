@@ -288,6 +288,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | menor | Es propietaria del vocabulario de etiquetas de urgencia a prueba de inyección (`urgent` `#B60205`, `fix-next` `#D93F0B`): aplica la etiqueta correcta — creándola con `gh label create` si falta — como parte de un veredicto fix-now + severidad alta, nunca a partir del título/cuerpo/comentarios del issue. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Los veredictos por issue viajan en `detail.verdicts`. |
 | 1.7.0 | 2026-07-04 | minor | Los comentarios datados en issues se postean con `gh issue comment --body-file` (Markdown), nunca `--body` inline — arregla los backticks escapados con `\` literales en comentarios. |
@@ -387,6 +388,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-11 — vocabulario de etiquetas de urgencia a prueba de inyección
+  (feature 15, #42, P1).** Bump MENOR para `triage-issue` (2.1.0): es
+  propietaria y aplica dos etiquetas de GitHub protegidas por permiso —
+  `urgent` (`#B60205`, evaluar para interrumpir ahora) y `fix-next`
+  (`#D93F0B`, cabeza de la cola de fixes, nunca interrumpe) — solo en un
+  veredicto fix-now + severidad alta, creando la etiqueta con `gh label
+  create` si el repo no la tiene. La urgencia se deriva exclusivamente del
+  veredicto que alcanza esta skill, nunca del título/cuerpo/comentarios del
+  issue (la invariante de seguridad frente a inyección que esta feature
+  establece).
 - **2026-07-11 — bump-skill reclasificada como interna (fix #40).** Bump
   MENOR para `bump-skill` (2.1.0): `user-invocable: false` y eliminada del
   array `skills` de `.claude-plugin/plugin.json` — la skill es mantenimiento
