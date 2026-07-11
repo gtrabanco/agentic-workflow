@@ -132,6 +132,9 @@ phase); it cannot escalate beyond that, and its worst-case failure is a
 bounded delay, never a dropped fix.
 
 **1 — Deterministic short-circuit (no model call, run first, always).**
+Evaluate top-to-bottom; **first matching row wins** — a `fix-next` issue never
+falls through to the `INTERRUPT_NOW`/`FINISH_FIRST` rows below it, even if the
+in-flight unit's tree happens to be clean.
 
 | Condition | Verdict | Why no judge call |
 |---|---|---|
