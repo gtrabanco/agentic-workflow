@@ -133,7 +133,7 @@ plan → execute → review → audit → merge.**
 
 | Skill          | What it does                                                                                               |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code** |
+| `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code**; on fix-now + high severity, applies the injection-safe `urgent`/`fix-next` label it owns |
 
 ### Document
 
