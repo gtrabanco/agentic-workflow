@@ -39,7 +39,7 @@ commands from the repo root.
       `skills/workflow-status/SKILL.md:67-82,197-211`.
 - [x] Carry the interruptibility facts (phase · dirty/clean · distance to commit
       boundary), reusing the crash-recovery reconcile. `read-verified` —
-      `interruptibility: {phase, dirty, tasks_from_boundary}`, reuses step 8 +
+      `interruptibility: {phase, dirty, tasks_from_boundary}`, reuses step 7 +
       crash recovery, no new git calls (`skills/workflow-status/SKILL.md:75-82`).
 - [x] State: sensor reports facts, never a pause-vs-finish decision; `urgent`
       wins over `fix-next` on one issue. `read-verified` —
