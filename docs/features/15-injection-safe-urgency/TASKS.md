@@ -53,22 +53,24 @@ commands from the repo root.
 
 ## P3 — Consumer judge: `ORCHESTRATION.md` rubric + `ship-roadmap` SELECT
 
-- [ ] Add the canonical pause-vs-finish micro-judge to
+- [x] Add the canonical pause-vs-finish micro-judge to
       `docs/workflow/ORCHESTRATION.md`: deterministic short-circuit → cheap-tier
       clean-context tool-less judge → closed-binary + repair loop →
-      rubric-as-system-prompt → fail-safe `FINISH_FIRST`. `read-verified` — all
-      four guardrails + the short-circuit present.
-- [ ] `grep -qi "FINISH_FIRST" docs/workflow/ORCHESTRATION.md` exits 0.
-- [ ] `grep -qi "INTERRUPT_NOW" docs/workflow/ORCHESTRATION.md` exits 0.
-- [ ] `ship-roadmap` SELECT handles `fix-next` (head of queue) + `urgent` (run the
+      rubric-as-system-prompt → fail-safe `FINISH_FIRST`. `read-verified` — new
+      `## Urgency: the pause-vs-finish micro-judge` section, all four
+      guardrails + the short-circuit table present.
+- [x] `grep -qi "FINISH_FIRST" docs/workflow/ORCHESTRATION.md` exits 0.
+- [x] `grep -qi "INTERRUPT_NOW" docs/workflow/ORCHESTRATION.md` exits 0.
+- [x] `ship-roadmap` SELECT handles `fix-next` (head of queue) + `urgent` (run the
       judge) and **references** the `ORCHESTRATION.md` rubric (no fork).
-      `read-verified` — `skills/ship-roadmap/SKILL.md` SELECT.
-- [ ] `grep -Eqi "urgent|fix-next" skills/ship-roadmap/SKILL.md` exits 0.
-- [ ] `grep -qi "ORCHESTRATION" skills/ship-roadmap/SKILL.md` exits 0 (points at
+      `read-verified` — `skills/ship-roadmap/SKILL.md` SELECT priority 1.
+- [x] `grep -Eqi "urgent|fix-next" skills/ship-roadmap/SKILL.md` exits 0.
+- [x] `grep -qi "ORCHESTRATION" skills/ship-roadmap/SKILL.md` exits 0 (points at
       the canonical rubric).
-- [ ] Run `bump-skill` for `ship-roadmap` (minor). Verify:
+- [x] Run `bump-skill` for `ship-roadmap` (minor). Verify:
       `grep -qE "^version: 2\.[2-9]" skills/ship-roadmap/SKILL.md` (bumped above
-      2.1.0); CHANGELOG (EN/ES) + README rows updated. `read-verified`.
+      2.1.0 → 2.2.0); CHANGELOG (EN/ES) + README rows updated. `read-verified` —
+      commit `5d18630`.
       (`ORCHESTRATION.md` is a doc — **no** `bump-skill`.)
 
 ## P4 — `init-workspace`: seed both labels

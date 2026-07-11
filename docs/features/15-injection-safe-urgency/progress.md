@@ -52,3 +52,27 @@ rows + README/README.es cells updated, release-log entries added (commit
 complete (P1, P2) — review checkpoint recommended, not mandatory. Next:
 `execute-phase 15 P3` (`ORCHESTRATION.md` judge rubric + `ship-roadmap`
 SELECT).
+
+## P3 — Consumer judge: `ORCHESTRATION.md` rubric + `ship-roadmap` SELECT — 2026-07-11
+
+Review checkpoint offered after P2, skipped by the user (mandatory end review
+still applies). Added `## Urgency: the pause-vs-finish micro-judge` to
+`docs/workflow/ORCHESTRATION.md`: a short-circuit table (empty urgent list,
+`fix-next` bypass, clean-tree-at-boundary → `INTERRUPT_NOW`, ≤1 task from
+close → `FINISH_FIRST`) before the judge spec — tool-less, cheap-tier/
+clean-context, closed-binary `{"verdict", "reason"}` output with a one-shot
+schema repair, rubric-as-system-prompt (the checklist is quoted verbatim as
+the judge's system prompt), fail-safe default `FINISH_FIRST`. Also documents
+the acting step (park as a voluntary WIP-commit "crash", reuse `RESUMABLE` +
+idempotent phase re-entry to resume — no new machinery). Wired `ship-roadmap`
+SELECT: new priority-1 urgency check ahead of blocking fixes, reading
+`workflow-status`'s `detail.urgent` — `fix-next` → head of queue, no
+interrupt; `urgent` → runs the `ORCHESTRATION.md` rubric by reference (not
+forked) against `detail.urgent.interruptibility`; renumbered the remaining
+priority list (2–6). All P3 command-checkable criteria pass (`FINISH_FIRST`,
+`INTERRUPT_NOW` in ORCHESTRATION.md; `urgent`/`fix-next`, `ORCHESTRATION` in
+ship-roadmap). `bump-skill` ran for `ship-roadmap` 2.1.0 → 2.2.0 (minor):
+CHANGELOG.md/es rows + README/README.es cells updated, release-log entries
+added (commit `5d18630`); `ORCHESTRATION.md` is a doc, no `bump-skill`. No
+open decisions or deviations from the SPEC. Next: `execute-phase 15 P4`
+(`init-workspace` label seeding).
