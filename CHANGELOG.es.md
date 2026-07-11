@@ -282,6 +282,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.1 | 2026-07-11 | parche | Añadido el `argument-hint: "[--fix]"` que faltaba en el frontmatter (el modo `--fix` existía en el cuerpo pero era invisible en los menús de los agentes) — parte de #43, la referencia de invocación y argumentos en `docs/workflow/SKILLS.md`. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.7.0 | 2026-07-05 | menor | Nuevo check 13 — procedencia de docs generadas (solo cuando hay bloque `Docs site` declarado): las páginas con `generated-by: agentic-workflow/generate-docs` cuya `source-unit` ya no existe son huérfanas (MEDIA); las páginas cuya unidad mergeó después de su fecha `updated` con commits en sus rutas son obsoletas (BAJA). Bloque de disciplina del workflow renumerado a 10–14. |
 | 1.6.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
