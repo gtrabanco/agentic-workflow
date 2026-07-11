@@ -165,7 +165,7 @@ ticks tasks here.
 
 ### P2 — Hardening & PR
 
-- [ ] Run `bump-skill` on `bump-skill` (recommended **minor** bump —
+- [x] Run `bump-skill` on `bump-skill` (recommended **minor** bump —
       metadata reclassification, zero behavior change; if `bump-skill`'s own
       diff analysis judges the removal of the `/bump-skill` menu surface a
       contract change, **major** is acceptable — the executor decides). Ensure
@@ -173,12 +173,12 @@ ticks tasks here.
       the **Internal (`user-invocable: false`)** subsection in both
       `CHANGELOG.md` and `CHANGELOG.es.md` (an existing table is not auto-moved —
       move it by hand if the tool leaves it under "User-facing").
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted):
+- [x] Re-run the project's full verification gate (commands + exit codes pasted):
       `python3 -c "import json;d=json.load(open('.claude-plugin/plugin.json'));assert './skills/bump-skill' not in d['skills'] and len(d['skills'])==27"`
       (exit 0); `npx skills add . --list` (discovers 28); the Acceptance
       grep checks (all pass).
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -333,4 +333,4 @@ implementation phase + the standard close-out.
 
 ## Status
 
-`pending`
+`done`
