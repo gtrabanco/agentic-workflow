@@ -2,13 +2,15 @@
 name: execute-phase
 user-invocable: true
 version: 2.0.0
-argument-hint: <NN> <phase> | <NN> (single-pass) | --fix | [--force]
+argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Implement one phase of a feature (default), a small feature end-to-end in a
-  single pass (SPEC-only, no planning artifacts), or a fix (--fix). Enforces
+  Implement one phase of a feature (default), or a small feature / a fix (--fix)
+  by its SPEC's ## Phases ledger — one phase per invocation, the final phase is
+  always Hardening & PR (the close-out); legacy SPECs without ## Phases run
+  end-to-end in a single pass. Enforces
   branch safety, issue policy, the project's verification gate, and per-phase doc
   discipline. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "execute phase P1 of NN", "implement the NN feature",
@@ -20,8 +22,8 @@ description: >
 Three modes:
 
 - **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
-- **single-pass** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): implement it end-to-end in one pass.
-- **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`.
+- **single-pass unit** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): execute its SPEC's `## Phases` **one phase per invocation**; a SPEC without `## Phases` runs end-to-end in one pass (legacy fallback — see *Workflows*).
+- **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`: same phased consumption and legacy fallback.
 
 ## Turn contract — every invocation, verify before ending the turn
 
@@ -271,7 +273,27 @@ crash-recovery verdict `RESUMABLE` relies on. If the ledger contradicts the
 commits in a way that has no unique next task, stop and report instead of
 guessing (that is its `AMBIGUOUS` verdict — a human decides).
 
-**Single-pass** — small feature with only a `SPEC.md`, no planning artifacts:
+**Phased single-pass units — the default for both modes below.** Every fix
+SPEC and every XS/S feature SPEC drafted since `plan-fix` 2.1.0 /
+`plan-feature-scaffold` 1.8.0 carries a `## Phases` section (**≥ 2 phases**;
+the final one is always `Hardening & PR`). When the SPEC has it, run **one
+phase per invocation**: `execute-phase <NN> [P<k>]` /
+`execute-phase --fix <n> [P<k>]` — `P<k>` omitted → the **first phase with an
+unticked task** (deterministic; no judgement). The SPEC's checkboxes are the
+execution ledger (there is no `TASKS.md`): tick each task with evidence, and
+reconcile on re-entry exactly as *Resuming an interrupted phase* above
+prescribes for `TASKS.md`. Implementation phases run the mode's steps below
+but **STOP after the phase commit — no push, no PR** (the per-phase stop and
+the turn contract's box 4 "unit not finished" rule). The final
+`Hardening & PR` phase runs the close-out — the mode's "Mark done + open the
+PR" step — **in its own invocation**: its pre-written tasks ARE the close-out
+chain; execute them literally, in order. A SPEC **without** `## Phases`
+(drafted before those versions) runs the **legacy flow** below unchanged,
+end-to-end in one pass.
+
+**Single-pass** — small feature with only a `SPEC.md`, no planning artifacts
+(SPEC carries `## Phases` → phased per the block above; otherwise legacy,
+all steps in one pass):
 
 1. Verify branch.
 2. Read `SPEC.md` (+ `DECISIONS.md` if present) and the docs its documentation map points to.
@@ -279,7 +301,9 @@ guessing (that is its `AMBIGUOUS` verdict — a human decides).
 4. Implement end-to-end (see *Implementation guidance*).
 5. Run the gate; write `CHECKLIST.md` (below).
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"`.
-7. **Mark done + open the PR — always (this is the last step).** Flip the roadmap
+7. **Mark done + open the PR — always (the close-out; in a phased SPEC these
+   are the final `Hardening & PR` phase's tasks, run in their own
+   invocation).** Flip the roadmap
    row to `done` (it's *built*; merge state lives in the forge, not the status —
    see *Marking done*), commit that flip, then `git push` and open the PR
    (body written to a file as Markdown, per the Markdown rule above):
@@ -293,17 +317,19 @@ guessing (that is its `AMBIGUOUS` verdict — a human decides).
 8. **Mandatory review hand-off** → `/review-change` (the required final quality step;
    see *Review checkpoint*), then `audit-pr` as the merge gate. Print the next step.
 
-**`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`:
+**`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md` (SPEC carries `## Phases` → phased per the block above; otherwise legacy, all steps in one pass):
 
 1. Verify the issue exists (`gh issue view <n>`); if it doesn't, create it
    (`gh issue create --template fix.yml --body-file <path>`, body from the SPEC
    written to a Markdown file — per the Markdown rule above).
 2. **If `docs/fix/<n>-<topic>/SPEC.md` already exists (e.g. from `plan-fix`), use it — do not re-draft.** Otherwise copy the template, fill every section, and register the entry in `docs/fix/README.md`.
 3. Verify branch (`fix/<n>-<topic>`).
-4. Implement the fix (no planning artifacts; the SPEC is enough).
+4. Implement the fix (no separate planning artifacts; the SPEC and its `## Phases` ledger are enough).
 5. Run the gate.
 6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`.
-7. **Mark done + open the PR — always (this is the last step).** Set the
+7. **Mark done + open the PR — always (the close-out; in a phased SPEC these
+   are the final `Hardening & PR` phase's tasks, run in their own
+   invocation).** Set the
    `docs/fix/README.md` entry's status to `done` (built, not yet merged), commit,
    `git push`, then open the PR with the body written to a Markdown file (per the
    Markdown rule above): `gh pr create --base main --title "fix(<scope>): <summary>" --body-file <path>`

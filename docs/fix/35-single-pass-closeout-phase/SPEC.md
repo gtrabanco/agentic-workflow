@@ -226,19 +226,27 @@ weak-model fixture run; ≤ 1 day, more than one commit.
 
 ### P1 — Planners & executor: emit and consume phased single-pass SPECs
 
-- [ ] `skills/plan-fix/SKILL.md`: add the "Phases" algorithm step + the
+- [x] `skills/plan-fix/SKILL.md`: add the "Phases" algorithm step + the
       `## Phases` SPEC section (literal close-out tasks in `P(n+1)`); update
       the Hand-off block; frontmatter `2.1.0` (via `bump-skill` in P2 if
-      preferred — version lands before the PR either way).
-- [ ] `skills/plan-feature-scaffold/SKILL.md`: XS/S ≥ 2-phase rule; update
-      the fixed completion report line.
-- [ ] `skills/execute-phase/SKILL.md`: phased `--fix`/single-pass consumption
+      preferred — version lands before the PR either way). — algorithm step 12
+      added (self-review/commit renumbered 13/14), Output + description +
+      Hand-off updated; version rides P2's bump-skill.
+- [x] `skills/plan-feature-scaffold/SKILL.md`: XS/S ≥ 2-phase rule; update
+      the fixed completion report line. — Process step 4 XS/S bullet +
+      completion report + description.
+- [x] `skills/execute-phase/SKILL.md`: phased `--fix`/single-pass consumption
       (`[P<k>]` optional arg → first unticked phase), SPEC checklist as
       ledger, legacy fallback sentence, reword both "this is the last step"
-      blocks.
-- [ ] All four SPEC templates (repo + `template/`) updated.
-- [ ] Gate: `npx skills add . --list` exit 0.
-- [ ] Commit (conventional, one per coherent chunk is fine).
+      blocks. — "Phased single-pass units" block in Workflows; both step-7
+      headers reworded (grep "this is the last step" → 0 hits); description +
+      argument-hint updated.
+- [x] All four SPEC templates (repo + `template/`) updated. — fix templates
+      gain `## Phases` with pre-written `P2 — Hardening & PR`; feature
+      templates gain the XS/S rule, PR-as-step scoped to M/L.
+- [x] Gate: `npx skills add . --list` exit 0. — verified 2026-07-11.
+- [x] Commit (conventional, one per coherent chunk is fine). — see P1 commit
+      sha in the PR.
 
 ### P2 — Hardening & PR
 

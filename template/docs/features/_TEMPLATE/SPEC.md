@@ -108,8 +108,14 @@ are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or "Steps".**
 Planning (producing the planning artifacts) is done by `plan-feature` before
 execution, so it is **not** a numbered phase here. `P1` is the first
 implementation phase (it also commits the planning artifacts); the **last phase
-is always hardening** (edge cases + the dev-scenario failure modes). Opening the
-PR is the final *step* of the last phase, not a phase of its own.
+is always hardening** (edge cases + the dev-scenario failure modes). For **M/L**,
+opening the PR is the final *step* of the hardening phase (its `TASKS.md`
+checklist ends with the literal close-out tasks), not a phase of its own. For
+**XS/S** (SPEC-only, no `TASKS.md`), list the phases **here, with checkbox
+tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
+carrying the literal close-out tasks (fixed wording — see
+`docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` runs one phase per
+invocation and ticks this section as its ledger.
 
 ## Deploy & rollback
 
