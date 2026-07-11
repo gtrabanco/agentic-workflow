@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.0 | 2026-07-11 | menor | Nuevo campo de envelope `detail.urgent`: issues abiertos con las etiquetas `urgent`/`fix-next` (leídas solo del objeto JSON `labels`, nunca del título/cuerpo/comentarios) junto a los hechos de interrumpibilidad de la unidad en curso (fase, sucio/limpio, tareas hasta el próximo límite de commit) — reutilizados del reconcile existente de progreso de fase/recuperación de caídas, sin nuevas llamadas a git. Solo presencia, reporta hechos, nunca decide pausa-vs-terminar. |
 | 1.2.0 | 2026-07-09 | menor | Lee la máquina de estados de cinco valores del roadmap (`idea / defined / planned / in-progress / done`): un nuevo paso de clasificación separa las unidades en `design_candidates` (filas `idea`, siguiente `/design-feature`) frente a `startable_now` (estado ≥ `defined`, dependencias cumplidas, comando siguiente según el estado exacto); nuevo campo de envelope de nivel superior `design_candidates` junto a `startable_now`/`blocked_units`; las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` según `MIGRATION.md`. El resumen humano gana una línea de candidatos a diseño. |
 | 1.1.1 | 2026-07-05 | parche | Fold de revisión sobre la recuperación de caídas de 1.1.0 (sin publicar): precedencia explícita del estado del envelope con varias ramas (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, gana el peor); la comprobación de commits sin push ahora protege el caso sin upstream (justamente el caso de crash-nunca-pusheado) en vez de fallar en `git log @{u}..`; el envelope de ejemplo ya muestra en `detail` la clave `crash_recovery` que la prosa ya exigía. |
 | 1.1.0 | 2026-07-05 | menor | Recuperación de caídas: cada invocación clasifica los turnos interrumpidos desde la verdad del sustrato (ramas de unidad sucias/sin push, libro de fases vs commits) en un veredicto cerrado — `CLEAN`→OK, `RESUMABLE`→CONTINUE con el comando de reanudación, `AMBIGUOUS`→NEEDS_INPUT con opciones — en un sub-bloque `CRASH RECOVERY` fijo. Nuevo hint `--last-envelope <json|ruta>` (con fallback de pegarlo en el mensaje documentado): se contrasta con el estado recalculado, nunca es autoritativo. Sin cambio en el esquema del envelope — solo estados existentes. |
@@ -388,6 +389,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-11 — campo de envelope de urgencia + interrumpibilidad (feature
+  15, #42, P2).** Bump MENOR para `workflow-status` (1.3.0): nuevo campo de
+  envelope `detail.urgent` que lista los issues abiertos con `urgent`/
+  `fix-next` — leído solo del objeto JSON `labels`, nunca del título/cuerpo/
+  comentarios — junto a los hechos de interrumpibilidad de la unidad en curso
+  (fase, sucio/limpio, tareas hasta el próximo límite de commit). Solo
+  presencia, reporta hechos, nunca decide pausa-vs-terminar (eso sigue siendo
+  el juez acotado del consumidor).
 - **2026-07-11 — vocabulario de etiquetas de urgencia a prueba de inyección
   (feature 15, #42, P1).** Bump MENOR para `triage-issue` (2.1.0): es
   propietaria y aplica dos etiquetas de GitHub protegidas por permiso —
