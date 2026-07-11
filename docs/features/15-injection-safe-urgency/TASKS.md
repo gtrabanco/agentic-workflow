@@ -89,18 +89,22 @@ commands from the repo root.
 
 ## P5 — Hardening & PR
 
-- [ ] Each dev-scenario failure edge is stated in the owning skill:
+- [x] Each dev-scenario failure edge is stated in the owning skill:
       `urgent:label-exists`, `urgent:no-permission`, `urgent:both-labels`,
       `judge:unparseable`, `judge:fix-next`, `status:issue-closed`,
       `status:no-labels`. `read-verified` — SPEC Dev scenarios cross-checked
-      against each skill.
-- [ ] Re-run the full verification gate: `npx skills add . --list` discovers all
-      skills (exit 0, paste output) + doc-coherence.
-- [ ] `audit-docs` passes (no roadmap/folder/link drift, no leaked
-      stack/real-project reference). `read-verified` — PASS, no findings.
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty.
-- [ ] Open the PR (`gh pr create --base main --body-file <path>` — body a Markdown
+      against each skill; `skills/workflow-status/SKILL.md:199-209` gained the
+      `status:issue-closed` clarification (`--state open` scoping) this phase.
+- [x] Re-run the full verification gate: `npx skills add . --list` discovers all
+      skills (exit 0, paste output) + doc-coherence. Exit 0, all skills
+      (including the four touched ones at their new versions) listed.
+- [x] `audit-docs` passes (no roadmap/folder/link drift, no leaked
+      stack/real-project reference). `read-verified` — PASS, no findings
+      (11/14 checks run; 3/13/part-of-12 n/a — no fix touched, no Docs site
+      block, PR not yet opened).
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty.
+- [x] Open the PR (`gh pr create --base main --body-file <path>` — body a Markdown
       file with real backticks, includes `Closes #42`) and **PRINT THE PR URL in
       the chat**.
-- [ ] Update roadmap row 15 → `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #<n>` and push.
+- [x] Update roadmap row 15 → `done · [#<pr>](<pr-url>)`.
+- [x] Commit `docs: link PR #<n>` and push.
