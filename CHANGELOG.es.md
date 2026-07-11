@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.3.0 | 2026-07-11 | menor | Nuevo campo de envelope `detail.urgent`: issues abiertos con las etiquetas `urgent`/`fix-next` (leídas solo del objeto JSON `labels`, nunca del título/cuerpo/comentarios) junto a los hechos de interrumpibilidad de la unidad en curso (fase, sucio/limpio, tareas hasta el próximo límite de commit) — reutilizados del reconcile existente de progreso de fase/recuperación de caídas, sin nuevas llamadas a git. Solo presencia, reporta hechos, nunca decide pausa-vs-terminar. |
 | 1.2.0 | 2026-07-09 | menor | Lee la máquina de estados de cinco valores del roadmap (`idea / defined / planned / in-progress / done`): un nuevo paso de clasificación separa las unidades en `design_candidates` (filas `idea`, siguiente `/design-feature`) frente a `startable_now` (estado ≥ `defined`, dependencias cumplidas, comando siguiente según el estado exacto); nuevo campo de envelope de nivel superior `design_candidates` junto a `startable_now`/`blocked_units`; las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` según `MIGRATION.md`. El resumen humano gana una línea de candidatos a diseño. |
 | 1.1.1 | 2026-07-05 | parche | Fold de revisión sobre la recuperación de caídas de 1.1.0 (sin publicar): precedencia explícita del estado del envelope con varias ramas (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, gana el peor); la comprobación de commits sin push ahora protege el caso sin upstream (justamente el caso de crash-nunca-pusheado) en vez de fallar en `git log @{u}..`; el envelope de ejemplo ya muestra en `detail` la clave `crash_recovery` que la prosa ya exigía. |
 | 1.1.0 | 2026-07-05 | menor | Recuperación de caídas: cada invocación clasifica los turnos interrumpidos desde la verdad del sustrato (ramas de unidad sucias/sin push, libro de fases vs commits) en un veredicto cerrado — `CLEAN`→OK, `RESUMABLE`→CONTINUE con el comando de reanudación, `AMBIGUOUS`→NEEDS_INPUT con opciones — en un sub-bloque `CRASH RECOVERY` fijo. Nuevo hint `--last-envelope <json|ruta>` (con fallback de pegarlo en el mensaje documentado): se contrasta con el estado recalculado, nunca es autoritativo. Sin cambio en el esquema del envelope — solo estados existentes. |
@@ -114,6 +115,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-11 | menor | SELECT gana una nueva prioridad principal: lee primero `detail.urgent` de `workflow-status` (solo etiquetas) — un issue `fix-next` abierto salta a la cabeza de la cola (sin interrumpir); un issue `urgent` abierto corre la rúbrica canónica de pausa-vs-terminar en `docs/workflow/ORCHESTRATION.md` (referenciada, nunca duplicada) contra los hechos de interrumpibilidad de la unidad en curso, `INTERRUPT_NOW` la aparca, `FINISH_FIRST` encola el fix para la siguiente iteración. Lista de prioridades renumerada. |
 | 2.1.0 | 2026-07-10 | menor | Etapa REVIEW: para features `L`/marcadas como sensibles, cada invocación de `review-change` (checkpoint o revisión final) ahora corre con `--adversarial 2` — un piso obligatorio, no supervisado, deliberadamente **no** alineado con el checkpoint interactivo advisory de `review-change`. XS/S/M no sensible sin cambios (revisor único). |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación (snippet de system-prompt inyectado por el driver + bucle de reparación, ver `orchestration-envelope`); `workflow-status` sigue siendo el único emisor en línea. La prosa del bucle de driver se reescribe para referenciar el envelope inyectado de forma genérica. Ver `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | menor | Cumple con la máquina de estados del roadmap en vez de eximirse: la fundación se documenta como **diseño en lote** (las rondas 2–4 de la entrevista son las respuestas de definición de producto), así que la fundación escribe las filas de las features en `idea` (la feature 01, scaffoldeada por la fundación, aterriza directamente en `planned`). Nueva etapa **DESIGN**: una unidad `idea`/`defined` en mitad del run recibe diseño JIT componiendo `design-feature` + `plan-feature-scaffold` en el mismo turno, **derivado estrictamente del registro bloqueado `SHIP_DECISIONS.md` — sin preguntas nuevas** — promoviendo `idea → defined → planned` antes de PLAN. No diseñable desde el registro → se aparca (`blockers[]` tipo `undesignable`, `needs_input` registra el vacío), `state` se mantiene en `CONTINUE` (un aparcado por unidad, no una parada del run); SELECT pasa a la siguiente unidad arrancable. Tablas de secuencia de etapas, enrutado de modelos y condiciones de parada actualizadas para incluir DESIGN. |
@@ -288,6 +290,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | menor | Es propietaria del vocabulario de etiquetas de urgencia a prueba de inyección (`urgent` `#B60205`, `fix-next` `#D93F0B`): aplica la etiqueta correcta — creándola con `gh label create` si falta — como parte de un veredicto fix-now + severidad alta, nunca a partir del título/cuerpo/comentarios del issue. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Los veredictos por issue viajan en `detail.verdicts`. |
 | 1.7.0 | 2026-07-04 | minor | Los comentarios datados en issues se postean con `gh issue comment --body-file` (Markdown), nunca `--body` inline — arregla los backticks escapados con `\` literales en comentarios. |
@@ -304,6 +307,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-11 | menor | Siembra las etiquetas `urgent`/`fix-next` a prueba de inyección (`gh label create`, crea-si-falta) en el proceso del modo bootstrap (nuevo paso 7); el modo upgrade añade la que falte de forma aditiva (nuevo paso 6, sin tocar nunca una etiqueta que el proyecto ya personalizó). Nunca redefine el vocabulario — `triage-issue` sigue siendo la única propietaria. Forge no disponible → se omite y se reporta como residual, nunca falla el andamiaje. |
 | 2.1.1 | 2026-07-10 | patch | La `description:` ahora nombra el modo upgrade y añade sus frases disparadoras ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — los metadatos del loader no mencionaban el modo que añadió 2.1.0, por lo que no era descubrible de forma fiable mediante lenguaje natural. Sin cambio de comportamiento. |
 | 2.1.0 | 2026-07-10 | menor | Añade un **modo upgrade**: en un repo que el Step 0 reconoce como andamiaje agentic-workflow existente, ahora se ofrece upgrade junto a merge/adapt/abort — compara el sustrato con el `template/` actual, lee `docs/workflow/MIGRATION.md`, propone solo los bloques que faltan mediante una entrevista corta con valores por defecto de descubrimiento, y nunca reescribe un bloque personalizado (aditivo, nunca sobrescribe). Refuerza los cuatro casos límite (sin deriva, `MIGRATION.md` ausente, bloque personalizado, bootstrap sin cambios). El modo bootstrap queda igual. Ver `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
@@ -387,6 +391,42 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-11 — siembra de etiquetas de urgencia (feature 15, #42, P4).**
+  Bump MENOR para `init-workspace` (2.2.0): el modo bootstrap siembra las
+  etiquetas `urgent`/`fix-next` con `gh label create` (crea-si-falta); el
+  modo upgrade añade la que falte de forma aditiva, sin tocar nunca una
+  etiqueta que el proyecto ya personalizó. El vocabulario sigue siendo
+  propiedad de `triage-issue`; forge no disponible → se omite y se reporta
+  como residual, nunca falla el andamiaje.
+- **2026-07-11 — juez pausa-vs-terminar + cableado en SELECT (feature 15,
+  #42, P3).** Nueva sección canónica `## Urgency: the pause-vs-finish
+  micro-judge` en `docs/workflow/ORCHESTRATION.md` (doc, sin `bump-skill`):
+  cortocircuito determinista (límite de commit / a un checkbox del cierre /
+  bypass de `fix-next`) antes de un juez de tier barato, contexto limpio y
+  sin herramientas, con salida binaria cerrada `FINISH_FIRST |
+  INTERRUPT_NOW`, bucle de reparación de esquema, rúbrica-como-system-prompt
+  y valor por defecto a prueba de fallos `FINISH_FIRST`. Bump MENOR para
+  `ship-roadmap` (2.2.0): SELECT lee primero `detail.urgent` —
+  `fix-next` → cabeza de la cola, `urgent` → corre la rúbrica referenciada
+  (nunca duplicada) de `ORCHESTRATION.md` contra la unidad en curso.
+- **2026-07-11 — campo de envelope de urgencia + interrumpibilidad (feature
+  15, #42, P2).** Bump MENOR para `workflow-status` (1.3.0): nuevo campo de
+  envelope `detail.urgent` que lista los issues abiertos con `urgent`/
+  `fix-next` — leído solo del objeto JSON `labels`, nunca del título/cuerpo/
+  comentarios — junto a los hechos de interrumpibilidad de la unidad en curso
+  (fase, sucio/limpio, tareas hasta el próximo límite de commit). Solo
+  presencia, reporta hechos, nunca decide pausa-vs-terminar (eso sigue siendo
+  el juez acotado del consumidor).
+- **2026-07-11 — vocabulario de etiquetas de urgencia a prueba de inyección
+  (feature 15, #42, P1).** Bump MENOR para `triage-issue` (2.1.0): es
+  propietaria y aplica dos etiquetas de GitHub protegidas por permiso —
+  `urgent` (`#B60205`, evaluar para interrumpir ahora) y `fix-next`
+  (`#D93F0B`, cabeza de la cola de fixes, nunca interrumpe) — solo en un
+  veredicto fix-now + severidad alta, creando la etiqueta con `gh label
+  create` si el repo no la tiene. La urgencia se deriva exclusivamente del
+  veredicto que alcanza esta skill, nunca del título/cuerpo/comentarios del
+  issue (la invariante de seguridad frente a inyección que esta feature
+  establece).
 - **2026-07-11 — bump-skill reclasificada como interna (fix #40).** Bump
   MENOR para `bump-skill` (2.1.0): `user-invocable: false` y eliminada del
   array `skills` de `.claude-plugin/plugin.json` — la skill es mantenimiento

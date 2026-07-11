@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.1.1
+version: 2.2.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -136,9 +136,22 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-7. **Report.** List what was created, which placeholders still need human input,
-   the companion skills recorded/installed, and the next step: `plan-feature` →
-   `execute-phase`.
+7. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+   two capability-gated GitHub labels `triage-issue` owns and applies
+   (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
+   vocabulary — this step only seeds it, never redefines it):
+   `gh label create urgent --color B60205 --description "Evaluate for
+   interrupt-now — reaches the pause-vs-finish judge"` and
+   `gh label create fix-next --color D93F0B --description "Head of the fix
+   queue — never interrupts the in-flight unit"`. Create-if-missing: an
+   "already exists" error from `gh label create` is treated as success, not a
+   failure. Requires the forge remote/auth Step 0 already detected — if the
+   forge is unavailable or the user declines forge setup, skip this step and
+   list the two labels as a residual for the user to create manually later
+   (never fail the whole scaffold on it).
+8. **Report.** List what was created, which placeholders still need human input,
+   the companion skills recorded/installed, the urgency labels seeded (or
+   skipped, with reason), and the next step: `plan-feature` → `execute-phase`.
 
 ## Upgrade mode
 
@@ -146,7 +159,7 @@ Entered when Step 0 finds an existing **agentic-workflow scaffold** (not a
 bare or foreign repo). Bootstrap mode (the Process section above) never
 engages here — upgrade mode reuses the same discovery + interview machinery,
 scoped to **only the blocks the current template has that this project
-lacks**. Six ordered steps:
+lacks**. Seven ordered steps:
 
 1. **Locate the current template.** Fetch the current `template/` the same
    way bootstrap does — `npx degit gtrabanco/agentic-workflow/template <temp-dir>`
@@ -175,10 +188,19 @@ lacks**. Six ordered steps:
    already tailored, and never delete anything** — a tailored block the
    template also changed is left untouched and listed as a residual, not
    silently updated. Leave honest placeholders where the user skipped.
-6. **Report + hand off.** Summarize blocks added, filled, and skipped
-   (residuals), then print the recommendation to run `product-audit` next to
-   see which newly-available *capabilities* apply to the code (upgrade mode
-   migrates the substrate only, never the code).
+6. **Seed missing urgency labels, additively (feature 15).** Independent of
+   the `CLAUDE.md`/`docs/` block diff above (this is forge-repo state, not a
+   doc block): check whether the target repo already has the `urgent` and
+   `fix-next` labels (`gh label list`); create whichever is missing with the
+   same `gh label create` calls bootstrap mode uses (see Process step 7) —
+   never touch a label that already exists (additive-only, same never-clobber
+   rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
+   project recolored or redescribed is left exactly as-is).
+7. **Report + hand off.** Summarize blocks added, filled, and skipped
+   (residuals), the urgency labels seeded (or already present), then print the
+   recommendation to run `product-audit` next to see which newly-available
+   *capabilities* apply to the code (upgrade mode migrates the substrate only,
+   never the code).
 
 **Failure edges — handle each explicitly, never silently:**
 
@@ -211,7 +233,13 @@ lacks**. Six ordered steps:
   deletes a block the project already tailored, even if the current template
   changed that block too. A genuine re-tailor is a separate, explicitly
   requested bootstrap adapt-in-place run, never something upgrade mode does
-  on its own.
+  on its own. **The urgency label seeding is additive-only the same way:**
+  create a missing `urgent`/`fix-next` label, never touch one that already
+  exists (name, color, or description a project already customized).
+- **Never redefine the urgency label vocabulary here.** `skills/triage-issue
+  /SKILL.md` is the sole owner of the `urgent`/`fix-next` names, colors, and
+  apply rules — this skill only seeds those two labels into the repo; it never
+  invents a third label or changes what the two mean.
 - Docs-only scaffolding; no app code, no dependencies installed unprompted.
 - Architecture-agnostic: record the project's pattern, don't impose one.
 - Honest placeholders over invented specifics; flag what's left to fill.
@@ -247,7 +275,9 @@ enables:
 
 - A tailored `CLAUDE.md` + `docs/` scaffold + `.github/` templates exist in the
   target, unused folders pruned, residual placeholders flagged, the platform's
-  companion review skills are recorded (and offered).
+  companion review skills are recorded (and offered), and the `urgent`/
+  `fix-next` labels are seeded (scaffold) or additively reconciled (upgrade) —
+  or explicitly listed as a residual when the forge was unavailable.
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
