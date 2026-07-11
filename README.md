@@ -78,6 +78,10 @@ engine, the `orchestration-envelope` contract, and the workflow's **own 9-skill 
 review skill is ever required**, on any agent, with any model. One disciplined
 path: **design → plan → execute → review → audit → merge.**
 
+> Every skill's invocation forms and flags (`--fix`, `--force`,
+> `--adversarial N`, `--next`, `--fullauto`, …) are catalogued in the
+> [Invocation & arguments reference](docs/workflow/SKILLS.md#invocation--arguments-reference).
+
 ### Setup
 
 | Skill            | What it does                                                                                                                                                                                          |

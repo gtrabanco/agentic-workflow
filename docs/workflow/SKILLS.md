@@ -99,6 +99,31 @@ sensor, and the repo-only `bump-skill` maintenance helper.
 |---|---|
 | `bump-skill` | After editing a SKILL.md: bump `version:`, add CHANGELOG.md + CHANGELOG.es.md rows, update the README skill/model tables. Repo-only — its description keeps it from triggering in other projects |
 
+## Invocation & arguments reference
+
+Every user-invocable skill's invocation forms and what each argument/flag does
+— the human-readable mirror of each skill's `argument-hint` frontmatter.
+Brackets `[…]` = optional; `|` separates alternative forms. A skill invoked
+with no arguments uses the default stated here.
+
+| Skill | Invocation | Arguments & flags |
+|---|---|---|
+| `audit-docs` | `/audit-docs [--fix]` | No args: report-only, findings ranked by severity. `--fix`: additionally applies the **low-risk** fixes — docs are never rewritten without it (or an explicit user go-ahead). |
+| `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |
+| `bump-skill` | `/bump-skill` | No arguments — detects the edited `SKILL.md` files itself. Repo-maintenance only. |
+| `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | A raw idea → interview from zero. A bare existing `NN-slug` → **review mode**: prints a summary of what the feature will do and asks what to add/remove/change. `NN-slug + instruction` → applies the change directly, no questions, scoped to the instruction. Upsert always — the only from-zero reset is an explicit "delete and redesign" in the instruction. |
+| `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` alone → single-pass (XS/S SPEC-only features). `NN P<k>` → exactly one phase of an M/L feature. `--fix <n>` → implement the fix unit `docs/fix/<n>-*`. `--force` → override the dependency/status gate (user-only escape hatch; the override is recorded in `decisions.md`; the autopilot never passes it). |
+| `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | Scope defaults to the current branch's diff vs the default branch; a slug/fix/path narrows or redirects it. `--review` → additionally export the most recent `review-change` report as a docs page (opt-in, never automatic). |
+| `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (proposes only the new/missing template blocks; additive-only). |
+| `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
+| `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |
+| `plan-fix` | `/plan-fix <issue-number>` | Required. Drafts `docs/fix/<n>-<topic>/SPEC.md` on a fix branch and stops for review. |
+| `product-audit` | `/product-audit [path-or-area]` | Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
+| `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
+| `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Default: opens PRs, the human merges. `--fullauto` → merges MERGE-READY PRs under the non-negotiable safety floors. `--continue` → resume an existing run by one stage (the external-driver loop re-invokes this). |
+| `triage-issue` | `/triage-issue <n> [n…]` | One or many issue numbers — batch runs produce independent verdicts plus one summary table. |
+| `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Default: human summary + the machine envelope. `--json-only` → envelope only (driver mode). `--last-envelope` → the driver's persisted envelope as a crash-recovery **hint** (diffed against recomputed state; never authoritative). No argument passing on your agent? Paste the JSON in the message — the last fenced json block of the *request* is read as the hint. |
+
 ## Built-in companions (Claude Code)
 
 `/code-review` (correctness + simplification), `/security-review` (security pass),
