@@ -1,6 +1,6 @@
 ---
 name: bump-skill
-user-invocable: true
+user-invocable: false
 version: 2.0.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
