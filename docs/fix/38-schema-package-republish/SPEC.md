@@ -94,10 +94,10 @@ ticks tasks here.
 
 ### P1 — Bump version + changelog
 
-- [ ] Set `version` to `1.0.2` in `packages/agentic-workflow-schema/package.json`
-- [ ] Add a `| 1.0.2 | <date> | patch | …` row to the `@gtrabanco/agentic-workflow-schema` section of `CHANGELOG.md` (date = execution date), stating it republishes the current README (#44 reference + orchestration guide) that was stranded at `1.0.1`, and that the #33 wording already shipped in `1.0.1`
-- [ ] Run the package gate: `cd packages/agentic-workflow-schema && bun run test` → exit 0 (paste output)
-- [ ] Confirm no unintended package change: `git diff --stat` shows only `package.json` (version line) + `CHANGELOG.md`
+- [x] Set `version` to `1.0.2` in `packages/agentic-workflow-schema/package.json` — `package.json:3`
+- [x] Add a `| 1.0.2 | <date> | patch | …` row to the `@gtrabanco/agentic-workflow-schema` section of `CHANGELOG.md` (date = execution date), stating it republishes the current README (#44 reference + orchestration guide) that was stranded at `1.0.1`, and that the #33 wording already shipped in `1.0.1` — `CHANGELOG.md:78` (row dated 2026-07-12)
+- [x] Run the package gate: `cd packages/agentic-workflow-schema && bun run test` → exit 0 (paste output) — 13 pass / 0 fail, EXIT=0
+- [x] Confirm no unintended package change: `git diff --stat` shows only `package.json` (version line) + `CHANGELOG.md` — confirmed (2 files)
 
 ### P2 — Hardening & PR
 
