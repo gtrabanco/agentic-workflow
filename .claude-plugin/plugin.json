@@ -1,0 +1,50 @@
+{
+  "name": "agentic-workflow",
+  "description": "Stack-agnostic agent skills for a disciplined, doc-driven feature/issue workflow: design, plan, execute by phases, review, audit, and ship — with a full internal review pack and merge gates.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Gabriel Trabanco",
+    "url": "https://github.com/gtrabanco"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/gtrabanco/agentic-workflow",
+  "repository": "https://github.com/gtrabanco/agentic-workflow",
+  "keywords": [
+    "workflow",
+    "agentic",
+    "planning",
+    "code-review",
+    "documentation",
+    "spec-driven"
+  ],
+  "skills": [
+    "./skills/audit-docs",
+    "./skills/audit-pr",
+    "./skills/bump-skill",
+    "./skills/design-feature",
+    "./skills/execute-phase",
+    "./skills/generate-docs",
+    "./skills/init-workspace",
+    "./skills/log-session",
+    "./skills/orchestration-envelope",
+    "./skills/plan-feature",
+    "./skills/plan-feature-from-issue",
+    "./skills/plan-feature-scaffold",
+    "./skills/plan-fix",
+    "./skills/product-audit",
+    "./skills/review-a11y",
+    "./skills/review-brand",
+    "./skills/review-change",
+    "./skills/review-code",
+    "./skills/review-debt",
+    "./skills/review-design",
+    "./skills/review-implementation",
+    "./skills/review-perf",
+    "./skills/review-security",
+    "./skills/review-seo",
+    "./skills/review-verify",
+    "./skills/ship-roadmap",
+    "./skills/triage-issue",
+    "./skills/workflow-status"
+  ]
+}
