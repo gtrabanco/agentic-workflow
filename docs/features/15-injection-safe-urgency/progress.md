@@ -76,3 +76,22 @@ CHANGELOG.md/es rows + README/README.es cells updated, release-log entries
 added (commit `5d18630`); `ORCHESTRATION.md` is a doc, no `bump-skill`. No
 open decisions or deviations from the SPEC. Next: `execute-phase 15 P4`
 (`init-workspace` label seeding).
+
+## P4 — `init-workspace`: seed both labels — 2026-07-11
+
+Added bootstrap Process step 7 (renumbered "Report" to step 8): seeds
+`urgent`/`fix-next` via `gh label create` (create-if-missing — an
+"already exists" error counts as success), never redefining the vocabulary
+(`triage-issue` stays sole owner); forge unavailable → skip, list as a
+residual, never fail the scaffold. Added Upgrade mode step 6 (renumbered
+"Report + hand off" to step 7): checks `gh label list` and creates whichever
+label is missing, additive-only — never touches a label the project already
+customized (name/color/description), same never-clobber rule as the doc-block
+diff. Updated the "Six ordered steps" lead-in to "Seven", the Guardrails
+section (two new bullets: additive-only labels, never-redefine-vocabulary),
+and Done when. All P4 command-checkable criteria pass (label vocab, `gh label
+create`). `bump-skill` ran for `init-workspace` 2.1.1 → 2.2.0 (minor):
+CHANGELOG.md/es rows + README/README.es cells updated, release-log entries
+added (commit `ff34505`). No open decisions or deviations from the SPEC. Four
+phases complete (P1–P4); only P5 (Hardening & PR) remains. Next:
+`execute-phase 15 P5`.
