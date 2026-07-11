@@ -87,7 +87,7 @@ plan → execute → review → audit → merge.**
 
 | Skill            | What it does                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills. On a repo that already has the scaffold, detects it and switches to **upgrade mode** — diffs against the current template and proposes only the blocks you're missing, never clobbering a tailored one |
+| `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); suggests the companion review skills your platform needs; offers to install the skills; seeds the injection-safe `urgent`/`fix-next` labels. On a repo that already has the scaffold, detects it and switches to **upgrade mode** — diffs against the current template and proposes only the blocks you're missing (plus any missing urgency labels), never clobbering a tailored one |
 
 ### Design
 
