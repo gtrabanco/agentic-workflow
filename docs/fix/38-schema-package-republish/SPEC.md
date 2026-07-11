@@ -101,9 +101,9 @@ ticks tasks here.
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted) — `npx skills add . --list` exit 0; `bun run test` 13/13 pass, exit 0
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty — confirmed
+- [x] Set the fix-index row status to `done` and commit the flip — `docs/fix/README.md:17`
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
