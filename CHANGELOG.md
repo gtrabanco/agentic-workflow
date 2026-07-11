@@ -104,6 +104,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.3.0 | 2026-07-11 | minor | New `detail.urgent` envelope field: open issues carrying the `urgent`/`fix-next` labels (read only from the JSON `labels` object, never title/body/comment) alongside the in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to the next commit boundary) — reused from the existing phase-progress/crash-recovery reconcile, no new git calls. Presence-only, reports facts, never decides pause-vs-finish. |
 | 1.2.0 | 2026-07-09 | minor | Reads the roadmap's five-state machine (`idea / defined / planned / in-progress / done`): a new classification step splits units into `design_candidates` (`idea` rows, next `/design-feature`) vs `startable_now` (status ≥ `defined`, deps met, next command matched to the exact status); new top-level `design_candidates` envelope field alongside `startable_now`/`blocked_units`; legacy plain-`planned` rows with a complete SPEC product half treated as `defined`+`planned` per `MIGRATION.md`. Human summary gains a design-candidates line. |
 | 1.1.1 | 2026-07-05 | patch | Review fold on 1.1.0's crash recovery (unreleased): multi-branch envelope-state precedence made explicit (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, worst wins); the unpushed-commits check now guards for no-upstream branches (the exact mid-crash never-pushed case) instead of erroring on `git log @{u}..`; the example envelope's `detail` now shows the `crash_recovery` key the prose already required. |
 | 1.1.0 | 2026-07-05 | minor | Crash recovery: every invocation classifies interrupted turns from ground truth (dirty/unpushed unit branches, phase-ledger vs commits) into a closed verdict — `CLEAN`→OK, `RESUMABLE`→CONTINUE with the resume command, `AMBIGUOUS`→NEEDS_INPUT with options — in a fixed `CRASH RECOVERY` sub-block. New `--last-envelope <json|path>` hint (paste-in-message fallback documented): diffed against recomputed state, never authoritative. No envelope-schema change — existing states only. |
@@ -112,6 +113,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-11 | minor | SELECT gains a new top priority: reads `workflow-status`'s `detail.urgent` (labels-only) first — an open `fix-next` issue jumps to head of queue (no interrupt); an open `urgent` issue runs the canonical pause-vs-finish rubric in `docs/workflow/ORCHESTRATION.md` (referenced, never forked) against the in-flight unit's interruptibility facts, `INTERRUPT_NOW` parking it, `FINISH_FIRST` queuing the fix for next iteration. Priority list renumbered. |
 | 2.1.0 | 2026-07-10 | minor | REVIEW stage: for `L`/sensitive-flagged features, every `review-change` invocation (checkpoint or end review) now runs with `--adversarial 2` — a hard floor, unattended, deliberately **not** aligned with `review-change`'s own interactive advisory checkpoint. XS/S/non-sensitive-M unchanged (single-reviewer). |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. Driver-loop prose rephrased to reference the driver-injected envelope generically. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Complies with the roadmap status machine instead of exempting itself: founding is documented as **batch design** (interview rounds 2–4 are the product-definition answers), so founding writes feature rows at `idea` (the founding-scaffolded feature 01 lands directly at `planned`). New **DESIGN** stage: a mid-run `idea`/`defined` unit gets JIT design composing `design-feature` + `plan-feature-scaffold` in-turn, **derived strictly from the locked `SHIP_DECISIONS.md` record — no new questions** — promoting `idea → defined → planned` before PLAN. Undesignable-from-record → parked (`blockers[]` kind `undesignable`, `needs_input` records the gap), `state` stays `CONTINUE` (a per-unit park, not a run halt); SELECT moves to the next startable unit. Stage sequence, model routing, and stop-conditions tables updated to include DESIGN. |
@@ -286,6 +288,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-11 | minor | Owns the injection-safe urgency label vocabulary (`urgent` `#B60205`, `fix-next` `#D93F0B`): applies the correct label — creating it via `gh label create` if missing — as part of a fix-now + high-severity verdict, never from issue title/body/comment text. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Per-issue verdicts ride `detail.verdicts`. |
 | 1.7.0 | 2026-07-04 | minor | Dated issue comments posted with `gh issue comment --body-file` (Markdown), never inline `--body` — fixes literal `\`-escaped backticks in comments. |
@@ -302,6 +305,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-11 | minor | Seeds the injection-safe `urgent`/`fix-next` labels (`gh label create`, create-if-missing) in bootstrap mode's Process (new step 7); upgrade mode adds whichever is missing additively (new step 6, never touching a label the project already customized). Never redefines the vocabulary — `triage-issue` stays the sole owner. Forge unavailable → skip and report as a residual, never fail the scaffold. |
 | 2.1.1 | 2026-07-10 | patch | `description:` now names upgrade mode and adds its trigger phrases ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — the loader metadata was silent about the mode 2.1.0 added, so it wasn't reliably discoverable by natural-language request. No behavior change. |
 | 2.1.0 | 2026-07-10 | minor | Adds an **upgrade mode**: on a repo Step 0 recognizes as an existing agentic-workflow scaffold, offers upgrade alongside merge/adapt/abort — diffs the substrate against the current `template/`, reads `docs/workflow/MIGRATION.md`, proposes only the missing blocks via a short discovery-defaulted interview, and never rewrites a tailored block (additive-only, never-clobber). Hardens the four failure edges (no-drift, `MIGRATION.md`-absent, tailored-block, bootstrap-unchanged). Bootstrap mode is byte-for-byte unchanged. See `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
@@ -385,6 +389,38 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-11 — urgency label seeding (feature 15, #42, P4).** MINOR bump
+  for `init-workspace` (2.2.0): bootstrap mode seeds the `urgent`/`fix-next`
+  labels via `gh label create` (create-if-missing); upgrade mode adds
+  whichever is missing additively, never touching a label the project
+  already customized. Vocabulary stays owned by `triage-issue`; forge
+  unavailable → skipped and reported as a residual, never a scaffold
+  failure.
+- **2026-07-11 — pause-vs-finish judge + SELECT wiring (feature 15, #42,
+  P3).** New canonical `## Urgency: the pause-vs-finish micro-judge` section
+  in `docs/workflow/ORCHESTRATION.md` (doc, no `bump-skill`): deterministic
+  short-circuit (commit boundary / one-checkbox-from-close / `fix-next`
+  bypass) before a cheap-tier, clean-context, tool-less judge with
+  closed-binary `FINISH_FIRST | INTERRUPT_NOW` output, schema repair loop,
+  rubric-as-system-prompt, and a fail-safe `FINISH_FIRST` default. MINOR bump
+  for `ship-roadmap` (2.2.0): SELECT reads `detail.urgent` first —
+  `fix-next` → head of queue, `urgent` → runs the referenced (never forked)
+  `ORCHESTRATION.md` rubric against the in-flight unit.
+- **2026-07-11 — urgency + interruptibility envelope field (feature 15, #42,
+  P2).** MINOR bump for `workflow-status` (1.3.0): new `detail.urgent`
+  envelope field lists open issues carrying `urgent`/`fix-next` — read only
+  from the JSON `labels` object, never title/body/comment — alongside the
+  in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to
+  the next commit boundary). Presence-only, reports facts, never decides
+  pause-vs-finish (that stays the consumer's bounded judge).
+- **2026-07-11 — injection-safe urgency label vocabulary (feature 15, #42,
+  P1).** MINOR bump for `triage-issue` (2.1.0): owns and applies two
+  capability-gated GitHub labels — `urgent` (`#B60205`, evaluate for
+  interrupt-now) and `fix-next` (`#D93F0B`, head of the fix queue, never
+  interrupts) — on a fix-now + high-severity verdict only, creating the label
+  via `gh label create` if the repo lacks it. Urgency is derived exclusively
+  from the verdict this skill reaches, never from issue title/body/comment
+  text (the injection-safety invariant this feature exists to establish).
 - **2026-07-11 — bump-skill reclassified internal (fix #40).** MINOR bump for
   `bump-skill` (2.1.0): `user-invocable: false` and dropped from
   `.claude-plugin/plugin.json`'s `skills` array — the skill is
