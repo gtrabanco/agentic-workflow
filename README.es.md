@@ -80,6 +80,11 @@ así que **nunca se requiere una skill de revisión externa**, en ningún agente
 con ningún modelo. Un único camino disciplinado:
 **design → plan → execute → review → audit → merge.**
 
+> Las formas de invocación y flags de cada skill (`--fix`, `--force`,
+> `--adversarial N`, `--next`, `--fullauto`, …) están catalogadas en la
+> [referencia de invocación y argumentos](docs/workflow/SKILLS.md#invocation--arguments-reference)
+> (en inglés; su traducción llega con [#37](https://github.com/gtrabanco/agentic-workflow/issues/37)).
+
 ### Configuración inicial
 
 | Skill            | Qué hace                                                                                                                                                                                                            |

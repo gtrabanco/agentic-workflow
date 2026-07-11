@@ -1,7 +1,8 @@
 ---
 name: audit-docs
 user-invocable: true
-version: 2.0.0
+version: 2.0.1
+argument-hint: "[--fix]"
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
