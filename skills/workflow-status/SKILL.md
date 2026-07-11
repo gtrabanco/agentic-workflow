@@ -76,24 +76,24 @@ ship-roadmap run exists.
    path is redundant on that issue). Alongside the label list, carry the
    **in-flight unit's interruptibility facts** — current phase, dirty/clean
    tree, distance to the next commit boundary — reusing the same reconcile
-   step 8 (phase progress) and the crash-recovery dirty-tree check already
+   step 7 (phase progress) and the crash-recovery dirty-tree check already
    compute; do not duplicate the git calls. This sensor **reports facts only**
    — it never decides pause-vs-finish (that is the consumer's bounded judge,
    canonical in `docs/workflow/ORCHESTRATION.md`); urgency may only *inform*
    `next.recommended`, never silently override it.
-5. **Roadmap + fix index.** Parse every row: id, slug, status — the
+4. **Roadmap + fix index.** Parse every row: id, slug, status — the
    five-state machine `idea / defined / planned / in-progress / done` (see
    `docs/features/ROADMAP.md` → Status legend) — depends-on, linked PR. A
    legacy row reading a plain `planned` with no five-state history: check its
    `SPEC.md` product half; complete (`## Design status: designed`) → treat as
    `defined`+`planned` (no redirect, per `docs/workflow/MIGRATION.md`);
    otherwise treat as `idea`.
-6. **Compute the dependency tree.** For every non-merged unit, build the
+5. **Compute the dependency tree.** For every non-merged unit, build the
    **transitive** depends-on closure and mark each edge met (dep's PR merged)
    or unmet — same rule as execute-phase's dependency gate: `done`-with-open-PR
    is NOT met. Detect inconsistencies (a "merged" row whose own deps aren't
    merged; cycles) and report them as `substrate` blockers.
-7. **Classify readiness — `startable_now` requires status ≥ `defined` AND deps
+6. **Classify readiness — `startable_now` requires status ≥ `defined` AND deps
    met.** For every unit in the roadmap/fix index:
    - status `idea` → list under **`design_candidates`**, next command
      `/design-feature <slug>`. Never `startable_now`, regardless of deps.
@@ -101,23 +101,23 @@ ship-roadmap run exists.
      command matched to the exact status: `defined` → `/plan-feature <slug>`,
      `planned` → `/execute-phase <NN> P1`.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
-8. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
+7. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
    phase, total phases, per-phase checkbox completion.
-9. **Pending quality gates.** For each unit with commits: has the mandatory
+8. **Pending quality gates.** For each unit with commits: has the mandatory
    `review-change` for its current state run (review report present in the
    feature folder)? Has `audit-pr` a MERGE-READY bound to the PR's current
    head SHA (look for the audit comment marker on the PR)? Derive
    `review_pending` / `audit_pending` / `merge_ready` per unit.
-10. **Findings awaiting a destination.** Scan the in-flight folders'
-    `known-issues.md` for entries with no linked issue, and open issues labeled
-    or titled as postponed findings. Count + list them.
-11. **Product-audit recommendation.** Recommend when ≥3 features merged since
+9. **Findings awaiting a destination.** Scan the in-flight folders'
+   `known-issues.md` for entries with no linked issue, and open issues labeled
+   or titled as postponed findings. Count + list them.
+10. **Product-audit recommendation.** Recommend when ≥3 features merged since
     the last `SHIP_REPORT`/product-audit artifact, or when the same drift kind
     appears in ≥2 units' docs. State the reason; never run it.
-12. **Crash recovery (run every invocation — cheap, see the section below).**
+11. **Crash recovery (run every invocation — cheap, see the section below).**
     Classify whether an interrupted turn is in evidence and append the fixed
     `CRASH RECOVERY` sub-block to the report.
-13. **Report.** Print a short human summary (table: unit | status | deps unmet |
+12. **Report.** Print a short human summary (table: unit | status | deps unmet |
     PR | next gate) plus a **design candidates** line (`idea` units and their
     `/design-feature` next command) plus the `CRASH RECOVERY` sub-block, then
     the envelope. With `--json-only`, envelope only.
