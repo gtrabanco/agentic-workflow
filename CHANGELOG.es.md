@@ -115,6 +115,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-11 | menor | SELECT gana una nueva prioridad principal: lee primero `detail.urgent` de `workflow-status` (solo etiquetas) — un issue `fix-next` abierto salta a la cabeza de la cola (sin interrumpir); un issue `urgent` abierto corre la rúbrica canónica de pausa-vs-terminar en `docs/workflow/ORCHESTRATION.md` (referenciada, nunca duplicada) contra los hechos de interrumpibilidad de la unidad en curso, `INTERRUPT_NOW` la aparca, `FINISH_FIRST` encola el fix para la siguiente iteración. Lista de prioridades renumerada. |
 | 2.1.0 | 2026-07-10 | menor | Etapa REVIEW: para features `L`/marcadas como sensibles, cada invocación de `review-change` (checkpoint o revisión final) ahora corre con `--adversarial 2` — un piso obligatorio, no supervisado, deliberadamente **no** alineado con el checkpoint interactivo advisory de `review-change`. XS/S/M no sensible sin cambios (revisor único). |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación (snippet de system-prompt inyectado por el driver + bucle de reparación, ver `orchestration-envelope`); `workflow-status` sigue siendo el único emisor en línea. La prosa del bucle de driver se reescribe para referenciar el envelope inyectado de forma genérica. Ver `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | menor | Cumple con la máquina de estados del roadmap en vez de eximirse: la fundación se documenta como **diseño en lote** (las rondas 2–4 de la entrevista son las respuestas de definición de producto), así que la fundación escribe las filas de las features en `idea` (la feature 01, scaffoldeada por la fundación, aterriza directamente en `planned`). Nueva etapa **DESIGN**: una unidad `idea`/`defined` en mitad del run recibe diseño JIT componiendo `design-feature` + `plan-feature-scaffold` en el mismo turno, **derivado estrictamente del registro bloqueado `SHIP_DECISIONS.md` — sin preguntas nuevas** — promoviendo `idea → defined → planned` antes de PLAN. No diseñable desde el registro → se aparca (`blockers[]` tipo `undesignable`, `needs_input` registra el vacío), `state` se mantiene en `CONTINUE` (un aparcado por unidad, no una parada del run); SELECT pasa a la siguiente unidad arrancable. Tablas de secuencia de etapas, enrutado de modelos y condiciones de parada actualizadas para incluir DESIGN. |
@@ -389,6 +390,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-11 — juez pausa-vs-terminar + cableado en SELECT (feature 15,
+  #42, P3).** Nueva sección canónica `## Urgency: the pause-vs-finish
+  micro-judge` en `docs/workflow/ORCHESTRATION.md` (doc, sin `bump-skill`):
+  cortocircuito determinista (límite de commit / a un checkbox del cierre /
+  bypass de `fix-next`) antes de un juez de tier barato, contexto limpio y
+  sin herramientas, con salida binaria cerrada `FINISH_FIRST |
+  INTERRUPT_NOW`, bucle de reparación de esquema, rúbrica-como-system-prompt
+  y valor por defecto a prueba de fallos `FINISH_FIRST`. Bump MENOR para
+  `ship-roadmap` (2.2.0): SELECT lee primero `detail.urgent` —
+  `fix-next` → cabeza de la cola, `urgent` → corre la rúbrica referenciada
+  (nunca duplicada) de `ORCHESTRATION.md` contra la unidad en curso.
 - **2026-07-11 — campo de envelope de urgencia + interrumpibilidad (feature
   15, #42, P2).** Bump MENOR para `workflow-status` (1.3.0): nuevo campo de
   envelope `detail.urgent` que lista los issues abiertos con `urgent`/

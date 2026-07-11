@@ -113,6 +113,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-11 | minor | SELECT gains a new top priority: reads `workflow-status`'s `detail.urgent` (labels-only) first — an open `fix-next` issue jumps to head of queue (no interrupt); an open `urgent` issue runs the canonical pause-vs-finish rubric in `docs/workflow/ORCHESTRATION.md` (referenced, never forked) against the in-flight unit's interruptibility facts, `INTERRUPT_NOW` parking it, `FINISH_FIRST` queuing the fix for next iteration. Priority list renumbered. |
 | 2.1.0 | 2026-07-10 | minor | REVIEW stage: for `L`/sensitive-flagged features, every `review-change` invocation (checkpoint or end review) now runs with `--adversarial 2` — a hard floor, unattended, deliberately **not** aligned with `review-change`'s own interactive advisory checkpoint. XS/S/non-sensitive-M unchanged (single-reviewer). |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. Driver-loop prose rephrased to reference the driver-injected envelope generically. See `docs/workflow/MIGRATION.md`. |
 | 1.11.0 | 2026-07-09 | minor | Complies with the roadmap status machine instead of exempting itself: founding is documented as **batch design** (interview rounds 2–4 are the product-definition answers), so founding writes feature rows at `idea` (the founding-scaffolded feature 01 lands directly at `planned`). New **DESIGN** stage: a mid-run `idea`/`defined` unit gets JIT design composing `design-feature` + `plan-feature-scaffold` in-turn, **derived strictly from the locked `SHIP_DECISIONS.md` record — no new questions** — promoting `idea → defined → planned` before PLAN. Undesignable-from-record → parked (`blockers[]` kind `undesignable`, `needs_input` records the gap), `state` stays `CONTINUE` (a per-unit park, not a run halt); SELECT moves to the next startable unit. Stage sequence, model routing, and stop-conditions tables updated to include DESIGN. |
@@ -387,6 +388,16 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-11 — pause-vs-finish judge + SELECT wiring (feature 15, #42,
+  P3).** New canonical `## Urgency: the pause-vs-finish micro-judge` section
+  in `docs/workflow/ORCHESTRATION.md` (doc, no `bump-skill`): deterministic
+  short-circuit (commit boundary / one-checkbox-from-close / `fix-next`
+  bypass) before a cheap-tier, clean-context, tool-less judge with
+  closed-binary `FINISH_FIRST | INTERRUPT_NOW` output, schema repair loop,
+  rubric-as-system-prompt, and a fail-safe `FINISH_FIRST` default. MINOR bump
+  for `ship-roadmap` (2.2.0): SELECT reads `detail.urgent` first —
+  `fix-next` → head of queue, `urgent` → runs the referenced (never forked)
+  `ORCHESTRATION.md` rubric against the in-flight unit.
 - **2026-07-11 — urgency + interruptibility envelope field (feature 15, #42,
   P2).** MINOR bump for `workflow-status` (1.3.0): new `detail.urgent`
   envelope field lists open issues carrying `urgent`/`fix-next` — read only
