@@ -31,6 +31,21 @@ and what the recommended next command is.** Built for external orchestrators
 ✓ Every claim comes from a RUN command or a READ file (git/forge output, roadmap,
   fix index, feature folders) — nothing inferred from memory
 ✓ Nothing was edited, committed, pushed, or created — read-only, always
+✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare
+  `/plan-feature`) AND staged by the target unit's resolved status:
+  `idea`/undesigned → `/design-feature <slug>`; `defined` → `/plan-feature
+  <slug>`; `planned` → `/execute-phase <NN> P1`
+✓ Every `design_candidates[].next` begins with `/design-feature ` — design
+  candidates always route to design, regardless of anything else
+✓ `recommendations.product_audit` was computed by the step-10 mechanical
+  two-condition check (never guessed), and `next.tier` was derived from the
+  resolved `next.recommended` command via the command→tier map in
+  `## Machine envelope` (never guessed)
+✓ The envelope is emitted on **every** invocation of this skill, including a
+  same-session natural-language follow-up about state — never replaced by prose
+✓ The emitted envelope was checked against the shape reminders in
+  `## Machine envelope` (mirroring
+  `packages/agentic-workflow-schema/envelope.schema.json`) before printing
 ✓ The human-readable summary is printed, then the machine envelope (fenced
   ```json — see ## Machine envelope) is the ABSOLUTE last output
 ```
@@ -87,7 +102,13 @@ ship-roadmap run exists.
    legacy row reading a plain `planned` with no five-state history: check its
    `SPEC.md` product half; complete (`## Design status: designed`) → treat as
    `defined`+`planned` (no redirect, per `docs/workflow/MIGRATION.md`);
-   otherwise treat as `idea`.
+   otherwise treat as `idea`. **Unknown status.** A row whose status is **not**
+   one of the five states above (e.g. a non-standard `scheduled`) maps to the
+   **nearest** five-state value, **defaulting to `idea`** when no nearer value
+   is evident — so it safely routes to `/design-feature` rather than skipping
+   design. Worked example: `scheduled → idea` (cross-reference `#51`, which
+   owns the fuller status-vocabulary reconciliation). Note the raw status
+   string in `workflow_observations` so the mapping is visible, never silent.
 5. **Compute the dependency tree.** For every non-merged unit, build the
    **transitive** depends-on closure and mark each edge met (dep's PR merged)
    or unmet — same rule as execute-phase's dependency gate: `done`-with-open-PR
@@ -111,9 +132,20 @@ ship-roadmap run exists.
 9. **Findings awaiting a destination.** Scan the in-flight folders'
    `known-issues.md` for entries with no linked issue, and open issues labeled
    or titled as postponed findings. Count + list them.
-10. **Product-audit recommendation.** Recommend when ≥3 features merged since
-    the last `SHIP_REPORT`/product-audit artifact, or when the same drift kind
-    appears in ≥2 units' docs. State the reason; never run it.
+10. **Product-audit recommendation — a mechanical two-condition checklist, no
+    exception clause.** Set `recommendations.product_audit: true` with a stated
+    `reason` when **either** condition holds — this is a count, not a judgment
+    call. **No exception clause exists**: a "wait for a natural pause" or
+    "wait for a bigger milestone" rationale is not defined anywhere in this
+    checklist and must never be invented to skip a fired trigger:
+    - ✓ `merged_count >= 3` — features/fixes merged since the last
+      `SHIP_REPORT`/product-audit artifact (a literal count from the forge's
+      merged-PR list in step 2)
+    - ✓ the same drift kind recurs in **≥2** units' docs
+    Otherwise `recommendations.product_audit: false`, `reason: null`. A fired
+    trigger may additionally surface `/product-audit` as `next.recommended` or
+    an `alternatives` entry (backlog/audit over net-new feature work) — never
+    run it.
 11. **Crash recovery (run every invocation — cheap, see the section below).**
     Classify whether an interrupted turn is in evidence and append the fixed
     `CRASH RECOVERY` sub-block to the report.
