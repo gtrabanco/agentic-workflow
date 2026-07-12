@@ -105,6 +105,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.4.0 | 2026-07-12 | minor | Emit-time hardening (#52): turn-contract assertions that `next.recommended` is non-bare and correctly staged, `design_candidates[].next` always routes to `/design-feature`, `recommendations.product_audit`/`next.tier` come from the new mechanical checks/map, and the envelope is emitted on every invocation (incl. same-session follow-ups) after a self-check against the bundled schema. Envelope shape reminders (`blockers[].scope` enum, run/OK incompatibility, `dependencies.unmet` array-of-strings) and a fixed command→tier map added to `## Machine envelope`. Process step 4 maps an unknown roadmap status to `idea` by default (e.g. `scheduled → idea`, cross-ref `#51`); step 10 (product-audit) rewritten as a mechanical two-condition checklist with no invented exception. New Process step surfaces the untriaged open-issue backlog as `detail.untriaged_issues: {count, oldest_open}` (no schema change — `detail` is free-form). |
 | 1.3.0 | 2026-07-11 | minor | New `detail.urgent` envelope field: open issues carrying the `urgent`/`fix-next` labels (read only from the JSON `labels` object, never title/body/comment) alongside the in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to the next commit boundary) — reused from the existing phase-progress/crash-recovery reconcile, no new git calls. Presence-only, reports facts, never decides pause-vs-finish. |
 | 1.2.0 | 2026-07-09 | minor | Reads the roadmap's five-state machine (`idea / defined / planned / in-progress / done`): a new classification step splits units into `design_candidates` (`idea` rows, next `/design-feature`) vs `startable_now` (status ≥ `defined`, deps met, next command matched to the exact status); new top-level `design_candidates` envelope field alongside `startable_now`/`blocked_units`; legacy plain-`planned` rows with a complete SPEC product half treated as `defined`+`planned` per `MIGRATION.md`. Human summary gains a design-candidates line. |
 | 1.1.1 | 2026-07-05 | patch | Review fold on 1.1.0's crash recovery (unreleased): multi-branch envelope-state precedence made explicit (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, worst wins); the unpushed-commits check now guards for no-upstream branches (the exact mid-crash never-pushed case) instead of erroring on `git log @{u}..`; the example envelope's `detail` now shows the `crash_recovery` key the prose already required. |
@@ -390,6 +391,14 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-12 — workflow-status envelope emit-time hardening (fix #52).**
+  MINOR bump for `workflow-status` (1.4.0): turn-contract assertions for a
+  non-bare/correctly-staged `next.recommended`, envelope shape reminders and
+  a command→tier map, a mechanical (exception-proof) `product_audit`
+  trigger, an unknown-roadmap-status → `idea` default mapping, and a new
+  `detail.untriaged_issues` backlog field. Fixes two reproduced defects
+  (non-actionable recommendations, schema-invalid envelopes) without any
+  schema/package change.
 - **2026-07-11 — urgency label seeding (feature 15, #42, P4).** MINOR bump
   for `init-workspace` (2.2.0): bootstrap mode seeds the `urgent`/`fix-next`
   labels via `gh label create` (create-if-missing); upgrade mode adds
