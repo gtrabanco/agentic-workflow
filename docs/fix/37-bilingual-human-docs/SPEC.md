@@ -437,7 +437,7 @@ literal `Hardening & PR` close-out.
       verified with `gh pr view 50 --json body`, backticks render
       correctly, no literal `\`` escapes.)
 - [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #37` and push
+- [x] Commit `docs: link PR #37` and push (sha `6183dd9`)
 
 ## Testing
 
