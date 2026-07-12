@@ -314,15 +314,21 @@ literal `Hardening & PR` close-out.
 
 ### P1 — Tutorial-flow docs → ES
 
-- [ ] `docs/workflow/README.es.md` — faithful translation; back-link;
+- [x] `docs/workflow/README.es.md` — faithful translation; back-link;
       internal Pages-table links repointed to `.es.md` siblings; add
       forward-link to `docs/workflow/README.md`.
-- [ ] `docs/workflow/FEATURE_WORKFLOW.es.md` — translation + back-link;
+- [x] `docs/workflow/FEATURE_WORKFLOW.es.md` — translation + back-link;
       add forward-link to `FEATURE_WORKFLOW.md`.
-- [ ] `docs/workflow/ISSUE_WORKFLOW.es.md` — translation + back-link;
+- [x] `docs/workflow/ISSUE_WORKFLOW.es.md` — translation + back-link;
       add forward-link to `ISSUE_WORKFLOW.md`.
-- [ ] Gate: every relative link in the 3 new `.es.md` resolves; no
-      stack/real-project reference introduced.
+- [x] Gate: every relative link in the 3 new `.es.md` resolves; no
+      stack/real-project reference introduced. (Links within P1's own
+      files resolve now. `README.es.md`'s Pages-table links to
+      `SKILLS.es.md`, `REVIEW_AND_CLASSIFY.es.md`, `RECOMMENDED_SKILLS.es.md`,
+      `REPLICATE.es.md`, `MIGRATION.es.md`, `GOLDEN_FIXTURE.es.md` are
+      intentional forward references per the link-convention decision —
+      those siblings land in P2/P3 and the full link-resolution check reruns
+      at P7 Hardening. No stack/real-project reference found — grep-checked.)
 
 ### P2 — Skill & review reference → ES
 
