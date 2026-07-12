@@ -1,5 +1,7 @@
 # Migration notes
 
+> 🇪🇸 [Versión en español](MIGRATION.es.md)
+
 ## Upgrade path from a pre-2026-07-09 install
 
 The 2026-07-09/07-10 backlog (11 units) landed two **majors** plus several
