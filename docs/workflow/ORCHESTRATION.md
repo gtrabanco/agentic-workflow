@@ -85,6 +85,18 @@ a driver that wants the envelope must supply it itself:
    emits the envelope inline (emitting it is its function), so polling it is a
    normal call with no injected snippet or repair step required.
 
+> **Structured-outputs shortcut.** On providers/models with strict structured
+> outputs (`response_format: {type: "json_schema", strict: true}` — many
+> OpenAI-compatible providers offer it on selected models; check your
+> provider's docs for which), the driver can *force*
+> the envelope instead of hoping for it: send the envelope-only turn (the
+> repair prompt of step 2, or a dedicated final "emit the envelope" turn)
+> with the package's `envelope.schema.json` as the response format — the
+> reply then validates by construction. Keep steps 2–3 as the fallback for
+> models without the feature, and never set a response format on the
+> *working* turns themselves: it would force the whole output to JSON and
+> suppress the prose and tool use the turn still needs.
+
 ## The state machine (route on `state`)
 
 | `state` | Meaning | Orchestrator action | Suggested tier |

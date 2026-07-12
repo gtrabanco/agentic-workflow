@@ -117,6 +117,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.1 | 2026-07-13 | patch | Portability gains a provider-concurrency guardrail: cap parallel subagents/headless executors at the provider's documented parallel-request limit per API key (leaving a slot for the conductor), and reduce parallelism on a 429 instead of retrying at full fan-out. Guidance only — no stage or contract change. |
 | 2.2.0 | 2026-07-11 | minor | SELECT gains a new top priority: reads `workflow-status`'s `detail.urgent` (labels-only) first — an open `fix-next` issue jumps to head of queue (no interrupt); an open `urgent` issue runs the canonical pause-vs-finish rubric in `docs/workflow/ORCHESTRATION.md` (referenced, never forked) against the in-flight unit's interruptibility facts, `INTERRUPT_NOW` parking it, `FINISH_FIRST` queuing the fix for next iteration. Priority list renumbered. |
 | 2.1.0 | 2026-07-10 | minor | REVIEW stage: for `L`/sensitive-flagged features, every `review-change` invocation (checkpoint or end review) now runs with `--adversarial 2` — a hard floor, unattended, deliberately **not** aligned with `review-change`'s own interactive advisory checkpoint. XS/S/non-sensitive-M unchanged (single-reviewer). |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. Driver-loop prose rephrased to reference the driver-injected envelope generically. See `docs/workflow/MIGRATION.md`. |
@@ -340,7 +341,8 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
 | | 1.1.0 | 2026-06-27 | minor | Lint step flags edited skills missing a `→ Next:` block or using `S1`/"Step" phase labels (warns, never auto-fixes) |
 | | 1.0.0 | 2026-06-19 | — | New repo-maintenance skill. After editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skills and model tables in README.md + README.es.md |
-| `orchestration-envelope` | 1.1.1 | 2026-07-10 | patch | Fix #33: the frontmatter description and opening section still stated the pre-feature-10 contract ("every user-facing skill prints the envelope") ABOVE the feature-10 correction — rewritten head-first to the current contract (schema + last-fenced-json parse rule as the core; emission = `workflow-status` always, other skills only under the driver-injected snippet, nothing in interactive sessions). Same stale sentence fixed in `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts`, and `envelope.schema.json` (description/comment/metadata text only, no schema-shape or code-behavior change, no package release needed). |
+| `orchestration-envelope` | 1.2.0 | 2026-07-13 | minor | Structured-outputs shortcut for drivers: when the provider/model supports strict structured outputs (`response_format: json_schema` + `strict`), the envelope-only turn (the repair prompt, or a dedicated final "emit the envelope" turn) may pass the npm package's `envelope.schema.json` as the response format so the reply validates by construction. The repair loop stays as the fallback for models without the feature; working turns never get a response format (it would force the whole output to JSON and suppress prose/tool use). Schema unchanged — no package release needed. |
+| | 1.1.1 | 2026-07-10 | patch | Fix #33: the frontmatter description and opening section still stated the pre-feature-10 contract ("every user-facing skill prints the envelope") ABOVE the feature-10 correction — rewritten head-first to the current contract (schema + last-fenced-json parse rule as the core; emission = `workflow-status` always, other skills only under the driver-injected snippet, nothing in interactive sessions). Same stale sentence fixed in `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts`, and `envelope.schema.json` (description/comment/metadata text only, no schema-shape or code-behavior change, no package release needed). |
 | | 1.1.0 | 2026-07-10 | minor | New `## Driver system-prompt snippet + repair loop` section: the canonical driver-injected system-prompt snippet (verbatim, fenced) and the repair-loop protocol (parse-fail → re-invoke with "Emit only the machine envelope for the turn above.", one retry, then driver-level FAILED) — the envelope requirement moved here from the 14 user-facing skills' per-skill turn contracts. |
 | | 1.0.0 | 2026-07-05 | — | New internal contract: the machine-envelope JSON schema (11 states, fixed keys, last-fenced-json parse rule) every user-facing skill emits as its absolute last output. |
 | `review-implementation` | 1.1.0 | 2026-07-09 | minor | Phase 1 ("Find") stance is now adversarial by default: "assume the diff is WRONG — your job is to prove it does not work." The axis table and the Phase 2 classification rubric are unchanged. |
@@ -395,6 +397,20 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-13 — provider-aware operating guidance (feature 16, NaN
+  Builders/OpenAI-compatible inference).** MINOR bump for
+  `orchestration-envelope` (1.2.0): drivers may force the machine envelope
+  via strict structured outputs (`response_format: json_schema`) on the
+  envelope-only turn where the provider supports it, with the repair loop as
+  fallback. PATCH bump for `ship-roadmap` (2.2.1): Portability guardrail
+  capping parallel executors at the provider's per-key concurrency limit.
+  Plus doc-only updates: the README NaN.builders section replaces the
+  incorrect "uniform effort dial" claim with a per-model reasoning-control
+  matrix, demotes Gemma4 from the agentic execution ladder (XML-format tool
+  calling, unvalidated for OpenAI-style harnesses), adds a
+  catalog-verification caveat for GLM-5.2 and per-key rate/concurrency
+  limits; `GOLDEN_FIXTURE.md` gains a tool-calling smoke test as a model
+  precondition for the executor path.
 - **2026-07-12 — break the plan-feature replan loop (fix #51).** MINOR bumps
   for `plan-feature` (3.1.0), `plan-feature-scaffold` (1.9.0), and
   `workflow-status` (1.5.0, then a same-day PATCH to 1.5.1): the redirect gate
