@@ -1,5 +1,7 @@
 # Programmatic orchestration — driving the workflow without Claude Code
 
+> 🇪🇸 [Versión en español](ORCHESTRATION.es.md)
+
 The workflow's skills are plain instructions any agent can follow — but two
 conveniences of Claude Code made the *autopilot* feel native there: **`/loop`**
 (auto re-invocation) and **subagents** (a fresh cheap-model context per phase).

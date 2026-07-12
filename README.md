@@ -281,37 +281,60 @@ fast; sanity-check against a current leaderboard before pinning):
 frontier ([full catalog](https://nan.builders/docs/models): GLM-5.2 ~753B MoE ·
 Mimo V2.5 310B · DeepSeek V4 Flash 284B · Qwen3.6 35B · Gemma4 26B) with
 per-request **Thinking** toggle and **effort** control (Minimal → Max), which
-maps 1:1 onto this workflow's tiers. Our picks per skill:
+maps 1:1 onto this workflow's tiers. Sign up via
+[this referral link](https://cloud.nan.builders/r/7GK06FX8).
 
-| Skill | NaN model | Thinking | Effort |
-|---|---|---|---|
-| `init-workspace`, `plan-feature`, `plan-fix`, `review-change`, `audit-pr`, `triage-issue` | **GLM-5.2** | on | High |
-| `product-audit` | **GLM-5.2** | on | **Max** |
-| `ship-roadmap` (conductor) | **GLM-5.2** | on | High |
-| `execute-phase` (+ ship-roadmap's execution runs), `audit-docs`, `bump-skill`, `workflow-status` | **Qwen3.6** | off | Medium |
-| `log-session`, evidence gathering | **DeepSeek V4 Flash** | off | Low |
+**Two profiles, not one primary.** GLM-5.2 is no longer available on the
+basic plan — it's the **€200-plan** primary (practically unlimited there;
+caps only bite very heavy use). On the **basic plan** it's simply
+unavailable, so the picks below split into an €200-plan column and a
+basic-plan ladder.
 
-Alternates: subtle implementation logic → bump `execute-phase` to GLM-5.2/High;
-**Mimo V2.5** (a different family) reviewing Qwen-written code adds reviewer
-independence; **Gemma4** swaps into the small tier. Whisper, Kokoro, Rerank,
-Qwen3 Embedding and Flux 2 Klein are audio/retrieval/image models — not used by
-the workflow. Sign up via [this referral link](https://cloud.nan.builders/r/7GK06FX8).
+**Quota-aware routing rule.** Per the catalog, only **Mimo V2.5** and
+**DeepSeek V4 Flash** carry an explicit cap (500M tok/member/mo); **Qwen3.6**
+and **Gemma4** show no listed cap (256K ctx — "no cap listed" is treated as
+*unconfirmed*, never asserted as unlimited). Reserve the two capped 500M
+budgets for 1M-context work and merge-gating verdicts; push re-checkable and
+mechanical volume onto the uncapped models instead.
 
-**If GLM-5.2 is down — fallback ladder:**
+**Preference ladders per task** (2–3 deep on the basic plan; the €200 plan
+just runs GLM-5.2 everywhere):
 
-| # | Fallback | Config | Good for | Never for |
+| Task | Skills | €200 plan | Basic-plan ladder | Never here |
 |---|---|---|---|---|
-| 1 | **Mimo V2.5** (310B, reasoning, 1M ctx) | Thinking on, High (Max for `product-audit`) | **every** GLM-5.2 slot, including `audit-pr` and `product-audit`; as a cross-family reviewer it even adds independence | — |
-| 2 | **Qwen3.6** (35B) | Thinking on, High | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `ship-roadmap` conductor — their output is re-checked downstream by review/audit | `audit-pr` · `product-audit` · reviewing code Qwen3.6 itself wrote (≥ holds, independence doesn't) |
-| 3 | **DeepSeek V4 Flash** (284B·21B active) | Thinking on, High | last-resort planning/triage when 1–2 are down | any verdict that gates a merge |
-| — | **Gemma4** (26B) | — | small mechanical tier only | judgment, ever |
+| **Merge gates** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max for `product-audit`) | 1. **Mimo V2.5** (Max) → 2. **DeepSeek V4 Flash** (floor) → else **defer to the human** | Qwen3.6, Gemma4 |
+| **Planning / routing / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, `ship-roadmap` conductor | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
+| **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **Gemma4** → 3. **DeepSeek V4 Flash** | — |
+| **Cheap** | `log-session`, evidence gathering | DeepSeek V4 Flash, Thinking off, Low | 1. **DeepSeek V4 Flash** → 2. **Qwen3.6** → 3. **Gemma4** | — |
+| **Folding `review-change`/`audit-pr` findings** | `execute-phase`'s fold cycle | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
 
-**The two merge-gating verdicts only run on tier 1 quality:** `audit-pr` and
-`product-audit` may fall back to **Mimo V2.5** (Max effort), but never further
-down — a mid-model sweep returns a *plausible-looking but shallow* report,
-worse than no report. Both GLM-5.2 **and** Mimo V2.5 down → defer: the human
-gates the merge manually, the product audit waits. Everything already at the
-Qwen3.6/Flash tiers is unaffected by a GLM-5.2 outage.
+The fold-cycle row supersedes the old single-model "Alternates" line (which
+only named GLM-5.2 for subtle-logic bumps). Rule of thumb: the fixing model
+is never weaker than the one that wrote the original code, and never weaker
+than the finding's subtlety warrants — otherwise the fix itself needs
+re-catching on re-review, wasting a cycle.
+
+**`Qwen3.6` reasoning caveat, stated explicitly:** acceptable only for
+**re-checked** reasoning (planning/routing/triage output that review or audit
+verifies downstream) — never a merge-gating verdict (3B active parameters → a
+plausible-but-shallow audit is worse than none). On the basic plan, once the
+Mimo V2.5 + DeepSeek V4 Flash quota is spent, no strong reasoner remains →
+defer to the human, wait for the quota reset, or upgrade to the €200 plan.
+
+**Per-model pros/cons:**
+
+| Model | Size | Context | Basic-plan quota | Good for | Avoid for |
+|---|---|---|---|---|---|
+| **GLM-5.2** | ~753B MoE | — | Unavailable on the basic plan (€200-plan only, practically unlimited there) | Every judgment slot, when available | — |
+| **Mimo V2.5** | 310B, reasoning | 1M ctx | 500M tok/member/mo | Merge gates + long-context work; a different family from Qwen3.6, so it adds reviewer independence | — |
+| **DeepSeek V4 Flash** | 284B total · 21B active | — | 500M tok/member/mo | Cheap/mechanical volume; last-resort planning/triage floor when 1–2 above are spent | Any verdict that gates a merge |
+| **Qwen3.6** | 35B | 256K ctx | no cap listed | Planning/routing/triage (re-checked downstream); mechanical execution | Merge-gating verdicts; reviewing code it wrote itself |
+| **Gemma4** | 26B | 256K ctx | no cap listed | Small mechanical tier only | Any judgment call |
+
+Whisper, Kokoro, Rerank, Qwen3 Embedding and Flux 2 Klein are
+audio/retrieval/image models — not used by the workflow. Model strength above
+is framed by active-params + role, not benchmark numbers — sanity-check
+against a current leaderboard before pinning; this landscape moves fast.
 
 **Already on the default branch (or `#inheritance`)?** No pinning to remove —
 that's the point. Every skill already **inherits your session's model and

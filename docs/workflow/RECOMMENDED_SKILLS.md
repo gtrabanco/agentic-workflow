@@ -1,5 +1,7 @@
 # Recommended skills — agnostic software quality & architecture
 
+> 🇪🇸 [Versión en español](RECOMMENDED_SKILLS.es.md)
+
 This shortlist is deliberately **stack-agnostic**: skills that help you *program
 well with agents* and raise **software quality and architecture** on **any**
 project — regardless of language, framework, or infrastructure. They support and
