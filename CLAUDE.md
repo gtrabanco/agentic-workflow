@@ -36,6 +36,16 @@ README.md / README.es.md project overview (EN / ES)
 - **Docs language is English.** Every committed artifact (skills, docs, templates,
   commits, PR descriptions) is in English, regardless of the language used to
   request the work. Reply to the user in the user's language.
+- **Human-readable docs carry EN + ES siblings.** `README`, `CHANGELOG`,
+  `docs/workflow/*.md`, and the schema package `README` each get a faithful
+  `.es.md` sibling with reciprocal language-switcher links
+  (`> 🇪🇸 [Versión en español](<name>.es.md)` on the English original,
+  `> 🇬🇧 [English version](<name>.md)` on the Spanish sibling). Kept in sync
+  **on next touch** — whoever edits the English doc updates its Spanish
+  sibling in the same change; no automated staleness check. `SKILL.md`,
+  SPECs, commits, PRs, and machine config (`model-routing.yml`) stay
+  English-only per the rule above — this bilingual pattern applies only to
+  human tutorial/reference prose, not process artifacts.
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture",
