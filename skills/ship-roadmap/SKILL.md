@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 2.2.0
+version: 2.2.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -585,6 +585,13 @@ leans on them harder than any other — here is the manual equivalent of each:
 - **No per-skill `model:`/`effort:`** — the `#claude` branch's routing table pins these tiers; here, pick tiers yourself:
   judgment stages on your **strongest** model, implementation on a cheaper one,
   and `product-audit` always as its own maximum-effort run.
+- **Provider concurrency limits** — when spawning parallel subagents (or
+  parallel headless invocations), cap concurrency at the provider's documented
+  parallel-request limit per API key, leaving one slot free for the conductor
+  (e.g. a provider allowing 5 concurrent requests → at most 3–4 parallel
+  executors). An agentic loop spends one request per tool round-trip, so
+  parallel executors also eat the per-minute request budget fast; on a 429,
+  reduce parallelism before retrying rather than hammering the limit.
 
 ## Relationship to other skills
 
