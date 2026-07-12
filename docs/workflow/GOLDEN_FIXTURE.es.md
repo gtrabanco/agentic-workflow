@@ -162,6 +162,7 @@ la cobertura se mantenga auditable a lo largo del tiempo.
 | Fecha | Modelo | Skill(s) + versión | Resultado | Nota |
 |------|-------|--------------------|--------|------|
 | 2026-07-10 | Qwen3.6 35B | `execute-phase` 1.x | PASS | fila de ejemplo — reemplazar en la primera ejecución real |
+| 2026-07-12 | Claude Haiku 4.5 (modelo más débil disponible en la flota de esta sesión) | `plan-feature` 3.1.0, `plan-feature-scaffold` 1.9.0 (fix #51) | PASS | Dos ejecuciones reales contra el fixture (`docs/features/99-csv-export-command`, copias en scratch): (A) fila del roadmap preestablecida en `planned` → `plan-feature 99-csv-export-command` se detuvo correctamente en el cortocircuito de ya-planificada, imprimió el bloque exacto `→ Next: /execute-phase 99 P1 …` verbatim, nunca invocó `plan-feature-scaffold`, no tocó ningún archivo. (B) fila preestablecida en `defined` → enrutó a través de `plan-feature-scaffold`, que escribió `defined → planned` y luego realizó un **paso de relectura distinto** (llamada `Read` separada tras el `Edit`) confirmando que la fila leía literalmente `planned` antes de terminar el turno; el informe de finalización coincidió con el contrato fijo `SCAFFOLD …`; sin pasos inventados en ninguna ejecución. |
 
 ## Límite de alcance
 

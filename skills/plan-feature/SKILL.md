@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.0.0
+version: 3.1.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -13,7 +13,7 @@ description: >
   already-scoped slug/SPEC (straight to engineering-half scaffolding), routes
   to the right internal step, then ensures the roadmap entry and prints the
   next step. Force a path with flags to skip detection; `--next` plans the
-  next planned feature from the roadmap. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  next `defined` feature from the roadmap. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "plan a
   feature", "plan the feature from issue N", "plan the next roadmap feature",
   "scaffold feature NN", "create SPEC and TASKS for NN".
@@ -34,6 +34,9 @@ one — see the redirect gate below.
   print the fixed `/design-feature <slug>` block, do nothing else this turn
 ✓ Designed input only: engineering half filled, artifacts written, and the
   roadmap entry registered (number, order, deps verified)
+✓ If `plan-feature-scaffold` ran this turn: the roadmap row was re-read
+  AFTER the write and literally reads `planned` — a dropped `defined→planned`
+  write fails this box; do not end the turn until it's fixed
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
@@ -55,11 +58,31 @@ Before any other step, resolve the target slug/issue and read **the roadmap
 status** (`docs/features/ROADMAP.md` → the five-state machine
 `idea/defined/planned/in-progress/done`) — the **primary** gate signal. The
 SPEC's `## Design status` marker is the SPEC-local record and the
-**legacy-compat fallback** only (see step 3 below), never the primary check:
+**legacy-compat fallback** only (see step 6 below), never the primary check:
 
-1. **Roadmap row status `defined` or higher** → proceed to Routing below (the
-   product half is designed; no need to re-check the SPEC marker).
-2. **Roadmap row status `idea`, or no row at all** → **STOP**. Print exactly:
+1. **Roadmap row status `defined`** → proceed to Routing below (the product
+   half is designed; the engineering half still needs scaffolding).
+2. **Roadmap row status `planned`** (SPEC + artifacts already present) →
+   **STOP**. Never invoke `plan-feature-scaffold` — re-scaffolding an
+   already-planned feature is the re-plan-loop bug this gate exists to close.
+   Print exactly:
+
+   ```
+   → Next: /execute-phase <NN> P1 — this feature is already planned; start
+     implementation, don't re-plan it.
+   ```
+3. **Roadmap row status `in-progress`** → **STOP**. Print exactly:
+
+   ```
+   → Next: /execute-phase <NN> <next-phase> — this feature is already being
+     implemented; resume the current phase, don't re-plan it.
+   ```
+4. **Roadmap row status `done`** → **STOP**. Print exactly:
+
+   ```
+   → Next: nothing — <NN>-<slug> already shipped (roadmap status `done`).
+   ```
+5. **Roadmap row status `idea`, or no row at all** → **STOP**. Print exactly:
 
    ```
    → Next: /design-feature <slug> — this feature has no completed product design yet
@@ -68,13 +91,14 @@ SPEC's `## Design status` marker is the SPEC-local record and the
 
    No bypass flag exists for this gate — an undesigned feature is never
    planned by this skill, under any flag or instruction.
-3. **Legacy compat.** A roadmap row still reading a plain `planned` with no
+6. **Legacy compat.** A roadmap row still reading a plain `planned` with no
    five-state history (predates this repo's roadmap-status-machine feature):
    fall back to the SPEC marker — `## Design status: designed` and Capability
-   closure filled → treat as `defined`+`planned`, proceed to Routing (no
-   redirect, no relabelling required). Marker missing/`not designed`/closure
-   empty → treat as `idea`, STOP per step 2. See `docs/workflow/MIGRATION.md`.
-4. **A raw idea with no slug at all** (nothing to check) → the same STOP
+   closure filled → treat as `defined`+`planned`, STOP per step 2 above (a
+   legacy `planned` row is still already-planned — hand off to
+   `/execute-phase`, never re-scaffold). Marker missing/`not designed`/closure
+   empty → treat as `idea`, STOP per step 5. See `docs/workflow/MIGRATION.md`.
+7. **A raw idea with no slug at all** (nothing to check) → the same STOP
    applies: print the block above pointing at `/design-feature "<idea>"`
    instead of a slug.
 
@@ -87,8 +111,9 @@ Once the gate passes, pick the mode — first match wins:
 2. **Issue** — an issue number or issue URL → `plan-feature-from-issue`.
 3. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
    `plan-feature-scaffold`.
-4. **`--next` / no input** — read the roadmap, take the next `planned` entry;
-   apply the redirect gate to it, then scaffold if designed.
+4. **`--next` / no input** — read the roadmap, take the next `defined` entry
+   (the units that still need engineering planning — a `planned` row is
+   already scaffolded); apply the redirect gate to it, then scaffold.
 5. **Ambiguous** — ask one question, then route.
 
 ### Example (routing)
@@ -97,8 +122,9 @@ Once the gate passes, pick the mode — first match wins:
 |---|---|---|---|
 | `plan-feature 14-csv-export` (not designed) | undesigned slug | — | STOP → `/design-feature 14-csv-export` |
 | `plan-feature 131` | issue #131 | `plan-feature-from-issue` → `plan-feature-scaffold` | PR carries `Closes #131` |
-| `plan-feature 14-csv-export` (designed) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
-| `plan-feature --next` | next `planned` roadmap entry | gate, then scaffold | `execute-phase NN P1` |
+| `plan-feature 14-csv-export` (designed, `defined`) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
+| `plan-feature 14-csv-export` (already `planned`) | already-planned slug | — | STOP → `/execute-phase 14 P1` (no re-scaffold) |
+| `plan-feature --next` | next `defined` roadmap entry | gate, then scaffold | `execute-phase NN P1` |
 
 ## Process
 
@@ -173,7 +199,8 @@ enables:
 - The redirect gate ran, and if it stopped, nothing else in this turn touched
   the SPEC.
 - Designed input only: a planned feature with its full artifact set exists and
-  is roadmap-registered.
+  is roadmap-registered — **and the roadmap row was re-read after the write and
+  literally reads `planned`** (never assumed from having run the write step).
 - The dependency & blocker check ran, and **the closing `→ Next:` block matches
   its result** — clean:
 
@@ -181,6 +208,13 @@ enables:
   → Next: /execute-phase <NN> P1 — start phase 1 (M/L, phased)
     · XS/S feature → /execute-phase <NN> (single-pass)
     · adjust scope first → re-run /design-feature <slug>   · audit the planning docs → /audit-docs
+  ```
+
+  already-planned feature (redirect gate stopped, never re-scaffolded):
+
+  ```
+  → Next: /execute-phase <NN> P1 — this feature is already planned; start
+    implementation, don't re-plan it.
   ```
 
   undesigned feature (redirect gate stopped):
