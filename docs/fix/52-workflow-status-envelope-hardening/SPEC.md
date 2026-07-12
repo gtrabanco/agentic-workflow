@@ -8,17 +8,26 @@
 
 `workflow-status` emitted a machine envelope that (a) routed to a non-actionable,
 wrong-stage `next.recommended`, (b) **fails its own `validateEnvelope()`** against
-the bundled JSON Schema, and (c) suppressed the `product_audit` recommendation its
-own rule required — so a real driver would reject the envelope and a human could
-not tell which feature to build. The defect is not a wrong process rule: the rules
-in `skills/workflow-status/SKILL.md` are already correct. It is that **nothing
-enforces them at emit time** — the turn contract has no assertion that
-`next.recommended` is non-bare and correctly staged, the envelope section gives no
-shape reminder for the two fields that violated the schema, and the product-audit
-trigger is stated but never mechanically checked. This is the same "weak models
-drop end-of-document duties" hardening this repo already applies elsewhere, so it
-is a small, self-contained skill edit that cannot wait for a feature cycle:
-undetected, every driven run on a weak tier can silently emit a garbage envelope.
+the bundled JSON Schema, (c) suppressed the `product_audit` recommendation its own
+rule required, and (f) had **no structured field for the plain open-issue backlog**
+— so a real driver would reject the envelope, a human could not tell which feature
+to build, and even a fixed `next.recommended` had nothing concrete to cite for the
+"3 pages of open issues" the user felt were ignored. Two independent
+reproductions (2026-07-11, two unrelated projects, across `/plan-feature` **and**
+`/triage-issue`) confirm the defects are not command-specific. Most are not a wrong
+process rule: the rules in `skills/workflow-status/SKILL.md` are already correct.
+The failure is that **nothing enforces them at emit time** — the turn contract has
+no assertion that `next.recommended` is non-bare and correctly staged, the envelope
+section gives no shape reminder for the two fields that violated the schema, and the
+product-audit trigger is stated but never mechanically checked (worse: a model
+*invented* an unauthorized "wait for a natural pause" exception on top of a
+count-only checklist). The one genuinely new gap (F) is a missing **capability**:
+the sensor never enumerates open issues that have never been through
+`/triage-issue`. This is the same "weak models drop end-of-document duties" /
+"checklists over heuristics" hardening this repo already applies elsewhere, so it
+is a self-contained skill edit that cannot wait for a feature cycle: undetected,
+every driven run on a weak tier can silently emit a garbage envelope that buries the
+backlog.
 
 ## Issue
 
@@ -34,11 +43,14 @@ None. (Independent of `#51`; see **Cross-issue notes**.)
 
 ## Root cause
 
-All five sub-defects trace to one class of gap in
+Five of the six sub-defects (A–E) trace to one class of gap in
 [`skills/workflow-status/SKILL.md`](../../../skills/workflow-status/SKILL.md):
-a **missing emit-time assertion / shape reminder**, not a wrong rule. Confirmed
-against the skill and `packages/agentic-workflow-schema/envelope.schema.json` on
-`main` (2026-07-11), re-verified in the issue triage (2026-07-12):
+a **missing emit-time assertion / shape reminder**, not a wrong rule. The sixth
+(F) is a missing **capability** — no computation surfaces the untriaged backlog.
+Confirmed against the skill and
+`packages/agentic-workflow-schema/envelope.schema.json` on `main` (2026-07-11),
+re-verified in the issue triage (2026-07-12) and a second reproduction comment
+(2026-07-12, a `/triage-issue` envelope from a second unrelated project):
 
 - **A — `next.recommended` bare / wrong-stage.** Process step 6
   (`skills/workflow-status/SKILL.md:96`) already states the correct routing
@@ -63,26 +75,51 @@ against the skill and `packages/agentic-workflow-schema/envelope.schema.json` on
   `run`/`code` while keeping `state: OK` — an internal contradiction (run-scope =
   stop-the-world, incompatible with `OK`, per
   `skills/orchestration-envelope/SKILL.md:80`).
-- **C — `product_audit` trigger miss.** Process step 10
+- **C — `product_audit` trigger miss / invented exception.** Process step 10
   (`skills/workflow-status/SKILL.md:114`) states the trigger (≥3 features merged
   since the last audit **OR** the same drift kind in ≥2 units) but nothing
-  mechanically checks it before setting `recommendations.product_audit`, so both
-  triggers fired yet the field was emitted `false`.
+  mechanically checks it before setting `recommendations.product_audit`. The first
+  reproduction skipped the check (both triggers fired, field emitted `false`); the
+  **second** is worse — the model *invented* an unauthorized exception
+  (`reason: "…recommend waiting for natural pause before next audit"`) on top of a
+  count-only checklist that defines no such clause. That is exactly the failure
+  `CLAUDE.md`'s **"Checklists over heuristics"** principle exists to prevent, and
+  it means the step must be worded as a **mechanical boolean** (`merged_count >= 3`,
+  no exception defined) a model cannot rationalize past — not merely "make the check
+  run".
 - **D — `next.tier` mismatch.** Neither the skill nor
   `skills/orchestration-envelope/SKILL.md:93` gives `workflow-status` a
-  **derivation rule** tying `next.tier` to the resolved command's declared tier,
-  so a planning recommendation (`strong` work) was emitted `cheap`.
+  **derivation rule** tying `next.tier` to the resolved command's declared tier, so
+  a planning recommendation (`strong` work) was emitted `cheap` — recurring across
+  `/plan-feature` (repro 1) and `/triage-issue` (repro 2), both declared `strong`
+  in `docs/workflow/model-routing.yml` and the README model table.
 - **E — envelope dropped on follow-up.** The turn contract
   (`skills/workflow-status/SKILL.md:35`) requires the envelope as the absolute
   last output of an invocation but says nothing about a same-session
   natural-language follow-up about state, where the reported reply dropped it.
+- **F — no structured field for the untriaged open-issue backlog (NEW, repro 2).**
+  Process step 9 (`skills/workflow-status/SKILL.md:111`) scopes `pending_triage`
+  narrowly — `known-issues.md` entries with no linked issue, plus open issues
+  *labeled/titled* as postponed findings. A project's plain low-priority backlog
+  (open issues that never went through `/triage-issue`: no dated verdict comment,
+  no disposition) correctly yields `pending_triage: []`, and `findings.untriaged`
+  is review-finding routing, not issue backlog. So **no field anywhere enumerates
+  the untriaged backlog** — fixing A alone still leaves `next.recommended` with no
+  concrete issue numbers to cite. The sensor needs a new computation:
+  cross-reference `gh issue list --state open` against triage disposition (the
+  fixed-format dated `VERDICT:` comment `triage-issue` posts —
+  `skills/triage-issue/SKILL.md:95-104`) and surface the untriaged subset.
 
 ## Detected in
 
 User report, 2026-07-11 — a real `workflow-status` envelope from a mature project
 (all planned features merged, 30+ open issues, 10 undesigned features) pasted into
 chat; every claim re-verified against the schema and skill on `main`. Triaged
-fix-now (2026-07-12) with per-claim re-verification recorded on `#52`.
+fix-now (2026-07-12) with per-claim re-verification recorded on `#52`. A **second
+reproduction** (2026-07-12 comment) from a different project — a `/triage-issue`
+envelope with `tier: "cheap"`, a bare `/triage-issue`, and an invented product-audit
+exception — corroborated A/C/D across command types and surfaced the new backlog-
+coverage gap (F).
 
 ## Scope
 
@@ -127,23 +164,42 @@ both README tables). Specifically:
    - add one turn-contract box: the emitted envelope is validated against
      `packages/agentic-workflow-schema/envelope.schema.json` (the bundled schema)
      before it is printed — dogfood the package the drivers use.
-4. **Product-audit mechanical check (C)** — reword Process step 10 from a
-   heuristic into a two-condition checklist (`✓ ≥3 features merged since the last
-   SHIP_REPORT/product-audit artifact` **OR** `✓ the same drift kind appears in
+4. **Product-audit mechanical boolean (C)** — reword Process step 10 from a
+   heuristic into a two-condition checklist (`✓ merged_count >= 3` since the last
+   SHIP_REPORT/product-audit artifact **OR** `✓ the same drift kind appears in
    ≥2 units' docs`) with `product_audit: true` + a stated `reason` when **either**
-   holds, and note that a fired trigger may surface `/product-audit` as
-   `next.recommended` or an `alternatives` entry (backlog/audit over net-new
-   feature work).
+   holds. The wording must make it a **mechanical boolean with no exception clause**
+   — state explicitly that `merged_count >= 3` is a count, not a judgment call, and
+   that "wait for a natural pause / big-milestone" reasoning is **not defined and
+   must not be invented** (the repro-2 failure). Note that a fired trigger may
+   surface `/product-audit` as `next.recommended` or an `alternatives` entry
+   (backlog/audit over net-new feature work).
 5. **`next.tier` derivation rule (D)** — add to `## Machine envelope` a fixed
    command→tier map: `plan-feature`, `design-feature`, `review-change`, `audit-pr`,
    `triage-issue`, `product-audit` → `strong`; `execute-phase` → `cheap`;
    `next.tier` is read off this map from the resolved `next.recommended`, never
    guessed.
+6. **Untriaged open-issue backlog surfacing (F)** — add a new Process step
+   (after step 9's `pending_triage`) that cross-references the open-issue list
+   already fetched in step 2 (`gh issue list --state open`) against triage
+   disposition, marking an issue **untriaged** when it carries **no dated
+   `triage-issue` verdict comment** (the fixed-format `VERDICT: …` block —
+   `skills/triage-issue/SKILL.md:95-104`) and no `wontfix`/`postponed`/`promoted`
+   disposition label. Surface the result in a new free-form envelope field
+   `detail.untriaged_issues: {count, oldest_open: [numbers]}` (`detail` is
+   schema-unconstrained — `envelope.schema.json:154` — so **no package change**),
+   cap the listed numbers (default: oldest 5) to bound output, and let a non-zero
+   count influence `next.recommended`/`alternatives` (surface `/triage-issue <the
+   listed numbers>` as a concrete, non-bare option). Keep this **distinct** from
+   `pending_triage` (findings-derived) and `findings.untriaged` (review-finding
+   routing).
 
 ### Out of scope
 
 - **The `plan-feature` loop / no-progress guard / already-planned short-circuit**
   — that is `#51`; do not touch `plan-feature`/`plan-feature-scaffold` here.
+- **Re-scoping or removing `pending_triage` / `findings.untriaged`.** F **adds** a
+  new field beside them; their existing narrow semantics are unchanged.
 - **The deeper `scheduled`-status vocabulary reconciliation** across the roadmap
   legend and authoring skills — `#51` owns status-vocabulary; this fix only adds
   the defensive *unknown → idea* mapping so `workflow-status` routes safely today.
@@ -178,11 +234,18 @@ both README tables). Specifically:
 - **Blast radius:** dev-only / driver-facing. A wrong edit degrades the guidance a
   future `workflow-status` run follows; it cannot corrupt data or affect a running
   system (the skill never writes). Correct edits make every driven run's envelope
-  schema-valid and its recommendation actionable.
+  schema-valid, its recommendation actionable, and the backlog visible. F adds one
+  free-form `detail.untriaged_issues` sub-object — `detail` is schema-unconstrained
+  (`envelope.schema.json:154`), so **still no schema/package change**.
+- **New runtime cost (F only):** determining "untriaged" may require reading each
+  open issue's comments for the triage `VERDICT:` marker — the one place this
+  otherwise-cheap sensor may issue per-issue forge reads. Bounded by capping the
+  listed numbers and computing lazily; called out in **Decisions** and left for the
+  implementer to optimise, not a correctness risk.
 - **Detection lead time:** immediate for B (a driver's `validateEnvelope()` rejects
-  a bad envelope on the next poll); silent-until-noticed for A/C/D (a human or
-  driver acts on a wrong-but-valid recommendation) — which is exactly why the
-  assertions move enforcement to emit time.
+  a bad envelope on the next poll); silent-until-noticed for A/C/D/F (a human or
+  driver acts on a wrong-but-valid recommendation, or never sees the backlog) —
+  which is exactly why the assertions move enforcement to emit time.
 
 ## Operational risks
 
@@ -239,7 +302,16 @@ Each is an objective, independently checkable condition.
       `next.tier` derives from the resolved `next.recommended`.
 - [ ] Process step 10 is a two-condition checklist that sets
       `product_audit: true` + a `reason` when either condition holds, and may
-      surface `/product-audit` in `next`.
+      surface `/product-audit` in `next`. Its wording states `merged_count >= 3`
+      is a **mechanical boolean** and that no "wait for a natural pause"/milestone
+      exception exists or may be invented. *(grep: "merged_count" / "no exception")*
+- [ ] A new Process step (after step 9) surfaces the untriaged open-issue backlog:
+      an open issue with **no dated `triage-issue` `VERDICT:` comment** and no
+      `wontfix`/`postponed`/`promoted` label is counted, and the result is emitted
+      as `detail.untriaged_issues: {count, oldest_open: [...]}` (kept distinct from
+      `pending_triage` and `findings.untriaged`). *(grep: "untriaged_issues")*
+- [ ] When `detail.untriaged_issues.count > 0`, the skill may cite
+      `/triage-issue <numbers>` (non-bare) in `next.recommended`/`alternatives`.
 - [ ] `skills/workflow-status/SKILL.md` `version:` is bumped and
       `CHANGELOG.md` + `CHANGELOG.es.md` + both READMEs are updated by
       `bump-skill` (verification-gate item).
@@ -279,7 +351,8 @@ Edit only the `## Machine envelope` section of
 ### P2 — Recommendation-policy enforcement (defects A, C, D, E)
 
 Edit the `## Turn contract` and `## Process` sections of
-`skills/workflow-status/SKILL.md`; then run `bump-skill`.
+`skills/workflow-status/SKILL.md`. (No `bump-skill` yet — it runs once in P3, the
+last implementation phase.)
 
 - [ ] Add the turn-contract box: `next.recommended` non-bare (carries slug/NN)
       **and** staged by the target unit's resolved status
@@ -300,17 +373,41 @@ Edit the `## Turn contract` and `## Process` sections of
       default `idea`* rule, naming `scheduled → idea`, adding the raw status to
       `workflow_observations`, cross-referencing `#51`. *(evidence: the edited
       step)*
-- [ ] Rewrite Process step 10 as a two-condition checklist (`✓ ≥3 merged since
-      last audit` OR `✓ same drift kind in ≥2 units`) → `product_audit: true` +
-      `reason`; note it may surface `/product-audit` in `next`. *(evidence: the
+- [ ] Rewrite Process step 10 as a mechanical two-condition checklist
+      (`✓ merged_count >= 3` since last audit OR `✓ same drift kind in ≥2 units`)
+      → `product_audit: true` + `reason`; state `merged_count >= 3` is a count, not
+      a judgment, and that **no** "wait for a natural pause" exception exists or may
+      be invented; note it may surface `/product-audit` in `next`. *(evidence: the
       edited step)*
+- [ ] Gate: `npx skills add . --list` lists every skill; markdown well-formed;
+      no stack reference introduced.
+
+### P3 — Untriaged-backlog surfacing (defect F) + version sync
+
+Edit the `## Process` and `## Machine envelope` sections of
+`skills/workflow-status/SKILL.md`, then run `bump-skill` (last implementation
+phase — one version sync over the complete P1–P3 edits).
+
+- [ ] Add a new Process step (after step 9's `pending_triage`) that cross-references
+      the step-2 open-issue list against triage disposition: an open issue is
+      **untriaged** iff it has no dated `triage-issue` `VERDICT:` comment
+      (`skills/triage-issue/SKILL.md:95-104`) and no
+      `wontfix`/`postponed`/`promoted` label. *(evidence: the new step)*
+- [ ] Document the `detail.untriaged_issues: {count, oldest_open: [numbers]}` field
+      in `## Machine envelope` (cap listed numbers at oldest 5; `detail` is
+      schema-free — no package change), distinct from `pending_triage` and
+      `findings.untriaged`. *(evidence: the new field + example)*
+- [ ] State that a non-zero `untriaged_issues.count` may drive
+      `next.recommended`/`alternatives` to a non-bare `/triage-issue <numbers>`
+      (ties the backlog into the recommendation A hardened). *(evidence: the new
+      wording)*
 - [ ] Run `bump-skill` for `workflow-status`: version bumped, `CHANGELOG.md` +
       `CHANGELOG.es.md` rows added, `README.md` + `README.es.md` tables synced.
       *(evidence: `git diff --stat` shows all five files)*
 - [ ] Gate: `npx skills add . --list` lists every skill; markdown well-formed;
-      no stack reference introduced.
+      no stack reference introduced; the section's example JSON stays schema-valid.
 
-### P3 — Hardening & PR
+### P4 — Hardening & PR
 
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
@@ -333,12 +430,14 @@ No application build exists; "green" is the repo's documentation gate
   `orchestration-envelope`, `#51`) resolve.
 - No stack/real-project reference leaked into the skill.
 - **Manual verification (why: no runtime to drive a doc change):** re-read the
-  hardened skill against the reported envelope's inputs and confirm each of A–E
-  now has a turn-contract box or shape reminder that would have caught it — in
-  particular that the emitted envelope, run through the shape reminders, would
-  pass `validateEnvelope()`. There is no unit/integration layer for a
-  skill-authoring doc; the golden-fixture smoke-test does not apply
-  (`workflow-status` is not in its executor-path list).
+  hardened skill against **both** reported envelopes' inputs (the `/plan-feature`
+  and the `/triage-issue` repro) and confirm each of A–F now has a turn-contract
+  box, shape reminder, or Process step that would have caught it — in particular
+  that the emitted envelope, run through the shape reminders, would pass
+  `validateEnvelope()`, and that the untriaged backlog would appear as concrete
+  numbers. There is no unit/integration layer for a skill-authoring doc; the
+  golden-fixture smoke-test does not apply (`workflow-status` is not in its
+  executor-path list).
 
 ## Rollback
 
@@ -366,14 +465,23 @@ executable (carries a slug/NN).
   `#51`/status-vocabulary owns the fuller reconciliation. Either can merge first.
 - **`#49`** (surface per-finding severity/tier in the envelope) — **parallel,
   additive.** An enhancement that adds new envelope detail; unrelated to the
-  emit-time correctness hardened here. No conflict.
+  emit-time correctness hardened here. F's `detail.untriaged_issues` is a different
+  field (issue backlog, not per-finding severity) — no conflict, both live under
+  the free-form `detail`.
+- **Second reproduction (2026-07-12 issue comment)** — corroborating evidence from
+  a second, unrelated project, not a separate issue: it confirmed A/C/D recur across
+  command types and contributed the new gap F, both folded into this SPEC. No new
+  issue to file.
 - No open PRs. No issue blocks or is blocked by this fix.
 
 ## Effort
 
-**S** — a single `SKILL.md` edited in two localized passes (envelope section;
-turn-contract + two Process steps) plus the mechanical `bump-skill` sync; no code,
-no schema, no tests to author. Comfortably ≤ 4h.
+**M** — still a single `SKILL.md`, but now three localized implementation passes
+(envelope shape + tier map; turn-contract + Process steps 4/10; new untriaged-
+backlog Process step + `detail` field) plus the mechanical `bump-skill` sync; no
+code, no schema, no tests to author. The new capability F (a Process step with a
+per-issue disposition check) is what tips it past S into multi-commit territory;
+comfortably ≤ 1 day.
 
 ## Decisions made during drafting
 
@@ -387,15 +495,31 @@ no schema, no tests to author. Comfortably ≤ 4h.
   larger refactor and out of scope. `orchestration-envelope:93` already states the
   strong/cheap principle — this fix makes it mechanical for the one skill that
   emits the envelope itself.
-- **`bump-skill` runs in P2 (last implementation phase), not P3.** It must run
-  once, after all `SKILL.md` edits are final; P2 is the last phase that edits the
-  skill, so the version/changelog/README sync lands with the implementation and
-  P3's gate re-runs over a complete tree. The literal `Hardening & PR` tasks are
-  kept verbatim.
+- **`bump-skill` runs in P3 (last implementation phase), not P4.** It must run
+  once, after all `SKILL.md` edits (P1–P3) are final; P3 is the last phase that
+  edits the skill, so the version/changelog/README sync lands with the
+  implementation and P4's gate re-runs over a complete tree. The literal
+  `Hardening & PR` tasks are kept verbatim.
 - **Self-validation is documented as an instruction, not implemented as code.**
   The skill tells the emitter to check its envelope against the bundled schema;
   adding an executable validator to the skill runtime is out of scope (no code
   change, no package touch).
+- **F is a new field `detail.untriaged_issues`, not an extension of
+  `pending_triage`.** `pending_triage` has a deliberately narrow, findings-derived
+  meaning (step 9) and `findings.untriaged` is review-finding routing; overloading
+  either would blur two distinct signals a driver routes on separately. A new
+  free-form `detail` sub-object is the smallest addition and needs no schema change.
+- **"Untriaged" = no dated `triage-issue` `VERDICT:` comment.** That fixed-format
+  comment (`skills/triage-issue/SKILL.md:95-104`) is the disposition marker
+  `triage-issue` reliably writes; disposition labels are a secondary signal (triage
+  does not always apply them). The trade-off is per-issue comment reads on an
+  otherwise-cheap sensor — accepted because the issue explicitly requests the
+  capability; the implementer may bound/lazy-compute it (see **Impact**).
+- **Incremental update over a re-plan.** The second reproduction corroborated the
+  existing A–E hardening (generic assertions already cover the new command types)
+  and added exactly one new concern (F) plus a wording sharpening (C); the SPEC's
+  structure held, so this revised the existing SPEC in place (new defect F, extra
+  phase P3, sharpened C) rather than drafting a fresh one.
 
 ## Status
 
