@@ -388,23 +388,23 @@ Edit the `## Process` and `## Machine envelope` sections of
 `skills/workflow-status/SKILL.md`, then run `bump-skill` (last implementation
 phase — one version sync over the complete P1–P3 edits).
 
-- [ ] Add a new Process step (after step 9's `pending_triage`) that cross-references
+- [x] Add a new Process step (after step 9's `pending_triage`) that cross-references
       the step-2 open-issue list against triage disposition: an open issue is
       **untriaged** iff it has no dated `triage-issue` `VERDICT:` comment
       (`skills/triage-issue/SKILL.md:95-104`) and no
       `wontfix`/`postponed`/`promoted` label. *(evidence: the new step)*
-- [ ] Document the `detail.untriaged_issues: {count, oldest_open: [numbers]}` field
+- [x] Document the `detail.untriaged_issues: {count, oldest_open: [numbers]}` field
       in `## Machine envelope` (cap listed numbers at oldest 5; `detail` is
       schema-free — no package change), distinct from `pending_triage` and
       `findings.untriaged`. *(evidence: the new field + example)*
-- [ ] State that a non-zero `untriaged_issues.count` may drive
+- [x] State that a non-zero `untriaged_issues.count` may drive
       `next.recommended`/`alternatives` to a non-bare `/triage-issue <numbers>`
       (ties the backlog into the recommendation A hardened). *(evidence: the new
       wording)*
-- [ ] Run `bump-skill` for `workflow-status`: version bumped, `CHANGELOG.md` +
+- [x] Run `bump-skill` for `workflow-status`: version bumped, `CHANGELOG.md` +
       `CHANGELOG.es.md` rows added, `README.md` + `README.es.md` tables synced.
       *(evidence: `git diff --stat` shows all five files)*
-- [ ] Gate: `npx skills add . --list` lists every skill; markdown well-formed;
+- [x] Gate: `npx skills add . --list` lists every skill; markdown well-formed;
       no stack reference introduced; the section's example JSON stays schema-valid.
 
 ### P4 — Hardening & PR

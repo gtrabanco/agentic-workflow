@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.4.0 | 2026-07-12 | menor | Endurecimiento en tiempo de emisión (#52): comprobaciones del contrato de turno para que `next.recommended` sea no-vacío y esté correctamente escalonado, `design_candidates[].next` enrute siempre a `/design-feature`, `recommendations.product_audit`/`next.tier` provengan de las nuevas comprobaciones/tabla mecánicas, y el envelope se emita en cada invocación (incluidos los seguimientos en la misma sesión) tras autocomprobarse contra el esquema empaquetado. Se añaden recordatorios de forma del envelope (`enum` de `blockers[].scope`, incompatibilidad run/OK, `dependencies.unmet` como array de strings) y una tabla fija comando→nivel en `## Machine envelope`. El paso 4 del proceso mapea un estado de roadmap desconocido a `idea` por defecto (p. ej. `scheduled → idea`, referencia cruzada a `#51`); el paso 10 (product-audit) se reescribe como lista mecánica de dos condiciones sin excepción inventada. Un nuevo paso del proceso muestra el backlog de issues abiertos sin triar como `detail.untriaged_issues: {count, oldest_open}` (sin cambio de esquema — `detail` es de forma libre). |
 | 1.3.0 | 2026-07-11 | menor | Nuevo campo de envelope `detail.urgent`: issues abiertos con las etiquetas `urgent`/`fix-next` (leídas solo del objeto JSON `labels`, nunca del título/cuerpo/comentarios) junto a los hechos de interrumpibilidad de la unidad en curso (fase, sucio/limpio, tareas hasta el próximo límite de commit) — reutilizados del reconcile existente de progreso de fase/recuperación de caídas, sin nuevas llamadas a git. Solo presencia, reporta hechos, nunca decide pausa-vs-terminar. |
 | 1.2.0 | 2026-07-09 | menor | Lee la máquina de estados de cinco valores del roadmap (`idea / defined / planned / in-progress / done`): un nuevo paso de clasificación separa las unidades en `design_candidates` (filas `idea`, siguiente `/design-feature`) frente a `startable_now` (estado ≥ `defined`, dependencias cumplidas, comando siguiente según el estado exacto); nuevo campo de envelope de nivel superior `design_candidates` junto a `startable_now`/`blocked_units`; las filas legacy en `planned` plano con la mitad de producto del SPEC completa se tratan como `defined`+`planned` según `MIGRATION.md`. El resumen humano gana una línea de candidatos a diseño. |
 | 1.1.1 | 2026-07-05 | parche | Fold de revisión sobre la recuperación de caídas de 1.1.0 (sin publicar): precedencia explícita del estado del envelope con varias ramas (`AMBIGUOUS` > `RESUMABLE` > `CLEAN`, gana el peor); la comprobación de commits sin push ahora protege el caso sin upstream (justamente el caso de crash-nunca-pusheado) en vez de fallar en `git log @{u}..`; el envelope de ejemplo ya muestra en `detail` la clave `crash_recovery` que la prosa ya exigía. |
@@ -391,6 +392,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-12 — endurecimiento en tiempo de emisión del envelope de
+  workflow-status (fix #52).** Bump MENOR para `workflow-status` (1.4.0):
+  comprobaciones del contrato de turno para un `next.recommended` no-vacío y
+  correctamente escalonado, recordatorios de forma del envelope y una tabla
+  comando→nivel, un disparador mecánico (a prueba de excepciones) para
+  `product_audit`, un mapeo por defecto de estado de roadmap desconocido a
+  `idea`, y un nuevo campo de backlog `detail.untriaged_issues`. Corrige dos
+  defectos reproducidos (recomendaciones no accionables, envelopes inválidos
+  contra el esquema) sin ningún cambio de esquema/paquete.
 - **2026-07-11 — siembra de etiquetas de urgencia (feature 15, #42, P4).**
   Bump MENOR para `init-workspace` (2.2.0): el modo bootstrap siembra las
   etiquetas `urgent`/`fix-next` con `gh label create` (crea-si-falta); el
