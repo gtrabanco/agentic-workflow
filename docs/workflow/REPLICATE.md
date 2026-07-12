@@ -1,5 +1,7 @@
 # Replicate in any project
 
+> 🇪🇸 [Versión en español](REPLICATE.es.md)
+
 Replicating the workflow has **two halves**: the documentation **scaffold** (the
 substrate the skills read) and the **skills** themselves (the behavior).
 

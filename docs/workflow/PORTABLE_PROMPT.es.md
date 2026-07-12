@@ -1,17 +1,23 @@
-# Portable prompt — install the agentic workflow skill system
+# Prompt portable — instalar el sistema de skills del flujo de trabajo agéntico
 
-> 🇪🇸 [Versión en español](PORTABLE_PROMPT.es.md)
+> 🇬🇧 [English version](PORTABLE_PROMPT.md)
 
-Paste the prompt below into Claude Code (or any capable coding agent) **from the
-root of the target repository**. It regenerates the agentic workflow — **11
-user-facing skills + 3 internal steps** (minus `init-workspace`, which this
-prompt itself replaces as the bootstrap) — **adapted to that project's**
-architecture, documentation, and conventions, rather than copying this repo's
-specifics verbatim.
+Pega el prompt de abajo en Claude Code (o cualquier agente de programación
+capaz) **desde la raíz del repositorio destino**. Regenera el flujo de
+trabajo agéntico — **11 skills orientadas al usuario + 3 pasos internos**
+(menos `init-workspace`, que este mismo prompt reemplaza como el bootstrap)
+— **adaptadas a la** arquitectura, documentación, y convenciones **de ese
+proyecto**, en lugar de copiar textualmente los detalles de este
+repositorio.
 
-Use this when you want the skills tuned to a new project. For a deterministic,
-identical copy instead, install them with the `skills` CLI:
-`npx skills add gtrabanco/agentic-workflow` (see `REPLICATE.md`).
+Usa esto cuando quieras que las skills se ajusten a un proyecto nuevo. Para
+una copia determinista e idéntica en su lugar, instálalas con la CLI
+`skills`: `npx skills add gtrabanco/agentic-workflow` (ver `REPLICATE.es.md`).
+
+> **Nota sobre el idioma del prompt:** el bloque de abajo se deja
+> deliberadamente **sin traducir** — es un prompt literal, pensado para
+> pegarse tal cual en un agente; traducirlo cambiaría lo que el agente
+> ejecuta. Pégalo textualmente sin importar el idioma en el que trabajes.
 
 ---
 
@@ -212,12 +218,15 @@ created and how to use it.
 
 ---
 
-## Notes
+## Notas
 
-- The prompt is intentionally **discovery-driven**: it asks the agent to learn
-  each project's rules instead of hardcoding this repo's. That's what lets you
-  "work the same way" everywhere while still respecting each project's architecture.
-- After it runs, drive features with `plan-feature` (the router) and fixes with
-  `plan-fix`, execute with `execute-phase`, review with `review-change`, gate the
-  PR with `audit-pr`, and triage issues with `triage-issue` — exactly as
-  documented in `docs/workflow/`.
+- El prompt es intencionalmente **impulsado por el descubrimiento**: le
+  pide al agente que aprenda las reglas de cada proyecto en lugar de
+  codificar las de este repositorio. Eso es lo que te permite "trabajar de
+  la misma forma" en todas partes mientras sigues respetando la
+  arquitectura de cada proyecto.
+- Después de que se ejecute, impulsa las features con `plan-feature` (el
+  router) y los fixes con `plan-fix`, ejecuta con `execute-phase`, revisa
+  con `review-change`, aplica la puerta al PR con `audit-pr`, y clasifica
+  issues con `triage-issue` — exactamente como se documenta en
+  `docs/workflow/`.

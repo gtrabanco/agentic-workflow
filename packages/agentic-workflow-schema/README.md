@@ -1,5 +1,7 @@
 # @gtrabanco/agentic-workflow-schema
 
+> 🇪🇸 [Versión en español](README.es.md)
+
 Types, JSON Schema, and parser/validator for the
 [agentic-workflow](https://github.com/gtrabanco/agentic-workflow) **machine
 envelope** — the fixed JSON block a driven agent turn ends with (emitted by

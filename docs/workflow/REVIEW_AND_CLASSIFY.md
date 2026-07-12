@@ -1,5 +1,7 @@
 # Review & classify — `review-change` + `review-implementation`
 
+> 🇪🇸 [Versión en español](REVIEW_AND_CLASSIFY.es.md)
+
 How to review a change. **`review-change`** is the platform-adaptive
 **orchestrator**: it runs only the reviews that apply to this project + change and
 synthesizes one report. **`review-implementation`** is its **findings engine** —
