@@ -372,12 +372,14 @@ literal `Hardening & PR` close-out.
 
 ### P4 — Schema package API reference → ES
 
-- [ ] `packages/agentic-workflow-schema/README.es.md` — faithful
+- [x] `packages/agentic-workflow-schema/README.es.md` — faithful
       translation + back-link; add forward-link to the package `README.md`.
-- [ ] Add `"README.es.md"` to the `files` array in
+- [x] Add `"README.es.md"` to the `files` array in
       `packages/agentic-workflow-schema/package.json`.
-- [ ] Gate: `npm test` in the package passes; `npm pack --dry-run` lists
-      `README.es.md`; relative links resolve.
+- [x] Gate: `npm test` in the package passes (13/13); `npm pack --dry-run`
+      lists `README.es.md` (11.9kB, 7 total files); relative links
+      resolve; no stack/real-project leak; `npx skills add . --list`
+      still green.
 
 ### P5 — Model-routing recommendation revision
 
