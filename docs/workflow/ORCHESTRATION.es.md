@@ -94,6 +94,18 @@ un driver que quiera el sobre debe suministrarlo él mismo:
    consultarla es una llamada normal sin fragmento inyectado ni paso de
    reparación requerido.
 
+> **Atajo de structured outputs.** En providers/modelos con structured
+> outputs estrictos (`response_format: {type: "json_schema", strict: true}` —
+> muchos providers compatibles con OpenAI lo ofrecen en modelos concretos;
+> comprueba en la documentación de tu provider cuáles), el driver
+> puede *forzar* el sobre en vez de esperarlo: envía el turno de solo-sobre
+> (el prompt de reparación del paso 2, o un turno final dedicado a "emite el
+> sobre") con el `envelope.schema.json` del paquete como response format — la
+> respuesta valida por construcción. Mantén los pasos 2–3 como fallback para
+> modelos sin la funcionalidad, y nunca pongas un response format en los
+> turnos de *trabajo*: forzaría toda la salida a JSON y suprimiría la prosa y
+> el uso de tools que el turno sigue necesitando.
+
 ## La máquina de estados (enrutar por `state`)
 
 | `state` | Significado | Acción del orquestador | Nivel sugerido |

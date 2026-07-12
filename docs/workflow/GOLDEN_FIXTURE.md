@@ -127,6 +127,27 @@ if one exists.
    itself.
 4. **Observe the output** against the fixed pass criteria below.
 
+## Tool-calling smoke test (model precondition)
+
+Executor-path skills only work if the model can drive tools (read/edit files,
+run commands). Before trusting **any model not yet validated for OpenAI-style
+function calling** in the executor path — providers typically validate tool
+calling on some models and not others (e.g. Gemma4's tool calling is
+documented in an XML format, not the OpenAI `tools` schema) — run this once
+per model, before step 3 above:
+
+1. Send one chat request with a single trivial tool defined (e.g.
+   `get_time`, no parameters) and a prompt that requires it ("What time is
+   it? Use the tool.").
+2. Pass only if: ✓ `finish_reason` is `tool_calls`; ✓
+   `choices[0].message.tool_calls[0].function.name` names the tool; ✓
+   `arguments` is parseable JSON (here: `{}`).
+3. Any other shape (tool call narrated in prose, XML in `content`, empty
+   `tool_calls`) = **FAIL** — do not use that model for executor-path runs;
+   it can still serve non-agentic roles (single-shot review prose, vision).
+
+Record the result as a run-log row (`Skill(s)` column: `tool-calling smoke`).
+
 ## Fixed pass criteria
 
 Pass only if **every** box holds:

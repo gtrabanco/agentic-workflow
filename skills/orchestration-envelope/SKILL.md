@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.1.1
+version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -125,6 +125,18 @@ is why the snippet, not a per-skill turn-contract box, is the enforcement
 point. Bound the retry: **one repair attempt per turn**; a second parse
 failure is a driver-level `FAILED` for that step, surfaced to a human rather
 than looped indefinitely.
+
+**Structured-outputs shortcut (provider-conditional).** If the provider/model
+supports strict structured outputs (`response_format: {type: "json_schema",
+strict: true}` — many OpenAI-compatible providers offer it on selected models;
+check your provider's docs for which), the driver can force the envelope
+rather than hope for it: send the
+envelope-only turn (the repair prompt above, or a dedicated final "emit the
+envelope" turn) with the package's `envelope.schema.json` as the response
+format, and the reply validates by construction. The repair loop remains the
+fallback for models without the feature. Never set a response format on the
+working turns themselves — it forces the entire output to JSON and suppresses
+the prose and tool use the turn still needs.
 
 `workflow-status` is the one exception: it still emits the envelope inline as
 part of its own output (emitting it *is* its function — `--json-only` is
