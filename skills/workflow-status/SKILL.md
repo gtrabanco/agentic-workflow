@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
