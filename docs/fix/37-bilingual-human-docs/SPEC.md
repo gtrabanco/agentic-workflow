@@ -421,9 +421,14 @@ literal `Hardening & PR` close-out.
 
 ### P7 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+      (`npx skills add . --list` exit 0; `npm test` in
+      `packages/agentic-workflow-schema` 13/13 pass; full link-resolution
+      sweep across all 12 new `.es.md` + `README.md`/`README.es.md`/
+      `CLAUDE.md` — 0 broken; no stack/real-project leak grep-checked
+      across every phase.)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -461,7 +466,7 @@ translations themselves (recoverable from git history).
 
 ## Status
 
-`pending`
+`done`
 
 ## Decisions made during drafting
 
