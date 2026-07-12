@@ -1,5 +1,7 @@
 # Agentic workflow
 
+> 🇪🇸 [Versión en español](README.es.md)
+
 How we build with agentic programming in this repo: the end-to-end flow for a
 **feature** and for an **issue**, the **skills** that drive each step, and how to
 **replicate** the whole system in another project.
