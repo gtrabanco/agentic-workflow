@@ -383,7 +383,7 @@ literal `Hardening & PR` close-out.
 
 ### P5 — Model-routing recommendation revision
 
-- [ ] `README.md`: rewrite the "Running on NaN.builders" section + the
+- [x] `README.md`: rewrite the "Running on NaN.builders" section + the
       "If GLM-5.2 is down" fallback ladder into the two-profile,
       quota-aware shape specified in Scope → Model-routing revision:
       GLM-5.2 = €200-plan option (not the basic-plan primary); quota-aware
@@ -394,12 +394,16 @@ literal `Hardening & PR` close-out.
       Qwen3.6 for merge gates / defer to human" rule; the 5-model pros/cons
       table. No unverified benchmark numbers; keep the "sanity-check
       against a current leaderboard" caveat.
-- [ ] `README.es.md`: mirror the **same** revised section as a faithful
+- [x] `README.es.md`: mirror the **same** revised section as a faithful
       Spanish translation — identical ladders, config values, model names,
       and table rows; no divergence from `README.md`.
-- [ ] Gate: EN and ES model tables/ladders match 1:1 (diff the two
+- [x] Gate: EN and ES model tables/ladders match 1:1 (diff the two
       sections); all links in both still resolve; no invented benchmark
-      claim introduced.
+      claim introduced. (Verified: model names, sizes, context, quota
+      figures, and ladder ordering are identical across both files —
+      grep-counted, with the only surface differences being the localized
+      unit labels "tok/member/mo" vs. "tok/miembro/mes". `npx skills add .
+      --list` green; no stack/real-project leak.)
 
 ### P6 — Sync-policy convention
 
