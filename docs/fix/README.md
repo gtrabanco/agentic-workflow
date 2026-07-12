@@ -14,8 +14,7 @@ this table — history lives in git log + closed issues.
 
 | Folder | Topic | Status | Depends on | Issue |
 | ------ | ----- | ------ | ---------- | ----- |
-
-_No active fixes — all merged entries removed per the convention below._
+| `38-schema-package-republish` | Republish schema package (bump 1.0.1 → 1.0.2 so the stranded #44 README reaches npm) | done · [#48](https://github.com/gtrabanco/agentic-workflow/pull/48) | — | [#38](https://github.com/gtrabanco/agentic-workflow/issues/38) |
 
 ---
 
