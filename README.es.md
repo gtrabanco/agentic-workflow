@@ -288,9 +288,11 @@ se mueve rápido; contrástalo con un leaderboard actual antes de fijar nada):
 
 [NaN Cloud](https://cloud.nan.builders/r/7GK06FX8) sirve la frontera open-weight
 ([catálogo completo](https://nan.builders/docs/models): GLM-5.2 ~753B MoE ·
-Mimo V2.5 310B · DeepSeek V4 Flash 284B · Qwen3.6 35B · Gemma4 26B) con toggle
-de **Thinking** y control de **effort** por petición (Minimal → Max), que mapea
-1:1 con los tiers de este workflow. Regístrate con
+Mimo V2.5 310B · DeepSeek V4 Flash 284B · Qwen3.6 35B · Gemma4 26B) tras una
+API compatible con OpenAI (`https://api.nan.builders/v1`). El control de
+razonamiento es **por modelo, no un dial uniforme** — la matriz de abajo
+muestra cómo mapea cada modelo con los tiers de `effort:` de este workflow.
+Regístrate con
 [este enlace de referido](https://cloud.nan.builders/r/7GK06FX8).
 
 **Dos perfiles, no un solo principal.** GLM-5.2 ya no está disponible en el
@@ -298,6 +300,13 @@ plan básico — es el principal del **plan de €200** (prácticamente ilimitad
 ahí; los límites solo aprietan con uso muy intensivo). En el **plan básico**
 simplemente no está disponible, así que los picks de abajo se dividen en una
 columna para el plan de €200 y una escalera para el plan básico.
+
+> **Verifica primero tu catálogo.** El listado de `/v1/models` de la
+> referencia pública del API solo nombra `deepseek-v4-flash`, `mimo-v2.5`,
+> `qwen3.6` y `gemma4` para chat — GLM-5.2 no aparece en él. Ejecuta
+> `GET /v1/models` con tu propia key y enruta solo a los modelos que devuelva
+> de verdad; trata la columna del plan de €200 de abajo como condicionada a
+> esa comprobación.
 
 **Regla de enrutamiento consciente de la cuota.** Según el catálogo, solo
 **Mimo V2.5** y **DeepSeek V4 Flash** llevan un límite explícito (500M
@@ -307,15 +316,36 @@ afirma como ilimitado). Reserva los dos presupuestos de 500M con límite para
 trabajo de 1M de contexto y veredictos que gatean merges; empuja el volumen
 re-comprobable y mecánico hacia los modelos sin límite en su lugar.
 
+**Control de razonamiento por modelo** (según la referencia del API) — mapea
+los valores de `effort:` de este workflow con esta matriz en vez de asumir un
+dial compartido:
+
+| Modelo | Control | Por defecto | Mapeo de `effort:` |
+|---|---|---|---|
+| **DeepSeek V4 Flash** | `reasoning_effort: low\|medium\|high` — campo top-level del body, no `extra_body` | `medium` | `low`/`medium`/`high` → literal; `xhigh`/`max` → `high` |
+| **Qwen3.6** | booleano `chat_template_kwargs.enable_thinking` | ON | `low` → thinking off; `medium` o superior → on |
+| **Gemma4** | booleano `chat_template_kwargs.enable_thinking` | OFF | `high` o superior → thinking on; si no, off |
+| **Mimo V2.5** | ninguno — reasoning siempre activo, no controlable por API | ON | sin mapeo: cada petición paga tokens de razonamiento; deja margen en `max_tokens` (docs: ≥300 de mínimo absoluto) |
+
+**El tool calling solo está validado en Qwen3.6.** La referencia del API marca
+el function calling estilo OpenAI como validado específicamente en `qwen3.6`,
+dice de probar el resto antes de depender de tools en producción, y documenta
+el tool calling de Gemma4 en un formato XML — no el esquema `tools` de OpenAI
+que envían los harnesses de agentes. Así que el camino ejecutor
+(`execute-phase`, cualquier cosa que lea/edite ficheros mediante tools) usa
+Qwen3.6 por defecto; ejecuta el smoke test de tool calling de
+[`docs/workflow/GOLDEN_FIXTURE.es.md`](docs/workflow/GOLDEN_FIXTURE.es.md)
+antes de promover cualquier otro modelo de NaN a ese camino.
+
 **Escaleras de preferencia por tarea** (2–3 niveles en el plan básico; el
 plan de €200 simplemente corre GLM-5.2 en todas partes):
 
 | Tarea | Skills | Plan de €200 | Escalera del plan básico | Nunca aquí |
 |---|---|---|---|---|
-| **Puertas de merge** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max para `product-audit`) | 1. **Mimo V2.5** (Max) → 2. **DeepSeek V4 Flash** (suelo) → si no, **pospón al humano** | Qwen3.6, Gemma4 |
+| **Puertas de merge** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max para `product-audit`) | 1. **Mimo V2.5** (reasoning siempre activo) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, suelo) → si no, **pospón al humano** | Qwen3.6, Gemma4 |
 | **Planificación / enrutamiento / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, conductor de `ship-roadmap` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (ahorra cuota) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
-| **Ejecución / mecánico** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **Gemma4** → 3. **DeepSeek V4 Flash** | — |
-| **Barato** | `log-session`, recolección de evidencia | DeepSeek V4 Flash, Thinking off, Low | 1. **DeepSeek V4 Flash** → 2. **Qwen3.6** → 3. **Gemma4** | — |
+| **Ejecución / mecánico** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** solo tras pasar el smoke test de tool calling | Mimo V2.5 (el reasoning no se puede apagar — quema su cuota limitada) |
+| **Barato** | `log-session`, recolección de evidencia | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (solo pasos no agénticos, o tras el smoke test de tools) | Mimo V2.5 |
 | **Incorporar hallazgos de `review-change`/`audit-pr`** | ciclo de incorporación de `execute-phase` | según el hallazgo (ver abajo) | hallazgo **rutinario/mecánico** (estilo, stub de test faltante, doc obsoleto) → igual que Ejecución/mecánico; hallazgo **sutil** (lógica, seguridad, arquitectura) → sube al tier que lo encontró (escalera de Puertas de merge o de Planificación/enrutamiento, la que haya corrido la revisión) | — |
 
 La fila del ciclo de incorporación reemplaza a la antigua línea de
@@ -337,11 +367,19 @@ humano, espera al reinicio de la cuota, o sube al plan de €200.
 
 | Modelo | Tamaño | Contexto | Cuota en plan básico | Bueno para | Evitar para |
 |---|---|---|---|---|---|
-| **GLM-5.2** | ~753B MoE | — | No disponible en el plan básico (solo plan de €200, prácticamente ilimitado ahí) | Cualquier hueco de juicio, cuando está disponible | — |
-| **Mimo V2.5** | 310B, reasoning | 1M ctx | 500M tok/miembro/mes | Puertas de merge + trabajo de contexto largo; familia distinta a Qwen3.6, así que añade independencia de revisor | — |
-| **DeepSeek V4 Flash** | 284B total · 21B activos | — | 500M tok/miembro/mes | Volumen barato/mecánico; suelo de último recurso para planificación/triage cuando 1–2 de arriba están gastados | Cualquier veredicto que gatee un merge |
-| **Qwen3.6** | 35B | 256K ctx | sin límite listado | Planificación/enrutamiento/triage (re-comprobado después); ejecución mecánica | Veredictos que gatean merges; revisar código que él mismo escribió |
-| **Gemma4** | 26B | 256K ctx | sin límite listado | Solo tier pequeño mecánico | Cualquier llamada de juicio |
+| **GLM-5.2** | ~753B MoE | — | No disponible en el plan básico (solo plan de €200, prácticamente ilimitado ahí); no figura en el catálogo público del API — confírmalo con `GET /v1/models` | Cualquier hueco de juicio, cuando está disponible | — |
+| **Mimo V2.5** | 310B, reasoning siempre activo | 1M ctx | 500M tok/miembro/mes | Puertas de merge + trabajo de contexto largo; familia distinta a Qwen3.6, así que añade independencia de revisor | Volumen mecánico/de bajo esfuerzo — el reasoning no se puede apagar, así que cada tarea barata quema la cuota limitada; tools sin validar |
+| **DeepSeek V4 Flash** | 284B total · 21B activos | 1M ctx | 500M tok/miembro/mes | Volumen barato/mecánico con `reasoning_effort: low`; el único modelo de NaN con dial graduado de esfuerzo; suelo de último recurso para planificación/triage cuando 1–2 de arriba están gastados | Cualquier veredicto que gatee un merge |
+| **Qwen3.6** | 35B | 256K ctx | sin límite listado | El único modelo de NaN con tool calling OpenAI validado → ejecutor agéntico por defecto; speculative decoding MTP ≈2× throughput; planificación/enrutamiento/triage (re-comprobado después) | Veredictos que gatean merges; revisar código que él mismo escribió |
+| **Gemma4** | 26B | 256K ctx | sin límite listado | Tier pequeño no agéntico (texto/visión de un solo turno) | Cualquier llamada de juicio; bucles agénticos de tools hasta que pase el smoke test (tool calling en formato XML) |
+
+**Límites operativos por API key** (de la referencia del API): 60
+peticiones/min, **máximo 5 peticiones concurrentes**, 1.5M tokens/min por
+modelo de chat. Limita cualquier fan-out de subagentes/revisiones (el
+paralelismo de `ship-roadmap`, el pack de `review-change`) a ≤5 concurrentes
+— 3–4 en la práctica, dejando margen para el conductor — y recuerda que un
+bucle agéntico gasta una petición por cada ida y vuelta de tool, así que
+varios agentes en paralelo alcanzan los 60 rpm enseguida.
 
 Whisper, Kokoro, Rerank, Qwen3 Embedding y Flux 2 Klein son modelos de
 audio/retrieval/imagen — el workflow no los usa. La fuerza de los modelos de
@@ -385,7 +423,12 @@ termine con un **envelope máquina** — un bloque JSON fijo y cercado (state,
 unit, phase, PR, findings, blockers, orden de construcción de dependencias,
 siguiente comando recomendado + pista de tier de modelo) — y ejecuta un
 **bucle de reparación** cuando un turno lo omite (reintenta con un prompt de
-una línea; un reintento, luego un fallo a nivel de driver). El driver lo
+una línea; un reintento, luego un fallo a nivel de driver). En providers con
+structured outputs estrictos (`response_format: {type: "json_schema",
+strict}` — en NaN: `qwen3.6` y `gemma4`), es preferible forzar el envelope
+pasando el `envelope.schema.json` del paquete npm como response format en el
+turno final del envelope; el bucle de reparación queda como fallback para los
+modelos que no lo soporten. El driver lo
 parsea e invoca la siguiente skill con el modelo que tú elijas en cada paso.
 Es la sustitución neutral de proveedor del `/loop` y los subagentes de Claude
 Code: el mismo bucle que `ship-roadmap` ejecuta dentro del agente, alojado
