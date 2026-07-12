@@ -138,7 +138,7 @@ both README tables). Specifically:
      `/plan-feature <slug>`; `planned` → `/execute-phase <NN> P1`).
    - **every** `design_candidates[].next` begins with `/design-feature ` (design
      candidates route to design regardless of anything else).
-   - `recommendations.product_audit` was computed by the step-10 mechanical check,
+   - `recommendations.product_audit` was computed by the step-11 mechanical check,
      not guessed.
    - `next.tier` was derived from the resolved `next.recommended` command's
      declared tier (per the mapping added in P2), not guessed.
@@ -164,8 +164,9 @@ both README tables). Specifically:
    - add one turn-contract box: the emitted envelope is validated against
      `packages/agentic-workflow-schema/envelope.schema.json` (the bundled schema)
      before it is printed — dogfood the package the drivers use.
-4. **Product-audit mechanical boolean (C)** — reword Process step 10 from a
-   heuristic into a two-condition checklist (`✓ merged_count >= 3` since the last
+4. **Product-audit mechanical boolean (C)** — reword Process step 11 (step 10 at
+   drafting time, before P3 inserted the new untriaged-backlog step ahead of it)
+   from a heuristic into a two-condition checklist (`✓ merged_count >= 3` since the last
    SHIP_REPORT/product-audit artifact **OR** `✓ the same drift kind appears in
    ≥2 units' docs`) with `product_audit: true` + a stated `reason` when **either**
    holds. The wording must make it a **mechanical boolean with no exception clause**
@@ -286,7 +287,7 @@ Each is an objective, independently checkable condition.
 - [ ] The turn contract asserts every `design_candidates[].next` begins with
       `/design-feature `.
 - [ ] The turn contract asserts `recommendations.product_audit` came from the
-      step-10 mechanical check and `next.tier` from the command→tier map.
+      step-11 mechanical check and `next.tier` from the command→tier map.
 - [ ] The turn contract asserts the envelope is emitted on every invocation
       **including a same-session natural-language follow-up** about state.
 - [ ] The turn contract asserts the envelope validates against
@@ -300,7 +301,8 @@ Each is an objective, independently checkable condition.
       `dependencies.unmet` is an array of strings (not objects).
 - [ ] `## Machine envelope` contains the command→tier map and the rule that
       `next.tier` derives from the resolved `next.recommended`.
-- [ ] Process step 10 is a two-condition checklist that sets
+- [ ] Process step 11 (product-audit; shifted from step 10 once P3's untriaged-
+      backlog step was inserted ahead of it) is a two-condition checklist that sets
       `product_audit: true` + a `reason` when either condition holds, and may
       surface `/product-audit` in `next`. Its wording states `merged_count >= 3`
       is a **mechanical boolean** and that no "wait for a natural pause"/milestone
@@ -361,7 +363,7 @@ last implementation phase.)
 - [x] Add the turn-contract box: every `design_candidates[].next` begins with
       `/design-feature `. *(evidence: the new box)*
 - [x] Add the turn-contract box: `recommendations.product_audit` came from the
-      step-10 mechanical check and `next.tier` from the P1 command→tier map.
+      step-11 mechanical check and `next.tier` from the P1 command→tier map.
       *(evidence: the new box)*
 - [x] Add the turn-contract box: the envelope is emitted on **every** invocation
       including a same-session natural-language follow-up about state — never
@@ -373,7 +375,9 @@ last implementation phase.)
       default `idea`* rule, naming `scheduled → idea`, adding the raw status to
       `workflow_observations`, cross-referencing `#51`. *(evidence: the edited
       step)*
-- [x] Rewrite Process step 10 as a mechanical two-condition checklist
+- [x] Rewrite Process step 10 (step 10 at the time this P2 task ran; became step 11
+      after P3 inserted the untriaged-backlog step ahead of it) as a mechanical
+      two-condition checklist
       (`✓ merged_count >= 3` since last audit OR `✓ same drift kind in ≥2 units`)
       → `product_audit: true` + `reason`; state `merged_count >= 3` is a count, not
       a judgment, and that **no** "wait for a natural pause" exception exists or may
@@ -533,7 +537,9 @@ comfortably ≤ 1 day.
   design (`skills/triage-issue/SKILL.md:148-153`), not label-gated — hardening
   the *detection* would mean changing `triage-issue`'s output contract, which
   is out of scope for an envelope-emission fix. Revisit only if `triage-issue`
-  itself adds a disposition label to complement the comment marker.
+  itself adds a disposition label to complement the comment marker. Tracked as
+  **`#54`** (postponed, triaged 2026-07-12) so this acceptance stays auditable
+  beyond this SPEC.
 
 ## Status
 
