@@ -151,6 +151,7 @@ over time.
 | Date | Model | Skill(s) + version | Result | Note |
 |------|-------|--------------------|--------|------|
 | 2026-07-10 | Qwen3.6 35B | `execute-phase` 1.x | PASS | example row — replace on first real run |
+| 2026-07-12 | n/a — no weaker model available in this session | `plan-feature` 3.1.0, `plan-feature-scaffold` 1.9.0 (fix #51) | NOT RUN | This session's agent had no access to a weaker fleet model to execute the live procedure; substituted a manual read-through of the new gate/guard wording against the fixed pass criteria (no ambiguity found in the new STOP branches, `--next` retarget, or re-read/reapply step). A real weak-model run against this fixture is still owed — flagged here rather than fabricating a PASS. |
 
 ## Scope boundary
 
