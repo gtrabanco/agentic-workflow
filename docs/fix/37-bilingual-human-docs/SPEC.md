@@ -407,14 +407,17 @@ literal `Hardening & PR` close-out.
 
 ### P6 — Sync-policy convention
 
-- [ ] `CLAUDE.md`: under "Working rules", record that **human-readable
+- [x] `CLAUDE.md`: under "Working rules", record that **human-readable
       docs** (`README`, `CHANGELOG`, `docs/workflow/*.md`, the schema
       package `README`) carry EN + ES siblings kept in sync **on next
       touch** — no automated bookkeeping — while `SKILL.md`, SPECs,
       commits, PRs, and machine config (`model-routing.yml`) stay
       English-only.
-- [ ] Gate: `CLAUDE.md` still links resolve; wording is generic (no
-      stack/project reference).
+- [x] Gate: `CLAUDE.md` still links resolve; wording is generic (no
+      stack/project reference). (Only "broken" matches from the link
+      checker were the literal `<name>.es.md`/`<name>.md` placeholder
+      pattern inside the new bullet's own prose, not real links. No
+      stack/real-project leak; `npx skills add . --list` still green.)
 
 ### P7 — Hardening & PR
 
