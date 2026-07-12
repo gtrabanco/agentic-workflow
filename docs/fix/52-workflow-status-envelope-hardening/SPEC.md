@@ -409,9 +409,9 @@ phase — one version sync over the complete P1–P3 edits).
 
 ### P4 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -523,4 +523,4 @@ comfortably ≤ 1 day.
 
 ## Status
 
-`pending`
+`done`
