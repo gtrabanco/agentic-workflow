@@ -212,7 +212,7 @@ documentation/guidance correction.
   `GOLDEN_FIXTURE.md` EN/ES tool-calling smoke test; `bump-skill` for
   `orchestration-envelope` (1.1.1 → 1.2.0, minor) and `ship-roadmap` (2.2.0 →
   2.2.1, patch) with CHANGELOG EN/ES rows.
-- [ ] **P2 — Hardening & PR.** Verify `npx skills add . --list` still
+- [x] **P2 — Hardening & PR.** Verify `npx skills add . --list` still
   discovers every skill; verify no conflict markers or stray provider names
   outside the README section; register this SPEC in
   `docs/features/ROADMAP.md`; open the branch's PR against `main` with
