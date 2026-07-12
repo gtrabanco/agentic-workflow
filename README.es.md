@@ -290,39 +290,64 @@ se mueve rápido; contrástalo con un leaderboard actual antes de fijar nada):
 ([catálogo completo](https://nan.builders/docs/models): GLM-5.2 ~753B MoE ·
 Mimo V2.5 310B · DeepSeek V4 Flash 284B · Qwen3.6 35B · Gemma4 26B) con toggle
 de **Thinking** y control de **effort** por petición (Minimal → Max), que mapea
-1:1 con los tiers de este workflow. Nuestros picks por skill:
-
-| Skill | Modelo NaN | Thinking | Effort |
-|---|---|---|---|
-| `init-workspace`, `plan-feature`, `plan-fix`, `review-change`, `audit-pr`, `triage-issue` | **GLM-5.2** | on | High |
-| `product-audit` | **GLM-5.2** | on | **Max** |
-| `ship-roadmap` (conductor) | **GLM-5.2** | on | High |
-| `execute-phase` (+ la ejecución de ship-roadmap), `audit-docs`, `bump-skill`, `workflow-status` | **Qwen3.6** | off | Medium |
-| `log-session`, recolección de evidencia | **DeepSeek V4 Flash** | off | Low |
-
-Alternativas: lógica de implementación sutil → sube `execute-phase` a
-GLM-5.2/High; **Mimo V2.5** (familia distinta) revisando código escrito por
-Qwen añade independencia del revisor; **Gemma4** vale para el tier pequeño.
-Whisper, Kokoro, Rerank, Qwen3 Embedding y Flux 2 Klein son modelos de
-audio/retrieval/imagen — el workflow no los usa. Regístrate con
+1:1 con los tiers de este workflow. Regístrate con
 [este enlace de referido](https://cloud.nan.builders/r/7GK06FX8).
 
-**Si GLM-5.2 está caído — escalera de fallback:**
+**Dos perfiles, no un solo principal.** GLM-5.2 ya no está disponible en el
+plan básico — es el principal del **plan de €200** (prácticamente ilimitado
+ahí; los límites solo aprietan con uso muy intensivo). En el **plan básico**
+simplemente no está disponible, así que los picks de abajo se dividen en una
+columna para el plan de €200 y una escalera para el plan básico.
 
-| # | Fallback | Config | Vale para | Nunca para |
+**Regla de enrutamiento consciente de la cuota.** Según el catálogo, solo
+**Mimo V2.5** y **DeepSeek V4 Flash** llevan un límite explícito (500M
+tok/miembro/mes); **Qwen3.6** y **Gemma4** no muestran límite listado (256K
+de contexto — "sin límite listado" se trata como *no confirmado*, nunca se
+afirma como ilimitado). Reserva los dos presupuestos de 500M con límite para
+trabajo de 1M de contexto y veredictos que gatean merges; empuja el volumen
+re-comprobable y mecánico hacia los modelos sin límite en su lugar.
+
+**Escaleras de preferencia por tarea** (2–3 niveles en el plan básico; el
+plan de €200 simplemente corre GLM-5.2 en todas partes):
+
+| Tarea | Skills | Plan de €200 | Escalera del plan básico | Nunca aquí |
 |---|---|---|---|---|
-| 1 | **Mimo V2.5** (310B, reasoning, 1M ctx) | Thinking on, High (Max para `product-audit`) | **todos** los huecos de GLM-5.2, incluidos `audit-pr` y `product-audit`; como revisor de familia cruzada incluso añade independencia | — |
-| 2 | **Qwen3.6** (35B) | Thinking on, High | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, conductor de `ship-roadmap` — su salida la re-comprueban después revisión y auditoría | `audit-pr` · `product-audit` · revisar código que el propio Qwen3.6 escribió (el ≥ se cumple, la independencia no) |
-| 3 | **DeepSeek V4 Flash** (284B·21B activos) | Thinking on, High | planificación/triage de último recurso si 1–2 caen | cualquier veredicto que gatee un merge |
-| — | **Gemma4** (26B) | — | solo tier pequeño mecánico | juicio, jamás |
+| **Puertas de merge** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max para `product-audit`) | 1. **Mimo V2.5** (Max) → 2. **DeepSeek V4 Flash** (suelo) → si no, **pospón al humano** | Qwen3.6, Gemma4 |
+| **Planificación / enrutamiento / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, conductor de `ship-roadmap` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (ahorra cuota) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
+| **Ejecución / mecánico** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **Gemma4** → 3. **DeepSeek V4 Flash** | — |
+| **Barato** | `log-session`, recolección de evidencia | DeepSeek V4 Flash, Thinking off, Low | 1. **DeepSeek V4 Flash** → 2. **Qwen3.6** → 3. **Gemma4** | — |
+| **Incorporar hallazgos de `review-change`/`audit-pr`** | ciclo de incorporación de `execute-phase` | según el hallazgo (ver abajo) | hallazgo **rutinario/mecánico** (estilo, stub de test faltante, doc obsoleto) → igual que Ejecución/mecánico; hallazgo **sutil** (lógica, seguridad, arquitectura) → sube al tier que lo encontró (escalera de Puertas de merge o de Planificación/enrutamiento, la que haya corrido la revisión) | — |
 
-**Los dos veredictos que gatean merges solo corren con calidad de tier 1:**
-`audit-pr` y `product-audit` pueden caer a **Mimo V2.5** (effort Max), pero
-nunca más abajo — un barrido en un modelo medio devuelve un informe
-*aparentemente completo pero superficial*, peor que ningún informe. ¿GLM-5.2
-**y** Mimo V2.5 caídos a la vez? → pospón: el humano gatea el merge a mano y el
-product-audit espera. Todo lo que ya corre en los tiers Qwen3.6/Flash no se ve
-afectado por una caída de GLM-5.2.
+La fila del ciclo de incorporación reemplaza a la antigua línea de
+"Alternativas" de un solo modelo (que solo nombraba a GLM-5.2 para subidas
+de lógica sutil). Regla general: el modelo que arregla nunca es más débil
+que el que escribió el código original, ni más débil de lo que exige la
+sutileza del hallazgo — de lo contrario el propio arreglo necesita
+volver a atraparse en la re-revisión, desperdiciando un ciclo.
+
+**Advertencia de razonamiento de `Qwen3.6`, explícita:** aceptable solo para
+razonamiento **re-comprobado** (salida de planificación/enrutamiento/triage
+que revisión o auditoría verifica después) — nunca un veredicto que gatee
+un merge (3B de parámetros activos → una auditoría plausible-pero-superficial
+es peor que ninguna). En el plan básico, una vez gastada la cuota de Mimo
+V2.5 + DeepSeek V4 Flash, no queda ningún razonador fuerte → pospón al
+humano, espera al reinicio de la cuota, o sube al plan de €200.
+
+**Pros y contras por modelo:**
+
+| Modelo | Tamaño | Contexto | Cuota en plan básico | Bueno para | Evitar para |
+|---|---|---|---|---|---|
+| **GLM-5.2** | ~753B MoE | — | No disponible en el plan básico (solo plan de €200, prácticamente ilimitado ahí) | Cualquier hueco de juicio, cuando está disponible | — |
+| **Mimo V2.5** | 310B, reasoning | 1M ctx | 500M tok/miembro/mes | Puertas de merge + trabajo de contexto largo; familia distinta a Qwen3.6, así que añade independencia de revisor | — |
+| **DeepSeek V4 Flash** | 284B total · 21B activos | — | 500M tok/miembro/mes | Volumen barato/mecánico; suelo de último recurso para planificación/triage cuando 1–2 de arriba están gastados | Cualquier veredicto que gatee un merge |
+| **Qwen3.6** | 35B | 256K ctx | sin límite listado | Planificación/enrutamiento/triage (re-comprobado después); ejecución mecánica | Veredictos que gatean merges; revisar código que él mismo escribió |
+| **Gemma4** | 26B | 256K ctx | sin límite listado | Solo tier pequeño mecánico | Cualquier llamada de juicio |
+
+Whisper, Kokoro, Rerank, Qwen3 Embedding y Flux 2 Klein son modelos de
+audio/retrieval/imagen — el workflow no los usa. La fuerza de los modelos de
+arriba se enmarca por parámetros activos + rol, no por números de
+benchmark — verifica contra un leaderboard actual antes de fijar; este
+panorama cambia rápido.
 
 **¿Ya estás en la rama por defecto (o en `#inheritance`)?** No hay nada que
 quitar — es justo el punto. Cada skill ya **hereda el modelo y esfuerzo de tu
