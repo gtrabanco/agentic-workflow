@@ -15,7 +15,7 @@ this table — history lives in git log + closed issues.
 | Folder | Topic | Status | Depends on | Issue |
 | ------ | ----- | ------ | ---------- | ----- |
 | `38-schema-package-republish` | Republish schema package (bump 1.0.1 → 1.0.2 so the stranded #44 README reaches npm) | done · [#48](https://github.com/gtrabanco/agentic-workflow/pull/48) | — | [#38](https://github.com/gtrabanco/agentic-workflow/issues/38) |
-| `37-bilingual-human-docs` | Spanish `.es.md` siblings for all human-readable docs (`docs/workflow/*.md` + schema package README) + on-next-touch sync convention; also folds in the model-routing recommendation revision (GLM-5.2 → €200 plan, quota-aware per-task ladders) | done | — | [#37](https://github.com/gtrabanco/agentic-workflow/issues/37) |
+| `37-bilingual-human-docs` | Spanish `.es.md` siblings for all human-readable docs (`docs/workflow/*.md` + schema package README) + on-next-touch sync convention; also folds in the model-routing recommendation revision (GLM-5.2 → €200 plan, quota-aware per-task ladders) | done · [#50](https://github.com/gtrabanco/agentic-workflow/pull/50) | — | [#37](https://github.com/gtrabanco/agentic-workflow/issues/37) |
 
 ---
 

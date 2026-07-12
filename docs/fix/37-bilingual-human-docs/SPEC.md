@@ -429,11 +429,14 @@ literal `Hardening & PR` close-out.
       across every phase.)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #37`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+      (PR: https://github.com/gtrabanco/agentic-workflow/pull/50 — body
+      verified with `gh pr view 50 --json body`, backticks render
+      correctly, no literal `\`` escapes.)
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
 - [ ] Commit `docs: link PR #37` and push
 
 ## Testing
