@@ -19,6 +19,16 @@ language-neutral across any project this pack installs into — not human
 tutorial/reference prose explaining the repo to a reader. The fix also
 records a lightweight go-forward convention so the pattern stays coherent.
 
+**Folded in (owner decision, 2026-07-12):** the README's model-routing
+recommendation (`README.md` + `README.es.md`, the "Running on NaN.builders"
+section + fallback ladder) is revised in the same fix. `GLM-5.2` is no
+longer available on the basic plan — it stays in the docs but repositioned
+as the **€200-plan** primary (practically unlimited there); for the
+majority on the basic plan it is **not** the primary. The section is
+restructured into quota-aware, 2–3-deep preference ladders per task with
+per-model pros/cons. The owner chose to carry this in `#37` rather than a
+separate issue/fix (see "Decisions made during drafting").
+
 ## Issue
 
 `#37` — GitHub issue. The PR must close it via `Closes #37` in the body.
@@ -49,7 +59,9 @@ recorded scope decision either way, so the gap persisted silently.
 User conversation, 2026-07-11 — noticed while asking about
 `docs/workflow/GOLDEN_FIXTURE.md`. Owner comment (2026-07-11) added
 `packages/agentic-workflow-schema/README.md` to scope, to translate after
-`#44` landed there.
+`#44` landed there. Conversation 2026-07-12: owner reported `GLM-5.2` left
+the basic plan (returns on a forthcoming €200 plan) and folded the
+model-routing recommendation revision into this fix.
 
 ## Scope
 
@@ -83,10 +95,48 @@ doc, and record the go-forward convention.
   here (e.g. `model-routing.yml`, `SKILL.md` paths, `docs/features/`,
   `docs/fix/`) keep their existing English target.
 
-**Convention (P5):** record in `CLAUDE.md` that human-readable docs carry
+**Convention (P6):** record in `CLAUDE.md` that human-readable docs carry
 EN + ES siblings, kept in sync **on next touch** (no automated
 bookkeeping), while `SKILL.md`, SPECs, commits, PRs, and machine config
 stay English-only.
+
+**Model-routing revision (P5) — `README.md` + `README.es.md`, the
+"Running on NaN.builders" section + "If GLM-5.2 is down" fallback ladder.**
+Same content change applied to EN, then mirrored into the ES sibling. The
+new shape:
+
+- **Two profiles, not one primary.** `GLM-5.2` stays listed but as the
+  **€200-plan** primary (practically unlimited there; caps only bite very
+  heavy use). On the basic plan it is **unavailable** → for most users it
+  is not the primary.
+- **Quota-aware routing rule.** Only `Mimo V2.5` and `DeepSeek V4 Flash`
+  carry an explicit cap (500M tok/member/mo per the catalog); `Qwen3.6` /
+  `Gemma4` show no listed cap (256K ctx). Reserve the capped 500M budgets
+  for 1M-context work and merge-gating verdicts; push re-checkable and
+  mechanical volume onto the uncapped models.
+- **Preference ladders (2–3 deep) per task**, each entry with config
+  (Thinking/effort) and a one-line pro/con:
+  - *Merge gates* (`audit-pr`, `product-audit`): €200 → GLM-5.2 High/Max;
+    basic → 1. Mimo V2.5 → 2. DeepSeek V4 Flash (floor) → else **defer to
+    the human**. **Never** Qwen3.6/Gemma4 here.
+  - *Planning/routing/triage* (`plan-feature`, `plan-fix`,
+    `init-workspace`, `triage-issue`, `review-change`, `ship-roadmap`
+    conductor — re-checked downstream): €200 → GLM-5.2; basic → 1. Qwen3.6
+    (quota-saver) → 2. Mimo V2.5 → 3. DeepSeek V4 Flash.
+  - *Execution/mechanical* (`execute-phase`, `audit-docs`, `bump-skill`,
+    `workflow-status`): 1. Qwen3.6 → 2. Gemma4 → 3. DeepSeek V4 Flash.
+  - *Cheap* (`log-session`, evidence): 1. DeepSeek V4 Flash → 2. Qwen3.6
+    → 3. Gemma4.
+- **`Qwen3.6` reasoning caveat, stated explicitly:** acceptable only for
+  **re-checked** reasoning; never a merge-gating verdict (3B active → a
+  plausible-but-shallow audit is worse than none). On the basic plan, once
+  Mimo + DeepSeek quota is spent, no strong reasoner remains → defer to
+  human, wait for reset, or upgrade to the €200 plan.
+- **Per-model pros/cons table** covering all five (GLM-5.2, Mimo V2.5,
+  DeepSeek V4 Flash, Qwen3.6, Gemma4).
+- **No unverified benchmark claims.** Model strength is framed by
+  active-params + role, not invented leaderboard numbers; the existing
+  "sanity-check against a current leaderboard" caveat stays.
 
 ### Out of scope
 
@@ -124,6 +174,14 @@ in brackets (this repo has no application build — see CLAUDE.md
       `README.es.md`, and `npm test` in that package passes. [package test]
 - [ ] `CLAUDE.md` documents the EN+ES human-doc convention and its "on next
       touch" (no-tooling) sync policy. [file-content]
+- [ ] `README.md` model-routing section is restructured: GLM-5.2 shown as
+      the €200-plan option (not the basic-plan primary), quota-aware rule
+      stated, per-task preference ladders (2–3 deep) with config + pro/con,
+      the "never Qwen3.6 for merge gates / defer to human" rule, and a
+      5-model pros/cons table. [file-content]
+- [ ] `README.es.md` carries the **same** restructured section, a faithful
+      translation of the revised `README.md` content (no divergence in the
+      ladders, config values, or model names). [manual review — EN/ES parity]
 - [ ] `docs/fix/README.md` row for this fix reaches `done`. [file-content]
 
 **Manual verification required (why):** translation fidelity and Spanish
@@ -134,16 +192,19 @@ sections, no invented content, no mistranslated technical claims).
 ## Impact
 
 - **Layers touched:** documentation only (`docs/workflow/`,
-  `packages/agentic-workflow-schema/`) + repo guidance (`CLAUDE.md`) + one
-  package-manifest field (`package.json` `files`). No skills, no schema,
-  no runtime code.
+  `packages/agentic-workflow-schema/`, `README.md` + `README.es.md`) + repo
+  guidance (`CLAUDE.md`) + one package-manifest field (`package.json`
+  `files`). No skills, no schema, no runtime code.
 - **Modules/files:** 12 new `.es.md`; 12 English docs edited (forward-link
-  only); `packages/agentic-workflow-schema/package.json`; `CLAUDE.md`;
-  `docs/fix/README.md`.
+  only); `README.md` + `README.es.md` (model-routing section rewritten —
+  content, not a forward-link); `packages/agentic-workflow-schema/package.json`;
+  `CLAUDE.md`; `docs/fix/README.md`.
 - **Blast radius:** dev-/reader-facing only. Worst realistic failure is a
-  broken relative link or a mistranslation — no data, no behavior, no
-  security surface. A wrong `files` entry could omit `README.es.md` from
-  the published package (caught by the acceptance check + `npm pack`).
+  broken relative link, a mistranslation, or a **stale/incorrect model
+  recommendation** (a reader picks a model for a merge gate that the doc
+  should have barred) — no data, no behavior, no security surface. A wrong
+  `files` entry could omit `README.es.md` from the published package
+  (caught by the acceptance check + `npm pack`).
 - **Detection lead time:** immediate at review (link check + manual
   read); a stale/omitted translation surfaces only when a Spanish reader
   hits it — hence the recorded on-next-touch convention.
@@ -155,7 +216,11 @@ sections, no invented content, no mistranslated technical claims).
   rules"). This fix translates *human docs*, never those.
 - **Stack/architecture-agnostic.** No product/stack/framework/ORM/runtime/
   architecture reference may be introduced into the translated docs
-  (CLAUDE.md "Working rules").
+  (CLAUDE.md "Working rules"). The model-routing revision stays inside
+  `README.md`/`README.es.md`'s existing "Concrete picks / Running on
+  NaN.builders" section — the doc's already-designated place for concrete,
+  non-agnostic model recommendations — so it introduces no product
+  reference into `skills/` or the shared workflow docs.
 - **Schema mirror rule.** If `packages/agentic-workflow-schema/` is
   touched, `npm test` passes there; **any envelope-schema change** must be
   mirrored in types + `envelope.schema.json` + version bump, same PR. This
@@ -193,6 +258,9 @@ Acceptance), not a side update:
 
 - All 11 `docs/workflow/*.md` (new `.es.md` + forward-link on the EN doc).
 - `packages/agentic-workflow-schema/README.md` (new `.es.md` + `files`).
+- `README.md` + `README.es.md` — model-routing section rewritten
+  (GLM-5.2 → €200-plan; quota-aware per-task ladders; 5-model pros/cons),
+  EN then mirrored to ES.
 - `CLAUDE.md` — new bilingual human-doc convention (section under "Working
   rules").
 
@@ -214,19 +282,29 @@ design; the on-next-touch convention in `CLAUDE.md` is the only guard.
   `files`; does not block this fix and this fix does not block it.
 - No open issue overlaps, absorbs, or is absorbed by this fix (`#37` is
   the only other open issue — this one).
+- **Model-routing revision — no separate issue.** The GLM-5.2
+  plan-availability change (basic → €200 plan) would normally be its own
+  fix/issue (different files, editorial content vs. translation). The owner
+  explicitly directed (2026-07-12) that it ride in `#37` with no new issue;
+  the PR's `Closes #37` therefore also carries this documented,
+  out-of-title change. Recorded here so the SPEC — not silent drift — is
+  the source of truth.
 
 ## Effort
 
-**L** (multi-commit, > 1 day-equivalent) — ~90 KB of prose across 12 files
-plus 12 forward-link edits, a manifest change, and a convention note.
+**L** (multi-commit, > 1 day-equivalent) — ~90 KB of prose across 12 files,
+12 forward-link edits, a manifest change, a convention note, **plus** the
+model-routing section rewrite in two files (the one genuinely editorial
+piece).
 
 The `plan-fix` guidance says an L item may be escalated to a feature via
-`plan-feature` — **the user decides at review**. Recommendation: keep it as
-this phased fix. The work is mechanical translation with **zero open design
-decisions**, cleanly partitioned by document cluster; the `## Phases`
-ledger already sequences it into checkable multi-commit units, which is
-exactly what `execute-phase --fix` runs. A feature SPEC would add planning
-overhead without adding design content.
+`plan-feature` — **the user decides**; the owner has decided to keep it as
+this phased fix (and to fold the model-routing change in). All but one
+phase is mechanical translation; the single design-bearing piece
+(model-routing, P5) is fully specified above (ladders, config, rules), so
+no open design decision remains for the executor. The `## Phases` ledger
+sequences everything into checkable multi-commit units, which is exactly
+what `execute-phase --fix` runs.
 
 ## Phases
 
@@ -271,7 +349,24 @@ literal `Hardening & PR` close-out.
 - [ ] Gate: `npm test` in the package passes; `npm pack --dry-run` lists
       `README.es.md`; relative links resolve.
 
-### P5 — Sync-policy convention
+### P5 — Model-routing recommendation revision
+
+- [ ] `README.md`: rewrite the "Running on NaN.builders" section + the
+      "If GLM-5.2 is down" fallback ladder into the two-profile,
+      quota-aware shape specified in Scope → Model-routing revision:
+      GLM-5.2 = €200-plan option (not the basic-plan primary); quota-aware
+      routing rule; per-task preference ladders (2–3 deep) with config +
+      pro/con; the "never Qwen3.6 for merge gates / defer to human" rule;
+      the 5-model pros/cons table. No unverified benchmark numbers; keep
+      the "sanity-check against a current leaderboard" caveat.
+- [ ] `README.es.md`: mirror the **same** revised section as a faithful
+      Spanish translation — identical ladders, config values, model names,
+      and table rows; no divergence from `README.md`.
+- [ ] Gate: EN and ES model tables/ladders match 1:1 (diff the two
+      sections); all links in both still resolve; no invented benchmark
+      claim introduced.
+
+### P6 — Sync-policy convention
 
 - [ ] `CLAUDE.md`: under "Working rules", record that **human-readable
       docs** (`README`, `CHANGELOG`, `docs/workflow/*.md`, the schema
@@ -282,7 +377,7 @@ literal `Hardening & PR` close-out.
 - [ ] Gate: `CLAUDE.md` still links resolve; wording is generic (no
       stack/project reference).
 
-### P6 — Hardening & PR
+### P7 — Hardening & PR
 
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
@@ -304,6 +399,12 @@ No unit/integration layer applies (documentation). Verification is:
    (P4), plus `npm pack --dry-run` to confirm `README.es.md` is packaged.
 3. **Manual review** — a fluent reader spot-checks translation fidelity
    (mandatory; not automatable).
+4. **Model-routing parity + correctness** (P5) — diff the `README.md` and
+   `README.es.md` model sections (ladders/config/names/table must match
+   1:1); confirm the recommendation logic is present (GLM-5.2 = €200-plan,
+   never Qwen3.6 for merge gates, defer-to-human when both capped models
+   are spent). Correctness of the recommendation is a manual judgement, not
+   an automatable gate.
 
 Existing tests at regression risk: none — no code path changes; the schema
 package test only re-runs to confirm the manifest edit is inert.
@@ -337,5 +438,22 @@ translations themselves (recoverable from git history).
   existing root-`README.md` pattern — the `docs/workflow/*.md` files have
   none today, so establishing the pair edits both sides.
 - **Phase grouping by document cluster** (flow / reference / replication /
-  schema / policy) rather than one phase per file — keeps each phase a
-  single coherent concern while staying independently checkable.
+  schema / model-routing / policy) rather than one phase per file — keeps
+  each phase a single coherent concern while staying independently
+  checkable.
+- **Model-routing revision folded into `#37`, no separate issue** — owner
+  instruction (2026-07-12), overriding the default one-PR-per-unit /
+  track-don't-inline discipline (flagged at the time, waived by the owner).
+  Reflected in the SPEC so scope stays explicit rather than drifting.
+- **GLM-5.2 repositioned, not removed** — it stays in the docs as the
+  €200-plan primary (owner: practically unlimited there, limits only for
+  very heavy use); the basic-plan default becomes the quota-aware fleet.
+- **Quota-aware routing** — grounded in the nan.builders catalog
+  (2026-07-12 fetch): only Mimo V2.5 and DeepSeek V4 Flash show a 500M
+  tok/member cap; GLM-5.2/Qwen3.6/Gemma4 show none. "No cap listed" is
+  treated as *unconfirmed, not unlimited* — the doc must not assert
+  unlimited without the plan terms.
+- **Qwen3.6 = re-checkable reasoning only** — reasoned from active-params
+  (35B/3B) + role, not a live benchmark; never a merge-gating verdict;
+  both capped models spent ⇒ defer to human. No invented benchmark numbers
+  enter the doc (the leaderboard-sanity-check caveat stays).
