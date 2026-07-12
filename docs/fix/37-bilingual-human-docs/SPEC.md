@@ -344,11 +344,16 @@ literal `Hardening & PR` close-out.
 
 ### P2 — Skill & review reference → ES
 
-- [ ] `docs/workflow/SKILLS.es.md` — translation + back-link; forward-link on EN.
-- [ ] `docs/workflow/REVIEW_AND_CLASSIFY.es.md` — translation + back-link; forward-link on EN.
-- [ ] `docs/workflow/RECOMMENDED_SKILLS.es.md` — translation + back-link; forward-link on EN.
-- [ ] `docs/workflow/ORCHESTRATION.es.md` — translation + back-link; forward-link on EN.
-- [ ] Gate: every relative link in the 4 new `.es.md` resolves; no leak.
+- [x] `docs/workflow/SKILLS.es.md` — translation + back-link; forward-link on EN.
+- [x] `docs/workflow/REVIEW_AND_CLASSIFY.es.md` — translation + back-link; forward-link on EN.
+- [x] `docs/workflow/RECOMMENDED_SKILLS.es.md` — translation + back-link; forward-link on EN.
+- [x] `docs/workflow/ORCHESTRATION.es.md` — translation + back-link; forward-link on EN.
+- [x] Gate: every relative link in the 4 new `.es.md` resolves; no leak.
+      (Verified with a link-resolution script; the two flagged items were
+      false positives — a same-page anchor and a directory reference, both
+      confirmed to exist. `npx skills add . --list` still enumerates all
+      skills. No stack/real-project reference — grep-checked, one
+      false-positive substring match on "Guardrails".)
 
 ### P3 — Replication, testing, portability, migration → ES
 

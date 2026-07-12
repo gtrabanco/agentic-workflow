@@ -1,5 +1,7 @@
 # Skill system reference
 
+> 🇪🇸 [Versión en español](SKILLS.es.md)
+
 The skills that make up the agentic workflow, grouped by role.
 
 **14 user-facing skills** (one menu entry each) + **14 internal** steps composed
