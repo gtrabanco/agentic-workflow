@@ -354,32 +354,32 @@ Edit the `## Turn contract` and `## Process` sections of
 `skills/workflow-status/SKILL.md`. (No `bump-skill` yet — it runs once in P3, the
 last implementation phase.)
 
-- [ ] Add the turn-contract box: `next.recommended` non-bare (carries slug/NN)
+- [x] Add the turn-contract box: `next.recommended` non-bare (carries slug/NN)
       **and** staged by the target unit's resolved status
       (`idea`→`/design-feature`, `defined`→`/plan-feature`,
       `planned`→`/execute-phase <NN> P1`). *(evidence: the new box)*
-- [ ] Add the turn-contract box: every `design_candidates[].next` begins with
+- [x] Add the turn-contract box: every `design_candidates[].next` begins with
       `/design-feature `. *(evidence: the new box)*
-- [ ] Add the turn-contract box: `recommendations.product_audit` came from the
+- [x] Add the turn-contract box: `recommendations.product_audit` came from the
       step-10 mechanical check and `next.tier` from the P1 command→tier map.
       *(evidence: the new box)*
-- [ ] Add the turn-contract box: the envelope is emitted on **every** invocation
+- [x] Add the turn-contract box: the envelope is emitted on **every** invocation
       including a same-session natural-language follow-up about state — never
       replaced by prose (defect E). *(evidence: the new box)*
-- [ ] Add the turn-contract box: the emitted envelope validates against
+- [x] Add the turn-contract box: the emitted envelope validates against
       `packages/agentic-workflow-schema/envelope.schema.json` before printing.
       *(evidence: the new box)*
-- [ ] Extend Process step 4 with the *unknown roadmap status → nearest five-state,
+- [x] Extend Process step 4 with the *unknown roadmap status → nearest five-state,
       default `idea`* rule, naming `scheduled → idea`, adding the raw status to
       `workflow_observations`, cross-referencing `#51`. *(evidence: the edited
       step)*
-- [ ] Rewrite Process step 10 as a mechanical two-condition checklist
+- [x] Rewrite Process step 10 as a mechanical two-condition checklist
       (`✓ merged_count >= 3` since last audit OR `✓ same drift kind in ≥2 units`)
       → `product_audit: true` + `reason`; state `merged_count >= 3` is a count, not
       a judgment, and that **no** "wait for a natural pause" exception exists or may
       be invented; note it may surface `/product-audit` in `next`. *(evidence: the
       edited step)*
-- [ ] Gate: `npx skills add . --list` lists every skill; markdown well-formed;
+- [x] Gate: `npx skills add . --list` lists every skill; markdown well-formed;
       no stack reference introduced.
 
 ### P3 — Untriaged-backlog surfacing (defect F) + version sync
