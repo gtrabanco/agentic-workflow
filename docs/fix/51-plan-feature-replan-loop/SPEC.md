@@ -210,8 +210,8 @@ that surfaces a stalled planning loop). Sensor-side half of gap 2.
       manual read-through against the fixed pass criteria (logged as a `NOT
       RUN` row in `GOLDEN_FIXTURE.md`'s run log, not fabricated as a pass) — a
       real weak-model run is still owed.
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and PRINT
@@ -376,4 +376,4 @@ change.
 
 ## Status
 
-`pending`
+`done`
