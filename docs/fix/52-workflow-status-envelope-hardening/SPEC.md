@@ -68,7 +68,7 @@ re-verified in the issue triage (2026-07-12) and a second reproduction comment
   (`skills/workflow-status/SKILL.md:178`) documents the payload by example but
   gives **no explicit shape reminder** for the two fields that were emitted
   wrong: `blockers[].scope` must be one of `enum: ["unit","run"]`
-  (`envelope.schema.json:110` — a `"code"` value is invalid) and
+  (`envelope.schema.json:111` — a `"code"` value is invalid) and
   `dependencies.unmet` is `{type: array, items: {type: string}}`
   (`envelope.schema.json:120` — an array of objects is invalid). The example also
   never states that doc-drift is unit-scope, so the sensor over-escalated it to
@@ -108,7 +108,7 @@ re-verified in the issue triage (2026-07-12) and a second reproduction comment
   concrete issue numbers to cite. The sensor needs a new computation:
   cross-reference `gh issue list --state open` against triage disposition (the
   fixed-format dated `VERDICT:` comment `triage-issue` posts —
-  `skills/triage-issue/SKILL.md:95-104`) and surface the untriaged subset.
+  `skills/triage-issue/SKILL.md:148-153`) and surface the untriaged subset.
 
 ## Detected in
 
@@ -184,7 +184,7 @@ both README tables). Specifically:
    already fetched in step 2 (`gh issue list --state open`) against triage
    disposition, marking an issue **untriaged** when it carries **no dated
    `triage-issue` verdict comment** (the fixed-format `VERDICT: …` block —
-   `skills/triage-issue/SKILL.md:95-104`) and no `wontfix`/`postponed`/`promoted`
+   `skills/triage-issue/SKILL.md:148-153`) and no `wontfix`/`postponed`/`promoted`
    disposition label. Surface the result in a new free-form envelope field
    `detail.untriaged_issues: {count, oldest_open: [numbers]}` (`detail` is
    schema-unconstrained — `envelope.schema.json:154` — so **no package change**),
@@ -332,7 +332,7 @@ Edit only the `## Machine envelope` section of
 - [x] Add a **shape-reminder** block adjacent to the JSON example stating:
       `blockers[].scope` ∈ `{"unit","run"}` — there is **no** `"code"`; doc/roadmap
       drift is `"unit"`. *(evidence: the new bullets; cross-check
-      `packages/agentic-workflow-schema/envelope.schema.json:110`)*
+      `packages/agentic-workflow-schema/envelope.schema.json:111`)*
 - [x] In the same block, state that a `"run"`-scope blocker forces `state` ∈
       `{BLOCKED, HALT}` and is never compatible with `state: OK` (cite
       `orchestration-envelope`). *(evidence: the new bullet)*
@@ -391,7 +391,7 @@ phase — one version sync over the complete P1–P3 edits).
 - [x] Add a new Process step (after step 9's `pending_triage`) that cross-references
       the step-2 open-issue list against triage disposition: an open issue is
       **untriaged** iff it has no dated `triage-issue` `VERDICT:` comment
-      (`skills/triage-issue/SKILL.md:95-104`) and no
+      (`skills/triage-issue/SKILL.md:148-153`) and no
       `wontfix`/`postponed`/`promoted` label. *(evidence: the new step)*
 - [x] Document the `detail.untriaged_issues: {count, oldest_open: [numbers]}` field
       in `## Machine envelope` (cap listed numbers at oldest 5; `detail` is
@@ -510,7 +510,7 @@ comfortably ≤ 1 day.
   either would blur two distinct signals a driver routes on separately. A new
   free-form `detail` sub-object is the smallest addition and needs no schema change.
 - **"Untriaged" = no dated `triage-issue` `VERDICT:` comment.** That fixed-format
-  comment (`skills/triage-issue/SKILL.md:95-104`) is the disposition marker
+  comment (`skills/triage-issue/SKILL.md:148-153`) is the disposition marker
   `triage-issue` reliably writes; disposition labels are a secondary signal (triage
   does not always apply them). The trade-off is per-issue comment reads on an
   otherwise-cheap sensor — accepted because the issue explicitly requests the
@@ -520,6 +520,20 @@ comfortably ≤ 1 day.
   and added exactly one new concern (F) plus a wording sharpening (C); the SPEC's
   structure held, so this revised the existing SPEC in place (new defect F, extra
   phase P3, sharpened C) rather than drafting a fresh one.
+- **`detail.untriaged_issues` trusts the `VERDICT:` comment's presence, not an
+  actor check — accepted, not fixed (review-change finding, 2026-07-12).**
+  Unlike `detail.urgent` (label-gated, triage+-permission-only per GitHub),
+  step 10's untriaged detection matches on comment *text*, so a self-declared
+  "VERDICT:" string in an issue's body/comment could in principle drop it from
+  the backlog before a real `triage-issue` run. Left as-is: the consequence is
+  under-reporting a count (the sensor's own stated worst case, never a
+  security boundary — the injection-safety invariant this fix must preserve
+  is scoped to `detail.urgent` only, per **Rules that must never be
+  violated**), and `triage-issue`'s own `VERDICT:` marker is comment-text by
+  design (`skills/triage-issue/SKILL.md:148-153`), not label-gated — hardening
+  the *detection* would mean changing `triage-issue`'s output contract, which
+  is out of scope for an envelope-emission fix. Revisit only if `triage-issue`
+  itself adds a disposition label to complement the comment marker.
 
 ## Status
 

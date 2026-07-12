@@ -137,7 +137,7 @@ ship-roadmap run exists.
     fetched in step 2 (`gh issue list --state open`) against triage
     disposition: an issue is **untriaged** iff it carries **no dated
     `triage-issue` `VERDICT:` comment** (the fixed-format block —
-    `skills/triage-issue/SKILL.md:95-104`) **and** no `wontfix` /
+    `skills/triage-issue/SKILL.md:148-153`) **and** no `wontfix` /
     `postponed` / `promoted` disposition label. Count the untriaged subset and
     list its oldest entries (cap: 5) by issue number. Emit the result as
     `detail.untriaged_issues: {count, oldest_open: [numbers]}` — kept
@@ -277,7 +277,7 @@ concrete `/triage-issue <numbers>` citing the listed issues.
 `packages/agentic-workflow-schema/envelope.schema.json`):**
 
 - `blockers[].scope` ∈ `{"unit","run"}` — there is **no** `"code"` value;
-  doc/roadmap drift is always `"unit"`-scope (`envelope.schema.json:110`).
+  doc/roadmap drift is always `"unit"`-scope (`envelope.schema.json:111`).
 - A `"run"`-scope blocker forces `state` ∈ `{BLOCKED, HALT}` — it is **never**
   compatible with `state: OK` (see `orchestration-envelope`).
 - `dependencies.unmet` is an **array of strings** (unit ids / `#issue` refs) —
