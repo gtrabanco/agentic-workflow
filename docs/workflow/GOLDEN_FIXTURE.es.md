@@ -134,6 +134,30 @@ if one exists.
 4. **Observa la salida** contra los criterios de aprobación fijos de
    abajo.
 
+## Smoke test de tool calling (precondición del modelo)
+
+Las skills del camino ejecutor solo funcionan si el modelo sabe manejar tools
+(leer/editar ficheros, ejecutar comandos). Antes de confiar en **cualquier
+modelo aún no validado para function calling estilo OpenAI** en el camino
+ejecutor — los providers suelen validar el tool calling en unos modelos y no
+en otros (p. ej. el tool calling de Gemma4 está documentado en un formato
+XML, no en el esquema `tools` de OpenAI) — ejecuta esto una vez por modelo,
+antes del paso 3 de arriba:
+
+1. Envía una petición de chat con una sola tool trivial definida (p. ej.
+   `get_time`, sin parámetros) y un prompt que la exija ("¿Qué hora es? Usa
+   la tool.").
+2. Aprueba solo si: ✓ `finish_reason` es `tool_calls`; ✓
+   `choices[0].message.tool_calls[0].function.name` nombra la tool; ✓
+   `arguments` es JSON parseable (aquí: `{}`).
+3. Cualquier otra forma (la llamada narrada en prosa, XML en `content`,
+   `tool_calls` vacío) = **FAIL** — no uses ese modelo para ejecuciones del
+   camino ejecutor; aún puede servir en roles no agénticos (prosa de revisión
+   de un solo turno, visión).
+
+Registra el resultado como una fila del log de ejecuciones (columna
+`Skill(s)`: `tool-calling smoke`).
+
 ## Criterios de aprobación fijos
 
 Aprueba solo si **todas** las casillas se cumplen:

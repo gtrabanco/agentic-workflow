@@ -118,6 +118,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.1 | 2026-07-13 | parche | Portability gana una barrera de concurrencia del provider: limita los subagentes/ejecutores headless paralelos al límite documentado de peticiones paralelas por API key del provider (dejando un hueco para el conductor), y reduce el paralelismo ante un 429 en vez de reintentar a fan-out completo. Solo guía — sin cambio de etapas ni de contrato. |
 | 2.2.0 | 2026-07-11 | menor | SELECT gana una nueva prioridad principal: lee primero `detail.urgent` de `workflow-status` (solo etiquetas) — un issue `fix-next` abierto salta a la cabeza de la cola (sin interrumpir); un issue `urgent` abierto corre la rúbrica canónica de pausa-vs-terminar en `docs/workflow/ORCHESTRATION.md` (referenciada, nunca duplicada) contra los hechos de interrumpibilidad de la unidad en curso, `INTERRUPT_NOW` la aparca, `FINISH_FIRST` encola el fix para la siguiente iteración. Lista de prioridades renumerada. |
 | 2.1.0 | 2026-07-10 | menor | Etapa REVIEW: para features `L`/marcadas como sensibles, cada invocación de `review-change` (checkpoint o revisión final) ahora corre con `--adversarial 2` — un piso obligatorio, no supervisado, deliberadamente **no** alineado con el checkpoint interactivo advisory de `review-change`. XS/S/M no sensible sin cambios (revisor único). |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación (snippet de system-prompt inyectado por el driver + bucle de reparación, ver `orchestration-envelope`); `workflow-status` sigue siendo el único emisor en línea. La prosa del bucle de driver se reescribe para referenciar el envelope inyectado de forma genérica. Ver `docs/workflow/MIGRATION.md`. |
@@ -341,7 +342,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.2.0 | 2026-07-02 | minor | El lint ahora comprueba también que las skills de cara al usuario llevan la sección `## Portability`; añadida su propia nota de Portability. |
 | | 1.1.0 | 2026-06-27 | menor | Paso de lint que marca las skills editadas sin bloque `→ Next:` o con etiquetas de fase `S1`/"Step" (avisa, nunca corrige solo) |
 | | 1.0.0 | 2026-06-19 | — | Nueva skill de mantenimiento del repo. Tras editar un SKILL.md, sube la `version:`, añade filas en CHANGELOG.md + CHANGELOG.es.md y actualiza las tablas de skills y modelos en README.md + README.es.md |
-| `orchestration-envelope` | 1.1.1 | 2026-07-10 | parche | Fix #33: la descripción del frontmatter y la sección de apertura aún enunciaban el contrato previo a la feature 10 ("toda skill de cara al usuario imprime el envelope") POR ENCIMA de la corrección de la feature 10 — reescritas de cabeza al contrato vigente (esquema + regla de parseo último-json-cercado como núcleo; emisión = `workflow-status` siempre, el resto de skills solo bajo el snippet inyectado por el driver, nada en sesiones interactivas). La misma frase obsoleta corregida en `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts` y `envelope.schema.json` (solo texto de descripción/comentario/metadatos, sin cambio de forma del esquema ni de comportamiento, sin release del paquete). |
+| `orchestration-envelope` | 1.2.0 | 2026-07-13 | menor | Atajo de structured outputs para drivers: cuando el provider/modelo soporta structured outputs estrictos (`response_format: json_schema` + `strict`), el turno de solo-envelope (el prompt de reparación, o un turno final dedicado a "emite el envelope") puede pasar el `envelope.schema.json` del paquete npm como response format para que la respuesta valide por construcción. El bucle de reparación queda como fallback para modelos sin la funcionalidad; los turnos de trabajo nunca llevan response format (forzaría toda la salida a JSON y suprimiría la prosa/el uso de tools). Esquema sin cambios — no se necesita release del paquete. |
+| | 1.1.1 | 2026-07-10 | parche | Fix #33: la descripción del frontmatter y la sección de apertura aún enunciaban el contrato previo a la feature 10 ("toda skill de cara al usuario imprime el envelope") POR ENCIMA de la corrección de la feature 10 — reescritas de cabeza al contrato vigente (esquema + regla de parseo último-json-cercado como núcleo; emisión = `workflow-status` siempre, el resto de skills solo bajo el snippet inyectado por el driver, nada en sesiones interactivas). La misma frase obsoleta corregida en `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts` y `envelope.schema.json` (solo texto de descripción/comentario/metadatos, sin cambio de forma del esquema ni de comportamiento, sin release del paquete). |
 | | 1.1.0 | 2026-07-10 | menor | Nueva sección `## Driver system-prompt snippet + repair loop`: el snippet canónico de system-prompt inyectado por el driver (verbatim, cercado) y el protocolo de bucle de reparación (fallo de parseo → reinvocar con "Emit only the machine envelope for the turn above.", un reintento, luego FAILED del driver) — el requisito del envelope se traslada aquí desde los contratos de turno por skill de las 14 skills de cara al usuario. |
 | | 1.0.0 | 2026-07-05 | — | Nuevo contrato interno: el esquema JSON del envelope máquina (11 estados, claves fijas, regla de parseo último-json-cercado) que toda skill de cara al usuario emite como su salida final absoluta. |
 | `review-implementation` | 1.1.0 | 2026-07-09 | menor | La postura de la Fase 1 ("Find") ahora es adversarial por defecto: "asume que el diff está MAL — tu trabajo es probar que no funciona". La tabla de ejes y la rúbrica de clasificación de la Fase 2 no cambian. |
@@ -396,6 +398,21 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-13 — guía operativa consciente del provider (feature 16,
+  inferencia compatible con OpenAI, NaN Builders).** Bump MENOR para
+  `orchestration-envelope` (1.2.0): los drivers pueden forzar el envelope
+  máquina mediante structured outputs estrictos (`response_format:
+  json_schema`) en el turno de solo-envelope cuando el provider lo soporta,
+  con el bucle de reparación como fallback. Bump PARCHE para `ship-roadmap`
+  (2.2.1): barrera de Portability que limita los ejecutores paralelos al
+  límite de concurrencia por key del provider. Además, actualizaciones solo
+  de docs: la sección NaN.builders del README sustituye el claim incorrecto
+  del "dial uniforme de esfuerzo" por una matriz de control de razonamiento
+  por modelo, degrada a Gemma4 de la escalera de ejecución agéntica (tool
+  calling en formato XML, sin validar para harnesses estilo OpenAI), añade
+  una advertencia de verificación de catálogo para GLM-5.2 y los límites de
+  rate/concurrencia por key; `GOLDEN_FIXTURE.md` gana un smoke test de tool
+  calling como precondición de modelo para el camino ejecutor.
 - **2026-07-12 — romper el bucle de re-planificación de plan-feature (fix
   #51).** Bumps MENORES para `plan-feature` (3.1.0), `plan-feature-scaffold`
   (1.9.0) y `workflow-status` (1.5.0, luego un PARCHE el mismo día a 1.5.1): la
