@@ -216,6 +216,33 @@ means no urgency signal is in play; `next.recommended` may still be
 influenced by a non-empty one (e.g. surfaced as an `alternatives` entry), but
 is never silently replaced by it.
 
+**Envelope shape reminders (self-check before printing — mirrors
+`packages/agentic-workflow-schema/envelope.schema.json`):**
+
+- `blockers[].scope` ∈ `{"unit","run"}` — there is **no** `"code"` value;
+  doc/roadmap drift is always `"unit"`-scope (`envelope.schema.json:110`).
+- A `"run"`-scope blocker forces `state` ∈ `{BLOCKED, HALT}` — it is **never**
+  compatible with `state: OK` (see `orchestration-envelope`).
+- `dependencies.unmet` is an **array of strings** (unit ids / `#issue` refs) —
+  never an array of objects (`envelope.schema.json:120`); any richer detail
+  belongs in a `blockers[].detail` string instead.
+
+**`next.tier` derivation — a fixed command→tier map, never guessed:**
+
+| Command | Tier |
+|---|---|
+| `/plan-feature` | `strong` |
+| `/design-feature` | `strong` |
+| `/review-change` | `strong` |
+| `/audit-pr` | `strong` |
+| `/triage-issue` | `strong` |
+| `/product-audit` | `strong` |
+| `/execute-phase` | `cheap` |
+
+`next.tier` is read off this map by matching the resolved `next.recommended`
+command's name (ignoring its arguments) — never guessed and never copied from
+the invoking driver's own tier.
+
 ```json
 {
   "skill": "workflow-status",
