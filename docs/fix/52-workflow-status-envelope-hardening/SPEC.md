@@ -329,23 +329,23 @@ ticks tasks here.
 Edit only the `## Machine envelope` section of
 `skills/workflow-status/SKILL.md`. No other section, no other file.
 
-- [ ] Add a **shape-reminder** block adjacent to the JSON example stating:
+- [x] Add a **shape-reminder** block adjacent to the JSON example stating:
       `blockers[].scope` ∈ `{"unit","run"}` — there is **no** `"code"`; doc/roadmap
       drift is `"unit"`. *(evidence: the new bullets; cross-check
       `packages/agentic-workflow-schema/envelope.schema.json:110`)*
-- [ ] In the same block, state that a `"run"`-scope blocker forces `state` ∈
+- [x] In the same block, state that a `"run"`-scope blocker forces `state` ∈
       `{BLOCKED, HALT}` and is never compatible with `state: OK` (cite
       `orchestration-envelope`). *(evidence: the new bullet)*
-- [ ] In the same block, state that `dependencies.unmet` is an **array of
+- [x] In the same block, state that `dependencies.unmet` is an **array of
       strings** (unit ids / `#issue` refs), never objects; richer detail goes in a
       `blockers[].detail` string. *(evidence: the new bullet; cross-check
       `envelope.schema.json:120`)*
-- [ ] Add the command→tier map (`plan-feature`/`design-feature`/`review-change`/
+- [x] Add the command→tier map (`plan-feature`/`design-feature`/`review-change`/
       `audit-pr`/`triage-issue`/`product-audit` → `strong`; `execute-phase` →
       `cheap`) and the rule that `next.tier` derives from the resolved
       `next.recommended` (defect D lives here, adjacent to the envelope shape).
       *(evidence: the new map)*
-- [ ] Gate: markdown still well-formed, no stack reference introduced, and the
+- [x] Gate: markdown still well-formed, no stack reference introduced, and the
       example JSON in the section stays schema-valid.
 
 ### P2 — Recommendation-policy enforcement (defects A, C, D, E)
