@@ -184,6 +184,18 @@ bajo la regla de equivalencia de arriba. Los proyectos que quieran el
 historial explícito de cinco estados en filas antiguas pueden reetiquetar
 a mano, pero nada lo requiere.
 
+> **Sustituido por el fix [#51](https://github.com/gtrabanco/agentic-workflow/issues/51)
+> (2026-07-12).** "No se dispara ninguna redirección" arriba describe la
+> puerta de `plan-feature` tal como existía en esa fecha, que dejaba pasar una
+> fila equivalente a `defined`+`planned` hasta `plan-feature-scaffold` y la
+> volvía a generar. El fix #51 cerró ese bucle de replanificación: la puerta
+> ahora trata *cualquier* fila equivalente a `planned` — heredada o nativa de
+> cinco estados — como ya planificada y **SE DETIENE**, remitiendo a
+> `/execute-phase` en su lugar. Una fila `planned` heredada y diseñada sigue
+> siendo "completamente ejecutable" (no se redirige a `/design-feature`), pero
+> ya no se regenera silenciosamente. Ver la puerta de redirección de
+> `skills/plan-feature/SKILL.md` para el comportamiento actual.
+
 ## 2026-07-09 — `plan-feature` 2.0.0: la definición de producto se separa en `design-feature`
 
 **Cambio disruptivo al contrato de `plan-feature`.** La definición de

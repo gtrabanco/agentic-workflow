@@ -158,6 +158,17 @@ invocation.
 above. Projects that want the explicit five-state history on old rows may
 relabel them by hand, but nothing requires it.
 
+> **Superseded by fix [#51](https://github.com/gtrabanco/agentic-workflow/issues/51)
+> (2026-07-12).** "No redirect fires" above describes `plan-feature`'s gate as
+> it existed on this date, which let a `defined`+`planned`-equivalent row fall
+> through to `plan-feature-scaffold` and re-scaffold it. Fix #51 closed that
+> re-plan loop: the gate now treats *any* `planned`-equivalent row — legacy or
+> five-state-native — as already-planned and **STOPS**, handing off to
+> `/execute-phase` instead. A legacy `planned`+designed row is therefore still
+> "fully executable" (no redirect to `/design-feature`), but is no longer
+> silently re-scaffolded. See `skills/plan-feature/SKILL.md`'s redirect gate
+> for the current behavior.
+
 ## 2026-07-09 — `plan-feature` 2.0.0: product definition splits into `design-feature`
 
 **Breaking change to `plan-feature`'s contract.** Product definition (the

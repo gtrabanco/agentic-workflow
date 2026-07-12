@@ -105,6 +105,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.1 | 2026-07-12 | patch | No-progress guard wording precision (review finding on fix #51's PR): the note now names the stall as **suspected**, not a confirmed dropped write — the guard cannot tell from the envelope alone whether the recommended command ran and its write was dropped, or never ran at all. No behavior change. |
 | 1.5.0 | 2026-07-12 | minor | Fix #51: no-progress guard on the `--last-envelope` crash-recovery hint — when the hint's `next.recommended` targeted `/plan-feature <slug>`/`/design-feature <slug>` and this run still classifies that same unit at the same pre-advance status (`defined`/`idea`), emit a `workflow_observations` note naming the suspected dropped status write instead of silently repeating the recommendation. Read-only invariant unchanged; the recommendation itself is unaffected. |
 | 1.4.0 | 2026-07-12 | minor | Emit-time hardening (#52): turn-contract assertions that `next.recommended` is non-bare and correctly staged, `design_candidates[].next` always routes to `/design-feature`, `recommendations.product_audit`/`next.tier` come from the new mechanical checks/map, and the envelope is emitted on every invocation (incl. same-session follow-ups) after a self-check against the bundled schema. Envelope shape reminders (`blockers[].scope` enum, run/OK incompatibility, `dependencies.unmet` array-of-strings) and a fixed command→tier map added to `## Machine envelope`. Process step 4 maps an unknown roadmap status to `idea` by default (e.g. `scheduled → idea`, cross-ref `#51`); step 10 (product-audit) rewritten as a mechanical two-condition checklist with no invented exception. New Process step surfaces the untriaged open-issue backlog as `detail.untriaged_issues: {count, oldest_open}` (no schema change — `detail` is free-form). |
 | 1.3.0 | 2026-07-11 | minor | New `detail.urgent` envelope field: open issues carrying the `urgent`/`fix-next` labels (read only from the JSON `labels` object, never title/body/comment) alongside the in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to the next commit boundary) — reused from the existing phase-progress/crash-recovery reconcile, no new git calls. Presence-only, reports facts, never decides pause-vs-finish. |
@@ -396,14 +397,17 @@ How pinning actually works, verified against the `skills` CLI:
 
 - **2026-07-12 — break the plan-feature replan loop (fix #51).** MINOR bumps
   for `plan-feature` (3.1.0), `plan-feature-scaffold` (1.9.0), and
-  `workflow-status` (1.5.0): the redirect gate now short-circuits on
-  `planned`/`in-progress`/`done` (hand off to `/execute-phase`, never
-  re-scaffold) instead of falling through "defined or higher"; `--next`
-  retargets to the next `defined` entry; `plan-feature-scaffold` re-reads the
-  roadmap row after its `defined → planned` write and re-applies on mismatch;
-  `workflow-status` adds a read-only no-progress guard that flags a stalled
+  `workflow-status` (1.5.0, then a same-day PATCH to 1.5.1): the redirect gate
+  now short-circuits on `planned`/`in-progress`/`done` (hand off to
+  `/execute-phase`, never re-scaffold) instead of falling through "defined or
+  higher"; `--next` retargets to the next `defined` entry;
+  `plan-feature-scaffold` re-reads the roadmap row after its `defined →
+  planned` write and re-applies on mismatch; `workflow-status` adds a
+  read-only no-progress guard that flags a stalled
   `/plan-feature`/`/design-feature` hint via `workflow_observations` instead
-  of silently repeating it.
+  of silently repeating it — the 1.5.1 patch tightened that note's wording to
+  say "suspected" stall rather than asserting the recommended command ran
+  (review-change finding on the PR).
 - **2026-07-12 — workflow-status envelope emit-time hardening (fix #52).**
   MINOR bump for `workflow-status` (1.4.0): turn-contract assertions for a
   non-bare/correctly-staged `next.recommended`, envelope shape reminders and
