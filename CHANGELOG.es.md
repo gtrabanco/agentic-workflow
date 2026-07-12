@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.5.1 | 2026-07-12 | parche | Precisión de redacción en la guarda de no-progreso (hallazgo de revisión en la PR del fix #51): la nota ahora nombra el estancamiento como **sospechoso**, no como una escritura perdida confirmada — la guarda no puede distinguir, solo con el envelope, si el comando recomendado se ejecutó y su escritura se perdió, o si nunca se ejecutó. Sin cambio de comportamiento. |
 | 1.5.0 | 2026-07-12 | menor | Fix #51: guarda de no-progreso sobre el hint `--last-envelope` de recuperación de caídas — cuando el `next.recommended` del hint apuntaba a `/plan-feature <slug>`/`/design-feature <slug>` y esta ejecución sigue clasificando a esa misma unidad en el mismo estado previo al avance (`defined`/`idea`), emite una nota en `workflow_observations` nombrando la sospecha de escritura de estado perdida, en vez de repetir silenciosamente la misma recomendación. El invariante de solo-lectura no cambia; la recomendación en sí no se ve afectada. |
 | 1.4.0 | 2026-07-12 | menor | Endurecimiento en tiempo de emisión (#52): comprobaciones del contrato de turno para que `next.recommended` sea no-vacío y esté correctamente escalonado, `design_candidates[].next` enrute siempre a `/design-feature`, `recommendations.product_audit`/`next.tier` provengan de las nuevas comprobaciones/tabla mecánicas, y el envelope se emita en cada invocación (incluidos los seguimientos en la misma sesión) tras autocomprobarse contra el esquema empaquetado. Se añaden recordatorios de forma del envelope (`enum` de `blockers[].scope`, incompatibilidad run/OK, `dependencies.unmet` como array de strings) y una tabla fija comando→nivel en `## Machine envelope`. El paso 4 del proceso mapea un estado de roadmap desconocido a `idea` por defecto (p. ej. `scheduled → idea`, referencia cruzada a `#51`); el paso 10 (product-audit) se reescribe como lista mecánica de dos condiciones sin excepción inventada. Un nuevo paso del proceso muestra el backlog de issues abiertos sin triar como `detail.untriaged_issues: {count, oldest_open}` (sin cambio de esquema — `detail` es de forma libre). |
 | 1.3.0 | 2026-07-11 | menor | Nuevo campo de envelope `detail.urgent`: issues abiertos con las etiquetas `urgent`/`fix-next` (leídas solo del objeto JSON `labels`, nunca del título/cuerpo/comentarios) junto a los hechos de interrumpibilidad de la unidad en curso (fase, sucio/limpio, tareas hasta el próximo límite de commit) — reutilizados del reconcile existente de progreso de fase/recuperación de caídas, sin nuevas llamadas a git. Solo presencia, reporta hechos, nunca decide pausa-vs-terminar. |
@@ -397,14 +398,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 - **2026-07-12 — romper el bucle de re-planificación de plan-feature (fix
   #51).** Bumps MENORES para `plan-feature` (3.1.0), `plan-feature-scaffold`
-  (1.9.0) y `workflow-status` (1.5.0): la puerta de redirección ahora
-  cortocircuita en `planned`/`in-progress`/`done` (remite a `/execute-phase`,
-  nunca re-genera el andamiaje) en vez de continuar con "defined o superior";
-  `--next` apunta a la siguiente entrada `defined`; `plan-feature-scaffold`
-  relee la fila del roadmap tras su escritura `defined → planned` y reaplica
-  si no coincide; `workflow-status` añade una guarda de no-progreso de solo
-  lectura que señala un hint `/plan-feature`/`/design-feature` estancado vía
-  `workflow_observations` en vez de repetirlo silenciosamente.
+  (1.9.0) y `workflow-status` (1.5.0, luego un PARCHE el mismo día a 1.5.1): la
+  puerta de redirección ahora cortocircuita en `planned`/`in-progress`/`done`
+  (remite a `/execute-phase`, nunca re-genera el andamiaje) en vez de
+  continuar con "defined o superior"; `--next` apunta a la siguiente entrada
+  `defined`; `plan-feature-scaffold` relee la fila del roadmap tras su
+  escritura `defined → planned` y reaplica si no coincide; `workflow-status`
+  añade una guarda de no-progreso de solo lectura que señala un hint
+  `/plan-feature`/`/design-feature` estancado vía `workflow_observations` en
+  vez de repetirlo silenciosamente — el parche 1.5.1 ajustó la redacción de
+  esa nota para decir estancamiento "sospechoso" en vez de afirmar que el
+  comando recomendado se ejecutó (hallazgo de review-change en la PR).
 - **2026-07-12 — endurecimiento en tiempo de emisión del envelope de
   workflow-status (fix #52).** Bump MENOR para `workflow-status` (1.4.0):
   comprobaciones del contrato de turno para un `next.recommended` no-vacío y

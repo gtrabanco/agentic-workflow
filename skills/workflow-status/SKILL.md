@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.5.0
+version: 1.5.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -202,10 +202,12 @@ section *classifies*; the resume command it recommends does the acting.
   <slug>` for a given unit, and this run's own recomputed status for that
   **same unit** is still at the **same pre-advance status** the hint expected
   to move it off of (`defined` for a `/plan-feature` hint; `idea` for a
-  `/design-feature` hint) — the recommended command ran since the hint was
-  taken, yet the status never advanced. Emit a `workflow_observations` note
-  naming the suspected dropped status write (see `## Machine envelope` for the
-  exact note shape). This is strictly additive: the same `next.recommended` /
+  `/design-feature` hint) — either the recommended command ran but its status
+  write was dropped, or it never ran at all; this guard cannot distinguish the
+  two from the envelope alone, so the note names it as a **suspected** stall,
+  not a confirmed dropped write. Emit a `workflow_observations` note (see
+  `## Machine envelope` for the exact note shape). This is strictly additive:
+  the same `next.recommended` /
   `next.tier` still fire per the normal classification (step 6) — the guard
   only stops the silent, bland repeat by making the stall visible. Still
   read-only: no write, no repair, no new persistence.
