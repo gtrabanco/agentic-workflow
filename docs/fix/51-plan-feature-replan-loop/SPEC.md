@@ -152,24 +152,24 @@ Files: `skills/plan-feature/SKILL.md`, `skills/plan-feature-scaffold/SKILL.md`
 (one concern: the planning pipeline advances correctly and self-verifies its
 own status write). Gaps 1, 3, and the planning-side half of gap 2.
 
-- [ ] `plan-feature` redirect gate: replace step 1's "`defined` or higher →
+- [x] `plan-feature` redirect gate: replace step 1's "`defined` or higher →
       proceed" with status-specific branches — `defined` → Routing; `planned`
       (SPEC + artifacts present) → **STOP**, print `→ /execute-phase <NN> P1`,
       never invoke `plan-feature-scaffold`; `in-progress` → **STOP**, hand off
       to resume the current phase (`/execute-phase <NN> <next-phase>`); `done`
       → **STOP**, report already-shipped. (grep: gate names all three STOP
       states.)
-- [ ] `plan-feature` Routing example table + "Done when": add the
+- [x] `plan-feature` Routing example table + "Done when": add the
       already-planned closing block variant matching the new short-circuit.
-- [ ] `plan-feature` `--next`: change "next `planned` entry" → "next `defined`
+- [x] `plan-feature` `--next`: change "next `planned` entry" → "next `defined`
       entry" in the frontmatter description (lines ~15–16), routing step 4
       (line ~90), and the example table (line ~101). (grep: no `--next`/
       `planned` pairing remains.)
-- [ ] `plan-feature` turn contract + "Done when": add a checkbox asserting that,
+- [x] `plan-feature` turn contract + "Done when": add a checkbox asserting that,
       when a scaffold ran this turn, the roadmap row was re-read and literally
       reads `planned` before the turn ends (a dropped `defined→planned` write
       fails the turn).
-- [ ] `plan-feature-scaffold` step 5 + "Done when": after the `defined →
+- [x] `plan-feature-scaffold` step 5 + "Done when": after the `defined →
       planned` write, re-read the roadmap row and confirm it literally reads
       `planned`; re-apply the edit on mismatch; never end with the write
       unverified.
