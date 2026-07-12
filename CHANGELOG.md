@@ -105,6 +105,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.5.1 | 2026-07-12 | patch | No-progress guard wording precision (review finding on fix #51's PR): the note now names the stall as **suspected**, not a confirmed dropped write — the guard cannot tell from the envelope alone whether the recommended command ran and its write was dropped, or never ran at all. No behavior change. |
+| 1.5.0 | 2026-07-12 | minor | Fix #51: no-progress guard on the `--last-envelope` crash-recovery hint — when the hint's `next.recommended` targeted `/plan-feature <slug>`/`/design-feature <slug>` and this run still classifies that same unit at the same pre-advance status (`defined`/`idea`), emit a `workflow_observations` note naming the suspected dropped status write instead of silently repeating the recommendation. Read-only invariant unchanged; the recommendation itself is unaffected. |
 | 1.4.0 | 2026-07-12 | minor | Emit-time hardening (#52): turn-contract assertions that `next.recommended` is non-bare and correctly staged, `design_candidates[].next` always routes to `/design-feature`, `recommendations.product_audit`/`next.tier` come from the new mechanical checks/map, and the envelope is emitted on every invocation (incl. same-session follow-ups) after a self-check against the bundled schema. Envelope shape reminders (`blockers[].scope` enum, run/OK incompatibility, `dependencies.unmet` array-of-strings) and a fixed command→tier map added to `## Machine envelope`. Process step 4 maps an unknown roadmap status to `idea` by default (e.g. `scheduled → idea`, cross-ref `#51`); step 10 (product-audit) rewritten as a mechanical two-condition checklist with no invented exception. New Process step surfaces the untriaged open-issue backlog as `detail.untriaged_issues: {count, oldest_open}` (no schema change — `detail` is free-form). |
 | 1.3.0 | 2026-07-11 | minor | New `detail.urgent` envelope field: open issues carrying the `urgent`/`fix-next` labels (read only from the JSON `labels` object, never title/body/comment) alongside the in-flight unit's interruptibility facts (phase, dirty/clean, tasks left to the next commit boundary) — reused from the existing phase-progress/crash-recovery reconcile, no new git calls. Presence-only, reports facts, never decides pause-vs-finish. |
 | 1.2.0 | 2026-07-09 | minor | Reads the roadmap's five-state machine (`idea / defined / planned / in-progress / done`): a new classification step splits units into `design_candidates` (`idea` rows, next `/design-feature`) vs `startable_now` (status ≥ `defined`, deps met, next command matched to the exact status); new top-level `design_candidates` envelope field alongside `startable_now`/`blocked_units`; legacy plain-`planned` rows with a complete SPEC product half treated as `defined`+`planned` per `MIGRATION.md`. Human summary gains a design-candidates line. |
@@ -173,6 +175,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.1.0 | 2026-07-12 | minor | Fix #51: the redirect gate's "`defined` or higher → proceed" branch is now status-specific — only `defined` proceeds to Routing; `planned` (SPEC + artifacts present) **STOPS** and hands off to `/execute-phase <NN> P1` instead of re-scaffolding; `in-progress` STOPS to resume the current phase; `done` STOPS as already-shipped. `--next` now targets the next **`defined`** entry (was `planned`, which is already scaffolded). Turn contract + Done when gained a box asserting a `defined→planned` write was re-read and confirmed before the turn ends. |
 | 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-09 | minor | Redirect gate now keys on the **roadmap status** (the five-state machine) as the primary signal — status `defined`+ proceeds, `idea`/absent STOPs — instead of the SPEC `## Design status` marker. The marker is retained as the **legacy-compat fallback** only, for a pre-migration roadmap row still reading a plain `planned` with no five-state history. See `docs/workflow/MIGRATION.md`. |
 | 2.0.0 | 2026-07-09 | major | **Breaking:** product definition (raw-idea interview + capability closure) moves to the new `design-feature` skill. `plan-feature` is engineering-planning only, drops the `--interview` flag and the internal `plan-feature-interview` step (deleted), and gains a **redirect gate with no bypass flag**: an undesigned feature (no `SPEC.md`, `## Design status` not `designed`, or empty Capability closure) STOPS and points at `/design-feature <slug>`. Migration note in `docs/workflow/MIGRATION.md`. |
@@ -356,6 +359,7 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
+| `plan-feature-scaffold` | 1.9.0 | 2026-07-12 | minor | Fix #51: after the `defined → planned` roadmap write, re-read the row and confirm it literally reads `planned`; re-apply the edit on mismatch instead of assuming the write landed. Done when gained the matching re-read-and-confirmed assertion. |
 | `plan-feature-scaffold` | 1.8.0 | 2026-07-11 | minor | Fix #35: XS/S stays SPEC-only, but the SPEC's `### Phases` must list **≥ 2 phases with checkbox tasks** — `P1` implementation + final `P2 — Hardening & PR` carrying the literal close-out tasks copied from the fix template; the fixed completion report always states the phase count (the `| single-pass` variant is gone). |
 | `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | minor | Phase-cutting is now a **hard gate**, not advisory: an M/L feature MUST split into `Depends on:`-chained features on >~5 phases, a multi-layer/concern phase, or an unresolved design decision, and every emitted phase must pass a four-box cheap-executability checklist (independently checkable · zero open decisions · one concern · gate runs locally). `TASKS.md`/`testing.md` generation now emits command-checkable acceptance criteria as the runnable command, not prose. |
 | | 1.6.0 | 2026-07-09 | minor | "Register in the roadmap" now **sets** the row's status to `planned` (the `defined → planned` transition this skill owns) alongside number/ordering/dependencies — an already-`defined` row is promoted; a wholly new row (already-scoped SPEC with no prior entry) is added directly at `planned`. |
@@ -391,6 +395,19 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-12 — break the plan-feature replan loop (fix #51).** MINOR bumps
+  for `plan-feature` (3.1.0), `plan-feature-scaffold` (1.9.0), and
+  `workflow-status` (1.5.0, then a same-day PATCH to 1.5.1): the redirect gate
+  now short-circuits on `planned`/`in-progress`/`done` (hand off to
+  `/execute-phase`, never re-scaffold) instead of falling through "defined or
+  higher"; `--next` retargets to the next `defined` entry;
+  `plan-feature-scaffold` re-reads the roadmap row after its `defined →
+  planned` write and re-applies on mismatch; `workflow-status` adds a
+  read-only no-progress guard that flags a stalled
+  `/plan-feature`/`/design-feature` hint via `workflow_observations` instead
+  of silently repeating it — the 1.5.1 patch tightened that note's wording to
+  say "suspected" stall rather than asserting the recommended command ran
+  (review-change finding on the PR).
 - **2026-07-12 — workflow-status envelope emit-time hardening (fix #52).**
   MINOR bump for `workflow-status` (1.4.0): turn-contract assertions for a
   non-bare/correctly-staged `next.recommended`, envelope shape reminders and

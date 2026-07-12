@@ -151,6 +151,8 @@ over time.
 | Date | Model | Skill(s) + version | Result | Note |
 |------|-------|--------------------|--------|------|
 | 2026-07-10 | Qwen3.6 35B | `execute-phase` 1.x | PASS | example row — replace on first real run |
+| 2026-07-12 | n/a — no weaker model available in this session | `plan-feature` 3.1.0, `plan-feature-scaffold` 1.9.0 (fix #51) | NOT RUN | Superseded by the row below — an earlier session had no weaker fleet model available and substituted a manual read-through. Kept here for the audit trail. |
+| 2026-07-12 | Claude Haiku 4.5 (weakest model available in this session's fleet) | `plan-feature` 3.1.0, `plan-feature-scaffold` 1.9.0 (fix #51) | PASS | Two live runs against the fixture (`docs/features/99-csv-export-command`, scratch copies): (A) roadmap row pre-set to `planned` → `plan-feature 99-csv-export-command` correctly STOPPED at the already-planned short-circuit, printed the exact `→ Next: /execute-phase 99 P1 …` block verbatim, never invoked `plan-feature-scaffold`, touched no files. (B) roadmap row pre-set to `defined` → routed through `plan-feature-scaffold`, which wrote `defined → planned`, then performed a **distinct re-read step** (separate `Read` tool call after the `Edit`) confirming the row literally read `planned` before ending the turn; completion report matched the fixed `SCAFFOLD …` contract; no invented steps in either run. Closes the "owed" weak-model run flagged in the row above. |
 
 ## Scope boundary
 
