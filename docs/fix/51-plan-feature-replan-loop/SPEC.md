@@ -179,7 +179,7 @@ own status write). Gaps 1, 3, and the planning-side half of gap 2.
 File: `skills/workflow-status/SKILL.md` (one concern: the sensor-side seatbelt
 that surfaces a stalled planning loop). Sensor-side half of gap 2.
 
-- [ ] Add the no-progress guard to the Process (natural home: the
+- [x] Add the no-progress guard to the Process (natural home: the
       `--last-envelope` / crash-recovery hint handling, lines ~192–195): when
       the hint envelope's `next.recommended` was `/plan-feature <slug>` (or
       `/design-feature <slug>`) and this run still classifies that same unit at
@@ -187,7 +187,7 @@ that surfaces a stalled planning loop). Sensor-side half of gap 2.
       `workflow_observations` note naming the suspected dropped status write —
       instead of blandly, silently re-recommending the same command. The
       recommendation itself still fires; the guard only *adds* the observation.
-- [ ] Document the note in the `## Machine envelope` section (a
+- [x] Document the note in the `## Machine envelope` section (a
       `workflow_observations` example line) and add a turn-contract / "Done
       when" mention so a weak model can't drop it. Confirm no new write path is
       introduced — read-only invariant preserved. (grep: `workflow_observations`

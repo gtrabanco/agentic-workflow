@@ -37,6 +37,10 @@ and what the recommended next command is.** Built for external orchestrators
   <slug>`; `planned` → `/execute-phase <NN> P1`
 ✓ Every `design_candidates[].next` begins with `/design-feature ` — design
   candidates always route to design, regardless of anything else
+✓ When `--last-envelope` is supplied: the no-progress guard ran (crash-recovery
+  checklist) — a hint that recommended `/plan-feature`/`/design-feature` for a
+  unit still at its pre-advance status produces a `workflow_observations` note,
+  never a silently repeated bland recommendation
 ✓ `recommendations.product_audit` was computed by the step-11 mechanical
   two-condition check (never guessed), and `next.tier` was derived from the
   resolved `next.recommended` command via the command→tier map in
@@ -193,6 +197,18 @@ section *classifies*; the resume command it recommends does the acting.
 - ✓ **Hint envelope (optional).** With `--last-envelope <json|path>`, diff the
   caller's persisted envelope against the recomputed state and report the
   divergence in one line. The hint never overrides recomputed state.
+- ✓ **No-progress guard (optional, requires `--last-envelope`).** When the
+  hint's `next.recommended` was `/plan-feature <slug>` or `/design-feature
+  <slug>` for a given unit, and this run's own recomputed status for that
+  **same unit** is still at the **same pre-advance status** the hint expected
+  to move it off of (`defined` for a `/plan-feature` hint; `idea` for a
+  `/design-feature` hint) — the recommended command ran since the hint was
+  taken, yet the status never advanced. Emit a `workflow_observations` note
+  naming the suspected dropped status write (see `## Machine envelope` for the
+  exact note shape). This is strictly additive: the same `next.recommended` /
+  `next.tier` still fire per the normal classification (step 6) — the guard
+  only stops the silent, bland repeat by making the stall visible. Still
+  read-only: no write, no repair, no new persistence.
 
 **Classification (decision table — every row independently checkable; first
 matching row wins per branch):**
@@ -299,6 +315,15 @@ concrete `/triage-issue <numbers>` citing the listed issues.
 `next.tier` is read off this map by matching the resolved `next.recommended`
 command's name (ignoring its arguments) — never guessed and never copied from
 the invoking driver's own tier.
+
+**No-progress guard note (`workflow_observations`, requires `--last-envelope`,
+see the crash-recovery checklist above)** — when the hint's `next.recommended`
+targeted `/plan-feature <slug>` or `/design-feature <slug>` and this run still
+classifies that same unit at the same pre-advance status, append a note of the
+exact shape:
+`"<slug> still 'defined' after the hint's /plan-feature <slug> recommendation — suspected dropped defined→planned write (see #51)"`
+(swap `defined`/`/plan-feature` for `idea`/`/design-feature` on the design
+side). The recommendation itself is unaffected — this only adds visibility.
 
 ```json
 {
@@ -409,6 +434,9 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
 - The `CRASH RECOVERY` sub-block was printed with a verdict from the decision
   table, and the envelope `state` matches it (CLEAN→OK, RESUMABLE→CONTINUE,
   AMBIGUOUS→NEEDS_INPUT).
+- With `--last-envelope` supplied: the no-progress guard ran — a stalled
+  `/plan-feature`/`/design-feature` hint surfaces as a `workflow_observations`
+  note, never a silent bland repeat, with no new write path introduced.
 - The human summary (unless `--json-only`) and the envelope — with
   `design_candidates` top-level and `detail` carrying features, fixes,
   startable_now, blocked_units, open_prs, pending_triage, `untriaged_issues`
