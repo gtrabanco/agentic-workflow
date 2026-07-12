@@ -357,11 +357,18 @@ literal `Hardening & PR` close-out.
 
 ### P3 — Replication, testing, portability, migration → ES
 
-- [ ] `docs/workflow/REPLICATE.es.md` — translation + back-link; forward-link on EN.
-- [ ] `docs/workflow/GOLDEN_FIXTURE.es.md` — translation + back-link; forward-link on EN.
-- [ ] `docs/workflow/PORTABLE_PROMPT.es.md` — translation + back-link; forward-link on EN.
-- [ ] `docs/workflow/MIGRATION.es.md` — translation + back-link; forward-link on EN.
-- [ ] Gate: every relative link in the 4 new `.es.md` resolves; no leak.
+- [x] `docs/workflow/REPLICATE.es.md` — translation + back-link; forward-link on EN.
+- [x] `docs/workflow/GOLDEN_FIXTURE.es.md` — translation + back-link; forward-link on EN.
+- [x] `docs/workflow/PORTABLE_PROMPT.es.md` — translation + back-link; forward-link on EN
+      (the pasteable prompt fence itself kept verbatim/untranslated per the
+      code-block rule — translating a literal paste-in prompt would change
+      what the agent executes; noted inline in the ES doc).
+- [x] `docs/workflow/MIGRATION.es.md` — translation + back-link; forward-link on EN
+      (two same-page anchor links re-slugged to match the translated
+      headings; verified programmatically against GitHub's slug algorithm).
+- [x] Gate: every relative link in the 4 new `.es.md` resolves; no leak.
+      (`npx skills add . --list` green; grep-checked for stack/real-project
+      leaks — none found.)
 
 ### P4 — Schema package API reference → ES
 
