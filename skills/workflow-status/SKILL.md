@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -37,7 +37,7 @@ and what the recommended next command is.** Built for external orchestrators
   <slug>`; `planned` → `/execute-phase <NN> P1`
 ✓ Every `design_candidates[].next` begins with `/design-feature ` — design
   candidates always route to design, regardless of anything else
-✓ `recommendations.product_audit` was computed by the step-10 mechanical
+✓ `recommendations.product_audit` was computed by the step-11 mechanical
   two-condition check (never guessed), and `next.tier` was derived from the
   resolved `next.recommended` command via the command→tier map in
   `## Machine envelope` (never guessed)
@@ -132,7 +132,22 @@ ship-roadmap run exists.
 9. **Findings awaiting a destination.** Scan the in-flight folders'
    `known-issues.md` for entries with no linked issue, and open issues labeled
    or titled as postponed findings. Count + list them.
-10. **Product-audit recommendation — a mechanical two-condition checklist, no
+10. **Untriaged open-issue backlog (`detail.untriaged_issues`) — distinct from
+    step 9's `pending_triage`.** Cross-reference the open-issue list already
+    fetched in step 2 (`gh issue list --state open`) against triage
+    disposition: an issue is **untriaged** iff it carries **no dated
+    `triage-issue` `VERDICT:` comment** (the fixed-format block —
+    `skills/triage-issue/SKILL.md:95-104`) **and** no `wontfix` /
+    `postponed` / `promoted` disposition label. Count the untriaged subset and
+    list its oldest entries (cap: 5) by issue number. Emit the result as
+    `detail.untriaged_issues: {count, oldest_open: [numbers]}` — kept
+    separate from `pending_triage` (findings-derived, step 9) and
+    `findings.untriaged` (review-finding routing); never merge the three. A
+    non-zero `count` may surface a concrete, non-bare `/triage-issue
+    <numbers>` in `next.recommended`/`alternatives` (ties the backlog into the
+    routing decision from step 6/the turn contract) — it never silently
+    replaces the resolved recommendation.
+11. **Product-audit recommendation — a mechanical two-condition checklist, no
     exception clause.** Set `recommendations.product_audit: true` with a stated
     `reason` when **either** condition holds — this is a count, not a judgment
     call. **No exception clause exists**: a "wait for a natural pause" or
@@ -146,10 +161,10 @@ ship-roadmap run exists.
     trigger may additionally surface `/product-audit` as `next.recommended` or
     an `alternatives` entry (backlog/audit over net-new feature work) — never
     run it.
-11. **Crash recovery (run every invocation — cheap, see the section below).**
+12. **Crash recovery (run every invocation — cheap, see the section below).**
     Classify whether an interrupted turn is in evidence and append the fixed
     `CRASH RECOVERY` sub-block to the report.
-12. **Report.** Print a short human summary (table: unit | status | deps unmet |
+13. **Report.** Print a short human summary (table: unit | status | deps unmet |
     PR | next gate) plus a **design candidates** line (`idea` units and their
     `/design-feature` next command) plus the `CRASH RECOVERY` sub-block, then
     the envelope. With `--json-only`, envelope only.
@@ -248,6 +263,16 @@ means no urgency signal is in play; `next.recommended` may still be
 influenced by a non-empty one (e.g. surfaced as an `alternatives` entry), but
 is never silently replaced by it.
 
+**`detail.untriaged_issues`** — the plain open-issue backlog surfaced by
+step 10: `{count, oldest_open: [numbers]}` (oldest-first, capped at 5 numbers).
+`detail` is schema-unconstrained (`envelope.schema.json:154`), so this field
+needs **no package change**. Kept strictly distinct from `detail.pending_triage`
+(findings pulled from `known-issues.md`/postponed-labeled issues, step 9) and
+`findings.untriaged` (review-finding routing) — none of the three subsumes
+another. `count: 0` means every open issue has a triage disposition; a
+non-zero `count` may drive `next.recommended`/`alternatives` toward a
+concrete `/triage-issue <numbers>` citing the listed issues.
+
 **Envelope shape reminders (self-check before printing — mirrors
 `packages/agentic-workflow-schema/envelope.schema.json`):**
 
@@ -307,6 +332,7 @@ the invoking driver's own tier.
     "blocked_units": {"09-billing": {"unmet": ["05-auth"], "build_order": ["05-auth", "09-billing"]}},
     "open_prs": [{"number": 13, "unit": "07-csv-export", "ci": "green", "merge_ready": false}],
     "pending_triage": [{"source": "docs/features/07-csv-export/known-issues.md", "title": "empty-file edge"}],
+    "untriaged_issues": {"count": 3, "oldest_open": [21, 33, 40]},
     "workflow_observations": ["branch feat/07-csv-export is 1 commit ahead of origin"],
     "urgent": {
       "issues": [{"number": 51, "title": "prod webhook signature check bypassed", "label": "urgent"}],
@@ -385,9 +411,9 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
   AMBIGUOUS→NEEDS_INPUT).
 - The human summary (unless `--json-only`) and the envelope — with
   `design_candidates` top-level and `detail` carrying features, fixes,
-  startable_now, blocked_units, open_prs, pending_triage and `urgent`
-  (labels-only issue list + interruptibility facts) — are printed, envelope
-  last.
+  startable_now, blocked_units, open_prs, pending_triage, `untriaged_issues`
+  (count + oldest_open) and `urgent` (labels-only issue list +
+  interruptibility facts) — are printed, envelope last.
 - Nothing was modified anywhere.
 
 → Next: the envelope's `next.recommended` command — it is computed from the
