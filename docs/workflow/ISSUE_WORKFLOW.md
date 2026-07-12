@@ -1,5 +1,7 @@
 # Issue workflow (end-to-end)
 
+> 🇪🇸 [Versión en español](ISSUE_WORKFLOW.es.md)
+
 What happens to an issue from the moment it lands to a defensible, recorded
 decision. The hub skill is `triage-issue`; the spokes route to fix, feature, or
 deferral. Several issues can be triaged in one batch (`triage-issue 12 14 17`) —

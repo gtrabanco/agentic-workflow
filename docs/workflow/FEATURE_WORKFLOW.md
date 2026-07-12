@@ -1,5 +1,7 @@
 # Feature workflow (end-to-end)
 
+> 🇪🇸 [Versión en español](FEATURE_WORKFLOW.es.md)
+
 From an idea or a feature-request issue to a merged PR — every step and the skill
 that drives it. The lifecycle, per `CLAUDE.md`, is the **five-stage pipeline**:
 
