@@ -1,5 +1,7 @@
 # Golden fixture procedure
 
+> 🇪🇸 [Versión en español](GOLDEN_FIXTURE.es.md)
+
 A repeatable smoke test for skill wording: run a small, fixed toy feature
 through a changed skill **with the weakest model in your fleet**, and check
 its contracted output still holds. This is U9 of the 2026-07-09 backlog
