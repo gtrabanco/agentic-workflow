@@ -127,6 +127,18 @@ new shape:
     `workflow-status`): 1. Qwen3.6 → 2. Gemma4 → 3. DeepSeek V4 Flash.
   - *Cheap* (`log-session`, evidence): 1. DeepSeek V4 Flash → 2. Qwen3.6
     → 3. Gemma4.
+  - *Folding `review-change`/`audit-pr` findings back into the branch*
+    (`execute-phase`'s fold cycle): **routine/mechanical** findings (style,
+    missing test stub, stale doc) → same as Execution/mechanical above
+    (Qwen3.6 → Gemma4 → DeepSeek V4 Flash); **subtle** findings (logic,
+    security, architecture — the kind a weak model wouldn't have caught in
+    the first place) → bump to the tier that found them (Merge-gates or
+    Planning/routing ladder, whichever review ran). Rule of thumb: the
+    fixing model is never weaker than the one that wrote the original
+    code, and never weaker than warranted by the finding's subtlety —
+    otherwise the fix itself needs re-catching on re-review, wasting a
+    cycle. Supersedes the current single-model "Alternates" line
+    (`README.md`, subtle-logic bump) which only names GLM-5.2.
 - **`Qwen3.6` reasoning caveat, stated explicitly:** acceptable only for
   **re-checked** reasoning; never a merge-gating verdict (3B active → a
   plausible-but-shallow audit is worse than none). On the basic plan, once
@@ -362,9 +374,12 @@ literal `Hardening & PR` close-out.
       quota-aware shape specified in Scope → Model-routing revision:
       GLM-5.2 = €200-plan option (not the basic-plan primary); quota-aware
       routing rule; per-task preference ladders (2–3 deep) with config +
-      pro/con; the "never Qwen3.6 for merge gates / defer to human" rule;
-      the 5-model pros/cons table. No unverified benchmark numbers; keep
-      the "sanity-check against a current leaderboard" caveat.
+      pro/con, **including the fold-cycle ladder** (routine finding →
+      execution tier; subtle finding → bump to the tier that found it,
+      superseding the old single-model "Alternates" line); the "never
+      Qwen3.6 for merge gates / defer to human" rule; the 5-model pros/cons
+      table. No unverified benchmark numbers; keep the "sanity-check
+      against a current leaderboard" caveat.
 - [ ] `README.es.md`: mirror the **same** revised section as a faithful
       Spanish translation — identical ladders, config values, model names,
       and table rows; no divergence from `README.md`.
