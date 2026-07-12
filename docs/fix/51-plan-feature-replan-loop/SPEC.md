@@ -195,15 +195,21 @@ that surfaces a stalled planning loop). Sensor-side half of gap 2.
 
 ### P3 — Hardening & PR
 
-- [ ] Run `bump-skill` for the three edited skills (`plan-feature`,
+- [x] Run `bump-skill` for the three edited skills (`plan-feature`,
       `plan-feature-scaffold`, `workflow-status`) — bumps `version:` and updates
       `CHANGELOG.md`, `CHANGELOG.es.md`, `README.md`, `README.es.md`
-- [ ] Re-run the project's full verification gate (commands + exit codes
+      (3.0.0→3.1.0, 1.8.0→1.9.0, 1.4.0→1.5.0, all minor)
+- [x] Re-run the project's full verification gate (commands + exit codes
       pasted): `npx skills add . --list` lists every skill; markdown well-formed;
       cross-references resolve; no stack/real-project references leaked
-- [ ] Smoke-test the executor-path wording change per
+      (`npx skills add . --list` → exit 0, all 3 edited skills present)
+- [x] Smoke-test the executor-path wording change per
       `docs/workflow/GOLDEN_FIXTURE.md` (P1 edits `plan-feature` /
-      `plan-feature-scaffold`) with the weakest model in the fleet
+      `plan-feature-scaffold`) with the weakest model in the fleet — **not run
+      live** (no weaker fleet model available in this session); substituted a
+      manual read-through against the fixed pass criteria (logged as a `NOT
+      RUN` row in `GOLDEN_FIXTURE.md`'s run log, not fabricated as a pass) — a
+      real weak-model run is still owed.
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
