@@ -65,3 +65,35 @@ untouched).
 
 Next: `execute-phase 17 P2` — `audit-pr` persists fix-now blockers to the same
 ledger.
+
+## P2 — `audit-pr` persist to the same ledger — 2026-07-13
+
+Same branch, continuing from P1. Added process step 5 to
+`skills/audit-pr/SKILL.md` ("Persist blockers to the fold ledger (BLOCKED
+verdict only)") between the existing step 4 (Decide) and the MERGE-READY
+comment step (renumbered 5 → 6, 6 → 7, 7 → 8). Every blocker on a BLOCKED
+verdict writes to the **same** `review-findings.md` ledger `review-change`
+writes (D4 — one list for the fold cycle, not two), same fixed schema, same
+merged-unit-skip gate (`gh pr view --json state` → `MERGED` → no write), same
+dedupe-by-`file:line`+axis rule (explicitly cross-referenced to
+`review-change`'s rule rather than restated independently, to keep the two
+skills' dedupe behavior from drifting). Assigned `severity: high` uniformly
+(a blocker is fix-now and gates the merge by definition — `audit-pr`'s
+contract table has no finer severity gradient than blocker/non-blocker) and
+`class: fix-now`; `axis` = the gate name from the merge-readiness contract
+table (`Tests`, `Docs`, `Traceability`, …); `route` = this skill's own
+Routing section's mapping for that blocker kind.
+
+`bump-skill` ran: `audit-pr` 3.0.0 → 3.1.0 (minor), CHANGELOG.md/.es.md
+per-skill row + release-log entry (merged into the same-day feature-17
+bullet from P1), README.md/.es.md skills-table cell — commit `13ab857`.
+
+Gate: P2 task greps run and passing (see `TASKS.md` P2). No application
+build in this repo; project-wide skills-discovery/doc-coherence and schema
+tests deferred to P5 hardening per the phasing.
+
+No known-issues opened; no new decisions beyond D1–D4 (already resolved at
+planning). SPEC unchanged.
+
+Next: `execute-phase 17 P3` — `execute-phase`'s own fold cycle gains the
+`folded: no → yes` tick.
