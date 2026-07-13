@@ -179,3 +179,58 @@ No known-issues opened; no new decisions beyond D1–D4. SPEC unchanged
 Next: `execute-phase 17 P5` — Hardening & PR: dev-scenario failure modes,
 `template/` mirror, documentation map entry, `GOLDEN_FIXTURE.md` run, full
 gate + `audit-docs`, close out (PR, roadmap link).
+
+## P5 — Hardening & PR — 2026-07-13
+
+Same branch, continuing from P4 (the final phase — its pre-written tasks ARE
+the close-out chain).
+
+**Dev-scenario failure edges** — verified each was already stated in its
+owning skill from P1–P4 (no new edits needed): re-run dedupe
+(`review-change`/`audit-pr`, both cite the same `file:line`+axis rule),
+merged-unit no-write (both, `gh pr view --json state` → `MERGED` gate),
+missing-ledger → `fix_now: []` no error (`workflow-status`), fold+tick drop
+(`workflow-status` reads only `folded: no`; `execute-phase` owns the flip),
+audit-pr writes the same ledger (D4 cross-reference), schema-drift guard
+(covered by the 2 new schema-package tests added in P4).
+
+**`template/` mirror + documentation map**: added a "Fix-now fold ledger"
+paragraph to `template/CLAUDE.md`'s Feature workflow section (the ledger
+path, schema, and who writes/ticks it) and a matching paragraph to
+`docs/workflow/FEATURE_WORKFLOW.md` (+ ES sibling) explaining when the ledger
+is created (Stage 4, not scaffolded up front) and by whom. Commit `4074531`.
+
+**`GOLDEN_FIXTURE.md` run** (mandatory — this phase touched `review-change`,
+`execute-phase`, `workflow-status`, all executor-path/review-pack skills):
+no local weaker model available in this session's fleet, so used the
+documented fallback — Claude Haiku 4.5, the weakest model in this session's
+own fleet, per 3 live subagent runs fed the exact process-step text against
+the toy fixture (`docs/features/99-csv-export-command`, scratch copy under
+the session scratchpad, deleted after). (A) `review-change` process step 9,
+given a synthetic fix-now finding → wrote a real `review-findings.md` row
+with the fixed schema verbatim. (B) `workflow-status` process step 9, reading
+that file → produced the exact matching `findings.fix_now[]` JSON item,
+correctly deriving `suggested_tier: cheap` from the mechanical table
+(severity `med`, axis `tests` — neither condition fires). (C)
+`execute-phase`'s fold-cycle checklist box, given "finding just fixed and
+committed" → flipped only `folded: no → yes`. All three: zero invented
+steps, zero reported ambiguity — confirms the wording survives a weak model.
+Run-log row appended to `docs/workflow/GOLDEN_FIXTURE.md` (+ ES sibling),
+same commit `4074531`.
+
+**Full gate**: `npx skills add . --list` — all skills discovered, no errors.
+`cd packages/agentic-workflow-schema && npm test` — 15/15 green.
+
+**`audit-docs`**: ran scoped to this feature's own docs (roadmap row ↔
+folder ↔ doc-map ↔ template) — Decision: PASS, no findings. Phase-naming
+check's one grep hit (`progress.md:141` "Step 9") is a reference to
+`workflow-status`'s own numbered process step, not this feature's `P1`–`P5`
+phase labels — not a violation.
+
+**Close-out**: roadmap row 17 flipped `planned → done` (this commit); the PR
+open step and the `docs: link PR` follow-up commit are the remaining close-out
+actions, executed immediately after this phase-docs commit per the mode
+steps.
+
+Pending-docs check: `git status --porcelain -- docs/` → empty before this
+commit lands.

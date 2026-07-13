@@ -98,25 +98,42 @@ Run each check from the repo root (`/Users/gtrabanco/MyProjects/agentic-skills`)
 
 ## P5 — Hardening & PR
 
-- [ ] Each dev-scenario failure edge is stated in its owning skill: re-run dedupe,
+- [x] Each dev-scenario failure edge is stated in its owning skill: re-run dedupe,
       merged-unit (no write), missing-ledger (`fix_now: []`, no error), fold+tick
       drop, audit-pr same ledger, schema-drift guard.
-      Check: `read-verified` against the touched skills
-- [ ] Ledger convention mirrored into `template/`.
-      Check: `grep -rq "review-findings.md" template/`
-- [ ] `review-findings.md` added to the documentation map.
-      Check: `grep -rq "review-findings.md" docs/workflow/`
-- [ ] `GOLDEN_FIXTURE.md` run with the weakest fleet model produced a ledger with a
+      Check: `read-verified` — re-run dedupe: `review-change`
+      (`SKILL.md:167-170`) and `audit-pr` (`SKILL.md:140-142`); merged-unit
+      (no write): both, `MERGED` state check; missing-ledger: `workflow-status`
+      (`SKILL.md:154-156`, `fix_now: []`, no error); fold+tick drop:
+      `workflow-status` reads only `folded: no` (`:141`) + `execute-phase`
+      ticks it (`:416-419`); audit-pr same ledger: D4 cross-reference
+      (`audit-pr/SKILL.md:130-132`); schema-drift guard: `validateEnvelope()`
+      rejects malformed items — covered by the 2 new schema-package tests
+- [x] Ledger convention mirrored into `template/`.
+      Check: `grep -rq "review-findings.md" template/` — PASS
+      (`template/CLAUDE.md:212-217`, commit `4074531`)
+- [x] `review-findings.md` added to the documentation map.
+      Check: `grep -rq "review-findings.md" docs/workflow/` — PASS
+      (`docs/workflow/FEATURE_WORKFLOW.md:122-131` + ES sibling)
+- [x] `GOLDEN_FIXTURE.md` run with the weakest fleet model produced a ledger with a
       real severity value + matching envelope item; run-log row recorded.
-      Check: `read-verified` via the golden-fixture run log
-- [ ] Full gate green (skills discovered + doc-coherence).
-      Check: `npx skills add . --list`
-- [ ] Schema package tests green.
-      Check: `cd packages/agentic-workflow-schema && npm test`
-- [ ] `audit-docs` PASS (roadmap ↔ folder ↔ doc-map; `review-findings.md` listed).
-      Check: `read-verified` via the `audit-docs` report
-- [ ] Pending-docs check empty.
-      Check: `git status --porcelain -- docs/`
+      Check: `read-verified` — 3 live Haiku 4.5 subagent runs against the
+      fixture (scratch copy, cleaned up after): `review-change`'s persist
+      step wrote a real ledger row (`severity: med`), `workflow-status`'s
+      emit step produced the exact matching envelope item
+      (`suggested_tier: cheap`, correctly derived), `execute-phase`'s
+      fold-cycle box flipped `folded: yes` — zero invented steps in any run.
+      Run-log row added to `docs/workflow/GOLDEN_FIXTURE.md` (+ ES sibling),
+      commit `4074531`
+- [x] Full gate green (skills discovered + doc-coherence).
+      Check: `npx skills add . --list` — PASS, all skills discovered, no errors
+- [x] Schema package tests green.
+      Check: `cd packages/agentic-workflow-schema && npm test` — PASS, 15/15
+- [x] `audit-docs` PASS (roadmap ↔ folder ↔ doc-map; `review-findings.md` listed).
+      Check: `read-verified` — `audit-docs` report: Decision: PASS, no
+      findings (roadmap ↔ folder ↔ doc-map ↔ template all consistent)
+- [x] Pending-docs check empty.
+      Check: `git status --porcelain -- docs/` — PASS, empty
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped
       backticks; body includes `Closes #49`) and PRINT THE PR URL in the chat.
