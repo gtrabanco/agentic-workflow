@@ -8,21 +8,27 @@ Run each check from the repo root (`/Users/gtrabanco/MyProjects/agentic-skills`)
 
 ## P1 — `review-change`: ledger schema + persist step
 
-- [ ] Define the ledger `review-findings.md` in `review-change` (schema, location,
+- [x] Define the ledger `review-findings.md` in `review-change` (schema, location,
       write/dedupe rule).
-      Check: `grep -q "review-findings.md" skills/review-change/SKILL.md`
-- [ ] The fixed schema line is present verbatim.
-      Check: `grep -qF "| id | file:line | axis | severity | class | route | folded |" skills/review-change/SKILL.md`
-- [ ] Persist step writes **fix-now** findings only, on an **unmerged** unit, with
+      Check: `grep -q "review-findings.md" skills/review-change/SKILL.md` — PASS
+      (process step 9, `skills/review-change/SKILL.md:152-169`)
+- [x] The fixed schema line is present verbatim.
+      Check: `grep -qF "| id | file:line | axis | severity | class | route | folded |" skills/review-change/SKILL.md` — PASS
+- [x] Persist step writes **fix-now** findings only, on an **unmerged** unit, with
       `folded` starting `no`, deduped by `file:line`+axis.
-      Check: `read-verified` (fix-now-only + unmerged gate + dedupe rule stated)
-- [ ] `folded` column documented as starting `no`.
-      Check: `grep -q "folded" skills/review-change/SKILL.md`
-- [ ] `bump-skill` ran for `review-change` (minor): version bumped, CHANGELOG
+      Check: `read-verified` — step 9 gates on PR state `MERGED` (no write),
+      writes only fix-now rows, `folded` starts `no`, dedupes by
+      `file:line`+axis reusing the adversarial-mode merge rule; non-fix-now
+      findings explicitly excluded (kept on `triage-issue`, step 8)
+- [x] `folded` column documented as starting `no`.
+      Check: `grep -q "folded" skills/review-change/SKILL.md` — PASS
+- [x] `bump-skill` ran for `review-change` (minor): version bumped, CHANGELOG
       (EN/ES) + README (EN/ES) rows added.
-      Check: `git diff --name-only | grep -E 'CHANGELOG(\.es)?\.md|README(\.es)?\.md'`
-- [ ] Planning artifacts committed and roadmap row 17 reads `planned`.
-      Check: `grep -E '^\| 17 \|' docs/features/ROADMAP.md | grep -q 'planned'`
+      Check: `git diff --name-only | grep -E 'CHANGELOG(\.es)?\.md|README(\.es)?\.md'` — PASS
+      (commit `dcdd6b2`; version 2.1.1 → 2.2.0)
+- [x] Planning artifacts committed and roadmap row 17 reads `planned`.
+      Check: `grep -E '^\| 17 \|' docs/features/ROADMAP.md | grep -q 'planned'` — PASS
+      (commit `f405f08`)
 
 ## P2 — `audit-pr`: persist to the same ledger
 
