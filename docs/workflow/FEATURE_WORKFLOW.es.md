@@ -137,6 +137,17 @@ conjunto de artefactos escala según el `Size` del SPEC:**
 Luego **registra la feature en el roadmap** (numeración, orden,
 dependencias). No crea la rama ni escribe código.
 
+**`review-findings.md` — el ledger de fold fix-now (escrito durante la Etapa
+4, no scaffoldeado por adelantado).** `review-change`/`audit-pr` crean
+`docs/features/<NN>-<slug>/review-findings.md` la primera vez que un hallazgo
+fix-now necesita foldearse — esquema fijo
+`| id | file:line | axis | severity | class | route | folded |`, `folded`
+empieza en `no`, deduplicado por `file:line`+axis, ambos escritores comparten
+el mismo ledger. El ciclo de fold de `execute-phase` marca cada fila foldeada
+`folded: yes`; `workflow-status` expone las filas sin foldear en
+`findings.fix_now[]` del envelope máquina. Los fixes usan la ruta
+equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
+
 > Las incógnitas se convierten en preguntas abiertas en `decisions.md` —
 > nunca en placeholders en blanco.
 
