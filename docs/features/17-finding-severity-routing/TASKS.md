@@ -134,8 +134,13 @@ Run each check from the repo root (`/Users/gtrabanco/MyProjects/agentic-skills`)
       findings (roadmap ↔ folder ↔ doc-map ↔ template all consistent)
 - [x] Pending-docs check empty.
       Check: `git status --porcelain -- docs/` — PASS, empty
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown
       file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped
       backticks; body includes `Closes #49`) and PRINT THE PR URL in the chat.
-- [ ] Update the roadmap row 17 to `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #<n>` and push.
+      Check: PASS — https://github.com/gtrabanco/agentic-workflow/pull/57
+      (verified via `gh pr view 57 --json body` — backticks render, no
+      literal `\`)
+- [x] Update the roadmap row 17 to `done · [#<pr>](<pr-url>)`.
+      Check: PASS — `docs/features/ROADMAP.md:27`
+- [x] Commit `docs: link PR #<n>` and push.
+      Check: this commit, pushed immediately after.
