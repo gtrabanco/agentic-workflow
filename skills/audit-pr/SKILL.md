@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 3.1.0
+version: 3.1.1
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -281,7 +281,7 @@ Before merge, a human should still verify:
 ## Guardrails
 
 - **Read-first verdict. Never push, edit, or refactor.** The only forge writes
-  this skill may perform: (1) the **MERGE-READY comment** (Process step 5 —
+  this skill may perform: (1) the **MERGE-READY comment** (Process step 6 —
   idempotent, comment-only, never a commit tag), and (2) the opt-in
   **auto-merge** — written policy or explicit instruction, MERGE-READY on the
   current SHA, pre-merge checklist green, outputs pasted. One key missing →

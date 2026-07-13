@@ -239,6 +239,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.1.1 | 2026-07-13 | patch | Guardrails cross-reference fix: the MERGE-READY comment now correctly cites Process step 6 (was still pointing at the pre-3.1.0 step 5 after the fold-ledger step renumbering). |
 | 3.1.0 | 2026-07-13 | minor | New process step 5 (BLOCKED verdict only): every blocker persists to the **same** fix-now fold ledger `review-findings.md` that `review-change` writes (D4 — one ledger for the fold cycle), severity `high` (a blocker gates the merge by definition), deduped by `file:line`+axis, no write on a merged unit. Remaining process steps renumbered (6→8). Part of feature 17 (`finding-severity-routing`). |
 | 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-05 | minor | On MERGE-READY, posts a dated, SHA-bound **comment on the PR itself** (`gh pr comment --body-file`, idempotent by HTML marker; never a commit-message tag; nothing posted on BLOCKED). Plus the machine envelope (MERGE_READY/MERGED/NEEDS_FIXES/BLOCKED states, verdict + manual checks in `detail`). |
@@ -415,7 +416,9 @@ How pinning actually works, verified against the `skills` CLI:
   `EnvelopeFixNowFinding` replaced (`{ref, title, file?}` →
   `{id, file, axis, severity, class, route, suggested_tier}`), types +
   `envelope.schema.json` + tests updated — the remaining phase is P5
-  Hardening & PR.
+  Hardening & PR. PATCH follow-up for `audit-pr` (3.1.1): fixed a stale
+  Guardrails cross-reference to Process step 5 left over from the 3.1.0
+  renumbering (now correctly cites step 6).
 
 - **2026-07-13 — provider-aware operating guidance (feature 16, NaN
   Builders/OpenAI-compatible inference).** MINOR bump for
