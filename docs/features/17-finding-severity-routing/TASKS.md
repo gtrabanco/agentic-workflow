@@ -47,14 +47,22 @@ Run each check from the repo root (`/Users/gtrabanco/MyProjects/agentic-skills`)
 
 ## P3 — `execute-phase`: fold-cycle tick
 
-- [ ] The fold-cycle checklist gains a box flipping `folded: no → yes` on
+- [x] The fold-cycle checklist gains a box flipping `folded: no → yes` on
       fold+commit.
-      Check: `grep -q "folded" skills/execute-phase/SKILL.md`
-- [ ] The box sits inside the existing fold-cycle checklist (not a new section) and
+      Check: `grep -q "folded" skills/execute-phase/SKILL.md` — PASS
+      (`skills/execute-phase/SKILL.md:411-420`)
+- [x] The box sits inside the existing fold-cycle checklist (not a new section) and
       is the sole ledger transition.
-      Check: `read-verified`
-- [ ] `bump-skill` ran for `execute-phase` (minor): version + CHANGELOG + README.
-      Check: `grep -n 'version:' skills/execute-phase/SKILL.md`
+      Check: `read-verified` — the new box is the fourth line inside the
+      existing "Folding review / audit findings" checklist block (between the
+      per-phase docs box and the `git add`+commit box); no new section was
+      added; the box's own wording states it is "the one and only ledger
+      state transition, owned solely by this fold cycle"
+- [x] `bump-skill` ran for `execute-phase` (minor): version + CHANGELOG + README.
+      Check: `grep -n 'version:' skills/execute-phase/SKILL.md` — PASS
+      (commit `606dee6`; version 2.1.0 → 2.2.0; README unchanged — the
+      skills-table cell is already generic and doesn't itemize fold-cycle
+      mechanics)
 
 ## P4 — `workflow-status` + schema package: emit + mirror
 
