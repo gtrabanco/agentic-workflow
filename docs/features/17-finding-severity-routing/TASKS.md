@@ -66,24 +66,35 @@ Run each check from the repo root (`/Users/gtrabanco/MyProjects/agentic-skills`)
 
 ## P4 — `workflow-status` + schema package: emit + mirror
 
-- [ ] `workflow-status` reads `review-findings.md`, emits only `folded: no` rows.
-      Check: `grep -q "review-findings.md" skills/workflow-status/SKILL.md`
-- [ ] Structured `findings.fix_now[]` item shape
+- [x] `workflow-status` reads `review-findings.md`, emits only `folded: no` rows.
+      Check: `grep -q "review-findings.md" skills/workflow-status/SKILL.md` — PASS
+      (process step 9, `skills/workflow-status/SKILL.md:139-157`)
+- [x] Structured `findings.fix_now[]` item shape
       `{id, file, axis, severity, class, route, suggested_tier}` shown in the
       envelope example.
-      Check: `grep -q "suggested_tier" skills/workflow-status/SKILL.md`
-- [ ] The `suggested_tier` derivation table is fixed/mechanical (severity `high`
+      Check: `grep -q "suggested_tier" skills/workflow-status/SKILL.md` — PASS
+      (envelope example, `SKILL.md:361`)
+- [x] The `suggested_tier` derivation table is fixed/mechanical (severity `high`
       OR subtle axis → `strong`; else `cheap`), reusing `strong`/`cheap`.
-      Check: `read-verified` (a checklist a weak model cannot misread)
-- [ ] `next.tier` derivation is unchanged in intent.
-      Check: `read-verified` (the command→tier map section is untouched)
-- [ ] Schema package mirrors the new item shape (types + `envelope.schema.json`),
+      Check: `read-verified` — step 9 states the derivation as a 3-row fixed
+      table (`severity == "high"` → `strong`; axis ∈ subtle set → `strong`;
+      else `cheap`), a lookup a weak model runs mechanically, no judgement
+- [x] `next.tier` derivation is unchanged in intent.
+      Check: `read-verified` — the "`next.tier` derivation" section
+      (`SKILL.md:305-319`, the command→tier fixed map) was not touched; step 9
+      explicitly notes it's "a separate, per-finding field"
+- [x] Schema package mirrors the new item shape (types + `envelope.schema.json`),
       version bumped, tests updated.
-      Check: `grep -q "suggested_tier" packages/agentic-workflow-schema/src/index.ts packages/agentic-workflow-schema/envelope.schema.json`
-- [ ] Schema package tests pass.
-      Check: `cd packages/agentic-workflow-schema && npm test`
-- [ ] `bump-skill` ran for `workflow-status` (minor): version + CHANGELOG + README.
-      Check: `grep -n 'version:' skills/workflow-status/SKILL.md`
+      Check: `grep -q "suggested_tier" packages/agentic-workflow-schema/src/index.ts packages/agentic-workflow-schema/envelope.schema.json` — PASS
+      (`EnvelopeFixNowFinding` replaced; package version 1.0.2 → 2.0.0, major —
+      breaking item-shape change per the package's own semver policy)
+- [x] Schema package tests pass.
+      Check: `cd packages/agentic-workflow-schema && npm test` — PASS, 15/15
+      tests green (2 new: populated fix_now item accepted, malformed item
+      rejected)
+- [x] `bump-skill` ran for `workflow-status` (minor): version + CHANGELOG + README.
+      Check: `grep -n 'version:' skills/workflow-status/SKILL.md` — PASS
+      (commit `f35f9ba`; version 1.5.1 → 1.6.0)
 
 ## P5 — Hardening & PR
 

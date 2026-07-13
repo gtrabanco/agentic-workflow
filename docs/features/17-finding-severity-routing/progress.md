@@ -126,3 +126,56 @@ No known-issues opened; no new decisions beyond D1–D4. SPEC unchanged.
 Next: `execute-phase 17 P4` — `workflow-status` reads the ledger and emits
 `findings.fix_now[]` with `suggested_tier`; schema package mirrors the item
 shape in the same phase.
+
+## P4 — `workflow-status` + schema package: emit + mirror — 2026-07-13
+
+Same branch, continuing from P3. This was the largest phase (SPEC-flagged as
+one concern grouping the `workflow-status` emit with its schema-package
+mirror, since the repo's Verification rule binds them to the same PR).
+
+`skills/workflow-status/SKILL.md`: inserted new process step 9 ("Fix-now fold
+ledger → `findings.fix_now[]`") between the existing step 8 (pending quality
+gates) and step 9 (findings awaiting a destination), which renumbered
+old 9→14 to 10→14 — fixed every downstream cross-reference to a renumbered
+step (`step 9`→`step 10` in the untriaged-backlog prose, `step 10`→`step 11`
+in the `detail.untriaged_issues` guardrail note). Step 9 reads each in-flight
+unit's `review-findings.md`, projects only `folded: no` rows into
+`{id, file, axis, severity, class, route, suggested_tier}`, and documents
+`suggested_tier`'s derivation as a fixed 3-row table (matches D3 from
+`decisions.md` verbatim). Also extended step 8's language: the ledger's mere
+presence now satisfies its "review report present" check — resolving the
+latent inconsistency the SPEC flagged (`known-issues.md`, "Latent
+inconsistency resolved incidentally"). Updated the envelope JSON example to
+show one populated `fix_now` item. `next.tier`'s own derivation section
+(`:305-319`) was left untouched, per acceptance criterion 6.
+
+`packages/agentic-workflow-schema/`: replaced `EnvelopeFixNowFinding`
+(`{ref, title, file?}` → `{id, file, axis, severity, class, route,
+suggested_tier}`) in `src/index.ts`, added the `FixNowSeverity` type +
+`FIX_NOW_SEVERITIES` validation list, updated `validateEnvelope`'s per-item
+checks, mirrored the shape in `envelope.schema.json`. Added two tests
+(populated item accepted; malformed item — bad severity, bad tier, missing
+field — rejected). `npm test` (`tsc && node --test`): **15/15 green**, exit 0.
+Bumped the package version **1.0.2 → 2.0.0 (major)** — the package's own
+`README.md` "Versioning" section states a removed/renamed key is a breaking
+change, and this replaces the entire item shape. Updated both READMEs'
+field-by-field table row for `findings.fix_now[]` (EN/ES). `dist/` is
+gitignored (built on publish, rebuilt locally by `npm test`'s `tsc` step) —
+nothing to commit there.
+
+`bump-skill` ran: `workflow-status` 1.5.1 → 1.6.0 (minor), CHANGELOG.md/.es.md
+per-skill row + release-log entry (merged into the same-day feature-17
+bullet, now noting the schema package's major bump too), README.md/.es.md
+skills-table cell updated to mention `findings.fix_now[]`. No model/effort
+tier changed → `model-routing.yml` untouched. Commit `f35f9ba`.
+
+Gate: P4 task greps + `npm test` all pass (see `TASKS.md` P4). No application
+build outside the schema package; project-wide skills-discovery/doc-coherence
+deferred to P5 hardening per the phasing.
+
+No known-issues opened; no new decisions beyond D1–D4. SPEC unchanged
+(acceptance criteria 1–8 now satisfied; 9–10 are P5's).
+
+Next: `execute-phase 17 P5` — Hardening & PR: dev-scenario failure modes,
+`template/` mirror, documentation map entry, `GOLDEN_FIXTURE.md` run, full
+gate + `audit-docs`, close out (PR, roadmap link).
