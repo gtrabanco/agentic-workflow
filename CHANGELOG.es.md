@@ -214,6 +214,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-13 | menor | Nuevo paso de persistencia (paso de proceso 9): los hallazgos fix-now ahora se anexan al **ledger de fold fix-now** de la unidad, `review-findings.md` (esquema fijo `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` empieza en `no`), deduplicado por `file:line`+axis, en una unidad no mergeada — una unidad mergeada no recibe escritura. El bloque `→ Next:` y la sección Routing ahora mencionan el ledger para hallazgos fix-now. Los hallazgos no-fix-now no se ven afectados. Parte de la feature 17 (`finding-severity-routing`). |
 | 2.1.1 | 2026-07-10 | parche | Aclarada la semántica de N: distingue "el flag `--adversarial` no se pasó en absoluto" (modo de un solo revisor, sin mensaje) de "`--adversarial` se pasó sin un N válido" (sin número, o un número `< 2` — error de uso, cae al modo de un solo revisor). Corrige una contradicción con la decisión D1 de `decisions.md`, que exigía el error de uso tanto para N ausente como para N<2. Sin cambio de comportamiento en la ruta por defecto sin flag. |
 | 2.1.0 | 2026-07-10 | menor | Nuevo modo opt-in `--adversarial N`: N revisores independientes, context-clean, solo-diff y adversariales corren en paralelo (subagentes de Claude Code / invocaciones headless / conversaciones nuevas secuenciales), hallazgos fusionados y deduplicados por `file:line`+eje en la misma tabla de decisión existente con una columna de confianza `Reviewers n/N`, umbral de inclusión ≥1 (sin quórum). Por defecto DESACTIVADO; auto-recomendado (nunca forzado) para cambios `L`/marcados como sensibles. La ruta por defecto sin flag no cambia. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
@@ -397,6 +398,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-13 — finding-severity-routing P1 (feature 17).** Bump MENOR para
+  `review-change` (2.2.0): nuevo paso de persistencia que escribe los
+  hallazgos fix-now en un nuevo ledger de fold fix-now por unidad,
+  `review-findings.md` (esquema fijo, `folded` empieza en `no`, deduplicado
+  por `file:line`+axis, sin escritura en una unidad mergeada) — el primero de
+  los cuatro toques de skill de la feature (`audit-pr`, `execute-phase`,
+  `workflow-status` + paquete de esquema en fases posteriores).
 
 - **2026-07-13 — guía operativa consciente del provider (feature 16,
   inferencia compatible con OpenAI, NaN Builders).** Bump MENOR para
