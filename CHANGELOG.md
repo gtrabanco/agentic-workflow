@@ -105,6 +105,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.6.0 | 2026-07-13 | minor | New process step 9 (renumbers 9→14 to 10→14): reads each in-flight unit's `review-findings.md` fold ledger and emits its `folded: no` rows as structured `findings.fix_now[]` items `{id, file, axis, severity, class, route, suggested_tier}`, `suggested_tier` derived by a fixed table (severity `high` OR a subtle axis → `strong`; else `cheap`). `next.tier` unchanged. Step 8's "review report present" check now also accepts the ledger's presence as evidence `review-change` ran. Envelope example updated with a populated `fix_now` item. Schema package mirrored (major bump, breaking item-shape change) same PR. Part of feature 17 (`finding-severity-routing`). |
 | 1.5.1 | 2026-07-12 | patch | No-progress guard wording precision (review finding on fix #51's PR): the note now names the stall as **suspected**, not a confirmed dropped write — the guard cannot tell from the envelope alone whether the recommended command ran and its write was dropped, or never ran at all. No behavior change. |
 | 1.5.0 | 2026-07-12 | minor | Fix #51: no-progress guard on the `--last-envelope` crash-recovery hint — when the hint's `next.recommended` targeted `/plan-feature <slug>`/`/design-feature <slug>` and this run still classifies that same unit at the same pre-advance status (`defined`/`idea`), emit a `workflow_observations` note naming the suspected dropped status write instead of silently repeating the recommendation. Read-only invariant unchanged; the recommendation itself is unaffected. |
 | 1.4.0 | 2026-07-12 | minor | Emit-time hardening (#52): turn-contract assertions that `next.recommended` is non-bare and correctly staged, `design_candidates[].next` always routes to `/design-feature`, `recommendations.product_audit`/`next.tier` come from the new mechanical checks/map, and the envelope is emitted on every invocation (incl. same-session follow-ups) after a self-check against the bundled schema. Envelope shape reminders (`blockers[].scope` enum, run/OK incompatibility, `dependencies.unmet` array-of-strings) and a fixed command→tier map added to `## Machine envelope`. Process step 4 maps an unknown roadmap status to `idea` by default (e.g. `scheduled → idea`, cross-ref `#51`); step 10 (product-audit) rewritten as a mechanical two-condition checklist with no invented exception. New Process step surfaces the untriaged open-issue backlog as `detail.untriaged_issues: {count, oldest_open}` (no schema change — `detail` is free-form). |
@@ -400,15 +401,21 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
-- **2026-07-13 — finding-severity-routing P1–P3 (feature 17).** MINOR bump for
+- **2026-07-13 — finding-severity-routing P1–P4 (feature 17).** MINOR bump for
   `review-change` (2.2.0): new persist step writes fix-now findings to a new
   per-unit fix-now fold ledger `review-findings.md` (fixed schema, `folded`
   starts `no`, deduped by `file:line`+axis, no write on a merged unit). MINOR
   bump for `audit-pr` (3.1.0): BLOCKED-verdict blockers persist to the **same**
   ledger (D4 — one list for the fold cycle), severity `high`, same dedupe/gate
   rules. MINOR bump for `execute-phase` (2.2.0): the fold-cycle checklist
-  gains a box flipping each folded finding's ledger row `folded: no → yes` —
-  `workflow-status` + schema package follow in the remaining phases.
+  gains a box flipping each folded finding's ledger row `folded: no → yes`.
+  MINOR bump for `workflow-status` (1.6.0): reads the ledger and emits
+  `findings.fix_now[]` items with a derived `suggested_tier`; `next.tier`
+  unchanged. MAJOR bump for `@gtrabanco/agentic-workflow-schema` (2.0.0):
+  `EnvelopeFixNowFinding` replaced (`{ref, title, file?}` →
+  `{id, file, axis, severity, class, route, suggested_tier}`), types +
+  `envelope.schema.json` + tests updated — the remaining phase is P5
+  Hardening & PR.
 
 - **2026-07-13 — provider-aware operating guidance (feature 16, NaN
   Builders/OpenAI-compatible inference).** MINOR bump for

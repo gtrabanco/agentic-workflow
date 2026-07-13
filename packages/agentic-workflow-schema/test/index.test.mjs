@@ -65,6 +65,41 @@ test("rejects non-integer issues_filed", () => {
   assert.equal(result.ok, false);
 });
 
+test("accepts a populated findings.fix_now[] item", () => {
+  const withFinding = {
+    ...VALID,
+    findings: {
+      ...VALID.findings,
+      fix_now: [
+        {
+          id: "F1",
+          file: "src/export/handler.ts:88",
+          axis: "security",
+          severity: "high",
+          class: "fix-now",
+          route: "fold into phase",
+          suggested_tier: "strong",
+        },
+      ],
+    },
+  };
+  const result = validateEnvelope(withFinding);
+  assert.equal(result.ok, true);
+});
+
+test("rejects a fix_now item with a bad severity or missing fields", () => {
+  const cases = [
+    { id: "F1", file: "a.ts:1", axis: "tests", severity: "critical", class: "fix-now", route: "r", suggested_tier: "cheap" },
+    { id: "F1", file: "a.ts:1", axis: "tests", severity: "high", class: "fix-now", route: "r", suggested_tier: "medium" },
+    { file: "a.ts:1", axis: "tests", severity: "high", class: "fix-now", route: "r", suggested_tier: "strong" },
+  ];
+  for (const item of cases) {
+    const bad = { ...VALID, findings: { ...VALID.findings, fix_now: [item] } };
+    const result = validateEnvelope(bad);
+    assert.equal(result.ok, false, `expected rejection for ${JSON.stringify(item)}`);
+  }
+});
+
 test("reports invalid JSON in the last block", () => {
   const result = parseEnvelope("```json\n{not json}\n```");
   assert.equal(result.ok, false);
