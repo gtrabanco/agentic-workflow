@@ -97,3 +97,32 @@ planning). SPEC unchanged.
 
 Next: `execute-phase 17 P3` — `execute-phase`'s own fold cycle gains the
 `folded: no → yes` tick.
+
+## P3 — `execute-phase` fold-cycle tick — 2026-07-13
+
+Same branch, continuing from P2. Added one box to the existing "Folding
+review / audit findings" checklist in `skills/execute-phase/SKILL.md`
+(`:411-420`): each folded finding's `review-findings.md` row flips
+`folded: no → yes` — stated explicitly as the ledger's one and only state
+transition, owned solely by this fold cycle (matches D1's capability-closure
+row from the SPEC). No new section added; the box sits inside the existing
+checklist between the per-phase-docs box and the commit box, since ticking
+the ledger is itself a doc update that must ride the same fold commit. Noted
+that the ledger is **optional** — a unit with no fix-now findings has none,
+so the box doesn't apply when there's nothing to tick.
+
+`bump-skill` ran: `execute-phase` 2.1.0 → 2.2.0 (minor), CHANGELOG.md/.es.md
+per-skill row + release-log entry (merged into the same-day feature-17
+bullet). README.md/.es.md skills-table cell left unchanged — it's already a
+generic phase-execution description and doesn't itemize fold-cycle
+mechanics, so no factual inaccuracy to fix. Commit `606dee6`.
+
+Gate: P3 task grep passes (see `TASKS.md` P3). No application build in this
+repo; project-wide skills-discovery/doc-coherence and schema tests deferred
+to P5 hardening per the phasing.
+
+No known-issues opened; no new decisions beyond D1–D4. SPEC unchanged.
+
+Next: `execute-phase 17 P4` — `workflow-status` reads the ledger and emits
+`findings.fix_now[]` with `suggested_tier`; schema package mirrors the item
+shape in the same phase.
