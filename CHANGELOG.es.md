@@ -240,6 +240,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.1.1 | 2026-07-13 | parche | Corrección de referencia cruzada en Guardrails: el comentario MERGE-READY ahora cita correctamente el paso de proceso 6 (seguía apuntando al paso 5 previo a la renumeración de 3.1.0). |
 | 3.1.0 | 2026-07-13 | menor | Nuevo paso de proceso 5 (solo en veredicto BLOCKED): cada blocker se persiste en el **mismo** ledger de fold fix-now `review-findings.md` que escribe `review-change` (D4 — un solo ledger para el ciclo de fold), severidad `high` (un blocker bloquea el merge por definición), deduplicado por `file:line`+axis, sin escritura en una unidad mergeada. Pasos de proceso restantes renumerados (6→8). Parte de la feature 17 (`finding-severity-routing`). |
 | 3.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-05 | menor | Con MERGE-READY, publica un **comentario datado y ligado al SHA en el propio PR** (`gh pr comment --body-file`, idempotente por marcador HTML; nunca una etiqueta en el mensaje de commit; nada se publica en BLOCKED). Más el envelope máquina (estados MERGE_READY/MERGED/NEEDS_FIXES/BLOCKED, veredicto + checks manuales en `detail`). |
@@ -418,7 +419,9 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   reemplazado (`{ref, title, file?}` →
   `{id, file, axis, severity, class, route, suggested_tier}`), tipos +
   `envelope.schema.json` + tests actualizados — la fase restante es P5
-  Hardening & PR.
+  Hardening & PR. Seguimiento PARCHE para `audit-pr` (3.1.1): corregida una
+  referencia cruzada obsoleta en Guardrails al paso de proceso 5, residual de
+  la renumeración de 3.1.0 (ahora cita correctamente el paso 6).
 
 - **2026-07-13 — guía operativa consciente del provider (feature 16,
   inferencia compatible con OpenAI, NaN Builders).** Bump MENOR para
