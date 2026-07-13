@@ -21,3 +21,12 @@ implemented inline by this feature's phases.
   folder" to detect that review ran, but no skill wrote one. The `review-findings.md`
   ledger gives that detection a real artifact — handled within this feature's
   scope, listed here only for traceability.
+
+  **Residual gap (found in `review-change`, 2026-07-13): only partially
+  resolved.** The ledger proves review ran only when the review found at least
+  one fix-now finding — a **cleanly-reviewed** unit (zero fix-now findings)
+  writes no ledger, so `review_pending` can't distinguish "reviewed, nothing to
+  fix" from "never reviewed." Accepted as-is: `review_pending` is a status hint,
+  not a merge gate (`audit-pr`'s own MERGE-READY check is independent), and no
+  consumer depends on its precision today. Revisit only if a driver starts
+  branching on `review_pending` for a merge-blocking decision.
