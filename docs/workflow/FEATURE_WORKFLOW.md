@@ -119,6 +119,17 @@ SPEC's `Size`:**
 It then **registers the feature in the roadmap** (numbering, ordering,
 dependencies). It does **not** create the branch or write code.
 
+**`review-findings.md` — the fix-now fold ledger (written during Stage 4, not
+scaffolded up front).** `review-change`/`audit-pr` create
+`docs/features/<NN>-<slug>/review-findings.md` the first time a fix-now
+finding needs to fold — fixed schema
+`| id | file:line | axis | severity | class | route | folded |`, `folded`
+starting `no`, deduped by `file:line`+axis, both writers sharing the same
+ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
+`workflow-status` surfaces unfolded rows in the machine envelope's
+`findings.fix_now[]`. Fixes use the equivalent path,
+`docs/fix/<n>-<topic>/review-findings.md`.
+
 > Unknowns become open questions in `decisions.md` — never blank placeholders.
 
 ## Stage 2 — Execute, one phase at a time (`execute-phase`)

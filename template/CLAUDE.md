@@ -209,6 +209,13 @@ Start a new feature by copying `docs/features/_TEMPLATE/SPEC.md` to
 `docs/features/ROADMAP.md` (the source of truth for numbering, order, and
 dependencies).
 
+**Fix-now fold ledger.** Step 6 (verification & review) writes fix-now
+findings from `review-change`/`audit-pr` to `docs/features/<NN>-<slug>/review-findings.md`
+(fixed schema `| id | file:line | axis | severity | class | route | folded |`,
+`folded` starting `no`) — the same ledger for both, deduped by `file:line`+axis;
+`execute-phase`'s fold cycle ticks each folded row `folded: yes`. Fixes use the
+same convention at `docs/fix/<n>-<topic>/review-findings.md`.
+
 ## Fix workflow
 
 A fix is lighter than a feature: only a `SPEC.md` (from
