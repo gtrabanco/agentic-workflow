@@ -32,12 +32,18 @@ Run each check from the repo root (`/Users/gtrabanco/MyProjects/agentic-skills`)
 
 ## P2 — `audit-pr`: persist to the same ledger
 
-- [ ] `audit-pr` fix-now blockers append to the **same** `review-findings.md`.
-      Check: `grep -q "review-findings.md" skills/audit-pr/SKILL.md`
-- [ ] Same schema + dedupe-by-`file:line`+axis + unmerged gate as `review-change`.
-      Check: `read-verified` (one ledger, D4; identical write rule)
-- [ ] `bump-skill` ran for `audit-pr` (minor): version + CHANGELOG + README rows.
-      Check: `grep -n 'version:' skills/audit-pr/SKILL.md`
+- [x] `audit-pr` fix-now blockers append to the **same** `review-findings.md`.
+      Check: `grep -q "review-findings.md" skills/audit-pr/SKILL.md` — PASS
+      (process step 5, `skills/audit-pr/SKILL.md:127-142`)
+- [x] Same schema + dedupe-by-`file:line`+axis + unmerged gate as `review-change`.
+      Check: `read-verified` — step 5 uses the identical fixed schema, the same
+      `gh pr view --json state` → `MERGED` → no-write gate, and the same
+      dedupe-by-`file:line`+axis rule (explicitly cross-referenced as
+      "identical to `review-change`'s rule"); writes to the **same** ledger
+      path (D4), not a separate one
+- [x] `bump-skill` ran for `audit-pr` (minor): version + CHANGELOG + README rows.
+      Check: `grep -n 'version:' skills/audit-pr/SKILL.md` — PASS (commit
+      `13ab857`; version 3.0.0 → 3.1.0)
 
 ## P3 — `execute-phase`: fold-cycle tick
 
