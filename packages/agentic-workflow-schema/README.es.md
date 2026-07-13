@@ -89,7 +89,7 @@ forma libre, cualquier valor del tipo indicado.
 | `pr.ci` | enum | **cerrado** — `green` · `red` · `pending` · `none` · `null` | `none` = el proyecto no tiene CI; `null` = no comprobado este turno. |
 | `gates.verification` | enum | **cerrado** — `green` · `red` · `not-run` · `null` | La propia puerta del proyecto (chequeo de tipos + tests + build) tal como se ejecutó por última vez. |
 | `gates.review_pending` / `gates.audit_pending` | boolean\|null | abierto | Si la revisión obligatoria / auditoría de merge todavía tiene que suceder. |
-| `findings.fix_now[]` | array de objetos | items: `ref` (abierto), `title` (abierto), `file` (abierto, nullable) | Hallazgos que deben incorporarse a la rama ACTUAL antes de que avance. |
+| `findings.fix_now[]` | array de objetos | items: `id`/`file`/`axis`/`class`/`route` (abierto), `severity` (**cerrado** — `high`·`med`·`low`), `suggested_tier` (**cerrado** — `strong`·`cheap`) | Hallazgos que deben incorporarse a la rama ACTUAL antes de que avance — un item por cada fila sin foldear del ledger de fold fix-now (`review-findings.md`) de la unidad. |
 | `findings.issues_filed[]` | array de enteros | abierto | Números de issue creados/actualizados este turno. |
 | `findings.untriaged` | integer ≥ 0 | abierto | Hallazgos todavía sin destino — las skills cuyo contrato enruta todo deben reportar `0`. |
 | `findings.decisions_recorded` | integer ≥ 0 | abierto | Decisiones escritas en registros clase `decisions.md` este turno. |

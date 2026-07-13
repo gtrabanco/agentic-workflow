@@ -85,11 +85,15 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["ref", "title"],
+            "required": ["id", "file", "axis", "severity", "class", "route", "suggested_tier"],
             "properties": {
-              "ref": { "type": "string" },
-              "title": { "type": "string" },
-              "file": { "type": ["string", "null"] }
+              "id": { "type": "string" },
+              "file": { "type": "string" },
+              "axis": { "type": "string" },
+              "severity": { "enum": ["high", "med", "low"] },
+              "class": { "type": "string" },
+              "route": { "type": "string" },
+              "suggested_tier": { "enum": ["strong", "cheap"] }
             }
           }
         },

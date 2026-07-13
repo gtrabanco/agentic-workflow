@@ -85,7 +85,7 @@ rejects anything else); **open** = free-form, any value of the stated type.
 | `pr.ci` | enum | **closed** — `green` · `red` · `pending` · `none` · `null` | `none` = the project has no CI; `null` = not checked this turn. |
 | `gates.verification` | enum | **closed** — `green` · `red` · `not-run` · `null` | The project's own gate (type-check + tests + build) as last RUN. |
 | `gates.review_pending` / `gates.audit_pending` | boolean\|null | open | Whether the mandatory review / merge audit still has to happen. |
-| `findings.fix_now[]` | object array | items: `ref` (open), `title` (open), `file` (open, nullable) | Findings that must fold into the CURRENT branch before it advances. |
+| `findings.fix_now[]` | object array | items: `id`/`file`/`axis`/`class`/`route` (open), `severity` (**closed** — `high`·`med`·`low`), `suggested_tier` (**closed** — `strong`·`cheap`) | Findings that must fold into the CURRENT branch before it advances — one item per unfolded row of the unit's `review-findings.md` fold ledger. |
 | `findings.issues_filed[]` | integer array | open | Issue numbers created/updated this turn. |
 | `findings.untriaged` | integer ≥ 0 | open | Findings still without a destination — skills whose contract routes everything must report `0`. |
 | `findings.decisions_recorded` | integer ≥ 0 | open | Decisions written to `decisions.md`-class records this turn. |
