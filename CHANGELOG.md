@@ -213,6 +213,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-13 | minor | New persist step (process step 9): fix-now findings now append to the unit's fix-now fold ledger `review-findings.md` (fixed schema `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` starts `no`), deduped by `file:line`+axis, on an unmerged unit — a merged unit gets no write. `→ Next:` and the Routing section now mention the ledger for fix-now findings. Non-fix-now findings unaffected. Part of feature 17 (`finding-severity-routing`). |
 | 2.1.1 | 2026-07-10 | patch | Clarified the N-semantics wording: distinguishes "`--adversarial` flag not passed at all" (single-reviewer, no message) from "`--adversarial` passed without a valid N" (no number, or `< 2` — usage error, falls back to single-reviewer). Fixes a contradiction with `decisions.md` D1, which required the usage error on both the missing-N and N<2 cases. No behavior change to the default no-flag path. |
 | 2.1.0 | 2026-07-10 | minor | New opt-in `--adversarial N` mode: N independent, context-clean, diff-only, adversarial reviewers run in parallel (Claude Code subagents / headless invocations / sequential fresh conversations), findings merged and deduped by `file:line`+axis into the existing decision table with a `Reviewers n/N` confidence column, inclusion threshold ≥1 (no quorum). Default OFF; auto-recommended (never forced) for `L`/sensitive-flagged changes. Default no-flag path unchanged. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
@@ -396,6 +397,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-13 — finding-severity-routing P1 (feature 17).** MINOR bump for
+  `review-change` (2.2.0): new persist step writes fix-now findings to a new
+  per-unit fix-now fold ledger `review-findings.md` (fixed schema, `folded`
+  starts `no`, deduped by `file:line`+axis, no write on a merged unit) — the
+  first of the feature's four skill touches (`audit-pr`, `execute-phase`,
+  `workflow-status` + schema package follow in later phases).
 
 - **2026-07-13 — provider-aware operating guidance (feature 16, NaN
   Builders/OpenAI-compatible inference).** MINOR bump for
