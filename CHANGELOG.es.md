@@ -238,6 +238,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.1.0 | 2026-07-13 | menor | Nuevo paso de proceso 5 (solo en veredicto BLOCKED): cada blocker se persiste en el **mismo** ledger de fold fix-now `review-findings.md` que escribe `review-change` (D4 — un solo ledger para el ciclo de fold), severidad `high` (un blocker bloquea el merge por definición), deduplicado por `file:line`+axis, sin escritura en una unidad mergeada. Pasos de proceso restantes renumerados (6→8). Parte de la feature 17 (`finding-severity-routing`). |
 | 3.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-05 | menor | Con MERGE-READY, publica un **comentario datado y ligado al SHA en el propio PR** (`gh pr comment --body-file`, idempotente por marcador HTML; nunca una etiqueta en el mensaje de commit; nada se publica en BLOCKED). Más el envelope máquina (estados MERGE_READY/MERGED/NEEDS_FIXES/BLOCKED, veredicto + checks manuales en `detail`). |
 | 2.0.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -399,13 +400,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
-- **2026-07-13 — finding-severity-routing P1 (feature 17).** Bump MENOR para
-  `review-change` (2.2.0): nuevo paso de persistencia que escribe los
+- **2026-07-13 — finding-severity-routing P1–P2 (feature 17).** Bump MENOR
+  para `review-change` (2.2.0): nuevo paso de persistencia que escribe los
   hallazgos fix-now en un nuevo ledger de fold fix-now por unidad,
   `review-findings.md` (esquema fijo, `folded` empieza en `no`, deduplicado
-  por `file:line`+axis, sin escritura en una unidad mergeada) — el primero de
-  los cuatro toques de skill de la feature (`audit-pr`, `execute-phase`,
-  `workflow-status` + paquete de esquema en fases posteriores).
+  por `file:line`+axis, sin escritura en una unidad mergeada). Bump MENOR
+  para `audit-pr` (3.1.0): los blockers de un veredicto BLOCKED se persisten
+  en el **mismo** ledger (D4 — una sola lista para el ciclo de fold),
+  severidad `high`, mismas reglas de dedupe/gate — `execute-phase`,
+  `workflow-status` + paquete de esquema en fases posteriores.
 
 - **2026-07-13 — guía operativa consciente del provider (feature 16,
   inferencia compatible con OpenAI, NaN Builders).** Bump MENOR para
