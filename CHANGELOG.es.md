@@ -140,6 +140,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-13 | menor | La checklist del ciclo de fold ("Folding review / audit findings") gana una casilla: la fila de cada hallazgo folded en el ledger `review-findings.md` de la unidad pasa `folded: no → yes` — la única transición de estado del ledger, propiedad exclusiva de este ciclo de fold. El ledger es opcional (una unidad sin hallazgos fix-now no tiene uno). Parte de la feature 17 (`finding-severity-routing`). |
 | 2.1.0 | 2026-07-11 | menor | Fix #35: las unidades de pase único (features XS/S y fixes) ahora son **por fases** — cuando el SPEC lleva `## Phases` (emitido por `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), se ejecuta **una fase por invocación** (`[P<k>]` opcional, por defecto la primera fase con tareas sin marcar), marcando los checkboxes del SPEC como ledger de ejecución; la fase final `Hardening & PR` ejecuta la cadena de cierre (flip de estado, push, PR, commit del enlace, push) en su propia invocación — la cadena que los modelos débiles truncaban al final del turno de implementación. Un SPEC sin `## Phases` ejecuta el pase único legacy sin cambios (el fallback que mantiene esto como menor). Las dos cabeceras "this is the last step" reescritas a la forma de fase final. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación (snippet de system-prompt inyectado por el driver + bucle de reparación, ver `orchestration-envelope`); `workflow-status` sigue siendo el único emisor en línea. La descripción del orquestador externo en la ejecución por lotes ahora referencia el envelope inyectado de forma genérica en vez de una emisión inline. Ver `docs/workflow/MIGRATION.md`. |
 | 1.16.0 | 2026-07-10 | menor | Nueva regla **una fase = una sesión**, colocada justo antes de la sección de ejecución por lotes: nunca ejecutar dos fases en una misma conversación con un modelo no-frontera — el patrón por lotes de `/loop` ya limpia y reinvoca por fase; esta es la regla que aplica, emparejada con el fallback manual de reinvocación ya existente en Portability. |
@@ -400,15 +401,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
-- **2026-07-13 — finding-severity-routing P1–P2 (feature 17).** Bump MENOR
+- **2026-07-13 — finding-severity-routing P1–P3 (feature 17).** Bump MENOR
   para `review-change` (2.2.0): nuevo paso de persistencia que escribe los
   hallazgos fix-now en un nuevo ledger de fold fix-now por unidad,
   `review-findings.md` (esquema fijo, `folded` empieza en `no`, deduplicado
   por `file:line`+axis, sin escritura en una unidad mergeada). Bump MENOR
   para `audit-pr` (3.1.0): los blockers de un veredicto BLOCKED se persisten
   en el **mismo** ledger (D4 — una sola lista para el ciclo de fold),
-  severidad `high`, mismas reglas de dedupe/gate — `execute-phase`,
-  `workflow-status` + paquete de esquema en fases posteriores.
+  severidad `high`, mismas reglas de dedupe/gate. Bump MENOR para
+  `execute-phase` (2.2.0): la checklist del ciclo de fold gana una casilla
+  que pasa `folded: no → yes` en la fila de cada hallazgo folded —
+  `workflow-status` + paquete de esquema en las fases restantes.
 
 - **2026-07-13 — guía operativa consciente del provider (feature 16,
   inferencia compatible con OpenAI, NaN Builders).** Bump MENOR para

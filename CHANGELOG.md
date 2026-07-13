@@ -139,6 +139,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-13 | minor | The fold-cycle checklist ("Folding review / audit findings") gains a box: each folded finding's row in the unit's `review-findings.md` ledger flips `folded: no → yes` — the one and only ledger state transition, owned solely by this fold cycle. The ledger is optional (a unit with no fix-now findings has none). Part of feature 17 (`finding-severity-routing`). |
 | 2.1.0 | 2026-07-11 | minor | Fix #35: single-pass units (XS/S features and fixes) are now **phased** — when the SPEC carries `## Phases` (emitted by `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), run **one phase per invocation** (`[P<k>]` optional, defaults to the first phase with an unticked task), ticking the SPEC's checkboxes as the execution ledger; the final `Hardening & PR` phase runs the close-out chain (status flip, push, PR, link commit, push) in its own invocation — the chain weak models kept truncating at the tail of the implementation turn. A SPEC without `## Phases` runs the legacy single pass unchanged (the fallback that keeps this minor). Both "this is the last step" step headers reworded to the final-phase shape. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer (driver-injected system-prompt snippet + repair loop, see `orchestration-envelope`); `workflow-status` remains the sole inline emitter. The `/loop` batch-execution external-orchestrator description now references the driver-injected envelope generically instead of an inline emission. See `docs/workflow/MIGRATION.md`. |
 | 1.16.0 | 2026-07-10 | minor | New **one phase = one session** rule, stated right before the Batch-execution section: never execute two phases in one conversation on a non-frontier model — the `/loop` batch shape already clears and re-invokes per phase; this is the rule it enforces, paired with the existing manual-re-invoke Portability fallback. |
@@ -399,14 +400,15 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
-- **2026-07-13 — finding-severity-routing P1–P2 (feature 17).** MINOR bump for
+- **2026-07-13 — finding-severity-routing P1–P3 (feature 17).** MINOR bump for
   `review-change` (2.2.0): new persist step writes fix-now findings to a new
   per-unit fix-now fold ledger `review-findings.md` (fixed schema, `folded`
   starts `no`, deduped by `file:line`+axis, no write on a merged unit). MINOR
   bump for `audit-pr` (3.1.0): BLOCKED-verdict blockers persist to the **same**
   ledger (D4 — one list for the fold cycle), severity `high`, same dedupe/gate
-  rules — `execute-phase`, `workflow-status` + schema package follow in later
-  phases.
+  rules. MINOR bump for `execute-phase` (2.2.0): the fold-cycle checklist
+  gains a box flipping each folded finding's ledger row `folded: no → yes` —
+  `workflow-status` + schema package follow in the remaining phases.
 
 - **2026-07-13 — provider-aware operating guidance (feature 16, NaN
   Builders/OpenAI-compatible inference).** MINOR bump for
