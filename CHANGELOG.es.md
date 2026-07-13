@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.0 | 2026-07-13 | menor | Nuevo paso de proceso 9 (renumera 9→14 a 10→14): lee el ledger de fold fix-now `review-findings.md` de cada unidad en curso y emite sus filas `folded: no` como items estructurados `findings.fix_now[]` `{id, file, axis, severity, class, route, suggested_tier}`, `suggested_tier` derivado por una tabla fija (severidad `high` O un axis sutil → `strong`; si no, `cheap`). `next.tier` sin cambios. El chequeo "review report present" del paso 8 ahora también acepta la presencia del ledger como evidencia de que `review-change` corrió. Ejemplo de envelope actualizado con un item `fix_now` poblado. Paquete de esquema reflejado (bump mayor, cambio de forma incompatible) en la misma PR. Parte de la feature 17 (`finding-severity-routing`). |
 | 1.5.1 | 2026-07-12 | parche | Precisión de redacción en la guarda de no-progreso (hallazgo de revisión en la PR del fix #51): la nota ahora nombra el estancamiento como **sospechoso**, no como una escritura perdida confirmada — la guarda no puede distinguir, solo con el envelope, si el comando recomendado se ejecutó y su escritura se perdió, o si nunca se ejecutó. Sin cambio de comportamiento. |
 | 1.5.0 | 2026-07-12 | menor | Fix #51: guarda de no-progreso sobre el hint `--last-envelope` de recuperación de caídas — cuando el `next.recommended` del hint apuntaba a `/plan-feature <slug>`/`/design-feature <slug>` y esta ejecución sigue clasificando a esa misma unidad en el mismo estado previo al avance (`defined`/`idea`), emite una nota en `workflow_observations` nombrando la sospecha de escritura de estado perdida, en vez de repetir silenciosamente la misma recomendación. El invariante de solo-lectura no cambia; la recomendación en sí no se ve afectada. |
 | 1.4.0 | 2026-07-12 | menor | Endurecimiento en tiempo de emisión (#52): comprobaciones del contrato de turno para que `next.recommended` sea no-vacío y esté correctamente escalonado, `design_candidates[].next` enrute siempre a `/design-feature`, `recommendations.product_audit`/`next.tier` provengan de las nuevas comprobaciones/tabla mecánicas, y el envelope se emita en cada invocación (incluidos los seguimientos en la misma sesión) tras autocomprobarse contra el esquema empaquetado. Se añaden recordatorios de forma del envelope (`enum` de `blockers[].scope`, incompatibilidad run/OK, `dependencies.unmet` como array de strings) y una tabla fija comando→nivel en `## Machine envelope`. El paso 4 del proceso mapea un estado de roadmap desconocido a `idea` por defecto (p. ej. `scheduled → idea`, referencia cruzada a `#51`); el paso 10 (product-audit) se reescribe como lista mecánica de dos condiciones sin excepción inventada. Un nuevo paso del proceso muestra el backlog de issues abiertos sin triar como `detail.untriaged_issues: {count, oldest_open}` (sin cambio de esquema — `detail` es de forma libre). |
@@ -401,7 +402,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
-- **2026-07-13 — finding-severity-routing P1–P3 (feature 17).** Bump MENOR
+- **2026-07-13 — finding-severity-routing P1–P4 (feature 17).** Bump MENOR
   para `review-change` (2.2.0): nuevo paso de persistencia que escribe los
   hallazgos fix-now en un nuevo ledger de fold fix-now por unidad,
   `review-findings.md` (esquema fijo, `folded` empieza en `no`, deduplicado
@@ -410,8 +411,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   en el **mismo** ledger (D4 — una sola lista para el ciclo de fold),
   severidad `high`, mismas reglas de dedupe/gate. Bump MENOR para
   `execute-phase` (2.2.0): la checklist del ciclo de fold gana una casilla
-  que pasa `folded: no → yes` en la fila de cada hallazgo folded —
-  `workflow-status` + paquete de esquema en las fases restantes.
+  que pasa `folded: no → yes` en la fila de cada hallazgo folded. Bump MENOR
+  para `workflow-status` (1.6.0): lee el ledger y emite `findings.fix_now[]`
+  con un `suggested_tier` derivado; `next.tier` sin cambios. Bump MAYOR para
+  `@gtrabanco/agentic-workflow-schema` (2.0.0): `EnvelopeFixNowFinding`
+  reemplazado (`{ref, title, file?}` →
+  `{id, file, axis, severity, class, route, suggested_tier}`), tipos +
+  `envelope.schema.json` + tests actualizados — la fase restante es P5
+  Hardening & PR.
 
 - **2026-07-13 — guía operativa consciente del provider (feature 16,
   inferencia compatible con OpenAI, NaN Builders).** Bump MENOR para
