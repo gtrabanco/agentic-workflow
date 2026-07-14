@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.1.1
+version: 2.2.0
 argument-hint: <path-or-glob> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -149,7 +149,27 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    or a justified drop. **No non-fix-now finding may end without a destination** — the
    point is to never silently lose one, and to catch the few that actually deserve an
    issue or a doc note.
-9. **Report — return exactly this structure** (fixed output contract; nothing
+9. **Persist fix-now findings to the fold ledger.** The unit's **fix-now fold
+   ledger** is `review-findings.md`, located beside its other docs
+   (`docs/features/<NN>-<slug>/review-findings.md` for a feature,
+   `docs/fix/<n>-<topic>/review-findings.md` for a fix), fixed schema:
+
+   ```
+   | id | file:line | axis | severity | class | route | folded |
+   ```
+
+   **Merged unit → no write** (a PR exists and its state is `MERGED` — check
+   `gh pr view --json state` when a PR is open; otherwise the unit is unmerged
+   by definition). Otherwise, for each **fix-now** finding: append a row
+   (create the file with the header row if it doesn't exist yet), carrying the
+   verbatim `Sev` value into `severity`; `folded` always starts `no` —
+   `execute-phase`'s fold cycle is the only step that ever flips it to `yes`.
+   Re-runs **dedupe by `file:line` + axis** (the same rule the adversarial mode
+   uses to merge reviewer findings, above): a finding already on the ledger at
+   that `file:line`+axis is not re-appended; a genuinely new finding gets the
+   next `Fn` id. **Non-fix-now findings are never written here** — they keep
+   their `triage-issue` destinations from step 8.
+10. **Report — return exactly this structure** (fixed output contract; nothing
    more, nothing less):
 
    ```
@@ -167,12 +187,13 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    Decision: PASS | FAIL   (FAIL while any fix-now finding is open)
    ```
 
-10. **Next step.** Close with the `→ Next:` block:
+11. **Next step.** Close with the `→ Next:` block:
 
    ```
    → Next: /audit-pr — merge gate (when the table is clean)
-     · fix-now findings → fold into the branch — gate green, COMMIT and PUSH
-       (execute-phase's fold cycle; an unpushed fix doesn't exist for CI or
+     · fix-now findings → persisted to `review-findings.md`; fold into the
+       branch — gate green, COMMIT and PUSH (execute-phase's fold cycle ticks
+       each folded row `folded: yes`; an unpushed fix doesn't exist for CI or
        the PR), then re-review
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
      · SPEC drift flagged here AND on a prior unit → /product-audit (the founding
@@ -255,8 +276,9 @@ For a change to a backend export module (no UI surface):
 Every non-`fix-now` finding is routed **through `triage-issue`** (step 8) so its
 disposition is a decision, not a default:
 
-- **fix-now** → `plan-fix` → `execute-phase --fix`, or fold into the current phase
-  if it's unmerged work.
+- **fix-now** → persisted to the unit's `review-findings.md` fold ledger, then
+  `plan-fix` → `execute-phase --fix`, or fold into the current phase if it's
+  unmerged work.
 - **postpone** → `triage-issue` → open a tracked issue with a trigger.
 - **intentional-tradeoff** → `triage-issue` → record it (comment / `decisions.md` / issue).
 - **ignore** → `triage-issue` → note the rationale (or confirm it truly needs nothing).
