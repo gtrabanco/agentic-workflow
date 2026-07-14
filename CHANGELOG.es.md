@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.6.1 | 2026-07-14 | parche | El paso 11 (backlog de issues sin triar) se reescribe: la etiqueta de disposición `postponed`/`promoted`/`wontfix` (propiedad de `triage-issue`, protegida por permiso triage+, imposible de falsificar) pasa a ser la señal de triado **autoritativa**; el comentario `VERDICT:` se mantiene como **fallback heredado** explícito para issues triados antes de que existiera la etiqueta, con una nota de residual aceptado (un comentario falseado todavía puede infra-contar el backlog — sin impacto de privilegios/inyección, `detail.urgent` intacto). Sin cambio de forma — `detail.untriaged_issues: {count, oldest_open}` no cambia. Parte del fix `#54`. |
 | 1.6.0 | 2026-07-13 | menor | Nuevo paso de proceso 9 (renumera 9→14 a 10→14): lee el ledger de fold fix-now `review-findings.md` de cada unidad en curso y emite sus filas `folded: no` como items estructurados `findings.fix_now[]` `{id, file, axis, severity, class, route, suggested_tier}`, `suggested_tier` derivado por una tabla fija (severidad `high` O un axis sutil → `strong`; si no, `cheap`). `next.tier` sin cambios. El chequeo "review report present" del paso 8 ahora también acepta la presencia del ledger como evidencia de que `review-change` corrió. Ejemplo de envelope actualizado con un item `fix_now` poblado. Paquete de esquema reflejado (bump mayor, cambio de forma incompatible) en la misma PR. Parte de la feature 17 (`finding-severity-routing`). |
 | 1.5.1 | 2026-07-12 | parche | Precisión de redacción en la guarda de no-progreso (hallazgo de revisión en la PR del fix #51): la nota ahora nombra el estancamiento como **sospechoso**, no como una escritura perdida confirmada — la guarda no puede distinguir, solo con el envelope, si el comando recomendado se ejecutó y su escritura se perdió, o si nunca se ejecutó. Sin cambio de comportamiento. |
 | 1.5.0 | 2026-07-12 | menor | Fix #51: guarda de no-progreso sobre el hint `--last-envelope` de recuperación de caídas — cuando el `next.recommended` del hint apuntaba a `/plan-feature <slug>`/`/design-feature <slug>` y esta ejecución sigue clasificando a esa misma unidad en el mismo estado previo al avance (`defined`/`idea`), emite una nota en `workflow_observations` nombrando la sospecha de escritura de estado perdida, en vez de repetir silenciosamente la misma recomendación. El invariante de solo-lectura no cambia; la recomendación en sí no se ve afectada. |
@@ -404,13 +405,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
-- **2026-07-14 — triage-disposition-labels P1 (fix 54).** Bump MENOR para
+- **2026-07-14 — triage-disposition-labels P1–P2 (fix 54).** Bump MENOR para
   `triage-issue` (2.2.0): es propietaria y aplica las etiquetas de disposición
   terminal `postponed`/`promoted`/`wontfix` según el veredicto
   correspondiente, replicando la mecánica ya existente de las etiquetas de
-  urgencia — da a `workflow-status` una señal de triado inequívoca y
-  protegida por permiso triage+ para cerrar el hueco de detección
-  falseable del issue `#54` (confianza en el texto del comentario).
+  urgencia. Bump PARCHE para `workflow-status` (1.6.1): el paso 11 se
+  reescribe para que esa etiqueta sea la señal autoritativa de triado, con
+  el comentario `VERDICT:` como fallback heredado explícito (residual
+  aceptado anotado) — cierra el hueco de detección falseable del issue
+  `#54` (confianza solo en el texto del comentario).
 
 - **2026-07-13 — finding-severity-routing P1–P4 (feature 17).** Bump MENOR
   para `review-change` (2.2.0): nuevo paso de persistencia que escribe los
