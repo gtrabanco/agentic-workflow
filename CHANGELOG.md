@@ -105,6 +105,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.6.1 | 2026-07-14 | patch | Step 11 (untriaged-issue backlog) reworded: the `postponed`/`promoted`/`wontfix` disposition label (owned by `triage-issue`, triage+-permission-gated, unforgeable) is now stated as the **authoritative** triaged signal; the `VERDICT:` comment is kept as an explicit **legacy fallback** for issues triaged before the label existed, with an accepted-residual note (a spoofed comment can still under-count the backlog — no privilege/injection impact, `detail.urgent` untouched). No field-shape change — `detail.untriaged_issues: {count, oldest_open}` is unchanged. Part of fix `#54`. |
 | 1.6.0 | 2026-07-13 | minor | New process step 9 (renumbers 9→14 to 10→14): reads each in-flight unit's `review-findings.md` fold ledger and emits its `folded: no` rows as structured `findings.fix_now[]` items `{id, file, axis, severity, class, route, suggested_tier}`, `suggested_tier` derived by a fixed table (severity `high` OR a subtle axis → `strong`; else `cheap`). `next.tier` unchanged. Step 8's "review report present" check now also accepts the ledger's presence as evidence `review-change` ran. Envelope example updated with a populated `fix_now` item. Schema package mirrored (major bump, breaking item-shape change) same PR. Part of feature 17 (`finding-severity-routing`). |
 | 1.5.1 | 2026-07-12 | patch | No-progress guard wording precision (review finding on fix #51's PR): the note now names the stall as **suspected**, not a confirmed dropped write — the guard cannot tell from the envelope alone whether the recommended command ran and its write was dropped, or never ran at all. No behavior change. |
 | 1.5.0 | 2026-07-12 | minor | Fix #51: no-progress guard on the `--last-envelope` crash-recovery hint — when the hint's `next.recommended` targeted `/plan-feature <slug>`/`/design-feature <slug>` and this run still classifies that same unit at the same pre-advance status (`defined`/`idea`), emit a `workflow_observations` note naming the suspected dropped status write instead of silently repeating the recommendation. Read-only invariant unchanged; the recommendation itself is unaffected. |
@@ -299,6 +300,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-14 | minor | Owns a second label vocabulary — terminal-disposition labels (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): applies the matching label — creating it via `gh label create` if missing — as part of a `postpone`/`promote`/`wontfix` verdict, mirroring the urgency-label mechanics. Closes the untriaged-detection spoof gap from `#54` by giving `workflow-status` an unforgeable, triage+-permission-gated triaged signal instead of trusting `VERDICT:` comment text alone. |
 | 2.1.0 | 2026-07-11 | minor | Owns the injection-safe urgency label vocabulary (`urgent` `#B60205`, `fix-next` `#D93F0B`): applies the correct label — creating it via `gh label create` if missing — as part of a fix-now + high-severity verdict, never from issue title/body/comment text. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Per-issue verdicts ride `detail.verdicts`. |
@@ -401,6 +403,15 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-14 — triage-disposition-labels P1–P2 (fix 54).** MINOR bump for
+  `triage-issue` (2.2.0): owns and applies the terminal-disposition labels
+  `postponed`/`promoted`/`wontfix` on their matching verdict, mirroring the
+  existing urgency-label mechanics. PATCH bump for `workflow-status` (1.6.1):
+  step 11 reworded so that disposition label is the authoritative
+  untriaged-check signal, with the `VERDICT:` comment kept as an explicit
+  legacy fallback (accepted residual noted) — closes the `#54` untriaged-
+  detection spoof gap (comment-text-only trust).
 
 - **2026-07-13 — finding-severity-routing P1–P4 (feature 17).** MINOR bump for
   `review-change` (2.2.0): new persist step writes fix-now findings to a new
