@@ -98,10 +98,18 @@ Sea cual sea el veredicto:
 
 - Publica la decisión como un **comentario fechado en el issue** con la
   evidencia que comprobaste.
+- **Aplicar la etiqueta forma parte del veredicto, no una confirmación
+  aparte.** Un veredicto **fix-now + severidad alta** aplica la etiqueta de
+  urgencia correspondiente (`urgent` / `fix-next`); un veredicto **postpone**
+  / **promote** / **wontfix** aplica la etiqueta de disposición
+  correspondiente (`postponed` / `promoted` / `wontfix`). Ambas son propiedad
+  exclusiva de `triage-issue`, ambas quedan totalmente determinadas por el
+  veredicto basado en evidencia recién alcanzado — nunca por un análisis del
+  texto del issue — así que aplicarlas no necesita confirmación aparte.
 - Si se convirtió en un fix activo → está en el índice de fixes; si se
   fusionó/cerró → elimina la fila obsoleta del índice.
-- Nunca cambies el estado de GitHub (etiquetas, cierre) sin confirmación
-  cuando sea ambiguo.
+- Cualquier **otro** cambio de estado en GitHub (cerrar, etiquetas no
+  relacionadas) sigue necesitando confirmación cuando sea ambiguo.
 
 Una ejecución periódica de `audit-docs` detecta filas del índice de fixes
 cuyo issue ya se cerró, issues diferidos que silenciosamente se volvieron
