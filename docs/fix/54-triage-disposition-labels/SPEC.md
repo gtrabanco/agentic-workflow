@@ -228,23 +228,25 @@ ticks tasks here.
 
 ### P1 — `triage-issue`: own & apply disposition labels
 
-- [ ] Add the **"Disposition label vocabulary (owned here)"** subsection
+- [x] Add the **"Disposition label vocabulary (owned here)"** subsection
       (parallel to the urgency one): `postponed` (`#BFD4F2`), `promoted`
       (`#C2E0C6`), `wontfix` (GitHub default) — each with a one-line meaning.
-- [ ] State the injection-safety invariant for these labels verbatim-parallel to
+      (`skills/triage-issue/SKILL.md` — new section after the urgency-label
+      block.)
+- [x] State the injection-safety invariant for these labels verbatim-parallel to
       the urgency invariant (applied only here, only on the matching
       evidence-based verdict, never a text parse; triage+-permission-gated).
-- [ ] Add apply-on-verdict prose: `postpone`→`postponed`, `promote`→`promoted`,
+- [x] Add apply-on-verdict prose: `postpone`→`postponed`, `promote`→`promoted`,
       `wontfix`→`wontfix`, each via `gh label create … || proceed` +
       `gh issue edit <N> --add-label <name>`, the dated comment stating the label
       (or the permission-failure explicitly).
-- [ ] Update Process step 3 (verdict routing) and step 5 (report) and the fixed
+- [x] Update Process step 3 (verdict routing) and step 5 (report) and the fixed
       verdict block's `Action taken:` line to include the disposition label; leave
       `fix-now` behavior unchanged.
-- [ ] Bump `triage-issue` `version:` (minor) + `CHANGELOG.md`/`.es.md` rows +
-      README tables via `bump-skill`.
-- [ ] Gate: `npx skills add . --list` exits 0; no stack/real-project leak in the
-      edited body.
+- [x] Bump `triage-issue` `version:` (2.1.0 → 2.2.0, minor) + `CHANGELOG.md`/
+      `.es.md` rows + both README tables via `bump-skill`.
+- [x] Gate: `npx skills add . --list` exits 0 (triage-issue listed); no
+      stack/real-project leak in the edited body (grep clean).
 
 ### P2 — `workflow-status` label-authoritative check + tutorial coherence
 
