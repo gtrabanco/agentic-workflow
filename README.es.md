@@ -138,7 +138,7 @@ con ningún modelo. Un único camino disciplinado:
 
 | Skill          | Qué hace                                                                                                   |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código**; en fix-now + severidad alta, aplica la etiqueta `urgent`/`fix-next` a prueba de inyección que posee |
+| `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código**; en fix-now + severidad alta, aplica la etiqueta `urgent`/`fix-next` a prueba de inyección que posee; en postpone/promote/wontfix, aplica la etiqueta de disposición correspondiente que posee (`postponed`/`promoted`/`wontfix`) |
 
 ### Documentación
 

@@ -299,6 +299,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-14 | minor | Owns a second label vocabulary — terminal-disposition labels (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): applies the matching label — creating it via `gh label create` if missing — as part of a `postpone`/`promote`/`wontfix` verdict, mirroring the urgency-label mechanics. Closes the untriaged-detection spoof gap from `#54` by giving `workflow-status` an unforgeable, triage+-permission-gated triaged signal instead of trusting `VERDICT:` comment text alone. |
 | 2.1.0 | 2026-07-11 | minor | Owns the injection-safe urgency label vocabulary (`urgent` `#B60205`, `fix-next` `#D93F0B`): applies the correct label — creating it via `gh label create` if missing — as part of a fix-now + high-severity verdict, never from issue title/body/comment text. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Per-issue verdicts ride `detail.verdicts`. |
@@ -401,6 +402,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-14 — triage-disposition-labels P1 (fix 54).** MINOR bump for
+  `triage-issue` (2.2.0): owns and applies the terminal-disposition labels
+  `postponed`/`promoted`/`wontfix` on their matching verdict, mirroring the
+  existing urgency-label mechanics — gives `workflow-status` an unforgeable,
+  triage+-permission-gated triaged signal to close the `#54` untriaged-
+  detection spoof gap (comment-text trust).
 
 - **2026-07-13 — finding-severity-routing P1–P4 (feature 17).** MINOR bump for
   `review-change` (2.2.0): new persist step writes fix-now findings to a new
