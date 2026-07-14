@@ -80,10 +80,16 @@ export interface EnvelopeGates {
   audit_pending: boolean | null;
 }
 
+export type FixNowSeverity = "high" | "med" | "low";
+
 export interface EnvelopeFixNowFinding {
-  ref: string;
-  title: string;
-  file?: string | null;
+  id: string;
+  file: string;
+  axis: string;
+  severity: FixNowSeverity;
+  class: string;
+  route: string;
+  suggested_tier: Tier;
 }
 
 export interface EnvelopeFindings {
@@ -196,6 +202,7 @@ const BLOCKER_KINDS = [
   "input",
 ];
 const BLOCKER_SCOPES = ["unit", "run"];
+const FIX_NOW_SEVERITIES = ["high", "med", "low"];
 
 const REQUIRED_KEYS = [
   "skill",
@@ -343,8 +350,24 @@ export function validateEnvelope(value: unknown): ValidationResult {
       errors.push("findings.fix_now must be an array");
     } else {
       findings.fix_now.forEach((f, i) => {
-        if (!isObj(f) || typeof f.ref !== "string" || typeof f.title !== "string") {
-          errors.push(`findings.fix_now[${i}] must be {ref, title, file?}`);
+        if (!isObj(f)) {
+          errors.push(`findings.fix_now[${i}] must be an object`);
+          return;
+        }
+        if (typeof f.id !== "string") errors.push(`findings.fix_now[${i}].id must be a string`);
+        if (typeof f.file !== "string") errors.push(`findings.fix_now[${i}].file must be a string`);
+        if (typeof f.axis !== "string") errors.push(`findings.fix_now[${i}].axis must be a string`);
+        if (!FIX_NOW_SEVERITIES.includes(f.severity as string)) {
+          errors.push(
+            `findings.fix_now[${i}].severity must be one of ${FIX_NOW_SEVERITIES.join("|")} (got: ${String(f.severity)})`
+          );
+        }
+        if (typeof f.class !== "string") errors.push(`findings.fix_now[${i}].class must be a string`);
+        if (typeof f.route !== "string") errors.push(`findings.fix_now[${i}].route must be a string`);
+        if (f.suggested_tier !== "strong" && f.suggested_tier !== "cheap") {
+          errors.push(
+            `findings.fix_now[${i}].suggested_tier must be strong|cheap (got: ${String(f.suggested_tier)})`
+          );
         }
       });
     }
