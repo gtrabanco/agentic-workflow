@@ -263,15 +263,12 @@ ticks tasks here.
       `.es.md` rows + both README tables via `bump-skill`.
 - [x] Gate: `npx skills add . --list` exits 0 (workflow-status listed); no
       stack/real-project leak in the edited body (grep clean).
-- [ ] Bump `workflow-status` `version:` (patch) + `CHANGELOG.md`/`.es.md` rows +
-      README tables via `bump-skill`.
-- [ ] Gate: `npx skills add . --list` exits 0; EN/ES `ISSUE_WORKFLOW` in sync; no
-      leak in the edited body.
 
 ### P3 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Re-run the project's full verification gate (commands + exit codes pasted:
+      `npx skills add . --list` → exit 0)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
@@ -301,4 +298,4 @@ lost on rollback beyond the doc/skill edits themselves.
 
 ## Status
 
-`pending`
+`done` (built, PR open — merge state lives in the forge)
