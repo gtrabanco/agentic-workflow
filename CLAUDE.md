@@ -40,12 +40,19 @@ README.md / README.es.md project overview (EN / ES)
   `docs/workflow/*.md`, and the schema package `README` each get a faithful
   `.es.md` sibling with reciprocal language-switcher links
   (`> 🇪🇸 [Versión en español](<name>.es.md)` on the English original,
-  `> 🇬🇧 [English version](<name>.md)` on the Spanish sibling). Kept in sync
-  **on next touch** — whoever edits the English doc updates its Spanish
-  sibling in the same change; no automated staleness check. `SKILL.md`,
+  `> 🇬🇧 [English version](<name>.md)` on the Spanish sibling).
+  **Hard rule — the ES sibling is updated in the SAME change, never
+  deferred.** If a change edits an English doc that has a `.es.md` sibling (or
+  is documentation that should be translated), it MUST update the Spanish
+  version in the same commit/PR — a diff that touches only the English side of
+  a bilingual pair is incomplete and must not be committed or merged. This is
+  not "on next touch, best effort": whoever edits the English doc owns the
+  reciprocal ES edit right then. There is no automated staleness check, so the
+  rule is enforced by the author and by review. **Scope exception:** `SKILL.md`,
   SPECs, commits, PRs, and machine config (`model-routing.yml`) stay
-  English-only per the rule above — this bilingual pattern applies only to
-  human tutorial/reference prose, not process artifacts.
+  English-only per the docs-language rule above and have **no** ES sibling — the
+  bilingual sync rule applies only to docs that actually have a translatable
+  sibling (human tutorial/reference prose), never to process artifacts.
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture",
