@@ -85,9 +85,17 @@ branch — then **stops for review**. Then `execute-phase --fix`:
 Whatever the verdict:
 
 - Post the decision as a **dated issue comment** with the evidence you checked.
+- **Label application is part of the verdict, not a separate confirmation.**
+  A **fix-now + high-severity** verdict applies the matching urgency label
+  (`urgent` / `fix-next`); a **postpone** / **promote** / **wontfix** verdict
+  applies the matching disposition label (`postponed` / `promoted` /
+  `wontfix`). Both are owned solely by `triage-issue`, both are fully
+  determined by the evidence-based verdict just reached — never a parse of
+  issue text — so applying either needs no separate confirmation.
 - If it became an active fix → it's in the fix index; if it merged/closed →
   remove the stale index row.
-- Never change GitHub state (labels, close) without confirmation when ambiguous.
+- Any **other** GitHub state mutation (closing, unrelated labels) still needs
+  confirmation when ambiguous.
 
 A periodic `audit-docs` run catches fix-index rows whose issue already
 closed, deferred issues that quietly became actionable, and similar drift.

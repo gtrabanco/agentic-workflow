@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.6.0
+version: 1.6.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -161,11 +161,23 @@ ship-roadmap run exists.
 11. **Untriaged open-issue backlog (`detail.untriaged_issues`) — distinct from
     step 10's `pending_triage`.** Cross-reference the open-issue list already
     fetched in step 2 (`gh issue list --state open`) against triage
-    disposition: an issue is **untriaged** iff it carries **no dated
-    `triage-issue` `VERDICT:` comment** (the fixed-format block —
-    `skills/triage-issue/SKILL.md:148-153`) **and** no `wontfix` /
-    `postponed` / `promoted` disposition label. Count the untriaged subset and
-    list its oldest entries (cap: 5) by issue number. Emit the result as
+    disposition. The **authoritative** triaged signal is a `wontfix` /
+    `postponed` / `promoted` disposition label — `triage-issue` is the sole
+    owner/writer of that vocabulary (`skills/triage-issue/SKILL.md` →
+    *Disposition label vocabulary*) and label mutation is triage+-permission-
+    gated, so its presence cannot be forged by comment text. A dated
+    `triage-issue` `VERDICT:` comment (the fixed-format block —
+    `skills/triage-issue/SKILL.md:148-153`) is honored too, as a **legacy
+    fallback** for issues triaged before disposition labels existed — kept for
+    backward compatibility, not because it is as trustworthy as the label.
+    **Accepted residual:** because the comment-text fallback stays active, a
+    hand-authored `VERDICT:` string on an issue that was never actually
+    triaged can still cause it to be excluded here — an under-count, not a
+    privilege or content-injection issue (`detail.urgent` is unaffected).
+    Revisit this residual only if exploitation evidence surfaces (see `#54`).
+    An issue is **untriaged** iff it carries **neither** signal. Count the
+    untriaged subset and list its oldest entries (cap: 5) by issue number.
+    Emit the result as
     `detail.untriaged_issues: {count, oldest_open: [numbers]}` — kept
     separate from `pending_triage` (findings-derived, step 10) and
     `findings.untriaged` (review-finding routing); never merge the three. A
