@@ -196,28 +196,28 @@ alarmed.
 
 ## Acceptance
 
-- [ ] `skills/triage-issue/SKILL.md` has a **"Disposition label vocabulary (owned
+- [x] `skills/triage-issue/SKILL.md` has a **"Disposition label vocabulary (owned
       here)"** subsection declaring `postponed` / `promoted` / `wontfix` with
       color + meaning, and the same injection-safety invariant wording as the
       urgency section. *(grep: "Disposition label vocabulary")*
-- [ ] `triage-issue` applies the matching label on `postpone` / `promote` /
+- [x] `triage-issue` applies the matching label on `postpone` / `promote` /
       `wontfix` via create-if-missing + `gh issue edit --add-label`, stated in the
       dated comment (or the permission-failure stated explicitly). *(grep for the
       three label names + `--add-label` in the apply-on-verdict prose)*
-- [ ] The fixed verdict block's `Action taken:` line references the disposition
+- [x] The fixed verdict block's `Action taken:` line references the disposition
       label applied.
-- [ ] `fix-now` verdict prose is unchanged (no disposition label added to it).
-- [ ] `skills/workflow-status/SKILL.md` step 11 states the disposition label is
+- [x] `fix-now` verdict prose is unchanged (no disposition label added to it).
+- [x] `skills/workflow-status/SKILL.md` step 11 states the disposition label is
       the **authoritative** triaged signal and the `VERDICT:` comment is a
       **legacy fallback**, with the accepted-residual note; the emitted field
       shape `detail.untriaged_issues: {count, oldest_open}` is unchanged. *(grep:
       "legacy fallback" or equivalent near step 11)*
-- [ ] `docs/workflow/ISSUE_WORKFLOW.md` **and** `.es.md` note disposition-label
+- [x] `docs/workflow/ISSUE_WORKFLOW.md` **and** `.es.md` note disposition-label
       application on verdict (EN + ES in sync).
-- [ ] `triage-issue` and `workflow-status` `version:` bumped; matching rows added
+- [x] `triage-issue` and `workflow-status` `version:` bumped; matching rows added
       to `CHANGELOG.md` and `CHANGELOG.es.md`; both README skill/version tables
       updated (`bump-skill`).
-- [ ] Gate green: `npx skills add . --list` exits 0 and lists every skill; no
+- [x] Gate green: `npx skills add . --list` exits 0 and lists every skill; no
       stack/real-project reference leaked into the edited skill bodies; all
       cross-references resolve.
 
@@ -250,13 +250,19 @@ ticks tasks here.
 
 ### P2 — `workflow-status` label-authoritative check + tutorial coherence
 
-- [ ] Reword `skills/workflow-status/SKILL.md` step 11: disposition label =
+- [x] Reword `skills/workflow-status/SKILL.md` step 11: disposition label =
       authoritative triaged signal; `VERDICT:` comment = explicit **legacy
       fallback**; add the accepted-residual note. Do **not** change the emitted
-      `detail.untriaged_issues` field shape.
-- [ ] Update `docs/workflow/ISSUE_WORKFLOW.md` Stage 5 with the
+      `detail.untriaged_issues` field shape. (Field shape unchanged — verified:
+      `detail.untriaged_issues: {count, oldest_open: [numbers]}` line untouched.)
+- [x] Update `docs/workflow/ISSUE_WORKFLOW.md` Stage 5 with the
       disposition-label-on-verdict note; mirror it into
-      `docs/workflow/ISSUE_WORKFLOW.es.md` (reciprocal-link parity intact).
+      `docs/workflow/ISSUE_WORKFLOW.es.md` (reciprocal-link parity intact —
+      verified both `> 🇪🇸`/`> 🇬🇧` header links still present).
+- [x] Bump `workflow-status` `version:` (1.6.0 → 1.6.1, patch) + `CHANGELOG.md`/
+      `.es.md` rows + both README tables via `bump-skill`.
+- [x] Gate: `npx skills add . --list` exits 0 (workflow-status listed); no
+      stack/real-project leak in the edited body (grep clean).
 - [ ] Bump `workflow-status` `version:` (patch) + `CHANGELOG.md`/`.es.md` rows +
       README tables via `bump-skill`.
 - [ ] Gate: `npx skills add . --list` exits 0; EN/ES `ISSUE_WORKFLOW` in sync; no
