@@ -269,13 +269,14 @@ ticks tasks here.
 - [x] Re-run the project's full verification gate (commands + exit codes pasted:
       `npx skills add . --list` → exit 0)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Set the fix-index row status to `done` and commit the flip (`6e84054`)
+- [x] `git push` (pushed `6e84054` to `origin/fix/54-triage-disposition-labels`)
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #54`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #54` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #54`.
+      PR: https://github.com/gtrabanco/agentic-workflow/pull/58
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #54` and push
 
 ## Testing
 
