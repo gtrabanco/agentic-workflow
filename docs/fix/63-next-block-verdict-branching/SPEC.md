@@ -111,33 +111,40 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
 
 ### P1 — Branch step 11 on the Decision verdict
 
-- [ ] In `skills/review-change/SKILL.md` step 11, replace the single static
+- [x] In `skills/review-change/SKILL.md` step 11, replace the single static
       `→ Next:` template with two explicitly-labelled branches — one for
       `Decision: FAIL`, one for `Decision: PASS` — each with its own fenced,
-      quoted `→ Next:` block (evidence: the two fenced blocks present in the
-      diff, FAIL first).
-- [ ] The `FAIL` block recommends folding the fix-now findings on its `→ Next:`
+      quoted `→ Next:` block (evidence: two fenced blocks in
+      `skills/review-change/SKILL.md` step 11, FAIL first).
+- [x] The `FAIL` block recommends folding the fix-now findings on its `→ Next:`
       line (gate green, COMMIT and PUSH, re-run `/review-change`) and demotes
       `/audit-pr` to a sub-bullet gated on "after the table is clean" (evidence:
-      the FAIL block's first `→ Next:` line names the fold action, not
-      `/audit-pr`).
-- [ ] The `PASS` block's `→ Next:` line is `/audit-pr — merge gate` (evidence:
-      grep the PASS block).
-- [ ] Restate the `/product-audit` recurrence gate as an explicit yes/no
-      checkbox in both branches (or once, shared) (evidence: the checkbox text
-      in the diff).
-- [ ] Add a sentence that the selected block is emitted as multiple literal
+      FAIL block line 1 = "fold the fix-now findings into the branch"; the
+      `· /audit-pr → only after the table is clean` sub-bullet).
+- [x] The `PASS` block's `→ Next:` line is `/audit-pr — merge gate` (evidence:
+      the PASS fenced block's first line).
+- [x] Restate the `/product-audit` recurrence gate as an explicit yes/no
+      checkbox in both branches (evidence: "SPEC drift flagged here AND on a
+      prior unit? → /product-audit (yes: … ; no: omit this line)" in both).
+- [x] Add a sentence that the selected block is emitted as multiple literal
       lines exactly as quoted, never joined with `·` into one line (evidence:
-      the sentence in the diff).
-- [ ] Run `bump-skill` for `review-change`: bump `version:`, add rows to
+      step 11's lead-in sentence "emit the matching block verbatim, as multiple
+      literal lines … Never join the `·` sub-bullets into one prose line").
+- [x] Run `bump-skill` for `review-change`: bump `version:`, add rows to
       `CHANGELOG.md` + `CHANGELOG.es.md`, update the skills/model tables in
-      `README.md` + `README.es.md` (evidence: the version delta + changelog
-      rows in the diff).
-- [ ] Smoke-test per `docs/workflow/GOLDEN_FIXTURE.md` with the weakest fleet
+      `README.md` + `README.es.md` (evidence: `version: 2.2.0 → 2.2.1`;
+      changelog rows + release-log entries in both languages. READMEs
+      unchanged: patch bump, both cells still factually accurate — per
+      `bump-skill` step 7a).
+- [x] Smoke-test per `docs/workflow/GOLDEN_FIXTURE.md` with the weakest fleet
       model on a synthetic `Decision: FAIL` scenario; confirm the emitted block
-      leads with the fold action and renders multi-line (evidence: paste the
-      model's emitted `→ Next:` block).
-- [ ] `npx skills add . --list` lists `review-change` (evidence: paste the line).
+      leads with the fold action and renders multi-line (evidence: emitted
+      block led with "fold the fix-now findings into the branch — gate green,
+      COMMIT and PUSH …", `/audit-pr` demoted to the table-clean sub-bullet,
+      rendered as 4 literal lines, `/product-audit` correctly omitted on first
+      drift occurrence).
+- [x] `npx skills add . --list` lists `review-change` (evidence: `│ review-change`
+      listed with its full description).
 
 ### P2 — Hardening & PR
 
