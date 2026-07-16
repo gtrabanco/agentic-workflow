@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.2.0
+version: 2.2.1
 argument-hint: <path-or-glob> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -187,21 +187,38 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    Decision: PASS | FAIL   (FAIL while any fix-now finding is open)
    ```
 
-11. **Next step.** Close with the `→ Next:` block:
+11. **Next step.** The `→ Next:` block is **never one static template** — branch
+   on the `Decision` value from step 10 and emit the matching block **verbatim,
+   as multiple literal lines**. Never join the `·` sub-bullets into one prose
+   line — each sub-bullet is its own line, exactly as quoted below.
+
+   **`Decision: FAIL`** (any fix-now finding open) — the recommended line is the
+   fold, never the merge gate:
 
    ```
-   → Next: /audit-pr — merge gate (when the table is clean)
-     · fix-now findings → persisted to `review-findings.md`; fold into the
-       branch — gate green, COMMIT and PUSH (execute-phase's fold cycle ticks
-       each folded row `folded: yes`; an unpushed fix doesn't exist for CI or
-       the PR), then re-review
+   → Next: fold the fix-now findings into the branch — gate green, COMMIT and
+     PUSH (execute-phase's fold cycle ticks each folded row `folded: yes`; an
+     unpushed fix doesn't exist for CI or the PR), then re-run /review-change
+     · /audit-pr → only after the table is clean (not yet — findings open)
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
-     · SPEC drift flagged here AND on a prior unit → /product-audit (the founding
-       assumptions are probably stale — don't keep patching a compounding error)
+     · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
+       founding assumptions are probably stale — don't keep patching a
+       compounding error; no: omit this line)
    ```
 
-   The `/product-audit` line fires **only on recurring drift** — the same kind of
-   inconsistency surfacing a second time, not a single isolated finding.
+   **`Decision: PASS`** (table clean) — the recommended line is the merge gate:
+
+   ```
+   → Next: /audit-pr — merge gate
+     · non-fix-now → /triage-issue (issue / documented decision / justified drop)
+     · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
+       founding assumptions are probably stale — don't keep patching a
+       compounding error; no: omit this line)
+   ```
+
+   The `/product-audit` line fires **only on recurring drift** — the same kind
+   of inconsistency surfacing a second time, not a single isolated finding;
+   the yes/no checkbox above is how to decide, in both branches.
 
 ## Adversarial multi-reviewer mode (`--adversarial N`, opt-in)
 
