@@ -250,13 +250,13 @@ placement in the process/workflow-discipline dimension.
 Layer: `docs`. Done-when: for each EN/ES pair, `grep` shows the scope-bleed
 guardrail named in both siblings for all three skills.
 
-- [ ] `README.md` + `README.es.md` — the `execute-phase`, `audit-pr`, and
+- [x] `README.md` + `README.es.md` — the `execute-phase`, `audit-pr`, and
       `product-audit` contract rows each name the scope-bleed guardrail (both
       siblings, same change).
-- [ ] `docs/workflow/SKILLS.md` + `docs/workflow/SKILLS.es.md` — the same three
+- [x] `docs/workflow/SKILLS.md` + `docs/workflow/SKILLS.es.md` — the same three
       rows name the guardrail (both siblings).
-- [ ] Verify: `grep -il "scope-bleed\|descope"` each pair → mentioned in EN and
-      ES for both doc pairs.
+- [x] Verify: `grep -il "scope-bleed\|descope"` each pair → mentioned in EN and
+      ES for both doc pairs (confirmed on all four files).
 
 ### P5 — Registration via bump-skill
 
@@ -434,4 +434,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`in-progress` (P3 of 6 done)
+`in-progress` (P4 of 6 done)
