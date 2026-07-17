@@ -202,6 +202,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.3.0 | 2026-07-17 | minor | Fix #80: `plan-fix` now accepts multiple issue numbers with fully defined semantics — a fixed 4-box shared-root-cause checklist decides whether they merge into ONE unit (primary = lowest issue number, `Closes #<n>` per issue) or the skill refuses with a verbatim split (`plan these separately`). Single-number invocation unchanged. `argument-hint`, `## Input`, `## Output`, and `## Hand-off` updated to match. |
 | 2.2.0 | 2026-07-17 | minor | Fix #64: Algorithm step 12 (Phases) now requires every implementation phase to pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy) before it is emitted — any FAIL means re-cut or split, never emit unticked. Step 13 (Self-review) gained the matching all-8-boxes assertion. |
 | 2.1.0 | 2026-07-11 | minor | Fix #35: every fix SPEC now carries a `## Phases` execution ledger — **always ≥ 2 phases**: `P1..Pn` implementation (each phase cut by the cheap-executability checklist) + final `P(n+1) — Hardening & PR` with the template's literal close-out tasks, never paraphrased. New algorithm step 12 (self-review and hand-off updated); hand-off now points to `execute-phase --fix <n>` executing `P1`. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
@@ -415,6 +416,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-17 — plan-fix-multi-issue-semantics (fix 80).** MINOR bump for
+  `plan-fix` (2.3.0): `/plan-fix <n> [<n2> …]` now has fully defined
+  multi-issue semantics — a fixed 4-box shared-root-cause checklist decides
+  whether multiple issues merge into ONE unit (primary = lowest issue
+  number, `Closes #<n>` per issue) or the skill refuses with a verbatim
+  split output. Single-number invocation is byte-for-byte unchanged.
 
 - **2026-07-17 — legacy-spec-phase-lint-carveout (fix 81).** PATCH bump for
   `execute-phase` (2.4.1): the Phase-lint pre-flight guard added by fix 64

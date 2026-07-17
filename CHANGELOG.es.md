@@ -203,6 +203,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-17 | menor | Fix #80: `plan-fix` ahora acepta varios números de issue con semántica plenamente definida — una checklist fija de 4 casillas de causa-raíz-compartida decide si se fusionan en UNA unidad (primaria = número de issue más bajo, `Closes #<n>` por issue) o si la skill se niega con una división verbatim (`plan these separately`). La invocación de un solo número queda sin cambios. `argument-hint`, `## Input`, `## Output` y `## Hand-off` actualizados en consonancia. |
 | 2.2.0 | 2026-07-17 | menor | Fix #64: el paso 12 del algoritmo (Phases) ahora exige que toda fase de implementación pase el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — la copia autoritativa) antes de emitirse — cualquier FAIL implica recortar o dividir la fase, nunca emitirla sin marcar. El paso 13 (Self-review) gana la afirmación equivalente de las 8 casillas. |
 | 2.1.0 | 2026-07-11 | menor | Fix #35: todo SPEC de fix lleva ahora un ledger de ejecución `## Phases` — **siempre ≥ 2 fases**: `P1..Pn` de implementación (cada fase cortada por la checklist de ejecutabilidad-barata) + la final `P(n+1) — Hardening & PR` con las tareas de cierre literales de la plantilla, nunca parafraseadas. Nuevo paso 12 del algoritmo (self-review y hand-off actualizados); el hand-off ahora apunta a `execute-phase --fix <n>` ejecutando `P1`. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
@@ -416,6 +417,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-17 — plan-fix-multi-issue-semantics (fix 80).** Bump MENOR para
+  `plan-fix` (2.3.0): `/plan-fix <n> [<n2> …]` ahora tiene semántica
+  multi-issue plenamente definida — una checklist fija de 4 casillas de
+  causa-raíz-compartida decide si varios issues se fusionan en UNA unidad
+  (primaria = número de issue más bajo, `Closes #<n>` por issue) o si la
+  skill se niega con una salida de división verbatim. La invocación de un
+  solo número queda sin cambios, byte a byte.
 
 - **2026-07-17 — legacy-spec-phase-lint-carveout (fix 81).** Bump PARCHE para
   `execute-phase` (2.4.1): el guardia de pre-vuelo de lint de fase añadido por
