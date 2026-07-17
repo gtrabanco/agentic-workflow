@@ -252,9 +252,11 @@ than `2.4.0`.
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+      Evidence: `npx skills add . --list` → exit 0.
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty (verified
+      after this phase's commit)
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -289,4 +291,4 @@ prior guard wording exactly. Nothing is lost.
 
 ## Status
 
-`pending`
+`done`
