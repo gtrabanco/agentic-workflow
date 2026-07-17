@@ -257,6 +257,9 @@ Blockers (ranked):
      → fix: <smallest action to clear it> (<route>)
   ...
 
+Warnings (non-blocking — never change the verdict):
+  - design-debt: closure absent, SPEC predates the rule (dated <YYYY-MM-DD>)
+
 Non-blocking nits:
   - <minor item> — <pointer>
 
@@ -264,6 +267,9 @@ Before merge, a human should still verify:
   - <manual-verification item from review-change>
 
 → Next:
+  Print the ONE verdict bullet that matches, THEN — if a closure warning fired —
+  also print the closure bullet (a warning never blocks, so it co-occurs with a
+  MERGE-READY verdict; the two lines print together, never one instead of the other):
   · MERGE-READY, no auto-merge policy → you merge: <full PR URL>, then
     /plan-feature --next (the next roadmap unit) or pick an issue with /triage-issue
   · MERGE-READY, auto-merge authorized → merged (URL + merge SHA above), then
@@ -271,9 +277,9 @@ Before merge, a human should still verify:
   · MERGE-READY but pending commit/push/pull found → NOT merged: commit + push,
     wait for CI, re-run /audit-pr (a fresh verdict on the new SHA decides)
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
-  · Closure warning/blocker → /design-feature <slug> — fills the missing
-    closure rows (upsert, destroys nothing) before further work on this
-    feature is planned; re-run /audit-pr after
+  · Closure warning (in addition to the verdict above) or a closure blocker →
+    /design-feature <slug> — fills the missing closure rows (upsert, destroys
+    nothing) before further work on this feature is planned; re-run /audit-pr after
 ```
 
 If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge.
