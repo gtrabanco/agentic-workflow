@@ -96,32 +96,32 @@ Design discussion, 2026-07-17 (recorded in issue #78); triaged the same day to
 
 ## Acceptance
 
-- [ ] The three-box closure-integrity check is added to `audit-pr`'s
+- [x] The three-box closure-integrity check is added to `audit-pr`'s
       merge-readiness contract table, with **both** the legacy-warning path and
       the blocker path specified as fixed outputs (grep `skills/audit-pr/SKILL.md`
       → the three boxes, the `design-debt: closure absent…` warning string, and
       a `BLOCKER` path all present).
-- [ ] The retrofit trigger is stated in `audit-pr` (the warning text names it)
+- [x] The retrofit trigger is stated in `audit-pr` (the warning text names it)
       and cross-referenced from `design-feature`'s upsert section (grep both
       SKILLs → each references the other's role in the retrofit path).
-- [ ] `n/a` is explicitly documented as **passing** — the check never demands
+- [x] `n/a` is explicitly documented as **passing** — the check never demands
       surface; `n/a: <reason>` is a valid, passing row (present verbatim in the
       gate text).
-- [ ] The gate's scope (feature PRs only; fix PRs n/a) and its mechanical
+- [x] The gate's scope (feature PRs only; fix PRs n/a) and its mechanical
       legacy-vs-new detection (grep for `## Capability closure`, never
       dates/versions) are both stated in `audit-pr`.
-- [ ] `audit-pr`'s `→ Next:` block routes a closure warning/blocker to
+- [x] `audit-pr`'s `→ Next:` block routes a closure warning/blocker to
       `/design-feature <slug>` (upsert) as the recommended command.
-- [ ] Docs restating the audit contract updated in the same change: `README.md`
+- [x] Docs restating the audit contract updated in the same change: `README.md`
       + `README.es.md`, `docs/workflow/SKILLS.md` + `SKILLS.es.md`,
       `docs/workflow/FEATURE_WORKFLOW.md` + `FEATURE_WORKFLOW.es.md` — each names
       the closure-integrity gate (grep both siblings of each pair → mentioned in
       EN and ES).
-- [ ] `bump-skill` run: `audit-pr` and `design-feature` `version:` bumped
+- [x] `bump-skill` run: `audit-pr` and `design-feature` `version:` bumped
       (minor — backward-compatible capability), `CHANGELOG.md` +
       `CHANGELOG.es.md` rows added, README skill-version tables reflect the new
       versions.
-- [ ] `npx skills add . --list` still discovers every skill (no YAML breakage).
+- [x] `npx skills add . --list` still discovers every skill (no YAML breakage).
 - [ ] GOLDEN_FIXTURE smoke test recorded: a weak model given a hollow closure
       block produces BLOCKED with the design-debt route; given a SPEC with no
       closure block produces the warning and does **not** block (run-log row
@@ -195,11 +195,11 @@ gate named in both siblings.
 Layer: `docs`. Done-when: `npx skills add . --list` lists every skill and the
 new `audit-pr` + `design-feature` versions appear in both READMEs.
 
-- [ ] Run `bump-skill` for `audit-pr` and `design-feature`: bump each
+- [x] Run `bump-skill` for `audit-pr` and `design-feature`: bump each
       `version:` (minor) and add rows to `CHANGELOG.md` + `CHANGELOG.es.md`.
-- [ ] Confirm `bump-skill` updated the skill-version tables in `README.md` +
+- [x] Confirm `bump-skill` updated the skill-version tables in `README.md` +
       `README.es.md`.
-- [ ] Verify: `npx skills add . --list` discovers every skill (no YAML breakage).
+- [x] Verify: `npx skills add . --list` discovers every skill (no YAML breakage).
 
 ### P5 — Hardening & PR
 
