@@ -215,8 +215,8 @@ audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED─�
   findings*) remains the in-context / portability fallback for agents that
   fold inline within a phase's own turn; this skill is the standalone,
   independently-invocable path with the frozen-classification and forbidden-
-  list contract made explicit and hand off, don't compose, don't run
-  above its own tier.
+  list contract made explicit. It hands off rather than composing, and never
+  runs above its own tier.
 - `DISPUTED` findings route to `/triage-issue`, which reaches its own
   evidence-grounded verdict — this skill never re-litigates a dispute itself.
 
