@@ -242,7 +242,10 @@ the forge); the final review and the merge gate then run over the PR:
 - **`audit-pr`** — the merge gate. Acceptance criteria met, all phases complete,
   docs/tests/CI green (**never merge with pending docs**), `Closes #N` present, the
   issue/fix-index entry still tracked (removed only after merge), branch independently
-  mergeable, and the review axes clean → **merge-ready or a list of blockers**.
+  mergeable, the review axes clean, and **closure integrity** (a feature SPEC's
+  `## Capability closure` has no blank rows; absent on a legacy SPEC → a dated
+  `design-debt` warning, never a blocker; `n/a` for fix-governed PRs) →
+  **merge-ready or a list of blockers**.
 
 Re-run the gate (type-check, tests, build) green.
 

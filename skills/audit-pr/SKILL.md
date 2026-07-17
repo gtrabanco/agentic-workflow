@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 3.1.1
+version: 3.2.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -10,7 +10,9 @@ description: >
   merge-readiness contract: SPEC acceptance criteria met, all phases complete, docs
   updated per the doc map, Closes #N present when issue-born, tests added at the
   right layer, CI green, branch off the default branch and independently mergeable,
-  and the review-change axes clean (or consciously deferred to tracked issues).
+  the review-change axes clean (or consciously deferred to tracked issues), and the
+  governing feature SPEC's capability closure taken and recorded (closure-integrity
+  gate — legacy SPECs warn, never block).
   Verdict: merge-ready, or a ranked list of blockers — always with the PR's full
   URL printed, and on MERGE-READY a dated, SHA-bound comment posted on the PR
   itself. Never edits; never merges by default — with a documented auto-merge
@@ -43,6 +45,9 @@ explicit user instruction) plus a fail-closed pre-merge checklist.
   never a commit-message tag. BLOCKED → no comment posted
 ✓ Nothing was edited or refactored; nothing was merged UNLESS the auto-merge
   policy applied AND the pre-merge checklist was RUN with its output pasted
+✓ Closure integrity was evaluated and its result stated explicitly: pass /
+  blocker / warning / n-a (fix-governed PRs are always n-a; never skipped
+  silently)
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
@@ -101,10 +106,39 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **Verification gate / CI** | The project's gate passes — type-check, tests, build — and `statusCheckRollup` is green. | Any required check failing, pending, or absent where the project requires one. |
 | **Mergeability** | Branch is off the default base, independently mergeable (no conflicts), not stacked on another PR, not draft. | Wrong base, conflicts, stacked dependency, or still draft. |
 | **Review axes clean** | The applicable `review-change` axes are clean **or** every remaining finding is *consciously deferred* to a tracked issue with a trigger. | A `fix-now` finding still open, or a deferral with no issue/trigger behind it. |
+| **Closure integrity** | The governing **feature** SPEC's capability closure was taken and recorded — `design-feature` was actually run, not bypassed. Fix-governed PRs: `n/a` (no closure block by design). | A present `Capability closure` block has a blank row, or a resolved non-`n/a` row with no matching acceptance criterion. |
 
 > Run `review-change` for the axis check if it hasn't been run on the final state,
 > or read its latest report. Don't re-litigate findings already classified — verify
 > each open one is either resolved or has a real, tracked home.
+
+> **Closure integrity — fixed output.** Detection is purely mechanical: grep the
+> governing SPEC for a `Capability closure` heading — match the heading text, not
+> a fixed level (SPECs nest it as `### Capability closure` under `## Product half`;
+> older ones use `## Capability closure`) — never dates, never versions, never
+> judgment.
+> - **Fix-governed PR** (`docs/fix/<n>-<topic>/SPEC.md`) → **n/a**, always. Fix
+>   SPECs carry no closure block by design; never emit a warning for one.
+> - **Feature SPEC, block present** → evaluate the three boxes, each a blocker
+>   on failure:
+>   1. the block exists in the SPEC (true whenever this path is reached)
+>   2. zero blank rows — every entity/capability/role row is either filled
+>      (UI + API + test) or carries an explicit `n/a: <reason>`
+>   3. every resolved non-`n/a` row maps to a listed acceptance criterion
+>   `n/a: <reason>` is a **fully valid, passing** row — the gate verifies the
+>   decision was *taken and recorded*, never that UI/API surface exists. Never
+>   push a blank row into inventing surface to pass this gate.
+> - **Feature SPEC, block absent** → the SPEC predates or bypassed
+>   `design-feature`. Never a blocker — emit a dated **warning**, PR still
+>   merges:
+>   ```
+>   design-debt: closure absent, SPEC predates the rule (dated <YYYY-MM-DD>)
+>   ```
+>   This warning is itself the **retrofit trigger**: the next unit of work that
+>   touches this feature must fill the closure via `/design-feature <slug>`
+>   (upsert — fills only the missing rows, destroys nothing recorded) *before*
+>   that new work is planned. See `design-feature`'s upsert semantics for the
+>   other half of this contract.
 
 > **`done` ≠ merge-ready.** A unit flips to `done` when its PR opens (built, not
 > merged — merge state lives in the forge). So a `done` roadmap row is *not* evidence
@@ -225,6 +259,9 @@ Blockers (ranked):
      → fix: <smallest action to clear it> (<route>)
   ...
 
+Warnings (non-blocking — never change the verdict):
+  - design-debt: closure absent, SPEC predates the rule (dated <YYYY-MM-DD>)
+
 Non-blocking nits:
   - <minor item> — <pointer>
 
@@ -232,6 +269,9 @@ Before merge, a human should still verify:
   - <manual-verification item from review-change>
 
 → Next:
+  Print the ONE verdict bullet that matches, THEN — if a closure warning fired —
+  also print the closure bullet (a warning never blocks, so it co-occurs with a
+  MERGE-READY verdict; the two lines print together, never one instead of the other):
   · MERGE-READY, no auto-merge policy → you merge: <full PR URL>, then
     /plan-feature --next (the next roadmap unit) or pick an issue with /triage-issue
   · MERGE-READY, auto-merge authorized → merged (URL + merge SHA above), then
@@ -239,6 +279,9 @@ Before merge, a human should still verify:
   · MERGE-READY but pending commit/push/pull found → NOT merged: commit + push,
     wait for CI, re-run /audit-pr (a fresh verdict on the new SHA decides)
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
+  · Closure warning (in addition to the verdict above) or a closure blocker →
+    /design-feature <slug> — fills the missing closure rows (upsert, destroys
+    nothing) before further work on this feature is planned; re-run /audit-pr after
 ```
 
 If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge.
