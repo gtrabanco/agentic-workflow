@@ -236,13 +236,14 @@ Layer: `docs`. Done-when: `grep` on `skills/product-audit/SKILL.md` finds the
 ≥ 2-consecutive-units scope-export threshold, the `#64` route, and its
 placement in the process/workflow-discipline dimension.
 
-- [ ] Add the **scope-export recurrence** signal to the process/workflow-
+- [x] Add the **scope-export recurrence** signal to the process/workflow-
       discipline sweep: ≥ 2 consecutive recent units with a non-empty
       `## Amendments` descope log (or a descope-classified born issue) → a
       planning-quality finding ("features cut too big for real capacity"),
-      routed to the atomicity/split rules (#64).
-- [ ] Reflect the signal in the audit dimensions table / output format so it
+      routed to the atomicity/split rules (#64). (`skills/product-audit/SKILL.md:92`)
+- [x] Reflect the signal in the audit dimensions table / output format so it
       surfaces as a ranked finding, not buried prose.
+      (`skills/product-audit/SKILL.md:92,146-152`)
 
 ### P4 — Contract-restatement docs parity
 
@@ -433,4 +434,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`in-progress` (P2 of 6 done)
+`in-progress` (P3 of 6 done)
