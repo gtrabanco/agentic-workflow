@@ -143,19 +143,19 @@ returns the updated hint **and** `grep -c "shared-root-cause" skills/plan-fix/SK
 ≥ 1 **and** the body contains both fenced fixed-output blocks (merge summary +
 refusal).
 
-- [ ] Set `argument-hint` to `<issue-number> [<issue-number> …]`.
-- [ ] Rewrite `## Input` to define one-number vs. multiple-numbers vs.
+- [x] Set `argument-hint` to `<issue-number> [<issue-number> …]`.
+- [x] Rewrite `## Input` to define one-number vs. multiple-numbers vs.
       invalid-input, deferring semantics to the new Algorithm step.
-- [ ] Add an Algorithm step encoding the five semantics (one / multiple /
+- [x] Add an Algorithm step encoding the five semantics (one / multiple /
       all-tick / any-fail / invalid) with the 4-box shared-root-cause checklist,
       placed so it runs **before** scope/phases drafting.
-- [ ] Quote the fixed **merge-summary** output as a copy-verbatim fenced block
+- [x] Quote the fixed **merge-summary** output as a copy-verbatim fenced block
       (primary = lowest number; every issue listed with its own acceptance;
       fix-index references all; `Closes #<n>` one per line).
-- [ ] Quote the fixed **refusal** output as a copy-verbatim fenced block (name
+- [x] Quote the fixed **refusal** output as a copy-verbatim fenced block (name
       the failing box per issue pair; print `plan these separately: …`; never
       plan a subset or only the first).
-- [ ] Adjust `## Output` + `## Hand-off` so a merged unit keys to the lowest
+- [x] Adjust `## Output` + `## Hand-off` so a merged unit keys to the lowest
       issue number and the hand-off's `Closes #<n>` note is per-issue; keep the
       single-number wording intact.
 
