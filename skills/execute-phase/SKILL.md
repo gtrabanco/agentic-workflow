@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.4.0
+version: 2.4.1
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -159,6 +159,13 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
    the autopilot (`ship-roadmap`) must never pass it.
 
 ## Phase-lint pre-flight guard (always, before any edit — after the dependency/own-status gates)
+
+**Legacy-SPEC carve-out (check this first, before anything else in this
+section):** if the target SPEC has **no `## Phases` section**, skip this
+guard entirely — no lint run, no STOP — and fall straight through to the
+*Workflows* section's legacy single-pass flow ("A SPEC without `## Phases`
+… runs the legacy flow … end-to-end in one pass"). The guard below applies
+only to a SPEC that carries a `## Phases` ledger.
 
 Before touching any code, run the canonical 8-box phase-lint
 (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative
