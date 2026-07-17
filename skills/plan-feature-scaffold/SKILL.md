@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.9.0
+version: 1.10.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -88,6 +88,12 @@ the agent guide and state the assumption.
      locally**. A phase failing any box is re-cut or split (feeds the split
      rule above). State `n/a: <reason>` only where a box is genuinely
      inapplicable.
+   - **Phase-lint (mandatory, emit-time).** Before emitting the phase list,
+     run the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md`
+     `## Phases` "Phase-lint" — the authoritative copy, also quoted in
+     `docs/features/_TEMPLATE/SPEC.md` `### Phases`) against every phase.
+     Any FAIL → re-cut or split the phase using the mandatory-split rule
+     above before emitting; never emit a phase with an unticked lint box.
    - **M/L** → generate the full set, mirroring the recent features':
      - `PLAN.md` — phased plan **labelled `P1, P2, …`** and called *phases*;
        phases are an *implementation* sequence, not a delivery boundary.
