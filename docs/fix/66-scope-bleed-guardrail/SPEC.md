@@ -274,12 +274,14 @@ READMEs.
 
 ### P6 — Hardening & PR
 
-- [ ] GOLDEN_FIXTURE smoke test (`manual`): with the weakest fleet model, drive
+- [x] GOLDEN_FIXTURE smoke test (`manual`): with the weakest fleet model, drive
       the reworded `execute-phase` against two issue-creation cases — an issue
       overlapping an unmet acceptance criterion → STOP demanding a
       `## Amendments` entry; an issue outside every criterion/task → filed, no
-      stop. Append a run-log row to `docs/workflow/GOLDEN_FIXTURE.md`.
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+      stop. Append a run-log row to `docs/workflow/GOLDEN_FIXTURE.md`. (PASS,
+      Claude Haiku 4.5 — both cases correctly classified, row appended EN+ES)
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+      (`npx skills add . --list` → exit 0)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
@@ -436,4 +438,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`in-progress` (P5 of 6 done)
+`done` (built; PR link added in the follow-up commit — see Hardening & PR phase)
