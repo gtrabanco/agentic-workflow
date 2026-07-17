@@ -10,7 +10,9 @@ description: >
   merge-readiness contract: SPEC acceptance criteria met, all phases complete, docs
   updated per the doc map, Closes #N present when issue-born, tests added at the
   right layer, CI green, branch off the default branch and independently mergeable,
-  and the review-change axes clean (or consciously deferred to tracked issues).
+  the review-change axes clean (or consciously deferred to tracked issues), and the
+  governing feature SPEC's capability closure taken and recorded (closure-integrity
+  gate — legacy SPECs warn, never block).
   Verdict: merge-ready, or a ranked list of blockers — always with the PR's full
   URL printed, and on MERGE-READY a dated, SHA-bound comment posted on the PR
   itself. Never edits; never merges by default — with a documented auto-merge
