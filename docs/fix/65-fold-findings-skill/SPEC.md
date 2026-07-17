@@ -140,30 +140,30 @@ ticks tasks here.
 
 ### P1 — Author `skills/fold-findings/SKILL.md`
 
-- [ ] Create `skills/fold-findings/SKILL.md` with frontmatter: `name: fold-findings`,
+- [x] Create `skills/fold-findings/SKILL.md` with frontmatter: `name: fold-findings`,
       `user-invocable: true`, `version: 1.0.0`, a `description` with trigger
       phrases ("fold the findings", "fix the review findings", "repair the audit
       blockers", "fold-findings").
-- [ ] Write `## Turn contract` (boxes: per-finding contract emitted; git commit+push
+- [x] Write `## Turn contract` (boxes: per-finding contract emitted; git commit+push
       actually RUN with sha per folded finding; closing `→ Next:` printed last;
       artifact-language rule).
-- [ ] Write `When to use` and `Step 0 — Discover the project (always first)`
+- [x] Write `When to use` and `Step 0 — Discover the project (always first)`
       (discover the project's verification gate, the ledger location, the forge CLI).
-- [ ] Write `Process`: ingest ledger (fix-now rows `folded: no`) and/or `audit-pr`
+- [x] Write `Process`: ingest ledger (fix-now rows `folded: no`) and/or `audit-pr`
       blocker list; optional finding-ID restriction arg; one finding at a time in
       ledger/severity order → fix root cause → run gate → one commit
       `fix(<scope>): fold <finding-id> — <summary>` → push → tick `folded: yes`
       with sha.
-- [ ] Write the **frozen-classification** rule + the `FOLDED | DISPUTED | BLOCKED`
+- [x] Write the **frozen-classification** rule + the `FOLDED | DISPUTED | BLOCKED`
       verdicts, with `DISPUTED` (evidence → `/triage-issue`) and `BLOCKED`
       (missing input) defined.
-- [ ] Write the **definition-of-fixed** `✓`-checklist and the **forbidden** `✗`-list
+- [x] Write the **definition-of-fixed** `✓`-checklist and the **forbidden** `✗`-list
       verbatim from the issue (every acceptance box above).
-- [ ] Write the fixed **per-finding output contract** and the
+- [x] Write the fixed **per-finding output contract** and the
       `Folded: n/m · Disputed: k · Blocked: j` tally line.
-- [ ] Write the **model-tier note** (fixer never weaker than the code's writer nor
+- [x] Write the **model-tier note** (fixer never weaker than the code's writer nor
       than the finding's subtlety; subtle logic/security bumps to the finding's tier).
-- [ ] Write `Guardrails`, `Relationship to other skills`
+- [x] Write `Guardrails`, `Relationship to other skills`
       (`review-change` classifies → `fold-findings` folds fix-now → `triage-issue`
       handles non-fix-now / disputes), `## Portability (agents other than Claude
       Code)`, `Done when`, and the outcome-branched closing `→ Next:` block.
