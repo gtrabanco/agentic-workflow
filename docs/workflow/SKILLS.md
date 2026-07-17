@@ -63,7 +63,7 @@ the workflow's own 9-skill internal review pack: `review-code`,
 |---|---|---|---|
 | `review-change` | the **change** | Run only the reviews that apply to this platform + a **SPEC drift check** (diff vs. the SPEC's scope and acceptance criteria) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | `plan-fix` (fix-now) / `triage-issue` (every non-fix-now: postpone / ignore / intentional-tradeoff) |
 | `fold-findings` | the **findings ledger** | Repair each fix-now finding from `review-change`/`audit-pr` for real, one at a time — frozen classification (never reclassifies), a fixed forbidden list closes the known-issues-dump/downgrade/test-loosening/suppression escape hatches; per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict | re-run `review-change` (all folded) / `triage-issue` (disputed) |
-| `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
+| `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes, closure integrity (feature SPECs only; legacy → dated warning, never a blocker) → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 

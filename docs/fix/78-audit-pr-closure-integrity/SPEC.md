@@ -180,14 +180,14 @@ upsert section.
 Layer: `docs`. Done-when: for each EN/ES pair, `grep` shows the closure-integrity
 gate named in both siblings.
 
-- [ ] `README.md` + `README.es.md` — the `audit-pr` gate-list row names the
+- [x] `README.md` + `README.es.md` — the `audit-pr` gate-list row names the
       closure-integrity gate (both siblings, same change).
-- [ ] `docs/workflow/SKILLS.md` + `docs/workflow/SKILLS.es.md` — the `audit-pr`
+- [x] `docs/workflow/SKILLS.md` + `docs/workflow/SKILLS.es.md` — the `audit-pr`
       row names the closure-integrity gate (both siblings).
-- [ ] `docs/workflow/FEATURE_WORKFLOW.md` + `docs/workflow/FEATURE_WORKFLOW.es.md`
+- [x] `docs/workflow/FEATURE_WORKFLOW.md` + `docs/workflow/FEATURE_WORKFLOW.es.md`
       — the `audit-pr` merge-gate bullet names the closure-integrity gate (both
       siblings).
-- [ ] Verify: `grep -il "closure" ` each pair → the gate is mentioned in EN and
+- [x] Verify: `grep -il "closure" ` each pair → the gate is mentioned in EN and
       ES for all three pairs.
 
 ### P4 — Registration via bump-skill
