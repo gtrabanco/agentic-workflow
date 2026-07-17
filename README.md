@@ -329,6 +329,7 @@ just runs GLM-5.2 everywhere):
 | Task | Skills | €200 plan | Basic-plan ladder | Never here |
 |---|---|---|---|---|
 | **Merge gates** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max for `product-audit`) | 1. **Mimo V2.5** (reasoning always on) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, floor) → else **defer to the human** | Qwen3.6, Gemma4 |
+| **Product definition** | `design-feature` | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning always on; different family from the Qwen executor adds independence) → 2. **Qwen3.6** (thinking ON — only for XS/S or derivative features, quota-saver) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
 | **Planning / routing / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, `ship-roadmap` conductor | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
 | **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** only after it passes the tool-calling smoke test | Mimo V2.5 (reasoning can't be turned off — burns its capped budget) |
 | **Cheap** | `log-session`, evidence gathering | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (non-agentic steps only, or after the tools smoke test) | Mimo V2.5 |
@@ -339,6 +340,19 @@ only named GLM-5.2 for subtle-logic bumps). Rule of thumb: the fixing model
 is never weaker than the one that wrote the original code, and never weaker
 than the finding's subtlety warrants — otherwise the fix itself needs
 re-catching on re-review, wasting a cycle.
+
+**Why `design-feature` sits in the merge-gate class, not the cheap tier:**
+its output — the SPEC's product half plus capability closure — is the
+**founding assumptions** the rest of the flow builds on, so an error there
+compounds through plan → execute → review, the same blast radius as a
+merge-gate verdict. Mimo V2.5's always-on reasoning is the right spend for it
+(few invocations, high leverage) — unlike mechanical volume, where the same
+always-on reasoning burns quota for no benefit. Qwen3.6 with thinking on is
+acceptable only as rung 2, and only for XS/S or derivative features: the
+raw-idea interview keeps a human in the loop, and `plan-feature`'s
+capability-closure gate re-checks the output downstream (the same
+re-checked-reasoning caveat below). As with every model choice here,
+sanity-check availability against `GET /v1/models` before pinning.
 
 **`Qwen3.6` reasoning caveat, stated explicitly:** acceptable only for
 **re-checked** reasoning (planning/routing/triage output that review or audit
