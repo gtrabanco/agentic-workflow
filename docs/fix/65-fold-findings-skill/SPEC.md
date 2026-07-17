@@ -170,19 +170,19 @@ ticks tasks here.
 
 ### P2 — Wire hand-offs and register the skill
 
-- [ ] `skills/review-change/SKILL.md` step 11 `Decision: FAIL` `→ Next:` block:
+- [x] `skills/review-change/SKILL.md` step 11 `Decision: FAIL` `→ Next:` block:
       recommend `/fold-findings` as the fold path; keep the multi-line fixed shape
       (no `·`-joined prose), keep the `/audit-pr` / non-fix-now / product-audit
       sub-bullets. Bump `version:` (minor).
-- [ ] `skills/execute-phase/SKILL.md` § *Folding review / audit findings*: add a
+- [x] `skills/execute-phase/SKILL.md` § *Folding review / audit findings*: add a
       sentence naming `/fold-findings` as the standalone skill for this cycle, inline
       checklist retained as fallback. Bump `version:` (minor).
-- [ ] `docs/workflow/model-routing.yml`: add `fold-findings:` with `model`/`effort`
+- [x] `docs/workflow/model-routing.yml`: add `fold-findings:` with `model`/`effort`
       (proposed `opus` / `high` — never below the review tier that produced the
       findings; see *Decisions*).
-- [ ] `docs/workflow/SKILLS.md`: add the `fold-findings` catalog row (Review/Decide
+- [x] `docs/workflow/SKILLS.md`: add the `fold-findings` catalog row (Review/Decide
       area) and its `## Invocation & arguments reference` row.
-- [ ] `docs/workflow/SKILLS.es.md`: add the reciprocal Spanish rows (bilingual sync,
+- [x] `docs/workflow/SKILLS.es.md`: add the reciprocal Spanish rows (bilingual sync,
       same change).
 
 ### P3 — Sync docs and smoke-test
