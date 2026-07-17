@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.2.0
+version: 2.3.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -402,6 +402,15 @@ Phase <N> done and committed. Review checkpoint (recommended).
 ```
 
 ### Folding review / audit findings (a first-class mini-cycle)
+
+**`/fold-findings` is the standalone skill for this cycle** — it carries the
+full frozen-classification rule and forbidden list (no known-issues dump, no
+severity downgrade, no test loosening, no suppression-as-fix) as a fixed,
+independently-invocable contract; prefer it as a fresh hand-off (its own
+turn, its own model/effort) whenever one is available. The checklist below is
+the in-context / portability fallback for folding inline within this skill's
+own turn (e.g. no slash-command menu, or an agent that folds without leaving
+its current context).
 
 When `review-change` findings (fix-now) or `audit-pr` blockers are folded back
 into a branch that already has an open PR, the fold is complete **only** when
