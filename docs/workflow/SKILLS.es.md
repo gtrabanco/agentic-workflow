@@ -4,16 +4,17 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**14 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
+**15 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, el motor de hallazgos `review-implementation` de
 `review-change`, el contrato `orchestration-envelope`, el paquete de revisión
 interno de 9 skills del propio flujo de trabajo: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`, y el ayudante de
-mantenimiento `bump-skill` propio del repositorio). De las 14: 12 skills del
-flujo de trabajo principal, un ayudante de diario `log-session`, y un sensor
-de solo lectura `workflow-status`.
+mantenimiento `bump-skill` propio del repositorio). De las 15: 12 skills del
+flujo de trabajo principal, `fold-findings` (ciclo de reparación de hallazgos
+fix-now), un ayudante de diario `log-session`, y un sensor de solo lectura
+`workflow-status`.
 
 ## Configuración
 
@@ -63,6 +64,7 @@ de solo lectura `workflow-status`.
 | Skill | Alcance | Rol | Entrega a |
 |---|---|---|---|
 | `review-change` | el **cambio** | Ejecuta solo las revisiones que aplican a esta plataforma + una **comprobación de desviación del SPEC** (diff vs. el alcance y los criterios de aceptación del SPEC) + clasifica → una tabla de decisión + checklist de verificación manual; **obligatorio antes de cada merge** | `plan-fix` (fix-now) / `triage-issue` (cada hallazgo no-fix-now: postpone / ignore / intentional-tradeoff) |
+| `fold-findings` | el **ledger de hallazgos** | Repara de verdad, uno por uno, cada hallazgo fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica), una lista de prohibiciones fija cierra las válvulas de escape (volcado a known-issues, downgrade, aflojar tests, supresión); veredicto por hallazgo `FOLDED \| DISPUTED \| BLOCKED` | re-ejecutar `review-change` (todo foldeado) / `triage-issue` (disputado) |
 | `audit-pr` | el **PR** | Puerta de merge: aceptación, fases, docs, tests, CI, `Closes #N`, ejes de revisión → merge-ready o bloqueadores | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; extrae de los docs de feature → propone issues + cambios de roadmap (nunca arregla automáticamente) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | los **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones | informe (+ arreglos opcionales de bajo riesgo) |
@@ -118,6 +120,7 @@ indicado aquí.
 | `audit-pr` | `/audit-pr [pr-number]` | Por defecto, el PR de la rama actual. Un número apunta a otro PR. |
 | `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | Una idea en bruto → entrevista desde cero. Un `NN-slug` existente a secas → **modo revisión**: imprime un resumen de lo que hará la feature y pregunta qué añadir/quitar/cambiar. `NN-slug + instrucción` → aplica el cambio directamente, sin preguntas, acotado a la instrucción. Siempre upsert — el único reinicio desde cero es una instrucción explícita de "borrar y rediseñar". |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` solo → pase único (features `XS/S` solo-SPEC). `NN P<k>` → exactamente una fase de una feature M/L. `--fix <n>` → implementa la unidad de fix `docs/fix/<n>-*`. `--force` → invalida la puerta de dependencias/estado (válvula de escape solo para el usuario; la invalidación se registra en `decisions.md`; el autopiloto nunca la pasa). |
+| `fold-findings` | `/fold-findings [finding-id …]` | Sin argumentos: repara, uno por uno, cada fila fix-now (`folded: no`) del ledger `review-findings.md` de la unidad. Uno o más IDs de hallazgo → acota la cola a exactamente esas filas. |
 | `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | El alcance por defecto es el diff de la rama actual frente a la rama por defecto; un slug/fix/ruta lo acota o redirige. `--review` → además exporta el informe más reciente de `review-change` como una página de docs (opt-in, nunca automático). |
 | `init-workspace` | `/init-workspace [target-dir]` | Por defecto el directorio actual. En un repositorio que ya tiene el andamiaje, cambia automáticamente al **modo actualización** (propone solo los bloques de plantilla nuevos/faltantes; solo aditivo). |
 | `log-session` | `/log-session [note]` | La nota opcional se antepone al Resumen de la entrada. |
