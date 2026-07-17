@@ -174,16 +174,16 @@ carry a new `plan-fix` 2.3.0 row.
 
 ### P3 — Hardening & PR
 
-- [ ] (manual) GOLDEN_FIXTURE-style smoke test with the weakest fleet model —
+- [x] (manual) GOLDEN_FIXTURE-style smoke test with the weakest fleet model —
       scenario (a) two mergeable toy issues → one unit, both `Closes #` present;
       scenario (b) two non-mergeable toy issues → refusal output verbatim, zero
       SPECs written; paste both transcripts
-- [ ] (manual) Confirm `execute-phase --fix` needs no change — read
+- [x] (manual) Confirm `execute-phase --fix` needs no change — read
       `skills/execute-phase/SKILL.md` L360/L365 (keys on `docs/fix/<n>-<topic>/`),
       paste the line refs
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -322,4 +322,4 @@ boundary; sized M because the phased close-out is genuinely multi-commit.
 
 ## Status
 
-`pending`
+`done`
