@@ -151,12 +151,13 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #63`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #63` and push
+      (evidence: https://github.com/gtrabanco/agentic-workflow/pull/68)
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #63` and push
 
 ## Impact
 
