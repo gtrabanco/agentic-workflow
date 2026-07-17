@@ -251,12 +251,12 @@ the literal `Hardening & PR` close-out.
 Layer: `docs`. Done-when: `grep -c` of the 8 box labels returns 8 in both
 template files.
 
-- [ ] Author the canonical 8-box phase-lint block in
+- [x] Author the canonical 8-box phase-lint block in
       `docs/fix/_TEMPLATE/SPEC.md` `## Phases` (verbatim wording per In-scope
       §1; marked as the authoritative copy).
-- [ ] Quote the same 8-box block in `docs/features/_TEMPLATE/SPEC.md`
+- [x] Quote the same 8-box block in `docs/features/_TEMPLATE/SPEC.md`
       `### Phases`, with a marker pointing to the fix template as authoritative.
-- [ ] Verify: `grep` the 8 box labels in both files → all 8 present in each.
+- [x] Verify: `grep` the 8 box labels in both files → all 8 present in each.
 
 ### P2 — Emit-time lint in the planner skills
 
