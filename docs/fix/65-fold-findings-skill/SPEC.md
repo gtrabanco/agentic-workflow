@@ -339,4 +339,4 @@ persisted, nothing lost.
 
 ## Status
 
-`pending`
+`done`
