@@ -264,11 +264,13 @@ Layer: `docs`. Done-when: `npx skills add . --list` lists every skill and the
 new `execute-phase` + `audit-pr` + `product-audit` versions appear in both
 READMEs.
 
-- [ ] Run `bump-skill` for `execute-phase`, `audit-pr`, `product-audit`: bump
+- [x] Run `bump-skill` for `execute-phase`, `audit-pr`, `product-audit`: bump
       each `version:` (minor) and add rows to `CHANGELOG.md` + `CHANGELOG.es.md`.
-- [ ] Confirm `bump-skill` updated the skill-version tables in `README.md` +
-      `README.es.md`.
-- [ ] Verify: `npx skills add . --list` discovers every skill (no YAML breakage).
+      (execute-phase 2.4.1→2.5.0, audit-pr 3.2.0→3.3.0, product-audit 2.0.0→2.1.0)
+- [x] Confirm `bump-skill` updated the skill-version tables in `README.md` +
+      `README.es.md`. (contract rows already reflected the new capabilities from
+      P4; no further change needed — confirmed by `bump-skill`'s own step 7/8)
+- [x] Verify: `npx skills add . --list` discovers every skill (no YAML breakage).
 
 ### P6 — Hardening & PR
 
@@ -434,4 +436,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`in-progress` (P4 of 6 done)
+`in-progress` (P5 of 6 done)

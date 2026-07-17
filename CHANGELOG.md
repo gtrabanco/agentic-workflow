@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.0 | 2026-07-17 | minor | Fix #66: new **descope guard** in the Issue policy — before creating any issue, classify it discovered-work (file freely) vs. descope (overlaps a SPEC acceptance criterion/phase task not fully delivered); a descope STOPs before the issue is created, requiring a user-approved, dated `## Amendments` entry first (canonical row format defined once here). New Forbidden-list entry and turn-contract box asserting the guard ran on every issue created in the turn. |
 | 2.4.1 | 2026-07-17 | patch | Fix #81: the Phase-lint pre-flight guard (added in 2.4.0) gains an explicit legacy-SPEC carve-out — a SPEC with no `## Phases` section skips the guard entirely (no lint, no STOP) and falls through to the pre-existing legacy single-pass flow, restoring fix #64's own backward-compatibility promise. |
 | 2.4.0 | 2026-07-17 | minor | Fix #64: new **phase-lint pre-flight guard**, run after the dependency/own-status gates and before any edit — the target phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") or execute-phase STOPs with a fixed block naming the failed boxes and recommending re-cut via `/plan-feature`/`/plan-fix`; `--force` skips the STOP, never the check, logged in `decisions.md`/`progress.md`. Wired into the Turn contract and Hard rules. |
 | 2.3.0 | 2026-07-17 | minor | Fix #65: the fold-cycle section ("Folding review / audit findings") now names the new standalone `/fold-findings` skill as the preferred, independently-invocable path (frozen classification + forbidden list, own turn/tier); the section's own checklist is retained as the in-context / portability fallback. |
@@ -253,6 +254,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.3.0 | 2026-07-17 | minor | New **scope integrity (descope)** gate in the merge-readiness contract: lists issues born since branch divergence that reference the unit; each must have its acceptance criterion still met **or** a matching, user-approved, dated `## Amendments` entry (keyed off the same log `execute-phase`'s descope guard writes) — else BLOCKER; applies to feature and fix PRs alike, passes trivially when nothing was exported. Turn contract gained a matching box; closing `→ Next:` routes a scope-bleed blocker to the amendment-or-triage decision. Part of #66. |
 | 3.2.0 | 2026-07-17 | minor | New **closure integrity** gate in the merge-readiness contract: grep the governing feature SPEC for a `Capability closure` heading (any level); a present block with a blank row or an unmapped non-`n/a` row is a blocker, `n/a: <reason>` passes, absent block yields a dated `design-debt: closure absent, SPEC predates the rule` warning (never a blocker) — fix-governed PRs are always n/a. The warning doubles as the retrofit trigger, routed to `/design-feature <slug>` in the closing block. Turn contract gained a matching box. Part of #78. |
 | 3.1.1 | 2026-07-13 | patch | Guardrails cross-reference fix: the MERGE-READY comment now correctly cites Process step 6 (was still pointing at the pre-3.1.0 step 5 after the fold-ledger step renumbering). |
 | 3.1.0 | 2026-07-13 | minor | New process step 5 (BLOCKED verdict only): every blocker persists to the **same** fix-now fold ledger `review-findings.md` that `review-change` writes (D4 — one ledger for the fold cycle), severity `high` (a blocker gates the merge by definition), deduped by `file:line`+axis, no write on a merged unit. Remaining process steps renumbered (6→8). Part of feature 17 (`finding-severity-routing`). |
@@ -274,6 +276,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-17 | minor | New **scope-export recurrence** signal in the Workflow discipline dimension: ≥ 2 consecutive recent units each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (#64). Output format gained a worked example under Top findings. Part of #66. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-10 | minor | New "Installed tooling" dimension + process step: inventories installed skills and connected MCP servers, cross-references them against the applicable review axes and the roadmap, and adds a fourth proposal stream ("Tooling: register / re-design") — register a useful unregistered tool in `CLAUDE.md`, or route a scope-affecting discovery to `/design-feature`. Proposes only; never registers or edits `CLAUDE.md`. `detail.proposed_tooling` added to the machine envelope (additive). |
 | 1.7.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. HALT state for critical, stop-the-world findings. |
@@ -418,6 +421,21 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-17 — scope-bleed-guardrail (fix 66).** MINOR bump for
+  `execute-phase` (2.5.0): new descope guard — before creating any issue,
+  classify it discovered-work (file freely) or descope (overlaps an unmet
+  SPEC acceptance criterion/phase task); a descope STOPs before the issue is
+  created, requiring a user-approved, dated `## Amendments` entry first
+  (canonical row format defined once here). MINOR bump for `audit-pr`
+  (3.3.0): new scope integrity (descope) gate in the merge-readiness
+  contract — issues born since branch divergence that reference the unit
+  must have their criterion still met or a matching `## Amendments` entry,
+  else BLOCKER; feature and fix PRs alike. MINOR bump for `product-audit`
+  (2.1.0): new scope-export recurrence signal — ≥ 2 consecutive units
+  exporting scope is a planning-quality finding routed to the atomicity/split
+  rules (#64). Guardrail #4 (`workflow-status` envelope exposure) deferred to
+  #79.
 
 - **2026-07-17 — audit-pr-closure-integrity (fix 78).** MINOR bump for
   `audit-pr` (3.2.0): new closure-integrity gate in the merge-readiness
