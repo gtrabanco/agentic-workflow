@@ -104,15 +104,17 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **Verification gate / CI** | The project's gate passes — type-check, tests, build — and `statusCheckRollup` is green. | Any required check failing, pending, or absent where the project requires one. |
 | **Mergeability** | Branch is off the default base, independently mergeable (no conflicts), not stacked on another PR, not draft. | Wrong base, conflicts, stacked dependency, or still draft. |
 | **Review axes clean** | The applicable `review-change` axes are clean **or** every remaining finding is *consciously deferred* to a tracked issue with a trigger. | A `fix-now` finding still open, or a deferral with no issue/trigger behind it. |
-| **Closure integrity** | The governing **feature** SPEC's capability closure was taken and recorded — `design-feature` was actually run, not bypassed. Fix-governed PRs: `n/a` (no closure block by design). | A present `## Capability closure` block has a blank row, or a resolved non-`n/a` row with no matching acceptance criterion. |
+| **Closure integrity** | The governing **feature** SPEC's capability closure was taken and recorded — `design-feature` was actually run, not bypassed. Fix-governed PRs: `n/a` (no closure block by design). | A present `Capability closure` block has a blank row, or a resolved non-`n/a` row with no matching acceptance criterion. |
 
 > Run `review-change` for the axis check if it hasn't been run on the final state,
 > or read its latest report. Don't re-litigate findings already classified — verify
 > each open one is either resolved or has a real, tracked home.
 
 > **Closure integrity — fixed output.** Detection is purely mechanical: grep the
-> governing SPEC for the `## Capability closure` heading — never dates, never
-> versions, never judgment.
+> governing SPEC for a `Capability closure` heading — match the heading text, not
+> a fixed level (SPECs nest it as `### Capability closure` under `## Product half`;
+> older ones use `## Capability closure`) — never dates, never versions, never
+> judgment.
 > - **Fix-governed PR** (`docs/fix/<n>-<topic>/SPEC.md`) → **n/a**, always. Fix
 >   SPECs carry no closure block by design; never emit a warning for one.
 > - **Feature SPEC, block present** → evaluate the three boxes, each a blocker
