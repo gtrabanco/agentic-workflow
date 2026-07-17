@@ -88,6 +88,9 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 
 ### P1 — <implementation>
 
+Layer: `<schema/db|domain|api|ui|config/infra|docs|hardening>`. Done-when:
+`<command>` → `<expected outcome>`.
+
 - [ ] <task — independently checkable, mapped to evidence>
 
 ### P2 — Hardening & PR
