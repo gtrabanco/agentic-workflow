@@ -60,7 +60,13 @@ Three modes:
      docs language > English. The CONVERSATION language never decides — a
      Spanish prompt still produces English commits/PRs/issues unless one of
      the first two says otherwise.
-✓ 8. The closing `→ Next:` block is printed as the ABSOLUTE last output.
+✓ 8. Descope guard applied to every issue created this turn (see *Descope
+     guard* under *Issue policy*): each classified discovered vs. descope; any
+     descope has a user-approved, dated `## Amendments` entry in the governing
+     SPEC created BEFORE the issue, and the issue links it. No issue created
+     this turn is the first record of a descope. No issues created this turn?
+     Box passes trivially — state so.
+✓ 9. The closing `→ Next:` block is printed as the ABSOLUTE last output.
 ```
 
 **Push policy — two regimes, by whether the PR exists yet.** Before the PR:
@@ -209,6 +215,10 @@ the **target phase** (its title, declared layer, task list, and done-when).
 - Architecture changes (layers, boundaries, patterns)
 - Refactoring unrelated code
 - Building future phases or features early
+- Creating an issue that descopes a SPEC acceptance criterion or phase task
+  without a user-approved, dated `## Amendments` entry (see *Descope guard*
+  under *Issue policy* below) — an issue may never be the first record of a
+  descope
 
 Something forbidden looks necessary → stop, record it in `decisions.md` or
 `known-issues.md`, and surface it — never do it silently.
@@ -279,6 +289,37 @@ examples use `gh`; translate if the project declares another forge).
 - **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml --body-file <path>` if missing, populating the body from the SPEC (body as a Markdown file — see the Markdown rule above). Use the returned number for branch and folder.
 - **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
 - **Language precedence for every artifact** (issues, PRs, commits, SPECs, docs): (1) an explicit user instruction in the prompt, else (2) the project's declared docs language (Workflow conventions), else (3) English. The conversation language is NOT a signal — being asked in Spanish never makes the PR Spanish. Non-matching source material gets translated first.
+
+### Descope guard (run before creating any issue during this unit)
+
+A cheap way to look finished is to quietly convert unfinished SPEC scope into a
+follow-up issue — the unit reads as done, the scope silently moved to the
+backlog. Before creating **any** issue while executing this unit, classify it
+with the fixed **descope test**:
+
+- **Descope** — the issue's content overlaps a SPEC acceptance criterion or a
+  phase task that is **not fully delivered** in this unit.
+- **Discovered work** — everything else (genuinely new, outside the SPEC's
+  promises) — file it freely; that's what `triage-issue` is for.
+
+**On a descope → STOP before creating the issue.** An issue may never be the
+first record of a descope. The descope must first be recorded as an explicit,
+**user-approved, dated SPEC amendment**:
+
+1. Move the criterion/task out of the active `## Acceptance` (or `## Phases`
+   ledger), and log it in the governing SPEC's `## Amendments` section (create
+   the section if absent) with this canonical row format:
+   ```
+   - <YYYY-MM-DD> — descoped: "<criterion/task>" — approved by user — follow-up: #<n>
+   ```
+2. Get explicit user approval for the descope (ask; never self-authorize moving
+   a criterion out of scope).
+3. **Only then** create the follow-up issue, and **link the amendment** in its
+   body (the `#<n>` in the row above is filled in once the issue exists).
+
+`audit-pr`'s scope-bleed gate and `product-audit`'s recurrence signal both key
+off this same `## Amendments` log — it is the single authoritative record of
+every descope, defined once here.
 
 ## Workflows
 
