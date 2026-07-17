@@ -277,14 +277,14 @@ re-cut/split behavior; `grep` finds the lint reference in each.
 Layer: `docs`. Done-when: `execute-phase/SKILL.md` has the pre-flight guard
 section with its fixed STOP block and `--force` log rule.
 
-- [ ] Add a pre-flight phase-lint guard to `execute-phase/SKILL.md` (before any
+- [x] Add a pre-flight phase-lint guard to `execute-phase/SKILL.md` (before any
       edit, after the dependency/own-status gates): run the 8-box lint on the
       target phase; on FAIL STOP with a fixed output block listing the failed
       boxes and recommending re-cut (`/plan-feature <NN>` or `/plan-fix`).
-- [ ] Document the `--force` override: skips the STOP, never the check; logged
+- [x] Document the `--force` override: skips the STOP, never the check; logged
       in `decisions.md`/`progress.md`.
-- [ ] Add the guard to the Turn contract / Hard rules so a weak model runs it.
-- [ ] Verify: `grep` the guard block + `--force` log rule in the skill body.
+- [x] Add the guard to the Turn contract / Hard rules so a weak model runs it.
+- [x] Verify: `grep` the guard block + `--force` log rule in the skill body.
 
 ### P4 — Registration via bump-skill
 

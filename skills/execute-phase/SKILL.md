@@ -31,11 +31,15 @@ Three modes:
 ✓ 1. Branch verified FIRST: `git branch --show-current` was RUN and its output
      pasted. Output = the default branch → `git switch -c <branch>` was RUN
      before any edit. NEVER work on main/master.
-✓ 2. The gate was RUN (not assumed): commands + exit codes pasted.
-✓ 3. `git add <files>` and `git commit -m "<type>(<scope>): <summary>"` were
+✓ 2. Phase-lint pre-flight guard RUN against the target phase (after the
+     dependency/own-status gates, before any edit) — its 8 boxes were checked,
+     not assumed. Any FAIL without `--force` → STOP with the fixed block; no
+     edit happens on a non-atomic phase.
+✓ 3. The gate was RUN (not assumed): commands + exit codes pasted.
+✓ 4. `git add <files>` and `git commit -m "<type>(<scope>): <summary>"` were
      EXECUTED and the resulting sha is pasted. Describing a commit you did not
      run counts as NOT committed.
-✓ 4. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
+✓ 5. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
      `gh pr create` were EXECUTED and **the PR URL is printed in the chat**
      (not every agent shows open PRs — the link in the chat is the contract).
      The PR body is NEVER empty: what it does, why, evidence, and
@@ -45,18 +49,18 @@ Three modes:
      `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
      without its PR link is an UNFINISHED unit. Unit not finished? Then
      NOTHING was pushed.
-✓ 5. Clean-tree check LAST: `git status --porcelain` was RUN and its output
+✓ 6. Clean-tree check LAST: `git status --porcelain` was RUN and its output
      pasted immediately before ending the turn. Any tracked modification —
      CODE OR DOCS (`docs/**` counts; doc updates left uncommitted are the #1
      close-out failure) — was committed before the turn ended. AND if the
      branch has an open PR: `git status -sb` shows the branch is NOT ahead of
      its remote (every commit pushed). A dirty tree or an unpushed commit on a
      PR-backed branch = the turn is NOT done.
-✓ 6. Artifact language: explicit user instruction > the project's declared
+✓ 7. Artifact language: explicit user instruction > the project's declared
      docs language > English. The CONVERSATION language never decides — a
      Spanish prompt still produces English commits/PRs/issues unless one of
      the first two says otherwise.
-✓ 7. The closing `→ Next:` block is printed as the ABSOLUTE last output.
+✓ 8. The closing `→ Next:` block is printed as the ABSOLUTE last output.
 ```
 
 **Push policy — two regimes, by whether the PR exists yet.** Before the PR:
@@ -79,6 +83,7 @@ its PR (finished units), is a FAILED turn, not a done one.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
 - **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
 - **Dependency gate before any work** — see the section below. No edit, no branch, no commit happens for a unit whose dependency closure isn't merged, unless the user passed `--force`.
+- **Phase-lint pre-flight guard before any edit** — see the section below, right after the dependency/own-status gates. No edit happens for a phase that fails the canonical 8-box phase-lint, unless the user passed `--force`.
 
 ## Dependency gate (always, before any other step)
 
@@ -152,6 +157,34 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
 5. **`--force`** skips the STOP (never the check), same rule as the
    dependency gate: recorded in `decisions.md` before implementation begins;
    the autopilot (`ship-roadmap`) must never pass it.
+
+## Phase-lint pre-flight guard (always, before any edit — after the dependency/own-status gates)
+
+Before touching any code, run the canonical 8-box phase-lint
+(`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative
+copy, also quoted in `docs/features/_TEMPLATE/SPEC.md` `### Phases`) against
+the **target phase** (its title, declared layer, task list, and done-when).
+
+1. **All 8 boxes tick** → proceed to the normal workflow.
+2. **Any box FAILs → STOP before any edit** and print exactly:
+
+   ```
+   PHASE-LINT GATE — <NN|n>-<slug> <phase> BLOCKED
+   Failed boxes:
+     ✗ <box label> — <one-line reason>
+     [✗ <box label> — <one-line reason>] …
+
+   → Next: /plan-feature <NN> — re-cut or split the phase (feature)
+     · fix-type unit → /plan-fix — re-cut or split the phase
+     · proceed anyway, at your own risk → /execute-phase <NN|--fix n> <phase> --force
+       (the override is recorded in decisions.md — never silent)
+   ```
+
+3. **`--force`** skips the STOP (never the check): the lint still runs and its
+   result is **recorded in `decisions.md`** (feature mode) or the fix SPEC's
+   own notes / `progress.md` if present ("executed non-atomic phase: <failed
+   boxes>, user-forced <date>") before implementation begins. `--force` is a
+   user-only escape hatch — the autopilot (`ship-roadmap`) must never pass it.
 
 ## Allowed & forbidden (fixed lists — no interpretation)
 
@@ -284,7 +317,7 @@ execution ledger (there is no `TASKS.md`): tick each task with evidence, and
 reconcile on re-entry exactly as *Resuming an interrupted phase* above
 prescribes for `TASKS.md`. Implementation phases run the mode's steps below
 but **STOP after the phase commit — no push, no PR** (the per-phase stop and
-the turn contract's box 4 "unit not finished" rule). The final
+the turn contract's box 5 "unit not finished" rule). The final
 `Hardening & PR` phase runs the close-out — the mode's "Mark done + open the
 PR" step — **in its own invocation**: its pre-written tasks ARE the close-out
 chain; execute them literally, in order. A SPEC **without** `## Phases`
