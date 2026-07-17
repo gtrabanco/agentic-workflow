@@ -232,15 +232,23 @@ the guard section (before the "run the 8-box lint" step) **and**
 `grep -m1 '^version:' skills/execute-phase/SKILL.md` shows a version greater
 than `2.4.0`.
 
-- [ ] In `skills/execute-phase/SKILL.md`'s "Phase-lint pre-flight guard"
+- [x] In `skills/execute-phase/SKILL.md`'s "Phase-lint pre-flight guard"
       section (~line 161), add an unconditional first step: a SPEC with **no
       `## Phases` section** skips the guard entirely (no lint, no STOP) and
       runs the legacy single-pass flow — placed **before** the "run the
       canonical 8-box phase-lint" instruction, and cross-referencing the
       existing legacy exemption in the *Workflows* section.
-- [ ] Run `bump-skill` for `execute-phase`: bump its `version:` (patch), add
+      Evidence: `skills/execute-phase/SKILL.md:163-167`, commit `b0c13eb`.
+- [x] Run `bump-skill` for `execute-phase`: bump its `version:` (patch), add
       the `CHANGELOG.md` + `CHANGELOG.es.md` rows, and refresh the
       `README.md` + `README.es.md` skills/version tables.
+      Evidence: `version: 2.4.1` (`skills/execute-phase/SKILL.md:4`),
+      `CHANGELOG.md`/`CHANGELOG.es.md` rows + release-log entries, commit
+      `b0c13eb`. README/README.es.md skills table left unchanged — the
+      existing cell already states the legacy-SPEC single-pass fact
+      separately and isn't inaccurate (patch-bump policy: no README edit
+      required unless the cell is wrong); no model/effort tier changed, so
+      `model-routing.yml` is untouched.
 
 ### P2 — Hardening & PR
 
