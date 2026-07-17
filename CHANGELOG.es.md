@@ -142,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-17 | menor | Fix #65: la sección del ciclo de fold ("Folding review / audit findings") ahora nombra la nueva skill independiente `/fold-findings` como la vía preferida e invocable por sí sola (clasificación congelada + lista de prohibiciones, turno/nivel propio); la checklist de esta sección se mantiene como fallback en contexto / de portabilidad. |
 | 2.2.0 | 2026-07-13 | menor | La checklist del ciclo de fold ("Folding review / audit findings") gana una casilla: la fila de cada hallazgo folded en el ledger `review-findings.md` de la unidad pasa `folded: no → yes` — la única transición de estado del ledger, propiedad exclusiva de este ciclo de fold. El ledger es opcional (una unidad sin hallazgos fix-now no tiene uno). Parte de la feature 17 (`finding-severity-routing`). |
 | 2.1.0 | 2026-07-11 | menor | Fix #35: las unidades de pase único (features XS/S y fixes) ahora son **por fases** — cuando el SPEC lleva `## Phases` (emitido por `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), se ejecuta **una fase por invocación** (`[P<k>]` opcional, por defecto la primera fase con tareas sin marcar), marcando los checkboxes del SPEC como ledger de ejecución; la fase final `Hardening & PR` ejecuta la cadena de cierre (flip de estado, push, PR, commit del enlace, push) en su propia invocación — la cadena que los modelos débiles truncaban al final del turno de implementación. Un SPEC sin `## Phases` ejecuta el pase único legacy sin cambios (el fallback que mantiene esto como menor). Las dos cabeceras "this is the last step" reescritas a la forma de fase final. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación (snippet de system-prompt inyectado por el driver + bucle de reparación, ver `orchestration-envelope`); `workflow-status` sigue siendo el único emisor en línea. La descripción del orquestador externo en la ejecución por lotes ahora referencia el envelope inyectado de forma genérica en vez de una emisión inline. Ver `docs/workflow/MIGRATION.md`. |
@@ -217,6 +218,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-17 | menor | Fix #65: el bloque `→ Next:` de `Decision: FAIL` ahora recomienda la nueva skill independiente `/fold-findings` (clasificación congelada, lista de prohibiciones que cierra las válvulas de escape de volcado-a-known-issues/downgrade/aflojar-tests/supresión) como la vía de fold, en lugar de la línea de prosa inline "fold the fix-now findings"; la forma fija multilínea y los sub-bullets de `/audit-pr`/no-fix-now/product-audit no cambian. |
 | 2.2.1 | 2026-07-17 | parche | El bloque `→ Next:` del paso 11 ahora se ramifica explícitamente según `Decision`: un bloque `FAIL` recomienda foldear los hallazgos fix-now (gate en verde, commit + push, re-ejecutar `/review-change`) con `/audit-pr` degradado a sub-bullet condicionado a la tabla limpia; un bloque `PASS` mantiene `/audit-pr — merge gate`. La condición de recurrencia de `/product-audit` ahora es una casilla explícita sí/no, y el bloque debe emitirse como líneas literales múltiples, nunca como prosa unida con `·`. Corrige el issue #63 — modelos débiles (observado: qwen3.6-thinking) copiaban la plantilla estática única anterior de forma literal, recomendando el merge gate incluso en `FAIL`. |
 | 2.2.0 | 2026-07-13 | menor | Nuevo paso de persistencia (paso de proceso 9): los hallazgos fix-now ahora se anexan al **ledger de fold fix-now** de la unidad, `review-findings.md` (esquema fijo `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` empieza en `no`), deduplicado por `file:line`+axis, en una unidad no mergeada — una unidad mergeada no recibe escritura. El bloque `→ Next:` y la sección Routing ahora mencionan el ledger para hallazgos fix-now. Los hallazgos no-fix-now no se ven afectados. Parte de la feature 17 (`finding-severity-routing`). |
 | 2.1.1 | 2026-07-10 | parche | Aclarada la semántica de N: distingue "el flag `--adversarial` no se pasó en absoluto" (modo de un solo revisor, sin mensaje) de "`--adversarial` se pasó sin un N válido" (sin número, o un número `< 2` — error de uso, cae al modo de un solo revisor). Corrige una contradicción con la decisión D1 de `decisions.md`, que exigía el error de uso tanto para N ausente como para N<2. Sin cambio de comportamiento en la ruta por defecto sin flag. |
@@ -238,6 +240,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | 1.1.0 | 2026-06-09 | menor | Comprobación de deriva del SPEC (diff vs. alcance + criterios de aceptación del SPEC) |
 | 1.0.1 | 2026-06-05 | parche | Redacción: `execute-phase` "hace hand-off a" él |
 | 1.0.0 | 2026-06-05 | — | Primer release — orquestador de revisión adaptativo a la plataforma |
+
+#### `fold-findings`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-07-17 | — | Nueva skill (fix #65): repara uno por uno los hallazgos fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica; una objeción genuina produce `DISPUTED` → `/triage-issue`), una lista de prohibiciones fija (nada de volcado a known-issues, nota de tradeoff en `decisions.md`, aflojar/saltar tests, supresión de lint como arreglo, stub `TODO`, ni marcar `folded: yes` sin un diff), y un contrato de salida fijo por hallazgo `FOLDED <sha> \| DISPUTED <razón> \| BLOCKED <input faltante>` que termina en un total `Folded: n/m · Disputed: k · Blocked: j`. La checklist del ciclo de fold embebida en `execute-phase` se mantiene como fallback en contexto/portabilidad. |
 
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
@@ -405,6 +412,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-17 — fold-findings-skill (fix 65).** Nueva skill `fold-findings`
+  (1.0.0): ciclo de reparación independiente e invocable por sí solo para los
+  hallazgos fix-now de `review-change`/`audit-pr` — clasificación congelada,
+  una lista de prohibiciones fija que cierra las válvulas de escape de
+  volcado-a-known-issues/downgrade-de-severidad/aflojar-tests/supresión, y un
+  contrato de salida fijo por hallazgo `FOLDED | DISPUTED | BLOCKED`. Bumps
+  MENOR para `review-change` (2.3.0: `Decision: FAIL` recomienda
+  `/fold-findings`) y `execute-phase` (2.3.0: la sección del ciclo de fold la
+  nombra como vía preferida, la checklist inline se mantiene como fallback).
+  Registrada en `model-routing.yml` (`opus`/`high`) y en
+  `docs/workflow/SKILLS.md` + `SKILLS.es.md`.
 
 - **2026-07-17 — next-block-verdict-branching (fix 63).** Bump PARCHE para
   `review-change` (2.2.1): el bloque `→ Next:` del paso 11 ahora se ramifica

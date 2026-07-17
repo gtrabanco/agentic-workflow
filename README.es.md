@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 28 skills (14 de cara al usuario + 14 internas) — la fuente instalable
+skills/                  las 29 skills (15 de cara al usuario + 14 internas) — la fuente instalable
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -71,7 +71,7 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**14 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
+**15 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
 que se componen por ti: los dos pasos de planificación del router `plan-feature`,
 el motor de `review-change`, el contrato `orchestration-envelope`, el **pack de revisión interno propio de 9 skills**
 (`review-code`, `review-security`, `review-verify`, `review-debt`,
@@ -123,6 +123,7 @@ con ningún modelo. Un único camino disciplinado:
 | Skill           | Alcance         | Qué hace                                                                                                                                                                                                            |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review-change` | el **cambio**   | Ejecuta solo las revisiones que **aplican a tu plataforma** (código, seguridad, verify, diseño, a11y, marca, rendimiento, SEO) — adversariales por defecto, asumiendo que el diff está mal hasta probar lo contrario — y clasifica → una tabla de decisión + una checklist explícita de verificación manual; un árbol sucio o commits sin push en la rama del PR son hallazgos `workflow` fix-now. La revisión final obligatoria **debe correr en una conversación que no implementó el cambio** — si lo hizo, parar y hacer hand-off a una nueva. Opt-in `--adversarial N`: N revisores independientes y context-clean corren en paralelo (subagentes / headless / fallback secuencial), hallazgos fusionados por `file:line` con umbral de inclusión ≥1 — desactivado por defecto, auto-recomendado (nunca forzado) para cambios `L`/sensibles. Los hallazgos fix-now en una unidad no mergeada se persisten en el ledger de fold fix-now de esa unidad (`review-findings.md`), deduplicado por `file:line`+axis |
+| `fold-findings` | el **ledger de hallazgos** | Repara de verdad, uno por uno, cada hallazgo fix-now de `review-change`/`audit-pr` — **clasificación congelada** (nunca reclasifica; una objeción genuina produce `DISPUTED` → `triage-issue`) y una **lista de prohibiciones** fija que cierra las válvulas de escape de volcado-a-known-issues/downgrade de severidad/aflojar tests/supresión de lint/stub `TODO`, terminando en un veredicto `FOLDED \| DISPUTED \| BLOCKED` por hallazgo + total. La checklist del ciclo de fold embebida en `execute-phase` se mantiene como fallback en contexto/portabilidad |
 | `audit-pr`      | el **PR**       | Gate de fusión: criterios de aceptación cumplidos, todas las fases hechas, docs/tests/CI en verde, `Closes #N`, ejes de revisión limpios → **listo para fusionar o una lista de bloqueantes**, siempre con la URL completa del PR; con MERGE-READY publica un comentario datado y ligado al SHA en el propio PR. Un veredicto BLOCKED persiste cada bloqueante en el ledger de fold fix-now de la unidad (`review-findings.md`, severidad `high`), el mismo ledger que escribe `review-change`. Auto-merge opt-in: con una política documentada fusiona PRs MERGE-READY tras un checklist de limpieza fail-closed (algo pendiente → push, esperar CI, re-auditar) |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; mina las docs de features → propone issues + altas/bajas en el roadmap + tooling instalado a registrar/rediseñar (**nunca arregla automáticamente**)                                                         |
 | `audit-docs`    | las **docs**    | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones                                                                                                                                           |
@@ -232,6 +233,7 @@ una conveniencia de la rama `#claude`.
 | `plan-fix`       | Opus           | alto     | scoping de arquitecto + análisis de riesgo                                                                                                                                                                                  |
 | `execute-phase`  | Sonnet         | medio    | implementación mecánica según el SPEC — una fase por invocación (Opus si la lógica es sutil)                                                                                                                               |
 | `review-change`  | Opus           | alto     | orquestación de revisión adaptativa a la plataforma + síntesis                                                                                                                                                              |
+| `fold-findings`  | Opus           | alto     | nunca por debajo del nivel de la revisión que produjo el hallazgo; un hallazgo sutil de lógica/seguridad merece su propio pase con lo más fuerte disponible                                                                 |
 | `audit-pr`       | Opus           | alto     | juicio de aptitud de fusión de todo el PR                                                                                                                                                                                   |
 | `product-audit`  | Opus           | máx      | barrido multi-eje de todo el producto + propuestas (effort máx para el barrido más amplio)                                                                                                                                  |
 | `audit-docs`     | Sonnet         | medio    | comprobaciones cruzadas mayormente mecánicas (Opus para auditorías profundas)                                                                                                                                               |

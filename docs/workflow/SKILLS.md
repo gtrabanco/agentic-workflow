@@ -4,14 +4,15 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**14 user-facing skills** (one menu entry each) + **14 internal** steps composed
+**15 user-facing skills** (one menu entry each) + **14 internal** steps composed
 for you (the `plan-feature` router's two planning steps, the `review-change`
 findings engine `review-implementation`, the `orchestration-envelope` contract,
 the workflow's own 9-skill internal review pack: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`, and the repo-only
-`bump-skill` maintenance helper). Of the 14: 12 core workflow skills, a
-`log-session` journal helper, and a `workflow-status` read-only sensor.
+`bump-skill` maintenance helper). Of the 15: 12 core workflow skills, `fold-findings`
+(fold cycle for fix-now findings), a `log-session` journal helper, and a
+`workflow-status` read-only sensor.
 
 ## Setup
 
@@ -61,6 +62,7 @@ the workflow's own 9-skill internal review pack: `review-code`,
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
 | `review-change` | the **change** | Run only the reviews that apply to this platform + a **SPEC drift check** (diff vs. the SPEC's scope and acceptance criteria) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | `plan-fix` (fix-now) / `triage-issue` (every non-fix-now: postpone / ignore / intentional-tradeoff) |
+| `fold-findings` | the **findings ledger** | Repair each fix-now finding from `review-change`/`audit-pr` for real, one at a time — frozen classification (never reclassifies), a fixed forbidden list closes the known-issues-dump/downgrade/test-loosening/suppression escape hatches; per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict | re-run `review-change` (all folded) / `triage-issue` (disputed) |
 | `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
@@ -114,6 +116,7 @@ with no arguments uses the default stated here.
 | `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |
 | `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | A raw idea → interview from zero. A bare existing `NN-slug` → **review mode**: prints a summary of what the feature will do and asks what to add/remove/change. `NN-slug + instruction` → applies the change directly, no questions, scoped to the instruction. Upsert always — the only from-zero reset is an explicit "delete and redesign" in the instruction. |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` alone → single-pass (XS/S SPEC-only features). `NN P<k>` → exactly one phase of an M/L feature. `--fix <n>` → implement the fix unit `docs/fix/<n>-*`. `--force` → override the dependency/status gate (user-only escape hatch; the override is recorded in `decisions.md`; the autopilot never passes it). |
+| `fold-findings` | `/fold-findings [finding-id …]` | No args: repairs every fix-now (`folded: no`) row on the unit's `review-findings.md` ledger, one at a time. One or more finding IDs → restricts the queue to exactly those rows. |
 | `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | Scope defaults to the current branch's diff vs the default branch; a slug/fix/path narrows or redirects it. `--review` → additionally export the most recent `review-change` report as a docs page (opt-in, never automatic). |
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (proposes only the new/missing template blocks; additive-only). |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
