@@ -253,7 +253,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
-| 3.2.0 | 2026-07-17 | minor | New **closure integrity** gate in the merge-readiness contract: grep the governing feature SPEC for `## Capability closure`; a present block with a blank row or an unmapped non-`n/a` row is a blocker, `n/a: <reason>` passes, absent block yields a dated `design-debt: closure absent, SPEC predates the rule` warning (never a blocker) — fix-governed PRs are always n/a. The warning doubles as the retrofit trigger, routed to `/design-feature <slug>` in the closing block. Turn contract gained a matching box. Part of #78. |
+| 3.2.0 | 2026-07-17 | minor | New **closure integrity** gate in the merge-readiness contract: grep the governing feature SPEC for a `Capability closure` heading (any level); a present block with a blank row or an unmapped non-`n/a` row is a blocker, `n/a: <reason>` passes, absent block yields a dated `design-debt: closure absent, SPEC predates the rule` warning (never a blocker) — fix-governed PRs are always n/a. The warning doubles as the retrofit trigger, routed to `/design-feature <slug>` in the closing block. Turn contract gained a matching box. Part of #78. |
 | 3.1.1 | 2026-07-13 | patch | Guardrails cross-reference fix: the MERGE-READY comment now correctly cites Process step 6 (was still pointing at the pre-3.1.0 step 5 after the fold-ledger step renumbering). |
 | 3.1.0 | 2026-07-13 | minor | New process step 5 (BLOCKED verdict only): every blocker persists to the **same** fix-now fold ledger `review-findings.md` that `review-change` writes (D4 — one ledger for the fold cycle), severity `high` (a blocker gates the merge by definition), deduped by `file:line`+axis, no write on a merged unit. Remaining process steps renumbered (6→8). Part of feature 17 (`finding-severity-routing`). |
 | 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
@@ -421,8 +421,9 @@ How pinning actually works, verified against the `skills` CLI:
 
 - **2026-07-17 — audit-pr-closure-integrity (fix 78).** MINOR bump for
   `audit-pr` (3.2.0): new closure-integrity gate in the merge-readiness
-  contract — a purely mechanical check (grep `## Capability closure`) that a
-  feature SPEC's capability closure was actually taken and recorded; blocker
+  contract — a purely mechanical check (grep for a `Capability closure`
+  heading, any level) that a feature SPEC's capability closure was actually
+  taken and recorded; blocker
   on a blank/unmapped row, `n/a: <reason>` passes, absent block yields a
   dated `design-debt` warning (never a blocker) that doubles as the retrofit
   trigger. Fix-governed PRs are always n/a. MINOR bump for `design-feature`
