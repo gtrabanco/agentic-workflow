@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 2.0.0
+version: 2.1.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -172,7 +172,13 @@ research is the Engineering half's job, not this one.
     `decisions.md` (dated, with what changed and why) — it never rewrites or
     deletes a prior decision. The only path that starts the product half from
     zero is an explicit "delete and redesign" in the prompt; even then, record
-    that reset itself in `decisions.md`.
+    that reset itself in `decisions.md`. **This is the retrofit path
+    `audit-pr`'s closure-integrity gate routes to:** a legacy SPEC with no
+    `Capability closure` block trips that gate's dated `design-debt:
+    closure absent, SPEC predates the rule` warning (never a blocker) on the
+    next PR touching the feature; re-running `design-feature <slug>` there
+    fills only the missing closure rows via this same upsert — it never
+    rewrites what's already recorded.
 12. **Hand off.** Once `designed`, print the closing block (see *Done when*)
     recommending `/plan-feature <slug>`.
 

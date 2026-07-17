@@ -175,6 +175,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.1.0 | 2026-07-17 | minor | Upsert semantics section now cross-references `audit-pr`'s closure-integrity gate: a legacy SPEC's dated `design-debt` warning is the retrofit trigger, and re-running this skill fills only the missing closure rows via the same upsert-never-destroy path. Part of #78. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also removed a dangling self-reference to the deleted section (a `NEEDS_INPUT` cross-pointer). See `docs/workflow/MIGRATION.md`. |
 | 1.1.0 | 2026-07-09 | minor | Now **sets** the roadmap row status, not just reads it: stamping `## Design status: designed` sets the feature's roadmap row to `defined` (the `idea → defined` transition this skill owns) — added at `idea` first if the row didn't exist. `NEEDS_INPUT` leaves both the marker and the row unchanged. Turn contract and Done when gained the matching boxes. |
 | 1.0.0 | 2026-07-09 | — | New skill: product definition, split out of `plan-feature`. Folds in the raw-idea interview and walks a fixed **capability-closure** checklist (per entity: CRUD + state transitions, each with UI + API + test, or explicit `n/a: <reason>`; per capability: entry point + ACL; per role: assigned/revoked/viewed) into the SPEC's Product half + Acceptance criteria, stamping `## Design status: designed`. Upserts on re-run (never destroys `decisions.md`); bare `<slug>` reviews and asks, `<slug> "<instruction>"` applies directly. |
@@ -252,6 +253,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.2.0 | 2026-07-17 | minor | New **closure integrity** gate in the merge-readiness contract: grep the governing feature SPEC for a `Capability closure` heading (any level); a present block with a blank row or an unmapped non-`n/a` row is a blocker, `n/a: <reason>` passes, absent block yields a dated `design-debt: closure absent, SPEC predates the rule` warning (never a blocker) — fix-governed PRs are always n/a. The warning doubles as the retrofit trigger, routed to `/design-feature <slug>` in the closing block. Turn contract gained a matching box. Part of #78. |
 | 3.1.1 | 2026-07-13 | patch | Guardrails cross-reference fix: the MERGE-READY comment now correctly cites Process step 6 (was still pointing at the pre-3.1.0 step 5 after the fold-ledger step renumbering). |
 | 3.1.0 | 2026-07-13 | minor | New process step 5 (BLOCKED verdict only): every blocker persists to the **same** fix-now fold ledger `review-findings.md` that `review-change` writes (D4 — one ledger for the fold cycle), severity `high` (a blocker gates the merge by definition), deduped by `file:line`+axis, no write on a merged unit. Remaining process steps renumbered (6→8). Part of feature 17 (`finding-severity-routing`). |
 | 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
@@ -416,6 +418,17 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-17 — audit-pr-closure-integrity (fix 78).** MINOR bump for
+  `audit-pr` (3.2.0): new closure-integrity gate in the merge-readiness
+  contract — a purely mechanical check (grep for a `Capability closure`
+  heading, any level) that a feature SPEC's capability closure was actually
+  taken and recorded; blocker
+  on a blank/unmapped row, `n/a: <reason>` passes, absent block yields a
+  dated `design-debt` warning (never a blocker) that doubles as the retrofit
+  trigger. Fix-governed PRs are always n/a. MINOR bump for `design-feature`
+  (2.1.0): upsert semantics section cross-references the retrofit trigger —
+  a re-run fills only the missing closure rows.
 
 - **2026-07-17 — plan-fix-multi-issue-semantics (fix 80).** MINOR bump for
   `plan-fix` (2.3.0): `/plan-fix <n> [<n2> …]` now has fully defined
