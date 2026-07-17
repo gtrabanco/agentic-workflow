@@ -169,7 +169,7 @@ Layer: `docs`. Done-when: `grep` on `skills/design-feature/SKILL.md` finds a
 reference to `audit-pr`'s closure-integrity gate / retrofit trigger in the
 upsert section.
 
-- [ ] In `design-feature`'s upsert semantics section, note that `audit-pr`'s
+- [x] In `design-feature`'s upsert semantics section, note that `audit-pr`'s
       closure-integrity warning is the retrofit trigger: re-running
       `design-feature <slug>` on a legacy feature fills only the missing closure
       rows (upsert never destroys recorded decisions) before that new work is
