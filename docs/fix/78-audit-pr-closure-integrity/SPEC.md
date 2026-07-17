@@ -122,7 +122,7 @@ Design discussion, 2026-07-17 (recorded in issue #78); triaged the same day to
       `CHANGELOG.es.md` rows added, README skill-version tables reflect the new
       versions.
 - [x] `npx skills add . --list` still discovers every skill (no YAML breakage).
-- [ ] GOLDEN_FIXTURE smoke test recorded: a weak model given a hollow closure
+- [x] GOLDEN_FIXTURE smoke test recorded: a weak model given a hollow closure
       block produces BLOCKED with the design-debt route; given a SPEC with no
       closure block produces the warning and does **not** block (run-log row
       appended to `docs/workflow/GOLDEN_FIXTURE.md`).
@@ -203,13 +203,13 @@ new `audit-pr` + `design-feature` versions appear in both READMEs.
 
 ### P5 — Hardening & PR
 
-- [ ] GOLDEN_FIXTURE smoke test (`manual`): with the weakest fleet model, drive
+- [x] GOLDEN_FIXTURE smoke test (`manual`): with the weakest fleet model, drive
       the reworded `audit-pr` against two SPEC variants — a hollow closure block
       (blank row) → BLOCKED with the design-debt/`design-feature` route; a SPEC
       with no closure block → the dated warning, no block. Append a run-log row
       to `docs/workflow/GOLDEN_FIXTURE.md`.
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
