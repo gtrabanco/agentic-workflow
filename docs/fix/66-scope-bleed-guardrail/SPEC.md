@@ -210,22 +210,25 @@ Layer: `docs`. Done-when: `grep` on `skills/audit-pr/SKILL.md` finds the Scope
 integrity (descope) gate row, the born-issues detection command, the per-issue
 checklist, the `BLOCKER` path, and the new turn-contract box.
 
-- [ ] Add a **Scope integrity (descope)** row to the merge-readiness contract
+- [x] Add a **Scope integrity (descope)** row to the merge-readiness contract
       table (blocker when an issue born during the unit maps to an unmet
       acceptance criterion with no matching `## Amendments` entry).
-- [ ] Add the fixed-output gate detail after the table: mechanical detection of
+      (`skills/audit-pr/SKILL.md:113`)
+- [x] Add the fixed-output gate detail after the table: mechanical detection of
       issues born since branch divergence referencing the unit; the per-issue
       checklist (criterion met **or** amendment exists → pass, else BLOCKER);
       the symmetric `## Amendments`-row validity check (dated, user-approved,
-      linked).
-- [ ] State the gate scope (any SPEC-governed PR — feature and fix; nothing
+      linked). (`skills/audit-pr/SKILL.md:153-172`)
+- [x] State the gate scope (any SPEC-governed PR — feature and fix; nothing
       exported → passes) and that the `## Amendments` log is the authoritative
       record it keys off (single-source cross-ref to `execute-phase`).
-- [ ] Add a **turn-contract box** requiring the scope-bleed gate to be evaluated
-      (pass / blocker / n-a) on every audit.
-- [ ] Wire the closing `→ Next:` block: a scope-bleed blocker routes to the
+      (`skills/audit-pr/SKILL.md:156-157,173-175`)
+- [x] Add a **turn-contract box** requiring the scope-bleed gate to be evaluated
+      (pass / blocker / n-a) on every audit. (`skills/audit-pr/SKILL.md:51-53`)
+- [x] Wire the closing `→ Next:` block: a scope-bleed blocker routes to the
       amendment-or-triage decision (record the `## Amendments` entry, or
       re-classify the issue as genuinely discovered).
+      (`skills/audit-pr/SKILL.md:319-321`)
 
 ### P3 — Recurrence signal in product-audit
 
@@ -430,4 +433,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`in-progress` (P1 of 6 done)
+`in-progress` (P2 of 6 done)
