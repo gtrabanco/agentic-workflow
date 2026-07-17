@@ -282,14 +282,16 @@ READMEs.
       Claude Haiku 4.5 — both cases correctly classified, row appended EN+ES)
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
       (`npx skills add . --list` → exit 0)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip (sha `8bdbc62`)
+- [x] `git push` (sha `8bdbc62` pushed, branch tracking origin)
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #66`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #66` and push
+      (https://github.com/gtrabanco/agentic-workflow/pull/88, verified 0
+      escaped backticks)
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #66` and push
 
 ## Testing
 
@@ -438,4 +440,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`done` (built; PR link added in the follow-up commit — see Hardening & PR phase)
+`done` · [#88](https://github.com/gtrabanco/agentic-workflow/pull/88)
