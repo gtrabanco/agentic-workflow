@@ -299,7 +299,7 @@ new versions appear in both READMEs.
 
 ### P5 — Hardening & PR
 
-- [ ] GOLDEN_FIXTURE smoke test (`manual`): run the procedure in
+- [x] GOLDEN_FIXTURE smoke test (`manual`): run the procedure in
       `docs/workflow/GOLDEN_FIXTURE.md` against the reworded executor-path
       skills with the weakest fleet model — confirm the lint block renders and
       the pre-flight STOP fires on a deliberately non-atomic fixture phase.
