@@ -216,6 +216,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.1 | 2026-07-17 | patch | Step 11's `→ Next:` block now branches explicitly on `Decision`: a `FAIL` block recommends folding the fix-now findings (gate green, commit + push, re-run `/review-change`) with `/audit-pr` demoted to a table-clean sub-bullet, a `PASS` block keeps `/audit-pr — merge gate`; the `/product-audit` recurrence condition is now an explicit yes/no checkbox, and the block must render as multiple literal lines, never `·`-joined prose. Fixes #63 — weak models (observed: qwen3.6-thinking) were copying the old single static template verbatim, recommending the merge gate even on `FAIL`. |
 | 2.2.0 | 2026-07-13 | minor | New persist step (process step 9): fix-now findings now append to the unit's fix-now fold ledger `review-findings.md` (fixed schema `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` starts `no`), deduped by `file:line`+axis, on an unmerged unit — a merged unit gets no write. `→ Next:` and the Routing section now mention the ledger for fix-now findings. Non-fix-now findings unaffected. Part of feature 17 (`finding-severity-routing`). |
 | 2.1.1 | 2026-07-10 | patch | Clarified the N-semantics wording: distinguishes "`--adversarial` flag not passed at all" (single-reviewer, no message) from "`--adversarial` passed without a valid N" (no number, or `< 2` — usage error, falls back to single-reviewer). Fixes a contradiction with `decisions.md` D1, which required the usage error on both the missing-N and N<2 cases. No behavior change to the default no-flag path. |
 | 2.1.0 | 2026-07-10 | minor | New opt-in `--adversarial N` mode: N independent, context-clean, diff-only, adversarial reviewers run in parallel (Claude Code subagents / headless invocations / sequential fresh conversations), findings merged and deduped by `file:line`+axis into the existing decision table with a `Reviewers n/N` confidence column, inclusion threshold ≥1 (no quorum). Default OFF; auto-recommended (never forced) for `L`/sensitive-flagged changes. Default no-flag path unchanged. |
@@ -403,6 +404,18 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-17 — next-block-verdict-branching (fix 63).** PATCH bump for
+  `review-change` (2.2.1): step 11's `→ Next:` block now branches explicitly
+  on `Decision` — a `FAIL` block leads with folding the fix-now findings
+  (gate green, commit + push, re-run `/review-change`), demoting `/audit-pr`
+  to a table-clean-gated sub-bullet; a `PASS` block keeps
+  `/audit-pr — merge gate`. The `/product-audit` recurrence condition is now
+  an explicit yes/no checkbox, and the block must render as multiple literal
+  lines, never `·`-joined prose — restores the "checklists over heuristics;
+  fixed output formats" contract that a weak model (observed:
+  qwen3.6-thinking) was silently violating by copying the old single static
+  template verbatim even on `FAIL`.
 
 - **2026-07-14 — triage-disposition-labels P1–P2 (fix 54).** MINOR bump for
   `triage-issue` (2.2.0): owns and applies the terminal-disposition labels

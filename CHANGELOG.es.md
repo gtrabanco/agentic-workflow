@@ -217,6 +217,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.1 | 2026-07-17 | parche | El bloque `→ Next:` del paso 11 ahora se ramifica explícitamente según `Decision`: un bloque `FAIL` recomienda foldear los hallazgos fix-now (gate en verde, commit + push, re-ejecutar `/review-change`) con `/audit-pr` degradado a sub-bullet condicionado a la tabla limpia; un bloque `PASS` mantiene `/audit-pr — merge gate`. La condición de recurrencia de `/product-audit` ahora es una casilla explícita sí/no, y el bloque debe emitirse como líneas literales múltiples, nunca como prosa unida con `·`. Corrige el issue #63 — modelos débiles (observado: qwen3.6-thinking) copiaban la plantilla estática única anterior de forma literal, recomendando el merge gate incluso en `FAIL`. |
 | 2.2.0 | 2026-07-13 | menor | Nuevo paso de persistencia (paso de proceso 9): los hallazgos fix-now ahora se anexan al **ledger de fold fix-now** de la unidad, `review-findings.md` (esquema fijo `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` empieza en `no`), deduplicado por `file:line`+axis, en una unidad no mergeada — una unidad mergeada no recibe escritura. El bloque `→ Next:` y la sección Routing ahora mencionan el ledger para hallazgos fix-now. Los hallazgos no-fix-now no se ven afectados. Parte de la feature 17 (`finding-severity-routing`). |
 | 2.1.1 | 2026-07-10 | parche | Aclarada la semántica de N: distingue "el flag `--adversarial` no se pasó en absoluto" (modo de un solo revisor, sin mensaje) de "`--adversarial` se pasó sin un N válido" (sin número, o un número `< 2` — error de uso, cae al modo de un solo revisor). Corrige una contradicción con la decisión D1 de `decisions.md`, que exigía el error de uso tanto para N ausente como para N<2. Sin cambio de comportamiento en la ruta por defecto sin flag. |
 | 2.1.0 | 2026-07-10 | menor | Nuevo modo opt-in `--adversarial N`: N revisores independientes, context-clean, solo-diff y adversariales corren en paralelo (subagentes de Claude Code / invocaciones headless / conversaciones nuevas secuenciales), hallazgos fusionados y deduplicados por `file:line`+eje en la misma tabla de decisión existente con una columna de confianza `Reviewers n/N`, umbral de inclusión ≥1 (sin quórum). Por defecto DESACTIVADO; auto-recomendado (nunca forzado) para cambios `L`/marcados como sensibles. La ruta por defecto sin flag no cambia. |
@@ -404,6 +405,19 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-17 — next-block-verdict-branching (fix 63).** Bump PARCHE para
+  `review-change` (2.2.1): el bloque `→ Next:` del paso 11 ahora se ramifica
+  explícitamente según `Decision` — un bloque `FAIL` encabeza con foldear los
+  hallazgos fix-now (gate en verde, commit + push, re-ejecutar
+  `/review-change`), degradando `/audit-pr` a un sub-bullet condicionado a la
+  tabla limpia; un bloque `PASS` mantiene `/audit-pr — merge gate`. La
+  condición de recurrencia de `/product-audit` ahora es una casilla explícita
+  sí/no, y el bloque debe emitirse como líneas literales múltiples, nunca
+  como prosa unida con `·` — restaura el contrato "checklists sobre
+  heurísticas; formatos de salida fijos" que un modelo débil (observado:
+  qwen3.6-thinking) violaba silenciosamente al copiar la plantilla estática
+  única anterior de forma literal incluso en `FAIL`.
 
 - **2026-07-14 — triage-disposition-labels P1–P2 (fix 54).** Bump MENOR para
   `triage-issue` (2.2.0): es propietaria y aplica las etiquetas de disposición
