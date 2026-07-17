@@ -108,24 +108,24 @@ smuggling, >12-box close-outs, external gates between code boxes).
 
 Objective, verifiable conditions for "done":
 
-- [ ] `docs/fix/_TEMPLATE/SPEC.md` `## Phases` contains the canonical 8-box
+- [x] `docs/fix/_TEMPLATE/SPEC.md` `## Phases` contains the canonical 8-box
       phase-lint block (all 8 boxes present, verbatim wording per In-scope §1).
-- [ ] `docs/features/_TEMPLATE/SPEC.md` `### Phases` quotes the same 8-box
+- [x] `docs/features/_TEMPLATE/SPEC.md` `### Phases` quotes the same 8-box
       block, with a marker pointing to the fix template as the authoritative
       copy (grep both files → the 8 box labels match).
-- [ ] `plan-feature-scaffold/SKILL.md` states the emit-time lint and the
+- [x] `plan-feature-scaffold/SKILL.md` states the emit-time lint and the
       on-FAIL re-cut/split behavior, referencing the canonical block.
-- [ ] `plan-fix/SKILL.md` Algorithm step 12 (Phases) + step 13 (Self-review)
+- [x] `plan-fix/SKILL.md` Algorithm step 12 (Phases) + step 13 (Self-review)
       require the lint to pass before emitting the phase list.
-- [ ] `execute-phase/SKILL.md` has a pre-flight phase-lint guard that STOPS on
+- [x] `execute-phase/SKILL.md` has a pre-flight phase-lint guard that STOPS on
       FAIL with a fixed output block, recommends re-cutting, and documents the
       `--force` override + its `decisions.md` log.
-- [ ] Every edited `SKILL.md` has its `version:` bumped (minor — new
+- [x] Every edited `SKILL.md` has its `version:` bumped (minor — new
       backward-compatible capability) and a row in `CHANGELOG.md` +
       `CHANGELOG.es.md`; `README.md` + `README.es.md` skill tables reflect the
       new versions. (via `bump-skill`)
-- [ ] `npx skills add . --list` still discovers every skill (no YAML breakage).
-- [ ] GOLDEN_FIXTURE smoke test run on the reworded executor-path skills
+- [x] `npx skills add . --list` still discovers every skill (no YAML breakage).
+- [x] GOLDEN_FIXTURE smoke test run on the reworded executor-path skills
       (`plan-feature-scaffold`, `plan-fix`, `execute-phase`) with the weakest
       fleet model — the lint block renders and the pre-flight STOP triggers on a
       deliberately non-atomic fixture phase.
@@ -306,12 +306,13 @@ new versions appear in both READMEs.
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #64`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #64` and push
+      (https://github.com/gtrabanco/agentic-workflow/pull/75)
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #75` and push
 
 ## Testing
 
