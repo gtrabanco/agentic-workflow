@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.2.1
+version: 2.3.0
 argument-hint: <path-or-glob> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -196,9 +196,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    fold, never the merge gate:
 
    ```
-   → Next: fold the fix-now findings into the branch — gate green, COMMIT and
-     PUSH (execute-phase's fold cycle ticks each folded row `folded: yes`; an
-     unpushed fix doesn't exist for CI or the PR), then re-run /review-change
+   → Next: /fold-findings — repair each fix-now finding for real (frozen
+     classification, no known-issues dump/downgrade/suppression escape hatch),
+     then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
