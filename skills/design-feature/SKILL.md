@@ -174,7 +174,7 @@ research is the Engineering half's job, not this one.
     zero is an explicit "delete and redesign" in the prompt; even then, record
     that reset itself in `decisions.md`. **This is the retrofit path
     `audit-pr`'s closure-integrity gate routes to:** a legacy SPEC with no
-    `## Capability closure` block trips that gate's dated `design-debt:
+    `Capability closure` block trips that gate's dated `design-debt:
     closure absent, SPEC predates the rule` warning (never a blocker) on the
     next PR touching the feature; re-running `design-feature <slug>` there
     fills only the missing closure rows via this same upsert — it never
