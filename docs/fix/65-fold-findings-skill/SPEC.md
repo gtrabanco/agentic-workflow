@@ -187,11 +187,11 @@ ticks tasks here.
 
 ### P3 — Sync docs and smoke-test
 
-- [ ] Run `bump-skill`: confirm `fold-findings` 1.0.0 + the two wiring bumps land in
+- [x] Run `bump-skill`: confirm `fold-findings` 1.0.0 + the two wiring bumps land in
       `CHANGELOG.md`, `CHANGELOG.es.md`, and the README skills + model tables
       (EN + ES). Report its 5-rule lint.
-- [ ] `npx skills add . --list` → `fold-findings` appears.
-- [ ] Run the `docs/workflow/GOLDEN_FIXTURE.md` procedure on the weakest fleet model
+- [x] `npx skills add . --list` → `fold-findings` appears.
+- [x] Run the `docs/workflow/GOLDEN_FIXTURE.md` procedure on the weakest fleet model
       for `fold-findings`, `execute-phase`, and `review-change`; paste the outcome.
 
 ### P4 — Hardening & PR
