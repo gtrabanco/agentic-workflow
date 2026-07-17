@@ -140,26 +140,26 @@ three boxes, the `design-debt: closure absent, SPEC predates the rule` warning
 string, the `n/a: <reason>` passing note, and the `/design-feature <slug>`
 route.
 
-- [ ] Add a **Closure integrity** gate row to the merge-readiness contract
+- [x] Add a **Closure integrity** gate row to the merge-readiness contract
       table (what it means: the governing feature SPEC's capability closure was
       taken and recorded; blocker when a present closure block has a blank row
       or an unmapped non-`n/a` row).
-- [ ] Add the fixed-output gate detail after the table: the three boxes
+- [x] Add the fixed-output gate detail after the table: the three boxes
       (block present · zero blank rows · every non-`n/a` row maps to an
       acceptance criterion), stating `n/a: <reason>` is a valid passing row and
       the check never demands surface.
-- [ ] State the mechanical legacy-vs-new detection (grep for `## Capability
+- [x] State the mechanical legacy-vs-new detection (grep for `## Capability
       closure`, never dates/versions) and the two paths: block present → boxes
       are blockers; block absent → dated warning `design-debt: closure absent,
       SPEC predates the rule`, PR still merges.
-- [ ] State the gate scope: feature-governed PRs only; fix-governed PRs are
+- [x] State the gate scope: feature-governed PRs only; fix-governed PRs are
       `n/a` (no closure block by design, never a warning).
-- [ ] State the retrofit trigger in the warning text (new work touching a
+- [x] State the retrofit trigger in the warning text (new work touching a
       legacy feature fills the closure via `design-feature` upsert before
       planning that work).
-- [ ] Add a turn-contract box requiring the closure gate to be evaluated
+- [x] Add a turn-contract box requiring the closure gate to be evaluated
       (pass / blocker / warning / n-a) on every audit.
-- [ ] Wire the closing `→ Next:` block: on a closure warning/blocker, recommend
+- [x] Wire the closing `→ Next:` block: on a closure warning/blocker, recommend
       `/design-feature <slug>` (upsert); keep the existing alternatives as
       sub-bullets.
 
