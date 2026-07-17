@@ -343,6 +343,7 @@ plan de €200 simplemente corre GLM-5.2 en todas partes):
 | Tarea | Skills | Plan de €200 | Escalera del plan básico | Nunca aquí |
 |---|---|---|---|---|
 | **Puertas de merge** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max para `product-audit`) | 1. **Mimo V2.5** (reasoning siempre activo) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, suelo) → si no, **pospón al humano** | Qwen3.6, Gemma4 |
+| **Definición de producto** | `design-feature` | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning siempre activo; una familia distinta del ejecutor Qwen añade independencia) → 2. **Qwen3.6** (thinking ON — solo para features XS/S o derivadas, ahorra cuota) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
 | **Planificación / enrutamiento / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, conductor de `ship-roadmap` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (ahorra cuota) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
 | **Ejecución / mecánico** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** solo tras pasar el smoke test de tool calling | Mimo V2.5 (el reasoning no se puede apagar — quema su cuota limitada) |
 | **Barato** | `log-session`, recolección de evidencia | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (solo pasos no agénticos, o tras el smoke test de tools) | Mimo V2.5 |
@@ -354,6 +355,21 @@ de lógica sutil). Regla general: el modelo que arregla nunca es más débil
 que el que escribió el código original, ni más débil de lo que exige la
 sutileza del hallazgo — de lo contrario el propio arreglo necesita
 volver a atraparse en la re-revisión, desperdiciando un ciclo.
+
+**Por qué `design-feature` está en la clase de puertas de merge, no en el
+tier barato:** su salida — la mitad de producto del SPEC más el cierre de
+capacidades — son los **supuestos fundacionales** sobre los que se construye
+el resto del flujo, así que un error ahí se propaga por plan → execute →
+review, el mismo radio de impacto que un veredicto de puerta de merge. El
+reasoning siempre activo de Mimo V2.5 es el gasto correcto aquí (pocas
+invocaciones, alto apalancamiento) — a diferencia del volumen mecánico,
+donde ese mismo reasoning siempre activo quema cuota sin beneficio. Qwen3.6
+con thinking activado es aceptable solo como segundo peldaño, y solo para
+features XS/S o derivadas: la entrevista de idea en bruto mantiene a un
+humano en el bucle, y la puerta de cierre de capacidades de `plan-feature`
+vuelve a verificar la salida después (la misma advertencia de razonamiento
+re-comprobado de abajo). Como con cada elección de modelo aquí, comprueba la
+disponibilidad con `GET /v1/models` antes de fijarla.
 
 **Advertencia de razonamiento de `Qwen3.6`, explícita:** aceptable solo para
 razonamiento **re-comprobado** (salida de planificación/enrutamiento/triage

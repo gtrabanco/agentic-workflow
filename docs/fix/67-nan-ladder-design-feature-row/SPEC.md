@@ -123,18 +123,18 @@ Objective, verifiable conditions for "done":
 
 ### P1 — Add the Product definition ladder row (both READMEs)
 
-- [ ] `README.md`: insert the **Product definition** row into the *Preference
+- [x] `README.md`: insert the **Product definition** row into the *Preference
       ladders per task* table immediately after the **Merge gates** row, five
       columns verbatim from the issue's proposed row.
-- [ ] `README.md`: add the condensed four-point rationale paragraph below the
+- [x] `README.md`: add the condensed four-point rationale paragraph below the
       table (near the `Qwen3.6` reasoning caveat).
-- [ ] `README.es.md`: insert the faithful Spanish **Definición de producto** row
+- [x] `README.es.md`: insert the faithful Spanish **Definición de producto** row
       in the same table position (after *Puertas de merge*).
-- [ ] `README.es.md`: add the faithful Spanish rationale paragraph.
-- [ ] Verify both tables still render (pipe/column count unchanged) and
+- [x] `README.es.md`: add the faithful Spanish rationale paragraph.
+- [x] Verify both tables still render (pipe/column count unchanged) and
       `git grep -n "Product definition" README.md` +
       `git grep -n "Definición de producto" README.es.md` each hit the new row.
-- [ ] Commit both files together (bilingual sync rule — never an EN-only diff).
+- [x] Commit both files together (bilingual sync rule — never an EN-only diff).
 
 ### P2 — Hardening & PR
 
