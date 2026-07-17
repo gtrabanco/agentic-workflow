@@ -187,19 +187,22 @@ Layer: `docs`. Done-when: `grep` on `skills/execute-phase/SKILL.md` finds the
 descope test checklist, the STOP block, the `## Amendments` row format, the new
 Forbidden entry, and the new turn-contract box.
 
-- [ ] Add a **descope guard** subsection to the Issue policy: the fixed descope
+- [x] Add a **descope guard** subsection to the Issue policy: the fixed descope
       test (issue overlaps an unmet acceptance criterion/phase task → descope;
-      else discovered work → file freely).
-- [ ] Add the fixed **descope STOP block** — on a descope, stop and require a
+      else discovered work → file freely). (`skills/execute-phase/SKILL.md:296-317`)
+- [x] Add the fixed **descope STOP block** — on a descope, stop and require a
       user-approved dated `## Amendments` entry (criterion moved out of active
       `## Acceptance`) before the linked follow-up issue may be created.
-- [ ] Define the canonical **`## Amendments` row format** once
+      (`skills/execute-phase/SKILL.md:305-315`)
+- [x] Define the canonical **`## Amendments` row format** once
       (`- <YYYY-MM-DD> — descoped: "<criterion/task>" — approved by user —
       follow-up: #<n>`), noting the other two skills reference this definition.
-- [ ] Add the **Forbidden**-list entry: creating an issue that descopes a SPEC
+      (`skills/execute-phase/SKILL.md:313,316-317`)
+- [x] Add the **Forbidden**-list entry: creating an issue that descopes a SPEC
       criterion/task without a user-approved dated amendment.
-- [ ] Add a **turn-contract box** asserting the descope guard was applied to
-      every issue created during the turn.
+      (`skills/execute-phase/SKILL.md:218-221`)
+- [x] Add a **turn-contract box** asserting the descope guard was applied to
+      every issue created during the turn. (`skills/execute-phase/SKILL.md:63-68`)
 
 ### P2 — Scope-bleed gate in the audit-pr contract
 
@@ -427,4 +430,4 @@ kind of change. Multi-commit, ≤ 1 day.
 
 ## Status
 
-`pending`
+`in-progress` (P1 of 6 done)
