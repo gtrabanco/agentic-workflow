@@ -121,7 +121,7 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 >   SPECs carry no closure block by design; never emit a warning for one.
 > - **Feature SPEC, block present** → evaluate the three boxes, each a blocker
 >   on failure:
->   1. the block exists in the SPEC (already true in this branch)
+>   1. the block exists in the SPEC (true whenever this path is reached)
 >   2. zero blank rows — every entity/capability/role row is either filled
 >      (UI + API + test) or carries an explicit `n/a: <reason>`
 >   3. every resolved non-`n/a` row maps to a listed acceptance criterion
