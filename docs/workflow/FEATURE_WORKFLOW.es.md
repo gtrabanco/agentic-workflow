@@ -275,7 +275,10 @@ puerta de merge se ejecutan entonces sobre el PR:
   todas las fases completas, docs/tests/CI en verde (**nunca fusionar con
   docs pendientes**), `Closes #N` presente, la entrada de issue/índice de
   fixes aún rastreada (se elimina solo después del merge), rama
-  independientemente fusionable, y los ejes de revisión limpios →
+  independientemente fusionable, los ejes de revisión limpios, e
+  **integridad de cierre** (el `## Capability closure` de una SPEC de feature
+  no tiene filas en blanco; si falta en una SPEC legacy → warning datado
+  `design-debt`, nunca bloqueante; `n/a` en PRs de fix) →
   **merge-ready o una lista de bloqueadores**.
 
 Vuelve a ejecutar la puerta (chequeo de tipos, tests, build) en verde.
