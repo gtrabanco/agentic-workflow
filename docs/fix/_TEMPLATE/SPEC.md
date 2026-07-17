@@ -58,6 +58,34 @@ and ticks tasks here. **Always ≥ 2 phases**: `P1..Pn` implement the fix
 always `Hardening & PR` — keep its pre-written tasks **literally**, never
 paraphrase or merge them into an implementation phase.
 
+### Phase-lint (authoritative copy — keep in sync with
+`docs/features/_TEMPLATE/SPEC.md` `### Phases`)
+
+Every implementation phase below must pass all 8 boxes before it is emitted
+(planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
+unticked box blocks emission/execution until the phase is re-cut or split.
+
+- [ ] Title names ONE deliverable — FAIL if it joins nouns with `+`, `,`,
+      `&`, `and`/`y`, or `/`.
+- [ ] One declared layer — each phase declares exactly one of the fixed enum
+      `schema/db | domain | api | ui | config/infra | docs | hardening |
+      close-out`; FAIL if any task's target file belongs to another. Tests
+      for the phase's own layer belong to the phase; a test-only phase
+      declares `hardening`.
+- [ ] ≤ 8 tasks (close-out phase: ≤ 10, only the literal close-out chain).
+- [ ] One checkbox = one deliverable — FAIL if a task contains a `→` chain
+      of implementation steps, enumerates > 3 cases/scenarios, or creates
+      > 1 file of distinct concerns.
+- [ ] Zero decision words — FAIL on `Decide`, `choose`, `OR` between
+      alternatives, `If … then <change scope>`.
+- [ ] No conditional scope mutation — a task may not move work between
+      phases at runtime.
+- [ ] No external/manual gates inside implementation phases —
+      human/out-of-repo verifications live in the hardening/close-out phase,
+      marked `manual`.
+- [ ] Machine-checkable done-when — every phase ends with one verifiable
+      invariant (a command + expected outcome).
+
 ### P1 — <implementation>
 
 - [ ] <task — independently checkable, mapped to evidence>
