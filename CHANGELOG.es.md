@@ -176,6 +176,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `design-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-17 | menor | La sección de semántica de upsert ahora referencia cruzadamente la puerta de integridad de cierre de `audit-pr`: el warning datado `design-debt` de una SPEC legacy es el disparador de retrofit, y reejecutar esta skill rellena solo las filas de cierre faltantes por el mismo camino de upsert-nunca-destruye. Parte de #78. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. También se elimina una referencia colgante a la sección borrada (un puntero cruzado en `NEEDS_INPUT`). Ver `docs/workflow/MIGRATION.md`. |
 | 1.1.0 | 2026-07-09 | menor | Ahora **escribe** el estado de la fila del roadmap, no solo lo lee: sellar `## Design status: designed` pone la fila del roadmap de esta feature en `defined` (la transición `idea → defined` que esta skill posee) — añadida en `idea` primero si la fila no existía. `NEEDS_INPUT` deja tanto el marcador como la fila sin cambios. El contrato de turno y "Listo cuando" ganan las casillas correspondientes. |
 | 1.0.0 | 2026-07-09 | — | Nueva skill: definición de producto, separada de `plan-feature`. Incorpora la entrevista de idea en crudo y recorre un checklist fijo de **cierre de capacidades** (por entidad: CRUD + transiciones de estado, cada una con UI + API + test, o `n/a: <razón>` explícito; por capacidad: punto de entrada + ACL; por rol: asignado/revocado/visto dónde) hacia la mitad de producto del SPEC + criterios de aceptación, sellando `## Design status: designed`. Hace upsert al reejecutarse (nunca destruye `decisions.md`); `<slug>` sin más revisa y pregunta, `<slug> "<instrucción>"` aplica directamente. |
@@ -253,6 +254,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.2.0 | 2026-07-17 | menor | Nueva puerta de **integridad de cierre** en el contrato de merge-readiness: grep sobre la SPEC de feature que gobierna en busca de `## Capability closure`; un bloque presente con una fila en blanco o una fila no-`n/a` sin mapear es bloqueante, `n/a: <razón>` pasa, un bloque ausente produce un warning datado `design-debt: closure absent, SPEC predates the rule` (nunca bloqueante) — los PRs gobernados por fix son siempre n/a. El warning es a la vez el disparador de retrofit, enrutado a `/design-feature <slug>` en el bloque de cierre. El contrato de turno gana la casilla correspondiente. Parte de #78. |
 | 3.1.1 | 2026-07-13 | parche | Corrección de referencia cruzada en Guardrails: el comentario MERGE-READY ahora cita correctamente el paso de proceso 6 (seguía apuntando al paso 5 previo a la renumeración de 3.1.0). |
 | 3.1.0 | 2026-07-13 | menor | Nuevo paso de proceso 5 (solo en veredicto BLOCKED): cada blocker se persiste en el **mismo** ledger de fold fix-now `review-findings.md` que escribe `review-change` (D4 — un solo ledger para el ciclo de fold), severidad `high` (un blocker bloquea el merge por definición), deduplicado por `file:line`+axis, sin escritura en una unidad mergeada. Pasos de proceso restantes renumerados (6→8). Parte de la feature 17 (`finding-severity-routing`). |
 | 3.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
@@ -417,6 +419,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-17 — audit-pr-closure-integrity (fix 78).** Bump MENOR para
+  `audit-pr` (3.2.0): nueva puerta de integridad de cierre en el contrato de
+  merge-readiness — un chequeo puramente mecánico (grep `## Capability
+  closure`) de que el cierre de capacidades de la SPEC de feature fue
+  realmente tomado y registrado; bloqueante en una fila en blanco/sin
+  mapear, `n/a: <razón>` pasa, un bloque ausente produce un warning datado
+  `design-debt` (nunca bloqueante) que es a la vez el disparador de
+  retrofit. Los PRs gobernados por fix son siempre n/a. Bump MENOR para
+  `design-feature` (2.1.0): la sección de semántica de upsert referencia
+  cruzadamente el disparador de retrofit — reejecutar rellena solo las
+  filas de cierre faltantes.
 
 - **2026-07-17 — plan-fix-multi-issue-semantics (fix 80).** Bump MENOR para
   `plan-fix` (2.3.0): `/plan-fix <n> [<n2> …]` ahora tiene semántica
