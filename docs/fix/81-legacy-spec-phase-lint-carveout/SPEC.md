@@ -257,11 +257,14 @@ than `2.4.0`.
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty (verified
       after this phase's commit)
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push` — evidence: commit `5a9aa87` pushed to
+      `fix/81-legacy-spec-phase-lint-carveout`.
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #81`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+      PRINT THE PR URL in the chat; the body includes `Closes #81`.
+      Evidence: [#83](https://github.com/gtrabanco/agentic-workflow/pull/83),
+      backticks verified rendering (0 `\`-escaped hits).
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
 - [ ] Commit `docs: link PR #81` and push
 
 ## Testing
