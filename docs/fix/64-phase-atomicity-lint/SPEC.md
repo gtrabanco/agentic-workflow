@@ -263,14 +263,14 @@ template files.
 Layer: `docs`. Done-when: both emitter skills name the lint and the on-FAIL
 re-cut/split behavior; `grep` finds the lint reference in each.
 
-- [ ] In `plan-feature-scaffold/SKILL.md`, add the emit-time lint to the
+- [x] In `plan-feature-scaffold/SKILL.md`, add the emit-time lint to the
       per-phase checklist (§ "Scale the artifacts"): phases pass only if the
       8 boxes tick; on FAIL re-cut or split via the existing mandatory-split
       rule. Reference the canonical block.
-- [ ] In `plan-fix/SKILL.md`, require the lint in Algorithm step 12 (Phases)
+- [x] In `plan-fix/SKILL.md`, require the lint in Algorithm step 12 (Phases)
       and add a self-review line in step 13 that the emitted `## Phases` passes
       all 8 boxes.
-- [ ] Verify: `grep` the lint reference in both skill bodies.
+- [x] Verify: `grep` the lint reference in both skill bodies.
 
 ### P3 — Pre-flight lint guard in execute-phase
 
