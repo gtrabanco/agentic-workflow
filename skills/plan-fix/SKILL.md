@@ -1,8 +1,8 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.2.0
-argument-hint: <issue-number>
+version: 2.3.0
+argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -41,13 +41,29 @@ Senior software architect. Skeptical, scope-disciplined, evidence-based. Refuses
 
 ## Input
 
-A GitHub issue number from this repo. Example: `plan-fix 17`.
+One or more GitHub issue numbers from this repo, space-separated.
+
+- **One number** → `plan-fix 17`. Today's single-issue behavior, unchanged.
+- **Multiple numbers** → `plan-fix 71 72 73`. Semantics deferred to Algorithm
+  step 5 (Multi-issue resolution): all issues are ingested, then a fixed
+  shared-root-cause checklist decides whether they merge into ONE unit or the
+  skill refuses and prints the split.
+- **Invalid input** (a non-number token, or an issue number that doesn't
+  exist in this repo) → usage error naming the bad token; never proceed
+  partially (see step 5).
 
 ## Output
 
-- `docs/fix/<issue-number>-<topic>/SPEC.md` — filled from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections below, including its `## Phases` execution ledger (**always ≥ 2 phases**; final = `Hardening & PR`).
-- Branch `fix/<issue-number>-<topic>` created from `main`.
-- One commit on that branch with the SPEC and the updated `docs/fix/README.md` entry (status `pending`).
+- `docs/fix/<primary-issue-number>-<topic>/SPEC.md` — filled from
+  `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections below, including its
+  `## Phases` execution ledger (**always ≥ 2 phases**; final =
+  `Hardening & PR`). `<primary-issue-number>` is the single issue number for
+  a one-number invocation, or the **lowest** issue number when multiple
+  issues merge into one unit (Algorithm step 5). When issues merge, the SPEC
+  scope lists every merged issue with its own acceptance criteria.
+- Branch `fix/<primary-issue-number>-<topic>` created from `main`.
+- One commit on that branch with the SPEC and the updated `docs/fix/README.md`
+  entry (status `pending`, referencing every merged issue when applicable).
 - **Stop. Do not push. Do not open the PR.** Hand off to `execute-phase --fix`.
 
 ## Hard rules
@@ -58,20 +74,68 @@ A GitHub issue number from this repo. Example: `plan-fix 17`.
 
 ## Algorithm
 
-1. **Ingest the issue.** `gh issue view <n> --json title,body,labels,number,author,createdAt,comments` (forge CLI per the project's Workflow conventions — examples here use `gh`; translate to the declared forge's CLI if different). Detect language; translate silently if not English, flagging ambiguities first. Derive `<topic>` slug from the title (kebab-case, ≤ 40 chars, no leading verb).
+1. **Ingest the issue(s).** For each issue number passed (one or many), run
+   `gh issue view <n> --json title,body,labels,number,author,createdAt,comments`
+   (forge CLI per the project's Workflow conventions — examples here use `gh`;
+   translate to the declared forge's CLI if different). Any token that isn't a
+   number, or that `gh issue view` fails to resolve, stops the run with the
+   **invalid-input** usage error (step 5) — never proceed with a partial set.
+   Detect language per issue; translate silently if not English, flagging
+   ambiguities first. Derive `<topic>` slug from the primary issue's title
+   (kebab-case, ≤ 40 chars, no leading verb) — see step 5 for which issue is
+   primary.
 2. **Read the docs map.** Read `CLAUDE.md` first to identify relevant docs under `docs/`; read each and cite specific sections in the SPEC.
-3. **Locate the affected code.** Name the layers (domain / use-cases / infrastructure / pages), modules and files (with paths), and the ports / adapters / entities involved.
-4. **Cross-issue analysis.** `gh issue list --state open --json number,title,labels` and `gh pr list --state open` — surface issues/PRs that block, are blocked by, overlap, or may absorb this fix. Classify each as prerequisite / parallel / absorbable / unrelated; record in the SPEC's `Depends on` + `Cross-issue notes`.
-5. **Define scope.** In scope: smallest change set that closes the issue. Out of scope: adjacent problems, each with a one-line pointer to where it should be filed. Refuse to expand "in scope" with hypothetical improvements — the architect's job is to limit.
-6. **Risk analysis.** Cover: **blast radius** (data corruption / silent regression / user-visible / dev-only); **detection lead time** (alert / log scan / customer report / silent); **operational risks** (scheduled-job, queue, cache-invalidation, schema, external-adapter); **security risks** (auth, secrets, PII, webhooks, rate-limits); **compliance touchpoints** (any domain/compliance rules — data retention, regional, consumer-protection; state "n/a" explicitly if none); **migration / backwards-compat** (schema, cache/namespace, slug renames, alias tables).
-7. **Acceptance + tests.** Each criterion objective and checkable, mapped to a test layer (unit / integration / contract / architecture); note required manual verification and why. Identify existing tests at regression risk.
-8. **Observability.** What log line / metric / alert confirms the fix is live and healthy in prod; what changes if it degrades silently.
-9. **Affected docs.** Use the CLAUDE.md docs map; for each doc needing update, add an acceptance criterion: "Updated `<doc-path>` section `<section>`".
-10. **Rollback.** Single command or PR-revert flow; name the data-side cleanup or state "none" explicitly (e.g. orphan rows after schema rollback); what's preserved (archives, audit logs) and what's lost.
-11. **Effort.** T-shirt size: XS (1 commit, ≤ 1h), S (1 commit, ≤ 4h), M (multi-commit, ≤ 1 day), L (multi-commit, > 1 day → propose escalating to a feature via `plan-feature`; the user decides).
-12. **Phases.** Fill the SPEC's `## Phases` section — the execution ledger `execute-phase --fix` runs one phase per invocation: `P1..Pn` implementation phases (minimum 1; each task independently checkable **without judgement**, zero open design decisions, one layer/concern, gate runnable locally — split the phase if any box fails), plus the final `P(n+1) — Hardening & PR` phase. Keep the template's pre-written `Hardening & PR` tasks **literally** — never paraphrase them, never merge them into an implementation phase. The total is **always ≥ 2 phases**, even for an XS one-line fix. Every implementation phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy) before it is emitted; any FAIL means re-cut or split the phase, never emit it unticked.
-13. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; the `## Phases` section has ≥ 2 phases and ends with the literal `Hardening & PR` tasks; every implementation phase passes all 8 phase-lint boxes; all English.
-14. **Commit.** Verify branch with `git branch --show-current`. If `main`, `git switch -c fix/<n>-<topic>`. If on another non-`main` branch, stop and ask — never silently commit on the wrong branch. Stage `docs/fix/<n>-<topic>/SPEC.md` and the updated `docs/fix/README.md`. Commit: `docs(fix): draft SPEC for #<n> — <topic>`. **Do not push or open the PR.** Print branch name + commit hash and the hand-off below.
+3. **Locate the affected code.** Name the layers (domain / use-cases / infrastructure / pages), modules and files (with paths), and the ports / adapters / entities involved — per issue, when multiple.
+4. **Cross-issue analysis.** `gh issue list --state open --json number,title,labels` and `gh pr list --state open` — surface issues/PRs (other than the ones passed as input) that block, are blocked by, overlap, or may absorb this fix. Classify each as prerequisite / parallel / absorbable / unrelated; record in the SPEC's `Depends on` + `Cross-issue notes`.
+5. **Multi-issue resolution.** Runs regardless of how many issues were passed — it's the gate before scope/phases drafting.
+   - **One number** → today's behavior, byte-for-byte unchanged; skip to step 6 with that issue as primary.
+   - **Multiple numbers** → ingest ALL issues (step 1), then evaluate the fixed **shared-root-cause checklist**, every box independently checkable:
+     - ✓ the issues name the same defect class in the same files/surfaces (cite paths)
+     - ✓ one fix would naturally cover them in the same commits (no issue needs work the others' files don't touch)
+     - ✓ no issue requires a design decision the others don't (a "needs design call" issue never merges into a mechanical unit)
+     - ✓ no conflicting severities/routes recorded in their triage verdicts
+   - **All boxes tick** → ONE unit: primary = the **lowest issue number**; branch `fix/<primary>-<topic>`, SPEC `docs/fix/<primary>-<topic>/SPEC.md` whose scope lists every issue with its own acceptance criteria; the fix-index row references all; the PR will carry `Closes #<n>` for **each** issue (one per line). Print the fixed **merge-summary** output, verbatim:
+     ```
+     MULTI-ISSUE MERGE — #<primary> (+#<n2>, #<n3>, …)
+     Shared-root-cause checklist: ALL 4 boxes ticked
+       ✓ same defect class/files: <paths>
+       ✓ one fix covers all in the same commits
+       ✓ no issue needs a design decision the others don't
+       ✓ no conflicting severities/routes in triage verdicts
+     Unit: docs/fix/<primary>-<topic>/SPEC.md
+     Issues merged: #<primary> (primary), #<n2>, #<n3>, …
+     PR will carry: Closes #<primary>
+                   Closes #<n2>
+                   Closes #<n3>
+     ```
+     Then continue to step 6 and draft ONE SPEC covering every merged issue.
+   - **Any box fails** → STOP. Never silently plan a subset; never silently plan only the first number. No SPEC is written. Print the fixed **refusal** output, verbatim, naming the failing box per issue pair:
+     ```
+     MULTI-ISSUE REFUSAL — cannot merge #<a>, #<b>[, …]
+     Failing box(es):
+       #<a> vs #<b>: <failing box name> — <one-line evidence>
+       [repeat per failing pair]
+     No SPEC written. Plan these separately:
+       /plan-fix <a>
+       /plan-fix <b>
+       ...
+     ```
+     End the turn here — no further Algorithm steps run.
+   - **Invalid input** (a non-number token, or an unknown issue) → usage error naming the bad token; never proceed partially (precedent: `review-change` `--adversarial N` invalid-input → usage error, `skills/review-change/SKILL.md` L229–233):
+     ```
+     Usage: plan-fix <issue-number> [<issue-number> …]
+     Invalid token: "<token>" — not a number, or not an issue in this repo.
+     ```
+6. **Define scope.** In scope: smallest change set that closes the issue (or, when merged, every issue in the unit). Out of scope: adjacent problems, each with a one-line pointer to where it should be filed. Refuse to expand "in scope" with hypothetical improvements — the architect's job is to limit.
+7. **Risk analysis.** Cover: **blast radius** (data corruption / silent regression / user-visible / dev-only); **detection lead time** (alert / log scan / customer report / silent); **operational risks** (scheduled-job, queue, cache-invalidation, schema, external-adapter); **security risks** (auth, secrets, PII, webhooks, rate-limits); **compliance touchpoints** (any domain/compliance rules — data retention, regional, consumer-protection; state "n/a" explicitly if none); **migration / backwards-compat** (schema, cache/namespace, slug renames, alias tables).
+8. **Acceptance + tests.** Each criterion objective and checkable, mapped to a test layer (unit / integration / contract / architecture); note required manual verification and why. Identify existing tests at regression risk. When merged, each issue's acceptance criteria stay separately identifiable.
+9. **Observability.** What log line / metric / alert confirms the fix is live and healthy in prod; what changes if it degrades silently.
+10. **Affected docs.** Use the CLAUDE.md docs map; for each doc needing update, add an acceptance criterion: "Updated `<doc-path>` section `<section>`".
+11. **Rollback.** Single command or PR-revert flow; name the data-side cleanup or state "none" explicitly (e.g. orphan rows after schema rollback); what's preserved (archives, audit logs) and what's lost.
+12. **Effort.** T-shirt size: XS (1 commit, ≤ 1h), S (1 commit, ≤ 4h), M (multi-commit, ≤ 1 day), L (multi-commit, > 1 day → propose escalating to a feature via `plan-feature`; the user decides).
+13. **Phases.** Fill the SPEC's `## Phases` section — the execution ledger `execute-phase --fix` runs one phase per invocation: `P1..Pn` implementation phases (minimum 1; each task independently checkable **without judgement**, zero open design decisions, one layer/concern, gate runnable locally — split the phase if any box fails), plus the final `P(n+1) — Hardening & PR` phase. Keep the template's pre-written `Hardening & PR` tasks **literally** — never paraphrase them, never merge them into an implementation phase. The total is **always ≥ 2 phases**, even for an XS one-line fix. Every implementation phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy) before it is emitted; any FAIL means re-cut or split the phase, never emit it unticked.
+14. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; the `## Phases` section has ≥ 2 phases and ends with the literal `Hardening & PR` tasks; every implementation phase passes all 8 phase-lint boxes; all English.
+15. **Commit.** Verify branch with `git branch --show-current`. If `main`, `git switch -c fix/<primary>-<topic>`. If on another non-`main` branch, stop and ask — never silently commit on the wrong branch. Stage `docs/fix/<primary>-<topic>/SPEC.md` and the updated `docs/fix/README.md`. Commit: `docs(fix): draft SPEC for #<primary>[+#<n2>+…] — <topic>`. **Do not push or open the PR.** Print branch name + commit hash and the hand-off below.
 
 ## Question protocol
 
@@ -97,12 +161,13 @@ The base template at `docs/fix/_TEMPLATE/SPEC.md` is mandatory. Add these sectio
 After commit, print exactly:
 
 ```
-SPEC drafted: docs/fix/<n>-<topic>/SPEC.md
-Branch: fix/<n>-<topic> (local, not pushed)
+SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md
+Branch: fix/<primary>-<topic> (local, not pushed)
 Commit: <short hash>
 
-→ Next: review the SPEC, then /execute-phase --fix <n> — execute P1 (one phase per invocation)
-  · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<n>`
+→ Next: review the SPEC, then /execute-phase --fix <primary> — execute P1 (one phase per invocation)
+  · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<primary>`
+    (and `Closes #<n2>`, `Closes #<n3>`, … — one line per merged issue, when applicable)
   · scope looks wrong → adjust the SPEC and re-run /plan-fix
 ```
 
