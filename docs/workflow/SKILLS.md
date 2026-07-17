@@ -55,7 +55,7 @@ the workflow's own 9-skill internal review pack: `review-code`,
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **recommends a `review-change` checkpoint every 2 phases (skippable) and hands off once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
+| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **descope guard** (any issue created is classified discovered-work vs. descope — a descope STOPs for a user-approved, dated `## Amendments` entry before the issue may exist); **recommends a `review-change` checkpoint every 2 phases (skippable) and hands off once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
 
 ## Review & audit — *change → PR → product*
 
@@ -63,8 +63,8 @@ the workflow's own 9-skill internal review pack: `review-code`,
 |---|---|---|---|
 | `review-change` | the **change** | Run only the reviews that apply to this platform + a **SPEC drift check** (diff vs. the SPEC's scope and acceptance criteria) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | `plan-fix` (fix-now) / `triage-issue` (every non-fix-now: postpone / ignore / intentional-tradeoff) |
 | `fold-findings` | the **findings ledger** | Repair each fix-now finding from `review-change`/`audit-pr` for real, one at a time — frozen classification (never reclassifies), a fixed forbidden list closes the known-issues-dump/downgrade/test-loosening/suppression escape hatches; per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict | re-run `review-change` (all folded) / `triage-issue` (disputed) |
-| `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes, closure integrity (feature SPECs only; legacy → dated warning, never a blocker) → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
-| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes) | `triage-issue` / `plan-feature` / `plan-fix` |
+| `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes, closure integrity (feature SPECs only; legacy → dated warning, never a blocker), scope integrity (descope: an issue born during the unit mapping to an unmet criterion/task needs a matching `## Amendments` entry, else BLOCKER; feature and fix PRs alike) → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
+| `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
 > `review-change`'s findings engine is the internal `review-implementation`
