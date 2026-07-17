@@ -167,10 +167,10 @@ the shape is stated) `README.md` + `README.es.md`; `grep -n "version: 2.3.0"
 skills/plan-fix/SKILL.md` matches; `CHANGELOG.md` and `CHANGELOG.es.md` each
 carry a new `plan-fix` 2.3.0 row.
 
-- [ ] Update the `plan-fix` argument shape in `docs/workflow/SKILLS.md` invocation table.
-- [ ] Update the `plan-fix` argument shape in `docs/workflow/SKILLS.es.md` invocation table.
-- [ ] Update any `plan-fix` argument-shape row in `README.md` + `README.es.md`.
-- [ ] Run `bump-skill` for `plan-fix` (minor: 2.2.0 → 2.3.0) — version, CHANGELOG EN+ES rows, README skills/model tables.
+- [x] Update the `plan-fix` argument shape in `docs/workflow/SKILLS.md` invocation table.
+- [x] Update the `plan-fix` argument shape in `docs/workflow/SKILLS.es.md` invocation table.
+- [x] Update any `plan-fix` argument-shape row in `README.md` + `README.es.md`.
+- [x] Run `bump-skill` for `plan-fix` (minor: 2.2.0 → 2.3.0) — version, CHANGELOG EN+ES rows, README skills/model tables.
 
 ### P3 — Hardening & PR
 
