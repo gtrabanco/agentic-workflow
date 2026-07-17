@@ -189,7 +189,12 @@ checklist ends with the literal close-out tasks), not a phase of its own. For
 tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
 carrying the literal close-out tasks (fixed wording — see
 `docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` runs one phase per
-invocation and ticks this section as its ledger.
+invocation and ticks this section as its ledger. Each implementation phase
+header is followed by `Layer: <schema/db|domain|api|ui|config/infra|docs|
+hardening>. Done-when: <command> → <expected outcome>.` before its task list
+(same scaffold as `docs/fix/_TEMPLATE/SPEC.md` `### P1`) — the phase-lint's
+"one declared layer" and "machine-checkable done-when" boxes need somewhere to
+be filled in, not invented.
 
 #### Phase-lint (quoted — authoritative copy is
 `docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint"; keep in sync)
