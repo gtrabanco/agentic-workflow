@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.1 | 2026-07-17 | patch | Fix #81: the Phase-lint pre-flight guard (added in 2.4.0) gains an explicit legacy-SPEC carve-out — a SPEC with no `## Phases` section skips the guard entirely (no lint, no STOP) and falls through to the pre-existing legacy single-pass flow, restoring fix #64's own backward-compatibility promise. |
 | 2.4.0 | 2026-07-17 | minor | Fix #64: new **phase-lint pre-flight guard**, run after the dependency/own-status gates and before any edit — the target phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") or execute-phase STOPs with a fixed block naming the failed boxes and recommending re-cut via `/plan-feature`/`/plan-fix`; `--force` skips the STOP, never the check, logged in `decisions.md`/`progress.md`. Wired into the Turn contract and Hard rules. |
 | 2.3.0 | 2026-07-17 | minor | Fix #65: the fold-cycle section ("Folding review / audit findings") now names the new standalone `/fold-findings` skill as the preferred, independently-invocable path (frozen classification + forbidden list, own turn/tier); the section's own checklist is retained as the in-context / portability fallback. |
 | 2.2.0 | 2026-07-13 | minor | The fold-cycle checklist ("Folding review / audit findings") gains a box: each folded finding's row in the unit's `review-findings.md` ledger flips `folded: no → yes` — the one and only ledger state transition, owned solely by this fold cycle. The ledger is optional (a unit with no fix-now findings has none). Part of feature 17 (`finding-severity-routing`). |
@@ -414,6 +415,14 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-17 — legacy-spec-phase-lint-carveout (fix 81).** PATCH bump for
+  `execute-phase` (2.4.1): the Phase-lint pre-flight guard added by fix 64
+  had no carve-out for legacy SPECs without a `## Phases` section, so it
+  wrongly STOPped on the pre-existing legacy single-pass flow. Added an
+  explicit, unconditional skip — checked before the lint step runs — so a
+  SPEC with no `## Phases` section falls straight through to the legacy
+  flow, restoring fix 64's own backward-compatibility promise.
 
 - **2026-07-17 — phase-atomicity-lint (fix 64).** Turns the "one layer/concern,
   zero open decisions" phase-atomicity prose into a canonical, judgment-free
