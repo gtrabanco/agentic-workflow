@@ -277,4 +277,4 @@ preserved: full history in git log + the closed issue #63.
 
 ## Status
 
-`pending`
+`done` (built, PR open — merge state lives in the forge)
