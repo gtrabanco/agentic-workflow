@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 28 skills (14 user-facing + 14 internal) — the installable source
+skills/                  the 29 skills (15 user-facing + 14 internal) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -70,7 +70,7 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**14 user-facing skills** (one menu entry each) + **14 internal** ones composed
+**15 user-facing skills** (one menu entry each) + **14 internal** ones composed
 for you: the `plan-feature` router's two planning steps, the `review-change`
 engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
@@ -119,6 +119,7 @@ plan → execute → review → audit → merge.**
 | Skill           | Scope           | What it does                                                                                                                                                                                   |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) — adversarially by default, assuming the diff is wrong until proven otherwise — and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits on the PR branch are fix-now `workflow` findings. The mandatory end review **must run in a conversation that did not implement the change** — if it did, stop and hand off to a fresh one. Opt-in `--adversarial N`: N independent context-clean reviewers run in parallel (subagents / headless / sequential-fallback), findings merged by `file:line` at an inclusion threshold of ≥1 — default off, auto-recommended (never forced) for `L`/sensitive changes. Fix-now findings on an unmerged unit persist to that unit's fix-now fold ledger (`review-findings.md`), deduped by `file:line`+axis |
+| `fold-findings` | the **findings ledger** | Repairs each fix-now finding from `review-change`/`audit-pr` for real, one at a time — **frozen classification** (never reclassifies; a genuine objection produces `DISPUTED` → `triage-issue`) and a fixed **forbidden list** closing the known-issues-dump/severity-downgrade/test-loosening/lint-suppression/`TODO`-stub escape hatches, ending in a per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict + tally. `execute-phase`'s embedded fold-cycle checklist remains the in-context/portability fallback |
 | `audit-pr`      | the **PR**      | Merge gate: acceptance met, all phases done, docs/tests/CI green, `Closes #N`, review axes clean → **merge-ready or a list of blockers**, always with the PR's full URL; on MERGE-READY it posts a dated, SHA-bound comment on the PR itself. A BLOCKED verdict persists every blocker to the unit's fix-now fold ledger (`review-findings.md`, severity `high`), the same ledger `review-change` writes. Opt-in auto-merge: with a documented policy it merges MERGE-READY PRs after a fail-closed cleanliness checklist (anything pending → push, wait for CI, re-audit) |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove + installed-tooling to register/re-design (**never auto-fixes**)                                                                          |
 | `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
@@ -224,6 +225,7 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |
 | `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — one phase per invocation (Opus if the logic is subtle)                                                                                              |
 | `review-change`  | Opus       | high   | platform-adaptive review orchestration + synthesis                                                                                                                                       |
+| `fold-findings`  | Opus       | high   | never weaker than the review tier that produced the finding; a subtle logic/security finding earns its own strongest-available pass                                                     |
 | `audit-pr`       | Opus       | high   | whole-PR merge-readiness judgement                                                                                                                                                       |
 | `product-audit`  | Opus       | max    | product-wide multi-axis sweep + proposals (max effort for the widest context sweep)                                                                                                      |
 | `audit-docs`     | Sonnet     | medium | mostly mechanical cross-document checks (Opus for deep audits)                                                                                                                           |
