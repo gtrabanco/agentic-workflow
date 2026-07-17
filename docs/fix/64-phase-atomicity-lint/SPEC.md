@@ -303,9 +303,9 @@ new versions appear in both READMEs.
       `docs/workflow/GOLDEN_FIXTURE.md` against the reworded executor-path
       skills with the weakest fleet model — confirm the lint block renders and
       the pre-flight STOP fires on a deliberately non-atomic fixture phase.
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -334,4 +334,4 @@ behavior. Nothing is lost.
 
 ## Status
 
-`pending`
+`done`
