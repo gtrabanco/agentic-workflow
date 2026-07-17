@@ -291,11 +291,11 @@ section with its fixed STOP block and `--force` log rule.
 Layer: `docs`. Done-when: `npx skills add . --list` lists every skill and the
 new versions appear in both READMEs.
 
-- [ ] Run `bump-skill` for the three edited skills: bump each `version:` (minor)
+- [x] Run `bump-skill` for the three edited skills: bump each `version:` (minor)
       and add rows to `CHANGELOG.md` + `CHANGELOG.es.md`.
-- [ ] Confirm `bump-skill` updated the skill-version tables in `README.md` +
+- [x] Confirm `bump-skill` updated the skill-version tables in `README.md` +
       `README.es.md`.
-- [ ] Verify: `npx skills add . --list` discovers every skill (no YAML breakage).
+- [x] Verify: `npx skills add . --list` discovers every skill (no YAML breakage).
 
 ### P5 — Hardening & PR
 
