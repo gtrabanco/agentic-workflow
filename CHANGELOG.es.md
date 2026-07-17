@@ -142,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.4.0 | 2026-07-17 | menor | Fix #64: nuevo **guardia de pre-vuelo de lint de fase**, ejecutado tras las puertas de dependencias/estado propio y antes de cualquier edición — la fase objetivo debe pasar el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") o execute-phase se DETIENE con un bloque fijo que nombra las casillas fallidas y recomienda recortar de nuevo vía `/plan-feature`/`/plan-fix`; `--force` omite la DETENCIÓN, nunca la comprobación, registrado en `decisions.md`/`progress.md`. Integrado en el contrato de turno y las reglas duras. |
 | 2.3.0 | 2026-07-17 | menor | Fix #65: la sección del ciclo de fold ("Folding review / audit findings") ahora nombra la nueva skill independiente `/fold-findings` como la vía preferida e invocable por sí sola (clasificación congelada + lista de prohibiciones, turno/nivel propio); la checklist de esta sección se mantiene como fallback en contexto / de portabilidad. |
 | 2.2.0 | 2026-07-13 | menor | La checklist del ciclo de fold ("Folding review / audit findings") gana una casilla: la fila de cada hallazgo folded en el ledger `review-findings.md` de la unidad pasa `folded: no → yes` — la única transición de estado del ledger, propiedad exclusiva de este ciclo de fold. El ledger es opcional (una unidad sin hallazgos fix-now no tiene uno). Parte de la feature 17 (`finding-severity-routing`). |
 | 2.1.0 | 2026-07-11 | menor | Fix #35: las unidades de pase único (features XS/S y fixes) ahora son **por fases** — cuando el SPEC lleva `## Phases` (emitido por `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), se ejecuta **una fase por invocación** (`[P<k>]` opcional, por defecto la primera fase con tareas sin marcar), marcando los checkboxes del SPEC como ledger de ejecución; la fase final `Hardening & PR` ejecuta la cadena de cierre (flip de estado, push, PR, commit del enlace, push) en su propia invocación — la cadena que los modelos débiles truncaban al final del turno de implementación. Un SPEC sin `## Phases` ejecuta el pase único legacy sin cambios (el fallback que mantiene esto como menor). Las dos cabeceras "this is the last step" reescritas a la forma de fase final. |
@@ -201,6 +202,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-17 | menor | Fix #64: el paso 12 del algoritmo (Phases) ahora exige que toda fase de implementación pase el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — la copia autoritativa) antes de emitirse — cualquier FAIL implica recortar o dividir la fase, nunca emitirla sin marcar. El paso 13 (Self-review) gana la afirmación equivalente de las 8 casillas. |
 | 2.1.0 | 2026-07-11 | menor | Fix #35: todo SPEC de fix lleva ahora un ledger de ejecución `## Phases` — **siempre ≥ 2 fases**: `P1..Pn` de implementación (cada fase cortada por la checklist de ejecutabilidad-barata) + la final `P(n+1) — Hardening & PR` con las tareas de cierre literales de la plantilla, nunca parafraseadas. Nuevo paso 12 del algoritmo (self-review y hand-off actualizados); el hand-off ahora apunta a `execute-phase --fix <n>` ejecutando `P1`. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.4.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. |
@@ -377,6 +379,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
+| `plan-feature-scaffold` | 1.10.0 | 2026-07-17 | menor | Fix #64: la checklist por fase (§ "Scale the artifacts") gana un paso obligatorio de **Phase-lint** en tiempo de emisión — antes de emitir la lista de fases, toda fase debe pasar el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — la copia autoritativa); cualquier FAIL se recorta o divide vía la regla de división obligatoria existente, nunca se emite. |
 | `plan-feature-scaffold` | 1.9.0 | 2026-07-12 | menor | Fix #51: tras la escritura `defined → planned` del roadmap, relee la fila y confirma que dice literalmente `planned`; reaplica la edición si no coincide, en vez de asumir que la escritura se realizó. "Done when" gana la afirmación equivalente de relectura-y-confirmación. |
 | `plan-feature-scaffold` | 1.8.0 | 2026-07-11 | menor | Fix #35: XS/S sigue siendo solo-SPEC, pero su `### Phases` debe listar **≥ 2 fases con tareas checkbox** — `P1` implementación + la final `P2 — Hardening & PR` con las tareas de cierre literales copiadas de la plantilla de fix; el informe fijo de finalización siempre indica el número de fases (la variante `| single-pass` desaparece). |
 | `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | menor | El corte de fases ahora es un **gate obligatorio**, no consultivo: una feature M/L DEBE dividirse en features encadenadas por `Depends on:` cuando supera ~5 fases, una fase toca más de una capa/asunto, o una fase requiere una decisión de diseño sin resolver, y cada fase emitida debe superar una checklist de cuatro casillas de ejecutabilidad-barata (comprobable sin juicio · cero decisiones abiertas · un solo asunto · el gate corre localmente). La generación de `TASKS.md`/`testing.md` ahora emite los criterios de aceptación comprobables por comando como el comando ejecutable, no como prosa. |
@@ -412,6 +415,21 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-17 — phase-atomicity-lint (fix 64).** Convierte la prosis de
+  atomicidad de fase ("un layer/concern, cero decisiones abiertas") en un
+  bloque canónico de lint de 8 casillas, libre de juicio, redactado una sola
+  vez en `docs/fix/_TEMPLATE/SPEC.md` `## Phases` (copia autoritativa) y
+  citado literalmente en `docs/features/_TEMPLATE/SPEC.md` `### Phases`.
+  Bumps MENORES para `plan-feature-scaffold` (1.10.0) y `plan-fix` (2.2.0):
+  ambos emisores ahora exigen que toda fase pase el lint de 8 casillas antes
+  de emitirse, recortando o dividiendo en caso de FAIL. Bump MENOR para
+  `execute-phase` (2.4.0): nuevo guardia de pre-vuelo de lint de fase,
+  ejecutado tras las puertas de dependencias/estado propio y antes de
+  cualquier edición — un FAIL DETIENE el turno con un bloque fijo que nombra
+  las casillas fallidas y recomienda recortar de nuevo; `--force` omite la
+  DETENCIÓN, nunca la comprobación, registrado en
+  `decisions.md`/`progress.md`.
 
 - **2026-07-17 — fold-findings-skill (fix 65).** Nueva skill `fold-findings`
   (1.0.0): ciclo de reparación independiente e invocable por sí solo para los

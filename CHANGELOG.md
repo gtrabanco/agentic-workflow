@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.0 | 2026-07-17 | minor | Fix #64: new **phase-lint pre-flight guard**, run after the dependency/own-status gates and before any edit — the target phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") or execute-phase STOPs with a fixed block naming the failed boxes and recommending re-cut via `/plan-feature`/`/plan-fix`; `--force` skips the STOP, never the check, logged in `decisions.md`/`progress.md`. Wired into the Turn contract and Hard rules. |
 | 2.3.0 | 2026-07-17 | minor | Fix #65: the fold-cycle section ("Folding review / audit findings") now names the new standalone `/fold-findings` skill as the preferred, independently-invocable path (frozen classification + forbidden list, own turn/tier); the section's own checklist is retained as the in-context / portability fallback. |
 | 2.2.0 | 2026-07-13 | minor | The fold-cycle checklist ("Folding review / audit findings") gains a box: each folded finding's row in the unit's `review-findings.md` ledger flips `folded: no → yes` — the one and only ledger state transition, owned solely by this fold cycle. The ledger is optional (a unit with no fix-now findings has none). Part of feature 17 (`finding-severity-routing`). |
 | 2.1.0 | 2026-07-11 | minor | Fix #35: single-pass units (XS/S features and fixes) are now **phased** — when the SPEC carries `## Phases` (emitted by `plan-fix` 2.1.0 / `plan-feature-scaffold` 1.8.0), run **one phase per invocation** (`[P<k>]` optional, defaults to the first phase with an unticked task), ticking the SPEC's checkboxes as the execution ledger; the final `Hardening & PR` phase runs the close-out chain (status flip, push, PR, link commit, push) in its own invocation — the chain weak models kept truncating at the tail of the implementation turn. A SPEC without `## Phases` runs the legacy single pass unchanged (the fallback that keeps this minor). Both "this is the last step" step headers reworded to the final-phase shape. |
@@ -200,6 +201,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-17 | minor | Fix #64: Algorithm step 12 (Phases) now requires every implementation phase to pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy) before it is emitted — any FAIL means re-cut or split, never emit unticked. Step 13 (Self-review) gained the matching all-8-boxes assertion. |
 | 2.1.0 | 2026-07-11 | minor | Fix #35: every fix SPEC now carries a `## Phases` execution ledger — **always ≥ 2 phases**: `P1..Pn` implementation (each phase cut by the cheap-executability checklist) + final `P(n+1) — Hardening & PR` with the template's literal close-out tasks, never paraphrased. New algorithm step 12 (self-review and hand-off updated); hand-off now points to `execute-phase --fix <n>` executing `P1`. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.4.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. |
@@ -376,6 +378,7 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
+| `plan-feature-scaffold` | 1.10.0 | 2026-07-17 | minor | Fix #64: the per-phase checklist (§ "Scale the artifacts") gains a mandatory emit-time **Phase-lint** step — before emitting the phase list, every phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy); any FAIL is re-cut or split via the existing mandatory-split rule, never emitted. |
 | `plan-feature-scaffold` | 1.9.0 | 2026-07-12 | minor | Fix #51: after the `defined → planned` roadmap write, re-read the row and confirm it literally reads `planned`; re-apply the edit on mismatch instead of assuming the write landed. Done when gained the matching re-read-and-confirmed assertion. |
 | `plan-feature-scaffold` | 1.8.0 | 2026-07-11 | minor | Fix #35: XS/S stays SPEC-only, but the SPEC's `### Phases` must list **≥ 2 phases with checkbox tasks** — `P1` implementation + final `P2 — Hardening & PR` carrying the literal close-out tasks copied from the fix template; the fixed completion report always states the phase count (the `| single-pass` variant is gone). |
 | `plan-feature-scaffold` | 1.7.0 | 2026-07-10 | minor | Phase-cutting is now a **hard gate**, not advisory: an M/L feature MUST split into `Depends on:`-chained features on >~5 phases, a multi-layer/concern phase, or an unresolved design decision, and every emitted phase must pass a four-box cheap-executability checklist (independently checkable · zero open decisions · one concern · gate runs locally). `TASKS.md`/`testing.md` generation now emits command-checkable acceptance criteria as the runnable command, not prose. |
@@ -411,6 +414,19 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-17 — phase-atomicity-lint (fix 64).** Turns the "one layer/concern,
+  zero open decisions" phase-atomicity prose into a canonical, judgment-free
+  8-box phase-lint block, authored once in `docs/fix/_TEMPLATE/SPEC.md`
+  `## Phases` (authoritative copy) and quoted verbatim in
+  `docs/features/_TEMPLATE/SPEC.md` `### Phases`. MINOR bumps for
+  `plan-feature-scaffold` (1.10.0) and `plan-fix` (2.2.0): both emitters now
+  require every phase to pass the 8-box lint before it is emitted, re-cutting
+  or splitting on FAIL. MINOR bump for `execute-phase` (2.4.0): new
+  pre-flight phase-lint guard, run after the dependency/own-status gates and
+  before any edit — a FAIL STOPs with a fixed block naming the failed boxes
+  and recommending re-cut; `--force` skips the STOP, never the check, logged
+  in `decisions.md`/`progress.md`.
 
 - **2026-07-17 — fold-findings-skill (fix 65).** New skill `fold-findings`
   (1.0.0): standalone, independently-invocable repair cycle for
