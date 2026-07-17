@@ -142,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.4.1 | 2026-07-17 | parche | Fix #81: el guardia de pre-vuelo de lint de fase (añadido en 2.4.0) gana una salvedad explícita para SPECs legacy — un SPEC sin sección `## Phases` omite el guardia por completo (sin lint, sin DETENCIÓN) y cae directamente al flujo legacy de paso único preexistente, restaurando la promesa de retrocompatibilidad de la propia fix #64. |
 | 2.4.0 | 2026-07-17 | menor | Fix #64: nuevo **guardia de pre-vuelo de lint de fase**, ejecutado tras las puertas de dependencias/estado propio y antes de cualquier edición — la fase objetivo debe pasar el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") o execute-phase se DETIENE con un bloque fijo que nombra las casillas fallidas y recomienda recortar de nuevo vía `/plan-feature`/`/plan-fix`; `--force` omite la DETENCIÓN, nunca la comprobación, registrado en `decisions.md`/`progress.md`. Integrado en el contrato de turno y las reglas duras. |
 | 2.3.0 | 2026-07-17 | menor | Fix #65: la sección del ciclo de fold ("Folding review / audit findings") ahora nombra la nueva skill independiente `/fold-findings` como la vía preferida e invocable por sí sola (clasificación congelada + lista de prohibiciones, turno/nivel propio); la checklist de esta sección se mantiene como fallback en contexto / de portabilidad. |
 | 2.2.0 | 2026-07-13 | menor | La checklist del ciclo de fold ("Folding review / audit findings") gana una casilla: la fila de cada hallazgo folded en el ledger `review-findings.md` de la unidad pasa `folded: no → yes` — la única transición de estado del ledger, propiedad exclusiva de este ciclo de fold. El ledger es opcional (una unidad sin hallazgos fix-now no tiene uno). Parte de la feature 17 (`finding-severity-routing`). |
@@ -415,6 +416,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-17 — legacy-spec-phase-lint-carveout (fix 81).** Bump PARCHE para
+  `execute-phase` (2.4.1): el guardia de pre-vuelo de lint de fase añadido por
+  la fix 64 no tenía salvedad para SPECs legacy sin sección `## Phases`, así
+  que se DETENÍA indebidamente sobre el flujo legacy de paso único
+  preexistente. Se añadió una omisión explícita e incondicional — comprobada
+  antes de ejecutar el paso de lint — para que un SPEC sin sección
+  `## Phases` caiga directamente al flujo legacy, restaurando la promesa de
+  retrocompatibilidad de la propia fix 64.
 
 - **2026-07-17 — phase-atomicity-lint (fix 64).** Convierte la prosis de
   atomicidad de fase ("un layer/concern, cero decisiones abiertas") en un
