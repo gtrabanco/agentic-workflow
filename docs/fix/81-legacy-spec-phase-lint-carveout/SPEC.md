@@ -265,7 +265,7 @@ than `2.4.0`.
       Evidence: [#83](https://github.com/gtrabanco/agentic-workflow/pull/83),
       backticks verified rendering (0 `\`-escaped hits).
 - [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #81` and push
+- [x] Commit `docs: link PR #81` and push — evidence: commit `3fed87e`.
 
 ## Testing
 
