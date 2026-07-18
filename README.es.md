@@ -139,7 +139,7 @@ con ningún modelo. Un único camino disciplinado:
 
 | Skill          | Qué hace                                                                                                   |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `triage-issue` | Clasifica un issue (fix-now / promote / postpone / wontfix) **verificando su disparador contra el código**; en fix-now + severidad alta, aplica la etiqueta `urgent`/`fix-next` a prueba de inyección que posee; en postpone/promote/wontfix, aplica la etiqueta de disposición correspondiente que posee (`postponed`/`promoted`/`wontfix`) |
+| `triage-issue` | Clasifica un issue (fix-now / fix-in-unit / promote / postpone / wontfix) **verificando su disparador contra el código**; un chequeo de pertenencia de alcance (antes de clasificar) enruta un issue que ya pertenece a una unidad abierta a la propia rama de esa unidad (`fix-in-unit`), nunca a una unidad nueva independiente; en fix-now + severidad alta, aplica la etiqueta `urgent`/`fix-next` a prueba de inyección que posee; en postpone/promote/wontfix, aplica la etiqueta de disposición correspondiente que posee (`postponed`/`promoted`/`wontfix`) |
 
 ### Documentación
 
@@ -485,10 +485,11 @@ Ver **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**
 ```
 /triage-issue <N>
    → lee el disparador "cuándo arreglar" del issue, lo verifica contra el código actual
-   → fix-now  → plan-fix → execute-phase --fix
-     promote  → plan-feature   (el router toma el issue → SPEC acotado)
-     postpone → comentario con fecha, dejar abierto (sin trabajo inline)
-     wontfix  → proponer cierre
+   → fix-now     → plan-fix → execute-phase --fix
+     fix-in-unit → se resuelve en la propia rama de la unidad abierta (execute-phase / fold-findings / replan)
+     promote     → plan-feature   (el router toma el issue → SPEC acotado)
+     postpone    → comentario con fecha, dejar abierto (sin trabajo inline)
+     wontfix     → proponer cierre
 ```
 
 Ver **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
