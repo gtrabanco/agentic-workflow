@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.5.1
+version: 2.5.2
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -474,6 +474,14 @@ end review is their only one).
 is always an open PR.** Mark the unit `done`, commit the flip, push, and `gh pr create`
 (see the mode steps above) — regardless of the review/audit still to come. Then hand
 off to `/review-change` (mandatory), which feeds `audit-pr` (the merge gate).
+
+**Adversarial pass at that mandatory end review.** `review-change` evaluates its
+own recommendation checklist there (`L`/sensitive change, reviewer not the
+fleet's strongest or weaker than the author, or a single model family on a
+`≥M` change) and — only when a box fires — recommends `--adversarial N`
+(N=2 default, N=3 on a security/auth surface or a single-family fleet) instead
+of its default single-reviewer pass. This is evaluated once, at that mandatory
+end review; it does not change the every-2-phases checkpoint cadence above.
 
 Checkpoint hand-off (print it — every invocation ends by suggesting the next
 step; at the 2-phase mark the review is the recommendation, continuing is a

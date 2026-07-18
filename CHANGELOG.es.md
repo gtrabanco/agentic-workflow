@@ -142,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.2 | 2026-07-18 | parche | Fix #76: el hand-off obligatorio de revisión de fin de unidad ahora anota cuándo `review-change` recomienda `--adversarial N` en esa revisión terminal — solo redacción, la cadencia del checkpoint cada 2 fases no cambia. |
 | 2.5.1 | 2026-07-18 | parche | Fix #66: se aclaró el paso de retro-relleno de la enmienda en la guardia de descope — tras crear el issue de seguimiento y enlazarlo en el cuerpo del issue, editar explícitamente la fila `## Amendments` para sustituir el marcador `#<n>` por el número real del issue y commitear ese cambio; una fila que aún lea el marcador literal falla la comprobación simétrica de fila sin enlazar de `audit-pr`. |
 | 2.5.0 | 2026-07-17 | menor | Fix #66: nueva **guardia de descope** en la Política de issues — antes de crear cualquier issue, se clasifica como trabajo descubierto (se archiva libremente) o descope (solapa un criterio de aceptación/tarea de la SPEC no entregado del todo); un descope PARA antes de crear el issue, exigiendo primero una entrada `## Amendments` fechada y aprobada por el usuario (formato de fila canónico definido una sola vez aquí). Nueva entrada en la lista de prohibiciones y casilla del contrato de turno que exige que la guardia se aplicase a cada issue creado en el turno. |
 | 2.4.1 | 2026-07-17 | parche | Fix #81: el guardia de pre-vuelo de lint de fase (añadido en 2.4.0) gana una salvedad explícita para SPECs legacy — un SPEC sin sección `## Phases` omite el guardia por completo (sin lint, sin DETENCIÓN) y cae directamente al flujo legacy de paso único preexistente, restaurando la promesa de retrocompatibilidad de la propia fix #64. |
@@ -225,6 +226,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.4.0 | 2026-07-18 | menor | Fix #76: hace que `--adversarial N` sea usable por flotas de modelos débiles orquestadas a mano — checklist de recomendación de 4 casillas (sustituye el disparador L/sensible únicamente, añade una condición "revisor no es el más fuerte/es más débil que el autor" expuesta como línea de informe, nunca auto-detectada), escalera fija de N (2 por defecto, 3 en seguridad/familia única, >3 desaconsejado), roles de revisor asignados por índice (R1 corrección, R2 seguridad, R3 cobertura de SPEC) con la guarda de rol-como-prioridad-no-alcance, contratos de revisor/merge de fuente única, un nuevo modo de fusión `--merge` con lista de prohibiciones, plantillas de bloques para pegar en Portability, y un ancla de cadencia una-vez-por-unidad (límite explícito con `#77`). |
 | 2.3.0 | 2026-07-17 | menor | Fix #65: el bloque `→ Next:` de `Decision: FAIL` ahora recomienda la nueva skill independiente `/fold-findings` (clasificación congelada, lista de prohibiciones que cierra las válvulas de escape de volcado-a-known-issues/downgrade/aflojar-tests/supresión) como la vía de fold, en lugar de la línea de prosa inline "fold the fix-now findings"; la forma fija multilínea y los sub-bullets de `/audit-pr`/no-fix-now/product-audit no cambian. |
 | 2.2.1 | 2026-07-17 | parche | El bloque `→ Next:` del paso 11 ahora se ramifica explícitamente según `Decision`: un bloque `FAIL` recomienda foldear los hallazgos fix-now (gate en verde, commit + push, re-ejecutar `/review-change`) con `/audit-pr` degradado a sub-bullet condicionado a la tabla limpia; un bloque `PASS` mantiene `/audit-pr — merge gate`. La condición de recurrencia de `/product-audit` ahora es una casilla explícita sí/no, y el bloque debe emitirse como líneas literales múltiples, nunca como prosa unida con `·`. Corrige el issue #63 — modelos débiles (observado: qwen3.6-thinking) copiaban la plantilla estática única anterior de forma literal, recomendando el merge gate incluso en `FAIL`. |
 | 2.2.0 | 2026-07-13 | menor | Nuevo paso de persistencia (paso de proceso 9): los hallazgos fix-now ahora se anexan al **ledger de fold fix-now** de la unidad, `review-findings.md` (esquema fijo `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` empieza en `no`), deduplicado por `file:line`+axis, en una unidad no mergeada — una unidad mergeada no recibe escritura. El bloque `→ Next:` y la sección Routing ahora mencionan el ledger para hallazgos fix-now. Los hallazgos no-fix-now no se ven afectados. Parte de la feature 17 (`finding-severity-routing`). |
@@ -424,6 +426,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — usabilidad del modo adversarial en flotas débiles (fix 76).**
+  Bump MENOR para `review-change` (2.4.0): el modo `--adversarial N` gana una
+  checklist de recomendación de 4 casillas (condición de modelo, nunca
+  auto-detectada), una escalera fija de N, roles de revisor asignados por
+  índice con la guarda de rol-como-prioridad-no-alcance, contratos de
+  revisor/merge de fuente única, un nuevo modo de fusión `--merge` con lista
+  de prohibiciones, plantillas para pegar en Portability, y un ancla de
+  cadencia una-vez-por-unidad. Bump PARCHE para `execute-phase` (2.5.2): el
+  hand-off obligatorio de revisión de fin de unidad anota cuándo pasar
+  `--adversarial N`. Más una fila de escalera adversarial de NaN en ambos
+  READMEs.
 
 - **2026-07-18 — conciencia de unidad abierta en triage (fix 86+87).**
   Bump MENOR para `triage-issue` (2.3.0): nuevo chequeo de pertenencia de
