@@ -86,15 +86,15 @@ cross-reference paths stay exactly as authored.
 
 ## Acceptance
 
-- [ ] `docs/fix/_TEMPLATE/SPEC.md` — the `### Phase-lint` heading and its full
+- [x] `docs/fix/_TEMPLATE/SPEC.md` — the `### Phase-lint` heading and its full
       parenthetical are on one physical line ending in `)`; no orphan paragraph
       line remains beneath it.
-- [ ] `docs/features/_TEMPLATE/SPEC.md` — the `#### Phase-lint` heading and its
+- [x] `docs/features/_TEMPLATE/SPEC.md` — the `#### Phase-lint` heading and its
       full parenthetical are on one physical line ending in `)`; no orphan
       paragraph line remains beneath it.
-- [ ] The cross-reference text inside each parenthetical is unchanged (same
+- [x] The cross-reference text inside each parenthetical is unchanged (same
       paths, backticks, and "keep in sync" wording).
-- [ ] The 8 phase-lint checklist boxes below each heading are byte-for-byte
+- [x] The 8 phase-lint checklist boxes below each heading are byte-for-byte
       unchanged.
 
 ## Phases
@@ -142,9 +142,9 @@ Layer: `docs`. Done-when:
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -246,4 +246,4 @@ files, no code, no test, no build.
 
 ## Status
 
-`pending`
+`done`
