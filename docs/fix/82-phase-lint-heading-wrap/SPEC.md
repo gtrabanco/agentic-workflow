@@ -128,7 +128,7 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 Layer: `docs`. Done-when:
 `grep -nE '^#{3,4} Phase-lint \(.*\)$' docs/fix/_TEMPLATE/SPEC.md docs/features/_TEMPLATE/SPEC.md`
 → prints exactly 2 lines (one per file, each ending in `)`) AND
-`grep -nE '^`docs/(features|fix)/_TEMPLATE/SPEC.md` ' docs/fix/_TEMPLATE/SPEC.md docs/features/_TEMPLATE/SPEC.md`
+`` `grep -nE '^`docs/(features|fix)/_TEMPLATE/SPEC.md` ' docs/fix/_TEMPLATE/SPEC.md docs/features/_TEMPLATE/SPEC.md` ``
 → prints nothing (no orphan continuation line remains).
 
 - [x] `docs/fix/_TEMPLATE/SPEC.md`: join the `### Phase-lint (authoritative copy
