@@ -110,7 +110,7 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **Mergeability** | Branch is off the default base, independently mergeable (no conflicts), not stacked on another PR, not draft. | Wrong base, conflicts, stacked dependency, or still draft. |
 | **Review axes clean** | The applicable `review-change` axes are clean **or** every remaining finding is *consciously deferred* to a tracked issue with a trigger. | A `fix-now` finding still open, or a deferral with no issue/trigger behind it. |
 | **Closure integrity** | The governing **feature** SPEC's capability closure was taken and recorded — `design-feature` was actually run, not bypassed. Fix-governed PRs: `n/a` (no closure block by design). | A present `Capability closure` block has a blank row, or a resolved non-`n/a` row with no matching acceptance criterion. |
-| **Scope integrity (descope)** | An issue born during this unit that maps to an unmet SPEC acceptance criterion or phase task has a matching, user-approved, dated `## Amendments` entry — descoped scope was recorded, not silently exported. | An issue born since branch divergence that references this unit maps to an unmet criterion/task with no matching `## Amendments` entry, or an `## Amendments` row that is undated, unapproved, or unlinked to an issue. |
+| **Scope integrity (descope)** | An issue born during this unit that maps to an unmet SPEC acceptance criterion or phase task has a matching, user-approved, dated `## Amendments` entry — descoped scope was recorded, not silently exported. Detection is two-path: a slug/issue-number text match, **or** an issue linked from an `## Amendments` row (`#89`) — either is sufficient to enumerate the issue, so a descoped issue with a generic title/body is not invisible to the gate. | An issue born since branch divergence that references this unit (by either detection path) maps to an unmet criterion/task with no matching `## Amendments` entry, or an `## Amendments` row that is undated, unapproved, or unlinked to an issue. |
 
 > Run `review-change` for the axis check if it hasn't been run on the final state,
 > or read its latest report. Don't re-litigate findings already classified — verify
@@ -159,9 +159,20 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 > 1. List issues **born since the branch diverged**
 >    (`git log <base>..HEAD --format=%ad --date=short | tail -1` for the
 >    earliest commit date, then `gh issue list --state all --search
->    "created:>=<date>"`) that **reference this unit** (title/body mentions the
->    feature/fix slug or issue number).
-> 2. For each such issue, run the per-issue checklist:
+>    "created:>=<date>"`) that **reference this unit**, via **either** of two
+>    detection paths — a hit on either is sufficient, run both, never only the
+>    first:
+>    - **text match** — title/body mentions the feature/fix slug or issue
+>      number, or
+>    - **`## Amendments` link** (`#89`) — the issue is linked from a row in
+>      the governing SPEC's `## Amendments` section (the same log
+>      `execute-phase`'s descope guard writes to — single source, see that
+>      skill's *Descope guard*), **regardless of the issue's own title/body
+>      text**. This closes the coverage gap a generic-titled or slug-unaware
+>      descoped issue leaves in the text-match path alone: an issue linked
+>      from an amendment row is unambiguously about this unit no matter what
+>      it's titled.
+> 2. For each such issue (from either path), run the per-issue checklist:
 >    - ✓ the SPEC criterion/task it touches is still **met in the PR** — pass,
 >      it's discovered work or already covered, or
 >    - ✓ a matching `## Amendments` entry exists in the governing SPEC
@@ -178,6 +189,14 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 > - This gate never re-litigates whether the *original* criterion was reasonable
 >   — only whether its descope, if any, was recorded and approved before the
 >   issue was filed.
+> - **Backstop, not primary.** `execute-phase`'s creation-time descope guard
+>   (`skills/execute-phase/SKILL.md` *Descope guard*) is the **primary**
+>   control — it stops a descope from ever reaching an issue without an
+>   approved `## Amendments` entry first. This gate is the **backstop** that
+>   catches what the primary control missed (a descope-filed issue from a
+>   session that bypassed the guard, or a hand-filed issue). The `## Amendments`
+>   -link detection path (`#89`) widens this backstop's *coverage* only — it
+>   changes nothing about `execute-phase`'s own contract or precedence.
 
 ## Process
 
