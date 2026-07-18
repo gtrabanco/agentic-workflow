@@ -232,16 +232,17 @@ everywhere'` → no match (exit 1) in either file.
       section and are a deliberate grouping choice, not a fresh gap — out of
       this fix's scope.
 
-### P3 — Ordering convention in CLAUDE.md
+### P3 — Ordering convention in CLAUDE.md ✓ done
 
 Layer: `docs`. Done-when: `grep -c 'alphabetical' CLAUDE.md` ≥ 1 in the
 Conventions table region and the table names both machine and narrative
 surfaces.
+**Verified:** `grep -c 'alphabetical' CLAUDE.md` → `1`.
 
-- [ ] Add a row (or rows) to `CLAUDE.md`'s Conventions table declaring:
+- [x] Add a row (or rows) to `CLAUDE.md`'s Conventions table declaring:
       machine/config surfaces (`plugin.json`, `model-routing.yml`) →
       alphabetical; narrative surfaces (README "The skills" sections,
-      `SKILLS.md`) → flow order.
+      `SKILLS.md`) → flow order — `CLAUDE.md` Conventions table, two new rows.
 
 ### P4 — bump-skill machine-surface lint
 
