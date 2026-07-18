@@ -131,11 +131,11 @@ Layer: `docs`. Done-when:
 `grep -nE '^`docs/(features|fix)/_TEMPLATE/SPEC.md` ' docs/fix/_TEMPLATE/SPEC.md docs/features/_TEMPLATE/SPEC.md`
 → prints nothing (no orphan continuation line remains).
 
-- [ ] `docs/fix/_TEMPLATE/SPEC.md`: join the `### Phase-lint (authoritative copy
+- [x] `docs/fix/_TEMPLATE/SPEC.md`: join the `### Phase-lint (authoritative copy
       — keep in sync with` line and its `` `docs/features/_TEMPLATE/SPEC.md`
       `### Phases`) `` continuation into one physical line, single space between
       the two halves.
-- [ ] `docs/features/_TEMPLATE/SPEC.md`: join the `#### Phase-lint (quoted —
+- [x] `docs/features/_TEMPLATE/SPEC.md`: join the `#### Phase-lint (quoted —
       authoritative copy is` line and its `` `docs/fix/_TEMPLATE/SPEC.md`
       `## Phases` "Phase-lint"; keep in sync) `` continuation into one physical
       line, single space between the two halves.
