@@ -355,15 +355,16 @@ Layer: `docs`. Done-when:
 `grep -rl "fix-in-unit" docs/workflow/ISSUE_WORKFLOW.md docs/workflow/ISSUE_WORKFLOW.es.md docs/workflow/SKILLS.md docs/workflow/SKILLS.es.md README.md README.es.md`
 → lists all 6 files.
 
-- [ ] Add the `fix-in-unit` row to `docs/workflow/ISSUE_WORKFLOW.md` Stage-3
+- [x] Add the `fix-in-unit` row to `docs/workflow/ISSUE_WORKFLOW.md` Stage-3
       verdict table plus a Stage-4 open-unit note.
-- [ ] Mirror that same edit in `docs/workflow/ISSUE_WORKFLOW.es.md`.
-- [ ] Enumerate `fix-in-unit` in `docs/workflow/SKILLS.md`'s `triage-issue`
+- [x] Mirror that same edit in `docs/workflow/ISSUE_WORKFLOW.es.md`.
+- [x] Enumerate `fix-in-unit` in `docs/workflow/SKILLS.md`'s `triage-issue`
       rows (invocation table, skill-map, flow diagram).
-- [ ] Mirror that same edit in `docs/workflow/SKILLS.es.md`.
-- [ ] Enumerate `fix-in-unit` in `README.md`'s `triage-issue` skill row and
+- [x] Mirror that same edit in `docs/workflow/SKILLS.es.md`.
+- [x] Enumerate `fix-in-unit` in `README.md`'s `triage-issue` skill row and
       issue-flow diagram.
-- [ ] Mirror that same edit in `README.es.md`.
+- [x] Mirror that same edit in `README.es.md`. — all 6 files committed in
+      2a4bf5f
 
 ### P8 — Hardening & PR
 
