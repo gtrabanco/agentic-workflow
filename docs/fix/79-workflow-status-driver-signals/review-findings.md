@@ -7,4 +7,4 @@ fold cycle / `fold-findings` is the only step that flips `folded` to `yes`.
 |---|---|---|---|---|---|---|
 | F1 | skills/workflow-status/SKILL.md:410 | docs-accuracy | low | fix-now | fold | yes |
 | F2 | skills/workflow-status/SKILL.md:501 | docs-accuracy | low | fix-now | fold | yes |
-| F3 | README.md:123 | docs-accuracy | med | fix-now | fold | no |
+| F3 | README.md:123 | docs-accuracy | med | fix-now | fold | yes |
