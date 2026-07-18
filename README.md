@@ -336,12 +336,21 @@ just runs GLM-5.2 everywhere):
 | **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** only after it passes the tool-calling smoke test | Mimo V2.5 (reasoning can't be turned off — burns its capped budget) |
 | **Cheap** | `log-session`, evidence gathering | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (non-agentic steps only, or after the tools smoke test) | Mimo V2.5 |
 | **Folding `review-change`/`audit-pr` findings** | `execute-phase`'s fold cycle | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
+| **Adversarial review (`review-change --adversarial N` / `--merge`)** | `review-change` | GLM-5.2 × N, Thinking on, High | reviewers never weaker than the model that authored the diff; worked example: Qwen3.6-authored change → `--adversarial 2` with **Mimo V2.5** + **DeepSeek V4 Flash** (`reasoning_effort: high`) — two families neither of which is the Qwen executor, free decorrelation already sitting in this fleet; the orchestrating/merge conversation runs per the Planning/routing ladder (Qwen3.6 thinking ON is compliant there) | a reviewer weaker than the authoring model |
 
 The fold-cycle row supersedes the old single-model "Alternates" line (which
 only named GLM-5.2 for subtle-logic bumps). Rule of thumb: the fixing model
 is never weaker than the one that wrote the original code, and never weaker
 than the finding's subtlety warrants — otherwise the fix itself needs
 re-catching on re-review, wasting a cycle.
+
+**Why the adversarial row pays for itself on this fleet specifically:** the
+mode's recommendation checklist fires whenever the reviewing model isn't the
+fleet's strongest or is weaker than the author — on the basic-plan ladder that
+is the common case (Qwen3.6 executes most units). Because the fleet already
+has four distinct model families, spawning `N=2` reviewers from families other
+than the author's is close to free decorrelation, not an extra purchase — the
+quota was already reserved for Merge-gates-class work.
 
 **Why `design-feature` sits in the merge-gate class, not the cheap tier:**
 its output — the SPEC's product half plus capability closure — is the
