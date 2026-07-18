@@ -153,7 +153,7 @@ plan → execute → review → audit → merge.**
 
 | Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps"). Run before every commit that touches a skill. |
+| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array and `model-routing.yml`'s keys stay alphabetical). Run before every commit that touches a skill. |
 
 ### Autopilot — the whole flow, end to end
 
@@ -325,21 +325,25 @@ through tools) defaults to Qwen3.6; run the tool-calling smoke test in
 [`docs/workflow/GOLDEN_FIXTURE.md`](docs/workflow/GOLDEN_FIXTURE.md) before
 promoting any other NaN model into that path.
 
-**Preference ladders per task** (2–3 deep on the basic plan; the €200 plan
-just runs GLM-5.2 everywhere):
+**Preference ladders per task** (2–3 deep on the basic plan; the €200-plan
+column assumes GLM-5.2 is confirmed in your own catalog via `GET /v1/models`
+per the caveat above — unconfirmed → treat that column as historical and use
+the basic-plan ladder):
 
-| Task | Skills | €200 plan | Basic-plan ladder | Never here |
+| Task | Skills | €200 plan (if GLM-5.2 confirmed) | Basic-plan ladder | Never here |
 |---|---|---|---|---|
 | **Merge gates** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max for `product-audit`) | 1. **Mimo V2.5** (reasoning always on) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, floor) → else **defer to the human** | Qwen3.6, Gemma4 |
 | **Product definition** | `design-feature` | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning always on; different family from the Qwen executor adds independence) → 2. **Qwen3.6** (thinking ON — only for XS/S or derivative features, quota-saver) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
 | **Planning / routing / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, `ship-roadmap` conductor | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (quota-saver) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
 | **Execution / mechanical** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** only after it passes the tool-calling smoke test | Mimo V2.5 (reasoning can't be turned off — burns its capped budget) |
 | **Cheap** | `log-session`, evidence gathering | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (non-agentic steps only, or after the tools smoke test) | Mimo V2.5 |
-| **Folding `review-change`/`audit-pr` findings** | `execute-phase`'s fold cycle | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
+| **Folding `review-change`/`audit-pr` findings** | `fold-findings` (primary); `execute-phase`'s embedded fold cycle (in-context/portability fallback) | per finding (see below) | **routine/mechanical** finding (style, missing test stub, stale doc) → same as Execution/mechanical; **subtle** finding (logic, security, architecture) → bump to the tier that found it (Merge-gates or Planning/routing ladder, whichever review ran) | — |
 | **Adversarial review (`review-change --adversarial N` / `--merge`)** | `review-change` | GLM-5.2 × N, Thinking on, High | reviewers never weaker than the model that authored the diff; worked example: Qwen3.6-authored change → `--adversarial 2` with **Mimo V2.5** + **DeepSeek V4 Flash** (`reasoning_effort: high`) — two families neither of which is the Qwen executor, free decorrelation already sitting in this fleet; the orchestrating/merge conversation runs per the Planning/routing ladder (Qwen3.6 thinking ON is compliant there) | a reviewer weaker than the authoring model |
 
-The fold-cycle row supersedes the old single-model "Alternates" line (which
-only named GLM-5.2 for subtle-logic bumps). Rule of thumb: the fixing model
+The folding row routes through the standalone `fold-findings` skill, falling
+back to `execute-phase`'s embedded fold cycle only where a separate
+invocation isn't available; it supersedes the old single-model "Alternates"
+line (which only named GLM-5.2 for subtle-logic bumps). Rule of thumb: the fixing model
 is never weaker than the one that wrote the original code, and never weaker
 than the finding's subtlety warrants — otherwise the fix itself needs
 re-catching on re-review, wasting a cycle.

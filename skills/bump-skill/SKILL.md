@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.1.0
+version: 2.2.0
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
@@ -17,7 +17,8 @@ description: >
 
 ```
 ✓ Every changed skill's version: was bumped and BOTH changelogs got their rows
-✓ The lint results (all 5 authoring rules) were reported
+✓ The lint results (all 6 authoring rules, including the two machine-surface
+  parity/ordering checks) were reported
 ✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
 
@@ -89,6 +90,16 @@ reports — it does not auto-correct):
   section (deliverable in fixed format; `→ Next:` printed last; executors run
   commands, never describe them). `grep -L '^## Turn contract' skills/<name>/SKILL.md`
   flags a miss (skip for internal skills).
+- **`plugin.json` parity.** Every `skills/<name>/` with `user-invocable: true`
+  has a matching `./skills/<name>` entry in `.claude-plugin/plugin.json`.
+  Compare the two sets (directories vs. array entries) and flag any
+  `user-invocable: true` skill missing from the array — this is what left
+  `fold-findings` installing outside its category (see #71).
+- **Machine-surface alphabetical order.** `.claude-plugin/plugin.json`'s
+  `skills` array and `docs/workflow/model-routing.yml`'s top-level keys must
+  each be alphabetical (per `CLAUDE.md`'s Conventions table). Extract each
+  surface's ordered list and diff it against its sorted form
+  (`sort -c`-equivalent); flag any surface that fails.
 
 Report violations in the summary; do not block the bump on them.
 
@@ -249,7 +260,8 @@ be worked on from any agent:
   skill, newest first.
 - `README.md` and `README.es.md` skills and model tables are accurate.
 - Major bumps have a migration note and cross-reference updates.
-- Any authoring-rule violations (missing `→ Next:` block, `S1`/"Step" phase labels)
-  are reported for the user to fix before committing.
+- Any authoring-rule violations (missing `→ Next:` block, `S1`/"Step" phase labels,
+  a `user-invocable: true` skill absent from `plugin.json`, a non-alphabetical
+  machine surface) are reported for the user to fix before committing.
 - **The next step is printed** — the `git add` + `git commit` command, ready
   to run.
