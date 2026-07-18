@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.5.0
+version: 2.5.1
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -316,7 +316,10 @@ first record of a descope. The descope must first be recorded as an explicit,
    - <YYYY-MM-DD> — descoped: "<criterion/task>" — approved by user — follow-up: #<n>
    ```
 3. **Only then** create the follow-up issue, and **link the amendment** in its
-   body (the `#<n>` in the row above is filled in once the issue exists).
+   body. Immediately after, edit the `## Amendments` row to replace the
+   `#<n>` placeholder with the real issue number, and commit that edit — a
+   row still reading the literal `#<n>` placeholder is unlinked and fails
+   `audit-pr`'s symmetric check.
 
 `audit-pr`'s scope-bleed gate and `product-audit`'s recurrence signal both key
 off this same `## Amendments` log — it is the single authoritative record of

@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.1 | 2026-07-18 | patch | Fix #66: clarified the descope guard's amendment-backfill step — after creating the follow-up issue and linking it in the issue body, explicitly edit the `## Amendments` row to replace the `#<n>` placeholder with the real issue number and commit that edit; a row still reading the literal placeholder fails `audit-pr`'s symmetric unlinked-row check. |
 | 2.5.0 | 2026-07-17 | minor | Fix #66: new **descope guard** in the Issue policy — before creating any issue, classify it discovered-work (file freely) vs. descope (overlaps a SPEC acceptance criterion/phase task not fully delivered); a descope STOPs before the issue is created, requiring a user-approved, dated `## Amendments` entry first (canonical row format defined once here). New Forbidden-list entry and turn-contract box asserting the guard ran on every issue created in the turn. |
 | 2.4.1 | 2026-07-17 | patch | Fix #81: the Phase-lint pre-flight guard (added in 2.4.0) gains an explicit legacy-SPEC carve-out — a SPEC with no `## Phases` section skips the guard entirely (no lint, no STOP) and falls through to the pre-existing legacy single-pass flow, restoring fix #64's own backward-compatibility promise. |
 | 2.4.0 | 2026-07-17 | minor | Fix #64: new **phase-lint pre-flight guard**, run after the dependency/own-status gates and before any edit — the target phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") or execute-phase STOPs with a fixed block naming the failed boxes and recommending re-cut via `/plan-feature`/`/plan-fix`; `--force` skips the STOP, never the check, logged in `decisions.md`/`progress.md`. Wired into the Turn contract and Hard rules. |
@@ -421,6 +422,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-18 — scope-bleed-guardrail review fold (fix 66).** PATCH bump for
+  `execute-phase` (2.5.1): clarified the descope guard's amendment-backfill
+  step — after the follow-up issue exists and is linked, the `## Amendments`
+  row's `#<n>` placeholder is explicitly replaced with the real issue number
+  and the edit committed, so it never fails `audit-pr`'s symmetric unlinked-
+  row check. Found and fixed during `review-change` on PR #88.
 
 - **2026-07-17 — scope-bleed-guardrail (fix 66).** MINOR bump for
   `execute-phase` (2.5.0): new descope guard — before creating any issue,
