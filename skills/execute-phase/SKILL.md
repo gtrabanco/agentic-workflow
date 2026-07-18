@@ -306,14 +306,15 @@ with the fixed **descope test**:
 first record of a descope. The descope must first be recorded as an explicit,
 **user-approved, dated SPEC amendment**:
 
-1. Move the criterion/task out of the active `## Acceptance` (or `## Phases`
-   ledger), and log it in the governing SPEC's `## Amendments` section (create
-   the section if absent) with this canonical row format:
+1. Get explicit user approval for the descope **first** (ask; never
+   self-authorize moving a criterion out of scope — the amendment row must
+   never be written before approval is in hand).
+2. **Only then** move the criterion/task out of the active `## Acceptance` (or
+   `## Phases` ledger), and log it in the governing SPEC's `## Amendments`
+   section (create the section if absent) with this canonical row format:
    ```
    - <YYYY-MM-DD> — descoped: "<criterion/task>" — approved by user — follow-up: #<n>
    ```
-2. Get explicit user approval for the descope (ask; never self-authorize moving
-   a criterion out of scope).
 3. **Only then** create the follow-up issue, and **link the amendment** in its
    body (the `#<n>` in the row above is filled in once the issue exists).
 
