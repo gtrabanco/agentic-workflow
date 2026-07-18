@@ -266,12 +266,17 @@ Layer: `docs`. Done-when: `grep -c 'plugin.json' skills/bump-skill/SKILL.md`
 
 ### P5 — Hardening & PR
 
-- [ ] Run `bump-skill` on the edited `skills/bump-skill/SKILL.md` (version
+- [x] Run `bump-skill` on the edited `skills/bump-skill/SKILL.md` (version
       bump + `CHANGELOG.md`/`CHANGELOG.es.md` rows + `README.md`/`README.es.md`
-      §"The skills"/§"Model & effort" table refresh)
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+      §"The skills"/§"Model & effort" table refresh) — 2.1.0 → 2.2.0 (minor),
+      commit `090d198`.
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+      — `plugin.json` JSON-parse + all touched files read-back + `npx skills
+      add . --list` → "Found 29 skills", exit 0.
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty (checked
+      before this ledger edit and the fix-index flip; re-verified below).
+- [x] Set the fix-index row status to `done` and commit the flip —
+      `docs/fix/README.md` row flipped to `done`.
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
