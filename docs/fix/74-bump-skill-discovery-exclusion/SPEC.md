@@ -221,26 +221,26 @@ mechanism gates it rather than the skill being broken.
 
 ## Acceptance
 
-- [ ] The `skills` CLI's actual exclusion capability is established from
+- [x] The `skills` CLI's actual exclusion capability is established from
       primary sources and recorded (done in this SPEC's "Primary-source CLI
       capability finding" + `decisions.md`): `metadata.internal: true` gates
       discovery; manifest is additive; no `.skillsignore`.
-- [ ] The option decision (option 2) and the rationale for rejecting options 1
+- [x] The option decision (option 2) and the rationale for rejecting options 1
       and 3 are recorded in
       `docs/fix/74-bump-skill-discovery-exclusion/decisions.md`.
-- [ ] `npx skills add . --list` (with `INSTALL_INTERNAL_SKILLS` unset) no
+- [x] `npx skills add . --list` (with `INSTALL_INTERNAL_SKILLS` unset) no
       longer lists `bump-skill`.
-- [ ] `INSTALL_INTERNAL_SKILLS=1 npx skills add . --list` still lists
+- [x] `INSTALL_INTERNAL_SKILLS=1 npx skills add . --list` still lists
       `bump-skill` (proves the mechanism, not breakage).
-- [ ] `bump-skill` still resolves and runs in this repo via
+- [x] `bump-skill` still resolves and runs in this repo via
       `.claude/skills/bump-skill/SKILL.md` (symlink intact; Skill-tool
       invocation unaffected).
-- [ ] `skills/bump-skill/SKILL.md`'s new lint rule enforces the conjunction
+- [x] `skills/bump-skill/SKILL.md`'s new lint rule enforces the conjunction
       (`user-invocable: false` AND absent from `plugin.json`) ⇒
       `metadata.internal: true`, and the rule-count references read "7".
-- [ ] `CLAUDE.md` documents the repo-internal-skill convention
+- [x] `CLAUDE.md` documents the repo-internal-skill convention
       (`metadata.internal: true`) in one line.
-- [ ] No `plugin.json` entry is added or removed; the 13 shipped
+- [x] No `plugin.json` entry is added or removed; the 13 shipped
       `user-invocable: false` sub-skills are unchanged (no `metadata.internal`
       added to any of them).
 
@@ -289,21 +289,24 @@ Layer: `docs`. Done-when:
 (the rule references it), **and** `grep -c '7 authoring rules' skills/bump-skill/SKILL.md`
 ≥ 1.
 
-- [ ] Create `docs/fix/74-bump-skill-discovery-exclusion/decisions.md`
+- [x] Create `docs/fix/74-bump-skill-discovery-exclusion/decisions.md`
       recording: (a) the primary-source CLI finding (the
       `data.metadata?.internal === true` discovery gate, verified in
       `dist/cli.mjs` 1.5.16 and 1.5.19; manifest additive; no `.skillsignore`);
       (b) option 2 chosen; (c) options 1 and 3 rejected, with the one-line
-      reason each.
-- [ ] Add lint rule 7 ("internal-skill discovery exclusion") to
+      reason each. Evidence: `docs/fix/74-bump-skill-discovery-exclusion/decisions.md`.
+- [x] Add lint rule 7 ("internal-skill discovery exclusion") to
       `skills/bump-skill/SKILL.md` §2b: any `skills/<name>/` that is
       `user-invocable: false` **AND** absent from `plugin.json`'s `skills`
       array must carry `metadata.internal: true`; include the grep recipe and
       an explicit note that skills present in `plugin.json` are exempt.
-- [ ] Update the rule-count references in `skills/bump-skill/SKILL.md`
+      Evidence: `skills/bump-skill/SKILL.md` §2b, new bullet after
+      "Machine-surface alphabetical order".
+- [x] Update the rule-count references in `skills/bump-skill/SKILL.md`
       (`## Turn contract` line and the §2b lint-report sentence) from
       "6 authoring rules" to "7 authoring rules".
-- [ ] Add a one-line note to `CLAUDE.md`'s `bump-skill` / Authoring-a-skill
+      Evidence: `grep -c '7 authoring rules' skills/bump-skill/SKILL.md` → 1.
+- [x] Add a one-line note to `CLAUDE.md`'s `bump-skill` / Authoring-a-skill
       guidance: a repo-internal skill (`user-invocable: false`, not in
       `plugin.json`) carries `metadata.internal: true` to stay out of
       `npx skills add` discovery.

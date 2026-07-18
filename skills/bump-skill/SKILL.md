@@ -19,8 +19,9 @@ description: >
 
 ```
 ✓ Every changed skill's version: was bumped and BOTH changelogs got their rows
-✓ The lint results (all 6 authoring rules, including the two machine-surface
-  parity/ordering checks) were reported
+✓ The lint results (all 7 authoring rules, including the two machine-surface
+  parity/ordering checks and the internal-skill discovery-exclusion check)
+  were reported
 ✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
 
@@ -102,6 +103,20 @@ reports — it does not auto-correct):
   each be alphabetical (per `CLAUDE.md`'s Conventions table). Extract each
   surface's ordered list and diff it against its sorted form
   (`sort -c`-equivalent); flag any surface that fails.
+- **Internal-skill discovery exclusion.** Any `skills/<name>/` that is both
+  `user-invocable: false` **and** absent from `plugin.json`'s `skills` array
+  is repo-internal (meaningless outside this repo) and must carry
+  `metadata.internal: true` in its frontmatter — the only mechanism the
+  `skills` CLI honors to keep `npx skills add . --list` from discovering and
+  offering it (`user-invocable`/`plugin.json` alone do not gate discovery;
+  see `docs/fix/74-bump-skill-discovery-exclusion/decisions.md`). Skills
+  present in `plugin.json` are **exempt** even if `user-invocable: false`
+  (they are shipped sub-skills composed by orchestrators, not repo-internal —
+  e.g. the `review-*` pack, `orchestration-envelope`,
+  `plan-feature-scaffold`, `plan-feature-from-issue`). For each changed
+  skill: if `user-invocable: false` and its `./skills/<name>` entry is absent
+  from `plugin.json`, `grep -q 'internal: true' skills/<name>/SKILL.md`
+  should succeed; flag a miss.
 
 Report violations in the summary; do not block the bump on them.
 
