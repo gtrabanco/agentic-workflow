@@ -145,7 +145,7 @@ Layer: `docs`. Target: `skills/ship-roadmap/SKILL.md`. Done-when:
 `grep -n "layer boundary" skills/ship-roadmap/SKILL.md` → returns the
 rewritten REVIEW-stage bullet.
 
-- [ ] Rewrite the REVIEW-stage bullet's cadence clause ("L or
+- [x] Rewrite the REVIEW-stage bullet's cadence clause ("L or
       sensitive-flagged features get a checkpoint every 2 phases") to fire on
       `execute-phase`'s three named triggers (layer boundary, accumulation,
       sensitivity), cross-referencing `#77`'s trigger definitions instead of
@@ -153,7 +153,7 @@ rewritten REVIEW-stage bullet.
       `--adversarial 2` hard floor, and the "must never be aligned with
       `review-change`'s own interactive auto-recommend" boundary sentence
       unchanged in meaning. — `skills/ship-roadmap/SKILL.md` REVIEW-stage
-      bullet.
+      bullet (L345 region).
 
 ### P2 — Hardening & PR
 
@@ -266,6 +266,14 @@ the trigger model is already specified by `#77`.
 
 ## Decisions made during drafting
 
+- **Started with unmet dependency, user-forced 2026-07-18.** The `Depends
+  on:` gate (#77, PR [#92](https://github.com/gtrabanco/agentic-workflow/pull/92))
+  was still open at implementation time. The user explicitly chose to force
+  through rather than wait, so P1 was implemented against the trigger
+  definitions on the `fix/77-review-checkpoint-cadence-triggers` branch tip
+  (verified identical in substance to what `#92` will land on `main`) instead
+  of blocking. If `#92` lands with different trigger wording before this PR
+  merges, re-verify the cross-reference still matches.
 - **Cross-reference, not restate.** The rewritten bullet points at
   `execute-phase`'s trigger definitions rather than copying the three
   trigger descriptions into `ship-roadmap` verbatim, so a future re-tune of

@@ -120,6 +120,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-18 | menor | Etapa REVIEW: la cadencia del checkpoint para features `L`/marcadas como sensibles ahora se dispara con los tres triggers nombrados de `execute-phase` (límite de capa / acumulación / sensibilidad, referenciados desde `#77` en vez de repetidos) en lugar de un conteo fijo de "cada 2 fases", que se había recalibrado mal ~3x tras el lint de atomicidad de #64 que redujo el tamaño de fase. El piso obligatorio `--adversarial 2` y la falta de alineación con la cadencia advisory propia de `review-change` no cambian. Cierra #93. |
 | 2.2.1 | 2026-07-13 | parche | Portability gana una barrera de concurrencia del provider: limita los subagentes/ejecutores headless paralelos al límite documentado de peticiones paralelas por API key del provider (dejando un hueco para el conductor), y reduce el paralelismo ante un 429 en vez de reintentar a fan-out completo. Solo guía — sin cambio de etapas ni de contrato. |
 | 2.2.0 | 2026-07-11 | menor | SELECT gana una nueva prioridad principal: lee primero `detail.urgent` de `workflow-status` (solo etiquetas) — un issue `fix-next` abierto salta a la cabeza de la cola (sin interrumpir); un issue `urgent` abierto corre la rúbrica canónica de pausa-vs-terminar en `docs/workflow/ORCHESTRATION.md` (referenciada, nunca duplicada) contra los hechos de interrumpibilidad de la unidad en curso, `INTERRUPT_NOW` la aparca, `FINISH_FIRST` encola el fix para la siguiente iteración. Lista de prioridades renumerada. |
 | 2.1.0 | 2026-07-10 | menor | Etapa REVIEW: para features `L`/marcadas como sensibles, cada invocación de `review-change` (checkpoint o revisión final) ahora corre con `--adversarial 2` — un piso obligatorio, no supervisado, deliberadamente **no** alineado con el checkpoint interactivo advisory de `review-change`. XS/S/M no sensible sin cambios (revisor único). |
@@ -426,6 +427,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — triggers de cadencia en ship-roadmap (fix 93).** Bump MENOR
+  para `ship-roadmap` (2.3.0): la cadencia del checkpoint para features
+  `L`/marcadas como sensibles en la etapa REVIEW ahora se dispara con los
+  tres triggers nombrados de `execute-phase` (límite de capa / acumulación /
+  sensibilidad, referenciados desde `#77` en vez de repetidos) en lugar del
+  conteo fijo "cada 2 fases", que se había recalibrado mal ~3x tras el lint
+  de atomicidad de #64 que redujo el tamaño de fase. El piso obligatorio
+  `--adversarial 2` y la falta de alineación con la cadencia advisory propia
+  de `review-change` no cambian.
 
 - **2026-07-18 — usabilidad del modo adversarial en flotas débiles (fix 76).**
   Bump MENOR para `review-change` (2.4.0): el modo `--adversarial N` gana una
