@@ -271,13 +271,16 @@ Layer: `docs`. Done-when:
 Layer: `docs`. Done-when:
 `grep -c "fix-in-unit" skills/triage-issue/SKILL.md` → ≥ 3.
 
-- [ ] Add `fix-in-unit <unit>` to the fixed output contract's `VERDICT:` line
-      (`VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix`).
-- [ ] Add the batch summary table's group-by-home-unit rule (member issues
-      listed under their unit's heading).
-- [ ] Add an explicit non-regression line: "no member unit → today's
+- [x] Add `fix-in-unit <unit>` to the fixed output contract's `VERDICT:` line
+      (`VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix`). —
+      `skills/triage-issue/SKILL.md` step 7 fixed-format block
+- [x] Add the batch summary table's group-by-home-unit rule (member issues
+      listed under their unit's heading). — step 7, "Batch summary table"
+      paragraph
+- [x] Add an explicit non-regression line: "no member unit → today's
       four-verdict classification, unchanged" — leave the four existing
-      verdict rows and their labels untouched.
+      verdict rows and their labels untouched. — step 7, paragraph directly
+      under the fixed-format block
 
 ### P3 — `fix-in-unit` sub-routes: fold-into-ledger and replan
 
