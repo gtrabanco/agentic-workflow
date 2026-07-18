@@ -310,11 +310,11 @@ Layer: `docs`. Done-when: all four markers present —
 
 Layer: `docs`. Done-when: `grep -q suggested skills/orchestration-envelope/SKILL.md`.
 
-- [ ] Add `suggested` (optional) to the `next` object in the canonical Schema
+- [x] Add `suggested` (optional) to the `next` object in the canonical Schema
       snippet.
-- [ ] Add a field rule: `next.suggested[]` = `{command, trigger, source_skill}`,
+- [x] Add a field rule: `next.suggested[]` = `{command, trigger, source_skill}`,
       optional/additive, single-sourced from the owning skill's trigger.
-- [ ] Cross-reference the schema package 2.1.0 mirror.
+- [x] Cross-reference the schema package 2.1.0 mirror.
 
 ### P5 — audit-pr descope-gate amendments cross-check
 
