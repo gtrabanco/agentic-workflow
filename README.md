@@ -134,7 +134,7 @@ plan → execute → review → audit → merge.**
 
 | Skill          | What it does                                                                                               |
 | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `triage-issue` | Classifies an issue (fix-now / promote / postpone / wontfix) by **verifying its trigger against the code**; on fix-now + high severity, applies the injection-safe `urgent`/`fix-next` label it owns; on postpone/promote/wontfix, applies the matching disposition label it owns (`postponed`/`promoted`/`wontfix`) |
+| `triage-issue` | Classifies an issue (fix-now / fix-in-unit / promote / postpone / wontfix) by **verifying its trigger against the code**; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch (`fix-in-unit`), never a new standalone unit; on fix-now + high severity, applies the injection-safe `urgent`/`fix-next` label it owns; on postpone/promote/wontfix, applies the matching disposition label it owns (`postponed`/`promoted`/`wontfix`) |
 
 ### Document
 
@@ -461,10 +461,11 @@ See **[`docs/workflow/FEATURE_WORKFLOW.md`](docs/workflow/FEATURE_WORKFLOW.md)**
 ```
 /triage-issue <N>
    → reads the issue's "when to fix" trigger, verifies it against the current code
-   → fix-now  → plan-fix → execute-phase --fix
-     promote  → plan-feature   (the router takes the issue → scoped SPEC)
-     postpone → dated comment, leave open (no inline work)
-     wontfix  → propose close
+   → fix-now     → plan-fix → execute-phase --fix
+     fix-in-unit → resolve on the open unit's own branch (execute-phase / fold-findings / replan)
+     promote     → plan-feature   (the router takes the issue → scoped SPEC)
+     postpone    → dated comment, leave open (no inline work)
+     wontfix     → propose close
 ```
 
 See **[`docs/workflow/ISSUE_WORKFLOW.md`](docs/workflow/ISSUE_WORKFLOW.md)**.
