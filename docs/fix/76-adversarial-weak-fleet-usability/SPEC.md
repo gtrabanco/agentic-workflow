@@ -322,12 +322,16 @@ end-of-unit review hand-off). Done-when:
 `grep -n "adversarial" skills/execute-phase/SKILL.md` → returns the hand-off
 line, and `git diff main -- skills/execute-phase/SKILL.md` shows L348 unchanged.
 
-- [ ] Add the adversarial recommendation line to `review-change` step 11's
+- [x] Add the adversarial recommendation line to `review-change` step 11's
       terminal `→ Next:` block(s), firing exactly when the P1 checklist fires
-      (naming which box), as its own literal line.
-- [ ] Add to `execute-phase`'s **mandatory end-of-unit review hand-off**
+      (naming which box), as its own literal line. — new `·` sub-bullet added
+      to both the `Decision: FAIL` and `Decision: PASS` blocks.
+- [x] Add to `execute-phase`'s **mandatory end-of-unit review hand-off**
       (L402/L425/L530 area) a note on when to pass `--adversarial N`, leaving
-      the every-2-phases checkpoint sentence (L348) untouched.
+      the every-2-phases checkpoint sentence (L348) untouched. — new
+      "Adversarial pass at that mandatory end review." paragraph in *Review
+      checkpoint & finishing a unit*; the every-2-phases sentence (step 7) is
+      byte-for-byte unchanged (verified via `git diff`).
 
 ### P7 — NaN adversarial ladder row
 
