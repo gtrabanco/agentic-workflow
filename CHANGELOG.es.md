@@ -364,7 +364,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
-| `bump-skill` | 2.1.0 | 2026-07-11 | menor | Fix #40: reclasificada como `user-invocable: false` — la skill es mantenimiento del propio repo `agentic-workflow` y su entrada de menú `/bump-skill` era ruido para el ~99% de quienes consumen el paquete sin autorar sus `SKILL.md`. Sin cambio de comportamiento; se sigue ejecutando vía la herramienta Skill o siguiendo `SKILL.md` directamente. Su tabla por skill se traslada de "Mantenimiento del repo" a esta sección Interna. |
+| `bump-skill` | 2.2.0 | 2026-07-18 | menor | Fix #71/#72/#73: el lint de §2b gana dos comprobaciones de superficies máquina — paridad con `plugin.json` (toda skill `user-invocable: true` tiene su entrada en el array) y orden alfabético de las superficies máquina (array `skills` de `plugin.json` + claves de `model-routing.yml`) — la misma clase de deriva que dejó a `fold-findings` instalarse sin registrar. |
+| | 2.1.0 | 2026-07-11 | menor | Fix #40: reclasificada como `user-invocable: false` — la skill es mantenimiento del propio repo `agentic-workflow` y su entrada de menú `/bump-skill` era ruido para el ~99% de quienes consumen el paquete sin autorar sus `SKILL.md`. Sin cambio de comportamiento; se sigue ejecutando vía la herramienta Skill o siguiendo `SKILL.md` directamente. Su tabla por skill se traslada de "Mantenimiento del repo" a esta sección Interna. |
 | | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Además se retira la regla de lint "Machine envelope", ya obsoleta (exigía que toda skill de cara al usuario llevara la sección — ya no es cierto). Ver `docs/workflow/MIGRATION.md`. |
 | | 1.5.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. El lint gana una 5ª regla: las skills de cara al usuario deben llevar la sección `## Machine envelope`. |
 | | 1.3.1 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`); la guía sobre modelos no-Claude en la descripción se sustituyó por un puntero a `#claude`. |
@@ -429,6 +430,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — paridad de registro de skills (fix 71+72+73).** Se registra
+  `fold-findings` en `.claude-plugin/plugin.json` (se instalaba bajo `General`
+  en vez de `Agentic Workflow`); se restaura el orden alfabético completo de
+  `docs/workflow/model-routing.yml`; se nombra `fold-findings` en la escalera
+  de equivalencia no-Claude de ambos README (ruta principal, con el ciclo de
+  incorporación de `execute-phase` como fallback) y se concilia el
+  planteamiento de GLM-5.2 en el "plan de €200" con la sección de dos
+  perfiles; se declara la convención de orden máquina-vs-narrativa en
+  `CLAUDE.md`. Bump MENOR para `bump-skill` (2.2.0): dos nuevas reglas de
+  lint en §2b (paridad con `plugin.json`, orden alfabético de superficies
+  máquina) para que esta clase de deriva no pueda repetirse en silencio.
 
 - **2026-07-18 — disparadores de cadencia del checkpoint de revisión (fix 77).**
   Bump MENOR para `execute-phase` (2.6.0): el checkpoint fijo cada 2 fases se
