@@ -51,7 +51,7 @@ of the final assistant message. Exactly one envelope per turn; parse failure
   "dependencies": {"unmet": [], "build_order": []},
   "recommendations": {"product_audit": false, "reason": null},
   "needs_input": null,
-  "next": {"recommended": "<the → Next: block's recommended command>", "alternatives": [], "tier": "strong | cheap"},
+  "next": {"recommended": "<the → Next: block's recommended command>", "alternatives": [], "tier": "strong | cheap", "suggested": []},
   "detail": null
 }
 ```
@@ -93,6 +93,16 @@ Field rules — checkable, no interpretation:
 - **`next.tier`** — `strong` when the recommended command is judgment work
   (plan / review / audit / triage), `cheap` when it is mechanical execution.
   This is the model-routing hint for the orchestrator.
+- **`next.suggested[]`** — optional, `workflow-status`-only: trigger-attributed
+  suggestions `{command, trigger, source_skill}`, one entry per fired trigger
+  the driver can act on right now. `trigger` **quotes** the owning skill's own
+  condition verbatim — never a second, drifting copy of that skill's logic.
+  Advisory only: it rides beside `next.recommended`/`next.tier`, never
+  replaces or reorders them. Absent/empty on any envelope that doesn't emit
+  it — old consumers ignore an unknown key, so this is additive. Mirrored in
+  `packages/agentic-workflow-schema` 2.1.0 (`EnvelopeSuggestion[]`, optional)
+  — see that package's `## Versioning` for the additive-minor rule this
+  followed.
 - **`detail`** — optional skill-specific payload (object), documented in the
   emitting skill's `## Machine envelope` section; `null` otherwise.
 - **Truthfulness:** every value reflects what actually happened — sha/PR/issue
