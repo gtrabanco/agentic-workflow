@@ -161,12 +161,13 @@ rewritten REVIEW-stage bullet.
       — `npx skills add . --list` → exit 0.
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #93`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #93` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #93` —
+      https://github.com/gtrabanco/agentic-workflow/pull/94
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #93` and push
 
 ## Testing
 
