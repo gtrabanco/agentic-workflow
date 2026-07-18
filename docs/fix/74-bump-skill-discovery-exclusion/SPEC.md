@@ -323,12 +323,13 @@ Layer: `docs`. Done-when:
       entries; README.md/.es.md skill-table cell updated. Commit `d39825d`.
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #74`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #74` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #74`.
+      PR: https://github.com/gtrabanco/agentic-workflow/pull/96
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #74` and push
 
 ## Testing
 
