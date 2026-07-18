@@ -343,10 +343,11 @@ Layer: `docs`. Done-when: `git diff --name-only` includes `CHANGELOG.md`,
 
 ### P7 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted):
-      `cd packages/agentic-workflow-schema && npm test`; `npx skills add . --list`
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted):
+      `cd packages/agentic-workflow-schema && npm test` → 18/18 pass, exit 0;
+      `npx skills add . --list` → clean
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE
