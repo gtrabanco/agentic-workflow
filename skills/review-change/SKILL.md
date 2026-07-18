@@ -237,10 +237,51 @@ turn-contract box) decorrelates some blind spots; running N independent
 reviewers — ideally across **different model families** (a preference, not a
 requirement: an agent with one family runs N same-family reviewers and says so)
 — decorrelates more, at 2–3× the cost of the findings-gathering stage. That cost
-is why the mode stays opt-in and is only **auto-recommended, never forced**, for
-`L` or sensitive-flagged changes (auth, payments, destructive migrations,
-secrets, CI config) — this skill surfaces the recommendation in its report /
-`→ Next:` block but proceeds single-reviewer unless the user opts in.
+is why the mode stays opt-in and is only **auto-recommended, never forced**.
+
+**Recommendation checklist.** Recommend `--adversarial 2` if **ANY** box ticks
+(this skill surfaces the recommendation in its report / `→ Next:` block but
+proceeds single-reviewer unless the user opts in):
+
+- ✓ the change is `L`
+- ✓ the change touches a sensitive surface (auth, payments, destructive
+  migrations, secrets, CI config)
+- ✓ the reviewing model is **not the strongest model available in the fleet**,
+  or is weaker than the model that authored the diff
+- ✓ only one model family is available **and** the change is `≥ M`
+
+The model condition is a documented rule of thumb, **surfaced as a report line
+only — never auto-detection.** An agent cannot reliably introspect its own
+model identity, so this skill never tries; it states the condition in prose
+and lets the human (or the orchestrator that knows which model is running)
+judge it.
+
+**N ladder (fixed).** `N=2` is the default (the `ship-roadmap` floor). Bump to
+`N=3` when either holds: the change has a security/auth surface, or all
+available reviewers share one model family (the third reviewer buys back some
+of the decorrelation a single family can't provide). `N>3` is **explicitly
+discouraged** — with the ≥1 inclusion threshold below, reviewers beyond 3
+mostly add dedupe work at merge time, not new findings.
+
+**Reviewer roles (fixed, assigned by index).** Each reviewer *i* gets role *i*
+from this fixed set — never chosen ad hoc:
+
+- **R1 — correctness/logic adversary.** Assume the diff is wrong until proven
+  otherwise; hunt first for logic errors, wrong conditionals, off-by-one/edge
+  cases, silent behavior changes.
+- **R2 — security/inputs adversary.** Hunt first for untrusted input handling,
+  injection, auth/authorization gaps, secret handling, and unsafe defaults.
+- **R3 — SPEC-coverage adversary.** Hunt first for what the governing SPEC
+  *promises* that the diff does not actually do — unmet acceptance criteria,
+  silently narrowed scope, claims contradicted by the code.
+
+**A role is an attention priority, NOT an exclusive scope.** The full
+`review-implementation` checklist stays **mandatory for every reviewer** —
+the role only orders where that reviewer looks first, it never narrows what
+they're allowed to flag. The known failure mode this guards against: a
+role-narrowed reviewer skips an obvious defect because it fell outside "their"
+role. Every reviewer prompt (see the reviewer contract below) must carry this
+sentence, not just the role assignment.
 
 **Platform-adaptive spawn (three tiers).** Each of the N reviewers is a
 **context-clean, diff-only, adversarial** run of the existing findings engine

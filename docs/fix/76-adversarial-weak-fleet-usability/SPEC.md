@@ -215,24 +215,29 @@ multi-reviewer mode" section). Done-when:
 `grep -n "not the strongest" skills/review-change/SKILL.md` → returns the
 model-condition line.
 
-- [ ] Replace the single `L`/sensitive criterion (L240–243) with the four-box
+- [x] Replace the single `L`/sensitive criterion (L240–243) with the four-box
       recommendation checklist defined in Scope item 1 (recommend
-      `--adversarial 2` if ANY box ticks).
-- [ ] State the model condition as a surfaced **report line, never
-      auto-detection** (an agent cannot reliably introspect its own model).
-- [ ] Add the fixed N ladder: `N=2` default (the `ship-roadmap` floor); `N=3`
+      `--adversarial 2` if ANY box ticks). — `skills/review-change/SKILL.md`
+      "Recommendation checklist" block.
+- [x] State the model condition as a surfaced **report line, never
+      auto-detection** (an agent cannot reliably introspect its own model). —
+      same block, "surfaced as a report line only — never auto-detection".
+- [x] Add the fixed N ladder: `N=2` default (the `ship-roadmap` floor); `N=3`
       when security/auth surface OR all reviewers share one model family; `>3`
       explicitly discouraged, with the ≥1-inclusion-threshold rationale (extra
-      reviewers add dedupe, not findings).
-- [ ] Add the fixed role set assigned by reviewer index (reviewer *i* → role
+      reviewers add dedupe, not findings). — `skills/review-change/SKILL.md`
+      "N ladder (fixed)" block.
+- [x] Add the fixed role set assigned by reviewer index (reviewer *i* → role
       *i*): R1 correctness/logic adversary · R2 security/inputs adversary · R3
       SPEC-coverage adversary ("find what the SPEC promises the diff does not
-      do").
-- [ ] State the role-is-attention-priority-**NOT**-exclusive-scope guardrail
+      do"). — `skills/review-change/SKILL.md` "Reviewer roles (fixed, assigned
+      by index)" block.
+- [x] State the role-is-attention-priority-**NOT**-exclusive-scope guardrail
       verbatim-equivalent: the full checklist stays mandatory for every
       reviewer; the role only orders where it bites first; name the known
       failure mode (a role-narrowed reviewer skipping an obvious off-role
-      defect).
+      defect). — `skills/review-change/SKILL.md` "A role is an attention
+      priority, NOT an exclusive scope." paragraph.
 
 ### P2 — Single-source adversarial review contracts
 
