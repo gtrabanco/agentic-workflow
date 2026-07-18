@@ -68,7 +68,7 @@ becomes urgent to the rest of the workflow. If both labels somehow end up
 applied to the same issue, `urgent` wins (it is checked first below) — no
 issue is ever double-labeled by this skill in one triage pass.
 
-**Apply-on-verdict (urgency).** When step 3 below classifies **fix-now** and
+**Apply-on-verdict (urgency).** When step 4 below classifies **fix-now** and
 the issue's severity is **high**, applying the label is part of that
 verdict — never a separate, silent step:
 
@@ -77,7 +77,7 @@ verdict — never a separate, silent step:
    already exists are treated as success (create-if-missing); proceed either
    way.
 2. `gh issue edit <N> --add-label <name>`.
-3. The dated verdict comment (step 5) states which label was applied and why
+3. The dated verdict comment (step 6) states which label was applied and why
    (or, if the actor running this skill lacks triage+ permission and the
    create/add-label call fails, states that failure explicitly — the run is
    unaffected either way; no urgency is ever asserted without a label actually
@@ -106,9 +106,9 @@ the matching verdict reached by the Process below — evidence-grounded
 classification of the issue, never a parse of its title/body/comment text.
 Label mutation is **triage+-permission-gated** on the forge, which is exactly
 why it is the one signal an outsider cannot forge; the `VERDICT:` comment text
-(step 6) is not a substitute for it.
+(step 7) is not a substitute for it.
 
-**Apply-on-verdict (disposition).** When step 3 below classifies **postpone**,
+**Apply-on-verdict (disposition).** When step 4 below classifies **postpone**,
 **promote**, or **wontfix**, applying the matching label is part of that
 verdict — never a separate, silent step:
 
@@ -118,7 +118,7 @@ verdict — never a separate, silent step:
    deleted or renamed). Errors because a label already exists are treated as
    success (create-if-missing); proceed either way.
 2. `gh issue edit <N> --add-label <name>`.
-3. The dated verdict comment (step 5) states which disposition label was
+3. The dated verdict comment (step 6) states which disposition label was
    applied (or, if the actor running this skill lacks triage+ permission and
    the create/add-label call fails, states that failure explicitly — the run
    is unaffected either way; no disposition is ever asserted without a label
@@ -149,7 +149,19 @@ gh issue view <N> --json number,title,body,labels,state,comments
    - check a threshold (article count, p95 latency, row count),
    - reproduce a reported defect, or confirm it's already fixed.
    Use `grep`/`gh`/tests — cite the evidence (paths, counts, line refs).
-3. **Classify** into one of:
+3. **Scope-membership check.** Before classifying, decide whether this issue
+   already belongs to a unit that is currently open, per this fixed checklist
+   (every item independently checkable):
+   - List candidate open units mechanically: roadmap/fix-index rows with
+     status `in-progress` or `planned`, plus any unit with an open PR
+     (`gh pr list --state open`).
+   - For each candidate, compare the issue against it: membership = ✓ the
+     issue's ask overlaps a SPEC **acceptance criterion** or a **phase task**
+     — quote **both** sides (the issue's own line and the matching SPEC/phase
+     line) before calling it a match; no quote pair means not a member.
+   - No candidate matched → fall through to today's four-verdict
+     classification below, unchanged.
+4. **Classify** into one of:
    - **fix-now** — defect or trigger met → route to `plan-fix` then
      `execute-phase --fix`; add the entry to the fix index. **High severity** →
      apply the urgency label per *Urgency label vocabulary* above (`urgent` by
@@ -165,10 +177,10 @@ gh issue view <N> --json number,title,body,labels,state,comments
    - **wontfix** — obsolete or explicitly bounded by the issue → propose closing,
      with rationale. Apply the `wontfix` disposition label per *Disposition
      label vocabulary* above.
-4. **When the call is the user's, ask.** If the decision hinges on product/risk
+5. **When the call is the user's, ask.** If the decision hinges on product/risk
    judgment rather than evidence, present the verdict and options and let the
    user choose before acting.
-5. **Report and keep docs coherent.** Post the decision as a dated issue comment
+6. **Report and keep docs coherent.** Post the decision as a dated issue comment
    with evidence. **The comment is Markdown, not shell — never hand-escape it:**
    backticks / `*` / `_` in the body are formatting; a `\` before them renders
    literally (`` \`code\` `` instead of `` `code` ``). Write the comment body to
@@ -188,7 +200,7 @@ gh issue view <N> --json number,title,body,labels,state,comments
    becomes an active fix, register it in the fix index; if
    closed, remove any stale index entry. Any **other** GitHub state mutation
    (closing, unrelated labels) still needs confirmation when ambiguous.
-6. **Return exactly, per issue** (fixed verdict format — batch runs repeat it,
+7. **Return exactly, per issue** (fixed verdict format — batch runs repeat it,
    then add one summary table):
 
    ```
