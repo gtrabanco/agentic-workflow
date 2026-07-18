@@ -249,67 +249,115 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 - [ ] Machine-checkable done-when — every phase ends with one verifiable
       invariant (a command + expected outcome).
 
-### P1 — Membership step + `fix-in-unit` verdict (skeleton, #87)
+### P1 — Scope-membership checklist
 
-Layer: `docs`. Done-when: `grep -c "fix-in-unit" skills/triage-issue/SKILL.md`
-→ ≥ 6 and `grep -c "Membership checklist\|scope-membership" skills/triage-issue/SKILL.md`
+Layer: `docs`. Done-when:
+`grep -c "scope-membership\|Membership checklist" skills/triage-issue/SKILL.md`
 → ≥ 1.
 
-- [ ] Add a `## Process` scope-membership step **before** classification,
-      encoding the 4-item *Membership checklist* above verbatim (candidate
-      enumeration → both-sides-quoted comparison → verdict → no-match fallthrough).
-- [ ] Add `fix-in-unit` to the fixed output contract line
-      (`VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix`).
-- [ ] Add the batch summary table's **group-by-home-unit** rule to the output
-      contract (member issues listed under their unit).
-- [ ] Add the incremental-replan sub-route naming the three exact commands
-      (`design-feature <slug> "<instruction>"` / `plan-feature <slug>` / #66
-      `## Amendments`); the string "replan if needed" appears nowhere.
-- [ ] Add the scope-bleed-restore sub-route (un-amended descope of an unmerged
-      unit → restore-the-criterion; issue closes as scope-returned).
-- [ ] Add a checklist line asserting "no member unit → today's four-verdict
-      classification, unchanged" and leave the four existing verdict rows and
-      their labels untouched.
+- [ ] Add a new `## Process` step, positioned before classification, titled
+      "Scope-membership check".
+- [ ] State the candidate-enumeration item: list open units mechanically —
+      roadmap/fix-index rows with status `in-progress` or `planned`, plus any
+      unit with an open PR (`gh pr list --state open`).
+- [ ] State the per-candidate comparison item: membership requires quoting
+      both the issue's line and the matching SPEC acceptance-criterion or
+      phase-task line; no quote pair means not a member.
+- [ ] State the fallthrough item: no candidate matched → today's four-verdict
+      classification, unchanged.
 
-### P2 — Ledger-append route + consumer verification (#86)
+### P2 — `fix-in-unit` verdict definition
+
+Layer: `docs`. Done-when:
+`grep -c "fix-in-unit" skills/triage-issue/SKILL.md` → ≥ 3.
+
+- [ ] Add `fix-in-unit <unit>` to the fixed output contract's `VERDICT:` line
+      (`VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix`).
+- [ ] Add the batch summary table's group-by-home-unit rule (member issues
+      listed under their unit's heading).
+- [ ] Add an explicit non-regression line: "no member unit → today's
+      four-verdict classification, unchanged" — leave the four existing
+      verdict rows and their labels untouched.
+
+### P3 — `fix-in-unit` sub-routes: fold-into-ledger and replan
+
+Layer: `docs`. Done-when:
+`grep -c "fold into the unit\|incremental replan\|scope-bleed restore" skills/triage-issue/SKILL.md`
+→ ≥ 3.
+
+- [ ] Add the fold-into-ledger sub-route (repairable as-is → append a
+      provenance-marked row to the unit's `review-findings.md`, or fold into
+      the unit's current/next phase).
+- [ ] Add the incremental-replan sub-route naming the three exact commands as
+      separate lines — `design-feature <slug> "<instruction>"`,
+      `plan-feature <slug>`, and a `## Amendments` entry per #66; the phrase
+      "replan if needed" appears nowhere.
+- [ ] Add the scope-bleed-restore sub-route (issue born as an un-amended
+      descope of an unmerged unit → restore-the-criterion; the issue closes as
+      scope-returned, not new work).
+
+### P4 — Ledger-append mechanism (#86)
 
 Layer: `docs`. Done-when:
 `grep -c "review-findings.md\|triage #" skills/triage-issue/SKILL.md` → ≥ 2.
 
-- [ ] Add the fold-into-ledger sub-route: append a row to the unit's
-      `review-findings.md` in the fixed 7-column schema, `folded: no`, with the
-      provenance marker `triage #<n> <YYYY-MM-DD>` in the `route` cell (quote the
-      schema so it stays copy-verbatim).
-- [ ] State the frozen-classification guarantee: the row is born from the dated
-      verdict of the disposition-owning skill (not a silent reclassification),
-      so `fold-findings`' frozen-classification guardrail stays intact.
-- [ ] Wire `Closes #<n>` to the **unit's** PR (issue closes via the open unit's
-      PR, not a new one) in the `fix-in-unit` action text.
-- [ ] Record the read-only verification of `fold-findings` (schema L64–74 +
-      Process intact — marker inside `route`, 7 columns, no edit) as a Testing
-      note; make no `fold-findings` edit unless the check fails.
-- [ ] Record the read-only verification of `workflow-status` step 9 (L139–156 —
-      named-column read, marker additive, envelope shape unchanged, npm mirror
-      untouched) as a Testing note.
+- [ ] Quote the fixed 7-column schema
+      (`| id | file:line | axis | severity | class | route | folded |`) and
+      specify the appended row starts `folded: no`.
+- [ ] Specify the provenance marker format `triage #<n> <YYYY-MM-DD>` placed
+      inside the `route` cell.
+- [ ] State the frozen-classification guarantee: the row is born from the
+      dated verdict of the disposition-owning skill, never a silent
+      reclassification.
+- [ ] Wire `Closes #<n>` to the unit's own PR in the `fix-in-unit` action text
+      (never a new PR).
 
-### P3 — `→ Next:` block, diagram + doc parity (bilingual)
+### P5 — Consumer verification notes (#86)
+
+Layer: `hardening`. Done-when: `grep -c "fold-findings\|workflow-status" docs/fix/86-triage-open-unit-awareness/SPEC.md`
+→ ≥ 2 (Testing section carries both read-through notes).
+
+- [ ] Read `skills/fold-findings/SKILL.md` Step 0 schema (L64–74) + Process;
+      confirm the provenance marker sits inside the existing `route` column
+      and all 7 columns are intact; record the result in this SPEC's
+      `## Testing` section; edit `fold-findings` only if the check fails.
+- [ ] Read `skills/workflow-status/SKILL.md` step 9 (L139–156); confirm it
+      reads named columns, the marker is additive inside `route`, and the
+      envelope shape (and therefore the npm schema mirror) is unchanged;
+      record the result in this SPEC's `## Testing` section.
+
+### P6 — `→ Next:` block and relationship diagram
 
 Layer: `docs`. Done-when:
-`grep -rl "fix-in-unit" skills/triage-issue/SKILL.md docs/workflow/ISSUE_WORKFLOW.md docs/workflow/ISSUE_WORKFLOW.es.md docs/workflow/SKILLS.md docs/workflow/SKILLS.es.md README.md README.es.md`
-→ lists all 7 files.
+`grep -c "fix-in-unit" skills/triage-issue/SKILL.md` → ≥ 5 (verdict line +
+diagram + closing block references combined).
 
-- [ ] Update `triage-issue`'s `## Relationship to other skills` diagram + the
-      closing `→ Next:` block so `fix-in-unit` recommends `/execute-phase <NN>
-      P<k>` or `/fold-findings`, never `/plan-fix`.
+- [ ] Update the `## Relationship to other skills` diagram to show the
+      `fix-in-unit` route.
+- [ ] Update the closing `→ Next:` block so a `fix-in-unit` verdict
+      recommends `/execute-phase <NN> P<k>` or `/fold-findings`, never
+      `/plan-fix`.
+
+### P7 — Doc parity: ISSUE_WORKFLOW, SKILLS, README (bilingual)
+
+Layer: `docs`. Done-when:
+`grep -rl "fix-in-unit" docs/workflow/ISSUE_WORKFLOW.md docs/workflow/ISSUE_WORKFLOW.es.md docs/workflow/SKILLS.md docs/workflow/SKILLS.es.md README.md README.es.md`
+→ lists all 6 files.
+
 - [ ] Add the `fix-in-unit` row to `docs/workflow/ISSUE_WORKFLOW.md` Stage-3
-      verdict table + Stage-4 open-unit note; mirror in `ISSUE_WORKFLOW.es.md`.
-- [ ] Enumerate `fix-in-unit` in `docs/workflow/SKILLS.md` `triage-issue` rows
-      (invocation table + skill-map + flow diagram); mirror in `SKILLS.es.md`.
-- [ ] Enumerate `fix-in-unit` in the `README.md` `triage-issue` row + issue-flow
-      diagram; mirror in `README.es.md`.
+      verdict table plus a Stage-4 open-unit note.
+- [ ] Mirror that same edit in `docs/workflow/ISSUE_WORKFLOW.es.md`.
+- [ ] Enumerate `fix-in-unit` in `docs/workflow/SKILLS.md`'s `triage-issue`
+      rows (invocation table, skill-map, flow diagram).
+- [ ] Mirror that same edit in `docs/workflow/SKILLS.es.md`.
+- [ ] Enumerate `fix-in-unit` in `README.md`'s `triage-issue` skill row and
+      issue-flow diagram.
+- [ ] Mirror that same edit in `README.es.md`.
 
-### P4 — Hardening & PR
+### P8 — Hardening & PR
 
+- [ ] Run `/bump-skill` for `triage-issue` (minor version bump, `CHANGELOG.md`
+      + `CHANGELOG.es.md` rows, README skills/model tables refreshed)
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
@@ -451,11 +499,22 @@ copy-verbatim contract to get exactly right.
   #86 reuses). No behavioral consequence — both issues are `Closes`-d.
 - **`fold-findings` / `workflow-status` treated as verify-only.** The design
   keeps the marker inside an existing column precisely so neither needs a code
-  change; if verification (P2) finds a real break, the minimal fix lands in this
+  change; if verification (P5) finds a real break, the minimal fix lands in this
   PR, otherwise no edit.
 - **Sub-route command names taken from live skills:** `design-feature <slug>
   "<instruction>"` (upsert, `design-feature` L93/L207), `plan-feature <slug>`
   (router), `## Amendments` (execute-phase L305–318). No new command invented.
+- **`## Phases` re-cut before P1 execution (2026-07-18).** The originally
+  drafted P1 ("Membership step + `fix-in-unit` verdict (skeleton, #87)")
+  failed `execute-phase --fix`'s phase-lint pre-flight on two boxes: the title
+  joined two deliverables with `+`, and its first task packed a 4-step `→`
+  chain into one checkbox — both slipped past `plan-fix`'s own emission-time
+  lint. User chose "re-cut P1 now" over `--force`. The ledger was split into
+  seven atomic phases (P1 membership checklist, P2 verdict definition, P3
+  fold/replan sub-routes, P4 ledger-append mechanism, P5 consumer
+  verification, P6 `→ Next:`/diagram, P7 bilingual doc parity) plus P8
+  Hardening & PR — same acceptance criteria, no scope change, only the
+  execution granularity changed.
 
 ## Status
 
