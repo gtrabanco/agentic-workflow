@@ -287,12 +287,15 @@ Layer: `docs`. Target: `skills/review-change/SKILL.md` (Portability section).
 Done-when: `grep -n "Portability" skills/review-change/SKILL.md` and the two
 paste blocks are present below it.
 
-- [ ] Add the **reviewer-prompt** paste block (role + diff scope + "Return
-      exactly:" table), referencing the P2 reviewer contract as its source.
-- [ ] Add the **merge-prompt** paste block (the textual form of the P2 merge
-      contract), referencing the P2 merge contract as its source.
-- [ ] State the one-source-two-wrappers rule: pro invokes the flag, manual
-      orchestrators paste the block — both render the same contract.
+- [x] Add the **reviewer-prompt** paste block (role + diff scope + "Return
+      exactly:" table), referencing the P2 reviewer contract as its source. —
+      "Reviewer-prompt paste block" under Portability.
+- [x] Add the **merge-prompt** paste block (the textual form of the P2 merge
+      contract), referencing the P2 merge contract as its source. —
+      "Merge-prompt paste block" under Portability.
+- [x] State the one-source-two-wrappers rule: pro invokes the flag, manual
+      orchestrators paste the block — both render the same contract. — "One
+      source, two wrappers" sentence.
 
 ### P5 — Adversarial cadence anchor
 
