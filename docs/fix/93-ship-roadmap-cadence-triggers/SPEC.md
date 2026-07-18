@@ -62,8 +62,9 @@ declared scope, filed as its own issue per the review's routing.
   sensitivity), keeping the L/sensitive-only scope, the `--adversarial 2`
   hard floor, and the existing "must never be aligned with `review-change`'s
   own interactive auto-recommend" boundary sentence unchanged in meaning.
-- Version bump + `CHANGELOG.md` + `CHANGELOG.es.md` rows (via `bump-skill`),
-  if `ship-roadmap` carries a `version:` field.
+- Version bump + `CHANGELOG.md` + `CHANGELOG.es.md` rows (via `bump-skill`).
+  `ship-roadmap` carries `version: 2.2.1` (verified at drafting), so this is
+  required, not conditional.
 
 ### Out of scope
 
@@ -98,11 +99,11 @@ declared scope, filed as its own issue per the review's routing.
   meaning. Verifiable: `git diff main -- skills/ship-roadmap/SKILL.md` shows
   no change to either sentence outside the cadence-mechanism clause itself.
 - [ ] **AC4 — no scope bleed.** `git diff main --stat` for this branch
-  touches only `skills/ship-roadmap/SKILL.md` (+ version/CHANGELOG files if
-  `bump-skill` applies). No other file changed.
-- [ ] **AC5 — version + changelog (if applicable).** If
-  `skills/ship-roadmap/SKILL.md` carries a `version:` frontmatter field,
-  `bump-skill` is run and `CHANGELOG.md` + `CHANGELOG.es.md` gain rows.
+  touches only `skills/ship-roadmap/SKILL.md` + version/CHANGELOG files. No
+  other file changed.
+- [ ] **AC5 — version + changelog.** `skills/ship-roadmap/SKILL.md` carries
+  `version: 2.2.1` (verified at drafting), so `bump-skill` is run and
+  `CHANGELOG.md` + `CHANGELOG.es.md` gain rows — mandatory, not conditional.
 
 ## Phases
 
@@ -192,8 +193,8 @@ persisted state involved.
 
 - **Layers touched:** `docs` only — a single skill contract
   (`ship-roadmap`). No application layer; this repo ships no runtime code.
-- **Modules / files:** `skills/ship-roadmap/SKILL.md` (+ `CHANGELOG.md` /
-  `.es.md` if `bump-skill` applies).
+- **Modules / files:** `skills/ship-roadmap/SKILL.md` + `CHANGELOG.md` /
+  `.es.md` (`bump-skill` applies — mandatory, per `version: 2.2.1`).
 - **Blast radius:** dev-only autopilot behavior — changes *when* the
   unattended L/sensitive review floor fires, not *whether* it fires or how
   strict it is. No user-facing runtime effect, no data path.
@@ -243,7 +244,8 @@ developer-workflow doc change.
 
 - `skills/ship-roadmap/SKILL.md` — REVIEW-stage cadence bullet (this fix's
   sole target).
-- `CHANGELOG.md` + `.es.md` — version row, if `bump-skill` applies.
+- `CHANGELOG.md` + `.es.md` — version row (`ship-roadmap` carries
+  `version: 2.2.1`, so `bump-skill` applies — mandatory).
 - `docs/fix/README.md` — this fix's index entry (added at draft; flipped
   `done` at close-out).
 
