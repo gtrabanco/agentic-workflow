@@ -348,12 +348,13 @@ Layer: `docs`. Done-when: `git diff --name-only` includes `CHANGELOG.md`,
       `npx skills add . --list` → clean
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE
-      PR URL in the chat; the body includes `Closes #79` and `Closes #89`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #79` and push
+      PR URL in the chat; the body includes `Closes #79` and `Closes #89`.
+      PR: https://github.com/gtrabanco/agentic-workflow/pull/98
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #79` and push
 
 ## Testing
 
@@ -408,4 +409,4 @@ additive edit with a machine-checkable done-when.
 
 ## Status
 
-`pending`
+`done` · [#98](https://github.com/gtrabanco/agentic-workflow/pull/98)
