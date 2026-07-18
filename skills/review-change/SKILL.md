@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.4.0
+version: 2.4.1
 argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -52,7 +52,8 @@ first on purpose).
   adversarial reviewer would find (see the turn-contract box above). If the
   reviewing conversation authored the diff, stop and hand off to a fresh one
   before reviewing.
-  `execute-phase` additionally **recommends** a hand-off every 2 phases — an
+  `execute-phase` additionally **recommends** a hand-off at its trigger-based
+  checkpoints (layer boundary, accumulation, or sensitivity — see `#77`) — an
   optional checkpoint the user may skip.
 - When you want the *right* reviews for this change without running irrelevant
   passes (e.g. accessibility on a backend change).
@@ -497,9 +498,9 @@ enables:
   `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`),
   `triage-issue` (every non-fix-now finding — equal tier, in-turn), and — as
   optional extras only — any platform review skills the project installed.
-- Sits in Stage 4 of the feature workflow; `execute-phase` recommends it every 2
-  phases (optional checkpoint) and hands off for the **mandatory end review**
-  (it runs in its own turn). `fix-now` → `plan-fix`; everything else →
+- Sits in Stage 4 of the feature workflow; `execute-phase` recommends it at its
+  trigger-based checkpoints (optional) and hands off for the **mandatory end
+  review** (it runs in its own turn). `fix-now` → `plan-fix`; everything else →
   `triage-issue`.
 - `audit-pr` is the PR-level gate it feeds; `product-audit` the periodic full sweep.
 
