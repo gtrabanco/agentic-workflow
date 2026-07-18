@@ -282,7 +282,7 @@ Layer: `docs`. Done-when:
       verdict rows and their labels untouched. — step 7, paragraph directly
       under the fixed-format block
 
-### P3 — `fix-in-unit` sub-routes: fold-into-ledger and replan
+### P3 — `fix-in-unit` repair sub-routes
 
 Layer: `docs`. Done-when:
 `grep -c "fold into the unit\|incremental replan\|scope-bleed restore" skills/triage-issue/SKILL.md`
@@ -329,7 +329,7 @@ Layer: `hardening`. Done-when: `grep -c "fold-findings\|workflow-status" docs/fi
       envelope shape (and therefore the npm schema mirror) is unchanged;
       record the result in this SPEC's `## Testing` section.
 
-### P6 — `→ Next:` block and relationship diagram
+### P6 — `fix-in-unit` hand-off wiring
 
 Layer: `docs`. Done-when:
 `grep -c "fix-in-unit" skills/triage-issue/SKILL.md` → ≥ 5 (verdict line +
@@ -341,7 +341,7 @@ diagram + closing block references combined).
       recommends `/execute-phase <NN> P<k>` or `/fold-findings`, never
       `/plan-fix`.
 
-### P7 — Doc parity: ISSUE_WORKFLOW, SKILLS, README (bilingual)
+### P7 — Bilingual doc-parity sweep
 
 Layer: `docs`. Done-when:
 `grep -rl "fix-in-unit" docs/workflow/ISSUE_WORKFLOW.md docs/workflow/ISSUE_WORKFLOW.es.md docs/workflow/SKILLS.md docs/workflow/SKILLS.es.md README.md README.es.md`
