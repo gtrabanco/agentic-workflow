@@ -275,22 +275,31 @@ CHANGELOGs.
 
 ### P5 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
       — `npx skills add . --list` → exit 0, every skill discovered including the
       bumped `execute-phase`/`review-change`; code-fence balance on every
-      touched file.
-- [ ] GOLDEN_FIXTURE smoke (`manual`): run `docs/workflow/GOLDEN_FIXTURE.md`
+      touched file. Also caught two residual hyphenated "every-2-phases"/"after
+      every two phases" references in `skills/execute-phase/SKILL.md` (L517,
+      L629) that P1's space-form grep missed — fixed to the trigger-model
+      wording; broad `grep -rniE` sweep across all touched files now `0`
+      current-behavior hits (CHANGELOG hits are frozen history + this fix's own
+      "what changed" rows, correctly untouched).
+- [x] GOLDEN_FIXTURE smoke (`manual`): run `docs/workflow/GOLDEN_FIXTURE.md`
       with the weakest fleet model against the new trigger wording; confirm no
       misread; append a dated run-log row to `docs/workflow/GOLDEN_FIXTURE.md`
-      + `.es.md`.
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+      + `.es.md`. — PASS: two live Claude Haiku 4.5 runs (layer-boundary-fires
+      scenario, no-trigger-fires scenario) both reproduced the fixed
+      "Checkpoint hand-off" block exactly, correct trigger naming/reasoning,
+      correct omission logic, zero invented steps.
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty (after this
+      phase's commit).
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #77`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #77` and push
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #77` and push
 
 ## Testing
 
@@ -314,7 +323,7 @@ revert to the phase counter on their next `execute-phase` invocation (the
 
 ## Status
 
-`pending`
+`done`
 
 ---
 
