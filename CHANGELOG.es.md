@@ -364,6 +364,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `bump-skill` | 2.3.1 | 2026-07-18 | patch | Seguimiento de `review-change` sobre #74/PR #96: se corrigieron las referencias al conteo de reglas del lint §2b ("dos" → "siete" invariantes de autoría de `CLAUDE.md`, en consonancia con "las 7 reglas de autoría" del Turn contract) y se ancló el grep de la regla 7 (exclusión de descubrimiento) al bloque de frontmatter únicamente (región extraída con `awk` entre las dos primeras líneas `---`), de modo que ya no puede satisfacerse con la propia prosa de la regla que menciona `metadata.internal: true` en vez de una clave real de frontmatter. |
 | `bump-skill` | 2.3.0 | 2026-07-18 | menor | Fix #74: `bump-skill` lleva ahora `metadata.internal: true` — el mecanismo propio de la CLI `skills` (verificado en `dist/cli.mjs` 1.5.16/1.5.19) que impide que `npx skills add . --list` descubra u ofrezca skills internas del repo, a diferencia de `user-invocable`/`plugin.json`, que solo rigen el menú posinstalación. El lint de §2b gana una 7ª regla que exige lo mismo para cualquier futura skill interna del repo (conjunción: `user-invocable: false` Y ausente de `plugin.json`). |
 | | 2.2.0 | 2026-07-18 | menor | Fix #71/#72/#73: el lint de §2b gana dos comprobaciones de superficies máquina — paridad con `plugin.json` (toda skill `user-invocable: true` tiene su entrada en el array) y orden alfabético de las superficies máquina (array `skills` de `plugin.json` + claves de `model-routing.yml`) — la misma clase de deriva que dejó a `fold-findings` instalarse sin registrar. |
 | | 2.1.0 | 2026-07-11 | menor | Fix #40: reclasificada como `user-invocable: false` — la skill es mantenimiento del propio repo `agentic-workflow` y su entrada de menú `/bump-skill` era ruido para el ~99% de quienes consumen el paquete sin autorar sus `SKILL.md`. Sin cambio de comportamiento; se sigue ejecutando vía la herramienta Skill o siguiendo `SKILL.md` directamente. Su tabla por skill se traslada de "Mantenimiento del repo" a esta sección Interna. |
@@ -444,6 +445,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   dejado abiertas. Bump MENOR para `bump-skill` (2.3.0): se añade
   `metadata.internal: true` a su propio frontmatter, más una 7ª regla de lint
   en §2b que exige lo mismo para cualquier futura skill interna del repo.
+  Seguimiento del mismo día vía `review-change`: bump PATCH (2.3.1) que
+  corrigió la referencia de conteo obsoleta ("dos" → "siete" invariantes de
+  autoría) y ancló el grep de la regla al bloque de frontmatter únicamente,
+  de modo que ya no puede satisfacerse con la propia prosa descriptiva de la
+  regla.
 
 - **2026-07-18 — paridad de registro de skills (fix 71+72+73).** Se registra
   `fold-findings` en `.claude-plugin/plugin.json` (se instalaba bajo `General`
