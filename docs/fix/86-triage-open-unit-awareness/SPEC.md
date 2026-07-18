@@ -307,16 +307,17 @@ Layer: `docs`. Done-when:
 Layer: `docs`. Done-when:
 `grep -c "review-findings.md\|triage #" skills/triage-issue/SKILL.md` → ≥ 2.
 
-- [ ] Quote the fixed 7-column schema
+- [x] Quote the fixed 7-column schema
       (`| id | file:line | axis | severity | class | route | folded |`) and
-      specify the appended row starts `folded: no`.
-- [ ] Specify the provenance marker format `triage #<n> <YYYY-MM-DD>` placed
-      inside the `route` cell.
-- [ ] State the frozen-classification guarantee: the row is born from the
+      specify the appended row starts `folded: no`. —
+      `skills/triage-issue/SKILL.md` "Ledger-append mechanism" section
+- [x] Specify the provenance marker format `triage #<n> <YYYY-MM-DD>` placed
+      inside the `route` cell. — same section, provenance-marker paragraph
+- [x] State the frozen-classification guarantee: the row is born from the
       dated verdict of the disposition-owning skill, never a silent
-      reclassification.
-- [ ] Wire `Closes #<n>` to the unit's own PR in the `fix-in-unit` action text
-      (never a new PR).
+      reclassification. — same section, "not a silent reclassification" paragraph
+- [x] Wire `Closes #<n>` to the unit's own PR in the `fix-in-unit` action text
+      (never a new PR). — same section, "Closes #<n> on the unit's own PR" paragraph
 
 ### P5 — Consumer verification notes (#86)
 
