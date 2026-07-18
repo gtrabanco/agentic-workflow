@@ -348,14 +348,15 @@ turns:
      checkpoint triggers", `#77`) — evaluated after each phase commit, rather
      than a fixed phase count. **For L or sensitive-flagged features, every
      `review-change` invocation in this stage — checkpoint or end review —
-     runs with `--adversarial 2`: a HARD FLOOR, not a recommendation.** The autopilot is unattended, so a
-     risk-proportional review floor replaces the human's skip judgment that
-     the interactive advisory checkpoint relies on elsewhere. This
-     deliberately does **not mirror** `review-change`'s own interactive
-     auto-recommend-for-L/sensitive behavior (advisory, skippable there) — the
-     two are intentionally different policies for different contexts (human
-     present vs. unattended loop) and must never be "aligned" into one. XS/S
-     and non-sensitive M stay single-reviewer. Persist the review report into
+     runs with `--adversarial 2`: a HARD FLOOR, not a recommendation.** The
+     autopilot is unattended, so a risk-proportional review floor replaces
+     the human's skip judgment that the interactive advisory checkpoint
+     relies on elsewhere. This deliberately does **not mirror**
+     `review-change`'s own interactive auto-recommend-for-L/sensitive
+     behavior (advisory, skippable there) — the two are intentionally
+     different policies for different contexts (human present vs.
+     unattended loop) and must never be "aligned" into one. XS/S and
+     non-sensitive M stay single-reviewer. Persist the review report into
      the feature's docs folder. fix-now findings → one sonnet fixer subagent +
      gate + commit **+ push (when the PR exists) + clean-tree check (step
      5)** (max 2 review-fix cycles); every **non-fix-now finding is triaged**
