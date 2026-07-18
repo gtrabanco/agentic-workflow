@@ -1,7 +1,9 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.2.0
+version: 2.3.1
+metadata:
+  internal: true
 description: >
   Internal skill for the agentic-workflow repo. After editing one or more
   SKILL.md files, bumps their `version:` fields and updates every piece of
@@ -17,8 +19,9 @@ description: >
 
 ```
 ✓ Every changed skill's version: was bumped and BOTH changelogs got their rows
-✓ The lint results (all 6 authoring rules, including the two machine-surface
-  parity/ordering checks) were reported
+✓ The lint results (all 7 authoring rules, including the two machine-surface
+  parity/ordering checks and the internal-skill discovery-exclusion check)
+  were reported
 ✓ The git add + commit command block is printed as the ABSOLUTE last output
 ```
 
@@ -72,7 +75,7 @@ question covering all ambiguous skills at once is fine.
 
 ### 2b. Lint the repo's authoring rules (flag, don't fix)
 
-For each changed skill, check the two `CLAUDE.md` authoring invariants and **warn**
+For each changed skill, check the seven `CLAUDE.md` authoring invariants and **warn**
 if violated (this skill never edits a SKILL.md beyond its `version:` line, so it
 reports — it does not auto-correct):
 
@@ -100,6 +103,24 @@ reports — it does not auto-correct):
   each be alphabetical (per `CLAUDE.md`'s Conventions table). Extract each
   surface's ordered list and diff it against its sorted form
   (`sort -c`-equivalent); flag any surface that fails.
+- **Internal-skill discovery exclusion.** Any `skills/<name>/` that is both
+  `user-invocable: false` **and** absent from `plugin.json`'s `skills` array
+  is repo-internal (meaningless outside this repo) and must carry
+  `metadata.internal: true` in its frontmatter — the only mechanism the
+  `skills` CLI honors to keep `npx skills add . --list` from discovering and
+  offering it (`user-invocable`/`plugin.json` alone do not gate discovery;
+  see `docs/fix/74-bump-skill-discovery-exclusion/decisions.md`). Skills
+  present in `plugin.json` are **exempt** even if `user-invocable: false`
+  (they are shipped sub-skills composed by orchestrators, not repo-internal —
+  e.g. the `review-*` pack, `orchestration-envelope`,
+  `plan-feature-scaffold`, `plan-feature-from-issue`). For each changed
+  skill: if `user-invocable: false` and its `./skills/<name>` entry is absent
+  from `plugin.json`, check the **frontmatter block only** (the region
+  between the first two `---` lines) for an anchored `internal: true` key —
+  e.g. `awk '/^---$/{c++} c==1' skills/<name>/SKILL.md | grep -qE '^\s*internal:\s*true\s*$'`
+  — should succeed; flag a miss. Matching anywhere in the body (not just the
+  frontmatter) would let this rule's own prose about `metadata.internal: true`
+  satisfy the check for a skill that never actually sets the key.
 
 Report violations in the summary; do not block the bump on them.
 

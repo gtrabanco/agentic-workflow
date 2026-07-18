@@ -363,7 +363,9 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
-| `bump-skill` | 2.2.0 | 2026-07-18 | minor | Fix #71/#72/#73: §2b lint gains two machine-surface checks — `plugin.json` parity (every `user-invocable: true` skill has a matching array entry) and machine-surface alphabetical order (`plugin.json` `skills` array + `model-routing.yml` keys) — the exact drift class that let `fold-findings` ship unregistered. |
+| `bump-skill` | 2.3.1 | 2026-07-18 | patch | Review-change follow-up on #74/PR #96: fixed the §2b lint's rule count references ("two" → "seven" `CLAUDE.md` authoring invariants, matching the Turn contract's "all 7 authoring rules") and anchored rule 7's discovery-exclusion check to the frontmatter block only (`awk`-extracted region between the first two `---` lines), so it can no longer be satisfied by the rule's own prose mentioning `metadata.internal: true` instead of an actual frontmatter key. |
+| `bump-skill` | 2.3.0 | 2026-07-18 | minor | Fix #74: `bump-skill` itself now carries `metadata.internal: true` — the `skills` CLI's own gate (verified in `dist/cli.mjs` 1.5.16/1.5.19) that keeps `npx skills add . --list` from discovering/offering repo-internal skills, unlike `user-invocable`/`plugin.json` which only govern the post-install menu. §2b lint gains a 7th rule enforcing the same for any future repo-internal skill (conjunction: `user-invocable: false` AND absent from `plugin.json`). |
+| | 2.2.0 | 2026-07-18 | minor | Fix #71/#72/#73: §2b lint gains two machine-surface checks — `plugin.json` parity (every `user-invocable: true` skill has a matching array entry) and machine-surface alphabetical order (`plugin.json` `skills` array + `model-routing.yml` keys) — the exact drift class that let `fold-findings` ship unregistered. |
 | | 2.1.0 | 2026-07-11 | minor | Fix #40: reclassified `user-invocable: false` — the skill is repo-maintenance for `agentic-workflow` itself and its `/bump-skill` menu entry was pure noise for the ~99% of consumers who don't author this pack's `SKILL.md` files. Behavior unchanged; still run via the Skill tool or by following `SKILL.md` directly. Per-skill table moved from "Repo maintenance" (User-facing-adjacent) to this Internal section. |
 | | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also retired the now-obsolete "Machine envelope" lint rule (it required every user-facing skill to carry the section — no longer true). See `docs/workflow/MIGRATION.md`. |
 | | 1.5.0 | 2026-07-05 | minor | Machine envelope: every invocation now ends with a fixed JSON block (state, unit, phase, pr, findings, blockers, dependencies, next + model-tier hint) for programmatic orchestration — schema in the internal `orchestration-envelope` skill, protocol in `docs/workflow/ORCHESTRATION.md`. Lint gains a 5th rule: user-facing skills must carry the `## Machine envelope` section. |
@@ -429,6 +431,21 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-18 — bump-skill discovery exclusion (fix 74).** `bump-skill` is
+  repo-maintenance for `agentic-workflow` itself, yet `npx skills add . --list`
+  still discovered and offered it to every consumer — fix #40's
+  `user-invocable: false` + `plugin.json` removal only gate the post-install
+  menu, not discovery. Established from the `skills` CLI's own source
+  (`dist/cli.mjs`, verified in 1.5.16 and 1.5.19) that `metadata.internal: true`
+  is the CLI's actual discovery-exclusion mechanism, mooting the relocate/hook
+  options the issue had left open. MINOR bump for `bump-skill` (2.3.0):
+  `metadata.internal: true` added to its own frontmatter, plus a 7th §2b lint
+  rule enforcing the same for any future repo-internal skill. Same-day
+  `review-change` follow-up: PATCH bump (2.3.1) fixed the rule's stale count
+  reference ("two" → "seven" authoring invariants) and anchored its grep to
+  the frontmatter block only, so the check can no longer be satisfied by the
+  rule's own descriptive prose.
 
 - **2026-07-18 — skill-registration-parity (fix 71+72+73).** Registered
   `fold-findings` in `.claude-plugin/plugin.json` (it was installing under
