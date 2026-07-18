@@ -106,7 +106,8 @@ reference THIS project's real paths/commands/language.
    The project's verification gate before every commit — **never commit red**
    (unfixable-in-scope failures → known-issues + stop). When reality contradicts
    the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
-   doc discipline; hand off to `review-change` every 2 phases AND for the
+   doc discipline; hand off to `review-change` at trigger-based checkpoints
+   (layer boundary, accumulation, or sensitivity) AND for the
    **mandatory** end review (suggest it rather than composing it, so it runs at its
    own model/effort). A finished unit (the final `Hardening & PR` phase for
    XS/S and fixes, a feature's final phase, or a legacy single pass)
