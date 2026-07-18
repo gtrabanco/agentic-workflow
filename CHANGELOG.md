@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.6.0 | 2026-07-18 | minor | Fix #77: replaced the fixed every-2-phases review-checkpoint cadence with three mechanical triggers — **layer boundary** (next phase declares a different `Layer:`), **accumulation** (`git diff --stat <baseline>..HEAD` > 400 lines or > 8 files since the last-reviewed marker), and **sensitivity** (auth/payments/destructive-migration/secrets/CI phase) — plus the `Last reviewed: <sha>` marker spec in `progress.md` (sole writer `execute-phase`, `git merge-base` fallback when absent). The mandatory terminal review and `review-change`'s adversarial cadence are unchanged. |
 | 2.5.2 | 2026-07-18 | patch | Fix #76: the mandatory end-of-unit review hand-off notes when `review-change` recommends `--adversarial N` at that terminal review — wording only, the every-2-phases checkpoint cadence is unchanged. |
 | 2.5.1 | 2026-07-18 | patch | Fix #66: clarified the descope guard's amendment-backfill step — after creating the follow-up issue and linking it in the issue body, explicitly edit the `## Amendments` row to replace the `#<n>` placeholder with the real issue number and commit that edit; a row still reading the literal placeholder fails `audit-pr`'s symmetric unlinked-row check. |
 | 2.5.0 | 2026-07-17 | minor | Fix #66: new **descope guard** in the Issue policy — before creating any issue, classify it discovered-work (file freely) vs. descope (overlaps a SPEC acceptance criterion/phase task not fully delivered); a descope STOPs before the issue is created, requiring a user-approved, dated `## Amendments` entry first (canonical row format defined once here). New Forbidden-list entry and turn-contract box asserting the guard ran on every issue created in the turn. |
@@ -225,6 +226,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.1 | 2026-07-18 | patch | Fix #77: restated the two `execute-phase` cadence cross-references ("When to use" and "Relationship to other skills") from the retired every-2-phases interval to the new trigger-based cadence (layer boundary/accumulation/sensitivity); the adversarial "Cadence — once per unit" section and its `#77` boundary note are unchanged. |
 | 2.4.0 | 2026-07-18 | minor | Fix #76: made `--adversarial N` usable by hand-orchestrated weak-model fleets — a 4-box recommendation checklist (replaces the L/sensitive-only trigger, adds a "reviewer not strongest/weaker than author" condition surfaced as a report line, never auto-detected), a fixed N ladder (2 default, 3 on security/single-family, >3 discouraged), index-assigned reviewer roles (R1 correctness, R2 security, R3 SPEC-coverage) with a role-is-priority-not-scope guardrail, single-sourced reviewer/merge contracts, a new `--merge` fusion entry point with a forbidden-drop list, Portability paste-block templates, a once-per-unit cadence anchor (explicit `#77` boundary), and `→ Next:` wiring at the terminal review. |
 | 2.3.0 | 2026-07-17 | minor | Fix #65: the `Decision: FAIL` `→ Next:` block now recommends the new standalone `/fold-findings` skill (frozen classification, forbidden list closing the known-issues-dump/downgrade/test-loosening/suppression escape hatches) as the fold path, replacing the inline "fold the fix-now findings" prose line; the multi-line fixed shape and the `/audit-pr`/non-fix-now/product-audit sub-bullets are unchanged. |
 | 2.2.1 | 2026-07-17 | patch | Step 11's `→ Next:` block now branches explicitly on `Decision`: a `FAIL` block recommends folding the fix-now findings (gate green, commit + push, re-run `/review-change`) with `/audit-pr` demoted to a table-clean sub-bullet, a `PASS` block keeps `/audit-pr — merge gate`; the `/product-audit` recurrence condition is now an explicit yes/no checkbox, and the block must render as multiple literal lines, never `·`-joined prose. Fixes #63 — weak models (observed: qwen3.6-thinking) were copying the old single static template verbatim, recommending the merge gate even on `FAIL`. |
@@ -425,6 +427,16 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-18 — review checkpoint cadence triggers (fix 77).** MINOR bump
+  for `execute-phase` (2.6.0): the fixed every-2-phases checkpoint is
+  replaced by three mechanical triggers — layer boundary, accumulation
+  (`git diff --stat` thresholds), and sensitivity — plus a `Last reviewed:
+  <sha>` marker spec in `progress.md`. PATCH bump for `review-change`
+  (2.4.1): its two cadence cross-references restated to the trigger model;
+  the adversarial once-per-unit cadence is untouched. Cadence docs parity
+  across `SKILLS`/`FEATURE_WORKFLOW`/`PORTABLE_PROMPT`/`MIGRATION`/README
+  (EN+ES).
 
 - **2026-07-18 — adversarial mode weak-fleet usability (fix 76).** MINOR bump
   for `review-change` (2.4.0): the `--adversarial N` mode gains a 4-box

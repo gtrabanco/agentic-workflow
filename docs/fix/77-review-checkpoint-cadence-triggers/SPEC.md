@@ -262,13 +262,16 @@ tables, via `bump-skill`. Done-when: `bump-skill`'s own consistency checks pass
 and `grep -n` finds the new `execute-phase`/`review-change` version rows in both
 CHANGELOGs.
 
-- [ ] Run `bump-skill` for `execute-phase` (minor — cadence contract change,
+- [x] Run `bump-skill` for `execute-phase` (minor — cadence contract change,
       backward-compatible) and `review-change` (patch — cross-ref wording);
       it bumps `version:`, writes `CHANGELOG.md` + `CHANGELOG.es.md` rows, and
-      refreshes the README skills/model tables. — bump-skill output.
-- [ ] Verify the READMEs' skills-table cells for both skills match the new
-      cadence wording (no residual "every 2 phases"). — `grep` over
-      `README.md` + `README.es.md`.
+      refreshes the README skills/model tables. — bump-skill output:
+      execute-phase 2.5.2→2.6.0 (minor), review-change 2.4.0→2.4.1 (patch);
+      model/effort tiers unchanged (no `model-routing.yml` edit needed).
+- [x] Verify the READMEs' skills-table cells for both skills match the new
+      cadence wording (no residual "every 2 phases"). — already updated in P3
+      (`README.md:115`, `README.es.md:119`); confirmed via `grep -c "every 2
+      phases" README.md README.es.md` → `0`.
 
 ### P5 — Hardening & PR
 
