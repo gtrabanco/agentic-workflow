@@ -79,7 +79,7 @@ fix-now), un ayudante de diario `log-session`, y un sensor de solo lectura
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `triage-issue` | Clasifica fix-now / promote / postpone / wontfix; verifica disparadores contra el código real; acepta varios issues en un solo lote | `plan-fix`, `plan-feature`, o un comentario fechado |
+| `triage-issue` | Clasifica fix-now / fix-in-unit / promote / postpone / wontfix; un chequeo de pertenencia de alcance (antes de clasificar) enruta un issue que ya pertenece a una unidad abierta a la propia rama de esa unidad; verifica disparadores contra el código real; acepta varios issues en un solo lote | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, o un comentario fechado |
 
 ## Documentar
 
@@ -129,7 +129,7 @@ indicado aquí.
 | `product-audit` | `/product-audit [path-or-area]` | Por defecto, el producto entero; una ruta/área acota el barrido. Solo propone — nunca arregla. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Por defecto, el cambio actual (diff de la rama frente a la rama por defecto); una ruta amplía/acota. `--adversarial N` → N revisores adversariales independientes, de contexto limpio, solo-diff, en paralelo, hallazgos fusionados y deduplicados (opt-in; auto-recomendado para cambios `L`/sensibles). |
 | `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Por defecto: abre PRs, el humano fusiona. `--fullauto` → fusiona PRs MERGE-READY bajo los pisos de seguridad no negociables. `--continue` → reanuda una ejecución existente por una etapa (el bucle del driver externo reinvoca esto). |
-| `triage-issue` | `/triage-issue <n> [n…]` | Uno o varios números de issue — las ejecuciones en lote producen veredictos independientes más una tabla resumen. |
+| `triage-issue` | `/triage-issue <n> [n…]` | Uno o varios números de issue — las ejecuciones en lote producen veredictos independientes más una tabla resumen, agrupada por unidad de origen para los veredictos `fix-in-unit`. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Por defecto: resumen humano + el sobre-máquina. `--json-only` → solo el sobre (modo driver). `--last-envelope` → el sobre persistido del driver como **pista** de recuperación ante caídas (comparado contra el estado recalculado; nunca autoritativo). ¿Tu agente no pasa argumentos? Pega el JSON en el mensaje — se lee el último bloque json entre comillas de la *solicitud* como la pista. |
 
 ## Compañeras integradas (Claude Code)
@@ -158,6 +158,7 @@ ROADMAP --next ────┘  registers the roadmap entry, prints the next ste
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
 ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+                            ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
