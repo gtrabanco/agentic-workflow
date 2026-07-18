@@ -335,9 +335,11 @@ Layer: `docs`. Done-when: `git diff --name-only` includes `CHANGELOG.md`,
 `CHANGELOG.es.md`, `README.md`, `README.es.md` and the three edited SKILL.md
 `version:` bumps, AND `npx skills add . --list` lists every skill.
 
-- [ ] Run `bump-skill` for `workflow-status`, `orchestration-envelope`,
-      `audit-pr` (minor bumps — additive capability).
-- [ ] Confirm CHANGELOG EN+ES rows and README skills-table versions updated.
+- [x] Run `bump-skill` for `workflow-status`, `orchestration-envelope`,
+      `audit-pr` (minor bumps — additive capability). Versions: 1.6.1→1.7.0,
+      1.2.0→1.3.0, 3.3.0→3.4.0. Lint: no violations.
+- [x] Confirm CHANGELOG EN+ES rows and README skills-table versions updated.
+      (Model/effort table unchanged — no tier changes.)
 
 ### P7 — Hardening & PR
 
