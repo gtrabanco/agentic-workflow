@@ -100,6 +100,38 @@ test("rejects a fix_now item with a bad severity or missing fields", () => {
   }
 });
 
+test("accepts a populated next.suggested[]", () => {
+  const withSuggested = {
+    ...VALID,
+    next: {
+      ...VALID.next,
+      suggested: [
+        { command: "/review-change", trigger: "accumulation > 400 lines since last-reviewed sha", source_skill: "execute-phase" },
+      ],
+    },
+  };
+  const result = validateEnvelope(withSuggested);
+  assert.equal(result.ok, true);
+});
+
+test("accepts an envelope with no next.suggested (optional field)", () => {
+  const result = validateEnvelope(VALID);
+  assert.equal(result.ok, true);
+  assert.equal(VALID.next.suggested, undefined);
+});
+
+test("rejects a next.suggested item missing a required field", () => {
+  const bad = {
+    ...VALID,
+    next: {
+      ...VALID.next,
+      suggested: [{ command: "/review-change", trigger: "…" }],
+    },
+  };
+  const result = validateEnvelope(bad);
+  assert.equal(result.ok, false);
+});
+
 test("reports invalid JSON in the last block", () => {
   const result = parseEnvelope("```json\n{not json}\n```");
   assert.equal(result.ok, false);

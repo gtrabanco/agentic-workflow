@@ -243,17 +243,21 @@ ticks tasks here. Every implementation phase below passed the 8-box phase-lint
 Layer: `schema/db`. Done-when: `cd packages/agentic-workflow-schema && npm test`
 → all pass, AND `grep -q '"suggested"' envelope.schema.json`.
 
-- [ ] Add `EnvelopeSuggestion` interface (`command`, `trigger`, `source_skill`:
+- [x] Add `EnvelopeSuggestion` interface (`command`, `trigger`, `source_skill`:
       string) and an optional `suggested?: EnvelopeSuggestion[]` to
       `EnvelopeNext` in `src/index.ts`.
-- [ ] Extend `validateEnvelope`'s `next` block to validate `suggested` when
+- [x] Extend `validateEnvelope`'s `next` block to validate `suggested` when
       present: array of objects with three string fields; absence is valid.
-- [ ] Add `suggested` (optional array; NOT in `required`) to the `next`
+- [x] Add `suggested` (optional array; NOT in `required`) to the `next`
       properties in `envelope.schema.json`.
-- [ ] Bump `package.json` version 2.0.0 → 2.1.0.
-- [ ] Rebuild `dist/` (`npm run build`) so the committed validator matches.
-- [ ] Add a test in `test/index.test.mjs`: an envelope with a populated
+- [x] Bump `package.json` version 2.0.0 → 2.1.0.
+- [x] Rebuild `dist/` (`npm run build`) so the committed validator matches
+      (`dist/` is gitignored — rebuilt via `npm test`'s `tsc` step, verified
+      `dist/index.d.ts` carries `suggested?: EnvelopeSuggestion[]`).
+- [x] Add a test in `test/index.test.mjs`: an envelope with a populated
       `next.suggested` validates ok; a suggestion missing a field fails.
+      (3 tests added: accepts populated, accepts absent, rejects incomplete —
+      18/18 pass.)
 
 ### P2 — Schema package README field row
 
