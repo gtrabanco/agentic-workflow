@@ -397,8 +397,9 @@ is never silently replaced by it.
 
 **`detail.untriaged_issues`** — the plain open-issue backlog surfaced by
 step 15: `{count, oldest_open: [numbers]}` (oldest-first, capped at 5 numbers).
-`detail` is schema-unconstrained (`envelope.schema.json:154`), so this field
-needs **no package change**. Kept strictly distinct from `detail.pending_triage`
+`detail` is schema-unconstrained (`envelope.schema.json:170`, `"detail": {}`),
+so this field needs **no package change**. Kept strictly distinct from
+`detail.pending_triage`
 (findings pulled from `known-issues.md`/postponed-labeled issues, step 14) and
 `findings.untriaged` (review-finding routing) — none of the three subsumes
 another. `count: 0` means every open issue has a triage disposition; a
@@ -407,7 +408,7 @@ concrete `/triage-issue <numbers>` citing the listed issues.
 
 **Per-unit `review`/`closure`/`issues_born` (step 10–12) — carried on each
 `detail.features[]`/`detail.fixes[]` entry, not as new top-level keys.**
-`detail` is schema-unconstrained (`envelope.schema.json:158`, `"detail": {}`)
+`detail` is schema-unconstrained (`envelope.schema.json:170`, `"detail": {}`)
 — same precedent as `detail.urgent`/`detail.untriaged_issues` (fix `#52`), so
 these need **no package change**:
 - `review: {last_checkpoint_sha, unreviewed_diff: {lines, files},
