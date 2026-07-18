@@ -354,11 +354,16 @@ Layer: `docs`. Target: run `bump-skill` for the edited skills. Done-when:
 `grep -n "^version:" skills/review-change/SKILL.md` → shows the bumped minor,
 and CHANGELOG rows exist.
 
-- [ ] Run `bump-skill` for `review-change` (minor — backward-compatible new
-      `--merge` capability + recommendation/role/ladder additions).
-- [ ] Run `bump-skill` for `execute-phase` (patch — hand-off wording only).
-- [ ] Confirm CHANGELOG.md + CHANGELOG.es.md rows added and README +
-      README.es.md skill/version tables synced by `bump-skill`.
+- [x] Run `bump-skill` for `review-change` (minor — backward-compatible new
+      `--merge` capability + recommendation/role/ladder additions). —
+      2.3.0 → 2.4.0.
+- [x] Run `bump-skill` for `execute-phase` (patch — hand-off wording only). —
+      2.5.1 → 2.5.2.
+- [x] Confirm CHANGELOG.md + CHANGELOG.es.md rows added and README +
+      README.es.md skill/version tables synced by `bump-skill`. — both
+      changelogs' per-skill tables + release logs updated; both README skills
+      tables' `review-change` row updated to mention `--merge` and the new
+      recommendation conditions.
 
 ### P9 — Hardening & PR
 
