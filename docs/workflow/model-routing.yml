@@ -35,6 +35,9 @@ init-workspace:
 log-session:
   model: sonnet
   effort: medium
+orchestration-envelope:
+  model: sonnet
+  effort: medium
 plan-feature:
   model: opus
   effort: high
@@ -89,9 +92,6 @@ ship-roadmap:
 triage-issue:
   model: opus
   effort: high
-orchestration-envelope:
-  model: sonnet
-  effort: medium
 workflow-status:
   model: sonnet
   effort: medium

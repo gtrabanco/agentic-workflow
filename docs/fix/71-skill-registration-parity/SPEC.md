@@ -174,22 +174,27 @@ Execution ledger — `execute-phase --fix` runs **one phase per invocation**.
 Every implementation phase below passes all 8 phase-lint boxes
 (`docs/fix/_TEMPLATE/SPEC.md` `## Phases`).
 
-### P1 — Machine-config surfaces
+### P1 — Machine-config surfaces ✓ done
 
 Layer: `config/infra`. Done-when:
 `node -e "const s=require('./.claude-plugin/plugin.json').skills; process.exit(s.includes('./skills/fold-findings') && JSON.stringify(s)===JSON.stringify([...s].sort())?0:1)"`
 → exit 0, **and** `grep -E '^[a-z-]+:' docs/workflow/model-routing.yml | sed 's/:.*//' | sort -c` → no "out of order" error.
+**Verified:** node check exit 0; `sort -c` on the extracted keys produced no
+diff (alphabetical).
 
-- [ ] Add `"./skills/fold-findings"` to `.claude-plugin/plugin.json`'s
+- [x] Add `"./skills/fold-findings"` to `.claude-plugin/plugin.json`'s
       `skills` array between `"./skills/execute-phase"` and
-      `"./skills/generate-docs"`.
-- [ ] Move `orchestration-envelope:` (with its `model`/`effort` block) in
+      `"./skills/generate-docs"` — `.claude-plugin/plugin.json`.
+- [x] Move `orchestration-envelope:` (with its `model`/`effort` block) in
       `docs/workflow/model-routing.yml` to its alphabetical slot between
       `log-session:` and `plan-feature:`.
-- [ ] Move `workflow-status:` (with its block) to the end of
+- [x] Move `workflow-status:` (with its block) to the end of
       `docs/workflow/model-routing.yml`, after `triage-issue:`.
-- [ ] Confirm `npx skills add . --list` prints `fold-findings` under
+- [x] Confirm `npx skills add . --list` prints `fold-findings` under
       `Agentic Workflow` and not under `General`; paste the category lines.
+      **Evidence:** `fold-findings` printed between `execute-phase` and
+      `generate-docs` under `Agentic Workflow`; `General` now lists only
+      `bump-skill` (tracked separately as #74).
 
 ### P2 — Equivalence-ladder tables
 
