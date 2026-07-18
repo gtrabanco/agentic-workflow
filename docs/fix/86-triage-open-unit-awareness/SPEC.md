@@ -327,7 +327,9 @@ Layer: `hardening`. Done-when: `grep -c "fold-findings\|workflow-status" docs/fi
 - [ ] Read `skills/fold-findings/SKILL.md` Step 0 schema (L64–74) + Process;
       confirm the provenance marker sits inside the existing `route` column
       and all 7 columns are intact; record the result in this SPEC's
-      `## Testing` section; edit `fold-findings` only if the check fails.
+      `## Testing` section (a failed check is a `known-issues.md`-worthy
+      blocker per the completion gate, handled there — not a scope branch
+      inside this task).
 - [ ] Read `skills/workflow-status/SKILL.md` step 9 (L139–156); confirm it
       reads named columns, the marker is additive inside `route`, and the
       envelope shape (and therefore the npm schema mirror) is unchanged;
