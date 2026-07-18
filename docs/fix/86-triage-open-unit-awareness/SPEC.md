@@ -255,16 +255,16 @@ Layer: `docs`. Done-when:
 `grep -c "scope-membership\|Membership checklist" skills/triage-issue/SKILL.md`
 → ≥ 1.
 
-- [ ] Add a new `## Process` step, positioned before classification, titled
-      "Scope-membership check".
-- [ ] State the candidate-enumeration item: list open units mechanically —
+- [x] Add a new `## Process` step, positioned before classification, titled
+      "Scope-membership check". — `skills/triage-issue/SKILL.md` new step 3
+- [x] State the candidate-enumeration item: list open units mechanically —
       roadmap/fix-index rows with status `in-progress` or `planned`, plus any
-      unit with an open PR (`gh pr list --state open`).
-- [ ] State the per-candidate comparison item: membership requires quoting
+      unit with an open PR (`gh pr list --state open`). — step 3, bullet 1
+- [x] State the per-candidate comparison item: membership requires quoting
       both the issue's line and the matching SPEC acceptance-criterion or
-      phase-task line; no quote pair means not a member.
-- [ ] State the fallthrough item: no candidate matched → today's four-verdict
-      classification, unchanged.
+      phase-task line; no quote pair means not a member. — step 3, bullet 2
+- [x] State the fallthrough item: no candidate matched → today's four-verdict
+      classification, unchanged. — step 3, bullet 3
 
 ### P2 — `fix-in-unit` verdict definition
 
@@ -518,4 +518,4 @@ copy-verbatim contract to get exactly right.
 
 ## Status
 
-`pending`
+`in-progress`
