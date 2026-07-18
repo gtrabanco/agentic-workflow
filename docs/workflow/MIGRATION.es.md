@@ -391,7 +391,7 @@ se añadieron cuatro skills **nuevas** de calidad/automatización.
 | 🔴 **Eliminada** (renombrada) | `feature-from-issue` | **Borrar.** Su trabajo se movió al router `plan-feature` (camino de issue); el motor es el `plan-feature-from-issue` interno. |
 | 🔴 **Eliminada** (renombrada) | `draft-fix-spec` | **Borrar.** Renombrada a `plan-fix`. |
 | 🟡 **Conservada** (mismo nombre) | `plan-feature` | Se actualiza en su lugar — **pero su significado cambió**: antes solo construía el andamiaje; ahora es el **router** (detecta idea / issue / slug acotado y despacha). El paso de andamiaje antiguo es ahora el `plan-feature-scaffold` interno. |
-| 🟡 **Conservada** (mismo nombre) | `execute-phase` | Se actualiza en su lugar. Ahora entrega el control a `review-change` cada 2 fases (checkpoint de revisión). |
+| 🟡 **Conservada** (mismo nombre) | `execute-phase` | Se actualiza en su lugar. Ahora entrega el control a `review-change` en checkpoints basados en disparadores (ver `#77`). |
 | 🟡 **Conservada** (mismo nombre) | `init-workspace` | Se actualiza en su lugar. Ahora también sugiere las skills de revisión complementarias de la plataforma. |
 | 🟡 **Conservada** (mismo nombre) | `review-implementation` | Se actualiza en su lugar. Ahora también es el motor que compone `review-change`. |
 | 🟡 **Conservada** (mismo nombre) | `audit-docs` | Se actualiza en su lugar. |

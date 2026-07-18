@@ -240,18 +240,18 @@ Done-when:
 `grep -rn "every 2 phases\|cada 2 fases\|cada dos fases" docs/workflow/SKILLS.md docs/workflow/SKILLS.es.md docs/workflow/FEATURE_WORKFLOW.md docs/workflow/FEATURE_WORKFLOW.es.md docs/workflow/PORTABLE_PROMPT.md docs/workflow/PORTABLE_PROMPT.es.md docs/workflow/MIGRATION.md docs/workflow/MIGRATION.es.md README.md README.es.md`
 → `0` current-behavior hits.
 
-- [ ] `docs/workflow/SKILLS.md` L58 + `docs/workflow/SKILLS.es.md` L60 —
+- [x] `docs/workflow/SKILLS.md` L58 + `docs/workflow/SKILLS.es.md` L60 —
       execute-phase row cadence clause → trigger model (EN + ES together). —
       both files.
-- [ ] `docs/workflow/FEATURE_WORKFLOW.md` (L172–173, L217, L274) +
+- [x] `docs/workflow/FEATURE_WORKFLOW.md` (L172–173, L217, L274) +
       `.es.md` (L195, L246, L311) — cadence mentions → trigger model
       (EN + ES together). — both files.
-- [ ] `docs/workflow/PORTABLE_PROMPT.md` L103 + `.es.md` L109 — "every 2
+- [x] `docs/workflow/PORTABLE_PROMPT.md` L103 + `.es.md` L109 — "every 2
       phases" clause → trigger model (EN + ES together). — both files.
-- [ ] `docs/workflow/MIGRATION.md` L345 + `.es.md` L394 — execute-phase
+- [x] `docs/workflow/MIGRATION.md` L345 + `.es.md` L394 — execute-phase
       kept-skill note → "at review checkpoints" (drop the stale interval;
       EN + ES together). — both files.
-- [ ] `README.md` (L115 cell, L459 flow line) + `README.es.md` (L119 cell,
+- [x] `README.md` (L115 cell, L459 flow line) + `README.es.md` (L119 cell,
       L484 flow line) — execute-phase description + flow diagram → trigger
       model (EN + ES together). — both files.
 
