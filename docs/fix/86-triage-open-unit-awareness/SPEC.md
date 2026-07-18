@@ -288,16 +288,19 @@ Layer: `docs`. Done-when:
 `grep -c "fold into the unit\|incremental replan\|scope-bleed restore" skills/triage-issue/SKILL.md`
 → ≥ 3.
 
-- [ ] Add the fold-into-ledger sub-route (repairable as-is → append a
+- [x] Add the fold-into-ledger sub-route (repairable as-is → append a
       provenance-marked row to the unit's `review-findings.md`, or fold into
-      the unit's current/next phase).
-- [ ] Add the incremental-replan sub-route naming the three exact commands as
+      the unit's current/next phase). —
+      `skills/triage-issue/SKILL.md` step 3, "repairable as-is" bullet
+- [x] Add the incremental-replan sub-route naming the three exact commands as
       separate lines — `design-feature <slug> "<instruction>"`,
       `plan-feature <slug>`, and a `## Amendments` entry per #66; the phrase
-      "replan if needed" appears nowhere.
-- [ ] Add the scope-bleed-restore sub-route (issue born as an un-amended
+      "replan if needed" appears nowhere. — step 3, "changes the unit's
+      shape" bullet
+- [x] Add the scope-bleed-restore sub-route (issue born as an un-amended
       descope of an unmerged unit → restore-the-criterion; the issue closes as
-      scope-returned, not new work).
+      scope-returned, not new work). — step 3, "born as an un-amended
+      descope" bullet
 
 ### P4 — Ledger-append mechanism (#86)
 
