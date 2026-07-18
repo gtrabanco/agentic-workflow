@@ -244,19 +244,25 @@ surfaces.
       alphabetical; narrative surfaces (README "The skills" sections,
       `SKILLS.md`) → flow order — `CLAUDE.md` Conventions table, two new rows.
 
-### P4 — bump-skill machine-surface lint
+### P4 — bump-skill machine-surface lint ✓ done
 
 Layer: `docs`. Done-when: `grep -c 'plugin.json' skills/bump-skill/SKILL.md`
 ≥ 1 in §2b and the two new lint bullets are present.
+**Verified:** `grep -c 'plugin.json' skills/bump-skill/SKILL.md` → `4`.
 
-- [ ] Add a §2b lint bullet: every `skills/<name>/` with
+- [x] Add a §2b lint bullet: every `skills/<name>/` with
       `user-invocable: true` must have a matching `./skills/<name>` entry in
-      `.claude-plugin/plugin.json`; report the result (never auto-fix).
-- [ ] Add a §2b lint bullet: the machine surfaces (`plugin.json` `skills`
+      `.claude-plugin/plugin.json`; report the result (never auto-fix) —
+      `skills/bump-skill/SKILL.md` §2b, new "`plugin.json` parity" bullet.
+- [x] Add a §2b lint bullet: the machine surfaces (`plugin.json` `skills`
       array + `model-routing.yml` top-level keys) must be alphabetical;
-      report the result.
-- [ ] Update the §Turn-contract line and the §Summary line that enumerate the
-      lint results so they cover the new rules.
+      report the result — `skills/bump-skill/SKILL.md` §2b, new
+      "Machine-surface alphabetical order" bullet.
+- [x] Update the §Turn-contract line and the §Summary line that enumerate the
+      lint results so they cover the new rules — Turn contract now says "all
+      6 authoring rules, including the two machine-surface parity/ordering
+      checks"; the "Done when" summary line now names both new violation
+      classes.
 
 ### P5 — Hardening & PR
 
