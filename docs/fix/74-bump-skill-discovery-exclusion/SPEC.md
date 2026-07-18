@@ -264,17 +264,22 @@ Layer: `config/infra`. Done-when:
 `bump-skill` line, **and** `INSTALL_INTERNAL_SKILLS=1 npx skills add . --list`
 → output contains a `bump-skill` line.
 
-- [ ] Add a `metadata:` block with `internal: true` to
+- [x] Add a `metadata:` block with `internal: true` to
       `skills/bump-skill/SKILL.md`'s YAML frontmatter (below
       `user-invocable: false`; leave every other frontmatter line byte-for-byte
       unchanged, including `version:` — the bump happens in hardening).
-- [ ] Capture the exclusion: run `npx skills add . --list` with
+      Evidence: `skills/bump-skill/SKILL.md:4-5`.
+- [x] Capture the exclusion: run `npx skills add . --list` with
       `INSTALL_INTERNAL_SKILLS` unset and confirm `bump-skill` is absent from
       the output (paste the relevant lines).
-- [ ] Capture the override: run `INSTALL_INTERNAL_SKILLS=1 npx skills add . --list`
+      Evidence: `Found 28 skills` (down from 29); `bump-skill` not among the
+      listed names.
+- [x] Capture the override: run `INSTALL_INTERNAL_SKILLS=1 npx skills add . --list`
       and confirm `bump-skill` reappears (paste the relevant lines).
-- [ ] Confirm in-repo dogfooding intact: `readlink .claude/skills` → `../skills`
+      Evidence: `Found 29 skills`; `│    bump-skill` present in the listing.
+- [x] Confirm in-repo dogfooding intact: `readlink .claude/skills` → `../skills`
       and `test -f .claude/skills/bump-skill/SKILL.md` → exit 0.
+      Evidence: `readlink` returned `../skills`; symlinked SKILL.md reachable.
 
 ### P2 — Record the decision and encode the lint
 
