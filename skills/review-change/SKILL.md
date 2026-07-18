@@ -205,7 +205,7 @@ Every axis maps to a skill of the workflow's **own internal review pack**
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
      · adversarial recommendation checklist fired AND this run was
        single-reviewer? → re-run the fold review as /review-change
-       --adversarial N (N per the ladder above) instead of single-reviewer
+       --adversarial N (N per the ladder below) instead of single-reviewer
        (yes: <which box fired>; no: omit this line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a
@@ -219,7 +219,7 @@ Every axis maps to a skill of the workflow's **own internal review pack**
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
      · adversarial recommendation checklist fired AND this run was
        single-reviewer? → re-run as /review-change --adversarial N (N per the
-       ladder above) before /audit-pr (yes: <which box fired>; no: omit this
+       ladder below) before /audit-pr (yes: <which box fired>; no: omit this
        line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a
