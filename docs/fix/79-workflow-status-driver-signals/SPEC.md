@@ -264,11 +264,12 @@ Layer: `schema/db`. Done-when: `cd packages/agentic-workflow-schema && npm test`
 Layer: `docs`. Done-when:
 `grep -q 'next.suggested' packages/agentic-workflow-schema/README.md && grep -q 'next.suggested' packages/agentic-workflow-schema/README.es.md`.
 
-- [ ] Add a `next.suggested[]` row to the "envelope, field by field" table in
+- [x] Add a `next.suggested[]` row to the "envelope, field by field" table in
       `README.md` (type: object array; open; meaning: trigger-attributed
       suggestions).
-- [ ] Add the reciprocal row to `README.es.md` (faithful translation).
-- [ ] Note the 2.1.0 additive-minor bump in each README's "Versioning" section.
+- [x] Add the reciprocal row to `README.es.md` (faithful translation).
+- [x] Note the 2.1.0 additive-minor bump in each README's "Versioning" section
+      (`README.md` "## Versioning", `README.es.md` "## Versionado").
 
 ### P3 — workflow-status per-unit signals emission
 
