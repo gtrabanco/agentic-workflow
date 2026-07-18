@@ -339,12 +339,14 @@ Layer: `docs`. Targets: `README.md` + `README.es.md` (NaN "Running on
 NaN.builders" section). Done-when:
 `grep -c "adversarial" README.md README.es.md` → each side carries the new row.
 
-- [ ] Add to `README.md` the adversarial ladder row/note: reviewers never
+- [x] Add to `README.md` the adversarial ladder row/note: reviewers never
       weaker than the author; worked example Qwen3.6-authored → `--adversarial
       2` with Mimo V2.5 + DeepSeek V4 Flash (high); merge/orchestration per the
-      Planning/routing ladder (Qwen3.6 thinking ON is compliant).
-- [ ] Mirror the row faithfully in `README.es.md` (bilingual-sync rule — same
-      change).
+      Planning/routing ladder (Qwen3.6 thinking ON is compliant). — new
+      "Adversarial review" row + rationale paragraph in the NaN ladder table.
+- [x] Mirror the row faithfully in `README.es.md` (bilingual-sync rule — same
+      change). — "Revisión adversarial" row + rationale paragraph, faithful
+      translation, same commit.
 
 ### P8 — Version bump (bump-skill)
 
