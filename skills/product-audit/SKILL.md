@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 2.0.0
+version: 2.1.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -89,7 +89,7 @@ pack covers every axis).
 | **Brand / voice** | User-facing copy vs. the brand guide | surfaces with copy |
 | **Tech debt** | Accumulated shortcuts, TODO/FIXME, stale abstractions | all |
 | **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs | all |
-| **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks 1–13 mechanically** (compose it); never assume a rule held because it "should" | all |
+| **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks 1–13 mechanically** (compose it); never assume a rule held because it "should". **Scope-export recurrence:** across the most recent units (merged or in-flight), each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) counts as one scope-exporting unit — **≥ 2 consecutive** such units is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (**#64**), not re-litigated as a per-unit defect | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | all |
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope | all |
 
@@ -146,6 +146,10 @@ Health by dimension:
 Top findings (severity-ranked):
   [SEV] <dimension> — <finding> — evidence: <file:line | metric | doc> — class: <fix-now|postpone|tradeoff>
   ...
+  [example — scope-export recurrence] Workflow discipline — <N> consecutive
+    units exported scope via `## Amendments`/descope issues — features are
+    being cut too big for real capacity — evidence: <unit list + amendments/
+    issues> — class: postpone — route: #64 (atomicity/split rules)
 
 Proposals — the user decides which to act on:
 
