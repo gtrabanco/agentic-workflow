@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.2.0
+version: 2.3.0
 argument-hint: <issue-number> [more issue numbers…]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
