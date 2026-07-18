@@ -246,18 +246,21 @@ canonical contract blocks once in the mode section). Done-when:
 `grep -c "Return exactly" skills/review-change/SKILL.md` → the two contract
 blocks are present.
 
-- [ ] Author the **reviewer contract** once: a "Return exactly:" block giving
+- [x] Author the **reviewer contract** once: a "Return exactly:" block giving
       role (by index) + diff-only scope + the fixed findings-table output the
-      reviewer must return.
-- [ ] Author the **merge contract** once: dedupe by `file:line`+axis →
+      reviewer must return. — "Reviewer contract (single source)" block.
+- [x] Author the **merge contract** once: dedupe by `file:line`+axis →
       `Reviewers n/N` column → steps 2–10 → fixed report ending
-      `Decision: PASS | FAIL`.
-- [ ] State the merge contract's forbidden list as prohibitions: never drop,
-      downgrade, reclassify, or re-litigate any finding.
-- [ ] Restate the **≥1 inclusion threshold inside the merge contract** (a
-      finding any single reviewer raised enters classification normally).
-- [ ] Add a `provenance` column note: externally-produced reviews are accepted
-      **only if already in the fixed table format**.
+      `Decision: PASS | FAIL`. — "Merge contract (single source)" block.
+- [x] State the merge contract's forbidden list as prohibitions: never drop,
+      downgrade, reclassify, or re-litigate any finding. — same block,
+      "Forbidden — never" bullet.
+- [x] Restate the **≥1 inclusion threshold inside the merge contract** (a
+      finding any single reviewer raised enters classification normally). —
+      "Inclusion threshold = ≥1 reviewer" bullet, restated in the same block.
+- [x] Add a `provenance` column note: externally-produced reviews are accepted
+      **only if already in the fixed table format**. — "Externally-produced
+      reviews" bullet.
 
 ### P3 — `--merge` fusion mode
 
@@ -266,14 +269,17 @@ Layer: `docs`. Target: `skills/review-change/SKILL.md` + line 5
 `grep -n "\-\-merge" skills/review-change/SKILL.md` → returns the mode entry
 and the argument-hint.
 
-- [ ] Add the `--merge` mode: it starts at the fusion step, accepts N pasted
+- [x] Add the `--merge` mode: it starts at the fusion step, accepts N pasted
       findings tables (fixed format), and runs the merge contract (P2) to the
-      fixed report ending `Decision: PASS | FAIL`.
-- [ ] Reference the P2 merge contract from the `--merge` mode (single source —
-      no second copy of the dedupe/threshold/forbidden rules).
-- [ ] Wire `--merge` into Process step 1 (the findings-engine branch) alongside
-      the existing no-flag and `--adversarial N` branches.
-- [ ] Add `--merge` to the `argument-hint:` frontmatter (line 5).
+      fixed report ending `Decision: PASS | FAIL`. — "`--merge` mode." block.
+- [x] Reference the P2 merge contract from the `--merge` mode (single source —
+      no second copy of the dedupe/threshold/forbidden rules). — same block,
+      "the mode consumes the single merge contract above, never a second
+      copy of it".
+- [x] Wire `--merge` into Process step 1 (the findings-engine branch) alongside
+      the existing no-flag and `--adversarial N` branches. — Process step 1
+      rewritten with the `--merge` branch.
+- [x] Add `--merge` to the `argument-hint:` frontmatter (line 5). — done.
 
 ### P4 — Portability manual-orchestration templates
 
@@ -295,14 +301,15 @@ Layer: `docs`. Target: `skills/review-change/SKILL.md` (mode section /
 `grep -n "once per unit" skills/review-change/SKILL.md` → returns the cadence
 statement.
 
-- [ ] State that the adversarial run happens **once per unit, at the mandatory
+- [x] State that the adversarial run happens **once per unit, at the mandatory
       terminal `review-change`** (pre-Hardening & PR), where the recommendation
-      checklist is evaluated.
-- [ ] State the explicit sensitive-phase exception (not a cadence): a sensitive
-      phase may earn an early adversarial pass scoped to that phase's diff.
-- [ ] Add the explicit `#77` boundary note: this issue owns **where**
+      checklist is evaluated. — "Cadence — once per unit." paragraph.
+- [x] State the explicit sensitive-phase exception (not a cadence): a sensitive
+      phase may earn an early adversarial pass scoped to that phase's diff. —
+      same paragraph, "one stated exception" sentence.
+- [x] Add the explicit `#77` boundary note: this issue owns **where**
       adversarial runs; `#77` owns the general checkpoint cadence — neither edits
-      the other's sentences.
+      the other's sentences. — "Boundary with `#77`" sentence.
 
 ### P6 — Adversarial `→ Next:` wiring
 
