@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 2.2.1
+version: 2.3.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -342,17 +342,21 @@ turns:
    - **REVIEW** — compose `review-change` in-turn (equal tier), with
      **risk-proportional cadence**: XS/S and non-sensitive M features get ONE
      review at branch end (matching execute-phase's documented batch pattern);
-     L or sensitive-flagged features get a checkpoint every 2 phases. **For L
-     or sensitive-flagged features, every `review-change` invocation in this
-     stage — checkpoint or end review — runs with `--adversarial 2`: a HARD
-     FLOOR, not a recommendation.** The autopilot is unattended, so a
-     risk-proportional review floor replaces the human's skip judgment that
-     the interactive advisory checkpoint relies on elsewhere. This
-     deliberately does **not mirror** `review-change`'s own interactive
-     auto-recommend-for-L/sensitive behavior (advisory, skippable there) — the
-     two are intentionally different policies for different contexts (human
-     present vs. unattended loop) and must never be "aligned" into one. XS/S
-     and non-sensitive M stay single-reviewer. Persist the review report into
+     L or sensitive-flagged features get a checkpoint on the same three named
+     triggers `execute-phase`'s interactive checkpoint uses — layer boundary,
+     accumulation, sensitivity (see `skills/execute-phase/SKILL.md` "Review
+     checkpoint triggers", `#77`) — evaluated after each phase commit, rather
+     than a fixed phase count. **For L or sensitive-flagged features, every
+     `review-change` invocation in this stage — checkpoint or end review —
+     runs with `--adversarial 2`: a HARD FLOOR, not a recommendation.** The
+     autopilot is unattended, so a risk-proportional review floor replaces
+     the human's skip judgment that the interactive advisory checkpoint
+     relies on elsewhere. This deliberately does **not mirror**
+     `review-change`'s own interactive auto-recommend-for-L/sensitive
+     behavior (advisory, skippable there) — the two are intentionally
+     different policies for different contexts (human present vs.
+     unattended loop) and must never be "aligned" into one. XS/S and
+     non-sensitive M stay single-reviewer. Persist the review report into
      the feature's docs folder. fix-now findings → one sonnet fixer subagent +
      gate + commit **+ push (when the PR exists) + clean-tree check (step
      5)** (max 2 review-fix cycles); every **non-fix-now finding is triaged**
