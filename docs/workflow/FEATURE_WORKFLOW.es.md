@@ -192,7 +192,7 @@ Repetir para cada fase (P1, P2, …). Las features pequeñas (`Size: XS/S`) se
 manejan con `execute-phase <NN>` en un solo pase — sin skill separada; el
 pase único termina cambiando la fila del roadmap a `done` y abriendo el PR,
 luego el obligatorio `/review-change` → `/audit-pr`. Para ejecutar todas las
-fases sin supervisión (los checkpoints cada 2 fases se saltan, pero la
+fases sin supervisión (los checkpoints basados en disparadores se saltan, pero la
 revisión final **obligatoria** no — sigue corriendo una vez antes del PR),
 ver el patrón de **ejecución por lotes con `/loop`** en la skill
 `execute-phase`.
@@ -243,9 +243,11 @@ verificada por la puerta como cualquier fase.
 
 ## Etapa 4 — Review & audit (rama completa)
 
-`execute-phase` **recomienda** un checkpoint de `review-change` cada 2 fases
-(una sugerencia que se puede saltar — continuar a la siguiente fase es una
-alternativa listada) **y entrega el control una vez al final (obligatorio —
+`execute-phase` **recomienda** un checkpoint de `review-change` según su
+cadencia basada en disparadores — límite de capa completado, umbral de
+acumulación, o fase sensible (una sugerencia que se puede saltar — continuar a
+la siguiente fase es una alternativa listada) **y entrega el control una vez
+al final (obligatorio —
 cada unidad recibe una revisión final antes de su puerta de merge)**. Una
 unidad terminada **siempre abre su PR y pasa a `done`** (construida, no
 fusionada — el estado de merge vive en la forja); la revisión final y la
@@ -308,7 +310,7 @@ Vuelve a ejecutar la puerta (chequeo de tipos, tests, build) en verde.
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN  P1              → data/domain layer, gate green, commit
 /execute-phase  NN  P2              → orchestration + adapter, gate green, commit
-   → recommended review checkpoint (every 2 phases, skippable): /review-change → classified table + manual checks
+   → recommended review checkpoint (trigger-based: layer boundary/accumulation/sensitivity, skippable): /review-change → classified table + manual checks
 /execute-phase  NN  hardening       → edge cases, gate green, commit
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
 /review-change                      → mandatory final review; non-fix-now → triage-issue

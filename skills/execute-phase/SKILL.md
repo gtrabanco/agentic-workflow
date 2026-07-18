@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.5.2
+version: 2.6.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -199,6 +199,37 @@ the **target phase** (its title, declared layer, task list, and done-when).
    boxes>, user-forced <date>") before implementation begins. `--force` is a
    user-only escape hatch — the autopilot (`ship-roadmap`) must never pass it.
 
+## Review checkpoint triggers (feature mode)
+
+The recommended, skippable checkpoint fires on **what accumulated since the
+last checkpoint**, not on a phase count — a phase-counter cadence re-miscalibrates
+whenever phase size changes (see `#77`). After each phase commit, check all
+three; recommend the checkpoint (naming which trigger fired) the moment any
+one does:
+
+1. **Layer boundary** — the phase about to start declares a different
+   `Layer:` (the phase-lint enum) than the phase just committed. The just-closed
+   layer is a coherent reviewable unit.
+2. **Accumulation** — the unreviewed diff since the last-reviewed marker
+   exceeds **> 400 changed lines (insertions + deletions) OR > 8 changed
+   files**, measured with `git diff --stat <baseline>..HEAD`. Covers a long run
+   of small same-layer phases the layer-boundary trigger would miss.
+3. **Sensitivity** — the phase just committed touches auth, payments,
+   destructive migrations, secrets, or CI config → recommend an **immediate**
+   checkpoint on closing it, regardless of the other two triggers. This is a
+   **single-reviewer** recommendation and does not change `review-change`'s
+   own once-per-unit adversarial cadence (`skills/review-change/SKILL.md`
+   "Cadence — once per unit") — the two are independent mechanisms.
+
+**Last-reviewed marker.** Home: `progress.md`'s header line
+`Last reviewed: <sha>`. Sole writer: `execute-phase` — stamped with the
+just-committed phase's sha immediately after a checkpoint is taken (review
+happens in a separate turn, so this skill records the marker at the start of
+the *next* phase it executes, using the sha the user confirmed was reviewed).
+If the marker is absent (unit's first checkpoint, or a legacy `progress.md`
+predating this rule), the baseline is `git merge-base <default-branch> HEAD` —
+never treat a missing marker as a blocker or crash condition.
+
 ## Allowed & forbidden (fixed lists — no interpretation)
 
 **Allowed changes in a phase:**
@@ -345,7 +376,7 @@ every descope, defined once here.
    uncommitted, and stop with a clear report.
 5. Update the per-phase docs.
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"` — one commit per phase, conventional format. Run this; don't just describe what should be committed.
-7. **Review checkpoint (recommended, not blocking)** — every 2 phases, **recommend** a hand-off to `/review-change` in the closing block (see below). The user decides: review now, or continue straight to the next phase — the skill never forces the intermediate stop. The **end-of-unit review stays mandatory** (it feeds `audit-pr`, the merge gate). Never run the review in this skill's turn.
+7. **Review checkpoint (recommended, not blocking)** — check the *Review checkpoint triggers* above; when one fires, **recommend** a hand-off to `/review-change` in the closing block, naming the trigger (see below). The user decides: review now, or continue straight to the next phase — the skill never forces the intermediate stop. The **end-of-unit review stays mandatory** (it feeds `audit-pr`, the merge gate). Never run the review in this skill's turn.
 
 **Resuming an interrupted phase (stated contract — any agent must honor it).**
 If, on entry, the unit branch already carries dirty files or commits belonging
@@ -463,12 +494,14 @@ boundary, hand off; don't compose.) On agents without per-skill model config the
 rule holds by hand: run the review as a **separate, fresh invocation** on your
 strongest model — never inline in the implementation run.
 
-**Cadence.** Feature mode: after every **2 completed phases**, the closing block
-**recommends** the hand-off — a suggestion the user may skip to keep executing
-phases; the skill never blocks on an intermediate review. What is **never
-optional** is the end: every unit gets one `review-change` pass before merge
-(single-pass and `--fix` included — they have no intermediate phases, so the
-end review is their only one).
+**Cadence.** Feature mode: after each completed phase, the closing block
+**recommends** the hand-off whenever a *Review checkpoint trigger* fires
+(layer boundary, accumulation, or sensitivity — see above), naming which one —
+a suggestion the user may skip to keep executing phases; the skill never
+blocks on an intermediate review. What is **never optional** is the end: every
+unit gets one `review-change` pass before merge (single-pass and `--fix`
+included — they have no intermediate phases, so the end review is their only
+one).
 
 **Finishing a unit (single-pass, `--fix`, or a feature's final phase): the last step
 is always an open PR.** Mark the unit `done`, commit the flip, push, and `gh pr create`
@@ -481,18 +514,24 @@ fleet's strongest or weaker than the author, or a single model family on a
 `≥M` change) and — only when a box fires — recommends `--adversarial N`
 (N=2 default, N=3 on a security/auth surface or a single-family fleet) instead
 of its default single-reviewer pass. This is evaluated once, at that mandatory
-end review; it does not change the every-2-phases checkpoint cadence above.
+end review; it does not change the trigger-based checkpoint cadence above.
 
 Checkpoint hand-off (print it — every invocation ends by suggesting the next
-step; at the 2-phase mark the review is the recommendation, continuing is a
+step; when a trigger fires, the review is the recommendation, continuing is a
 listed alternative — the user picks):
 
 ```
-Phase <N> done and committed. Review checkpoint (recommended).
-→ Next: /review-change — 2 phases unreviewed; it reviews the branch at its own model/effort
+Phase <N> done and committed. Review checkpoint (recommended) — <trigger name> fired: <one-line reason>.
+→ Next: /review-change — it reviews the branch at its own model/effort
   · skip the checkpoint → /execute-phase <NN> <next phase> (the mandatory end review still covers everything)
   · findings (if you review) → fold fix-now into the branch; non-fix-now → /triage-issue; then re-review
 ```
+
+`<trigger name>` is one of `layer boundary`, `accumulation`, or `sensitivity`
+(see *Review checkpoint triggers*); `<one-line reason>` cites the evidence
+(e.g. "next phase declares `api`, this one was `domain`", "612 lines / 11
+files since `a1b2c3d`", "phase touched auth middleware"). No trigger fired?
+Omit the checkpoint line entirely and go straight to naming the next phase.
 
 ### Folding review / audit findings (a first-class mini-cycle)
 
@@ -582,13 +621,13 @@ commit each phase, and stop when TASKS.md shows all phases checked
 
 The loop reads `TASKS.md` to pick the next uncompleted phase, implements it,
 and terminates naturally when nothing remains — no explicit stop condition
-needed. **Per-2-phase checkpoints are skipped in this mode, but the end review is
+needed. **Trigger-based checkpoints are skipped in this mode, but the end review is
 not optional:** at the end, **mark done + open the PR**, then run `/review-change`
 once (the mandatory final review) → `audit-pr`.
 
 Use this when the SPEC is solid and you want to review the whole branch at once
-rather than after every two phases. For incremental, phase-by-phase review,
-stick to the default (manual re-invocation + checkpoint hand-offs).
+rather than at each intermediate checkpoint. For incremental, phase-by-phase
+review, stick to the default (manual re-invocation + checkpoint hand-offs).
 
 **No `/loop` on your agent?** Two vendor-neutral equivalents: (a) an
 **external orchestrator** loops this skill headless, injecting the
@@ -622,10 +661,11 @@ enables:
 ## Relationship to other skills
 
 - Planned by `plan-feature` (features) or `plan-fix` (fixes); executes their SPEC.
-- **Hands off** to `review-change` — recommended at the 2-phase checkpoint
-  (skippable), **mandatory** when finishing a unit — it runs at its own
-  model/effort, not composed in this skill's turn. `fix-now` findings fold
-  back here; non-fix-now routes through `triage-issue`.
+- **Hands off** to `review-change` — recommended at a trigger-based checkpoint
+  (layer boundary, accumulation, or sensitivity; skippable), **mandatory** when
+  finishing a unit — it runs at its own model/effort, not composed in this
+  skill's turn. `fix-now` findings fold back here; non-fix-now routes through
+  `triage-issue`.
 - A finished unit (single-pass, `--fix`, or final phase) **always opens its PR and
   flips to `done`**; `audit-pr` then gates the merge (it blocks on pending docs or a
   prematurely-dropped issue entry).

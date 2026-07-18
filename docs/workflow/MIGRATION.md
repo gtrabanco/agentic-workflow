@@ -342,7 +342,7 @@ symmetry**, and four **new** quality/automation skills were added.
 | 🔴 **Removed** (renamed away) | `feature-from-issue` | **Delete.** Its job moved into the `plan-feature` router (issue path); the engine is the internal `plan-feature-from-issue`. |
 | 🔴 **Removed** (renamed) | `draft-fix-spec` | **Delete.** Renamed to `plan-fix`. |
 | 🟡 **Kept** (same name) | `plan-feature` | Updates in place — **but its meaning changed**: it used to scaffold only; it is now the **router** (it detects idea / issue / scoped slug and dispatches). The old scaffolding step is now the internal `plan-feature-scaffold`. |
-| 🟡 **Kept** (same name) | `execute-phase` | Updates in place. Now hands off to `review-change` every 2 phases (review checkpoint). |
+| 🟡 **Kept** (same name) | `execute-phase` | Updates in place. Now hands off to `review-change` at trigger-based review checkpoints (see `#77`). |
 | 🟡 **Kept** (same name) | `init-workspace` | Updates in place. Now also suggests the platform's companion review skills. |
 | 🟡 **Kept** (same name) | `review-implementation` | Updates in place. Now also the engine that `review-change` composes. |
 | 🟡 **Kept** (same name) | `audit-docs` | Updates in place. |
