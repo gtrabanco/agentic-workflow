@@ -368,17 +368,20 @@ Layer: `docs`. Done-when:
 
 ### P8 — Hardening & PR
 
-- [ ] Run `/bump-skill` for `triage-issue` (minor version bump, `CHANGELOG.md`
-      + `CHANGELOG.es.md` rows, README skills/model tables refreshed)
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Run `/bump-skill` for `triage-issue` (minor version bump, `CHANGELOG.md`
+      + `CHANGELOG.es.md` rows, README skills/model tables refreshed) — sha `3e2ee14`
+- [x] Re-run the project's full verification gate (commands + exit codes pasted) —
+      `npx skills add . --list` exit=0, `triage-issue` listed; route-enumeration
+      grep for `fix-in-unit` → 7/7 target files (SKILL + 6 docs)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip — sha `7b922c7`
+- [x] `git push` (branch tracking `origin`, up to date)
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #86` and `Closes #87`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #86` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #86` and `Closes #87` —
+      PR [#90](https://github.com/gtrabanco/agentic-workflow/pull/90)
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)` — `done · [#90]`
+- [x] Commit `docs: link PR #86` and push — sha `a461317`
 
 ## Testing
 
