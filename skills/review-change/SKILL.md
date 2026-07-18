@@ -431,8 +431,56 @@ enables:
 - **`--adversarial N` spawn tiers** — Claude Code subagents (tier 1) and
   headless invocation (tier 2) are conveniences; an agent with neither runs the
   tier-3 fallback of N **sequential fresh conversations**, each context-clean
-  and diff-only, then merges their findings by hand per the dedupe rule above —
-  slower, never a reason to skip the mode.
+  and diff-only, then merges their findings by hand per the merge contract
+  above — slower, never a reason to skip the mode. **One source, two
+  wrappers:** the pro path invokes `--adversarial N` / `--merge` and this
+  skill runs the contracts itself; a manual orchestrator without either flag
+  pastes the two blocks below into fresh conversations by hand — both render
+  the exact same reviewer/merge contract, never a second, drifting copy.
+
+  **Reviewer-prompt paste block** (one per reviewer, in a fresh conversation;
+  fills `<i>`/`<role name>`/`<scope>` from the fixed role set and N ladder
+  above — this is the reviewer contract, quoted verbatim):
+
+  ```
+  ROLE: R<i> — <role name, from the fixed set above>
+  SCOPE: <diff-only — the branch diff vs the default branch, or the passed path/glob>
+
+  You are reviewer <i> of N in an adversarial multi-reviewer review. Assume the
+  diff is wrong until proven otherwise. Your role orders where you look FIRST —
+  it is an attention priority, not an exclusive scope: the full
+  review-implementation checklist stays mandatory. Flag anything wrong, not only
+  findings inside your role.
+
+  Return exactly:
+  | file:line | axis | Finding | Sev | Class | WHY | Route |
+  |---|---|---|---|---|---|---|
+  <one row per finding — empty table if none>
+  ```
+
+  **Merge-prompt paste block** (one fresh conversation, after collecting all N
+  reviewer tables above — this is the merge contract, quoted verbatim):
+
+  ```
+  You are fusing N independent adversarial review tables into one. Given the N
+  pasted findings tables below (each already in the reviewer contract's fixed
+  format):
+  - Dedupe by file:line + axis; identical findings from multiple reviewers
+    collapse into one row.
+  - Add a `Reviewers n/N` column: how many of the N flagged it.
+  - Inclusion threshold = ≥1 reviewer — a finding any single reviewer raised
+    enters classification normally; no majority/quorum gate.
+  - Forbidden — never: drop a finding, downgrade its severity, reclassify it,
+    or re-litigate whether it's real. Fusion only — disputes happen in
+    triage, not here.
+  - Externally-produced reviews are accepted only if already in the fixed
+    table format.
+
+  <N pasted findings tables go here>
+
+  Return the merged table, then continue through review-change's steps 2–10
+  to the fixed report ending `Decision: PASS | FAIL`.
+  ```
 
 ## Relationship to other skills
 
