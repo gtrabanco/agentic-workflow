@@ -196,8 +196,7 @@ hardening>. Done-when: <command> → <expected outcome>.` before its task list
 "one declared layer" and "machine-checkable done-when" boxes need somewhere to
 be filled in, not invented.
 
-#### Phase-lint (quoted — authoritative copy is
-`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint"; keep in sync)
+#### Phase-lint (quoted — authoritative copy is `docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint"; keep in sync)
 
 Every implementation phase below must pass all 8 boxes before it is emitted
 (planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
