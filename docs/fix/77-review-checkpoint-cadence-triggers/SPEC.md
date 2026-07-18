@@ -179,7 +179,7 @@ Layer: `docs`. Target: `skills/execute-phase/SKILL.md`. Done-when:
 `grep -n "Layer boundary" skills/execute-phase/SKILL.md` → returns the trigger
 block.
 
-- [ ] Add a `### Review checkpoint triggers` block defining the three named,
+- [x] Add a `### Review checkpoint triggers` block defining the three named,
       independently-checkable triggers: **(1) Layer boundary** — the NEXT
       phase's declared `Layer:` differs from the just-finished phase's →
       recommend a checkpoint; **(2) Accumulation** — the unreviewed diff since
@@ -189,29 +189,29 @@ block.
       phase touches auth, payments, destructive migrations, secrets, or CI
       config → recommend an immediate checkpoint. — `skills/execute-phase/SKILL.md`
       "Review checkpoint triggers" block.
-- [ ] Add the **last-reviewed-SHA recording spec** in the same block: home =
+- [x] Add the **last-reviewed-SHA recording spec** in the same block: home =
       `progress.md` header line `Last reviewed: <sha>`; sole writer =
       `execute-phase` (stamped at the checkpoint fold-back, or at the next
       phase's entry after a clean checkpoint); absent marker → baseline =
       `git merge-base <default-branch> HEAD`, never crash on the first
       checkpoint of a unit. — same block, "Last reviewed" + "merge-base"
       sentences.
-- [ ] Add a one-line boundary note: trigger 3 recommends a **single-reviewer**
+- [x] Add a one-line boundary note: trigger 3 recommends a **single-reviewer**
       checkpoint on closing a sensitive phase and does **not** change
       `review-change`'s once-per-unit adversarial cadence (cross-ref the
       adversarial section). — same block, boundary sentence.
-- [ ] Rewrite step 7 of the feature-phase workflow (L348) so the checkpoint is
+- [x] Rewrite step 7 of the feature-phase workflow (L348) so the checkpoint is
       recommended **when a trigger fires (naming which one)**, not on the phase
       counter; keep "recommended, not blocking" and the mandatory-end-review
       sentence. — `skills/execute-phase/SKILL.md` feature-phase step 7.
-- [ ] Rewrite the **Cadence** paragraph (L466–471) to the trigger model,
+- [x] Rewrite the **Cadence** paragraph (L466–471) to the trigger model,
       keeping the "never optional … end review" sentence verbatim in meaning. —
       "Cadence." paragraph under *Review checkpoint & finishing a unit*.
-- [ ] Rewrite the checkpoint hand-off block (L490–495) so its `→ Next:` line
+- [x] Rewrite the checkpoint hand-off block (L490–495) so its `→ Next:` line
       names the firing trigger (e.g. "layer boundary reached", "accumulation
       threshold", "sensitive phase") instead of "2 phases unreviewed". —
       "Checkpoint hand-off" fenced block.
-- [ ] Update the batch-execution note (L586) and the relationship-to-other-skills
+- [x] Update the batch-execution note (L586) and the relationship-to-other-skills
       bullet (L500-equivalent, L626–628) from "per-2-phase / every 2 phases"
       to "trigger-based checkpoints". — `skills/execute-phase/SKILL.md`
       *Batch execution* + *Relationship to other skills*.
