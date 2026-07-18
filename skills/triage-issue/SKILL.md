@@ -208,9 +208,21 @@ gh issue view <N> --json number,title,body,labels,state,comments
    Trigger (the issue's own): <quoted clause | "none stated">
    Checked: <the exact commands/counts/repro run>
    Evidence: <paths, counts, line refs, output>
-   VERDICT: fix-now | promote | postpone | wontfix
+   VERDICT: fix-now | fix-in-unit | promote | postpone | wontfix
    Action taken: <fix-index entry + route | dated comment posted + disposition label applied | close proposed + disposition label applied>
    ```
+
+   No member unit matched a `fix-in-unit` candidate for this issue → the
+   verdict, evidence, and action above are exactly what they would have been
+   without the scope-membership step — today's four-verdict classification,
+   unchanged.
+
+   **Batch summary table — group by home unit.** When triaging several issues
+   in one run, the closing summary table groups every `fix-in-unit` issue
+   under its home unit's heading (one heading per unit, its member issues
+   listed beneath), with any issue that matched no open unit listed last under
+   a plain "no member unit" heading — this is the signal that surfaces N
+   issues sharing one open unit at a glance, not N separate rows.
 
 ## Guardrails
 
