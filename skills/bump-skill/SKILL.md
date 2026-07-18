@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.3.0
+version: 2.3.1
 metadata:
   internal: true
 description: >
@@ -75,7 +75,7 @@ question covering all ambiguous skills at once is fine.
 
 ### 2b. Lint the repo's authoring rules (flag, don't fix)
 
-For each changed skill, check the two `CLAUDE.md` authoring invariants and **warn**
+For each changed skill, check the seven `CLAUDE.md` authoring invariants and **warn**
 if violated (this skill never edits a SKILL.md beyond its `version:` line, so it
 reports — it does not auto-correct):
 
@@ -115,8 +115,12 @@ reports — it does not auto-correct):
   e.g. the `review-*` pack, `orchestration-envelope`,
   `plan-feature-scaffold`, `plan-feature-from-issue`). For each changed
   skill: if `user-invocable: false` and its `./skills/<name>` entry is absent
-  from `plugin.json`, `grep -q 'internal: true' skills/<name>/SKILL.md`
-  should succeed; flag a miss.
+  from `plugin.json`, check the **frontmatter block only** (the region
+  between the first two `---` lines) for an anchored `internal: true` key —
+  e.g. `awk '/^---$/{c++} c==1' skills/<name>/SKILL.md | grep -qE '^\s*internal:\s*true\s*$'`
+  — should succeed; flag a miss. Matching anywhere in the body (not just the
+  frontmatter) would let this rule's own prose about `metadata.internal: true`
+  satisfy the check for a skill that never actually sets the key.
 
 Report violations in the summary; do not block the bump on them.
 
