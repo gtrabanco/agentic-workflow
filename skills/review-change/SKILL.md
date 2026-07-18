@@ -2,7 +2,7 @@
 name: review-change
 user-invocable: true
 version: 2.3.0
-argument-hint: <path-or-glob> [--adversarial N]
+argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -96,12 +96,14 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
 ## Process
 
-1. **Findings engine.** No `--adversarial N` flag → run `review-implementation`
-   once over the scope → its classified decision table (fix-now / postpone /
-   ignore / intentional-tradeoff), unchanged from before this mode existed. With
-   `--adversarial N` → run the **adversarial multi-reviewer mode** below instead;
-   everything from step 2 onward runs once, over its merged table, exactly as in
-   the no-flag case.
+1. **Findings engine.** No flag → run `review-implementation` once over the
+   scope → its classified decision table (fix-now / postpone / ignore /
+   intentional-tradeoff), unchanged from before this mode existed. With
+   `--adversarial N` → run the **adversarial multi-reviewer mode** below
+   instead. With `--merge` → skip straight to that mode's fusion step (N
+   findings tables pasted in, per the merge contract). Either way, everything
+   from step 2 onward runs once, over the merged table, exactly as in the
+   no-flag case.
 2. **SPEC drift check.** Locate the governing SPEC (feature or fix) and compare
    the diff against its scope and acceptance criteria: flag work that contradicts
    the SPEC, silently exceeds it, or leaves a claimed criterion untouched.
@@ -169,7 +171,7 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    that `file:line`+axis is not re-appended; a genuinely new finding gets the
    next `Fn` id. **Non-fix-now findings are never written here** — they keep
    their `triage-issue` destinations from step 8.
-10. **Report — return exactly this structure** (fixed output contract; nothing
+10. **Report — Return exactly this structure** (fixed output contract; nothing
    more, nothing less):
 
    ```
@@ -283,6 +285,28 @@ role-narrowed reviewer skips an obvious defect because it fell outside "their"
 role. Every reviewer prompt (see the reviewer contract below) must carry this
 sentence, not just the role assignment.
 
+**Reviewer contract (single source).** Each of the N reviewers — spawned by
+whichever tier below applies — receives this fixed prompt; only `<i>`/`<role
+name>`/`<scope>` vary per reviewer. This is the **one and only place** the
+reviewer prompt is authored — the Portability paste block later in this skill
+quotes it verbatim, never a rewritten copy:
+
+```
+ROLE: R<i> — <role name, from the fixed set above>
+SCOPE: <diff-only — the branch diff vs the default branch, or the passed path/glob>
+
+You are reviewer <i> of N in an adversarial multi-reviewer review. Assume the
+diff is wrong until proven otherwise. Your role orders where you look FIRST —
+it is an attention priority, not an exclusive scope: the full
+review-implementation checklist stays mandatory. Flag anything wrong, not only
+findings inside your role.
+
+Return exactly:
+| file:line | axis | Finding | Sev | Class | WHY | Route |
+|---|---|---|---|---|---|---|
+<one row per finding — empty table if none>
+```
+
 **Platform-adaptive spawn (three tiers).** Each of the N reviewers is a
 **context-clean, diff-only, adversarial** run of the existing findings engine
 (`review-implementation`), reviewing the same scope — none of them is the
@@ -299,7 +323,9 @@ turn-contract box still applies to the orchestrator):
    slower, the documented floor-of-last-resort so no agent is blocked from
    using this mode.
 
-**Merge + dedupe.** Collect all N reviewers' classified findings and:
+**Merge contract (single source).** Collect all N reviewers' classified
+findings tables — each already in the reviewer contract's fixed format above
+(a `provenance` note records which reviewer/source produced each row) — and:
 
 - **Dedupe by `file:line` + axis** (two genuinely different findings on the
   same line, different axis, stay separate). Identical findings from multiple
@@ -309,8 +335,39 @@ turn-contract box still applies to the orchestrator):
 - **Inclusion threshold = ≥1 reviewer.** A finding any single reviewer raised
   enters classification normally; there is no majority/quorum gate to include a
   finding — a real defect only one sharp reviewer caught must not be dropped.
+- **Forbidden — never**, while merging: dropping a finding, downgrading its
+  severity, reclassifying it, or re-litigating whether it's real. The merge
+  step's only job is fusion; disputing a finding's validity happens later, in
+  the normal triage steps (2–10) that consume the merged table — never during
+  the merge itself.
+- **Externally-produced reviews** (not spawned by this run) are accepted into
+  the merge **only if they already arrive in the reviewer contract's fixed
+  table format**. Normalizing free prose into that format is the contributing
+  conversation's job, not the merge step's — it converts to the table first.
 - The merged table then flows through the unchanged steps 2–10 above, producing
   the same fixed-format report + `Decision: PASS | FAIL`.
+
+**`--merge` mode.** `/review-change --merge` is the direct entry point for the
+merge contract above — it starts **at the fusion step**, skipping the N-reviewer
+spawn: pass it N pasted findings tables (each already in the reviewer
+contract's fixed format), and it runs the merge contract, then the unchanged
+steps 2–10, to the same fixed report ending `Decision: PASS | FAIL`. This is
+how a manual orchestrator — one that ran the N reviewer conversations by hand
+via the Portability paste blocks — hands the results back to this skill for
+fusion, without re-authoring the dedupe/threshold/forbidden rules itself: the
+mode consumes the single merge contract above, never a second copy of it.
+
+**Cadence — once per unit.** The adversarial run (spawn or `--merge`) happens
+**once per unit, at the mandatory terminal `review-change`** (the pass before
+`Hardening & PR` — see *Review checkpoint & finishing a unit* in
+`execute-phase`), where the recommendation checklist above is evaluated. The
+one stated exception, not a cadence of its own: a phase touching a sensitive
+surface (auth, payments, destructive migrations, secrets, CI config) may earn
+an **early** adversarial pass scoped to just that phase's diff — still a
+single extra event, not a recurring checkpoint. **Boundary with `#77`** (the general review-checkpoint cadence redesign):
+this section owns *where* the adversarial mode runs (the terminal review, plus
+the sensitive-phase exception); `#77` owns the general every-N-phases
+checkpoint interval — neither issue's change edits the other's sentences.
 
 ## Example output (generic)
 
