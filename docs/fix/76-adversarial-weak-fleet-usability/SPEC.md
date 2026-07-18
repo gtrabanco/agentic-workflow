@@ -367,10 +367,14 @@ and CHANGELOG rows exist.
 
 ### P9 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] GOLDEN_FIXTURE smoke (`manual`): run `docs/workflow/GOLDEN_FIXTURE.md`
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+      — `npx skills add . --list` → exit 0, every skill discovered including
+      the bumped `review-change`/`execute-phase`; code-fence balance verified
+      even on every touched file.
+- [x] GOLDEN_FIXTURE smoke (`manual`): run `docs/workflow/GOLDEN_FIXTURE.md`
       with the weakest fleet model against the new `--merge` mode and the
-      reviewer template; confirm no misread
+      reviewer template; confirm no misread — PASS, run-log row appended to
+      `docs/workflow/GOLDEN_FIXTURE.md` + `.es.md` (2026-07-18).
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
