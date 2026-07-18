@@ -375,14 +375,14 @@ and CHANGELOG rows exist.
       with the weakest fleet model against the new `--merge` mode and the
       reviewer template; confirm no misread — PASS, run-log row appended to
       `docs/workflow/GOLDEN_FIXTURE.md` + `.es.md` (2026-07-18).
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #76`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #76` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #76` — [#91](https://github.com/gtrabanco/agentic-workflow/pull/91)
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #76` and push
 
 ## Testing
 
