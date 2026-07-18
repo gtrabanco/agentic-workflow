@@ -324,16 +324,18 @@ Layer: `docs`. Done-when:
 Layer: `hardening`. Done-when: `grep -c "fold-findings\|workflow-status" docs/fix/86-triage-open-unit-awareness/SPEC.md`
 → ≥ 2 (Testing section carries both read-through notes).
 
-- [ ] Read `skills/fold-findings/SKILL.md` Step 0 schema (L64–74) + Process;
+- [x] Read `skills/fold-findings/SKILL.md` Step 0 schema (L64–74) + Process;
       confirm the provenance marker sits inside the existing `route` column
       and all 7 columns are intact; record the result in this SPEC's
       `## Testing` section (a failed check is a `known-issues.md`-worthy
       blocker per the completion gate, handled there — not a scope branch
-      inside this task).
-- [ ] Read `skills/workflow-status/SKILL.md` step 9 (L139–156); confirm it
+      inside this task). — result: no edit needed, see `## Testing`
+      "Consumer read-through" bullet
+- [x] Read `skills/workflow-status/SKILL.md` step 9 (L139–156); confirm it
       reads named columns, the marker is additive inside `route`, and the
       envelope shape (and therefore the npm schema mirror) is unchanged;
-      record the result in this SPEC's `## Testing` section.
+      record the result in this SPEC's `## Testing` section. — result: no
+      edit needed, envelope shape unchanged, see `## Testing` same bullet
 
 ### P6 — `fix-in-unit` hand-off wiring
 
@@ -391,6 +393,19 @@ No application build — "green" per `CLAUDE.md` *Verification*:
   verified read-only, no edit (or a minimal same-PR edit if the read finds a
   break). No unit/integration test layer exists for markdown skills — this is a
   documentation/contract change, so review + grep are the gate.
+  - **`fold-findings` (verified, P5):** `skills/fold-findings/SKILL.md`
+    Step 0.1 (L64–70) quotes the 7-column schema verbatim and treats it as
+    opaque — it reads `folded: no` rows (Process step 1) and never parses the
+    `route` cell's contents beyond displaying it to the agent implementing the
+    fold. A `triage #<n> <YYYY-MM-DD>` marker inside `route` is just more text
+    in a column it already reads unopinionated. **Result: no edit needed.**
+  - **`workflow-status` (verified, P5):** `skills/workflow-status/SKILL.md`
+    step 9 (L139–156) emits `route` **verbatim** into `findings.fix_now[]`
+    (`{id, file, axis, severity, class, route, suggested_tier}`) — no parsing
+    or validation of `route`'s internal format, and `suggested_tier` derives
+    only from `severity`/`axis`, never `route`. The envelope shape is
+    unchanged, so the npm schema package mirror rule does not trigger.
+    **Result: no edit needed.**
 
 ## Rollback
 
