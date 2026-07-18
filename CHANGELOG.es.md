@@ -142,6 +142,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.1 | 2026-07-18 | parche | Fix #66: se aclaró el paso de retro-relleno de la enmienda en la guardia de descope — tras crear el issue de seguimiento y enlazarlo en el cuerpo del issue, editar explícitamente la fila `## Amendments` para sustituir el marcador `#<n>` por el número real del issue y commitear ese cambio; una fila que aún lea el marcador literal falla la comprobación simétrica de fila sin enlazar de `audit-pr`. |
+| 2.5.0 | 2026-07-17 | menor | Fix #66: nueva **guardia de descope** en la Política de issues — antes de crear cualquier issue, se clasifica como trabajo descubierto (se archiva libremente) o descope (solapa un criterio de aceptación/tarea de la SPEC no entregado del todo); un descope PARA antes de crear el issue, exigiendo primero una entrada `## Amendments` fechada y aprobada por el usuario (formato de fila canónico definido una sola vez aquí). Nueva entrada en la lista de prohibiciones y casilla del contrato de turno que exige que la guardia se aplicase a cada issue creado en el turno. |
 | 2.4.1 | 2026-07-17 | parche | Fix #81: el guardia de pre-vuelo de lint de fase (añadido en 2.4.0) gana una salvedad explícita para SPECs legacy — un SPEC sin sección `## Phases` omite el guardia por completo (sin lint, sin DETENCIÓN) y cae directamente al flujo legacy de paso único preexistente, restaurando la promesa de retrocompatibilidad de la propia fix #64. |
 | 2.4.0 | 2026-07-17 | menor | Fix #64: nuevo **guardia de pre-vuelo de lint de fase**, ejecutado tras las puertas de dependencias/estado propio y antes de cualquier edición — la fase objetivo debe pasar el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") o execute-phase se DETIENE con un bloque fijo que nombra las casillas fallidas y recomienda recortar de nuevo vía `/plan-feature`/`/plan-fix`; `--force` omite la DETENCIÓN, nunca la comprobación, registrado en `decisions.md`/`progress.md`. Integrado en el contrato de turno y las reglas duras. |
 | 2.3.0 | 2026-07-17 | menor | Fix #65: la sección del ciclo de fold ("Folding review / audit findings") ahora nombra la nueva skill independiente `/fold-findings` como la vía preferida e invocable por sí sola (clasificación congelada + lista de prohibiciones, turno/nivel propio); la checklist de esta sección se mantiene como fallback en contexto / de portabilidad. |
@@ -254,6 +256,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.3.0 | 2026-07-17 | menor | Nueva puerta de **integridad de alcance (descope)** en el contrato de merge-readiness: lista los issues nacidos desde que la rama divergió que hacen referencia a la unidad; cada uno debe tener su criterio de aceptación aún cumplido **o** una entrada `## Amendments` correspondiente, fechada y aprobada por el usuario (con la misma bitácora que escribe la guardia de descope de `execute-phase`) — si no, BLOQUEANTE; aplica tanto a PRs de feature como de fix, y pasa trivialmente cuando no se exportó nada. El contrato de turno gana la casilla correspondiente; el bloque de cierre `→ Next:` enruta un bloqueante de scope-bleed a la decisión de enmienda o triage. Parte de #66. |
 | 3.2.0 | 2026-07-17 | menor | Nueva puerta de **integridad de cierre** en el contrato de merge-readiness: grep sobre la SPEC de feature que gobierna en busca de un encabezado `Capability closure` (a cualquier nivel); un bloque presente con una fila en blanco o una fila no-`n/a` sin mapear es bloqueante, `n/a: <razón>` pasa, un bloque ausente produce un warning datado `design-debt: closure absent, SPEC predates the rule` (nunca bloqueante) — los PRs gobernados por fix son siempre n/a. El warning es a la vez el disparador de retrofit, enrutado a `/design-feature <slug>` en el bloque de cierre. El contrato de turno gana la casilla correspondiente. Parte de #78. |
 | 3.1.1 | 2026-07-13 | parche | Corrección de referencia cruzada en Guardrails: el comentario MERGE-READY ahora cita correctamente el paso de proceso 6 (seguía apuntando al paso 5 previo a la renumeración de 3.1.0). |
 | 3.1.0 | 2026-07-13 | menor | Nuevo paso de proceso 5 (solo en veredicto BLOCKED): cada blocker se persiste en el **mismo** ledger de fold fix-now `review-findings.md` que escribe `review-change` (D4 — un solo ledger para el ciclo de fold), severidad `high` (un blocker bloquea el merge por definición), deduplicado por `file:line`+axis, sin escritura en una unidad mergeada. Pasos de proceso restantes renumerados (6→8). Parte de la feature 17 (`finding-severity-routing`). |
@@ -275,6 +278,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.1.0 | 2026-07-17 | menor | Nueva señal de **recurrencia de exportación de alcance** en la dimensión Disciplina de workflow: ≥ 2 unidades recientes consecutivas, cada una con una bitácora `## Amendments` de descope no vacía o un issue nacido clasificado como descope (puerta de scope-bleed de `audit-pr`), es un hallazgo de calidad de planificación ("features recortadas demasiado grandes para la capacidad real"), enrutado a las reglas de atomicidad/división (#64). El formato de salida gana un ejemplo trabajado bajo Top findings. Parte de #66. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-10 | menor | Nueva dimensión "Installed tooling" + paso de proceso: inventaría las skills instaladas y los servidores MCP conectados, los cruza contra los ejes de revisión aplicables y el roadmap, y añade un cuarto flujo de propuestas ("Tooling: register / re-design") — registrar una herramienta útil no registrada en `CLAUDE.md`, o enrutar un descubrimiento que cambia el alcance a `/design-feature`. Solo propone; nunca registra ni edita `CLAUDE.md`. Se añade `detail.proposed_tooling` al envelope máquina (aditivo). |
 | 1.7.0 | 2026-07-05 | menor | Envelope máquina: cada invocación termina ahora con un bloque JSON fijo (state, unit, phase, pr, findings, blockers, dependencies, next + pista de tier de modelo) para orquestación programática — esquema en la skill interna `orchestration-envelope`, protocolo en `docs/workflow/ORCHESTRATION.md`. Estado HALT para hallazgos críticos que paran todo. |
@@ -419,6 +423,32 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — pliegue de revisión del scope-bleed-guardrail (fix 66).**
+  Bump PARCHE para `execute-phase` (2.5.1): se aclaró el paso de retro-
+  relleno de la enmienda en la guardia de descope — una vez que el issue de
+  seguimiento existe y está enlazado, la fila `## Amendments` sustituye
+  explícitamente el marcador `#<n>` por el número real del issue y ese
+  cambio se commitea, de modo que nunca falla la comprobación simétrica de
+  fila sin enlazar de `audit-pr`. Encontrado y corregido durante
+  `review-change` en el PR #88.
+
+- **2026-07-17 — scope-bleed-guardrail (fix 66).** Bump MENOR para
+  `execute-phase` (2.5.0): nueva guardia de descope — antes de crear cualquier
+  issue, se clasifica como trabajo descubierto (se archiva libremente) o
+  descope (solapa un criterio de aceptación/tarea de la SPEC incumplido); un
+  descope PARA antes de crear el issue, exigiendo primero una entrada
+  `## Amendments` fechada y aprobada por el usuario (formato de fila canónico
+  definido una sola vez aquí). Bump MENOR para `audit-pr` (3.3.0): nueva
+  puerta de integridad de alcance (descope) en el contrato de merge-readiness
+  — los issues nacidos desde que la rama divergió que hacen referencia a la
+  unidad deben tener su criterio aún cumplido o una entrada `## Amendments`
+  correspondiente, si no BLOQUEANTE; PRs de feature y de fix por igual. Bump
+  MENOR para `product-audit` (2.1.0): nueva señal de recurrencia de
+  exportación de alcance — ≥ 2 unidades consecutivas exportando alcance es un
+  hallazgo de calidad de planificación enrutado a las reglas de
+  atomicidad/división (#64). El guardarraíl #4 (exposición en el envelope de
+  `workflow-status`) se pospone a #79.
 
 - **2026-07-17 — audit-pr-closure-integrity (fix 78).** Bump MENOR para
   `audit-pr` (3.2.0): nueva puerta de integridad de cierre en el contrato de

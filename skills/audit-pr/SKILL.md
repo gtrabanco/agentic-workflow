@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 3.2.0
+version: 3.3.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -48,6 +48,9 @@ explicit user instruction) plus a fail-closed pre-merge checklist.
 ✓ Closure integrity was evaluated and its result stated explicitly: pass /
   blocker / warning / n-a (fix-governed PRs are always n-a; never skipped
   silently)
+✓ Scope integrity (descope) was evaluated and its result stated explicitly:
+  pass / blocker / n-a (no unit-referencing issues born on the branch → n-a;
+  never skipped silently)
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
@@ -99,7 +102,7 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 |---|---|---|
 | **Acceptance criteria** | Every SPEC acceptance criterion is satisfied, each mapped to concrete evidence (code, test, or doc). | Any criterion unmet, unverifiable, or silently dropped. |
 | **All phases complete** | Feature: every phase in `PLAN.md`/`TASKS.md` is done and logged in `progress.md`. Fix: the SPEC is fully implemented. | Any unchecked task or unimplemented phase without an explicit, tracked deferral. |
-| **Scope integrity** | The PR implements the SPEC and no more; out-of-scope work was split out. | Undocumented scope creep, or in-scope work missing. |
+| **Scope integrity (creep)** | The PR implements the SPEC and no more; out-of-scope work was split out. | Undocumented scope creep, or in-scope work missing. |
 | **Docs updated** | Every "Affected docs" criterion is satisfied; per-phase docs (`progress`/`testing`/`known-issues`/`decisions`) reflect reality; the doc map still resolves. **Never merge with documentation still pending.** | A doc the map or SPEC requires is stale, missing, pending, or contradicts the code. |
 | **Traceability** | `Closes #N` is in the PR body when the work is issue-born (from `plan-feature-from-issue` or `plan-fix`); the roadmap/fix-index entry matches, is **still present** (removed only *after* merge, never before), and carries the linked PR reference (`done · [#<pr>](<pr-url>)`). | Issue-born work without `Closes #N`; a roadmap/index entry out of sync; the entry dropped before merge; or a `done` row without its PR link. |
 | **Tests** | New behavior is covered at the right layer (prefer integration); acceptance criteria map to tests; no regression-risk tests left red. | New behavior untested, or tests assert nothing meaningful. |
@@ -107,6 +110,7 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **Mergeability** | Branch is off the default base, independently mergeable (no conflicts), not stacked on another PR, not draft. | Wrong base, conflicts, stacked dependency, or still draft. |
 | **Review axes clean** | The applicable `review-change` axes are clean **or** every remaining finding is *consciously deferred* to a tracked issue with a trigger. | A `fix-now` finding still open, or a deferral with no issue/trigger behind it. |
 | **Closure integrity** | The governing **feature** SPEC's capability closure was taken and recorded — `design-feature` was actually run, not bypassed. Fix-governed PRs: `n/a` (no closure block by design). | A present `Capability closure` block has a blank row, or a resolved non-`n/a` row with no matching acceptance criterion. |
+| **Scope integrity (descope)** | An issue born during this unit that maps to an unmet SPEC acceptance criterion or phase task has a matching, user-approved, dated `## Amendments` entry — descoped scope was recorded, not silently exported. | An issue born since branch divergence that references this unit maps to an unmet criterion/task with no matching `## Amendments` entry, or an `## Amendments` row that is undated, unapproved, or unlinked to an issue. |
 
 > Run `review-change` for the axis check if it hasn't been run on the final state,
 > or read its latest report. Don't re-litigate findings already classified — verify
@@ -145,6 +149,35 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 > of merge-readiness: this gate still has to pass on its own. The two things this gate
 > most often catches on a `done`-but-unmerged unit are **pending docs** and a
 > **prematurely-removed issue/fix-index entry** — both are blockers.
+
+> **Scope integrity (descope) — fixed output.** A cheap way to look finished is
+> to quietly convert unfinished SPEC scope into a follow-up issue — the unit
+> reads as done, the scope silently moved to the backlog. This gate catches it
+> mechanically, keyed off the same `## Amendments` log `execute-phase`'s
+> descope guard writes to (single source — see that skill's *Descope guard*
+> section):
+> 1. List issues **born since the branch diverged**
+>    (`git log <base>..HEAD --format=%ad --date=short | tail -1` for the
+>    earliest commit date, then `gh issue list --state all --search
+>    "created:>=<date>"`) that **reference this unit** (title/body mentions the
+>    feature/fix slug or issue number).
+> 2. For each such issue, run the per-issue checklist:
+>    - ✓ the SPEC criterion/task it touches is still **met in the PR** — pass,
+>      it's discovered work or already covered, or
+>    - ✓ a matching `## Amendments` entry exists in the governing SPEC
+>      (dated, **user-approved**, and **linked** to this issue's number) — pass,
+>      the descope was properly recorded
+>    - neither holds → **BLOCKER**.
+> 3. Symmetrically, every `## Amendments` row in the governing SPEC must itself
+>    be dated, user-approved, and link a real, existing issue — an `## Amendments`
+>    row missing any of those is also a **BLOCKER** (a hollow amendment is the
+>    same failure as no amendment at all).
+> - **Scope:** any SPEC-governed PR — **feature and fix** alike, both carry
+>   acceptance criteria a lazy run could export. No issues born during the unit,
+>   or none referencing it → the gate **passes** (nothing was exported).
+> - This gate never re-litigates whether the *original* criterion was reasonable
+>   — only whether its descope, if any, was recorded and approved before the
+>   issue was filed.
 
 ## Process
 
@@ -282,6 +315,9 @@ Before merge, a human should still verify:
   · Closure warning (in addition to the verdict above) or a closure blocker →
     /design-feature <slug> — fills the missing closure rows (upsert, destroys
     nothing) before further work on this feature is planned; re-run /audit-pr after
+  · Scope-bleed blocker → record the missing `## Amendments` entry (user-approved,
+    dated, linking the issue) in the governing SPEC, or re-classify the issue as
+    genuinely discovered work via /triage-issue; re-run /audit-pr after
 ```
 
 If MERGE-READY, omit the blocker list and state it plainly: nothing blocks merge.
