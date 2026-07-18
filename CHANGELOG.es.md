@@ -142,6 +142,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.1 | 2026-07-18 | parche | Fix #66: se aclaró el paso de retro-relleno de la enmienda en la guardia de descope — tras crear el issue de seguimiento y enlazarlo en el cuerpo del issue, editar explícitamente la fila `## Amendments` para sustituir el marcador `#<n>` por el número real del issue y commitear ese cambio; una fila que aún lea el marcador literal falla la comprobación simétrica de fila sin enlazar de `audit-pr`. |
 | 2.5.0 | 2026-07-17 | menor | Fix #66: nueva **guardia de descope** en la Política de issues — antes de crear cualquier issue, se clasifica como trabajo descubierto (se archiva libremente) o descope (solapa un criterio de aceptación/tarea de la SPEC no entregado del todo); un descope PARA antes de crear el issue, exigiendo primero una entrada `## Amendments` fechada y aprobada por el usuario (formato de fila canónico definido una sola vez aquí). Nueva entrada en la lista de prohibiciones y casilla del contrato de turno que exige que la guardia se aplicase a cada issue creado en el turno. |
 | 2.4.1 | 2026-07-17 | parche | Fix #81: el guardia de pre-vuelo de lint de fase (añadido en 2.4.0) gana una salvedad explícita para SPECs legacy — un SPEC sin sección `## Phases` omite el guardia por completo (sin lint, sin DETENCIÓN) y cae directamente al flujo legacy de paso único preexistente, restaurando la promesa de retrocompatibilidad de la propia fix #64. |
 | 2.4.0 | 2026-07-17 | menor | Fix #64: nuevo **guardia de pre-vuelo de lint de fase**, ejecutado tras las puertas de dependencias/estado propio y antes de cualquier edición — la fase objetivo debe pasar el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint") o execute-phase se DETIENE con un bloque fijo que nombra las casillas fallidas y recomienda recortar de nuevo vía `/plan-feature`/`/plan-fix`; `--force` omite la DETENCIÓN, nunca la comprobación, registrado en `decisions.md`/`progress.md`. Integrado en el contrato de turno y las reglas duras. |
@@ -422,6 +423,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — pliegue de revisión del scope-bleed-guardrail (fix 66).**
+  Bump PARCHE para `execute-phase` (2.5.1): se aclaró el paso de retro-
+  relleno de la enmienda en la guardia de descope — una vez que el issue de
+  seguimiento existe y está enlazado, la fila `## Amendments` sustituye
+  explícitamente el marcador `#<n>` por el número real del issue y ese
+  cambio se commitea, de modo que nunca falla la comprobación simétrica de
+  fila sin enlazar de `audit-pr`. Encontrado y corregido durante
+  `review-change` en el PR #88.
 
 - **2026-07-17 — scope-bleed-guardrail (fix 66).** Bump MENOR para
   `execute-phase` (2.5.0): nueva guardia de descope — antes de crear cualquier
