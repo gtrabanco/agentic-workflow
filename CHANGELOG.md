@@ -119,6 +119,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.3.0 | 2026-07-18 | minor | REVIEW stage: the L/sensitive-flagged checkpoint cadence now fires on `execute-phase`'s three named triggers (layer boundary / accumulation / sensitivity, cross-referenced from `#77` rather than restated) instead of a fixed "every 2 phases" count, which had re-miscalibrated ~3x after #64's atomicity lint shrank phase size. The `--adversarial 2` hard floor and the non-alignment with `review-change`'s own advisory cadence are unchanged. Fixes #93. |
 | 2.2.1 | 2026-07-13 | patch | Portability gains a provider-concurrency guardrail: cap parallel subagents/headless executors at the provider's documented parallel-request limit per API key (leaving a slot for the conductor), and reduce parallelism on a 429 instead of retrying at full fan-out. Guidance only — no stage or contract change. |
 | 2.2.0 | 2026-07-11 | minor | SELECT gains a new top priority: reads `workflow-status`'s `detail.urgent` (labels-only) first — an open `fix-next` issue jumps to head of queue (no interrupt); an open `urgent` issue runs the canonical pause-vs-finish rubric in `docs/workflow/ORCHESTRATION.md` (referenced, never forked) against the in-flight unit's interruptibility facts, `INTERRUPT_NOW` parking it, `FINISH_FIRST` queuing the fix for next iteration. Priority list renumbered. |
 | 2.1.0 | 2026-07-10 | minor | REVIEW stage: for `L`/sensitive-flagged features, every `review-change` invocation (checkpoint or end review) now runs with `--adversarial 2` — a hard floor, unattended, deliberately **not** aligned with `review-change`'s own interactive advisory checkpoint. XS/S/non-sensitive-M unchanged (single-reviewer). |
@@ -437,6 +438,15 @@ How pinning actually works, verified against the `skills` CLI:
   the adversarial once-per-unit cadence is untouched. Cadence docs parity
   across `SKILLS`/`FEATURE_WORKFLOW`/`PORTABLE_PROMPT`/`MIGRATION`/README
   (EN+ES).
+
+- **2026-07-18 — ship-roadmap cadence triggers (fix 93).** MINOR bump for
+  `ship-roadmap` (2.3.0): the REVIEW stage's L/sensitive-flagged checkpoint
+  cadence now fires on `execute-phase`'s three named triggers (layer
+  boundary / accumulation / sensitivity, cross-referenced from `#77` rather
+  than restated) instead of the stale "every 2 phases" phase count, which
+  had re-miscalibrated ~3x after #64's atomicity lint shrank phase size. The
+  `--adversarial 2` hard floor and the non-alignment with `review-change`'s
+  own advisory cadence stay unchanged.
 
 - **2026-07-18 — adversarial mode weak-fleet usability (fix 76).** MINOR bump
   for `review-change` (2.4.0): the `--adversarial N` mode gains a 4-box
