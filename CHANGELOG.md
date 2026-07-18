@@ -363,6 +363,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `bump-skill` | 2.3.1 | 2026-07-18 | patch | Review-change follow-up on #74/PR #96: fixed the §2b lint's rule count references ("two" → "seven" `CLAUDE.md` authoring invariants, matching the Turn contract's "all 7 authoring rules") and anchored rule 7's discovery-exclusion check to the frontmatter block only (`awk`-extracted region between the first two `---` lines), so it can no longer be satisfied by the rule's own prose mentioning `metadata.internal: true` instead of an actual frontmatter key. |
 | `bump-skill` | 2.3.0 | 2026-07-18 | minor | Fix #74: `bump-skill` itself now carries `metadata.internal: true` — the `skills` CLI's own gate (verified in `dist/cli.mjs` 1.5.16/1.5.19) that keeps `npx skills add . --list` from discovering/offering repo-internal skills, unlike `user-invocable`/`plugin.json` which only govern the post-install menu. §2b lint gains a 7th rule enforcing the same for any future repo-internal skill (conjunction: `user-invocable: false` AND absent from `plugin.json`). |
 | | 2.2.0 | 2026-07-18 | minor | Fix #71/#72/#73: §2b lint gains two machine-surface checks — `plugin.json` parity (every `user-invocable: true` skill has a matching array entry) and machine-surface alphabetical order (`plugin.json` `skills` array + `model-routing.yml` keys) — the exact drift class that let `fold-findings` ship unregistered. |
 | | 2.1.0 | 2026-07-11 | minor | Fix #40: reclassified `user-invocable: false` — the skill is repo-maintenance for `agentic-workflow` itself and its `/bump-skill` menu entry was pure noise for the ~99% of consumers who don't author this pack's `SKILL.md` files. Behavior unchanged; still run via the Skill tool or by following `SKILL.md` directly. Per-skill table moved from "Repo maintenance" (User-facing-adjacent) to this Internal section. |
@@ -440,7 +441,11 @@ How pinning actually works, verified against the `skills` CLI:
   is the CLI's actual discovery-exclusion mechanism, mooting the relocate/hook
   options the issue had left open. MINOR bump for `bump-skill` (2.3.0):
   `metadata.internal: true` added to its own frontmatter, plus a 7th §2b lint
-  rule enforcing the same for any future repo-internal skill.
+  rule enforcing the same for any future repo-internal skill. Same-day
+  `review-change` follow-up: PATCH bump (2.3.1) fixed the rule's stale count
+  reference ("two" → "seven" authoring invariants) and anchored its grep to
+  the frontmatter block only, so the check can no longer be satisfied by the
+  rule's own descriptive prose.
 
 - **2026-07-18 — skill-registration-parity (fix 71+72+73).** Registered
   `fold-findings` in `.claude-plugin/plugin.json` (it was installing under
