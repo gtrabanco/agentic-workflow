@@ -203,6 +203,10 @@ Every axis maps to a skill of the workflow's **own internal review pack**
      then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
+     · adversarial recommendation checklist fired AND this run was
+       single-reviewer? → re-run the fold review as /review-change
+       --adversarial N (N per the ladder above) instead of single-reviewer
+       (yes: <which box fired>; no: omit this line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a
        compounding error; no: omit this line)
@@ -213,6 +217,10 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    ```
    → Next: /audit-pr — merge gate
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
+     · adversarial recommendation checklist fired AND this run was
+       single-reviewer? → re-run as /review-change --adversarial N (N per the
+       ladder above) before /audit-pr (yes: <which box fired>; no: omit this
+       line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a
        compounding error; no: omit this line)
