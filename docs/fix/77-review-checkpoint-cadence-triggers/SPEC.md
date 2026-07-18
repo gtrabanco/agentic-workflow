@@ -224,11 +224,11 @@ Layer: `docs`. Target: `skills/review-change/SKILL.md`. Done-when:
 "Cadence — once per unit" and "Boundary with `#77`" lines (adversarial block
 intact).
 
-- [ ] Restate L55–56 ("recommends a hand-off every 2 phases — an optional
+- [x] Restate L55–56 ("recommends a hand-off every 2 phases — an optional
       checkpoint") to the trigger model (layer boundary / accumulation /
       sensitivity; see `execute-phase`), keeping it optional and skippable. —
       `skills/review-change/SKILL.md` "When to use" bullet.
-- [ ] Restate L500–501 ("recommends it every 2 phases (optional checkpoint)")
+- [x] Restate L500–501 ("recommends it every 2 phases (optional checkpoint)")
       to "recommends it at its trigger-based checkpoints (optional)"; leave the
       "mandatory end review" clause unchanged. — `skills/review-change/SKILL.md`
       "Relationship / Done when" bullet.
