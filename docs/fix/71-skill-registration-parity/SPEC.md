@@ -277,13 +277,15 @@ Layer: `docs`. Done-when: `grep -c 'plugin.json' skills/bump-skill/SKILL.md`
       before this ledger edit and the fix-index flip; re-verified below).
 - [x] Set the fix-index row status to `done` and commit the flip —
       `docs/fix/README.md` row flipped to `done`.
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push` — pushed `fix/71-skill-registration-parity` to origin.
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #71`,
-      `Closes #72`, `Closes #73` (one per line)
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #71` and push
+      `Closes #72`, `Closes #73` (one per line) — PR #95:
+      https://github.com/gtrabanco/agentic-workflow/pull/95
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)` —
+      `docs/fix/README.md` row now `done · [#95](.../pull/95)`.
+- [x] Commit `docs: link PR #71` and push
 
 ## Impact
 
