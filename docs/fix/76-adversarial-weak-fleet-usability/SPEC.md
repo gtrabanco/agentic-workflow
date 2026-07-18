@@ -127,51 +127,51 @@ All eight proposal items from issue #76, single-sourced:
 
 ## Acceptance
 
-- [ ] All eight proposal items implemented in `skills/review-change/SKILL.md`,
+- [x] All eight proposal items implemented in `skills/review-change/SKILL.md`,
       plus the ladder row in `README.md` and `README.es.md` (same change).
-- [ ] The recommendation checklist replaces the L/sensitive-only criterion:
+- [x] The recommendation checklist replaces the L/sensitive-only criterion:
       `grep -n "not the strongest" skills/review-change/SKILL.md` returns the
       model-condition box, and the block states "report line / never
       auto-detection".
-- [ ] The fixed N ladder is present: `N=2` default, `N=3` conditions
+- [x] The fixed N ladder is present: `N=2` default, `N=3` conditions
       (security/auth OR single family), `>3` discouraged with the ≥1-threshold
       rationale — all as checkable statements.
-- [ ] The fixed role set (R1/R2/R3, index-assigned) is present AND the
+- [x] The fixed role set (R1/R2/R3, index-assigned) is present AND the
       role-is-attention-priority-not-exclusive-scope guardrail is stated
       verbatim-equivalent, naming the role-narrowed-reviewer failure mode.
-- [ ] The reviewer contract and the merge contract each exist **once**,
+- [x] The reviewer contract and the merge contract each exist **once**,
       referenced by both the `--merge` mode and the Portability templates
       (single source of truth — the two Portability blocks point at the mode's
       contracts, not a second copy).
-- [ ] `--merge` mode is documented and wired into Process step 1 +
+- [x] `--merge` mode is documented and wired into Process step 1 +
       `argument-hint`; it starts at the fusion step and produces the fixed
       report ending `Decision: PASS | FAIL`.
-- [ ] `--merge` never drops a finding: the forbidden list (no dropping,
+- [x] `--merge` never drops a finding: the forbidden list (no dropping,
       downgrading, reclassifying, re-litigating) is present and the ≥1
       inclusion threshold is restated **inside** the mode.
-- [ ] The cadence anchor is stated (once per unit at the terminal
+- [x] The cadence anchor is stated (once per unit at the terminal
       `review-change`; sensitive-phase early-pass exception) with an explicit
       `#77` boundary note.
-- [ ] The terminal `review-change` `→ Next:` recommendation block gains the
+- [x] The terminal `review-change` `→ Next:` recommendation block gains the
       adversarial recommendation line (fires when the checklist fires);
       `execute-phase`'s mandatory end-of-unit review hand-off mentions when to
       pass `--adversarial N`, and the every-2-phases checkpoint sentence
       (`skills/execute-phase/SKILL.md` L348) is **unchanged**.
-- [ ] `README.md` and `README.es.md` each carry the NaN adversarial ladder row
+- [x] `README.md` and `README.es.md` each carry the NaN adversarial ladder row
       with the Qwen3.6 → Mimo V2.5 + DeepSeek V4 Flash (high) worked example;
       the two are faithful siblings (bilingual-sync rule).
-- [ ] Updated `docs/fix/README.md` fix-index row for this fix.
-- [ ] GOLDEN_FIXTURE smoke: `docs/workflow/GOLDEN_FIXTURE.md` run with the
+- [x] Updated `docs/fix/README.md` fix-index row for this fix.
+- [x] GOLDEN_FIXTURE smoke: `docs/workflow/GOLDEN_FIXTURE.md` run with the
       weakest fleet model against the new `--merge` mode and the reviewer
       template — no misread.
-- [ ] `bump-skill` run: `review-change` `version:` bumped (minor),
+- [x] `bump-skill` run: `review-change` `version:` bumped (minor),
       `execute-phase` bumped (patch); CHANGELOG.md + CHANGELOG.es.md rows;
       README + README.es.md skill/version tables synced.
-- [ ] No envelope/`workflow-status`/npm-schema change (deferred to `#79`);
+- [x] No envelope/`workflow-status`/npm-schema change (deferred to `#79`);
       `git diff --name-only main..HEAD` touches none of
       `skills/orchestration-envelope/`, `skills/workflow-status/`,
       `packages/`.
-- [ ] All committed artifacts in English (SKILL.md/SPEC/commits/PR); README
+- [x] All committed artifacts in English (SKILL.md/SPEC/commits/PR); README
       ES sibling updated.
 
 ## Phases
