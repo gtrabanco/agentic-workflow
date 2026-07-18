@@ -57,7 +57,7 @@ fix-now), un ayudante de diario `log-session`, y un sensor de solo lectura
 
 | Skill | Rol |
 |---|---|
-| `execute-phase` | Ejecuta una fase de feature (por defecto), una feature `XS/S` pequeña en un solo pase, o un fix (`--fix`); **tests primero** en trabajo de dominio/orquestación, nunca confirma en rojo, en P1 confirma los artefactos de planificación por separado; seguridad de rama + disciplina de docs por fase + puerta; **guardia de descope** (todo issue creado se clasifica trabajo-descubierto vs. descope — un descope PARA hasta que exista una entrada `## Amendments` fechada y aprobada por el usuario); **recomienda un checkpoint de `review-change` cada 2 fases (se puede saltar) y entrega el control una vez al final (obligatorio)**; una unidad terminada **siempre abre su PR y pasa a `done`** (construida, no fusionada) |
+| `execute-phase` | Ejecuta una fase de feature (por defecto), una feature `XS/S` pequeña en un solo pase, o un fix (`--fix`); **tests primero** en trabajo de dominio/orquestación, nunca confirma en rojo, en P1 confirma los artefactos de planificación por separado; seguridad de rama + disciplina de docs por fase + puerta; **guardia de descope** (todo issue creado se clasifica trabajo-descubierto vs. descope — un descope PARA hasta que exista una entrada `## Amendments` fechada y aprobada por el usuario); **recomienda un checkpoint de `review-change` según disparadores — límite de capa, acumulación o sensibilidad (se puede saltar) — y entrega el control una vez al final (obligatorio)**; una unidad terminada **siempre abre su PR y pasa a `done`** (construida, no fusionada) |
 
 ## Review & audit — *cambio → PR → producto*
 

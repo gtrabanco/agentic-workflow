@@ -55,7 +55,7 @@ the workflow's own 9-skill internal review pack: `review-code`,
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **descope guard** (any issue created is classified discovered-work vs. descope — a descope STOPs for a user-approved, dated `## Amendments` entry before the issue may exist); **recommends a `review-change` checkpoint every 2 phases (skippable) and hands off once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
+| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; branch safety + per-phase doc discipline + gate; **descope guard** (any issue created is classified discovered-work vs. descope — a descope STOPs for a user-approved, dated `## Amendments` entry before the issue may exist); **recommends a `review-change` checkpoint at trigger-based cadence — layer boundary, accumulation, or sensitivity (skippable) — and hands off once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
 
 ## Review & audit — *change → PR → product*
 
