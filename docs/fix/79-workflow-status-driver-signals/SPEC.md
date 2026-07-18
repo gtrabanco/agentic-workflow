@@ -276,25 +276,35 @@ Layer: `docs`. Done-when:
 Layer: `docs`. Done-when: all four markers present —
 `grep -q 'issues_born' skills/workflow-status/SKILL.md && grep -q '"closure"' skills/workflow-status/SKILL.md && grep -q 'last_checkpoint_sha' skills/workflow-status/SKILL.md && grep -q 'next.suggested' skills/workflow-status/SKILL.md`.
 
-- [ ] Add a Process step computing per-unit `review`
+- [x] Add a Process step computing per-unit `review`
       (`last_checkpoint_sha` from #77's `Last reviewed: <sha>` marker;
       `unreviewed_diff` from `git diff --stat <sha>..HEAD`; `terminal_done` +
       `adversarial` from #76's terminal-review evidence), cross-referencing the
-      owning skills.
-- [ ] Add a Process step computing per-unit `closure.state` via the #78
+      owning skills. (Step 10. `terminal_done` is reused from step 8's existing
+      `review_pending`, never recomputed. `adversarial.ran`/`n` are
+      **honestly `null`** unless real evidence exists — no skill persists an
+      adversarial-mode marker anywhere queryable today; this is documented
+      inline, not silently guessed.)
+- [x] Add a Process step computing per-unit `closure.state` via the #78
       capability-closure grep, cross-referencing `audit-pr`'s closure gate.
-- [ ] Add a Process step computing per-unit
+      (Step 11.)
+- [x] Add a Process step computing per-unit
       `issues_born:{n,with_descope_amendment}` from the `## Amendments`-log
       provenance (single-source #66/`execute-phase`), labels/markers only.
-- [ ] Add a Process step building `next.suggested[]`
+      (Step 12, reusing `audit-pr`'s scope-bleed detection widened by P5.)
+- [x] Add a Process step building `next.suggested[]`
       (`{command,trigger,source_skill}`), each trigger quoting the owning skill's
-      condition (#77/#76/#78/#65) — single-source, not a second copy.
-- [ ] Update `## Machine envelope`: document the four fields and update the
+      condition (#77/#76/#78/#65) — single-source, not a second copy. (Step 13.)
+- [x] Update `## Machine envelope`: document the four fields and update the
       example envelope (`review`/`closure`/`issues_born` on a `detail.features[]`
-      entry; a populated `next.suggested`).
-- [ ] Update the Turn contract and Done-when to require the new fields; state the
+      entry; a populated `next.suggested`). Verified: the example envelope
+      parses as valid JSON and passes `validateEnvelope()` from the rebuilt
+      `dist/` (P1's schema mirror).
+- [x] Update the Turn contract and Done-when to require the new fields; state the
       `detail`-placement rationale (schema-opaque, no package change) referencing
-      `envelope.schema.json`.
+      `envelope.schema.json`. Renumbered steps 10→18 (was 10→14) and fixed every
+      stale cross-reference (`step 6/7/8/2` unchanged; `10`→new content, old
+      `10-14`→now `14-18`).
 
 ### P4 — orchestration-envelope contract snippet
 

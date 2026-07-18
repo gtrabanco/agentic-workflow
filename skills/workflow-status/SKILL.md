@@ -41,10 +41,15 @@ and what the recommended next command is.** Built for external orchestrators
   checklist) — a hint that recommended `/plan-feature`/`/design-feature` for a
   unit still at its pre-advance status produces a `workflow_observations` note,
   never a silently repeated bland recommendation
-✓ `recommendations.product_audit` was computed by the step-11 mechanical
+✓ `recommendations.product_audit` was computed by the step-16 mechanical
   two-condition check (never guessed), and `next.tier` was derived from the
   resolved `next.recommended` command via the command→tier map in
   `## Machine envelope` (never guessed)
+✓ Per-unit `review`/`closure`/`issues_born` (steps 10–12) were computed per
+  their fixed rules — `adversarial.ran`/`n` stayed `null` unless real
+  evidence exists, never guessed — and any fired `next.suggested[]` entries
+  (step 13) quote their owning skill's condition verbatim, never a second
+  copy of the trigger logic
 ✓ The envelope is emitted on **every** invocation of this skill, including a
   same-session natural-language follow-up about state — never replaced by prose
 ✓ The emitted envelope was checked against the shape reminders in
@@ -155,11 +160,86 @@ ship-roadmap run exists.
    error); no unit in the run has one → `findings.fix_now: []`, same as
    today. **Read-only**: this step only projects the ledger's current
    unfolded rows — never writes, ticks `folded`, or judges.
-10. **Findings awaiting a destination.** Scan the in-flight folders'
+10. **Per-unit review signals (`detail.*.review`).** For each in-flight
+    feature/fix, compute:
+    - `last_checkpoint_sha` — feature-mode units only: read `progress.md`'s
+      `Last reviewed: <sha>` header line (`execute-phase`'s per-phase
+      checkpoint cadence, `#77`, "Last-reviewed marker"). Fix/single-pass
+      units have no phase checkpoints — the cadence section is scoped
+      "(feature mode)" only — so this is always `null` for them, not an
+      error.
+    - `unreviewed_diff: {lines, files}` — `git diff --stat <baseline>..HEAD`
+      where `<baseline>` is `last_checkpoint_sha` if present, else
+      `git merge-base <default-branch> HEAD` — the identical fallback
+      `execute-phase`'s cadence triggers define (`#77`); never a new rule.
+    - `terminal_done` — **reused, not recomputed**: `= !review_pending` (step
+      8's existing computation) for any unit at or past `done`/PR-open status. Before that,
+      `false` by contract — `execute-phase` always opens the PR **before**
+      the mandatory review hand-off (see its *Workflows* close-out order), so
+      a `done` status alone never implies the terminal review already ran.
+    - `adversarial: {ran, n}` — **best-effort, evidence-gated; never
+      guessed.** No skill persists an adversarial-mode marker anywhere this
+      sensor can read: `review-change`'s report (including its `Reviewers
+      n/N` column, `skills/review-change/SKILL.md`) prints to chat only, and
+      the fold ledger's fixed schema
+      (`| id | file:line | axis | severity | class | route | folded |`)
+      carries no reviewer-count field. Emit `{ran: null, n: null}` with a
+      `workflow_observations` note ("adversarial mode unverifiable — no
+      persisted marker, see `#76`") — never infer `true`/`false` from
+      absence of evidence.
+11. **Per-unit closure state (`detail.*.closure`).** `{state}` ∈
+    `present | absent-legacy | blocked` — reuse `audit-pr`'s own mechanical
+    check verbatim (`skills/audit-pr/SKILL.md` "Closure integrity — fixed
+    output"): grep the governing SPEC for a `Capability closure` heading.
+    Fix-governed unit → `n/a` (fix SPECs carry no closure block by design,
+    same carve-out `audit-pr` applies). Feature SPEC, block absent →
+    `absent-legacy`. Feature SPEC, block present with any blank row or a
+    resolved non-`n/a` row unmapped to an acceptance criterion → `blocked`.
+    Feature SPEC, block present and every row filled or `n/a`-justified and
+    mapped → `present`. Single-sourced: never re-derive the three-box logic
+    here, just re-run `audit-pr`'s own grep.
+12. **Per-unit descope provenance (`detail.*.issues_born`).**
+    `{n, with_descope_amendment}` — reuse `audit-pr`'s scope-bleed gate
+    detection verbatim (`skills/audit-pr/SKILL.md` "Scope integrity
+    (descope) — fixed output" step 1, widened by `#79`/`#89` to also match
+    an issue **linked from** an `## Amendments` row, not only a slug/number
+    text match): enumerate issues born since branch divergence that
+    reference this unit. `n` = that count; `with_descope_amendment` = the
+    subset carrying a matching, dated, user-approved `## Amendments` row.
+    Evidence is labels, the `## Amendments` log, and the mechanical
+    slug/number text match `audit-pr` itself defines — **never** an issue's
+    free-text body beyond that defined match (injection-safety, mirrors
+    `detail.urgent`'s labels-only discipline).
+13. **`next.suggested[]` — single-sourced trigger surface.** One entry per
+    **fired** trigger the driver can act on now, `{command, trigger,
+    source_skill}` — the `trigger` string **quotes**, never paraphrases, the
+    owning skill's own condition:
+    - a review checkpoint trigger fired (layer boundary / accumulation /
+      sensitivity — step 10's `unreviewed_diff` plus the unit's declared
+      phase layers) → `{command: "/review-change", trigger: "<the fired
+      trigger's name and evidence, quoting execute-phase's own wording>",
+      source_skill: "execute-phase"}` (`#77`).
+    - `review.terminal_done: false` on a unit at/past `done` AND
+      `review-change`'s own adversarial recommendation checklist fires
+      (reuse that checklist verbatim, never re-derive it) →
+      `{command: "/review-change --adversarial 2", trigger: "<which
+      checklist box fired>", source_skill: "review-change"}` (`#76`).
+    - `closure.state: "absent-legacy"` on a unit about to receive new
+      planned work → `{command: "/design-feature <slug>", trigger: "closure
+      absent, SPEC predates the rule — retrofit trigger", source_skill:
+      "audit-pr"}` (`#78`).
+    - a unit's `review-findings.md` ledger carries any `folded: no` row →
+      `{command: "/fold-findings", trigger: "unfolded fix-now finding(s) on
+      the ledger", source_skill: "fold-findings"}` (`#65`).
+    No trigger fired for a unit → it contributes nothing (not an error, same
+    convention as `findings.fix_now`). **Additive advisory only**:
+    `next.recommended`/`next.tier` (step 6/turn contract) are computed
+    exactly as before — `next.suggested` never replaces or reorders them.
+14. **Findings awaiting a destination.** Scan the in-flight folders'
     `known-issues.md` for entries with no linked issue, and open issues labeled
     or titled as postponed findings. Count + list them.
-11. **Untriaged open-issue backlog (`detail.untriaged_issues`) — distinct from
-    step 10's `pending_triage`.** Cross-reference the open-issue list already
+15. **Untriaged open-issue backlog (`detail.untriaged_issues`) — distinct from
+    step 14's `pending_triage`.** Cross-reference the open-issue list already
     fetched in step 2 (`gh issue list --state open`) against triage
     disposition. The **authoritative** triaged signal is a `wontfix` /
     `postponed` / `promoted` disposition label — `triage-issue` is the sole
@@ -179,13 +259,13 @@ ship-roadmap run exists.
     untriaged subset and list its oldest entries (cap: 5) by issue number.
     Emit the result as
     `detail.untriaged_issues: {count, oldest_open: [numbers]}` — kept
-    separate from `pending_triage` (findings-derived, step 10) and
+    separate from `pending_triage` (findings-derived, step 14) and
     `findings.untriaged` (review-finding routing); never merge the three. A
     non-zero `count` may surface a concrete, non-bare `/triage-issue
     <numbers>` in `next.recommended`/`alternatives` (ties the backlog into the
     routing decision from step 6/the turn contract) — it never silently
     replaces the resolved recommendation.
-12. **Product-audit recommendation — a mechanical two-condition checklist, no
+16. **Product-audit recommendation — a mechanical two-condition checklist, no
     exception clause.** Set `recommendations.product_audit: true` with a stated
     `reason` when **either** condition holds — this is a count, not a judgment
     call. **No exception clause exists**: a "wait for a natural pause" or
@@ -199,10 +279,10 @@ ship-roadmap run exists.
     trigger may additionally surface `/product-audit` as `next.recommended` or
     an `alternatives` entry (backlog/audit over net-new feature work) — never
     run it.
-13. **Crash recovery (run every invocation — cheap, see the section below).**
+17. **Crash recovery (run every invocation — cheap, see the section below).**
     Classify whether an interrupted turn is in evidence and append the fixed
     `CRASH RECOVERY` sub-block to the report.
-14. **Report.** Print a short human summary (table: unit | status | deps unmet |
+18. **Report.** Print a short human summary (table: unit | status | deps unmet |
     PR | next gate) plus a **design candidates** line (`idea` units and their
     `/design-feature` next command) plus the `CRASH RECOVERY` sub-block, then
     the envelope. With `--json-only`, envelope only.
@@ -316,14 +396,38 @@ influenced by a non-empty one (e.g. surfaced as an `alternatives` entry), but
 is never silently replaced by it.
 
 **`detail.untriaged_issues`** — the plain open-issue backlog surfaced by
-step 11: `{count, oldest_open: [numbers]}` (oldest-first, capped at 5 numbers).
+step 15: `{count, oldest_open: [numbers]}` (oldest-first, capped at 5 numbers).
 `detail` is schema-unconstrained (`envelope.schema.json:154`), so this field
 needs **no package change**. Kept strictly distinct from `detail.pending_triage`
-(findings pulled from `known-issues.md`/postponed-labeled issues, step 10) and
+(findings pulled from `known-issues.md`/postponed-labeled issues, step 14) and
 `findings.untriaged` (review-finding routing) — none of the three subsumes
 another. `count: 0` means every open issue has a triage disposition; a
 non-zero `count` may drive `next.recommended`/`alternatives` toward a
 concrete `/triage-issue <numbers>` citing the listed issues.
+
+**Per-unit `review`/`closure`/`issues_born` (step 10–12) — carried on each
+`detail.features[]`/`detail.fixes[]` entry, not as new top-level keys.**
+`detail` is schema-unconstrained (`envelope.schema.json:158`, `"detail": {}`)
+— same precedent as `detail.urgent`/`detail.untriaged_issues` (fix `#52`), so
+these need **no package change**:
+- `review: {last_checkpoint_sha, unreviewed_diff: {lines, files},
+  terminal_done, adversarial: {ran, n}}` — step 10. `adversarial.ran`/`n` are
+  `null` unless real evidence exists (no skill persists that marker today —
+  never guessed).
+- `closure: {state}` ∈ `present | absent-legacy | blocked` (feature units)
+  or `n/a` (fix units) — step 11, reusing `audit-pr`'s own grep verbatim.
+- `issues_born: {n, with_descope_amendment}` — step 12, reusing `audit-pr`'s
+  scope-bleed detection (widened by `#79`/`#89` to also match an issue
+  linked from an `## Amendments` row).
+
+**`next.suggested[]`** — step 13's trigger-attributed suggestion surface,
+`{command, trigger, source_skill}[]`, **optional** (mirrors
+`packages/agentic-workflow-schema` 2.1.0's optional `EnvelopeSuggestion[]`).
+Each `trigger` string quotes the owning skill's own condition — never a
+second, drifting copy of that skill's logic. Advisory only: it rides beside
+`next.recommended`/`next.tier`, never replaces them. No unit has a fired
+trigger this run → `next.suggested` is omitted entirely (an empty/absent
+field, not an error).
 
 **Envelope shape reminders (self-check before printing — mirrors
 `packages/agentic-workflow-schema/envelope.schema.json`):**
@@ -376,15 +480,22 @@ side). The recommendation itself is unaffected — this only adds visibility.
   "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/design-feature 08-billing-webhooks"}],
   "recommendations": {"product_audit": false, "reason": null},
   "needs_input": null,
-  "next": {"recommended": "/review-change", "alternatives": ["/plan-feature 05"], "tier": "strong"},
+  "next": {"recommended": "/review-change", "alternatives": ["/plan-feature 05"], "tier": "strong",
+           "suggested": [{"command": "/review-change", "trigger": "accumulation: 420 changed lines since last-reviewed sha", "source_skill": "execute-phase"}]},
   "detail": {
     "features": [
       {"id": "07-csv-export", "status": "in-progress", "deps": ["01"], "deps_unmet": [],
        "phase": {"current": "P2", "total": 4}, "pr": null,
-       "review_pending": true, "audit_pending": null, "merge_ready": null},
+       "review_pending": true, "audit_pending": null, "merge_ready": null,
+       "review": {"last_checkpoint_sha": "a1b2c3d", "unreviewed_diff": {"lines": 420, "files": 9},
+                   "terminal_done": false, "adversarial": {"ran": null, "n": null}},
+       "closure": {"state": "present"}, "issues_born": {"n": 0, "with_descope_amendment": 0}},
       {"id": "05-auth", "status": "defined", "deps": [], "deps_unmet": [],
        "phase": {"current": null, "total": null}, "pr": null,
-       "review_pending": null, "audit_pending": null, "merge_ready": null}
+       "review_pending": null, "audit_pending": null, "merge_ready": null,
+       "review": {"last_checkpoint_sha": null, "unreviewed_diff": {"lines": null, "files": null},
+                   "terminal_done": false, "adversarial": {"ran": null, "n": null}},
+       "closure": {"state": "absent-legacy"}, "issues_born": {"n": 0, "with_descope_amendment": 0}}
     ],
     "fixes": [
       {"id": "43-null-crash", "issue": 43, "status": "planned", "deps_unmet": [], "pr": null}
@@ -478,6 +589,11 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
   startable_now, blocked_units, open_prs, pending_triage, `untriaged_issues`
   (count + oldest_open) and `urgent` (labels-only issue list +
   interruptibility facts) — are printed, envelope last.
+- Each `detail.features[]`/`detail.fixes[]` entry additionally carries
+  `review`, `closure`, and `issues_born` (steps 10–12) — `detail`-scoped, no
+  schema change — and any fired triggers appear in a top-level
+  `next.suggested[]` (step 13), single-sourced from the owning skill's own
+  condition text.
 - Nothing was modified anywhere.
 
 → Next: the envelope's `next.recommended` command — it is computed from the
