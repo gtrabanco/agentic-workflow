@@ -313,14 +313,16 @@ Layer: `docs`. Done-when:
 
 ### P3 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted):
+- [x] Re-run the project's full verification gate (commands + exit codes pasted):
       `npx skills add . --list` discovers every shipped skill and NOT
       `bump-skill`; markdown/cross-references resolve; no stack/real-project
-      references leaked.
-- [ ] Run `bump-skill` on `skills/bump-skill/SKILL.md` (version + both
+      references leaked. Evidence: `Found 28 skills`, `bump-skill` absent.
+- [x] Run `bump-skill` on `skills/bump-skill/SKILL.md` (version + both
       CHANGELOGs + both README tables), since this unit edits it.
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+      Evidence: `version: 2.3.0`; CHANGELOG.md/.es.md rows + release-log
+      entries; README.md/.es.md skill-table cell updated. Commit `d39825d`.
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
@@ -346,4 +348,4 @@ presence or absence.
 
 ## Status
 
-`pending`
+`done`
