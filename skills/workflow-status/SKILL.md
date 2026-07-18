@@ -499,7 +499,10 @@ side). The recommendation itself is unaffected — this only adds visibility.
        "closure": {"state": "absent-legacy"}, "issues_born": {"n": 0, "with_descope_amendment": 0}}
     ],
     "fixes": [
-      {"id": "43-null-crash", "issue": 43, "status": "planned", "deps_unmet": [], "pr": null}
+      {"id": "43-null-crash", "issue": 43, "status": "planned", "deps_unmet": [], "pr": null,
+       "review": {"last_checkpoint_sha": null, "unreviewed_diff": {"lines": null, "files": null},
+                   "terminal_done": false, "adversarial": {"ran": null, "n": null}},
+       "closure": {"state": "n/a"}, "issues_born": {"n": 0, "with_descope_amendment": 0}}
     ],
     "startable_now": ["05-auth", "fix-43"],
     "blocked_units": {"09-billing": {"unmet": ["05-auth"], "build_order": ["05-auth", "09-billing"]}},
