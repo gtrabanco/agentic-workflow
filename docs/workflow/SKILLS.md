@@ -76,7 +76,7 @@ the workflow's own 9-skill internal review pack: `review-code`,
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `triage-issue` | Classify fix-now / promote / postpone / wontfix; verify triggers vs. real code; accepts several issues in one batch | `plan-fix`, `plan-feature`, or a dated comment |
+| `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, or a dated comment |
 
 ## Document
 
@@ -125,7 +125,7 @@ with no arguments uses the default stated here.
 | `product-audit` | `/product-audit [path-or-area]` | Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
 | `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Default: opens PRs, the human merges. `--fullauto` → merges MERGE-READY PRs under the non-negotiable safety floors. `--continue` → resume an existing run by one stage (the external-driver loop re-invokes this). |
-| `triage-issue` | `/triage-issue <n> [n…]` | One or many issue numbers — batch runs produce independent verdicts plus one summary table. |
+| `triage-issue` | `/triage-issue <n> [n…]` | One or many issue numbers — batch runs produce independent verdicts plus one summary table, grouped by home unit for any `fix-in-unit` verdicts. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Default: human summary + the machine envelope. `--json-only` → envelope only (driver mode). `--last-envelope` → the driver's persisted envelope as a crash-recovery **hint** (diffed against recomputed state; never authoritative). No argument passing on your agent? Paste the JSON in the message — the last fenced json block of the *request* is read as the hint. |
 
 ## Built-in companions (Claude Code)
@@ -153,6 +153,7 @@ ROADMAP --next ────┘  registers the roadmap entry, prints the next ste
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
 ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+                            ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
