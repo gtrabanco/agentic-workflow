@@ -159,6 +159,23 @@ gh issue view <N> --json number,title,body,labels,state,comments
      issue's ask overlaps a SPEC **acceptance criterion** or a **phase task**
      — quote **both** sides (the issue's own line and the matching SPEC/phase
      line) before calling it a match; no quote pair means not a member.
+   - **Member of an open unit → verdict `fix-in-unit <unit>`.** Resolve the
+     issue on that unit's own branch, never as a new standalone unit. Pick
+     exactly one of these sub-routes:
+     - *repairable as-is* → **fold into the unit's** current/next phase, or
+       append a provenance-marked row to the unit's `review-findings.md` (see
+       *Ledger-append mechanism* below).
+     - *changes the unit's shape* → **incremental replan** on the same unit:
+       name the exact command — `design-feature <slug> "<instruction>"`
+       (product half, upsert) for a product-shape change, `plan-feature
+       <slug>` (re-run, engineering half) for an engineering-shape change, or
+       a user-approved, dated `## Amendments` entry per #66's mechanism (fix
+       units). Never write "replan if needed" — always name which of the
+       three applies and why.
+     - *born as an un-amended descope of an unmerged unit* →
+       **scope-bleed restore**: the route is restore-the-criterion-in-the-unit
+       (no matching `## Amendments` entry); the issue closes as
+       scope-returned, not as new work.
    - No candidate matched → fall through to today's four-verdict
      classification below, unchanged.
 4. **Classify** into one of:
