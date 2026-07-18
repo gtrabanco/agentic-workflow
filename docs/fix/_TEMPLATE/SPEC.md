@@ -58,8 +58,7 @@ and ticks tasks here. **Always ≥ 2 phases**: `P1..Pn` implement the fix
 always `Hardening & PR` — keep its pre-written tasks **literally**, never
 paraphrase or merge them into an implementation phase.
 
-### Phase-lint (authoritative copy — keep in sync with
-`docs/features/_TEMPLATE/SPEC.md` `### Phases`)
+### Phase-lint (authoritative copy — keep in sync with `docs/features/_TEMPLATE/SPEC.md` `### Phases`)
 
 Every implementation phase below must pass all 8 boxes before it is emitted
 (planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
