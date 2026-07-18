@@ -350,6 +350,7 @@ plan de €200 simplemente corre GLM-5.2 en todas partes):
 | **Ejecución / mecánico** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** solo tras pasar el smoke test de tool calling | Mimo V2.5 (el reasoning no se puede apagar — quema su cuota limitada) |
 | **Barato** | `log-session`, recolección de evidencia | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (solo pasos no agénticos, o tras el smoke test de tools) | Mimo V2.5 |
 | **Incorporar hallazgos de `review-change`/`audit-pr`** | ciclo de incorporación de `execute-phase` | según el hallazgo (ver abajo) | hallazgo **rutinario/mecánico** (estilo, stub de test faltante, doc obsoleto) → igual que Ejecución/mecánico; hallazgo **sutil** (lógica, seguridad, arquitectura) → sube al tier que lo encontró (escalera de Puertas de merge o de Planificación/enrutamiento, la que haya corrido la revisión) | — |
+| **Revisión adversarial (`review-change --adversarial N` / `--merge`)** | `review-change` | GLM-5.2 × N, Thinking on, High | los revisores nunca son más débiles que el modelo que escribió el diff; ejemplo trabajado: cambio escrito por Qwen3.6 → `--adversarial 2` con **Mimo V2.5** + **DeepSeek V4 Flash** (`reasoning_effort: high`) — dos familias distintas del ejecutor Qwen, descorrelación gratis que esta flota ya tiene; la conversación que orquesta/fusiona corre según la escalera de Planificación/enrutamiento (Qwen3.6 con thinking ON es válido ahí) | un revisor más débil que el modelo que escribió el código |
 
 La fila del ciclo de incorporación reemplaza a la antigua línea de
 "Alternativas" de un solo modelo (que solo nombraba a GLM-5.2 para subidas
@@ -357,6 +358,15 @@ de lógica sutil). Regla general: el modelo que arregla nunca es más débil
 que el que escribió el código original, ni más débil de lo que exige la
 sutileza del hallazgo — de lo contrario el propio arreglo necesita
 volver a atraparse en la re-revisión, desperdiciando un ciclo.
+
+**Por qué la fila adversarial se paga sola precisamente en esta flota:** la
+checklist de recomendación del modo se dispara cada vez que el modelo
+revisor no es el más fuerte de la flota o es más débil que el autor — en la
+escalera del plan básico ese es el caso común (Qwen3.6 ejecuta la mayoría de
+las unidades). Como la flota ya tiene cuatro familias de modelo distintas,
+lanzar `N=2` revisores de familias distintas a la del autor es
+descorrelación casi gratis, no una compra extra — la cuota ya estaba
+reservada para trabajo de la clase Puertas de merge.
 
 **Por qué `design-feature` está en la clase de puertas de merge, no en el
 tier barato:** su salida — la mitad de producto del SPEC más el cierre de
