@@ -196,26 +196,41 @@ diff (alphabetical).
       `generate-docs` under `Agentic Workflow`; `General` now lists only
       `bump-skill` (tracked separately as #74).
 
-### P2 — Equivalence-ladder tables
+### P2 — Equivalence-ladder tables ✓ done
 
 Layer: `docs`. Done-when:
 `grep -c 'fold-findings' README.md README.es.md` → ≥ 1 in each **and**
 `grep -n 'GLM-5.2 everywhere' README.md README.es.md` → no match in the
 ladder-table caption of either file.
+**Verified:** `grep -c` → `README.md:5`, `README.es.md:5`; `grep -n 'GLM-5.2
+everywhere'` → no match (exit 1) in either file.
 
-- [ ] Rewrite the fold row of `README.md`'s *Preference ladders per task*
+- [x] Rewrite the fold row of `README.md`'s *Preference ladders per task*
       table so its `Skills` column names `fold-findings` (primary) with
       `execute-phase`'s fold cycle as the fallback; keep the
-      routine-vs-subtle tier advice unchanged.
-- [ ] Reconcile the prose beneath `README.md`'s ladder table (the
-      "fold-cycle row supersedes…" paragraph) with the skill split.
-- [ ] Reconcile the GLM-5.2 "€200 plan" availability framing in `README.md`'s
-      ladder table + caption with the two-profile section (available set or
-      historical annotation).
-- [ ] Apply the faithful ES counterpart of all three edits above to
-      `README.es.md` in this same phase (bilingual sync).
-- [ ] Record the spot-check: read every ladder row and confirm none omits a
-      user-facing skill shipped after the section was written.
+      routine-vs-subtle tier advice unchanged — `README.md` fold row.
+- [x] Reconcile the prose beneath `README.md`'s ladder table (the
+      "fold-cycle row supersedes…" paragraph) with the skill split —
+      rewritten to route through `fold-findings` with `execute-phase`'s
+      embedded cycle as fallback.
+- [x] Reconcile the GLM-5.2 "€200 plan" availability framing in `README.md`'s
+      ladder table + caption with the two-profile section — the column
+      header and caption now condition the €200-plan column on the reader's
+      own `GET /v1/models` catalog check (per the existing caveat blockquote
+      and the per-model table's "not in the public API catalog" note),
+      instead of presenting GLM-5.2 as a certain tier.
+- [x] Apply the faithful ES counterpart of all three edits above to
+      `README.es.md` in this same phase (bilingual sync) — done.
+- [x] Record the spot-check: read every ladder row and confirm none omits a
+      user-facing skill shipped after the section was written. **Result:**
+      cross-referenced the 28-entry `plugin.json` skills array against every
+      ladder row; the only skill shipped since this section was last touched
+      is `fold-findings` (#65/PR #70), now covered. Pre-existing omissions
+      (`review-a11y`/`review-code`/etc. sub-checks composed under
+      `review-change`; `generate-docs`, `orchestration-envelope`; the two
+      `plan-feature-*` helpers explicitly hidden from the menu) predate this
+      section and are a deliberate grouping choice, not a fresh gap — out of
+      this fix's scope.
 
 ### P3 — Ordering convention in CLAUDE.md
 

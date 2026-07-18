@@ -339,22 +339,27 @@ Qwen3.6 por defecto; ejecuta el smoke test de tool calling de
 [`docs/workflow/GOLDEN_FIXTURE.es.md`](docs/workflow/GOLDEN_FIXTURE.es.md)
 antes de promover cualquier otro modelo de NaN a ese camino.
 
-**Escaleras de preferencia por tarea** (2–3 niveles en el plan básico; el
-plan de €200 simplemente corre GLM-5.2 en todas partes):
+**Escaleras de preferencia por tarea** (2–3 niveles en el plan básico; la
+columna del plan de €200 asume que GLM-5.2 está confirmado en tu propio
+catálogo vía `GET /v1/models` según la advertencia de arriba — si no está
+confirmado, trata esa columna como histórica y usa la escalera del plan
+básico):
 
-| Tarea | Skills | Plan de €200 | Escalera del plan básico | Nunca aquí |
+| Tarea | Skills | Plan de €200 (si GLM-5.2 está confirmado) | Escalera del plan básico | Nunca aquí |
 |---|---|---|---|---|
 | **Puertas de merge** | `audit-pr`, `product-audit` | GLM-5.2, Thinking on, High (Max para `product-audit`) | 1. **Mimo V2.5** (reasoning siempre activo) → 2. **DeepSeek V4 Flash** (`reasoning_effort: high`, suelo) → si no, **pospón al humano** | Qwen3.6, Gemma4 |
 | **Definición de producto** | `design-feature` | GLM-5.2, Thinking on, High | 1. **Mimo V2.5** (reasoning siempre activo; una familia distinta del ejecutor Qwen añade independencia) → 2. **Qwen3.6** (thinking ON — solo para features XS/S o derivadas, ahorra cuota) → 3. **DeepSeek V4 Flash** (`reasoning_effort: high`) | Gemma4; Qwen3.6 thinking OFF |
 | **Planificación / enrutamiento / triage** | `plan-feature`, `plan-fix`, `init-workspace`, `triage-issue`, `review-change`, conductor de `ship-roadmap` | GLM-5.2, Thinking on, High | 1. **Qwen3.6** (ahorra cuota) → 2. **Mimo V2.5** → 3. **DeepSeek V4 Flash** | — |
 | **Ejecución / mecánico** | `execute-phase`, `audit-docs`, `bump-skill`, `workflow-status` | Qwen3.6, Thinking off, Medium | 1. **Qwen3.6** → 2. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 3. **Gemma4** solo tras pasar el smoke test de tool calling | Mimo V2.5 (el reasoning no se puede apagar — quema su cuota limitada) |
 | **Barato** | `log-session`, recolección de evidencia | DeepSeek V4 Flash, `reasoning_effort: low` | 1. **DeepSeek V4 Flash** (`reasoning_effort: low`) → 2. **Qwen3.6** (thinking off) → 3. **Gemma4** (solo pasos no agénticos, o tras el smoke test de tools) | Mimo V2.5 |
-| **Incorporar hallazgos de `review-change`/`audit-pr`** | ciclo de incorporación de `execute-phase` | según el hallazgo (ver abajo) | hallazgo **rutinario/mecánico** (estilo, stub de test faltante, doc obsoleto) → igual que Ejecución/mecánico; hallazgo **sutil** (lógica, seguridad, arquitectura) → sube al tier que lo encontró (escalera de Puertas de merge o de Planificación/enrutamiento, la que haya corrido la revisión) | — |
+| **Incorporar hallazgos de `review-change`/`audit-pr`** | `fold-findings` (principal); ciclo de incorporación embebido en `execute-phase` (fallback en contexto/portabilidad) | según el hallazgo (ver abajo) | hallazgo **rutinario/mecánico** (estilo, stub de test faltante, doc obsoleto) → igual que Ejecución/mecánico; hallazgo **sutil** (lógica, seguridad, arquitectura) → sube al tier que lo encontró (escalera de Puertas de merge o de Planificación/enrutamiento, la que haya corrido la revisión) | — |
 | **Revisión adversarial (`review-change --adversarial N` / `--merge`)** | `review-change` | GLM-5.2 × N, Thinking on, High | los revisores nunca son más débiles que el modelo que escribió el diff; ejemplo trabajado: cambio escrito por Qwen3.6 → `--adversarial 2` con **Mimo V2.5** + **DeepSeek V4 Flash** (`reasoning_effort: high`) — dos familias distintas del ejecutor Qwen, descorrelación gratis que esta flota ya tiene; la conversación que orquesta/fusiona corre según la escalera de Planificación/enrutamiento (Qwen3.6 con thinking ON es válido ahí) | un revisor más débil que el modelo que escribió el código |
 
-La fila del ciclo de incorporación reemplaza a la antigua línea de
-"Alternativas" de un solo modelo (que solo nombraba a GLM-5.2 para subidas
-de lógica sutil). Regla general: el modelo que arregla nunca es más débil
+La fila de incorporación enruta a través de la skill independiente
+`fold-findings`, cayendo al ciclo de incorporación embebido en
+`execute-phase` solo cuando no hay una invocación separada disponible;
+reemplaza a la antigua línea de "Alternativas" de un solo modelo (que solo
+nombraba a GLM-5.2 para subidas de lógica sutil). Regla general: el modelo que arregla nunca es más débil
 que el que escribió el código original, ni más débil de lo que exige la
 sutileza del hallazgo — de lo contrario el propio arreglo necesita
 volver a atraparse en la re-revisión, desperdiciando un ciclo.
