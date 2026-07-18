@@ -514,7 +514,7 @@ fleet's strongest or weaker than the author, or a single model family on a
 `≥M` change) and — only when a box fires — recommends `--adversarial N`
 (N=2 default, N=3 on a security/auth surface or a single-family fleet) instead
 of its default single-reviewer pass. This is evaluated once, at that mandatory
-end review; it does not change the every-2-phases checkpoint cadence above.
+end review; it does not change the trigger-based checkpoint cadence above.
 
 Checkpoint hand-off (print it — every invocation ends by suggesting the next
 step; when a trigger fires, the review is the recommendation, continuing is a
@@ -626,8 +626,8 @@ not optional:** at the end, **mark done + open the PR**, then run `/review-chang
 once (the mandatory final review) → `audit-pr`.
 
 Use this when the SPEC is solid and you want to review the whole branch at once
-rather than after every two phases. For incremental, phase-by-phase review,
-stick to the default (manual re-invocation + checkpoint hand-offs).
+rather than at each intermediate checkpoint. For incremental, phase-by-phase
+review, stick to the default (manual re-invocation + checkpoint hand-offs).
 
 **No `/loop` on your agent?** Two vendor-neutral equivalents: (a) an
 **external orchestrator** loops this skill headless, injecting the
