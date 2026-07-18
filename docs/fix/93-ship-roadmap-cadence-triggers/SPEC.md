@@ -27,12 +27,14 @@ body.
 ## Depends on
 
 `#77` (`fix/77-review-checkpoint-cadence-triggers`, PR
-[#92](https://github.com/gtrabanco/agentic-workflow/pull/92), open, not yet
-merged) — provides the three named trigger definitions
+[#92](https://github.com/gtrabanco/agentic-workflow/pull/92), **merged into
+`main`** 2026-07-18) — provides the three named trigger definitions
 (`skills/execute-phase/SKILL.md` "Review checkpoint triggers") this fix
-cross-references rather than restates. **Unmet as of this writing** —
-`execute-phase --fix`'s dependency gate will stop on this unit until #92
-merges (or the user passes `--force`, logged).
+cross-references rather than restates. **Met** — verified against `main`
+post-merge: `main`'s `execute-phase/SKILL.md` "Review checkpoint triggers"
+section names the same three triggers (layer boundary / accumulation /
+sensitivity) this fix's cross-reference assumed; the cross-reference
+resolves and matches in substance, no further edit needed.
 
 ## Root cause
 
@@ -253,10 +255,9 @@ developer-workflow doc change.
 
 ## Cross-issue notes
 
-- **#77 — review-checkpoint-cadence-triggers** — prerequisite, **not yet
-  merged** (PR #92 open). Provides the trigger definitions this fix
-  cross-references. The dependency gate in `execute-phase --fix` will stop
-  on this unit until #92 merges.
+- **#77 — review-checkpoint-cadence-triggers** — prerequisite, **merged**
+  (PR #92, into `main` 2026-07-18). Provides the trigger definitions this
+  fix cross-references; wording verified to match post-merge.
 - No other open issues or PRs reference `ship-roadmap`'s cadence wording as
   of 2026-07-18 (`gh issue list --state open`, `gh pr list --state open`
   checked at drafting).
