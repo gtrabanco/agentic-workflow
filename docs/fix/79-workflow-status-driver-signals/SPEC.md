@@ -320,14 +320,14 @@ Layer: `docs`. Done-when: `grep -q suggested skills/orchestration-envelope/SKILL
 
 Layer: `docs`. Done-when: `grep -q 'linked from an' skills/audit-pr/SKILL.md`.
 
-- [ ] In "Scope integrity (descope) — fixed output" step 1, add a second
+- [x] In "Scope integrity (descope) — fixed output" step 1, add a second
       detection path: an issue **linked from an `## Amendments` row** in the
       governing SPEC is enumerated regardless of its own title/body text.
-- [ ] State this widens the backstop's coverage only; `execute-phase`'s
+- [x] State this widens the backstop's coverage only; `execute-phase`'s
       creation-time guard stays the primary control — cross-reference #89 and the
-      single-source `## Amendments` log.
-- [ ] Reword any gate-table/summary phrasing that implies text-match is the sole
-      detection path.
+      single-source `## Amendments` log. (New "Backstop, not primary" bullet.)
+- [x] Reword any gate-table/summary phrasing that implies text-match is the sole
+      detection path. (Gate table row now states "Detection is two-path".)
 
 ### P6 — Skill registration via bump-skill
 
