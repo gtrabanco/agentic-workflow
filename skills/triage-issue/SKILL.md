@@ -299,7 +299,10 @@ enables:
 
 ```
                  ┌─ fix-now ─────────▶ plan-fix ─▶ execute-phase --fix
-triage-issue ────┼─ promote ─────────▶ plan-feature (router → from-issue)
+                 ├─ fix-in-unit ─────▶ execute-phase <NN> P<k> (fold into phase)
+triage-issue ────┤                    or fold-findings (ledger row)
+                 │                    or design-feature / plan-feature (replan)
+                 ├─ promote ─────────▶ plan-feature (router → from-issue)
                  ├─ postpone ────────▶ dated comment, leave open
                  └─ wontfix ─────────▶ propose close
 ```
@@ -314,6 +317,8 @@ triage-issue ────┼─ promote ─────────▶ plan-feat
   ```
   → Next: act on the verdict(s)
     · fix-now → /plan-fix   · promote → /plan-feature
+    · fix-in-unit → /execute-phase <NN> P<k> (fold into phase) or
+      /fold-findings (ledger row) — never /plan-fix
     · postpone → dated comment, leave open   · wontfix → propose close
     · same inconsistency across several issues → /product-audit (a recurring pattern,
       not isolated tickets — sweep the product rather than triaging one by one)
