@@ -143,6 +143,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.6.0 | 2026-07-18 | menor | Fix #77: sustituye la cadencia fija de checkpoint de revisión cada 2 fases por tres disparadores mecánicos — **límite de capa** (la siguiente fase declara un `Layer:` distinto), **acumulación** (`git diff --stat <baseline>..HEAD` > 400 líneas u > 8 ficheros desde el marcador última-revisión), y **sensibilidad** (fase de auth/pagos/migración destructiva/secretos/CI) — más la especificación del marcador `Last reviewed: <sha>` en `progress.md` (único escritor `execute-phase`, respaldo `git merge-base` si está ausente). La revisión final obligatoria y la cadencia adversarial de `review-change` no cambian. |
 | 2.5.2 | 2026-07-18 | parche | Fix #76: el hand-off obligatorio de revisión de fin de unidad ahora anota cuándo `review-change` recomienda `--adversarial N` en esa revisión terminal — solo redacción, la cadencia del checkpoint cada 2 fases no cambia. |
 | 2.5.1 | 2026-07-18 | parche | Fix #66: se aclaró el paso de retro-relleno de la enmienda en la guardia de descope — tras crear el issue de seguimiento y enlazarlo en el cuerpo del issue, editar explícitamente la fila `## Amendments` para sustituir el marcador `#<n>` por el número real del issue y commitear ese cambio; una fila que aún lea el marcador literal falla la comprobación simétrica de fila sin enlazar de `audit-pr`. |
 | 2.5.0 | 2026-07-17 | menor | Fix #66: nueva **guardia de descope** en la Política de issues — antes de crear cualquier issue, se clasifica como trabajo descubierto (se archiva libremente) o descope (solapa un criterio de aceptación/tarea de la SPEC no entregado del todo); un descope PARA antes de crear el issue, exigiendo primero una entrada `## Amendments` fechada y aprobada por el usuario (formato de fila canónico definido una sola vez aquí). Nueva entrada en la lista de prohibiciones y casilla del contrato de turno que exige que la guardia se aplicase a cada issue creado en el turno. |
@@ -227,6 +228,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.4.1 | 2026-07-18 | parche | Fix #77: reformula las dos referencias cruzadas a la cadencia de `execute-phase` ("When to use" y "Relationship to other skills") desde el intervalo retirado de cada 2 fases hacia la nueva cadencia basada en disparadores (límite de capa/acumulación/sensibilidad); la sección adversarial "Cadence — once per unit" y su nota de límite con `#77` no cambian. |
 | 2.4.0 | 2026-07-18 | menor | Fix #76: hace que `--adversarial N` sea usable por flotas de modelos débiles orquestadas a mano — checklist de recomendación de 4 casillas (sustituye el disparador L/sensible únicamente, añade una condición "revisor no es el más fuerte/es más débil que el autor" expuesta como línea de informe, nunca auto-detectada), escalera fija de N (2 por defecto, 3 en seguridad/familia única, >3 desaconsejado), roles de revisor asignados por índice (R1 corrección, R2 seguridad, R3 cobertura de SPEC) con la guarda de rol-como-prioridad-no-alcance, contratos de revisor/merge de fuente única, un nuevo modo de fusión `--merge` con lista de prohibiciones, plantillas de bloques para pegar en Portability, y un ancla de cadencia una-vez-por-unidad (límite explícito con `#77`). |
 | 2.3.0 | 2026-07-17 | menor | Fix #65: el bloque `→ Next:` de `Decision: FAIL` ahora recomienda la nueva skill independiente `/fold-findings` (clasificación congelada, lista de prohibiciones que cierra las válvulas de escape de volcado-a-known-issues/downgrade/aflojar-tests/supresión) como la vía de fold, en lugar de la línea de prosa inline "fold the fix-now findings"; la forma fija multilínea y los sub-bullets de `/audit-pr`/no-fix-now/product-audit no cambian. |
 | 2.2.1 | 2026-07-17 | parche | El bloque `→ Next:` del paso 11 ahora se ramifica explícitamente según `Decision`: un bloque `FAIL` recomienda foldear los hallazgos fix-now (gate en verde, commit + push, re-ejecutar `/review-change`) con `/audit-pr` degradado a sub-bullet condicionado a la tabla limpia; un bloque `PASS` mantiene `/audit-pr — merge gate`. La condición de recurrencia de `/product-audit` ahora es una casilla explícita sí/no, y el bloque debe emitirse como líneas literales múltiples, nunca como prosa unida con `·`. Corrige el issue #63 — modelos débiles (observado: qwen3.6-thinking) copiaban la plantilla estática única anterior de forma literal, recomendando el merge gate incluso en `FAIL`. |
@@ -427,6 +429,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — disparadores de cadencia del checkpoint de revisión (fix 77).**
+  Bump MENOR para `execute-phase` (2.6.0): el checkpoint fijo cada 2 fases se
+  sustituye por tres disparadores mecánicos — límite de capa, acumulación
+  (umbrales de `git diff --stat`), y sensibilidad — más una especificación del
+  marcador `Last reviewed: <sha>` en `progress.md`. Bump PARCHE para
+  `review-change` (2.4.1): sus dos referencias cruzadas de cadencia se
+  reformulan al modelo de disparadores; la cadencia adversarial
+  una-vez-por-unidad no cambia. Paridad de docs de cadencia en
+  `SKILLS`/`FEATURE_WORKFLOW`/`PORTABLE_PROMPT`/`MIGRATION`/README (EN+ES).
 
 - **2026-07-18 — triggers de cadencia en ship-roadmap (fix 93).** Bump MENOR
   para `ship-roadmap` (2.3.0): la cadencia del checkpoint para features
