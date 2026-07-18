@@ -152,7 +152,19 @@
       "properties": {
         "recommended": { "type": "string" },
         "alternatives": { "type": "array", "items": { "type": "string" } },
-        "tier": { "enum": ["strong", "cheap"] }
+        "tier": { "enum": ["strong", "cheap"] },
+        "suggested": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["command", "trigger", "source_skill"],
+            "properties": {
+              "command": { "type": "string" },
+              "trigger": { "type": "string" },
+              "source_skill": { "type": "string" }
+            }
+          }
+        }
       }
     },
     "detail": {}
