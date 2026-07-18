@@ -123,10 +123,18 @@ export interface EnvelopeNeedsInput {
   options: string[];
 }
 
+export interface EnvelopeSuggestion {
+  command: string;
+  trigger: string;
+  source_skill: string;
+}
+
 export interface EnvelopeNext {
   recommended: string;
   alternatives: string[];
   tier: Tier;
+  /** Optional trigger-attributed suggestions (workflow-status only). */
+  suggested?: EnvelopeSuggestion[];
 }
 
 export interface Envelope {
@@ -398,6 +406,21 @@ export function validateEnvelope(value: unknown): ValidationResult {
     }
     if (value.next.tier !== "strong" && value.next.tier !== "cheap") {
       errors.push(`next.tier must be strong|cheap (got: ${String(value.next.tier)})`);
+    }
+    if (value.next.suggested !== undefined) {
+      if (!Array.isArray(value.next.suggested)) {
+        errors.push("next.suggested must be an array when present");
+      } else {
+        value.next.suggested.forEach((s, i) => {
+          if (!isObj(s)) {
+            errors.push(`next.suggested[${i}] must be an object`);
+            return;
+          }
+          if (typeof s.command !== "string") errors.push(`next.suggested[${i}].command must be a string`);
+          if (typeof s.trigger !== "string") errors.push(`next.suggested[${i}].trigger must be a string`);
+          if (typeof s.source_skill !== "string") errors.push(`next.suggested[${i}].source_skill must be a string`);
+        });
+      }
     }
   }
 
