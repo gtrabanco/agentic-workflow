@@ -99,6 +99,7 @@ rejects anything else); **open** = free-form, any value of the stated type.
 | `next.recommended` | string | open (a skill invocation) | The single best next command. |
 | `next.alternatives[]` | string array | open | The other defensible choices. |
 | `next.tier` | enum | **closed** — `strong` · `cheap` | Which model class the next step deserves — judgment vs mechanical. |
+| `next.suggested[]` | object array, optional | items: `command`/`trigger`/`source_skill` (all open strings) | Trigger-attributed suggestions (`workflow-status` only) — each entry names the command, the exact condition that fired it, and the skill that owns that condition; single-sourced, never a second copy of the trigger logic. Absent on envelopes that don't emit it. |
 | `detail` | any | open (skill-specific) | Per-skill payload — e.g. `workflow-status` carries the full project tree (`features`, `fixes`, `startable_now`, `blocked_units`, `crash_recovery`, …) here. |
 
 ### The `state` routing table (closed — exactly these 11)
@@ -189,3 +190,7 @@ This package's semver tracks the **envelope contract**, not the repo:
 breaking schema change (key removed/renamed, state removed) → major;
 additive (new optional key, new state) → minor; fixes/docs → patch. When the
 `orchestration-envelope` skill changes, this package changes in the same PR.
+
+**2.1.0** — additive minor: optional `next.suggested[]` (see the field table
+above), landed with `workflow-status`'s driver-signal exposure (fix #79). No
+required key changed; older envelopes without the field still validate.

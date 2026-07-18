@@ -103,6 +103,7 @@ forma libre, cualquier valor del tipo indicado.
 | `next.recommended` | string | abierto (una invocación de skill) | El único mejor comando siguiente. |
 | `next.alternatives[]` | array de string | abierto | Las otras elecciones defendibles. |
 | `next.tier` | enum | **cerrado** — `strong` · `cheap` | Qué clase de modelo merece el siguiente paso — juicio vs. mecánico. |
+| `next.suggested[]` | array de objetos, opcional | items: `command`/`trigger`/`source_skill` (todos strings abiertos) | Sugerencias atribuidas a un disparador (solo `workflow-status`) — cada entrada nombra el comando, la condición exacta que lo disparó, y la skill dueña de esa condición; con fuente única, nunca una segunda copia de la lógica del disparador. Ausente en sobres que no lo emiten. |
 | `detail` | any | abierto (específico de la skill) | Carga útil por skill — p. ej. `workflow-status` lleva aquí el árbol completo del proyecto (`features`, `fixes`, `startable_now`, `blocked_units`, `crash_recovery`, …). |
 
 ### La tabla de enrutamiento de `state` (cerrada — exactamente estos 11)
@@ -198,3 +199,8 @@ repositorio: cambio disruptivo del esquema (clave eliminada/renombrada,
 estado eliminado) → major; aditivo (clave opcional nueva, estado nuevo) →
 minor; arreglos/docs → patch. Cuando cambia la skill
 `orchestration-envelope`, este paquete cambia en el mismo PR.
+
+**2.1.0** — aditivo, minor: `next.suggested[]` opcional (ver la tabla de
+campos arriba), publicado junto con la exposición de señales de driver de
+`workflow-status` (fix #79). Ninguna clave requerida cambió; los sobres
+antiguos sin este campo siguen validando.
