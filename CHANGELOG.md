@@ -141,6 +141,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.2 | 2026-07-18 | patch | Fix #76: the mandatory end-of-unit review hand-off notes when `review-change` recommends `--adversarial N` at that terminal review — wording only, the every-2-phases checkpoint cadence is unchanged. |
 | 2.5.1 | 2026-07-18 | patch | Fix #66: clarified the descope guard's amendment-backfill step — after creating the follow-up issue and linking it in the issue body, explicitly edit the `## Amendments` row to replace the `#<n>` placeholder with the real issue number and commit that edit; a row still reading the literal placeholder fails `audit-pr`'s symmetric unlinked-row check. |
 | 2.5.0 | 2026-07-17 | minor | Fix #66: new **descope guard** in the Issue policy — before creating any issue, classify it discovered-work (file freely) vs. descope (overlaps a SPEC acceptance criterion/phase task not fully delivered); a descope STOPs before the issue is created, requiring a user-approved, dated `## Amendments` entry first (canonical row format defined once here). New Forbidden-list entry and turn-contract box asserting the guard ran on every issue created in the turn. |
 | 2.4.1 | 2026-07-17 | patch | Fix #81: the Phase-lint pre-flight guard (added in 2.4.0) gains an explicit legacy-SPEC carve-out — a SPEC with no `## Phases` section skips the guard entirely (no lint, no STOP) and falls through to the pre-existing legacy single-pass flow, restoring fix #64's own backward-compatibility promise. |
@@ -224,6 +225,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.0 | 2026-07-18 | minor | Fix #76: made `--adversarial N` usable by hand-orchestrated weak-model fleets — a 4-box recommendation checklist (replaces the L/sensitive-only trigger, adds a "reviewer not strongest/weaker than author" condition surfaced as a report line, never auto-detected), a fixed N ladder (2 default, 3 on security/single-family, >3 discouraged), index-assigned reviewer roles (R1 correctness, R2 security, R3 SPEC-coverage) with a role-is-priority-not-scope guardrail, single-sourced reviewer/merge contracts, a new `--merge` fusion entry point with a forbidden-drop list, Portability paste-block templates, a once-per-unit cadence anchor (explicit `#77` boundary), and `→ Next:` wiring at the terminal review. |
 | 2.3.0 | 2026-07-17 | minor | Fix #65: the `Decision: FAIL` `→ Next:` block now recommends the new standalone `/fold-findings` skill (frozen classification, forbidden list closing the known-issues-dump/downgrade/test-loosening/suppression escape hatches) as the fold path, replacing the inline "fold the fix-now findings" prose line; the multi-line fixed shape and the `/audit-pr`/non-fix-now/product-audit sub-bullets are unchanged. |
 | 2.2.1 | 2026-07-17 | patch | Step 11's `→ Next:` block now branches explicitly on `Decision`: a `FAIL` block recommends folding the fix-now findings (gate green, commit + push, re-run `/review-change`) with `/audit-pr` demoted to a table-clean sub-bullet, a `PASS` block keeps `/audit-pr — merge gate`; the `/product-audit` recurrence condition is now an explicit yes/no checkbox, and the block must render as multiple literal lines, never `·`-joined prose. Fixes #63 — weak models (observed: qwen3.6-thinking) were copying the old single static template verbatim, recommending the merge gate even on `FAIL`. |
 | 2.2.0 | 2026-07-13 | minor | New persist step (process step 9): fix-now findings now append to the unit's fix-now fold ledger `review-findings.md` (fixed schema `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`, `folded` starts `no`), deduped by `file:line`+axis, on an unmerged unit — a merged unit gets no write. `→ Next:` and the Routing section now mention the ledger for fix-now findings. Non-fix-now findings unaffected. Part of feature 17 (`finding-severity-routing`). |
@@ -423,6 +425,16 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-18 — adversarial mode weak-fleet usability (fix 76).** MINOR bump
+  for `review-change` (2.4.0): the `--adversarial N` mode gains a 4-box
+  recommendation checklist (model condition, never auto-detected), a fixed
+  N ladder, index-assigned reviewer roles with a role-is-priority-not-scope
+  guardrail, single-sourced reviewer/merge contracts, a new `--merge` fusion
+  mode with a forbidden-drop list, Portability paste-block templates, and a
+  once-per-unit cadence anchor. PATCH bump for `execute-phase` (2.5.2): the
+  mandatory end-of-unit review hand-off notes when to pass `--adversarial N`.
+  Plus a NaN adversarial-review ladder row in both READMEs.
 
 - **2026-07-18 — triage open-unit awareness (fix 86+87).** MINOR bump for
   `triage-issue` (2.3.0): new scope-membership check before classification and

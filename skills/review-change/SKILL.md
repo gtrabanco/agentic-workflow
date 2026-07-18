@@ -1,8 +1,8 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.3.0
-argument-hint: <path-or-glob> [--adversarial N]
+version: 2.4.0
+argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -96,12 +96,14 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
 ## Process
 
-1. **Findings engine.** No `--adversarial N` flag → run `review-implementation`
-   once over the scope → its classified decision table (fix-now / postpone /
-   ignore / intentional-tradeoff), unchanged from before this mode existed. With
-   `--adversarial N` → run the **adversarial multi-reviewer mode** below instead;
-   everything from step 2 onward runs once, over its merged table, exactly as in
-   the no-flag case.
+1. **Findings engine.** No flag → run `review-implementation` once over the
+   scope → its classified decision table (fix-now / postpone / ignore /
+   intentional-tradeoff), unchanged from before this mode existed. With
+   `--adversarial N` → run the **adversarial multi-reviewer mode** below
+   instead. With `--merge` → skip straight to that mode's fusion step (N
+   findings tables pasted in, per the merge contract). Either way, everything
+   from step 2 onward runs once, over the merged table, exactly as in the
+   no-flag case.
 2. **SPEC drift check.** Locate the governing SPEC (feature or fix) and compare
    the diff against its scope and acceptance criteria: flag work that contradicts
    the SPEC, silently exceeds it, or leaves a claimed criterion untouched.
@@ -169,7 +171,7 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    that `file:line`+axis is not re-appended; a genuinely new finding gets the
    next `Fn` id. **Non-fix-now findings are never written here** — they keep
    their `triage-issue` destinations from step 8.
-10. **Report — return exactly this structure** (fixed output contract; nothing
+10. **Report — Return exactly this structure** (fixed output contract; nothing
    more, nothing less):
 
    ```
@@ -201,6 +203,10 @@ Every axis maps to a skill of the workflow's **own internal review pack**
      then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
+     · adversarial recommendation checklist fired AND this run was
+       single-reviewer? → re-run the fold review as /review-change
+       --adversarial N (N per the ladder below) instead of single-reviewer
+       (yes: <which box fired>; no: omit this line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a
        compounding error; no: omit this line)
@@ -211,6 +217,10 @@ Every axis maps to a skill of the workflow's **own internal review pack**
    ```
    → Next: /audit-pr — merge gate
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
+     · adversarial recommendation checklist fired AND this run was
+       single-reviewer? → re-run as /review-change --adversarial N (N per the
+       ladder below) before /audit-pr (yes: <which box fired>; no: omit this
+       line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a
        compounding error; no: omit this line)
@@ -237,10 +247,73 @@ turn-contract box) decorrelates some blind spots; running N independent
 reviewers — ideally across **different model families** (a preference, not a
 requirement: an agent with one family runs N same-family reviewers and says so)
 — decorrelates more, at 2–3× the cost of the findings-gathering stage. That cost
-is why the mode stays opt-in and is only **auto-recommended, never forced**, for
-`L` or sensitive-flagged changes (auth, payments, destructive migrations,
-secrets, CI config) — this skill surfaces the recommendation in its report /
-`→ Next:` block but proceeds single-reviewer unless the user opts in.
+is why the mode stays opt-in and is only **auto-recommended, never forced**.
+
+**Recommendation checklist.** Recommend `--adversarial 2` if **ANY** box ticks
+(this skill surfaces the recommendation in its report / `→ Next:` block but
+proceeds single-reviewer unless the user opts in):
+
+- ✓ the change is `L`
+- ✓ the change touches a sensitive surface (auth, payments, destructive
+  migrations, secrets, CI config)
+- ✓ the reviewing model is **not the strongest model available in the fleet**,
+  or is weaker than the model that authored the diff
+- ✓ only one model family is available **and** the change is `≥ M`
+
+The model condition is a documented rule of thumb, **surfaced as a report line
+only — never auto-detection.** An agent cannot reliably introspect its own
+model identity, so this skill never tries; it states the condition in prose
+and lets the human (or the orchestrator that knows which model is running)
+judge it.
+
+**N ladder (fixed).** `N=2` is the default (the `ship-roadmap` floor). Bump to
+`N=3` when either holds: the change has a security/auth surface, or all
+available reviewers share one model family (the third reviewer buys back some
+of the decorrelation a single family can't provide). `N>3` is **explicitly
+discouraged** — with the ≥1 inclusion threshold below, reviewers beyond 3
+mostly add dedupe work at merge time, not new findings.
+
+**Reviewer roles (fixed, assigned by index).** Each reviewer *i* gets role *i*
+from this fixed set — never chosen ad hoc:
+
+- **R1 — correctness/logic adversary.** Assume the diff is wrong until proven
+  otherwise; hunt first for logic errors, wrong conditionals, off-by-one/edge
+  cases, silent behavior changes.
+- **R2 — security/inputs adversary.** Hunt first for untrusted input handling,
+  injection, auth/authorization gaps, secret handling, and unsafe defaults.
+- **R3 — SPEC-coverage adversary.** Hunt first for what the governing SPEC
+  *promises* that the diff does not actually do — unmet acceptance criteria,
+  silently narrowed scope, claims contradicted by the code.
+
+**A role is an attention priority, NOT an exclusive scope.** The full
+`review-implementation` checklist stays **mandatory for every reviewer** —
+the role only orders where that reviewer looks first, it never narrows what
+they're allowed to flag. The known failure mode this guards against: a
+role-narrowed reviewer skips an obvious defect because it fell outside "their"
+role. Every reviewer prompt (see the reviewer contract below) must carry this
+sentence, not just the role assignment.
+
+**Reviewer contract (single source).** Each of the N reviewers — spawned by
+whichever tier below applies — receives this fixed prompt; only `<i>`/`<role
+name>`/`<scope>` vary per reviewer. This is the **one and only place** the
+reviewer prompt is authored — the Portability paste block later in this skill
+quotes it verbatim, never a rewritten copy:
+
+```
+ROLE: R<i> — <role name, from the fixed set above>
+SCOPE: <diff-only — the branch diff vs the default branch, or the passed path/glob>
+
+You are reviewer <i> of N in an adversarial multi-reviewer review. Assume the
+diff is wrong until proven otherwise. Your role orders where you look FIRST —
+it is an attention priority, not an exclusive scope: the full
+review-implementation checklist stays mandatory. Flag anything wrong, not only
+findings inside your role.
+
+Return exactly:
+| file:line | axis | Finding | Sev | Class | WHY | Route |
+|---|---|---|---|---|---|---|
+<one row per finding — empty table if none>
+```
 
 **Platform-adaptive spawn (three tiers).** Each of the N reviewers is a
 **context-clean, diff-only, adversarial** run of the existing findings engine
@@ -258,7 +331,9 @@ turn-contract box still applies to the orchestrator):
    slower, the documented floor-of-last-resort so no agent is blocked from
    using this mode.
 
-**Merge + dedupe.** Collect all N reviewers' classified findings and:
+**Merge contract (single source).** Collect all N reviewers' classified
+findings tables — each already in the reviewer contract's fixed format above
+(a `provenance` note records which reviewer/source produced each row) — and:
 
 - **Dedupe by `file:line` + axis** (two genuinely different findings on the
   same line, different axis, stay separate). Identical findings from multiple
@@ -268,8 +343,39 @@ turn-contract box still applies to the orchestrator):
 - **Inclusion threshold = ≥1 reviewer.** A finding any single reviewer raised
   enters classification normally; there is no majority/quorum gate to include a
   finding — a real defect only one sharp reviewer caught must not be dropped.
+- **Forbidden — never**, while merging: dropping a finding, downgrading its
+  severity, reclassifying it, or re-litigating whether it's real. The merge
+  step's only job is fusion; disputing a finding's validity happens later, in
+  the normal triage steps (2–10) that consume the merged table — never during
+  the merge itself.
+- **Externally-produced reviews** (not spawned by this run) are accepted into
+  the merge **only if they already arrive in the reviewer contract's fixed
+  table format**. Normalizing free prose into that format is the contributing
+  conversation's job, not the merge step's — it converts to the table first.
 - The merged table then flows through the unchanged steps 2–10 above, producing
   the same fixed-format report + `Decision: PASS | FAIL`.
+
+**`--merge` mode.** `/review-change --merge` is the direct entry point for the
+merge contract above — it starts **at the fusion step**, skipping the N-reviewer
+spawn: pass it N pasted findings tables (each already in the reviewer
+contract's fixed format), and it runs the merge contract, then the unchanged
+steps 2–10, to the same fixed report ending `Decision: PASS | FAIL`. This is
+how a manual orchestrator — one that ran the N reviewer conversations by hand
+via the Portability paste blocks — hands the results back to this skill for
+fusion, without re-authoring the dedupe/threshold/forbidden rules itself: the
+mode consumes the single merge contract above, never a second copy of it.
+
+**Cadence — once per unit.** The adversarial run (spawn or `--merge`) happens
+**once per unit, at the mandatory terminal `review-change`** (the pass before
+`Hardening & PR` — see *Review checkpoint & finishing a unit* in
+`execute-phase`), where the recommendation checklist above is evaluated. The
+one stated exception, not a cadence of its own: a phase touching a sensitive
+surface (auth, payments, destructive migrations, secrets, CI config) may earn
+an **early** adversarial pass scoped to just that phase's diff — still a
+single extra event, not a recurring checkpoint. **Boundary with `#77`** (the general review-checkpoint cadence redesign):
+this section owns *where* the adversarial mode runs (the terminal review, plus
+the sensitive-phase exception); `#77` owns the general every-N-phases
+checkpoint interval — neither issue's change edits the other's sentences.
 
 ## Example output (generic)
 
@@ -333,8 +439,56 @@ enables:
 - **`--adversarial N` spawn tiers** — Claude Code subagents (tier 1) and
   headless invocation (tier 2) are conveniences; an agent with neither runs the
   tier-3 fallback of N **sequential fresh conversations**, each context-clean
-  and diff-only, then merges their findings by hand per the dedupe rule above —
-  slower, never a reason to skip the mode.
+  and diff-only, then merges their findings by hand per the merge contract
+  above — slower, never a reason to skip the mode. **One source, two
+  wrappers:** the pro path invokes `--adversarial N` / `--merge` and this
+  skill runs the contracts itself; a manual orchestrator without either flag
+  pastes the two blocks below into fresh conversations by hand — both render
+  the exact same reviewer/merge contract, never a second, drifting copy.
+
+  **Reviewer-prompt paste block** (one per reviewer, in a fresh conversation;
+  fills `<i>`/`<role name>`/`<scope>` from the fixed role set and N ladder
+  above — this is the reviewer contract, quoted verbatim):
+
+  ```
+  ROLE: R<i> — <role name, from the fixed set above>
+  SCOPE: <diff-only — the branch diff vs the default branch, or the passed path/glob>
+
+  You are reviewer <i> of N in an adversarial multi-reviewer review. Assume the
+  diff is wrong until proven otherwise. Your role orders where you look FIRST —
+  it is an attention priority, not an exclusive scope: the full
+  review-implementation checklist stays mandatory. Flag anything wrong, not only
+  findings inside your role.
+
+  Return exactly:
+  | file:line | axis | Finding | Sev | Class | WHY | Route |
+  |---|---|---|---|---|---|---|
+  <one row per finding — empty table if none>
+  ```
+
+  **Merge-prompt paste block** (one fresh conversation, after collecting all N
+  reviewer tables above — this is the merge contract, quoted verbatim):
+
+  ```
+  You are fusing N independent adversarial review tables into one. Given the N
+  pasted findings tables below (each already in the reviewer contract's fixed
+  format):
+  - Dedupe by file:line + axis; identical findings from multiple reviewers
+    collapse into one row.
+  - Add a `Reviewers n/N` column: how many of the N flagged it.
+  - Inclusion threshold = ≥1 reviewer — a finding any single reviewer raised
+    enters classification normally; no majority/quorum gate.
+  - Forbidden — never: drop a finding, downgrade its severity, reclassify it,
+    or re-litigate whether it's real. Fusion only — disputes happen in
+    triage, not here.
+  - Externally-produced reviews are accepted only if already in the fixed
+    table format.
+
+  <N pasted findings tables go here>
+
+  Return the merged table, then continue through review-change's steps 2–10
+  to the fixed report ending `Decision: PASS | FAIL`.
+  ```
 
 ## Relationship to other skills
 
