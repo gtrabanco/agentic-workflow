@@ -343,11 +343,11 @@ Layer: `docs`. Done-when:
 `grep -c "fix-in-unit" skills/triage-issue/SKILL.md` → ≥ 5 (verdict line +
 diagram + closing block references combined).
 
-- [ ] Update the `## Relationship to other skills` diagram to show the
-      `fix-in-unit` route.
-- [ ] Update the closing `→ Next:` block so a `fix-in-unit` verdict
+- [x] Update the `## Relationship to other skills` diagram to show the
+      `fix-in-unit` route. — `skills/triage-issue/SKILL.md` diagram
+- [x] Update the closing `→ Next:` block so a `fix-in-unit` verdict
       recommends `/execute-phase <NN> P<k>` or `/fold-findings`, never
-      `/plan-fix`.
+      `/plan-fix`. — same file, "Done when" `→ Next:` block
 
 ### P7 — Bilingual doc-parity sweep
 
