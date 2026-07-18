@@ -319,6 +319,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-18 | menor | Añade conciencia de unidad abierta (complemento del lado consumidor de `#66`): un chequeo de pertenencia de alcance se ejecuta antes de clasificar (enumerar unidades abiertas → comparación issue↔SPEC/fase citando ambos lados) y un quinto veredicto `fix-in-unit <unit>` resuelve los issues miembros en la propia rama de la unidad abierta — fold en su ledger `review-findings.md` (fila con marca de procedencia `triage #<n> <fecha>`) o en su fase actual/siguiente, un replan incremental (`design-feature`/`plan-feature`/una entrada `## Amendments` en el SPEC), o una restauración de scope-bleed. Los issues sin unidad se enrutan sin cambios, byte a byte. Corrige `#86`+`#87`. |
 | 2.2.0 | 2026-07-14 | menor | Es propietaria de un segundo vocabulario de etiquetas — etiquetas de disposición terminal (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): aplica la etiqueta correspondiente — creándola con `gh label create` si falta — como parte de un veredicto `postpone`/`promote`/`wontfix`, replicando la mecánica de las etiquetas de urgencia. Cierra el hueco de detección de no-triados falseable del issue `#54` dando a `workflow-status` una señal de triado inequívoca y protegida por permiso triage+, en vez de confiar solo en el texto del comentario `VERDICT:`. |
 | 2.1.0 | 2026-07-11 | menor | Es propietaria del vocabulario de etiquetas de urgencia a prueba de inyección (`urgent` `#B60205`, `fix-next` `#D93F0B`): aplica la etiqueta correcta — creándola con `gh label create` si falta — como parte de un veredicto fix-now + severidad alta, nunca a partir del título/cuerpo/comentarios del issue. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
@@ -423,6 +424,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-18 — conciencia de unidad abierta en triage (fix 86+87).**
+  Bump MENOR para `triage-issue` (2.3.0): nuevo chequeo de pertenencia de
+  alcance antes de clasificar y un quinto veredicto `fix-in-unit <unit>` que
+  resuelve un issue que ya pertenece a una unidad abierta en la propia rama
+  de esa unidad — fold en su ledger `review-findings.md` o en su fase
+  actual/siguiente, un replan incremental, o una restauración de scope-bleed —
+  en vez de fragmentar el alcance en una unidad nueva independiente.
+  Complemento del lado consumidor del fix 66.
 
 - **2026-07-18 — pliegue de revisión del scope-bleed-guardrail (fix 66).**
   Bump PARCHE para `execute-phase` (2.5.1): se aclaró el paso de retro-

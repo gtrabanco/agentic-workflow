@@ -61,6 +61,7 @@ Cita la evidencia (rutas, recuentos, referencias de línea) en la decisión.
 | Veredicto | Cuándo | Ruta |
 |---|---|---|
 | **fix-now** | Defecto, o el disparador se cumple | `plan-fix` → `execute-phase --fix`; añadir al índice de fixes |
+| **fix-in-unit** | El issue ya pertenece a una unidad actualmente abierta (un chequeo de pertenencia de alcance se ejecuta antes de clasificar) | Se resuelve en la propia rama de esa unidad: fold en su ledger/fase (`/execute-phase <NN> P<k>` o `/fold-findings`), un replan incremental (`design-feature`/`plan-feature`/una entrada `## Amendments` en el SPEC), o una restauración de scope-bleed — nunca una unidad nueva independiente, nunca `/plan-fix` |
 | **promote-to-feature** | Es realmente una capacidad nueva | `plan-feature <N>` (el router lleva el issue → SPEC acotado y **dimensionado**; las features pequeñas `XS/S` van solo con SPEC con ≥ 2 fases en el SPEC → `execute-phase <NN>`) |
 | **postpone** | Válido pero el disparador no se cumple | Dejar abierto; publicar comentario de reconfirmación fechado; **no implementar sobre la marcha** |
 | **wontfix** | Obsoleto o explícitamente acotado | Proponer cerrarlo con justificación |
@@ -70,6 +71,12 @@ evidencia, presenta el veredicto + opciones y deja que el usuario decida
 antes de actuar.
 
 ## Etapa 4 — El camino del fix (cuando es fix-now)
+
+**Nota sobre unidad abierta.** Un veredicto `fix-in-unit` se salta por
+completo este camino del fix — el issue se resuelve en la rama de la unidad
+**ya abierta** (fold en su ledger/fase, o un replan incremental), nunca a
+través de una rama `fix/<N>-<topic>` nueva. Todo lo que sigue aplica solo a
+un `fix-now` genuino (ninguna unidad abierta reclama el issue).
 
 `plan-fix` (persona de arquitecto senior) redacta
 `docs/fix/<N>-<topic>/SPEC.md` a partir del issue, lo acota estrictamente,

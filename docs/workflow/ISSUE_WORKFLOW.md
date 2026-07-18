@@ -55,6 +55,7 @@ Cite the evidence (paths, counts, line refs) in the decision.
 | Verdict | When | Route |
 |---|---|---|
 | **fix-now** | Defect, or the trigger is met | `plan-fix` → `execute-phase --fix`; add to fix index |
+| **fix-in-unit** | The issue already belongs to a unit that is currently open (a scope-membership check runs before classification) | Resolve on that unit's own branch: fold into its ledger/phase (`/execute-phase <NN> P<k>` or `/fold-findings`), an incremental replan (`design-feature`/`plan-feature`/a SPEC `## Amendments` entry), or a scope-bleed restore — never a new standalone unit, never `/plan-fix` |
 | **promote-to-feature** | It's really new capability | `plan-feature <N>` (the router takes the issue → scoped, **sized** SPEC; small `XS/S` features go SPEC-only with ≥ 2 phases in the SPEC → `execute-phase <NN>`) |
 | **postpone** | Valid but trigger unmet | Leave open; post dated re-confirmation comment; **don't implement inline** |
 | **wontfix** | Obsolete or explicitly bounded | Propose closing with rationale |
@@ -63,6 +64,12 @@ If the call hinges on product/risk judgment rather than evidence, present the
 verdict + options and let the user decide before acting.
 
 ## Stage 4 — The fix path (when fix-now)
+
+**Open-unit note.** A `fix-in-unit` verdict skips this fix path entirely — the
+issue resolves on the **already-open** unit's own branch (fold into its
+ledger/phase, or an incremental replan), never through a new `fix/<N>-<topic>`
+branch. Everything below applies only to a genuine `fix-now` (no open unit
+claims the issue).
 
 `plan-fix` (senior-architect persona) drafts
 `docs/fix/<N>-<topic>/SPEC.md` from the issue, scopes it tightly, surfaces
