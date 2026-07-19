@@ -286,6 +286,30 @@ se mueve rápido; contrástalo con un leaderboard actual antes de fijar nada):
   **Gemma 3 27B**, **Phi-4-mini** — corren en local, suficientes para trabajo
   tipo grep.
 
+### Ejecutar todo el flujo con una flota de modelos pequeños/baratos
+
+Los skills están endurecidos para modelos ejecutores pequeños (ventanas de
+contexto modestas, sin caché de prompt): checklists fijas en lugar de juicio,
+las puertas de presencia Phase-lint y Spec-lint, un esquema fijo de handoff en
+`progress.md` con conversación nueva por fase, presupuestos de contexto por
+fase/pasada, y revisiones aisladas por eje que devuelven solo tablas de
+hallazgos. En una flota sin ningún modelo de clase frontier:
+
+- **Ejecución** (`execute-phase`, `log-session`, mantenimiento de docs) está
+  diseñada para el tier más barato — una fase por conversación, handoff vía
+  `progress.md`, máximo 10 lecturas de fichero completo por fase.
+- **Planificación, revisión y auditoría** (`design-feature`, `plan-feature`,
+  `plan-fix`, `review-change`, `audit-pr`, `product-audit`) siguen usando el
+  **modelo más fuerte que tengas**, aunque no sea frontier — y nunca uno más
+  débil que el que escribió el cambio.
+- **Revisiones**: mantén el aislamiento por eje por defecto (cada pasada un
+  contexto nuevo, retorno solo-tabla) y prefiere `--adversarial 2` en cambios
+  `L` o sensibles — N revisores baratos y descorrelacionados recuperan parte
+  de lo que un único revisor pequeño no ve.
+- **Divide más.** La regla de división obligatoria (≤ ~5 fases, una capa por
+  fase) es la palanca principal: fases más pequeñas son lo que hace fiable la
+  ejecución barata. Ante la duda, corta más pequeño.
+
 #### <img src="docs/assets/nan-cloud.svg" alt="Logo de NaN Cloud" width="20" height="19"> Ejecutar sobre [NaN.builders](https://cloud.nan.builders/r/7GK06FX8)
 
 [NaN Cloud](https://cloud.nan.builders/r/7GK06FX8) sirve la frontera open-weight

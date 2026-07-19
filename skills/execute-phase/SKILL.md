@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.6.0
+version: 2.7.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -90,6 +90,48 @@ its PR (finished units), is a FAILED turn, not a done one.
 - **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
 - **Dependency gate before any work** — see the section below. No edit, no branch, no commit happens for a unit whose dependency closure isn't merged, unless the user passed `--force`.
 - **Phase-lint pre-flight guard before any edit** — see the section below, right after the dependency/own-status gates. No edit happens for a phase that fails the canonical 8-box phase-lint, unless the user passed `--force`.
+
+## Context budget (hard rule — small models re-pay full context every turn)
+
+- **File cap: read at most 10 files in full per phase**, beyond the unit's
+  own docs (`SPEC.md`, the phase's `TASKS.md` section, `progress.md`).
+  Targeted reads (≤ 50 lines of a named range) and grep/glob results do NOT
+  count against the cap. About to exceed it → STOP reading; record what you
+  know and what's still unverified in the phase's `Gotchas:` line, then
+  proceed on what targeted reads can confirm, or report the blocker — never
+  sweep the codebase.
+- **Summarize, don't hold.** The moment a file yields the fact you needed,
+  write the fact (with its `file:line`) into your working notes / the
+  progress entry and work from the note. Never re-read a file already
+  summarized; never quote whole files into the conversation.
+- **Step 0 minimum set (fixed).** Discovery reads exactly: the agent guide's
+  Workflow conventions + the architecture doc section covering the phase's
+  declared `Layer:`. Nothing else by default; every additional doc counts
+  against the file cap.
+
+## Phase handoff record (`progress.md` — fixed schema)
+
+Every phase ends by APPENDING one entry to the unit's `progress.md`. Feature
+mode: the file `plan-feature-scaffold` created. Phased XS/S single-pass and
+`--fix` units: create `progress.md` beside the SPEC on P1 (the SPEC's
+checkboxes stay the task ledger; this file is the **handoff channel**).
+Fixed schema — all five lines present, `none` is a valid value, free prose
+is not:
+
+```
+## P<k> — <YYYY-MM-DD>
+- Done: <the phase's delivered tasks, one line>
+- Remains: <in-unit work still open, or none>
+- Gotchas: <surprises, workarounds, or decisions the NEXT phase must know, or none>
+- Files: <paths touched>
+- Next: P<k+1> — <its title> | unit finished
+```
+
+The entry rides the phase commit (no sha in the entry — the commit that
+carries it IS the phase's sha; `git log` resolves it). The next phase
+starts in a **fresh conversation** and reads ONLY `SPEC.md`, its own phase's
+`TASKS.md` section (or SPEC `## Phases`), and `progress.md` — this file IS
+the handoff; never rely on session memory from a previous phase.
 
 ## Dependency gate (always, before any other step)
 
@@ -269,8 +311,10 @@ Something forbidden looks necessary → stop, record it in `decisions.md` or
   consumers)
 ✓ Architecture doc respected (dependency directions, layer boundaries)
 ✓ Docs updated — at minimum verify each of: TASKS.md (checkboxes),
-  progress.md, testing.md, known-issues.md, decisions.md (if any decision was
-  taken), SPEC.md (only if scope/acceptance changed — with the change logged)
+  progress.md (one handoff entry in the fixed schema — Done / Remains /
+  Gotchas / Files / Next), testing.md, known-issues.md, decisions.md (if any
+  decision was taken), SPEC.md (only if scope/acceptance changed — with the
+  change logged)
 ✓ Docs COMMITTED with the phase — after the phase commit,
   `git status --porcelain -- docs/` returns nothing. Doc updates ride the
   phase commit (same `git add`), never sit uncommitted "for later"
@@ -364,11 +408,12 @@ every descope, defined once here.
    (`docs/features/<NN>-<slug>/`) are still uncommitted, commit them first on the
    feature branch — `git add docs/features/<NN>-<slug> && git commit -m "docs(<NN>-<slug>): planning artifacts"` —
    so planning history stays separate from implementation.
-2. Read `progress.md` first (the running log — what prior phases did and left
-   open), then `SPEC.md` + `TASKS.md` for the requested phase. **Same-session
-   shortcut:** if you executed the previous phase in this session and the
-   planning docs haven't changed, don't re-read them — only the new phase's
-   `TASKS.md` section.
+2. Read `progress.md` first (the phase handoff record — fixed schema above;
+   the last entry's `Remains:`/`Gotchas:` lines are the previous phase's
+   message to you), then `SPEC.md` + the requested phase's `TASKS.md`
+   section. That is the whole handoff — never rely on session memory from a
+   previous phase, and honor the *Context budget* for everything beyond
+   these files.
 3. Implement only that phase (see *Implementation guidance*).
 4. Run the gate (type-check, tests, build). **If red:** fix within the phase's
    scope and re-run — never commit red. If the failure can't be fixed within
@@ -398,7 +443,8 @@ phase per invocation**: `execute-phase <NN> [P<k>]` /
 unticked task** (deterministic; no judgement). The SPEC's checkboxes are the
 execution ledger (there is no `TASKS.md`): tick each task with evidence, and
 reconcile on re-entry exactly as *Resuming an interrupted phase* above
-prescribes for `TASKS.md`. Implementation phases run the mode's steps below
+prescribes for `TASKS.md`. Each phase appends its handoff entry to a
+`progress.md` beside the SPEC (created on P1 — see *Phase handoff record*). Implementation phases run the mode's steps below
 but **STOP after the phase commit — no push, no PR** (the per-phase stop and
 the turn contract's box 5 "unit not finished" rule). The final
 `Hardening & PR` phase runs the close-out — the mode's "Mark done + open the

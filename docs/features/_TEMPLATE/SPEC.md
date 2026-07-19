@@ -115,6 +115,52 @@ sweep — that is `product-audit`'s job). n/a if none apply.
 Product-definition decisions the project lead must make (or has made) before
 implementation starts. Record the chosen option and the rationale.
 
+### Deferred decisions
+
+Decisions deliberately postponed instead of resolved now — the interview's
+"we'll decide later" answers land here, never silently dropped. One row per
+decision; a deferred decision with no decide-by trigger is not deferred, it
+is lost. Write `none` when the section is empty.
+
+| Decision | Why deferred | Decide by (trigger or phase) |
+|---|---|---|
+
+### Spec-lint (mechanical — presence checks only)
+
+Structural gate on this SPEC, modeled on the Phase-lint: every box is a
+presence check a weak model can verify without judgement — fail-closed, no
+quality opinion. Two runners: `design-feature` runs the **product boxes**
+before stamping `## Design status: designed`; `plan-feature-scaffold` runs
+**all boxes** (product boxes re-run as a regression check) before its
+completion report. Any FAIL → fix the SPEC or end `NEEDS_INPUT` — never
+stamp `designed` or report the scaffold over a failed box.
+
+Product boxes:
+
+- [ ] No template placeholders left in the product half —
+      `grep -nE '<(where|surface|name|reason|list|role)'` over the sections
+      above returns nothing. The fenced Capability-closure template block is
+      **replaced** by the instantiated rows when the closure is walked — a
+      SPEC still containing the generic block fails this box.
+- [ ] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — never empty.
+- [ ] Every Capability closure row is filled or `n/a: <reason>` — zero blank
+      rows.
+- [ ] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same
+      wording or an explicit reference) — an in-scope item with no criterion
+      FAILs.
+- [ ] Every Acceptance criterion is a runnable command OR labelled
+      `read-verified` — an unlabelled prose criterion FAILs.
+- [ ] `### Deferred decisions` exists; every row has a decide-by trigger, or
+      the section reads `none`.
+
+Engineering boxes (additionally, at scaffold time):
+
+- [ ] `### Dev scenarios` has ≥ 1 failure-mode row, or an explicit
+      `n/a: <reason>`.
+- [ ] Every phase passes the 8-box Phase-lint below (already mandatory).
+- [ ] No template placeholders left anywhere in the file (same grep, whole
+      file).
+
 ## Design status
 
 `not designed` — capability closure not yet complete. `design-feature` sets
@@ -164,7 +210,12 @@ prefers integration and architecture tests over heavy mocking.
 
 The situations this feature introduces that must be reproducible in local
 dev — happy path **and** failure modes (empty/degraded state, races,
-outages, mass changes, data loss). For each, name it and state how it is
+outages, mass changes, data loss). Seed the failure modes from this **fixed
+category list** — walk every category and write a scenario or
+`n/a: <reason>` (unaided recall under-enumerates; the list makes coverage a
+presence check): empty/zero state · invalid or oversized input · permission
+denied / wrong role · dependency outage or timeout · concurrent/duplicate
+action · limit or threshold hit. For each, name it and state how it is
 reached through an **existing** mechanism (queued message, guard threshold,
 manual override, stubbed source) — scenarios are orchestration, never new
 domain. If the project has a runnable dev-scenario harness, register each
