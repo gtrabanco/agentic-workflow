@@ -1,11 +1,20 @@
 # NN — <feature-slug>
 
-> Feature specification. The doc read at the start of the workflow. Fill every
-> section. Detailed phase tasks live in `PLAN.md` / `TASKS.md`, generated in
-> planning from this spec.
+> Feature specification. This is the **feature doc** read at the start
+> of the workflow (`CLAUDE.md` → Feature workflow). Fill every section.
+> Detailed phase tasks live in `PLAN.md` / `TASKS.md`, generated in
+> planning mode from this spec.
 >
-> Copy this folder to `docs/features/NN-<feature-slug>/` and register the feature
-> in `docs/features/ROADMAP.md` before starting.
+> Copy this folder to `docs/features/NN-<feature-slug>/` and keep the
+> file named `SPEC.md`. Register the feature in
+> `docs/features/ROADMAP.md` before starting.
+>
+> **One SPEC, two halves.** `design-feature` writes the **Product half**
+> (product definition, capability closure, acceptance criteria) and stamps
+> `## Design status`. `plan-feature` refuses to plan a feature not marked
+> `designed`, then writes the **Engineering half** (architecture, design,
+> phases, testing). Never split this into a separate design document —
+> one file, two owners, no drift.
 
 ## Goal
 
@@ -30,83 +39,242 @@ well-cut.
 
 ## Dependencies
 
-What must be merged or true before this can start. Distinguish hard dependencies
-(cannot start without) from soft ones.
+What must be merged or true before this feature can start. Distinguish
+hard dependencies (cannot start without) from soft ones.
 
-## Context
+---
 
-Why this feature, why now. What already exists, what is missing, and what problem
-the gap causes. Reference prior features and their open questions where relevant.
+## Product half
 
-## Business goals
+Written by `design-feature`. Not complete until `## Design status` below reads
+`designed` — `plan-feature` refuses to plan this feature until then.
+
+### Context
+
+Why this feature, why now. What already exists, what is missing, and
+what problem the gap causes. Reference prior features and their open
+questions where relevant.
+
+### Business goals
 
 The business outcome this serves. Omit only if the feature is purely
 internal/technical.
 
-## Technical goals
+### Scope
 
-The architectural outcomes — not implementation detail.
-
-## Scope
-
-### In scope
+#### In scope
 
 Concrete, checkable list of what this feature delivers.
 
-### Out of scope / non-goals
+#### Out of scope / non-goals
 
-Explicit list of what this feature deliberately does NOT do, and which feature
-owns each item instead. This is the primary defence against scope creep.
+Explicit list of what this feature deliberately does NOT do, and which
+feature owns each item instead. This section is the primary defence
+against scope creep during implementation.
 
-## Architecture impact
+### Capability closure
 
-How the feature interacts with the project's architecture (per
-`docs/architecture/ARCHITECTURE.md`). State the invariants the implementation
-must hold (which modules/layers it may and may not touch, dependency-direction
-rules). If it touches sensitive boundaries, justify it here.
+Three fixed checklists — a row a weak model cannot misread. Every row resolves
+to a filled surface **or** an explicit `n/a: <reason>` — a blank row fails the
+gate. The filled rows become the Acceptance criteria below.
 
-## Design
+**1. Entity closure** — for **each entity** this feature introduces or touches,
+**each capability** (action a user can take), and **each role/permission**:
 
-The substantive technical content: data shapes, entities, interfaces, schema,
-algorithms, state machines. Pre-resolve every decision the implementer would
-otherwise have to guess. Close inherited open questions explicitly. This section
-most reduces implementation risk — if it is vague, the implementation improvises.
+```markdown
+For EACH entity this feature introduces or touches:
+- [ ] Create — UI entry point: <where> · API: <surface> · test: <name>  | n/a: <reason>
+- [ ] Read/list — UI: <where> · API: <surface> · test: <name>           | n/a: <reason>
+- [ ] Update — UI: <where> · API: <surface> · test: <name>              | n/a: <reason>
+- [ ] Delete — UI: <where> · API: <surface> · test: <name>              | n/a: <reason>
+- [ ] State transitions (suspend/block/archive/…): <list> — each with UI+API+test | n/a: <reason>
 
-## Decisions to confirm
+For EACH capability (action a user can take):
+- [ ] Visible entry point: <where>
+- [ ] Role matrix — EVERY role in the capability inventory decided:
+      <role>: allowed | denied — one entry per role, no role unlisted | n/a: <reason>
 
-Decisions the lead must make (or has made) before implementation starts. Record
-the chosen option and the rationale.
+For EACH role / permission this feature introduces:
+- [ ] Assigned where · Revoked where · Viewed where
+```
 
-## Acceptance criteria
+**2. Integration closure** — the feature reconciled against the project's
+**capability inventory** (`docs/CAPABILITIES.md` — the maintained list of
+cross-cutting subsystems: auth, ACL/roles, navigation surfaces, notifications,
+search, audit log, settings, …). One row per inventory subsystem — **no
+subsystem skipped**; if the project has no inventory yet, derive one from the
+architecture doc + codebase, walk it, and propose seeding the file:
 
-Objective, verifiable conditions for "done". Each must be checkable without
-judgement. Emit command-checkable criteria as runnable commands where possible
-(a `grep`, a test invocation, a build) — not as prose; genuinely
-judgement-only criteria stay prose, labelled `read-verified`.
+```markdown
+For EACH subsystem in docs/CAPABILITIES.md (or the derived inventory):
+- [ ] <subsystem> — how this feature integrates: <surface / change / hook> · test: <name> | n/a: <reason>
+```
 
-## Testing requirements
+Example rows for a "blog" feature: `auth — writing requires session; public
+read`; `ACL — new permission blog:write; granted to admin, owner`;
+`navigation — dashboard link "Articles", drafts listed above published, "New
+article" button`.
 
-What must be tested and how. State the test layer (unit / integration /
-architecture) and any tooling constraints. Prefer integration and architecture
-tests over heavy mocking.
+### Expectation sweep
 
-## Dev scenarios
+The implicit-knowledge gate. Enumerate what a competent human would **assume
+ships** with a feature of this kind without being told (drafts for a blog, an
+unsubscribe link for email, an empty state for a list…). Fixed protocol:
+**≥ 10 candidate expectations** for an M/L feature, **≥ 5** for XS/S; each row
+resolves to exactly one of `in-scope` (pointer to its acceptance criterion),
+`out-of-scope` (named in *Out of scope / non-goals*), or `deferred` (row in
+*Deferred decisions*) — an unresolved row fails the gate. Rejected
+expectations are value too: they stop being future surprises.
 
-The situations this feature introduces that must be reproducible in local dev —
-happy path **and** failure modes (empty/degraded state, races, outages, mass
-changes, data loss). For each, name it and state how it is reached through an
-**existing** mechanism. Until a runnable harness exists, list them as prose.
+| # | Expectation | Resolution | Pointer |
+|---|---|---|---|
+| 1 | <expectation> | in-scope \| out-of-scope \| deferred | <criterion / scope bullet / deferred row> |
+
+### Acceptance criteria
+
+Objective, verifiable conditions for "done". Each must be checkable
+without judgement — the filled rows of Capability closure above, plus any
+criteria the Engineering half adds once phased. Emit command-checkable
+criteria as runnable commands where possible (a `grep`, a test invocation, a
+build) — not as prose; genuinely judgement-only criteria stay prose, labelled
+`read-verified`.
+
+### Tooling
+
+Installed skills/MCPs relevant to *this* feature (not a global discovery
+sweep — that is `product-audit`'s job). n/a if none apply.
+
+### Product decisions
+
+Product-definition decisions the project lead must make (or has made) before
+implementation starts. Record the chosen option and the rationale.
+
+### Deferred decisions
+
+Decisions deliberately postponed instead of resolved now — the interview's
+"we'll decide later" answers land here, never silently dropped. One row per
+decision; a deferred decision with no decide-by trigger is not deferred, it
+is lost. Write `none` when the section is empty.
+
+| Decision | Why deferred | Decide by (trigger or phase) |
+|---|---|---|
+
+### Spec-lint (mechanical — presence checks only)
+
+Structural gate on this SPEC, modeled on the Phase-lint: every box is a
+presence check a weak model can verify without judgement — fail-closed, no
+quality opinion. Two runners: `design-feature` runs the **product boxes**
+before stamping `## Design status: designed`; `plan-feature-scaffold` runs
+**all boxes** (product boxes re-run as a regression check) before its
+completion report. Any FAIL → fix the SPEC or end `NEEDS_INPUT` — never
+stamp `designed` or report the scaffold over a failed box.
+
+Product boxes:
+
+- [ ] No template placeholders left in the product half —
+      `grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation|criterion)'`
+      over the sections above returns nothing. The fenced Capability-closure
+      template blocks are **replaced** by the instantiated rows when the
+      closure is walked — a SPEC still containing a generic block fails this
+      box.
+- [ ] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — never empty.
+- [ ] Every Capability closure row is filled or `n/a: <reason>` — zero blank
+      rows.
+- [ ] Integration closure has one row per subsystem listed in
+      `docs/CAPABILITIES.md` (or, when the project has no inventory, per the
+      derived inventory recorded in the section) — zero subsystems skipped.
+- [ ] Every capability's role matrix lists EVERY role in the capability
+      inventory with an explicit `allowed`/`denied` — no role unlisted.
+- [ ] `### Expectation sweep` has ≥ 10 resolved rows (M/L) or ≥ 5 (XS/S);
+      every row's resolution is `in-scope`, `out-of-scope`, or `deferred`
+      with a pointer — an unresolved or pointer-less row FAILs.
+- [ ] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same
+      wording or an explicit reference) — an in-scope item with no criterion
+      FAILs.
+- [ ] Every Acceptance criterion is a runnable command OR labelled
+      `read-verified` — an unlabelled prose criterion FAILs.
+- [ ] `### Deferred decisions` exists; every row has a decide-by trigger, or
+      the section reads `none`.
+
+Engineering boxes (additionally, at scaffold time):
+
+- [ ] `### Dev scenarios` has ≥ 1 failure-mode row, or an explicit
+      `n/a: <reason>`.
+- [ ] Every phase passes the 8-box Phase-lint below (already mandatory).
+- [ ] No template placeholders left anywhere in the file (same grep, whole
+      file).
+
+## Design status
+
+`not designed` — capability closure not yet complete. `design-feature` sets
+this to `designed` once every closure row is filled or explicitly `n/a`.
+`plan-feature` refuses to plan a feature not marked `designed`.
+
+---
+
+## Engineering half
+
+Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
+half above is marked `designed`.
+
+### Technical goals
+
+The architectural outcomes — not implementation detail.
+
+### Architecture impact
+
+How the feature interacts with the project's architecture and layering
+(as defined in its architecture doc). State the invariants the
+implementation must hold (e.g. "outer-layer-only — no changes to the
+core/domain layer"). If the feature touches the core/domain, justify it
+here.
+
+### Design
+
+The substantive technical content: entities, ports, adapters, schema,
+data shapes, algorithms, state machines. Pre-resolve every decision the
+implementer would otherwise have to guess. Close inherited open
+questions explicitly. This is the section that most reduces
+implementation risk — if it is vague, the implementation improvises.
+
+### Decisions to confirm
+
+Engineering decisions the project lead must make (or has made) before
+implementation starts. Record the chosen option and the rationale, so
+later reviewers understand the trade-off.
+
+### Testing requirements
+
+What must be tested and how. State the test layer (unit / integration
+/ architecture) and any tooling or runtime constraints. The project
+prefers integration and architecture tests over heavy mocking.
+
+### Dev scenarios
+
+The situations this feature introduces that must be reproducible in local
+dev — happy path **and** failure modes (empty/degraded state, races,
+outages, mass changes, data loss). Seed the failure modes from this **fixed
+category list** — walk every category and write a scenario or
+`n/a: <reason>` (unaided recall under-enumerates; the list makes coverage a
+presence check): empty/zero state · invalid or oversized input · permission
+denied / wrong role · dependency outage or timeout · concurrent/duplicate
+action · limit or threshold hit. For each, name it and state how it is
+reached through an **existing** mechanism (queued message, guard threshold,
+manual override, stubbed source) — scenarios are orchestration, never new
+domain. If the project has a runnable dev-scenario harness, register each
+scenario there (dev-gated, never reaching production) and link it here;
+otherwise list them as prose.
 
 | Scenario | Reproduces | Mechanism it drives |
 |---|---|---|
 | `<area>:<name>` | the situation | the existing trigger |
 
-## Phases
+### Phases
 
-High-level phase breakdown; detailed tasks are expanded in `TASKS.md`. **Phases
-are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or "Steps".**
-Planning (producing the planning artifacts) is done by `plan-feature` before
-execution, so it is **not** a numbered phase here. `P1` is the first
+High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
+**Phases are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or
+"Steps".** Planning (producing the planning artifacts) is done by `plan-feature`
+before execution, so it is **not** a numbered phase here. `P1` is the first
 implementation phase (it also commits the planning artifacts); the **last phase
 is always hardening** (edge cases + the dev-scenario failure modes). For **M/L**,
 opening the PR is the final *step* of the hardening phase (its `TASKS.md`
@@ -115,24 +283,56 @@ checklist ends with the literal close-out tasks), not a phase of its own. For
 tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
 carrying the literal close-out tasks (fixed wording — see
 `docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` runs one phase per
-invocation and ticks this section as its ledger.
+invocation and ticks this section as its ledger. Each implementation phase
+header is followed by `Layer: <schema/db|domain|api|ui|config/infra|docs|
+hardening>. Done-when: <command> → <expected outcome>.` before its task list
+(same scaffold as `docs/fix/_TEMPLATE/SPEC.md` `### P1`) — the phase-lint's
+"one declared layer" and "machine-checkable done-when" boxes need somewhere to
+be filled in, not invented.
 
-## Deploy & rollback
+#### Phase-lint (quoted — authoritative copy is `docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint"; keep in sync)
+
+Every implementation phase below must pass all 8 boxes before it is emitted
+(planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
+unticked box blocks emission/execution until the phase is re-cut or split.
+
+- [ ] Title names ONE deliverable — FAIL if it joins nouns with `+`, `,`,
+      `&`, `and`/`y`, or `/`.
+- [ ] One declared layer — each phase declares exactly one of the fixed enum
+      `schema/db | domain | api | ui | config/infra | docs | hardening |
+      close-out`; FAIL if any task's target file belongs to another. Tests
+      for the phase's own layer belong to the phase; a test-only phase
+      declares `hardening`.
+- [ ] ≤ 8 tasks (close-out phase: ≤ 10, only the literal close-out chain).
+- [ ] One checkbox = one deliverable — FAIL if a task contains a `→` chain
+      of implementation steps, enumerates > 3 cases/scenarios, or creates
+      > 1 file of distinct concerns.
+- [ ] Zero decision words — FAIL on `Decide`, `choose`, `OR` between
+      alternatives, `If … then <change scope>`.
+- [ ] No conditional scope mutation — a task may not move work between
+      phases at runtime.
+- [ ] No external/manual gates inside implementation phases —
+      human/out-of-repo verifications live in the hardening/close-out phase,
+      marked `manual`.
+- [ ] Machine-checkable done-when — every phase ends with one verifiable
+      invariant (a command + expected outcome).
+
+### Deploy & rollback
 
 Only when shipping needs more than merging: schema migrations and their order,
 feature flag (if gradual rollout), config/env changes, and the rollback path
 (revert PR? data cleanup?). State **n/a** explicitly when merging is enough.
 
-## Open questions / risks
+### Open questions / risks
 
-Known unknowns and risks. Promote to `TASKS.md` if they become blockers. Mark
-inherited questions as RESOLVED or DEFERRED with a pointer to where they're now
-handled.
+Known unknowns and risks. Promote to `TASKS.md` if they become
+blockers. Mark inherited questions as RESOLVED or DEFERRED with a
+pointer to where they are now handled.
 
-## Deliverables
+### Deliverables
 
 The concrete artifacts the PR contains.
 
-## Post-merge next feature
+### Post-merge next feature
 
 The expected next feature in the sequence — see `docs/features/ROADMAP.md`.

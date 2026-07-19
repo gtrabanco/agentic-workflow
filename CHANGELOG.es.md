@@ -144,6 +144,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.8.0 | 2026-07-19 | menor | La casilla de docs de la puerta de cierre de fase ahora incluye `docs/CAPABILITIES.md`: una fase que introduce un nuevo subsistema transversal, rol o permiso añade su fila al inventario de capacidades (aditivo, nunca reescribe filas existentes; n/a explícito cuando el proyecto no tiene fichero de inventario). |
 | 2.7.0 | 2026-07-19 | menor | Endurecimiento para modelos pequeños: nueva regla dura de **presupuesto de contexto** (≤ 10 lecturas de fichero completo por fase más allá de los docs propios de la unidad; lecturas dirigidas ≤ 50 líneas y greps no cuentan; conjunto mínimo fijo del Paso 0; resume-no-retengas) y nuevo **registro de handoff de fase** — `progress.md` gana un esquema fijo de entrada por fase (`Done / Remains / Gotchas / Files / Next`), creado junto al SPEC en P1 para unidades XS/S por fases y `--fix`; la fase siguiente arranca en conversación nueva y lee solo `SPEC.md` + su sección de `TASKS.md` + `progress.md`. El atajo de relectura en misma sesión se elimina (una fase = una conversación nueva); la casilla de docs de la puerta de cierre nombra el esquema. |
 | 2.6.0 | 2026-07-18 | menor | Fix #77: sustituye la cadencia fija de checkpoint de revisión cada 2 fases por tres disparadores mecánicos — **límite de capa** (la siguiente fase declara un `Layer:` distinto), **acumulación** (`git diff --stat <baseline>..HEAD` > 400 líneas u > 8 ficheros desde el marcador última-revisión), y **sensibilidad** (fase de auth/pagos/migración destructiva/secretos/CI) — más la especificación del marcador `Last reviewed: <sha>` en `progress.md` (único escritor `execute-phase`, respaldo `git merge-base` si está ausente). La revisión final obligatoria y la cadencia adversarial de `review-change` no cambian. |
 | 2.5.2 | 2026-07-18 | parche | Fix #76: el hand-off obligatorio de revisión de fin de unidad ahora anota cuándo `review-change` recomienda `--adversarial N` en esa revisión terminal — solo redacción, la cadencia del checkpoint cada 2 fases no cambia. |
@@ -183,6 +184,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `design-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-19 | menor | Cierre de requisitos implícitos: el cierre de capacidades pasa a tres checklists fijas — cierre de entidades (sin cambios), nuevo **cierre de integración** (una fila resuelta por subsistema del inventario de capacidades del proyecto, `docs/CAPABILITIES.md` — ninguno omitido; sin inventario → deriva uno y ofrece sembrar el fichero) y una **matriz de roles** (cada rol del inventario explícitamente permitido/denegado por capacidad) — más un nuevo paso y sección del SPEC de **barrido de expectativas** (≥ 10 M/L / ≥ 5 XS/S expectativas de dominio que un humano asumiría implícitamente, cada una forzada a in-scope/out-of-scope/deferred). Tres nuevas casillas de producto del Spec-lint, casillas equivalentes en el contrato de turno y guardarraíles; el Paso 0 lee el inventario. |
 | 2.2.0 | 2026-07-19 | menor | Endurecimiento de la entrevista para modelos pequeños: **una pregunta por turno, nunca en lote**; una **rúbrica de vaguedad** fija de seis huecos (usuarios/roles afectados · estados de error y borde · forma de los datos · límites y umbrales · fuera de alcance · criterios de éxito — cada uno relleno o `n/a` explícito); regla de pregunta obligatoria (un requisito sin criterio de aceptación verificable es automáticamente la siguiente pregunta); técnica de reformular-como-medible; las respuestas "decidir más tarde" aterrizan en la nueva sección `### Deferred decisions` del SPEC; escalada estructural (≥ 3 huecos vacíos → `NEEDS_INPUT`, nunca adivinar). Sellar `designed` ahora exige las nuevas **casillas de producto del Spec-lint** de la plantilla de SPEC (comprobaciones mecánicas de presencia — resultados pegados, fail-closed). |
 | 2.1.0 | 2026-07-17 | menor | La sección de semántica de upsert ahora referencia cruzadamente la puerta de integridad de cierre de `audit-pr`: el warning datado `design-debt` de una SPEC legacy es el disparador de retrofit, y reejecutar esta skill rellena solo las filas de cierre faltantes por el mismo camino de upsert-nunca-destruye. Parte de #78. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. También se elimina una referencia colgante a la sección borrada (un puntero cruzado en `NEEDS_INPUT`). Ver `docs/workflow/MIGRATION.md`. |
@@ -291,6 +293,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.2.0 | 2026-07-19 | menor | La dimensión Proceso y docs gana **frescura del inventario de capacidades**: contrasta `docs/CAPABILITIES.md` con el código (roles/permisos/subsistemas presentes en uno pero no en el otro son un hallazgo); un fichero de inventario ausente produce una propuesta de sembrarlo, nunca un auto-arreglo. |
 | 2.1.0 | 2026-07-17 | menor | Nueva señal de **recurrencia de exportación de alcance** en la dimensión Disciplina de workflow: ≥ 2 unidades recientes consecutivas, cada una con una bitácora `## Amendments` de descope no vacía o un issue nacido clasificado como descope (puerta de scope-bleed de `audit-pr`), es un hallazgo de calidad de planificación ("features recortadas demasiado grandes para la capacidad real"), enrutado a las reglas de atomicidad/división (#64). El formato de salida gana un ejemplo trabajado bajo Top findings. Parte de #66. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-10 | menor | Nueva dimensión "Installed tooling" + paso de proceso: inventaría las skills instaladas y los servidores MCP conectados, los cruza contra los ejes de revisión aplicables y el roadmap, y añade un cuarto flujo de propuestas ("Tooling: register / re-design") — registrar una herramienta útil no registrada en `CLAUDE.md`, o enrutar un descubrimiento que cambia el alcance a `/design-feature`. Solo propone; nunca registra ni edita `CLAUDE.md`. Se añade `detail.proposed_tooling` al envelope máquina (aditivo). |
@@ -351,6 +354,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-19 | menor | La entrevista de bootstrap gana un paso de **inventario de capacidades**: siembra `docs/CAPABILITIES.md` desde el descubrimiento (roles + `yes\|no\|partial` por fila de subsistema de la plantilla propuestos desde el código; en un repo vacío las filas fijas se recorren con el usuario), podando filas que nunca aplican — nunca se deja como plantilla en bruto. El diff de plantilla del modo upgrade nombra el inventario y lo propone con los mismos valores sembrados por descubrimiento. |
 | 2.2.0 | 2026-07-11 | menor | Siembra las etiquetas `urgent`/`fix-next` a prueba de inyección (`gh label create`, crea-si-falta) en el proceso del modo bootstrap (nuevo paso 7); el modo upgrade añade la que falte de forma aditiva (nuevo paso 6, sin tocar nunca una etiqueta que el proyecto ya personalizó). Nunca redefine el vocabulario — `triage-issue` sigue siendo la única propietaria. Forge no disponible → se omite y se reporta como residual, nunca falla el andamiaje. |
 | 2.1.1 | 2026-07-10 | patch | La `description:` ahora nombra el modo upgrade y añade sus frases disparadoras ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — los metadatos del loader no mencionaban el modo que añadió 2.1.0, por lo que no era descubrible de forma fiable mediante lenguaje natural. Sin cambio de comportamiento. |
 | 2.1.0 | 2026-07-10 | menor | Añade un **modo upgrade**: en un repo que el Step 0 reconoce como andamiaje agentic-workflow existente, ahora se ofrece upgrade junto a merge/adapt/abort — compara el sustrato con el `template/` actual, lee `docs/workflow/MIGRATION.md`, propone solo los bloques que faltan mediante una entrevista corta con valores por defecto de descubrimiento, y nunca reescribe un bloque personalizado (aditivo, nunca sobrescribe). Refuerza los cuatro casos límite (sin deriva, `MIGRATION.md` ausente, bloque personalizado, bootstrap sin cambios). El modo bootstrap queda igual. Ver `docs/workflow/MIGRATION.md`. |
@@ -448,6 +452,18 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-19 — cierre de requisitos implícitos.** Un pase coordinado para
+  que "añade un blog" implique el permiso en el ACL, el enlace en el
+  dashboard y el requisito de auth sin que nadie lo diga: nuevo inventario de
+  capacidades `docs/CAPABILITIES.md` en la plantilla (+ fila en el mapa de
+  documentación), **cierre de integración** + **matriz de roles** + **barrido
+  de expectativas** en la plantilla de SPEC y `design-feature` 2.3.0, siembra
+  del inventario en `init-workspace` 2.3.0, mantenimiento aditivo del
+  inventario en `execute-phase` 2.8.0, y comprobación de frescura en
+  `product-audit` 2.2.0. El
+  `template/docs/features/_TEMPLATE/SPEC.md` exportable se resincroniza con
+  la plantilla canónica de dos mitades. Nota de migración:
+  `docs/workflow/MIGRATION.md` (2026-07-19).
 - **2026-07-19 — pase de endurecimiento para modelos pequeños.** Un pase
   coordinado para que las skills corran con fiabilidad en modelos ejecutores
   pequeños/baratos (contexto modesto, sin caché de prompt): **presupuestos de

@@ -74,11 +74,12 @@ against scope creep during implementation.
 
 ### Capability closure
 
-For **each entity** this feature introduces or touches, **each capability**
-(action a user can take), and **each role/permission** — a checklist row a
-weak model cannot misread. Every row resolves to a filled surface **or** an
-explicit `n/a: <reason>` — a blank row fails the gate. The filled rows become
-the Acceptance criteria below.
+Three fixed checklists — a row a weak model cannot misread. Every row resolves
+to a filled surface **or** an explicit `n/a: <reason>` — a blank row fails the
+gate. The filled rows become the Acceptance criteria below.
+
+**1. Entity closure** — for **each entity** this feature introduces or touches,
+**each capability** (action a user can take), and **each role/permission**:
 
 ```markdown
 For EACH entity this feature introduces or touches:
@@ -90,11 +91,44 @@ For EACH entity this feature introduces or touches:
 
 For EACH capability (action a user can take):
 - [ ] Visible entry point: <where>
-- [ ] Who may execute it (ACL): <role(s)>
+- [ ] Role matrix — EVERY role in the capability inventory decided:
+      <role>: allowed | denied — one entry per role, no role unlisted | n/a: <reason>
 
-For EACH role / permission:
+For EACH role / permission this feature introduces:
 - [ ] Assigned where · Revoked where · Viewed where
 ```
+
+**2. Integration closure** — the feature reconciled against the project's
+**capability inventory** (`docs/CAPABILITIES.md` — the maintained list of
+cross-cutting subsystems: auth, ACL/roles, navigation surfaces, notifications,
+search, audit log, settings, …). One row per inventory subsystem — **no
+subsystem skipped**; if the project has no inventory yet, derive one from the
+architecture doc + codebase, walk it, and propose seeding the file:
+
+```markdown
+For EACH subsystem in docs/CAPABILITIES.md (or the derived inventory):
+- [ ] <subsystem> — how this feature integrates: <surface / change / hook> · test: <name> | n/a: <reason>
+```
+
+Example rows for a "blog" feature: `auth — writing requires session; public
+read`; `ACL — new permission blog:write; granted to admin, owner`;
+`navigation — dashboard link "Articles", drafts listed above published, "New
+article" button`.
+
+### Expectation sweep
+
+The implicit-knowledge gate. Enumerate what a competent human would **assume
+ships** with a feature of this kind without being told (drafts for a blog, an
+unsubscribe link for email, an empty state for a list…). Fixed protocol:
+**≥ 10 candidate expectations** for an M/L feature, **≥ 5** for XS/S; each row
+resolves to exactly one of `in-scope` (pointer to its acceptance criterion),
+`out-of-scope` (named in *Out of scope / non-goals*), or `deferred` (row in
+*Deferred decisions*) — an unresolved row fails the gate. Rejected
+expectations are value too: they stop being future surprises.
+
+| # | Expectation | Resolution | Pointer |
+|---|---|---|---|
+| 1 | <expectation> | in-scope \| out-of-scope \| deferred | <criterion / scope bullet / deferred row> |
 
 ### Acceptance criteria
 
@@ -138,13 +172,22 @@ stamp `designed` or report the scaffold over a failed box.
 Product boxes:
 
 - [ ] No template placeholders left in the product half —
-      `grep -nE '<(where|surface|name|reason|list|role)'` over the sections
-      above returns nothing. The fenced Capability-closure template block is
-      **replaced** by the instantiated rows when the closure is walked — a
-      SPEC still containing the generic block fails this box.
+      `grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation|criterion)'`
+      over the sections above returns nothing. The fenced Capability-closure
+      template blocks are **replaced** by the instantiated rows when the
+      closure is walked — a SPEC still containing a generic block fails this
+      box.
 - [ ] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — never empty.
 - [ ] Every Capability closure row is filled or `n/a: <reason>` — zero blank
       rows.
+- [ ] Integration closure has one row per subsystem listed in
+      `docs/CAPABILITIES.md` (or, when the project has no inventory, per the
+      derived inventory recorded in the section) — zero subsystems skipped.
+- [ ] Every capability's role matrix lists EVERY role in the capability
+      inventory with an explicit `allowed`/`denied` — no role unlisted.
+- [ ] `### Expectation sweep` has ≥ 10 resolved rows (M/L) or ≥ 5 (XS/S);
+      every row's resolution is `in-scope`, `out-of-scope`, or `deferred`
+      with a pointer — an unresolved or pointer-less row FAILs.
 - [ ] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same
       wording or an explicit reference) — an in-scope item with no criterion
       FAILs.

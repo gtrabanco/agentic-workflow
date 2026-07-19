@@ -1,7 +1,7 @@
 ---
 name: product-audit
 user-invocable: true
-version: 2.1.0
+version: 2.2.0
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -88,7 +88,7 @@ pack covers every axis).
 | **SEO** | Indexability, metadata, structured data | web |
 | **Brand / voice** | User-facing copy vs. the brand guide | surfaces with copy |
 | **Tech debt** | Accumulated shortcuts, TODO/FIXME, stale abstractions | all |
-| **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs | all |
+| **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs, capability-inventory freshness (`docs/CAPABILITIES.md` ↔ code drift) | all |
 | **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks 1–13 mechanically** (compose it); never assume a rule held because it "should". **Scope-export recurrence:** across the most recent units (merged or in-flight), each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) counts as one scope-exporting unit — **≥ 2 consecutive** such units is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (**#64**), not re-litigated as a per-unit defect | all |
 | **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | all |
 | **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope | all |
@@ -109,7 +109,13 @@ internal review pack (`review-code`, `review-security`, `review-verify`,
    extras. Classify findings (severity + fix-now / postpone / tradeoff).
 3. **Audit process & docs** — incomplete phases (`progress.md`/`TASKS.md`), aging
    open issues, **solvable known-issues** (trigger now met), doc-map completeness
-   (compose `audit-docs`), and missing/optimizable workflow docs.
+   (compose `audit-docs`), missing/optimizable workflow docs, and **capability
+   inventory freshness**: cross-check `docs/CAPABILITIES.md` against the code —
+   roles, permissions, or cross-cutting subsystems present in the code but
+   missing from the inventory (or vice versa) are a Process & docs finding
+   (`design-feature`'s Integration closure is only as good as this file). If
+   the project has no inventory file, propose seeding it from the template —
+   a finding, never an auto-fix.
 4. **Mine accumulated suggestions** — read every feature folder's `decisions.md`,
    `known-issues.md`, and `architecture-notes.md`; extract deferred items, open
    questions, and recorded debt. Cluster duplicates across features.

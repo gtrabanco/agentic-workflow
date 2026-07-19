@@ -22,6 +22,7 @@ your domains.
 |---|---|
 | Any code change | `docs/architecture/ARCHITECTURE.md` |
 | New feature / planning / sequencing | `docs/features/ROADMAP.md`, `docs/features/_TEMPLATE/SPEC.md` |
+| Feature design — capability & integration closure | `docs/CAPABILITIES.md` *(the capability inventory: roles + cross-cutting subsystems; extended whenever a feature introduces one)* |
 | A fix | `docs/fix/_TEMPLATE/SPEC.md`, `docs/fix/README.md` |
 | Integrating an external provider | `docs/providers/<provider>.md` |
 | SEO / metadata / structured data | `docs/frontend/SEO.md` *(optional)* |

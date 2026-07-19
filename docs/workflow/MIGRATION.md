@@ -37,6 +37,37 @@ this section is just the map.
 Everything below this point is the dated, detailed record — read a specific
 entry when the summary above isn't enough context to act.
 
+## 2026-07-19 — capability inventory, integration closure & expectation sweep
+
+**What changed.** `design-feature` 2.3.0 attacks the implicit-requirements gap
+("add a blog" must imply the ACL permission, the dashboard link, the auth
+requirement) with three additions:
+
+- **`docs/CAPABILITIES.md` — the capability inventory** (new template file +
+  documentation-map row): the maintained list of the project's roles and
+  cross-cutting subsystems (auth, ACL, navigation, notifications, search,
+  audit, settings, …). Seeded by `init-workspace` (bootstrap interview or
+  upgrade mode), extended additively by `execute-phase` when a phase
+  introduces a subsystem/role/permission, freshness-checked by
+  `product-audit`.
+- **Integration closure** — the SPEC template's `### Capability closure` now
+  carries three fixed checklists: the existing entity closure, a new
+  integration closure (one resolved row per inventory subsystem — none
+  skipped), and a role matrix (every inventory role explicitly
+  `allowed`/`denied` per capability). Three new Spec-lint product boxes
+  enforce them.
+- **`### Expectation sweep`** — a new SPEC section: ≥ 10 (M/L) / ≥ 5 (XS/S)
+  domain expectations a human would assume implicitly, each forced to
+  in-scope / out-of-scope / deferred.
+
+**Migration.** Additive — nothing breaks. Legacy SPECs without the new
+sections stay valid until the next `design-feature <slug>` upsert, which
+backfills them (same retrofit path as the original closure rule; `audit-pr`'s
+closure-integrity gate keeps treating legacy SPECs as a dated warning, never a
+blocker). To adopt: `npx skills update`, then run `init-workspace` (upgrade
+mode proposes `docs/CAPABILITIES.md` seeded from discovery) — or copy
+`template/docs/CAPABILITIES.md` and fill it by hand.
+
 ## 2026-07-10 — `init-workspace` gains an upgrade mode for existing scaffolds
 
 **Additive, non-breaking.** `init-workspace` gains a second mode: on a repo
