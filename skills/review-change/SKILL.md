@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.5.0
+version: 2.6.0
 argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -95,22 +95,55 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 | `review-seo` | ✓ | ✗ | ✗ | ✗ | ✗ |
 | API ergonomics / usage docs (inline pass) | if API | if API | flags/help | ✓✓ | ✓ |
 
+## Isolation rule (default — every pass, not only adversarial)
+
+Each review pass (`review-implementation` in step 1 and every applicable pack
+pass in step 4) runs **isolated and context-clean**, and returns **only its
+fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
+
+- **Spawn**: on Claude Code, one subagent per pass; on an agent with headless
+  invocation, one headless run per pass; with neither, a fresh conversation
+  per pass (same three tiers as the adversarial spawn below).
+- **Each pass receives ONLY**: (a) the scope (branch/diff reference or
+  path-glob), (b) its own `SKILL.md` checklist, (c) the specific project docs
+  its Step 0 names. Context budget per pass: the diff plus **at most 10
+  non-diff files read in full** (targeted ≤ 50-line reads and greps don't
+  count).
+- **The orchestrator holds tables, not sources.** After dispatch it never
+  re-reads the diff or the files — it merges the returned tables (step 6)
+  and runs steps 7–11 on them.
+- **Inline fallback** (an agent that cannot spawn any fresh context):
+  compose the passes in-turn as before — sequentially, and each pass must
+  end by reducing to its table before the next pass starts; never hold two
+  passes' raw context at once.
+- The composition tier rule is unchanged: a spawned pass runs at ≥ its own
+  tier (the session model or stronger — never a weaker override).
+
 ## Process
 
 1. **Findings engine.** No flag → run `review-implementation` once over the
-   scope → its classified decision table (fix-now / postpone / ignore /
-   intentional-tradeoff), unchanged from before this mode existed. With
+   scope (isolated, per the *Isolation rule* above) → its classified decision
+   table (fix-now / postpone / ignore / intentional-tradeoff), unchanged from
+   before this mode existed. With
    `--adversarial N` → run the **adversarial multi-reviewer mode** below
    instead. With `--merge` → skip straight to that mode's fusion step (N
    findings tables pasted in, per the merge contract). Either way, everything
    from step 2 onward runs once, over the merged table, exactly as in the
    no-flag case.
-2. **SPEC drift check.** Locate the governing SPEC (feature or fix) and compare
-   the diff against its scope and acceptance criteria: flag work that contradicts
-   the SPEC, silently exceeds it, or leaves a claimed criterion untouched.
-   Findings get axis `spec-drift` in the table. Catching drift at a phase
-   checkpoint is far cheaper than at the `audit-pr` merge gate. (No SPEC found →
-   note it and skip.)
+2. **SPEC drift check (structural).** Locate the governing SPEC (feature or
+   fix) and build a **per-criterion coverage table** — one row per acceptance
+   criterion, no free-form comparison:
+
+   ```
+   | criterion | evidence (file:line or command run) | met | unmet | untouched |
+   ```
+
+   Then map each diff hunk to a criterion — or to `none`. Findings, axis
+   `spec-drift`: (a) every criterion marked `unmet`/`untouched` that the unit
+   claims delivered, and (b) every `none`-mapped hunk (work the SPEC never
+   asked for — silent scope excess). Catching drift at a phase checkpoint is
+   far cheaper than at the `audit-pr` merge gate. (No SPEC found → note it
+   and skip.)
 3. **Workflow-discipline check (mechanical, every review).** On the branch
    under review, verify and file findings under axis `workflow`:
    commits follow `<type>(<scope>): <summary>`; phase labels in touched
@@ -127,8 +160,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 4. **Applicable pack passes.** For each axis the matrix + footprint mark as
    relevant, run the workflow's own internal skill for it (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
-   `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — composed in-turn
-   (this same conversation), each returning its fixed-format table + PASS|FAIL.
+   `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — **isolated,
+   per the *Isolation rule* above** (in-turn composition only as its stated
+   inline fallback), each returning ONLY its fixed-format table + PASS|FAIL.
    **Skip the rest** and say which you skipped and why. The pack ships with the
    workflow, so an applicable pass can never be "missing".
 5. **Optional extras.** If the project recorded additional platform review skills
@@ -440,6 +474,10 @@ enables:
   literally, in a fresh conversation: hand-offs assume a clean context.
   "Compose in-turn" means the opposite: run that step within this same
   conversation, as part of this review.
+- **Default-pass isolation** — the *Isolation rule* uses the same three spawn
+  tiers as `--adversarial N` (subagents / headless / fresh conversations); an
+  agent with none of them runs the documented inline fallback: sequential
+  in-turn passes, each reduced to its findings table before the next starts.
 - **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   this review needs your **strongest** model. Never review a change with a
   model weaker than the one that wrote it — and prefer a different model family
@@ -501,11 +539,13 @@ enables:
 
 ## Relationship to other skills
 
-- Composes `review-implementation` (engine), the internal review pack
+- Orchestrates `review-implementation` (engine) and the internal review pack
   (`review-code`, `review-security`, `review-verify`, `review-debt`,
-  `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`),
-  `triage-issue` (every non-fix-now finding — equal tier, in-turn), and — as
-  optional extras only — any platform review skills the project installed.
+  `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`)
+  — isolated per pass by default (see *Isolation rule*; in-turn composition is
+  the fallback) — plus `triage-issue` (every non-fix-now finding — equal tier,
+  in-turn), and — as optional extras only — any platform review skills the
+  project installed.
 - Sits in Stage 4 of the feature workflow; `execute-phase` recommends it at its
   trigger-based checkpoints (optional) and hands off for the **mandatory end
   review** (it runs in its own turn). `fix-now` → `plan-fix`; everything else →

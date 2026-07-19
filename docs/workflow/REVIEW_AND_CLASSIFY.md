@@ -29,7 +29,10 @@ tests, build).
 ## How to invoke
 
 - `/review-change` — the orchestrator: runs the applicable axes for this platform
-  and synthesizes one table + a manual-verification checklist. Use this before a PR.
+  — each pass **isolated by default** (context-clean, returns only its findings
+  table; in-turn composition is the fallback for agents that can't spawn fresh
+  contexts) — and synthesizes one table + a manual-verification checklist. Use
+  this before a PR.
 - `/review-implementation` — just the engine; defaults to the **current branch diff
   vs `main`**.
 - Pass a path/glob to widen or narrow scope, e.g. *"review-implementation on

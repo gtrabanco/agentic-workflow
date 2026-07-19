@@ -1,7 +1,7 @@
 ---
 name: plan-feature-from-issue
 user-invocable: false
-version: 1.4.0
+version: 1.5.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -51,9 +51,16 @@ gh issue view <N> --json number,title,body,labels,state,comments
 4. **Close product-half gaps proactively.** Compare the issue against what a
    complete SPEC **product half** needs (goals, scope in/out, business goals,
    i18n/SEO/a11y/pricing per the docs map, a UI design reference when the
-   feature has a UI surface). For each genuine gap you can't safely default,
-   ask the user (batch related questions; never ask what the issue or docs
-   already answer).
+   feature has a UI surface), probing the same fixed **vagueness rubric**
+   `design-feature`'s interview uses: affected users/roles · error & edge
+   states · data shape · boundaries & limits · out of scope · success
+   criteria — each slot filled or explicit `n/a: <reason>`. For each genuine
+   gap you can't safely default, ask the user **one question per turn, never
+   batched**, each with a recommended default; never ask what the issue or
+   docs already answer. **Structural hand-off threshold:** if ≥ 3 rubric
+   slots remain unfillable from the issue plus the answers so far, stop and
+   hand the feature to `design-feature` (the thin-issue rule below, now with
+   a fixed trigger) instead of continuing to interview here.
 5. **Satisfy capability closure.** Walk the same fixed checklist
    `design-feature` uses (per entity: CRUD + state transitions, each with UI +
    API + test, or explicit `n/a: <reason>`; per capability: entry point + ACL;

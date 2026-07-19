@@ -32,9 +32,16 @@ listado).
 
 `design-feature <slug>`:
 
-- Incorpora la entrevista de idea-en-bruto (problema y objetivo, alcance
-  dentro/fuera, pistas de arquitectura, preocupaciones transversales) cuando
-  se parte de cero.
+- Incorpora la entrevista de idea-en-bruto cuando se parte de cero — **una
+  pregunta por turno, nunca en lote**, cada una con un valor por defecto
+  recomendado. La lista de preguntas es una **rúbrica de vaguedad** fija de
+  seis huecos (usuarios/roles afectados · estados de error y borde · forma de
+  los datos · límites y umbrales · fuera de alcance · criterios de éxito);
+  todo requisito sin criterio de aceptación verificable es automáticamente la
+  siguiente pregunta, la redacción vaga se reformula como objetivos medibles,
+  las respuestas "decidir más tarde" aterrizan en la sección
+  `### Deferred decisions` del SPEC, y ≥ 3 huecos vacíos terminan el turno en
+  `NEEDS_INPUT` en lugar de adivinar.
 - Ejecuta **investigación proporcional**: primero la checklist de cierre de
   capacidades (barata), investigación externa/de dominio solo cuando el
   dominio es nuevo para el proyecto — sin investigación de mercado
@@ -61,8 +68,11 @@ listado).
   mantiene uniforme, pero pasarla es barato.
 
 Una vez que cada fila de cierre está rellenada o explícitamente marcada
-`n/a`, `design-feature` fija `## Design status` en `designed` y entrega el
-control a `/plan-feature <slug>`.
+`n/a` **y todas las casillas de producto del Spec-lint de la plantilla de SPEC
+marcan** (comprobaciones mecánicas de presencia: sin placeholders,
+fuera-de-alcance no vacío, cada criterio ejecutable o `read-verified`,
+decisiones diferidas presentes), `design-feature` fija `## Design status` en
+`designed` y entrega el control a `/plan-feature <slug>`.
 
 ### La puerta de redirección
 
@@ -159,8 +169,11 @@ equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
    trabaja sobre `main`). **En P1 primero confirma los artefactos de
    planificación por separado** (`docs(NN-slug): planning artifacts`), de
    modo que el historial de planificación quede aparte de la implementación.
-2. Lee `progress.md` (qué hicieron las fases anteriores), luego `SPEC.md` +
-   `TASKS.md` de la fase solicitada.
+2. Lee `progress.md` (el **registro de handoff de fase** — una entrada fija
+   `Done / Remains / Gotchas / Files / Next` por fase), luego `SPEC.md` +
+   `TASKS.md` de la fase solicitada. Ese es todo el handoff — cada fase corre
+   en una conversación nueva bajo un presupuesto de contexto explícito (≤ 10
+   lecturas de fichero completo más allá de los docs propios de la unidad).
 3. Implementa **solo esa fase** — **tests primero** en el trabajo de
    core/dominio y orquestación: los tests de aceptación/integración de la
    fase se escriben en rojo, y luego se implementa hasta verde (los
@@ -170,7 +183,8 @@ equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
    build). **Nunca confirma en rojo** — un fallo que no se puede arreglar
    dentro del alcance va a `known-issues.md` y la ejecución se detiene con un
    informe.
-5. Actualiza `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` (y
+5. Actualiza `TASKS.md`, `progress.md` (añadiendo la entrada de handoff de la
+   fase en el esquema fijo), `testing.md`, `known-issues.md` (y
    `decisions.md` si la arquitectura se movió). Cuando la realidad
    contradice el plan, se actualizan `TASKS.md`/`PLAN.md` y el porqué se
    registra en `decisions.md` — nunca una divergencia silenciosa.
