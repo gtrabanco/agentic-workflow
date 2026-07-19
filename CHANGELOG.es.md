@@ -293,6 +293,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.3.0 | 2026-07-19 | menor | Cada ejecución queda ahora **persistida**: el informe se escribe y commitea como `docs/audits/<id>-<YYYY-MM-DD>.md` con un id de auditoría incremental (la única mutación de la skill). Los hallazgos llevan una única secuencia `F1, F2, …` ordenada por severidad (nunca letras por dimensión), las propuestas citan sus hallazgos de origen (`from: F<k>`), todos los flujos de propuestas — incluidos los de roadmap — están siempre presentes (`none — <why>` cuando están vacíos), y el bloque de cierre enruta a `triage-issue <id> F<k>` (sugiere el triaje, nunca lo ejecuta). |
 | 2.2.0 | 2026-07-19 | menor | La dimensión Proceso y docs gana **frescura del inventario de capacidades**: contrasta `docs/CAPABILITIES.md` con el código (roles/permisos/subsistemas presentes en uno pero no en el otro son un hallazgo); un fichero de inventario ausente produce una propuesta de sembrarlo, nunca un auto-arreglo. |
 | 2.1.0 | 2026-07-17 | menor | Nueva señal de **recurrencia de exportación de alcance** en la dimensión Disciplina de workflow: ≥ 2 unidades recientes consecutivas, cada una con una bitácora `## Amendments` de descope no vacía o un issue nacido clasificado como descope (puerta de scope-bleed de `audit-pr`), es un hallazgo de calidad de planificación ("features recortadas demasiado grandes para la capacidad real"), enrutado a las reglas de atomicidad/división (#64). El formato de salida gana un ejemplo trabajado bajo Top findings. Parte de #66. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
@@ -335,6 +336,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.4.0 | 2026-07-19 | menor | Nuevo **modo hallazgo-de-auditoría** (`triage-issue <audit-id> F<k> …`): tría hallazgos de un informe persistido de `product-audit` — re-verifica el hallazgo contra el código actual, deduplica contra issues existentes, abre el issue de GitHub solo con un veredicto fix-now/postpone/promote (el cuerpo cita `Origin: product audit <id>, finding F<k>`), y marca el hallazgo como triado en el fichero de auditoría con una nota datada `↳ triaged`. Las invocaciones por número de issue no cambian. |
 | 2.3.0 | 2026-07-18 | menor | Añade conciencia de unidad abierta (complemento del lado consumidor de `#66`): un chequeo de pertenencia de alcance se ejecuta antes de clasificar (enumerar unidades abiertas → comparación issue↔SPEC/fase citando ambos lados) y un quinto veredicto `fix-in-unit <unit>` resuelve los issues miembros en la propia rama de la unidad abierta — fold en su ledger `review-findings.md` (fila con marca de procedencia `triage #<n> <fecha>`) o en su fase actual/siguiente, un replan incremental (`design-feature`/`plan-feature`/una entrada `## Amendments` en el SPEC), o una restauración de scope-bleed. Los issues sin unidad se enrutan sin cambios, byte a byte. Corrige `#86`+`#87`. |
 | 2.2.0 | 2026-07-14 | menor | Es propietaria de un segundo vocabulario de etiquetas — etiquetas de disposición terminal (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): aplica la etiqueta correspondiente — creándola con `gh label create` si falta — como parte de un veredicto `postpone`/`promote`/`wontfix`, replicando la mecánica de las etiquetas de urgencia. Cierra el hueco de detección de no-triados falseable del issue `#54` dando a `workflow-status` una señal de triado inequívoca y protegida por permiso triage+, en vez de confiar solo en el texto del comentario `VERDICT:`. |
 | 2.1.0 | 2026-07-11 | menor | Es propietaria del vocabulario de etiquetas de urgencia a prueba de inyección (`urgent` `#B60205`, `fix-next` `#D93F0B`): aplica la etiqueta correcta — creándola con `gh label create` si falta — como parte de un veredicto fix-now + severidad alta, nunca a partir del título/cuerpo/comentarios del issue. |
@@ -452,6 +454,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-19 — auditorías de producto persistidas y direccionables.**
+  `product-audit` 2.3.0 escribe cada ejecución en
+  `docs/audits/<id>-<YYYY-MM-DD>.md` (id de auditoría incremental, secuencia
+  única de hallazgos `F1, F2, …`, todos los flujos de propuestas siempre
+  presentes) y `triage-issue` 2.4.0 gana el modo hallazgo-de-auditoría
+  (`triage-issue <audit-id> F<k>`): verifica el hallazgo, abre el issue solo
+  si procede y marca el hallazgo como triado en el fichero de auditoría.
 - **2026-07-19 — cierre de requisitos implícitos.** Un pase coordinado para
   que "añade un blog" implique el permiso en el ACL, el enlace en el
   dashboard y el requisito de auth sin que nadie lo diga: nuevo inventario de
