@@ -14,7 +14,7 @@ this table — history lives in git log + closed issues.
 
 | Folder | Topic | Status | Depends on | Issue |
 | ------ | ----- | ------ | ---------- | ----- |
-| `100-stale-fix-index-rows` | Drop 21 stale rows from this table pointing to already-merged PRs | done | — | [#100](https://github.com/gtrabanco/agentic-workflow/issues/100) |
+| `100-stale-fix-index-rows` | Drop 21 stale rows from this table pointing to already-merged PRs | done · [#102](https://github.com/gtrabanco/agentic-workflow/pull/102) | — | [#100](https://github.com/gtrabanco/agentic-workflow/issues/100) |
 
 ---
 
