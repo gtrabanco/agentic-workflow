@@ -44,6 +44,38 @@ Todo lo que sigue a partir de aquí es el registro fechado y detallado —
 lee una entrada específica cuando el resumen de arriba no dé suficiente
 contexto para actuar.
 
+## 2026-07-19 — inventario de capacidades, cierre de integración y barrido de expectativas
+
+**Qué cambió.** `design-feature` 2.3.0 ataca el hueco de los requisitos
+implícitos ("añade un blog" debe implicar el permiso en el ACL, el enlace en
+el dashboard, el requisito de auth) con tres adiciones:
+
+- **`docs/CAPABILITIES.md` — el inventario de capacidades** (nuevo fichero de
+  plantilla + fila en el mapa de documentación): la lista mantenida de los
+  roles y subsistemas transversales del proyecto (auth, ACL, navegación,
+  notificaciones, búsqueda, auditoría, ajustes, …). Lo siembra
+  `init-workspace` (entrevista de bootstrap o modo upgrade), lo extiende
+  aditivamente `execute-phase` cuando una fase introduce un
+  subsistema/rol/permiso, y `product-audit` comprueba su frescura.
+- **Cierre de integración** — el `### Capability closure` de la plantilla de
+  SPEC lleva ahora tres checklists fijas: el cierre de entidades existente,
+  un nuevo cierre de integración (una fila resuelta por subsistema del
+  inventario — ninguno omitido) y una matriz de roles (cada rol del
+  inventario explícitamente `allowed`/`denied` por capacidad). Tres nuevas
+  casillas de producto del Spec-lint las hacen cumplir.
+- **`### Expectation sweep`** — nueva sección del SPEC: ≥ 10 (M/L) / ≥ 5
+  (XS/S) expectativas de dominio que un humano asumiría implícitamente, cada
+  una forzada a in-scope / out-of-scope / deferred.
+
+**Migración.** Aditivo — nada se rompe. Los SPECs legados sin las nuevas
+secciones siguen siendo válidos hasta el siguiente upsert de
+`design-feature <slug>`, que las rellena (la misma ruta de retrofit que la
+regla original de cierre; la puerta de integridad de cierre de `audit-pr`
+sigue tratando los SPECs legados como aviso fechado, nunca como bloqueante).
+Para adoptarlo: `npx skills update`, y después `init-workspace` (el modo
+upgrade propone `docs/CAPABILITIES.md` sembrado desde el descubrimiento) — o
+copia `template/docs/CAPABILITIES.md` y rellénalo a mano.
+
 ## 2026-07-10 — `init-workspace` gana un modo de actualización para andamiajes existentes
 
 **Aditivo, no rompe nada.** `init-workspace` gana un segundo modo: en un
