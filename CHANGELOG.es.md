@@ -229,6 +229,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.0 | 2026-07-19 | menor | El Routing ahora enuncia las comprobaciones de anulación hacia fix-now de `review-implementation` 1.2.0 (arreglo barato / defecto dentro de alcance → siempre fix-now, nunca un escape a postpone/known-issue/tradeoff) y añade la ruta `replan-in-unit` para un fix-now dentro de alcance demasiado grande (conserva su clase fix-now + su fila en el ledger; el usuario confirma las nuevas fase(s) del SPEC y `execute-phase` en la misma rama lo pliega); el bloque `→ Next:` de `Decision: FAIL` gana el sub-punto condicional correspondiente. |
 | 2.4.1 | 2026-07-18 | parche | Fix #77: reformula las dos referencias cruzadas a la cadencia de `execute-phase` ("When to use" y "Relationship to other skills") desde el intervalo retirado de cada 2 fases hacia la nueva cadencia basada en disparadores (límite de capa/acumulación/sensibilidad); la sección adversarial "Cadence — once per unit" y su nota de límite con `#77` no cambian. |
 | 2.4.0 | 2026-07-18 | menor | Fix #76: hace que `--adversarial N` sea usable por flotas de modelos débiles orquestadas a mano — checklist de recomendación de 4 casillas (sustituye el disparador L/sensible únicamente, añade una condición "revisor no es el más fuerte/es más débil que el autor" expuesta como línea de informe, nunca auto-detectada), escalera fija de N (2 por defecto, 3 en seguridad/familia única, >3 desaconsejado), roles de revisor asignados por índice (R1 corrección, R2 seguridad, R3 cobertura de SPEC) con la guarda de rol-como-prioridad-no-alcance, contratos de revisor/merge de fuente única, un nuevo modo de fusión `--merge` con lista de prohibiciones, plantillas de bloques para pegar en Portability, y un ancla de cadencia una-vez-por-unidad (límite explícito con `#77`). |
 | 2.3.0 | 2026-07-17 | menor | Fix #65: el bloque `→ Next:` de `Decision: FAIL` ahora recomienda la nueva skill independiente `/fold-findings` (clasificación congelada, lista de prohibiciones que cierra las válvulas de escape de volcado-a-known-issues/downgrade/aflojar-tests/supresión) como la vía de fold, en lugar de la línea de prosa inline "fold the fix-now findings"; la forma fija multilínea y los sub-bullets de `/audit-pr`/no-fix-now/product-audit no cambian. |
@@ -257,6 +258,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `fold-findings`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.0 | 2026-07-19 | menor | Dos adiciones: (1) **reconstrucción del ledger** — invocada tras un `VERDICT: BLOCKED` de `audit-pr` con el ledger ausente o sin filas para algún blocker, la skill añade ella misma las filas que faltan a partir del propio veredicto (esquema fijo, `class: fix-now`, dedupe por `file:line`+eje, con commit) y continúa; terminar con "no hay hallazgos" mientras un veredicto BLOCKED lista blockers es una violación del contrato. (2) Nuevo veredicto por hallazgo **`REPLAN`** para filas `replan-in-unit` (y cualquier hallazgo cuyo arreglo mínimo correcto resulte demasiado grande para plegarse en un commit): nunca se implementa en línea ni se degrada — se traspasa a fase(s) del SPEC confirmadas por el usuario + `execute-phase` en la misma rama; el total gana un campo opcional `· Replan: r` (omitido cuando es 0). |
 | 1.0.0 | 2026-07-17 | — | Nueva skill (fix #65): repara uno por uno los hallazgos fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica; una objeción genuina produce `DISPUTED` → `/triage-issue`), una lista de prohibiciones fija (nada de volcado a known-issues, nota de tradeoff en `decisions.md`, aflojar/saltar tests, supresión de lint como arreglo, stub `TODO`, ni marcar `folded: yes` sin un diff), y un contrato de salida fijo por hallazgo `FOLDED <sha> \| DISPUTED <razón> \| BLOCKED <input faltante>` que termina en un total `Folded: n/m · Disputed: k · Blocked: j`. La checklist del ciclo de fold embebida en `execute-phase` se mantiene como fallback en contexto/portabilidad. |
 
 #### `audit-pr`
@@ -383,7 +385,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.1.1 | 2026-07-10 | parche | Fix #33: la descripción del frontmatter y la sección de apertura aún enunciaban el contrato previo a la feature 10 ("toda skill de cara al usuario imprime el envelope") POR ENCIMA de la corrección de la feature 10 — reescritas de cabeza al contrato vigente (esquema + regla de parseo último-json-cercado como núcleo; emisión = `workflow-status` siempre, el resto de skills solo bajo el snippet inyectado por el driver, nada en sesiones interactivas). La misma frase obsoleta corregida en `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts` y `envelope.schema.json` (solo texto de descripción/comentario/metadatos, sin cambio de forma del esquema ni de comportamiento, sin release del paquete). |
 | | 1.1.0 | 2026-07-10 | menor | Nueva sección `## Driver system-prompt snippet + repair loop`: el snippet canónico de system-prompt inyectado por el driver (verbatim, cercado) y el protocolo de bucle de reparación (fallo de parseo → reinvocar con "Emit only the machine envelope for the turn above.", un reintento, luego FAILED del driver) — el requisito del envelope se traslada aquí desde los contratos de turno por skill de las 14 skills de cara al usuario. |
 | | 1.0.0 | 2026-07-05 | — | Nuevo contrato interno: el esquema JSON del envelope máquina (11 estados, claves fijas, regla de parseo último-json-cercado) que toda skill de cara al usuario emite como su salida final absoluta. |
-| `review-implementation` | 1.1.0 | 2026-07-09 | menor | La postura de la Fase 1 ("Find") ahora es adversarial por defecto: "asume que el diff está MAL — tu trabajo es probar que no funciona". La tabla de ejes y la rúbrica de clasificación de la Fase 2 no cambian. |
+| `review-implementation` | 1.2.0 | 2026-07-19 | menor | La Fase 2 gana dos **comprobaciones de anulación hacia fix-now**, obligatorias antes de cualquier clase no-fix-now: un arreglo barato (unas pocas líneas de bajo riesgo que cuestan menos que rastrear un issue) o un defecto dentro de alcance (dentro del alcance del SPEC que gobierna la unidad) es siempre fix-now — postpone/known-issue/tradeoff no están disponibles para ellos. Un fix-now grande dentro de alcance nunca se degrada: nueva ruta `replan-in-unit` que añade fase(s) confirmadas por el usuario al ledger `## Phases` del SPEC de la unidad (antes de `Hardening & PR`), ejecutadas en la misma rama. Se añade la guarda simétrica de no-desinflar. |
+| | 1.1.0 | 2026-07-09 | menor | La postura de la Fase 1 ("Find") ahora es adversarial por defecto: "asume que el diff está MAL — tu trabajo es probar que no funciona". La tabla de ejes y la rúbrica de clasificación de la Fase 2 no cambian. |
 | | 1.0.3 | 2026-07-04 | parche | Sin cambio de comportamiento: el frontmatter `model:`/`effort:` de esta skill se trasladó a `docs/workflow/model-routing.yml` (usado solo para construir la rama `#claude`). |
 | | 1.0.2 | 2026-07-02 | parche | La referencia a revisiones companion ahora apunta al pack de revisión interno (`review-*`) |
 | | 1.0.1 | 2026-06-09 | parche | Descripción acortada 96 → 36 palabras (contexto siempre cargado); cuerpo sin cambios |
@@ -436,6 +439,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-07-19 — comprobaciones de anulación hacia fix-now + reconstrucción de blockers en fold-findings.**
+  `review-implementation` 1.2.0 cierra los escapes de clasificación: un arreglo
+  barato o un defecto dentro de alcance es siempre fix-now (comprobaciones
+  obligatorias antes de cualquier clase no-fix-now), y un fix-now dentro de
+  alcance demasiado grande se enruta a la nueva `replan-in-unit` (fase(s)
+  confirmadas por el usuario añadidas al SPEC de la unidad, misma rama) en vez
+  de degradarse. `review-change` 2.5.0 refleja ambas en su Routing y en el
+  bloque `→ Next:` de `FAIL`. `fold-findings` 1.1.0 reconstruye las filas de
+  ledger ausentes desde un veredicto BLOCKED de `audit-pr` (nunca "no hay
+  hallazgos" mientras se listan blockers) y añade el veredicto por hallazgo
+  `REPLAN` + el campo opcional `· Replan: r` en el total.
 - **2026-07-19 — señales de driver en workflow-status + ampliación de la puerta de descope en audit-pr (fix 79+89).**
   Expone el lado sensor de la ronda de diseño del 2026-07-17 (#66/#76/#77/#78)
   en el envelope de `workflow-status`: señales por-unidad `review`/`closure`/
