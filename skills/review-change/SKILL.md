@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.4.1
+version: 2.5.0
 argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -203,6 +203,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
      classification, no known-issues dump/downgrade/suppression escape hatch),
      then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
+     · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),
+       then /execute-phase on this same branch (yes: list the finding ids; no:
+       omit this line)
      · non-fix-now → /triage-issue (issue / documented decision / justified drop)
      · adversarial recommendation checklist fired AND this run was
        single-reviewer? → re-run the fold review as /review-change
@@ -402,7 +405,12 @@ disposition is a decision, not a default:
 
 - **fix-now** → persisted to the unit's `review-findings.md` fold ledger, then
   `plan-fix` → `execute-phase --fix`, or fold into the current phase if it's
-  unmerged work.
+  unmerged work. Classification honors `review-implementation`'s **fix-now
+  override checks**: a cheap fix or an in-scope defect is always fix-now —
+  never a postpone/known-issue/tradeoff escape.
+- **fix-now / `replan-in-unit`** (too large to fold as-is) → keeps its fix-now
+  class and ledger row; propose the new SPEC phase(s) to the user, then
+  `execute-phase` on the same branch folds it.
 - **postpone** → `triage-issue` → open a tracked issue with a trigger.
 - **intentional-tradeoff** → `triage-issue` → record it (comment / `decisions.md` / issue).
 - **ignore** → `triage-issue` → note the rationale (or confirm it truly needs nothing).
