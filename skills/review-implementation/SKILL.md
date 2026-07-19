@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.1.0
+version: 1.2.2
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -79,12 +79,57 @@ description, and the **evidence** (the code/why it qualifies). No remedy code ye
 
 Turn findings into a **decision table**. Classify each into exactly one of:
 
-- **fix-now** — correctness/security risk, or blocks the merge.
+- **fix-now** — correctness/security risk, blocks the merge, is cheap to fix,
+  or is in-scope of the unit under review (see the mandatory checks below).
 - **postpone** — real but deferrable; must become a tracked issue (with a
   trigger), not inline work.
 - **ignore** — not worth acting on; say why (false positive, negligible).
 - **intentional-tradeoff** — deliberate and acceptable; document the rationale
   where future readers will see it.
+
+### Fix-now override checks (mandatory before assigning `postpone` / `intentional-tradeoff` to a confirmed real defect — never for `ignore`)
+
+Postpone / intentional-tradeoff are **escape hatches with guards**, not
+defaults, for findings that ARE real defects. `ignore` is a different claim —
+"this isn't a real defect" (false positive, negligible) — and is decided
+first, before these checks: a false positive has no "fix" and no "scope" to
+check, so it is never routed through this gate. Once a finding is confirmed a
+real, actionable defect and you are choosing between `postpone` /
+`intentional-tradeoff` and `fix-now`, run BOTH checks; if either ticks, the
+class is **fix-now** regardless of severity:
+
+```
+✓ Cheap-fix check — the fix is small and low-risk (a few lines, a missing
+  annotation, a rename, a guard clause; no design decision, no migration, no
+  API change). A fix that costs less than tracking it as an issue is NEVER
+  postponed: classify fix-now, note "cheap" in the WHY column.
+✓ In-scope check — the defect lies inside the governing SPEC's scope for this
+  unit (the feature/fix this branch implements). In-scope defects are the
+  branch's own unfinished work: postpone / known-issue / tradeoff is NOT
+  available for them — classify fix-now, note "in-scope" in the WHY column.
+```
+
+Both checks n/a (the fix is genuinely large AND out of the unit's scope) → the
+non-fix-now classes are available as before.
+
+### Large in-scope fix-now → replan, never downgrade
+
+An in-scope fix-now that is too large to fold as-is (multi-file redesign, or
+evidence the unit should have been split) keeps its **fix-now** class — size is
+never a reason to downgrade. Set its `Route` to **`replan-in-unit`**: the unit's
+SPEC `## Phases` ledger gets one or more new phases covering the work, on the
+SAME branch — proposed to the user for confirmation, then executed via
+`execute-phase`. Placement depends on whether the final `Hardening & PR` phase
+has already run:
+
+- **Hardening not yet executed** → insert the new phase(s) BEFORE it; the
+  ledger's existing close-out stays last.
+- **Hardening already executed** → append the new phase(s) AFTER it, plus one
+  fresh final `Hardening & PR` phase closing them out — the ledger must always
+  end with an unexecuted hardening close-out covering every phase before it;
+  a completed hardening never vouches for work added after it ran.
+
+The finding is not folded directly; it is folded by the new phase(s).
 
 For every finding, give the reasoning columns. Example (generic — your findings,
 your domains):
@@ -109,6 +154,9 @@ your domains):
 
 - **fix-now** → `plan-fix` → `execute-phase --fix`, or fold into the
   current feature phase if part of unmerged work.
+- **fix-now / `replan-in-unit`** → new phase(s) appended to the unit's SPEC
+  `## Phases` ledger (user confirms first), then `execute-phase` on the same
+  branch — never a tracked issue, never a downgrade.
 - **postpone** → open a tracked issue with an explicit *when-to-fix* trigger;
   `triage-issue` owns it thereafter. **Do not implement inline.**
 - **intentional-tradeoff** → record it (code comment, `decisions.md`, or an
@@ -120,6 +168,10 @@ your domains):
 - **Findings + table only. Never refactor or edit code in this skill.**
 - Honor the dead-code exception — staged/planned code is not dead code.
 - Don't inflate severity; separate "correctness/security" from "taste".
+- Don't deflate either: never classify a confirmed real defect as `postpone`/
+  `intentional-tradeoff` without running the fix-now override checks, and
+  never downgrade an in-scope fix-now because it is big — size routes to
+  `replan-in-unit`, not to postpone.
 - Otherwise per the project's **Workflow conventions** (docs-language, evidence):
   cite `file:line`, mark uncertainties *verify*.
 
