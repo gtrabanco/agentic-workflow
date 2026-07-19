@@ -228,6 +228,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.0 | 2026-07-19 | minor | Routing now states `review-implementation` 1.2.0's fix-now override checks (cheap fix / in-scope defect → always fix-now, never a postpone/known-issue/tradeoff escape) and adds the `replan-in-unit` route for a too-large in-scope fix-now (keeps its fix-now class + ledger row; user confirms new SPEC phase(s), then `execute-phase` on the same branch folds it); the `Decision: FAIL` `→ Next:` block gains a matching conditional sub-bullet. |
 | 2.4.1 | 2026-07-18 | patch | Fix #77: restated the two `execute-phase` cadence cross-references ("When to use" and "Relationship to other skills") from the retired every-2-phases interval to the new trigger-based cadence (layer boundary/accumulation/sensitivity); the adversarial "Cadence — once per unit" section and its `#77` boundary note are unchanged. |
 | 2.4.0 | 2026-07-18 | minor | Fix #76: made `--adversarial N` usable by hand-orchestrated weak-model fleets — a 4-box recommendation checklist (replaces the L/sensitive-only trigger, adds a "reviewer not strongest/weaker than author" condition surfaced as a report line, never auto-detected), a fixed N ladder (2 default, 3 on security/single-family, >3 discouraged), index-assigned reviewer roles (R1 correctness, R2 security, R3 SPEC-coverage) with a role-is-priority-not-scope guardrail, single-sourced reviewer/merge contracts, a new `--merge` fusion entry point with a forbidden-drop list, Portability paste-block templates, a once-per-unit cadence anchor (explicit `#77` boundary), and `→ Next:` wiring at the terminal review. |
 | 2.3.0 | 2026-07-17 | minor | Fix #65: the `Decision: FAIL` `→ Next:` block now recommends the new standalone `/fold-findings` skill (frozen classification, forbidden list closing the known-issues-dump/downgrade/test-loosening/suppression escape hatches) as the fold path, replacing the inline "fold the fix-now findings" prose line; the multi-line fixed shape and the `/audit-pr`/non-fix-now/product-audit sub-bullets are unchanged. |
@@ -256,6 +257,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `fold-findings`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-07-19 | minor | Two additions: (1) **ledger reconstruction** — invoked after an `audit-pr` `VERDICT: BLOCKED` with the ledger absent or missing blockers, the skill now appends the missing rows from the verdict itself (fixed schema, `class: fix-now`, deduped by `file:line`+axis, committed) and proceeds; ending with "no findings" while a BLOCKED verdict lists blockers is a contract violation. (2) New **`REPLAN`** per-finding verdict for `replan-in-unit` rows (and any finding whose smallest correct fix proves too large to fold in one commit): never implemented inline, never downgraded — hand-off to user-confirmed SPEC phase(s) + `execute-phase` on the same branch; tally gains an optional `· Replan: r` field (omitted when 0). |
 | 1.0.0 | 2026-07-17 | — | New skill (fix #65): repairs `review-change`/`audit-pr` fix-now findings one at a time — frozen classification (never reclassifies; a genuine objection produces `DISPUTED` → `/triage-issue`), a fixed forbidden list (no known-issues dump, no `decisions.md` tradeoff note, no test loosening/skipping, no lint-suppression-as-fix, no `TODO` stub, no ticking `folded: yes` without a diff), and a fixed per-finding `FOLDED <sha> \| DISPUTED <reason> \| BLOCKED <missing input>` output contract ending in a `Folded: n/m · Disputed: k · Blocked: j` tally. `execute-phase`'s embedded fold-cycle checklist remains the in-context/portability fallback. |
 
 #### `audit-pr`
@@ -382,7 +384,10 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.1.1 | 2026-07-10 | patch | Fix #33: the frontmatter description and opening section still stated the pre-feature-10 contract ("every user-facing skill prints the envelope") ABOVE the feature-10 correction — rewritten head-first to the current contract (schema + last-fenced-json parse rule as the core; emission = `workflow-status` always, other skills only under the driver-injected snippet, nothing in interactive sessions). Same stale sentence fixed in `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts`, and `envelope.schema.json` (description/comment/metadata text only, no schema-shape or code-behavior change, no package release needed). |
 | | 1.1.0 | 2026-07-10 | minor | New `## Driver system-prompt snippet + repair loop` section: the canonical driver-injected system-prompt snippet (verbatim, fenced) and the repair-loop protocol (parse-fail → re-invoke with "Emit only the machine envelope for the turn above.", one retry, then driver-level FAILED) — the envelope requirement moved here from the 14 user-facing skills' per-skill turn contracts. |
 | | 1.0.0 | 2026-07-05 | — | New internal contract: the machine-envelope JSON schema (11 states, fixed keys, last-fenced-json parse rule) every user-facing skill emits as its absolute last output. |
-| `review-implementation` | 1.1.0 | 2026-07-09 | minor | Phase 1 ("Find") stance is now adversarial by default: "assume the diff is WRONG — your job is to prove it does not work." The axis table and the Phase 2 classification rubric are unchanged. |
+| `review-implementation` | 1.2.2 | 2026-07-19 | patch | Fixed a wrapped ATX heading — the "Fix-now override checks" `###` heading spanned two lines, rendering as two separate H3s; now a single heading line. Formatting only, no behavior change. |
+| | 1.2.1 | 2026-07-19 | patch | Clarified the fix-now override checks' scope: they gate `postpone`/`intentional-tradeoff` for a *confirmed real defect* only — `ignore` (false positive/negligible) is decided first and was never meant to route through this gate. Wording-only; no behavior change. |
+| | 1.2.0 | 2026-07-19 | minor | Phase 2 gains two **fix-now override checks**, mandatory before any non-fix-now class: a cheap fix (a few low-risk lines costing less than tracking an issue) or an in-scope defect (inside the governing SPEC's scope for the unit) is always fix-now — postpone/known-issue/tradeoff is not available for them. A large in-scope fix-now is never downgraded: new route `replan-in-unit` appends user-confirmed phase(s) to the unit's SPEC `## Phases` ledger — before the final `Hardening & PR` phase if it hasn't run yet; after it plus a fresh final `Hardening & PR` phase if it already ran (a completed hardening never vouches for later work) — executed on the same branch. Matching don't-deflate guardrail added. |
+| | 1.1.0 | 2026-07-09 | minor | Phase 1 ("Find") stance is now adversarial by default: "assume the diff is WRONG — your job is to prove it does not work." The axis table and the Phase 2 classification rubric are unchanged. |
 | | 1.0.3 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.2 | 2026-07-02 | patch | Companion-review reference now points at the internal review pack (`review-*`) |
 | | 1.0.1 | 2026-06-09 | patch | Description shortened 96 → 36 words (always-loaded context); body unchanged |
@@ -435,6 +440,21 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-19 — fix-now override checks + fold-findings blocker reconstruction.**
+  `review-implementation` 1.2.0 closes the classification escape hatches: a
+  cheap fix or an in-scope defect is always fix-now (mandatory override checks
+  before any non-fix-now class), and a too-large in-scope fix-now routes to
+  the new `replan-in-unit` (user-confirmed phase(s) appended to the unit's
+  SPEC, same branch, re-adding a final hardening phase when the original one
+  already ran) instead of being downgraded. `review-change` 2.5.0
+  mirrors both in its Routing and `FAIL` `→ Next:` block. `fold-findings`
+  1.1.0 reconstructs missing ledger rows from an `audit-pr` BLOCKED verdict
+  (never "no findings" while blockers are listed) and adds the `REPLAN`
+  per-finding verdict + optional `· Replan: r` tally field.
+  `review-implementation` 1.2.1 (patch) then clarified the override checks'
+  scope: they gate `postpone`/`intentional-tradeoff` for a confirmed real
+  defect only, never `ignore`; 1.2.2 (patch) fixed a wrapped ATX heading in
+  the same section that rendered as two H3s.
 - **2026-07-19 — workflow-status driver signals + audit-pr descope-gate widening (fix 79+89).**
   Exposes the 2026-07-17 design round's sensor side (#66/#76/#77/#78) in the
   `workflow-status` envelope: per-unit `review`/`closure`/`issues_born` under
