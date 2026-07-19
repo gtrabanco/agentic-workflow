@@ -26,18 +26,6 @@ every row must have a folder (or be explicitly marked "scheduled").
 | 16 | `nan-model-guidance` | done · [#56](https://github.com/gtrabanco/agentic-workflow/pull/56) | — (docs-only touch on 04 10 12, all merged) | Opportunistic (not backlog-chained, S): corrects the README's NaN.builders/OpenAI-compatible provider guidance against that provider's own API reference — the prior "1:1 uniform effort dial" claim was false. Adds a per-model reasoning-control matrix + `effort:` mapping, demotes the model with unvalidated/XML-format tool calling out of the agentic-execution ladder, adds a GLM-5.2 catalog-verification caveat and per-key rate/concurrency limits. `orchestration-envelope` (1.2.0, minor) + `ORCHESTRATION.md` gain a structured-outputs shortcut for forcing the driver-injected envelope where the provider supports strict JSON schema, repair loop as fallback. `ship-roadmap` (2.2.1, patch) gains a Portability concurrency guardrail. `GOLDEN_FIXTURE.md` gains a tool-calling smoke test as a model precondition for the executor path |
 | 17 | `finding-severity-routing` | done · [#57](https://github.com/gtrabanco/agentic-workflow/pull/57) | — (soft: 37 docs the manual ladder) | Issue [#49](https://github.com/gtrabanco/agentic-workflow/issues/49) (M): surface per-finding severity so the fold cycle can route the fixing model per finding. `review-change`/`audit-pr` compute a `Sev` per finding but persist nothing; this adds a per-unit **fix-now fold ledger** (`review-findings.md`, schema `\| id \| file:line \| axis \| severity \| class \| route \| folded \|`) the writer skills append to (fix-now only; non-fix-now stays with `triage-issue`), `execute-phase`'s fold cycle ticks (`folded: no→yes`), and `workflow-status` reads (read-only) to emit `findings.fix_now[]` items carrying `severity` + a derived `suggested_tier` (severity `high` OR subtle axis → `strong`; else `cheap`, reusing `next.tier`'s vocabulary). `next.tier` unchanged. Schema package mirrored (item shape + version bump) same PR; `template/` mirrors the ledger convention. Resolves #49's two scope questions (D1 new ledger; D2 verbatim severity + derived tier) |
 
-> **Merge order & shared-file coupling (2026-07-05).** Features 01–03 are
-> functionally independent (no `Depends on:`), but their PRs edit overlapping
-> files — `skills/init-workspace/SKILL.md` (01: Docs site round → 1.7.0; 02:
-> Performance tooling round → 1.8.0), `skills/execute-phase/SKILL.md` (01 →
-> 1.13.0; 03 → 1.13.1), `template/CLAUDE.md`, and both CHANGELOGs. **Merge in
-> PR order: [#8](https://github.com/gtrabanco/agentic-workflow/pull/8) →
-> [#9](https://github.com/gtrabanco/agentic-workflow/pull/9) →
-> [#10](https://github.com/gtrabanco/agentic-workflow/pull/10)**, resolving
-> conflicts by **keeping both sides' additions** (both interview rounds, both
-> changelog rows, the higher version number). A "take theirs/ours" resolution
-> silently drops one feature's content while other skills still reference it.
-
 ## Status legend
 
 The pipeline's single ground-truth state machine — every sensor and executor
