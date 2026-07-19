@@ -292,6 +292,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.3.0 | 2026-07-19 | minor | Every run is now **persisted**: the report is written and committed as `docs/audits/<id>-<YYYY-MM-DD>.md` with an incremental audit id (the skill's only mutation). Findings carry a single severity-ranked `F1, F2, …` sequence (never per-dimension letters), proposals cite their source findings (`from: F<k>`), every proposal stream — the roadmap ones included — is always present (`none — <why>` when empty), and the closing block routes to `triage-issue <id> F<k>` (suggest triage, never run it). |
 | 2.2.0 | 2026-07-19 | minor | Process & docs dimension gains **capability-inventory freshness**: cross-checks `docs/CAPABILITIES.md` against the code (roles/permissions/subsystems present in one but not the other are a finding); a missing inventory file yields a seed-it proposal, never an auto-fix. |
 | 2.1.0 | 2026-07-17 | minor | New **scope-export recurrence** signal in the Workflow discipline dimension: ≥ 2 consecutive recent units each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (#64). Output format gained a worked example under Top findings. Part of #66. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
@@ -334,6 +335,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.0 | 2026-07-19 | minor | New **audit-finding mode** (`triage-issue <audit-id> F<k> …`): triages findings from a persisted `product-audit` report — re-verifies the finding against current code, dedupes against existing issues, opens the GitHub issue only on a fix-now/postpone/promote verdict (body cites `Origin: product audit <id>, finding F<k>`), and marks the finding triaged in the audit file with a dated `↳ triaged` note. Issue-number invocations are unchanged. |
 | 2.3.0 | 2026-07-18 | minor | Adds open-unit awareness (consumer-side complement of `#66`): a scope-membership check runs before classification (enumerate open units → both-sides-quoted issue↔SPEC/phase comparison) and a fifth verdict `fix-in-unit <unit>` resolves member issues on the open unit's own branch — fold into its `review-findings.md` ledger (provenance-marked `triage #<n> <date>` row) or its current/next phase, an incremental replan (`design-feature`/`plan-feature`/a SPEC `## Amendments` entry), or a scope-bleed restore. Non-member issues route byte-for-byte unchanged. Fixes `#86`+`#87`. |
 | 2.2.0 | 2026-07-14 | minor | Owns a second label vocabulary — terminal-disposition labels (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): applies the matching label — creating it via `gh label create` if missing — as part of a `postpone`/`promote`/`wontfix` verdict, mirroring the urgency-label mechanics. Closes the untriaged-detection spoof gap from `#54` by giving `workflow-status` an unforgeable, triage+-permission-gated triaged signal instead of trusting `VERDICT:` comment text alone. |
 | 2.1.0 | 2026-07-11 | minor | Owns the injection-safe urgency label vocabulary (`urgent` `#B60205`, `fix-next` `#D93F0B`): applies the correct label — creating it via `gh label create` if missing — as part of a fix-now + high-severity verdict, never from issue title/body/comment text. |
@@ -451,6 +453,12 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-19 — persisted, addressable product audits.** `product-audit`
+  2.3.0 writes every run to `docs/audits/<id>-<YYYY-MM-DD>.md` (incremental
+  audit id, single `F1, F2, …` finding sequence, all proposal streams always
+  present) and `triage-issue` 2.4.0 gains audit-finding mode
+  (`triage-issue <audit-id> F<k>`): verify the finding, open the issue only
+  if warranted, and mark the finding triaged in the audit file.
 - **2026-07-19 — implicit-requirements closure.** A coordinated pass so
   "add a blog" implies the ACL permission, the dashboard link, and the auth
   requirement without being told: new `docs/CAPABILITIES.md` capability
