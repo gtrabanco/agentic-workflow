@@ -13,8 +13,9 @@ regular feature cycle.
 
 ## Issue
 
-`#<n>` — GitHub issue. Required. The PR must close it via
-`Closes #<n>` in the body.
+`#<n>` — tracked issue in the project's forge. Required. The PR must close it
+via `Closes #<n>` in the body (or the forge's equivalent auto-close
+convention).
 
 ## Branch
 
