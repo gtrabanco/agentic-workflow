@@ -172,7 +172,7 @@ stamp `designed` or report the scaffold over a failed box.
 Product boxes:
 
 - [ ] No template placeholders left in the product half —
-      `grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation)'`
+      `grep -nE '<(where|surface|name|reason|list|role|subsystem|expectation|criterion)'`
       over the sections above returns nothing. The fenced Capability-closure
       template blocks are **replaced** by the instantiated rows when the
       closure is walked — a SPEC still containing a generic block fails this
