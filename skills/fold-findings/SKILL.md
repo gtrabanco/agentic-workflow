@@ -146,8 +146,11 @@ mark the finding `DISPUTED` or `BLOCKED` with the reason instead.
    `replan-in-unit` (an in-scope fix-now too large for a single fold) is
    emitted as `REPLAN` instead of entering the per-finding loop — this skill
    never implements it inline. Its fold path is: confirm with the user the new
-   phase(s) to append to the unit's SPEC `## Phases` ledger (before
-   `Hardening & PR`), then `/execute-phase` on this same branch executes them;
+   phase(s) to append to the unit's SPEC `## Phases` ledger — before the final
+   `Hardening & PR` phase if it has not run yet; after it, PLUS a fresh final
+   `Hardening & PR` phase, if it already ran (a completed hardening never
+   vouches for work added after it) — then `/execute-phase` on this same
+   branch executes them;
    the executing phase flips the row `folded: yes`. The same applies if, while
    diagnosing any other finding, the smallest correct fix turns out too large
    to fold in one commit: do NOT downgrade or defer — emit `REPLAN` with the
