@@ -130,7 +130,7 @@ git history at any time. No data-side cleanup (documentation-only).
 
 ## Status
 
-`in-progress`
+`done`
 
 ## Cross-issue notes
 
