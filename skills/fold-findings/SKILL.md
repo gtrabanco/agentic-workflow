@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -28,8 +28,8 @@ weakening the check that caught it.
 
 ```
 ✓ 1. Every finding taken up this turn produced its fixed per-finding output
-     line (FOLDED <sha> | DISPUTED <reason> | BLOCKED <missing input>) — no
-     finding silently skipped.
+     line (FOLDED <sha> | DISPUTED <reason> | BLOCKED <missing input> |
+     REPLAN <proposed phase(s)>) — no finding silently skipped.
 ✓ 2. For each FOLDED finding: the gate was RUN (not assumed) and green, a
      single commit was RUN with its sha pasted, and (if the branch has an
      open PR) `git push` was RUN immediately after that commit.
@@ -38,7 +38,7 @@ weakening the check that caught it.
 ✓ 4. No finding was reclassified: no severity downgrade, no fix-now →
      non-fix-now, no "actually this is fine" — a genuine objection produced
      `DISPUTED` with evidence, routed to `/triage-issue`, never a silent drop.
-✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j` tally and the
+✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` tally and the
      outcome-branched `→ Next:` block are printed as the ABSOLUTE last output.
 ```
 
@@ -51,8 +51,10 @@ first on purpose).
 - After a `/review-change` run reports `Decision: FAIL` with one or more
   fix-now findings on the unit's `review-findings.md` ledger.
 - After an `/audit-pr` run reports `VERDICT: BLOCKED` — every blocker on a
-  BLOCKED verdict is fix-now by definition and is already persisted to the
-  same ledger (see `skills/audit-pr/SKILL.md` step 5).
+  BLOCKED verdict is fix-now by definition and should already be persisted to
+  the same ledger (see `skills/audit-pr/SKILL.md` step 5). If it isn't —
+  ledger absent or blockers missing — this skill reconstructs the rows from
+  the verdict itself (Step 0) instead of reporting "no findings".
 - Never for findings not yet routed fix-now (postpone / wontfix / promote /
   documented-tradeoff) — those are `/triage-issue`'s job, not this skill's.
 
@@ -69,6 +71,17 @@ needs:
    | id | file:line | axis | severity | class | route | folded |
    ```
 
+   **Ledger missing or missing blockers after an `audit-pr` BLOCKED verdict →
+   reconstruct, never report "no findings".** If this run was invoked after a
+   `VERDICT: BLOCKED` (the verdict is in the conversation, pasted by the user,
+   or in the PR's audit comment — read it via the forge CLI when needed) and
+   the ledger file is absent or lacks rows for one or more listed blockers:
+   append one row per missing blocker yourself, in the ledger's fixed schema
+   (`class: fix-now`, `folded: no`, next free `Fn` ids, dedupe by
+   `file:line`+axis), commit it as `docs(<unit>): reconstruct fold ledger from
+   audit-pr blockers`, and proceed with the fold. Ending the turn with
+   "no findings" while a BLOCKED verdict lists blockers is a contract
+   violation.
 2. Rows with `folded: no` are this turn's queue. If invoked with explicit
    finding IDs as arguments, restrict the queue to those IDs only — everything
    else on the ledger is left untouched (never opportunistically folded).
@@ -129,6 +142,16 @@ mark the finding `DISPUTED` or `BLOCKED` with the reason instead.
    explicit finding-ID subset passed as arguments), in ledger order (id
    ascending), which is also roughly severity order since higher-severity
    findings are appended first by the writer skills.
+   **`replan-in-unit` rows are not folded directly.** A row whose `route` is
+   `replan-in-unit` (an in-scope fix-now too large for a single fold) is
+   emitted as `REPLAN` instead of entering the per-finding loop — this skill
+   never implements it inline. Its fold path is: confirm with the user the new
+   phase(s) to append to the unit's SPEC `## Phases` ledger (before
+   `Hardening & PR`), then `/execute-phase` on this same branch executes them;
+   the executing phase flips the row `folded: yes`. The same applies if, while
+   diagnosing any other finding, the smallest correct fix turns out too large
+   to fold in one commit: do NOT downgrade or defer — emit `REPLAN` with the
+   proposed phase(s) in the reason.
 2. **One finding at a time.** For each:
    a. Read the finding's `file:line`, axis, severity, and route.
    b. Diagnose the actual root cause — not the symptom the finding names.
@@ -162,14 +185,17 @@ mark the finding `DISPUTED` or `BLOCKED` with the reason instead.
 Per finding, in the order processed:
 
 ```
-| <finding-id> | verdict: FOLDED <sha> | DISPUTED <reason → /triage-issue> | BLOCKED <missing input> |
+| <finding-id> | verdict: FOLDED <sha> | DISPUTED <reason → /triage-issue> | BLOCKED <missing input> | REPLAN <proposed phase(s) → /execute-phase> |
 ```
 
 Then the tally line, exactly:
 
 ```
-Folded: n/m · Disputed: k · Blocked: j
+Folded: n/m · Disputed: k · Blocked: j · Replan: r
 ```
+
+(`· Replan: r` is omitted when r = 0 — existing consumers of the tally line
+see the unchanged three-field format.)
 
 ## Guardrails
 
@@ -223,7 +249,7 @@ audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED─�
 ## Done when
 
 - Every finding in this turn's queue has a per-finding `FOLDED`/`DISPUTED`/
-  `BLOCKED` line and the tally is printed.
+  `BLOCKED`/`REPLAN` line and the tally is printed.
 - Every `FOLDED` finding has a pushed commit and a ticked ledger row.
 - Nothing was reclassified, and nothing outside the queue was touched.
 
@@ -232,4 +258,5 @@ audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED─�
   · all FOLDED → /review-change — re-review the branch now that findings are fixed
   · any DISPUTED → /triage-issue <ids> — get an evidence-grounded verdict on the dispute(s)
   · any BLOCKED → supply the missing input listed above, then re-run /fold-findings
+  · any REPLAN → confirm the proposed SPEC phase(s), then /execute-phase on this same branch
 ```
