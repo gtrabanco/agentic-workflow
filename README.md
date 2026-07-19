@@ -277,6 +277,30 @@ fast; sanity-check against a current leaderboard before pinning):
 - **Small & cheap** (⇔ Haiku): **Qwen3 4–14B**, **Mistral Small 3.1**,
   **Gemma 3 27B**, **Phi-4-mini** — local-friendly, fine for grep-shaped work.
 
+### Running the whole flow on a small/cheap fleet
+
+The skills are hardened for small executor models (modest context windows, no
+prompt caching): fixed checklists instead of judgment calls, the Phase-lint
+and Spec-lint presence gates, a fixed `progress.md` handoff schema with a
+fresh conversation per phase, per-phase/per-pass context budgets, and reviews
+isolated per axis returning findings tables only. On a fleet with no
+frontier-class model at all:
+
+- **Execution** (`execute-phase`, `log-session`, doc bookkeeping) is designed
+  for the cheapest tier — one phase per conversation, handoff via
+  `progress.md`, at most 10 full-file reads per phase.
+- **Planning, review, and audit** (`design-feature`, `plan-feature`,
+  `plan-fix`, `review-change`, `audit-pr`, `product-audit`) still get the
+  **strongest model you have**, even if that model isn't frontier-class —
+  and never one weaker than the model that wrote the change.
+- **Reviews**: keep the per-axis isolation default (each pass a fresh
+  context, table-only return) and prefer `--adversarial 2` on `L` or
+  sensitive changes — N cheap, decorrelated reviewers recover part of what a
+  single small reviewer misses.
+- **Split more.** The mandatory-split rule (≤ ~5 phases, one layer per
+  phase) is the main lever: smaller phases are what make cheap execution
+  reliable. When in doubt, cut smaller.
+
 #### <img src="docs/assets/nan-cloud.svg" alt="NaN Cloud logo" width="20" height="19"> Running on [NaN.builders](https://cloud.nan.builders/r/7GK06FX8)
 
 [NaN Cloud](https://cloud.nan.builders/r/7GK06FX8) serves the open-weight

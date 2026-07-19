@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 2.1.0
+version: 2.2.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -36,12 +36,16 @@ planning happens. **Docs only — no code, no branch.**
 
 ```
 ✓ The Product half of the SPEC is filled (Context, Business goals, Scope,
-  Capability closure, Tooling, Product decisions) OR a `NEEDS_INPUT` question
-  is pending — never a half-filled section left silently incomplete
+  Capability closure, Tooling, Product decisions, Deferred decisions) OR a
+  `NEEDS_INPUT` question is pending — never a half-filled section left
+  silently incomplete
 ✓ Every Capability closure row resolves to a filled surface (UI + API + test)
   or an explicit `n/a: <reason>` — a blank row is not a valid end state
-✓ `## Design status` is set to `designed` only when closure is complete;
-  otherwise it stays `not designed` and the turn reports what's missing
+✓ Interview questions (when any were needed) went out ONE per turn — never a
+  batched round
+✓ `## Design status` is set to `designed` only when the Spec-lint product
+  boxes all tick (closure complete included) — otherwise it stays
+  `not designed` and the turn reports the failed boxes
 ✓ The roadmap row's status is set to `defined` in lockstep with `designed`
   (added at `idea` first if it didn't exist) — never `defined` with an
   incomplete closure, never `designed` with the roadmap row left at `idea`
@@ -96,17 +100,37 @@ research is the Engineering half's job, not this one.
    - **Nothing exists yet** (brand-new idea, no prior SPEC): go straight to
      step 3 (interview), since there is nothing to review or upsert.
 3. **Raw-idea interview (folded in, only when starting from zero or the
-   instruction leaves genuine gaps).** Small batched rounds, each with a
-   recommended default, covering only what the docs and the instruction don't
-   already answer:
-   - **Problem & goal** — what changes for the user; success signal.
-   - **Business goals** — the outcome served (n/a if purely internal).
-   - **Scope** — explicitly what is IN and what is OUT.
-   - **Size estimate** (`XS/S/M/L`) — drives how much ceremony the Engineering
-     half later needs; XS/S stays SPEC-only, M/L gets the full artifact set.
-   - **Non-goals / future work** — deferred to issues, not designed early.
-   - **Traceability** — offer to open a tracking issue (from the feature issue
-     template); if created, the eventual PR will `Closes #n`.
+   instruction leaves genuine gaps).** Fixed protocol — structural, not
+   judgement:
+   - **One question per turn, never batched.** Each question carries a
+     recommended default the user can accept with one word. Ask nothing the
+     docs or the instruction already answer.
+   - **Vagueness rubric (fixed slots — the question list IS this list).**
+     Probe each slot until it is filled or explicitly `n/a: <reason>`:
+     1. **Affected users/roles** — who uses it; who must not.
+     2. **Error & edge states** — what happens on failure / empty / invalid.
+     3. **Data shape** — what is stored and shown, roughly.
+     4. **Boundaries & limits** — sizes, counts, rates, thresholds.
+     5. **Out of scope** — what this deliberately does NOT do.
+     6. **Success criteria** — how we verify it worked.
+   - **Mandatory-question rule.** A stated requirement that has no verifiable
+     acceptance criterion yet is automatically the next question — no
+     requirement enters the SPEC without one.
+   - **Reframe, don't interrogate.** Restate each vague requirement as
+     measurable criteria ("fast" → "list renders < 200 ms at 1k rows") and
+     ask: "are these the right targets?" — a yes converts directly into
+     acceptance criteria.
+   - **Deferred decisions.** An answer of "decide later" is recorded as a row
+     in the SPEC's `### Deferred decisions` (with a decide-by trigger) —
+     never dropped, never silently guessed.
+   - **Escalation (structural).** If, after the interview, **≥ 3 rubric slots
+     remain empty** (neither filled nor `n/a`), do not guess: end the turn
+     `NEEDS_INPUT`, listing the empty slots verbatim as the pending
+     questions — the feature is not designable yet.
+   - The identity questions ride the same one-per-turn protocol: problem &
+     goal, business goals, size estimate (`XS/S/M/L` — XS/S stays SPEC-only,
+     M/L gets the full artifact set), non-goals / future work, traceability
+     (offer a tracking issue; if created, the eventual PR will `Closes #n`).
 4. **Proportional research.** Capability closure (step 5) is cheap and comes
    first. Reach for external or domain research **only** when the feature
    touches a domain genuinely new to the project (a regulation, an unfamiliar
@@ -147,22 +171,28 @@ research is the Engineering half's job, not this one.
    record them in `## Tooling`. This is not a global discovery sweep — that is
    `product-audit`'s job; record only what this feature will actually use.
 8. **Write the Product half.** Fill `Context`, `Business goals`, `Scope`
-   (in/out), `Capability closure`, `Acceptance criteria`, `Tooling`, and
-   `Product decisions` in the SPEC. Record every non-obvious call in `Product
-   decisions` with its rationale, and log any residual unknown as an open
-   question in `decisions.md` rather than guessing.
-9. **Stamp `## Design status` and set the roadmap row to `defined`.** Every
-   closure row filled or explicit `n/a` → set the marker to `designed` **and**
+   (in/out), `Capability closure`, `Acceptance criteria`, `Tooling`,
+   `Product decisions`, and `Deferred decisions` (`none` if empty) in the
+   SPEC. When instantiating the closure, **replace** the template's fenced
+   example block with the filled rows (keeping it fails the spec-lint's
+   placeholder box). Record every non-obvious call in `Product decisions`
+   with its rationale, and log any residual unknown as an open question in
+   `decisions.md` rather than guessing.
+9. **Run the Spec-lint product boxes, then stamp.** Mechanically check the
+   SPEC template's `### Spec-lint` **product boxes**
+   (`docs/features/_TEMPLATE/SPEC.md`) and paste the box results. All
+   product boxes tick → set the marker to `designed` **and**
    set this feature's `docs/features/ROADMAP.md` row status to `defined` (the
    `idea → defined` transition this skill owns — see the roadmap's Status
    legend). If the row doesn't exist yet (brand-new feature, no prior `idea`
    row), add it first at `idea` (number, slug, dependencies), then promote it
    to `defined` in the same edit — no feature is ever registered directly at
-   `defined` without passing through `idea`. Any closure row still blank, or
-   an unresolved question blocking closure → leave `## Design status` at `not
-   designed`, leave the roadmap row at `idea` (or unadded), and end the turn
-   with the pending question asked plainly instead of a false `designed`
-   stamp or a premature `defined` write.
+   `defined` without passing through `idea`. Any spec-lint product box FAILing
+   (a blank closure row, an unlabelled prose criterion, an in-scope item with
+   no criterion, …), or an unresolved question blocking closure → leave
+   `## Design status` at `not designed`, leave the roadmap row at `idea` (or
+   unadded), and end the turn with the failed boxes / pending question stated
+   plainly instead of a false `designed` stamp or a premature `defined` write.
 10. **Confirm the roadmap row.** The row from step 9 carries the right number,
     slug, dependencies, and status (`defined`). Beyond `defined`, status
     transitions (`planned`, `in-progress`, `done`) are `plan-feature-scaffold`'s
