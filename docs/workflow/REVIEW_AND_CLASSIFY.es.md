@@ -33,8 +33,10 @@ proyecto (chequeo de tipos, tests, build).
 ## Cómo invocarla
 
 - `/review-change` — el orquestador: ejecuta los ejes aplicables a esta
-  plataforma y sintetiza una tabla + una checklist de verificación manual.
-  Úsala antes de un PR.
+  plataforma — cada pasada **aislada por defecto** (contexto limpio, devuelve
+  solo su tabla de hallazgos; la composición en el mismo turno es el fallback
+  para agentes que no pueden abrir contextos nuevos) — y sintetiza una tabla
+  + una checklist de verificación manual. Úsala antes de un PR.
 - `/review-implementation` — solo el motor; por defecto usa el **diff de la
   rama actual frente a `main`**.
 - Pasa una ruta/glob para ampliar o acotar el alcance, p. ej.

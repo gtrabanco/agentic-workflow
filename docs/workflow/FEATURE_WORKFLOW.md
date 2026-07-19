@@ -28,8 +28,14 @@ view).
 
 `design-feature <slug>`:
 
-- Folds in the raw-idea interview (problem & goal, scope in/out, architecture
-  hints, cross-cutting concerns) when starting from zero.
+- Folds in the raw-idea interview when starting from zero — **one question per
+  turn, never batched**, each with a recommended default. The question list is
+  a fixed six-slot **vagueness rubric** (affected users/roles · error & edge
+  states · data shape · boundaries & limits · out of scope · success criteria);
+  any requirement without a verifiable acceptance criterion is automatically
+  the next question, vague wording is reframed as measurable targets, "decide
+  later" answers land in the SPEC's `### Deferred decisions` section, and ≥ 3
+  rubric slots left empty ends the turn `NEEDS_INPUT` instead of guessing.
 - Runs **proportional research**: the capability-closure checklist first
   (cheap), external/domain research only when the domain is new to the project
   — no systematic per-feature market research.
@@ -50,8 +56,11 @@ view).
   closure rows resolve to `n/a` — the gate stays uniform, but passing it is
   cheap.
 
-Once every closure row is filled or explicitly `n/a`, `design-feature` sets
-`## Design status` to `designed` and hands off to `/plan-feature <slug>`.
+Once every closure row is filled or explicitly `n/a` **and the SPEC template's
+Spec-lint product boxes all tick** (mechanical presence checks: no placeholders,
+out-of-scope non-empty, every criterion runnable or `read-verified`, deferred
+decisions present), `design-feature` sets `## Design status` to `designed` and
+hands off to `/plan-feature <slug>`.
 
 ### The redirect gate
 
@@ -140,8 +149,11 @@ ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
    (it never works on `main`). **On P1 it first commits the planning artifacts
    separately** (`docs(NN-slug): planning artifacts`), so planning history
    stays apart from implementation.
-2. Reads `progress.md` (what prior phases did), then `SPEC.md` + `TASKS.md`
-   for the requested phase.
+2. Reads `progress.md` (the **phase handoff record** — a fixed
+   `Done / Remains / Gotchas / Files / Next` entry per phase), then `SPEC.md`
+   + `TASKS.md` for the requested phase. That is the whole handoff — each
+   phase runs in a fresh conversation under an explicit context budget (≤ 10
+   full-file reads beyond the unit's own docs).
 3. Implements **only that phase** — **tests first** on core/domain and
    orchestration work: the phase's acceptance/integration tests are written
    red, then implemented to green (the SPEC's dev scenarios are the test
@@ -149,7 +161,8 @@ ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
 4. Runs the project's verification gate (type-check, tests, build). **Never
    commits red** — an unfixable-within-scope failure goes to
    `known-issues.md` and execution stops with a report.
-5. Updates `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` (and
+5. Updates `TASKS.md`, `progress.md` (appending the phase's handoff entry in
+   the fixed schema), `testing.md`, `known-issues.md` (and
    `decisions.md` if architecture moved). When reality contradicts the plan,
    `TASKS.md`/`PLAN.md` are updated and the why recorded in `decisions.md` —
    never a silent divergence.
