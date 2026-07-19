@@ -112,10 +112,19 @@ non-fix-now classes are available as before.
 An in-scope fix-now that is too large to fold as-is (multi-file redesign, or
 evidence the unit should have been split) keeps its **fix-now** class — size is
 never a reason to downgrade. Set its `Route` to **`replan-in-unit`**: the unit's
-SPEC `## Phases` ledger gets one or more new phases (before the final
-`Hardening & PR` phase) covering the work, on the SAME branch — proposed to the
-user for confirmation, then executed via `execute-phase`. The finding is not
-folded directly; it is folded by the new phase(s).
+SPEC `## Phases` ledger gets one or more new phases covering the work, on the
+SAME branch — proposed to the user for confirmation, then executed via
+`execute-phase`. Placement depends on whether the final `Hardening & PR` phase
+has already run:
+
+- **Hardening not yet executed** → insert the new phase(s) BEFORE it; the
+  ledger's existing close-out stays last.
+- **Hardening already executed** → append the new phase(s) AFTER it, plus one
+  fresh final `Hardening & PR` phase closing them out — the ledger must always
+  end with an unexecuted hardening close-out covering every phase before it;
+  a completed hardening never vouches for work added after it ran.
+
+The finding is not folded directly; it is folded by the new phase(s).
 
 For every finding, give the reasoning columns. Example (generic — your findings,
 your domains):
