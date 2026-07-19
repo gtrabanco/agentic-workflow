@@ -143,6 +143,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.8.0 | 2026-07-19 | minor | Phase completion gate's docs box now includes `docs/CAPABILITIES.md`: a phase that introduces a new cross-cutting subsystem, role, or permission appends its row to the capability inventory (additive, never rewriting existing rows; explicitly n/a when the project has no inventory file). |
 | 2.7.0 | 2026-07-19 | minor | Small-model hardening: new **Context budget** hard rule (≤ 10 full-file reads per phase beyond the unit's own docs; targeted ≤ 50-line reads and greps don't count; fixed Step 0 minimum set; summarize-don't-hold) and new **Phase handoff record** — `progress.md` gains a fixed per-phase entry schema (`Done / Remains / Gotchas / Files / Next`), created beside the SPEC on P1 for phased XS/S and `--fix` units; the next phase starts fresh and reads only `SPEC.md` + its `TASKS.md` section + `progress.md`. The same-session re-read shortcut is removed (one phase = one fresh conversation); the completion gate's docs box names the schema. |
 | 2.6.0 | 2026-07-18 | minor | Fix #77: replaced the fixed every-2-phases review-checkpoint cadence with three mechanical triggers — **layer boundary** (next phase declares a different `Layer:`), **accumulation** (`git diff --stat <baseline>..HEAD` > 400 lines or > 8 files since the last-reviewed marker), and **sensitivity** (auth/payments/destructive-migration/secrets/CI phase) — plus the `Last reviewed: <sha>` marker spec in `progress.md` (sole writer `execute-phase`, `git merge-base` fallback when absent). The mandatory terminal review and `review-change`'s adversarial cadence are unchanged. |
 | 2.5.2 | 2026-07-18 | patch | Fix #76: the mandatory end-of-unit review hand-off notes when `review-change` recommends `--adversarial N` at that terminal review — wording only, the every-2-phases checkpoint cadence is unchanged. |
@@ -182,6 +183,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.3.0 | 2026-07-19 | minor | Implicit-requirements closure: capability closure becomes three fixed checklists — entity closure (unchanged), new **integration closure** (one resolved row per subsystem in the project's capability inventory, `docs/CAPABILITIES.md` — none skipped; no inventory → derive one and offer to seed the file) and a **role matrix** (every inventory role explicitly allowed/denied per capability) — plus a new **expectation sweep** step and SPEC section (≥ 10 M/L / ≥ 5 XS/S domain expectations a human would assume implicitly, each forced to in-scope/out-of-scope/deferred). Three new Spec-lint product boxes, matching turn-contract boxes and guardrails; Step 0 reads the inventory. |
 | 2.2.0 | 2026-07-19 | minor | Small-model hardening of the interview: **one question per turn, never batched**; a fixed six-slot **vagueness rubric** (affected users/roles · error & edge states · data shape · boundaries & limits · out of scope · success criteria — each filled or explicit `n/a`); mandatory-question rule (a requirement with no verifiable acceptance criterion is automatically the next question); reframe-as-measurable technique; "decide later" answers land in the SPEC's new `### Deferred decisions` section; structural escalation (≥ 3 empty slots → `NEEDS_INPUT`, never guess). Stamping `designed` now requires the SPEC template's new **Spec-lint product boxes** (mechanical presence checks — results pasted, fail-closed). |
 | 2.1.0 | 2026-07-17 | minor | Upsert semantics section now cross-references `audit-pr`'s closure-integrity gate: a legacy SPEC's dated `design-debt` warning is the retrofit trigger, and re-running this skill fills only the missing closure rows via the same upsert-never-destroy path. Part of #78. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. Also removed a dangling self-reference to the deleted section (a `NEEDS_INPUT` cross-pointer). See `docs/workflow/MIGRATION.md`. |
@@ -290,6 +292,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.2.0 | 2026-07-19 | minor | Process & docs dimension gains **capability-inventory freshness**: cross-checks `docs/CAPABILITIES.md` against the code (roles/permissions/subsystems present in one but not the other are a finding); a missing inventory file yields a seed-it proposal, never an auto-fix. |
 | 2.1.0 | 2026-07-17 | minor | New **scope-export recurrence** signal in the Workflow discipline dimension: ≥ 2 consecutive recent units each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (#64). Output format gained a worked example under Top findings. Part of #66. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.8.0 | 2026-07-10 | minor | New "Installed tooling" dimension + process step: inventories installed skills and connected MCP servers, cross-references them against the applicable review axes and the roadmap, and adds a fourth proposal stream ("Tooling: register / re-design") — register a useful unregistered tool in `CLAUDE.md`, or route a scope-affecting discovery to `/design-feature`. Proposes only; never registers or edits `CLAUDE.md`. `detail.proposed_tooling` added to the machine envelope (additive). |
@@ -350,6 +353,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.3.0 | 2026-07-19 | minor | Bootstrap interview gains a **capability inventory** step: seeds `docs/CAPABILITIES.md` from discovery (roles + `yes\|no\|partial` per template subsystem row proposed from the code; on an empty repo the fixed rows are walked with the user), pruning never-applicable rows — never left as the raw template. Upgrade mode's template diff names the inventory and proposes it with the same discovery-seeded defaults. |
 | 2.2.0 | 2026-07-11 | minor | Seeds the injection-safe `urgent`/`fix-next` labels (`gh label create`, create-if-missing) in bootstrap mode's Process (new step 7); upgrade mode adds whichever is missing additively (new step 6, never touching a label the project already customized). Never redefines the vocabulary — `triage-issue` stays the sole owner. Forge unavailable → skip and report as a residual, never fail the scaffold. |
 | 2.1.1 | 2026-07-10 | patch | `description:` now names upgrade mode and adds its trigger phrases ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — the loader metadata was silent about the mode 2.1.0 added, so it wasn't reliably discoverable by natural-language request. No behavior change. |
 | 2.1.0 | 2026-07-10 | minor | Adds an **upgrade mode**: on a repo Step 0 recognizes as an existing agentic-workflow scaffold, offers upgrade alongside merge/adapt/abort — diffs the substrate against the current `template/`, reads `docs/workflow/MIGRATION.md`, proposes only the missing blocks via a short discovery-defaulted interview, and never rewrites a tailored block (additive-only, never-clobber). Hardens the four failure edges (no-drift, `MIGRATION.md`-absent, tailored-block, bootstrap-unchanged). Bootstrap mode is byte-for-byte unchanged. See `docs/workflow/MIGRATION.md`. |
@@ -447,6 +451,17 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-07-19 — implicit-requirements closure.** A coordinated pass so
+  "add a blog" implies the ACL permission, the dashboard link, and the auth
+  requirement without being told: new `docs/CAPABILITIES.md` capability
+  inventory in the template (+ documentation-map row), **integration
+  closure** + **role matrix** + **expectation sweep** in the SPEC template
+  and `design-feature` 2.3.0, inventory seeding in `init-workspace` 2.3.0,
+  additive inventory maintenance in `execute-phase` 2.8.0, and freshness
+  checks in `product-audit` 2.2.0. The exportable
+  `template/docs/features/_TEMPLATE/SPEC.md` is re-synced with the canonical
+  two-halves template. Migration note: `docs/workflow/MIGRATION.md`
+  (2026-07-19).
 - **2026-07-19 — small-model hardening pass.** One coordinated pass so the
   skills run reliably on small/cheap executor models (modest context, no
   prompt caching): explicit **context budgets** (`execute-phase` 2.7.0,

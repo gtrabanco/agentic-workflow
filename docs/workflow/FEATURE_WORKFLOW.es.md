@@ -46,13 +46,29 @@ listado).
   capacidades (barata), investigación externa/de dominio solo cuando el
   dominio es nuevo para el proyecto — sin investigación de mercado
   sistemática por feature.
-- Recorre la **checklist de cierre de capacidades**: para cada entidad
-  introducida o tocada, CRUD + transiciones de estado, cada una con un punto
-  de entrada de UI + superficie de API + test, o un `n/a: <razón>` explícito;
-  para cada capacidad, su punto de entrada y quién puede ejecutarla; para
-  cada rol/permiso, dónde se asigna, se revoca y se visualiza. Una fila en
-  blanco hace fallar la puerta; las filas rellenadas se convierten en los
-  criterios de Aceptación.
+- Recorre las **checklists de cierre de capacidades** — tres tablas fijas;
+  una fila en blanco hace fallar la puerta y las filas rellenadas se
+  convierten en los criterios de Aceptación:
+  - **Cierre de entidades** — para cada entidad introducida o tocada, CRUD +
+    transiciones de estado, cada una con un punto de entrada de UI +
+    superficie de API + test, o un `n/a: <razón>` explícito.
+  - **Cierre de integración** — la feature reconciliada contra **cada**
+    subsistema del **inventario de capacidades** del proyecto
+    (`docs/CAPABILITIES.md`: auth, ACL, navegación, notificaciones, búsqueda,
+    auditoría, ajustes, …), una fila por subsistema, ninguno omitido. Esto es
+    lo que hace que "añade un blog" implique el permiso en el ACL, el enlace
+    en el dashboard con los borradores arriba y el requisito de auth — sin
+    que nadie lo diga. ¿Aún no hay fichero de inventario? → la skill deriva
+    uno del doc de arquitectura + el código y ofrece sembrarlo.
+  - **Matriz de roles** — para cada capacidad, CADA rol del inventario
+    explícitamente `allowed`/`denied`; ningún rol queda implícito.
+- Ejecuta el **barrido de expectativas** — la puerta del conocimiento
+  implícito: enumera ≥ 10 cosas (≥ 5 para XS/S) que un humano competente
+  asumiría que incluye una feature de este tipo ("un blog tiene borradores",
+  "una lista tiene estado vacío") y fuerza cada una a exactamente uno de
+  in-scope / out-of-scope / deferred — nunca queda sin mencionar. Las
+  expectativas rechazadas se registran como out-of-scope, desactivando
+  sorpresas futuras.
 - Registra notas de herramientas por feature (skills/MCPs instaladas
   relevantes para *esta* feature — un barrido global es tarea de
   `product-audit`, no de esto).
@@ -71,7 +87,9 @@ Una vez que cada fila de cierre está rellenada o explícitamente marcada
 `n/a` **y todas las casillas de producto del Spec-lint de la plantilla de SPEC
 marcan** (comprobaciones mecánicas de presencia: sin placeholders,
 fuera-de-alcance no vacío, cada criterio ejecutable o `read-verified`,
-decisiones diferidas presentes), `design-feature` fija `## Design status` en
+decisiones diferidas presentes, una fila de integración por subsistema del
+inventario, matriz de roles completa, barrido de expectativas totalmente
+resuelto), `design-feature` fija `## Design status` en
 `designed` y entrega el control a `/plan-feature <slug>`.
 
 ### La puerta de redirección

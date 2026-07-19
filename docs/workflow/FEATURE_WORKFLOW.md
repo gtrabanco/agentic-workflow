@@ -39,12 +39,27 @@ view).
 - Runs **proportional research**: the capability-closure checklist first
   (cheap), external/domain research only when the domain is new to the project
   — no systematic per-feature market research.
-- Walks the **capability-closure checklist**: for each entity introduced or
-  touched, CRUD + state transitions, each with a UI entry point + API surface +
-  test, or an explicit `n/a: <reason>`; for each capability, its entry point and
-  who may execute it; for each role/permission, where it's assigned, revoked,
-  and viewed. A blank row fails the gate; the filled rows become the Acceptance
-  criteria.
+- Walks the **capability-closure checklists** — three fixed tables, a blank
+  row fails the gate and the filled rows become the Acceptance criteria:
+  - **Entity closure** — for each entity introduced or touched, CRUD + state
+    transitions, each with a UI entry point + API surface + test, or an
+    explicit `n/a: <reason>`.
+  - **Integration closure** — the feature reconciled against **every**
+    subsystem in the project's **capability inventory**
+    (`docs/CAPABILITIES.md`: auth, ACL, navigation, notifications, search,
+    audit, settings, …), one row per subsystem, none skipped. This is what
+    makes "add a blog" imply the ACL permission, the dashboard link with
+    drafts on top, and the auth requirement — without being told. No
+    inventory file yet → the skill derives one from the architecture doc +
+    code and offers to seed it.
+  - **Role matrix** — for each capability, EVERY inventory role explicitly
+    `allowed`/`denied`; no role left implicit.
+- Runs the **expectation sweep** — the implicit-knowledge gate: enumerates
+  ≥ 10 things (≥ 5 for XS/S) a competent human would assume ship with a
+  feature of this kind ("a blog has drafts", "a list has an empty state") and
+  forces each into exactly one of in-scope / out-of-scope / deferred — never
+  left unstated. Rejected expectations are recorded as out-of-scope, defusing
+  future surprises.
 - Records per-feature tooling notes (installed skills/MCPs relevant to *this*
   feature — a global sweep is `product-audit`'s job, not this).
 - **Upserts**: re-running on an existing slug re-reads the SPEC + `decisions.md`
@@ -59,8 +74,9 @@ view).
 Once every closure row is filled or explicitly `n/a` **and the SPEC template's
 Spec-lint product boxes all tick** (mechanical presence checks: no placeholders,
 out-of-scope non-empty, every criterion runnable or `read-verified`, deferred
-decisions present), `design-feature` sets `## Design status` to `designed` and
-hands off to `/plan-feature <slug>`.
+decisions present, one integration row per inventory subsystem, role matrix
+complete, expectation sweep fully resolved), `design-feature` sets
+`## Design status` to `designed` and hands off to `/plan-feature <slug>`.
 
 ### The redirect gate
 
