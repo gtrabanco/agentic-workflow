@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.2.1
+version: 1.2.2
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -87,8 +87,7 @@ Turn findings into a **decision table**. Classify each into exactly one of:
 - **intentional-tradeoff** — deliberate and acceptable; document the rationale
   where future readers will see it.
 
-### Fix-now override checks (mandatory, before assigning `postpone` or
-### `intentional-tradeoff` — a real, confirmed defect, not `ignore`)
+### Fix-now override checks (mandatory before assigning `postpone` / `intentional-tradeoff` to a confirmed real defect — never for `ignore`)
 
 Postpone / intentional-tradeoff are **escape hatches with guards**, not
 defaults, for findings that ARE real defects. `ignore` is a different claim —
