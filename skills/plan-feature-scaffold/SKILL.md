@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.10.0
+version: 1.11.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -94,6 +94,13 @@ the agent guide and state the assumption.
      `docs/features/_TEMPLATE/SPEC.md` `### Phases`) against every phase.
      Any FAIL → re-cut or split the phase using the mandatory-split rule
      above before emitting; never emit a phase with an unticked lint box.
+   - **Spec-lint (mandatory, emit-time).** After filling the engineering
+     half, run the SPEC template's `### Spec-lint` — **all boxes**: the
+     engineering boxes plus the product boxes as a regression check
+     (`design-feature` already passed them; a FAIL here means the product
+     half regressed or the scaffold left placeholders). Presence checks
+     only — mechanical, no quality judgement. Any FAIL → fix before the
+     completion report; never report over a failed box.
    - **M/L** → generate the full set, mirroring the recent features':
      - `PLAN.md` — phased plan **labelled `P1, P2, …`** and called *phases*;
        phases are an *implementation* sequence, not a delivery boundary.
@@ -117,7 +124,11 @@ the agent guide and state the assumption.
        prose, labelled `read-verified` (feature 07's `testing.md` is the
        reference shape). A weak executor verifies by *running* the command, not
        by judging prose.
-     - `progress.md` — running log, one entry per phase.
+     - `progress.md` — the phase handoff record, one entry per phase in
+       `execute-phase`'s fixed schema (`## P<k> — <date> — <sha>` +
+       `Done / Remains / Gotchas / Files / Next` lines — see *Phase handoff
+       record* in `skills/execute-phase/SKILL.md`). Create it with just the
+       header line `Last reviewed: —`; `execute-phase` appends the entries.
      - `testing.md` — what is tested at which layer (prefer integration); same
        command-checkable-as-command rule as `TASKS.md` above.
      - `known-issues.md` — deferred items, each linked to (or destined for) an
@@ -143,6 +154,7 @@ the agent guide and state the assumption.
    Artifacts written: <SPEC.md [+ PLAN.md TASKS.md progress.md testing.md
      known-issues.md decisions.md architecture-notes.md for M/L]>
    Roadmap: registered as <NN> (deps: <list|none>)   Phases: <n> (P1…P<n>, last = <hardening (M/L) | Hardening & PR (XS/S)>)
+   Spec-lint: PASS (<n>/<n> boxes)   Phase-lint: PASS (all phases)
    Open questions: <n> (in decisions.md) | none
    ```
 

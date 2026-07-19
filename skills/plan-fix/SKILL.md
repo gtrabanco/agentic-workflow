@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.3.0
+version: 2.4.0
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -134,7 +134,7 @@ One or more GitHub issue numbers from this repo, space-separated.
 11. **Rollback.** Single command or PR-revert flow; name the data-side cleanup or state "none" explicitly (e.g. orphan rows after schema rollback); what's preserved (archives, audit logs) and what's lost.
 12. **Effort.** T-shirt size: XS (1 commit, ≤ 1h), S (1 commit, ≤ 4h), M (multi-commit, ≤ 1 day), L (multi-commit, > 1 day → propose escalating to a feature via `plan-feature`; the user decides).
 13. **Phases.** Fill the SPEC's `## Phases` section — the execution ledger `execute-phase --fix` runs one phase per invocation: `P1..Pn` implementation phases (minimum 1; each task independently checkable **without judgement**, zero open design decisions, one layer/concern, gate runnable locally — split the phase if any box fails), plus the final `P(n+1) — Hardening & PR` phase. Keep the template's pre-written `Hardening & PR` tasks **literally** — never paraphrase them, never merge them into an implementation phase. The total is **always ≥ 2 phases**, even for an XS one-line fix. Every implementation phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy) before it is emitted; any FAIL means re-cut or split the phase, never emit it unticked.
-14. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; the `## Phases` section has ≥ 2 phases and ends with the literal `Hardening & PR` tasks; every implementation phase passes all 8 phase-lint boxes; all English.
+14. **Self-review (before committing).** All template sections filled; all claims cite a file path or doc section; scope didn't creep (vs. issue body); out-of-scope items each have a destination; acceptance criteria are independently-verifiable checkboxes; the `## Phases` section has ≥ 2 phases and ends with the literal `Hardening & PR` tasks; every implementation phase passes all 8 phase-lint boxes; **the template's `### Spec-lint` boxes all tick** (mechanical presence checks — placeholders gone, out-of-scope non-empty, every acceptance criterion runnable or `read-verified`); all English.
 15. **Commit.** Verify branch with `git branch --show-current`. If `main`, `git switch -c fix/<primary>-<topic>`. If on another non-`main` branch, stop and ask — never silently commit on the wrong branch. Stage `docs/fix/<primary>-<topic>/SPEC.md` and the updated `docs/fix/README.md`. Commit: `docs(fix): draft SPEC for #<primary>[+#<n2>+…] — <topic>`. **Do not push or open the PR.** Print branch name + commit hash and the hand-off below.
 
 ## Question protocol

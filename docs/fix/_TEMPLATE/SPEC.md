@@ -48,7 +48,21 @@ own fix folder or feature where each belongs.
 
 ## Acceptance
 
-Objective, verifiable conditions for "done".
+Objective, verifiable conditions for "done". Each criterion is a runnable
+command where possible, or labelled `read-verified` — never unlabelled prose.
+
+### Spec-lint (mechanical — presence checks only)
+
+Run by `plan-fix` before committing the draft; fail-closed, no quality
+judgement. Any FAIL → fix the SPEC before the commit.
+
+- [ ] No template placeholders left (`grep -nE '<(topic|n|task|command|expected)'`
+      over the filled sections returns nothing — the `### P1` scaffold lines
+      are replaced, not kept).
+- [ ] `### Out of scope` has ≥ 1 concrete bullet — never empty.
+- [ ] Every `## Acceptance` criterion is a runnable command OR labelled
+      `read-verified`.
+- [ ] Every phase passes the 8-box Phase-lint below (already mandatory).
 
 ## Phases
 
