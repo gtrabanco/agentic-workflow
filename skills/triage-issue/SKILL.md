@@ -1,8 +1,8 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.3.0
-argument-hint: <issue-number> [more issue numbers…]
+version: 2.4.0
+argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -10,7 +10,9 @@ description: >
   (deferred/trigger-based), wontfix, or promote-to-feature. Reads the issue's own
   "when to fix"/trigger and severity, verifies the trigger against the CURRENT
   codebase (counts consumers, checks thresholds, measures), then routes or
-  reports with a dated, auditable comment. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  reports with a dated, auditable comment. Also triages product-audit findings
+  ("triage-issue <audit-id> F<k>"): reads docs/audits/<audit-id>-*.md, verifies
+  the finding, and opens the GitHub issue only if the verdict warrants it. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "triage issue N", "should we
   fix #N now", "classify this issue", "is #N's trigger met", "what do we do with
   #N".
@@ -27,6 +29,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ```
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
 ✓ Nothing deferred was implemented inline
+✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -43,6 +46,9 @@ first on purpose).
   gets its own independent verdict + evidence, then one summary table at the
   end. Batching applies to *triage only* — any resulting fix still gets its own
   branch and PR.
+- **Audit findings** — `triage-issue <audit-id> F<k> [F<j> …]` triages findings
+  from a persisted `product-audit` report instead of existing issues (see
+  *Audit-finding mode* below). Batching works the same way.
 
 ## Urgency label vocabulary (owned here)
 
@@ -240,6 +246,42 @@ gh issue view <N> --json number,title,body,labels,state,comments
    listed beneath), with any issue that matched no open unit listed last under
    a plain "no member unit" heading — this is the signal that surfaces N
    issues sharing one open unit at a glance, not N separate rows.
+
+## Audit-finding mode (`triage-issue <audit-id> F<k> …`)
+
+When the first argument is an **audit id** (a plain integer matching a
+`docs/audits/<id>-*.md` file) followed by one or more `F<k>` finding ids, the
+input is a `product-audit` finding, not an existing issue. Detection is
+mechanical: `F`-prefixed second argument → audit-finding mode; otherwise every
+argument is an issue number, unchanged.
+
+1. **Read the audit report** `docs/audits/<id>-*.md` (exactly one file matches;
+   zero or several → stop and report the mismatch). Locate each requested
+   `F<k>` row in `## Findings` and any proposal citing it (`from: F<k>`).
+2. **Verify against current code** — same as Process step 2: the audit may be
+   stale; re-check its evidence (paths, counts, repro) before acting. An
+   already-fixed finding → verdict **wontfix** (obsolete), no issue opened.
+3. **Check for an existing issue** — `gh issue list --search "Audit <id> F<k>"`
+   plus a title match; if one exists, triage THAT issue via the normal Process
+   (never open a duplicate).
+4. **Classify** with the same four verdicts (plus `fix-in-unit` via step 3 of
+   the Process). Then:
+   - **fix-now / postpone / promote** → this is the moment the GitHub issue is
+     **opened** (the audit itself never files issues): body written with the
+     Write tool and `gh issue create --body-file`, citing provenance on its
+     first line — `Origin: product audit <id>, finding F<k>
+     (docs/audits/<id>-<date>.md)` — plus the finding's evidence, severity, and
+     class. Then apply the verdict's labels/comment/routing exactly as the
+     normal Process dictates for that verdict.
+   - **wontfix / already-fixed** → open nothing; the verdict block is the record.
+5. **Mark the finding triaged** in the audit file: append directly under the
+   `F<k>` line one indented note —
+   `↳ triaged <YYYY-MM-DD>: <verdict> — issue #<n> | no issue (<why>)` —
+   and commit with `docs(audits): triage audit <id> F<k>`. Never renumber or
+   rewrite the finding itself.
+6. **Report** the same fixed verdict block, with
+   `ISSUE #<n>` replaced by `AUDIT <id> F<k> — <finding title>` when no issue
+   ends up existing.
 
 ## Ledger-append mechanism (`fix-in-unit` → fold-into-ledger sub-route)
 
