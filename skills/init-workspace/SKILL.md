@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.2.0
+version: 2.3.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -91,6 +91,16 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    - **Doc domains** — which of `providers/ brand/ domain/ business/
      infrastructure/ legal/ frontend/` apply. **Delete the folders that don't**
      (e.g. `frontend/` for a non-UI project).
+   - **Capability inventory** (`docs/CAPABILITIES.md` — the substrate
+     `design-feature`'s Integration closure walks). Seed it from discovery,
+     not raw placeholders: on an existing codebase, propose the roles and the
+     `yes|no|partial` state of each template subsystem row (auth, ACL,
+     navigation, notifications, search, audit, settings, jobs, storage, i18n,
+     flags, billing, public API) from what the code actually shows; on an
+     empty repo, walk the same fixed rows with the user (`no` is a valid,
+     load-bearing answer). Delete rows that can never apply to this product;
+     confirm the result in one round — never leave the file as the raw
+     template.
    - **Performance tooling** — detect what the stack offers, one slot at a
      time (fixed checklist, first match per slot; record `none` explicitly
      when nothing fits — never leave the slot undiscussed):
@@ -170,8 +180,12 @@ lacks**. Seven ordered steps:
    Produce the list of blocks/conventions the template carries that this
    project's substrate lacks, or still holds as a raw, unfilled placeholder —
    e.g. a `Docs site` block, a `Performance commands` block, a `Git workflow`
-   line, the five-state roadmap `Status legend`. This is the diff-against-
-   current-template contract; it is the only source of *what's new*.
+   line, the five-state roadmap `Status legend`, the capability inventory
+   (`docs/CAPABILITIES.md` + its documentation-map row). This is the
+   diff-against-current-template contract; it is the only source of *what's
+   new*. (A missing `docs/CAPABILITIES.md` is proposed with the same
+   discovery-seeded defaults bootstrap's interview uses — never as the raw
+   template.)
 3. **Read `docs/workflow/MIGRATION.md`.** For each missing block, pull its
    dated migration note so the proposal explains *why* the block exists and
    *what* it migrates. If `MIGRATION.md` is absent, proceed on the template

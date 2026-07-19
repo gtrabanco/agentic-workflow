@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.7.0
+version: 2.8.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -314,7 +314,10 @@ Something forbidden looks necessary → stop, record it in `decisions.md` or
   progress.md (one handoff entry in the fixed schema — Done / Remains /
   Gotchas / Files / Next), testing.md, known-issues.md, decisions.md (if any
   decision was taken), SPEC.md (only if scope/acceptance changed — with the
-  change logged)
+  change logged), docs/CAPABILITIES.md (only if this phase introduced a new
+  cross-cutting subsystem, role, or permission — append the row, additive,
+  never rewrite existing ones; explicitly n/a when the project has no
+  inventory file)
 ✓ Docs COMMITTED with the phase — after the phase commit,
   `git status --porcelain -- docs/` returns nothing. Doc updates ride the
   phase commit (same `git add`), never sit uncommitted "for later"
