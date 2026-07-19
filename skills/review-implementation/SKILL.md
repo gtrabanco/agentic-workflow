@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.2.2
+version: 1.3.0
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -41,6 +41,15 @@ and any runtime/platform, security, money, i18n/SEO/a11y and bundle rules. Pull
 the project's specific risk axes from its guardrail skills where present
 (architecture-pattern, runtime/platform, domain-rules). The axis list below is the
 default; the project's docs refine it.
+
+## Context budget (hard rule)
+
+The scope is the diff. Beyond it, read **at most 10 non-diff files in full**
+for surrounding context (callers, contracts, tests); targeted reads (≤ 50
+lines of a named range) and grep/glob results don't count. Record each
+finding as its table row **immediately** (id, `file:line`, axis, one-line
+evidence) and drop the raw file content — Phase 2 classifies the table, never
+the sources. Never quote whole files into the report.
 
 ## Phase 1 — Find (no refactor)
 
@@ -99,10 +108,12 @@ real, actionable defect and you are choosing between `postpone` /
 class is **fix-now** regardless of severity:
 
 ```
-✓ Cheap-fix check — the fix is small and low-risk (a few lines, a missing
-  annotation, a rename, a guard clause; no design decision, no migration, no
-  API change). A fix that costs less than tracking it as an issue is NEVER
-  postponed: classify fix-now, note "cheap" in the WHY column.
+✓ Cheap-fix check — the fix is small and low-risk. Fixed bound, not a
+  feeling: "cheap" means **≤ ~15 changed lines AND ≤ 2 files AND no public
+  API/schema/design change, no migration** (a missing annotation, a rename,
+  a guard clause). Within the bound, a fix costs less than tracking it as an
+  issue and is NEVER postponed: classify fix-now, note "cheap" in the WHY
+  column.
 ✓ In-scope check — the defect lies inside the governing SPEC's scope for this
   unit (the feature/fix this branch implements). In-scope defects are the
   branch's own unfinished work: postpone / known-issue / tradeoff is NOT
