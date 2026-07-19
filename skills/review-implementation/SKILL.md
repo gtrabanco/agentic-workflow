@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.2.0
+version: 1.2.1
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -87,11 +87,17 @@ Turn findings into a **decision table**. Classify each into exactly one of:
 - **intentional-tradeoff** — deliberate and acceptable; document the rationale
   where future readers will see it.
 
-### Fix-now override checks (mandatory, before assigning any non-fix-now class)
+### Fix-now override checks (mandatory, before assigning `postpone` or
+### `intentional-tradeoff` — a real, confirmed defect, not `ignore`)
 
-Postpone / ignore / intentional-tradeoff are **escape hatches with guards**, not
-defaults. Before a finding may take a non-fix-now class, run BOTH checks; if
-either ticks, the class is **fix-now** regardless of severity:
+Postpone / intentional-tradeoff are **escape hatches with guards**, not
+defaults, for findings that ARE real defects. `ignore` is a different claim —
+"this isn't a real defect" (false positive, negligible) — and is decided
+first, before these checks: a false positive has no "fix" and no "scope" to
+check, so it is never routed through this gate. Once a finding is confirmed a
+real, actionable defect and you are choosing between `postpone` /
+`intentional-tradeoff` and `fix-now`, run BOTH checks; if either ticks, the
+class is **fix-now** regardless of severity:
 
 ```
 ✓ Cheap-fix check — the fix is small and low-risk (a few lines, a missing
@@ -163,9 +169,10 @@ your domains):
 - **Findings + table only. Never refactor or edit code in this skill.**
 - Honor the dead-code exception — staged/planned code is not dead code.
 - Don't inflate severity; separate "correctness/security" from "taste".
-- Don't deflate either: never classify non-fix-now without running the fix-now
-  override checks, and never downgrade an in-scope fix-now because it is big —
-  size routes to `replan-in-unit`, not to postpone.
+- Don't deflate either: never classify a confirmed real defect as `postpone`/
+  `intentional-tradeoff` without running the fix-now override checks, and
+  never downgrade an in-scope fix-now because it is big — size routes to
+  `replan-in-unit`, not to postpone.
 - Otherwise per the project's **Workflow conventions** (docs-language, evidence):
   cite `file:line`, mark uncertainties *verify*.
 
