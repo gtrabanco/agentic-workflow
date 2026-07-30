@@ -19,7 +19,7 @@
 
 Facts are direct observations. They never contain interpretation.
 
-## Accepted Decisions
+## Accepted decisions
 
 | ID | Decision | Rationale | Evidence | Accepted at |
 |---|---|---|---|---|
