@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.8.0
+version: 2.9.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -66,7 +66,10 @@ Three modes:
      SPEC created BEFORE the issue, and the issue links it. No issue created
      this turn is the first record of a descope. No issues created this turn?
      Box passes trivially — state so.
-✓ 9. The closing `→ Next:` block is printed as the ABSOLUTE last output.
+✓ 9. Every out-of-scope finding discovered during implementation was classified
+     with the Opportunistic finding policy, recorded in `decisions.md`, and
+     handled only by its recorded decision. No finding? State `none`.
+✓ 10. The closing `→ Next:` block is printed as the ABSOLUTE last output.
 ```
 
 **Push policy — two regimes, by whether the PR exists yet.** Before the PR:
@@ -279,6 +282,8 @@ never treat a missing marker as a blocker or crash condition.
 - Tests for the behavior this phase adds or alters
 - The per-phase doc updates listed in the completion gate below
 - The smallest refactor strictly required to land a task (state why in the commit)
+- An `Autofix` or `Opportunistic Fix` that passes every box in the
+  *Opportunistic finding policy* below
 
 **Forbidden — never, even if it "would help":**
 - New abstractions beyond what the SPEC names (an interface with one
@@ -288,6 +293,8 @@ never treat a missing marker as a blocker or crash condition.
 - Architecture changes (layers, boundaries, patterns)
 - Refactoring unrelated code
 - Building future phases or features early
+- Folding a discovered finding into the branch before it passes the
+  *Opportunistic finding policy*
 - Creating an issue that descopes a SPEC acceptance criterion or phase task
   without a user-approved, dated `## Amendments` entry (see *Descope guard*
   under *Issue policy* below) — an issue may never be the first record of a
@@ -402,6 +409,49 @@ first record of a descope. The descope must first be recorded as an explicit,
 `audit-pr`'s scope-bleed gate and `product-audit`'s recurrence signal both key
 off this same `## Amendments` log — it is the single authoritative record of
 every descope, defined once here.
+
+### Opportunistic finding policy (run when implementation discovers work)
+
+This policy applies to a **real, out-of-scope finding discovered while
+implementing the current unit**: a lint warning, dead code, missing defensive
+check, documentation defect, or similar work that the current phase did not
+promise. A missing acceptance criterion or phase task is **not** a finding to
+route: it remains in-scope work and must be delivered (or follows the descope
+guard above).
+
+**Discover the effective policy first.** Read the target project's agent guide
+and policy/docs map for an explicit *Opportunistic finding policy*. Use it only
+when it declares all of these fields: Autofix line/file limits, Opportunistic
+Fix line/file limits, the permitted risk level, and forbidden change surfaces.
+Otherwise use the complete fallback policy below. Do not combine partial local
+rules with fallback values; record `source: project` or `source: fallback` in
+the decision log.
+
+**Fallback policy — classify every finding in this order; the first matching
+row wins.** Estimates are the smallest complete fix, including tests and docs.
+
+| Decision | Pass only if every box is true | Action |
+|---|---|---|
+| **Autofix** | ✓ ≤15 changed lines; ✓ ≤2 files; ✓ every file is already modified in this phase; ✓ low implementation and regression risk; ✓ no public API, schema, migration, dependency, permission, architecture, or user-visible behavior change; ✓ the primary phase objective remains unchanged | Fix now in the current phase commit; run the normal verification gate. |
+| **Opportunistic Fix** | ✓ ≤40 changed lines; ✓ ≤3 files; ✓ every file is already modified in this phase or directly covered by its test; ✓ directly supports the current phase's behavior or makes its touched code consistent; ✓ low implementation and regression risk; ✓ no public API, schema, migration, dependency, permission, or architecture change; ✓ no acceptance criterion is added, removed, or changed; ✓ the primary phase objective remains unchanged | Fix in the current phase commit; add or update the focused test when behavior is affected; run the normal verification gate. |
+| **Create Issue** | Any Autofix or Opportunistic Fix box fails, the evidence is uncertain, the finding is independent of the current phase, or it needs product/risk judgment | Do not change code for the finding. Apply the descope guard before filing; then create a tracked issue and route it through `triage-issue`. |
+
+**Record before acting — no silent scope expansion.** For each finding append a
+row to `decisions.md` (create `## Opportunistic finding decisions` and its
+header if absent) before editing or filing:
+
+```
+| Date | Finding | Evidence | Estimate (lines/files) | Risk | Local files | Decision | Why | Policy source | Record |
+|---|---|---|---|---|---|---|---|---|---|
+| <YYYY-MM-DD> | <one line> | <file:line or command> | <n lines>/<n files> | <low/med/high> | <yes/no + paths> | <Autofix/Opportunistic Fix/Create Issue> | <failed/passed boxes> | <project/fallback> | <pending commit, commit sha, or issue #n> |
+```
+
+For `Create Issue`, write `pending issue` in `Record`, create the issue only
+after the descope guard passes, then replace it with the real `issue #<n>` in
+the same phase commit. If the decision is not deterministic from the evidence,
+record `Create Issue — judgment required` and ask the user before filing or
+changing code. This table is the execution log required for later review;
+`known-issues.md` remains for blockers, not a substitute for this decision.
 
 ## Workflows
 
