@@ -41,4 +41,4 @@
 - [x] Run `npx skills add . --list` and record the result in `testing.md`.
 - [ ] Golden fixtures are not run: this feature changes contracts but no live
       weakest-model runner is available in this session.
-- [ ] Open a PR with `Closes #110`, link the roadmap, commit, and push.
+- [x] Opened [#114](https://github.com/gtrabanco/agentic-workflow/pull/114) with `Closes #110`, linked the roadmap, committed, and pushed.
