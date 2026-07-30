@@ -369,6 +369,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.0 | 2026-07-31 | minor | Adds an explicit bootstrap and upgrade process step to seed `docs/workflow/REPOSITORY_STATE.md` from the template without overwriting an existing ledger. |
 | 2.3.0 | 2026-07-19 | minor | Bootstrap interview gains a **capability inventory** step: seeds `docs/CAPABILITIES.md` from discovery (roles + `yes\|no\|partial` per template subsystem row proposed from the code; on an empty repo the fixed rows are walked with the user), pruning never-applicable rows — never left as the raw template. Upgrade mode's template diff names the inventory and proposes it with the same discovery-seeded defaults. |
 | 2.2.0 | 2026-07-11 | minor | Seeds the injection-safe `urgent`/`fix-next` labels (`gh label create`, create-if-missing) in bootstrap mode's Process (new step 7); upgrade mode adds whichever is missing additively (new step 6, never touching a label the project already customized). Never redefines the vocabulary — `triage-issue` stays the sole owner. Forge unavailable → skip and report as a residual, never fail the scaffold. |
 | 2.1.1 | 2026-07-10 | patch | `description:` now names upgrade mode and adds its trigger phrases ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — the loader metadata was silent about the mode 2.1.0 added, so it wasn't reliably discoverable by natural-language request. No behavior change. |
@@ -471,6 +472,8 @@ How pinning actually works, verified against the `skills` CLI:
   1.1.0 preserves `contradicted` snapshot status when discovery records a
   conflict instead of freezing unresolved contradictions. `resolve-repository-state`
   1.1.0 stops without freezing when a contradiction needs human input.
+  `init-workspace` 2.5.0 seeds the repository-state ledger as an explicit
+  bootstrap and upgrade process step.
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as

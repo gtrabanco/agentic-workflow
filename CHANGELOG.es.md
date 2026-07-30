@@ -370,6 +370,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.0 | 2026-07-31 | minor | Añade un paso explícito de proceso en bootstrap y upgrade para sembrar `docs/workflow/REPOSITORY_STATE.md` desde la plantilla sin sobrescribir un ledger existente. |
 | 2.3.0 | 2026-07-19 | menor | La entrevista de bootstrap gana un paso de **inventario de capacidades**: siembra `docs/CAPABILITIES.md` desde el descubrimiento (roles + `yes\|no\|partial` por fila de subsistema de la plantilla propuestos desde el código; en un repo vacío las filas fijas se recorren con el usuario), podando filas que nunca aplican — nunca se deja como plantilla en bruto. El diff de plantilla del modo upgrade nombra el inventario y lo propone con los mismos valores sembrados por descubrimiento. |
 | 2.2.0 | 2026-07-11 | menor | Siembra las etiquetas `urgent`/`fix-next` a prueba de inyección (`gh label create`, crea-si-falta) en el proceso del modo bootstrap (nuevo paso 7); el modo upgrade añade la que falte de forma aditiva (nuevo paso 6, sin tocar nunca una etiqueta que el proyecto ya personalizó). Nunca redefine el vocabulario — `triage-issue` sigue siendo la única propietaria. Forge no disponible → se omite y se reporta como residual, nunca falla el andamiaje. |
 | 2.1.1 | 2026-07-10 | patch | La `description:` ahora nombra el modo upgrade y añade sus frases disparadoras ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — los metadatos del loader no mencionaban el modo que añadió 2.1.0, por lo que no era descubrible de forma fiable mediante lenguaje natural. Sin cambio de comportamiento. |
@@ -473,6 +474,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   snapshot cuando discovery registra un conflicto en vez de congelar
   contradicciones sin resolver. `resolve-repository-state` 1.1.0 se detiene
   sin congelar cuando una contradicción necesita input humano.
+  `init-workspace` 2.5.0 siembra el ledger de estado del repositorio como paso
+  explícito de proceso en bootstrap y upgrade.
 
 - **2026-07-30 — política de hallazgos oportunistas.** `execute-phase` 2.10.0
   clasifica los hallazgos reales fuera de alcance descubiertos durante la
