@@ -99,6 +99,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `discover-repository-state`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 1.1.0 | 2026-07-31 | minor | Preserves `contradicted` snapshot status when discovery records a conflict instead of freezing unresolved contradictions. |
 | 1.0.0 | 2026-07-30 | — | New skill: discovers evidence-backed repository facts and freezes the Normalized Repository State without making recommendations. |
 
 #### `resolve-repository-state`
@@ -464,6 +465,10 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-31 — normalized repository-state folding.** `discover-repository-state`
+  1.1.0 preserves `contradicted` snapshot status when discovery records a
+  conflict instead of freezing unresolved contradictions.
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as
