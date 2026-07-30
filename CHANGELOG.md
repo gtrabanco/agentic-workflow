@@ -143,8 +143,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
-| 2.10.0 | 2026-07-30 | minor | Issue #111 follow-up: project overrides now require the complete ordered three-decision contract, actions, and decision-log schema; incomplete overrides fall back as a whole. |
-| 2.9.0 | 2026-07-30 | minor | Issue #111: adds a project-overridable opportunistic-finding policy with deterministic `Autofix` / `Opportunistic Fix` / `Create Issue` routing, fixed fallback limits, and a `decisions.md` execution log; descope protection remains mandatory before issue creation. |
+| 2.10.0 | 2026-07-30 | minor | Issue #111: adds one deterministic `Autofix` / `Opportunistic Fix` / `Create Issue` policy, explicit per-row pass/fail evaluation and numerical-boundary check, and a `decisions.md` execution log; configuration remains future work pending a machine-checkable schema. |
+| 2.9.0 | 2026-07-30 | minor | Issue #111 initial policy draft; superseded before release by 2.10.0's single-source deterministic contract. |
 | 2.8.0 | 2026-07-19 | minor | Phase completion gate's docs box now includes `docs/CAPABILITIES.md`: a phase that introduces a new cross-cutting subsystem, role, or permission appends its row to the capability inventory (additive, never rewriting existing rows; explicitly n/a when the project has no inventory file). |
 | 2.7.0 | 2026-07-19 | minor | Small-model hardening: new **Context budget** hard rule (≤ 10 full-file reads per phase beyond the unit's own docs; targeted ≤ 50-line reads and greps don't count; fixed Step 0 minimum set; summarize-don't-hold) and new **Phase handoff record** — `progress.md` gains a fixed per-phase entry schema (`Done / Remains / Gotchas / Files / Next`), created beside the SPEC on P1 for phased XS/S and `--fix` units; the next phase starts fresh and reads only `SPEC.md` + its `TASKS.md` section + `progress.md`. The same-session re-read shortcut is removed (one phase = one fresh conversation); the completion gate's docs box names the schema. |
 | 2.6.0 | 2026-07-18 | minor | Fix #77: replaced the fixed every-2-phases review-checkpoint cadence with three mechanical triggers — **layer boundary** (next phase declares a different `Layer:`), **accumulation** (`git diff --stat <baseline>..HEAD` > 400 lines or > 8 files since the last-reviewed marker), and **sensitivity** (auth/payments/destructive-migration/secrets/CI phase) — plus the `Last reviewed: <sha>` marker spec in `progress.md` (sole writer `execute-phase`, `git merge-base` fallback when absent). The mandatory terminal review and `review-change`'s adversarial cadence are unchanged. |
@@ -457,11 +457,10 @@ How pinning actually works, verified against the `skills` CLI:
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as
-  `Autofix`, `Opportunistic Fix`, or `Create Issue` using a complete
-  project-declared contract or deterministic fallback limits. Every decision is
-  logged in `decisions.md`; incomplete overrides fall back as a whole, fixes
-  remain local and low-risk, and the existing descope guard still runs before
-  an issue can be created. Implements #111.
+  `Autofix`, `Opportunistic Fix`, or `Create Issue` using one deterministic
+  policy. Every decision is logged in `decisions.md`; fixes remain local and
+  low-risk, and the existing descope guard still runs before an issue can be
+  created. Implements #111.
 
 - **2026-07-19 — persisted, addressable product audits.** `product-audit`
   2.3.0 writes every run to `docs/audits/<id>-<YYYY-MM-DD>.md` (incremental
