@@ -10,9 +10,10 @@ findings engine `review-implementation`, the `orchestration-envelope` contract,
 the workflow's own 9-skill internal review pack: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`, and the repo-only
-`bump-skill` maintenance helper). Of the 15: 12 core workflow skills, `fold-findings`
-(fold cycle for fix-now findings), a `log-session` journal helper, and a
-`workflow-status` read-only sensor.
+`bump-skill` maintenance helper). The 17 user-facing skills cover setup,
+repository-state discovery/resolution, design, planning, execution, review,
+audit, finding folds, docs generation, issue triage, roadmap shipping, session
+logging, and workflow status.
 
 ## Setup
 
