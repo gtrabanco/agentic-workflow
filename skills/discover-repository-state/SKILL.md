@@ -1,7 +1,7 @@
 ---
 name: discover-repository-state
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: [--refresh]
 description: >
   Discover repository evidence and write a frozen Normalized Repository State.
@@ -19,7 +19,7 @@ Create a reviewable evidence snapshot before planning or implementation.
 ```
 ✓ Repository evidence was read or commands were run for every fact
 ✓ Facts, documentation, planned work, decisions, and inference are separated
-✓ Snapshot status is frozen before this turn ends
+✓ Snapshot status is frozen unless a contradiction was recorded
 ✓ No accepted decision or existing frozen fact was silently changed
 ✓ The closing → Next: block is printed last
 ```
@@ -41,10 +41,11 @@ ledger before collecting evidence.
    copy them into facts without separate implementation evidence.
 4. Place reasoning under **Inference** and unresolved ambiguity under **Open
    Questions**.
-5. If new evidence conflicts with a frozen fact, append a **Contradiction**;
-   do not alter the fact. Hand off to `resolve-repository-state`.
-6. Set the snapshot status to `frozen`, commit the artifact, and cite the source
-   revision.
+5. If new evidence conflicts with a frozen fact, append a **Contradiction**,
+   set snapshot status to `contradicted`, and do not alter the fact. Hand off
+   to `resolve-repository-state`.
+6. If no contradiction was recorded, set the snapshot status to `frozen`.
+   Commit the artifact and cite the source revision.
 
 ## Guardrails
 
@@ -63,7 +64,8 @@ consume the frozen result.
 
 ## Done when
 
-The ledger is frozen and every fact carries direct evidence.
+The ledger is frozen or explicitly contradicted, and every fact carries direct
+evidence.
 
 → Next: /plan-feature <slug> — plan from frozen facts
   · contradiction recorded → /resolve-repository-state

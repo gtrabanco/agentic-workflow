@@ -100,6 +100,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `discover-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|
+| 1.1.0 | 2026-07-31 | minor | Conserva el estado `contradicted` del snapshot cuando discovery registra un conflicto en vez de congelar contradicciones sin resolver. |
 | 1.0.0 | 2026-07-30 | — | Nueva skill: descubre hechos respaldados por evidencia y congela el Estado Normalizado del Repositorio sin hacer recomendaciones. |
 
 #### `resolve-repository-state`
@@ -465,6 +466,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-31 — plegado del estado normalizado del repositorio.**
+  `discover-repository-state` 1.1.0 conserva el estado `contradicted` del
+  snapshot cuando discovery registra un conflicto en vez de congelar
+  contradicciones sin resolver.
 
 - **2026-07-30 — política de hallazgos oportunistas.** `execute-phase` 2.10.0
   clasifica los hallazgos reales fuera de alcance descubiertos durante la
