@@ -196,7 +196,11 @@ equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
    core/dominio y orquestación: los tests de aceptación/integración de la
    fase se escriben en rojo, y luego se implementa hasta verde (los
    escenarios de desarrollo del SPEC son la lista de tests). Sin agrupar
-   fases, sin abstracción prematura, sin refactors no relacionados.
+   fases, sin abstracción prematura, sin refactors no relacionados. Un
+   hallazgo nuevo fuera de alcance se clasifica con la política documentada
+   **Autofix / Opportunistic Fix / Create Issue** antes de actuar; solo un fix
+   local de bajo riesgo que pase todas las casillas puede entrar en el commit
+   de la fase, y su evidencia y decisión se registran en `decisions.md`.
 4. Ejecuta la puerta de verificación del proyecto (chequeo de tipos, tests,
    build). **Nunca confirma en rojo** — un fallo que no se puede arreglar
    dentro del alcance va a `known-issues.md` y la ejecución se detiene con un
