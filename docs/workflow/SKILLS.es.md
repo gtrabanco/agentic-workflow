@@ -11,10 +11,11 @@ internos** compuestos por ti (los dos pasos de planificación del router
 interno de 9 skills del propio flujo de trabajo: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`, y el ayudante de
-mantenimiento `bump-skill` propio del repositorio). De las 15: 12 skills del
-flujo de trabajo principal, `fold-findings` (ciclo de reparación de hallazgos
-fix-now), un ayudante de diario `log-session`, y un sensor de solo lectura
-`workflow-status`.
+mantenimiento `bump-skill` propio del repositorio). Las 17 skills orientadas
+al usuario cubren configuración, descubrimiento/resolución de estado del
+repositorio, diseño, planificación, ejecución, review, auditoría, fold de
+hallazgos, generación de docs, triage de issues, envío del roadmap, diario de
+sesión y estado del workflow.
 
 ## Configuración
 

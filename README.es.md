@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 29 skills (15 de cara al usuario + 14 internas) — la fuente instalable
+skills/                  las 31 skills fuente (17 de cara al usuario + 14 internas; 30 instalables)
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -71,12 +71,12 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**15 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
+**17 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
 que se componen por ti: los dos pasos de planificación del router `plan-feature`,
 el motor de `review-change`, el contrato `orchestration-envelope`, el **pack de revisión interno propio de 9 skills**
 (`review-code`, `review-security`, `review-verify`, `review-debt`,
 `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`), y
-el ayudante de mantenimiento interno `bump-skill` —
+el ayudante de mantenimiento interno `bump-skill` (excluido de la instalación) —
 así que **nunca se requiere una skill de revisión externa**, en ningún agente y
 con ningún modelo. Un único camino disciplinado:
 **design → plan → execute → review → audit → merge.**
