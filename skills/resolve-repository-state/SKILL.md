@@ -1,7 +1,7 @@
 ---
 name: resolve-repository-state
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: <contradiction-id>
 description: >
   Resolve an explicit Normalized Repository State contradiction. This is the
@@ -19,7 +19,7 @@ Resolve evidence conflicts explicitly and publish the next frozen snapshot.
 ```
 ✓ A named contradiction and both evidence sources were read
 ✓ The disposition is accepted, rejected, or needs-input
-✓ The next frozen snapshot records the resolution and source revision
+✓ Accepted/rejected results publish a frozen snapshot; needs-input stops without freezing
 ✓ No unrelated fact or decision changed
 ✓ The closing → Next: block is printed last
 ```
@@ -34,10 +34,15 @@ contradiction before deciding anything.
 1. Read the frozen ledger and the contradiction row named by the user.
 2. Verify both the frozen fact's evidence and the proposed new evidence.
 3. Choose one result: accept new evidence, reject it, or request human input.
-4. For an accepted result, supersede the fact or decision with a new row that
-   cites both evidence sources. For a rejection, retain the fact and record why.
-5. Update the contradiction row, increment the snapshot identifier, set status
-   to `frozen`, and record the next frozen snapshot's source revision.
+4. If human input is required, update the contradiction row with the exact
+   missing evidence or decision, keep snapshot status `contradicted`, and stop
+   without incrementing the snapshot identifier or publishing a frozen snapshot.
+5. For an accepted result, supersede the fact or decision with a new row that
+   cites both evidence sources. For a rejected result, retain the fact and
+   record why.
+6. For accepted or rejected results only, update the contradiction row,
+   increment the snapshot identifier, set status to `frozen`, and record the
+   next frozen snapshot's source revision.
 
 ## Guardrails
 
@@ -56,8 +61,8 @@ discovery, planning, execution, review, and audit reuse.
 
 ## Done when
 
-The contradiction has a recorded disposition and the next frozen snapshot is
-internally consistent.
+The contradiction has a recorded disposition, and either the next frozen
+snapshot is internally consistent or the missing human input is explicit.
 
 → Next: /plan-feature <slug> — resume planning from the resolved snapshot
   · implementation is next → /execute-phase <NN> P1
