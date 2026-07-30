@@ -144,8 +144,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
-| 2.10.0 | 2026-07-30 | menor | Seguimiento de la issue #111: las sobreescrituras por proyecto exigen el contrato completo y ordenado de tres decisiones, sus acciones y el esquema del registro; una sobreescritura incompleta usa el respaldo completo. |
-| 2.9.0 | 2026-07-30 | menor | Issue #111: añade una política de hallazgos oportunistas sobreescribible por proyecto con rutas deterministas `Autofix` / `Opportunistic Fix` / `Create Issue`, límites de respaldo fijos y un registro de ejecución en `decisions.md`; la protección de descope sigue siendo obligatoria antes de crear un issue. |
+| 2.10.0 | 2026-07-30 | menor | Issue #111: añade una única política determinista `Autofix` / `Opportunistic Fix` / `Create Issue`, evaluación explícita aprobado/fallido por fila, comprobación de límites numéricos y un registro de ejecución en `decisions.md`; la configuración queda para el futuro hasta contar con un esquema verificable por máquina. |
+| 2.9.0 | 2026-07-30 | menor | Borrador inicial de política para la issue #111; sustituido antes de la publicación por el contrato determinista de fuente única de 2.10.0. |
 | 2.8.0 | 2026-07-19 | menor | La casilla de docs de la puerta de cierre de fase ahora incluye `docs/CAPABILITIES.md`: una fase que introduce un nuevo subsistema transversal, rol o permiso añade su fila al inventario de capacidades (aditivo, nunca reescribe filas existentes; n/a explícito cuando el proyecto no tiene fichero de inventario). |
 | 2.7.0 | 2026-07-19 | menor | Endurecimiento para modelos pequeños: nueva regla dura de **presupuesto de contexto** (≤ 10 lecturas de fichero completo por fase más allá de los docs propios de la unidad; lecturas dirigidas ≤ 50 líneas y greps no cuentan; conjunto mínimo fijo del Paso 0; resume-no-retengas) y nuevo **registro de handoff de fase** — `progress.md` gana un esquema fijo de entrada por fase (`Done / Remains / Gotchas / Files / Next`), creado junto al SPEC en P1 para unidades XS/S por fases y `--fix`; la fase siguiente arranca en conversación nueva y lee solo `SPEC.md` + su sección de `TASKS.md` + `progress.md`. El atajo de relectura en misma sesión se elimina (una fase = una conversación nueva); la casilla de docs de la puerta de cierre nombra el esquema. |
 | 2.6.0 | 2026-07-18 | menor | Fix #77: sustituye la cadencia fija de checkpoint de revisión cada 2 fases por tres disparadores mecánicos — **límite de capa** (la siguiente fase declara un `Layer:` distinto), **acumulación** (`git diff --stat <baseline>..HEAD` > 400 líneas u > 8 ficheros desde el marcador última-revisión), y **sensibilidad** (fase de auth/pagos/migración destructiva/secretos/CI) — más la especificación del marcador `Last reviewed: <sha>` en `progress.md` (único escritor `execute-phase`, respaldo `git merge-base` si está ausente). La revisión final obligatoria y la cadencia adversarial de `review-change` no cambian. |
@@ -459,11 +459,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 - **2026-07-30 — política de hallazgos oportunistas.** `execute-phase` 2.10.0
   clasifica los hallazgos reales fuera de alcance descubiertos durante la
   implementación como `Autofix`, `Opportunistic Fix` o `Create Issue` usando
-  un contrato completo declarado por el proyecto o límites de respaldo
-  deterministas. Cada decisión queda registrada en `decisions.md`; las
-  sobreescrituras incompletas usan el respaldo completo, los fixes siguen
-  siendo locales y de bajo riesgo, y la guardia de descope existente se ejecuta
-  antes de poder crear un issue. Implementa #111.
+  una única política determinista. Cada decisión queda registrada en
+  `decisions.md`; los fixes siguen siendo locales y de bajo riesgo, y la
+  guardia de descope existente se ejecuta antes de poder crear un issue.
+  Implementa #111.
 
 - **2026-07-19 — auditorías de producto persistidas y direccionables.**
   `product-audit` 2.3.0 escribe cada ejecución en
