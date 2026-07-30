@@ -173,7 +173,11 @@ ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
 3. Implements **only that phase** — **tests first** on core/domain and
    orchestration work: the phase's acceptance/integration tests are written
    red, then implemented to green (the SPEC's dev scenarios are the test
-   list). No bundling, no premature abstraction, no unrelated refactors.
+   list). No bundling, no premature abstraction, no unrelated refactors. A
+   newly discovered, out-of-scope finding is classified by the documented
+   **Autofix / Opportunistic Fix / Create Issue** policy before action; only a
+   low-risk local fix that passes every policy box may join the phase commit,
+   and its evidence and decision are recorded in `decisions.md`.
 4. Runs the project's verification gate (type-check, tests, build). **Never
    commits red** — an unfixable-within-scope failure goes to
    `known-issues.md` and execution stops with a report.
