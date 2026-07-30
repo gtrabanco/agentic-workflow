@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 29 skills (15 user-facing + 14 internal) — the installable source
+skills/                  the 31 source skills (17 user-facing + 14 internal; 30 installable)
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -70,12 +70,12 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**15 user-facing skills** (one menu entry each) + **14 internal** ones composed
+**17 user-facing skills** (one menu entry each) + **14 internal** ones composed
 for you: the `plan-feature` router's two planning steps, the `review-change`
 engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`), and the repo-only
-`bump-skill` maintenance helper — so **no external review skill is ever
+`bump-skill` maintenance helper (excluded from installation) — so **no external review skill is ever
 required**, on any agent, with any model. One disciplined path: **design →
 plan → execute → review → audit → merge.**
 
