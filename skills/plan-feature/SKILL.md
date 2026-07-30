@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.1.0
+version: 3.2.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -150,6 +150,12 @@ Once the gate passes, pick the mode — first match wins:
 5. **Print the next step** per the check above (see Done when).
 
 ## Guardrails
+
+## Normalized Repository State
+
+Plan from frozen facts and decisions in `docs/workflow/REPOSITORY_STATE.md`.
+An absent fact may be inspected; a conflict is a resolver contradiction, never
+a rewrite. Planned work and documentation are not implementation evidence.
 
 - Docs only — no code, no branch (that is `execute-phase`).
 - **Never plan an undesigned feature** — the redirect gate has no bypass flag,

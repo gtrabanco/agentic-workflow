@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.3.0
+version: 1.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -168,6 +168,12 @@ merge when the version is new. A schema change that skips the package is an
 incomplete change.
 
 ## Relationship to other skills
+
+## Normalized Repository State
+
+Drivers call `discover-repository-state` before planning and pass the frozen
+`docs/workflow/REPOSITORY_STATE.md` ledger reference to later skills. A contradiction routes to
+`resolve-repository-state`; drivers never silently replace the snapshot.
 
 - Every `user-invocable: true` skill of the pack carries a `## Machine
   envelope` section stating which states it can emit and what it puts in

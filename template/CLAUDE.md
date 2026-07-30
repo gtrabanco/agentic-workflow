@@ -34,6 +34,7 @@ your domains.
 | Domain / business rules | `docs/domain/*`, `docs/business/*` |
 | Legal / compliance | `docs/legal/*` |
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
+| Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
 | Generated developer docs | the `Docs site` block below *(read by `/generate-docs`)* |
 
 ## Docs site *(optional — uncomment and fill to enable `/generate-docs`)*
@@ -58,6 +59,12 @@ always honors — **referenced** by the skills instead of restated in each one.
 map** above, the **roadmap** (`docs/features/ROADMAP.md`), and the template(s) or
 recent artifacts for the task at hand. Never assume paths or formats; if a doc is
 missing, say so and fall back to these conventions rather than guessing.
+
+**Normalized Repository State.** When `docs/workflow/REPOSITORY_STATE.md` exists,
+consume its frozen, evidence-backed facts and accepted decisions before
+rediscovering them. Keep facts, planned work, documentation, and inference
+separate. A missing fact may be inspected directly; conflicting evidence becomes
+a contradiction for `/resolve-repository-state`, never a silent overwrite.
 
 **Forge (issue/PR tracker):** `<GitHub (gh) | GitLab (glab) | other CLI>` — the
 CLI the skills use for issues and PRs. Skill examples are written with `gh`; when

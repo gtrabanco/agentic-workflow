@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 3.4.0
+version: 3.5.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -377,6 +377,11 @@ Before merge, a human should still verify:
 - **Red CI / failing gate** → report the failing check; the dev fixes on-branch.
 
 ## Guardrails
+
+## Normalized Repository State
+
+Audit against frozen NRS facts in `docs/workflow/REPOSITORY_STATE.md` and report conflicts as contradictions. This audit
+is read-only: only `resolve-repository-state` may update a frozen fact or decision.
 
 - **Read-first verdict. Never push, edit, or refactor.** The only forge writes
   this skill may perform: (1) the **MERGE-READY comment** (Process step 6 —
