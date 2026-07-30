@@ -6,7 +6,12 @@
 - `grep -rq "REPOSITORY_STATE.md" template docs/workflow skills` verifies wiring.
 - Each phase runs its task checks from `TASKS.md`.
 
-Result: `npx skills add . --list` passed on 2026-07-30 and discovered 30 skills.
+Result: `npx skills add . --list` passed on 2026-07-31 and discovered 30 skills.
+
+Golden fixture result: `qwen3:8b` passed tool-calling smoke on 2026-07-31
+(`get_time`, parseable `{}` arguments) and passed a live text-reasoning run for
+the Normalized Repository State conflict scenario across `design-feature`,
+`plan-feature`, `execute-phase`, `review-change`, and `audit-pr`.
 
 ## Integration and failure checks
 
