@@ -91,6 +91,8 @@ con ningún modelo. Un único camino disciplinado:
 | Skill            | Qué hace                                                                                                                                                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); siembra el **inventario de capacidades** (`docs/CAPABILITIES.md` — roles + subsistemas transversales, propuestos desde lo que el código realmente muestra); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills; siembra las etiquetas `urgent`/`fix-next` a prueba de inyección. En un repo que ya tiene el scaffold, lo detecta y pasa a **modo upgrade** — compara con el template actual y propone solo los bloques que te faltan (más cualquier etiqueta de urgencia que falte), sin sobrescribir nunca un bloque personalizado |
+| `discover-repository-state` | Crea y congela un ledger de estado del repositorio respaldado por evidencia antes de planificar o implementar; hechos, decisiones, documentación, trabajo planificado e inferencia permanecen separados |
+| `resolve-repository-state` | Único escritor de una contradicción explícita del estado; verifica la evidencia y publica el siguiente snapshot congelado |
 
 ### Diseño
 

@@ -4,7 +4,7 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**15 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
+**17 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, el motor de hallazgos `review-implementation` de
 `review-change`, el contrato `orchestration-envelope`, el paquete de revisión
@@ -21,6 +21,8 @@ fix-now), un ayudante de diario `log-session`, y un sensor de solo lectura
 | Skill | Rol | Entrega a |
 |---|---|---|
 | `init-workspace` | Obtiene el andamiaje de `template/` y lo adapta al proyecto mediante entrevista; sugiere las skills de revisión complementarias de la plataforma; ofrece instalar las skills | `design-feature` |
+| `discover-repository-state` | Crea un ledger congelado y respaldado por evidencia; separa hechos, decisiones, trabajo planificado, documentación e inferencia | `plan-feature` / `resolve-repository-state` |
+| `resolve-repository-state` | Único escritor que resuelve una contradicción explícita y publica el siguiente snapshot congelado | el paso de flujo interrumpido |
 
 ## Diseño
 

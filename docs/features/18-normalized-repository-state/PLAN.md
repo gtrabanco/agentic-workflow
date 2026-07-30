@@ -1,15 +1,13 @@
 # 18 — normalized-repository-state · PLAN
 
-## P1 — NRS artifact and discovery contract
+## P1 — NRS ledger template
 
-Create the canonical ledger and discovery-only writer. It records evidence-backed
-facts, keeps categories disjoint, freezes the snapshot, and is mirrored in the
-template.
+Create the canonical ledger template with its fixed evidence categories and
+snapshot metadata.
 
-## P2 — Contradiction resolution
+## P2 — Repository-state skills
 
-Create the resolver. It alone accepts or rejects new evidence, updates a fact or
-decision, and publishes the next frozen snapshot.
+Create discovery and resolver skills with separate writer ownership.
 
 ## P3 — Planning and execution consumption
 

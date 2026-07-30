@@ -4,7 +4,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**15 user-facing skills** (one menu entry each) + **14 internal** steps composed
+**17 user-facing skills** (one menu entry each) + **14 internal** steps composed
 for you (the `plan-feature` router's two planning steps, the `review-change`
 findings engine `review-implementation`, the `orchestration-envelope` contract,
 the workflow's own 9-skill internal review pack: `review-code`,
@@ -19,6 +19,8 @@ the workflow's own 9-skill internal review pack: `review-code`,
 | Skill | Role | Hands off to |
 |---|---|---|
 | `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `design-feature` |
+| `discover-repository-state` | Creates a frozen, evidence-backed repository-state ledger; separates facts, decisions, planned work, documentation, and inference | `plan-feature` / `resolve-repository-state` |
+| `resolve-repository-state` | Sole writer that resolves an explicit fact contradiction and publishes the next frozen snapshot | the interrupted workflow step |
 
 ## Design
 

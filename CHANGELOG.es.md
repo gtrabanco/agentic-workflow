@@ -97,6 +97,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ### De cara al usuario
 
+#### `discover-repository-state`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|
+| 1.0.0 | 2026-07-30 | — | Nueva skill: descubre hechos respaldados por evidencia y congela el Estado Normalizado del Repositorio sin hacer recomendaciones. |
+
+#### `resolve-repository-state`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|
+| 1.0.0 | 2026-07-30 | — | Nueva skill: único escritor para resolver contradicciones explícitas y publicar el siguiente snapshot congelado. |
+
 #### `generate-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
