@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.9.0
+version: 2.10.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -421,11 +421,14 @@ guard above).
 
 **Discover the effective policy first.** Read the target project's agent guide
 and policy/docs map for an explicit *Opportunistic finding policy*. Use it only
-when it declares all of these fields: Autofix line/file limits, Opportunistic
-Fix line/file limits, the permitted risk level, and forbidden change surfaces.
-Otherwise use the complete fallback policy below. Do not combine partial local
-rules with fallback values; record `source: project` or `source: fallback` in
-the decision log.
+when it is a complete contract that declares: (1) the three decisions
+`Autofix`, `Opportunistic Fix`, and `Create Issue` in that order; (2) the
+line/file limits, permitted risk level, and forbidden change surfaces for both
+fix decisions; (3) the action for each decision; and (4) the required decision
+log location and fields. Otherwise use the complete fallback policy below. Do
+not combine partial local rules with fallback values. A project policy may make
+the thresholds stricter, never omit a decision, its action, or its audit trail;
+record `source: project` or `source: fallback` in the decision log.
 
 **Fallback policy — classify every finding in this order; the first matching
 row wins.** Estimates are the smallest complete fix, including tests and docs.
