@@ -105,6 +105,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `resolve-repository-state`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 1.1.0 | 2026-07-31 | minor | Stops without freezing when a contradiction needs human input, keeping the snapshot contradicted until evidence or a decision is supplied. |
 | 1.0.0 | 2026-07-30 | — | New skill: sole writer for explicit repository-state contradiction resolution and next frozen snapshots. |
 
 #### `generate-docs`
@@ -468,7 +469,8 @@ How pinning actually works, verified against the `skills` CLI:
 
 - **2026-07-31 — normalized repository-state folding.** `discover-repository-state`
   1.1.0 preserves `contradicted` snapshot status when discovery records a
-  conflict instead of freezing unresolved contradictions.
+  conflict instead of freezing unresolved contradictions. `resolve-repository-state`
+  1.1.0 stops without freezing when a contradiction needs human input.
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as

@@ -106,6 +106,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `resolve-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|
+| 1.1.0 | 2026-07-31 | minor | Se detiene sin congelar cuando una contradicción necesita input humano, manteniendo el snapshot contradicho hasta recibir evidencia o una decisión. |
 | 1.0.0 | 2026-07-30 | — | Nueva skill: único escritor para resolver contradicciones explícitas y publicar el siguiente snapshot congelado. |
 
 #### `generate-docs`
@@ -470,7 +471,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 - **2026-07-31 — plegado del estado normalizado del repositorio.**
   `discover-repository-state` 1.1.0 conserva el estado `contradicted` del
   snapshot cuando discovery registra un conflicto en vez de congelar
-  contradicciones sin resolver.
+  contradicciones sin resolver. `resolve-repository-state` 1.1.0 se detiene
+  sin congelar cuando una contradicción necesita input humano.
 
 - **2026-07-30 — política de hallazgos oportunistas.** `execute-phase` 2.10.0
   clasifica los hallazgos reales fuera de alcance descubiertos durante la
