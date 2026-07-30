@@ -39,6 +39,6 @@
 
 - [x] Verify all four dev scenarios in their owning contracts.
 - [x] Run `npx skills add . --list` and record the result in `testing.md`.
-- [ ] Golden fixtures are not run: this feature changes contracts but no live
-      weakest-model runner is available in this session.
+- [x] Golden fixtures ran with `qwen3:8b`, including tool-calling smoke and
+      the Normalized Repository State conflict scenario.
 - [x] Opened [#114](https://github.com/gtrabanco/agentic-workflow/pull/114) with `Closes #110`, linked the roadmap, committed, and pushed.
