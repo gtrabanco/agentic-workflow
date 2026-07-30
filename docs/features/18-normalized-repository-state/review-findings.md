@@ -8,4 +8,4 @@
 | F6 | docs/features/18-normalized-repository-state/progress.md:3 | workflow | med | fix-now | fold into P5 — append the required phase handoff entries | yes |
 | F7 | CHANGELOG.md:99-367 | workflow | med | fix-now | fold into P5 — add changelog rows for all bumped skills in both languages | yes |
 | F8 | README.md:56 | workflow | med | fix-now | fold into P5 — reconcile skill counts across README, SKILLS, and verification output | yes |
-| F9 | b9f6fce:docs: link PR #114 | workflow | low | fix-now | fold into P5 — restore the scoped conventional-commit format | no |
+| F9 | b9f6fce:docs: link PR #114 | workflow | low | fix-now | fold into P5 — restore the scoped conventional-commit format | yes |
