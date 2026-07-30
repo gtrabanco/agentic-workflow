@@ -6,6 +6,8 @@
 - `grep -rq "REPOSITORY_STATE.md" template docs/workflow skills` verifies wiring.
 - Each phase runs its task checks from `TASKS.md`.
 
+Result: `npx skills add . --list` passed on 2026-07-30 and discovered 30 skills.
+
 ## Integration and failure checks
 
 - Golden fixtures confirm a missing fact creates evidence, not an overwrite.

@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 2.3.0
+version: 2.4.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -247,6 +247,12 @@ research is the Engineering half's job, not this one.
     recommending `/plan-feature <slug>`.
 
 ## Guardrails
+
+## Normalized Repository State
+
+Consume frozen facts and decisions from `docs/workflow/REPOSITORY_STATE.md`.
+An absent fact may be inspected; a conflict becomes a resolver contradiction.
+Documentation and inference are never implementation evidence.
 
 - Docs only — no code, no branch (that is `execute-phase`), no engineering
   content (architecture, design, phases, testing — that is `plan-feature`'s

@@ -88,6 +88,8 @@ plan → execute → review → audit → merge.**
 | Skill            | What it does                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); seeds the **capability inventory** (`docs/CAPABILITIES.md` — roles + cross-cutting subsystems, proposed from what the code actually shows); suggests the companion review skills your platform needs; offers to install the skills; seeds the injection-safe `urgent`/`fix-next` labels. On a repo that already has the scaffold, detects it and switches to **upgrade mode** — diffs against the current template and proposes only the blocks you're missing (plus any missing urgency labels), never clobbering a tailored one |
+| `discover-repository-state` | Creates and freezes an evidence-backed repository-state ledger before planning or implementation; facts, decisions, documentation, planned work, and inference remain distinct |
+| `resolve-repository-state` | Sole writer for an explicit repository-state contradiction; verifies the competing evidence and publishes the next frozen snapshot |
 
 ### Design
 

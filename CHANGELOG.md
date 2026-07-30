@@ -96,6 +96,16 @@ How pinning actually works, verified against the `skills` CLI:
 
 ### User-facing
 
+#### `discover-repository-state`
+| Version | Date | Type | What changed |
+|---|---|---|
+| 1.0.0 | 2026-07-30 | — | New skill: discovers evidence-backed repository facts and freezes the Normalized Repository State without making recommendations. |
+
+#### `resolve-repository-state`
+| Version | Date | Type | What changed |
+|---|---|---|
+| 1.0.0 | 2026-07-30 | — | New skill: sole writer for explicit repository-state contradiction resolution and next frozen snapshots. |
+
 #### `generate-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|

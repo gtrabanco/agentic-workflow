@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.7.0
+version: 1.8.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -78,6 +78,12 @@ read what THIS skill needs: `docs/features/ROADMAP.md`, the fix index
 ship-roadmap run exists.
 
 ## Process (fixed sequence — run the commands, don't infer)
+
+### Normalized Repository State
+
+Read `docs/workflow/REPOSITORY_STATE.md` when present and report its snapshot
+metadata as evidence. Never edit it or infer a fact from documentation; report
+conflicting live evidence as a contradiction candidate.
 
 1. **Git state.** `git branch --show-current`, `git status --porcelain`,
    `git fetch` + `git status -sb`. A dirty tree or unpushed branch is reported

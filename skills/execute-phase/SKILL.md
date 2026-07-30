@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.10.0
+version: 2.11.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -336,6 +336,13 @@ and stop with a clear report. Never commit red; never tick a box you didn't
 verify.
 
 ## Branch
+
+## Normalized Repository State
+
+Before implementation, consume frozen facts and decisions in
+`docs/workflow/REPOSITORY_STATE.md` when present. Inspect directly only for an
+absent fact; route contradictory evidence to `resolve-repository-state`.
+Documentation, planned work, and inference never prove implementation.
 
 | Mode | Format |
 |------|--------|

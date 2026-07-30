@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.3.0
+version: 2.4.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -240,6 +240,11 @@ lacks**. Seven ordered steps:
   added.
 
 ## Guardrails
+
+## Normalized Repository State
+
+Seed `docs/workflow/REPOSITORY_STATE.md` from the template. Explain that
+discovery freezes evidence before planning and only the resolver updates facts.
 
 - **Never overwrite an existing `CLAUDE.md` or `docs/` without explicit consent.**
 - **Additive-only, never clobber (upgrade mode).** Upgrade mode only adds
