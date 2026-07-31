@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "beforeShellExecution": [
+      {
+        "command": "bash .agentic-workflow/hooks/adapters/pre-tool-guard.sh",
+        "description": "Blocks environment disclosure and direct merge commands"
+      }
+    ]
+  }
+}
