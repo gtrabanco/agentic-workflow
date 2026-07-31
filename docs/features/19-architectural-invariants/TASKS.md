@@ -37,4 +37,4 @@
 - [x] Verify all four dev scenarios in the owning contracts.
 - [x] Run `npx skills add . --list` and record the result in `testing.md`.
 - [x] Run and record golden fixtures for modified executor-path skills.
-- [ ] Open a PR with `Closes #109`, link the roadmap, commit, and push.
+- [x] Opened [#115](https://github.com/gtrabanco/agentic-workflow/pull/115) with `Closes #109`, linked the roadmap, committed, and pushed.
