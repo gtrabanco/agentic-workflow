@@ -36,3 +36,10 @@ Last reviewed: —
 - Gotchas: The initial Qwen3 probe is retained as FAIL immediately before the superseding PASS. Hooks remain defense-in-depth and the user's external OpenCode configuration was not edited.
 - Files: scripts/check-skill-context.mjs, docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/features/20-runtime-guardrails-progressive-skills/, docs/features/ROADMAP.md
 - Next: `/review-change` in a conversation that did not implement this PR
+
+## Replan P6–P8 — 2026-07-31
+- Reason: the independent review retained fullauto authority, adapter, context-checker, and workflow findings that cannot be folded safely as one-off fixes.
+- Decision: the user confirmed P6 and P7; because P5 has already completed, P8 is a fresh mandatory `Hardening & PR` phase.
+- Scope: P6 owns the fullauto authority boundary; P7 owns adapter/context-guard closure; P8 owns tree synchronization, the user-approved history repair, and the final adversarial review/audit gate.
+- Remains: P6 — Fullauto authority boundary.
+- Next: `/execute-phase 20 P6`.

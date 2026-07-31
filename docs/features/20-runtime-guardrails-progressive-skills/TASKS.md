@@ -67,3 +67,38 @@
 - [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
 - [x] Commit `docs: link PR #<n>` and push.
   Done-when: `npx skills add . --list` → exit 0.
+
+## P6 — Fullauto authority boundary
+
+- [ ] Replace caller-controlled fullauto authorization, decision-file, and base inputs with forge-verifiable PR/head/audit evidence; fail closed when that evidence is unavailable.
+      Covers: F7–F11, F20, F23, F32, F34, F37, F41.
+- [ ] Reject interpreter-wrapped direct merge commands and prove the guard denies each wrapper form.
+      Covers: reopened F4.
+- [ ] Synchronize the `audit-pr` and `ship-roadmap` contracts with the enforced authority boundary.
+      Covers: F16–F17.
+- [ ] Add negative fixtures proving unauthorized, stale, foreign-base, failed-CI, and duplicate-comment paths never invoke the fake merge command.
+      Check: `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh`.
+  Done-when: command-guard and fullauto fixtures reject every unsafe authority path and exit 0.
+
+## P7 — Adapter and context-guard closure
+
+- [ ] Use OpenCode's plugin-context worktree and cover the runtime event shape.
+      Covers: F42.
+- [ ] Reject nested files/directories below `references/` and add a regression fixture.
+      Covers: F43.
+- [ ] Cover `--manifest-only` and a bare `--skill` in the context-checker CLI fixture.
+      Covers: F44.
+- [ ] Reconfirm progressive-route contracts after the checker changes.
+      Covers: F18.
+  Done-when: `bash template/.agentic-workflow/hooks/tests/test-opencode-guard.sh` and `node scripts/check-skill-context.test.mjs` exit 0.
+
+## P8 — Hardening & PR
+
+- [ ] Isolate the 28 unrelated tracked `skills/*` modifications before assessing the feature tree.
+      Covers: F38.
+- [ ] After user confirmation, reword `8c4eec6` to the scoped conventional-commit format and push with `--force-with-lease`.
+      Covers: F39.
+- [ ] Run the hook fixtures, context checker and its tests, manifest parsing, `npx skills add . --list`, and `git diff --check` on the synchronized branch.
+- [ ] Run `/review-change --adversarial 3`; fold any remaining fix-now findings, then run `/audit-pr`.
+      Covers: F40.
+  Done-when: the pushed branch has a clean tree, an adversarial PASS, and an audit-pr merge-ready verdict.
