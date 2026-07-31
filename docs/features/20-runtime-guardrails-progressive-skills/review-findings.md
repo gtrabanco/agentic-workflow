@@ -20,6 +20,9 @@
 | F18 | skills/workflow-status/references/SENSOR_SIGNALS.md:32 | progressive-routing | high | fix-now | replan-in-unit (propose P7) | no |
 | F19 | scripts/check-skill-context.mjs:32 | debt + perf | high | fix-now | fold into phase | yes |
 | F20 | template/.agentic-workflow/hooks/fullauto-merge.sh:64 | debt + correctness | med | fix-now | replan-in-unit (propose P6) | no |
+| F21 | .github/hooks/agentic-workflow.json.example:1 | platform | high | fix-now | fold into phase | no |
+| F22 | template/.agentic-workflow/hooks/adapters/copilot-guard.sh:14 | security + platform | high | fix-now | replan-in-unit (propose P6) | no |
+| F23 | template/.agentic-workflow/hooks/fullauto-merge.sh:100 | security + policy | high | fix-now | replan-in-unit (propose P6) | no |
 | F24 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:20 | security | high | fix-now | fold into phase | yes |
 | F25 | template/.agentic-workflow/hooks/guard-command.sh:48 | correctness | high | fix-now | fold into phase | yes |
 | F26 | template/.agentic-workflow/hooks/guard-command.sh:78 | security | high | fix-now | fold into phase | yes |
@@ -28,6 +31,12 @@
 | F29 | skills/review-change/SKILL.md:122 | progressive-routing + API | high | fix-now | fold into phase | yes |
 | F30 | template/.agentic-workflow/hooks/fullauto-merge.sh:12 | correctness | med | fix-now | fold into phase | yes |
 | F31 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:13 | debt | low | fix-now | fold into phase | yes |
+| F32 | template/.agentic-workflow/hooks/fullauto-merge.sh:102 | debt | med | fix-now | replan-in-unit (propose P6) | no |
 | F33 | template/.opencode/plugins/agentic-workflow-guard.ts.example:3 | tests | med | fix-now | fold into phase | yes |
+| F34 | template/.agentic-workflow/hooks/fullauto-merge.sh:29 | tests + security | high | fix-now | replan-in-unit (propose P6) | no |
 | F35 | scripts/check-skill-context.mjs:20 | tests | med | fix-now | fold into phase | yes |
 | F36 | scripts/check-skill-context.mjs:40 | perf | low | fix-now | fold into phase | yes |
+| F37 | template/.agentic-workflow/hooks/fullauto-merge.sh:48 | perf | low | fix-now | fold into phase | no |
+| F38 | skills/audit-docs/SKILL.md:1 | workflow | high | fix-now | clean and synchronize tree before rerun | no |
+| F39 | git-log:8c4eec6 | workflow | med | fix-now | reword scoped commit and force-with-lease | no |
+| F40 | docs/features/20-runtime-guardrails-progressive-skills/review-findings.md:9 | workflow + spec-drift | critical | fix-now | replan-in-unit (propose P6/P7) | no |
