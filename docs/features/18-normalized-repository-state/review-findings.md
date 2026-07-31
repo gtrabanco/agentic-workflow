@@ -20,3 +20,5 @@
 | F18 | docs/workflow/SKILLS.md:109-132; docs/workflow/SKILLS.es.md:112-136 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to the invocation reference | yes |
 | F19 | docs/workflow/REPLICATE.md:30-46; docs/workflow/REPLICATE.es.md:32-50 | workflow | med | fix-now | fold-findings — refresh the replication guide's stale skill counts and core-set list | yes |
 | F20 | docs/workflow/GOLDEN_FIXTURE.md:188-189; docs/workflow/GOLDEN_FIXTURE.es.md:200-201 | verify | med | fix-now | fold-findings — rerun or update fixture evidence for final plan/execute versions 3.2.1/2.11.1 | yes |
+| F21 | CHANGELOG.md:101 | workflow | med | fix-now | fold-findings — add the fourth separator cell so the new four-column table renders correctly | yes |
+| F22 | CHANGELOG.es.md:102 | workflow | med | fix-now | fold-findings — add the fourth separator cell so the new four-column table renders correctly | no |
