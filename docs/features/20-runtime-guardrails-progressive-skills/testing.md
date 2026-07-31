@@ -3,6 +3,7 @@
 ## Planned checks
 
 - Canonical command/path guard allow/block matrix.
+- Init-workspace scratch-tree installation, adapter inventory, additive upgrade and residual-report contract.
 - Claude Code, Cursor, Copilot, and OpenCode adapter payload normalization.
 - Fullauto wrapper success, failure, cleanup, head/base validation, and comment idempotency.
 - JSON parsing for both distribution manifests.
@@ -31,6 +32,7 @@
 - P5: the first Qwen3 8B (`--think=false`) progressive-route probe failed and exposed ambiguous selectors plus references cut mid-contract. Route allowlists/tables and semantic boundaries were tightened; the checker now rejects a reference whose first content line is not a heading.
 - P5: the hardened Qwen3 8B run passed all eight natural route-selection cases and the exact `execute-phase` defined-status blocker; the OpenAI-compatible tool smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Both bilingual golden logs contain the failed and superseding passed rows.
 - P5: `shellcheck`, `test-command-guard.sh` (6 allowed / 24 blocked), and `test-fullauto-merge.sh` (cleanup + idempotent comment) passed again on the final tree.
+- P5: `test-init-workspace-contract.sh` passed scratch install, adapter inventory, customized-file preservation, and residual-report assertions.
 - P5: all JSON manifests/examples parsed; grouped skill directories exist; plugin/model-routing order, bilingual version/changelog parity, and user-skill entrypoint contracts passed.
 - P5: `node scripts/check-skill-context.mjs` passed 8 budgeted skills and 48 reachable, semantically headed, one-hop references with no nested reference links.
 - P5: `npx skills add . --list` discovered 30 installable skills and exited 0.
