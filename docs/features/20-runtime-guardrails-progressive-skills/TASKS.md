@@ -58,11 +58,11 @@
 
 ## P5 — Hardening & PR
 
-- [ ] Run both hook fixtures and record results in `testing.md`.
-- [ ] Run the complete context/reference checker and record before/after metrics.
-- [ ] Parse manifests and run `npx skills add . --list`.
-- [ ] Run and record the golden fixture for changed executor-path contracts.
-- [ ] Synchronize English/Spanish workflow guidance and feature artifacts.
+- [x] Run both hook fixtures and record results in `testing.md`.
+- [x] Run the complete context/reference checker and record before/after metrics.
+- [x] Parse manifests and run `npx skills add . --list`.
+- [x] Run and record the golden fixture for changed executor-path contracts.
+- [x] Synchronize English/Spanish workflow guidance and feature artifacts.
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat.
 - [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
 - [ ] Commit `docs: link PR #<n>` and push.
