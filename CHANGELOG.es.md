@@ -108,6 +108,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `resolve-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|
+| 1.1.1 | 2026-07-31 | parche | Enruta los resultados `needs-input` hacia la evidencia o decisión pendiente en vez de recomendar la planificación. |
 | 1.1.0 | 2026-07-31 | minor | Se detiene sin congelar cuando una contradicción necesita input humano, manteniendo el snapshot contradicho hasta recibir evidencia o una decisión. |
 | 1.0.0 | 2026-07-30 | — | Nueva skill: único escritor para resolver contradicciones explícitas y publicar el siguiente snapshot congelado. |
 
