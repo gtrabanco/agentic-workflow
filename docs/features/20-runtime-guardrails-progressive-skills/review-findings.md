@@ -30,3 +30,4 @@
 | F31 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:13 | debt | low | fix-now | fold into phase | yes |
 | F33 | template/.opencode/plugins/agentic-workflow-guard.ts.example:3 | tests | med | fix-now | fold into phase | yes |
 | F35 | scripts/check-skill-context.mjs:20 | tests | med | fix-now | fold into phase | yes |
+| F36 | scripts/check-skill-context.mjs:40 | perf | low | fix-now | fold into phase | yes |
