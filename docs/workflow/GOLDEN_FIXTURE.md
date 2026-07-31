@@ -191,6 +191,7 @@ over time.
 
 | 2026-07-31 | Qwen3 8B (`qwen3:8b`) | `execute-phase` 2.12.0, `review-change` 2.8.0, `audit-pr` 3.6.0 (feature #109, architectural invariants) | FAIL | First live run used default thinking and prefixed the requested three-line verdict with analysis, so it did not meet the exact-output criterion. It correctly classified the direct file write as `violates`, review as a finding, and audit as a blocker; the rerun below is the passing result. |
 | 2026-07-31 | Qwen3 8B (`qwen3:8b`, `--think=false`) | `execute-phase` 2.12.0, `review-change` 2.8.0, `audit-pr` 3.6.0 (feature #109, architectural invariants) | PASS | Live CSV-fixture analogue: AI-001 required a CLI file-write adapter; `src/cli/export.ts` directly called `fs.writeFile`; frozen NRS confirmed the path. The model returned exactly three requested lines: execution `violates` and stops for an explicit architectural decision; review `finding` routed to that decision; audit `blocker` with cited source evidence. No workflow step was invented. |
+| 2026-07-31 | Qwen3 8B (`qwen3:8b`, `--think=false`) | `design-feature` 2.5.0, `plan-feature` 3.3.0, `plan-feature-from-issue` 1.6.0, `plan-feature-scaffold` 1.12.0 (feature #109, F1 fold) | PASS | Four live CSV-export fixture runs against scratch inputs: the design run produced the product SPEC and its exact closing block; planning, issue-to-SPEC routing, and scaffolding each returned their fixed completion contract with the required `→ Next:` hand-off. No repository files were edited and no workflow step was invented. |
 
 ## Scope boundary
 
