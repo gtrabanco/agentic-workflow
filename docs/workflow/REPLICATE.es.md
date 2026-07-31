@@ -29,25 +29,25 @@ Dos formas de instalar las skills en un repositorio. Son complementarias.
 
 | Método | Qué obtienes | Cuándo usarlo |
 |---|---|---|
-| **CLI `skills`** | Las 15 skills (11 orientadas al usuario + 3 internas, más el contrato `orchestration-envelope`) copiadas (o enlazadas simbólicamente) **textualmente** en el directorio de skills del agente destino | Quieres exactamente las mismas skills, rápido, determinista, en cualquier agente |
+| **CLI `skills`** | Las 30 skills instalables (17 orientadas al usuario + 13 internas, incluido el contrato `orchestration-envelope`) copiadas (o enlazadas simbólicamente) **textualmente** en el directorio de skills del agente destino | Quieres exactamente las mismas skills, rápido, determinista, en cualquier agente |
 | **Prompt portable** | Las skills **regeneradas, adaptadas** a los docs/arquitectura del repositorio destino | Quieres que se ajusten a las convenciones de un proyecto distinto |
 
-El conjunto principal es **11 orientadas al usuario + 3 internas**:
+El conjunto instalable es **17 orientadas al usuario + 13 internas** (30 en total):
 
-- **Orientadas al usuario (11):** `init-workspace`, `design-feature`,
-  `plan-feature`, `plan-fix`, `execute-phase`, `review-change`,
-  `audit-pr`, `audit-docs`, `product-audit`, `triage-issue`,
-  `ship-roadmap`.
-- **Internas (3):** `plan-feature-from-issue`, `plan-feature-scaffold` —
-  ocultas del menú e invocadas por el router `plan-feature`, que (una vez
-  diseñada una feature) detecta la entrada (issue → from-issue, slug/SPEC
-  acotado → scaffold) y despacha al motor correcto — más
-  `review-implementation`, el motor de hallazgos de dos fases encontrar →
-  clasificar que compone `review-change` (y que reutilizan `audit-pr` /
-  `product-audit`). La entrevista de idea-en-bruto que solía ser un paso
-  interno de `plan-feature` ahora está incorporada en la propia
-  `design-feature` (orientada al usuario, ya que la definición de
-  producto es su propia etapa).
+- **Orientadas al usuario (17):** `init-workspace`,
+  `discover-repository-state`, `resolve-repository-state`, `design-feature`,
+  `plan-feature`, `plan-fix`, `execute-phase`, `review-change`, `audit-pr`,
+  `audit-docs`, `product-audit`, `fold-findings`, `generate-docs`,
+  `triage-issue`, `ship-roadmap`, `log-session`, `workflow-status`.
+- **Internas (13):** `plan-feature-from-issue`, `plan-feature-scaffold`,
+  `orchestration-envelope`, `review-implementation`, `review-code`,
+  `review-security`, `review-verify`, `review-debt`, `review-design`,
+  `review-a11y`, `review-brand`, `review-perf` y `review-seo`. Están ocultas
+  del menú y los routers de las skills orientadas al usuario las despachan.
+  La utilidad `bump-skill`, exclusiva del repositorio, queda fuera del conteo
+  instalable. La entrevista de idea-en-bruto que solía ser un paso interno de
+  `plan-feature` ahora está incorporada en la propia `design-feature`
+  (orientada al usuario, ya que la definición de producto es su propia etapa).
 
 > **Versionado.** Cada skill lleva su propio `version:` (semver) en el
 > frontmatter; los cambios se registran en
