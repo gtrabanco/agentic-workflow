@@ -22,3 +22,10 @@ Last reviewed: —
 - Gotchas: The fixed BLOCKED report distinguishes a required architecture decision from an NRS evidence contradiction.
 - Files: skills/execute-phase/SKILL.md, CHANGELOG.md, CHANGELOG.es.md, README.md, README.es.md, docs/features/19-architectural-invariants/
 - Next: P4 — Review evaluation
+
+## P4 — 2026-07-31
+- Done: Added invariant-preservation findings to change review and an invariant merge gate to PR audit.
+- Remains: P5 — Hardening & PR
+- Gotchas: An architecture finding requires a recorded project decision; the reviewer and auditor cannot accept it themselves.
+- Files: skills/review-change/SKILL.md, skills/audit-pr/SKILL.md, CHANGELOG.md, CHANGELOG.es.md, README.md, README.es.md, docs/features/19-architectural-invariants/
+- Next: P5 — Hardening & PR

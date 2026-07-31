@@ -7,6 +7,8 @@
   invariant document and explicit-decision route.
 - P3 execution checks passed: invariant evaluation precedes edits and an absent
   NRS ledger remains compatible.
+- P4 review/audit checks passed: both name architectural invariants, preserve
+  the NRS read-only evidence rule, and expose an n-a branch for absent rules.
 - P2 through P4 run the commands in `TASKS.md`.
 - `npx skills add . --list` must discover every shipped skill.
 

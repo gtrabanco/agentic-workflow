@@ -130,6 +130,11 @@ con ningún modelo. Un único camino disciplinado:
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo, **persistido** como `docs/audits/<id>-<fecha>.md` (id de auditoría incremental, hallazgos numerados `F1, F2, …` → direccionables después como `triage-issue <id> F<k>`); mina las docs de features → propone issues + altas/bajas en el roadmap (siempre presentes) + tooling instalado a registrar/rediseñar; comprueba la frescura del inventario de capacidades (deriva `docs/CAPABILITIES.md` ↔ código); **recurrencia de exportación de alcance** (≥ 2 unidades consecutivas exportando alcance vía `## Amendments`/issues de descope → hallazgo de calidad de planificación enrutado a las reglas de atomicidad/división) (**nunca arregla automáticamente**)                                                         |
 | `audit-docs`    | las **docs**    | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones                                                                                                                                           |
 
+`review-change` y `audit-pr` también evalúan el documento opcional del proyecto
+`ARCHITECTURAL_INVARIANTS.md`: cada regla aplicable necesita evidencia del
+repositorio de que el cambio la preserva, o una decisión arquitectónica
+explícita. Los proyectos que no declaran el documento siguen siendo compatibles.
+
 > El motor de hallazgos de `review-change` es el `review-implementation` interno
 > — la pasada de dos fases encontrar → clasificar que compone (y que reutilizan
 > `audit-pr` / `product-audit`) — más el pack de revisión interno: una skill
