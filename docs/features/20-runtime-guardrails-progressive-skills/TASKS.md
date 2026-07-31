@@ -2,13 +2,13 @@
 
 ## P1 — Command guard
 
-- [ ] Add the canonical normalized command/path policy.
+- [x] Add the canonical normalized command/path policy.
       Check: `test -x template/.agentic-workflow/hooks/guard-command.sh`.
-- [ ] Add thin Claude Code, Cursor, Copilot, and OpenCode adapters.
+- [x] Add thin Claude Code, Cursor, Copilot, and OpenCode adapters.
       Check: `find template -path '*agentic-workflow*' -o -path '*opencode*' | grep -q guard`.
-- [ ] Add opt-in platform configuration examples.
+- [x] Add opt-in platform configuration examples.
       Check: `grep -rq "guard-command" template/.claude template/.cursor template/.github`.
-- [ ] Cover safe export assignments, environment dumps, `.env` reads, and direct merges.
+- [x] Cover safe export assignments, environment dumps, `.env` reads, and direct merges.
       Check: `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh`.
   Done-when: `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` → exit 0.
 

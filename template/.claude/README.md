@@ -1,4 +1,4 @@
-# `.claude/` — session-logging hooks (optional)
+# `.claude/` — safety and session hooks (optional)
 
 Automatic, **free** session logging for the agentic workflow. These hooks keep
 [`docs/LOGS.md`](../docs/LOGS.md) — the working journal — up to date without you
@@ -44,3 +44,15 @@ expensive tier — e.g. replace its command with one that runs
 into a docs/LOGS.md entry"`. This trades a little token cost and latency on each
 exit for a narrative entry. Most setups don't need it — the `/log-session` skill
 covers the rich case on demand.
+
+## Command safety hook
+
+The `PreToolUse` example also calls the shared
+`.agentic-workflow/hooks/guard-command.sh` policy. It blocks obvious environment
+dumps, direct `.env` reads, and direct merge commands while allowing assignments
+such as `export NODE_ENV=test`. It requires `jq`; a missing parser fails closed.
+
+This is defense-in-depth, not a sandbox. Keep forge branch protection/rulesets
+and secret-manager controls enabled. Automated merging is available only through
+the transient `ship-roadmap --fullauto` wrapper; the guard has no persistent
+allow marker.
