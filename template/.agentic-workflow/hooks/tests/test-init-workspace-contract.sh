@@ -48,5 +48,6 @@ grep -q "customized hook configuration" "$project/.claude/settings.json"
 grep -q "Agent safety hooks" "$repo_root/skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md"
 grep -q "existing customized hook file becomes a residual" "$repo_root/skills/init-workspace/references/BOOTSTRAP_WRITE.md"
 grep -q "residual reporting" "$repo_root/skills/init-workspace/SKILL.md"
+bash "$test_dir/test-opencode-guard.sh"
 
 printf 'PASS init-workspace contract: scratch install, inventory, additive preservation, residual reporting\n'
