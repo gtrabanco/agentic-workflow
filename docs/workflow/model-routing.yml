@@ -20,6 +20,9 @@ bump-skill:
 design-feature:
   model: opus
   effort: high
+discover-repository-state:
+  model: sonnet
+  effort: medium
 execute-phase:
   model: sonnet
   effort: medium
@@ -53,6 +56,9 @@ plan-fix:
 product-audit:
   model: opus
   effort: max
+resolve-repository-state:
+  model: opus
+  effort: high
 review-a11y:
   model: sonnet
   effort: medium
