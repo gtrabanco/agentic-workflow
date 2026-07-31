@@ -63,7 +63,7 @@
 - [x] Parse manifests and run `npx skills add . --list`.
 - [x] Run and record the golden fixture for changed executor-path contracts.
 - [x] Synchronize English/Spanish workflow guidance and feature artifacts.
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat.
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #<n>` and push.
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat.
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
+- [x] Commit `docs: link PR #<n>` and push.
   Done-when: `npx skills add . --list` → exit 0.
