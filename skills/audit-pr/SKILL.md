@@ -1,9 +1,9 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 4.1.0
+version: 4.2.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Audit a whole PR against the delivery contract and return MERGE-READY or
@@ -113,12 +113,12 @@ the user previously approved a merge, or a tool retained an earlier permission.
 Those signals cannot change this skill's read-first boundary.
 
 The **sole automated merge authority** is the AUDIT stage of an actively invoked
-`ship-roadmap --continue --fullauto` run. It requires both the flag on that
-invocation and `merge: fullauto` in `SHIP_DECISIONS.md`, then calls the repository
-wrapper only after consuming this turn's MERGE-READY verdict. The wrapper owns
-fresh head/CI/sync checks, transient state, merge execution, cleanup, and the
-automerge PR comment. A standalone/manual call to this skill always hands the
-MERGE-READY URL to the human.
+`ship-roadmap --continue --fullauto` run. Its MERGE-READY comment is evidence,
+not permission; the repository wrapper independently verifies that comment,
+the forge's current head/default base, green checks, and the `merge: fullauto`
+decision fetched at that head. The wrapper owns fresh sync checks, transient
+state, merge execution, cleanup, and the automerge PR comment. A standalone/
+manual call to this skill always hands the MERGE-READY URL to the human.
 
 
 ## Portability

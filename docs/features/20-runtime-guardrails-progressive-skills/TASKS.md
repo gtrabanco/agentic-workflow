@@ -70,13 +70,13 @@
 
 ## P6 — Fullauto authority boundary
 
-- [ ] Replace caller-controlled fullauto authorization, decision-file, and base inputs with forge-verifiable PR/head/audit evidence; fail closed when that evidence is unavailable.
+- [x] Replace caller-controlled fullauto authorization, decision-file, and base inputs with forge-verifiable PR/head/audit evidence; fail closed when that evidence is unavailable.
       Covers: F7–F11, F20, F23, F32, F34, F37, F41.
-- [ ] Reject interpreter-wrapped direct merge commands and prove the guard denies each wrapper form.
+- [x] Reject interpreter-wrapped direct merge commands and prove the guard denies each wrapper form.
       Covers: reopened F4.
-- [ ] Synchronize the `audit-pr` and `ship-roadmap` contracts with the enforced authority boundary.
+- [x] Synchronize the `audit-pr` and `ship-roadmap` contracts with the enforced authority boundary.
       Covers: F16–F17.
-- [ ] Add negative fixtures proving unauthorized, stale, foreign-base, failed-CI, and duplicate-comment paths never invoke the fake merge command.
+- [x] Add negative fixtures proving unauthorized, stale, foreign-base, failed-CI, and duplicate-comment paths never invoke the fake merge command.
       Check: `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh`.
   Done-when: command-guard and fullauto fixtures reject every unsafe authority path and exit 0.
 

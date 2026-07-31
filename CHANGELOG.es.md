@@ -137,6 +137,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.2.0 | 2026-07-31 | menor | Fullauto ahora invoca el wrapper solo con identificadores de PR y ejecución; el wrapper deriva y verifica desde el forge el head, la base por defecto, la evidencia de auditoría ligada al SHA y la decisión fijada al head, sin confiar en entradas controladas por el invocador. |
 | 3.1.1 | 2026-07-31 | parche | Enruta una fundación de repositorio existente invocada con `--fullauto` por la política de auditoría y merge, manteniendo las rutas de founding por defecto y greenfield sin recursos de auditoría. |
 | 3.1.0 | 2026-07-31 | menor | La carga progresiva separa fundación, recuperación/selección de continuación, avance de etapa, política de runtime/merge, informe terminal, guardrails y portabilidad en rutas explícitas de un salto; el cuerpo principal conserva el contrato de turno y la selección de ruta. |
 | 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** `--fullauto` es ahora la única autoridad de merge automatizado y debe usar el wrapper transitorio fail-closed del repositorio tras un veredicto fresco de `audit-pr`; los comandos directos de merge siguen bloqueados, el estado del intento se limpia en cada salida y cada automerge correcto queda registrado mediante un comentario idempotente de PR ligado al SHA. |
@@ -307,6 +308,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.2.0 | 2026-07-31 | menor | Sincroniza el contrato consumidor de merge con la frontera de autoridad fullauto verificable desde el forge; las auditorías standalone siguen limitadas a veredicto/comentario. |
 | 4.1.0 | 2026-07-31 | menor | La carga progresiva mueve gates de merge, checks de cierre/descope, proceso de auditoría, veredicto fijo, enrutamiento/guardrails y portabilidad detrás de una ruta de auditoría obligatoria de un salto; la propiedad del merge permanece en el entrypoint. |
 | 4.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** elimina el auto-merge standalone o autorizado por una política documental. La skill queda estrictamente limitada a veredicto/comentario y nunca fusiona; solo una etapa AUDIT activa de `ship-roadmap --fullauto` puede consumir su resultado MERGE-READY ligado al SHA e invocar el wrapper transitorio. |
 | 3.6.0 | 2026-07-31 | menor | Añade la preservación de invariantes arquitectónicas como puerta explícita de aptitud de merge basada en evidencia y una ruta n-a para proyectos que no declaran ninguna. |
