@@ -12,7 +12,7 @@
 | F10 | template/.agentic-workflow/hooks/fullauto-merge.sh:87 | correctness | high | fix-now | replan-in-unit (propose P6) | no |
 | F11 | template/.agentic-workflow/hooks/fullauto-merge.sh:78 | audit-integrity | high | fix-now | replan-in-unit (propose P6) | no |
 | F12 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:13 | security | high | fix-now | fold into phase | yes |
-| F13 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:72 | tests | med | fix-now | fold into phase | no |
+| F13 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:72 | tests | med | fix-now | fold into phase | yes |
 | F14 | skills/review-change/SKILL.md:124 | progressive-routing + API | high | fix-now | fold into phase | no |
 | F15 | skills/ship-roadmap/SKILL.md:109 | progressive-routing | high | fix-now | fold into phase | no |
 | F16 | skills/ship-roadmap/SKILL.md:80 | API + backward-compatibility | high | fix-now | replan-in-unit (propose P6) | no |
