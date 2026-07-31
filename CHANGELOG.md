@@ -158,6 +158,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before implementation and routes missing or non-frozen state to discovery or resolution. |
 | 2.11.0 | 2026-07-31 | minor | Consumes frozen Normalized Repository State facts before implementation, inspects only absent facts directly, and routes contradictory evidence to `resolve-repository-state`. |
 | 2.10.0 | 2026-07-30 | minor | Issue #111: adds one deterministic `Autofix` / `Opportunistic Fix` / `Create Issue` policy, explicit per-row pass/fail evaluation and numerical-boundary check, and a `decisions.md` execution log; configuration remains future work pending a machine-checkable schema. |
 | 2.9.0 | 2026-07-30 | minor | Issue #111 initial policy draft; superseded before release by 2.10.0's single-source deterministic contract. |
@@ -211,6 +212,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.2.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before planning and routes missing or non-frozen state to discovery or resolution. |
 | 3.1.0 | 2026-07-12 | minor | Fix #51: the redirect gate's "`defined` or higher → proceed" branch is now status-specific — only `defined` proceeds to Routing; `planned` (SPEC + artifacts present) **STOPS** and hands off to `/execute-phase <NN> P1` instead of re-scaffolding; `in-progress` STOPS to resume the current phase; `done` STOPS as already-shipped. `--next` now targets the next **`defined`** entry (was `planned`, which is already scaffolded). Turn contract + Done when gained a box asserting a `defined→planned` write was re-read and confirmed before the turn ends. |
 | 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-09 | minor | Redirect gate now keys on the **roadmap status** (the five-state machine) as the primary signal — status `defined`+ proceeds, `idea`/absent STOPs — instead of the SPEC `## Design status` marker. The marker is retained as the **legacy-compat fallback** only, for a pre-migration roadmap row still reading a plain `planned` with no five-state history. See `docs/workflow/MIGRATION.md`. |
