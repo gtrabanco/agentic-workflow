@@ -22,5 +22,9 @@
 - Golden-fixture result: Qwen3 8B passed the explicit-invariant scenario with
   `--think=false`; the first default-thinking attempt is retained as a failed
   exact-output run in `docs/workflow/GOLDEN_FIXTURE.md` and its Spanish sibling.
+- Golden-fixture completion: Qwen3 8B (`--think=false`) passed live CSV-export
+  runs for `design-feature` 2.5.0, `plan-feature` 3.3.0,
+  `plan-feature-from-issue` 1.6.0, and `plan-feature-scaffold` 1.12.0; the
+  run-log row is recorded in both language siblings.
 - PR [#115](https://github.com/gtrabanco/agentic-workflow/pull/115) targets
   `main` and its body contains `Closes #109`.
