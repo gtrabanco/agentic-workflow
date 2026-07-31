@@ -20,3 +20,5 @@
 | F18 | skills/workflow-status/references/SENSOR_SIGNALS.md:32 | progressive-routing | high | fix-now | replan-in-unit (propose P7) | no |
 | F19 | scripts/check-skill-context.mjs:32 | debt + perf | high | fix-now | fold into phase | yes |
 | F20 | template/.agentic-workflow/hooks/fullauto-merge.sh:64 | debt + correctness | med | fix-now | replan-in-unit (propose P6) | no |
+| F24 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:20 | security | high | fix-now | fold into phase | yes |
+
