@@ -88,4 +88,12 @@ const missingSkill = spawnSync(process.execPath, [path.join(repoRoot, "scripts/c
 assert.notEqual(missingSkill.status, 0);
 assert.match(`${missingSkill.stdout}\n${missingSkill.stderr}`, /Skill entrypoint was not discovered/);
 
+const manifestOnly = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--manifest-only"], { encoding: "utf8" });
+assert.equal(manifestOnly.status, 0, manifestOnly.stderr);
+assert.match(manifestOnly.stdout, /PASS context manifest/);
+
+const bareSkill = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--skill"], { encoding: "utf8" });
+assert.notEqual(bareSkill.status, 0);
+assert.match(`${bareSkill.stdout}\n${bareSkill.stderr}`, /--skill requires a name/);
+
 console.log("PASS context checker: nested, missing, unreachable, heading, budget, and argument failures rejected");

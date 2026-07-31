@@ -20,9 +20,9 @@ cp "$repo_root/template/.opencode/plugins/agentic-workflow-guard.ts.example" "$p
 OPENCODE_PLUGIN="$plugin" OPENCODE_FIXTURE="$fixture" bun -e '
   import { pathToFileURL } from "node:url";
   const plugin = await import(pathToFileURL(process.env.OPENCODE_PLUGIN).href);
-  const hooks = await plugin.AgenticWorkflowGuard();
+  const hooks = await plugin.AgenticWorkflowGuard({ worktree: process.env.OPENCODE_FIXTURE });
   const before = hooks["tool.execute.before"];
-  const input = { tool: "bash", worktree: process.env.OPENCODE_FIXTURE };
+  const input = { tool: "bash" };
   const blocked = async (command) => {
     try {
       await before(input, { args: { command } });

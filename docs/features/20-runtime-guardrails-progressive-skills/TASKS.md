@@ -82,13 +82,13 @@
 
 ## P7 — Adapter and context-guard closure
 
-- [ ] Use OpenCode's plugin-context worktree and cover the runtime event shape.
+- [x] Use OpenCode's plugin-context worktree and cover the runtime event shape.
       Covers: F42.
-- [ ] Reject nested files/directories below `references/` and add a regression fixture.
+- [x] Reject nested files/directories below `references/` and add a regression fixture.
       Covers: F43.
-- [ ] Cover `--manifest-only` and a bare `--skill` in the context-checker CLI fixture.
+- [x] Cover `--manifest-only` and a bare `--skill` in the context-checker CLI fixture.
       Covers: F44.
-- [ ] Reconfirm progressive-route contracts after the checker changes.
+- [x] Reconfirm progressive-route contracts after the checker changes.
       Covers: F18.
   Done-when: `bash template/.agentic-workflow/hooks/tests/test-opencode-guard.sh` and `node scripts/check-skill-context.test.mjs` exit 0.
 
