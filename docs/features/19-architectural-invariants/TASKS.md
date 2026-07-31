@@ -18,9 +18,9 @@
 
 ## P3 — Execution evaluation
 
-- [ ] Update execution's pre-edit contract with optional invariant evaluation and the stop route.
+- [x] Update execution's pre-edit contract with optional invariant evaluation and the stop route.
       Check: `grep -q "Architectural invariants" skills/execute-phase/SKILL.md`.
-- [ ] Preserve NRS optional evidence consumption and repository truth.
+- [x] Preserve NRS optional evidence consumption and repository truth.
       Check: `grep -q "REPOSITORY_STATE.md" skills/execute-phase/SKILL.md`.
   Done-when: `grep -q "explicit architectural decision" skills/execute-phase/SKILL.md` → exit 0.
 
