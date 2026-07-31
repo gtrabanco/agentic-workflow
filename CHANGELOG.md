@@ -98,7 +98,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 #### `discover-repository-state`
 | Version | Date | Type | What changed |
-|---|---|---|
+|---|---|---|---|
 | 1.1.2 | 2026-07-31 | patch | Routes a contradicted snapshot to `resolve-repository-state` before recommending planning. |
 | 1.1.1 | 2026-07-31 | patch | Removes the undeclared `--refresh` argument and clarifies that discovery preserves each ledger category separately. |
 | 1.1.0 | 2026-07-31 | minor | Preserves `contradicted` snapshot status when discovery records a conflict instead of freezing unresolved contradictions. |
