@@ -25,6 +25,10 @@ planning skills check against. Be explicit, e.g.:
 - `<rule, e.g. "the domain layer imports no framework/IO code">`
 - `<rule, e.g. "UI never talks to the database directly">`
 
+For long-lived constraints that apply beyond dependency direction, use the
+optional companion `ARCHITECTURAL_INVARIANTS.md`. It records one checkable rule,
+its repository evidence, and the authority required to change it.
+
 ## Diagram
 
 ```
