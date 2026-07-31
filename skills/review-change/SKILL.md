@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.9.0
+version: 2.9.1
 argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -121,7 +121,7 @@ read another `references/` path.
 |---|---|---|
 | Default review | [review process](references/REVIEW_PROCESS.md) → [persist and decide](references/PERSIST_AND_DECIDE.md) → [output and guardrails](references/OUTPUT_AND_GUARDRAILS.md) | adversarial setup, adversarial merge, portability |
 | `--adversarial N` | review process → [adversarial setup](references/ADVERSARIAL_SETUP.md) before reviewers → [adversarial merge](references/ADVERSARIAL_MERGE.md) before synthesis → persist/decide → output/guardrails | portability |
-| `--merge` | adversarial merge plus the supplied reviewer tables → persist/decide → output/guardrails | review process, adversarial setup, portability |
+| `--merge` | review process → adversarial setup → adversarial merge plus the supplied reviewer tables → persist/decide → output/guardrails | portability |
 
 Add [portability](references/PORTABILITY.md) only when independent contexts,
 parallelism, slash commands, or tier controls are actually unavailable. The

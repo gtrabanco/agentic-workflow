@@ -265,6 +265,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.9.1 | 2026-07-31 | parche | Hace que `--merge` sea autocontenido cargando el proceso de revisión y el setup adversarial antes del merge adversarial, para fusionar las tablas suministradas bajo el mismo contrato de revisión. |
 | 2.9.0 | 2026-07-31 | menor | La carga progresiva separa el proceso de review por defecto, persistencia/decisión, setup/merge adversarial, salida/guardrails y portabilidad; el aislamiento y el contrato de turno permanecen en el cuerpo de activación. |
 | 2.8.0 | 2026-07-31 | menor | Revisa explícitamente invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio e informa violaciones, introducciones o cambios no documentados como hallazgos de arquitectura. |
 | 2.7.1 | 2026-07-31 | parche | Mueve la guía de revisión NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
