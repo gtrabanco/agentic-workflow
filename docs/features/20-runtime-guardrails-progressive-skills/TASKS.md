@@ -21,7 +21,7 @@
 - [x] Require transient wrapper cleanup and a SHA-bound PR automerge comment.
       Check: `grep -q "agentic-workflow:automerge" skills/ship-roadmap/SKILL.md`.
 - [x] Add bootstrap and upgrade interview steps for detected safety-hook adapters.
-      Check: `grep -q "Agent safety hooks" skills/init-workspace/SKILL.md`.
+      Check: `grep -q "Agent safety hooks" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`.
 - [x] Bump changed skill versions and synchronize both changelogs/readmes.
       Check: `git diff --check`.
   Done-when: `grep -q "sole automated merge authority" skills/ship-roadmap/SKILL.md` → exit 0.

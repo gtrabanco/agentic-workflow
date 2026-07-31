@@ -18,7 +18,7 @@
 - P1: all hook JSON examples parsed with Node's `JSON.parse`.
 - P2: `audit-pr` authoring checks passed at 4.0.0 and no auto-merge branch remains.
 - P2: `ship-roadmap` authoring checks passed at 3.0.0; sole-authority, wrapper, cleanup, and PR-comment markers are present.
-- P2: `init-workspace` authoring checks passed at 2.7.0; bootstrap and additive upgrade paths name all four adapters.
+- P2: `init-workspace` authoring checks passed against `references/BOOTSTRAP_DISCOVERY.md`; bootstrap and additive upgrade paths name all four adapters.
 - P2: plugin alphabetical order and version/changelog parity checks passed.
 - P2: both command/fullauto fixtures passed again after the workflow-policy changes.
 - P3: `node scripts/check-skill-context.mjs --manifest-only` passed with eight budgeted skills and one-hop references.
