@@ -29,3 +29,10 @@ Last reviewed: —
 - Gotchas: Route resources are normative and fail closed when missing. The byte/4 result measures direct activation, not every conditional resource a long workflow may legitimately load later.
 - Files: skills/execute-phase/, skills/ship-roadmap/, skills/workflow-status/, skills/review-change/, skills/audit-pr/, skills/triage-issue/, skills/design-feature/, skills/init-workspace/, docs/workflow/SKILLS.md, docs/workflow/SKILLS.es.md, README.md, README.es.md, CHANGELOG.md, CHANGELOG.es.md
 - Next: P5 — Hardening & PR
+
+## P5 — 2026-07-31
+- Done: Hardened route selectors and semantic reference boundaries from the initial weak-model failure; passed the final hook, context, manifest, authoring, discovery, and Qwen3 golden gates; opened PR #116 and linked it from the roadmap.
+- Remains: Fresh-context mandatory final review; no merge was attempted.
+- Gotchas: The initial Qwen3 probe is retained as FAIL immediately before the superseding PASS. Hooks remain defense-in-depth and the user's external OpenCode configuration was not edited.
+- Files: scripts/check-skill-context.mjs, docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/features/20-runtime-guardrails-progressive-skills/, docs/features/ROADMAP.md
+- Next: `/review-change` in a conversation that did not implement this PR
