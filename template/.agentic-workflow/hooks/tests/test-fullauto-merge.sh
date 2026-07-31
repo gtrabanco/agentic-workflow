@@ -26,6 +26,7 @@ head_sha=$(git -C "$fixture/repo" rev-parse HEAD)
 printf 'OPEN\n' > "$fixture/state/pr-state"
 printf '0\n' > "$fixture/state/comments"
 printf '0\n' > "$fixture/state/merges"
+printf '\n' > "$fixture/state/method"
 printf 'main\n' > "$fixture/state/base"
 printf 'SUCCESS\n' > "$fixture/state/checks"
 
@@ -72,6 +73,7 @@ if [ "$1" = "api" ]; then
 fi
 if [ "$1 $2" = "pr merge" ]; then
   [ "${GH_TEST_FAIL_MERGE:-0}" = "0" ] || exit 1
+  printf '%s\n' "$*" > "$state_dir/method"
   printf 'MERGED\n' > "$state_dir/pr-state"
   printf '%s\n' "$(( $(cat "$state_dir/merges") + 1 ))" > "$state_dir/merges"
   exit 0
@@ -97,6 +99,7 @@ printf '%s' "$missing_value" | grep -q -- '--pr requires a value'
 run_wrapper >/dev/null
 [ "$(cat "$fixture/state/comments")" = "1" ]
 [ "$(cat "$fixture/state/merges")" = "1" ]
+grep -q -- '--merge' "$fixture/state/method"
 if find "$fixture/repo/.git/agentic-workflow" -type f -name 'automerge-*' 2>/dev/null | grep -q .; then
   echo "FAIL: attempt marker survived successful merge" >&2
   exit 1

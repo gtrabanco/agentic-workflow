@@ -4,7 +4,7 @@ set -euo pipefail
 
 pr=""
 run_id=""
-method="squash"
+method="merge"
 
 fail() {
   printf 'fullauto-merge: %s\n' "$1" >&2
