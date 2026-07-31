@@ -1,7 +1,7 @@
 ---
 name: resolve-repository-state
 user-invocable: true
-version: 1.1.0
+version: 1.1.1
 argument-hint: <contradiction-id>
 description: >
   Resolve an explicit Normalized Repository State contradiction. This is the
@@ -64,6 +64,12 @@ discovery, planning, execution, review, and audit reuse.
 The contradiction has a recorded disposition, and either the next frozen
 snapshot is internally consistent or the missing human input is explicit.
 
+If human input is required:
+
+→ Next: provide the requested evidence or decision — resolution cannot continue yet
+  · evidence supplied → rerun /resolve-repository-state <contradiction-id>
+
+Otherwise:
+
 → Next: /plan-feature <slug> — resume planning from the resolved snapshot
   · implementation is next → /execute-phase <NN> P1
-  · needs input → provide the requested evidence or decision
