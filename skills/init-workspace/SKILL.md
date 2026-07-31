@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.5.2
+version: 2.6.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -139,10 +139,16 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    has one, leave it unchanged and report that discovery should refresh it.
    Explain that discovery freezes evidence before planning and only
    `resolve-repository-state` updates frozen facts.
-6. **Offer the workflow skills.** Propose installing them:
+6. **Offer architectural invariants.** Keep
+   `docs/architecture/ARCHITECTURAL_INVARIANTS.md` from the template only when
+   the project has long-lived architectural constraints. Explain that it is
+   optional: an absent document means no project invariants are declared, not
+   that the scaffold failed. If retained, add its documentation-map row and
+   name the project's explicit architectural-decision authority.
+7. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-7. **State that reviews are self-contained; offer optional extras.** The
+8. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -152,7 +158,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-8. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+9. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -165,7 +171,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-9. **Report.** List what was created, which placeholders still need human input,
+10. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
    skipped, with reason), and the next step: `discover-repository-state` →
    `design-feature` → `plan-feature` → `execute-phase`.
@@ -188,7 +194,10 @@ lacks**. Seven ordered steps:
    project's substrate lacks, or still holds as a raw, unfilled placeholder —
    e.g. a `Docs site` block, a `Performance commands` block, a `Git workflow`
    line, the five-state roadmap `Status legend`, the capability inventory
-   (`docs/CAPABILITIES.md` + its documentation-map row), or the Normalized
+   (`docs/CAPABILITIES.md` + its documentation-map row), the optional
+   architectural-invariants document
+   (`docs/architecture/ARCHITECTURAL_INVARIANTS.md` + its documentation-map
+   row), or the Normalized
    Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). This is the
    diff-against-current-template contract; it is the only source of *what's
    new*. (A missing `docs/CAPABILITIES.md` is proposed with the same
@@ -216,7 +225,7 @@ lacks**. Seven ordered steps:
    the `CLAUDE.md`/`docs/` block diff above (this is forge-repo state, not a
    doc block): check whether the target repo already has the `urgent` and
    `fix-next` labels (`gh label list`); create whichever is missing with the
-   same `gh label create` calls bootstrap mode uses (see Process step 8) —
+   same `gh label create` calls bootstrap mode uses (see Process step 9) —
    never touch a label that already exists (additive-only, same never-clobber
    rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
    project recolored or redescribed is left exactly as-is).
@@ -274,6 +283,15 @@ lacks**. Seven ordered steps:
 
 Seed `docs/workflow/REPOSITORY_STATE.md` from the template. Explain that
 discovery freezes evidence before planning and only the resolver updates facts.
+
+## Architectural invariants
+
+Offer `docs/architecture/ARCHITECTURAL_INVARIANTS.md` as an optional project
+contract for long-lived architectural rules. Its entries must name a stable ID,
+repository evidence, and the authority that can change the rule. Do not infer a
+rule from the implementation or a feature SPEC. A project without this document
+remains compatible; record `n/a: no project invariants declared` in later
+workflow artifacts rather than creating one silently.
 
 ## Portability (agents other than Claude Code)
 

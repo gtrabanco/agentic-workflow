@@ -203,6 +203,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.0 | 2026-07-31 | minor | Classifies optional project architectural invariants with repository evidence and stops design for an explicit architectural decision when a rule is violated, introduced, or changed. |
 | 2.4.1 | 2026-07-31 | patch | Moves the NRS guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.3.0 | 2026-07-19 | minor | Implicit-requirements closure: capability closure becomes three fixed checklists — entity closure (unchanged), new **integration closure** (one resolved row per subsystem in the project's capability inventory, `docs/CAPABILITIES.md` — none skipped; no inventory → derive one and offer to seed the file) and a **role matrix** (every inventory role explicitly allowed/denied per capability) — plus a new **expectation sweep** step and SPEC section (≥ 10 M/L / ≥ 5 XS/S domain expectations a human would assume implicitly, each forced to in-scope/out-of-scope/deferred). Three new Spec-lint product boxes, matching turn-contract boxes and guardrails; Step 0 reads the inventory. |
 | 2.2.0 | 2026-07-19 | minor | Small-model hardening of the interview: **one question per turn, never batched**; a fixed six-slot **vagueness rubric** (affected users/roles · error & edge states · data shape · boundaries & limits · out of scope · success criteria — each filled or explicit `n/a`); mandatory-question rule (a requirement with no verifiable acceptance criterion is automatically the next question); reframe-as-measurable technique; "decide later" answers land in the SPEC's new `### Deferred decisions` section; structural escalation (≥ 3 empty slots → `NEEDS_INPUT`, never guess). Stamping `designed` now requires the SPEC template's new **Spec-lint product boxes** (mechanical presence checks — results pasted, fail-closed). |
@@ -214,6 +215,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.3.0 | 2026-07-31 | minor | Evaluates optional architectural invariants before scaffolding and restores compatibility with repositories that have no Normalized Repository State ledger. |
 | 3.2.2 | 2026-07-31 | patch | Moves the NRS planning gate below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 3.2.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before planning and routes missing or non-frozen state to discovery or resolution. |
 | 3.1.0 | 2026-07-12 | minor | Fix #51: the redirect gate's "`defined` or higher → proceed" branch is now status-specific — only `defined` proceeds to Routing; `planned` (SPEC + artifacts present) **STOPS** and hands off to `/execute-phase <NN> P1` instead of re-scaffolding; `in-progress` STOPS to resume the current phase; `done` STOPS as already-shipped. `--next` now targets the next **`defined`** entry (was `planned`, which is already scaffolded). Turn contract + Done when gained a box asserting a `defined→planned` write was re-read and confirmed before the turn ends. |
@@ -382,6 +384,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.6.0 | 2026-07-31 | minor | Offers the optional architectural-invariants document during bootstrap and upgrade without creating a requirement for existing repositories. |
 | 2.5.2 | 2026-07-31 | patch | Moves the NRS bootstrap guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.5.1 | 2026-07-31 | patch | Routes a newly bootstrapped project through repository-state discovery before design, planning, or execution. |
 | 2.5.0 | 2026-07-31 | minor | Adds an explicit bootstrap and upgrade process step to seed `docs/workflow/REPOSITORY_STATE.md` from the template without overwriting an existing ledger. |
@@ -440,6 +443,7 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (dimensions resolved, open questions, tracking issue) |
 | 1.1.0 | 2026-06-09 | minor | Estimates size `XS/S/M/L`; asks for a UI design reference on UI features |
 | | 1.0.0 | 2026-06-05 | — | Interview a raw idea into a SPEC |
+| `plan-feature-from-issue` | 1.6.0 | 2026-07-31 | minor | Classifies optional project architectural invariants before stamping an issue-derived product half designed, stopping for an explicit architectural decision when required. |
 | `plan-feature-from-issue` | 1.5.0 | 2026-07-19 | minor | Gap-closing (step 4) now probes `design-feature`'s fixed six-slot vagueness rubric, asks **one question per turn** with a recommended default (was: batch related questions), and gains a structural hand-off threshold: ≥ 3 rubric slots unfillable from the issue plus the answers so far → hand the feature to `design-feature`. |
 | `plan-feature-from-issue` | 1.4.0 | 2026-07-09 | minor | Now **sets** the roadmap row to `defined` in the same edit that stamps `## Design status: designed` (added at `idea` first if the row didn't exist) — the `idea → defined` transition, performed here when this skill satisfies closure directly rather than handing off to `design-feature`. |
 | | 1.3.0 | 2026-07-09 | minor | Now writes the SPEC's **product half** (two-halves convention) and must satisfy **capability closure** before handing off — a thin issue without enough to fill it is handed to `design-feature` (composed in-turn only at ≥ its tier) rather than faking `## Design status: designed`. |
@@ -447,6 +451,7 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Fixed completion report returned to the router (verdict, gaps closed, Closes #N wired) |
 | 1.1.0 | 2026-06-09 | minor | Produces a **sized** scoped SPEC with `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → scoped SPEC |
+| `plan-feature-scaffold` | 1.12.0 | 2026-07-31 | minor | Records optional architectural-invariant evidence and classification in the engineering half, stopping instead of emitting phases for a violation, introduction, or change. |
 | `plan-feature-scaffold` | 1.11.0 | 2026-07-19 | minor | New mandatory emit-time **Spec-lint** step (all boxes of the SPEC template's new `### Spec-lint` — engineering boxes plus the product boxes as a regression check; fail-closed, presence checks only); the fixed completion report now states the Spec-lint/Phase-lint results; `progress.md` is created with just the `Last reviewed: —` header and documented as the file `execute-phase` appends its fixed handoff-schema entries to. |
 | `plan-feature-scaffold` | 1.10.0 | 2026-07-17 | minor | Fix #64: the per-phase checklist (§ "Scale the artifacts") gains a mandatory emit-time **Phase-lint** step — before emitting the phase list, every phase must pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy); any FAIL is re-cut or split via the existing mandatory-split rule, never emitted. |
 | `plan-feature-scaffold` | 1.9.0 | 2026-07-12 | minor | Fix #51: after the `defined → planned` roadmap write, re-read the row and confirm it literally reads `planned`; re-apply the edit on mismatch instead of assuming the write landed. Done when gained the matching re-read-and-confirmed assertion. |
@@ -493,7 +498,11 @@ How pinning actually works, verified against the `skills` CLI:
   bootstrap and upgrade process step. `execute-phase` 2.11.0, `review-change`
   2.7.0, `audit-pr` 3.5.0, and `orchestration-envelope` 1.4.0 carry the same
   read-only NRS consumption and contradiction-routing contract through
-  implementation, review, audit, and orchestration.
+  implementation, review, audit, and orchestration. Architectural-invariants
+  feature 19 adds the optional project contract and its evidence/explicit-
+  decision gate to `init-workspace` 2.6.0, `design-feature` 2.5.0,
+  `plan-feature` 3.3.0, `plan-feature-from-issue` 1.6.0, and
+  `plan-feature-scaffold` 1.12.0.
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as
