@@ -167,7 +167,7 @@ Derived inventory because this repository has no root `docs/CAPABILITIES.md`.
 
 1. `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` exits 0 and includes direct merge denials.
 2. `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` exits 0 and includes env-dump, `.env`, and safe-assignment cases.
-3. `grep -q "Agent safety hooks" skills/init-workspace/SKILL.md` exits 0.
+3. `grep -q "Agent safety hooks" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md` exits 0.
 4. `bash template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh` exits 0 and proves marker cleanup plus a single idempotent PR comment.
 5. `node scripts/check-skill-context.mjs --skill execute-phase` exits 0 with the main `SKILL.md` below its hard budget.
 6. `node scripts/check-skill-context.mjs` exits 0 for every budgeted skill and every reference is reachable in one hop.
