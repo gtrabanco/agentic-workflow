@@ -159,6 +159,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.12.0 | 2026-07-31 | menor | Añade una puerta de invariantes arquitectónicas antes de editar con clasificación basada en evidencia, parada para decisión explícita y compatibilidad NRS opcional. |
 | 2.11.2 | 2026-07-31 | parche | Mueve la guía NRS debajo de las reglas de Branch para que los formatos de rama y las restricciones del workflow mantengan su alcance en la sección Branch. |
 | 2.11.1 | 2026-07-31 | parche | Exige un snapshot congelado del estado del repositorio antes de implementar y enruta el estado ausente o no congelado a discovery o resolución. |
 | 2.11.0 | 2026-07-31 | menor | Consume hechos congelados del Estado Normalizado del Repositorio antes de implementar, inspecciona directamente solo hechos ausentes y enruta evidencia contradictoria a `resolve-repository-state`. |
@@ -204,6 +205,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `design-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.0 | 2026-07-31 | menor | Clasifica invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio y detiene el diseño para una decisión arquitectónica explícita cuando una regla se viola, introduce o cambia. |
 | 2.4.1 | 2026-07-31 | parche | Mueve la guía NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.3.0 | 2026-07-19 | menor | Cierre de requisitos implícitos: el cierre de capacidades pasa a tres checklists fijas — cierre de entidades (sin cambios), nuevo **cierre de integración** (una fila resuelta por subsistema del inventario de capacidades del proyecto, `docs/CAPABILITIES.md` — ninguno omitido; sin inventario → deriva uno y ofrece sembrar el fichero) y una **matriz de roles** (cada rol del inventario explícitamente permitido/denegado por capacidad) — más un nuevo paso y sección del SPEC de **barrido de expectativas** (≥ 10 M/L / ≥ 5 XS/S expectativas de dominio que un humano asumiría implícitamente, cada una forzada a in-scope/out-of-scope/deferred). Tres nuevas casillas de producto del Spec-lint, casillas equivalentes en el contrato de turno y guardarraíles; el Paso 0 lee el inventario. |
 | 2.2.0 | 2026-07-19 | menor | Endurecimiento de la entrevista para modelos pequeños: **una pregunta por turno, nunca en lote**; una **rúbrica de vaguedad** fija de seis huecos (usuarios/roles afectados · estados de error y borde · forma de los datos · límites y umbrales · fuera de alcance · criterios de éxito — cada uno relleno o `n/a` explícito); regla de pregunta obligatoria (un requisito sin criterio de aceptación verificable es automáticamente la siguiente pregunta); técnica de reformular-como-medible; las respuestas "decidir más tarde" aterrizan en la nueva sección `### Deferred decisions` del SPEC; escalada estructural (≥ 3 huecos vacíos → `NEEDS_INPUT`, nunca adivinar). Sellar `designed` ahora exige las nuevas **casillas de producto del Spec-lint** de la plantilla de SPEC (comprobaciones mecánicas de presencia — resultados pegados, fail-closed). |
@@ -215,6 +217,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.3.0 | 2026-07-31 | menor | Evalúa invariantes arquitectónicas opcionales antes del scaffolding y restaura la compatibilidad con repositorios sin ledger de Estado Normalizado del Repositorio. |
 | 3.2.2 | 2026-07-31 | parche | Mueve la puerta de planificación NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 3.2.1 | 2026-07-31 | parche | Exige un snapshot congelado del estado del repositorio antes de planificar y enruta el estado ausente o no congelado a discovery o resolución. |
 | 3.1.0 | 2026-07-12 | menor | Fix #51: la rama "`defined` o superior → continuar" de la puerta de redirección ahora es específica por estado — solo `defined` continúa a Routing; `planned` (SPEC + artefactos presentes) **PARA** y remite a `/execute-phase <NN> P1` en vez de re-generar el andamiaje; `in-progress` PARA para reanudar la fase actual; `done` PARA como ya entregado. `--next` ahora apunta a la siguiente entrada **`defined`** (antes `planned`, que ya está con andamiaje). El contrato de turno y "Done when" ganan una casilla que exige releer y confirmar la escritura `defined→planned` antes de terminar el turno. |
@@ -257,6 +260,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.8.0 | 2026-07-31 | menor | Revisa explícitamente invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio e informa violaciones, introducciones o cambios no documentados como hallazgos de arquitectura. |
 | 2.7.1 | 2026-07-31 | parche | Mueve la guía de revisión NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.7.0 | 2026-07-31 | menor | Usa hechos NRS congelados como contexto de evidencia de solo lectura y propone contradicciones sin redefinir hechos, aceptar decisiones ni tratar documentación como evidencia de implementación. |
 | 2.6.0 | 2026-07-19 | menor | Endurecimiento para modelos pequeños: nueva **regla de aislamiento (por defecto)** — `review-implementation` y cada pasada aplicable del pack corren con contexto limpio (subagente / invocación headless / conversación nueva, los mismos tres niveles que `--adversarial`), reciben solo el alcance + su propia checklist + los docs que nombra su Paso 0 (≤ 10 lecturas completas de ficheros fuera del diff por pasada), y devuelven SOLO su tabla fija + PASS\|FAIL; el orquestador retiene tablas, nunca fuentes; la composición en el mismo turno queda como fallback inline documentado. La comprobación de deriva del SPEC ahora es **estructural**: tabla de cobertura por criterio (criterio → evidencia → cumplido/incumplido/intocado) más mapeo de cada hunk del diff a un criterio — hallazgos para criterios reclamados incumplidos y hunks mapeados a `none`. |
@@ -295,6 +299,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.6.0 | 2026-07-31 | menor | Añade la preservación de invariantes arquitectónicas como puerta explícita de aptitud de merge basada en evidencia y una ruta n-a para proyectos que no declaran ninguna. |
 | 3.5.1 | 2026-07-31 | parche | Mueve la guía de auditoría NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 3.5.0 | 2026-07-31 | menor | Audita contra hechos NRS congelados en modo solo lectura y reporta conflictos como contradicciones que solo `resolve-repository-state` puede resolver. |
 | 3.4.0 | 2026-07-19 | menor | Amplía la detección de la puerta de **integridad de alcance (descope)** a dos vías: la coincidencia de texto slug/número de issue existente, más una nueva vía que enumera cualquier issue **enlazado desde una fila de `## Amendments`** en la SPEC que gobierna, sin importar su propio título/cuerpo — cierra el hueco de cobertura donde un issue descoped con título genérico/sin mención del slug era invisible para la puerta. La guardia de descope en tiempo de creación de `execute-phase` sigue siendo el control primario; esta puerta sigue siendo un backstop. Arregla #89. |
@@ -383,6 +388,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.6.0 | 2026-07-31 | menor | Ofrece el documento opcional de invariantes arquitectónicas durante bootstrap y upgrade sin crear un requisito para repositorios existentes. |
 | 2.5.2 | 2026-07-31 | parche | Mueve la guía bootstrap NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.5.1 | 2026-07-31 | parche | Enruta un proyecto recién configurado por discovery del estado del repositorio antes del diseño, la planificación o la ejecución. |
 | 2.5.0 | 2026-07-31 | minor | Añade un paso explícito de proceso en bootstrap y upgrade para sembrar `docs/workflow/REPOSITORY_STATE.md` desde la plantilla sin sobrescribir un ledger existente. |
@@ -441,6 +447,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (dimensiones resueltas, preguntas abiertas, issue de tracking) |
 | 1.1.0 | 2026-06-09 | menor | Estima el tamaño `XS/S/M/L`; pide una referencia de diseño UI en features con UI |
 | | 1.0.0 | 2026-06-05 | — | Entrevista una idea en crudo hasta un SPEC |
+| `plan-feature-from-issue` | 1.6.0 | 2026-07-31 | menor | Clasifica invariantes arquitectónicas opcionales del proyecto antes de sellar como diseñado una mitad de producto derivada de un issue, deteniéndose para una decisión arquitectónica explícita cuando es necesaria. |
 | `plan-feature-from-issue` | 1.5.0 | 2026-07-19 | menor | El cierre de huecos (paso 4) ahora sondea la rúbrica de vaguedad fija de seis huecos de `design-feature`, pregunta **una cuestión por turno** con un valor por defecto recomendado (antes: agrupar preguntas relacionadas), y gana un umbral estructural de entrega: ≥ 3 huecos de la rúbrica irrellenables con el issue más las respuestas → entregar la feature a `design-feature`. |
 | `plan-feature-from-issue` | 1.4.0 | 2026-07-09 | menor | Ahora **escribe** la fila del roadmap a `defined` en la misma edición que sella `## Design status: designed` (añadida en `idea` primero si la fila no existía) — la transición `idea → defined`, realizada aquí cuando esta skill satisface el cierre directamente en vez de entregar a `design-feature`. |
 | | 1.3.0 | 2026-07-09 | menor | Ahora escribe la **mitad de producto** del SPEC (convención de dos mitades) y debe satisfacer el **cierre de capacidades** antes de entregar — un issue delgado sin suficiente contenido para completarlo se entrega a `design-feature` (compuesta en el mismo turno solo si es de tier ≥) en vez de simular `## Design status: designed`. |
@@ -448,6 +455,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | | 1.2.0 | 2026-07-02 | menor | Reporte de cierre fijo devuelto al router (veredicto, huecos cerrados, Closes #N enlazado) |
 | 1.1.0 | 2026-06-09 | menor | Produce un SPEC acotado **dimensionado** con `Closes #N` |
 | | 1.0.0 | 2026-06-05 | — | Issue → SPEC acotado |
+| `plan-feature-scaffold` | 1.12.0 | 2026-07-31 | menor | Registra evidencia y clasificación de invariantes arquitectónicas opcionales en la mitad de ingeniería y se detiene en vez de emitir fases para una violación, introducción o cambio. |
 | `plan-feature-scaffold` | 1.11.0 | 2026-07-19 | menor | Nuevo paso obligatorio de **Spec-lint** en tiempo de emisión (todas las casillas del nuevo `### Spec-lint` de la plantilla de SPEC — casillas de ingeniería más las de producto como comprobación de regresión; fail-closed, solo comprobaciones de presencia); el informe fijo de finalización ahora enuncia los resultados de Spec-lint/Phase-lint; `progress.md` se crea solo con la cabecera `Last reviewed: —` y se documenta como el fichero al que `execute-phase` añade sus entradas del esquema fijo de handoff. |
 | `plan-feature-scaffold` | 1.10.0 | 2026-07-17 | menor | Fix #64: la checklist por fase (§ "Scale the artifacts") gana un paso obligatorio de **Phase-lint** en tiempo de emisión — antes de emitir la lista de fases, toda fase debe pasar el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — la copia autoritativa); cualquier FAIL se recorta o divide vía la regla de división obligatoria existente, nunca se emite. |
 | `plan-feature-scaffold` | 1.9.0 | 2026-07-12 | menor | Fix #51: tras la escritura `defined → planned` del roadmap, relee la fila y confirma que dice literalmente `planned`; reaplica la edición si no coincide, en vez de asumir que la escritura se realizó. "Done when" gana la afirmación equivalente de relectura-y-confirmación. |
@@ -495,7 +503,12 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   explícito de proceso en bootstrap y upgrade. `execute-phase` 2.11.0,
   `review-change` 2.7.0, `audit-pr` 3.5.0 y `orchestration-envelope` 1.4.0
   llevan el mismo contrato de consumo NRS de solo lectura y enrutamiento de
-  contradicciones por implementación, review, auditoría y orquestación.
+  contradicciones por implementación, review, auditoría y orquestación. La
+  feature 19 de invariantes arquitectónicas añade el contrato opcional del
+  proyecto y su puerta de evidencia/decisión explícita a `init-workspace`
+  2.6.0, `design-feature` 2.5.0, `plan-feature` 3.3.0,
+  `plan-feature-from-issue` 1.6.0, `plan-feature-scaffold` 1.12.0,
+  `execute-phase` 2.12.0, `review-change` 2.8.0 y `audit-pr` 3.6.0.
 
 - **2026-07-30 — política de hallazgos oportunistas.** `execute-phase` 2.10.0
   clasifica los hallazgos reales fuera de alcance descubiertos durante la

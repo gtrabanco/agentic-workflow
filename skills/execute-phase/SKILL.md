@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.11.2
+version: 2.12.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -35,11 +35,16 @@ Three modes:
      dependency/own-status gates, before any edit) — its 8 boxes were checked,
      not assumed. Any FAIL without `--force` → STOP with the fixed block; no
      edit happens on a non-atomic phase.
-✓ 3. The gate was RUN (not assumed): commands + exit codes pasted.
-✓ 4. `git add <files>` and `git commit -m "<type>(<scope>): <summary>"` were
+✓ 3. Architectural-invariant gate RUN before any edit: every applicable project
+     rule was classified with cited repository evidence. `violates`,
+     `introduces`, or `changes` → STOP for an explicit architectural decision;
+     no edit turns the result into a phase task. An absent invariant document is
+     recorded as `n/a: no project invariants declared` and remains compatible.
+✓ 4. The gate was RUN (not assumed): commands + exit codes pasted.
+✓ 5. `git add <files>` and `git commit -m "<type>(<scope>): <summary>"` were
      EXECUTED and the resulting sha is pasted. Describing a commit you did not
      run counts as NOT committed.
-✓ 5. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
+✓ 6. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
      `gh pr create` were EXECUTED and **the PR URL is printed in the chat**
      (not every agent shows open PRs — the link in the chat is the contract).
      The PR body is NEVER empty: what it does, why, evidence, and
@@ -49,27 +54,27 @@ Three modes:
      `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
      without its PR link is an UNFINISHED unit. Unit not finished? Then
      NOTHING was pushed.
-✓ 6. Clean-tree check LAST: `git status --porcelain` was RUN and its output
+✓ 7. Clean-tree check LAST: `git status --porcelain` was RUN and its output
      pasted immediately before ending the turn. Any tracked modification —
      CODE OR DOCS (`docs/**` counts; doc updates left uncommitted are the #1
      close-out failure) — was committed before the turn ended. AND if the
      branch has an open PR: `git status -sb` shows the branch is NOT ahead of
      its remote (every commit pushed). A dirty tree or an unpushed commit on a
      PR-backed branch = the turn is NOT done.
-✓ 7. Artifact language: explicit user instruction > the project's declared
+✓ 8. Artifact language: explicit user instruction > the project's declared
      docs language > English. The CONVERSATION language never decides — a
      Spanish prompt still produces English commits/PRs/issues unless one of
      the first two says otherwise.
-✓ 8. Descope guard applied to every issue created this turn (see *Descope
+✓ 9. Descope guard applied to every issue created this turn (see *Descope
      guard* under *Issue policy*): each classified discovered vs. descope; any
      descope has a user-approved, dated `## Amendments` entry in the governing
      SPEC created BEFORE the issue, and the issue links it. No issue created
      this turn is the first record of a descope. No issues created this turn?
      Box passes trivially — state so.
-✓ 9. Every out-of-scope finding discovered during implementation was classified
+✓ 10. Every out-of-scope finding discovered during implementation was classified
      with the Opportunistic finding policy, recorded in `decisions.md`, and
      handled only by its recorded decision. No finding? State `none`.
-✓ 10. The closing `→ Next:` block is printed as the ABSOLUTE last output.
+✓ 11. The closing `→ Next:` block is printed as the ABSOLUTE last output.
 ```
 
 **Push policy — two regimes, by whether the PR exists yet.** Before the PR:
@@ -109,7 +114,8 @@ its PR (finished units), is a FAILED turn, not a done one.
   summarized; never quote whole files into the conversation.
 - **Step 0 minimum set (fixed).** Discovery reads exactly: the agent guide's
   Workflow conventions + the architecture doc section covering the phase's
-  declared `Layer:`. Nothing else by default; every additional doc counts
+  declared `Layer:` + the optional invariant document when the documentation
+  map declares one. Nothing else by default; every additional doc counts
   against the file cap.
 
 ## Phase handoff record (`progress.md` — fixed schema)
@@ -317,6 +323,7 @@ Something forbidden looks necessary → stop, record it in `decisions.md` or
 ✓ No hidden breaking change (changed public contracts diffed against their
   consumers)
 ✓ Architecture doc respected (dependency directions, layer boundaries)
+✓ Architectural invariants preserved or backed by an explicit recorded decision
 ✓ Docs updated — at minimum verify each of: TASKS.md (checkboxes),
   progress.md (one handoff entry in the fixed schema — Done / Remains /
   Gotchas / Files / Next), testing.md, known-issues.md, decisions.md (if any
@@ -352,13 +359,44 @@ checkout — and then one worktree per unit, removed after merge.
 
 ## Normalized Repository State
 
-Before implementation, consume frozen facts and decisions in
-`docs/workflow/REPOSITORY_STATE.md` when present. Inspect directly only for an
-absent fact; route contradictory evidence to `resolve-repository-state`.
-Documentation, planned work, and inference never prove implementation.
-Before any edit, require the ledger status to be `frozen`; a missing, `draft`,
-`contradicted`, or `resolved` snapshot stops implementation and routes to
-discovery or resolution first.
+When present, consume frozen facts and decisions in
+`docs/workflow/REPOSITORY_STATE.md`. Inspect directly only for an absent fact;
+route contradictory evidence to `resolve-repository-state`. Documentation,
+planned work, and inference never prove implementation. A present ledger whose
+status is `draft`, `contradicted`, or `resolved` stops implementation and routes
+to discovery or resolution first. If no ledger exists, inspect the repository
+directly and record `n/a: no normalized repository state`; NRS is optional.
+
+## Architectural invariants
+
+Before any edit, discover the optional project invariant document declared in
+the documentation map (normally
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md`). If absent, record
+`n/a: no project invariants declared` and continue. For every applicable rule,
+cite its ID and repository evidence and classify the phase as `preserves`,
+`violates`, `introduces`, or `changes`. Use frozen NRS facts when present, but
+the repository remains authoritative and conflicting evidence routes to the
+resolver.
+
+Only `preserves` may continue. A `violates`, `introduces`, or `changes` result
+stops before edits and requires an explicit architectural decision through the
+project's declared authority. A decision record alone is not sufficient: the
+declared authority must apply the decision to the invariant document, and the
+resulting rule must be re-evaluated and evidenced as `preserves` before the
+phase can resume. The executor does not edit the invariant document itself.
+Do not alter the SPEC or tests to make the phase pass, and do not convert the
+decision into phase work. Return exactly:
+
+```
+ARCHITECTURAL INVARIANT GATE — <NN|fix n> <P<k>|single-pass> BLOCKED
+Invariant: <ID> — <violates|introduces|changes>
+Evidence: <repository path:line or command result>
+Decision required: <project-declared architectural authority>
+
+→ Next: <decision path> — record the explicit architectural decision, then re-run this phase
+  · evidence conflict → /resolve-repository-state — reconcile the frozen fact first
+  · no invariant document → record n/a and continue only when no other rule applies
+```
 
 ## Issue policy
 

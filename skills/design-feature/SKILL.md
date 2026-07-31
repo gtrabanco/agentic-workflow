@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 2.4.1
+version: 2.5.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -274,6 +274,19 @@ research is the Engineering half's job, not this one.
 Consume frozen facts and decisions from `docs/workflow/REPOSITORY_STATE.md`.
 An absent fact may be inspected; a conflict becomes a resolver contradiction.
 Documentation and inference are never implementation evidence.
+
+## Architectural invariants
+
+Discover the optional project invariant document declared in the documentation
+map (normally `docs/architecture/ARCHITECTURAL_INVARIANTS.md`) before defining a
+capability. If absent, record `n/a: no project invariants declared` in the SPEC
+and continue. For every applicable rule, cite its ID and repository evidence and
+classify the proposal as `preserves`, `violates`, `introduces`, or `changes`.
+Only `preserves` may proceed to capability closure. A violation, new rule, or
+changed rule stops design for an explicit architectural decision through the
+project's declared authority; never make a SPEC, implementation plan, or test
+retroactively authorize it. When NRS exists, consume its frozen facts first;
+the repository remains authoritative and a conflict routes to the resolver.
 
 ## Interaction & upsert (worked shape)
 

@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.11.0
+version: 1.12.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -165,6 +165,16 @@ the agent guide and state the assumption.
 - Docs only. No source edits, migrations, or dependencies.
 - Respect the architecture: honor layer rules (inner layers don't import outer)
   and any domain/i18n/SEO/a11y rules from the docs map.
+- **Architectural invariants.** Discover the optional document declared in the
+  documentation map (normally `docs/architecture/ARCHITECTURAL_INVARIANTS.md`).
+  Its absence is compatible: record `n/a: no project invariants declared` in
+  the engineering half. For every applicable rule, record its ID, repository
+  evidence, and `preserves | violates | introduces | changes` classification in
+  `### Architecture impact`. Only `preserves` may produce phases; the other
+  classifications stop for an explicit architectural decision through the
+  project's declared authority. Never convert a violation into a phase task or
+  infer approval from the product half. Consume frozen NRS facts when present;
+  repository inspection remains authoritative.
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
 - Otherwise honor the project's **Workflow conventions** (branch/PR, docs-language).

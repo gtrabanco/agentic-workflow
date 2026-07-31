@@ -35,6 +35,7 @@ your domains.
 | Legal / compliance | `docs/legal/*` |
 | Session journal / resuming work | `docs/LOGS.md` *(written by `/log-session` + the `.claude/` hooks)* |
 | Frozen repository knowledge | `docs/workflow/REPOSITORY_STATE.md` *(written by discovery/resolution; consumed by workflow roles)* |
+| Architectural constraints | `docs/architecture/ARCHITECTURAL_INVARIANTS.md` *(optional; explicit rules that architectural changes must preserve)* |
 | Generated developer docs | the `Docs site` block below *(read by `/generate-docs`)* |
 
 ## Docs site *(optional — uncomment and fill to enable `/generate-docs`)*
@@ -65,6 +66,14 @@ consume its frozen, evidence-backed facts and accepted decisions before
 rediscovering them. Keep facts, planned work, documentation, and inference
 separate. A missing fact may be inspected directly; conflicting evidence becomes
 a contradiction for `/resolve-repository-state`, never a silent overwrite.
+
+**Architectural invariants.** When the documentation map declares
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md` (or an equivalent path), classify
+each applicable rule as preserved, violated, introduced, or changed before
+designing, planning, implementing, reviewing, or auditing a change. A violation
+or new/changed rule requires an explicit architectural decision; a feature SPEC,
+implementation, or passing test cannot silently authorize it. If no invariant
+document exists, record that no project invariants are declared and continue.
 
 **Forge (issue/PR tracker):** `<GitHub (gh) | GitLab (glab) | other CLI>` — the
 CLI the skills use for issues and PRs. Skill examples are written with `gh`; when
@@ -151,7 +160,9 @@ This project's architecture is documented in `docs/architecture/ARCHITECTURE.md`
 The workflow is **architecture-agnostic** — it does not assume any particular
 pattern (layered, hexagonal, clean, modular monolith, MVC, …). Record *your*
 chosen pattern, its layers/modules, and the **dependency-direction rules** that
-must never be violated in that doc, and the skills will respect them.
+must never be violated in that doc. Put long-lived cross-cutting rules in
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md` when applicable; the skills will
+respect both documents.
 
 State the invariants explicitly there (e.g. "module X must not import module Y",
 "business logic stays out of the UI layer"). Reference them from SPECs.
