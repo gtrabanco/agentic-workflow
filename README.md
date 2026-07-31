@@ -68,6 +68,13 @@ templates). Scaffold a new project's way of working with
 `npx degit gtrabanco/agentic-workflow/template my-project` — see
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
 
+The largest skills use progressive, one-hop loading instead of paying their full
+instruction cost at activation. In particular, `execute-phase` now activates at
+about 3k estimated tokens rather than 13k, then loads only the route-specific
+contracts it needs. Committed budgets enforce that shape; prompt caching is only
+an optional provider optimization, never a correctness dependency. See
+[Context budget and progressive loading](docs/workflow/SKILLS.md#context-budget-and-progressive-loading).
+
 ## The skills
 
 **17 user-facing skills** (one menu entry each) + **14 internal** ones composed

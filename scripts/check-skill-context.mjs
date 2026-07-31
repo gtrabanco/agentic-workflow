@@ -85,11 +85,15 @@ for (const skill of selected) {
     const referenceBody = fs.readFileSync(path.join(referencesDir, name), "utf8");
     const referenceEstimate = estimate(referenceBody);
     const referenceLines = lineCount(referenceBody);
+    const firstContentLine = referenceBody.split("\n").find((line) => line.trim() !== "") ?? "";
     if (referenceEstimate > budget.referenceEstimateMax) {
       failures.push(`${skill}/${name}: estimate ${referenceEstimate} > ${budget.referenceEstimateMax}`);
     }
     if (referenceLines > budget.referenceLinesMax) {
       failures.push(`${skill}/${name}: lines ${referenceLines} > ${budget.referenceLinesMax}`);
+    }
+    if (!/^#{1,3} /.test(firstContentLine)) {
+      failures.push(`${skill}/${name}: first content line must be a heading`);
     }
     if (/\]\((?:\.\.\/)?references\//.test(referenceBody)) {
       failures.push(`${skill}/${name}: nested reference link exceeds depth 1`);

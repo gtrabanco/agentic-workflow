@@ -22,3 +22,10 @@ Last reviewed: —
 - Gotchas: skills.sh and marketplace files affect discovery/distribution only. The byte/4 metric is a stable regression proxy, not a claim about provider billing tokens.
 - Files: skills.sh.json, .claude-plugin/marketplace.json, scripts/check-skill-context.mjs, docs/workflow/SKILL_CONTEXT_BUDGETS.json, skills/product-audit/SKILL.md, README.md, README.es.md, CHANGELOG.md, CHANGELOG.es.md, docs/features/20-runtime-guardrails-progressive-skills/
 - Next: P4 — Progressive loading
+
+## P4 — 2026-07-31
+- Done: Split all eight budgeted skills into compact activation cores and explicit one-hop route resources; retained universal turn, safety, NRS, invariant, portability, and handoff contracts in the entrypoints; synchronized bilingual context guidance and version history.
+- Remains: P5 — Hardening & PR
+- Gotchas: Route resources are normative and fail closed when missing. The byte/4 result measures direct activation, not every conditional resource a long workflow may legitimately load later.
+- Files: skills/execute-phase/, skills/ship-roadmap/, skills/workflow-status/, skills/review-change/, skills/audit-pr/, skills/triage-issue/, skills/design-feature/, skills/init-workspace/, docs/workflow/SKILLS.md, docs/workflow/SKILLS.es.md, README.md, README.es.md, CHANGELOG.md, CHANGELOG.es.md
+- Next: P5 — Hardening & PR

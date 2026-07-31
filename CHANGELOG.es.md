@@ -121,6 +121,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.9.0 | 2026-07-31 | menor | Carga progresiva: el cuerpo de activación es ahora una ruta compacta del sensor de solo lectura; secuencia de comandos, recuperación de caídas, campos del envelope, guardrails y portabilidad viven en recursos de un salto con orden obligatorio. |
 | 1.7.0 | 2026-07-19 | menor | Fix #79: cuatro nuevos pasos de proceso (10-13) añaden a cada entrada `detail.features[]`/`detail.fixes[]` señales por-unidad `review` (`last_checkpoint_sha`, `unreviewed_diff`, `terminal_done` reutilizado del cómputo existente de `review_pending`, `adversarial: {ran, n}` — honestamente `null` salvo evidencia real, nunca adivinado), `closure.state` (reutilizando el propio grep de `audit-pr`), e `issues_born: {n, with_descope_amendment}` (reutilizando la detección de scope-bleed de `audit-pr`, ampliada por #79/#89) — opaco al esquema, sin cambio de paquete (mismo precedente que `detail.urgent`). Nuevo `next.suggested[]` de nivel superior (`{command, trigger, source_skill}`, opcional) muestra los triggers disparados de `execute-phase`/`review-change`/`audit-pr`/`fold-findings`, cada uno citando la condición de su propia skill dueña — solo consultivo, nunca reemplaza `next.recommended`/`next.tier`. Reflejado en `packages/agentic-workflow-schema` 2.1.0 (misma PR). |
 | 1.6.1 | 2026-07-14 | parche | El paso 11 (backlog de issues sin triar) se reescribe: la etiqueta de disposición `postponed`/`promoted`/`wontfix` (propiedad de `triage-issue`, protegida por permiso triage+, imposible de falsificar) pasa a ser la señal de triado **autoritativa**; el comentario `VERDICT:` se mantiene como **fallback heredado** explícito para issues triados antes de que existiera la etiqueta, con una nota de residual aceptado (un comentario falseado todavía puede infra-contar el backlog — sin impacto de privilegios/inyección, `detail.urgent` intacto). Sin cambio de forma — `detail.untriaged_issues: {count, oldest_open}` no cambia. Parte del fix `#54`. |
 | 1.6.0 | 2026-07-13 | menor | Nuevo paso de proceso 9 (renumera 9→14 a 10→14): lee el ledger de fold fix-now `review-findings.md` de cada unidad en curso y emite sus filas `folded: no` como items estructurados `findings.fix_now[]` `{id, file, axis, severity, class, route, suggested_tier}`, `suggested_tier` derivado por una tabla fija (severidad `high` O un axis sutil → `strong`; si no, `cheap`). `next.tier` sin cambios. El chequeo "review report present" del paso 8 ahora también acepta la presencia del ledger como evidencia de que `review-change` corrió. Ejemplo de envelope actualizado con un item `fix_now` poblado. Paquete de esquema reflejado (bump mayor, cambio de forma incompatible) en la misma PR. Parte de la feature 17 (`finding-severity-routing`). |
@@ -136,6 +137,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.1.0 | 2026-07-31 | menor | La carga progresiva separa fundación, recuperación/selección de continuación, avance de etapa, política de runtime/merge, informe terminal, guardrails y portabilidad en rutas explícitas de un salto; el cuerpo principal conserva el contrato de turno y la selección de ruta. |
 | 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** `--fullauto` es ahora la única autoridad de merge automatizado y debe usar el wrapper transitorio fail-closed del repositorio tras un veredicto fresco de `audit-pr`; los comandos directos de merge siguen bloqueados, el estado del intento se limpia en cada salida y cada automerge correcto queda registrado mediante un comentario idempotente de PR ligado al SHA. |
 | 2.3.0 | 2026-07-18 | menor | Etapa REVIEW: la cadencia del checkpoint para features `L`/marcadas como sensibles ahora se dispara con los tres triggers nombrados de `execute-phase` (límite de capa / acumulación / sensibilidad, referenciados desde `#77` en vez de repetidos) en lugar de un conteo fijo de "cada 2 fases", que se había recalibrado mal ~3x tras el lint de atomicidad de #64 que redujo el tamaño de fase. El piso obligatorio `--adversarial 2` y la falta de alineación con la cadencia advisory propia de `review-change` no cambian. Cierra #93. |
 | 2.2.1 | 2026-07-13 | parche | Portability gana una barrera de concurrencia del provider: limita los subagentes/ejecutores headless paralelos al límite documentado de peticiones paralelas por API key del provider (dejando un hueco para el conductor), y reduce el paralelismo ante un 429 en vez de reintentar a fan-out completo. Solo guía — sin cambio de etapas ni de contrato. |
@@ -160,6 +162,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.13.0 | 2026-07-31 | menor | La carga progresiva reduce la estimación de activación de la skill más usada de unos 13k a 3k: las reglas universales de turno/handoff quedan en `SKILL.md`, mientras preflight, gates de ejecución, política de issues, workflows de modo, closeout/folding y portabilidad por lotes cargan solo cuando hacen falta. |
 | 2.12.0 | 2026-07-31 | menor | Añade una puerta de invariantes arquitectónicas antes de editar con clasificación basada en evidencia, parada para decisión explícita y compatibilidad NRS opcional. |
 | 2.11.2 | 2026-07-31 | parche | Mueve la guía NRS debajo de las reglas de Branch para que los formatos de rama y las restricciones del workflow mantengan su alcance en la sección Branch. |
 | 2.11.1 | 2026-07-31 | parche | Exige un snapshot congelado del estado del repositorio antes de implementar y enruta el estado ausente o no congelado a discovery o resolución. |
@@ -206,6 +209,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `design-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.6.0 | 2026-07-31 | menor | La carga progresiva separa las rutas de solo-estado, entrevista/cierre de idea nueva, escritura/upsert, ejemplo de upsert y portabilidad, manteniendo los gates universales de seguridad en el entrypoint. |
 | 2.5.0 | 2026-07-31 | menor | Clasifica invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio y detiene el diseño para una decisión arquitectónica explícita cuando una regla se viola, introduce o cambia. |
 | 2.4.1 | 2026-07-31 | parche | Mueve la guía NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.3.0 | 2026-07-19 | menor | Cierre de requisitos implícitos: el cierre de capacidades pasa a tres checklists fijas — cierre de entidades (sin cambios), nuevo **cierre de integración** (una fila resuelta por subsistema del inventario de capacidades del proyecto, `docs/CAPABILITIES.md` — ninguno omitido; sin inventario → deriva uno y ofrece sembrar el fichero) y una **matriz de roles** (cada rol del inventario explícitamente permitido/denegado por capacidad) — más un nuevo paso y sección del SPEC de **barrido de expectativas** (≥ 10 M/L / ≥ 5 XS/S expectativas de dominio que un humano asumiría implícitamente, cada una forzada a in-scope/out-of-scope/deferred). Tres nuevas casillas de producto del Spec-lint, casillas equivalentes en el contrato de turno y guardarraíles; el Paso 0 lee el inventario. |
@@ -261,6 +265,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.9.0 | 2026-07-31 | menor | La carga progresiva separa el proceso de review por defecto, persistencia/decisión, setup/merge adversarial, salida/guardrails y portabilidad; el aislamiento y el contrato de turno permanecen en el cuerpo de activación. |
 | 2.8.0 | 2026-07-31 | menor | Revisa explícitamente invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio e informa violaciones, introducciones o cambios no documentados como hallazgos de arquitectura. |
 | 2.7.1 | 2026-07-31 | parche | Mueve la guía de revisión NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.7.0 | 2026-07-31 | menor | Usa hechos NRS congelados como contexto de evidencia de solo lectura y propone contradicciones sin redefinir hechos, aceptar decisiones ni tratar documentación como evidencia de implementación. |
@@ -300,6 +305,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.1.0 | 2026-07-31 | menor | La carga progresiva mueve gates de merge, checks de cierre/descope, proceso de auditoría, veredicto fijo, enrutamiento/guardrails y portabilidad detrás de una ruta de auditoría obligatoria de un salto; la propiedad del merge permanece en el entrypoint. |
 | 4.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** elimina el auto-merge standalone o autorizado por una política documental. La skill queda estrictamente limitada a veredicto/comentario y nunca fusiona; solo una etapa AUDIT activa de `ship-roadmap --fullauto` puede consumir su resultado MERGE-READY ligado al SHA e invocar el wrapper transitorio. |
 | 3.6.0 | 2026-07-31 | menor | Añade la preservación de invariantes arquitectónicas como puerta explícita de aptitud de merge basada en evidencia y una ruta n-a para proyectos que no declaran ninguna. |
 | 3.5.1 | 2026-07-31 | parche | Mueve la guía de auditoría NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
@@ -371,6 +377,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.0 | 2026-07-31 | menor | La carga progresiva selecciona primero issue del forge frente a hallazgo de auditoría persistido y después carga el detalle de propiedad de etiquetas y ledger de fold solo para los veredictos que lo necesitan. |
 | 2.4.0 | 2026-07-19 | menor | Nuevo **modo hallazgo-de-auditoría** (`triage-issue <audit-id> F<k> …`): tría hallazgos de un informe persistido de `product-audit` — re-verifica el hallazgo contra el código actual, deduplica contra issues existentes, abre el issue de GitHub solo con un veredicto fix-now/postpone/promote (el cuerpo cita `Origin: product audit <id>, finding F<k>`), y marca el hallazgo como triado en el fichero de auditoría con una nota datada `↳ triaged`. Las invocaciones por número de issue no cambian. |
 | 2.3.0 | 2026-07-18 | menor | Añade conciencia de unidad abierta (complemento del lado consumidor de `#66`): un chequeo de pertenencia de alcance se ejecuta antes de clasificar (enumerar unidades abiertas → comparación issue↔SPEC/fase citando ambos lados) y un quinto veredicto `fix-in-unit <unit>` resuelve los issues miembros en la propia rama de la unidad abierta — fold en su ledger `review-findings.md` (fila con marca de procedencia `triage #<n> <fecha>`) o en su fase actual/siguiente, un replan incremental (`design-feature`/`plan-feature`/una entrada `## Amendments` en el SPEC), o una restauración de scope-bleed. Los issues sin unidad se enrutan sin cambios, byte a byte. Corrige `#86`+`#87`. |
 | 2.2.0 | 2026-07-14 | menor | Es propietaria de un segundo vocabulario de etiquetas — etiquetas de disposición terminal (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): aplica la etiqueta correspondiente — creándola con `gh label create` si falta — como parte de un veredicto `postpone`/`promote`/`wontfix`, replicando la mecánica de las etiquetas de urgencia. Cierra el hueco de detección de no-triados falseable del issue `#54` dando a `workflow-status` una señal de triado inequívoca y protegida por permiso triage+, en vez de confiar solo en el texto del comentario `VERDICT:`. |
@@ -391,6 +398,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.8.0 | 2026-07-31 | menor | La carga progresiva convierte bootstrap y upgrade aditivo en rutas mutuamente excluyentes y carga portabilidad del vendor solo para la primitiva ausente detectada; los gates universales de no-sobrescritura/consentimiento quedan en el entrypoint. |
 | 2.7.0 | 2026-07-31 | menor | Añade una entrevista de hooks de seguridad del agente y una ruta de upgrade aditiva para Claude Code, Cursor, Copilot y OpenCode; los adaptadores aceptados se instalan de forma explícita, ejecutan el fixture canónico del guard y nunca sobrescriben una configuración de hooks personalizada. |
 | 2.6.0 | 2026-07-31 | menor | Ofrece el documento opcional de invariantes arquitectónicas durante bootstrap y upgrade sin crear un requisito para repositorios existentes. |
 | 2.5.2 | 2026-07-31 | parche | Mueve la guía bootstrap NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
@@ -506,6 +514,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   nota de migración.
   `product-audit` 3.0.0 también pasa a requerir invocación explícita en los
   loaders compatibles para que su barrido amplio nunca se active por tanteo.
+  Los minors de carga progresiva reducen ocho entrypoints sobredimensionados
+  bajo presupuestos de contexto commiteados; `execute-phase` 2.13.0 baja de
+  unos 13k a 3k tokens estimados de activación conservando sus contratos en
+  recursos de un salto.
 
 - **2026-07-31 — plegado del estado normalizado del repositorio.**
   `discover-repository-state` 1.1.0 conserva el estado `contradicted` del
