@@ -21,6 +21,7 @@ más amigable para el lector vive en Notion ("Agentic Workflow").
 | [REPLICATE.es.md](REPLICATE.es.md) | Instalación con `npx skills` + prompt portable para configurar esto en cualquier proyecto |
 | [MIGRATION.es.md](MIGRATION.es.md) | Actualizar una instalación existente desde el conjunto de skills anterior — qué se renombró, qué eliminar |
 | [GOLDEN_FIXTURE.es.md](GOLDEN_FIXTURE.es.md) | Prueba de humo manual: tras editar una skill del camino ejecutor, correrla contra un fixture de juguete con el modelo más débil de la flota y comprobar que su salida contractual se mantiene |
+| [WORKFLOW_INVARIANTS.es.md](WORKFLOW_INVARIANTS.es.md) | Contrato portable para invariantes arquitectónicas opcionales del proyecto y su evaluación basada en evidencia |
 
 ## Principios fundamentales
 
@@ -43,6 +44,9 @@ más amigable para el lector vive en Notion ("Agentic Workflow").
 7. **Revisión a la altitud correcta.** El cambio (`review-change`), luego el
    PR (`audit-pr`), y — periódicamente — el producto entero
    (`product-audit`).
+8. **Los cambios de arquitectura son explícitos.** Las invariantes
+   arquitectónicas aplicables se evidencian y preservan, o se cambian mediante
+   una decisión explícita; nunca se infieren de una SPEC o implementación.
 
 ## El mapa de un vistazo
 
