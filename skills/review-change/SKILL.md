@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.7.1
+version: 2.8.0
 argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -34,6 +34,7 @@ or refactors.**
 ```
 ✓ This review runs in a conversation that did NOT implement the change; if this conversation wrote the diff, STOP and hand off to a fresh one (the reviewer works from the diff + the SPEC, not the author's mental state).
 ✓ The synthesized decision table + manual-verification checklist + `Decision: PASS | FAIL` were returned in the fixed output format
+✓ Architectural-invariant preservation was stated explicitly as pass / finding / n-a
 ✓ Every non-fix-now finding got a destination (triaged — issue / decision / drop)
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -212,6 +213,7 @@ fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
    ```
    REVIEW CHANGE — scope: <scope>
    Axes run: <list>   Skipped: <list + why>
+   Architectural invariants: pass | finding (<ID>) | n/a: no project invariants declared
 
    <the synthesized decision table (step 6)>
 
@@ -468,6 +470,22 @@ disposition is a decision, not a default:
 Use frozen NRS facts from `docs/workflow/REPOSITORY_STATE.md` as evidence context, but remain read-only. A review may
 propose a contradiction with fresh evidence; it cannot redefine a fact, accept a
 decision, or turn documentation into implementation evidence.
+
+## Architectural invariants
+
+Review the diff against the optional project invariant document declared in the
+documentation map (normally `docs/architecture/ARCHITECTURAL_INVARIANTS.md`).
+Its absence is compatible: report `n/a: no project invariants declared`. For
+each applicable rule, cite its ID and repository evidence and classify the
+actual change as `preserves`, `violates`, `introduces`, or `changes`. Consume
+frozen NRS facts when present, but inspect the repository for absent facts and
+route a conflict to `resolve-repository-state`.
+
+`preserves` reports `pass`. A `violates`, `introduces`, or `changes` result is
+an `architecture` finding in the synthesized table, with the evidence and route
+`explicit architectural decision`; report it before suggesting any modification.
+The reviewer cannot accept the decision, amend the invariant, or treat the SPEC,
+implementation, or passing test as approval.
 
 ## Portability (agents other than Claude Code)
 
