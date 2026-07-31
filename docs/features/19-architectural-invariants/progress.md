@@ -29,3 +29,10 @@ Last reviewed: —
 - Gotchas: An architecture finding requires a recorded project decision; the reviewer and auditor cannot accept it themselves.
 - Files: skills/review-change/SKILL.md, skills/audit-pr/SKILL.md, CHANGELOG.md, CHANGELOG.es.md, README.md, README.es.md, docs/features/19-architectural-invariants/
 - Next: P5 — Hardening & PR
+
+## P5 — 2026-07-31
+- Done: Verified compatibility, evidence, violation, and contradiction paths; ran skill discovery and the golden fixture.
+- Remains: Open linked PR and update the roadmap reference.
+- Gotchas: The initial Qwen3 default-thinking run failed the fixture's exact-output criterion; the `--think=false` rerun passed and both rows are retained in the bilingual run log.
+- Files: docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/features/19-architectural-invariants/TASKS.md, docs/features/19-architectural-invariants/testing.md
+- Next: unit finished
