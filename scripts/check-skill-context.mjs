@@ -36,13 +36,14 @@ if (manifest.schemaVersion !== 1 || manifest.referenceDepth !== 1) {
 
 const budgeted = discovered;
 const selected = requested.length > 0 ? [...new Set(requested)] : budgeted;
+const discoveredSet = new Set(discovered);
 for (const skill of selected) {
-  if (!discovered.includes(skill)) throw new Error(`Skill entrypoint was not discovered: ${skill}`);
+  if (!discoveredSet.has(skill)) throw new Error(`Skill entrypoint was not discovered: ${skill}`);
   const skillFile = path.join(repoRoot, "skills", skill, "SKILL.md");
   if (!fs.existsSync(skillFile)) throw new Error(`Missing skill entrypoint: ${skillFile}`);
 }
 for (const skill of Object.keys(manifest.skills)) {
-  if (!discovered.includes(skill)) throw new Error(`Budget override has no skill entrypoint: ${skill}`);
+  if (!discoveredSet.has(skill)) throw new Error(`Budget override has no skill entrypoint: ${skill}`);
 }
 
 if (manifestOnly) {
