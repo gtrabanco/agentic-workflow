@@ -1,8 +1,7 @@
 ---
 name: discover-repository-state
 user-invocable: true
-version: 1.1.0
-argument-hint: [--refresh]
+version: 1.1.1
 description: >
   Discover repository evidence and write a frozen Normalized Repository State.
   Produces verified repository evidence and keeps facts, decisions, planned

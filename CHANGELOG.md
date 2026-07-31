@@ -99,6 +99,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `discover-repository-state`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 1.1.1 | 2026-07-31 | patch | Removes the undeclared `--refresh` argument and clarifies that discovery preserves each ledger category separately. |
 | 1.1.0 | 2026-07-31 | minor | Preserves `contradicted` snapshot status when discovery records a conflict instead of freezing unresolved contradictions. |
 | 1.0.0 | 2026-07-30 | — | New skill: discovers evidence-backed repository facts and freezes the Normalized Repository State without making recommendations. |
 
