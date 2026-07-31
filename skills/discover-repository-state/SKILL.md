@@ -5,8 +5,9 @@ version: 1.1.0
 argument-hint: [--refresh]
 description: >
   Discover repository evidence and write a frozen Normalized Repository State.
-  Produces verified facts only; it does not make recommendations, accept
-  decisions, or infer implementation from documentation. Triggers: "discover
+  Produces verified repository evidence and keeps facts, decisions, planned
+  work, documentation, and inference separate. It does not make
+  recommendations or infer implementation from documentation. Triggers: "discover
   repository state", "normalize repository state", "freeze repository facts".
 ---
 
@@ -49,7 +50,8 @@ ledger before collecting evidence.
 
 ## Guardrails
 
-- Discovery skills produce only repository facts.
+- Discovery records repository facts and preserves decisions, planned work,
+  documentation, inference, questions, and contradictions in their own sections.
 - The repository remains authoritative; refresh when the snapshot is stale.
 - Never create implementation recommendations or silently accept decisions.
 

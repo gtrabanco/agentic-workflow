@@ -9,3 +9,10 @@
 | F7 | CHANGELOG.md:99-367 | workflow | med | fix-now | fold into P5 — add changelog rows for all bumped skills in both languages | yes |
 | F8 | README.md:56 | workflow | med | fix-now | fold into P5 — reconcile skill counts across README, SKILLS, and verification output | yes |
 | F9 | b9f6fce:docs: link PR #114 | workflow | low | fix-now | fold into P5 — restore the scoped conventional-commit format | yes |
+| F10 | skills/discover-repository-state/SKILL.md:52 | implementation | med | fix-now | fold-findings — reconcile the facts-only guardrail with the required non-fact ledger sections | yes |
+| F11 | skills/discover-repository-state/SKILL.md:5 | implementation | med | fix-now | fold-findings — define or remove the public --refresh flag | no |
+| F12 | skills/discover-repository-state/SKILL.md:70 | implementation | high | fix-now | fold-findings — make contradicted snapshots route to resolver before planning | no |
+| F13 | skills/resolve-repository-state/SKILL.md:67 | implementation | high | fix-now | fold-findings — make needs-input route stop for evidence instead of recommending planning | no |
+| F14 | skills/init-workspace/SKILL.md:136-141 | implementation | high | fix-now | fold-findings — require discovery/frozen state before the bootstrap handoff to planning or execution | no |
+| F15 | skills/plan-feature/SKILL.md:156-158 | implementation | high | fix-now | fold-findings — gate planning and execution on a frozen, non-contradicted snapshot | no |
+| F16 | PR #114:body | workflow | med | fix-now | fold-findings — synchronize the stale golden-fixture verification note with the committed evidence | no |
