@@ -67,4 +67,3 @@ an `architecture` finding in the synthesized table, with the evidence and route
 `explicit architectural decision`; report it before suggesting any modification.
 The reviewer cannot accept the decision, amend the invariant, or treat the SPEC,
 implementation, or passing test as approval.
-

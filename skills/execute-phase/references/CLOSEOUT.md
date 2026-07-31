@@ -68,4 +68,3 @@ Phase <N> done and committed. Review checkpoint (recommended) — <trigger name>
 (e.g. "next phase declares `api`, this one was `domain`", "612 lines / 11
 files since `a1b2c3d`", "phase touched auth middleware"). No trigger fired?
 Omit the checkpoint line entirely and go straight to naming the next phase.
-

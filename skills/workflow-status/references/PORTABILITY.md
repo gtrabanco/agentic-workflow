@@ -12,4 +12,3 @@ driver (a shell loop, a CI job, another agent) orchestrate the workflow:
 - **No argument passing (`--last-envelope`)** — paste the persisted envelope
   JSON into the invocation message: the skill treats the last fenced json
   block of the *request* as the hint.
-

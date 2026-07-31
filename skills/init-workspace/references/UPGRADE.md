@@ -81,4 +81,3 @@ lacks**. Seven ordered steps:
   that isn't this workflow's — upgrade mode never engages; the existing
   bootstrap Process (merge/adapt/abort) runs exactly as before this mode was
   added.
-
