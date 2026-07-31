@@ -12,7 +12,7 @@
 - `npx skills add . --list` passed on 2026-07-31 and discovered 30 skills.
 - P2 through P4 run the commands in `TASKS.md`.
 - `npx skills add . --list` must discover every shipped skill.
-- Contract regression check: `grep -q "authority must apply the decision to the invariant document" skills/execute-phase/SKILL.md` and `grep -q "decision record alone does not pass" skills/audit-pr/SKILL.md`.
+- Contract regression check: `grep -q "authority must apply the decision to the invariant document" skills/execute-phase/SKILL.md` and `grep -q "record alone does not pass" skills/audit-pr/SKILL.md`.
 
 ## Integration and failure checks
 
