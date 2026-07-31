@@ -264,7 +264,7 @@ tool-capable model.
 - P1 — Command guard
   Layer: config/infra. Done-when: `bash template/.agentic-workflow/hooks/tests/test-command-guard.sh` → exit 0.
 - P2 — Fullauto policy
-  Layer: docs. Done-when: `grep -q "sole automated merge authority" skills/ship-roadmap/SKILL.md` → exit 0.
+  Layer: docs. Done-when: `grep -q "sole automated merge authority" skills/ship-roadmap/references/AUDIT_AND_MERGE.md` → exit 0.
 - P3 — Context distribution
   Layer: config/infra. Done-when: `node scripts/check-skill-context.mjs --manifest-only` → exit 0.
 - P4 — Progressive loading
