@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.4.0
+version: 1.4.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -169,12 +169,6 @@ incomplete change.
 
 ## Relationship to other skills
 
-## Normalized Repository State
-
-Drivers call `discover-repository-state` before planning and pass the frozen
-`docs/workflow/REPOSITORY_STATE.md` ledger reference to later skills. A contradiction routes to
-`resolve-repository-state`; drivers never silently replace the snapshot.
-
 - Every `user-invocable: true` skill of the pack carries a `## Machine
   envelope` section stating which states it can emit and what it puts in
   `detail`; this file is the single source of truth for the shared schema.
@@ -183,3 +177,9 @@ Drivers call `discover-repository-state` before planning and pass the frozen
 - `docs/workflow/ORCHESTRATION.md` documents the external driver loop
   (state → next command → model tier) that replaces Claude Code's `/loop`
   and subagents on any agent.
+
+## Normalized Repository State
+
+Drivers call `discover-repository-state` before planning and pass the frozen
+`docs/workflow/REPOSITORY_STATE.md` ledger reference to later skills. A contradiction routes to
+`resolve-repository-state`; drivers never silently replace the snapshot.

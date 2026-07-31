@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.5.1
+version: 2.5.2
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -251,11 +251,6 @@ lacks**. Seven ordered steps:
 
 ## Guardrails
 
-## Normalized Repository State
-
-Seed `docs/workflow/REPOSITORY_STATE.md` from the template. Explain that
-discovery freezes evidence before planning and only the resolver updates facts.
-
 - **Never overwrite an existing `CLAUDE.md` or `docs/` without explicit consent.**
 - **Additive-only, never clobber (upgrade mode).** Upgrade mode only adds
   blocks the project lacks and fills raw placeholders — it never rewrites or
@@ -274,6 +269,11 @@ discovery freezes evidence before planning and only the resolver updates facts.
 - Honest placeholders over invented specifics; flag what's left to fill.
 - Honor the project's **Workflow conventions** once present; on an existing repo,
   don't work on its default branch and never commit/push unless asked.
+
+## Normalized Repository State
+
+Seed `docs/workflow/REPOSITORY_STATE.md` from the template. Explain that
+discovery freezes evidence before planning and only the resolver updates facts.
 
 ## Portability (agents other than Claude Code)
 
