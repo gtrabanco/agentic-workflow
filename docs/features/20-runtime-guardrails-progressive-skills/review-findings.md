@@ -27,3 +27,4 @@
 | F28 | scripts/check-skill-context.mjs:79 | correctness | high | fix-now | fold into phase | yes |
 | F29 | skills/review-change/SKILL.md:122 | progressive-routing + API | high | fix-now | fold into phase | yes |
 | F30 | template/.agentic-workflow/hooks/fullauto-merge.sh:12 | correctness | med | fix-now | fold into phase | yes |
+| F31 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:13 | debt | low | fix-now | fold into phase | yes |
