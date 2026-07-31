@@ -65,6 +65,9 @@ run_wrapper() {
     "$wrapper" --pr 12 --head "$head_sha" --base main --run-id fixture-run)
 }
 
+missing_value=$({ "$wrapper" --pr; } 2>&1 || true)
+printf '%s' "$missing_value" | grep -q -- '--pr requires a value'
+
 run_wrapper >/dev/null
 [ "$(cat "$fixture/state/comments")" = "1" ]
 if find "$fixture/repo/.git/agentic-workflow" -type f -name 'automerge-*' 2>/dev/null | grep -q .; then

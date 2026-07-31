@@ -9,22 +9,22 @@ run_id=""
 method="squash"
 decision_file="docs/features/SHIP_DECISIONS.md"
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --pr) pr=$2; shift 2 ;;
-    --head) head_sha=$2; shift 2 ;;
-    --base) base=$2; shift 2 ;;
-    --run-id) run_id=$2; shift 2 ;;
-    --method) method=$2; shift 2 ;;
-    --decision-file) decision_file=$2; shift 2 ;;
-    *) echo "fullauto-merge: unknown argument: $1" >&2; exit 2 ;;
-  esac
-done
-
 fail() {
   printf 'fullauto-merge: %s\n' "$1" >&2
   exit 1
 }
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --pr) [ "$#" -ge 2 ] || fail "--pr requires a value"; pr=$2; shift 2 ;;
+    --head) [ "$#" -ge 2 ] || fail "--head requires a value"; head_sha=$2; shift 2 ;;
+    --base) [ "$#" -ge 2 ] || fail "--base requires a value"; base=$2; shift 2 ;;
+    --run-id) [ "$#" -ge 2 ] || fail "--run-id requires a value"; run_id=$2; shift 2 ;;
+    --method) [ "$#" -ge 2 ] || fail "--method requires a value"; method=$2; shift 2 ;;
+    --decision-file) [ "$#" -ge 2 ] || fail "--decision-file requires a value"; decision_file=$2; shift 2 ;;
+    *) echo "fullauto-merge: unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
 
 [ "${AGENTIC_WORKFLOW_SHIP_ROADMAP_FULLAUTO:-}" = "1" ] || fail "active ship-roadmap --fullauto invocation is required"
 [ -n "$pr" ] && [ -n "$head_sha" ] && [ -n "$base" ] && [ -n "$run_id" ] || fail "--pr, --head, --base, and --run-id are required"
