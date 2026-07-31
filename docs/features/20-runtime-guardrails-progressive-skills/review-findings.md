@@ -45,3 +45,4 @@
 | F42 | template/.opencode/plugins/agentic-workflow-guard.ts.example:13 | platform + security | high | fix-now | replan-in-unit (propose P6) | no |
 | F43 | scripts/check-skill-context.mjs:82 | correctness | high | fix-now | replan-in-unit (propose P7) | no |
 | F44 | scripts/check-skill-context.test.mjs:83 | tests | low | fix-now | replan-in-unit (propose P7) | no |
+| F45 | template/.agentic-workflow/hooks/fullauto-merge.sh:7 | correctness | med | fix-now | fold into phase | yes |
