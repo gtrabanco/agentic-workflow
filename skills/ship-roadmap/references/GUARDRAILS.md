@@ -53,4 +53,3 @@ it bounds each machine's run, not the run's lifetime across machines. Verdicts
 persist in the run log and feature docs,
 but a crash between a review and its PR may re-run one review — accepted cost,
 never a correctness risk.
-

@@ -99,4 +99,3 @@
    listed beneath), with any issue that matched no open unit listed last under
    a plain "no member unit" heading — this is the signal that surfaces N
    issues sharing one open unit at a glance, not N separate rows.
-

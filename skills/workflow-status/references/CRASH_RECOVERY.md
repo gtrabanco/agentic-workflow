@@ -64,4 +64,3 @@ precedence, worst wins):** `AMBIGUOUS` > `RESUMABLE` > `CLEAN`. A human
 decision pending on ANY branch outranks a mechanical resume on another, which
 outranks an all-clean state. The report's per-branch table still lists every
 verdict; only the envelope's single `state` is reduced to the worst one.
-

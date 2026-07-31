@@ -13,4 +13,3 @@ enables:
 - **No `/loop`** — re-invoke this skill by hand when a review round or an
   instruction-mode revision is needed; follow the closing `→ Next:` block each
   time.
-

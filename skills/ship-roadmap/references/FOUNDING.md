@@ -99,4 +99,3 @@ Each firing is a fresh `/ship-roadmap --continue` turn (on Claude Code's
 driver chose — judgment iterations deserve your strongest model). Iterations
 after a terminal banner are cheap no-ops that re-print the same banner — so a
 missed stop costs tokens, never correctness.
-

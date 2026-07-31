@@ -6,4 +6,3 @@ design-feature <slug> "<instruction>" → apply directly, no questions, scoped t
 design-feature "<new idea>"           → interview from zero (no prior SPEC to review)
 design-feature <slug> "delete and redesign, <new direction>" → the only from-zero reset path
 ```
-

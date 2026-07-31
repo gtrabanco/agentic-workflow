@@ -145,4 +145,3 @@ Decision required: <project-declared architectural authority>
   · evidence conflict → /resolve-repository-state — reconcile the frozen fact first
   · no invariant document → record n/a and continue only when no other rule applies
 ```
-

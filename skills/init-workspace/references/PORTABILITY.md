@@ -14,4 +14,3 @@ enables:
   when available. If the agent exposes no pre-tool hook, report the safety hook
   as unavailable and keep forge rulesets as the hard boundary; `log-session`
   remains the manual logging alternative.
-

@@ -47,4 +47,3 @@ enables:
   decorrelates errors.
 - **No `/loop`** — re-invoke the skill by hand per phase, following its closing
   `→ Next:` block each time (see *Batch execution* above).
-
