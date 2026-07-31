@@ -26,9 +26,9 @@
 
 ## P4 — Review evaluation
 
-- [ ] Add invariant-preservation checks to `review-change` and `audit-pr`.
+- [x] Add invariant-preservation checks to `review-change` and `audit-pr`.
       Check: `grep -rl "Architectural invariants" skills/review-change skills/audit-pr | wc -l` → `2`.
-- [ ] Keep review/audit evidence-based and NRS read-only.
+- [x] Keep review/audit evidence-based and NRS read-only.
       Check: `grep -rq "REPOSITORY_STATE.md" skills/review-change skills/audit-pr`.
   Done-when: `grep -rl "Architectural invariants" skills/review-change skills/audit-pr | wc -l` → `2`.
 

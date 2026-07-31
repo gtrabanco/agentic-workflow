@@ -260,6 +260,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.8.0 | 2026-07-31 | menor | Revisa explícitamente invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio e informa violaciones, introducciones o cambios no documentados como hallazgos de arquitectura. |
 | 2.7.1 | 2026-07-31 | parche | Mueve la guía de revisión NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.7.0 | 2026-07-31 | menor | Usa hechos NRS congelados como contexto de evidencia de solo lectura y propone contradicciones sin redefinir hechos, aceptar decisiones ni tratar documentación como evidencia de implementación. |
 | 2.6.0 | 2026-07-19 | menor | Endurecimiento para modelos pequeños: nueva **regla de aislamiento (por defecto)** — `review-implementation` y cada pasada aplicable del pack corren con contexto limpio (subagente / invocación headless / conversación nueva, los mismos tres niveles que `--adversarial`), reciben solo el alcance + su propia checklist + los docs que nombra su Paso 0 (≤ 10 lecturas completas de ficheros fuera del diff por pasada), y devuelven SOLO su tabla fija + PASS\|FAIL; el orquestador retiene tablas, nunca fuentes; la composición en el mismo turno queda como fallback inline documentado. La comprobación de deriva del SPEC ahora es **estructural**: tabla de cobertura por criterio (criterio → evidencia → cumplido/incumplido/intocado) más mapeo de cada hunk del diff a un criterio — hallazgos para criterios reclamados incumplidos y hunks mapeados a `none`. |
@@ -298,6 +299,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.6.0 | 2026-07-31 | menor | Añade la preservación de invariantes arquitectónicas como puerta explícita de aptitud de merge basada en evidencia y una ruta n-a para proyectos que no declaran ninguna. |
 | 3.5.1 | 2026-07-31 | parche | Mueve la guía de auditoría NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 3.5.0 | 2026-07-31 | menor | Audita contra hechos NRS congelados en modo solo lectura y reporta conflictos como contradicciones que solo `resolve-repository-state` puede resolver. |
 | 3.4.0 | 2026-07-19 | menor | Amplía la detección de la puerta de **integridad de alcance (descope)** a dos vías: la coincidencia de texto slug/número de issue existente, más una nueva vía que enumera cualquier issue **enlazado desde una fila de `## Amendments`** en la SPEC que gobierna, sin importar su propio título/cuerpo — cierra el hueco de cobertura donde un issue descoped con título genérico/sin mención del slug era invisible para la puerta. La guardia de descope en tiempo de creación de `execute-phase` sigue siendo el control primario; esta puerta sigue siendo un backstop. Arregla #89. |
@@ -505,7 +507,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   feature 19 de invariantes arquitectónicas añade el contrato opcional del
   proyecto y su puerta de evidencia/decisión explícita a `init-workspace`
   2.6.0, `design-feature` 2.5.0, `plan-feature` 3.3.0,
-  `plan-feature-from-issue` 1.6.0 y `plan-feature-scaffold` 1.12.0.
+  `plan-feature-from-issue` 1.6.0, `plan-feature-scaffold` 1.12.0,
+  `execute-phase` 2.12.0, `review-change` 2.8.0 y `audit-pr` 3.6.0.
 
 - **2026-07-30 — política de hallazgos oportunistas.** `execute-phase` 2.10.0
   clasifica los hallazgos reales fuera de alcance descubiertos durante la

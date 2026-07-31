@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 3.5.1
+version: 3.6.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -51,6 +51,8 @@ explicit user instruction) plus a fail-closed pre-merge checklist.
 ✓ Scope integrity (descope) was evaluated and its result stated explicitly:
   pass / blocker / n-a (no unit-referencing issues born on the branch → n-a;
   never skipped silently)
+✓ Architectural-invariant preservation was evaluated and its result stated
+  explicitly: pass / blocker / n-a (no project document → n-a; never skipped)
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
@@ -111,6 +113,7 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
 | **Review axes clean** | The applicable `review-change` axes are clean **or** every remaining finding is *consciously deferred* to a tracked issue with a trigger. | A `fix-now` finding still open, or a deferral with no issue/trigger behind it. |
 | **Closure integrity** | The governing **feature** SPEC's capability closure was taken and recorded — `design-feature` was actually run, not bypassed. Fix-governed PRs: `n/a` (no closure block by design). | A present `Capability closure` block has a blank row, or a resolved non-`n/a` row with no matching acceptance criterion. |
 | **Scope integrity (descope)** | An issue born during this unit that maps to an unmet SPEC acceptance criterion or phase task has a matching, user-approved, dated `## Amendments` entry — descoped scope was recorded, not silently exported. Detection is two-path: a slug/issue-number text match, **or** an issue linked from an `## Amendments` row (`#89`) — either is sufficient to enumerate the issue, so a descoped issue with a generic title/body is not invisible to the gate. | An issue born since branch divergence that references this unit (by either detection path) maps to an unmet criterion/task with no matching `## Amendments` entry, or an `## Amendments` row that is undated, unapproved, or unlinked to an issue. |
+| **Architectural invariants** | Every applicable rule in the optional project invariant document is evidenced as preserved, or has an explicit architectural decision recorded through the project-declared authority. No document is `n/a`, not a blocker. | A rule is violated, introduced, or changed without cited repository evidence and an explicit recorded architectural decision; a SPEC, implementation, or passing test is offered as approval. |
 
 > Run `review-change` for the axis check if it hasn't been run on the final state,
 > or read its latest report. Don't re-litigate findings already classified — verify
@@ -403,6 +406,23 @@ Before merge, a human should still verify:
 
 Audit against frozen NRS facts in `docs/workflow/REPOSITORY_STATE.md` and report conflicts as contradictions. This audit
 is read-only: only `resolve-repository-state` may update a frozen fact or decision.
+
+## Architectural invariants
+
+Audit the PR against the optional invariant document declared in the project
+documentation map (normally
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md`). If absent, state
+`Architectural invariants: n/a: no project invariants declared` and continue.
+For each applicable rule, cite its ID and repository evidence, then classify the
+PR as `preserves`, `violates`, `introduces`, or `changes`. Use frozen NRS facts
+when present, but repository inspection is authoritative and conflict evidence
+routes to `resolve-repository-state`.
+
+Only `preserves` passes without more evidence. A `violates`, `introduces`, or
+`changes` result is a merge blocker until an explicit architectural decision is
+recorded through the project's declared authority. State
+`Architectural invariants: pass | blocker | n/a` in the verdict; never accept a
+SPEC, implementation, or passing test as the missing decision.
 
 ## Portability (agents other than Claude Code)
 

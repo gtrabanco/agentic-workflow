@@ -259,6 +259,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.8.0 | 2026-07-31 | minor | Explicitly reviews optional project architectural invariants with repository evidence and reports undocumented violations, introductions, or changes as architecture findings. |
 | 2.7.1 | 2026-07-31 | patch | Moves the NRS review guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.7.0 | 2026-07-31 | minor | Uses frozen NRS facts as read-only evidence context and proposes contradictions without redefining facts, accepting decisions, or treating documentation as implementation evidence. |
 | 2.6.0 | 2026-07-19 | minor | Small-model hardening: new **Isolation rule (default)** — `review-implementation` and every applicable pack pass run context-clean (subagent / headless / fresh conversation, same three tiers as `--adversarial`), receive only the scope + their own checklist + the docs their Step 0 names (≤ 10 full non-diff file reads per pass), and return ONLY their fixed table + PASS\|FAIL; the orchestrator holds tables, never sources; in-turn composition remains as the documented inline fallback. The SPEC drift check is now **structural**: a per-criterion coverage table (criterion → evidence → met/unmet/untouched) plus diff-hunk-to-criterion mapping — findings for unmet claimed criteria and `none`-mapped hunks. |
@@ -297,6 +298,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.6.0 | 2026-07-31 | minor | Adds architectural-invariant preservation as an explicit evidence-based merge-readiness gate with an n-a path for projects that declare none. |
 | 3.5.1 | 2026-07-31 | patch | Moves the NRS audit guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 3.5.0 | 2026-07-31 | minor | Audits against frozen NRS facts read-only and reports conflicts as contradictions that only `resolve-repository-state` may resolve. |
 | 3.4.0 | 2026-07-19 | minor | Widened the **scope integrity (descope)** gate's detection to two paths: the existing slug/issue-number text match, plus a new path enumerating any issue **linked from an `## Amendments` row** in the governing SPEC regardless of its own title/body text — closes the coverage gap where a descoped issue with a generic title/no slug mention was invisible to the gate. `execute-phase`'s creation-time descope guard remains the primary control; this gate stays a backstop. Fixes #89. |
@@ -503,7 +505,8 @@ How pinning actually works, verified against the `skills` CLI:
   feature 19 adds the optional project contract and its evidence/explicit-
   decision gate to `init-workspace` 2.6.0, `design-feature` 2.5.0,
   `plan-feature` 3.3.0, `plan-feature-from-issue` 1.6.0, and
-  `plan-feature-scaffold` 1.12.0.
+  `plan-feature-scaffold` 1.12.0, `execute-phase` 2.12.0,
+  `review-change` 2.8.0, and `audit-pr` 3.6.0.
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as

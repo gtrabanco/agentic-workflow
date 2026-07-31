@@ -126,6 +126,11 @@ plan → execute → review → audit → merge.**
 | `product-audit` | the **product** | Periodic full-spectrum health check, **persisted** as `docs/audits/<id>-<date>.md` (incremental audit id, findings numbered `F1, F2, …` → addressable later as `triage-issue <id> F<k>`); mines feature docs → proposes issues + roadmap add/remove (always present) + installed-tooling to register/re-design; checks capability-inventory freshness (`docs/CAPABILITIES.md` ↔ code drift); **scope-export recurrence** (≥ 2 consecutive units exporting scope via `## Amendments`/descope issues → planning-quality finding routed to the atomicity/split rules) (**never auto-fixes**)                                                                          |
 | `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
 
+`review-change` and `audit-pr` also evaluate the optional project
+`ARCHITECTURAL_INVARIANTS.md` document: every applicable rule needs repository
+evidence that the change preserves it, or an explicit architectural decision.
+Projects that do not declare the document remain compatible.
+
 > `review-change`'s findings engine is the internal `review-implementation` — the
 > two-phase find → classify pass it composes (and `audit-pr` / `product-audit`
 > reuse) — plus the internal review pack: one `review-*` skill per axis, each a
