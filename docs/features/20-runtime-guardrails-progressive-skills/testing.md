@@ -13,7 +13,7 @@
 ## Results
 
 - P1: `shellcheck template/.agentic-workflow/hooks/*.sh template/.agentic-workflow/hooks/adapters/*.sh template/.agentic-workflow/hooks/tests/*.sh` passed.
-- P1: `test-command-guard.sh` passed 6 allowed and 13 blocked cases, including normalized Claude/Cursor and Copilot payloads.
+- P1: `test-command-guard.sh` passed 6 allowed and 16 blocked cases, including normalized Claude/Cursor and Copilot payloads.
 - P1: `test-fullauto-merge.sh` passed success, already-merged retry, failure cleanup, and idempotent comment cases.
 - P1: all hook JSON examples parsed with Node's `JSON.parse`.
 - P2: `audit-pr` authoring checks passed at 4.0.0 and no auto-merge branch remains.
@@ -30,7 +30,7 @@
 - P4: `git diff --check origin/main...HEAD` and both bilingual context-guidance acceptance greps passed.
 - P5: the first Qwen3 8B (`--think=false`) progressive-route probe failed and exposed ambiguous selectors plus references cut mid-contract. Route allowlists/tables and semantic boundaries were tightened; the checker now rejects a reference whose first content line is not a heading.
 - P5: the hardened Qwen3 8B run passed all eight natural route-selection cases and the exact `execute-phase` defined-status blocker; the OpenAI-compatible tool smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Both bilingual golden logs contain the failed and superseding passed rows.
-- P5: `shellcheck`, `test-command-guard.sh` (6 allowed / 13 blocked), and `test-fullauto-merge.sh` (cleanup + idempotent comment) passed again on the final tree.
+- P5: `shellcheck`, `test-command-guard.sh` (6 allowed / 16 blocked), and `test-fullauto-merge.sh` (cleanup + idempotent comment) passed again on the final tree.
 - P5: all JSON manifests/examples parsed; grouped skill directories exist; plugin/model-routing order, bilingual version/changelog parity, and user-skill entrypoint contracts passed.
 - P5: `node scripts/check-skill-context.mjs` passed 8 budgeted skills and 48 reachable, semantically headed, one-hop references with no nested reference links.
 - P5: `npx skills add . --list` discovered 30 installable skills and exited 0.
