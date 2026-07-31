@@ -37,8 +37,11 @@ expect_block "env listing" --command "env"
 expect_block "printenv name" --command "printenv API_KEY"
 expect_block "declare exports" --command "declare -x"
 expect_block "direct PR merge" --command "gh pr merge 12 --squash"
+expect_block "absolute PR merge" --command "/usr/bin/gh pr merge 12 --squash"
+expect_block "repo-option PR merge" --command "gh --repo acme/app pr merge 12"
 expect_block "direct MR merge" --command "glab mr merge 12"
 expect_block "direct git merge" --command "git merge feature"
+expect_block "git -C merge" --command "git -C /tmp/repo merge feature"
 expect_block "REST merge" --command "gh api -X PUT repos/acme/app/pulls/12/merge"
 expect_block "GraphQL merge" --command "gh api graphql -f query='mutation { mergePullRequest }'"
 expect_block "shell env read" --command "cat .env"
@@ -60,4 +63,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 6 allowed, 13 blocked, adapters normalized\n'
+printf 'PASS command guard: 6 allowed, 16 blocked, adapters normalized\n'
