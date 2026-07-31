@@ -27,23 +27,25 @@ Two ways to install the skills into a repo. They're complementary.
 
 | Method | What you get | When to use |
 |---|---|---|
-| **`skills` CLI** | The 15 skills (11 user-facing + 3 internal, plus the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
+| **`skills` CLI** | The 30 installable skills (17 user-facing + 13 internal, including the `orchestration-envelope` contract) copied (or symlinked) **verbatim** into the target agent's skills dir | You want the exact same skills, fast, deterministic, on any agent |
 | **Portable prompt** | The skills **regenerated, adapted** to the target repo's docs/architecture | You want them tuned to a different project's conventions |
 
-The core set is **11 user-facing + 3 internal**:
+The installable set is **17 user-facing + 13 internal** (30 total):
 
-- **User-facing (11):** `init-workspace`, `design-feature`, `plan-feature`,
-  `plan-fix`, `execute-phase`, `review-change`, `audit-pr`, `audit-docs`,
-  `product-audit`, `triage-issue`, `ship-roadmap`.
-- **Internal (3):** `plan-feature-from-issue`, `plan-feature-scaffold` —
-  hidden from the menu and invoked by the `plan-feature` router, which (once a
-  feature is designed) detects the input (issue → from-issue, scoped
-  slug/SPEC → scaffold) and dispatches to the right engine — plus
-  `review-implementation`, the two-phase find → classify findings engine that
-  `review-change` composes (and `audit-pr` / `product-audit` reuse). The
-  raw-idea interview that used to be an internal `plan-feature` step is now
-  folded into `design-feature` itself (user-facing, since product definition
-  is its own stage).
+- **User-facing (17):** `init-workspace`, `discover-repository-state`,
+  `resolve-repository-state`, `design-feature`, `plan-feature`, `plan-fix`,
+  `execute-phase`, `review-change`, `audit-pr`, `audit-docs`, `product-audit`,
+  `fold-findings`, `generate-docs`, `triage-issue`, `ship-roadmap`,
+  `log-session`, `workflow-status`.
+- **Internal (13):** `plan-feature-from-issue`, `plan-feature-scaffold`,
+  `orchestration-envelope`, `review-implementation`, `review-code`,
+  `review-security`, `review-verify`, `review-debt`, `review-design`,
+  `review-a11y`, `review-brand`, `review-perf`, and `review-seo`. These are
+  hidden from the menu and dispatched by the user-facing workflow routers.
+  The repo-only `bump-skill` helper is excluded from the installable count.
+  The raw-idea interview that used to be an internal `plan-feature` step is now
+  folded into `design-feature` itself (user-facing, since product definition is
+  its own stage).
 
 > **Versioning.** Each skill carries its own `version:` (semver) in frontmatter;
 > changes are logged in [`../../CHANGELOG.md`](../../CHANGELOG.md). Upgrade an

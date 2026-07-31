@@ -1,0 +1,32 @@
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F1 | template/docs/workflow/REPOSITORY_STATE.md:22 | spec-drift | high | fix-now | fold into P5 — make AC5 pass exactly | yes |
+| F2 | skills/discover-repository-state/SKILL.md:44-46 | implementation | high | fix-now | fold into P2/P5 — preserve contradicted state until resolution | yes |
+| F3 | skills/resolve-repository-state/SKILL.md:36-40 | implementation | high | fix-now | fold into P2/P5 — stop without freezing on needs-input | yes |
+| F4 | skills/init-workspace/SKILL.md:246-247 | implementation | high | fix-now | fold into P3/P5 — add NRS seeding to the process | yes |
+| F5 | docs/features/18-normalized-repository-state/TASKS.md:42-43 | verify | med | fix-now | fold into P5 — run and record the golden fixtures | yes |
+| F6 | docs/features/18-normalized-repository-state/progress.md:3 | workflow | med | fix-now | fold into P5 — append the required phase handoff entries | yes |
+| F7 | CHANGELOG.md:99-367 | workflow | med | fix-now | fold into P5 — add changelog rows for all bumped skills in both languages | yes |
+| F8 | README.md:56 | workflow | med | fix-now | fold into P5 — reconcile skill counts across README, SKILLS, and verification output | yes |
+| F9 | b9f6fce:docs: link PR #114 | workflow | low | fix-now | fold into P5 — restore the scoped conventional-commit format | yes |
+| F10 | skills/discover-repository-state/SKILL.md:52 | implementation | med | fix-now | fold-findings — reconcile the facts-only guardrail with the required non-fact ledger sections | yes |
+| F11 | skills/discover-repository-state/SKILL.md:5 | implementation | med | fix-now | fold-findings — define or remove the public --refresh flag | yes |
+| F12 | skills/discover-repository-state/SKILL.md:70 | implementation | high | fix-now | fold-findings — make contradicted snapshots route to resolver before planning | yes |
+| F13 | skills/resolve-repository-state/SKILL.md:67 | implementation | high | fix-now | fold-findings — make needs-input route stop for evidence instead of recommending planning | yes |
+| F14 | skills/init-workspace/SKILL.md:136-141 | implementation | high | fix-now | fold-findings — require discovery/frozen state before the bootstrap handoff to planning or execution | yes |
+| F15 | skills/plan-feature/SKILL.md:156-158 | implementation | high | fix-now | fold-findings — gate planning and execution on a frozen, non-contradicted snapshot | yes |
+| F16 | PR #114:body | workflow | med | fix-now | fold-findings — synchronize the stale golden-fixture verification note with the committed evidence | yes |
+| F17 | docs/workflow/model-routing.yml:1-97; README.md:222-240; README.es.md:230-248 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to Claude routing and model tables | yes |
+| F18 | docs/workflow/SKILLS.md:109-132; docs/workflow/SKILLS.es.md:112-136 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to the invocation reference | yes |
+| F19 | docs/workflow/REPLICATE.md:30-46; docs/workflow/REPLICATE.es.md:32-50 | workflow | med | fix-now | fold-findings — refresh the replication guide's stale skill counts and core-set list | yes |
+| F20 | docs/workflow/GOLDEN_FIXTURE.md:188-189; docs/workflow/GOLDEN_FIXTURE.es.md:200-201 | verify | med | fix-now | fold-findings — rerun or update fixture evidence for final plan/execute versions 3.2.1/2.11.1 | yes |
+| F21 | CHANGELOG.md:101 | workflow | med | fix-now | fold-findings — add the fourth separator cell so the new four-column table renders correctly | yes |
+| F22 | CHANGELOG.es.md:102 | workflow | med | fix-now | fold-findings — add the fourth separator cell so the new four-column table renders correctly | yes |
+| F23 | docs/features/18-normalized-repository-state/TASKS.md:15 | verify | med | fix-now | fold into P5 — align the P2 check with the discovery skill's actual guardrail text | yes |
+| F24 | CHANGELOG.md:109; CHANGELOG.es.md:110 | workflow | med | fix-now | fold into P5 — repair the resolve-repository-state table separators; prior fixes corrected the neighboring discovery tables instead | yes |
+| F25 | skills/audit-pr/SKILL.md:379-386; skills/design-feature/SKILL.md:249-257; skills/init-workspace/SKILL.md:252-259; skills/plan-feature/SKILL.md:152-163; skills/review-change/SKILL.md:452-460; skills/orchestration-envelope/SKILL.md:170-178; skills/execute-phase/SKILL.md:338-350 | workflow | med | fix-now | fold into P5 — place the NRS subsection without orphaning the preceding section or nesting unrelated rules under it | yes |
+| F26 | skills/discover-repository-state/SKILL.md:44-49 | implementation | high | fix-now | fold into P5 — preserve an already-contradicted snapshot until resolver disposition; rerunning discovery must not freeze it implicitly | yes |
+| F27 | skills/resolve-repository-state/SKILL.md:57-80 | implementation | med | fix-now | fold into P5 — resume the workflow that reported the contradiction instead of always routing to plan-feature | yes |
+| F28 | skills/workflow-status/SKILL.md:35-43; skills/workflow-status/SKILL.md:84-94; skills/workflow-status/SKILL.md:373-378 | implementation | med | fix-now | fold into P5 — expose draft/contradicted NRS as a machine-readable blocker and resolver route for external drivers | yes |
+| F29 | docs/workflow/PORTABLE_PROMPT.md:6-10; docs/workflow/PORTABLE_PROMPT.es.md:7-10 | workflow | med | fix-now | fold into P5 — update the portable prompt's counts and include repository-state discovery/resolution so generated workflows do not omit the new contract | yes |
+| F30 | docs/features/18-normalized-repository-state/review-findings.md:28-31 | workflow | high | fix-now | fold-findings — commit and push the newly persisted review findings so the PR and CI judge the complete reviewed state | yes |

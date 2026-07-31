@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.10.0
+version: 2.11.2
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -349,6 +349,16 @@ or `worktrees`). Default and assumption everywhere: **`branches`** — one activ
 unit at a time, sequential, plain `git switch -c`; **never create a worktree**.
 Only when the project explicitly declares `worktrees` may a unit get its own
 checkout — and then one worktree per unit, removed after merge.
+
+## Normalized Repository State
+
+Before implementation, consume frozen facts and decisions in
+`docs/workflow/REPOSITORY_STATE.md` when present. Inspect directly only for an
+absent fact; route contradictory evidence to `resolve-repository-state`.
+Documentation, planned work, and inference never prove implementation.
+Before any edit, require the ledger status to be `frozen`; a missing, `draft`,
+`contradicted`, or `resolved` snapshot stops implementation and routes to
+discovery or resolution first.
 
 ## Issue policy
 
