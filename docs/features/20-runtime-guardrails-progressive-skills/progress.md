@@ -50,3 +50,10 @@ Last reviewed: —
 - Gotchas: Fullauto now fails closed when the forge exposes no CI checks; the wrapper accepts only PR number and run ID, and the audit comment must match the current head SHA.
 - Files: template/.agentic-workflow/hooks/fullauto-merge.sh, template/.agentic-workflow/hooks/guard-command.sh, template/.agentic-workflow/hooks/tests/test-command-guard.sh, template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh, skills/ship-roadmap/SKILL.md, skills/ship-roadmap/references/AUDIT_AND_MERGE.md, skills/ship-roadmap/references/ADVANCE.md, skills/audit-pr/SKILL.md, docs/features/20-runtime-guardrails-progressive-skills/
 - Next: P7 — Adapter and context-guard closure
+
+## P7 — 2026-08-01
+- Done: Corrected the OpenCode adapter to use plugin-context `worktree`, rejected nested files and directories below skill `references/`, expanded checker CLI fixtures for `--manifest-only` and bare `--skill`, and reconfirmed progressive-route budgets.
+- Remains: P8 — Hardening & PR
+- Gotchas: The OpenCode fixture now passes context at plugin initialization; the runtime event still supplies tool and argument data through the hook input/output pair.
+- Files: template/.opencode/plugins/agentic-workflow-guard.ts.example, template/.agentic-workflow/hooks/tests/test-opencode-guard.sh, scripts/check-skill-context.mjs, scripts/check-skill-context.test.mjs, docs/features/20-runtime-guardrails-progressive-skills/
+- Next: P8 — Hardening & PR
