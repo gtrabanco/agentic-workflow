@@ -8,3 +8,10 @@ Last reviewed: —
 - Gotchas: Direct merges have no allow marker; fullauto enters through the wrapper. Hook payload adapters require `jq`, while the OpenCode adapter calls the canonical policy through Bun.
 - Files: template/.agentic-workflow/hooks/, template/.claude/, template/.cursor/, template/.github/hooks/, template/.opencode/plugins/, docs/features/20-runtime-guardrails-progressive-skills/
 - Next: P2 — Fullauto policy
+
+## P2 — 2026-07-31
+- Done: Made audit-pr verdict-only, made active ship-roadmap fullauto the sole automated merge authority, added transient/comment requirements, and integrated opt-in hook installation into bootstrap/upgrade.
+- Remains: P3 — Context distribution
+- Gotchas: The wrapper is a deterministic accidental-action tripwire, not caller authentication; forge rulesets remain the hard boundary. Major migration notes supersede audit-pr's historical standalone auto-merge policy.
+- Files: skills/audit-pr/SKILL.md, skills/ship-roadmap/SKILL.md, skills/init-workspace/SKILL.md, template/CLAUDE.md, template/.agentic-workflow/hooks/README.md, README.md, README.es.md, CHANGELOG.md, CHANGELOG.es.md, docs/workflow/, docs/features/20-runtime-guardrails-progressive-skills/
+- Next: P3 — Context distribution

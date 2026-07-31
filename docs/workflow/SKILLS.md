@@ -19,7 +19,7 @@ logging, and workflow status.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `discover-repository-state` |
+| `init-workspace` | Fetch and adapt the scaffold; seed repository contracts; explicitly offer the detected Claude/Cursor/Copilot/OpenCode safety adapter without clobbering hooks | `discover-repository-state` |
 | `discover-repository-state` | Creates a frozen, evidence-backed repository-state ledger; separates facts, decisions, planned work, documentation, and inference | `plan-feature` / `resolve-repository-state` |
 | `resolve-repository-state` | Sole writer that resolves an explicit fact contradiction and publishes the next frozen snapshot | the interrupted workflow step |
 
@@ -66,7 +66,7 @@ logging, and workflow status.
 |---|---|---|---|
 | `review-change` | the **change** | Run only the reviews that apply to this platform — **each pass isolated by default** (context-clean, returns only its findings table; the orchestrator holds tables, never sources) — + a structural **SPEC drift check** (per-criterion coverage table + diff-hunk mapping) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | `plan-fix` (fix-now) / `triage-issue` (every non-fix-now: postpone / ignore / intentional-tradeoff) |
 | `fold-findings` | the **findings ledger** | Repair each fix-now finding from `review-change`/`audit-pr` for real, one at a time — frozen classification (never reclassifies), a fixed forbidden list closes the known-issues-dump/downgrade/test-loosening/suppression escape hatches; per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict | re-run `review-change` (all folded) / `triage-issue` (disputed) |
-| `audit-pr` | the **PR** | Merge gate: acceptance, phases, docs, tests, CI, `Closes #N`, review axes, closure integrity (feature SPECs only; legacy → dated warning, never a blocker), scope integrity (descope: an issue born during the unit mapping to an unmet criterion/task needs a matching `## Amendments` entry, else BLOCKER; feature and fix PRs alike) → merge-ready or blockers | `execute-phase` / `plan-fix` / `triage-issue` |
+| `audit-pr` | the **PR** | Read-first merge gate → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges. Active `ship-roadmap --fullauto` is the only consumer allowed to execute an automated merge | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
@@ -91,7 +91,7 @@ logging, and workflow status.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `ship-roadmap` | **Conductor.** One upfront interview (product, features, stack, architecture, quality, ops, autonomy, budget) → founds the project if needed → creates or adopts the complete roadmap → a `/loop`-driven loop ships it feature by feature: composes `plan-feature`, `review-change`, `audit-pr` in-turn (equal tier), delegates each `execute-phase` phase to a Sonnet subagent. Default: opens PRs, human merges; `--fullauto` merges under non-negotiable safety floors. Ends in a final report | human merges / `triage-issue` batch / `product-audit` (always a hand-off — its effort max exceeds the conductor's high) |
+| `ship-roadmap` | **Conductor.** One upfront interview and a driver loop ship the roadmap and issue sweep. Default: opens PRs, human merges. `--fullauto` is the sole automated merge authority and uses the transient fail-closed wrapper plus an idempotent PR comment; direct merges remain blocked | human merges / `triage-issue` batch / `product-audit` |
 
 ## Session
 
@@ -129,7 +129,7 @@ with no arguments uses the default stated here.
 | `product-audit` | `/product-audit [path-or-area]` | Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
-| `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Default: opens PRs, the human merges. `--fullauto` → merges MERGE-READY PRs under the non-negotiable safety floors. `--continue` → resume an existing run by one stage (the external-driver loop re-invokes this). |
+| `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Default: opens PRs, the human merges. `--fullauto` must be present on each iteration and uses the repository wrapper after a fresh MERGE-READY verdict. `--continue` resumes one stage. |
 | `triage-issue` | `/triage-issue <n> [n…]` | One or many issue numbers — batch runs produce independent verdicts plus one summary table, grouped by home unit for any `fix-in-unit` verdicts. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Default: human summary + the machine envelope. `--json-only` → envelope only (driver mode). `--last-envelope` → the driver's persisted envelope as a crash-recovery **hint** (diffed against recomputed state; never authoritative). No argument passing on your agent? Paste the JSON in the message — the last fenced json block of the *request* is read as the hint. |
 

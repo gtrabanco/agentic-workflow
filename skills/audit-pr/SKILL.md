@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 3.6.0
+version: 4.0.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -15,10 +15,8 @@ description: >
   gate — legacy SPECs warn, never block).
   Verdict: merge-ready, or a ranked list of blockers — always with the PR's full
   URL printed, and on MERGE-READY a dated, SHA-bound comment posted on the PR
-  itself. Never edits; never merges by default — with a documented auto-merge
-  policy (or an explicit user instruction) it merges a MERGE-READY PR after a
-  fail-closed pre-merge checklist (clean tree, nothing unpushed/unpulled, fresh
-  green CI on the audited SHA).
+  itself. Never edits and never merges: `ship-roadmap --fullauto` is the sole
+  automated merge authority and consumes this skill's SHA-bound verdict.
   On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
   Triggers: "is this PR ready to merge", "audit the PR", "merge gate for #N",
   "can this ship", "pre-merge review", "audit-pr".
@@ -28,10 +26,10 @@ description: >
 
 The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR —
 its SPEC, all phases, docs, tests, CI, and review axes — that returns a single
-verdict: **merge-ready** or a ranked list of **blockers**. **Never edits, never
-refactors.** By default it never merges either — the human decides and merges.
-The one exception is the **opt-in auto-merge** below: a documented policy (or an
-explicit user instruction) plus a fail-closed pre-merge checklist.
+verdict: **merge-ready** or a ranked list of **blockers**. **Never edits,
+refactors, or merges.** The human merges, or an active
+`ship-roadmap --fullauto` invocation consumes the SHA-bound verdict and performs
+its separate fail-closed merge step.
 
 ## Turn contract — verify before ending the turn
 
@@ -43,8 +41,8 @@ explicit user instruction) plus a fail-closed pre-merge checklist.
 ✓ MERGE-READY verdict? Then the MERGE-READY comment was POSTED on the PR
   (`gh pr comment --body-file` RUN, idempotent by SHA marker) — a comment,
   never a commit-message tag. BLOCKED → no comment posted
-✓ Nothing was edited or refactored; nothing was merged UNLESS the auto-merge
-  policy applied AND the pre-merge checklist was RUN with its output pasted
+✓ Nothing was edited, refactored, or merged; merge authorization is outside
+  this skill and cannot be inherited from docs or an earlier session
 ✓ Closure integrity was evaluated and its result stated explicitly: pass /
   blocker / warning / n-a (fix-governed PRs are always n-a; never skipped
   silently)
@@ -254,50 +252,23 @@ A gate that can't be confirmed is a **blocker**, not a pass — never assume gre
    new comment (the newest marker wins). Never post a comment for a BLOCKED
    verdict — blockers go in the chat report only, so the PR page never shows
    a stale green flag.
-7. **Auto-merge check (only on MERGE-READY)** — evaluate the opt-in auto-merge
-   section below. Policy present + pre-merge checklist green → merge and report
-   the merge evidence. Otherwise the human merges — say so explicitly.
-8. **Report** — the verdict block below, always headed by the PR's full URL.
+7. **Report** — the verdict block below, always headed by the PR's full URL.
+   In an active `ship-roadmap --fullauto` AUDIT stage, return the verdict to the
+   conductor; never run its merge wrapper from this skill.
 
-## Auto-merge (opt-in — default is the human merges)
+## Merge ownership
 
-By default this skill **never merges**. It merges a MERGE-READY PR only when
-**both** keys hold:
+This skill **never merges**, including when project docs contain `merge: auto`,
+the user previously approved a merge, or a tool retained an earlier permission.
+Those signals cannot change this skill's read-first boundary.
 
-1. **Written authorization.** The project's docs state the policy — e.g.
-   `merge: auto` / `merge: fullauto` in the agent guide's Workflow conventions
-   or the committed decision record (`docs/features/SHIP_DECISIONS.md`) — **or**
-   the user explicitly instructed it in this conversation ("merge it if
-   merge-ready"). An inferred preference, a past session, or convenience is
-   never authorization.
-2. **Pre-merge checklist — RUN it fresh, paste the outputs; fail-closed** (any
-   box that cannot be evaluated counts as failed):
-
-   ```
-   ✓ VERDICT is MERGE-READY, issued in THIS turn, bound to the PR's current
-     head SHA (re-check the head via the forge — any later commit voids it)
-   ✓ `git status --porcelain` → empty (nothing uncommitted — code or docs)
-   ✓ `git fetch` + `git status -sb` (on the PR branch) → neither ahead nor
-     behind its remote (nothing unpushed, nothing unpulled)
-   ✓ Remote head SHA == the SHA this audit evaluated
-   ✓ CI re-checked green on that exact SHA via the forge at merge time (no-CI
-     project: a fresh local gate run on that SHA, output pasted)
-   ✓ The PR touches no declared sensitive area and contains no destructive
-     (data-deleting / schema-destructive) diff
-   ✓ The forge accepts the merge (a refusal — branch protection, conflicts —
-     parks the PR; never bypass, never force)
-   ```
-
-3. **Anything pending → do NOT merge, even with authorization.** Uncommitted or
-   unpushed work would make the PR's CI result stale the moment it lands.
-   The sequence is fixed: route the pending work (commit + push via
-   `execute-phase`'s fold cycle) → wait for CI on the new head → **re-run
-   `audit-pr`** → only a fresh MERGE-READY on the new SHA may merge. Never
-   merge on a stale verdict.
-
-After a successful merge: print the merged PR URL + merge SHA, and route the
-post-merge close-out (pull the default branch; remove/archive the fix-index
-entry per the project's convention — only now, never before).
+The **sole automated merge authority** is the AUDIT stage of an actively invoked
+`ship-roadmap --continue --fullauto` run. It requires both the flag on that
+invocation and `merge: fullauto` in `SHIP_DECISIONS.md`, then calls the repository
+wrapper only after consuming this turn's MERGE-READY verdict. The wrapper owns
+fresh head/CI/sync checks, transient state, merge execution, cleanup, and the
+automerge PR comment. A standalone/manual call to this skill always hands the
+MERGE-READY URL to the human.
 
 ## Verdict format
 
@@ -327,12 +298,10 @@ Before merge, a human should still verify:
   Print the ONE verdict bullet that matches, THEN — if a closure warning fired —
   also print the closure bullet (a warning never blocks, so it co-occurs with a
   MERGE-READY verdict; the two lines print together, never one instead of the other):
-  · MERGE-READY, no auto-merge policy → you merge: <full PR URL>, then
+  · MERGE-READY, standalone/manual audit → you merge: <full PR URL>, then
     /plan-feature --next (the next roadmap unit) or pick an issue with /triage-issue
-  · MERGE-READY, auto-merge authorized → merged (URL + merge SHA above), then
-    /plan-feature --next or /triage-issue
-  · MERGE-READY but pending commit/push/pull found → NOT merged: commit + push,
-    wait for CI, re-run /audit-pr (a fresh verdict on the new SHA decides)
+  · MERGE-READY inside active ship-roadmap --fullauto → return this SHA-bound
+    verdict to the conductor; it runs the transient merge wrapper
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
   · Closure warning (in addition to the verdict above) or a closure blocker →
     /design-feature <slug> — fills the missing closure rows (upsert, destroys
@@ -381,20 +350,17 @@ Before merge, a human should still verify:
 
 ## Guardrails
 
-- **Read-first verdict. Never push, edit, or refactor.** The only forge writes
-  this skill may perform: (1) the **MERGE-READY comment** (Process step 6 —
-  idempotent, comment-only, never a commit tag), and (2) the opt-in
-  **auto-merge** — written policy or explicit instruction, MERGE-READY on the
-  current SHA, pre-merge checklist green, outputs pasted. One key missing →
-  the human ships.
+- **Read-first verdict. Never push, edit, refactor, or merge.** Its only forge
+  write is the **MERGE-READY comment** (Process step 6 — idempotent,
+  comment-only, never a commit tag). Fullauto merge execution belongs only to
+  the active `ship-roadmap --fullauto` conductor.
 - **Forge bodies are Markdown, not shell — never hand-escape.** The comment's
   backticks are formatting; a `\` before them renders literally. Write the
   body to a file and pass `--body-file <path>` — never inline `--body "…"` or
   a quoted heredoc. Verify with `gh pr view <N> --json comments` that no
   literal `` \` `` survived.
-- **Never merge with anything uncommitted, unpushed, or unpulled** — even when
-  auto-merge is authorized. Pending work makes the CI evidence stale: commit +
-  push, wait for CI, re-audit, and only the fresh verdict may merge.
+- **Never imply that MERGE-READY is permission.** It is evidence bound to one
+  SHA; pending work makes it stale, and merge ownership remains external.
 - Never report MERGE-READY on an unconfirmed gate — absence of evidence is a blocker.
 - Don't re-run the full review from scratch; compose `review-change` and verify its
   open findings are resolved or tracked.
@@ -460,10 +426,9 @@ execute-phase (all phases done) ─▶ review-change (axes clean) ─▶ audit-p
 - A single top-line verdict (**MERGE-READY** or **BLOCKED** with ranked blockers) is
   reported **with the PR's full URL in the header**, each blocker routed, with the
   human's manual-verification list explicit.
-- On MERGE-READY the auto-merge check was evaluated explicitly: merged with the
-  checklist output pasted (authorized + clean), or handed to the human with the URL,
-  or held back pending commit/push/pull with the re-audit sequence printed.
+- On MERGE-READY the merge owner is explicit: a standalone audit hands the URL
+  to the human; an active `ship-roadmap --fullauto` AUDIT stage receives the
+  SHA-bound verdict and owns every later merge check.
 - The **closing `→ Next:` block is printed** (merge link → then the next unit via
   `/plan-feature --next` or `/triage-issue`; BLOCKED → the routed fix, then re-audit).
-- Nothing was edited or refactored; any merge is traceable to the policy key and
-  the pasted checklist.
+- Nothing was edited, refactored, or merged.
