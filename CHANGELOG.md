@@ -136,6 +136,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.2.0 | 2026-07-31 | minor | Fullauto now invokes the wrapper with only PR and run identifiers; the wrapper derives and verifies the forge head, default base, SHA-bound audit evidence, and head-pinned decision instead of trusting caller-controlled inputs. |
 | 3.1.1 | 2026-07-31 | patch | Routes an existing-repository founding run invoked with `--fullauto` through the audit-and-merge policy, while keeping default and greenfield founding routes free of audit resources. |
 | 3.1.0 | 2026-07-31 | minor | Progressive loading splits founding, continuation recovery/selection, stage advancement, runtime/merge policy, terminal reporting, guardrails, and portability into explicit one-hop routes; the main activation body retains the turn contract and route selection. |
 | 3.0.0 | 2026-07-31 | major | **Breaking:** `--fullauto` is now the sole automated merge authority and must use the repository's fail-closed transient wrapper after a fresh `audit-pr` verdict; direct merge commands stay blocked, attempt state is cleaned on every exit, and each successful automerge is logged by an idempotent SHA-bound PR comment. |
@@ -306,6 +307,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.2.0 | 2026-07-31 | minor | Synchronizes the merge-consumer contract with the forge-verifiable fullauto authority boundary; standalone audits remain verdict/comment-only. |
 | 4.1.0 | 2026-07-31 | minor | Progressive loading moves merge gates, closure/descope checks, audit process, fixed verdict, routing/guardrails, and portability behind a mandatory one-hop audit route; merge ownership remains in the entrypoint. |
 | 4.0.0 | 2026-07-31 | major | **Breaking:** removed standalone/document-policy auto-merge. The skill is now strictly verdict/comment-only and never merges; only an active `ship-roadmap --fullauto` AUDIT stage may consume its SHA-bound MERGE-READY result and invoke the transient wrapper. |
 | 3.6.0 | 2026-07-31 | minor | Adds architectural-invariant preservation as an explicit evidence-based merge-readiness gate with an n-a path for projects that declare none. |
