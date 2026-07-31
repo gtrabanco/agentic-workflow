@@ -30,4 +30,3 @@ new PR: the issue closes via the **open unit's** existing PR — its body gains
 a `Closes #<n>` line for this issue (or, if the unit's PR isn't open yet,
 whoever opens it later adds the line then). State this explicitly in the
 verdict's `Action taken:` field.
-

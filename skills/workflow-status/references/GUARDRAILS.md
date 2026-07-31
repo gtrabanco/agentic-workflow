@@ -15,4 +15,3 @@
   labeling actor's permission via the issue timeline (presence is already
   triage+-gated by GitHub). This sensor never emits a pause-vs-finish
   decision — only the facts the consumer's judge needs.
-

@@ -81,4 +81,3 @@ verdict — never a separate, silent step:
 A **fix-now** verdict is unchanged by this section — it gets no disposition
 label (it is tracked via the fix index + its route, and its high-severity
 case already gets the urgency label above).
-

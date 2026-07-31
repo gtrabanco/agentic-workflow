@@ -34,4 +34,3 @@ leans on them harder than any other — here is the manual equivalent of each:
   executors). An agentic loop spends one request per tool round-trip, so
   parallel executors also eat the per-minute request budget fast; on a 429,
   reduce parallelism before retrying rather than hammering the limit.
-

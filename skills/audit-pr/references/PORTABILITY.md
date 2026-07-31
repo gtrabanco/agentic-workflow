@@ -10,4 +10,3 @@ enables:
 - **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   the merge gate is the highest-stakes automated verdict — run it on your
   **strongest** model, never on the cheap tier that wrote the code.
-

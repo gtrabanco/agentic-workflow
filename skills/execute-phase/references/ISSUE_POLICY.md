@@ -116,4 +116,3 @@ the same phase commit. If the decision is not deterministic from the evidence,
 record `Create Issue — judgment required` and ask the user before filing or
 changing code. This table is the execution log required for later review;
 `known-issues.md` remains for blockers, not a substitute for this decision.
-

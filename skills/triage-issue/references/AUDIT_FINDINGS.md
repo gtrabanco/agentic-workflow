@@ -33,4 +33,3 @@ argument is an issue number, unchanged.
 6. **Report** the same fixed verdict block, with
    `ISSUE #<n>` replaced by `AUDIT <id> F<k> — <finding title>` when no issue
    ends up existing.
-

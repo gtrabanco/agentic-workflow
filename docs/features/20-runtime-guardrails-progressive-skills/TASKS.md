@@ -23,7 +23,7 @@
 - [x] Add bootstrap and upgrade interview steps for detected safety-hook adapters.
       Check: `grep -q "Agent safety hooks" skills/init-workspace/references/BOOTSTRAP_DISCOVERY.md`.
 - [x] Bump changed skill versions and synchronize both changelogs/readmes.
-      Check: `git diff --check`.
+      Check: `git diff --check origin/main...HEAD`.
   Done-when: `grep -q "sole automated merge authority" skills/ship-roadmap/references/AUDIT_AND_MERGE.md` → exit 0.
 
 ## P3 — Context distribution
@@ -53,7 +53,7 @@
 - [x] Preserve fixed outputs, one-hop references, and small-model load instructions.
       Check: `node scripts/check-skill-context.mjs`.
 - [x] Bump every changed skill and synchronize bilingual version surfaces.
-      Check: `git diff --check`.
+      Check: `git diff --check origin/main...HEAD`.
   Done-when: `node scripts/check-skill-context.mjs` → exit 0.
 
 ## P5 — Hardening & PR

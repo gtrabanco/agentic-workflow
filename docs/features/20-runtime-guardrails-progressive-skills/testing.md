@@ -27,7 +27,7 @@
 - P4: `node scripts/check-skill-context.mjs` passed all eight skills, including one-hop reachability, no nested reference links, main/reference line limits, and description budgets.
 - P4/P5 final: direct activation estimates are `execute-phase` 3,016; `design-feature` 2,654; `ship-roadmap` 2,467; `review-change` 2,205; `init-workspace` 1,983; `audit-pr` 1,962; `workflow-status` 1,788; and `triage-issue` 1,443. All stay below their committed hard budgets; `execute-phase` remains about 77% below its pre-segmentation estimate of 13,010.
 - P4: every segmented entrypoint retains `Turn contract`, `Portability`, and `→ Next:`; executor/review/audit entrypoints also retain explicit NRS and Architectural invariants routing.
-- P4: `git diff --check` and both bilingual context-guidance acceptance greps passed.
+- P4: `git diff --check origin/main...HEAD` and both bilingual context-guidance acceptance greps passed.
 - P5: the first Qwen3 8B (`--think=false`) progressive-route probe failed and exposed ambiguous selectors plus references cut mid-contract. Route allowlists/tables and semantic boundaries were tightened; the checker now rejects a reference whose first content line is not a heading.
 - P5: the hardened Qwen3 8B run passed all eight natural route-selection cases and the exact `execute-phase` defined-status blocker; the OpenAI-compatible tool smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Both bilingual golden logs contain the failed and superseding passed rows.
 - P5: `shellcheck`, `test-command-guard.sh` (6 allowed / 13 blocked), and `test-fullauto-merge.sh` (cleanup + idempotent comment) passed again on the final tree.

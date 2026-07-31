@@ -71,4 +71,3 @@ enables:
   Return the merged table, then continue through review-change's steps 2–10
   to the fixed report ending `Decision: PASS | FAIL`.
   ```
-

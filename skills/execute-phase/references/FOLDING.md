@@ -72,4 +72,3 @@ phase preserves the cheap-execution guarantee. The `/loop` batch shape below
 already clears and re-invokes per phase; this rule is *why* it does — an
 external orchestrator or a by-hand loop must honor it the same way (see
 *Portability*, "No `/loop`").
-
