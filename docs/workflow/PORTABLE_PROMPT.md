@@ -174,9 +174,10 @@ the frozen ledger and route missing or contradictory state to these skills.
    roadmap, and loops: plan (compose plan-feature in-turn) → execute (one
    cheap-tier subagent per phase following execute-phase) → review (compose
    review-change) → PR → merge gate (compose audit-pr) → next feature. Default:
-   opens PRs, the human merges; --fullauto merges MERGE-READY PRs under
-   non-negotiable, fail-closed safety floors (never red, fresh verdict SHA,
-   sensitive-area and destructive-change pauses, no protection bypass). Run
+   opens PRs, the human merges; --fullauto is the sole automated merge
+   authority and, after a fresh SHA-bound audit, calls the repository's
+   transient wrapper (direct merge commands stay blocked) under fail-closed
+   safety floors (never red, sensitive/destructive pauses, no bypass). Run
    policy lives in a committed decision record; an untracked run log carries
    iteration state. Ends with a final report: per-feature outcomes, issues to
    open (with reopening triggers), discovered feature proposals, manual

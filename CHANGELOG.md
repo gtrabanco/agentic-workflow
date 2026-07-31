@@ -135,6 +135,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-07-31 | major | **Breaking:** `--fullauto` is now the sole automated merge authority and must use the repository's fail-closed transient wrapper after a fresh `audit-pr` verdict; direct merge commands stay blocked, attempt state is cleaned on every exit, and each successful automerge is logged by an idempotent SHA-bound PR comment. |
 | 2.3.0 | 2026-07-18 | minor | REVIEW stage: the L/sensitive-flagged checkpoint cadence now fires on `execute-phase`'s three named triggers (layer boundary / accumulation / sensitivity, cross-referenced from `#77` rather than restated) instead of a fixed "every 2 phases" count, which had re-miscalibrated ~3x after #64's atomicity lint shrank phase size. The `--adversarial 2` hard floor and the non-alignment with `review-change`'s own advisory cadence are unchanged. Fixes #93. |
 | 2.2.1 | 2026-07-13 | patch | Portability gains a provider-concurrency guardrail: cap parallel subagents/headless executors at the provider's documented parallel-request limit per API key (leaving a slot for the conductor), and reduce parallelism on a 429 instead of retrying at full fan-out. Guidance only — no stage or contract change. |
 | 2.2.0 | 2026-07-11 | minor | SELECT gains a new top priority: reads `workflow-status`'s `detail.urgent` (labels-only) first — an open `fix-next` issue jumps to head of queue (no interrupt); an open `urgent` issue runs the canonical pause-vs-finish rubric in `docs/workflow/ORCHESTRATION.md` (referenced, never forked) against the in-flight unit's interruptibility facts, `INTERRUPT_NOW` parking it, `FINISH_FIRST` queuing the fix for next iteration. Priority list renumbered. |
@@ -298,6 +299,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.0.0 | 2026-07-31 | major | **Breaking:** removed standalone/document-policy auto-merge. The skill is now strictly verdict/comment-only and never merges; only an active `ship-roadmap --fullauto` AUDIT stage may consume its SHA-bound MERGE-READY result and invoke the transient wrapper. |
 | 3.6.0 | 2026-07-31 | minor | Adds architectural-invariant preservation as an explicit evidence-based merge-readiness gate with an n-a path for projects that declare none. |
 | 3.5.1 | 2026-07-31 | patch | Moves the NRS audit guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 3.5.0 | 2026-07-31 | minor | Audits against frozen NRS facts read-only and reports conflicts as contradictions that only `resolve-repository-state` may resolve. |
@@ -387,6 +389,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.7.0 | 2026-07-31 | minor | Adds an Agent safety hooks interview and additive upgrade path for Claude Code, Cursor, Copilot, and OpenCode; accepted repository adapters install explicitly, run the canonical guard fixture, and never overwrite customized hook config. |
 | 2.6.0 | 2026-07-31 | minor | Offers the optional architectural-invariants document during bootstrap and upgrade without creating a requirement for existing repositories. |
 | 2.5.2 | 2026-07-31 | patch | Moves the NRS bootstrap guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.5.1 | 2026-07-31 | patch | Routes a newly bootstrapped project through repository-state discovery before design, planning, or execution. |
@@ -492,6 +495,12 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-31 — runtime guardrails and invocation-scoped fullauto.**
+  `init-workspace` 2.7.0 installs the portable guard pack additively;
+  `audit-pr` 4.0.0 becomes verdict/comment-only; `ship-roadmap` 3.0.0 is the
+  sole automated merge authority and uses a transient, fail-closed wrapper
+  with a SHA-bound PR audit comment. See feature 20 and the migration note.
 
 - **2026-07-31 — normalized repository-state folding.** `discover-repository-state`
   1.1.0 preserves `contradicted` snapshot status when discovery records a

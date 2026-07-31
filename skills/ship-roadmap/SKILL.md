@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 2.3.0
+version: 3.0.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -48,7 +48,8 @@ where a wrong call is expensive to undo.
 
 ```
 ✓ Exactly ONE stage advanced (or a terminal banner printed) and ONE line appended to the run log
-✓ Nothing was merged outside the --fullauto floors; nothing asked mid-run
+✓ Nothing was merged outside the active --fullauto wrapper; direct merge
+  commands remained blocked and no authorization survived the iteration
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -84,6 +85,10 @@ doc, and `.github/` templates. Then establish run context:
    subagent prompts reference it. Missing → stop and instruct:
    `npx skills add gtrabanco/agentic-workflow`. Without these files the loop
    silently degrades.
+   When this invocation carries `--fullauto`, also require executable
+   `.agentic-workflow/hooks/fullauto-merge.sh` plus the active platform guard.
+   Missing → stop and route to `init-workspace` upgrade; never fall back to a
+   direct forge merge command.
 3. **Run in progress?** `docs/features/SHIP_DECISIONS.md` exists — on any
    branch — or a `docs/ship-founding` PR is open → a run exists: `--continue`
    resumes it; a bare `/ship-roadmap` prints run status and the resume command
@@ -373,11 +378,11 @@ turns:
      the PR's head SHA in the run log, and **print the PR's full URL next to
      the verdict in the iteration output** (the human merging works from the
      chat, not from a CI monitor). MERGE-READY → default mode logs and
-     moves on; `--fullauto` checks the floors **including audit-pr's pre-merge
-     cleanliness checklist (nothing uncommitted/unpushed/unpulled — pending
-     work means: push, wait for CI, re-audit; never merge on a stale
-     verdict)**, **records the merge intent in the run log first**, then
-     merges. BLOCKED → in-scope blockers go to a
+     moves on; `--fullauto` treats `audit-pr` as verdict/comment-only, checks
+     the floors, **records the merge intent in the run log first**, then calls
+     `.agentic-workflow/hooks/fullauto-merge.sh` with the PR number, audited
+     head, default base, and run id. Never invoke `gh pr merge` directly.
+     BLOCKED → in-scope blockers go to a
      sonnet subagent next iteration (max 2 audit cycles, then the feature is
      parked and the loop moves on); the fixer's cycle ends committed AND
      pushed (step 5), so the re-audit judges the real branch.
@@ -444,6 +449,38 @@ flag on the running command **and** `merge: fullauto` in the committed decision
 record — a stray flag or a stale record alone can never enable it. The **first
 feature PR of a greenfield run is always human-merged** (calibration: inspect
 one complete artifact — code, tests, docs, review trail — before delegating).
+
+This AUDIT stage is the **sole automated merge authority**. Authorization lasts
+for this invocation and this merge attempt only:
+
+1. `audit-pr` returns a fresh SHA-bound MERGE-READY verdict and never merges.
+2. Record merge intent in `.ship-run.log` before execution.
+3. Invoke exactly:
+
+   ```sh
+   AGENTIC_WORKFLOW_SHIP_ROADMAP_FULLAUTO=1 \
+     .agentic-workflow/hooks/fullauto-merge.sh \
+     --pr <number> --head <audited-sha> --base <default> --run-id <run-id>
+   ```
+
+   For a no-CI project, add
+   `AGENTIC_WORKFLOW_LOCAL_GATE_SHA=<audited-sha>` only after the fresh local
+   gate ran on that exact SHA. These variables prefix this command only; never
+   export them or configure an agent-wide allow rule.
+4. The wrapper re-checks the committed decision, clean/synchronized branch,
+   local and remote head, base, mergeability, and CI/local-gate evidence. It
+   creates a namespaced marker under the git common directory only after those
+   checks, installs cleanup with `trap`, and removes the marker on success,
+   failure, signal, or already-merged recovery.
+5. After the forge reports MERGED, the wrapper posts one idempotent comment
+   marked `<!-- agentic-workflow:automerge head=<sha> -->`, containing the run,
+   audited head, and merge commit. That PR comment is the durable automerge log;
+   no repository log grows.
+
+Direct `gh pr merge`, `glab mr merge`, `git merge`, and forge-API merge calls
+remain blocked by the command guard at all times. There is no `.automerge` file
+and no persistent exception for a later manual `audit-pr` or shell session.
+
 Non-negotiable floors, evaluated fresh immediately before every merge —
 **fail-closed: a floor that cannot be evaluated counts as breached**:
 
@@ -523,6 +560,9 @@ Closing line, verbatim policy: **this report recommends; the human decides.**
   subagents already follow this; the conductor must too for the sweep.)
 - **Never commit red; never merge red.** The gate and the floors are
   unconditional — no flag, mode, or interview answer disables them.
+- **Never request or retain a direct-merge permission.** Fullauto calls only
+  the repository wrapper with command-scoped variables; a missing wrapper or
+  active guard blocks the run and routes to `init-workspace` upgrade.
 - **No stage ends dirty or unpushed.** The clean close-out check (Mode B
   step 5) is part of every stage: tracked modifications — docs included — are
   committed with the stage, and a PR-backed branch is pushed before the
@@ -603,7 +643,8 @@ leans on them harder than any other — here is the manual equivalent of each:
   pre-fed), `design-feature` + `plan-feature-scaffold` (JIT design for a
   mid-run `idea`/`defined` unit, derive-only from the locked founding
   decisions), `plan-feature` (JIT planning, scoped path), `review-change`
-  (checkpoints), `audit-pr` (merge gate), `audit-docs` (docs-only founding /
+  (checkpoints), `audit-pr` (verdict/comment merge gate; never the merge
+  executor), `audit-docs` (docs-only founding /
   report PR coherence).
 - **Spawns as sonnet subagents:** `execute-phase` discipline — phases,
   XS/S single passes, fix-now folding, audit-blocker fixes.

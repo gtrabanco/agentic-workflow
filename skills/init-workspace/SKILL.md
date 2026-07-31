@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.6.0
+version: 2.7.0
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -85,6 +85,13 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
      **worktrees** (parallel units in separate checkouts; only if the user's
      agent/tooling manages them). Recorded in the Workflow conventions
      **Git workflow** line; every skill that creates branches honors it.
+   - **Agent safety hooks** — detect where the agent actually runs and which
+     repository adapters apply: Claude Code, Cursor, Copilot, OpenCode, or none.
+     Recommend the shared command guard for every detected platform; explain
+     that shell adapters require `jq`, OpenCode uses the bundled Bun plugin,
+     and hooks are defense-in-depth behind forge rulesets. Ask one explicit
+     yes/no per adapter before activating it. Remote/VPS execution is not a
+     reason to skip: commit the repository adapter so the remote clone loads it.
    - **Docs language.**
    - **Architecture** — pattern, layers/modules, and dependency-direction rules
      (stay architecture-agnostic; record the user's choice in `ARCHITECTURE.md`).
@@ -131,8 +138,10 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
 4. **Write the adapted scaffold.** Fill the `CLAUDE.md` placeholders (commands,
    the documentation map rows, architecture); keep `AGENTS.md`, the
    `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and the
-   `.github/` templates; prune unused doc folders and map rows. Leave honest
-   placeholders where the user hasn't decided — never invent values.
+   `.github/` templates; keep `.agentic-workflow/hooks/` and activate only the
+   adapters explicitly accepted in the interview; prune unused doc folders and
+   map rows. Leave honest placeholders where the user hasn't decided — never
+   invent values.
 5. **Seed Normalized Repository State.** Copy
    `template/docs/workflow/REPOSITORY_STATE.md` to
    `docs/workflow/REPOSITORY_STATE.md` when it is absent. If the target already
@@ -145,10 +154,17 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    optional: an absent document means no project invariants are declared, not
    that the scaffold failed. If retained, add its documentation-map row and
    name the project's explicit architectural-decision authority.
-7. **Offer the workflow skills.** Propose installing them:
+7. **Install accepted agent safety hooks.** Keep the canonical policy and
+   fullauto wrapper at `.agentic-workflow/hooks/`. For each accepted platform,
+   activate only its repository config/example as documented in the hook pack.
+   Run `bash .agentic-workflow/hooks/tests/test-command-guard.sh`; missing `jq`,
+   an unknown payload, or an existing customized hook file becomes a residual,
+   never a silent overwrite. Direct merges remain blocked; do not create a
+   `.automerge` exception.
+8. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-8. **State that reviews are self-contained; offer optional extras.** The
+9. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -158,7 +174,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-9. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+10. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -171,7 +187,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-10. **Report.** List what was created, which placeholders still need human input,
+11. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
    skipped, with reason), and the next step: `discover-repository-state` →
    `design-feature` → `plan-feature` → `execute-phase`.
@@ -197,7 +213,7 @@ lacks**. Seven ordered steps:
    (`docs/CAPABILITIES.md` + its documentation-map row), the optional
    architectural-invariants document
    (`docs/architecture/ARCHITECTURAL_INVARIANTS.md` + its documentation-map
-   row), or the Normalized
+   row), the portable command-guard pack and detected platform adapter, or the Normalized
    Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). This is the
    diff-against-current-template contract; it is the only source of *what's
    new*. (A missing `docs/CAPABILITIES.md` is proposed with the same
@@ -220,7 +236,9 @@ lacks**. Seven ordered steps:
    blocks with the confirmed values. **Never rewrite a block the project has
    already tailored, and never delete anything** — a tailored block the
    template also changed is left untouched and listed as a residual, not
-   silently updated. Leave honest placeholders where the user skipped.
+   silently updated. For hooks, add the canonical pack when absent and activate
+   a platform adapter only after an explicit yes; never replace an existing
+   platform hook config. Leave honest placeholders where the user skipped.
 6. **Seed missing urgency labels, additively (feature 15).** Independent of
    the `CLAUDE.md`/`docs/` block diff above (this is forge-repo state, not a
    doc block): check whether the target repo already has the `urgent` and
@@ -305,9 +323,10 @@ enables:
 - **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
   the interview and adaptation are judgment work — run them on your
   **strongest** model.
-- **No Claude Code hooks** — the template's `.claude/` auto-logging hooks are
-  Claude Code-specific; on other agents skip that offer and note that
-  `log-session` is the manual alternative.
+- **No Claude Code hooks** — choose the Cursor, Copilot, or OpenCode adapter
+  when available. If the agent exposes no pre-tool hook, report the safety hook
+  as unavailable and keep forge rulesets as the hard boundary; `log-session`
+  remains the manual logging alternative.
 
 ## Relationship to other skills
 
@@ -323,8 +342,9 @@ enables:
 - A tailored `CLAUDE.md` + `docs/` scaffold + `.github/` templates exist in the
   target, unused folders pruned, residual placeholders flagged, the platform's
   companion review skills are recorded (and offered), and the `urgent`/
-  `fix-next` labels are seeded (scaffold) or additively reconciled (upgrade) —
-  or explicitly listed as a residual when the forge was unavailable.
+  `fix-next` labels are seeded (scaffold) or additively reconciled (upgrade),
+  and every accepted safety adapter is active and fixture-tested — or explicitly
+  listed as a residual when its hook API/dependency was unavailable.
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
