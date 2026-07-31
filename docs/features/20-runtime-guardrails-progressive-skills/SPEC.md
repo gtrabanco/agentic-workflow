@@ -271,6 +271,12 @@ tool-capable model.
   Layer: docs. Done-when: `node scripts/check-skill-context.mjs` → exit 0.
 - P5 — Hardening & PR
   Layer: hardening. Done-when: `npx skills add . --list` → exit 0.
+- P6 — Fullauto authority boundary
+  Layer: config/infra. Restore a forge-verifiable, PR/head/audit-bound fullauto authority; reject caller-controlled authorization, decision, and base inputs; and close interpreter-wrapped merge bypasses. Done-when: expanded negative fullauto and command-guard fixtures prove every rejected path prevents the fake merge call.
+- P7 — Adapter and context-guard closure
+  Layer: config/infra. Correct the real OpenCode worktree input shape, fail closed on nested references, and cover the remaining checker CLI branches. Done-when: OpenCode and context-checker fixtures reproduce each former failure and pass with the fix.
+- P8 — Hardening & PR
+  Layer: hardening. Re-establish a clean, synchronized review tree; complete the approved commit-history repair; then re-run the full verification, adversarial review, and PR merge gate. Done-when: `/review-change --adversarial 3` and `/audit-pr` both pass on the pushed branch.
 
 ### Deploy & rollback
 
