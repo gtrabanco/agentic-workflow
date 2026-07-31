@@ -8,6 +8,11 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = path.join(repoRoot, "docs/workflow/SKILL_CONTEXT_BUDGETS.json");
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+const skillsRoot = path.join(repoRoot, "skills");
+const discovered = fs.readdirSync(skillsRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skillsRoot, entry.name, "SKILL.md")))
+  .map((entry) => entry.name)
+  .sort();
 const args = process.argv.slice(2);
 const requested = [];
 let manifestOnly = false;
@@ -29,16 +34,19 @@ if (manifest.schemaVersion !== 1 || manifest.referenceDepth !== 1) {
   throw new Error("Unsupported context-budget manifest");
 }
 
-const budgeted = Object.keys(manifest.skills);
+const budgeted = discovered;
 const selected = requested.length > 0 ? [...new Set(requested)] : budgeted;
 for (const skill of selected) {
-  if (!manifest.skills[skill]) throw new Error(`Skill is not budgeted: ${skill}`);
+  if (!discovered.includes(skill)) throw new Error(`Skill entrypoint was not discovered: ${skill}`);
   const skillFile = path.join(repoRoot, "skills", skill, "SKILL.md");
   if (!fs.existsSync(skillFile)) throw new Error(`Missing skill entrypoint: ${skillFile}`);
 }
+for (const skill of Object.keys(manifest.skills)) {
+  if (!discovered.includes(skill)) throw new Error(`Budget override has no skill entrypoint: ${skill}`);
+}
 
 if (manifestOnly) {
-  console.log(`PASS context manifest: ${budgeted.length} budgeted skills; reference depth 1`);
+  console.log(`PASS context manifest: ${budgeted.length} discovered skills; ${Object.keys(manifest.skills).length} explicit overrides; reference depth 1`);
   process.exit(0);
 }
 
@@ -48,7 +56,7 @@ const failures = [];
 const rows = [];
 
 for (const skill of selected) {
-  const budget = { ...manifest.defaults, ...manifest.skills[skill] };
+  const budget = { ...manifest.defaults, ...(manifest.skills[skill] ?? {}) };
   const skillDir = path.join(repoRoot, "skills", skill);
   const skillFile = path.join(skillDir, "SKILL.md");
   const body = fs.readFileSync(skillFile, "utf8");

@@ -18,16 +18,19 @@ logging, and workflow status.
 ## Context budget and progressive loading
 
 Skill metadata is always advertised by the agent, but a `SKILL.md` body enters
-context only after activation. The eight largest entrypoints therefore keep
-universal gates and an explicit route in `SKILL.md`, then load detailed
-`references/` only when that route needs them. References are one hop deep and
-must not link to more references, so small models do not have to discover a
-hidden instruction chain.
+context only after activation. The context checker discovers every
+`skills/*/SKILL.md` entrypoint and applies the default budget, with explicit
+per-skill overrides for deliberate exceptions such as the broad, explicit-only
+`product-audit` sweep. Segmented entrypoints keep universal gates and an
+explicit route in `SKILL.md`, then load detailed `references/` only when that
+route needs them. References are one hop deep and must not link to more
+references, so small models do not have to discover a hidden instruction chain.
 
 The committed budget uses `ceil(UTF-8 bytes / 4)` as a deterministic estimate,
-not as provider billing tokens. Main entrypoints are capped at 4,200 estimated
-tokens and 360 lines; `execute-phase`, the hottest path, is capped at 3,500 and
-320. Its direct activation estimate fell from about 13,010 to about 3,000 while
+not as provider billing tokens. The default main-entrypoint cap is 4,200
+estimated tokens and 360 lines; explicit overrides are committed for deliberate
+exceptions, and `execute-phase`, the hottest path, is capped at 3,500 and 320.
+Its direct activation estimate fell from about 13,010 to about 3,000 while
 preserving the complete contracts behind mandatory routes. Validate the catalog
 with:
 

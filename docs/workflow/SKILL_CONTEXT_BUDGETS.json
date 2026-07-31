@@ -10,13 +10,41 @@
     "referenceLinesMax": 280
   },
   "skills": {
+    "audit-docs": {
+      "descriptionEstimateMax": 240
+    },
     "audit-pr": {},
+    "bump-skill": {
+      "descriptionEstimateMax": 220
+    },
     "design-feature": {},
     "execute-phase": {
       "mainEstimateMax": 3500,
       "mainLinesMax": 320
     },
+    "fold-findings": {
+      "descriptionEstimateMax": 190
+    },
+    "generate-docs": {
+      "descriptionEstimateMax": 230
+    },
     "init-workspace": {},
+    "log-session": {
+      "descriptionEstimateMax": 230
+    },
+    "orchestration-envelope": {
+      "descriptionEstimateMax": 170
+    },
+    "plan-feature": {
+      "descriptionEstimateMax": 300
+    },
+    "plan-fix": {
+      "descriptionEstimateMax": 240
+    },
+    "product-audit": {
+      "mainEstimateMax": 4600,
+      "descriptionEstimateMax": 380
+    },
     "review-change": {},
     "ship-roadmap": {},
     "triage-issue": {},
