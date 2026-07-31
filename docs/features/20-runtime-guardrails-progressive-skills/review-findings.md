@@ -17,12 +17,12 @@
 | F15 | skills/ship-roadmap/SKILL.md:109 | progressive-routing | high | fix-now | fold into phase | yes |
 | F16 | skills/ship-roadmap/SKILL.md:80 | API + backward-compatibility | high | fix-now | fold into phase | yes |
 | F17 | skills/ship-roadmap/references/AUDIT_AND_MERGE.md:27 | API | high | fix-now | fold into phase | yes |
-| F18 | skills/workflow-status/references/SENSOR_SIGNALS.md:32 | progressive-routing | high | fix-now | replan-in-unit (propose P7) | no |
+| F18 | skills/workflow-status/references/SENSOR_SIGNALS.md:32 | progressive-routing | high | fix-now | replan-in-unit (propose P7) | yes ↳ folded by 942ab62 |
 | F19 | scripts/check-skill-context.mjs:32 | debt + perf | high | fix-now | fold into phase | yes |
 | F20 | template/.agentic-workflow/hooks/fullauto-merge.sh:64 | debt + correctness | med | fix-now | fold into phase | yes |
 | F21 | .github/hooks/agentic-workflow.json.example:1 | platform | high | fix-now | fold into phase | no |
   ↳ triaged 2026-07-31: wontfix — the ledger path is obsolete; the existing template file is `template/.github/hooks/agentic-workflow.json.example`.
-| F22 | template/.agentic-workflow/hooks/adapters/copilot-guard.sh:14 | security + platform | high | fix-now | replan-in-unit (propose P6) | no |
+| F22 | template/.agentic-workflow/hooks/adapters/copilot-guard.sh:14 | security + platform | high | fix-now | replan-in-unit (propose P6) | yes ↳ folded by bf59ea3 |
 | F23 | template/.agentic-workflow/hooks/fullauto-merge.sh:100 | security + policy | high | fix-now | fold into phase | yes |
 | F24 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:20 | security | high | fix-now | fold into phase | yes |
 | F25 | template/.agentic-workflow/hooks/guard-command.sh:48 | correctness | high | fix-now | fold into phase | yes |
@@ -38,11 +38,11 @@
 | F35 | scripts/check-skill-context.mjs:20 | tests | med | fix-now | fold into phase | yes |
 | F36 | scripts/check-skill-context.mjs:40 | perf | low | fix-now | fold into phase | yes |
 | F37 | template/.agentic-workflow/hooks/fullauto-merge.sh:48 | perf | low | fix-now | fold into phase | yes |
-| F38 | skills/audit-docs/SKILL.md:1 | workflow | high | fix-now | clean and synchronize tree before rerun | no |
-| F39 | git-log:8c4eec6 | workflow | med | fix-now | reword scoped commit and force-with-lease | no |
-| F40 | docs/features/20-runtime-guardrails-progressive-skills/review-findings.md:9 | workflow + spec-drift | critical | fix-now | replan-in-unit (propose P6/P7) | no |
+| F38 | skills/audit-docs/SKILL.md:1 | workflow | high | fix-now | clean and synchronize tree before rerun | yes ↳ folded by 7e16101 |
+| F39 | git-log:8c4eec6 | workflow | med | fix-now | reword scoped commit and force-with-lease | yes ↳ folded by 39dc7a9 |
+| F40 | docs/features/20-runtime-guardrails-progressive-skills/review-findings.md:9 | workflow + spec-drift | critical | fix-now | replan-in-unit (propose P6/P7) | yes ↳ folded by d9299c6 replan + this adversarial review |
 | F41 | template/.agentic-workflow/hooks/fullauto-merge.sh:24 | security | high | fix-now | fold into phase | yes |
-| F42 | template/.opencode/plugins/agentic-workflow-guard.ts.example:13 | platform + security | high | fix-now | replan-in-unit (propose P6) | no |
-| F43 | scripts/check-skill-context.mjs:82 | correctness | high | fix-now | replan-in-unit (propose P7) | no |
-| F44 | scripts/check-skill-context.test.mjs:83 | tests | low | fix-now | replan-in-unit (propose P7) | no |
+| F42 | template/.opencode/plugins/agentic-workflow-guard.ts.example:13 | platform + security | high | fix-now | replan-in-unit (propose P6) | yes ↳ folded by 942ab62 |
+| F43 | scripts/check-skill-context.mjs:82 | correctness | high | fix-now | replan-in-unit (propose P7) | yes ↳ folded by 942ab62 |
+| F44 | scripts/check-skill-context.test.mjs:83 | tests | low | fix-now | replan-in-unit (propose P7) | yes ↳ folded by 942ab62 |
 | F45 | template/.agentic-workflow/hooks/fullauto-merge.sh:7 | correctness | med | fix-now | fold into phase | yes |
