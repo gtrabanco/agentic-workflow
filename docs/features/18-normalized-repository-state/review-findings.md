@@ -22,3 +22,4 @@
 | F20 | docs/workflow/GOLDEN_FIXTURE.md:188-189; docs/workflow/GOLDEN_FIXTURE.es.md:200-201 | verify | med | fix-now | fold-findings — rerun or update fixture evidence for final plan/execute versions 3.2.1/2.11.1 | yes |
 | F21 | CHANGELOG.md:101 | workflow | med | fix-now | fold-findings — add the fourth separator cell so the new four-column table renders correctly | yes |
 | F22 | CHANGELOG.es.md:102 | workflow | med | fix-now | fold-findings — add the fourth separator cell so the new four-column table renders correctly | yes |
+| F23 | docs/features/18-normalized-repository-state/TASKS.md:15 | verify | med | fix-now | fold into P5 — align the P2 check with the discovery skill's actual guardrail text | yes |
