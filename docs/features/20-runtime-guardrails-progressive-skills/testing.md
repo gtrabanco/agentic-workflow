@@ -34,3 +34,4 @@
 - P5: all JSON manifests/examples parsed; grouped skill directories exist; plugin/model-routing order, bilingual version/changelog parity, and user-skill entrypoint contracts passed.
 - P5: `node scripts/check-skill-context.mjs` passed 8 budgeted skills and 48 reachable, semantically headed, one-hop references with no nested reference links.
 - P5: `npx skills add . --list` discovered 30 installable skills and exited 0.
+- P5: PR [#116](https://github.com/gtrabanco/agentic-workflow/pull/116) opened against `main`; no merge command was run.
