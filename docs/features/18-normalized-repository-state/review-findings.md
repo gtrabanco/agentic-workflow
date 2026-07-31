@@ -19,4 +19,4 @@
 | F17 | docs/workflow/model-routing.yml:1-97; README.md:222-240; README.es.md:230-248 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to Claude routing and model tables | yes |
 | F18 | docs/workflow/SKILLS.md:109-132; docs/workflow/SKILLS.es.md:112-136 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to the invocation reference | yes |
 | F19 | docs/workflow/REPLICATE.md:30-46; docs/workflow/REPLICATE.es.md:32-50 | workflow | med | fix-now | fold-findings — refresh the replication guide's stale skill counts and core-set list | yes |
-| F20 | docs/workflow/GOLDEN_FIXTURE.md:188; docs/workflow/GOLDEN_FIXTURE.es.md:200 | verify | med | fix-now | fold-findings — rerun or update fixture evidence for final plan/execute versions 3.2.1/2.11.1 | no |
+| F20 | docs/workflow/GOLDEN_FIXTURE.md:188-189; docs/workflow/GOLDEN_FIXTURE.es.md:200-201 | verify | med | fix-now | fold-findings — rerun or update fixture evidence for final plan/execute versions 3.2.1/2.11.1 | yes |
