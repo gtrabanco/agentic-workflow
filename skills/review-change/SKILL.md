@@ -119,7 +119,7 @@ read another `references/` path.
 
 | Invocation route | LOAD in this order | SKIP |
 |---|---|---|
-| Default review | [review process](references/REVIEW_PROCESS.md) → [persist and decide](references/PERSIST_AND_DECIDE.md) → [output and guardrails](references/OUTPUT_AND_GUARDRAILS.md) | adversarial setup, adversarial merge, portability |
+| Default review | [review process](references/REVIEW_PROCESS.md) → [adversarial setup](references/ADVERSARIAL_SETUP.md) → [persist and decide](references/PERSIST_AND_DECIDE.md) → [output and guardrails](references/OUTPUT_AND_GUARDRAILS.md) | adversarial merge, portability |
 | `--adversarial N` | review process → [adversarial setup](references/ADVERSARIAL_SETUP.md) before reviewers → [adversarial merge](references/ADVERSARIAL_MERGE.md) before synthesis → persist/decide → output/guardrails | portability |
 | `--merge` | review process → adversarial setup → adversarial merge plus the supplied reviewer tables → persist/decide → output/guardrails | portability |
 
