@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.3.0
+version: 2.5.2
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -31,7 +31,7 @@ raw placeholders.
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The adapted scaffold is written (or the merge/abort decision was asked) and remaining placeholders are listed
+✓ The adapted scaffold and repository-state ledger are written (or the merge/abort decision was asked) and remaining placeholders are listed
 ✓ Nothing was installed or overwritten without an explicit yes
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
@@ -133,10 +133,16 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    `features/_TEMPLATE` + `ROADMAP`, the `fix/_TEMPLATE` + `README`, and the
    `.github/` templates; prune unused doc folders and map rows. Leave honest
    placeholders where the user hasn't decided — never invent values.
-5. **Offer the workflow skills.** Propose installing them:
+5. **Seed Normalized Repository State.** Copy
+   `template/docs/workflow/REPOSITORY_STATE.md` to
+   `docs/workflow/REPOSITORY_STATE.md` when it is absent. If the target already
+   has one, leave it unchanged and report that discovery should refresh it.
+   Explain that discovery freezes evidence before planning and only
+   `resolve-repository-state` updates frozen facts.
+6. **Offer the workflow skills.** Propose installing them:
    `npx skills add gtrabanco/agentic-workflow` (note the SSH/local-path variant if
    the source is private). Don't install without a yes.
-6. **State that reviews are self-contained; offer optional extras.** The
+7. **State that reviews are self-contained; offer optional extras.** The
    workflow ships its **own internal review pack** (`review-code`,
    `review-security`, `review-verify`, `review-debt`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — it installs
@@ -146,7 +152,7 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    under a short "Optional review extras" note so `review-change` and
    `product-audit` run them **in addition** — never as a dependency. Don't
    install anything without a yes.
-7. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
+8. **Seed the urgency labels (feature 15, injection-safe urgency).** Create the
    two capability-gated GitHub labels `triage-issue` owns and applies
    (`skills/triage-issue/SKILL.md` is the sole owner of the name/color
    vocabulary — this step only seeds it, never redefines it):
@@ -159,9 +165,10 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    forge is unavailable or the user declines forge setup, skip this step and
    list the two labels as a residual for the user to create manually later
    (never fail the whole scaffold on it).
-8. **Report.** List what was created, which placeholders still need human input,
+9. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
-   skipped, with reason), and the next step: `plan-feature` → `execute-phase`.
+   skipped, with reason), and the next step: `discover-repository-state` →
+   `design-feature` → `plan-feature` → `execute-phase`.
 
 ## Upgrade mode
 
@@ -181,11 +188,13 @@ lacks**. Seven ordered steps:
    project's substrate lacks, or still holds as a raw, unfilled placeholder —
    e.g. a `Docs site` block, a `Performance commands` block, a `Git workflow`
    line, the five-state roadmap `Status legend`, the capability inventory
-   (`docs/CAPABILITIES.md` + its documentation-map row). This is the
+   (`docs/CAPABILITIES.md` + its documentation-map row), or the Normalized
+   Repository State ledger (`docs/workflow/REPOSITORY_STATE.md`). This is the
    diff-against-current-template contract; it is the only source of *what's
    new*. (A missing `docs/CAPABILITIES.md` is proposed with the same
    discovery-seeded defaults bootstrap's interview uses — never as the raw
-   template.)
+   template. A missing repository-state ledger is proposed from the template
+   without overwriting any existing ledger.)
 3. **Read `docs/workflow/MIGRATION.md`.** For each missing block, pull its
    dated migration note so the proposal explains *why* the block exists and
    *what* it migrates. If `MIGRATION.md` is absent, proceed on the template
@@ -197,7 +206,8 @@ lacks**. Seven ordered steps:
    and the `MIGRATION.md` rationale when available. The user accepts, edits,
    or skips each block. **Never re-ask what the project already answered** —
    a block that's already filled is skipped, not re-interviewed.
-5. **Write additively.** Insert accepted blocks; fill raw, still-placeholder
+5. **Write additively.** Insert accepted blocks, including a missing
+   `docs/workflow/REPOSITORY_STATE.md`; fill raw, still-placeholder
    blocks with the confirmed values. **Never rewrite a block the project has
    already tailored, and never delete anything** — a tailored block the
    template also changed is left untouched and listed as a residual, not
@@ -206,7 +216,7 @@ lacks**. Seven ordered steps:
    the `CLAUDE.md`/`docs/` block diff above (this is forge-repo state, not a
    doc block): check whether the target repo already has the `urgent` and
    `fix-next` labels (`gh label list`); create whichever is missing with the
-   same `gh label create` calls bootstrap mode uses (see Process step 7) —
+   same `gh label create` calls bootstrap mode uses (see Process step 8) —
    never touch a label that already exists (additive-only, same never-clobber
    rule as the doc blocks; a pre-existing `urgent`/`fix-next` label the
    project recolored or redescribed is left exactly as-is).
@@ -260,6 +270,11 @@ lacks**. Seven ordered steps:
 - Honor the project's **Workflow conventions** once present; on an existing repo,
   don't work on its default branch and never commit/push unless asked.
 
+## Normalized Repository State
+
+Seed `docs/workflow/REPOSITORY_STATE.md` from the template. Explain that
+discovery freezes evidence before planning and only the resolver updates facts.
+
 ## Portability (agents other than Claude Code)
 
 The workflow is the contract; Claude Code features are conveniences. On an
@@ -282,7 +297,7 @@ enables:
   adapts. Use that when you want the raw scaffold and will fill it yourself.
 - `docs/workflow/PORTABLE_PROMPT.md` — regenerates the **skills** adapted to a
   project (behavior). This skill adapts the **substrate** (docs). Complementary.
-- After init: `plan-feature` →
+- After init: `discover-repository-state` → `design-feature` → `plan-feature` →
   `execute-phase`; run `audit-docs` to confirm the scaffold is coherent.
 
 ## Done when
@@ -295,7 +310,8 @@ enables:
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
-  → Next: /plan-feature — plan the first feature
-    · raw idea → /plan-feature "<idea>"   · next roadmap entry → /plan-feature --next
+  → Next: /discover-repository-state — freeze repository evidence before planning
+    · raw idea → /design-feature "<idea>" after discovery
+    · next roadmap entry → /plan-feature --next after discovery
     · confirm the scaffold is coherent → /audit-docs
   ```

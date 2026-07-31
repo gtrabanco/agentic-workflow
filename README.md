@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 29 skills (15 user-facing + 14 internal) — the installable source
+skills/                  the 31 source skills (17 user-facing + 14 internal; 30 installable)
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -70,12 +70,12 @@ templates). Scaffold a new project's way of working with
 
 ## The skills
 
-**15 user-facing skills** (one menu entry each) + **14 internal** ones composed
+**17 user-facing skills** (one menu entry each) + **14 internal** ones composed
 for you: the `plan-feature` router's two planning steps, the `review-change`
 engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`), and the repo-only
-`bump-skill` maintenance helper — so **no external review skill is ever
+`bump-skill` maintenance helper (excluded from installation) — so **no external review skill is ever
 required**, on any agent, with any model. One disciplined path: **design →
 plan → execute → review → audit → merge.**
 
@@ -88,6 +88,8 @@ plan → execute → review → audit → merge.**
 | Skill            | What it does                                                                                                                                                                                          |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Fetches the `template/` scaffold and **adapts it to your project** by interview (gate, doc map, architecture); seeds the **capability inventory** (`docs/CAPABILITIES.md` — roles + cross-cutting subsystems, proposed from what the code actually shows); suggests the companion review skills your platform needs; offers to install the skills; seeds the injection-safe `urgent`/`fix-next` labels. On a repo that already has the scaffold, detects it and switches to **upgrade mode** — diffs against the current template and proposes only the blocks you're missing (plus any missing urgency labels), never clobbering a tailored one |
+| `discover-repository-state` | Creates and freezes an evidence-backed repository-state ledger before planning or implementation; facts, decisions, documentation, planned work, and inference remain distinct |
+| `resolve-repository-state` | Sole writer for an explicit repository-state contradiction; verifies the competing evidence and publishes the next frozen snapshot |
 
 ### Design
 
@@ -220,6 +222,8 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | Skill            | Model tier | Effort | Why                                                                                                                                                                                      |
 | ---------------- | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Opus       | high   | interview-driven project bootstrap + adaptation                                                                                                                                          |
+| `discover-repository-state` | Sonnet     | medium | evidence collection and frozen repository-state snapshot                                                                                                                                 |
+| `resolve-repository-state` | Opus       | high   | contradiction resolution and repository-state judgment                                                                                                                                  |
 | `design-feature` | Opus       | high   | product-definition judgement: raw-idea interview + capability closure, composed by callers only at ≥ this tier                                                                          |
 | `plan-feature`   | Opus       | high   | router + engineering planning: its internal scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                           |
 | `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |

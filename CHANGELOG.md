@@ -96,6 +96,21 @@ How pinning actually works, verified against the `skills` CLI:
 
 ### User-facing
 
+#### `discover-repository-state`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.1.2 | 2026-07-31 | patch | Routes a contradicted snapshot to `resolve-repository-state` before recommending planning. |
+| 1.1.1 | 2026-07-31 | patch | Removes the undeclared `--refresh` argument and clarifies that discovery preserves each ledger category separately. |
+| 1.1.0 | 2026-07-31 | minor | Preserves `contradicted` snapshot status when discovery records a conflict instead of freezing unresolved contradictions. |
+| 1.0.0 | 2026-07-30 | — | New skill: discovers evidence-backed repository facts and freezes the Normalized Repository State without making recommendations. |
+
+#### `resolve-repository-state`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.1.1 | 2026-07-31 | patch | Routes `needs-input` outcomes to the missing evidence or decision instead of recommending planning. |
+| 1.1.0 | 2026-07-31 | minor | Stops without freezing when a contradiction needs human input, keeping the snapshot contradicted until evidence or a decision is supplied. |
+| 1.0.0 | 2026-07-30 | — | New skill: sole writer for explicit repository-state contradiction resolution and next frozen snapshots. |
+
 #### `generate-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
@@ -143,6 +158,9 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.2 | 2026-07-31 | patch | Moves the NRS guidance below the Branch rules so branch formats and workflow constraints remain scoped to the Branch section. |
+| 2.11.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before implementation and routes missing or non-frozen state to discovery or resolution. |
+| 2.11.0 | 2026-07-31 | minor | Consumes frozen Normalized Repository State facts before implementation, inspects only absent facts directly, and routes contradictory evidence to `resolve-repository-state`. |
 | 2.10.0 | 2026-07-30 | minor | Issue #111: adds one deterministic `Autofix` / `Opportunistic Fix` / `Create Issue` policy, explicit per-row pass/fail evaluation and numerical-boundary check, and a `decisions.md` execution log; configuration remains future work pending a machine-checkable schema. |
 | 2.9.0 | 2026-07-30 | minor | Issue #111 initial policy draft; superseded before release by 2.10.0's single-source deterministic contract. |
 | 2.8.0 | 2026-07-19 | minor | Phase completion gate's docs box now includes `docs/CAPABILITIES.md`: a phase that introduces a new cross-cutting subsystem, role, or permission appends its row to the capability inventory (additive, never rewriting existing rows; explicitly n/a when the project has no inventory file). |
@@ -185,6 +203,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.1 | 2026-07-31 | patch | Moves the NRS guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.3.0 | 2026-07-19 | minor | Implicit-requirements closure: capability closure becomes three fixed checklists — entity closure (unchanged), new **integration closure** (one resolved row per subsystem in the project's capability inventory, `docs/CAPABILITIES.md` — none skipped; no inventory → derive one and offer to seed the file) and a **role matrix** (every inventory role explicitly allowed/denied per capability) — plus a new **expectation sweep** step and SPEC section (≥ 10 M/L / ≥ 5 XS/S domain expectations a human would assume implicitly, each forced to in-scope/out-of-scope/deferred). Three new Spec-lint product boxes, matching turn-contract boxes and guardrails; Step 0 reads the inventory. |
 | 2.2.0 | 2026-07-19 | minor | Small-model hardening of the interview: **one question per turn, never batched**; a fixed six-slot **vagueness rubric** (affected users/roles · error & edge states · data shape · boundaries & limits · out of scope · success criteria — each filled or explicit `n/a`); mandatory-question rule (a requirement with no verifiable acceptance criterion is automatically the next question); reframe-as-measurable technique; "decide later" answers land in the SPEC's new `### Deferred decisions` section; structural escalation (≥ 3 empty slots → `NEEDS_INPUT`, never guess). Stamping `designed` now requires the SPEC template's new **Spec-lint product boxes** (mechanical presence checks — results pasted, fail-closed). |
 | 2.1.0 | 2026-07-17 | minor | Upsert semantics section now cross-references `audit-pr`'s closure-integrity gate: a legacy SPEC's dated `design-debt` warning is the retrofit trigger, and re-running this skill fills only the missing closure rows via the same upsert-never-destroy path. Part of #78. |
@@ -195,6 +214,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.2.2 | 2026-07-31 | patch | Moves the NRS planning gate below the Guardrails bullets so the guardrails keep their intended section scope. |
+| 3.2.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before planning and routes missing or non-frozen state to discovery or resolution. |
 | 3.1.0 | 2026-07-12 | minor | Fix #51: the redirect gate's "`defined` or higher → proceed" branch is now status-specific — only `defined` proceeds to Routing; `planned` (SPEC + artifacts present) **STOPS** and hands off to `/execute-phase <NN> P1` instead of re-scaffolding; `in-progress` STOPS to resume the current phase; `done` STOPS as already-shipped. `--next` now targets the next **`defined`** entry (was `planned`, which is already scaffolded). Turn contract + Done when gained a box asserting a `defined→planned` write was re-read and confirmed before the turn ends. |
 | 3.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-09 | minor | Redirect gate now keys on the **roadmap status** (the five-state machine) as the primary signal — status `defined`+ proceeds, `idea`/absent STOPs — instead of the SPEC `## Design status` marker. The marker is retained as the **legacy-compat fallback** only, for a pre-migration roadmap row still reading a plain `planned` with no five-state history. See `docs/workflow/MIGRATION.md`. |
@@ -235,6 +256,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.7.1 | 2026-07-31 | patch | Moves the NRS review guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
+| 2.7.0 | 2026-07-31 | minor | Uses frozen NRS facts as read-only evidence context and proposes contradictions without redefining facts, accepting decisions, or treating documentation as implementation evidence. |
 | 2.6.0 | 2026-07-19 | minor | Small-model hardening: new **Isolation rule (default)** — `review-implementation` and every applicable pack pass run context-clean (subagent / headless / fresh conversation, same three tiers as `--adversarial`), receive only the scope + their own checklist + the docs their Step 0 names (≤ 10 full non-diff file reads per pass), and return ONLY their fixed table + PASS\|FAIL; the orchestrator holds tables, never sources; in-turn composition remains as the documented inline fallback. The SPEC drift check is now **structural**: a per-criterion coverage table (criterion → evidence → met/unmet/untouched) plus diff-hunk-to-criterion mapping — findings for unmet claimed criteria and `none`-mapped hunks. |
 | 2.5.0 | 2026-07-19 | minor | Routing now states `review-implementation` 1.2.0's fix-now override checks (cheap fix / in-scope defect → always fix-now, never a postpone/known-issue/tradeoff escape) and adds the `replan-in-unit` route for a too-large in-scope fix-now (keeps its fix-now class + ledger row; user confirms new SPEC phase(s), then `execute-phase` on the same branch folds it); the `Decision: FAIL` `→ Next:` block gains a matching conditional sub-bullet. |
 | 2.4.1 | 2026-07-18 | patch | Fix #77: restated the two `execute-phase` cadence cross-references ("When to use" and "Relationship to other skills") from the retired every-2-phases interval to the new trigger-based cadence (layer boundary/accumulation/sensitivity); the adversarial "Cadence — once per unit" section and its `#77` boundary note are unchanged. |
@@ -271,6 +294,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.5.1 | 2026-07-31 | patch | Moves the NRS audit guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
+| 3.5.0 | 2026-07-31 | minor | Audits against frozen NRS facts read-only and reports conflicts as contradictions that only `resolve-repository-state` may resolve. |
 | 3.4.0 | 2026-07-19 | minor | Widened the **scope integrity (descope)** gate's detection to two paths: the existing slug/issue-number text match, plus a new path enumerating any issue **linked from an `## Amendments` row** in the governing SPEC regardless of its own title/body text — closes the coverage gap where a descoped issue with a generic title/no slug mention was invisible to the gate. `execute-phase`'s creation-time descope guard remains the primary control; this gate stays a backstop. Fixes #89. |
 | 3.3.0 | 2026-07-17 | minor | New **scope integrity (descope)** gate in the merge-readiness contract: lists issues born since branch divergence that reference the unit; each must have its acceptance criterion still met **or** a matching, user-approved, dated `## Amendments` entry (keyed off the same log `execute-phase`'s descope guard writes) — else BLOCKER; applies to feature and fix PRs alike, passes trivially when nothing was exported. Turn contract gained a matching box; closing `→ Next:` routes a scope-bleed blocker to the amendment-or-triage decision. Part of #66. |
 | 3.2.0 | 2026-07-17 | minor | New **closure integrity** gate in the merge-readiness contract: grep the governing feature SPEC for a `Capability closure` heading (any level); a present block with a blank row or an unmapped non-`n/a` row is a blocker, `n/a: <reason>` passes, absent block yields a dated `design-debt: closure absent, SPEC predates the rule` warning (never a blocker) — fix-governed PRs are always n/a. The warning doubles as the retrofit trigger, routed to `/design-feature <slug>` in the closing block. Turn contract gained a matching box. Part of #78. |
@@ -357,6 +382,9 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.2 | 2026-07-31 | patch | Moves the NRS bootstrap guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
+| 2.5.1 | 2026-07-31 | patch | Routes a newly bootstrapped project through repository-state discovery before design, planning, or execution. |
+| 2.5.0 | 2026-07-31 | minor | Adds an explicit bootstrap and upgrade process step to seed `docs/workflow/REPOSITORY_STATE.md` from the template without overwriting an existing ledger. |
 | 2.3.0 | 2026-07-19 | minor | Bootstrap interview gains a **capability inventory** step: seeds `docs/CAPABILITIES.md` from discovery (roles + `yes\|no\|partial` per template subsystem row proposed from the code; on an empty repo the fixed rows are walked with the user), pruning never-applicable rows — never left as the raw template. Upgrade mode's template diff names the inventory and proposes it with the same discovery-seeded defaults. |
 | 2.2.0 | 2026-07-11 | minor | Seeds the injection-safe `urgent`/`fix-next` labels (`gh label create`, create-if-missing) in bootstrap mode's Process (new step 7); upgrade mode adds whichever is missing additively (new step 6, never touching a label the project already customized). Never redefines the vocabulary — `triage-issue` stays the sole owner. Forge unavailable → skip and report as a residual, never fail the scaffold. |
 | 2.1.1 | 2026-07-10 | patch | `description:` now names upgrade mode and adds its trigger phrases ("upgrade my scaffold", "migrate my substrate to the current template", "bring my CLAUDE.md up to date with the template") — the loader metadata was silent about the mode 2.1.0 added, so it wasn't reliably discoverable by natural-language request. No behavior change. |
@@ -379,6 +407,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `orchestration-envelope` | 1.4.1 | 2026-07-31 | patch | Moves the NRS driver guidance below the relationship bullets so those bullets keep their intended section scope. |
 | `bump-skill` | 2.3.1 | 2026-07-18 | patch | Review-change follow-up on #74/PR #96: fixed the §2b lint's rule count references ("two" → "seven" `CLAUDE.md` authoring invariants, matching the Turn contract's "all 7 authoring rules") and anchored rule 7's discovery-exclusion check to the frontmatter block only (`awk`-extracted region between the first two `---` lines), so it can no longer be satisfied by the rule's own prose mentioning `metadata.internal: true` instead of an actual frontmatter key. |
 | `bump-skill` | 2.3.0 | 2026-07-18 | minor | Fix #74: `bump-skill` itself now carries `metadata.internal: true` — the `skills` CLI's own gate (verified in `dist/cli.mjs` 1.5.16/1.5.19) that keeps `npx skills add . --list` from discovering/offering repo-internal skills, unlike `user-invocable`/`plugin.json` which only govern the post-install menu. §2b lint gains a 7th rule enforcing the same for any future repo-internal skill (conjunction: `user-invocable: false` AND absent from `plugin.json`). |
 | | 2.2.0 | 2026-07-18 | minor | Fix #71/#72/#73: §2b lint gains two machine-surface checks — `plugin.json` parity (every `user-invocable: true` skill has a matching array entry) and machine-surface alphabetical order (`plugin.json` `skills` array + `model-routing.yml` keys) — the exact drift class that let `fold-findings` ship unregistered. |
@@ -391,7 +420,8 @@ How pinning actually works, verified against the `skills` CLI:
 | | 1.2.0 | 2026-07-02 | minor | Lint now also checks that user-facing skills carry the `## Portability` section; added its own Portability note. |
 | | 1.1.0 | 2026-06-27 | minor | Lint step flags edited skills missing a `→ Next:` block or using `S1`/"Step" phase labels (warns, never auto-fixes) |
 | | 1.0.0 | 2026-06-19 | — | New repo-maintenance skill. After editing a SKILL.md, bumps `version:`, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skills and model tables in README.md + README.es.md |
-| `orchestration-envelope` | 1.3.0 | 2026-07-19 | minor | Fix #79: `next.suggested[]` (optional `{command, trigger, source_skill}[]`) added to the canonical Schema snippet + a field rule — trigger-attributed suggestions `workflow-status` emits, single-sourced from each owning skill's own condition, advisory only (never replaces `next.recommended`/`next.tier`). Mirrored in `packages/agentic-workflow-schema` 2.1.0. |
+| `orchestration-envelope` | 1.4.0 | 2026-07-31 | minor | Drivers call `discover-repository-state` before planning, pass the frozen NRS ledger reference forward, and route contradictions to `resolve-repository-state` without silently replacing snapshots. |
+| | 1.3.0 | 2026-07-19 | minor | Fix #79: `next.suggested[]` (optional `{command, trigger, source_skill}[]`) added to the canonical Schema snippet + a field rule — trigger-attributed suggestions `workflow-status` emits, single-sourced from each owning skill's own condition, advisory only (never replaces `next.recommended`/`next.tier`). Mirrored in `packages/agentic-workflow-schema` 2.1.0. |
 | | 1.2.0 | 2026-07-13 | minor | Structured-outputs shortcut for drivers: when the provider/model supports strict structured outputs (`response_format: json_schema` + `strict`), the envelope-only turn (the repair prompt, or a dedicated final "emit the envelope" turn) may pass the npm package's `envelope.schema.json` as the response format so the reply validates by construction. The repair loop stays as the fallback for models without the feature; working turns never get a response format (it would force the whole output to JSON and suppress prose/tool use). Schema unchanged — no package release needed. |
 | | 1.1.1 | 2026-07-10 | patch | Fix #33: the frontmatter description and opening section still stated the pre-feature-10 contract ("every user-facing skill prints the envelope") ABOVE the feature-10 correction — rewritten head-first to the current contract (schema + last-fenced-json parse rule as the core; emission = `workflow-status` always, other skills only under the driver-injected snippet, nothing in interactive sessions). Same stale sentence fixed in `packages/agentic-workflow-schema/README.md`, `package.json`, `src/index.ts`, and `envelope.schema.json` (description/comment/metadata text only, no schema-shape or code-behavior change, no package release needed). |
 | | 1.1.0 | 2026-07-10 | minor | New `## Driver system-prompt snippet + repair loop` section: the canonical driver-injected system-prompt snippet (verbatim, fenced) and the repair-loop protocol (parse-fail → re-invoke with "Emit only the machine envelope for the turn above.", one retry, then driver-level FAILED) — the envelope requirement moved here from the 14 user-facing skills' per-skill turn contracts. |
@@ -454,6 +484,16 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-31 — normalized repository-state folding.** `discover-repository-state`
+  1.1.0 preserves `contradicted` snapshot status when discovery records a
+  conflict instead of freezing unresolved contradictions. `resolve-repository-state`
+  1.1.0 stops without freezing when a contradiction needs human input.
+  `init-workspace` 2.5.0 seeds the repository-state ledger as an explicit
+  bootstrap and upgrade process step. `execute-phase` 2.11.0, `review-change`
+  2.7.0, `audit-pr` 3.5.0, and `orchestration-envelope` 1.4.0 carry the same
+  read-only NRS consumption and contradiction-routing contract through
+  implementation, review, audit, and orchestration.
 
 - **2026-07-30 — opportunistic finding policy.** `execute-phase` 2.10.0
   classifies real out-of-scope findings discovered during implementation as
