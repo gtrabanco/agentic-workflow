@@ -1,7 +1,10 @@
 ---
 name: product-audit
 user-invocable: true
-version: 2.3.0
+disable-model-invocation: true
+version: 3.0.0
+metadata:
+  opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
