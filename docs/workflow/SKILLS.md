@@ -15,6 +15,32 @@ repository-state discovery/resolution, design, planning, execution, review,
 audit, finding folds, docs generation, issue triage, roadmap shipping, session
 logging, and workflow status.
 
+## Context budget and progressive loading
+
+Skill metadata is always advertised by the agent, but a `SKILL.md` body enters
+context only after activation. The eight largest entrypoints therefore keep
+universal gates and an explicit route in `SKILL.md`, then load detailed
+`references/` only when that route needs them. References are one hop deep and
+must not link to more references, so small models do not have to discover a
+hidden instruction chain.
+
+The committed budget uses `ceil(UTF-8 bytes / 4)` as a deterministic estimate,
+not as provider billing tokens. Main entrypoints are capped at 4,200 estimated
+tokens and 360 lines; `execute-phase`, the hottest path, is capped at 3,500 and
+320. Its direct activation estimate fell from about 13,010 to about 3,000 while
+preserving the complete contracts behind mandatory routes. Validate the catalog
+with:
+
+```sh
+node scripts/check-skill-context.mjs
+```
+
+Prompt caching may reduce repeated latency or billed input on a supporting
+provider, but it does not shrink the active context. Correctness and context
+capacity therefore rely on segmentation, not cache behavior. See
+[`SKILL_CONTEXT_BUDGETS.json`](SKILL_CONTEXT_BUDGETS.json) for the enforced
+limits.
+
 ## Setup
 
 | Skill | Role | Hands off to |

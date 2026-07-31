@@ -69,6 +69,14 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 `npx degit gtrabanco/agentic-workflow/template mi-proyecto` — ver
 [`docs/workflow/REPLICATE.md`](docs/workflow/REPLICATE.md).
 
+Las skills más grandes usan carga progresiva de un salto en lugar de pagar todo
+su coste de instrucciones al activarse. En particular, `execute-phase` se activa
+ahora con unos 3k tokens estimados en vez de 13k, y después carga solo los
+contratos de la ruta que necesita. Los presupuestos versionados fuerzan esa
+forma; la caché de prompts es solo una optimización opcional del proveedor,
+nunca una dependencia de corrección. Ver
+[Presupuesto de contexto y carga progresiva](docs/workflow/SKILLS.es.md#presupuesto-de-contexto-y-carga-progresiva).
+
 ## Las skills
 
 **17 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
