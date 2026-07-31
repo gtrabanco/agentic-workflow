@@ -58,6 +58,8 @@ expect_block "sed env read" --command "sed -n 1p .env"
 expect_block "awk env read" --command "awk 1 .env"
 expect_block "quoted env read" --command "cat '.env'"
 expect_block "nested env read" --command "head -1 config/.env.production"
+expect_block "copy env read" --command "cp .env /tmp/env.backup"
+expect_block "python env read" --command "python -c 'open(\".env\").read()'"
 expect_block "read-tool env path" --path "/srv/app/.env.local"
 
 if command -v jq >/dev/null 2>&1; then
