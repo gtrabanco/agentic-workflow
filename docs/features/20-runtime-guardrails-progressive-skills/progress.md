@@ -43,3 +43,10 @@ Last reviewed: —
 - Scope: P6 owns the fullauto authority boundary; P7 owns adapter/context-guard closure; P8 owns tree synchronization, the user-approved history repair, and the final adversarial review/audit gate.
 - Remains: P6 — Fullauto authority boundary.
 - Next: `/execute-phase 20 P6`.
+
+## P6 — 2026-07-31
+- Done: Bound fullauto authorization to the current forge PR head, default base, SHA-bound audit comment, and decision file fetched from that head; expanded direct-merge blocking to interpreter wrappers and added negative authority fixtures.
+- Remains: P7 — Adapter and context-guard closure
+- Gotchas: Fullauto now fails closed when the forge exposes no CI checks; the wrapper accepts only PR number and run ID, and the audit comment must match the current head SHA.
+- Files: template/.agentic-workflow/hooks/fullauto-merge.sh, template/.agentic-workflow/hooks/guard-command.sh, template/.agentic-workflow/hooks/tests/test-command-guard.sh, template/.agentic-workflow/hooks/tests/test-fullauto-merge.sh, skills/ship-roadmap/SKILL.md, skills/ship-roadmap/references/AUDIT_AND_MERGE.md, skills/ship-roadmap/references/ADVANCE.md, skills/audit-pr/SKILL.md, docs/features/20-runtime-guardrails-progressive-skills/
+- Next: P7 — Adapter and context-guard closure

@@ -40,6 +40,9 @@ expect_block "printenv name" --command "printenv API_KEY"
 expect_block "absolute printenv name" --command "/usr/bin/printenv API_KEY"
 expect_block "declare exports" --command "declare -x"
 expect_block "direct PR merge" --command "gh pr merge 12 --squash"
+expect_block "bash-wrapped PR merge" --command "bash -c 'gh pr merge 12 --squash'"
+expect_block "python-wrapped PR merge" --command "python -c 'os.system(\"gh pr merge 12\")'"
+expect_block "shell-wrapped git merge" --command "sh -c 'git merge feature'"
 expect_block "absolute PR merge" --command "/usr/bin/gh pr merge 12 --squash"
 expect_block "repo-option PR merge" --command "gh --repo acme/app pr merge 12"
 expect_block "attached repo-option PR merge" --command "gh --repo=acme/app pr merge 12"
@@ -95,4 +98,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 6 allowed, 24 blocked, adapters normalized\n'
+printf 'PASS command guard: 6 allowed, 27 blocked, adapters normalized\n'

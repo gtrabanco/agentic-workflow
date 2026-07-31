@@ -1,8 +1,8 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 3.1.1
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+version: 3.2.0
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
 description: >

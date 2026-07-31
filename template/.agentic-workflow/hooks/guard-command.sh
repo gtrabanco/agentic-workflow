@@ -44,13 +44,13 @@ fi
 # Direct merges stay blocked. Automated merges use fullauto-merge.sh, whose
 # child process is outside the agent tool boundary and has its own fail-closed
 # checks. There is intentionally no persistent allow marker for these patterns.
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?gh([[:space:]]+[^;&|()[:space:]]+){0,4}[[:space:]]+pr[[:space:]]+merge([[:space:]]|$)'; then
+if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?gh([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+pr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
   deny "direct pull-request merge; use ship-roadmap --fullauto"
 fi
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])glab([[:space:]]+[^;&|()[:space:]]+){0,4}[[:space:]]+mr[[:space:]]+merge([[:space:]]|$)'; then
+if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])glab([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+mr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
   deny "direct merge-request merge; use ship-roadmap --fullauto"
 fi
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:space:]]*/)?git([[:space:]]+[^;&|()[:space:]]+){0,4}[[:space:]]+merge([[:space:]]|$)'; then
+if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?git([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+merge([^[:alnum:]_-]|$)'; then
   deny "direct git merge"
 fi
 if printf '%s\n' "$command_text" | grep -Eqi 'mergePullRequest|/pulls/[0-9]+/merge([?[:space:]]|$)'; then

@@ -10,6 +10,7 @@
 - D6 — use one-hop supporting resources and fail context checks on nested/missing references.
 - D7 — `skills.sh.json` is discovery presentation metadata only; it does not affect runtime loading or caching.
 - D8 — caches may reduce billing/latency but cannot reclaim context-window capacity, so no cache-specific skill rule is added.
+- D9 — the fullauto wrapper accepts only a PR number and run ID; it derives the current head/default base from the forge and requires a SHA-bound audit comment plus the decision file fetched at that head. Missing forge evidence fails closed, including projects with no reported checks.
 
 ## Phase-lint
 

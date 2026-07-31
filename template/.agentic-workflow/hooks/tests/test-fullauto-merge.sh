@@ -25,6 +25,9 @@ git -C "$fixture/repo" push -qu origin feat/fixture
 head_sha=$(git -C "$fixture/repo" rev-parse HEAD)
 printf 'OPEN\n' > "$fixture/state/pr-state"
 printf '0\n' > "$fixture/state/comments"
+printf '0\n' > "$fixture/state/merges"
+printf 'main\n' > "$fixture/state/base"
+printf 'SUCCESS\n' > "$fixture/state/checks"
 
 sed "s/__HEAD__/$head_sha/g" > "$fixture/bin/gh" <<'FIXTURE'
 #!/usr/bin/env bash
@@ -33,20 +36,44 @@ state_dir=${GH_TEST_STATE:?}
 if [ "$1 $2" = "pr view" ]; then
   state=$(cat "$state_dir/pr-state")
   comments=$(cat "$state_dir/comments")
+  checks=$(cat "$state_dir/checks")
+  base=$(cat "$state_dir/base")
   bodies='[]'
   if [ "$comments" -gt 0 ]; then
     bodies='[{"body":"<!-- agentic-workflow:automerge head=__HEAD__ -->"}]'
   fi
-  if printf '%s\n' "$*" | grep -q 'mergeCommit'; then
-    printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"main","headRefOid":"__HEAD__","mergeable":"MERGEABLE","statusCheckRollup":[],"comments":%s,"mergeCommit":{"oid":"abc1234"}}\n' "$state" "$bodies"
-  else
-    printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"main","headRefOid":"__HEAD__","mergeable":"MERGEABLE","statusCheckRollup":[],"comments":%s}\n' "$state" "$bodies"
+  if [ "${GH_TEST_AUDIT:-1}" = "stale" ]; then
+    bodies='[{"body":"<!-- audit-pr:merge-ready sha=deadbeef -->"}]'
+  elif [ "${GH_TEST_AUDIT:-1}" = "1" ]; then
+    if [ "$comments" -gt 0 ]; then
+      bodies='[{"body":"<!-- agentic-workflow:automerge head=__HEAD__ -->"},{"body":"<!-- audit-pr:merge-ready sha=__HEAD__ -->"}]'
+    else
+      bodies='[{"body":"<!-- audit-pr:merge-ready sha=__HEAD__ -->"}]'
+    fi
   fi
+  status='[]'
+  if [ "$checks" != "NONE" ]; then
+    status="[{\"conclusion\":\"$checks\"}]"
+  fi
+  if printf '%s\n' "$*" | grep -q 'mergeCommit'; then
+    printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"%s","headRefOid":"__HEAD__","mergeable":"MERGEABLE","statusCheckRollup":%s,"comments":%s,"mergeCommit":{"oid":"abc1234"}}\n' "$state" "$base" "$status" "$bodies"
+  else
+    printf '{"number":12,"url":"https://example.invalid/pr/12","state":"%s","baseRefName":"%s","headRefOid":"__HEAD__","mergeable":"MERGEABLE","statusCheckRollup":%s,"comments":%s}\n' "$state" "$base" "$status" "$bodies"
+  fi
+  exit 0
+fi
+if [ "$1 $2" = "repo view" ]; then
+  printf '{"nameWithOwner":"acme/app","defaultBranchRef":{"name":"main"}}\n'
+  exit 0
+fi
+if [ "$1" = "api" ]; then
+  printf '{"content":"%s"}\n' "$(printf 'merge: fullauto\n' | base64 | tr -d '\n')"
   exit 0
 fi
 if [ "$1 $2" = "pr merge" ]; then
   [ "${GH_TEST_FAIL_MERGE:-0}" = "0" ] || exit 1
   printf 'MERGED\n' > "$state_dir/pr-state"
+  printf '%s\n' "$(( $(cat "$state_dir/merges") + 1 ))" > "$state_dir/merges"
   exit 0
 fi
 if [ "$1 $2" = "pr comment" ]; then
@@ -61,8 +88,7 @@ chmod +x "$fixture/bin/gh"
 
 run_wrapper() {
   (cd "$fixture/repo" && PATH="$fixture/bin:$PATH" GH_TEST_STATE="$fixture/state" \
-    AGENTIC_WORKFLOW_SHIP_ROADMAP_FULLAUTO=1 AGENTIC_WORKFLOW_LOCAL_GATE_SHA="$head_sha" \
-    "$wrapper" --pr 12 --head "$head_sha" --base main --run-id fixture-run)
+    "$wrapper" --pr 12 --run-id fixture-run)
 }
 
 missing_value=$({ "$wrapper" --pr; } 2>&1 || true)
@@ -70,6 +96,7 @@ printf '%s' "$missing_value" | grep -q -- '--pr requires a value'
 
 run_wrapper >/dev/null
 [ "$(cat "$fixture/state/comments")" = "1" ]
+[ "$(cat "$fixture/state/merges")" = "1" ]
 if find "$fixture/repo/.git/agentic-workflow" -type f -name 'automerge-*' 2>/dev/null | grep -q .; then
   echo "FAIL: attempt marker survived successful merge" >&2
   exit 1
@@ -78,10 +105,28 @@ fi
 # A retry reconciles the already-merged PR and does not duplicate its comment.
 run_wrapper >/dev/null
 [ "$(cat "$fixture/state/comments")" = "1" ]
+[ "$(cat "$fixture/state/merges")" = "1" ]
+
+for case_name in unauthorized-audit stale-audit foreign-base failed-ci; do
+  printf 'OPEN\n' > "$fixture/state/pr-state"
+  printf '0\n' > "$fixture/state/merges"
+  case "$case_name" in
+    unauthorized-audit) GH_TEST_AUDIT=0 run_wrapper >/dev/null 2>&1 && exit 1 || true ;;
+    stale-audit) GH_TEST_AUDIT=stale run_wrapper >/dev/null 2>&1 && exit 1 || true ;;
+    foreign-base) printf 'develop\n' > "$fixture/state/base"; run_wrapper >/dev/null 2>&1 && exit 1 || true; printf 'main\n' > "$fixture/state/base" ;;
+    failed-ci) printf 'FAILURE\n' > "$fixture/state/checks"; run_wrapper >/dev/null 2>&1 && exit 1 || true; printf 'SUCCESS\n' > "$fixture/state/checks" ;;
+  esac
+  [ "$(cat "$fixture/state/merges")" = "0" ]
+done
 
 printf 'OPEN\n' > "$fixture/state/pr-state"
 if GH_TEST_FAIL_MERGE=1 run_wrapper >/dev/null 2>&1; then
   echo "FAIL: merge failure was reported as success" >&2
+  exit 1
+fi
+
+if [ "$(cat "$fixture/state/merges")" != "0" ]; then
+  echo "FAIL: failed merge invoked fake merge unexpectedly" >&2
   exit 1
 fi
 if find "$fixture/repo/.git/agentic-workflow" -type f -name 'automerge-*' 2>/dev/null | grep -q .; then

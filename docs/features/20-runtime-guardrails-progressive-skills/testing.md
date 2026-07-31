@@ -38,3 +38,5 @@
 - P5: `node scripts/check-skill-context.mjs` passed 31 discovered skills and 48 reachable, semantically headed, one-hop references with no nested reference links.
 - P5: `npx skills add . --list` discovered 30 installable skills and exited 0.
 - P5: PR [#116](https://github.com/gtrabanco/agentic-workflow/pull/116) opened against `main`; no merge command was run.
+- P6: `test-command-guard.sh` passed direct, interpreter-wrapped, environment, and adapter cases; wrapped `bash`, `sh`, and `python` merge commands were denied.
+- P6: `test-fullauto-merge.sh` passed successful merge, already-merged idempotency, failed merge cleanup, missing audit evidence, foreign base, failed CI, and fake-merge-call count assertions. The wrapper now derives PR head/base and fetches the decision from the forge.

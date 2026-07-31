@@ -8,9 +8,10 @@ merging, re-run the same launch command (`/loop /ship-roadmap --continue`, plus
 `--fullauto` on fullauto runs) — recovery records the merges (the rows are already
 `done` from PR-open), unblocks the dependents, and resumes.
 
-**`--fullauto` — dual-keyed.** Auto-merge requires **both** the `--fullauto`
-flag on the running command **and** `merge: fullauto` in the committed decision
-record — a stray flag or a stale record alone can never enable it. The **first
+**`--fullauto` — dual-keyed.** Auto-merge requires a fresh SHA-bound
+`audit-pr:merge-ready` comment and `merge: fullauto` in the decision file at
+the PR's current head — stale or caller-supplied local evidence can never
+enable it. The **first
 feature PR of a greenfield run is always human-merged** (calibration: inspect
 one complete artifact — code, tests, docs, review trail — before delegating).
 
@@ -22,17 +23,15 @@ for this invocation and this merge attempt only:
 3. Invoke exactly:
 
    ```sh
-   AGENTIC_WORKFLOW_SHIP_ROADMAP_FULLAUTO=1 \
-     .agentic-workflow/hooks/fullauto-merge.sh \
-     --pr <number> --head <audited-sha> --base <default> --run-id <run-id>
+   .agentic-workflow/hooks/fullauto-merge.sh \
+     --pr <number> --run-id <run-id>
    ```
 
-   For a no-CI project, add
-   `AGENTIC_WORKFLOW_LOCAL_GATE_SHA=<audited-sha>` only after the fresh local
-   gate ran on that exact SHA. These variables prefix this command only; never
-   export them or configure an agent-wide allow rule.
-4. The wrapper re-checks the committed decision, clean/synchronized branch,
-   local and remote head, base, mergeability, and CI/local-gate evidence. It
+   The wrapper derives the PR head and forge default base itself. A project
+   with no forge-reported checks fails closed.
+4. The wrapper re-checks the current PR head, forge default base, SHA-bound
+   audit comment, decision file fetched from that head, clean/synchronized
+   branch, mergeability, and CI evidence. It
    creates a namespaced marker under the git common directory only after those
    checks, installs cleanup with `trap`, and removes the marker on success,
    failure, signal, or already-merged recovery.

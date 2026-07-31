@@ -86,8 +86,9 @@
      chat, not from a CI monitor). MERGE-READY → default mode logs and
      moves on; `--fullauto` treats `audit-pr` as verdict/comment-only, checks
      the floors, **records the merge intent in the run log first**, then calls
-     `.agentic-workflow/hooks/fullauto-merge.sh` with the PR number, audited
-     head, default base, and run id. Never invoke `gh pr merge` directly.
+     `.agentic-workflow/hooks/fullauto-merge.sh` with only the PR number and
+     run id. The wrapper derives and verifies head, base, decision, and audit
+     evidence from the forge. Never invoke `gh pr merge` directly.
      BLOCKED → in-scope blockers go to a
      sonnet subagent next iteration (max 2 audit cycles, then the feature is
      parked and the loop moves on); the fixer's cycle ends committed AND
