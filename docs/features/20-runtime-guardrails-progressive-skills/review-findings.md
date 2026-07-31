@@ -24,3 +24,4 @@
 | F25 | template/.agentic-workflow/hooks/guard-command.sh:48 | correctness | high | fix-now | fold into phase | yes |
 | F26 | template/.agentic-workflow/hooks/guard-command.sh:78 | security | high | fix-now | fold into phase | yes |
 | F27 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:13 | correctness | high | fix-now | fold into phase | yes |
+| F28 | scripts/check-skill-context.mjs:79 | correctness | high | fix-now | fold into phase | yes |
