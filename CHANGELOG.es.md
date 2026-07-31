@@ -99,7 +99,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 #### `discover-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
-|---|---|---|
+|---|---|---|---|
 | 1.1.2 | 2026-07-31 | parche | Enruta un snapshot contradicho a `resolve-repository-state` antes de recomendar la planificación. |
 | 1.1.1 | 2026-07-31 | parche | Elimina el argumento `--refresh` no declarado y aclara que discovery conserva separada cada categoría del ledger. |
 | 1.1.0 | 2026-07-31 | minor | Conserva el estado `contradicted` del snapshot cuando discovery registra un conflicto en vez de congelar contradicciones sin resolver. |
