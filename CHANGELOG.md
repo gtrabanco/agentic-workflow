@@ -326,6 +326,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-07-31 | major | **Breaking invocation change:** this high-cost, recommend-only sweep is manual-only on Claude Code and OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). Explicit `/product-audit` invocation remains unchanged; orchestrators and other skills must keep it as a human hand-off. |
 | 2.3.0 | 2026-07-19 | minor | Every run is now **persisted**: the report is written and committed as `docs/audits/<id>-<YYYY-MM-DD>.md` with an incremental audit id (the skill's only mutation). Findings carry a single severity-ranked `F1, F2, …` sequence (never per-dimension letters), proposals cite their source findings (`from: F<k>`), every proposal stream — the roadmap ones included — is always present (`none — <why>` when empty), and the closing block routes to `triage-issue <id> F<k>` (suggest triage, never run it). |
 | 2.2.0 | 2026-07-19 | minor | Process & docs dimension gains **capability-inventory freshness**: cross-checks `docs/CAPABILITIES.md` against the code (roles/permissions/subsystems present in one but not the other are a finding); a missing inventory file yields a seed-it proposal, never an auto-fix. |
 | 2.1.0 | 2026-07-17 | minor | New **scope-export recurrence** signal in the Workflow discipline dimension: ≥ 2 consecutive recent units each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (#64). Output format gained a worked example under Top findings. Part of #66. |
@@ -501,6 +502,8 @@ How pinning actually works, verified against the `skills` CLI:
   `audit-pr` 4.0.0 becomes verdict/comment-only; `ship-roadmap` 3.0.0 is the
   sole automated merge authority and uses a transient, fail-closed wrapper
   with a SHA-bound PR audit comment. See feature 20 and the migration note.
+  `product-audit` 3.0.0 also becomes explicit-invocation-only on supported
+  loaders so its wide sweep is never activated speculatively.
 
 - **2026-07-31 — normalized repository-state folding.** `discover-repository-state`
   1.1.0 preserves `contradicted` snapshot status when discovery records a

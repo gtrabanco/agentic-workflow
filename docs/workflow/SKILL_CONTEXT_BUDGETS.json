@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "metric": "ceil(UTF-8 bytes / 4); deterministic proxy, not provider billing tokens",
+  "referenceDepth": 1,
+  "defaults": {
+    "mainEstimateMax": 4200,
+    "mainLinesMax": 360,
+    "descriptionEstimateMax": 120,
+    "referenceEstimateMax": 2200,
+    "referenceLinesMax": 280
+  },
+  "skills": {
+    "audit-pr": {},
+    "design-feature": {},
+    "execute-phase": {
+      "mainEstimateMax": 3500,
+      "mainLinesMax": 320
+    },
+    "init-workspace": {},
+    "review-change": {},
+    "ship-roadmap": {},
+    "triage-issue": {},
+    "workflow-status": {}
+  }
+}

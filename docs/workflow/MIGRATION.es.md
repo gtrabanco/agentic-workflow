@@ -21,6 +21,15 @@ entregan la URL al humano; los drivers fullauto existentes deben conservar el
 flag en cada iteración y dejar que la skill invoque
 `.agentic-workflow/hooks/fullauto-merge.sh`.
 
+## 2026-07-31 — `product-audit` pasa a requerir invocación explícita
+
+**Cambio incompatible de invocación.** `product-audit` 3.0.0 declara activación
+manual-only en Claude Code y deshabilita la autoinvocación de OpenCode. Su
+contrato `/product-audit [ruta-o-área]` no cambia. Los drivers y las skills ya lo
+entregan al humano porque su barrido de producto a esfuerzo máximo nunca debe
+componerse; no necesitan cambiar el enrutamiento. Quien lo pida en lenguaje
+natural debe invocar ahora la skill por su nombre.
+
 ## Ruta de actualización desde una instalación anterior a 2026-07-09
 
 El backlog de 2026-07-09/07-10 (11 unidades) trajo dos **cambios mayores**

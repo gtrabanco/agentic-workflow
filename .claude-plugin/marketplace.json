@@ -1,0 +1,16 @@
+{
+  "name": "agentic-workflow",
+  "description": "A disciplined, stack-agnostic workflow for designing, planning, executing, reviewing, auditing, and shipping software with agents.",
+  "owner": {
+    "name": "Gabriel Trabanco",
+    "url": "https://github.com/gtrabanco"
+  },
+  "plugins": [
+    {
+      "name": "agentic-workflow",
+      "source": "./",
+      "description": "Doc-driven workflow skills, internal review pack, merge gates, and roadmap autopilot.",
+      "category": "engineering"
+    }
+  ]
+}
