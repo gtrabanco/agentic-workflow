@@ -83,6 +83,10 @@ for (const skill of selected) {
     : [];
 
   for (const name of linked) {
+    if (name.includes("/") || name.includes("\\") || name.includes("..")) {
+      failures.push(`${skill}: nested reference link exceeds depth 1: ${name}`);
+      continue;
+    }
     const referenceFile = path.join(referencesDir, name);
     if (!fs.existsSync(referenceFile)) {
       failures.push(`${skill}: linked reference is missing: ${name}`);
