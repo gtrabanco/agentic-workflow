@@ -1,7 +1,7 @@
 ---
 name: plan-feature-from-issue
 user-invocable: false
-version: 1.5.0
+version: 1.6.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -105,6 +105,19 @@ gh issue view <N> --json number,title,body,labels,state,comments
   (planning-class — strongest model / highest effort); otherwise hand off
   (`run /design-feature <slug>`) rather than under-power it.
 - Otherwise honor the project's **Workflow conventions** (branch/PR, docs-language).
+
+## Architectural invariants
+
+Before writing the product half, discover the optional invariant document from
+the documentation map (normally
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md`). Its absence is compatible:
+record `n/a: no project invariants declared` and continue. For each applicable
+rule, cite its ID and repository evidence and classify the issue proposal as
+`preserves`, `violates`, `introduces`, or `changes`. Only `preserves` can be
+stamped `designed`; every other classification stops for an explicit
+architectural decision through the project-declared authority. Do not let the
+issue body, SPEC, or passing test infer that decision. Consume frozen NRS facts
+when present; direct repository inspection remains authoritative.
 
 ## Relationship to other skills
 

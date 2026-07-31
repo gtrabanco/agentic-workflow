@@ -10,9 +10,9 @@
 
 ## P2 — Planning evaluation
 
-- [ ] Update initialization and planning roles to classify optional project invariants.
+- [x] Update initialization and planning roles to classify optional project invariants.
       Check: `grep -rl "ARCHITECTURAL_INVARIANTS.md" skills/init-workspace skills/design-feature skills/plan-feature skills/plan-feature-from-issue skills/plan-feature-scaffold | wc -l` → `5`.
-- [ ] Require an explicit architectural-decision route for a violation, new rule, or changed rule.
+- [x] Require an explicit architectural-decision route for a violation, new rule, or changed rule.
       Check: `grep -rq "explicit architectural decision" skills/init-workspace skills/design-feature skills/plan-feature skills/plan-feature-from-issue skills/plan-feature-scaffold`.
   Done-when: `grep -rl "ARCHITECTURAL_INVARIANTS.md" skills/init-workspace skills/design-feature skills/plan-feature skills/plan-feature-from-issue skills/plan-feature-scaffold | wc -l` → `5`.
 
