@@ -67,6 +67,15 @@ if command -v jq >/dev/null 2>&1; then
     printf 'FAIL block: Copilot adapter\n' >&2
     failures=$((failures + 1))
   }
+  if printf '%s' '{not-json' | "$adapter" >/dev/null 2>&1; then
+    printf 'FAIL block: malformed Claude/Cursor payload\n' >&2
+    failures=$((failures + 1))
+  fi
+  copilot_output=$(printf '%s' '{not-json' | "$copilot")
+  printf '%s' "$copilot_output" | jq -e '.continue == false and (.stopReason | contains("invalid hook payload"))' >/dev/null || {
+    printf 'FAIL block: malformed Copilot payload\n' >&2
+    failures=$((failures + 1))
+  }
 fi
 
 [ "$failures" -eq 0 ] || exit 1
