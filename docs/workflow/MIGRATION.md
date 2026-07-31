@@ -19,6 +19,15 @@ Do not carry forward agent/session-level `gh pr merge` permissions or a generic
 existing fullauto drivers must preserve the flag on every iteration and let the
 skill invoke `.agentic-workflow/hooks/fullauto-merge.sh`.
 
+## 2026-07-31 — `product-audit` becomes explicit-invocation-only
+
+**Breaking invocation change.** `product-audit` 3.0.0 declares manual-only
+activation on Claude Code and disables OpenCode autoinvocation. Its
+`/product-audit [path-or-area]` contract is unchanged. Drivers and skills already hand it to the
+human because its maximum-effort product sweep must never be composed; they need
+no routing change. Natural-language users must now invoke the named skill
+explicitly.
+
 ## Upgrade path from a pre-2026-07-09 install
 
 The 2026-07-09/07-10 backlog (11 units) landed two **majors** plus several

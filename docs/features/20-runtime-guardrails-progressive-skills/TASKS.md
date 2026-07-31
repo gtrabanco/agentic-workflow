@@ -28,13 +28,13 @@
 
 ## P3 — Context distribution
 
-- [ ] Add `skills.sh.json` groups without claiming runtime behavior.
+- [x] Add `skills.sh.json` groups without claiming runtime behavior.
       Check: `node -e "JSON.parse(require('fs').readFileSync('skills.sh.json'))"`.
-- [ ] Add Claude marketplace metadata with the existing plugin as its source.
+- [x] Add Claude marketplace metadata with the existing plugin as its source.
       Check: `node -e "JSON.parse(require('fs').readFileSync('.claude-plugin/marketplace.json'))"`.
-- [ ] Add conservative manual/model invocation metadata to safe standalone skills.
+- [x] Add conservative manual/model invocation metadata to safe standalone skills.
       Check: `grep -rq "disable-model-invocation\|opencode/autoinvoke" skills`.
-- [ ] Add the deterministic context/reference checker and committed budgets.
+- [x] Add the deterministic context/reference checker and committed budgets.
       Check: `node scripts/check-skill-context.mjs --manifest-only`.
   Done-when: `node scripts/check-skill-context.mjs --manifest-only` → exit 0.
 

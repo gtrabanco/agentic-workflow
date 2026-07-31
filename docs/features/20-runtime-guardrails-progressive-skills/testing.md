@@ -21,3 +21,6 @@
 - P2: `init-workspace` authoring checks passed at 2.7.0; bootstrap and additive upgrade paths name all four adapters.
 - P2: plugin alphabetical order and version/changelog parity checks passed.
 - P2: both command/fullauto fixtures passed again after the workflow-policy changes.
+- P3: `node scripts/check-skill-context.mjs --manifest-only` passed with eight budgeted skills and one-hop references.
+- P3: `skills.sh.json`, `.claude-plugin/marketplace.json`, and `SKILL_CONTEXT_BUDGETS.json` parsed as JSON; every grouped skill directory exists.
+- P3: `product-audit` 3.0.0 exposes both manual-only metadata keys and retains its explicit invocation contract.

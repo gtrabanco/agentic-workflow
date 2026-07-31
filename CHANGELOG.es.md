@@ -327,6 +327,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible de invocación:** este barrido costoso y solo de recomendación pasa a ser manual-only en Claude Code y OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). La invocación explícita `/product-audit` no cambia; orquestadores y otras skills deben mantenerla como hand-off humano. |
 | 2.3.0 | 2026-07-19 | menor | Cada ejecución queda ahora **persistida**: el informe se escribe y commitea como `docs/audits/<id>-<YYYY-MM-DD>.md` con un id de auditoría incremental (la única mutación de la skill). Los hallazgos llevan una única secuencia `F1, F2, …` ordenada por severidad (nunca letras por dimensión), las propuestas citan sus hallazgos de origen (`from: F<k>`), todos los flujos de propuestas — incluidos los de roadmap — están siempre presentes (`none — <why>` cuando están vacíos), y el bloque de cierre enruta a `triage-issue <id> F<k>` (sugiere el triaje, nunca lo ejecuta). |
 | 2.2.0 | 2026-07-19 | menor | La dimensión Proceso y docs gana **frescura del inventario de capacidades**: contrasta `docs/CAPABILITIES.md` con el código (roles/permisos/subsistemas presentes en uno pero no en el otro son un hallazgo); un fichero de inventario ausente produce una propuesta de sembrarlo, nunca un auto-arreglo. |
 | 2.1.0 | 2026-07-17 | menor | Nueva señal de **recurrencia de exportación de alcance** en la dimensión Disciplina de workflow: ≥ 2 unidades recientes consecutivas, cada una con una bitácora `## Amendments` de descope no vacía o un issue nacido clasificado como descope (puerta de scope-bleed de `audit-pr`), es un hallazgo de calidad de planificación ("features recortadas demasiado grandes para la capacidad real"), enrutado a las reglas de atomicidad/división (#64). El formato de salida gana un ejemplo trabajado bajo Top findings. Parte de #66. |
@@ -503,6 +504,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   es la única autoridad de merge automatizado y usa un wrapper transitorio
   fail-closed con comentario de auditoría ligado al SHA. Ver feature 20 y la
   nota de migración.
+  `product-audit` 3.0.0 también pasa a requerir invocación explícita en los
+  loaders compatibles para que su barrido amplio nunca se active por tanteo.
 
 - **2026-07-31 — plegado del estado normalizado del repositorio.**
   `discover-repository-state` 1.1.0 conserva el estado `contradicted` del
