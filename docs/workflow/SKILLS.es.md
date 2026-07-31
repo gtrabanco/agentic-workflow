@@ -4,23 +4,26 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**15 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
+**17 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, el motor de hallazgos `review-implementation` de
 `review-change`, el contrato `orchestration-envelope`, el paquete de revisión
 interno de 9 skills del propio flujo de trabajo: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`, y el ayudante de
-mantenimiento `bump-skill` propio del repositorio). De las 15: 12 skills del
-flujo de trabajo principal, `fold-findings` (ciclo de reparación de hallazgos
-fix-now), un ayudante de diario `log-session`, y un sensor de solo lectura
-`workflow-status`.
+mantenimiento `bump-skill` propio del repositorio). Las 17 skills orientadas
+al usuario cubren configuración, descubrimiento/resolución de estado del
+repositorio, diseño, planificación, ejecución, review, auditoría, fold de
+hallazgos, generación de docs, triage de issues, envío del roadmap, diario de
+sesión y estado del workflow.
 
 ## Configuración
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `init-workspace` | Obtiene el andamiaje de `template/` y lo adapta al proyecto mediante entrevista; sugiere las skills de revisión complementarias de la plataforma; ofrece instalar las skills | `design-feature` |
+| `init-workspace` | Obtiene el andamiaje de `template/` y lo adapta al proyecto mediante entrevista; sugiere las skills de revisión complementarias de la plataforma; ofrece instalar las skills | `discover-repository-state` |
+| `discover-repository-state` | Crea un ledger congelado y respaldado por evidencia; separa hechos, decisiones, trabajo planificado, documentación e inferencia | `plan-feature` / `resolve-repository-state` |
+| `resolve-repository-state` | Único escritor que resuelve una contradicción explícita y publica el siguiente snapshot congelado | el paso de flujo interrumpido |
 
 ## Diseño
 
@@ -119,6 +122,7 @@ indicado aquí.
 | `audit-docs` | `/audit-docs [--fix]` | Sin args: solo informe, hallazgos ordenados por severidad. `--fix`: además aplica los arreglos de **bajo riesgo** — los docs nunca se reescriben sin ello (o una confirmación explícita del usuario). |
 | `audit-pr` | `/audit-pr [pr-number]` | Por defecto, el PR de la rama actual. Un número apunta a otro PR. |
 | `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | Una idea en bruto → entrevista desde cero. Un `NN-slug` existente a secas → **modo revisión**: imprime un resumen de lo que hará la feature y pregunta qué añadir/quitar/cambiar. `NN-slug + instrucción` → aplica el cambio directamente, sin preguntas, acotado a la instrucción. Siempre upsert — el único reinicio desde cero es una instrucción explícita de "borrar y rediseñar". |
+| `discover-repository-state` | `/discover-repository-state` | Lee la evidencia del repositorio y escribe un Estado Normalizado del Repositorio congelado; las contradicciones se enrutan a `/resolve-repository-state`. |
 | `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` solo → pase único (features `XS/S` solo-SPEC). `NN P<k>` → exactamente una fase de una feature M/L. `--fix <n>` → implementa la unidad de fix `docs/fix/<n>-*`. `--force` → invalida la puerta de dependencias/estado (válvula de escape solo para el usuario; la invalidación se registra en `decisions.md`; el autopiloto nunca la pasa). |
 | `fold-findings` | `/fold-findings [finding-id …]` | Sin argumentos: repara, uno por uno, cada fila fix-now (`folded: no`) del ledger `review-findings.md` de la unidad. Uno o más IDs de hallazgo → acota la cola a exactamente esas filas. |
 | `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | El alcance por defecto es el diff de la rama actual frente a la rama por defecto; un slug/fix/ruta lo acota o redirige. `--review` → además exporta el informe más reciente de `review-change` como una página de docs (opt-in, nunca automático). |
@@ -127,6 +131,7 @@ indicado aquí.
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | Un slug o referencia de issue se detecta automáticamente; los flags fuerzan una ruta: `--from-issue N` (issue → mitad de producto acotada), `--scaffold <slug>` (directo al andamiaje de la mitad de ingeniería), `--next` (siguiente entrada del roadmap). Una feature sin diseñar (fila del roadmap por debajo de `defined`) → se detiene y redirige a `/design-feature` — sin flag de bypass. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Obligatorio, uno o más. Un número → redacta `docs/fix/<n>-<topic>/SPEC.md` en una rama de fix y se detiene para revisión. Varios números → una checklist fija de causa-raíz-compartida decide: si todas se cumplen, los fusiona en UNA unidad con clave el número más bajo; si alguna falla, se niega e imprime la división (`/plan-fix <a>`, `/plan-fix <b>` …). |
 | `product-audit` | `/product-audit [path-or-area]` | Por defecto, el producto entero; una ruta/área acota el barrido. Solo propone — nunca arregla. |
+| `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifica ambas fuentes de evidencia y publica el siguiente snapshot congelado, o se detiene con el input faltante explícito. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Por defecto, el cambio actual (diff de la rama frente a la rama por defecto); una ruta amplía/acota. `--adversarial N` → N revisores adversariales independientes, de contexto limpio, solo-diff, en paralelo, hallazgos fusionados y deduplicados (opt-in; auto-recomendado para cambios `L`/sensibles). |
 | `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Por defecto: abre PRs, el humano fusiona. `--fullauto` → fusiona PRs MERGE-READY bajo los pisos de seguridad no negociables. `--continue` → reanuda una ejecución existente por una etapa (el bucle del driver externo reinvoca esto). |
 | `triage-issue` | `/triage-issue <n> [n…]` | Uno o varios números de issue — las ejecuciones en lote producen veredictos independientes más una tabla resumen, agrupada por unidad de origen para los veredictos `fix-in-unit`. |

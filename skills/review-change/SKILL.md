@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.6.0
+version: 2.7.1
 argument-hint: <path-or-glob> [--adversarial N] [--merge]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -462,6 +462,12 @@ disposition is a decision, not a default:
   `--body-file <path>`, never an inline `--body "…"`/heredoc. `triage-issue`
   enforces this for the comments it posts — don't undercut it by pre-escaping
   finding text you hand it.
+
+## Normalized Repository State
+
+Use frozen NRS facts from `docs/workflow/REPOSITORY_STATE.md` as evidence context, but remain read-only. A review may
+propose a contradiction with fresh evidence; it cannot redefine a fact, accept a
+decision, or turn documentation into implementation evidence.
 
 ## Portability (agents other than Claude Code)
 

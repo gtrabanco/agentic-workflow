@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.3.0
+version: 1.4.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -177,3 +177,9 @@ incomplete change.
 - `docs/workflow/ORCHESTRATION.md` documents the external driver loop
   (state → next command → model tier) that replaces Claude Code's `/loop`
   and subagents on any agent.
+
+## Normalized Repository State
+
+Drivers call `discover-repository-state` before planning and pass the frozen
+`docs/workflow/REPOSITORY_STATE.md` ledger reference to later skills. A contradiction routes to
+`resolve-repository-state`; drivers never silently replace the snapshot.

@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  las 29 skills (15 de cara al usuario + 14 internas) — la fuente instalable
+skills/                  las 31 skills fuente (17 de cara al usuario + 14 internas; 30 instalables)
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
@@ -71,12 +71,12 @@ plantillas de GitHub). Genera la forma de trabajo de un proyecto nuevo con
 
 ## Las skills
 
-**15 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
+**17 skills de cara al usuario** (una entrada de menú cada una) + **14 internas**
 que se componen por ti: los dos pasos de planificación del router `plan-feature`,
 el motor de `review-change`, el contrato `orchestration-envelope`, el **pack de revisión interno propio de 9 skills**
 (`review-code`, `review-security`, `review-verify`, `review-debt`,
 `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`), y
-el ayudante de mantenimiento interno `bump-skill` —
+el ayudante de mantenimiento interno `bump-skill` (excluido de la instalación) —
 así que **nunca se requiere una skill de revisión externa**, en ningún agente y
 con ningún modelo. Un único camino disciplinado:
 **design → plan → execute → review → audit → merge.**
@@ -91,6 +91,8 @@ con ningún modelo. Un único camino disciplinado:
 | Skill            | Qué hace                                                                                                                                                                                                            |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Trae el scaffold `template/` y lo **adapta a tu proyecto** por entrevista (gate, mapa de docs, arquitectura); siembra el **inventario de capacidades** (`docs/CAPABILITIES.md` — roles + subsistemas transversales, propuestos desde lo que el código realmente muestra); sugiere las skills de revisión complementarias que necesita tu plataforma; ofrece instalar las skills; siembra las etiquetas `urgent`/`fix-next` a prueba de inyección. En un repo que ya tiene el scaffold, lo detecta y pasa a **modo upgrade** — compara con el template actual y propone solo los bloques que te faltan (más cualquier etiqueta de urgencia que falte), sin sobrescribir nunca un bloque personalizado |
+| `discover-repository-state` | Crea y congela un ledger de estado del repositorio respaldado por evidencia antes de planificar o implementar; hechos, decisiones, documentación, trabajo planificado e inferencia permanecen separados |
+| `resolve-repository-state` | Único escritor de una contradicción explícita del estado; verifica la evidencia y publica el siguiente snapshot congelado |
 
 ### Diseño
 
@@ -228,6 +230,8 @@ una conveniencia de la rama `#claude`.
 | Skill            | Tier de modelo | Esfuerzo | Por qué                                                                                                                                                                                                                     |
 | ---------------- | -------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `init-workspace` | Opus           | alto     | bootstrap del proyecto guiado por entrevista + adaptación                                                                                                                                                                   |
+| `discover-repository-state` | Sonnet         | medio    | recopilación de evidencia y snapshot congelado del estado del repositorio                                                                                                                                                   |
+| `resolve-repository-state` | Opus           | alto     | resolución de contradicciones y juicio sobre el estado del repositorio                                                                                                                                                     |
 | `design-feature` | Opus           | alto     | juicio de definición de producto: entrevista de idea en crudo + cierre de capacidades, compuesta por quien la llame solo a tier ≥                                                                                          |
 | `plan-feature`   | Opus           | alto     | router + planificación de ingeniería: sus pasos internos de scoping corren **en su turno**, así que el router debe llevar el effort (las skills compuestas heredan el effort del turno)                                     |
 | `plan-fix`       | Opus           | alto     | scoping de arquitecto + análisis de riesgo                                                                                                                                                                                  |

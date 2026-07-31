@@ -3,8 +3,8 @@
 > 🇪🇸 [Versión en español](PORTABLE_PROMPT.es.md)
 
 Paste the prompt below into Claude Code (or any capable coding agent) **from the
-root of the target repository**. It regenerates the agentic workflow — **11
-user-facing skills + 3 internal steps** (minus `init-workspace`, which this
+root of the target repository**. It regenerates the agentic workflow — **16
+user-facing skills + 13 internal steps** (minus `init-workspace`, which this
 prompt itself replaces as the bootstrap) — **adapted to that project's**
 architecture, documentation, and conventions, rather than copying this repo's
 specifics verbatim.
@@ -52,6 +52,16 @@ Each file: YAML frontmatter (`name`, `user-invocable`, a trigger-rich
 `Step 0 — Discover the project (always first)`, `Process`, `Guardrails`,
 `Relationship to other skills`, `Done when`. Make every skill discover-first and
 reference THIS project's real paths/commands/language.
+
+**Repository state**
+Before design or planning, create the Normalized Repository State contract:
+- `discover-repository-state` — inspect evidence and write a frozen ledger with
+  facts, accepted decisions, planned work, documentation, inference, questions,
+  and contradictions kept separate.
+- `resolve-repository-state` — the sole writer for resolving contradictions and
+  publishing the next frozen snapshot; consumers never update facts inline.
+All planning, execution, review, audit, status, and orchestration skills consume
+the frozen ledger and route missing or contradictory state to these skills.
 
 **Design**
 1. `design-feature` — product definition. Fold in a raw-idea interview
@@ -139,6 +149,14 @@ reference THIS project's real paths/commands/language.
    roadmap add/remove. Never auto-fixes; the user decides.
 11. `audit-docs` — audit docs ↔ roadmap ↔ code ↔ fix index for drift; produce a
    severity-ranked report; fix only low-risk items on request.
+
+**Supporting workflow skills**
+- `fold-findings` — repair every persisted fix-now finding one at a time, with a
+  green gate, one commit, and one push per finding.
+- `generate-docs` — write incremental developer documentation through the
+  project's declared docs adapter.
+- `log-session` — append a structured session handoff to the project journal.
+- `workflow-status` — emit the read-only machine envelope for external drivers.
 
 **Decide**
 12. `triage-issue` — classify an issue (fix-now / promote-to-feature / postpone /
