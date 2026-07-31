@@ -264,6 +264,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.9.1 | 2026-07-31 | patch | Makes `--merge` self-contained by loading the review process and adversarial setup before adversarial merge, so the supplied tables are fused under the same review contract. |
 | 2.9.0 | 2026-07-31 | minor | Progressive loading separates the default review process, persistence/decision, adversarial setup/merge, output/guardrails, and portability; isolation and the turn contract remain in the activation body. |
 | 2.8.0 | 2026-07-31 | minor | Explicitly reviews optional project architectural invariants with repository evidence and reports undocumented violations, introductions, or changes as architecture findings. |
 | 2.7.1 | 2026-07-31 | patch | Moves the NRS review guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
