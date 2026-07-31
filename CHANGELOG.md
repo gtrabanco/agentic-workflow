@@ -106,7 +106,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 #### `resolve-repository-state`
 | Version | Date | Type | What changed |
-|---|---|---|
+|---|---|---|---|
 | 1.1.1 | 2026-07-31 | patch | Routes `needs-input` outcomes to the missing evidence or decision instead of recommending planning. |
 | 1.1.0 | 2026-07-31 | minor | Stops without freezing when a contradiction needs human input, keeping the snapshot contradicted until evidence or a decision is supplied. |
 | 1.0.0 | 2026-07-30 | — | New skill: sole writer for explicit repository-state contradiction resolution and next frozen snapshots. |
