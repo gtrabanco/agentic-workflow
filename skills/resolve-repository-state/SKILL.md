@@ -57,7 +57,9 @@ Without a slash menu, open this file and follow its process in a fresh turn.
 ## Relationship to other skills
 
 Consumes contradictions from every workflow role and produces the snapshot that
-discovery, planning, execution, review, and audit reuse.
+discovery, planning, execution, review, and audit reuse. The contradiction's
+`Reported by` field identifies the interrupted role to resume; resolution never
+defaults a review, audit, or status interruption to planning.
 
 ## Done when
 
@@ -71,5 +73,7 @@ If human input is required:
 
 Otherwise:
 
-→ Next: /plan-feature <slug> — resume planning from the resolved snapshot
-  · implementation is next → /execute-phase <NN> P1
+→ Next: resume the interrupted workflow named by `Reported by` — continue from the resolved snapshot
+  · planning was interrupted → /plan-feature <slug>
+  · implementation was interrupted → /execute-phase <NN> P1
+  · review, audit, or status was interrupted → rerun that same skill
