@@ -35,6 +35,9 @@ and what the recommended next command is.** Built for external orchestrators
   `/plan-feature`) AND staged by the target unit's resolved status:
   `idea`/undesigned → `/design-feature <slug>`; `defined` → `/plan-feature
   <slug>`; `planned` → `/execute-phase <NN> P1`
+✓ A missing or non-frozen repository-state ledger emits a machine-readable
+  substrate blocker and routes to discovery or resolution before any unit is
+  listed as startable
 ✓ Every `design_candidates[].next` begins with `/design-feature ` — design
   candidates always route to design, regardless of anything else
 ✓ When `--last-envelope` is supplied: the no-progress guard ran (crash-recovery
@@ -81,9 +84,15 @@ ship-roadmap run exists.
 
 ### Normalized Repository State
 
-Read `docs/workflow/REPOSITORY_STATE.md` when present and report its snapshot
-metadata as evidence. Never edit it or infer a fact from documentation; report
-conflicting live evidence as a contradiction candidate.
+Read `docs/workflow/REPOSITORY_STATE.md` when present and always emit
+`detail.repository_state: {status, snapshot_id, source_revision}`. Before
+readiness classification, if the ledger is missing, `draft`, `contradicted`, or
+`resolved`, add a run-scoped `substrate` blocker, set the envelope state to
+`BLOCKED`, leave `startable_now` empty, and set `next.recommended` to
+`/discover-repository-state` for missing/non-frozen state or
+`/resolve-repository-state <contradiction-id>` for `contradicted` state. The
+sensor remains read-only; it never edits or resolves the ledger. Conflicting
+live evidence against a frozen ledger remains a contradiction candidate.
 
 1. **Git state.** `git branch --show-current`, `git status --porcelain`,
    `git fetch` + `git status -sb`. A dirty tree or unpushed branch is reported
@@ -366,9 +375,11 @@ Schema and placement per the installed `orchestration-envelope` skill. The
 `state` maps 1:1 from the crash-recovery verdict — **no new schema fields or
 states** (the schema package needs no release):
 
-- `CLEAN` → `state: OK` (the sensor default — even a broken substrate is
-  *reported*, as `blockers` with `kind: substrate`, while the envelope stays
-  OK).
+- `CLEAN` → `state: OK` (the sensor default when the substrate is usable).
+- A missing or non-frozen repository-state ledger is a run-scoped substrate
+  gate and overrides the crash-recovery state with `state: BLOCKED`; the
+  blocker and concrete discovery/resolution command are emitted before
+  readiness data.
 - `RESUMABLE` → `state: CONTINUE`, `next.recommended` = the resume command
   from the decision table.
 - `AMBIGUOUS` → `state: NEEDS_INPUT`, `needs_input.question` = what is
@@ -451,6 +462,8 @@ field, not an error).
 
 | Command | Tier |
 |---|---|
+| `/discover-repository-state` | `strong` |
+| `/resolve-repository-state` | `strong` |
 | `/plan-feature` | `strong` |
 | `/design-feature` | `strong` |
 | `/review-change` | `strong` |
