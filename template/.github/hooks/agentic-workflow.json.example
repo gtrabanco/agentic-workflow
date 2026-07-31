@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "bash .agentic-workflow/hooks/adapters/copilot-guard.sh"
+      }
+    ]
+  }
+}
