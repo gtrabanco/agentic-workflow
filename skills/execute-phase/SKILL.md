@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.11.0
+version: 2.11.1
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -343,6 +343,9 @@ Before implementation, consume frozen facts and decisions in
 `docs/workflow/REPOSITORY_STATE.md` when present. Inspect directly only for an
 absent fact; route contradictory evidence to `resolve-repository-state`.
 Documentation, planned work, and inference never prove implementation.
+Before any edit, require the ledger status to be `frozen`; a missing, `draft`,
+`contradicted`, or `resolved` snapshot stops implementation and routes to
+discovery or resolution first.
 
 | Mode | Format |
 |------|--------|
