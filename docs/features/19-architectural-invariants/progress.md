@@ -31,8 +31,8 @@ Last reviewed: —
 - Next: P5 — Hardening & PR
 
 ## P5 — 2026-07-31
-- Done: Verified compatibility, evidence, violation, and contradiction paths; ran skill discovery and the golden fixture.
-- Remains: Open linked PR and update the roadmap reference.
+- Done: Verified compatibility, evidence, violation, and contradiction paths; ran skill discovery and the golden fixture; opened PR #115 and linked the roadmap.
+- Remains: none
 - Gotchas: The initial Qwen3 default-thinking run failed the fixture's exact-output criterion; the `--think=false` rerun passed and both rows are retained in the bilingual run log.
 - Files: docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/features/19-architectural-invariants/TASKS.md, docs/features/19-architectural-invariants/testing.md
 - Next: unit finished
