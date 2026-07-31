@@ -375,6 +375,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.1 | 2026-07-31 | patch | Routes a newly bootstrapped project through repository-state discovery before design, planning, or execution. |
 | 2.5.0 | 2026-07-31 | minor | Adds an explicit bootstrap and upgrade process step to seed `docs/workflow/REPOSITORY_STATE.md` from the template without overwriting an existing ledger. |
 | 2.3.0 | 2026-07-19 | minor | Bootstrap interview gains a **capability inventory** step: seeds `docs/CAPABILITIES.md` from discovery (roles + `yes\|no\|partial` per template subsystem row proposed from the code; on an empty repo the fixed rows are walked with the user), pruning never-applicable rows — never left as the raw template. Upgrade mode's template diff names the inventory and proposes it with the same discovery-seeded defaults. |
 | 2.2.0 | 2026-07-11 | minor | Seeds the injection-safe `urgent`/`fix-next` labels (`gh label create`, create-if-missing) in bootstrap mode's Process (new step 7); upgrade mode adds whichever is missing additively (new step 6, never touching a label the project already customized). Never redefines the vocabulary — `triage-issue` stays the sole owner. Forge unavailable → skip and report as a residual, never fail the scaffold. |
