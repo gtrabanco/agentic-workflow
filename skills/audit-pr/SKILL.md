@@ -419,8 +419,10 @@ when present, but repository inspection is authoritative and conflict evidence
 routes to `resolve-repository-state`.
 
 Only `preserves` passes without more evidence. A `violates`, `introduces`, or
-`changes` result is a merge blocker until an explicit architectural decision is
-recorded through the project's declared authority. State
+`changes` result is a merge blocker until the project's declared authority has
+applied an explicit architectural decision to the invariant document and the
+resulting rule has been re-evaluated and evidenced as `preserves`. A decision
+record alone does not pass this gate. State
 `Architectural invariants: pass | blocker | n/a` in the verdict; never accept a
 SPEC, implementation, or passing test as the missing decision.
 
