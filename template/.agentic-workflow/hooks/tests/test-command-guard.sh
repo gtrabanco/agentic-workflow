@@ -82,6 +82,11 @@ if command -v jq >/dev/null 2>&1; then
     printf 'FAIL block: unrecognized Claude/Cursor payload\n' >&2
     failures=$((failures + 1))
   fi
+  newline_payload='{"tool_input":{"command":"echo safe\ngh pr merge 12"}}'
+  if printf '%s' "$newline_payload" | "$adapter" >/dev/null 2>&1; then
+    printf 'FAIL block: newline merge payload\n' >&2
+    failures=$((failures + 1))
+  fi
   copilot_output=$(printf '%s' '{not-json' | "$copilot")
   printf '%s' "$copilot_output" | jq -e '.continue == false and (.stopReason | contains("invalid hook payload"))' >/dev/null || {
     printf 'FAIL block: malformed Copilot payload\n' >&2
