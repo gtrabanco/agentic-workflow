@@ -380,9 +380,12 @@ resolver.
 
 Only `preserves` may continue. A `violates`, `introduces`, or `changes` result
 stops before edits and requires an explicit architectural decision through the
-project's declared authority. Do not alter the SPEC, test, or invariant document
-to make the phase pass, and do not convert the decision into phase work. Return
-exactly:
+project's declared authority. A decision record alone is not sufficient: the
+declared authority must apply the decision to the invariant document, and the
+resulting rule must be re-evaluated and evidenced as `preserves` before the
+phase can resume. The executor does not edit the invariant document itself.
+Do not alter the SPEC or tests to make the phase pass, and do not convert the
+decision into phase work. Return exactly:
 
 ```
 ARCHITECTURAL INVARIANT GATE — <NN|fix n> <P<k>|single-pass> BLOCKED
