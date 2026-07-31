@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 3.1.0
+version: 3.1.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -106,7 +106,8 @@ primitives exist, every other reference is forbidden for that turn.
 
 | Condition now | LOAD complete route in this order | SKIP now |
 |---|---|---|
-| Found or inspect a run, no `--continue` | [guardrails](references/GUARDRAILS.md) → [founding](references/FOUNDING.md) | recovery, stop conditions, advance, model routing, audit/merge, terminal report, portability |
+| Found or inspect a run, no `--continue` (default mode or greenfield `--fullauto`) | [guardrails](references/GUARDRAILS.md) → [founding](references/FOUNDING.md) | recovery, stop conditions, advance, model routing, audit/merge, terminal report, portability |
+| Existing-repo founding with `--fullauto` | [guardrails](references/GUARDRAILS.md) → [founding](references/FOUNDING.md) → [audit and merge policy](references/AUDIT_AND_MERGE.md) | recovery, stop conditions, advance, model routing, terminal report, portability |
 | Continue one non-AUDIT iteration | [guardrails](references/GUARDRAILS.md) → [recovery and selection](references/RECOVERY_AND_SELECTION.md) → [stop conditions](references/STOP_CONDITIONS.md) → [advance](references/ADVANCE.md) → [model routing](references/MODEL_ROUTING.md) before stage execution → [closeout and log](references/CLOSEOUT_AND_LOG.md) after it | founding, audit/merge, terminal report, portability |
 | Continue an AUDIT/fullauto iteration | [guardrails](references/GUARDRAILS.md) → [recovery and selection](references/RECOVERY_AND_SELECTION.md) → [stop conditions](references/STOP_CONDITIONS.md) → [advance](references/ADVANCE.md) → [model routing](references/MODEL_ROUTING.md) → [audit and merge policy](references/AUDIT_AND_MERGE.md) before the AUDIT stage → [closeout and log](references/CLOSEOUT_AND_LOG.md) after it | founding, terminal report, portability |
 | Terminal stop/report | the active row above, then [terminal report](references/TERMINAL_REPORT.md) | unrelated rows |

@@ -136,6 +136,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.1.1 | 2026-07-31 | patch | Routes an existing-repository founding run invoked with `--fullauto` through the audit-and-merge policy, while keeping default and greenfield founding routes free of audit resources. |
 | 3.1.0 | 2026-07-31 | minor | Progressive loading splits founding, continuation recovery/selection, stage advancement, runtime/merge policy, terminal reporting, guardrails, and portability into explicit one-hop routes; the main activation body retains the turn contract and route selection. |
 | 3.0.0 | 2026-07-31 | major | **Breaking:** `--fullauto` is now the sole automated merge authority and must use the repository's fail-closed transient wrapper after a fresh `audit-pr` verdict; direct merge commands stay blocked, attempt state is cleaned on every exit, and each successful automerge is logged by an idempotent SHA-bound PR comment. |
 | 2.3.0 | 2026-07-18 | minor | REVIEW stage: the L/sensitive-flagged checkpoint cadence now fires on `execute-phase`'s three named triggers (layer boundary / accumulation / sensitivity, cross-referenced from `#77` rather than restated) instead of a fixed "every 2 phases" count, which had re-miscalibrated ~3x after #64's atomicity lint shrank phase size. The `--adversarial 2` hard floor and the non-alignment with `review-change`'s own advisory cadence are unchanged. Fixes #93. |
