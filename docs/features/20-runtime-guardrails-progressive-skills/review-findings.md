@@ -29,3 +29,4 @@
 | F30 | template/.agentic-workflow/hooks/fullauto-merge.sh:12 | correctness | med | fix-now | fold into phase | yes |
 | F31 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:13 | debt | low | fix-now | fold into phase | yes |
 | F33 | template/.opencode/plugins/agentic-workflow-guard.ts.example:3 | tests | med | fix-now | fold into phase | yes |
+| F35 | scripts/check-skill-context.mjs:20 | tests | med | fix-now | fold into phase | yes |
