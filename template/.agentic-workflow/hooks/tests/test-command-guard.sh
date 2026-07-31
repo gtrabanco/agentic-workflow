@@ -48,6 +48,10 @@ expect_block "git -C merge" --command "git -C /tmp/repo merge feature"
 expect_block "REST merge" --command "gh api -X PUT repos/acme/app/pulls/12/merge"
 expect_block "GraphQL merge" --command "gh api graphql -f query='mutation { mergePullRequest }'"
 expect_block "shell env read" --command "cat .env"
+expect_block "grep env read" --command "grep API_KEY .env"
+expect_block "sed env read" --command "sed -n 1p .env"
+expect_block "awk env read" --command "awk 1 .env"
+expect_block "quoted env read" --command "cat '.env'"
 expect_block "nested env read" --command "head -1 config/.env.production"
 expect_block "read-tool env path" --path "/srv/app/.env.local"
 
@@ -66,4 +70,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 6 allowed, 20 blocked, adapters normalized\n'
+printf 'PASS command guard: 6 allowed, 24 blocked, adapters normalized\n'
