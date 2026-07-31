@@ -75,8 +75,8 @@ if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])([^;&|()[:spac
 fi
 
 # Shell reads are covered even on platforms that expose only a shell hook.
-if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])(cat|bat|head|tail|less|more|source|\.)[[:space:]]' \
-  && printf '%s\n' "$command_text" | grep -Eqi '(^|[/[:space:]])\.env($|[.[:space:]])'; then
+if printf '%s\n' "$command_text" | grep -Eqi '(^|[;&|()[:space:]])(cat|bat|head|tail|less|more|grep|sed|awk|source|\.)[[:space:]]' \
+  && printf '%s\n' "$command_text" | grep -Eqi '(^|/|[^[:alnum:]_])\.env($|[^[:alnum:]_])'; then
   deny "reading environment files may disclose secrets"
 fi
 
