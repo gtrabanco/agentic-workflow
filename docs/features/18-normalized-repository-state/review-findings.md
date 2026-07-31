@@ -17,6 +17,6 @@
 | F15 | skills/plan-feature/SKILL.md:156-158 | implementation | high | fix-now | fold-findings — gate planning and execution on a frozen, non-contradicted snapshot | yes |
 | F16 | PR #114:body | workflow | med | fix-now | fold-findings — synchronize the stale golden-fixture verification note with the committed evidence | yes |
 | F17 | docs/workflow/model-routing.yml:1-97; README.md:222-240; README.es.md:230-248 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to Claude routing and model tables | yes |
-| F18 | docs/workflow/SKILLS.md:109-132; docs/workflow/SKILLS.es.md:112-136 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to the invocation reference | no |
+| F18 | docs/workflow/SKILLS.md:109-132; docs/workflow/SKILLS.es.md:112-136 | workflow | med | fix-now | fold-findings — add the two new user-facing skills to the invocation reference | yes |
 | F19 | docs/workflow/REPLICATE.md:30-46; docs/workflow/REPLICATE.es.md:32-50 | workflow | med | fix-now | fold-findings — refresh the replication guide's stale skill counts and core-set list | no |
 | F20 | docs/workflow/GOLDEN_FIXTURE.md:188; docs/workflow/GOLDEN_FIXTURE.es.md:200 | verify | med | fix-now | fold-findings — rerun or update fixture evidence for final plan/execute versions 3.2.1/2.11.1 | no |
