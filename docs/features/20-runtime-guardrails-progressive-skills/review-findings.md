@@ -5,7 +5,7 @@
 | F3 | docs/features/20-runtime-guardrails-progressive-skills/testing.md:30 | workflow + spec-drift | high | fix-now | fold into phase | yes |
 | F4 | template/.agentic-workflow/hooks/guard-command.sh:47 | security | high | fix-now | fold into phase | yes |
 | F5 | template/.agentic-workflow/hooks/guard-command.sh:62 | security | high | fix-now | fold into phase | yes |
-| F6 | template/.agentic-workflow/hooks/guard-command.sh:73 | security | high | fix-now | fold into phase | no |
+| F6 | template/.agentic-workflow/hooks/guard-command.sh:73 | security | high | fix-now | fold into phase | yes |
 | F7 | template/.agentic-workflow/hooks/fullauto-merge.sh:19 | security | critical | fix-now | replan-in-unit (propose P6) | no |
 | F8 | template/.agentic-workflow/hooks/fullauto-merge.sh:55 | correctness | high | fix-now | replan-in-unit (propose P6) | no |
 | F9 | template/.agentic-workflow/hooks/fullauto-merge.sh:90 | security + verify | high | fix-now | replan-in-unit (propose P6) | no |
