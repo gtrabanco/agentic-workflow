@@ -18,5 +18,5 @@
 | F16 | skills/ship-roadmap/SKILL.md:80 | API + backward-compatibility | high | fix-now | replan-in-unit (propose P6) | no |
 | F17 | skills/ship-roadmap/references/AUDIT_AND_MERGE.md:27 | API | high | fix-now | replan-in-unit (propose P6) | no |
 | F18 | skills/workflow-status/references/SENSOR_SIGNALS.md:32 | progressive-routing | high | fix-now | replan-in-unit (propose P7) | no |
-| F19 | scripts/check-skill-context.mjs:32 | debt + perf | high | fix-now | fold into phase | no |
+| F19 | scripts/check-skill-context.mjs:32 | debt + perf | high | fix-now | fold into phase | yes |
 | F20 | template/.agentic-workflow/hooks/fullauto-merge.sh:64 | debt + correctness | med | fix-now | replan-in-unit (propose P6) | no |

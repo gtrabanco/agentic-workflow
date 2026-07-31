@@ -20,15 +20,19 @@ sesión y estado del workflow.
 ## Presupuesto de contexto y carga progresiva
 
 Los metadatos de las skills siempre se anuncian al agente, pero el cuerpo de
-`SKILL.md` solo entra en contexto tras la activación. Por eso los ocho
-entrypoints más grandes conservan en `SKILL.md` los gates universales y una ruta
-explícita, y cargan el detalle de `references/` solo cuando esa ruta lo necesita.
-Las referencias están a un salto y no pueden enlazar más referencias, para que
-los modelos pequeños no tengan que descubrir una cadena oculta de instrucciones.
+`SKILL.md` solo entra en contexto tras la activación. El checker de contexto
+descubre cada entrypoint `skills/*/SKILL.md` y aplica el presupuesto por defecto,
+con overrides explícitos por skill para excepciones deliberadas como el barrido
+amplio y de invocación explícita de `product-audit`. Las entrypoints segmentadas
+conservan en `SKILL.md` los gates universales y una ruta explícita, y cargan el
+detalle de `references/` solo cuando esa ruta lo necesita. Las referencias están
+a un salto y no pueden enlazar más referencias, para que los modelos pequeños
+no tengan que descubrir una cadena oculta de instrucciones.
 
 El presupuesto versionado usa `ceil(bytes UTF-8 / 4)` como estimación
-determinista, no como tokens facturados por el proveedor. Los entrypoints
-principales tienen un límite de 4.200 tokens estimados y 360 líneas;
+determinista, no como tokens facturados por el proveedor. El límite por defecto
+de los entrypoints principales es 4.200 tokens estimados y 360 líneas; los
+overrides explícitos quedan commiteados para excepciones deliberadas, y
 `execute-phase`, la ruta más frecuente, tiene 3.500 y 320. Su estimación de
 activación directa bajó de unos 13.010 a unos 3.000 manteniendo los contratos
 completos tras rutas obligatorias. Valida el catálogo con:
