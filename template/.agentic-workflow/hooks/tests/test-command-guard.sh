@@ -34,7 +34,10 @@ expect_allow "fullauto wrapper" --command "bash .agentic-workflow/hooks/fullauto
 expect_block "export listing" --command "export"
 expect_block "export -p" --command "export -p"
 expect_block "env listing" --command "env"
+expect_block "absolute env listing" --command "/usr/bin/env"
+expect_block "env assignment-only listing" --command "env NODE_ENV=test"
 expect_block "printenv name" --command "printenv API_KEY"
+expect_block "absolute printenv name" --command "/usr/bin/printenv API_KEY"
 expect_block "declare exports" --command "declare -x"
 expect_block "direct PR merge" --command "gh pr merge 12 --squash"
 expect_block "absolute PR merge" --command "/usr/bin/gh pr merge 12 --squash"
@@ -63,4 +66,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 6 allowed, 16 blocked, adapters normalized\n'
+printf 'PASS command guard: 6 allowed, 20 blocked, adapters normalized\n'
