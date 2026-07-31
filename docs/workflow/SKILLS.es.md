@@ -21,7 +21,7 @@ sesión y estado del workflow.
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `init-workspace` | Obtiene el andamiaje de `template/` y lo adapta al proyecto mediante entrevista; sugiere las skills de revisión complementarias de la plataforma; ofrece instalar las skills | `design-feature` |
+| `init-workspace` | Obtiene el andamiaje de `template/` y lo adapta al proyecto mediante entrevista; sugiere las skills de revisión complementarias de la plataforma; ofrece instalar las skills | `discover-repository-state` |
 | `discover-repository-state` | Crea un ledger congelado y respaldado por evidencia; separa hechos, decisiones, trabajo planificado, documentación e inferencia | `plan-feature` / `resolve-repository-state` |
 | `resolve-repository-state` | Único escritor que resuelve una contradicción explícita y publica el siguiente snapshot congelado | el paso de flujo interrumpido |
 

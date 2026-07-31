@@ -376,6 +376,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.1 | 2026-07-31 | parche | Enruta un proyecto recién configurado por discovery del estado del repositorio antes del diseño, la planificación o la ejecución. |
 | 2.5.0 | 2026-07-31 | minor | Añade un paso explícito de proceso en bootstrap y upgrade para sembrar `docs/workflow/REPOSITORY_STATE.md` desde la plantilla sin sobrescribir un ledger existente. |
 | 2.3.0 | 2026-07-19 | menor | La entrevista de bootstrap gana un paso de **inventario de capacidades**: siembra `docs/CAPABILITIES.md` desde el descubrimiento (roles + `yes\|no\|partial` por fila de subsistema de la plantilla propuestos desde el código; en un repo vacío las filas fijas se recorren con el usuario), podando filas que nunca aplican — nunca se deja como plantilla en bruto. El diff de plantilla del modo upgrade nombra el inventario y lo propone con los mismos valores sembrados por descubrimiento. |
 | 2.2.0 | 2026-07-11 | menor | Siembra las etiquetas `urgent`/`fix-next` a prueba de inyección (`gh label create`, crea-si-falta) en el proceso del modo bootstrap (nuevo paso 7); el modo upgrade añade la que falte de forma aditiva (nuevo paso 6, sin tocar nunca una etiqueta que el proyecto ya personalizó). Nunca redefine el vocabulario — `triage-issue` sigue siendo la única propietaria. Forge no disponible → se omite y se reporta como residual, nunca falla el andamiaje. |

@@ -19,7 +19,7 @@ logging, and workflow status.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `design-feature` |
+| `init-workspace` | Fetch the `template/` scaffold and adapt it to the project by interview; suggest the platform's companion review skills; offer to install the skills | `discover-repository-state` |
 | `discover-repository-state` | Creates a frozen, evidence-backed repository-state ledger; separates facts, decisions, planned work, documentation, and inference | `plan-feature` / `resolve-repository-state` |
 | `resolve-repository-state` | Sole writer that resolves an explicit fact contradiction and publishes the next frozen snapshot | the interrupted workflow step |
 

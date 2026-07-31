@@ -1,7 +1,7 @@
 ---
 name: init-workspace
 user-invocable: true
-version: 2.5.0
+version: 2.5.1
 argument-hint: <target-dir>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -167,7 +167,8 @@ Inspect the target dir (`[target-dir]`, default cwd) before touching anything:
    (never fail the whole scaffold on it).
 9. **Report.** List what was created, which placeholders still need human input,
    the companion skills recorded/installed, the urgency labels seeded (or
-   skipped, with reason), and the next step: `plan-feature` → `execute-phase`.
+   skipped, with reason), and the next step: `discover-repository-state` →
+   `design-feature` → `plan-feature` → `execute-phase`.
 
 ## Upgrade mode
 
@@ -296,7 +297,7 @@ enables:
   adapts. Use that when you want the raw scaffold and will fill it yourself.
 - `docs/workflow/PORTABLE_PROMPT.md` — regenerates the **skills** adapted to a
   project (behavior). This skill adapts the **substrate** (docs). Complementary.
-- After init: `plan-feature` →
+- After init: `discover-repository-state` → `design-feature` → `plan-feature` →
   `execute-phase`; run `audit-docs` to confirm the scaffold is coherent.
 
 ## Done when
@@ -309,7 +310,8 @@ enables:
 - **The closing `→ Next:` block is printed** (plus the offer to install the skills):
 
   ```
-  → Next: /plan-feature — plan the first feature
-    · raw idea → /plan-feature "<idea>"   · next roadmap entry → /plan-feature --next
+  → Next: /discover-repository-state — freeze repository evidence before planning
+    · raw idea → /design-feature "<idea>" after discovery
+    · next roadmap entry → /plan-feature --next after discovery
     · confirm the scaffold is coherent → /audit-docs
   ```
