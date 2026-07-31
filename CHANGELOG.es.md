@@ -159,6 +159,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.11.1 | 2026-07-31 | parche | Exige un snapshot congelado del estado del repositorio antes de implementar y enruta el estado ausente o no congelado a discovery o resolución. |
 | 2.11.0 | 2026-07-31 | menor | Consume hechos congelados del Estado Normalizado del Repositorio antes de implementar, inspecciona directamente solo hechos ausentes y enruta evidencia contradictoria a `resolve-repository-state`. |
 | 2.10.0 | 2026-07-30 | menor | Issue #111: añade una única política determinista `Autofix` / `Opportunistic Fix` / `Create Issue`, evaluación explícita aprobado/fallido por fila, comprobación de límites numéricos y un registro de ejecución en `decisions.md`; la configuración queda para el futuro hasta contar con un esquema verificable por máquina. |
 | 2.9.0 | 2026-07-30 | menor | Borrador inicial de política para la issue #111; sustituido antes de la publicación por el contrato determinista de fuente única de 2.10.0. |
@@ -212,6 +213,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.2.1 | 2026-07-31 | parche | Exige un snapshot congelado del estado del repositorio antes de planificar y enruta el estado ausente o no congelado a discovery o resolución. |
 | 3.1.0 | 2026-07-12 | menor | Fix #51: la rama "`defined` o superior → continuar" de la puerta de redirección ahora es específica por estado — solo `defined` continúa a Routing; `planned` (SPEC + artefactos presentes) **PARA** y remite a `/execute-phase <NN> P1` en vez de re-generar el andamiaje; `in-progress` PARA para reanudar la fase actual; `done` PARA como ya entregado. `--next` ahora apunta a la siguiente entrada **`defined`** (antes `planned`, que ya está con andamiaje). El contrato de turno y "Done when" ganan una casilla que exige releer y confirmar la escritura `defined→planned` antes de terminar el turno. |
 | 3.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 2.1.0 | 2026-07-09 | menor | La puerta de redirección ahora se basa en el **estado del roadmap** (la máquina de cinco estados) como señal primaria — estado `defined`+ continúa, `idea`/ausente PARA — en vez del marcador `## Design status` del SPEC. El marcador se conserva solo como **fallback de compatibilidad legacy**, para una fila del roadmap previa a la migración que aún lee un `planned` plano sin historial de cinco estados. Ver `docs/workflow/MIGRATION.md`. |
