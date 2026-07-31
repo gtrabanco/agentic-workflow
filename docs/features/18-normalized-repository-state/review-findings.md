@@ -15,4 +15,4 @@
 | F13 | skills/resolve-repository-state/SKILL.md:67 | implementation | high | fix-now | fold-findings — make needs-input route stop for evidence instead of recommending planning | yes |
 | F14 | skills/init-workspace/SKILL.md:136-141 | implementation | high | fix-now | fold-findings — require discovery/frozen state before the bootstrap handoff to planning or execution | yes |
 | F15 | skills/plan-feature/SKILL.md:156-158 | implementation | high | fix-now | fold-findings — gate planning and execution on a frozen, non-contradicted snapshot | yes |
-| F16 | PR #114:body | workflow | med | fix-now | fold-findings — synchronize the stale golden-fixture verification note with the committed evidence | no |
+| F16 | PR #114:body | workflow | med | fix-now | fold-findings — synchronize the stale golden-fixture verification note with the committed evidence | yes |
