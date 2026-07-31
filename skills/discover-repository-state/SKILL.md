@@ -41,11 +41,15 @@ ledger before collecting evidence.
    copy them into facts without separate implementation evidence.
 4. Place reasoning under **Inference** and unresolved ambiguity under **Open
    Questions**.
-5. If new evidence conflicts with a frozen fact, append a **Contradiction**,
-   set snapshot status to `contradicted`, and do not alter the fact. Hand off
-   to `resolve-repository-state`.
-6. If no contradiction was recorded, set the snapshot status to `frozen`.
-   Commit the artifact and cite the source revision.
+5. If the existing snapshot is already `contradicted`, preserve that status and
+   do not alter its unresolved contradiction; hand off to
+   `resolve-repository-state`. Otherwise, if new evidence conflicts with a
+   frozen fact, append a **Contradiction**, set snapshot status to
+   `contradicted`, and do not alter the fact. Hand off to
+   `resolve-repository-state`.
+6. Only if neither an existing nor a newly recorded contradiction is present,
+   set the snapshot status to `frozen`. Commit the artifact and cite the source
+   revision.
 
 ## Guardrails
 
