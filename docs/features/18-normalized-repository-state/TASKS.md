@@ -12,7 +12,7 @@
 ## P2 — Repository-state skills
 
 - [x] Add `skills/discover-repository-state/SKILL.md`; it produces only facts and freezes state.
-      Check: `grep -q "Discovery skills produce only repository facts" skills/discover-repository-state/SKILL.md`.
+      Check: `grep -q "Discovery records repository facts" skills/discover-repository-state/SKILL.md`.
 - [x] Add `skills/resolve-repository-state/SKILL.md` with a sole-writer rule.
       Check: `grep -q "sole" skills/resolve-repository-state/SKILL.md`.
 - [x] Define accepted/rejected evidence and a next frozen snapshot.
