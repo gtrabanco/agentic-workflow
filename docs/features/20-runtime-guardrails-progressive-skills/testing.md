@@ -43,3 +43,12 @@
 - P7: `test-opencode-guard.sh` passed with the worktree supplied through the OpenCode plugin context and the `tool.execute.before` event shape.
 - P7: `node scripts/check-skill-context.test.mjs` passed nested-directory, missing, unreachable, heading, budget, unknown-argument, missing-skill, `--manifest-only`, and bare-`--skill` cases.
 - P7: `node scripts/check-skill-context.mjs --manifest-only`, `node scripts/check-skill-context.mjs --skill execute-phase`, and `git diff --check` passed; the full checker retained one-hop route integrity and all progressive budgets.
+- P8: `test-opencode-guard.sh` passed allow and block paths against the OpenCode plugin worktree.
+- P8: `test-command-guard.sh` passed 6 allowed and 27 blocked cases with normalized adapters.
+- P8: `test-fullauto-merge.sh` passed transient-marker cleanup and idempotent PR comments.
+- P8: `check-skill-context.test.mjs`, `check-skill-context.mjs` (31 skills), and `--manifest-only` (31 skills / 17 overrides / depth 1) passed.
+- P8: `skills.sh.json`, `.claude-plugin/marketplace.json`, and `docs/workflow/SKILL_CONTEXT_BUDGETS.json` parsed with `JSON.parse`.
+- P8: `npx skills add . --list` discovered 30 installable skills, exit 0.
+- P8: `git diff --check origin/main...HEAD` and `git diff --check` passed with no whitespace errors.
+- P8: F38 reconciled — only the nine feature skills differ from `origin/main` (57 paths, all feature-scoped); tree clean and synced with origin (0 ahead / 0 behind).
+- P8: F39 resolved — scoped reword `39dc7a9 docs(20): link PR #116` on the branch and pushed; no force-push needed.

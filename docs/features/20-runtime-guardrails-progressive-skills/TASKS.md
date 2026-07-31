@@ -94,11 +94,11 @@
 
 ## P8 — Hardening & PR
 
-- [ ] Isolate the 28 unrelated tracked `skills/*` modifications before assessing the feature tree.
-      Covers: F38.
-- [ ] After user confirmation, reword `8c4eec6` to the scoped conventional-commit format and push with `--force-with-lease`.
-      Covers: F39.
-- [ ] Run the hook fixtures, context checker and its tests, manifest parsing, `npx skills add . --list`, and `git diff --check` on the synchronized branch.
+- [x] Isolate the 28 unrelated tracked `skills/*` modifications before assessing the feature tree.
+      Covers: F38. Resolved: tree is clean and synced with `origin/feat/20-...` (0/0); the only `skills/*` paths differing from `origin/main` belong to the feature's nine skills — no unrelated modifications remain to isolate.
+- [x] After user confirmation, reword `8c4eec6` to the scoped conventional-commit format and push with `--force-with-lease`.
+      Covers: F39. Resolved: the scoped reword `39dc7a9 docs(20): link PR #116` (same tree and parent as `8c4eec6`) is on the branch and pushed; `8c4eec6` remains only as the dangling pre-reword object.
+- [x] Run the hook fixtures, context checker and its tests, manifest parsing, `npx skills add . --list`, and `git diff --check` on the synchronized branch.
 - [ ] Run `/review-change --adversarial 3`; fold any remaining fix-now findings, then run `/audit-pr`.
       Covers: F40.
   Done-when: the pushed branch has a clean tree, an adversarial PASS, and an audit-pr merge-ready verdict.
