@@ -21,3 +21,13 @@ command gate. P5 contains only hardening and the literal close-out chain.
 ## Open questions
 
 none
+
+## Execution overrides
+
+- 2026-08-01 — P7 phase-lint failed because its title joins adapter and context-checker deliverables, several checkboxes combine deliverables, and its done-when contains two commands; user-forced execution via `execute-phase 20 P7 --force`.
+
+## Opportunistic finding decisions
+
+| Date | Finding | Evidence | Estimate (lines/files) | Risk | Local files | Decision | Why | Policy source | Record |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-08-01 | none | P7 implementation review | 0 lines/0 files | n/a | n/a | none | No out-of-scope finding discovered. | workflow | phase commit |

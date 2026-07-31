@@ -53,6 +53,15 @@ if (manifestOnly) {
 
 const estimate = (text) => Math.ceil(Buffer.byteLength(text, "utf8") / 4);
 const lineCount = (text) => text.split("\n").length - (text.endsWith("\n") ? 1 : 0);
+const nestedEntries = (directory, relative = "") => {
+  if (!fs.existsSync(directory)) return [];
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryRelative = path.join(relative, entry.name);
+    const entryPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) return [entryRelative, ...nestedEntries(entryPath, entryRelative)];
+    return [entryRelative];
+  });
+};
 const failures = [];
 const rows = [];
 
@@ -82,6 +91,9 @@ for (const skill of selected) {
   const existing = fs.existsSync(referencesDir)
     ? fs.readdirSync(referencesDir).filter((name) => name.endsWith(".md")).sort()
     : [];
+  for (const name of nestedEntries(referencesDir)) {
+    if (name.includes(path.sep)) failures.push(`${skill}: nested reference path exceeds depth 1: ${name}`);
+  }
 
   for (const name of linked) {
     if (name.includes("/") || name.includes("\\") || name.includes("..")) {
