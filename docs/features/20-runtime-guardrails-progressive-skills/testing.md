@@ -24,3 +24,7 @@
 - P3: `node scripts/check-skill-context.mjs --manifest-only` passed with eight budgeted skills and one-hop references.
 - P3: `skills.sh.json`, `.claude-plugin/marketplace.json`, and `SKILL_CONTEXT_BUDGETS.json` parsed as JSON; every grouped skill directory exists.
 - P3: `product-audit` 3.0.0 exposes both manual-only metadata keys and retains its explicit invocation contract.
+- P4: `node scripts/check-skill-context.mjs` passed all eight skills, including one-hop reachability, no nested reference links, main/reference line limits, and description budgets.
+- P4: direct activation estimates are `execute-phase` 3,016; `design-feature` 2,384; `review-change` 2,136; `ship-roadmap` 2,062; `audit-pr` 1,891; `workflow-status` 1,811; `init-workspace` 1,777; and `triage-issue` 1,379.
+- P4: every segmented entrypoint retains `Turn contract`, `Portability`, and `→ Next:`; executor/review/audit entrypoints also retain explicit NRS and Architectural invariants routing.
+- P4: `git diff --check` and both bilingual context-guidance acceptance greps passed.

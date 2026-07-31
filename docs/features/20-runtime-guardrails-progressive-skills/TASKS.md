@@ -40,19 +40,19 @@
 
 ## P4 — Progressive loading
 
-- [ ] Segment `execute-phase` into a compact universal core and conditional resources.
+- [x] Segment `execute-phase` into a compact universal core and conditional resources.
       Check: `node scripts/check-skill-context.mjs --skill execute-phase`.
-- [ ] Segment `ship-roadmap` by founding, continuation, merge, and report routes.
+- [x] Segment `ship-roadmap` by founding, continuation, merge, and report routes.
       Check: `node scripts/check-skill-context.mjs --skill ship-roadmap`.
-- [ ] Segment `workflow-status` around its deterministic sensor procedure.
+- [x] Segment `workflow-status` around its deterministic sensor procedure.
       Check: `node scripts/check-skill-context.mjs --skill workflow-status`.
-- [ ] Segment `review-change` and `audit-pr` route-specific detail.
+- [x] Segment `review-change` and `audit-pr` route-specific detail.
       Check: `node scripts/check-skill-context.mjs --skill review-change --skill audit-pr`.
-- [ ] Segment `triage-issue`, `design-feature`, and `init-workspace` route-specific detail.
+- [x] Segment `triage-issue`, `design-feature`, and `init-workspace` route-specific detail.
       Check: `node scripts/check-skill-context.mjs --skill triage-issue --skill design-feature --skill init-workspace`.
-- [ ] Preserve fixed outputs, one-hop references, and small-model load instructions.
+- [x] Preserve fixed outputs, one-hop references, and small-model load instructions.
       Check: `node scripts/check-skill-context.mjs`.
-- [ ] Bump every changed skill and synchronize bilingual version surfaces.
+- [x] Bump every changed skill and synchronize bilingual version surfaces.
       Check: `git diff --check`.
   Done-when: `node scripts/check-skill-context.mjs` → exit 0.
 
