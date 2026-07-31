@@ -158,6 +158,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.12.0 | 2026-07-31 | minor | Adds a pre-edit architectural-invariant gate with evidence-based classification, explicit-decision stop routing, and optional NRS compatibility. |
 | 2.11.2 | 2026-07-31 | patch | Moves the NRS guidance below the Branch rules so branch formats and workflow constraints remain scoped to the Branch section. |
 | 2.11.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before implementation and routes missing or non-frozen state to discovery or resolution. |
 | 2.11.0 | 2026-07-31 | minor | Consumes frozen Normalized Repository State facts before implementation, inspects only absent facts directly, and routes contradictory evidence to `resolve-repository-state`. |
