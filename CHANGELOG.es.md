@@ -136,6 +136,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** `--fullauto` es ahora la única autoridad de merge automatizado y debe usar el wrapper transitorio fail-closed del repositorio tras un veredicto fresco de `audit-pr`; los comandos directos de merge siguen bloqueados, el estado del intento se limpia en cada salida y cada automerge correcto queda registrado mediante un comentario idempotente de PR ligado al SHA. |
 | 2.3.0 | 2026-07-18 | menor | Etapa REVIEW: la cadencia del checkpoint para features `L`/marcadas como sensibles ahora se dispara con los tres triggers nombrados de `execute-phase` (límite de capa / acumulación / sensibilidad, referenciados desde `#77` en vez de repetidos) en lugar de un conteo fijo de "cada 2 fases", que se había recalibrado mal ~3x tras el lint de atomicidad de #64 que redujo el tamaño de fase. El piso obligatorio `--adversarial 2` y la falta de alineación con la cadencia advisory propia de `review-change` no cambian. Cierra #93. |
 | 2.2.1 | 2026-07-13 | parche | Portability gana una barrera de concurrencia del provider: limita los subagentes/ejecutores headless paralelos al límite documentado de peticiones paralelas por API key del provider (dejando un hueco para el conductor), y reduce el paralelismo ante un 429 en vez de reintentar a fan-out completo. Solo guía — sin cambio de etapas ni de contrato. |
 | 2.2.0 | 2026-07-11 | menor | SELECT gana una nueva prioridad principal: lee primero `detail.urgent` de `workflow-status` (solo etiquetas) — un issue `fix-next` abierto salta a la cabeza de la cola (sin interrumpir); un issue `urgent` abierto corre la rúbrica canónica de pausa-vs-terminar en `docs/workflow/ORCHESTRATION.md` (referenciada, nunca duplicada) contra los hechos de interrumpibilidad de la unidad en curso, `INTERRUPT_NOW` la aparca, `FINISH_FIRST` encola el fix para la siguiente iteración. Lista de prioridades renumerada. |
@@ -299,6 +300,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** elimina el auto-merge standalone o autorizado por una política documental. La skill queda estrictamente limitada a veredicto/comentario y nunca fusiona; solo una etapa AUDIT activa de `ship-roadmap --fullauto` puede consumir su resultado MERGE-READY ligado al SHA e invocar el wrapper transitorio. |
 | 3.6.0 | 2026-07-31 | menor | Añade la preservación de invariantes arquitectónicas como puerta explícita de aptitud de merge basada en evidencia y una ruta n-a para proyectos que no declaran ninguna. |
 | 3.5.1 | 2026-07-31 | parche | Mueve la guía de auditoría NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 3.5.0 | 2026-07-31 | menor | Audita contra hechos NRS congelados en modo solo lectura y reporta conflictos como contradicciones que solo `resolve-repository-state` puede resolver. |
@@ -388,6 +390,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `init-workspace`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.7.0 | 2026-07-31 | menor | Añade una entrevista de hooks de seguridad del agente y una ruta de upgrade aditiva para Claude Code, Cursor, Copilot y OpenCode; los adaptadores aceptados se instalan de forma explícita, ejecutan el fixture canónico del guard y nunca sobrescriben una configuración de hooks personalizada. |
 | 2.6.0 | 2026-07-31 | menor | Ofrece el documento opcional de invariantes arquitectónicas durante bootstrap y upgrade sin crear un requisito para repositorios existentes. |
 | 2.5.2 | 2026-07-31 | parche | Mueve la guía bootstrap NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 2.5.1 | 2026-07-31 | parche | Enruta un proyecto recién configurado por discovery del estado del repositorio antes del diseño, la planificación o la ejecución. |
@@ -493,6 +496,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-07-31 — guardrails de runtime y fullauto ligado a la invocación.**
+  `init-workspace` 2.7.0 instala el pack de guards de forma aditiva;
+  `audit-pr` 4.0.0 queda limitado a veredicto/comentario; `ship-roadmap` 3.0.0
+  es la única autoridad de merge automatizado y usa un wrapper transitorio
+  fail-closed con comentario de auditoría ligado al SHA. Ver feature 20 y la
+  nota de migración.
 
 - **2026-07-31 — plegado del estado normalizado del repositorio.**
   `discover-repository-state` 1.1.0 conserva el estado `contradicted` del

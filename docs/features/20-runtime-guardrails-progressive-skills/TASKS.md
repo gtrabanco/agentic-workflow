@@ -14,15 +14,15 @@
 
 ## P2 — Fullauto policy
 
-- [ ] Make standalone `audit-pr` verdict/comment-only and remove inherited merge authorization.
+- [x] Make standalone `audit-pr` verdict/comment-only and remove inherited merge authorization.
       Check: `grep -q "never merges" skills/audit-pr/SKILL.md`.
-- [ ] Make the active `ship-roadmap --fullauto` audit stage the sole automated merge authority.
+- [x] Make the active `ship-roadmap --fullauto` audit stage the sole automated merge authority.
       Check: `grep -q "sole automated merge authority" skills/ship-roadmap/SKILL.md`.
-- [ ] Require transient wrapper cleanup and a SHA-bound PR automerge comment.
+- [x] Require transient wrapper cleanup and a SHA-bound PR automerge comment.
       Check: `grep -q "agentic-workflow:automerge" skills/ship-roadmap/SKILL.md`.
-- [ ] Add bootstrap and upgrade interview steps for detected safety-hook adapters.
+- [x] Add bootstrap and upgrade interview steps for detected safety-hook adapters.
       Check: `grep -q "Agent safety hooks" skills/init-workspace/SKILL.md`.
-- [ ] Bump changed skill versions and synchronize both changelogs/readmes.
+- [x] Bump changed skill versions and synchronize both changelogs/readmes.
       Check: `git diff --check`.
   Done-when: `grep -q "sole automated merge authority" skills/ship-roadmap/SKILL.md` → exit 0.
 
