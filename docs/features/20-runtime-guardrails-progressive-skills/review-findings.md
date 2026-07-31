@@ -1,7 +1,7 @@
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | F1 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:170 | spec-drift | high | fix-now | fold into phase | yes |
-| F2 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:267 | spec-drift | med | fix-now | fold into phase | no |
+| F2 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:267 | spec-drift | med | fix-now | fold into phase | yes |
 | F3 | docs/features/20-runtime-guardrails-progressive-skills/testing.md:30 | workflow + spec-drift | high | fix-now | fold into phase | no |
 | F4 | template/.agentic-workflow/hooks/guard-command.sh:47 | security | high | fix-now | fold into phase | no |
 | F5 | template/.agentic-workflow/hooks/guard-command.sh:62 | security | high | fix-now | fold into phase | no |
