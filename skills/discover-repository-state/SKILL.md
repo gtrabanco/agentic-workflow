@@ -1,7 +1,7 @@
 ---
 name: discover-repository-state
 user-invocable: true
-version: 1.1.1
+version: 1.1.2
 description: >
   Discover repository evidence and write a frozen Normalized Repository State.
   Produces verified repository evidence and keeps facts, decisions, planned
@@ -68,6 +68,12 @@ consume the frozen result.
 The ledger is frozen or explicitly contradicted, and every fact carries direct
 evidence.
 
+If a contradiction was recorded:
+
+→ Next: /resolve-repository-state <contradiction-id> — resolve the contradicted snapshot first
+  · provide missing evidence → rerun /discover-repository-state
+
+Otherwise:
+
 → Next: /plan-feature <slug> — plan from frozen facts
-  · contradiction recorded → /resolve-repository-state
   · implementation-ready feature → /execute-phase <NN> P1
