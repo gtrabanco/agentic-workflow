@@ -57,3 +57,10 @@ Last reviewed: —
 - Gotchas: The OpenCode fixture now passes context at plugin initialization; the runtime event still supplies tool and argument data through the hook input/output pair.
 - Files: template/.opencode/plugins/agentic-workflow-guard.ts.example, template/.agentic-workflow/hooks/tests/test-opencode-guard.sh, scripts/check-skill-context.mjs, scripts/check-skill-context.test.mjs, docs/features/20-runtime-guardrails-progressive-skills/
 - Next: P8 — Hardening & PR
+
+## P8 — 2026-08-01
+- Done: Reconciled F38 (tree clean and synced; only the nine feature skills differ from `origin/main`), resolved F39 (scoped reword `39dc7a9` on the branch and pushed), and passed the full verification set: hook fixtures (command 6/27, fullauto cleanup + idempotent comment, opencode allow/block), context checker and tests (31 skills, depth 1), manifest `JSON.parse` on all three manifests, `npx skills add . --list` (30 skills), and `git diff --check` on both the branch diff and the worktree.
+- Remains: F40 — adversarial review, fold any fix-now findings, and `/audit-pr` merge gate.
+- Gotchas: The OpenCode fixture context arrives at plugin init; runtime events flow through the hook input/output pair.
+- Files: docs/features/20-runtime-guardrails-progressive-skills/
+- Next: P8 — adversarial review and audit-pr gate (F40)
