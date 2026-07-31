@@ -21,6 +21,7 @@ Notion ("Agentic Workflow").
 | [REPLICATE.md](REPLICATE.md) | `npx skills` install + portable prompt to set this up in any project |
 | [MIGRATION.md](MIGRATION.md) | Upgrading an existing install from the previous skill set — what was renamed, what to delete |
 | [GOLDEN_FIXTURE.md](GOLDEN_FIXTURE.md) | Manual smoke test: after editing an executor-path skill, run it against a toy fixture with the weakest fleet model and check its contracted output still holds |
+| [WORKFLOW_INVARIANTS.md](WORKFLOW_INVARIANTS.md) | Portable contract for optional project architectural invariants and their evidence-based evaluation |
 
 ## Core principles
 
@@ -40,6 +41,9 @@ Notion ("Agentic Workflow").
    pass (use the project's own gate commands).
 7. **Review at the right altitude.** The change (`review-change`), then the PR
    (`audit-pr`), then — periodically — the whole product (`product-audit`).
+8. **Architecture changes are explicit.** Applicable architectural invariants
+   are evidenced and preserved, or changed through an explicit decision — never
+   inferred from a feature SPEC or implementation.
 
 ## The map at a glance
 
