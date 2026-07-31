@@ -22,3 +22,4 @@
 | F20 | template/.agentic-workflow/hooks/fullauto-merge.sh:64 | debt + correctness | med | fix-now | replan-in-unit (propose P6) | no |
 | F24 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:20 | security | high | fix-now | fold into phase | yes |
 
+| F25 | template/.agentic-workflow/hooks/guard-command.sh:48 | correctness | high | fix-now | fold into phase | yes |
