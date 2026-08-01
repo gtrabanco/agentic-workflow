@@ -110,7 +110,7 @@ run_wrapper >/dev/null
 [ "$(cat "$fixture/state/comments")" = "1" ]
 [ "$(cat "$fixture/state/merges")" = "1" ]
 
-for case_name in unauthorized-audit stale-audit foreign-base failed-ci; do
+for case_name in unauthorized-audit stale-audit foreign-base failed-ci stale-local-gate; do
   printf 'OPEN\n' > "$fixture/state/pr-state"
   printf '0\n' > "$fixture/state/merges"
   case "$case_name" in
@@ -118,11 +118,21 @@ for case_name in unauthorized-audit stale-audit foreign-base failed-ci; do
     stale-audit) GH_TEST_AUDIT=stale run_wrapper >/dev/null 2>&1 && exit 1 || true ;;
     foreign-base) printf 'develop\n' > "$fixture/state/base"; run_wrapper >/dev/null 2>&1 && exit 1 || true; printf 'main\n' > "$fixture/state/base" ;;
     failed-ci) printf 'FAILURE\n' > "$fixture/state/checks"; run_wrapper >/dev/null 2>&1 && exit 1 || true; printf 'SUCCESS\n' > "$fixture/state/checks" ;;
+    stale-local-gate) printf 'NONE\n' > "$fixture/state/checks"; AGENTIC_WORKFLOW_LOCAL_GATE_SHA=deadbeef run_wrapper >/dev/null 2>&1 && exit 1 || true; printf 'SUCCESS\n' > "$fixture/state/checks" ;;
   esac
   [ "$(cat "$fixture/state/merges")" = "0" ]
 done
 
+# The check_count=0 branch must still merge when a fresh local gate SHA matches.
 printf 'OPEN\n' > "$fixture/state/pr-state"
+printf '0\n' > "$fixture/state/merges"
+printf 'NONE\n' > "$fixture/state/checks"
+AGENTIC_WORKFLOW_LOCAL_GATE_SHA="$head_sha" run_wrapper >/dev/null
+[ "$(cat "$fixture/state/merges")" = "1" ]
+printf 'SUCCESS\n' > "$fixture/state/checks"
+
+printf 'OPEN\n' > "$fixture/state/pr-state"
+printf '0\n' > "$fixture/state/merges"
 if GH_TEST_FAIL_MERGE=1 run_wrapper >/dev/null 2>&1; then
   echo "FAIL: merge failure was reported as success" >&2
   exit 1
