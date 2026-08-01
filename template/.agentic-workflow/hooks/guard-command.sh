@@ -44,6 +44,9 @@ fi
 # Direct merges stay blocked. Automated merges use fullauto-merge.sh, whose
 # child process is outside the agent tool boundary and has its own fail-closed
 # checks. There is intentionally no persistent allow marker for these patterns.
+# The literal-token match is a deliberate boundary: variable-indirection
+# (`cmd=gh; $cmd pr merge`) is out of scope by design, so do not rely on this
+# guard as a sandbox — the forge branch rule / CI is the enforcement boundary.
 if printf '%s\n' "$command_text" | grep -Eqi '(^|[^[:alnum:]_/-])([^[:space:];&|()[:space:]]*/)?gh([[:space:]]+[^;&|()[:space:]]+){0,8}[[:space:]]+pr[[:space:]]+merge([^[:alnum:]_-]|$)'; then
   deny "direct pull-request merge; use ship-roadmap --fullauto"
 fi
