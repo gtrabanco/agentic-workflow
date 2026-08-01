@@ -47,4 +47,4 @@
 | F45 | template/.agentic-workflow/hooks/fullauto-merge.sh:7 | correctness | med | fix-now | fold into phase | yes |
 | F46 | template/.agentic-workflow/hooks/guard-command.sh:47 | security | critical | fix-now | fold into phase | yes |
 | F47 | template/.agentic-workflow/hooks/fullauto-merge.sh:68,113 | debt + correctness | med | fix-now | fold into phase | yes |
-| F48 | template/.agentic-workflow/hooks/fullauto-merge.sh:96 | tests | med | fix-now | fold into phase | no |
+| F48 | template/.agentic-workflow/hooks/fullauto-merge.sh:96 | tests | med | fix-now | fold into phase | yes |
