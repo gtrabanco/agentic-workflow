@@ -46,5 +46,5 @@
 | F44 | scripts/check-skill-context.test.mjs:83 | tests | low | fix-now | replan-in-unit (propose P7) | yes ↳ folded by 942ab62 |
 | F45 | template/.agentic-workflow/hooks/fullauto-merge.sh:7 | correctness | med | fix-now | fold into phase | yes |
 | F46 | template/.agentic-workflow/hooks/guard-command.sh:47 | security | critical | fix-now | fold into phase | yes |
-| F47 | template/.agentic-workflow/hooks/fullauto-merge.sh:68,113 | debt + correctness | med | fix-now | fold into phase | no |
+| F47 | template/.agentic-workflow/hooks/fullauto-merge.sh:68,113 | debt + correctness | med | fix-now | fold into phase | yes |
 | F48 | template/.agentic-workflow/hooks/fullauto-merge.sh:96 | tests | med | fix-now | fold into phase | no |

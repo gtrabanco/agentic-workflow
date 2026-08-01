@@ -48,6 +48,10 @@ default_base=$(printf '%s' "$repo" | jq -r '.defaultBranchRef.name')
 audit_marker="<!-- audit-pr:merge-ready sha=$head_sha -->"
 marker="<!-- agentic-workflow:automerge head=$head_sha -->"
 
+comment_file=""
+attempt_marker=""
+trap 'rm -f "${comment_file:-}"; rm -f "${attempt_marker:-}"' EXIT HUP INT TERM
+
 printf '%s' "$pr_json" | jq -e --arg marker "$audit_marker" \
   '[.comments[]?.body | contains($marker)] | any' >/dev/null \
   || fail "fresh SHA-bound audit MERGE-READY evidence is unavailable"
@@ -65,7 +69,6 @@ comment_exists() {
 post_comment() {
   merge_sha=$1
   comment_file=$(mktemp "${TMPDIR:-/tmp}/agentic-workflow-automerge.XXXXXX")
-  trap 'rm -f "${comment_file:-}"; [ -z "${attempt_marker:-}" ] || rm -f "$attempt_marker"' EXIT HUP INT TERM
   tick='`'
   {
     printf '%s\n' "$marker"
@@ -109,8 +112,6 @@ marker_dir="$git_common/agentic-workflow"
 mkdir -p "$marker_dir"
 umask 077
 attempt_marker="$marker_dir/automerge-$run_id"
-comment_file=""
-trap 'rm -f "${comment_file:-}"; rm -f "${attempt_marker:-}"' EXIT HUP INT TERM
 printf 'run=%s\npr=%s\nhead=%s\n' "$run_id" "$pr" "$head_sha" > "$attempt_marker"
 
 gh pr merge "$pr" "--$method" --match-head-commit "$head_sha"
