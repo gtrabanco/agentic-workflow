@@ -21,7 +21,8 @@
 | F19 | scripts/check-skill-context.mjs:32 | debt + perf | high | fix-now | fold into phase | yes |
 | F20 | template/.agentic-workflow/hooks/fullauto-merge.sh:64 | debt + correctness | med | fix-now | fold into phase | yes |
 | F21 | .github/hooks/agentic-workflow.json.example:1 | platform | high | fix-now | fold into phase | no |
-  ↳ triaged 2026-07-31: wontfix — the ledger path is obsolete; the existing template file is `template/.github/hooks/agentic-workflow.json.example`.
+   ↳ triaged 2026-07-31: wontfix — the ledger path is obsolete; the existing template file is `template/.github/hooks/agentic-workflow.json.example`.
+   ↳ VERDICT: WONTFIX — finding targets `.github/hooks/agentic-workflow.json.example` which does not exist; the only wiring is `template/.github/hooks/agentic-workflow.json.example` (10 lines, preToolUse → copilot-guard.sh). No defect to fix.
 | F22 | template/.agentic-workflow/hooks/adapters/copilot-guard.sh:14 | security + platform | high | fix-now | replan-in-unit (propose P6) | yes ↳ folded by bf59ea3 |
 | F23 | template/.agentic-workflow/hooks/fullauto-merge.sh:100 | security + policy | high | fix-now | fold into phase | yes |
 | F24 | template/.agentic-workflow/hooks/adapters/pre-tool-guard.sh:20 | security | high | fix-now | fold into phase | yes |
@@ -46,3 +47,6 @@
 | F43 | scripts/check-skill-context.mjs:82 | correctness | high | fix-now | replan-in-unit (propose P7) | yes ↳ folded by 942ab62 |
 | F44 | scripts/check-skill-context.test.mjs:83 | tests | low | fix-now | replan-in-unit (propose P7) | yes ↳ folded by 942ab62 |
 | F45 | template/.agentic-workflow/hooks/fullauto-merge.sh:7 | correctness | med | fix-now | fold into phase | yes |
+| F46 | template/.agentic-workflow/hooks/guard-command.sh:47 | security | critical | fix-now | fold into phase | no |
+| F47 | template/.agentic-workflow/hooks/fullauto-merge.sh:68,113 | debt + correctness | med | fix-now | fold into phase | no |
+| F48 | template/.agentic-workflow/hooks/fullauto-merge.sh:96 | tests | med | fix-now | fold into phase | no |
