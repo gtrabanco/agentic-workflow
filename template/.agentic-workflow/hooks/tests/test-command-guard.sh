@@ -30,6 +30,7 @@ expect_allow "env-prefixed command" --command "env NODE_ENV=test npm test"
 expect_allow "export word in filename" --command "node scripts/export-report.mjs"
 expect_allow "merge-base is not merge" --command "git merge-base main HEAD"
 expect_allow "fullauto wrapper" --command "bash .agentic-workflow/hooks/fullauto-merge.sh --pr 12"
+expect_allow "variable-indirection merge (documented boundary)" --command 'cmd=gh; $cmd pr merge 12'
 
 expect_block "export listing" --command "export"
 expect_block "export -p" --command "export -p"
@@ -98,4 +99,4 @@ if command -v jq >/dev/null 2>&1; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS command guard: 6 allowed, 27 blocked, adapters normalized\n'
+printf 'PASS command guard: 7 allowed, 27 blocked, adapters normalized\n'
