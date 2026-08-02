@@ -49,4 +49,4 @@
 | F47 | template/.agentic-workflow/hooks/fullauto-merge.sh:68,113 | debt + correctness | med | fix-now | fold into phase | yes |
 | F48 | template/.agentic-workflow/hooks/fullauto-merge.sh:96 | tests | med | fix-now | fold into phase | yes |
 | F49 | scripts/check-skill-context.mjs (whole) + docs/workflow/SKILLS.md:38 + CLAUDE.md "Verification" | debt + rules | med | fix-now | fold into phase | yes ↳ folded: wired `check-skill-context` into CLAUDE.md `## Verification` standing gate. The new checker is referenced only by SKILLS.md:38 prose and the standing "Green" gate (CLAUDE.md Verification) deliberately omitted it, so the SPEC goal "Context budgets regress mechanically" was not an enforced step. Fix = add a context-budget bullet to the CLAUDE.md gate so `node scripts/check-skill-context.mjs` runs as part of "Green". |
-| F50 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:283 | scope | high | fix-now | fold into phase | no |
+| F50 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:283 | scope | high | fix-now | fold into phase | yes ↳ linked #117 (user-approved descope of adversarial review; amendment now satisfies scope gate) |
