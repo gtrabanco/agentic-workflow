@@ -145,9 +145,9 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-featu
 
 Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill generate-docs` → exit 0.
 
-- [ ] Add the Docusaurus adapter column to the canonical slot table.
-- [ ] Match the discovered Docusaurus convention for every documented slot.
-- [ ] Flip F2 to `yes` after the local gate passes.
+- [x] Add the Docusaurus adapter column to the canonical slot table.
+- [x] Match the discovered Docusaurus convention for every documented slot.
+- [x] Flip F2 to `yes` after the local gate passes.
 
 ### P3 — Hardening & PR
 
