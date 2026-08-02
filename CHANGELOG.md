@@ -120,6 +120,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.9.0 | 2026-07-31 | minor | Progressive loading: the activation body is now a compact read-only sensor route; command sequence, crash recovery, envelope fields, guardrails, and portability live in one-hop resources with mandatory load order. |
 | 1.7.0 | 2026-07-19 | minor | Fix #79: four new Process steps (10-13) attach per-unit `review` (`last_checkpoint_sha`, `unreviewed_diff`, `terminal_done` reused from the existing `review_pending` computation, `adversarial: {ran, n}` — honestly `null` unless real evidence exists, never guessed), `closure.state` (reusing `audit-pr`'s own grep), and `issues_born: {n, with_descope_amendment}` (reusing `audit-pr`'s scope-bleed detection, widened by #79/#89) to each `detail.features[]`/`detail.fixes[]` entry — schema-opaque, no package change (same precedent as `detail.urgent`). New top-level `next.suggested[]` (`{command, trigger, source_skill}`, optional) surfaces fired triggers from `execute-phase`/`review-change`/`audit-pr`/`fold-findings`, each quoting its owning skill's own condition — advisory only, never replaces `next.recommended`/`next.tier`. Mirrored in `packages/agentic-workflow-schema` 2.1.0 (same PR). |
 | 1.6.1 | 2026-07-14 | patch | Step 11 (untriaged-issue backlog) reworded: the `postponed`/`promoted`/`wontfix` disposition label (owned by `triage-issue`, triage+-permission-gated, unforgeable) is now stated as the **authoritative** triaged signal; the `VERDICT:` comment is kept as an explicit **legacy fallback** for issues triaged before the label existed, with an accepted-residual note (a spoofed comment can still under-count the backlog — no privilege/injection impact, `detail.urgent` untouched). No field-shape change — `detail.untriaged_issues: {count, oldest_open}` is unchanged. Part of fix `#54`. |
 | 1.6.0 | 2026-07-13 | minor | New process step 9 (renumbers 9→14 to 10→14): reads each in-flight unit's `review-findings.md` fold ledger and emits its `folded: no` rows as structured `findings.fix_now[]` items `{id, file, axis, severity, class, route, suggested_tier}`, `suggested_tier` derived by a fixed table (severity `high` OR a subtle axis → `strong`; else `cheap`). `next.tier` unchanged. Step 8's "review report present" check now also accepts the ledger's presence as evidence `review-change` ran. Envelope example updated with a populated `fix_now` item. Schema package mirrored (major bump, breaking item-shape change) same PR. Part of feature 17 (`finding-severity-routing`). |
@@ -135,6 +136,10 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.2.0 | 2026-07-31 | minor | Fullauto now invokes the wrapper with only PR and run identifiers; the wrapper derives and verifies the forge head, default base, SHA-bound audit evidence, and head-pinned decision instead of trusting caller-controlled inputs. |
+| 3.1.1 | 2026-07-31 | patch | Routes an existing-repository founding run invoked with `--fullauto` through the audit-and-merge policy, while keeping default and greenfield founding routes free of audit resources. |
+| 3.1.0 | 2026-07-31 | minor | Progressive loading splits founding, continuation recovery/selection, stage advancement, runtime/merge policy, terminal reporting, guardrails, and portability into explicit one-hop routes; the main activation body retains the turn contract and route selection. |
+| 3.0.0 | 2026-07-31 | major | **Breaking:** `--fullauto` is now the sole automated merge authority and must use the repository's fail-closed transient wrapper after a fresh `audit-pr` verdict; direct merge commands stay blocked, attempt state is cleaned on every exit, and each successful automerge is logged by an idempotent SHA-bound PR comment. |
 | 2.3.0 | 2026-07-18 | minor | REVIEW stage: the L/sensitive-flagged checkpoint cadence now fires on `execute-phase`'s three named triggers (layer boundary / accumulation / sensitivity, cross-referenced from `#77` rather than restated) instead of a fixed "every 2 phases" count, which had re-miscalibrated ~3x after #64's atomicity lint shrank phase size. The `--adversarial 2` hard floor and the non-alignment with `review-change`'s own advisory cadence are unchanged. Fixes #93. |
 | 2.2.1 | 2026-07-13 | patch | Portability gains a provider-concurrency guardrail: cap parallel subagents/headless executors at the provider's documented parallel-request limit per API key (leaving a slot for the conductor), and reduce parallelism on a 429 instead of retrying at full fan-out. Guidance only — no stage or contract change. |
 | 2.2.0 | 2026-07-11 | minor | SELECT gains a new top priority: reads `workflow-status`'s `detail.urgent` (labels-only) first — an open `fix-next` issue jumps to head of queue (no interrupt); an open `urgent` issue runs the canonical pause-vs-finish rubric in `docs/workflow/ORCHESTRATION.md` (referenced, never forked) against the in-flight unit's interruptibility facts, `INTERRUPT_NOW` parking it, `FINISH_FIRST` queuing the fix for next iteration. Priority list renumbered. |
@@ -158,6 +163,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.13.0 | 2026-07-31 | minor | Progressive loading reduces the most-used skill's activation estimate from about 13k to 3k: universal turn/handoff rules stay in `SKILL.md`, while preflight, execution gates, issue policy, mode workflows, closeout/folding, and batch portability load only when required. |
 | 2.12.0 | 2026-07-31 | minor | Adds a pre-edit architectural-invariant gate with evidence-based classification, explicit-decision stop routing, and optional NRS compatibility. |
 | 2.11.2 | 2026-07-31 | patch | Moves the NRS guidance below the Branch rules so branch formats and workflow constraints remain scoped to the Branch section. |
 | 2.11.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before implementation and routes missing or non-frozen state to discovery or resolution. |
@@ -204,6 +210,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.6.0 | 2026-07-31 | minor | Progressive loading separates status-only, new-idea interview/closure, write/upsert, worked-upsert, and portability paths while retaining universal safety gates in the entrypoint. |
 | 2.5.0 | 2026-07-31 | minor | Classifies optional project architectural invariants with repository evidence and stops design for an explicit architectural decision when a rule is violated, introduced, or changed. |
 | 2.4.1 | 2026-07-31 | patch | Moves the NRS guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.3.0 | 2026-07-19 | minor | Implicit-requirements closure: capability closure becomes three fixed checklists — entity closure (unchanged), new **integration closure** (one resolved row per subsystem in the project's capability inventory, `docs/CAPABILITIES.md` — none skipped; no inventory → derive one and offer to seed the file) and a **role matrix** (every inventory role explicitly allowed/denied per capability) — plus a new **expectation sweep** step and SPEC section (≥ 10 M/L / ≥ 5 XS/S domain expectations a human would assume implicitly, each forced to in-scope/out-of-scope/deferred). Three new Spec-lint product boxes, matching turn-contract boxes and guardrails; Step 0 reads the inventory. |
@@ -259,6 +266,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.9.1 | 2026-07-31 | patch | Makes `--merge` self-contained by loading the review process and adversarial setup before adversarial merge, so the supplied tables are fused under the same review contract. |
+| 2.9.0 | 2026-07-31 | minor | Progressive loading separates the default review process, persistence/decision, adversarial setup/merge, output/guardrails, and portability; isolation and the turn contract remain in the activation body. |
 | 2.8.0 | 2026-07-31 | minor | Explicitly reviews optional project architectural invariants with repository evidence and reports undocumented violations, introductions, or changes as architecture findings. |
 | 2.7.1 | 2026-07-31 | patch | Moves the NRS review guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.7.0 | 2026-07-31 | minor | Uses frozen NRS facts as read-only evidence context and proposes contradictions without redefining facts, accepting decisions, or treating documentation as implementation evidence. |
@@ -298,6 +307,9 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.2.0 | 2026-07-31 | minor | Synchronizes the merge-consumer contract with the forge-verifiable fullauto authority boundary; standalone audits remain verdict/comment-only. |
+| 4.1.0 | 2026-07-31 | minor | Progressive loading moves merge gates, closure/descope checks, audit process, fixed verdict, routing/guardrails, and portability behind a mandatory one-hop audit route; merge ownership remains in the entrypoint. |
+| 4.0.0 | 2026-07-31 | major | **Breaking:** removed standalone/document-policy auto-merge. The skill is now strictly verdict/comment-only and never merges; only an active `ship-roadmap --fullauto` AUDIT stage may consume its SHA-bound MERGE-READY result and invoke the transient wrapper. |
 | 3.6.0 | 2026-07-31 | minor | Adds architectural-invariant preservation as an explicit evidence-based merge-readiness gate with an n-a path for projects that declare none. |
 | 3.5.1 | 2026-07-31 | patch | Moves the NRS audit guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 3.5.0 | 2026-07-31 | minor | Audits against frozen NRS facts read-only and reports conflicts as contradictions that only `resolve-repository-state` may resolve. |
@@ -324,6 +336,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-07-31 | major | **Breaking invocation change:** this high-cost, recommend-only sweep is manual-only on Claude Code and OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). Explicit `/product-audit` invocation remains unchanged; orchestrators and other skills must keep it as a human hand-off. |
 | 2.3.0 | 2026-07-19 | minor | Every run is now **persisted**: the report is written and committed as `docs/audits/<id>-<YYYY-MM-DD>.md` with an incremental audit id (the skill's only mutation). Findings carry a single severity-ranked `F1, F2, …` sequence (never per-dimension letters), proposals cite their source findings (`from: F<k>`), every proposal stream — the roadmap ones included — is always present (`none — <why>` when empty), and the closing block routes to `triage-issue <id> F<k>` (suggest triage, never run it). |
 | 2.2.0 | 2026-07-19 | minor | Process & docs dimension gains **capability-inventory freshness**: cross-checks `docs/CAPABILITIES.md` against the code (roles/permissions/subsystems present in one but not the other are a finding); a missing inventory file yields a seed-it proposal, never an auto-fix. |
 | 2.1.0 | 2026-07-17 | minor | New **scope-export recurrence** signal in the Workflow discipline dimension: ≥ 2 consecutive recent units each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (#64). Output format gained a worked example under Top findings. Part of #66. |
@@ -367,6 +380,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.0 | 2026-07-31 | minor | Progressive loading selects forge-issue vs. persisted-audit input first, then loads label ownership and fold-ledger detail only for verdicts that need them. |
 | 2.4.0 | 2026-07-19 | minor | New **audit-finding mode** (`triage-issue <audit-id> F<k> …`): triages findings from a persisted `product-audit` report — re-verifies the finding against current code, dedupes against existing issues, opens the GitHub issue only on a fix-now/postpone/promote verdict (body cites `Origin: product audit <id>, finding F<k>`), and marks the finding triaged in the audit file with a dated `↳ triaged` note. Issue-number invocations are unchanged. |
 | 2.3.0 | 2026-07-18 | minor | Adds open-unit awareness (consumer-side complement of `#66`): a scope-membership check runs before classification (enumerate open units → both-sides-quoted issue↔SPEC/phase comparison) and a fifth verdict `fix-in-unit <unit>` resolves member issues on the open unit's own branch — fold into its `review-findings.md` ledger (provenance-marked `triage #<n> <date>` row) or its current/next phase, an incremental replan (`design-feature`/`plan-feature`/a SPEC `## Amendments` entry), or a scope-bleed restore. Non-member issues route byte-for-byte unchanged. Fixes `#86`+`#87`. |
 | 2.2.0 | 2026-07-14 | minor | Owns a second label vocabulary — terminal-disposition labels (`postponed` `#BFD4F2`, `promoted` `#C2E0C6`, `wontfix`): applies the matching label — creating it via `gh label create` if missing — as part of a `postpone`/`promote`/`wontfix` verdict, mirroring the urgency-label mechanics. Closes the untriaged-detection spoof gap from `#54` by giving `workflow-status` an unforgeable, triage+-permission-gated triaged signal instead of trusting `VERDICT:` comment text alone. |
@@ -387,6 +401,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `init-workspace`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.8.0 | 2026-07-31 | minor | Progressive loading makes bootstrap and additive upgrade mutually exclusive routes and loads vendor portability only for the detected missing primitive; universal no-clobber/consent gates stay in the entrypoint. |
+| 2.7.0 | 2026-07-31 | minor | Adds an Agent safety hooks interview and additive upgrade path for Claude Code, Cursor, Copilot, and OpenCode; accepted repository adapters install explicitly, run the canonical guard fixture, and never overwrite customized hook config. |
 | 2.6.0 | 2026-07-31 | minor | Offers the optional architectural-invariants document during bootstrap and upgrade without creating a requirement for existing repositories. |
 | 2.5.2 | 2026-07-31 | patch | Moves the NRS bootstrap guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 2.5.1 | 2026-07-31 | patch | Routes a newly bootstrapped project through repository-state discovery before design, planning, or execution. |
@@ -492,6 +508,17 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-07-31 — runtime guardrails and invocation-scoped fullauto.**
+  `init-workspace` 2.7.0 installs the portable guard pack additively;
+  `audit-pr` 4.0.0 becomes verdict/comment-only; `ship-roadmap` 3.0.0 is the
+  sole automated merge authority and uses a transient, fail-closed wrapper
+  with a SHA-bound PR audit comment. See feature 20 and the migration note.
+  `product-audit` 3.0.0 also becomes explicit-invocation-only on supported
+  loaders so its wide sweep is never activated speculatively.
+  Progressive-loading minors reduce eight oversized entrypoints under committed
+  context budgets; `execute-phase` 2.13.0 falls from about 13k to 3k estimated
+  activation tokens while preserving its contracts in one-hop resources.
 
 - **2026-07-31 — normalized repository-state folding.** `discover-repository-state`
   1.1.0 preserves `contradicted` snapshot status when discovery records a
