@@ -110,15 +110,15 @@ Layer: close-out. Done-when: `gh issue view 117 --json state` → `"state": "CLO
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #117`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #117` and push
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #117` and push
 
 ## Testing
 
@@ -130,7 +130,7 @@ Layer: close-out. Done-when: `gh issue view 117 --json state` → `"state": "CLO
 
 ## Status
 
-`pending`
+`done`
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
 
