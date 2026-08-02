@@ -20,3 +20,15 @@
 - `npx skills add . --list` → exit 0; discovered 30 installable skills.
 - `git diff --check` → exit 0.
 - `git status --porcelain -- docs/` → empty before the P3 close-out edits.
+
+## P4–P7 — planned
+
+- P4: `node scripts/check-skill-context.mjs --skill plan-feature` after the
+  issue route loads planning gates before composing its writer.
+- P5: `node scripts/check-skill-context.mjs --skill plan-feature-scaffold`
+  after the nested reference is removed.
+- P6: `! git diff --name-only origin/main...HEAD | grep -Fx
+  'docs/features/20-runtime-guardrails-progressive-skills/review-findings.md'`.
+- P7: fresh-context `--from-issue` probes with `draft`, `contradicted`, and
+  `resolved` NRS ledgers; record the no-write result and route in both Golden
+  Fixture language variants before closing F4–F8.
