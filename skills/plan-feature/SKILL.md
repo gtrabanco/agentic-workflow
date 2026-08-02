@@ -1,22 +1,15 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.3.0
+version: 3.3.1
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Engineering-planning router for an already-designed feature. Given a feature
-  whose SPEC product half is not marked `designed`, STOPS and redirects to
-  `/design-feature <slug>` — no bypass flag. Given a designed feature, a GitHub
-  issue #N (issue → scoped product half, satisfying capability closure), or an
-  already-scoped slug/SPEC (straight to engineering-half scaffolding), routes
-  to the right internal step, then ensures the roadmap entry and prints the
-  next step. Force a path with flags to skip detection; `--next` plans the
-  next `defined` feature from the roadmap. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
-  Triggers: "plan a
-  feature", "plan the feature from issue N", "plan the next roadmap feature",
-  "scaffold feature NN", "create SPEC and TASKS for NN".
+  Route designed features or issues into engineering planning and roadmap
+  registration; undesigned work stops at design-feature. Supports `--next`,
+  `--from-issue`, and `--scaffold`. Triggers: "plan-feature", "plan a feature",
+  "plan the next roadmap feature", "create SPEC and TASKS".
 ---
 
 # Plan Feature (router)
@@ -25,7 +18,7 @@ The engineering-planning door for a feature whose product definition already
 exists. Routes to a focused internal step so only the work you need runs (no
 fat single skill). **Docs only — no code, no branch.** Product definition
 (raw-idea interview, capability closure) is `design-feature`'s job, not this
-one — see the redirect gate below.
+one — the routed redirect gate enforces that split.
 
 ## Turn contract — verify before ending the turn
 
@@ -52,84 +45,22 @@ Per the agent guide's **Workflow conventions** + **documentation map**, then rea
 what THIS skill needs: the **roadmap** (`docs/features/ROADMAP.md`), so routing
 and roadmap registration match the project's real layout.
 
-## Redirect gate (always, before routing)
+## Progressive loading — route before planning
 
-Before any other step, resolve the target slug/issue and read **the roadmap
-status** (`docs/features/ROADMAP.md` → the five-state machine
-`idea/defined/planned/in-progress/done`) — the **primary** gate signal. The
-SPEC's `## Design status` marker is the SPEC-local record and the
-**legacy-compat fallback** only (see step 6 below), never the primary check:
+The reference allowlist is exactly the two paths below:
 
-1. **Roadmap row status `defined`** → proceed to Routing below (the product
-   half is designed; the engineering half still needs scaffolding).
-2. **Roadmap row status `planned`** (SPEC + artifacts already present) →
-   **STOP**. Never invoke `plan-feature-scaffold` — re-scaffolding an
-   already-planned feature is the re-plan-loop bug this gate exists to close.
-   Print exactly:
+1. Every invocation: read [redirect gate and routing](references/ROUTING.md),
+   apply the status gate first, and stop on its exact block when instructed.
+2. Designed input that will scaffold: read [repository-state and architectural
+   gates](references/PLANNING_GATES.md) before composing an internal step.
 
-   ```
-   → Next: /execute-phase <NN> P1 — this feature is already planned; start
-     implementation, don't re-plan it.
-   ```
-3. **Roadmap row status `in-progress`** → **STOP**. Print exactly:
-
-   ```
-   → Next: /execute-phase <NN> <next-phase> — this feature is already being
-     implemented; resume the current phase, don't re-plan it.
-   ```
-4. **Roadmap row status `done`** → **STOP**. Print exactly:
-
-   ```
-   → Next: nothing — <NN>-<slug> already shipped (roadmap status `done`).
-   ```
-5. **Roadmap row status `idea`, or no row at all** → **STOP**. Print exactly:
-
-   ```
-   → Next: /design-feature <slug> — this feature has no completed product design yet
-     (capability closure not done). Design it first; then re-run /plan-feature <slug>.
-   ```
-
-   No bypass flag exists for this gate — an undesigned feature is never
-   planned by this skill, under any flag or instruction.
-6. **Legacy compat.** A roadmap row still reading a plain `planned` with no
-   five-state history (predates this repo's roadmap-status-machine feature):
-   fall back to the SPEC marker — `## Design status: designed` and Capability
-   closure filled → treat as `defined`+`planned`, STOP per step 2 above (a
-   legacy `planned` row is still already-planned — hand off to
-   `/execute-phase`, never re-scaffold). Marker missing/`not designed`/closure
-   empty → treat as `idea`, STOP per step 5. See `docs/workflow/MIGRATION.md`.
-7. **A raw idea with no slug at all** (nothing to check) → the same STOP
-   applies: print the block above pointing at `/design-feature "<idea>"`
-   instead of a slug.
-
-## Routing
-
-Once the gate passes, pick the mode — first match wins:
-
-1. **Flag forces it** (skip detection): `--from-issue <N>`, `--scaffold <slug>`,
-   `--next`.
-2. **Issue** — an issue number or issue URL → `plan-feature-from-issue`.
-3. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
-   `plan-feature-scaffold`.
-4. **`--next` / no input** — read the roadmap, take the next `defined` entry
-   (the units that still need engineering planning — a `planned` row is
-   already scaffolded); apply the redirect gate to it, then scaffold.
-5. **Ambiguous** — ask one question, then route.
-
-### Example (routing)
-
-| You run | Detected | Routes to | Then |
-|---|---|---|---|
-| `plan-feature 14-csv-export` (not designed) | undesigned slug | — | STOP → `/design-feature 14-csv-export` |
-| `plan-feature 131` | issue #131 | `plan-feature-from-issue` → `plan-feature-scaffold` | PR carries `Closes #131` |
-| `plan-feature 14-csv-export` (designed, `defined`) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
-| `plan-feature 14-csv-export` (already `planned`) | already-planned slug | — | STOP → `/execute-phase 14 P1` (no re-scaffold) |
-| `plan-feature --next` | next `defined` roadmap entry | gate, then scaffold | `execute-phase NN P1` |
+Do not load planning gates after a redirect stop. Both resources are normative,
+one hop from this file, and fail closed when missing.
 
 ## Process
 
-1. **Redirect gate** per above — always first.
-2. **Route** per above. The from-issue internal produces a **filled, sized SPEC
+1. **Redirect gate** from `ROUTING.md` — always first.
+2. **Route** from the same resource. The from-issue internal produces a **filled, sized SPEC
    product half**; then invoke `plan-feature-scaffold`, which fills the
    engineering half and scales the artifacts to the SPEC's size (XS/S →
    SPEC-only; M/L → full set) and registers the roadmap. The already-designed
@@ -158,28 +89,6 @@ Once the gate passes, pick the mode — first match wins:
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
 - Otherwise per the project's **Workflow conventions** (docs-language).
-
-## Normalized Repository State
-
-When `docs/workflow/REPOSITORY_STATE.md` exists, plan from its frozen facts and
-decisions. An absent fact may be inspected; a conflict is a resolver
-contradiction, never a rewrite. Planned work and documentation are not
-implementation evidence. A present ledger whose status is `draft`,
-`contradicted`, or `resolved` stops planning and routes to discovery or
-resolution first. If no ledger exists, inspect the repository directly and
-record `n/a: no normalized repository state`; NRS is optional.
-
-## Architectural invariants
-
-Discover the optional project invariant document declared in the documentation
-map (normally `docs/architecture/ARCHITECTURAL_INVARIANTS.md`). If absent,
-record `n/a: no project invariants declared` and continue. For every applicable
-rule, cite its ID and repository evidence and classify the planned change as
-`preserves`, `violates`, `introduces`, or `changes`. Only `preserves` may reach
-scaffolding. A violation, new rule, or changed rule stops for an explicit
-architectural decision through the project's declared authority; never convert
-it into an engineering task or infer approval from the SPEC. Use frozen NRS
-facts when available, but repository inspection remains authoritative.
 
 ## Internal steps (not user-invocable)
 
