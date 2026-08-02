@@ -61,6 +61,21 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
 - Complete and verify the progressive-resource extraction already present on
   this branch, including its one-hop reference contracts and context-budget
   documentation.
+- The progressive-resource inventory owned by this unit is:
+  `skills/bump-skill/SKILL.md` with `references/DISCOVERY_AND_LINT.md` and
+  `references/VERSION_AND_DOCS.md`; `skills/execute-phase/SKILL.md` with
+  `references/HANDOFF.md`; `skills/fold-findings/SKILL.md` with
+  `references/FOLD_POLICY.md` and `references/FOLD_PROCESS.md`;
+  `skills/generate-docs/SKILL.md` with `references/ADAPTERS.md`,
+  `references/ADAPTER_DISCOVERY.md`, and `references/GENERATION_PROCESS.md`;
+  `skills/plan-feature/SKILL.md` with `references/PLANNING_GATES.md` and
+  `references/ROUTING.md`; `skills/plan-feature-scaffold/SKILL.md` with
+  `references/SCAFFOLD_PROCESS.md`; `skills/plan-fix/SKILL.md` with
+  `references/PLANNING_PROCESS.md` and `references/SPEC_CONTRACT.md`;
+  `skills/product-audit/SKILL.md` with `references/AUDIT_DIMENSIONS.md` and
+  `references/AUDIT_PROCESS.md`; and
+  `skills/review-implementation/SKILL.md` with `references/CLASSIFY.md` and
+  `references/FIND.md`.
 - Remove the feature-20 ledger hunk from this unit; historical findings stay
   owned by the merged feature's ledger.
 
@@ -205,14 +220,14 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-featu
 
 Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'docs/features/20-runtime-guardrails-progressive-skills/review-findings.md'` → exit 0.
 
-- [ ] Remove this unit's feature-20 review-ledger hunk without changing its
+- [x] Remove this unit's feature-20 review-ledger hunk without changing its
       historical findings.
-- [ ] Keep the user-approved amendment and map the remaining progressive
+- [x] Keep the user-approved amendment and map the remaining progressive
       resource files to this unit's scope.
-- [ ] Synchronize the current context-budget total in `SKILLS.md`,
+- [x] Synchronize the current context-budget total in `SKILLS.md`,
       `SKILLS.es.md`, `CHANGELOG.md`, and `CHANGELOG.es.md`.
-- [ ] Flip F7 to `yes` after the bilingual context documentation is verified.
-- [ ] Flip F8 to `yes` after the feature-20 ledger hunk is absent.
+- [x] Flip F7 to `yes` after the bilingual context documentation is verified.
+- [x] Flip F8 to `yes` after the feature-20 ledger hunk is absent.
 
 ### P7 — Hardening & PR
 
@@ -255,9 +270,10 @@ needed; the rollback restores the previous skill wording and adapter table.
 
 - **Layers touched:** workflow skill contracts and generated-documentation
   adapter metadata.
-- **Modules/files:** `skills/plan-feature/SKILL.md`,
-  `skills/plan-feature/references/PLANNING_GATES.md`,
-  `skills/generate-docs/references/ADAPTERS.md`, this SPEC, and the fix index.
+- **Modules/files:** the progressive-resource inventory listed in Scope,
+  `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`,
+  `CHANGELOG.es.md`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, the fix SPEC,
+  its findings/testing/progress ledgers, and the fix index.
 - **Blast radius:** developer workflow behavior; a missed NRS gate can create
   planning artifacts from contradictory repository state, while a wrong adapter
   can generate documentation into an incompatible site layout.

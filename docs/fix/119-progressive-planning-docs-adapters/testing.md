@@ -38,3 +38,10 @@
 - `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
 - `git diff --check` → exit 0.
 - Read-verified: issue routing resolves identity before composing `plan-feature-from-issue`; the parent route loads `PLANNING_GATES.md` first.
+
+## P6 — 2026-08-03
+- `node scripts/check-skill-context.mjs --skill plan-feature --skill generate-docs --skill plan-feature-scaffold` → exit 0; all three selected skills passed.
+- `node scripts/check-skill-context.test.mjs` → exit 0.
+- The nine progressive entrypoints sum to `16,035` estimated tokens; the bilingual context references and changelog entries contain `16,035` and no stale `15,977` total.
+- `git diff --check` → exit 0.
+- Read-verified: the feature-20 review ledger is unchanged after removing this branch's F51–F53 hunk; the unit scope retains the approved amendment and enumerates the progressive resources.
