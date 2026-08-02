@@ -278,6 +278,10 @@ tool-capable model.
 - P8 — Hardening & PR
   Layer: hardening. Re-establish a clean, synchronized review tree; complete the approved commit-history repair; then re-run the full verification, adversarial review, and PR merge gate. Done-when: `/review-change --adversarial 3` and `/audit-pr` both pass on the pushed branch.
 
+### Amendments
+
+- 2026-08-02 — descoped: "P8 done-when adversarial review `/review-change --adversarial 3`" — approved by user — follow-up: none (user-directed; `/audit-pr` merge gate remains in scope)
+
 ### Deploy & rollback
 
 No runtime deployment. Revert the PR. Hook installation remains opt-in, so
