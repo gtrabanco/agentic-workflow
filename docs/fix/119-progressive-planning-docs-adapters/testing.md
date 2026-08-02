@@ -45,3 +45,12 @@
 - The nine progressive entrypoints sum to `16,035` estimated tokens; the bilingual context references and changelog entries contain `16,035` and no stale `15,977` total.
 - `git diff --check` → exit 0.
 - Read-verified: the feature-20 review ledger is unchanged after removing this branch's F51–F53 hunk; the unit scope retains the approved amendment and enumerates the progressive resources.
+
+## P7 — 2026-08-03
+
+- `node scripts/check-skill-context.mjs` → exit 0; 31 skills passed.
+- `node scripts/check-skill-context.test.mjs` → exit 0.
+- `npx skills add . --list` → exit 0; discovered 30 skills.
+- `git diff --check` → exit 0.
+- Feature-20 ledger exclusion check → PASS; the historical review ledger is absent from `origin/main...HEAD`.
+- Read-verified fresh-context probes → PASS for `draft`, `contradicted`, and `resolved`: the parent route loads `PLANNING_GATES.md` before composing `plan-feature-from-issue`, each non-frozen state stops before a product-half write, and the expected route is discovery or resolution.

@@ -231,12 +231,12 @@ Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'd
 
 ### P7 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Run and record the three fresh-context NRS issue-route probes; no
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Run and record the three fresh-context NRS issue-route probes; no
       product-half write is permitted for any non-frozen state
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Flip F4 to `yes` after the issue-route probe passes
-- [ ] Flip F5 to `yes` after the issue-route probe is recorded
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Flip F4 to `yes` after the issue-route probe passes
+- [x] Flip F5 to `yes` after the issue-route probe is recorded
 - [ ] `git push`
 - [ ] Verify the existing PR body still includes `Closes #119` and describes
       the amended progressive-resource scope
