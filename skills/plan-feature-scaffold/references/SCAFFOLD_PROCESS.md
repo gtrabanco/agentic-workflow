@@ -45,8 +45,9 @@
   [ ] commit `docs: link PR #<n>` and push
   ```
 
-- `progress.md`: initialize only `Last reviewed: —`; `execute-phase` appends
-  the fixed schema in `references/HANDOFF.md` of that skill.
+- `progress.md`: initialize only `Last reviewed: —`; the executor appends one
+  fixed-schema handoff entry after each phase with `Done`, `Remains`, `Gotchas`,
+  `Files`, and `Next`.
 - `testing.md`: test layers, preferring integration; use the same command rule.
 - `known-issues.md`: deferred items linked to/destined for issues, never inline.
 - `decisions.md`: architecture/scope decisions and open questions.

@@ -26,7 +26,8 @@
 - P4: `node scripts/check-skill-context.mjs --skill plan-feature` after the
   issue route loads planning gates before composing its writer.
 - P5: `node scripts/check-skill-context.mjs --skill plan-feature-scaffold`
-  after the nested reference is removed.
+-  → exit 0 after the cross-skill handoff link is replaced by the self-contained
+  progress ownership statement.
 - P6: `! git diff --name-only origin/main...HEAD | grep -Fx
   'docs/features/20-runtime-guardrails-progressive-skills/review-findings.md'`.
 - P7: fresh-context `--from-issue` probes with `draft`, `contradicted`, and

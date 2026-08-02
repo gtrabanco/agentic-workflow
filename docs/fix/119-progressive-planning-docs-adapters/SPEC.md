@@ -196,10 +196,10 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-featu
 
 Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature-scaffold` → exit 0.
 
-- [ ] Replace the cross-skill `HANDOFF.md` link with a self-contained progress
+- [x] Replace the cross-skill `HANDOFF.md` link with a self-contained progress
       ownership statement.
-- [ ] Keep the scaffold reference allowlist one hop deep.
-- [ ] Flip F6 to `yes` after the scaffold context check passes.
+- [x] Keep the scaffold reference allowlist one hop deep.
+- [x] Flip F6 to `yes` after the scaffold context check passes.
 
 ### P6 — Progressive-loading traceability
 
