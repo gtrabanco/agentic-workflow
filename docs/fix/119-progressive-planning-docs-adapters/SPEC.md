@@ -240,7 +240,7 @@ Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'd
 - [ ] `git push`
 - [ ] Verify the existing PR body still includes `Closes #119` and describes
       the amended progressive-resource scope
-- [ ] Run `/review-change` on the pushed branch
+- [x] Run `/review-change` on the pushed branch
 - [ ] Run `/audit-pr` after the review table is clean
 
 ## Testing
