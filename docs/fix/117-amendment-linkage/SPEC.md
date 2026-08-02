@@ -118,7 +118,7 @@ Layer: close-out. Done-when: `gh issue view 117 --json state` → `"state": "CLO
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #117`
 - [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [x] Commit `docs: link PR #117` and push
+- [x] Commit `docs(117): link PR #118` and push
 
 ## Testing
 
