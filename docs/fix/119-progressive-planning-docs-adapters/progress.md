@@ -13,3 +13,10 @@
 - Gotchas: Docusaurus sidebar and build commands remain project-declared; the adapter table documents supported conventions without guessing a site configuration.
 - Files: `skills/generate-docs/references/ADAPTERS.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`
 - Next: P3 — Hardening & PR | unit unfinished
+
+## P3 — 2026-08-02
+- Done: Re-ran the full verification gate and set the fix-index row to `done` before opening the PR.
+- Remains: PR creation, PR-link commit, mandatory review handoff.
+- Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; P3 records both as n/a.
+- Files: `docs/fix/README.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`
+- Next: PR creation and link commit | unit unfinished
