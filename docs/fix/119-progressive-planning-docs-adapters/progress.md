@@ -16,7 +16,7 @@
 
 ## P3 — 2026-08-02
 - Done: Re-ran the full verification gate, pushed `codex/reduce-skill-context`, opened PR #120, linked it from the fix index, and recorded F3 as folded.
-- Remains: Mandatory `/review-change` before merge.
+- Remains: P4 — NRS issue-route ordering; P5 — Reference ownership; P6 — Progressive-loading traceability; P7 — Hardening & PR.
 - Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; P3 records both as n/a.
 - Files: `docs/fix/README.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`
-- Next: `/review-change` | unit finished
+- Next: P4 — NRS issue-route ordering | replan approved; unit in progress
