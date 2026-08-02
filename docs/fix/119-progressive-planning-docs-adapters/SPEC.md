@@ -8,11 +8,12 @@
 
 ## Goal
 
-Repair two regressions introduced while extracting progressive skill resources:
-issue-derived feature planning must apply the Normalized Repository State (NRS)
-gate before writing a product half, and Docusaurus must have an explicit docs
-adapter contract. Track the repairs in a dedicated fix unit instead of the
-already-merged feature 20 ledger.
+Repair the progressive-resource extraction carried by this branch: issue-derived
+feature planning must apply the Normalized Repository State (NRS) gate before
+writing a product half, generated-documentation adapters must have explicit
+slots, and every extracted contract must remain one-hop and traceable. Track the
+repairs in this dedicated fix unit rather than the already-merged feature 20
+ledger.
 
 ## Issue
 
@@ -57,6 +58,11 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
   `skills/generate-docs/references/ADAPTERS.md`.
 - Keep a dedicated fix SPEC, findings ledger, issue #119, and future PR link
   for these repairs.
+- Complete and verify the progressive-resource extraction already present on
+  this branch, including its one-hop reference contracts and context-budget
+  documentation.
+- Remove the feature-20 ledger hunk from this unit; historical findings stay
+  owned by the merged feature's ledger.
 
 ### Out of scope
 
@@ -67,6 +73,12 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
 - Adding adapters beyond Docusaurus; any new platform adapter needs its own
   issue and fix unit.
 - Rewriting the merged feature 20 ledger or its PR history.
+
+## Amendments
+
+| Date | Approved by | Change | Linked issue |
+| --- | --- | --- | --- |
+| 2026-08-02 | user (`Make the plan`) | Replan the current branch's progressive-resource extraction into this fix so its existing unmerged contracts, budget documentation, and review findings have one governing ledger. Remove, rather than rewrite, the feature-20 ledger hunk. | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
 
 ## Acceptance
 
@@ -85,6 +97,14 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
    `route: replan-in-unit`.
 6. `git diff --check` exits 0; the P3 PR body includes `Closes #119` and the
    fix-index row links that PR.
+7. `node scripts/check-skill-context.mjs --skill plan-feature-scaffold` exits
+   0 after its process contains no cross-skill reference hop.
+8. `read-verified`: fresh-context `plan-feature --from-issue` probes with
+   `draft`, `contradicted`, and `resolved` NRS ledgers all stop before a
+   product-half write and record the required discovery or resolution route.
+9. `! git diff --name-only origin/main...HEAD | grep -Fx
+   'docs/features/20-runtime-guardrails-progressive-skills/review-findings.md'`
+   exits 0; this unit does not carry a feature-20 ledger change.
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -162,6 +182,52 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill generate-d
 - [x] Commit `docs: link PR #<n>` and push
 - [x] Flip F3 to `yes` in the PR-link commit after the index row is updated.
 
+### P4 — NRS issue-route ordering
+
+Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
+
+- [ ] Make issue detection select the route without composing
+      `plan-feature-from-issue`.
+- [ ] Require `PLANNING_GATES.md` before the selected issue route can write a
+      product half.
+- [ ] Preserve the no-planning-gates early stop for redirected non-issue input.
+
+### P5 — Reference ownership
+
+Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature-scaffold` → exit 0.
+
+- [ ] Replace the cross-skill `HANDOFF.md` link with a self-contained progress
+      ownership statement.
+- [ ] Keep the scaffold reference allowlist one hop deep.
+- [ ] Flip F6 to `yes` after the scaffold context check passes.
+
+### P6 — Progressive-loading traceability
+
+Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'docs/features/20-runtime-guardrails-progressive-skills/review-findings.md'` → exit 0.
+
+- [ ] Remove this unit's feature-20 review-ledger hunk without changing its
+      historical findings.
+- [ ] Keep the user-approved amendment and map the remaining progressive
+      resource files to this unit's scope.
+- [ ] Synchronize the current context-budget total in `SKILLS.md`,
+      `SKILLS.es.md`, `CHANGELOG.md`, and `CHANGELOG.es.md`.
+- [ ] Flip F7 to `yes` after the bilingual context documentation is verified.
+- [ ] Flip F8 to `yes` after the feature-20 ledger hunk is absent.
+
+### P7 — Hardening & PR
+
+- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Run and record the three fresh-context NRS issue-route probes; no
+      product-half write is permitted for any non-frozen state
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Flip F4 to `yes` after the issue-route probe passes
+- [ ] Flip F5 to `yes` after the issue-route probe is recorded
+- [ ] `git push`
+- [ ] Verify the existing PR body still includes `Closes #119` and describes
+      the amended progressive-resource scope
+- [ ] Run `/review-change` on the pushed branch
+- [ ] Run `/audit-pr` after the review table is clean
+
 ## Testing
 
 - Contract: `node scripts/check-skill-context.mjs --skill plan-feature --skill generate-docs`.
@@ -171,6 +237,8 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill generate-d
   `ADAPTER_DISCOVERY.md` and run `git diff --check`.
 - Regression risk: `docs/workflow/GOLDEN_FIXTURE.md` and its Spanish sibling
   must record any new executor-path probe together.
+- Replan regression: verify the `plan-feature-scaffold` resource has no nested
+  reference and that the PR diff no longer changes the feature-20 ledger.
 
 ## Rollback
 
@@ -179,7 +247,7 @@ needed; the rollback restores the previous skill wording and adapter table.
 
 ## Status
 
-`done`
+`in-progress`
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
 
@@ -228,6 +296,8 @@ regulated data or product compliance surface in scope.
 - `docs/fix/README.md` — add the pending #119 unit, then link its PR in P3.
 - `docs/workflow/GOLDEN_FIXTURE.md` and `docs/workflow/GOLDEN_FIXTURE.es.md` —
   record the NRS issue-route probe when it is run.
+- `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`, and
+  `CHANGELOG.es.md` — keep the progressive-loading context total synchronized.
 
 ## Observability
 
@@ -254,3 +324,5 @@ review/PR close-out require multiple commits but no product design work.
   than creating the default `fix/119-progressive-planning-docs-adapters` branch.
 - The dedicated ledger starts with the frozen review classifications; P1, P2,
   and P3 own F1, F2, and F3 respectively.
+- The user approved this replan on 2026-08-02; P4–P7 own F4–F8 and replace P3
+  as the final close-out chain.
