@@ -1,0 +1,84 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Setup and state",
+      "description": "Bootstrap a repository and keep evidence-backed workflow state visible.",
+      "skills": [
+        "init-workspace",
+        "discover-repository-state",
+        "resolve-repository-state",
+        "workflow-status"
+      ]
+    },
+    {
+      "title": "Design and plan",
+      "description": "Close product requirements and turn them into executable feature or fix phases.",
+      "skills": [
+        "design-feature",
+        "plan-feature",
+        "plan-feature-from-issue",
+        "plan-feature-scaffold",
+        "plan-fix"
+      ]
+    },
+    {
+      "title": "Execute",
+      "description": "Implement one phase and fold frozen findings without widening scope.",
+      "skills": [
+        "execute-phase",
+        "fold-findings"
+      ]
+    },
+    {
+      "title": "Review and audit",
+      "description": "Review a change, gate a PR, audit documentation, or inspect product health.",
+      "skills": [
+        "review-change",
+        "audit-pr",
+        "audit-docs",
+        "product-audit"
+      ]
+    },
+    {
+      "title": "Internal review pack",
+      "description": "Axis-specific reviewers composed by review-change and product-audit.",
+      "skills": [
+        "review-a11y",
+        "review-brand",
+        "review-code",
+        "review-debt",
+        "review-design",
+        "review-implementation",
+        "review-perf",
+        "review-security",
+        "review-seo",
+        "review-verify"
+      ]
+    },
+    {
+      "title": "Decide",
+      "description": "Verify and classify tracked work before changing the roadmap or code.",
+      "skills": [
+        "triage-issue"
+      ]
+    },
+    {
+      "title": "Documentation and session",
+      "description": "Generate developer documentation and leave compact handoff records.",
+      "skills": [
+        "generate-docs",
+        "log-session"
+      ]
+    },
+    {
+      "title": "Autopilot and orchestration",
+      "description": "Run the full roadmap or supply the driver-facing envelope contract.",
+      "skills": [
+        "ship-roadmap",
+        "orchestration-envelope"
+      ]
+    }
+  ]
+}

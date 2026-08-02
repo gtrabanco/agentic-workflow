@@ -17,11 +17,41 @@ repositorio, diseño, planificación, ejecución, review, auditoría, fold de
 hallazgos, generación de docs, triage de issues, envío del roadmap, diario de
 sesión y estado del workflow.
 
+## Presupuesto de contexto y carga progresiva
+
+Los metadatos de las skills siempre se anuncian al agente, pero el cuerpo de
+`SKILL.md` solo entra en contexto tras la activación. El checker de contexto
+descubre cada entrypoint `skills/*/SKILL.md` y aplica el presupuesto por defecto,
+con overrides explícitos por skill para excepciones deliberadas como el barrido
+amplio y de invocación explícita de `product-audit`. Las entrypoints segmentadas
+conservan en `SKILL.md` los gates universales y una ruta explícita, y cargan el
+detalle de `references/` solo cuando esa ruta lo necesita. Las referencias están
+a un salto y no pueden enlazar más referencias, para que los modelos pequeños
+no tengan que descubrir una cadena oculta de instrucciones.
+
+El presupuesto versionado usa `ceil(bytes UTF-8 / 4)` como estimación
+determinista, no como tokens facturados por el proveedor. El límite por defecto
+de los entrypoints principales es 4.200 tokens estimados y 360 líneas; los
+overrides explícitos quedan commiteados para excepciones deliberadas, y
+`execute-phase`, la ruta más frecuente, tiene 3.500 y 320. Su estimación de
+activación directa bajó de unos 13.010 a unos 3.000 manteniendo los contratos
+completos tras rutas obligatorias. Valida el catálogo con:
+
+```sh
+node scripts/check-skill-context.mjs
+```
+
+La caché de prompts puede reducir latencia repetida o input facturado en un
+proveedor compatible, pero no reduce el contexto activo. La corrección y la
+capacidad de contexto dependen por tanto de la segmentación, no de la caché. Ver
+[`SKILL_CONTEXT_BUDGETS.json`](SKILL_CONTEXT_BUDGETS.json) para los límites
+aplicados.
+
 ## Configuración
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `init-workspace` | Obtiene el andamiaje de `template/` y lo adapta al proyecto mediante entrevista; sugiere las skills de revisión complementarias de la plataforma; ofrece instalar las skills | `discover-repository-state` |
+| `init-workspace` | Obtiene y adapta el andamiaje; siembra contratos del repositorio; ofrece explícitamente el adaptador de seguridad detectado para Claude/Cursor/Copilot/OpenCode sin sobrescribir hooks | `discover-repository-state` |
 | `discover-repository-state` | Crea un ledger congelado y respaldado por evidencia; separa hechos, decisiones, trabajo planificado, documentación e inferencia | `plan-feature` / `resolve-repository-state` |
 | `resolve-repository-state` | Único escritor que resuelve una contradicción explícita y publica el siguiente snapshot congelado | el paso de flujo interrumpido |
 
@@ -68,7 +98,7 @@ sesión y estado del workflow.
 |---|---|---|---|
 | `review-change` | el **cambio** | Ejecuta solo las revisiones que aplican a esta plataforma — **cada pasada aislada por defecto** (contexto limpio, devuelve solo su tabla de hallazgos; el orquestador retiene tablas, nunca fuentes) — + una **comprobación estructural de desviación del SPEC** (tabla de cobertura por criterio + mapeo de hunks del diff) + clasifica → una tabla de decisión + checklist de verificación manual; **obligatorio antes de cada merge** | `plan-fix` (fix-now) / `triage-issue` (cada hallazgo no-fix-now: postpone / ignore / intentional-tradeoff) |
 | `fold-findings` | el **ledger de hallazgos** | Repara de verdad, uno por uno, cada hallazgo fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica), una lista de prohibiciones fija cierra las válvulas de escape (volcado a known-issues, downgrade, aflojar tests, supresión); veredicto por hallazgo `FOLDED \| DISPUTED \| BLOCKED` | re-ejecutar `review-change` (todo foldeado) / `triage-issue` (disputado) |
-| `audit-pr` | el **PR** | Puerta de merge: aceptación, fases, docs, tests, CI, `Closes #N`, ejes de revisión, integridad de cierre (solo SPECs de feature; legacy → warning datado, nunca bloqueante), integridad de alcance (descope: un issue nacido durante la unidad que solapa un criterio/tarea incumplido necesita una entrada `## Amendments` correspondiente, si no BLOQUEANTE; aplica a PRs de feature y de fix) → merge-ready o bloqueadores | `execute-phase` / `plan-fix` / `triage-issue` |
+| `audit-pr` | el **PR** | Puerta de merge de solo lectura → comentario MERGE-READY ligado al SHA o bloqueantes con evidencia; nunca edita ni fusiona. Solo un `ship-roadmap --fullauto` activo puede ejecutar un merge automatizado | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; extrae de los docs de feature → propone issues + cambios de roadmap (nunca arregla automáticamente); recurrencia de exportación de alcance (≥ 2 unidades consecutivas exportando alcance → hallazgo de calidad de planificación enrutado a #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | los **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones | informe (+ arreglos opcionales de bajo riesgo) |
 
@@ -94,7 +124,7 @@ sesión y estado del workflow.
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `ship-roadmap` | **Conductor.** Una entrevista inicial (producto, features, stack, arquitectura, calidad, operaciones, autonomía, presupuesto) → funda el proyecto si hace falta → crea o adopta el roadmap completo → un bucle impulsado por `/loop` lo despliega feature por feature: compone `plan-feature`, `review-change`, `audit-pr` en el mismo turno (mismo nivel), delega cada fase de `execute-phase` a un subagente Sonnet. Por defecto: abre PRs, el humano fusiona; `--fullauto` fusiona bajo pisos de seguridad no negociables. Termina en un informe final | el humano fusiona / lote de `triage-issue` / `product-audit` (siempre una entrega — su effort máximo supera el high del conductor) |
+| `ship-roadmap` | **Conductor.** Una entrevista inicial y un bucle de driver entregan el roadmap y el barrido de issues. Por defecto abre PRs y el humano fusiona. `--fullauto` es la única autoridad de merge automatizado y usa el wrapper transitorio fail-closed más un comentario idempotente de PR; los merges directos siguen bloqueados | el humano fusiona / lote de `triage-issue` / `product-audit` |
 
 ## Sesión
 
@@ -130,10 +160,10 @@ indicado aquí.
 | `log-session` | `/log-session [note]` | La nota opcional se antepone al Resumen de la entrada. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | Un slug o referencia de issue se detecta automáticamente; los flags fuerzan una ruta: `--from-issue N` (issue → mitad de producto acotada), `--scaffold <slug>` (directo al andamiaje de la mitad de ingeniería), `--next` (siguiente entrada del roadmap). Una feature sin diseñar (fila del roadmap por debajo de `defined`) → se detiene y redirige a `/design-feature` — sin flag de bypass. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Obligatorio, uno o más. Un número → redacta `docs/fix/<n>-<topic>/SPEC.md` en una rama de fix y se detiene para revisión. Varios números → una checklist fija de causa-raíz-compartida decide: si todas se cumplen, los fusiona en UNA unidad con clave el número más bajo; si alguna falla, se niega e imprime la división (`/plan-fix <a>`, `/plan-fix <b>` …). |
-| `product-audit` | `/product-audit [path-or-area]` | Por defecto, el producto entero; una ruta/área acota el barrido. Solo propone — nunca arregla. |
+| `product-audit` | `/product-audit [path-or-area]` | Solo por invocación explícita. Por defecto, el producto entero; una ruta/área acota el barrido. Solo propone — nunca arregla. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifica ambas fuentes de evidencia y publica el siguiente snapshot congelado, o se detiene con el input faltante explícito. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Por defecto, el cambio actual (diff de la rama frente a la rama por defecto); una ruta amplía/acota. `--adversarial N` → N revisores adversariales independientes, de contexto limpio, solo-diff, en paralelo, hallazgos fusionados y deduplicados (opt-in; auto-recomendado para cambios `L`/sensibles). |
-| `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Por defecto: abre PRs, el humano fusiona. `--fullauto` → fusiona PRs MERGE-READY bajo los pisos de seguridad no negociables. `--continue` → reanuda una ejecución existente por una etapa (el bucle del driver externo reinvoca esto). |
+| `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Por defecto abre PRs y el humano fusiona. `--fullauto` debe estar presente en cada iteración y usa el wrapper del repositorio tras un veredicto MERGE-READY fresco. `--continue` reanuda una etapa. |
 | `triage-issue` | `/triage-issue <n> [n…]` | Uno o varios números de issue — las ejecuciones en lote producen veredictos independientes más una tabla resumen, agrupada por unidad de origen para los veredictos `fix-in-unit`. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Por defecto: resumen humano + el sobre-máquina. `--json-only` → solo el sobre (modo driver). `--last-envelope` → el sobre persistido del driver como **pista** de recuperación ante caídas (comparado contra el estado recalculado; nunca autoritativo). ¿Tu agente no pasa argumentos? Pega el JSON en el mensaje — se lee el último bloque json entre comillas de la *solicitud* como la pista. |
 

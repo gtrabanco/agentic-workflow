@@ -2,6 +2,34 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-07-31 — el merge automatizado se mueve exclusivamente a `ship-roadmap --fullauto`
+
+**Cambio incompatible.** `audit-pr` 4.0.0 ya no fusiona bajo una política
+documentada del proyecto ni por una instrucción standalone. Siempre devuelve un
+veredicto ligado al SHA y publica el comentario MERGE-READY existente.
+`ship-roadmap` 3.0.0 es ahora la única autoridad de merge automatizado: solo una
+invocación activa `--continue --fullauto` con `merge: fullauto` en
+`SHIP_DECISIONS.md` puede llamar al wrapper transitorio del repositorio. Los
+comandos directos de merge siguen bloqueados y el wrapper registra un automerge
+correcto mediante un comentario idempotente en la PR.
+
+**Migración.** Actualiza las skills, ejecuta después `init-workspace` en modo
+upgrade y acepta el adaptador de seguridad para el agente que realmente corre en
+el repositorio. No conserves permisos de `gh pr merge` a nivel de agente/sesión
+ni un archivo `.automerge` genérico. Las llamadas standalone a `audit-pr` ahora
+entregan la URL al humano; los drivers fullauto existentes deben conservar el
+flag en cada iteración y dejar que la skill invoque
+`.agentic-workflow/hooks/fullauto-merge.sh`.
+
+## 2026-07-31 — `product-audit` pasa a requerir invocación explícita
+
+**Cambio incompatible de invocación.** `product-audit` 3.0.0 declara activación
+manual-only en Claude Code y deshabilita la autoinvocación de OpenCode. Su
+contrato `/product-audit [ruta-o-área]` no cambia. Los drivers y las skills ya lo
+entregan al humano porque su barrido de producto a esfuerzo máximo nunca debe
+componerse; no necesitan cambiar el enrutamiento. Quien lo pida en lenguaje
+natural debe invocar ahora la skill por su nombre.
+
 ## Ruta de actualización desde una instalación anterior a 2026-07-09
 
 El backlog de 2026-07-09/07-10 (11 unidades) trajo dos **cambios mayores**
@@ -351,6 +379,10 @@ mecánicos de frontmatter/descripción). Este es un cambio de modelo de
 distribución, no un cambio de comportamiento.
 
 ## 2026-07-04 — `audit-pr` 2.0.0: auto-merge opt-in
+
+> Nota histórica, reemplazada por `audit-pr` 4.0.0 y `ship-roadmap` 3.0.0
+> (2026-07-31): ahora `audit-pr` standalone nunca fusiona; fullauto usa solo el
+> wrapper transitorio del repositorio.
 
 El contrato de `audit-pr` cambió de un incondicional **"nunca fusiona"** a
 **"nunca fusiona por defecto"**. Nada cambia para las configuraciones

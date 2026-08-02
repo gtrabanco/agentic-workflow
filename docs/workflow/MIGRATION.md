@@ -2,6 +2,32 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-07-31 — automated merge moves exclusively to `ship-roadmap --fullauto`
+
+**Breaking.** `audit-pr` 4.0.0 no longer merges under a documented project
+policy or a standalone instruction. It always returns a SHA-bound verdict and
+posts the existing MERGE-READY comment. `ship-roadmap` 3.0.0 is now the sole
+automated merge authority: only an active `--continue --fullauto` invocation
+with `merge: fullauto` in `SHIP_DECISIONS.md` may call the repository's
+transient wrapper. Direct merge commands remain blocked, and the wrapper logs a
+successful automerge with an idempotent PR comment.
+
+**Migration.** Update the skills, then run `init-workspace` in upgrade mode and
+accept the safety adapter for the agent that actually runs in the repository.
+Do not carry forward agent/session-level `gh pr merge` permissions or a generic
+`.automerge` file. Standalone `audit-pr` calls now hand the URL to the human;
+existing fullauto drivers must preserve the flag on every iteration and let the
+skill invoke `.agentic-workflow/hooks/fullauto-merge.sh`.
+
+## 2026-07-31 — `product-audit` becomes explicit-invocation-only
+
+**Breaking invocation change.** `product-audit` 3.0.0 declares manual-only
+activation on Claude Code and disables OpenCode autoinvocation. Its
+`/product-audit [path-or-area]` contract is unchanged. Drivers and skills already hand it to the
+human because its maximum-effort product sweep must never be composed; they need
+no routing change. Natural-language users must now invoke the named skill
+explicitly.
+
 ## Upgrade path from a pre-2026-07-09 install
 
 The 2026-07-09/07-10 backlog (11 units) landed two **majors** plus several
@@ -309,6 +335,10 @@ release (see the per-skill patch-bump rows dated 2026-07-04 in
 changes only). This is a distribution-model change, not a behavior change.
 
 ## 2026-07-04 — `audit-pr` 2.0.0: opt-in auto-merge
+
+> Historical note, superseded by `audit-pr` 4.0.0 and `ship-roadmap` 3.0.0
+> (2026-07-31): standalone `audit-pr` never merges now; fullauto uses only the
+> transient repository wrapper.
 
 `audit-pr`'s contract changed from an unconditional **"never merges"** to
 **"never merges by default"**. Nothing changes for existing setups — without the
