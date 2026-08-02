@@ -225,6 +225,8 @@ This repo has no application build. "Green" means:
 
 - The `skills` CLI discovers every skill: `npx skills add . --list` lists them all.
 - Markdown is well-formed; cross-references between docs resolve.
+- Context budgets pass: `node scripts/check-skill-context.mjs` (every skill's
+  `SKILL.md` is within its enforced line/token budget and reference reachability).
 - No stack/real-project references leaked into the skills or shared docs.
 - If `packages/agentic-workflow-schema/` was touched: `npm test` passes there,
   and any change to the envelope schema in

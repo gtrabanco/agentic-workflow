@@ -100,6 +100,14 @@ unit you're on. **`worktrees`**: parallel units in separate checkouts — only i
 your agent/tooling manages worktrees. Every skill that creates a branch honors
 this line; with `branches` declared, no skill may create a worktree.
 
+**Agent safety hooks:** `<Claude Code | Cursor | Copilot | OpenCode | none>`.
+When enabled, repository adapters call `.agentic-workflow/hooks/guard-command.sh`
+before shell/read tools. Direct environment dumps, `.env` reads, and merge
+commands are blocked. Automated merge is available only inside an active
+`ship-roadmap --fullauto` attempt through the transient wrapper; never grant an
+agent-wide or session-persistent merge permission. Hooks are defense-in-depth —
+forge branch protection/rulesets remain required.
+
 **Hard rules (always honored).**
 - **Branch & PR:** never work on `main`; one PR per unit against `main`; never
   stack — see [PR & branch workflow](#pr--branch-workflow).
