@@ -1,8 +1,11 @@
 ## Redirect gate (always, before routing)
 
 Before any other step, resolve the target slug/issue. An issue input
-(`--from-issue <N>` or issue URL/number) routes to `plan-feature-from-issue`
-first; that internal step supplies the feature slug for this gate. For other
+(`--from-issue <N>` or issue URL/number) resolves and validates the issue
+identity only; it does not invoke `plan-feature-from-issue` here. The parent
+must load `PLANNING_GATES.md` and confirm that planning may write before
+composing that internal writer. The internal step supplies the feature slug
+for the later roadmap gate. For other
 inputs, read **the roadmap status** (`docs/features/ROADMAP.md` → the five-state machine
 `idea/defined/planned/in-progress/done`) — the **primary** gate signal. The
 SPEC's `## Design status` marker is the SPEC-local record and the

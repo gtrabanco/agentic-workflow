@@ -32,3 +32,8 @@
 - P7: fresh-context `--from-issue` probes with `draft`, `contradicted`, and
   `resolved` NRS ledgers; record the no-write result and route in both Golden
   Fixture language variants before closing F4–F8.
+
+## P4 — 2026-08-03
+- `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
+- `git diff --check` → exit 0.
+- Read-verified: issue routing resolves identity before composing `plan-feature-from-issue`; the parent route loads `PLANNING_GATES.md` first.
