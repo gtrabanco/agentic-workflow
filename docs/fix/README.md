@@ -16,7 +16,7 @@ table — history lives in git log + closed issues.
 | ------ | ----- | ------ | ---------- | ----- |
 | `100-stale-fix-index-rows` | Drop 21 stale rows from this table pointing to already-merged PRs | done · [#102](https://github.com/gtrabanco/agentic-workflow/pull/102) | — | [#100](https://github.com/gtrabanco/agentic-workflow/issues/100) |
 | `101-stale-roadmap-merge-order-note` | Remove the dead 2026-07-05 merge-order note for PRs #8/#9/#10 (all merged) from `docs/features/ROADMAP.md` | done · [#103](https://github.com/gtrabanco/agentic-workflow/pull/103) | — | [#101](https://github.com/gtrabanco/agentic-workflow/issues/101) |
-| `117-amendment-linkage` | Close issue #117 — user-approved descope of P8 adversarial review (amendment linkage reference) | done | — | [#117](https://github.com/gtrabanco/agentic-workflow/issues/117) |
+| `117-amendment-linkage` | Close issue #117 — user-approved descope of P8 adversarial review (amendment linkage reference) | done · [#118](https://github.com/gtrabanco/agentic-workflow/pull/118) | — | [#117](https://github.com/gtrabanco/agentic-workflow/issues/117) |
 
 ---
 
