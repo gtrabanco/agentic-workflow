@@ -135,11 +135,11 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 
 Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
 
-- [ ] Require `PLANNING_GATES.md` before an issue-derived route can invoke
+- [x] Require `PLANNING_GATES.md` before an issue-derived route can invoke
       `plan-feature-from-issue`.
-- [ ] Preserve the redirect gate's early-stop behavior before loading planning
+- [x] Preserve the redirect gate's early-stop behavior before loading planning
       gates.
-- [ ] Flip F1 to `yes` after the local gate passes.
+- [x] Flip F1 to `yes` after the local gate passes.
 
 ### P2 — Docusaurus adapter slots
 
