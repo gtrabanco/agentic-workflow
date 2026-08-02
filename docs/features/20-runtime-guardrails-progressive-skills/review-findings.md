@@ -52,3 +52,4 @@
 | F50 | docs/features/20-runtime-guardrails-progressive-skills/SPEC.md:283 | scope | high | fix-now | fold into phase | yes ↳ linked #117 (user-approved descope of adversarial review; amendment now satisfies scope gate) |
 | F51 | skills/plan-feature/references/ROUTING.md:3 | progressive-routing + API | med | fix-now | fold into phase | yes |
 | F52 | skills/generate-docs/SKILL.md:61 | progressive-routing + API | major | fix-now | fold into phase | yes |
+| F53 | git status --porcelain | workflow | med | fix-now | clean and synchronize tree before rerun | yes |

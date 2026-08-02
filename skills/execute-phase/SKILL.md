@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.13.0
+version: 2.13.1
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -92,8 +92,10 @@ its PR (finished units), is a FAILED turn, not a done one.
 - Stop after the gate passes; keep commits small and reviewable.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
 - **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
-- **Dependency gate before any work** — see the section below. No edit, no branch, no commit happens for a unit whose dependency closure isn't merged, unless the user passed `--force`.
-- **Phase-lint pre-flight guard before any edit** — see the section below, right after the dependency/own-status gates. No edit happens for a phase that fails the canonical 8-box phase-lint, unless the user passed `--force`.
+- **Dependency gate before any work** — the preflight resource owns it. No edit,
+  branch, or commit for an unmerged dependency closure unless the user passed `--force`.
+- **Phase-lint before any edit** — the preflight resource runs it after
+  dependency/own-status gates. Any FAIL stops unless the user passed `--force`.
 
 ## Context budget (hard rule — small models re-pay full context every turn)
 
@@ -114,31 +116,6 @@ its PR (finished units), is a FAILED turn, not a done one.
   map declares one. Nothing else by default; every additional doc counts
   against the file cap.
 
-## Phase handoff record (`progress.md` — fixed schema)
-
-Every phase ends by APPENDING one entry to the unit's `progress.md`. Feature
-mode: the file `plan-feature-scaffold` created. Phased XS/S single-pass and
-`--fix` units: create `progress.md` beside the SPEC on P1 (the SPEC's
-checkboxes stay the task ledger; this file is the **handoff channel**).
-Fixed schema — all five lines present, `none` is a valid value, free prose
-is not:
-
-```
-## P<k> — <YYYY-MM-DD>
-- Done: <the phase's delivered tasks, one line>
-- Remains: <in-unit work still open, or none>
-- Gotchas: <surprises, workarounds, or decisions the NEXT phase must know, or none>
-- Files: <paths touched>
-- Next: P<k+1> — <its title> | unit finished
-```
-
-The entry rides the phase commit (no sha in the entry — the commit that
-carries it IS the phase's sha; `git log` resolves it). The next phase
-starts in a **fresh conversation** and reads ONLY `SPEC.md`, its own phase's
-`TASKS.md` section (or SPEC `## Phases`), and `progress.md` — this file IS
-the handoff; never rely on session memory from a previous phase.
-
-
 ## Progressive loading — mandatory route before acting
 
 This entrypoint carries only the universal turn contract and handoff schema.
@@ -153,10 +130,11 @@ only the listed files; every resource is one hop from this file.
    legacy single-pass, or fix from the target artifacts; do not load another mode.
 3. Only when creating a forge body, discovering out-of-scope work, or considering
    an issue: read [issue and finding policy](references/ISSUE_POLICY.md).
-4. For implementation guidance and review/finish routing: read
+4. Before writing `progress.md`: read the fixed [handoff schema](references/HANDOFF.md).
+5. For implementation guidance and review/finish routing: read
    [closeout](references/CLOSEOUT.md). On a folded review/audit finding also read
    [folding](references/FOLDING.md).
-5. Only for `/loop`, an external driver, manual batching, or a missing vendor
+6. Only for `/loop`, an external driver, manual batching, or a missing vendor
    feature: read [batch and portability](references/BATCH_AND_PORTABILITY.md).
 
 The fixed blocks in a selected resource are normative: copy them exactly.
