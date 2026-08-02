@@ -105,7 +105,7 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 
 Layer: close-out. Done-when: `gh issue view 117 --json state` → `"state": "CLOSED"`.
 
-- [ ] `gh issue close 117` — closes the issue that served as the amendment
+- [x] `gh issue close 117` — closes the issue that served as the amendment
       linkage reference for the user-approved P8 descope.
 
 ### P2 — Hardening & PR
