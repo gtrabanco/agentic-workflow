@@ -280,7 +280,7 @@ tool-capable model.
 
 ### Amendments
 
-- 2026-08-02 — descoped: "P8 done-when adversarial review `/review-change --adversarial 3`" — approved by user — follow-up: none (user-directed; `/audit-pr` merge gate remains in scope)
+- 2026-08-02 — descoped: "P8 done-when adversarial review `/review-change --adversarial 3`" — approved by user — follow-up: none (user-directed; `/audit-pr` merge gate remains in scope) — #117
 
 ### Deploy & rollback
 
