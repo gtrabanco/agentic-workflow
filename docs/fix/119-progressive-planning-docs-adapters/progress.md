@@ -44,7 +44,7 @@
 
 ## P7 — 2026-08-03
 - Done: Re-ran the full verification gate and three fresh-context NRS issue-route probes; folded F4–F8 after recording the no-write results and bilingual Golden Fixture evidence.
-- Remains: Review and audit of PR #120.
+- Remains: Audit of PR #120; review-change found no new findings.
 - Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; both gates are n/a. The probe is read-verified and does not replace a live weak-model Golden Fixture run.
 - Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/GOLDEN_FIXTURE.es.md`
-- Next: review-change on PR #120 | audit-pr after the review table is clean
+- Next: audit-pr on PR #120 | merge after a MERGE-READY verdict
