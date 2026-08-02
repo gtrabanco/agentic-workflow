@@ -34,3 +34,10 @@
 - Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; both gates are n/a for this phase.
 - Files: `skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
 - Next: P6 — Progressive-loading traceability | unit unfinished
+
+## P6 — 2026-08-03
+- Done: Removed only this branch's F51–F53 feature-20 ledger hunk, preserved historical findings, mapped the progressive resources into the fix scope, synchronized the bilingual context total to 16,035, and marked the P6 ledger tasks complete.
+- Remains: P7 — Hardening & PR.
+- Gotchas: The nine-entrypoint total is derived from the current context checker output; the feature-20 ledger must remain byte-for-byte unchanged from `origin/main` after this phase commit. NRS and architectural-invariant documents remain absent and are n/a.
+- Files: `docs/features/20-runtime-guardrails-progressive-skills/review-findings.md`, `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`, `CHANGELOG.es.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
+- Next: P7 — Hardening & PR | unit unfinished

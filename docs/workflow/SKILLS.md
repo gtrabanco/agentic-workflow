@@ -29,7 +29,7 @@ The committed budget uses `ceil(UTF-8 bytes / 4)` as a deterministic estimate,
 not as provider billing tokens. Every main entrypoint is capped at 2,800
 estimated tokens and 240 lines, with no size exception. The nine entrypoints
 refactored in the second progressive-loading pass fell from a combined 30,868
-to 15,977 estimated tokens while preserving their contracts behind explicit
+to 16,035 estimated tokens while preserving their contracts behind explicit
 routes. Validate the catalog with:
 
 ```sh

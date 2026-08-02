@@ -32,7 +32,7 @@ El presupuesto versionado usa `ceil(bytes UTF-8 / 4)` como estimación
 determinista, no como tokens facturados por el proveedor. Todos los entrypoints
 principales tienen un límite de 2.800 tokens estimados y 240 líneas, sin
 excepciones de tamaño. Los nueve entrypoints refactorizados en la segunda pasada
-de carga progresiva bajaron de 30.868 a 15.977 tokens estimados combinados,
+de carga progresiva bajaron de 30.868 a 16.035 tokens estimados combinados,
 conservando sus contratos tras rutas explícitas. Valida el catálogo con:
 
 ```sh

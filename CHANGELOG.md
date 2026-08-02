@@ -522,7 +522,7 @@ How pinning actually works, verified against the `skills` CLI:
   now route detailed contracts through explicit one-hop references, repeated
   prose is condensed, and the universal entrypoint cap drops from 4,200/360
   to 2,800 estimated tokens/240 lines with no size exception. Combined direct
-  activation for those nine falls from 30,868 to 15,977 estimated tokens;
+  activation for those nine falls from 30,868 to 16,035 estimated tokens;
   all behavior-preserving changes receive patch bumps.
 
 - **2026-07-31 — runtime guardrails and invocation-scoped fullauto.**
