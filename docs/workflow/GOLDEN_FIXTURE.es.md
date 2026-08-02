@@ -209,6 +209,8 @@ la cobertura se mantenga auditable a lo largo del tiempo.
 
 | 2026-08-02 | Qwen3 8B (`qwen3:8b`, `--think=false`; modelo local con tool-calling más débil, ya validado arriba) | `bump-skill` 2.3.2, `execute-phase` 2.13.1, `fold-findings` 1.1.1, `generate-docs` 2.0.1, `plan-feature` 3.3.1, `plan-feature-scaffold` 1.12.1, `plan-fix` 2.4.1, `product-audit` 3.0.1, `review-implementation` 1.3.1 (segunda pasada de carga progresiva) | PASS | Nueve probes vivos de selección de ruta, cada uno alimentado literalmente con el entrypoint actual, eligieron exactamente los recursos de un salto y su orden: handoff de execute tras los recursos previos; stop `planned` de plan-feature frente a gates de scaffold en `defined`; proceso de scaffold; find→classify del review; planning→SPEC del fix; discovery→sync del bump; policy→process del fold; parada temprana NOT-CONFIGURED de generate-docs; y dimensions→process de product-audit. No inventó ningún nombre de referencia ni paso extra del workflow. |
 
+| 2026-08-03 | n/a — sonda de shell de solo lectura verificada; no hubo ejecución de modelo | `plan-feature` 3.3.1 (fix #119, gate NRS de ruta de issue) | PASS | Tres sondas aisladas en scratch para los estados NRS `draft`, `contradicted` y `resolved` confirmaron que la ruta padre carga `PLANNING_GATES.md` antes de componer `plan-feature-from-issue`; cada estado no congelado se detuvo antes de escribir la mitad de producto y se enrutó a discovery o resolution. |
+
 ## Límite de alcance
 
 Manual primero, sin CI, sin script ejecutable. Esto es deliberadamente lo
