@@ -51,8 +51,9 @@ The reference allowlist is exactly the two paths below:
 
 1. Every invocation: read [redirect gate and routing](references/ROUTING.md),
    apply the status gate first, and stop on its exact block when instructed.
-2. Designed input that will scaffold: read [repository-state and architectural
-   gates](references/PLANNING_GATES.md) before composing an internal step.
+2. Any route that can write planning artifacts: after the redirect gate permits
+   routing, read [repository-state and architectural gates](references/PLANNING_GATES.md)
+   before composing an internal step, including the issue-derived route.
 
 Do not load planning gates after a redirect stop. Both resources are normative,
 one hop from this file, and fail closed when missing.
