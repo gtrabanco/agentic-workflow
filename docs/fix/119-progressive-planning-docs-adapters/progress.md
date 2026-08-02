@@ -41,3 +41,10 @@
 - Gotchas: The nine-entrypoint total is derived from the current context checker output; the feature-20 ledger must remain byte-for-byte unchanged from `origin/main` after this phase commit. NRS and architectural-invariant documents remain absent and are n/a.
 - Files: `docs/features/20-runtime-guardrails-progressive-skills/review-findings.md`, `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`, `CHANGELOG.es.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
 - Next: P7 — Hardening & PR | unit unfinished
+
+## P7 — 2026-08-03
+- Done: Re-ran the full verification gate and three fresh-context NRS issue-route probes; folded F4–F8 after recording the no-write results and bilingual Golden Fixture evidence.
+- Remains: Review and audit of PR #120.
+- Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; both gates are n/a. The probe is read-verified and does not replace a live weak-model Golden Fixture run.
+- Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/GOLDEN_FIXTURE.es.md`
+- Next: review-change on PR #120 | audit-pr after the review table is clean
