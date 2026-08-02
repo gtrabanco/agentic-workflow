@@ -154,13 +154,13 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill generate-d
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #119`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
-- [ ] Flip F3 to `yes` in the PR-link commit after the index row is updated.
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<n>` and push
+- [x] Flip F3 to `yes` in the PR-link commit after the index row is updated.
 
 ## Testing
 
