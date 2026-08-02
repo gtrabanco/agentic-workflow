@@ -99,6 +99,6 @@
 - [x] After user confirmation, reword `8c4eec6` to the scoped conventional-commit format and push with `--force-with-lease`.
       Covers: F39. Resolved: the scoped reword `39dc7a9 docs(20): link PR #116` (same tree and parent as `8c4eec6`) is on the branch and pushed; `8c4eec6` remains only as the dangling pre-reword object.
 - [x] Run the hook fixtures, context checker and its tests, manifest parsing, `npx skills add . --list`, and `git diff --check` on the synchronized branch.
-- [ ] Run `/review-change --adversarial 3`; fold any remaining fix-now findings, then run `/audit-pr`.
-      Covers: F40.
-  Done-when: the pushed branch has a clean tree, an adversarial PASS, and an audit-pr merge-ready verdict.
+- [x] Run `/review-change --adversarial 3`; fold any remaining fix-now findings, then run `/audit-pr`.
+      Covers: F40. Descoped per user directive 2026-08-02 (SPEC `## Amendments`): the adversarial review is NOT run; `/audit-pr` merge gate remains in scope.
+  Done-when: the pushed branch has a clean tree and an audit-pr merge-ready verdict (adversarial review descoped by user).
