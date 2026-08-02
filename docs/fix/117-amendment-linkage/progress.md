@@ -6,8 +6,8 @@
 - Next: P2 — Hardening & PR
 
 ## P2 — 2026-08-02
-- Done: Verification gate green (skills list + context budgets passed); pending-docs check clean; fix-index set to `done`
-- Remains: push, open PR, link PR in fix-index
+- Done: Verification gate green (skills list + context budgets passed); pending-docs check clean; fix-index set to `done`; push + PR #118 open + fix-index linked
+- Remains: PR merge (manual — forge admin)
 - Gotchas: none
 - Files: docs/fix/117-amendment-linkage/progress.md, docs/fix/README.md
-- Next: unit finished — push + PR
+- Next: PR merge
