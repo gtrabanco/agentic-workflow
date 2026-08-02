@@ -186,11 +186,11 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill generate-d
 
 Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
 
-- [ ] Make issue detection select the route without composing
+- [x] Make issue detection select the route without composing
       `plan-feature-from-issue`.
-- [ ] Require `PLANNING_GATES.md` before the selected issue route can write a
+- [x] Require `PLANNING_GATES.md` before the selected issue route can write a
       product half.
-- [ ] Preserve the no-planning-gates early stop for redirected non-issue input.
+- [x] Preserve the no-planning-gates early stop for redirected non-issue input.
 
 ### P5 — Reference ownership
 

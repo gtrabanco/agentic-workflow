@@ -61,8 +61,10 @@ one hop from this file, and fail closed when missing.
 ## Process
 
 1. **Redirect gate** from `ROUTING.md` — always first.
-2. **Route** from the same resource. The from-issue internal produces a **filled, sized SPEC
-   product half**; then invoke `plan-feature-scaffold`, which fills the
+2. **Route** from the same resource. For issue input, resolve and validate the issue
+   identity only; after `PLANNING_GATES.md` confirms that planning may write,
+   compose the from-issue internal to produce a **filled, sized SPEC product
+   half**; then invoke `plan-feature-scaffold`, which fills the
    engineering half and scales the artifacts to the SPEC's size (XS/S →
    SPEC-only; M/L → full set) and registers the roadmap. The already-designed
    scoped path runs `plan-feature-scaffold` directly.

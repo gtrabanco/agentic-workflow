@@ -20,3 +20,10 @@
 - Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; P3 records both as n/a.
 - Files: `docs/fix/README.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`
 - Next: P4 — NRS issue-route ordering | replan approved; unit in progress
+
+## P4 — 2026-08-03
+- Done: Issue routing now resolves and validates identity without composing the product-half writer; `PLANNING_GATES.md` is required before the issue-derived write route, while redirected non-issue stops retain their early-stop behavior.
+- Remains: P5 — Reference ownership; P6 — Progressive-loading traceability; P7 — Hardening & PR.
+- Gotchas: The fresh-context `draft`, `contradicted`, and `resolved` probes remain assigned to P7; F4 and F5 stay unfolded until those probes are recorded.
+- Files: `skills/plan-feature/SKILL.md`, `skills/plan-feature/references/ROUTING.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`
+- Next: P5 — Reference ownership | unit unfinished
