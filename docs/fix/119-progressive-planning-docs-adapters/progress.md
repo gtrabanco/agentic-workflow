@@ -27,3 +27,10 @@
 - Gotchas: The fresh-context `draft`, `contradicted`, and `resolved` probes remain assigned to P7; F4 and F5 stay unfolded until those probes are recorded.
 - Files: `skills/plan-feature/SKILL.md`, `skills/plan-feature/references/ROUTING.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`
 - Next: P5 — Reference ownership | unit unfinished
+
+## P5 — 2026-08-03
+- Done: Replaced the scaffold process's cross-skill `HANDOFF.md` link with a self-contained progress ownership statement; the scaffold keeps its one-hop reference allowlist and F6 is folded.
+- Remains: P6 — Progressive-loading traceability; P7 — Hardening & PR.
+- Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; both gates are n/a for this phase.
+- Files: `skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
+- Next: P6 — Progressive-loading traceability | unit unfinished
