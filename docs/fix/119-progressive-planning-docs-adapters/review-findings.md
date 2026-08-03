@@ -14,7 +14,7 @@
 | F12 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:98-122 | spec-drift | med | fix-now | replan-in-unit | yes |
 | F13 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:232-244 | workflow | high | fix-now | replan-in-unit | no |
 | F14 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | med | fix-now | fold into current fix | yes |
-| F15 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | high | fix-now | replan-in-unit | no |
+| F15 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | high | fix-now | replan-in-unit | yes |
 | F16 | .mcp.json:1 | workflow | med | fix-now | fold into current fix | yes |
 | F17 | skills/product-audit/SKILL.md:64-76 | correctness | med | fix-now | fold into current fix | yes |
 | F18 | docs/fix/119-progressive-planning-docs-adapters/testing.md:55 | verify | major | fix-now | fold into current fix | no |

@@ -65,3 +65,10 @@
 - Gotchas: Acceptance 7 retains the read-verified contract; P10 adds the distinct live weak-model evidence required by the triage verdict for F18.
 - Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`
 - Next: P9 — Issue route contract | unit unfinished
+
+## P9 — 2026-08-03
+- Done: Made issue detection an explicit route-selection step, assigned the planning-gate check to the parent before composition, recorded selected-route evidence, and folded F15.
+- Remains: P10 — Weak-model probe; P11 — Hardening & PR.
+- Gotchas: The route contract is read-verified in this phase; P10 still requires live weak-model probes with no product-half writes.
+- Files: `skills/plan-feature/references/ROUTING.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
+- Next: P10 — Weak-model probe | unit unfinished
