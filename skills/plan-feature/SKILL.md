@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.3.1
+version: 3.3.2
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
