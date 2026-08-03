@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.12.0
+version: 1.12.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -40,125 +40,15 @@ what THIS skill needs: the feature SPEC **template**, the **roadmap**
 the architecture/domain docs the map points to. No template/roadmap → fall back to
 the agent guide and state the assumption.
 
-## Process
+## Progressive loading — scaffold only after discovery
 
-1. **Verify the product half is designed.** The SPEC's `## Design status` must
-   read `designed` and Capability closure must be filled — `plan-feature`'s
-   redirect gate already checked this before calling this skill, but confirm
-   before writing: an undesigned SPEC here is a caller bug, not something to
-   silently patch over.
-2. **Resolve identity.** From the roadmap, confirm the number and kebab-case
-   slug the product half already used (or, for an already-scoped SPEC with no
-   prior roadmap entry, pick the next free number). Record dependencies
-   (features that must land first) and note ordering conflicts.
-3. **Fill the engineering half of the SPEC.** In the existing
-   `docs/features/<NN>-<slug>/SPEC.md`, complete every Engineering-half
-   section — technical goals, architecture impact, design, decisions to
-   confirm, branch name (`feat/<NN>-<slug>` or per project convention), phases,
-   testing requirements, and **dev scenarios** (happy path **and** failure
-   modes: empty/degraded state, races, outages — plus how to reproduce each
-   locally). Never touch the Product half (goal, context, scope, capability
-   closure, `## Design status`) — that is `design-feature`'s content; if it
-   looks wrong or incomplete, stop and redirect rather than editing it here.
-   No unfilled placeholders; record genuinely-unknown values as open questions
-   in `decisions.md`, not blanks.
-4. **Scale the artifacts to the size.**
-   - **XS/S** → the SPEC is the only planning artifact (skip the set below —
-     don't generate ceremony the feature doesn't need), but its `### Phases`
-     section must list **≥ 2 phases with checkbox tasks**: `P1` implementation
-     (cut by the per-phase cheap-executability checklist below), final phase
-     `P2 — Hardening & PR` carrying the **literal close-out tasks** (fixed
-     wording — copy them from `docs/fix/_TEMPLATE/SPEC.md` `## Phases`, never
-     paraphrase). Register the roadmap entry and hand off to
-     `execute-phase <NN>` (it runs one phase per invocation, ticking the
-     SPEC's `### Phases` checkboxes as its ledger).
-   - **Split — mandatory, not advisory.** Before emitting the phase list for an
-     M/L feature, split this feature into `Depends on:`-chained features if
-     **any** holds: (a) the plan would exceed **~5 phases**; (b) a phase
-     touches **more than one layer/concern**; (c) a phase requires a **design
-     decision not resolved** in `SPEC.md`/`decisions.md`. Use the existing
-     dependency infrastructure (transitive dependency gate + `workflow-status`
-     build order) — never invent a new mechanism. More, smaller, slower
-     features is the accepted trade; a phase a weak model cannot execute
-     without judgement is not well-cut.
-   - **Per-phase cheap-executability checklist.** Each phase you emit passes
-     only if: ✓ every task is independently checkable **without judgement**;
-     ✓ **zero open design decisions** (all resolved in `SPEC.md`/
-     `decisions.md`); ✓ **one layer/concern**; ✓ its **verification gate runs
-     locally**. A phase failing any box is re-cut or split (feeds the split
-     rule above). State `n/a: <reason>` only where a box is genuinely
-     inapplicable.
-   - **Phase-lint (mandatory, emit-time).** Before emitting the phase list,
-     run the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md`
-     `## Phases` "Phase-lint" — the authoritative copy, also quoted in
-     `docs/features/_TEMPLATE/SPEC.md` `### Phases`) against every phase.
-     Any FAIL → re-cut or split the phase using the mandatory-split rule
-     above before emitting; never emit a phase with an unticked lint box.
-   - **Spec-lint (mandatory, emit-time).** After filling the engineering
-     half, run the SPEC template's `### Spec-lint` — **all boxes**: the
-     engineering boxes plus the product boxes as a regression check
-     (`design-feature` already passed them; a FAIL here means the product
-     half regressed or the scaffold left placeholders). Presence checks
-     only — mechanical, no quality judgement. Any FAIL → fix before the
-     completion report; never report over a failed box.
-   - **M/L** → generate the full set, mirroring the recent features':
-     - `PLAN.md` — phased plan **labelled `P1, P2, …`** and called *phases*;
-       phases are an *implementation* sequence, not a delivery boundary.
-       **Naming is fixed: always `P1, P2, …` / "phases" — never `S1`/`S2` or
-       "Steps".** The label is the executor's argument (`execute-phase NN P2`),
-       so every artifact (`PLAN.md`, `TASKS.md`, `progress.md`) must use the same
-       `P1, P2, …` labels. **The last implementation phase is always a hardening
-       phase**: edge cases and the SPEC's dev-scenario failure modes
-       (empty/degraded states, races, outages), implemented and tested — not just
-       documented.
-     - `TASKS.md` — per-phase checklists the executor ticks off. **The final
-       phase's checklist always ends with these literal close-out tasks**:
-       "[ ] open the PR (`gh pr create --body-file <path>` — body written as a
-       Markdown file, real backticks, never inline `--body`/heredoc that leaves
-       `\`-escaped backticks) and PRINT THE PR URL in the chat",
-       "[ ] update the roadmap row to `done · [#<pr>](<pr-url>)`",
-       "[ ] commit `docs: link PR #<n>` and push" — so the close-out is a
-       ticked task, not an assumed behavior. **Emit each command-checkable
-       acceptance criterion as the command** (a `grep`, a test invocation, a
-       build) **— not as prose**; only genuinely judgement-only criteria stay
-       prose, labelled `read-verified` (feature 07's `testing.md` is the
-       reference shape). A weak executor verifies by *running* the command, not
-       by judging prose.
-     - `progress.md` — the phase handoff record, one entry per phase in
-       `execute-phase`'s fixed schema (`## P<k> — <date> — <sha>` +
-       `Done / Remains / Gotchas / Files / Next` lines — see *Phase handoff
-       record* in `skills/execute-phase/SKILL.md`). Create it with just the
-       header line `Last reviewed: —`; `execute-phase` appends the entries.
-     - `testing.md` — what is tested at which layer (prefer integration); same
-       command-checkable-as-command rule as `TASKS.md` above.
-     - `known-issues.md` — deferred items, each linked to (or destined for) an
-       issue. Do **not** plan to implement deferred work inline.
-     - `decisions.md` — architecture/scope decisions + open questions.
-     - `architecture-notes.md` — layer impact, ports, schema, bindings touched.
-5. **Register in the roadmap** with number, ordering, dependencies, **and set
-   the row's status to `planned`** — the `defined → planned` transition this
-   skill owns (see the roadmap's Status legend). The row must already read
-   `defined` on entry (step 1 confirmed the product half is `designed`); if
-   the row is missing entirely (an already-scoped SPEC with no prior roadmap
-   entry), add it directly at `planned` since the SPEC + artifacts this step
-   produces satisfy that state in the same edit. **Verify the write before
-   moving on**: re-read the roadmap row and confirm it literally reads
-   `planned`. If it doesn't (a dropped write), re-apply the edit and re-read
-   again — never end this step, or the turn, with the write unverified.
-6. **Do not branch or code.** That belongs to `execute-phase`; record the branch
-   name in the SPEC only.
-7. **Hand off — return exactly** (fixed completion report):
+The reference allowlist is exactly one path. After Step 0, read and execute the
+complete [scaffold process](references/SCAFFOLD_PROCESS.md). It owns the product-
+half gate, artifact scaling, phase/spec lint, roadmap transition, re-read, and
+fixed completion report.
 
-   ```
-   SCAFFOLD <NN>-<slug> — size: <XS|S|M|L>
-   Artifacts written: <SPEC.md [+ PLAN.md TASKS.md progress.md testing.md
-     known-issues.md decisions.md architecture-notes.md for M/L]>
-   Roadmap: registered as <NN> (deps: <list|none>)   Phases: <n> (P1…P<n>, last = <hardening (M/L) | Hardening & PR (XS/S)>)
-   Spec-lint: PASS (<n>/<n> boxes)   Phase-lint: PASS (all phases)
-   Open questions: <n> (in decisions.md) | none
-   ```
-
-   The caller (`plan-feature`) prints the closing `→ Next:` block.
+The resource is normative and one hop from this file. Missing resource → stop;
+never reconstruct phase or close-out wording from memory.
 
 ## Guardrails
 
