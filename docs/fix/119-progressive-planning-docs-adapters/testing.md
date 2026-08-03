@@ -85,3 +85,19 @@
 - Read-verified: issue detection selects the route before composition; the parent loads and applies `PLANNING_GATES.md` before composing `plan-feature-from-issue`.
 - `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
 - `git diff --check` → exit 0.
+
+## P10 — 2026-08-03
+
+- Tool-calling smoke: `qwen3:8b` with `think=false`, temperature `0`, and seed
+  `20` returned `finish_reason: tool_calls`, function `get_time`, and parseable
+  `{}` arguments.
+- Live weak-model NRS issue-route probe: `draft` called `read_nrs`, then
+  `/discover-repository-state`; `product_half_write_called: false`.
+- Live weak-model NRS issue-route probe: `contradicted` called `read_nrs`, then
+  `/resolve-repository-state`; `product_half_write_called: false`.
+- Live weak-model NRS issue-route probe: `resolved` called `read_nrs`, then
+  `/resolve-repository-state`; `product_half_write_called: false`.
+- All three fresh runs printed a `→ Next:` hand-off; no product-half write tool
+  was called. F18 is folded.
+- `grep -Fq 'live weak-model NRS issue-route probe' docs/workflow/GOLDEN_FIXTURE.md docs/workflow/GOLDEN_FIXTURE.es.md` → exit 0.
+- `git diff --check` → exit 0 before commit.

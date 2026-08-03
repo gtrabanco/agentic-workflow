@@ -72,3 +72,10 @@
 - Gotchas: The route contract is read-verified in this phase; P10 still requires live weak-model probes with no product-half writes.
 - Files: `skills/plan-feature/references/ROUTING.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
 - Next: P10 — Weak-model probe | unit unfinished
+
+## P10 — 2026-08-03
+- Done: Ran the live weak-model tool-calling smoke and fresh NRS issue-route probes for `draft`, `contradicted`, and `resolved`; all three stopped before a product-half write, selected discovery or resolution, and recorded Golden Fixture evidence; folded F18.
+- Remains: P11 — Hardening & PR.
+- Gotchas: `qwen3:8b` was run with `think=false`, temperature `0`, and seed `20`; the tool-calling smoke returned parseable `{}` arguments. NRS and architectural-invariant documents remain absent and are n/a.
+- Files: `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/GOLDEN_FIXTURE.es.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
+- Next: P11 — Hardening & PR | unit unfinished
