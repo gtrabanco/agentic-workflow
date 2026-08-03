@@ -5,23 +5,23 @@ named contract comparison and cited file evidence in `testing.md`.
 
 ## P1 — Route cost measurement
 
-- [ ] Extend the context-budget manifest with named, ordered composed routes
+- [x] Extend the context-budget manifest with named, ordered composed routes
       for planning, fix planning, execution modes, review modes, and feature/fix
       audit.
       Check: `node scripts/check-skill-context.mjs --routes --json` parses and
       lists every route named in SPEC Acceptance criterion 1.
-- [ ] Compute each route from unique files using the existing deterministic
+- [x] Compute each route from unique files using the existing deterministic
       byte/4 metric; report fixed instructions separately from target-project
       context.
       Check: `read-verified` against the manifest metric and stable JSON shape.
-- [ ] Reject structurally invalid route declarations and route-budget
+- [x] Reject structurally invalid route declarations and route-budget
       regressions.
       Check: `node scripts/check-skill-context.test.mjs` covers all five
       failures and exits 0.
-- [ ] Capture the pre-change baseline totals in `testing.md` before any hot
+- [x] Capture the pre-change baseline totals in `testing.md` before any hot
       route is rewritten.
       Check: `grep -q "Baseline route estimates" docs/features/21-workflow-contract-consolidation/testing.md`.
-- [ ] Keep the existing per-file budget CLI and tests backward compatible.
+- [x] Keep the existing per-file budget CLI and tests backward compatible.
       Check: `node scripts/check-skill-context.mjs --skill execute-phase --skill review-change --skill audit-pr` exits 0.
   Done-when: `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs --routes` → both exit 0.
 
