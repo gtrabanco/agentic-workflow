@@ -57,6 +57,22 @@
 - Review-change read-only pass → PASS: implementation, code, verification, debt, and performance axes found no new finding; UI, accessibility, brand, and SEO axes were n/a for this docs/skill change. Architectural invariants were n/a because no project invariant document exists. Manual checklist: weak-model live run not performed; read-verified route probes passed.
 - Audit-pr read-only pass → BLOCKED: PR #120 is mergeable and closes #119, but `gh pr checks 120` reports no checks, so CI verification evidence is absent. No MERGE-READY comment was posted.
 
+## P8 — 2026-08-03
+
+| Acceptance | Evidence owner | Verification |
+| --- | --- | --- |
+| 1 | P4 issue-route gate | `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0 |
+| 2 | P2 adapter slots | `node scripts/check-skill-context.mjs --skill generate-docs` → exit 0 |
+| 3 | P2 adapter slots | Docusaurus slot grep covers content, page, guides, map, review, sidebar, verify, and assets |
+| 4 | P1–P3 ledger | F1–F3 retain `fix-now` and `replan-in-unit` |
+| 5 | P3 PR close-out | `git diff --check` → exit 0; PR #120 body includes `Closes #119`; fix index links the PR |
+| 6 | P5 reference ownership | `node scripts/check-skill-context.mjs --skill plan-feature-scaffold` → exit 0 |
+| 7 | P7 read-verified route probes and P10 live probe | `draft`, `contradicted`, and `resolved` stop before a product-half write and route to discovery or resolution |
+| 8 | P6 traceability | feature-20 review ledger is absent from `origin/main...HEAD` |
+
+- `node scripts/check-skill-context.mjs --skill plan-feature --skill plan-feature-scaffold` → exit 0.
+- `git diff --check` → exit 0 before commit.
+
 ## F9 fold — 2026-08-03
 
 - `grep -Fq '**Issue input**' skills/plan-feature/references/ROUTING.md` → exit 0.
