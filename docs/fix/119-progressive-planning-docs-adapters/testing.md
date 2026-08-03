@@ -139,3 +139,4 @@
 - `gh pr view 120` → `OPEN`, `MERGEABLE`, base `main`; body contains the reconciled progressive-resource scope and `Closes #119`.
 - `gh pr checks 120` → no published checks; CI evidence remains unavailable for `/audit-pr`.
 - Final `/review-change` → PASS; no new findings and F13/F18/F19/F20 remain folded.
+- Final `/audit-pr` invocation → BLOCKED because `gh pr checks 120` reports no published checks; no merge-ready comment posted.
