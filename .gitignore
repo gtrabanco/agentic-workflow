@@ -6,3 +6,6 @@
 # Logs / temp
 *.log
 tmp/
+
+# Local MCP configuration
+.mcp.json

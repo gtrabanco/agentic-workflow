@@ -2,37 +2,23 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.0.0
+version: 3.0.2
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Periodic, product-wide health check — the CTO's "where do we actually stand?"
-  Sweeps the WHOLE codebase (not a diff, not a PR) across every applicable axis —
-  correctness, architecture, security/cybersecurity, performance, tests, UX/UI,
-  accessibility, SEO, brand, tech debt — PLUS process & docs (incomplete phases,
-  aging issues, solvable known-issues, doc/workflow completeness) and roadmap
-  coherence. Mines accumulated suggestions from feature docs. Output: a
-  severity-ranked report and concrete PROPOSALS — issues to open, roadmap features
-  to add or remove. Every run is persisted to docs/audits/<n>-<YYYY-MM-DD>.md with
-  an incremental audit id and findings numbered F1, F2, … so any finding is
-  addressable later as "triage-issue <audit-id> F<k>". NEVER auto-fixes; the user
-  decides what to act on.
-  On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
-  Triggers: "audit the product", "full health check", "are we product-ready",
-  "product-audit", "what's the state of the codebase", "CTO review", "tech-debt
-  and roadmap sweep".
+  Audit the whole product across code, quality, process, docs, roadmap, and
+  tooling. Persist one severity-ranked, F-numbered report with proposals; never
+  fix or file work. Triggers: "product-audit", "audit the product", "full health
+  check", "are we product-ready", "CTO review".
 ---
 
 # Product Audit
 
-The **CTO health check**: run every few features, before a release, or when the
-product is "done", to answer *"where do we actually stand, and what should we do
-next?"* across the entire product. **Recommend-only — it never fixes, opens
-issues, or edits the roadmap. It proposes; the human decides.** Its single
-write is its own persisted report: `docs/audits/<n>-<YYYY-MM-DD>.md`.
+Product-wide health check. It only writes
+`docs/audits/<n>-<YYYY-MM-DD>.md`; every proposed action remains a user decision.
 
 ## Turn contract — verify before ending the turn
 
@@ -53,9 +39,7 @@ first on purpose).
 - When you want the broad, honest picture — quality, security, debt, docs, and
   roadmap — not the review of a single change (`review-change`) or PR (`audit-pr`).
 
-This is the widest lens in the workflow. `review-change` audits a diff, `audit-pr`
-a PR, `audit-docs` doc↔roadmap↔code coherence — `product-audit` audits the
-**whole product across every dimension** and turns what it finds into proposals.
+Unlike diff, PR, or docs-only reviews, this skill covers the whole product.
 
 ## Scope
 
@@ -78,89 +62,23 @@ coverage you didn't do.
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the roadmap, the fix index, the feature folder layout, and
 the verification gate. From the map decide the product's nature (web / mobile /
-console / library / backend / infra) and which axes apply — the same applicability
-logic `review-change` uses, applied product-wide. Note any optional platform
-review skills the project installed (extras, never requirements — the internal
-pack covers every axis).
+console / library / backend / infra). Defer deciding which dimensions apply until
+`AUDIT_DIMENSIONS.md` has been loaded; that resource is the authoritative
+applicability matrix. Note any optional platform review skills the project
+installed (extras, never requirements — the internal pack covers every axis).
 
-## Audit dimensions (platform-adaptive — run only what applies)
+## Progressive loading — audit route
 
-| Dimension | What it sweeps product-wide | Applies to |
-|---|---|---|
-| **Correctness & architecture** | Bugs, layer/boundary violations, dead code, overengineering, drift from the architecture doc | all |
-| **Security & cybersecurity** | Secrets in repo, authz gaps, input validation, dependency / supply-chain risk | all |
-| **Performance** | Hotspots, complexity, N+1s, bundle/asset weight (web), resource leaks | all |
-| **Tests** | Coverage of critical paths, missing/!flaky tests, untested failure modes | all |
-| **UX / UI** | Design-system adherence, broken states, inconsistency | web / mobile / TUI |
-| **Accessibility** | a11y conformance for user-facing surfaces | web / mobile |
-| **SEO** | Indexability, metadata, structured data | web |
-| **Brand / voice** | User-facing copy vs. the brand guide | surfaces with copy |
-| **Tech debt** | Accumulated shortcuts, TODO/FIXME, stale abstractions | all |
-| **Process & docs** | Incomplete phases, aging open issues, **solvable known-issues**, doc completeness, missing/optimizable workflow docs, capability-inventory freshness (`docs/CAPABILITIES.md` ↔ code drift) | all |
-| **Workflow discipline** | The workflow's own rules held: branch/PR discipline, `done · #<pr>` links, phase naming (`P1…`), per-phase docs, commit format, dependency closures, artifact language — **run `audit-docs` checks 1–13 mechanically** (compose it); never assume a rule held because it "should". **Scope-export recurrence:** across the most recent units (merged or in-flight), each with a non-empty `## Amendments` descope log or a descope-classified born issue (`audit-pr`'s scope-bleed gate) counts as one scope-exporting unit — **≥ 2 consecutive** such units is a planning-quality finding ("features cut too big for real capacity"), routed to the atomicity/split rules (**#64**), not re-litigated as a per-unit defect | all |
-| **Roadmap coherence** | Stale/obsolete/superseded features, missing dependencies, gaps & opportunities | all |
-| **Installed tooling** | Installed skills + connected MCP servers vs. the project's applicable axes and roadmap features — unregistered-but-useful items, and tooling that would change a feature's scope | all |
+The reference allowlist is exactly the two paths below. Load both after Step 0,
+in order; they are normative and one hop from this entrypoint.
 
-Skip inapplicable axes (no a11y/SEO/brand for a CLI/library/infra product) and
-**say which you skipped and why**. Every axis is covered by the workflow's own
-internal review pack (`review-code`, `review-security`, `review-verify`,
-`review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
-`review-seo`) — installed with the workflow, so an applicable axis can never be
-"missing". Platform skills the project installed run as optional extras on top.
+1. Read [audit dimensions](references/AUDIT_DIMENSIONS.md), mark every dimension
+   applicable or `n-a: <reason>`, and state any sampling.
+2. Read [audit process](references/AUDIT_PROCESS.md), execute all nine steps, then
+   return the fixed report below.
 
-## Process
-
-1. **Map & decide axes** — Step 0; mark each dimension applicable / n-a.
-2. **Sweep code & axes** — run the applicable axes across the codebase: compose
-   `review-implementation` plus the internal review pack's applicable passes
-   (each returns its fixed-format table + PASS|FAIL), and any optional installed
-   extras. Classify findings (severity + fix-now / postpone / tradeoff).
-3. **Audit process & docs** — incomplete phases (`progress.md`/`TASKS.md`), aging
-   open issues, **solvable known-issues** (trigger now met), doc-map completeness
-   (compose `audit-docs`), missing/optimizable workflow docs, and **capability
-   inventory freshness**: cross-check `docs/CAPABILITIES.md` against the code —
-   roles, permissions, or cross-cutting subsystems present in the code but
-   missing from the inventory (or vice versa) are a Process & docs finding
-   (`design-feature`'s Integration closure is only as good as this file). If
-   the project has no inventory file, propose seeding it from the template —
-   a finding, never an auto-fix.
-4. **Mine accumulated suggestions** — read every feature folder's `decisions.md`,
-   `known-issues.md`, and `architecture-notes.md`; extract deferred items, open
-   questions, and recorded debt. Cluster duplicates across features.
-5. **Sweep installed tooling** — (a) inventory the installed skills and
-   connected MCP servers available to the agent; (b) cross-reference each
-   against the applicable review axes and the roadmap features; (c) classify
-   each as **register** (useful, not yet named in the project's `CLAUDE.md`),
-   **re-design** (would change a feature's definition/scope), or
-   **not-relevant**; (d) dedupe against what `CLAUDE.md` already registers —
-   only unregistered/relevant items survive into proposals. If the agent
-   cannot enumerate its installed skills / connected MCPs, say so plainly
-   (no silent caps) rather than inventing an inventory.
-6. **Synthesize proposals** — turn findings + mined items into four concrete,
-   deduped, severity-ranked streams:
-   - **Issues to open** — bugs, debt, security/perf items worth tracking.
-   - **Roadmap: add** — features/capabilities the evidence now justifies.
-   - **Roadmap: remove or revise** — features that are obsolete, superseded, or no
-     longer make sense.
-   - **Tooling: register or re-design** — unregistered-but-useful tooling to add
-     to `CLAUDE.md`, or a discovered skill/MCP that would rescope a feature.
-7. **Number the findings.** Assign every finding in the severity-ranked list a
-   sequential id `F1, F2, …` — **one single `F` sequence for the whole audit**,
-   in ranked order, regardless of dimension. Never use a different letter per
-   dimension or per severity; `F` is the only prefix. Proposals reference the
-   finding ids they derive from (`from: F3, F7`).
-8. **Persist the report** (the only mutation this skill makes):
-   - Compute the audit id: `mkdir -p docs/audits`, then next id =
-     highest `<n>` among existing `docs/audits/<n>-*.md` files + 1 (first audit
-     → `1`). Plain incremental integer, no zero-padding.
-   - Write the full report (the exact fixed format below) to
-     `docs/audits/<id>-<YYYY-MM-DD>.md` (today's date).
-   - Commit it on the current branch with
-     `docs(audits): product audit <id> <YYYY-MM-DD>` (and push if the project's
-     conventions push on commit). If the working tree carries unrelated
-     uncommitted changes, stage **only** the report file.
-9. **Report** — print the same report in chat. Recommend; do not act: filing
-   the proposed issues is `triage-issue`'s job (suggest it, never run it).
+A missing resource stops the audit; never reconstruct it from memory. Optional
+platform review skills remain extras, never replacements for the internal pack.
 
 ## Output format
 
