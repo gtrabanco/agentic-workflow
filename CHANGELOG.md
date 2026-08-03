@@ -225,6 +225,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.3.2 | 2026-08-03 | patch | Makes the issue-derived routing contract explicit: after `PLANNING_GATES.md` permits planning, compose `plan-feature-from-issue` and then `plan-feature-scaffold` in that order. |
 | 3.3.1 | 2026-08-02 | patch | Routes status detection and repository/invariant gates through two explicit one-hop references and trims activation metadata; planning behavior and fixed hand-offs are unchanged. |
 | 3.3.0 | 2026-07-31 | minor | Evaluates optional architectural invariants before scaffolding and restores compatibility with repositories that have no Normalized Repository State ledger. |
 | 3.2.2 | 2026-07-31 | patch | Moves the NRS planning gate below the Guardrails bullets so the guardrails keep their intended section scope. |
