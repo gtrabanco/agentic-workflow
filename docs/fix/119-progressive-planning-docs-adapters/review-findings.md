@@ -8,3 +8,4 @@
 | F6 | skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md:49 | context-integrity | major | fix-now | replan-in-unit | yes |
 | F7 | docs/workflow/SKILLS.md:32 | documentation accuracy | minor | fix-now | replan-in-unit | yes |
 | F8 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:61 | scope + workflow | high | fix-now | replan-in-unit | yes |
+| F9 | skills/plan-feature/references/ROUTING.md:58-66 | code | major | fix-now | fold into current fix | yes |
