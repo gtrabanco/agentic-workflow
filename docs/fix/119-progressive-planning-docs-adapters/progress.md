@@ -93,3 +93,10 @@
 - Gotchas: PR #120 remains the existing open PR; P13 must verify its reconciled scope and push without creating a duplicate. NRS and architectural-invariant documents remain absent and are n/a.
 - Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/README.md`, `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`, `CHANGELOG.es.md`
 - Next: P13 — Hardening & PR | unit unfinished
+
+## P13 — 2026-08-03
+- Done: Re-ran the full project gate, restored the fix-index row to `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`, and verified the existing PR body retains `Closes #119` plus the reconciled progressive-resource scope; pushed the close-out commit.
+- Remains: `/review-change` and `/audit-pr` are mandatory fresh handoffs and were intentionally not run in this invocation.
+- Gotchas: PR #120 is the existing PR; do not create a duplicate. `gh pr checks 120` reports no published checks, so `/audit-pr` remains blocked pending CI evidence. NRS and architectural-invariant documents remain absent and are n/a.
+- Files: `docs/fix/README.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`
+- Next: `/review-change` — mandatory fresh final review | unit close-out pushed
