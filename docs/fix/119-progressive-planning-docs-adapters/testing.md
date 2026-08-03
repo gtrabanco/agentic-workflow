@@ -56,3 +56,8 @@
 - Read-verified fresh-context probes → PASS for `draft`, `contradicted`, and `resolved`: the parent route loads `PLANNING_GATES.md` before composing `plan-feature-from-issue`, each non-frozen state stops before a product-half write, and the expected route is discovery or resolution.
 - Review-change read-only pass → PASS: implementation, code, verification, debt, and performance axes found no new finding; UI, accessibility, brand, and SEO axes were n/a for this docs/skill change. Architectural invariants were n/a because no project invariant document exists. Manual checklist: weak-model live run not performed; read-verified route probes passed.
 - Audit-pr read-only pass → BLOCKED: PR #120 is mergeable and closes #119, but `gh pr checks 120` reports no checks, so CI verification evidence is absent. No MERGE-READY comment was posted.
+
+## F9 fold — 2026-08-03
+
+- `grep -Fq '**Issue input**' skills/plan-feature/references/ROUTING.md` → exit 0.
+- `grep -Fq 'plan-feature-from-issue`, then `plan-feature-scaffold' skills/plan-feature/references/ROUTING.md` → exit 0.
