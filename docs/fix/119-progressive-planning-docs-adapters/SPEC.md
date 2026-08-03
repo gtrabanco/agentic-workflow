@@ -254,10 +254,10 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-featu
 
 Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
 
-- [ ] Keep issue detection as route selection before composing the writer.
-- [ ] State that the parent owns the planning-gate check before composition.
-- [ ] Record the selected-route probe in `testing.md`.
-- [ ] Flip F15 to `yes` after the route check passes.
+- [x] Keep issue detection as route selection before composing the writer.
+- [x] State that the parent owns the planning-gate check before composition.
+- [x] Record the selected-route probe in `testing.md`.
+- [x] Flip F15 to `yes` after the route check passes.
 
 ### P10 — Weak-model probe
 

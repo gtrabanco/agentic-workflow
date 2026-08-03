@@ -59,9 +59,10 @@ Once the gate passes, pick the mode — first match wins:
 
 1. **Flag forces it** (skip detection): `--scaffold <slug>`, `--next`.
 2. **Issue input** — `--from-issue <N>`, an issue URL, or a bare numeric argument
-   `<N>` (for example, `131`) → after `PLANNING_GATES.md` permits planning,
-   compose
-   `plan-feature-from-issue`, then `plan-feature-scaffold`.
+   `<N>` (for example, `131`) selects the issue-derived route; detection itself
+   does not compose `plan-feature-from-issue`. The parent route owns the
+   `PLANNING_GATES.md` check and must confirm that planning may write before it
+   composes `plan-feature-from-issue`, then `plan-feature-scaffold`.
 3. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
    `plan-feature-scaffold`.
 4. **`--next` / no input** — read the roadmap, take the next `defined` entry

@@ -77,3 +77,11 @@
 
 - `grep -Fq '**Issue input**' skills/plan-feature/references/ROUTING.md` → exit 0.
 - `grep -Fq 'plan-feature-from-issue`, then `plan-feature-scaffold' skills/plan-feature/references/ROUTING.md` → exit 0.
+
+## P9 — 2026-08-03
+
+- Selected-route probe: `grep -Fq 'selects the issue-derived route; detection itself' skills/plan-feature/references/ROUTING.md` → exit 0.
+- Parent-ownership probe: `grep -Fq 'The parent route owns the' skills/plan-feature/references/ROUTING.md` → exit 0.
+- Read-verified: issue detection selects the route before composition; the parent loads and applies `PLANNING_GATES.md` before composing `plan-feature-from-issue`.
+- `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
+- `git diff --check` → exit 0.
