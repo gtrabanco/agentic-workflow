@@ -48,3 +48,12 @@
 - Gotchas: `docs/workflow/REPOSITORY_STATE.md` and `docs/architecture/ARCHITECTURAL_INVARIANTS.md` remain absent; both gates are n/a. The probe is read-verified and does not replace a live weak-model Golden Fixture run.
 - Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/GOLDEN_FIXTURE.es.md`
 - Next: publish/obtain CI evidence, then re-run audit-pr | merge only after a MERGE-READY verdict
+
+## Replan — 2026-08-03
+
+- Done: User approved an incremental replan for open F11, F12, F13, and F15;
+  triage recorded F18 as `fix-in-unit` on issue #119.
+- Remains: P8 — Acceptance coverage map; P9 — Issue route contract; P10 — Weak-model probe; P11 — Hardening & PR.
+- Gotchas: P7 is historical close-out evidence only. P11 is the fresh final
+  close-out and must retain the template's literal task chain.
+- Next: P8 — Acceptance coverage map | unit unfinished

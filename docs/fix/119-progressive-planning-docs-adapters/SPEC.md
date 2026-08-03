@@ -94,6 +94,7 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
 | Date | Approved by | Change | Linked issue |
 | --- | --- | --- | --- |
 | 2026-08-02 | user (`Make the plan`) | Replan the current branch's progressive-resource extraction into this fix so its existing unmerged contracts, budget documentation, and review findings have one governing ledger. Remove, rather than rewrite, the feature-20 ledger hunk. | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
+| 2026-08-03 | user (`replan y triage-issue del disputed`) | Replan F11, F12, F13, and F15 in this unit; triage F18 as a fix-in-unit verification gap. Add fresh phases after completed P7, including a new literal Hardening & PR close-out. | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
 
 ## Acceptance
 
@@ -243,6 +244,46 @@ Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'd
 - [x] Run `/review-change` on the pushed branch
 - [x] Run `/audit-pr` after the review table is clean
 
+### P8 — Acceptance coverage map
+
+Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature --skill plan-feature-scaffold` → exit 0.
+
+- [ ] Add a coverage map that links every acceptance criterion to evidence.
+- [ ] Remove duplicate NRS-probe wording that cannot name distinct evidence.
+- [ ] Record the coverage map in `testing.md` with file-and-command evidence.
+- [ ] Flip F11 and F12 to `yes` after the coverage check passes.
+
+### P9 — Issue route contract
+
+Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature` → exit 0.
+
+- [ ] Keep issue detection as route selection before composing the writer.
+- [ ] State that the parent owns the planning-gate check before composition.
+- [ ] Record the selected-route probe in `testing.md`.
+- [ ] Flip F15 to `yes` after the route check passes.
+
+### P10 — Weak-model probe
+
+Layer: hardening. Done-when: `grep -Fq 'live weak-model NRS issue-route probe' docs/workflow/GOLDEN_FIXTURE.md docs/workflow/GOLDEN_FIXTURE.es.md` → exit 0.
+
+- [ ] Run the `draft` NRS issue-route probe with a tool-capable weak model.
+- [ ] Run the `contradicted` NRS issue-route probe with a tool-capable weak model.
+- [ ] Run the `resolved` NRS issue-route probe with a tool-capable weak model.
+- [ ] Record the three no-write outcomes in `testing.md` and both Golden Fixture run logs.
+- [ ] Flip F18 to `yes` after the live probe evidence is recorded.
+
+### P11 — Hardening & PR
+
+- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Set the fix-index row status to `done` and commit the flip
+- [ ] `git push`
+- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+      Markdown file, real backticks, never inline `--body`/heredoc) and
+      PRINT THE PR URL in the chat; the body includes `Closes #119`
+- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [ ] Commit `docs: link PR #<n>` and push
+
 ## Testing
 
 - Contract: `node scripts/check-skill-context.mjs --skill plan-feature --skill generate-docs`.
@@ -254,6 +295,8 @@ Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'd
   must record any new executor-path probe together.
 - Replan regression: verify the `plan-feature-scaffold` resource has no nested
   reference and that the PR diff no longer changes the feature-20 ledger.
+- Replan verification: P8 maps each acceptance criterion to evidence, P9 proves
+  parent-owned issue-route gating, and P10 records the live weak-model probe.
 
 ## Rollback
 
