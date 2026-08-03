@@ -302,7 +302,7 @@ Layer: close-out. Done-when: `git diff --check` → exit 0.
 - [x] Verify the fix-index row is `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`
 - [x] `git push`
 - [x] Verify the existing PR body still includes `Closes #119` and the reconciled scope
-- [ ] Run `/review-change` on the pushed branch
+- [x] Run `/review-change` on the pushed branch
 - [ ] Run `/audit-pr` after the review table is clean
 
 ## Testing
