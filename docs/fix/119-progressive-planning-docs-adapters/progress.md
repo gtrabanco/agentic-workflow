@@ -82,7 +82,14 @@
 
 ## P11 — 2026-08-03
 - Done: Re-ran the full verification gate, confirmed the fix-index `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)` entry and existing PR close-out contract, and recorded the final clean-docs check.
-- Remains: none.
+- Remains: P12 — Closeout reconciliation; P13 — Hardening & PR.
 - Gotchas: PR #120 is already open and mergeable, so no duplicate PR was created; its body contains the amended progressive-resource scope and `Closes #119`. `gh pr checks 120` reports no published checks, so `/audit-pr` remains blocked pending CI evidence. NRS and architectural-invariant documents remain absent and are n/a.
 - Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
-- Next: unit finished | hand off to `/review-change`, then `/audit-pr`
+- Next: P12 — Closeout reconciliation | unit unfinished
+
+## P12 — 2026-08-03
+- Done: Added explicit P11 close-out metadata, synchronized the progressive budget to 16,046 across the bilingual workflow docs and changelogs, set fix-index row 119 to `in progress`, and folded F13 and F20.
+- Remains: P13 — Hardening & PR.
+- Gotchas: PR #120 remains the existing open PR; P13 must verify its reconciled scope and push without creating a duplicate. NRS and architectural-invariant documents remain absent and are n/a.
+- Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/README.md`, `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`, `CHANGELOG.es.md`
+- Next: P13 — Hardening & PR | unit unfinished
