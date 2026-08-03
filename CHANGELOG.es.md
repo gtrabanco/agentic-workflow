@@ -525,7 +525,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   entrypoints grandes enrutan ahora contratos detallados mediante referencias
   explícitas de un salto, se condensa prosa repetida y el límite universal baja
   de 4.200/360 a 2.800 tokens estimados/240 líneas sin excepciones de tamaño.
-  Su activación directa combinada baja de 30.868 a 16.035 tokens estimados;
+  Su activación directa combinada baja de 30.868 a 16.046 tokens estimados;
   todos los cambios, compatibles, reciben bumps de parche.
 
 - **2026-07-31 — guardrails de runtime y fullauto ligado a la invocación.**

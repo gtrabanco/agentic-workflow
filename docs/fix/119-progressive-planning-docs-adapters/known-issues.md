@@ -30,3 +30,8 @@ None.
 
 The existing PR #120 has no published CI checks; `/audit-pr` must remain blocked
 until CI evidence is available.
+
+## P12 — 2026-08-03
+
+The existing PR #120 has no published CI checks; `/audit-pr` remains blocked
+until CI evidence is available. This is outside P12's reconciliation scope.

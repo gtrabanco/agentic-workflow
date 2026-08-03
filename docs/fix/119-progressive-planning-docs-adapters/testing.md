@@ -114,3 +114,15 @@
   `main`, body contains the amended progressive-resource scope and `Closes #119`.
 - `gh pr checks 120` reports no published checks; this remains an `audit-pr`
   merge-gate blocker and is not claimed as CI evidence here.
+
+## P12 — 2026-08-03
+
+- `node scripts/check-skill-context.mjs` → exit 0; 31 skills passed.
+- The mechanically verified progressive budget is `16,046` estimated tokens;
+  `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `CHANGELOG.md`, and
+  `CHANGELOG.es.md` contain the synchronized total.
+- `grep -Fq 'Layer: close-out. Done-when: `git diff --check` → exit 0.`'
+  docs/fix/119-progressive-planning-docs-adapters/SPEC.md` → exit 0.
+- Fix-index row 119 is `in progress` while P12/P13 remain open.
+- F13 and F20 are folded (`yes`) in `review-findings.md`.
+- `git diff --check` → exit 0.

@@ -95,6 +95,7 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
 | --- | --- | --- | --- |
 | 2026-08-02 | user (`Make the plan`) | Replan the current branch's progressive-resource extraction into this fix so its existing unmerged contracts, budget documentation, and review findings have one governing ledger. Remove, rather than rewrite, the feature-20 ledger hunk. | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
 | 2026-08-03 | user (`replan y triage-issue del disputed`) | Replan F11, F12, F13, and F15 in this unit; triage F18 as a fix-in-unit verification gap. Add fresh phases after completed P7, including a new literal Hardening & PR close-out. | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
+| 2026-08-03 | user (`Hazlo tú que estoy hasta la polla`) | Replan F13 and F20 after the completed P11 close-out: reconcile the close-out contract and current progressive budget, then run a fresh final Hardening & PR phase before review. | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
 
 ## Acceptance
 
@@ -271,6 +272,8 @@ Layer: hardening. Done-when: `grep -Fq 'live weak-model NRS issue-route probe' d
 
 ### P11 — Hardening & PR
 
+Layer: close-out. Done-when: `git diff --check` → exit 0.
+
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
@@ -280,6 +283,27 @@ Layer: hardening. Done-when: `grep -Fq 'live weak-model NRS issue-route probe' d
       PRINT THE PR URL in the chat; the body includes `Closes #119`
 - [x] Update the fix-index row to `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`
 - [x] Commit `docs: link PR #120` and push
+
+### P12 — Closeout reconciliation
+
+Layer: docs. Done-when: `node scripts/check-skill-context.mjs` → exit 0.
+
+- [x] Add the missing close-out metadata to P11.
+- [x] Synchronize the current progressive budget total across the four documented surfaces.
+- [x] Set the fix-index row to `in progress` while the replanned phases remain open.
+- [x] Flip F13 and F20 to `yes` after the reconciliation gate passes.
+
+### P13 — Hardening & PR
+
+Layer: close-out. Done-when: `git diff --check` → exit 0.
+
+- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Verify the fix-index row is `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`
+- [ ] `git push`
+- [ ] Verify the existing PR body still includes `Closes #119` and the reconciled scope
+- [ ] Run `/review-change` on the pushed branch
+- [ ] Run `/audit-pr` after the review table is clean
 
 ## Testing
 

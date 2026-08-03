@@ -12,11 +12,11 @@
 | F10 | skills/generate-docs/references/ADAPTERS.md:13 | correctness | med | fix-now | fold into current fix | yes |
 | F11 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:102-104,117-119 | spec-drift | high | fix-now | replan-in-unit | yes |
 | F12 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:98-122 | spec-drift | med | fix-now | replan-in-unit | yes |
-| F13 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:232-244 | workflow | high | fix-now | replan-in-unit | no |
+| F13 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:232-244 | workflow | high | fix-now | replan-in-unit | yes |
 | F14 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | med | fix-now | fold into current fix | yes |
 | F15 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | high | fix-now | replan-in-unit | yes |
 | F16 | .mcp.json:1 | workflow | med | fix-now | fold into current fix | yes |
 | F17 | skills/product-audit/SKILL.md:64-76 | correctness | med | fix-now | fold into current fix | yes |
 | F18 | docs/fix/119-progressive-planning-docs-adapters/testing.md:55 | verify | major | fix-now | fold into current fix | yes |
 | F19 | skills/generate-docs/SKILL.md:71 | correctness | med | fix-now | fold into current fix | yes |
-| F20 | docs/workflow/SKILLS.md:32 | project-rule violations | med | fix-now | replan-in-unit | no |
+| F20 | docs/workflow/SKILLS.md:32 | project-rule violations | med | fix-now | replan-in-unit | yes |
