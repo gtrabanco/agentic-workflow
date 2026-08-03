@@ -15,7 +15,10 @@ const discovered = fs.readdirSync(skillsRoot, { withFileTypes: true })
   .sort();
 const args = process.argv.slice(2);
 const requested = [];
+const requestedRoutes = [];
 let manifestOnly = false;
+let routeMode = false;
+let jsonOutput = false;
 
 for (let index = 0; index < args.length; index += 1) {
   if (args[index] === "--manifest-only") {
@@ -24,6 +27,15 @@ for (let index = 0; index < args.length; index += 1) {
     const value = args[index + 1];
     if (!value) throw new Error("--skill requires a name");
     requested.push(value);
+    index += 1;
+  } else if (args[index] === "--routes") {
+    routeMode = true;
+  } else if (args[index] === "--json") {
+    jsonOutput = true;
+  } else if (args[index] === "--route") {
+    const value = args[index + 1];
+    if (!value) throw new Error("--route requires a name");
+    requestedRoutes.push(value);
     index += 1;
   } else {
     throw new Error(`Unknown argument: ${args[index]}`);
@@ -62,6 +74,132 @@ const nestedEntries = (directory, relative = "") => {
     return [entryRelative];
   });
 };
+
+const resolveRouteFiles = (routeSkills) => {
+  const files = [];
+  const seen = new Set();
+  for (const skill of routeSkills) {
+    const skillDir = path.join(repoRoot, "skills", skill);
+    const skillFile = path.join(skillDir, "SKILL.md");
+    if (!seen.has(skillFile)) {
+      files.push(skillFile);
+      seen.add(skillFile);
+    }
+    const body = fs.readFileSync(skillFile, "utf8");
+    const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
+    const referencesDir = path.join(skillDir, "references");
+    if (fs.existsSync(referencesDir)) {
+      for (const name of fs.readdirSync(referencesDir).filter((n) => n.endsWith(".md")).sort()) {
+        const refPath = path.join(referencesDir, name);
+        if (!seen.has(refPath)) {
+          files.push(refPath);
+          seen.add(refPath);
+        }
+      }
+    }
+    for (const name of linked) {
+      const refPath = path.join(referencesDir, name);
+      if (!seen.has(refPath)) {
+        files.push(refPath);
+        seen.add(refPath);
+      }
+    }
+  }
+  return files;
+};
+
+const computeRouteMetrics = (files) => {
+  let totalEstimate = 0;
+  let totalLines = 0;
+  const fileResults = [];
+  for (const filePath of files) {
+    if (!fs.existsSync(filePath)) {
+      return { error: `Missing file in route: ${filePath}`, totalEstimate: 0, totalLines: 0, files: [] };
+    }
+    const body = fs.readFileSync(filePath, "utf8");
+    const est = estimate(body);
+    const lines = lineCount(body);
+    totalEstimate += est;
+    totalLines += lines;
+    fileResults.push({ path: path.relative(repoRoot, filePath), estimate: est, lines });
+  }
+  return { error: null, totalEstimate, totalLines, files: fileResults };
+};
+
+// Route mode
+if (routeMode) {
+  if (!manifest.routes) {
+    throw new Error("No routes declared in manifest");
+  }
+
+  const routeNames = requestedRoutes.length > 0 ? requestedRoutes : Object.keys(manifest.routes);
+  const routeFailures = [];
+  const routeRows = [];
+
+  for (const routeName of routeNames) {
+    const routeDef = manifest.routes[routeName];
+    if (!routeDef) {
+      routeFailures.push(`Route not declared in manifest: ${routeName}`);
+      continue;
+    }
+
+    let hasUnknown = false;
+    for (const skill of routeDef.skills) {
+      if (!discoveredSet.has(skill)) {
+        routeFailures.push(`${routeName}: route references unknown skill: ${skill}`);
+        hasUnknown = true;
+      }
+    }
+    if (hasUnknown) continue;
+
+    const resolvedFiles = resolveRouteFiles(routeDef.skills);
+    const metrics = computeRouteMetrics(resolvedFiles);
+    if (metrics.error) {
+      routeFailures.push(`${routeName}: ${metrics.error}`);
+      continue;
+    }
+
+    if (routeDef.routeEstimateMax !== null && metrics.totalEstimate > routeDef.routeEstimateMax) {
+      routeFailures.push(`${routeName}: route estimate ${metrics.totalEstimate} > ${routeDef.routeEstimateMax}`);
+    }
+    if (routeDef.routeLinesMax !== null && metrics.totalLines > routeDef.routeLinesMax) {
+      routeFailures.push(`${routeName}: route lines ${metrics.totalLines} > ${routeDef.routeLinesMax}`);
+    }
+
+    routeRows.push({
+      route: routeName,
+      skills: routeDef.skills.join(", "),
+      fileCount: metrics.files.length,
+      totalEstimate: metrics.totalEstimate,
+      totalLines: metrics.totalLines,
+      files: jsonOutput ? metrics.files : undefined,
+    });
+  }
+
+  if (jsonOutput) {
+    console.log(JSON.stringify({ routes: routeRows, failures: routeFailures }, null, 2));
+    if (routeFailures.length > 0) process.exit(1);
+    process.exit(0);
+  }
+
+  console.log("route                        skills         files  est  lines");
+  for (const row of routeRows) {
+    console.log(
+      `${row.route.padEnd(28)} ${row.skills.padEnd(14)} ${String(row.fileCount).padStart(5)} ${String(row.totalEstimate).padStart(5)} ${String(row.totalLines).padStart(6)}`,
+    );
+  }
+
+  if (routeFailures.length > 0) {
+    console.error("\nRoute budget failures:");
+    for (const failure of routeFailures) console.error(`- ${failure}`);
+    process.exit(1);
+  }
+
+  console.log(`PASS route budgets: ${routeRows.length} routes`);
+  process.exit(0);
+}
+
+// Per-file budget mode
 const failures = [];
 const rows = [];
 
