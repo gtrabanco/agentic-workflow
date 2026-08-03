@@ -20,3 +20,4 @@
 | F18 | docs/fix/119-progressive-planning-docs-adapters/testing.md:55 | verify | major | fix-now | fold into current fix | yes |
 | F19 | skills/generate-docs/SKILL.md:71 | correctness | med | fix-now | fold into current fix | yes |
 | F20 | docs/workflow/SKILLS.md:32 | project-rule violations | med | fix-now | replan-in-unit | yes |
+| F21 | `gh pr checks 120` | verification-gate | high | fix-now | execute-phase | no |
