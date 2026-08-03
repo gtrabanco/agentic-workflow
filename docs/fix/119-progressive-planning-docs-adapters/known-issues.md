@@ -17,3 +17,7 @@ no checks). Re-run `/audit-pr` after the required verification evidence exists.
 ## P8 — 2026-08-03
 
 None.
+
+## P9 — 2026-08-03
+
+None.
