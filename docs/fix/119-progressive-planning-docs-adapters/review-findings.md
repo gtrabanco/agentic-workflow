@@ -10,8 +10,8 @@
 | F8 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:61 | scope + workflow | high | fix-now | replan-in-unit | yes |
 | F9 | skills/plan-feature/references/ROUTING.md:58-66 | code | major | fix-now | fold into current fix | yes |
 | F10 | skills/generate-docs/references/ADAPTERS.md:13 | correctness | med | fix-now | fold into current fix | yes |
-| F11 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:102-104,117-119 | spec-drift | high | fix-now | replan-in-unit | no |
-| F12 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:98-122 | spec-drift | med | fix-now | replan-in-unit | no |
+| F11 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:102-104,117-119 | spec-drift | high | fix-now | replan-in-unit | yes |
+| F12 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:98-122 | spec-drift | med | fix-now | replan-in-unit | yes |
 | F13 | docs/fix/119-progressive-planning-docs-adapters/SPEC.md:232-244 | workflow | high | fix-now | replan-in-unit | no |
 | F14 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | med | fix-now | fold into current fix | yes |
 | F15 | skills/plan-feature/references/ROUTING.md:61-64 | workflow | high | fix-now | replan-in-unit | no |

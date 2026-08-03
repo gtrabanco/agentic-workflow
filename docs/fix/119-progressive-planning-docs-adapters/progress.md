@@ -57,3 +57,11 @@
 - Gotchas: P7 is historical close-out evidence only. P11 is the fresh final
   close-out and must retain the template's literal task chain.
 - Next: P8 — Acceptance coverage map | unit unfinished
+
+## P8 — 2026-08-03
+
+- Done: Removed the duplicate NRS-probe acceptance criterion, added a complete acceptance-to-evidence map, and folded F11 and F12.
+- Remains: P9 — Issue route contract; P10 — Weak-model probe; P11 — Hardening & PR.
+- Gotchas: Acceptance 7 retains the read-verified contract; P10 adds the distinct live weak-model evidence required by the triage verdict for F18.
+- Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/review-findings.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`
+- Next: P9 — Issue route contract | unit unfinished

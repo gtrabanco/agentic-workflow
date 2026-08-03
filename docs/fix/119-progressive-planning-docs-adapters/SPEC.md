@@ -100,25 +100,22 @@ R2 (Docusaurus adapter contract), and R3 (missing unmerged unit/ledger) on
 
 1. `node scripts/check-skill-context.mjs --skill plan-feature` exits 0 after
    the NRS gate is reachable on the issue-derived route.
-2. `read-verified`: a fresh-context `plan-feature --from-issue` probe with a
-   `draft`, `contradicted`, or `resolved` NRS ledger stops before a product-half
-   write and routes to discovery or resolution.
-3. `node scripts/check-skill-context.mjs --skill generate-docs` exits 0 after
+2. `node scripts/check-skill-context.mjs --skill generate-docs` exits 0 after
    the Docusaurus adapter table is complete.
-4. `grep -q "Docusaurus" skills/generate-docs/references/ADAPTERS.md` exits 0
+3. `grep -q "Docusaurus" skills/generate-docs/references/ADAPTERS.md` exits 0
    and the column covers content, page, guides, map, review, sidebar, verify,
    and assets slots.
-5. `test -f docs/fix/119-progressive-planning-docs-adapters/review-findings.md`
+4. `test -f docs/fix/119-progressive-planning-docs-adapters/review-findings.md`
    exits 0 and its F1–F3 rows retain `class: fix-now` and
    `route: replan-in-unit`.
-6. `git diff --check` exits 0; the P3 PR body includes `Closes #119` and the
+5. `git diff --check` exits 0; the P3 PR body includes `Closes #119` and the
    fix-index row links that PR.
-7. `node scripts/check-skill-context.mjs --skill plan-feature-scaffold` exits
+6. `node scripts/check-skill-context.mjs --skill plan-feature-scaffold` exits
    0 after its process contains no cross-skill reference hop.
-8. `read-verified`: fresh-context `plan-feature --from-issue` probes with
+7. `read-verified`: fresh-context `plan-feature --from-issue` probes with
    `draft`, `contradicted`, and `resolved` NRS ledgers all stop before a
    product-half write and record the required discovery or resolution route.
-9. `! git diff --name-only origin/main...HEAD | grep -Fx
+8. `! git diff --name-only origin/main...HEAD | grep -Fx
    'docs/features/20-runtime-guardrails-progressive-skills/review-findings.md'`
    exits 0; this unit does not carry a feature-20 ledger change.
 
@@ -248,10 +245,10 @@ Layer: docs. Done-when: `! git diff --name-only origin/main...HEAD | grep -Fx 'd
 
 Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-feature --skill plan-feature-scaffold` → exit 0.
 
-- [ ] Add a coverage map that links every acceptance criterion to evidence.
-- [ ] Remove duplicate NRS-probe wording that cannot name distinct evidence.
-- [ ] Record the coverage map in `testing.md` with file-and-command evidence.
-- [ ] Flip F11 and F12 to `yes` after the coverage check passes.
+- [x] Add a coverage map that links every acceptance criterion to evidence.
+- [x] Remove duplicate NRS-probe wording that cannot name distinct evidence.
+- [x] Record the coverage map in `testing.md` with file-and-command evidence.
+- [x] Flip F11 and F12 to `yes` after the coverage check passes.
 
 ### P9 — Issue route contract
 
