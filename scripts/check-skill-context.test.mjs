@@ -96,4 +96,67 @@ const bareSkill = spawnSync(process.execPath, [path.join(repoRoot, "scripts/chec
 assert.notEqual(bareSkill.status, 0);
 assert.match(`${bareSkill.stdout}\n${bareSkill.stderr}`, /--skill requires a name/);
 
-console.log("PASS context checker: nested, missing, unreachable, heading, budget, and argument failures rejected");
+// Route tests
+
+const manifestPath = path.join(repoRoot, "docs/workflow/SKILL_CONTEXT_BUDGETS.json");
+
+const unknownRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", "does-not-exist"], { encoding: "utf8" });
+assert.notEqual(unknownRoute.status, 0);
+assert.match(`${unknownRoute.stdout}\n${unknownRoute.stderr}`, /Route not declared/);
+
+const routeJson = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--json"], { encoding: "utf8" });
+assert.equal(routeJson.status, 0, routeJson.stderr);
+const parsed = JSON.parse(routeJson.stdout);
+assert(Array.isArray(parsed.routes), "JSON output should have routes array");
+assert(parsed.routes.length > 0, "JSON output should have at least one route");
+
+const routeTable = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes"], { encoding: "utf8" });
+assert.equal(routeTable.status, 0, routeTable.stderr);
+assert.match(routeTable.stdout, /PASS route budgets/);
+
+const filteredRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", "plan-feature:scoped"], { encoding: "utf8" });
+assert.equal(filteredRoute.status, 0, filteredRoute.stderr);
+assert.match(filteredRoute.stdout, /plan-feature:scoped/);
+assert(!filteredRoute.stdout.includes("plan-feature:issue"), "filtered route should not include other routes");
+
+const bareRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--route"], { encoding: "utf8" });
+assert.notEqual(bareRoute.status, 0);
+assert.match(`${bareRoute.stdout}\n${bareRoute.stderr}`, /--route requires a name/);
+
+const runFixtureRoute = (label, setup, expected) => {
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "agentic-route-check-"));
+  try {
+    fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
+    fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
+    fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    setup(manifest);
+    fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
+    const result = spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--routes"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0, `${label} should fail closed`);
+    assert.match(`${result.stdout}\n${result.stderr}`, expected, label);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+};
+
+runFixtureRoute(
+  "route with unknown skill",
+  (manifest) => { manifest.routes["test:bad"] = { skills: ["does-not-exist"], routeEstimateMax: null, routeLinesMax: null }; },
+  /route references unknown skill/,
+);
+
+runFixtureRoute(
+  "route budget regression",
+  (manifest) => { manifest.routes["plan-feature:scoped"].routeEstimateMax = 10; },
+  /route estimate .* >/,
+);
+
+runFixtureRoute(
+  "route lines regression",
+  (manifest) => { manifest.routes["plan-fix:issue"].routeLinesMax = 5; },
+  /route lines .* >/,
+);
+
+console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, and route failures rejected");

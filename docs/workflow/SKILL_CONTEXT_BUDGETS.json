@@ -19,5 +19,91 @@
     "orchestration-envelope": {
       "descriptionEstimateMax": 170
     }
+  },
+  "routes": {
+    "plan-feature:scoped": {
+      "skills": ["plan-feature"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "plan-feature:issue": {
+      "skills": ["plan-feature", "plan-feature-from-issue"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "plan-fix:issue": {
+      "skills": ["plan-fix"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "execute-phase:feature": {
+      "skills": ["execute-phase"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "execute-phase:small": {
+      "skills": ["execute-phase"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "execute-phase:fix": {
+      "skills": ["execute-phase"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "execute-phase:legacy": {
+      "skills": ["execute-phase"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "execute-phase:final-pr": {
+      "skills": ["execute-phase"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "review-change:default-backend": {
+      "skills": ["review-change"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "review-change:default-web": {
+      "skills": ["review-change"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "review-change:adversarial": {
+      "skills": ["review-change"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "review-change:synthesize": {
+      "skills": ["review-change"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "audit-pr:feature": {
+      "skills": ["audit-pr"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    },
+    "audit-pr:fix": {
+      "skills": ["audit-pr"],
+      "templates": [],
+      "routeEstimateMax": null,
+      "routeLinesMax": null
+    }
   }
 }
