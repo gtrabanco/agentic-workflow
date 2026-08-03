@@ -9,3 +9,7 @@ tmp/
 
 # Local MCP configuration
 .mcp.json
+
+# Agents & MCPs
+.serena
+.opencode
