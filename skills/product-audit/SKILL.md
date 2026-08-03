@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.0.1
+version: 3.0.2
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
@@ -62,10 +62,10 @@ coverage you didn't do.
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the roadmap, the fix index, the feature folder layout, and
 the verification gate. From the map decide the product's nature (web / mobile /
-console / library / backend / infra) and which axes apply — the same applicability
-logic `review-change` uses, applied product-wide. Note any optional platform
-review skills the project installed (extras, never requirements — the internal
-pack covers every axis).
+console / library / backend / infra). Defer deciding which dimensions apply until
+`AUDIT_DIMENSIONS.md` has been loaded; that resource is the authoritative
+applicability matrix. Note any optional platform review skills the project
+installed (extras, never requirements — the internal pack covers every axis).
 
 ## Progressive loading — audit route
 

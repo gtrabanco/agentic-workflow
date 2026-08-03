@@ -342,6 +342,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.2 | 2026-08-03 | patch | Load the audit-dimensions applicability matrix before selecting review dimensions, so Step 0 cannot make an incomplete axis decision ahead of the authoritative list. |
 | 3.0.1 | 2026-08-02 | patch | Moves audit dimensions and the nine-step sweep behind mandatory one-hop routes and removes repeated activation prose while keeping the fixed persisted report and recommend-only contract intact. |
 | 3.0.0 | 2026-07-31 | major | **Breaking invocation change:** this high-cost, recommend-only sweep is manual-only on Claude Code and OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). Explicit `/product-audit` invocation remains unchanged; orchestrators and other skills must keep it as a human hand-off. |
 | 2.3.0 | 2026-07-19 | minor | Every run is now **persisted**: the report is written and committed as `docs/audits/<id>-<YYYY-MM-DD>.md` with an incremental audit id (the skill's only mutation). Findings carry a single severity-ranked `F1, F2, …` sequence (never per-dimension letters), proposals cite their source findings (`from: F<k>`), every proposal stream — the roadmap ones included — is always present (`none — <why>` when empty), and the closing block routes to `triage-issue <id> F<k>` (suggest triage, never run it). |

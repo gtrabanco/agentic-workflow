@@ -343,6 +343,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.2 | 2026-08-03 | parche | Carga la matriz de aplicabilidad de dimensiones antes de seleccionar las dimensiones de revisión, para que el Paso 0 no decida ejes incompletos antes de la lista autoritativa. |
 | 3.0.1 | 2026-08-02 | parche | Mueve las dimensiones de auditoría y el barrido de nueve pasos tras rutas obligatorias de un salto y elimina prosa repetida de activación manteniendo intactos el informe fijo persistido y el contrato solo-recomendación. |
 | 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible de invocación:** este barrido costoso y solo de recomendación pasa a ser manual-only en Claude Code y OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). La invocación explícita `/product-audit` no cambia; orquestadores y otras skills deben mantenerla como hand-off humano. |
 | 2.3.0 | 2026-07-19 | menor | Cada ejecución queda ahora **persistida**: el informe se escribe y commitea como `docs/audits/<id>-<YYYY-MM-DD>.md` con un id de auditoría incremental (la única mutación de la skill). Los hallazgos llevan una única secuencia `F1, F2, …` ordenada por severidad (nunca letras por dimensión), las propuestas citan sus hallazgos de origen (`from: F<k>`), todos los flujos de propuestas — incluidos los de roadmap — están siempre presentes (`none — <why>` cuando están vacíos), y el bloque de cierre enruta a `triage-issue <id> F<k>` (sugiere el triaje, nunca lo ejecuta). |
