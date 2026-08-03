@@ -297,11 +297,11 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs` → exit 0.
 
 Layer: close-out. Done-when: `git diff --check` → exit 0.
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Verify the fix-index row is `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`
-- [ ] `git push`
-- [ ] Verify the existing PR body still includes `Closes #119` and the reconciled scope
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Verify the fix-index row is `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`
+- [x] `git push`
+- [x] Verify the existing PR body still includes `Closes #119` and the reconciled scope
 - [ ] Run `/review-change` on the pushed branch
 - [ ] Run `/audit-pr` after the review table is clean
 

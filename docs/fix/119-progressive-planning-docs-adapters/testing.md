@@ -126,3 +126,15 @@
 - Fix-index row 119 is `in progress` while P12/P13 remain open.
 - F13 and F20 are folded (`yes`) in `review-findings.md`.
 - `git diff --check` → exit 0.
+
+## P13 — 2026-08-03
+
+- `node scripts/check-skill-context.mjs` → exit 0; 31 skills passed.
+- `node scripts/check-skill-context.test.mjs` → exit 0.
+- `npx skills add . --list` → exit 0; discovered 30 skills.
+- `node scripts/check-skill-context.mjs --skill plan-feature --skill generate-docs --skill plan-feature-scaffold` → exit 0.
+- `git diff --check` → exit 0.
+- Feature-20 ledger exclusion check → exit 0.
+- `git status --porcelain -- docs/` → empty before P13 close-out edits.
+- `gh pr view 120` → `OPEN`, `MERGEABLE`, base `main`; body contains the reconciled progressive-resource scope and `Closes #119`.
+- `gh pr checks 120` → no published checks; CI evidence remains unavailable for `/audit-pr`.

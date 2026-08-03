@@ -35,3 +35,9 @@ until CI evidence is available.
 
 The existing PR #120 has no published CI checks; `/audit-pr` remains blocked
 until CI evidence is available. This is outside P12's reconciliation scope.
+
+## P13 — 2026-08-03
+
+The existing PR #120 has no published CI checks (`gh pr checks 120` reports no
+checks); `/audit-pr` remains blocked pending CI evidence. Review and audit are
+left as the mandatory fresh handoffs after this pushed close-out.
