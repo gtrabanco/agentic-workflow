@@ -70,15 +70,19 @@ never guess an adapter, output path, or fixed contract.
 
 **Allowed:**
 - Writing/updating pages under the adapter's guides location
+- Updating only the adapter's declared manual sidebar config when the adapter
+  table requires it
 - Running the declared docs build/verify command
 - Reading anything (diff, code, docs)
 
 **Forbidden — never, even if it "would help":**
 - Whole-project doc regeneration (the incrementality checklist is the only
   page selector)
-- Editing source code, tests, or config
+- Editing source code, tests, or any config other than the adapter's declared
+  manual sidebar config
 - Scaffolding a docs site (installing Astro/Starlight, creating configs)
-- Writing outside the adapter's content locations
+- Writing outside the adapter's content locations, except that declared manual
+  sidebar config
 - Pages without the provenance frontmatter
 - Committing or pushing (the unit's workflow owns the commit)
 

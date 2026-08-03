@@ -18,5 +18,5 @@
 | F16 | .mcp.json:1 | workflow | med | fix-now | fold into current fix | yes |
 | F17 | skills/product-audit/SKILL.md:64-76 | correctness | med | fix-now | fold into current fix | yes |
 | F18 | docs/fix/119-progressive-planning-docs-adapters/testing.md:55 | verify | major | fix-now | fold into current fix | yes |
-| F19 | skills/generate-docs/SKILL.md:71 | correctness | med | fix-now | fold into current fix | no |
+| F19 | skills/generate-docs/SKILL.md:71 | correctness | med | fix-now | fold into current fix | yes |
 | F20 | docs/workflow/SKILLS.md:32 | project-rule violations | med | fix-now | replan-in-unit | no |
