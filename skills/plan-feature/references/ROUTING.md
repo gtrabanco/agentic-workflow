@@ -58,12 +58,16 @@ SPEC's `## Design status` marker is the SPEC-local record and the
 Once the gate passes, pick the mode — first match wins:
 
 1. **Flag forces it** (skip detection): `--scaffold <slug>`, `--next`.
-2. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
+2. **Issue input** — `--from-issue <N>`, an issue URL, or a bare numeric argument
+   `<N>` (for example, `131`) → after `PLANNING_GATES.md` permits planning,
+   compose
+   `plan-feature-from-issue`, then `plan-feature-scaffold`.
+3. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
    `plan-feature-scaffold`.
-3. **`--next` / no input** — read the roadmap, take the next `defined` entry
+4. **`--next` / no input** — read the roadmap, take the next `defined` entry
    (the units that still need engineering planning — a `planned` row is
    already scaffolded); apply the redirect gate to it, then scaffold.
-4. **Ambiguous** — ask one question, then route.
+5. **Ambiguous** — ask one question, then route.
 
 ### Example (routing)
 
