@@ -25,3 +25,8 @@ None.
 ## P10 — 2026-08-03
 
 None.
+
+## P11 — 2026-08-03
+
+The existing PR #120 has no published CI checks; `/audit-pr` must remain blocked
+until CI evidence is available.

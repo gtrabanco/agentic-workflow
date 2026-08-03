@@ -101,3 +101,16 @@
   was called. F18 is folded.
 - `grep -Fq 'live weak-model NRS issue-route probe' docs/workflow/GOLDEN_FIXTURE.md docs/workflow/GOLDEN_FIXTURE.es.md` → exit 0.
 - `git diff --check` → exit 0 before commit.
+
+## P11 — 2026-08-03
+
+- `node scripts/check-skill-context.mjs` → exit 0; 31 skills passed.
+- `node scripts/check-skill-context.test.mjs` → exit 0.
+- `npx skills add . --list` → exit 0; discovered 30 skills.
+- `git diff --check` → exit 0.
+- `git status --porcelain -- docs/` → empty before the final close-out edits.
+- Feature-20 ledger exclusion check → exit 0.
+- Existing PR verification: `gh pr view 120` → `OPEN`, `MERGEABLE`, base
+  `main`, body contains the amended progressive-resource scope and `Closes #119`.
+- `gh pr checks 120` reports no published checks; this remains an `audit-pr`
+  merge-gate blocker and is not claimed as CI evidence here.
