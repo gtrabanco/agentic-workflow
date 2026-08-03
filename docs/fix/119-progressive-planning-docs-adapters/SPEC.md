@@ -263,11 +263,11 @@ Layer: docs. Done-when: `node scripts/check-skill-context.mjs --skill plan-featu
 
 Layer: hardening. Done-when: `grep -Fq 'live weak-model NRS issue-route probe' docs/workflow/GOLDEN_FIXTURE.md docs/workflow/GOLDEN_FIXTURE.es.md` → exit 0.
 
-- [ ] Run the `draft` NRS issue-route probe with a tool-capable weak model.
-- [ ] Run the `contradicted` NRS issue-route probe with a tool-capable weak model.
-- [ ] Run the `resolved` NRS issue-route probe with a tool-capable weak model.
-- [ ] Record the three no-write outcomes in `testing.md` and both Golden Fixture run logs.
-- [ ] Flip F18 to `yes` after the live probe evidence is recorded.
+- [x] Run the `draft` NRS issue-route probe with a tool-capable weak model.
+- [x] Run the `contradicted` NRS issue-route probe with a tool-capable weak model.
+- [x] Run the `resolved` NRS issue-route probe with a tool-capable weak model.
+- [x] Record the three no-write outcomes in `testing.md` and both Golden Fixture run logs.
+- [x] Flip F18 to `yes` after the live probe evidence is recorded.
 
 ### P11 — Hardening & PR
 
