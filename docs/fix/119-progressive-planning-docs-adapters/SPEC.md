@@ -271,15 +271,15 @@ Layer: hardening. Done-when: `grep -Fq 'live weak-model NRS issue-route probe' d
 
 ### P11 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #119`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] Update the fix-index row to `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)`
+- [x] Commit `docs: link PR #120` and push
 
 ## Testing
 
@@ -302,7 +302,7 @@ needed; the rollback restores the previous skill wording and adapter table.
 
 ## Status
 
-`in-progress`
+`done`
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
 
