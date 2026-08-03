@@ -115,6 +115,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `generate-docs`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.1 | 2026-08-02 | parche | Divide el descubrimiento de adaptador, la generación y los slots del adaptador en rutas explícitas de un salto y acorta prosa repetida de activación sin cambiar los contratos de páginas, mapa, exportación de review ni verificación. |
 | 2.0.0 | 2026-07-10 | mayor | **Cambio incompatible:** se elimina la sección `## Machine envelope` y su cláusula de emisión en el contrato de turno — el contrato del envelope se traslada a la capa de orquestación; `workflow-status` sigue siendo el único emisor en línea. Ver `docs/workflow/MIGRATION.md`. |
 | 1.0.0 | 2026-07-05 | — | Skill nueva: documentación de desarrollador incremental, guiada por diff, escrita en el sitio de docs del propio proyecto mediante un adaptador descubierto (declaración → Starlight → Docusaurus → fallback markdown; NOT-CONFIGURED → NEEDS_INPUT, nunca adivina). Forma de página fija + frontmatter de procedencia (`generated-by`/`source-unit`/`updated`), mapa de conocimiento solo desde un comando determinista declarado por el proyecto (el modelo nunca infiere aristas), export opt-in `--review` de informes de `review-change`, paso de verificación (build de docs o chequeo de enlaces). Nunca crea el sitio, nunca edita código, nunca commitea. |
 
@@ -164,6 +165,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.13.1 | 2026-08-02 | parche | Mueve el esquema fijo de handoff de `progress.md` tras una ruta explícita de un salto, conservando todos sus campos y reglas de cierre mientras reduce el contexto de activación directa. |
 | 2.13.0 | 2026-07-31 | menor | La carga progresiva reduce la estimación de activación de la skill más usada de unos 13k a 3k: las reglas universales de turno/handoff quedan en `SKILL.md`, mientras preflight, gates de ejecución, política de issues, workflows de modo, closeout/folding y portabilidad por lotes cargan solo cuando hacen falta. |
 | 2.12.0 | 2026-07-31 | menor | Añade una puerta de invariantes arquitectónicas antes de editar con clasificación basada en evidencia, parada para decisión explícita y compatibilidad NRS opcional. |
 | 2.11.2 | 2026-07-31 | parche | Mueve la guía NRS debajo de las reglas de Branch para que los formatos de rama y las restricciones del workflow mantengan su alcance en la sección Branch. |
@@ -224,6 +226,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.3.2 | 2026-08-03 | parche | Hace explícito el contrato de routing derivado de issues: después de que `PLANNING_GATES.md` permita planificar, compone `plan-feature-from-issue` y después `plan-feature-scaffold`, en ese orden. |
+| 3.3.1 | 2026-08-02 | parche | Enruta la detección de estado y los gates de repositorio/invariantes mediante dos referencias explícitas de un salto y recorta metadatos de activación; el comportamiento de planificación y los handoffs fijos no cambian. |
 | 3.3.0 | 2026-07-31 | menor | Evalúa invariantes arquitectónicas opcionales antes del scaffolding y restaura la compatibilidad con repositorios sin ledger de Estado Normalizado del Repositorio. |
 | 3.2.2 | 2026-07-31 | parche | Mueve la puerta de planificación NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
 | 3.2.1 | 2026-07-31 | parche | Exige un snapshot congelado del estado del repositorio antes de planificar y enruta el estado ausente o no congelado a discovery o resolución. |
@@ -247,6 +251,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.4.1 | 2026-08-02 | parche | Mueve la validación/planificación y los contratos detallados del SPEC a rutas explícitas de un salto y comprime la prosa explicativa conservando todas las reglas fijas multi-issue, de fases, commit y handoff. |
 | 2.4.0 | 2026-07-19 | menor | La auto-revisión (paso 14) ahora ejecuta también el nuevo `### Spec-lint` de la plantilla de fix — comprobaciones mecánicas de presencia (sin placeholders, fuera-de-alcance no vacío, cada criterio de aceptación un comando ejecutable o etiquetado `read-verified`) — antes del commit del borrador. |
 | 2.3.0 | 2026-07-17 | menor | Fix #80: `plan-fix` ahora acepta varios números de issue con semántica plenamente definida — una checklist fija de 4 casillas de causa-raíz-compartida decide si se fusionan en UNA unidad (primaria = número de issue más bajo, `Closes #<n>` por issue) o si la skill se niega con una división verbatim (`plan these separately`). La invocación de un solo número queda sin cambios. `argument-hint`, `## Input`, `## Output` y `## Hand-off` actualizados en consonancia. |
 | 2.2.0 | 2026-07-17 | menor | Fix #64: el paso 12 del algoritmo (Phases) ahora exige que toda fase de implementación pase el lint canónico de 8 casillas (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — la copia autoritativa) antes de emitirse — cualquier FAIL implica recortar o dividir la fase, nunca emitirla sin marcar. El paso 13 (Self-review) gana la afirmación equivalente de las 8 casillas. |
@@ -302,6 +307,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `fold-findings`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.1 | 2026-08-02 | parche | Separa la política congelada del procedimiento por hallazgo tras rutas obligatorias de un salto y acorta metadatos de activación; clasificaciones, prohibiciones, veredictos y conducta de commit/push no cambian. |
 | 1.1.0 | 2026-07-19 | menor | Dos adiciones: (1) **reconstrucción del ledger** — invocada tras un `VERDICT: BLOCKED` de `audit-pr` con el ledger ausente o sin filas para algún blocker, la skill añade ella misma las filas que faltan a partir del propio veredicto (esquema fijo, `class: fix-now`, dedupe por `file:line`+eje, con commit) y continúa; terminar con "no hay hallazgos" mientras un veredicto BLOCKED lista blockers es una violación del contrato. (2) Nuevo veredicto por hallazgo **`REPLAN`** para filas `replan-in-unit` (y cualquier hallazgo cuyo arreglo mínimo correcto resulte demasiado grande para plegarse en un commit): nunca se implementa en línea ni se degrada — se traspasa a fase(s) del SPEC confirmadas por el usuario + `execute-phase` en la misma rama; el total gana un campo opcional `· Replan: r` (omitido cuando es 0). |
 | 1.0.0 | 2026-07-17 | — | Nueva skill (fix #65): repara uno por uno los hallazgos fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica; una objeción genuina produce `DISPUTED` → `/triage-issue`), una lista de prohibiciones fija (nada de volcado a known-issues, nota de tradeoff en `decisions.md`, aflojar/saltar tests, supresión de lint como arreglo, stub `TODO`, ni marcar `folded: yes` sin un diff), y un contrato de salida fijo por hallazgo `FOLDED <sha> \| DISPUTED <razón> \| BLOCKED <input faltante>` que termina en un total `Folded: n/m · Disputed: k · Blocked: j`. La checklist del ciclo de fold embebida en `execute-phase` se mantiene como fallback en contexto/portabilidad. |
 
@@ -337,6 +343,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.2 | 2026-08-03 | parche | Carga la matriz de aplicabilidad de dimensiones antes de seleccionar las dimensiones de revisión, para que el Paso 0 no decida ejes incompletos antes de la lista autoritativa. |
+| 3.0.1 | 2026-08-02 | parche | Mueve las dimensiones de auditoría y el barrido de nueve pasos tras rutas obligatorias de un salto y elimina prosa repetida de activación manteniendo intactos el informe fijo persistido y el contrato solo-recomendación. |
 | 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible de invocación:** este barrido costoso y solo de recomendación pasa a ser manual-only en Claude Code y OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). La invocación explícita `/product-audit` no cambia; orquestadores y otras skills deben mantenerla como hand-off humano. |
 | 2.3.0 | 2026-07-19 | menor | Cada ejecución queda ahora **persistida**: el informe se escribe y commitea como `docs/audits/<id>-<YYYY-MM-DD>.md` con un id de auditoría incremental (la única mutación de la skill). Los hallazgos llevan una única secuencia `F1, F2, …` ordenada por severidad (nunca letras por dimensión), las propuestas citan sus hallazgos de origen (`from: F<k>`), todos los flujos de propuestas — incluidos los de roadmap — están siempre presentes (`none — <why>` cuando están vacíos), y el bloque de cierre enruta a `triage-issue <id> F<k>` (sugiere el triaje, nunca lo ejecuta). |
 | 2.2.0 | 2026-07-19 | menor | La dimensión Proceso y docs gana **frescura del inventario de capacidades**: contrasta `docs/CAPABILITIES.md` con el código (roles/permisos/subsistemas presentes en uno pero no en el otro son un hallazgo); un fichero de inventario ausente produce una propuesta de sembrarlo, nunca un auto-arreglo. |
@@ -430,6 +438,9 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `bump-skill` | 2.3.2 | 2026-08-02 | parche | Separa el descubrimiento/lint de cambios de la sincronización de versión/documentación y condensa ambas referencias sin cambiar semver, lint de siete reglas, changelogs bilingües, READMEs, routing ni migraciones. |
+| `plan-feature-scaffold` | 1.12.1 | 2026-08-02 | parche | Mueve el procedimiento completo de scaffold a un recurso obligatorio de un salto y comprime prosa repetida de fases conservando todas las reglas de mitad de producto, artefactos, lint, relectura de roadmap e informe fijo. |
+| `review-implementation` | 1.3.1 | 2026-08-02 | parche | Separa el hallazgo adversarial de la clasificación/routing en dos recursos secuenciales obligatorios; ejes, límites de override, clases y comportamiento de solo lectura no cambian. |
 | `orchestration-envelope` | 1.4.1 | 2026-07-31 | parche | Mueve la guía NRS de drivers debajo de los bullets de relación para que esos bullets mantengan su alcance de sección previsto. |
 | `bump-skill` | 2.3.1 | 2026-07-18 | patch | Seguimiento de `review-change` sobre #74/PR #96: se corrigieron las referencias al conteo de reglas del lint §2b ("dos" → "siete" invariantes de autoría de `CLAUDE.md`, en consonancia con "las 7 reglas de autoría" del Turn contract) y se ancló el grep de la regla 7 (exclusión de descubrimiento) al bloque de frontmatter únicamente (región extraída con `awk` entre las dos primeras líneas `---`), de modo que ya no puede satisfacerse con la propia prosa de la regla que menciona `metadata.internal: true` en vez de una clave real de frontmatter. |
 | `bump-skill` | 2.3.0 | 2026-07-18 | menor | Fix #74: `bump-skill` lleva ahora `metadata.internal: true` — el mecanismo propio de la CLI `skills` (verificado en `dist/cli.mjs` 1.5.16/1.5.19) que impide que `npx skills add . --list` descubra u ofrezca skills internas del repo, a diferencia de `user-invocable`/`plugin.json`, que solo rigen el menú posinstalación. El lint de §2b gana una 7ª regla que exige lo mismo para cualquier futura skill interna del repo (conjunción: `user-invocable: false` Y ausente de `plugin.json`). |
@@ -509,6 +520,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-02 — contexto progresivo de skills más estricto.** Nueve
+  entrypoints grandes enrutan ahora contratos detallados mediante referencias
+  explícitas de un salto, se condensa prosa repetida y el límite universal baja
+  de 4.200/360 a 2.800 tokens estimados/240 líneas sin excepciones de tamaño.
+  Su activación directa combinada baja de 30.868 a 16.046 tokens estimados;
+  todos los cambios, compatibles, reciben bumps de parche.
 
 - **2026-07-31 — guardrails de runtime y fullauto ligado a la invocación.**
   `init-workspace` 2.7.0 instala el pack de guards de forma aditiva;

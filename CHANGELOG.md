@@ -114,6 +114,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `generate-docs`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.1 | 2026-08-02 | patch | Splits adapter discovery, generation, and adapter slots into explicit one-hop routes and shortens repeated activation prose without changing page, map, review-export, or verification contracts. |
 | 2.0.0 | 2026-07-10 | major | **Breaking:** dropped the `## Machine envelope` section and its turn-contract emission clause — the envelope contract moved to the orchestration layer; `workflow-status` remains the sole inline emitter. See `docs/workflow/MIGRATION.md`. |
 | 1.0.0 | 2026-07-05 | — | New skill: incremental, diff-driven developer docs into the target project's docs site through a discovered adapter (declaration → Starlight → Docusaurus → plain-markdown fallback; NOT-CONFIGURED → NEEDS_INPUT, never guesses). Fixed page shape + provenance frontmatter (`generated-by`/`source-unit`/`updated`), knowledge map from a project-declared deterministic command only (model never infers edges), opt-in `--review` export of `review-change` reports, verify step (docs build or link check). Never scaffolds a site, never edits source, never commits. |
 
@@ -163,6 +164,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.13.1 | 2026-08-02 | patch | Moves the fixed `progress.md` handoff schema behind an explicit one-hop route, preserving every field and close-out rule while reducing direct activation context. |
 | 2.13.0 | 2026-07-31 | minor | Progressive loading reduces the most-used skill's activation estimate from about 13k to 3k: universal turn/handoff rules stay in `SKILL.md`, while preflight, execution gates, issue policy, mode workflows, closeout/folding, and batch portability load only when required. |
 | 2.12.0 | 2026-07-31 | minor | Adds a pre-edit architectural-invariant gate with evidence-based classification, explicit-decision stop routing, and optional NRS compatibility. |
 | 2.11.2 | 2026-07-31 | patch | Moves the NRS guidance below the Branch rules so branch formats and workflow constraints remain scoped to the Branch section. |
@@ -223,6 +225,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.3.2 | 2026-08-03 | patch | Makes the issue-derived routing contract explicit: after `PLANNING_GATES.md` permits planning, compose `plan-feature-from-issue` and then `plan-feature-scaffold` in that order. |
+| 3.3.1 | 2026-08-02 | patch | Routes status detection and repository/invariant gates through two explicit one-hop references and trims activation metadata; planning behavior and fixed hand-offs are unchanged. |
 | 3.3.0 | 2026-07-31 | minor | Evaluates optional architectural invariants before scaffolding and restores compatibility with repositories that have no Normalized Repository State ledger. |
 | 3.2.2 | 2026-07-31 | patch | Moves the NRS planning gate below the Guardrails bullets so the guardrails keep their intended section scope. |
 | 3.2.1 | 2026-07-31 | patch | Requires a frozen repository-state snapshot before planning and routes missing or non-frozen state to discovery or resolution. |
@@ -246,6 +250,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.4.1 | 2026-08-02 | patch | Moves validation/planning and SPEC-detail contracts into explicit one-hop routes, then compresses explanatory prose while retaining every fixed multi-issue, phase, commit, and hand-off rule. |
 | 2.4.0 | 2026-07-19 | minor | Self-review (step 14) now also runs the fix template's new `### Spec-lint` — mechanical presence checks (no placeholders left, out-of-scope non-empty, every acceptance criterion a runnable command or labelled `read-verified`) — before the draft commit. |
 | 2.3.0 | 2026-07-17 | minor | Fix #80: `plan-fix` now accepts multiple issue numbers with fully defined semantics — a fixed 4-box shared-root-cause checklist decides whether they merge into ONE unit (primary = lowest issue number, `Closes #<n>` per issue) or the skill refuses with a verbatim split (`plan these separately`). Single-number invocation unchanged. `argument-hint`, `## Input`, `## Output`, and `## Hand-off` updated to match. |
 | 2.2.0 | 2026-07-17 | minor | Fix #64: Algorithm step 12 (Phases) now requires every implementation phase to pass the canonical 8-box phase-lint (`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative copy) before it is emitted — any FAIL means re-cut or split, never emit unticked. Step 13 (Self-review) gained the matching all-8-boxes assertion. |
@@ -301,6 +306,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `fold-findings`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.1 | 2026-08-02 | patch | Splits frozen policy from the per-finding procedure behind mandatory one-hop routes and shortens activation metadata; classifications, forbidden actions, verdicts, and commit/push behavior are unchanged. |
 | 1.1.0 | 2026-07-19 | minor | Two additions: (1) **ledger reconstruction** — invoked after an `audit-pr` `VERDICT: BLOCKED` with the ledger absent or missing blockers, the skill now appends the missing rows from the verdict itself (fixed schema, `class: fix-now`, deduped by `file:line`+axis, committed) and proceeds; ending with "no findings" while a BLOCKED verdict lists blockers is a contract violation. (2) New **`REPLAN`** per-finding verdict for `replan-in-unit` rows (and any finding whose smallest correct fix proves too large to fold in one commit): never implemented inline, never downgraded — hand-off to user-confirmed SPEC phase(s) + `execute-phase` on the same branch; tally gains an optional `· Replan: r` field (omitted when 0). |
 | 1.0.0 | 2026-07-17 | — | New skill (fix #65): repairs `review-change`/`audit-pr` fix-now findings one at a time — frozen classification (never reclassifies; a genuine objection produces `DISPUTED` → `/triage-issue`), a fixed forbidden list (no known-issues dump, no `decisions.md` tradeoff note, no test loosening/skipping, no lint-suppression-as-fix, no `TODO` stub, no ticking `folded: yes` without a diff), and a fixed per-finding `FOLDED <sha> \| DISPUTED <reason> \| BLOCKED <missing input>` output contract ending in a `Folded: n/m · Disputed: k · Blocked: j` tally. `execute-phase`'s embedded fold-cycle checklist remains the in-context/portability fallback. |
 
@@ -336,6 +342,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.2 | 2026-08-03 | patch | Load the audit-dimensions applicability matrix before selecting review dimensions, so Step 0 cannot make an incomplete axis decision ahead of the authoritative list. |
+| 3.0.1 | 2026-08-02 | patch | Moves audit dimensions and the nine-step sweep behind mandatory one-hop routes and removes repeated activation prose while keeping the fixed persisted report and recommend-only contract intact. |
 | 3.0.0 | 2026-07-31 | major | **Breaking invocation change:** this high-cost, recommend-only sweep is manual-only on Claude Code and OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). Explicit `/product-audit` invocation remains unchanged; orchestrators and other skills must keep it as a human hand-off. |
 | 2.3.0 | 2026-07-19 | minor | Every run is now **persisted**: the report is written and committed as `docs/audits/<id>-<YYYY-MM-DD>.md` with an incremental audit id (the skill's only mutation). Findings carry a single severity-ranked `F1, F2, …` sequence (never per-dimension letters), proposals cite their source findings (`from: F<k>`), every proposal stream — the roadmap ones included — is always present (`none — <why>` when empty), and the closing block routes to `triage-issue <id> F<k>` (suggest triage, never run it). |
 | 2.2.0 | 2026-07-19 | minor | Process & docs dimension gains **capability-inventory freshness**: cross-checks `docs/CAPABILITIES.md` against the code (roles/permissions/subsystems present in one but not the other are a finding); a missing inventory file yields a seed-it proposal, never an auto-fix. |
@@ -429,6 +437,9 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `bump-skill` | 2.3.2 | 2026-08-02 | patch | Splits change/lint discovery from version/documentation synchronization, then condenses both references without changing semver, seven-rule lint, bilingual changelog, README, routing, or migration behavior. |
+| `plan-feature-scaffold` | 1.12.1 | 2026-08-02 | patch | Moves the complete scaffold procedure into one mandatory one-hop resource and compresses repeated phase prose while preserving all product-half, artifact, lint, roadmap re-read, and fixed-report rules. |
+| `review-implementation` | 1.3.1 | 2026-08-02 | patch | Separates adversarial finding from classification/routing into two mandatory sequential resources; axes, override bounds, classes, and read-only behavior are unchanged. |
 | `orchestration-envelope` | 1.4.1 | 2026-07-31 | patch | Moves the NRS driver guidance below the relationship bullets so those bullets keep their intended section scope. |
 | `bump-skill` | 2.3.1 | 2026-07-18 | patch | Review-change follow-up on #74/PR #96: fixed the §2b lint's rule count references ("two" → "seven" `CLAUDE.md` authoring invariants, matching the Turn contract's "all 7 authoring rules") and anchored rule 7's discovery-exclusion check to the frontmatter block only (`awk`-extracted region between the first two `---` lines), so it can no longer be satisfied by the rule's own prose mentioning `metadata.internal: true` instead of an actual frontmatter key. |
 | `bump-skill` | 2.3.0 | 2026-07-18 | minor | Fix #74: `bump-skill` itself now carries `metadata.internal: true` — the `skills` CLI's own gate (verified in `dist/cli.mjs` 1.5.16/1.5.19) that keeps `npx skills add . --list` from discovering/offering repo-internal skills, unlike `user-invocable`/`plugin.json` which only govern the post-install menu. §2b lint gains a 7th rule enforcing the same for any future repo-internal skill (conjunction: `user-invocable: false` AND absent from `plugin.json`). |
@@ -508,6 +519,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-02 — tighter progressive skill context.** Nine large entrypoints
+  now route detailed contracts through explicit one-hop references, repeated
+  prose is condensed, and the universal entrypoint cap drops from 4,200/360
+  to 2,800 estimated tokens/240 lines with no size exception. Combined direct
+  activation for those nine falls from 30,868 to 16,046 estimated tokens;
+  all behavior-preserving changes receive patch bumps.
 
 - **2026-07-31 — runtime guardrails and invocation-scoped fullauto.**
   `init-workspace` 2.7.0 installs the portable guard pack additively;
