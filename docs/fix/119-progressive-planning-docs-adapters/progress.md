@@ -79,3 +79,10 @@
 - Gotchas: `qwen3:8b` was run with `think=false`, temperature `0`, and seed `20`; the tool-calling smoke returned parseable `{}` arguments. NRS and architectural-invariant documents remain absent and are n/a.
 - Files: `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/GOLDEN_FIXTURE.es.md`, `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
 - Next: P11 — Hardening & PR | unit unfinished
+
+## P11 — 2026-08-03
+- Done: Re-ran the full verification gate, confirmed the fix-index `done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120)` entry and existing PR close-out contract, and recorded the final clean-docs check.
+- Remains: none.
+- Gotchas: PR #120 is already open and mergeable, so no duplicate PR was created; its body contains the amended progressive-resource scope and `Closes #119`. `gh pr checks 120` reports no published checks, so `/audit-pr` remains blocked pending CI evidence. NRS and architectural-invariant documents remain absent and are n/a.
+- Files: `docs/fix/119-progressive-planning-docs-adapters/SPEC.md`, `docs/fix/119-progressive-planning-docs-adapters/testing.md`, `docs/fix/119-progressive-planning-docs-adapters/known-issues.md`, `docs/fix/119-progressive-planning-docs-adapters/progress.md`
+- Next: unit finished | hand off to `/review-change`, then `/audit-pr`
