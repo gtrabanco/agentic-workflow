@@ -303,7 +303,7 @@ Layer: close-out. Done-when: `git diff --check` → exit 0.
 - [x] `git push`
 - [x] Verify the existing PR body still includes `Closes #119` and the reconciled scope
 - [x] Run `/review-change` on the pushed branch
-- [ ] Run `/audit-pr` after the review table is clean
+- [x] Run `/audit-pr` after the review table is clean
 
 ## Testing
 
