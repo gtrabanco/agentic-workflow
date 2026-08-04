@@ -59,3 +59,29 @@
 - Replacing ISSUE_POLICY (2135 est) with FORGE_BODY (513 est) dropped final-pr
   to 9071/621, so its maxima were tightened from 11000/740 to 9500/660; the new
   descope (9027/631) and finding (9719/655) routes got 9500/660 and 9800/680.
+
+## 2026-08-04 — Dependency receipts vs reality (P3-3)
+
+- The P3-3 plan added a versioned dependency receipt so later phases skip forge
+  traversal. Implementation landed the contract in `PREFLIGHT.md` (the
+  dependency-gate owner, loaded on every execute route): the unit's `progress.md`
+  records `Dependency receipt v1` after a full merged pass; later phases
+  recompute a cheap local fingerprint and fail closed to the full gate on any of
+  a changed graph, missing/older receipt, later `--force`, or unmet dependency.
+- **Fingerprint inputs are local-only.** The first draft hashed the SPEC line,
+  roadmap rows, *and* merged PR identities — but the fast path has no forge
+  access to re-derive PR identities, so the recompute could never match. Fixed:
+  the fingerprint covers only the SPEC `Depends on:` line and the closure
+  roadmap rows (which already encode the merged PR, e.g. `22-other #7 @ a1b2c3
+  merged`); PR identities stay in the receipt as provenance.
+- The receipt contract permanently grows PREFLIGHT (~1100 B, ~270 est / ~23
+  lines on every execute route). Rather than trimming the fail-closed detail
+  below the SPEC's testable-invalidation requirement, the seven execute maxima
+  were recalibrated once to the new steady state (feature/small 9600/670, fix
+  9750/670, legacy 9400/660, final-pr 9500/660 unchanged, descope 9400/670,
+  finding 10100/690). All routes stay far below the 13284/866 baseline; future
+  regressions are still caught against these maxima.
+- The contract is testable: `scripts/dependency-gate.test.mjs` (10 cases) models
+  the fingerprint and fast-path logic, cross-checks the git blob hash against
+  `git hash-object --stdin`, and asserts every invalidation case fails closed.
+

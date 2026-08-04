@@ -45,8 +45,8 @@
         "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FEATURE.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
       },
       "templates": [],
-      "routeEstimateMax": 9500,
-      "routeLinesMax": 660
+      "routeEstimateMax": 9600,
+      "routeLinesMax": 670
     },
     "execute-phase:small": {
       "skills": ["execute-phase"],
@@ -54,8 +54,8 @@
         "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_SMALL_PHASED.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
       },
       "templates": [],
-      "routeEstimateMax": 9500,
-      "routeLinesMax": 660
+      "routeEstimateMax": 9600,
+      "routeLinesMax": 670
     },
     "execute-phase:fix": {
       "skills": ["execute-phase"],
@@ -63,8 +63,8 @@
         "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FIX.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
       },
       "templates": [],
-      "routeEstimateMax": 9700,
-      "routeLinesMax": 660
+      "routeEstimateMax": 9750,
+      "routeLinesMax": 670
     },
     "execute-phase:legacy": {
       "skills": ["execute-phase"],
@@ -72,8 +72,8 @@
         "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_LEGACY.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
       },
       "templates": [],
-      "routeEstimateMax": 9300,
-      "routeLinesMax": 650
+      "routeEstimateMax": 9400,
+      "routeLinesMax": 660
     },
     "execute-phase:final-pr": {
       "skills": ["execute-phase"],
@@ -90,8 +90,8 @@
         "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "DESCOPE.md"]
       },
       "templates": [],
-      "routeEstimateMax": 9500,
-      "routeLinesMax": 660
+      "routeEstimateMax": 9400,
+      "routeLinesMax": 670
     },
     "execute-phase:finding": {
       "skills": ["execute-phase"],
@@ -99,8 +99,8 @@
         "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "OPPORTUNISTIC_FINDING.md"]
       },
       "templates": [],
-      "routeEstimateMax": 9800,
-      "routeLinesMax": 680
+      "routeEstimateMax": 10100,
+      "routeLinesMax": 690
     },
     "review-change:default-backend": {
       "skills": ["review-change"],
