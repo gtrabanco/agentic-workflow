@@ -64,3 +64,34 @@ Fixture evidence:
 
 Per-file sizes after P2: plan-feature/SKILL.md 3346-est route share; plan-feature-from-issue 1090-est; plan-feature-scaffold 1064-est; plan-fix/SKILL.md 6112 bytes (1528 est); PLANNING_PROCESS.md 4666 bytes (1167 est); SPEC_CONTRACT.md 1871 bytes (468 est).
 
+### P3 — execution route consolidation
+
+Gate: `node scripts/check-skill-context.mjs --routes --route execute-phase:feature --route execute-phase:final-pr` → `PASS route budgets: 2 routes`, exit 0. Both routes pass their reduced regression maxima.
+
+`WORKFLOWS.md` split into four per-mode resources (feature, small/phased, fix, legacy); the `execute-phase` entrypoint now selects **exactly one** mode from the target artifacts before loading mode detail, and each mode route records that single selected workflow resource.
+
+Route totals after P3 (measured `--route execute-phase:feature --route execute-phase:small --route execute-phase:fix --route execute-phase:legacy --route execute-phase:final-pr`, exit 0), vs. baseline:
+
+| Route | Skills | Files | Estimate | Lines | vs baseline |
+|---|---|---|---|---|---|
+| `execute-phase:feature` | execute-phase | 7 | 9202 | 628 | below 13284/866 |
+| `execute-phase:small` | execute-phase | 7 | 9191 | 636 | below 13284/866 |
+| `execute-phase:fix` | execute-phase | 7 | 9372 | 636 | below 13284/866 |
+| `execute-phase:legacy` | execute-phase | 7 | 8986 | 621 | below 13284/866 |
+| `execute-phase:final-pr` | execute-phase | 7 | 10686 | 713 | below 13284/866 |
+
+File count dropped (7 vs 9) because routes now compose only their declared `references` array. Mode routes load PREFLIGHT, EXECUTION_CONTRACT, the selected `WORKFLOWS_*.md`, HANDOFF, CLOSEOUT, and FOLDING; `BATCH_AND_PORTABILITY` and `ISSUE_POLICY` do not load on mode routes (portability/examples are conditional per AC16). The `final-pr` close-out route carries `ISSUE_POLICY` instead of a mode workflow (mode is already selected in prior phases).
+
+Reduced maxima set in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`:
+- `execute-phase:feature`: routeEstimateMax 9500, routeLinesMax 660
+- `execute-phase:small`: routeEstimateMax 9500, routeLinesMax 660
+- `execute-phase:fix`: routeEstimateMax 9700, routeLinesMax 660
+- `execute-phase:legacy`: routeEstimateMax 9300, routeLinesMax 650
+- `execute-phase:final-pr`: routeEstimateMax 11000, routeLinesMax 740
+
+Remaining routes still `null` (P4 sets the review/audit maxima).
+
+Fixture evidence:
+- The context-checker test suite adds per-route `references` fixtures: each mode route selects exactly one `WORKFLOWS_*.md`, `final-pr` selects none, and undeclared-skill / missing-file / directory-escaping route references fail closed.
+- `scripts/check-skill-context.mjs` route resolution is now route-authoritative: a route with a `references` object loads only the listed files for that skill; routes without one fall back to the full `references/` scan (unchanged for plan/review/audit routes).
+

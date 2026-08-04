@@ -159,4 +159,36 @@ runFixtureRoute(
   /route lines .* >/,
 );
 
-console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, and route failures rejected");
+runFixtureRoute(
+  "route references for undeclared skill",
+  (manifest) => { manifest.routes["test:badref"] = { skills: ["execute-phase"], references: { "review-change": ["HANDOFF.md"] }, templates: [], routeEstimateMax: null, routeLinesMax: null }; },
+  /route declares references for undeclared skill/,
+);
+
+runFixtureRoute(
+  "route references missing file",
+  (manifest) => { manifest.routes["test:missingref"] = { skills: ["execute-phase"], references: { "execute-phase": ["NOPE.md"] }, templates: [], routeEstimateMax: null, routeLinesMax: null }; },
+  /Missing file in route/,
+);
+
+runFixtureRoute(
+  "route reference escapes references directory",
+  (manifest) => { manifest.routes["test:escape"] = { skills: ["execute-phase"], references: { "execute-phase": ["../x.md"] }, templates: [], routeEstimateMax: null, routeLinesMax: null }; },
+  /route reference must be a flat file name/,
+);
+
+// Execute route selection: each mode route records exactly one workflow resource.
+
+{
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
+  for (const mode of ["feature", "small", "fix", "legacy"]) {
+    const refs = manifest.routes[`execute-phase:${mode}`].references["execute-phase"];
+    assert.equal(refs.filter((n) => n.startsWith("WORKFLOWS_")).length, 1, `execute-phase:${mode} must select exactly one workflow resource`);
+    for (const name of refs) assert(fs.existsSync(path.join(executeRefsDir, name)), `missing referenced file: ${name}`);
+  }
+  const finalPrRefs = manifest.routes["execute-phase:final-pr"].references["execute-phase"];
+  assert.equal(finalPrRefs.filter((n) => n.startsWith("WORKFLOWS_")).length, 0, "final-pr must not select a mode workflow");
+}
+
+console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, and route-reference failures rejected");
