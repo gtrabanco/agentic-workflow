@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.3.2
+version: 3.4.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -52,8 +52,13 @@ The reference allowlist is exactly the two paths below:
 1. Every invocation: read [redirect gate and routing](references/ROUTING.md),
    apply the status gate first, and stop on its exact block when instructed.
 2. Any route that can write planning artifacts: after the redirect gate permits
-   routing, read [repository-state and architectural gates](references/PLANNING_GATES.md)
-   before composing an internal step, including the issue-derived route.
+   routing, consume the [planning preflight](<../planning-preflight/SKILL.md>) —
+   it owns the normalized repository state read and the ONE final architectural
+   classification — before composing an internal step, including the
+   issue-derived route.
+3. Before composing an internal step: load the [phase contract](<../phase-contract/SKILL.md>)
+   so every SPEC written this turn carries the canonical 8-box phase-lint and
+   the normalized phase fingerprint.
 
 Do not load planning gates after a redirect stop. Both resources are normative,
 one hop from this file, and fail closed when missing.
@@ -62,12 +67,15 @@ one hop from this file, and fail closed when missing.
 
 1. **Redirect gate** from `ROUTING.md` — always first.
 2. **Route** from the same resource. For issue input, resolve and validate the issue
-   identity only; after `PLANNING_GATES.md` confirms that planning may write,
-   compose the from-issue internal to produce a **filled, sized SPEC product
-   half**; then invoke `plan-feature-scaffold`, which fills the
-   engineering half and scales the artifacts to the SPEC's size (XS/S →
-   SPEC-only; M/L → full set) and registers the roadmap. The already-designed
-   scoped path runs `plan-feature-scaffold` directly.
+   identity only; after the [planning preflight](<../planning-preflight/SKILL.md>)
+   confirms that planning may write, compose the from-issue internal to produce
+   a **filled, sized SPEC product half**; then invoke `plan-feature-scaffold`,
+   which fills the engineering half and scales the artifacts to the SPEC's size
+   (XS/S → SPEC-only; M/L → full set) and registers the roadmap. The
+   already-designed scoped path runs `plan-feature-scaffold` directly. Every
+   path holds **one immutable planning context** — the roadmap snapshot taken
+   before writing (and one issue payload when `--from-issue`) — reused across
+   the internal steps; never re-fetched mid-plan.
 3. **Confirm roadmap.** Verify the feature is registered in
    `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
    if any of the three is missing or wrong, fix the entry now — never leave

@@ -18,3 +18,18 @@
 - The project has no root `docs/CAPABILITIES.md`, repository-state artifact, or
   project-specific architectural-invariant document. The SPEC therefore records
   a derived workflow capability inventory and the compatible `n/a` outcomes.
+
+## 2026-08-04 — Route arrays vs reality (P2)
+
+- The planned approach expected new internal contracts to be added to route
+  `skills` arrays in `SKILL_CONTEXT_BUDGETS.json`. Reality contradicted the
+  plan: adding them would inflate route estimates above the baselines captured
+  in `testing.md`, so the `skills` arrays are left unchanged and the internal
+  contracts are instead linked from routers via `(../planning-preflight/SKILL.md)`
+  / `(../phase-contract/SKILL.md)` — the route resolver only pulls
+  `references/`-linked files into route totals, so these links change no route
+  membership.
+- The three planning routes carry reduced regression maxima (set below their
+  captured baselines): `plan-feature:scoped` 3346/258, `plan-feature:issue`
+  5221/398, `plan-fix:issue` 3145/222. Execute/review/audit routes stay `null`
+  until P3/P4 assign them maxima.

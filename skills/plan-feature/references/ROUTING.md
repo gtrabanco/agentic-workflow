@@ -3,9 +3,9 @@
 Before any other step, resolve the target slug/issue. An issue input
 (`--from-issue <N>` or issue URL/number) resolves and validates the issue
 identity only; it does not invoke `plan-feature-from-issue` here. The parent
-must load `PLANNING_GATES.md` and confirm that planning may write before
-composing that internal writer. The internal step supplies the feature slug
-for the later roadmap gate. For other
+must consume the [planning preflight](<../../planning-preflight/SKILL.md>) and
+confirm that planning may write before composing that internal writer. The
+internal step supplies the feature slug for the later roadmap gate. For other
 inputs, read **the roadmap status** (`docs/features/ROADMAP.md` → the five-state machine
 `idea/defined/planned/in-progress/done`) — the **primary** gate signal. The
 SPEC's `## Design status` marker is the SPEC-local record and the
@@ -61,8 +61,9 @@ Once the gate passes, pick the mode — first match wins:
 2. **Issue input** — `--from-issue <N>`, an issue URL, or a bare numeric argument
    `<N>` (for example, `131`) selects the issue-derived route; detection itself
    does not compose `plan-feature-from-issue`. The parent route owns the
-   `PLANNING_GATES.md` check and must confirm that planning may write before it
-   composes `plan-feature-from-issue`, then `plan-feature-scaffold`.
+   [planning preflight](<../../planning-preflight/SKILL.md>) consumption and must
+   confirm that planning may write before it composes `plan-feature-from-issue`,
+   then `plan-feature-scaffold`.
 3. **Scoped** — an existing, designed roadmap slug or a filled `SPEC.md` →
    `plan-feature-scaffold`.
 4. **`--next` / no input** — read the roadmap, take the next `defined` entry
