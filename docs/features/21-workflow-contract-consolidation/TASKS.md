@@ -27,27 +27,27 @@ named contract comparison and cited file evidence in `testing.md`.
 
 ## P2 — Planning contract consolidation
 
-- [ ] Add internal `planning-preflight` as the single normalized-state and
+- [x] Add internal `planning-preflight` as the single normalized-state and
       final architectural-planning gate used by `plan-feature` and `plan-fix`.
       Check: `grep -q "name: planning-preflight" skills/planning-preflight/SKILL.md`.
-- [ ] Add internal `phase-contract` as the single eight-box phase-lint owner,
+- [x] Add internal `phase-contract` as the single eight-box phase-lint owner,
       with fixed PASS/BLOCKED output and a normalized phase fingerprint.
       Check: `grep -q "name: phase-contract" skills/phase-contract/SKILL.md`.
-- [ ] Refactor `plan-feature` and its internals to pass one immutable planning
+- [x] Refactor `plan-feature` and its internals to pass one immutable planning
       context containing the roadmap snapshot and optional issue payload.
       Check: route fixtures assert one roadmap snapshot and at most one issue fetch.
-- [ ] Keep scaffold as the sole roadmap writer and post-write verifier.
+- [x] Keep scaffold as the sole roadmap writer and post-write verifier.
       Check: the planning fixture records exactly one post-write roadmap read.
-- [ ] Refactor `plan-fix` to consume the shared planning/phase contracts while
+- [x] Refactor `plan-fix` to consume the shared planning/phase contracts while
       preserving root-cause, risk, rollback, observability, local branch,
       commit, no-push, and no-PR behavior.
       Check: `read-verified` against the old/new turn contracts and fix fixture.
-- [ ] Slim feature/fix templates and mirrors so generated SPECs keep instance
+- [x] Slim feature/fix templates and mirrors so generated SPECs keep instance
       criteria, phase tasks, contract version/fingerprint, and results without
       duplicating authoring tutorials or the eight lint rules.
       Check: all eight invalid-phase fixtures fail identically in planner and
       executor paths.
-- [ ] Run `bump-skill` for every planning/internal skill changed in this phase
+- [x] Run `bump-skill` for every planning/internal skill changed in this phase
       and update the relevant migration/template surfaces.
       Check: `node scripts/check-skill-context.mjs --routes --route plan-feature:scoped --route plan-fix:issue` exits 0 below baseline.
   Done-when: `node scripts/check-skill-context.mjs --routes --route plan-feature:scoped --route plan-fix:issue` → both routes pass reduced maxima.

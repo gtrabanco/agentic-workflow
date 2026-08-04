@@ -226,6 +226,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.4.0 | 2026-08-04 | menor | Añade los contratos internos de un salto planning preflight y phase contract (rutas 2-3 de carga progresiva) y fija un único contexto de planificación inmutable — un snapshot del roadmap más payload opcional de issue — reutilizado entre internals compuestas, nunca re-consultado a mitad de plan. |
 | 3.3.2 | 2026-08-03 | parche | Hace explícito el contrato de routing derivado de issues: después de que `PLANNING_GATES.md` permita planificar, compone `plan-feature-from-issue` y después `plan-feature-scaffold`, en ese orden. |
 | 3.3.1 | 2026-08-02 | parche | Enruta la detección de estado y los gates de repositorio/invariantes mediante dos referencias explícitas de un salto y recorta metadatos de activación; el comportamiento de planificación y los handoffs fijos no cambian. |
 | 3.3.0 | 2026-07-31 | menor | Evalúa invariantes arquitectónicas opcionales antes del scaffolding y restaura la compatibilidad con repositorios sin ledger de Estado Normalizado del Repositorio. |
@@ -251,6 +252,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.0 | 2026-08-04 | menor | Consume el planning preflight compartido (lectura del estado normalizado del repositorio + una única clasificación arquitectónica final) y el phase contract (phase-lint canónico de 8 casillas + fingerprint de fase) antes de redactar y emitir un SPEC de fix; prosa comprimida para que la ruta se mantenga bajo su presupuesto base. |
 | 2.4.1 | 2026-08-02 | parche | Mueve la validación/planificación y los contratos detallados del SPEC a rutas explícitas de un salto y comprime la prosa explicativa conservando todas las reglas fijas multi-issue, de fases, commit y handoff. |
 | 2.4.0 | 2026-07-19 | menor | La auto-revisión (paso 14) ahora ejecuta también el nuevo `### Spec-lint` de la plantilla de fix — comprobaciones mecánicas de presencia (sin placeholders, fuera-de-alcance no vacío, cada criterio de aceptación un comando ejecutable o etiquetado `read-verified`) — antes del commit del borrador. |
 | 2.3.0 | 2026-07-17 | menor | Fix #80: `plan-fix` ahora acepta varios números de issue con semántica plenamente definida — una checklist fija de 4 casillas de causa-raíz-compartida decide si se fusionan en UNA unidad (primaria = número de issue más bajo, `Closes #<n>` por issue) o si la skill se niega con una división verbatim (`plan these separately`). La invocación de un solo número queda sin cambios. `argument-hint`, `## Input`, `## Output` y `## Hand-off` actualizados en consonancia. |
@@ -438,6 +440,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `phase-contract` | 1.0.0 | 2026-08-04 | — | Nuevo contrato interno: propietario canónico del phase-lint de ocho cajas, con salida fija `PASS (8/8)`/`BLOCKED — casilla <n>` y el fingerprint de fase normalizado (`P<n>:<layer>:<n-tasks>:<title-deliverable>`). |
+| `planning-preflight` | 1.0.0 | 2026-08-04 | — | Nuevo contrato interno: único consumidor del estado normalizado del repositorio y único propietario de la única clasificación arquitectónica final de un plan completo, con línea de resultado preflight fija. |
+| `plan-feature-scaffold` | 1.13.0 | 2026-08-04 | menor | Consume el planning preflight (lectura NRS + una única clasificación arquitectónica final) y el phase contract (phase-lint de 8 casillas + fingerprint de fase) en lugar de duplicar reglas de invariantes y lint. |
+| `plan-feature-from-issue` | 1.7.0 | 2026-08-04 | menor | La sección de invariantes arquitectónicas ahora consume el planning preflight para la lectura del estado normalizado del repositorio y la única clasificación arquitectónica final. |
 | `bump-skill` | 2.3.2 | 2026-08-02 | parche | Separa el descubrimiento/lint de cambios de la sincronización de versión/documentación y condensa ambas referencias sin cambiar semver, lint de siete reglas, changelogs bilingües, READMEs, routing ni migraciones. |
 | `plan-feature-scaffold` | 1.12.1 | 2026-08-02 | parche | Mueve el procedimiento completo de scaffold a un recurso obligatorio de un salto y comprime prosa repetida de fases conservando todas las reglas de mitad de producto, artefactos, lint, relectura de roadmap e informe fijo. |
 | `review-implementation` | 1.3.1 | 2026-08-02 | parche | Separa el hallazgo adversarial de la clasificación/routing en dos recursos secuenciales obligatorios; ejes, límites de override, clases y comportamiento de solo lectura no cambian. |
@@ -520,6 +526,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-04 — consolidación del contrato de planificación (feature 21, P2).**
+  Los cuatro entrypoints de planificación (`plan-feature` 3.4.0, `plan-fix`
+  2.5.0, `plan-feature-from-issue` 1.7.0, `plan-feature-scaffold` 1.13.0)
+  consumen ahora dos contratos internos nuevos — `planning-preflight` 1.0.0
+  (lectura del estado normalizado del repositorio + la única clasificación
+  arquitectónica final) y `phase-contract` 1.0.0 (phase-lint canónico de ocho
+  cajas + fingerprint de fase). Las plantillas feature/fix conservan un único
+  puntero al phase-contract en lugar de cajas de lint duplicadas; las rutas de
+  planificación llevan máximos de contexto reducidos commiteados.
 
 - **2026-08-02 — contexto progresivo de skills más estricto.** Nueve
   entrypoints grandes enrutan ahora contratos detallados mediante referencias
