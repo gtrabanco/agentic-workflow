@@ -224,7 +224,8 @@ How pinning actually works, verified against the `skills` CLI:
 
 #### `plan-feature`
 | Version | Date | Type | What changed |
-|---|---|---|---|
+|---|---|---|
+| 3.4.0 | 2026-08-04 | minor | Adds the planning preflight and phase contract as one-hop internal contracts (progressive-loading paths 2-3) and pins a single immutable planning context — one roadmap snapshot plus optional issue payload — reused across composed internals, never re-fetched mid-plan. |
 | 3.3.2 | 2026-08-03 | patch | Makes the issue-derived routing contract explicit: after `PLANNING_GATES.md` permits planning, compose `plan-feature-from-issue` and then `plan-feature-scaffold` in that order. |
 | 3.3.1 | 2026-08-02 | patch | Routes status detection and repository/invariant gates through two explicit one-hop references and trims activation metadata; planning behavior and fixed hand-offs are unchanged. |
 | 3.3.0 | 2026-07-31 | minor | Evaluates optional architectural invariants before scaffolding and restores compatibility with repositories that have no Normalized Repository State ledger. |
@@ -249,7 +250,8 @@ How pinning actually works, verified against the `skills` CLI:
 
 #### `plan-fix`
 | Version | Date | Type | What changed |
-|---|---|---|---|
+|---|---|---|
+| 2.5.0 | 2026-08-04 | minor | Consumes the shared planning preflight (normalized repository state read + one final architectural classification) and phase contract (canonical 8-box phase-lint + phase fingerprint) before drafting and emitting a fix SPEC; prose compressed so the route stays below its baseline budget. |
 | 2.4.1 | 2026-08-02 | patch | Moves validation/planning and SPEC-detail contracts into explicit one-hop routes, then compresses explanatory prose while retaining every fixed multi-issue, phase, commit, and hand-off rule. |
 | 2.4.0 | 2026-07-19 | minor | Self-review (step 14) now also runs the fix template's new `### Spec-lint` — mechanical presence checks (no placeholders left, out-of-scope non-empty, every acceptance criterion a runnable command or labelled `read-verified`) — before the draft commit. |
 | 2.3.0 | 2026-07-17 | minor | Fix #80: `plan-fix` now accepts multiple issue numbers with fully defined semantics — a fixed 4-box shared-root-cause checklist decides whether they merge into ONE unit (primary = lowest issue number, `Closes #<n>` per issue) or the skill refuses with a verbatim split (`plan these separately`). Single-number invocation unchanged. `argument-hint`, `## Input`, `## Output`, and `## Hand-off` updated to match. |
@@ -437,6 +439,10 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `phase-contract` | 1.0.0 | 2026-08-04 | — | New internal contract: canonical owner of the eight-box phase-lint, with fixed `PASS (8/8)`/`BLOCKED — box <n>` output and the normalized phase fingerprint (`P<n>:<layer>:<n-tasks>:<title-deliverable>`). |
+| `planning-preflight` | 1.0.0 | 2026-08-04 | — | New internal contract: single consumer of the normalized repository state and sole owner of the ONE final architectural classification for a complete plan, with a fixed preflight result line. |
+| `plan-feature-scaffold` | 1.13.0 | 2026-08-04 | minor | Consumes the planning preflight (NRS read + one final architectural classification) and the phase contract (8-box phase-lint + phase fingerprint) instead of duplicating invariant and lint rules. |
+| `plan-feature-from-issue` | 1.7.0 | 2026-08-04 | minor | Architectural-invariants section now consumes the planning preflight for the normalized repository state read and the single final architectural classification. |
 | `bump-skill` | 2.3.2 | 2026-08-02 | patch | Splits change/lint discovery from version/documentation synchronization, then condenses both references without changing semver, seven-rule lint, bilingual changelog, README, routing, or migration behavior. |
 | `plan-feature-scaffold` | 1.12.1 | 2026-08-02 | patch | Moves the complete scaffold procedure into one mandatory one-hop resource and compresses repeated phase prose while preserving all product-half, artifact, lint, roadmap re-read, and fixed-report rules. |
 | `review-implementation` | 1.3.1 | 2026-08-02 | patch | Separates adversarial finding from classification/routing into two mandatory sequential resources; axes, override bounds, classes, and read-only behavior are unchanged. |
@@ -519,6 +525,15 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-04 — planning contract consolidation (feature 21, P2).** The four
+  planning entrypoints (`plan-feature` 3.4.0, `plan-fix` 2.5.0,
+  `plan-feature-from-issue` 1.7.0, `plan-feature-scaffold` 1.13.0) now consume
+  two new internal contracts — `planning-preflight` 1.0.0 (normalized
+  repository state read + the one final architectural classification) and
+  `phase-contract` 1.0.0 (canonical eight-box phase-lint + phase fingerprint).
+  Feature/fix templates keep one phase-contract pointer instead of duplicated
+  lint boxes; planning routes carry committed reduced context maxima.
 
 - **2026-08-02 — tighter progressive skill context.** Nine large entrypoints
   now route detailed contracts through explicit one-hop references, repeated

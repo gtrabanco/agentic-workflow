@@ -80,10 +80,10 @@ guard entirely — no lint run, no STOP — and fall straight through to the
 … runs the legacy flow … end-to-end in one pass"). The guard below applies
 only to a SPEC that carries a `## Phases` ledger.
 
-Before touching any code, run the canonical 8-box phase-lint
-(`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative
-copy, also quoted in `docs/features/_TEMPLATE/SPEC.md` `### Phases`) against
-the **target phase** (its title, declared layer, task list, and done-when).
+Before touching any code, run the canonical 8-box phase-lint owned by
+`skills/phase-contract/SKILL.md` (the fixed PASS/BLOCKED block and the
+normalized phase fingerprint) against the **target phase** (its title,
+declared layer, task list, and done-when).
 
 1. **All 8 boxes tick** → proceed to the normal workflow.
 2. **Any box FAILs → STOP before any edit** and print exactly:
