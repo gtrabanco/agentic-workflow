@@ -126,5 +126,30 @@ SKILL.md main budget was re-verified after the step-3 conditional edit: 2799 est
 Fixture evidence:
 - The context-checker test suite adds per-route policy fixtures: `final-pr` records exactly one policy resource (`FORGE_BODY.md`), `descope` records only `DESCOPE.md`, `finding` records only `OPPORTUNISTIC_FINDING.md`, each referenced file exists, and `ISSUE_POLICY.md` no longer exists in `references/`.
 
+#### P3-3 — versioned dependency receipt + fail-closed fast path
+
+Gate: `node scripts/check-skill-context.mjs --routes` → `PASS route budgets: 16 routes`, exit 0; `node --test scripts/dependency-gate.test.mjs` → 10 pass.
+
+`PREFLIGHT.md` (loaded on every execute route) now owns the dependency receipt contract: after a full pass with every dependency merged, the unit's `progress.md` records `Dependency receipt v1` (fingerprint, closure, merged PRs, `Fully merged: yes`, `Verified: <date>`). Later phases recompute the cheap local fingerprint — `git hash-object --stdin` over the SPEC `Depends on:` line and the closure roadmap rows only — and skip forge traversal **only when** the receipt is current, the fingerprint matches, it records fully merged, and no `--force` is dated after it. Fail-closed invalidation on any of: fingerprint mismatch (graph changed), missing or older-version receipt, later `--force`, or the full gate finding an unmet dependency; ambiguity never skips the forge.
+
+Design fix recorded: the fingerprint covers only locally-derivable inputs. PR identities are receipt provenance, never fingerprint input — otherwise the fast-path recompute (which has no forge access) could never match the full-pass fingerprint.
+
+Route totals after P3-3 (measured `--routes`, all 16 exit 0; the receipt contract permanently grows PREFLIGHT on every execute route):
+
+| Route | Skills | Files | Estimate | Lines | vs baseline |
+|---|---|---|---|---|---|
+| `execute-phase:feature` | execute-phase | 7 | 9477 | 653 | below 13284/866 |
+| `execute-phase:small` | execute-phase | 7 | 9466 | 661 | below 13284/866 |
+| `execute-phase:fix` | execute-phase | 7 | 9647 | 661 | below 13284/866 |
+| `execute-phase:legacy` | execute-phase | 7 | 9261 | 646 | below 13284/866 |
+| `execute-phase:final-pr` | execute-phase | 7 | 9339 | 644 | below 13284/866 |
+| `execute-phase:descope` | execute-phase | 7 | 9295 | 654 | below 13284/866 |
+| `execute-phase:finding` | execute-phase | 7 | 9987 | 678 | below 13284/866 |
+
+The receipt contract (~1100 B) added ~270 est / ~23 lines to every execute route, so the seven execute maxima were recalibrated once to the new steady state (one-time adjustment, documented in decisions.md): feature 9500/660 → 9600/670, small 9500/660 → 9600/670, fix 9700/660 → 9750/670, legacy 9300/650 → 9400/660, final-pr unchanged 9500/660, descope 9500/660 → 9400/670, finding 9800/680 → 10100/690. All remain far below the 13284/866 baseline with headroom for drift.
+
+Fixture evidence:
+- `scripts/dependency-gate.test.mjs` models the contract as pure functions (`gitBlobSha` implements the git blob hash; `dependencyFingerprint` hashes SPEC line + roadmap rows; `fastPathEligible` returns `{ eligible, reason }`). 10 cases: the fingerprint primitive cross-checks `git hash-object --stdin`; a full gate pass produces a receipt that fast-paths; and each documented invalidation case fails closed — SPEC/roadway amendment (fingerprint mismatch), missing receipt, older-version (v0) receipt, later `--force`, unmet dependency, ambiguous (no-fingerprint) receipt — plus `--force` predating the receipt does not invalidate it, and the matrix asserts exactly the six documented reasons.
+- `node --test scripts/check-skill-context.test.mjs` still passes (route/policy fixtures unchanged).
 
 

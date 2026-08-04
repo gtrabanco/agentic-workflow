@@ -59,8 +59,25 @@ Last reviewed: —
   tightened 11000/740 → 9500/660 after the ~1615 est drop); policy-selection
   fixtures added; all 16 routes pass; SKILL.md main budget re-verified at
   2799 est / 177 lines.
-- Remains: P3-3 (versioned dependency receipt + fail-closed local fingerprint
-  fast path), P3-4 (fake-forge PR-surface kill switches + merge-time source
+- Done: Dependency receipt + fast path (P3-3) — `PREFLIGHT.md` gains the
+  versioned **dependency receipt (v1)** and its fail-closed local fingerprint
+  fast path: after a full merged pass the unit's `progress.md` records
+  `Dependency receipt v1` (fingerprint + closure + merged PRs); later phases
+  recompute the cheap local fingerprint (SPEC `Depends on:` line + closure
+  roadmap rows only) and skip forge traversal only when the receipt is current,
+  matches, records `Fully merged: yes`, and no `--force` is dated after it;
+  any of a changed graph, missing/older receipt, later `--force`, or an unmet
+  dependency fails closed to the full gate. Design fix: the fingerprint covers
+  only locally-derivable inputs — PR identities are receipt provenance, never
+  fingerprint input (else fast-path recompute could never match). The contract
+  is made testable by `scripts/dependency-gate.test.mjs` (10 cases: fast path +
+  every invalidation case + a `git hash-object --stdin` fidelity cross-check).
+  Because PREFLIGHT loads on every execute route, the seven execute maxima in
+  `SKILL_CONTEXT_BUDGETS.json` were recalibrated to the new steady state
+  (feature/small 9600/670, fix 9750/670, legacy 9400/660, final-pr 9500/660,
+  descope 9400/670, finding 10100/690); all 16 routes pass and stay far below
+  the 13284/866 baseline.
+- Remains: P3-4 (fake-forge PR-surface kill switches + merge-time source
   hash verification), P3-5 (receipt snapshots prove the exact per-phase gate
   sequence), P3-6 (bump-skill pass over execute-phase + changelogs).
 - Gotchas: SKILL.md step-3 conditional edit pushed the main estimate to 2863
@@ -75,7 +92,8 @@ Last reviewed: —
   skills/execute-phase/references/DESCOPE.md (new),
   skills/execute-phase/references/OPPORTUNISTIC_FINDING.md (new),
   skills/execute-phase/references/ISSUE_POLICY.md (deleted),
+  skills/execute-phase/references/PREFLIGHT.md,
   docs/workflow/SKILL_CONTEXT_BUDGETS.json, scripts/check-skill-context.mjs,
-  scripts/check-skill-context.test.mjs,
+  scripts/check-skill-context.test.mjs, scripts/dependency-gate.test.mjs (new),
   docs/features/21-workflow-contract-consolidation/{testing,decisions,progress}.md
-- Next: P3-3 — versioned dependency receipt | unit not finished
+- Next: P3-4 — fake-forge PR-surface kill switches | unit not finished
