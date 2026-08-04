@@ -33,3 +33,29 @@
   captured baselines): `plan-feature:scoped` 3346/258, `plan-feature:issue`
   5221/398, `plan-fix:issue` 3145/222. Execute/review/audit routes stay `null`
   until P3/P4 assign them maxima.
+
+## 2026-08-04 — Mode routes vs reality (P3-1)
+
+- The planned approach expected a single conditional `WORKFLOWS.md` loaded only
+  when the target artifacts require mode detail. Reality contradicted the plan:
+  the load condition is the route itself, not an artifact check, so the four
+  per-mode workflows (`WORKFLOWS_FEATURE.md`, `WORKFLOWS_SMALL_PHASED.md`,
+  `WORKFLOWS_FIX.md`, `WORKFLOWS_LEGACY.md`) are declared directly as the mode
+  route references; route resolution became route-authoritative.
+- `BATCH_AND_PORTABILITY` and `ISSUE_POLICY` do not load on mode routes; the
+  `final-pr` close-out route carries `ISSUE_POLICY` instead of a mode workflow.
+- The five execute routes carry reduced regression maxima (below the 13284/866
+  baseline): feature 9500/660, small 9500/660, fix 9700/660, legacy 9300/650,
+  final-pr 11000/740.
+
+## 2026-08-04 — Policy resources vs reality (P3-2)
+
+- `ISSUE_POLICY.md` (8538 B) was one mixed policy blob loaded on the final-pr
+  route; the P3-2 plan split it into three independently loaded resources. The
+  `execute-phase` entrypoint now loads **exactly one** policy per situation:
+  forge body → `FORGE_BODY.md` (final-pr route), descope → `DESCOPE.md`
+  (descope route), out-of-scope work → `OPPORTUNISTIC_FINDING.md` (finding
+  route). The three policy routes each record their required policy resource.
+- Replacing ISSUE_POLICY (2135 est) with FORGE_BODY (513 est) dropped final-pr
+  to 9071/621, so its maxima were tightened from 11000/740 to 9500/660; the new
+  descope (9027/631) and finding (9719/655) routes got 9500/660 and 9800/680.
