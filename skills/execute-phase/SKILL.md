@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.13.1
+version: 2.13.2
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -18,7 +18,7 @@ description: >
 Three modes:
 
 - **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
-- **single-pass unit** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): execute its SPEC's `## Phases` **one phase per invocation**; a SPEC without `## Phases` runs end-to-end in one pass (legacy fallback — see the mode workflows).
+- **single-pass unit** — a small feature (SPEC `Size: XS/S`, only a `SPEC.md`): run its SPEC's `## Phases` **one phase per invocation**; no `## Phases` → end-to-end in one pass (legacy fallback).
 - **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`: same phased consumption and legacy fallback.
 
 ## Turn contract — every invocation, verify before ending the turn
@@ -42,10 +42,10 @@ Three modes:
      run counts as NOT committed.
 ✓ 6. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
      `gh pr create` were EXECUTED and **the PR URL is printed in the chat**
-     (not every agent shows open PRs — the link in the chat is the contract).
+     (the chat link is the contract).
      The PR body is NEVER empty: what it does, why, evidence, and
      `Closes #<n>` when issue-born. The body is passed with `--body-file`
-     (real Markdown, NO `\`-escaped backticks — see Issue policy). AND the roadmap row (or fix-index entry)
+      (real Markdown, NO `\`-escaped backticks — see Forge body policy). AND the roadmap row (or fix-index entry)
      was updated to `done · [#<pr>](<pr-url>)` in a follow-up
      `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
      without its PR link is an UNFINISHED unit. Unit not finished? Then
@@ -62,7 +62,7 @@ Three modes:
      Spanish prompt still produces English commits/PRs/issues unless one of
      the first two says otherwise.
 ✓ 9. Descope guard applied to every issue created this turn (see *Descope
-     guard* under *Issue policy*): each classified discovered vs. descope; any
+      guard*): each classified discovered vs. descope; any
      descope has a user-approved, dated `## Amendments` entry in the governing
      SPEC created BEFORE the issue, and the issue links it. No issue created
      this turn is the first record of a descope. No issues created this turn?
@@ -126,12 +126,14 @@ only the listed files; every resource is one hop from this file.
    and stop on any contracted blocker before editing. This mandatory route owns
    the `docs/workflow/REPOSITORY_STATE.md` and Architectural invariants gates.
 2. Before implementation: read [execution contract](references/EXECUTION_CONTRACT.md),
-   then select **exactly one** mode from the target artifacts and read only its
+   then select **exactly one** mode from the artifacts and read only its
    workflow: [feature](references/WORKFLOWS_FEATURE.md), [small/phased](references/WORKFLOWS_SMALL_PHASED.md),
    [`--fix`](references/WORKFLOWS_FIX.md), or [legacy](references/WORKFLOWS_LEGACY.md)
    (SPEC without `## Phases`). Do not load another mode's workflow.
-3. Only when creating a forge body, discovering out-of-scope work, or considering
-   an issue: read [issue and finding policy](references/ISSUE_POLICY.md).
+3. Read the one policy your situation needs (each loads alone):
+   - writing a forge body → [forge body policy](references/FORGE_BODY.md)
+   - creating an issue → [descope guard](references/DESCOPE.md) first
+   - finding out-of-scope work → [opportunistic finding policy](references/OPPORTUNISTIC_FINDING.md)
 4. Before writing `progress.md`: read the fixed [handoff schema](references/HANDOFF.md).
 5. For implementation guidance and review/finish routing: read
    [closeout](references/CLOSEOUT.md). On a folded review/audit finding also read

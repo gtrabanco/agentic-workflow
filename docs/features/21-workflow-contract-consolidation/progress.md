@@ -39,3 +39,43 @@ Last reviewed: —
   skills/execute-phase/references/PREFLIGHT.md, docs/workflow/SKILL_CONTEXT_BUDGETS.json,
   docs/features/21-workflow-contract-consolidation/{testing,TASKS,decisions,progress}.md
 - Next: P3 — Execution route consolidation | unit not finished
+
+## P3 — 2026-08-04
+
+- Done: Execution route consolidation (P3-1) — `WORKFLOWS.md` split into four
+  per-mode resources (feature, small/phased, fix, legacy); `execute-phase`
+  (2.13.1) entrypoint selects **exactly one** mode from the target artifacts
+  before loading mode detail; route resolution is now route-authoritative (a
+  route with a `references` object loads only the listed files); the five
+  execute routes gain reduced regression maxima in `SKILL_CONTEXT_BUDGETS.json`;
+  `BATCH_AND_PORTABILITY` and `ISSUE_POLICY` do not load on mode routes; the
+  context-checker test suite gains per-route mode-selection fixtures. Committed
+  as `5c71105` (`feat(workflow): split execute-phase workflows into per-mode routes`).
+- Done: Execution policy consolidation (P3-2) — `ISSUE_POLICY.md` (8538 B)
+  split into `FORGE_BODY.md` (2052 B, final-pr route), `DESCOPE.md` (1874 B,
+  descope route), and `OPPORTUNISTIC_FINDING.md` (4643 B, finding route);
+  `execute-phase` (2.13.2) loads exactly one policy per situation; the three
+  policy routes record their required resource with reduced maxima (final-pr
+  tightened 11000/740 → 9500/660 after the ~1615 est drop); policy-selection
+  fixtures added; all 16 routes pass; SKILL.md main budget re-verified at
+  2799 est / 177 lines.
+- Remains: P3-3 (versioned dependency receipt + fail-closed local fingerprint
+  fast path), P3-4 (fake-forge PR-surface kill switches + merge-time source
+  hash verification), P3-5 (receipt snapshots prove the exact per-phase gate
+  sequence), P3-6 (bump-skill pass over execute-phase + changelogs).
+- Gotchas: SKILL.md step-3 conditional edit pushed the main estimate to 2863
+  (over 2800); ~113 bytes of prose were trimmed (single-pass unit summary,
+  PR-URL contract parenthetical, step-2 wording) to land at 2799 — only 1 est
+  of headroom, so future SKILL.md edits must stay small.
+- Files: skills/execute-phase/SKILL.md, skills/execute-phase/references/WORKFLOWS_FEATURE.md,
+  skills/execute-phase/references/WORKFLOWS_SMALL_PHASED.md,
+  skills/execute-phase/references/WORKFLOWS_FIX.md, skills/execute-phase/references/WORKFLOWS_LEGACY.md,
+  skills/execute-phase/references/WORKFLOWS.md (deleted),
+  skills/execute-phase/references/FORGE_BODY.md (new),
+  skills/execute-phase/references/DESCOPE.md (new),
+  skills/execute-phase/references/OPPORTUNISTIC_FINDING.md (new),
+  skills/execute-phase/references/ISSUE_POLICY.md (deleted),
+  docs/workflow/SKILL_CONTEXT_BUDGETS.json, scripts/check-skill-context.mjs,
+  scripts/check-skill-context.test.mjs,
+  docs/features/21-workflow-contract-consolidation/{testing,decisions,progress}.md
+- Next: P3-3 — versioned dependency receipt | unit not finished

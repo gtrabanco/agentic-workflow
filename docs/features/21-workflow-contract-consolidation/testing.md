@@ -95,3 +95,36 @@ Fixture evidence:
 - The context-checker test suite adds per-route `references` fixtures: each mode route selects exactly one `WORKFLOWS_*.md`, `final-pr` selects none, and undeclared-skill / missing-file / directory-escaping route references fail closed.
 - `scripts/check-skill-context.mjs` route resolution is now route-authoritative: a route with a `references` object loads only the listed files for that skill; routes without one fall back to the full `references/` scan (unchanged for plan/review/audit routes).
 
+#### P3-2 — split issue policy into conditional resources
+
+Gate: `node scripts/check-skill-context.mjs --routes` → `PASS route budgets: 16 routes`, exit 0 (14 routes + the two new policy routes). All execute routes pass their reduced maxima.
+
+`ISSUE_POLICY.md` (8538 B) split into three independently loaded policy resources; the `execute-phase` entrypoint loads **exactly one** policy per situation:
+- `FORGE_BODY.md` (2052 B) — forge body policy (`--body-file`, Markdown-not-shell, language precedence); loaded only on the `final-pr` close-out route.
+- `DESCOPE.md` (1874 B) — descope guard (STOP before creating an issue; user-approved dated `## Amendments` row; single authoritative log for `audit-pr`/`product-audit`).
+- `OPPORTUNISTIC_FINDING.md` (4643 B) — out-of-scope work policy (Autofix ≤15 lines/≤2 files; Opportunistic Fix ≤40 lines/≤3 files; Create Issue; `decisions.md` record format).
+
+Route totals after P3-2 (measured `--routes`, all 16 exit 0):
+
+| Route | Skills | Files | Estimate | Lines | vs baseline |
+|---|---|---|---|---|---|
+| `execute-phase:feature` | execute-phase | 7 | 9209 | 630 | below 13284/866 |
+| `execute-phase:small` | execute-phase | 7 | 9198 | 638 | below 13284/866 |
+| `execute-phase:fix` | execute-phase | 7 | 9379 | 638 | below 13284/866 |
+| `execute-phase:legacy` | execute-phase | 7 | 8993 | 623 | below 13284/866 |
+| `execute-phase:final-pr` | execute-phase | 7 | 9071 | 621 | below 13284/866 |
+| `execute-phase:descope` | execute-phase | 7 | 9027 | 631 | below 13284/866 |
+| `execute-phase:finding` | execute-phase | 7 | 9719 | 655 | below 13284/866 |
+
+`final-pr` dropped ~1615 est vs P3-1 (ISSUE_POLICY 2135 est → FORGE_BODY 513 est); the P3-1 maxima for it (11000/740) were tightened to 9500/660. The two new policy routes were added:
+
+- `execute-phase:descope`: routeEstimateMax 9500, routeLinesMax 660 (base + `DESCOPE.md`)
+- `execute-phase:finding`: routeEstimateMax 9800, routeLinesMax 680 (base + `OPPORTUNISTIC_FINDING.md`)
+
+SKILL.md main budget was re-verified after the step-3 conditional edit: 2799 est (≤ 2800), 177 lines.
+
+Fixture evidence:
+- The context-checker test suite adds per-route policy fixtures: `final-pr` records exactly one policy resource (`FORGE_BODY.md`), `descope` records only `DESCOPE.md`, `finding` records only `OPPORTUNISTIC_FINDING.md`, each referenced file exists, and `ISSUE_POLICY.md` no longer exists in `references/`.
+
+
+
