@@ -191,4 +191,28 @@ runFixtureRoute(
   assert.equal(finalPrRefs.filter((n) => n.startsWith("WORKFLOWS_")).length, 0, "final-pr must not select a mode workflow");
 }
 
+// Policy route selection: final-pr, descope, and finding each record only its
+// required policy resource (forge body / descope / opportunistic finding).
+
+{
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const policyFiles = ["FORGE_BODY.md", "DESCOPE.md", "OPPORTUNISTIC_FINDING.md"];
+  const policyFor = {
+    "execute-phase:final-pr": "FORGE_BODY.md",
+    "execute-phase:descope": "DESCOPE.md",
+    "execute-phase:finding": "OPPORTUNISTIC_FINDING.md",
+  };
+  const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
+  for (const [route, expected] of Object.entries(policyFor)) {
+    const refs = manifest.routes[route].references["execute-phase"];
+    const selected = refs.filter((n) => policyFiles.includes(n));
+    assert.equal(selected.length, 1, `${route} must record exactly one policy resource`);
+    assert.equal(selected[0], expected, `${route} must record its required policy resource`);
+    for (const name of refs) assert(fs.existsSync(path.join(executeRefsDir, name)), `missing referenced file: ${name}`);
+  }
+  assert.ok(!manifest.routes["execute-phase:final-pr"].references["execute-phase"].includes("DESCOPE.md"), "final-pr must not load descope");
+  assert.ok(!manifest.routes["execute-phase:final-pr"].references["execute-phase"].includes("OPPORTUNISTIC_FINDING.md"), "final-pr must not load finding policy");
+  assert.ok(!fs.existsSync(path.join(executeRefsDir, "ISSUE_POLICY.md")), "ISSUE_POLICY.md must be split");
+}
+
 console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, and route-reference failures rejected");

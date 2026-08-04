@@ -78,11 +78,29 @@
     "execute-phase:final-pr": {
       "skills": ["execute-phase"],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "ISSUE_POLICY.md"]
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "FORGE_BODY.md"]
       },
       "templates": [],
-      "routeEstimateMax": 11000,
-      "routeLinesMax": 740
+      "routeEstimateMax": 9500,
+      "routeLinesMax": 660
+    },
+    "execute-phase:descope": {
+      "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "DESCOPE.md"]
+      },
+      "templates": [],
+      "routeEstimateMax": 9500,
+      "routeLinesMax": 660
+    },
+    "execute-phase:finding": {
+      "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "OPPORTUNISTIC_FINDING.md"]
+      },
+      "templates": [],
+      "routeEstimateMax": 9800,
+      "routeLinesMax": 680
     },
     "review-change:default-backend": {
       "skills": ["review-change"],
