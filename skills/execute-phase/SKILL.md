@@ -18,7 +18,7 @@ description: >
 Three modes:
 
 - **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
-- **single-pass unit** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): execute its SPEC's `## Phases` **one phase per invocation**; a SPEC without `## Phases` runs end-to-end in one pass (legacy fallback — see *Workflows*).
+- **single-pass unit** — a small feature (SPEC `Size: XS/S`; only a `SPEC.md`, no planning artifacts): execute its SPEC's `## Phases` **one phase per invocation**; a SPEC without `## Phases` runs end-to-end in one pass (legacy fallback — see the mode workflows).
 - **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`: same phased consumption and legacy fallback.
 
 ## Turn contract — every invocation, verify before ending the turn
@@ -125,9 +125,11 @@ only the listed files; every resource is one hop from this file.
 1. Every invocation: read [preflight gates](references/PREFLIGHT.md), run them,
    and stop on any contracted blocker before editing. This mandatory route owns
    the `docs/workflow/REPOSITORY_STATE.md` and Architectural invariants gates.
-2. Before implementation: read [execution contract](references/EXECUTION_CONTRACT.md)
-   plus [mode workflows](references/WORKFLOWS.md). Select feature, phased XS/S,
-   legacy single-pass, or fix from the target artifacts; do not load another mode.
+2. Before implementation: read [execution contract](references/EXECUTION_CONTRACT.md),
+   then select **exactly one** mode from the target artifacts and read only its
+   workflow: [feature](references/WORKFLOWS_FEATURE.md), [small/phased](references/WORKFLOWS_SMALL_PHASED.md),
+   [`--fix`](references/WORKFLOWS_FIX.md), or [legacy](references/WORKFLOWS_LEGACY.md)
+   (SPEC without `## Phases`). Do not load another mode's workflow.
 3. Only when creating a forge body, discovering out-of-scope work, or considering
    an issue: read [issue and finding policy](references/ISSUE_POLICY.md).
 4. Before writing `progress.md`: read the fixed [handoff schema](references/HANDOFF.md).

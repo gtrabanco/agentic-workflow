@@ -76,8 +76,9 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
 **Legacy-SPEC carve-out (check this first, before anything else in this
 section):** if the target SPEC has **no `## Phases` section**, skip this
 guard entirely — no lint run, no STOP — and fall straight through to the
-*Workflows* section's legacy single-pass flow ("A SPEC without `## Phases`
-… runs the legacy flow … end-to-end in one pass"). The guard below applies
+legacy single-pass flow ("A SPEC without `## Phases`
+… runs the legacy flow … end-to-end in one pass" — see
+[legacy workflow](WORKFLOWS_LEGACY.md)). The guard below applies
 only to a SPEC that carries a `## Phases` ledger.
 
 Before touching any code, run the canonical 8-box phase-lint owned by

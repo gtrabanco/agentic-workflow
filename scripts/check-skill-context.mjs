@@ -75,21 +75,39 @@ const nestedEntries = (directory, relative = "") => {
   });
 };
 
-const resolveRouteFiles = (routeSkills) => {
+const resolveRouteFiles = (routeDef) => {
   const files = [];
   const seen = new Set();
-  for (const skill of routeSkills) {
+  for (const skill of routeDef.skills) {
     const skillDir = path.join(repoRoot, "skills", skill);
     const skillFile = path.join(skillDir, "SKILL.md");
     if (!seen.has(skillFile)) {
       files.push(skillFile);
       seen.add(skillFile);
     }
-    const body = fs.readFileSync(skillFile, "utf8");
-    const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
     const referencesDir = path.join(skillDir, "references");
-    if (fs.existsSync(referencesDir)) {
-      for (const name of fs.readdirSync(referencesDir).filter((n) => n.endsWith(".md")).sort()) {
+    const explicitRefs = routeDef.references?.[skill];
+    if (Array.isArray(explicitRefs)) {
+      for (const name of explicitRefs) {
+        const refPath = path.join(referencesDir, name);
+        if (!seen.has(refPath)) {
+          files.push(refPath);
+          seen.add(refPath);
+        }
+      }
+    } else {
+      const body = fs.readFileSync(skillFile, "utf8");
+      const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
+      if (fs.existsSync(referencesDir)) {
+        for (const name of fs.readdirSync(referencesDir).filter((n) => n.endsWith(".md")).sort()) {
+          const refPath = path.join(referencesDir, name);
+          if (!seen.has(refPath)) {
+            files.push(refPath);
+            seen.add(refPath);
+          }
+        }
+      }
+      for (const name of linked) {
         const refPath = path.join(referencesDir, name);
         if (!seen.has(refPath)) {
           files.push(refPath);
@@ -97,15 +115,27 @@ const resolveRouteFiles = (routeSkills) => {
         }
       }
     }
-    for (const name of linked) {
-      const refPath = path.join(referencesDir, name);
-      if (!seen.has(refPath)) {
-        files.push(refPath);
-        seen.add(refPath);
+  }
+  return files;
+};
+
+const validateRouteReferences = (routeName, routeDef) => {
+  const failures = [];
+  if (!routeDef.references) return failures;
+  for (const skill of Object.keys(routeDef.references)) {
+    if (!routeDef.skills.includes(skill)) {
+      failures.push(`${routeName}: route declares references for undeclared skill: ${skill}`);
+      continue;
+    }
+    for (const name of routeDef.references[skill]) {
+      if (name.includes("..") || name.includes("/") || name.includes("\\")) {
+        failures.push(`${routeName}: route reference must be a flat file name: ${name}`);
+      } else if (!name.endsWith(".md")) {
+        failures.push(`${routeName}: route reference must be a markdown file: ${name}`);
       }
     }
   }
-  return files;
+  return failures;
 };
 
 const computeRouteMetrics = (files) => {
@@ -152,7 +182,13 @@ if (routeMode) {
     }
     if (hasUnknown) continue;
 
-    const resolvedFiles = resolveRouteFiles(routeDef.skills);
+    const referenceFailures = validateRouteReferences(routeName, routeDef);
+    if (referenceFailures.length > 0) {
+      routeFailures.push(...referenceFailures);
+      continue;
+    }
+
+    const resolvedFiles = resolveRouteFiles(routeDef);
     const metrics = computeRouteMetrics(resolvedFiles);
     if (metrics.error) {
       routeFailures.push(`${routeName}: ${metrics.error}`);

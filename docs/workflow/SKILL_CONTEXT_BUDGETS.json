@@ -41,33 +41,48 @@
     },
     "execute-phase:feature": {
       "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FEATURE.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+      },
       "templates": [],
-      "routeEstimateMax": null,
-      "routeLinesMax": null
+      "routeEstimateMax": 9500,
+      "routeLinesMax": 660
     },
     "execute-phase:small": {
       "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_SMALL_PHASED.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+      },
       "templates": [],
-      "routeEstimateMax": null,
-      "routeLinesMax": null
+      "routeEstimateMax": 9500,
+      "routeLinesMax": 660
     },
     "execute-phase:fix": {
       "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FIX.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+      },
       "templates": [],
-      "routeEstimateMax": null,
-      "routeLinesMax": null
+      "routeEstimateMax": 9700,
+      "routeLinesMax": 660
     },
     "execute-phase:legacy": {
       "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_LEGACY.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+      },
       "templates": [],
-      "routeEstimateMax": null,
-      "routeLinesMax": null
+      "routeEstimateMax": 9300,
+      "routeLinesMax": 650
     },
     "execute-phase:final-pr": {
       "skills": ["execute-phase"],
+      "references": {
+        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "ISSUE_POLICY.md"]
+      },
       "templates": [],
-      "routeEstimateMax": null,
-      "routeLinesMax": null
+      "routeEstimateMax": 11000,
+      "routeLinesMax": 740
     },
     "review-change:default-backend": {
       "skills": ["review-change"],
