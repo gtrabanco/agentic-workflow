@@ -165,6 +165,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.13.2 | 2026-08-05 | parche | Divide el monolito `WORKFLOWS.md` en recursos de workflow por modo (feature, small/phased, fix, legacy) cargados exactamente uno a la vez, divide `ISSUE_POLICY.md` en tres recursos de política cargados de forma independiente (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) elegidos según la situación, y añade un recibo de dependencia versionado con una ruta rápida de huella local fail-closed. Conserva el comportamiento: cada casilla universal de seguridad de ejecución permanece residente en el contrato de turno compacto, cada una mapeada read-verified a su recurso dueño único, y cada ruta de ejecución sigue pasando con resultados observables sin cambios. |
 | 2.13.1 | 2026-08-02 | parche | Mueve el esquema fijo de handoff de `progress.md` tras una ruta explícita de un salto, conservando todos sus campos y reglas de cierre mientras reduce el contexto de activación directa. |
 | 2.13.0 | 2026-07-31 | menor | La carga progresiva reduce la estimación de activación de la skill más usada de unos 13k a 3k: las reglas universales de turno/handoff quedan en `SKILL.md`, mientras preflight, gates de ejecución, política de issues, workflows de modo, closeout/folding y portabilidad por lotes cargan solo cuando hacen falta. |
 | 2.12.0 | 2026-07-31 | menor | Añade una puerta de invariantes arquitectónicas antes de editar con clasificación basada en evidencia, parada para decisión explícita y compatibilidad NRS opcional. |
@@ -526,6 +527,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-05 — consolidación del contrato de ejecución (feature 21, P3).**
+  `execute-phase` 2.13.2 divide su monolito `WORKFLOWS.md` en cuatro recursos de
+  workflow por modo (feature, small/phased, fix, legacy) cargados exactamente uno
+  a la vez, divide `ISSUE_POLICY.md` en tres recursos de política cargados de
+  forma independiente (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`)
+  y añade un recibo de dependencia versionado con una ruta rápida de huella local
+  fail-closed. Las once casillas universales de seguridad de ejecución siguen
+  residentes en el contrato de turno compacto, cada una mapeada read-verified a
+  su recurso dueño único; conserva el comportamiento.
 
 - **2026-08-04 — consolidación del contrato de planificación (feature 21, P2).**
   Los cuatro entrypoints de planificación (`plan-feature` 3.4.0, `plan-fix`

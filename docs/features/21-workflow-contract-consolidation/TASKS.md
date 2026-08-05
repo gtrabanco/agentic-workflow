@@ -70,7 +70,7 @@ named contract comparison and cited file evidence in `testing.md`.
 - [x] Preserve route-specific observable behavior without loading its contract
       on unrelated routes.
       Check: existing and new execute fixtures pass with unchanged observable outcomes.
-- [ ] Run `bump-skill` for `execute-phase` and synchronize its docs/migration
+- [x] Run `bump-skill` for `execute-phase` and synchronize its docs/migration
       surfaces.
       Check: `node scripts/check-skill-context.mjs --routes --route execute-phase:feature --route execute-phase:final-pr` exits 0 below baseline.
   Done-when: `node scripts/check-skill-context.mjs --routes --route execute-phase:feature --route execute-phase:final-pr` → both routes pass and execution fixtures are green.

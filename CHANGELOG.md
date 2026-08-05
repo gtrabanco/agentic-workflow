@@ -164,6 +164,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.13.2 | 2026-08-05 | patch | Splits the monolith `WORKFLOWS.md` into per-mode workflow resources (feature, small/phased, fix, legacy) loaded exactly one at a time, splits `ISSUE_POLICY.md` into three independently loaded policy resources (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) chosen by situation, and adds a versioned dependency receipt with a fail-closed local fingerprint fast path. Behavior-preserving: every universal execution safety box stays resident in the compact Turn contract, each mapped read-verified to its unique owner resource, and every execute route still passes with unchanged observable outcomes. |
 | 2.13.1 | 2026-08-02 | patch | Moves the fixed `progress.md` handoff schema behind an explicit one-hop route, preserving every field and close-out rule while reducing direct activation context. |
 | 2.13.0 | 2026-07-31 | minor | Progressive loading reduces the most-used skill's activation estimate from about 13k to 3k: universal turn/handoff rules stay in `SKILL.md`, while preflight, execution gates, issue policy, mode workflows, closeout/folding, and batch portability load only when required. |
 | 2.12.0 | 2026-07-31 | minor | Adds a pre-edit architectural-invariant gate with evidence-based classification, explicit-decision stop routing, and optional NRS compatibility. |
@@ -525,6 +526,15 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-05 — execution contract consolidation (feature 21, P3).** `execute-phase`
+  2.13.2 splits its monolith `WORKFLOWS.md` into four per-mode workflow resources
+  (feature, small/phased, fix, legacy) loaded exactly one at a time, splits
+  `ISSUE_POLICY.md` into three independently loaded policy resources
+  (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`), and adds a versioned
+  dependency receipt with a fail-closed local fingerprint fast path. All eleven
+  universal execution safety boxes stay resident in the compact Turn contract,
+  each mapped read-verified to one unique owner resource; behavior-preserving.
 
 - **2026-08-04 — planning contract consolidation (feature 21, P2).** The four
   planning entrypoints (`plan-feature` 3.4.0, `plan-fix` 2.5.0,
