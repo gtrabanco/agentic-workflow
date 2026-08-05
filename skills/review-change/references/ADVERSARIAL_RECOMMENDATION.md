@@ -29,4 +29,3 @@ available reviewers share one model family (the third reviewer buys back some
 of the decorrelation a single family can't provide). `N>3` is **explicitly
 discouraged** — with the ≥1 inclusion threshold in the synthesis contract,
 reviewers beyond 3 mostly add dedupe work at merge time, not new findings.
-
