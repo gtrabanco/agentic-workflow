@@ -29,8 +29,9 @@ const parseReview = (body) => {
 };
 
 const newestReceipt = (comments) => {
-  for (const comment of comments ?? []) {
-    const receipt = parseReview(comment.body);
+  const list = comments ?? [];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const receipt = parseReview(list[i].body);
     if (receipt && receipt.contract === REVIEW_CONTRACT) return receipt;
   }
   return null;
@@ -76,8 +77,9 @@ const auditVerdict = ({ comments, headSha, gates = {} }) => {
 };
 
 const newestAuditComment = (comments) => {
-  for (const comment of comments ?? []) {
-    const match = AUDIT_MARKER_RE.exec(comment.body ?? "");
+  const list = comments ?? [];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const match = AUDIT_MARKER_RE.exec(list[i].body ?? "");
     if (match) return match[1];
   }
   return null;
@@ -156,6 +158,20 @@ test("newest audit-pr marker wins: older SHA comment is re-posted, newer SHA ski
   const comments = [{ body: `<!-- audit-pr:merge-ready sha=${oldSha} -->` }];
   assert.equal(mergeCommentAction({ verdict: "MERGE-READY", comments, headSha }).action, "post");
   assert.equal(mergeCommentAction({ verdict: "MERGE-READY", comments: [{ body: `<!-- audit-pr:merge-ready sha=${headSha} -->` }], headSha }).action, "skip");
+});
+
+test("newest* helpers select last matching (newest wins)", () => {
+  const sha1 = "a".repeat(40);
+  const sha2 = "b".repeat(40);
+  const c1 = { body: `<!-- audit-pr:merge-ready sha=${sha1} -->` };
+  const c2 = { body: `<!-- audit-pr:merge-ready sha=${sha2} -->` };
+  assert.equal(newestAuditComment([c1, c2]), sha2);
+  assert.equal(newestAuditComment([c2, c1]), sha1);
+  // also for review receipt newest in this file
+  const r1 = { body: reviewBody({ sha: sha1, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) };
+  const r2 = { body: reviewBody({ sha: sha2, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) };
+  // receiptStatus uses it; last wins means for a head matching the last, current
+  assert.equal(receiptStatus([r1, r2], sha2).status, "current");
 });
 
 test("comment marker integrity: no hand-escaping artifacts, no shell interpolation", () => {
