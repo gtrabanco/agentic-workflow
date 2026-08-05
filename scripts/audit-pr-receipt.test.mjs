@@ -67,7 +67,7 @@ const auditVerdict = ({ comments, headSha, gates = {} }) => {
       blockers: [status.reason],
     };
   }
-  const blockers = GATE_NAMES.filter((name) => gates[name] !== "pass" && gates[name] !== undefined && gates[name] !== null)
+  const blockers = GATE_NAMES.filter((name) => gates[name] !== "pass")
     .map((name) => `gate ${name} failed`);
   if (blockers.length > 0) {
     return { verdict: "BLOCKED", reason: blockers.join("; "), route: null, gatesEvaluated: true, blockers };
@@ -183,6 +183,17 @@ test("fixture matrix covers PASS/FAIL/absent/stale and every comment action", ()
     mergeCommentAction({ verdict: "MERGE-READY", comments: [{ body: `<!-- audit-pr:merge-ready sha=${"c".repeat(40)} -->` }], headSha: sha }),
   ];
   assert.deepEqual(actions.map((a) => a.action), ["post", "none", "skip", "post"]);
+});
+
+test("missing required gate (omitted from gates map) blocks (fail-closed)", () => {
+  const sha = "a".repeat(40);
+  const reviews = [{ body: reviewBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
+  const partial = { "acceptance-coverage": "pass" }; // many required gates absent
+  const result = auditVerdict({ comments: reviews, headSha: sha, gates: partial });
+  assert.equal(result.verdict, "BLOCKED");
+  assert.equal(result.gatesEvaluated, true);
+  assert.ok(result.blockers.length > 0, "omitted gates must produce blockers");
+  assert.ok(result.blockers.some((b) => /traceability|phases|closure/.test(b)), "at least one omitted gate reported");
 });
 
 test("pure: identical inputs yield identical verdicts and actions (no forge state, no side effects)", () => {
