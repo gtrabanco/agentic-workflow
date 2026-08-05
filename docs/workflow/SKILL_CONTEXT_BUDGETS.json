@@ -104,24 +104,36 @@
     },
     "review-change:default-backend": {
       "skills": ["review-change"],
+      "references": {
+        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_RECOMMENDATION.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
+      },
       "templates": [],
       "routeEstimateMax": null,
       "routeLinesMax": null
     },
     "review-change:default-web": {
       "skills": ["review-change"],
+      "references": {
+        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_RECOMMENDATION.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
+      },
       "templates": [],
       "routeEstimateMax": null,
       "routeLinesMax": null
     },
     "review-change:adversarial": {
       "skills": ["review-change"],
+      "references": {
+        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_SETUP.md", "ADVERSARIAL_SYNTHESIS.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
+      },
       "templates": [],
       "routeEstimateMax": null,
       "routeLinesMax": null
     },
     "review-change:synthesize": {
       "skills": ["review-change"],
+      "references": {
+        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_SYNTHESIS.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
+      },
       "templates": [],
       "routeEstimateMax": null,
       "routeLinesMax": null

@@ -298,17 +298,19 @@ puerta de merge se ejecutan entonces sobre el PR:
     de arquitectura, código eliminable/muerto (menos el código de feature
     planificada), seguridad, incompatibilidades de plataforma/runtime,
     sobre-ingeniería, riesgos de bundle, y tests (fallando **y** faltantes),
-    cada uno clasificado como fix-now / postpone / ignore /
-    intentional-tradeoff con el PORQUÉ, riesgo de implementación, impacto a
+    cada uno clasificado como fix-now / replan-in-unit / decision-required /
+    proposal / ignore con el PORQUÉ, riesgo de implementación, impacto a
     largo plazo, y una marca de optimización prematura.
   - `/code-review`, `/security-review`, `/verify`, y — para UI —
     `design-review`, `accessibility-review`, `brand-review` (solo las
     aplicables; nunca una pasada irrelevante).
 
-  Solo hallazgos, sin refactorizar; `fix-now` se enruta a `plan-fix` (o se
-  incorpora a la fase actual si es trabajo aún sin fusionar); **cada hallazgo
-  que no es fix-now pasa por `triage-issue`** (issue / decisión documentada /
-  descarte justificado), nunca se pierde en silencio.
+  Solo hallazgos, sin refactorizar; `fix-now` se incorpora a la fase actual
+  (nunca un issue rastreado, nunca `plan-fix`); `replan-in-unit` añade nuevas
+  fases confirmadas por el usuario al SPEC de la unidad; `decision-required`
+  bloquea hasta que el usuario decida; las **proposals** independientes se
+  agrupan para que el usuario las enrute a `triage-issue`, nunca se pierden y
+  la revisión no crea backlog.
 - **`audit-pr`** — la puerta de merge. Criterios de aceptación cumplidos,
   todas las fases completas, docs/tests/CI en verde (**nunca fusionar con
   docs pendientes**), `Closes #N` presente, la entrada de issue/índice de

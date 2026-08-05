@@ -20,7 +20,7 @@ Non-blocking nits:
   - <minor item> — <pointer>
 
 Before merge, a human should still verify:
-  - <manual-verification item from review-change>
+  - <manual-verification item from the review-change receipt>
 
 → Next:
   Print the ONE verdict bullet that matches, THEN — if a closure warning fired —
@@ -31,6 +31,8 @@ Before merge, a human should still verify:
   · MERGE-READY inside active ship-roadmap --fullauto → return this SHA-bound
     verdict to the conductor; it runs the transient merge wrapper
   · BLOCKED → clear the top blocker (routed above), then re-run /audit-pr
+  · Receipt absent/stale blocker → /review-change (re-review at the head), then
+    re-run /audit-pr — never re-review from this audit
   · Closure warning (in addition to the verdict above) or a closure blocker →
     /design-feature <slug> — fills the missing closure rows (upsert, destroys
     nothing) before further work on this feature is planned; re-run /audit-pr after

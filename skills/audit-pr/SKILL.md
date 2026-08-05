@@ -1,28 +1,39 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 4.2.0
+version: 4.3.0
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Audit a whole PR against the delivery contract and return MERGE-READY or
-  evidenced blockers with the full URL. Posts a SHA-bound ready comment; never
-  edits or merges. Triggers: "audit-pr", "is this PR ready", "merge gate".
+  evidenced blockers with the full URL. Consumes the current review-change
+  REVIEW-PASS receipt instead of re-running review axes; posts a SHA-bound
+  ready comment; never edits or merges. Triggers: "audit-pr", "is this PR
+  ready", "merge gate".
 ---
 
 # Audit PR
 
 The manager's **"can this ship?"** gate. A read-first audit over the *entire* PR —
-its SPEC, all phases, docs, tests, CI, and review axes — that returns a single
+its SPEC, all phases, docs, CI status, and review receipt — that returns a single
 verdict: **merge-ready** or a ranked list of **blockers**. **Never edits,
 refactors, or merges.** The human merges, or an active
 `ship-roadmap --fullauto` invocation consumes the SHA-bound verdict and performs
 its separate fail-closed merge step.
 
+`audit-pr` does **not** re-review the diff. It consumes the current SHA-bound
+`review-change` receipt (the `REVIEW-PASS` comment marker) as the review
+evidence, blocks on a missing or stale receipt routed to `/review-change`, and
+independently evaluates only the delivery gates below.
+
 ## Turn contract — verify before ending the turn
 
 ```
+✓ The review receipt was consumed: newest matching `review-change:pass` marker
+  fetched; absent → blocker routed to `/review-change`, stale → blocker routed
+  to `/review-change`, current → its scope/axes/acceptance coverage/manual
+  checks acknowledged without re-review
 ✓ The verdict block was printed in the fixed format: `VERDICT: MERGE-READY | BLOCKED` with ranked, evidenced blockers
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is
@@ -32,6 +43,8 @@ its separate fail-closed merge step.
   never a commit-message tag. BLOCKED → no comment posted
 ✓ Nothing was edited, refactored, or merged; merge authorization is outside
   this skill and cannot be inherited from docs or an earlier session
+✓ No review pass was composed or reconstructed: a missing/stale receipt is a
+  blocker, never a prompt to re-run review axes from this skill
 ✓ Closure integrity was evaluated and its result stated explicitly: pass /
   blocker / warning / n-a (fix-governed PRs are always n-a; never skipped
   silently)
@@ -50,12 +63,14 @@ first on purpose).
 ## When to use
 
 - After the work is "done" and before merging — the final gate once `review-change`
-  is clean and all phases are committed.
+  is clean (its `REVIEW-PASS` receipt is posted) and all phases are committed.
 - When you want one defensible answer to "is this PR actually ready?" rather than
   trusting that every loose end was tied off.
 
-`review-change` reviews the *diff* for quality; `audit-pr` audits the *PR as a unit
-of delivery* — that everything the SPEC promised is present, traceable, and green.
+`review-change` reviews the *diff* for quality and posts its SHA-bound receipt;
+`audit-pr` consumes that receipt and audits the *PR as a unit of delivery* — that
+everything the SPEC promised is present, traceable, and green. A missing or stale
+receipt is a blocker routed back to `/review-change`, never re-litigated here.
 
 ## Scope
 
@@ -66,9 +81,10 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
 ## Step 0 — Discover the project & the PR (always first)
 
 1. **Project contract.** Per the agent guide's **Workflow conventions** +
-   **documentation map**, then read what THIS skill needs: the roadmap, the
-   feature/fix templates, and the project's verification gate (type-check / tests
-   / build / CI).
+   **documentation map**, then read what THIS skill needs: the roadmap and the
+   project's verification gate (type-check / tests / build / CI). Do **not** load
+   full feature/fix templates — the SPEC below is the only planning artifact this
+   audit reads (AC 14).
 2. **The PR.** Identify it and read it in full (forge CLI per the project's
    Workflow conventions — examples use `gh`):
    ```sh
@@ -82,15 +98,38 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
    `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md`, `decisions.md`) when
    present. The SPEC is the source of truth for what "done" means.
 
+## Step 1 — Consume the review receipt (always, before any gate)
+
+The review evidence is the SHA-bound `REVIEW-PASS` receipt `review-change` posts
+on the PR — **never** a re-review composed here. Fetch the PR's comments and find
+the **newest** comment carrying the marker
+`<!-- review-change:pass sha=<40-hex> contract=v1 -->`:
+
+```sh
+gh pr view <N> --json comments
+```
+
+- **current** — marker `sha` equals the PR's head SHA (from Step 0). Acknowledge
+  its scope/axes, acceptance coverage, invariant result, and manual checks as the
+  review evidence, then evaluate the delivery gates below.
+- **absent** — no matching marker on the PR → **BLOCKER**: no review evidence at
+  the head; route to `/review-change`.
+- **stale** — a marker exists but its `sha` predates the current head → **BLOCKER**:
+  any later commit voids the receipt; route to `/review-change` for a re-review.
+
+Never compose, reconstruct, or "spot-check" the review from the diff to clear a
+missing/stale receipt — that is `review-change`'s turn, and re-litigating axes
+here is exactly what the receipt gate removes (AC 13).
+
 
 ## Progressive loading — mandatory audit route
 
 The reference allowlist is exactly the six linked paths below. Never invent or
-read another `references/` path. After discovery, every audit loads and applies
-exactly these five mandatory resources in order:
+read another `references/` path. After discovery and the Step 1 receipt check,
+every audit loads and applies exactly these five mandatory resources in order:
 
 1. [01 merge gates](references/01_MERGE_GATES.md) for delivery, CI, traceability,
-   review, and mergeability evidence.
+   review-receipt, and mergeability evidence.
 2. [02 closure and scope gates](references/02_CLOSURE_AND_SCOPE_GATES.md) for
    capability closure and descope provenance.
 3. [03 audit process](references/03_AUDIT_PROCESS.md) to gather, decide, persist
@@ -129,20 +168,25 @@ in [portability](references/PORTABILITY.md).
 ## Relationship to other skills
 
 ```
-execute-phase (all phases done) ─▶ review-change (axes clean) ─▶ audit-pr ─▶ merge
-                                                                    │
-                          blockers ─┬─ in-scope  ▶ execute-phase ──┘ (re-audit)
-                                    ├─ out-of-scope ▶ plan-fix
-                                    └─ deferral     ▶ triage-issue
+execute-phase (all phases done) ─▶ review-change (REVIEW-PASS receipt posted) ─▶ audit-pr ─▶ merge
+                                                                                │
+                     blockers ─┬─ receipt absent/stale ──▶ /review-change ──────┘ (re-review, re-audit)
+                               ├─ in-scope            ──▶ execute-phase ────────┘ (fold, re-audit)
+                               ├─ out-of-scope        ──▶ plan-fix
+                               └─ deferral            ──▶ triage-issue
 ```
 
-- Consumes `review-change` (axis cleanliness) and the artifacts of `plan-feature` /
+- Consumes the `review-change` `REVIEW-PASS` receipt (its scope/axes, acceptance
+  coverage, invariant result, manual checks) plus the artifacts of `plan-feature` /
   `plan-fix` / `execute-phase` (SPEC, phases, docs, `Closes #N`).
 - `audit-docs` is the cross-document coherence check; `audit-pr` is per-PR merge
   readiness; `product-audit` is the periodic, product-wide full sweep.
 
 ## Done when
 
+- The review receipt was consumed: a current marker was acknowledged, or a
+  missing/stale one became a blocker routed to `/review-change` (never re-reviewed
+  here).
 - Every applicable gate has a pass / blocker / n-a verdict backed by cited evidence.
 - A single top-line verdict (**MERGE-READY** or **BLOCKED** with ranked blockers) is
   reported **with the PR's full URL in the header**, each blocker routed, with the

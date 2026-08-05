@@ -63,28 +63,38 @@ proyecto (lo que mandaten sus docs).
 
 | Hallazgo | Eje | Sev | Clase | PORQUÉ | Riesgo de impl. | Impacto a largo plazo | ¿Opt. prematura? | Ruta |
 |---|---|---|---|---|---|---|---|---|
-| Query sin límite en camino caliente | perf | low | postpone | Insignificante ahora | Bajo (caché) | Crece con los datos | no | issue + disparador |
-| Helper duplicado en 2 archivos | mantenibilidad | low | intentional-tradeoff | Acoplar 2 features es peor | — | Divergencia casi nula | no | documentar en el código |
-| Secreto confirmado en un archivo de config | seguridad | high | fix-now | Exposición de credenciales | Bajo (mover a gestor de secretos) | Riesgo de incidente | no | plan-fix |
-| Módulo nuevo sin tests | tests | med | fix-now | Camino de fallo sin probar | Bajo | Riesgo de regresión | no | incorporar a la fase |
+| Token de API confirmado en un archivo de config | seguridad | high | fix-now | Exposición de credenciales | Bajo (mover a gestor de secretos) | Riesgo de incidente | no | incorporar a la fase |
+| Arreglar este bug de backend arrastra un rediseño de auth | corrección | high | decision-required | Decisión de producto/arquitectura inevitable | — | Bloqueante | no | presentar decisión, bloquear |
+| Rate limiter reutilizable en toda la flota | arquitectura | low | proposal | Independiente de esta unidad (D3) | — | — | sí | lote de propuesta + disparador |
+| Wrapper de un solo llamador alrededor de una llamada stdlib | sobreingeniería | low | ignore | Indirección sin beneficio | — | Insignificante | no | anotar razonamiento |
 
-Clases: **fix-now / postpone / ignore / intentional-tradeoff**.
+Clases: **fix-now / replan-in-unit / decision-required / proposal / ignore** — donde
+`ignore` afirma "esto no es un defecto real" (se decide primero, sobre la afirmación
+misma). Para el trabajo de la unidad actual solo existen **fix-now** (se incorpora a la
+fase abierta), **replan-in-unit** (nuevas fases confirmadas por el usuario) y
+**decision-required** (bloquea hasta que el usuario decida); `postpone` / `tradeoff` /
+`wontfix` / `disputed` y los issues creados por el revisor están **prohibidos** para el
+trabajo de la unidad actual (AC 10). Solo una capacidad futura realmente independiente
+se convierte en **proposal**.
 
 ## Qué haces con el resultado
 
 `review-change` es **obligatoria antes de cada merge** (cada unidad la
-recibe), y ejecuta **cada hallazgo no-fix-now a través de `triage-issue`**
-para que cada uno tenga un destino real — nunca se pierde en silencio:
+recibe). Cada hallazgo tiene un destino real — nunca se pierde en silencio,
+y la revisión no crea backlog (D3):
 
-- **fix-now** → `plan-fix` → `execute-phase --fix` (o se incorpora a la
-  fase de feature actual si es trabajo aún sin fusionar).
-- **postpone** → `triage-issue` → issue rastreado **con un disparador**. No
-  implementar sobre la marcha.
-- **intentional-tradeoff** → `triage-issue` → documentarlo (comentario en
-  el código, `decisions.md`, o un issue) para que no se vuelva a marcar en
-  la próxima revisión.
-- **ignore** → `triage-issue` → anota el razonamiento (o confirma que no
-  necesita nada).
+- **fix-now** → se incorpora directamente a la fase abierta de la unidad
+  actual. Nunca un issue rastreado, nunca `plan-fix` (AC 12).
+- **fix-now / replan-in-unit** → nuevas fase(s) confirmadas por el usuario
+  añadidas al ledger `## Phases` del SPEC de la unidad (antes del cierre de
+  hardening, o después de él más una fase final de hardening fresca si ya
+  corrió), luego `execute-phase` en la misma rama — nunca una degradación
+  (AC 12).
+- **fix-now / decision-required** → parar y presentar la decisión; la unidad
+  bloquea hasta que el usuario decida.
+- **proposal** (capacidad futura independiente) → lote en el reporte con un
+  disparador; el **usuario** decide si enrutarla a `triage-issue` (D3).
+- **ignore** → anotar el razonamiento en el reporte; sin más acción.
 
 Luego imprime el siguiente paso (limpio → `/audit-pr`).
 
@@ -123,5 +133,7 @@ un revisor se le escaparía.
 Etapa 4 (verificación & revisión), junto a `/code-review`,
 `/security-review`, `/verify`. Añade la **clasificación + los ejes
 conscientes del proyecto** que aquellas no tienen, en un solo pase. Enruta
-`fix-now` hacia `plan-fix`, y **cada hallazgo no-fix-now** (postpone / ignore
-/ intentional-tradeoff) hacia `triage-issue`.
+**fix-now** a la fase abierta de la unidad actual, **replan-in-unit** a
+nuevas fases del SPEC confirmadas por el usuario, presenta **decision-required**
+al usuario y agrupa las **proposals** independientes para que el usuario las
+enrute a `triage-issue`.
