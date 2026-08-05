@@ -94,10 +94,16 @@ Last reviewed: —
   policy file, and every execute route still PASSes on its own. Enforced by
   `scripts/check-skill-context.test.mjs` (read-verified owner map + mode/policy
   disjointness + per-route PASS); `node --test scripts/*.test.mjs` → 11 pass.
-- Remains: P3-5 (bump-skill pass over execute-phase + sync docs/migration
-  surfaces, gated by `check-skill-context.mjs --routes --route
-  execute-phase:feature --route execute-phase:final-pr` exiting 0 below
-  baseline).
+- Done: bump-skill pass over execute-phase (P3-6) — changelog rows for 2.13.2
+  added to CHANGELOG.md/CHANGELOG.es.md (workflow split, policy split, versioned
+  dependency receipt) plus the 2026-08-05 release-log line; all 7 authoring-rule
+  lint checks pass (→ Next: block present, P1-only phase labels, Portability +
+  Turn contract sections, plugin.json entry present and alphabetical,
+  model-routing keys alphabetical, no internal-discovery violations). README
+  cells remain accurate (no patch edit needed). Done-when gate green: both
+  `execute-phase:feature` (9516/655) and `execute-phase:final-pr` (9378/646)
+  pass below baseline.
+- Remains: P4 — Review-to-audit boundary (see TASKS.md P4).
 - Gotchas: SKILL.md step-3 conditional edit pushed the main estimate to 2863
   (over 2800); ~113 bytes of prose were trimmed (single-pass unit summary,
   PR-URL contract parenthetical, step-2 wording) to land at 2799 — only 1 est
@@ -114,4 +120,4 @@ Last reviewed: —
   docs/workflow/SKILL_CONTEXT_BUDGETS.json, scripts/check-skill-context.mjs,
   scripts/check-skill-context.test.mjs (P3-4 blocks), scripts/dependency-gate.test.mjs (new),
   docs/features/21-workflow-contract-consolidation/{testing,decisions,progress}.md
-- Next: P3-5 — bump-skill pass over execute-phase + docs/migration sync | unit not finished
+- Next: P4 — Review-to-audit boundary | unit not finished
