@@ -21,12 +21,12 @@ enables:
 - **`--adversarial N` spawn tiers** — Claude Code subagents (tier 1) and
   headless invocation (tier 2) are conveniences; an agent with neither runs the
   tier-3 fallback of N **sequential fresh conversations**, each context-clean
-  and diff-only, then merges their findings by hand per the merge contract
+  and diff-only, then fuses their findings by hand per the synthesis contract
   above — slower, never a reason to skip the mode. **One source, two
-  wrappers:** the pro path invokes `--adversarial N` / `--merge` and this
+  wrappers:** the pro path invokes `--adversarial N` / `--synthesize` and this
   skill runs the contracts itself; a manual orchestrator without either flag
   pastes the two blocks below into fresh conversations by hand — both render
-  the exact same reviewer/merge contract, never a second, drifting copy.
+  the exact same reviewer/synthesis contract, never a second, drifting copy.
 
   **Reviewer-prompt paste block** (one per reviewer, in a fresh conversation;
   fills `<i>`/`<role name>`/`<scope>` from the fixed role set and N ladder
@@ -38,18 +38,18 @@ enables:
 
   You are reviewer <i> of N in an adversarial multi-reviewer review. Assume the
   diff is wrong until proven otherwise. Your role orders where you look FIRST —
-  it is an attention priority, not an exclusive scope: the full
-  review-implementation checklist stays mandatory. Flag anything wrong, not only
-  findings inside your role.
+  it is an attention priority, not an exclusive scope: the full applicable
+  finder checklists stay mandatory. Flag anything wrong, not only findings
+  inside your role.
 
   Return exactly:
-  | file:line | axis | Finding | Sev | Class | WHY | Route |
-  |---|---|---|---|---|---|---|
+  | file:line | axis | Finding | Sev | Evidence |
+  |---|---|---|---|---|
   <one row per finding — empty table if none>
   ```
 
-  **Merge-prompt paste block** (one fresh conversation, after collecting all N
-  reviewer tables above — this is the merge contract, quoted verbatim):
+  **Synthesis-prompt paste block** (one fresh conversation, after collecting
+  all N reviewer tables above — this is the synthesis contract, quoted verbatim):
 
   ```
   You are fusing N independent adversarial review tables into one. Given the N
@@ -68,6 +68,7 @@ enables:
 
   <N pasted findings tables go here>
 
-  Return the merged table, then continue through review-change's steps 2–10
-  to the fixed report ending `Decision: PASS | FAIL`.
+  Return the merged table, then continue through the rest of review-change's
+  process to the fixed report ending `Decision: REVIEW-PASS | REVIEW-FAIL |
+  NEEDS-DECISION`.
   ```

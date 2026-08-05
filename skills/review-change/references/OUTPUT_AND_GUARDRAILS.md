@@ -7,9 +7,9 @@ For a change to a backend export module (no UI surface):
 
 | Axis | Finding | Sev | Class | WHY | Route |
 |---|---|---|---|---|---|
-| security | API token read from a committed file | high | fix-now | Credential exposure | `plan-fix` |
+| security | API token read from a committed file | high | fix-now | Credential exposure | fold into phase |
 | tests | Export handler has no failure-mode test | med | fix-now | Untested error path | fold into phase |
-| perf | Full table loaded before filtering | low | postpone | Fine at current size | issue + trigger (>100k rows) |
+| architecture | Rate limiter reusable across the fleet | low | proposal | Independent of this unit (D3) | batch proposal + trigger |
 
 > Manual-verification (automation can't confirm):
 > - The exported file opens cleanly in a spreadsheet app.
@@ -17,20 +17,32 @@ For a change to a backend export module (no UI surface):
 
 ## Routing
 
-Every non-`fix-now` finding is routed **through `triage-issue`** (step 8) so its
-disposition is a decision, not a default:
+Every finding gets a destination under the current-unit contract — none silently
+lost, and none becomes reviewer-created backlog (D3):
 
 - **fix-now** → persisted to the unit's `review-findings.md` fold ledger, then
-  `plan-fix` → `execute-phase --fix`, or fold into the current phase if it's
-  unmerged work. Classification honors `review-implementation`'s **fix-now
-  override checks**: a cheap fix or an in-scope defect is always fix-now —
-  never a postpone/known-issue/tradeoff escape.
+  folded into the current phase (unmerged work) — never a tracked issue, never
+  `plan-fix`. Classification honors `review-implementation`'s **current-unit
+  contract**: in-scope defects are always fix-now / replan-in-unit — never a
+  postpone/tradeoff/wontfix/new-issue escape.
 - **fix-now / `replan-in-unit`** (too large to fold as-is) → keeps its fix-now
   class and ledger row; propose the new SPEC phase(s) to the user, then
   `execute-phase` on the same branch folds it.
-- **postpone** → `triage-issue` → open a tracked issue with a trigger.
-- **intentional-tradeoff** → `triage-issue` → record it (comment / `decisions.md` / issue).
-- **ignore** → `triage-issue` → note the rationale (or confirm it truly needs nothing).
+- **fix-now / `decision-required`** → stop and surface the decision to the user;
+  the unit blocks until decided. No issue is created.
+- **proposal** (independent future capability) → batched in the report with a
+  trigger; only the **user** routes it to `triage-issue`.
+- **ignore** → note the rationale in the report; no further action.
+
+The report's `Decision:` line is **three-state** (D10): `REVIEW-PASS` when the
+table is clean, `REVIEW-FAIL` while any fix-now finding is open, and
+`NEEDS-DECISION` when a decision-required finding blocks. Only `REVIEW-PASS`
+**and only when the PR exists** posts the idempotent exact-SHA receipt (step 13
+of *Persist and decide*); `REVIEW-FAIL` leaves findings in the fold ledger and
+posts nothing; `NEEDS-DECISION` blocks without creating an issue. The
+`→ Next:` block in *Persist and decide* step 14 is the single place that maps
+each decision to its next command — never emit a `→ Next:` block that disagrees
+with the `Decision:` line.
 
 ## Guardrails
 
@@ -45,6 +57,10 @@ disposition is a decision, not a default:
   `--body-file <path>`, never an inline `--body "…"`/heredoc. `triage-issue`
   enforces this for the comments it posts — don't undercut it by pre-escaping
   finding text you hand it.
+- **The `REVIEW-PASS` receipt is a PR comment, never a commit** (D6): it goes
+  through a temporary `--body-file` (exact body from *Persist and decide* step
+  13), is idempotent by SHA, and is never added to the branch. `REVIEW-FAIL` and
+  `NEEDS-DECISION` post no receipt.
 
 ## Normalized Repository State
 

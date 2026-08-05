@@ -77,30 +77,30 @@ named contract comparison and cited file evidence in `testing.md`.
 
 ## P4 — Review-to-audit boundary
 
-- [ ] Replace `review-change --merge` and `ADVERSARIAL_MERGE.md` with
+- [x] Replace `review-change --merge` and `ADVERSARIAL_MERGE.md` with
       `--synthesize`/synthesis terminology; legacy `--merge` returns the fixed
       no-mutation migration refusal.
       Check: Acceptance criterion 2 command passes and negative merge fixtures
       observe zero merge calls.
-- [ ] Assign every review concern to one owning pass; make `review-debt` a
+- [x] Assign every review concern to one owning pass; make `review-debt` a
       synthesized-table transform and `review-implementation` the one
       scope/classification engine rather than duplicate diff scanners.
       Check: overlap fixture emits each seeded finding once with no missing axis.
-- [ ] Implement the current-unit classification contract defined by Product
+- [x] Implement the current-unit classification contract defined by Product
       decisions D2 and D3.
       Check: classification fixtures cover every scope category in AC 10–12.
-- [ ] Load only the short recommendation checklist on default review, the full
+- [x] Load only the short recommendation checklist on default review, the full
       setup on adversarial review, and only fusion detail on synthesis.
       Check: named review route budgets and load traces match their route manifests.
-- [ ] Post the idempotent exact-SHA final `REVIEW-PASS` receipt through
+- [x] Post the idempotent exact-SHA final `REVIEW-PASS` receipt through
       `--body-file`; keep FAIL findings in the fold ledger and use
       `NEEDS-DECISION` without issue creation.
       Check: fake-forge receipt suite covers PASS/FAIL/stale/idempotent/no-PR.
-- [ ] Refactor `audit-pr` to consume the current receipt and own only the
+- [x] Refactor `audit-pr` to consume the current receipt and own only the
       delivery gates listed in the SPEC.
       Check: audit fixtures prove current receipt consumption and stale/missing
       receipt blocking without invoking review passes.
-- [ ] Update downstream consumers only where they use renamed decisions, flags,
+- [x] Update downstream consumers only where they use renamed decisions, flags,
       reports, or routing; bump every changed skill.
       Check: repository search finds no active legacy flag/decision vocabulary
       outside migration/refusal text.
@@ -108,16 +108,16 @@ named contract comparison and cited file evidence in `testing.md`.
 
 ## P5 — Hardening & PR
 
-- [ ] Run the repository verification matrix defined in `testing.md`; record
+- [x] Run the repository verification matrix defined in `testing.md`; record
       commands and exit codes there.
-- [ ] Record before/after proxy totals for every hot route and explain any route
+- [x] Record before/after proxy totals for every hot route and explain any route
       that did not decrease; no coverage-related file may be omitted to improve
       the number.
-- [ ] Run the executor-path golden fixture with the weakest available
+- [x] Run the executor-path golden fixture with the weakest available
       tool-capable model and record every required assertion from AC 17.
-- [ ] Synchronize every versioned, migration, workflow, template, and bilingual
+- [x] Synchronize every versioned, migration, workflow, template, and bilingual
       documentation surface required by AC 16.
-- [ ] Run the complete local close-out command set from AC 18.
+- [x] Run the complete local close-out command set from AC 18.
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
 - [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
 - [ ] commit `docs: link PR #<n>` and push

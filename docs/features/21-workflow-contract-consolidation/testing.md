@@ -178,4 +178,135 @@ Fixture evidence:
 - `scripts/check-skill-context.test.mjs` gains two P3-4 blocks: the read-verified owner map (11 boxes; asserts contract line count == 11, unique per-box owner, owner exists, marker present) and the observable-behavior block (per-mode workflow + policy disjointness + per-route `--routes --route execute-phase:<mode>` PASS). `node --test scripts/*.test.mjs` → 11 pass.
 - Owner markers verified by grep (see the box/owner table above); no `ISSUE_POLICY.md` reappears on any route.
 
+### P4 — review-to-audit boundary
 
+Gate: `node scripts/check-skill-context.mjs --routes --route review-change:default-backend --route audit-pr:feature` → `PASS route budgets: 2 routes`, exit 0. Both routes pass their globals.
+
+#### P4-1 — merge→synthesize rename
+
+`review-change/SKILL.md` (2.9.1) gained `--synthesize` / `--adversarial N` and removed `--merge`; `ADVERSARIAL_MERGE.md` git-moved to `ADVERSARIAL_SYNTHESIS.md` and rewritten; legacy `--merge` returns the fixed no-mutation migration refusal before any git/forge mutation. AC 2 grep (`grep -Rni -- '--merge' skills/review-change docs/workflow | grep -v 'legacy.*reject\|migration'`) exits clean (0 active matches).
+
+Fixture evidence: `scripts/review-receipt.test.mjs`'s negative cases observe zero merge-invocation paths; no `--merge` string survives outside migration/refusal text (grep-verified).
+
+#### P4-2/P4-3 — one owner per axis, one classifier
+
+`review-implementation` (1.4.0) is the single scope/classification engine; `FIND.md` maps every review concern to one owning pass; `review-debt` (1.1.0) is a synthesized-table transform that never rescans the diff. `CLASSIFY.md` implements the D2/D3 current-unit contract (ignore → fix-now/replan-in-unit/decision-required → proposal; postpone/tradeoff/wontfix/disputed/new-issue forbidden for current-unit).
+
+Fixture evidence: `scripts/review-receipt.test.mjs` and the fake-forge suite below assert classification results stay in the fold ledger (REVIEW-FAIL/NEEDS-DECISION post no receipt); no reviewer-created postpone/tradeoff/issue escape paths remain in the routing docs (grep-verified).
+
+#### P4-4 — per-route review-change manifests
+
+`SKILL_CONTEXT_BUDGETS.json` gained explicit `references` arrays on all four review-change routes. Re-measured route totals vs. the pre-split identical 7-file set:
+
+| Route | Skills | Files | Estimate | Lines |
+|---|---|---|---|---|
+| `review-change:default-backend` | review-change | 5 | 7118 | 513 |
+| `review-change:default-web` | review-change | 5 | 7118 | 513 |
+| `review-change:adversarial` | review-change | 6 | 8770 | 620 |
+| `review-change:synthesize` | review-change | 5 | 7585 | 534 |
+
+`ADVERSARIAL_RECOMMENDATION.md` (32 L) holds the default route's only adversarial content; `ADVERSARIAL_SETUP.md` (was 103 L → 86 L) loads only for `--adversarial N`.
+
+#### P4-5 — idempotent REVIEW-PASS receipt
+
+`PERSIST_AND_DECIDE.md` step 13 posts the exact-SHA `REVIEW-PASS` PR comment via `--body-file` (`<!-- review-change:pass sha=<40-hex> contract=v1 -->`; newest matching marker wins; same-SHA skip; later commit → stale; REVIEW-FAIL/NEEDS-DECISION post nothing). `scripts/review-receipt.test.mjs` (12 tests, pure functions, zero forge spawns) covers PASS/FAIL/stale/idempotent/no-PR/absent + markdown-body integrity + purity + full matrix. `node --test scripts/*.test.mjs` → 23 pass.
+
+#### P4-6 — audit-pr consumes the receipt, owns only delivery gates
+
+`audit-pr/SKILL.md` (4.2.0 → 4.3.0) + `references/01_MERGE_GATES.md`, `03_AUDIT_PROCESS.md`, `04_VERDICT.md`, `05_ROUTING_AND_GUARDRAILS.md`, `PORTABILITY.md` refactored per AC 13/14 and the SPEC's audit-only gate list (lines 516–525):
+
+- **Step 1 consumes the review receipt** before any gate: newest `review-change:pass` marker whose `sha` equals the current head → acknowledged (scope/axes, acceptance coverage, invariant result, manual checks); absent/stale → **BLOCKER routed to `/review-change`**, never re-reviewed (AC 13).
+- **Gate list narrowed to the delivery set**: dropped the `Tests` (test-quality) gate and the acceptance-criteria diff→evidence remapping (replaced by the receipt's acceptance-coverage field); `Architectural invariants` gate now mirrors the receipt's result instead of reclassifying (AC 13); `Acceptance coverage` and `Review receipt` gates are receipt-based, never SPEC-diff remaps.
+- **Step 0 no longer loads feature/fix templates** (AC 14); the SPEC is the only planning artifact the audit reads.
+- MERGE-READY comment stays idempotent and SHA-bound (`<!-- audit-pr:merge-ready sha=<head SHA> -->`), cites the consumed receipt, posts only on MERGE-READY.
+
+New `scripts/audit-pr-receipt.test.mjs` (11 tests, pure functions, zero forge spawns) proves current receipt consumption, stale/missing receipt blocking (always routed to `/review-change`, gate evaluation skipped — never a re-review), gate failures blocking on a current receipt, idempotent SHA-bound comment posting (post/skip/none), newest-marker-wins, markdown-body integrity, purity, and the full verdict/comment matrix. `node --test scripts/*.test.mjs` → 34 pass.
+
+Route totals after P4-6 (measured `--routes --route review-change:default-backend --route audit-pr:feature`):
+
+| Route | Skills | Files | Estimate | Lines |
+|---|---|---|---|---|
+| `review-change:default-backend` | review-change | 5 | 7118 | 513 |
+| `audit-pr:feature` | audit-pr | 7 | 7964 | 517 |
+| `audit-pr:fix` | audit-pr | 7 | 7964 | 517 |
+
+audit-pr grew vs. the 6852/449 baseline because the receipt-consumption contract (Step 1, receipt gates, verdict comment) is additive; the SPEC's audit-only gate list is satisfied and the route stays far below the per-file globals. P5 records the before/after explanation per AC 1/AC 17.
+
+### P5 — hardening & PR (AC 1/16/17/18)
+
+#### P5-1 — verification matrix
+
+Done-when gates, all exit 0 (recorded verbatim):
+
+| Command | Result |
+|---|---|
+| `node --test scripts/*.test.mjs` | 34 pass / 0 fail |
+| `node --test scripts/check-skill-context.test.mjs` | PASS |
+| `node scripts/check-skill-context.mjs` | PASS context budgets: 33 skills |
+| `node scripts/check-skill-context.mjs --routes` | PASS route budgets: 16 routes |
+| `node scripts/check-skill-context.mjs --routes --route review-change:default-backend --route audit-pr:feature` | PASS route budgets: 2 routes |
+| `npx skills add . --list` | exit 0 |
+| AC 2 grep (`grep -Rni -- '--merge' skills/review-change docs/workflow \| grep -v 'legacy.*reject\|migration'`) | clean (exit 1, no matches) |
+| `git diff --check` | clean |
+
+#### P5-2 — before/after proxy totals (AC 1 report)
+
+Baseline = pre-consolidation route table at the top of this file (all four `review-change` routes were an identical 7-file set; `audit-pr` 6852/449). Final = measured at unit close-out (`node scripts/check-skill-context.mjs --routes`).
+
+| Route | Files before → after | Estimate before → after | Lines before → after | Δ est | Δ lines |
+|---|---|---|---|---|---|
+| `plan-feature:scoped` | 3 → 2 | 3496 → 3346 | 270 → 258 | −150 | −12 |
+| `plan-feature:issue` | 4 → 3 | 5391 → 5221 | 411 → 398 | −170 | −13 |
+| `plan-fix:issue` | 3 → 3 | 3150 → 3145 | 225 → 222 | −5 | −3 |
+| `execute-phase:feature` | 9 → 7 | 13284 → 9516 | 866 → 655 | −3768 | −211 |
+| `execute-phase:small` | 9 → 7 | 13284 → 9505 | 866 → 663 | −3779 | −203 |
+| `execute-phase:fix` | 9 → 7 | 13284 → 9686 | 866 → 663 | −3598 | −203 |
+| `execute-phase:legacy` | 9 → 7 | 13284 → 9300 | 866 → 648 | −3984 | −218 |
+| `execute-phase:final-pr` | 9 → 7 | 13284 → 9378 | 866 → 646 | −3906 | −220 |
+| `execute-phase:descope` | 9 → 7 | 13284 → 9334 | 866 → 656 | −3950 | −210 |
+| `execute-phase:finding` | 9 → 7 | 13284 → 10026 | 866 → 680 | −3258 | −186 |
+| `review-change:default-backend` | 7 → 5 | 8412 → 7118 | 605 → 513 | −1294 | −92 |
+| `review-change:default-web` | 7 → 5 | 8412 → 7118 | 605 → 513 | −1294 | −92 |
+| `review-change:adversarial` | 7 → 6 | 8412 → 8770 | 605 → 620 | **+358** | **+15** |
+| `review-change:synthesize` | 7 → 5 | 8412 → 7585 | 605 → 534 | −827 | −71 |
+| `audit-pr:feature` | 7 → 7 | 6852 → 7964 | 449 → 517 | **+1112** | **+68** |
+| `audit-pr:fix` | 7 → 7 | 6852 → 7964 | 449 → 517 | **+1112** | **+68** |
+
+Explanation of the three non-decreases (AC 1: no coverage-related file omitted to improve the number):
+
+- **`review-change:adversarial`** (+358 est / +15 lines, files 7 → 6): the P4 per-route manifest split recorded the adversarial route's true resource set. Before P4 all four review-change routes were the identical 7-file superset (8412/605) — adversarial detail lived in files every route "loaded." After the split the default/synthesize routes dropped below baseline by loading only their declared references, while the adversarial route now *accurately* accounts `ADVERSARIAL_RECOMMENDATION.md` + `ADVERSARIAL_SETUP.md` + `ADVERSARIAL_SYNTHESIS.md` (the full roles/spawn contract) as its own 6-file route. The small increase is measurement precision, not regression: the three other review-change routes each decreased, adversarial remains far below the per-file globals, and the route budget maxima pass.
+- **`audit-pr:feature` / `audit-pr:fix`** (+1112 est / +68 lines, files 7 → 7): the AC 13 receipt-consumption contract (Step 1 receipt read, the receipt-based `Acceptance coverage` / `Review receipt` gates, and the SHA-bound verdict comment) is additive — `audit-pr` now *reads* evidence it previously regenerated. Every coverage file that existed at baseline still loads (no coverage file removed); the growth is the new receipt contract itself, which the SPEC's audit-only gate list requires. The route stays far below the per-file globals (SKILL.md 2648 est, lines 199, each reference well under cap) and the maxima pass.
+
+No route omitted any coverage file to improve its number; the 9→7 and 7→5 file drops come from per-route `references` arrays that exclude non-loading portability/example/policy resources (AC 16), each recorded in the P2–P4 fixtures above.
+
+
+
+#### P5-3 — AC 18 local close-out command set (all exit 0)
+
+| Command | Result |
+|---|---|
+| `node scripts/check-skill-context.test.mjs` | exit 0 (PASS) |
+| `node scripts/check-skill-context.mjs` | exit 0 (PASS context budgets: 33 skills) |
+| `npx skills add . --list` | exit 0 |
+| `node --test scripts/*.test.mjs` | 34 pass / 0 fail |
+| `node --test scripts/audit-pr-receipt.test.mjs` | 11 pass / 0 fail |
+| `node --test scripts/review-receipt.test.mjs` | pass / 0 fail |
+| `git diff --check` | clean |
+| Manual doc link/coherence | no `ADVERSARIAL_MERGE` reference anywhere; all `--synthesize` / `ADVERSARIAL_SYNTHESIS` references resolve; route-manifest reference files all exist |
+
+#### P5-4 — AC 16 surface sync evidence
+
+- CHANGELOG EN + ES: `audit-pr` 4.3.0 row present in both (ES row added this
+  unit); `review-change` 2.10.0 and `execute-phase` 2.13.2 rows present in both.
+- `MIGRATION.md` + `MIGRATION.es.md`: new dated 2026-08-05 note — `review-change`
+  and `audit-pr` upgrade as a pair; an old `review-change` (no receipt) leaves
+  `audit-pr` 4.3.0 blocked with no marker at the head; never mix versions.
+- `docs/workflow/SKILLS.md` + `SKILLS.es.md`: `audit-pr` rows updated to
+  receipt-consumption wording matching README EN/ES.
+- `docs/workflow/GOLDEN_FIXTURE.md` + `GOLDEN_FIXTURE.es.md`: 2026-08-05 run-log
+  row present in both (qwen3.6 3B weak-model fixture, feature #21).
+- Version frontmatter (`audit-pr` 4.3.0, `review-change` 2.10.0,
+  `execute-phase` 2.13.2) matches CHANGELOG rows.
+- AC 2 sweep: `grep -Rni -- '--merge' skills/review-change docs/workflow`
+  (excl. legacy/migration) → clean (exit 1); stale `Decision: FAIL` /
+  `postpone` / `tradeoff` sweep → clean (exit 1).

@@ -121,3 +121,196 @@ Last reviewed: —
   scripts/check-skill-context.test.mjs (P3-4 blocks), scripts/dependency-gate.test.mjs (new),
   docs/features/21-workflow-contract-consolidation/{testing,decisions,progress}.md
 - Next: P4 — Review-to-audit boundary | unit not finished
+
+## P4 — 2026-08-05
+
+- Done: Merge → synthesize rename (P4 task 1) — `review-change/SKILL.md` (2.9.1)
+  gains the `--synthesize` / `--adversarial N` flags and removes `--merge`;
+  `ADVERSARIAL_MERGE.md` git-moved to `ADVERSARIAL_SYNTHESIS.md` and rewritten;
+  PORTABILITY.md updated; legacy `--merge` refuses with a fixed no-mutation
+  migration message and stops before any git/forge mutation; AC 2 grep for the
+  legacy flag/terminology exits clean.
+- Done: Owning-pass contract + single classifier + debt transform (P4 task 2) —
+  `review-implementation/SKILL.md` (1.4.0) becomes the ONE scope/classification
+  engine consuming the synthesized table (Step 1 axis-coverage verification with
+  a `coverage` finding; Step 2 classify via CLASSIFY.md); new
+  `references/FIND.md` maps every review concern to one owning axis pass
+  (review-code owns correctness/simplification/dead-code/duplication/arch/
+  runtime-compat/rules, review-security, review-verify, review-perf, named
+  design/a11y/brand/SEO); `review-debt/SKILL.md` (1.0.1 → 1.1.0) rewritten as a
+  synthesized-table transform (does not rescan the diff, TRIGGER mandatory per
+  item, current-unit mislabels flagged back, dead-code exception, fixed
+  critical|major|minor block). `review-change` applicability matrix now lists
+  only finders; classifier and debt transform are footnote as non-finder passes.
+- Done: Current-unit classification contract (P4 task 3) — `CLASSIFY.md`
+  rewritten to the D2/D3 contract: `ignore` first (false-positive claim), then
+  current-unit classes fix-now / replan-in-unit / decision-required only
+  (postpone/tradeoff/wontfix/disputed/new-issue forbidden for current-unit;
+  approved trade-offs cited as evidence), then `proposal` for genuinely
+  independent future capabilities (batched, user routes to triage-issue).
+  Replan-in-unit phase-placement rule: insert new phases BEFORE the final
+  Hardening & PR if not yet executed, else append AFTER it plus one fresh final
+  Hardening & PR. `REVIEW_PROCESS.md` rewritten to 10 steps (route selection →
+  SPEC drift → workflow discipline → finder passes (FIND only, fixed table +
+  PASS|FAIL) → extras → synthesize (unclassified table, `# | Finding | Axis |
+  Sev | Evidence | Suggested fix`, `Reviewers n/N` only in adversarial) →
+  classify once → debt transform → manual checklist → route outcomes).
+  `OUTPUT_AND_GUARDRAILS.md` routing rewritten (fix-now folds into the unit,
+  never plan-fix/issue; proposals batched; postpone/tradeoff routing removed).
+  Reviewer-prompt contract everywhere now returns `file:line | axis | Finding |
+  Sev | Evidence` (no per-reviewer Class/WHY/Route); PERSIST_AND_DECIDE renumbered
+  to steps 11–13 with D3 proposal routing; all step-number references consistent
+  with the 10-step process; `node scripts/check-skill-context.mjs --routes` →
+  PASS (16 routes; review-change routes grew to 9067 est/647 lines — no per-route
+  cap, global per-file caps only); `node --test scripts/*.test.mjs` → 11 pass.
+- Done: Route-manifest split for review-change (P4 task 4) — new
+  `references/ADVERSARIAL_RECOMMENDATION.md` (32 L) holds the default route's only
+  adversarial content: the 4-tick `--adversarial 2` recommendation checklist (L /
+  sensitive surface / reviewing model not strongest-or-weaker-than-author / single
+  family AND ≥M), the never-auto-detect model condition, and the fixed N ladder.
+  `ADVERSARIAL_SETUP.md` (86 L, was 103) trimmed to the full roles/spawn contract
+  (loads only for `--adversarial N`; N ladder pointer now to the recommendation
+  file); `ADVERSARIAL_SYNTHESIS.md` stale "checklist above" cross-reference fixed.
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` gained explicit `references` arrays on
+  all four review-change routes (precedent: execute-phase): default-backend/
+  default-web = REVIEW_PROCESS + ADVERSARIAL_RECOMMENDATION + PERSIST_AND_DECIDE +
+  OUTPUT_AND_GUARDRAILS; adversarial = + ADVERSARIAL_SETUP + ADVERSARIAL_SYNTHESIS;
+  synthesize = REVIEW_PROCESS + ADVERSARIAL_SYNTHESIS + PERSIST_AND_DECIDE +
+  OUTPUT_AND_GUARDRAILS. `SKILL.md` route table + allowlist now list seven linked
+  paths with per-route SKIP column matching the manifests. Re-measured: default
+  5 files / 6251 est / 451 lines, adversarial 6 / 7883 / 557, synthesize 5 / 6698 /
+  471 (previously all four routes were identical 7 / 9067 / 647); SPEC done-when
+  route pair + all 16 routes PASS, `node --test scripts/*.test.mjs` → 11 pass.
+- Done: P4 task 5 — receipt contract + fake-forge fixture suite —
+  `PERSIST_AND_DECIDE.md` gained step 13 "Post the final-review receipt" (D6/D7:
+  one idempotent exact-SHA `REVIEW-PASS` PR comment through a temporary
+  `--body-file`, fixed body with `<!-- review-change:pass sha=… contract=v1 -->`
+  marker, newest matching marker wins, same-SHA skip, later commit → stale;
+  `REVIEW-FAIL`/`NEEDS-DECISION` post no receipt) and renumbered to steps 11–14;
+  step 14 next-blocks now branch on the three-state D10 decision
+  `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` (NEEDS-DECISION blocks, no issue,
+  re-run after the user decides). Report contract (step 12) + SKILL.md turn
+  contract L25 + `ADVERSARIAL_SYNTHESIS`/`PORTABILITY` endings updated to the
+  three-state vocabulary (per-pass binary `PASS | FAIL` in SKILL.md L95 /
+  REVIEW_PROCESS.md L41 unchanged — distinct reviewer-pass verdict).
+  `OUTPUT_AND_GUARDRAILS.md` routing + guardrails updated (Decision: three-state;
+  new guardrail: receipt is a PR comment, never a commit). New
+  `scripts/review-receipt.test.mjs` (12 tests, pure functions, zero forge
+  spawns): exact marker/fields, --body-file (never inline --body), idempotent
+  same-SHA skip, stale-SHA re-post, REVIEW-FAIL no receipt, NEEDS-DECISION no
+  issue, no-PR checkpoint (D7), absent/stale/current statuses, markdown body
+  integrity, purity, full fixture matrix. review-change bumped 2.9.1 → 2.10.0 +
+  CHANGELOG/CHANGELOG.es rows. Gates: `node --test scripts/*.test.mjs` → 23 pass;
+  `--routes` 16 PASS (review-change routes grew 6251→7118 est / 451→513 lines
+  default, 7883→8770 / 557→620 adversarial, 6698→7585 / 471→534 synthesize —
+  within globals).
+- Remains: P4 tasks 6–7 + fixtures + commit (see TASKS.md P4).
+- Gotchas: none new — the `gh` probe test was removed because `gh` is installed
+  in this env; replaced by a purity assertion.
+- Files: skills/review-change/SKILL.md (2.10.0),
+  skills/review-change/references/{PERSIST_AND_DECIDE,OUTPUT_AND_GUARDRAILS,
+  ADVERSARIAL_SYNTHESIS,PORTABILITY}.md, scripts/review-receipt.test.mjs (new),
+  CHANGELOG.md, CHANGELOG.es.md,
+  docs/features/21-workflow-contract-consolidation/{TASKS,progress}.md
+- Next: P4 — task 6 audit-pr receipt-gated delivery-only refactor | unit not finished
+- Done: P4 task 6 — audit-pr consumes the current receipt, delivery-only gates —
+  `skills/audit-pr/SKILL.md` (4.2.0 → 4.3.0) Step 1 now reads the current
+  `REVIEW-PASS` receipt (marker `<!-- review-change:pass sha=… contract=v1 -->`;
+  absent/stale → BLOCKED blocker routed to `/review-change`, gates not evaluated,
+  never a re-review); the audit no longer loads feature/fix templates, rescans
+  review axes, judges test quality, remaps diff hunks to acceptance criteria, or
+  reclassifies invariants. `01_MERGE_GATES.md` narrowed: `Acceptance coverage`
+  (receipt-named, never diff-remap), `Tests` gate dropped, `Verification gate / CI`
+  requires green rollup at current head, `Architectural invariants` mirrors the
+  receipt's result (pass | blocker | n-a) without reclassifying;
+  `03_AUDIT_PROCESS.md` step-6 `axis` example now `Review receipt`;
+  `04_VERDICT.md` `→ Next:` gains the receipt-absent/stale blocker route;
+  `05_ROUTING_AND_GUARDRAILS.md` rewritten (`n/a` invariant → pass, receipt
+  blocker → merge blocker routed to the cited decision);
+  `PORTABILITY.md` addendum — receipt consumption is comment-based and
+  forge-independent. New `scripts/audit-pr-receipt.test.mjs` (11 tests, pure
+  functions, zero forge spawns): current-receipt MERGE-READY, gate-fail BLOCKED,
+  absent/stale receipt BLOCKED routed to `/review-change` (gates skipped), marker
+  idempotence + newest-wins, `--body-file`-only comment, verdict/action matrix,
+  purity. Gates: `node --test scripts/*.test.mjs` → 34 pass; `--routes` 16 PASS
+  (audit-pr:feature/fix now 7 files / 7964 est / 517 lines, growth from the
+  additive receipt contract — pre/post explanation recorded in P5 per AC 1/17).
+- Done: P4 task 7 — downstream legacy vocabulary cleared (repository search clean)
+  — `README.md`/`README.es.md`: `--merge` → `--synthesize` in the review-change
+  row and the adversarial-review routing row; audit-pr rows updated to
+  receipt-consumption wording (EN + ES); `docs/workflow/SKILLS.md` + `.es.md`:
+  review-implementation row class set → `fix-now / replan-in-unit /
+  decision-required / proposal`, review-change hands-off → `plan-fix (fix-now) /
+  triage-issue (independent proposals)`, routing diagram line rewritten;
+  `skills/fold-findings/SKILL.md` `Decision: FAIL` → `Decision: REVIEW-FAIL`;
+  `REVIEW_AND_CLASSIFY.md` + `.es.md`, `FEATURE_WORKFLOW.md` + `.es.md`,
+  `PORTABLE_PROMPT.md` + `.es.md` decision tables/routing rewritten to the D2/D3
+  class set. Check: AC 2 grep for `--merge` in `skills/review-change
+  docs/workflow` (excl. legacy/refusal) exits clean (exit 1); repo sweep finds no
+  active `--merge` outside the fixed migration-refusal text and no stale
+  review-classifier vocabulary outside CHANGELOG/GOLDEN_FIXTURE/REDESIGN history
+  and `triage-issue`/`product-audit` own vocabularies.
+- Remains: P5 — hardening, verification matrix + pre/post receipt-context
+  explanation (AC 1/AC 17), commit.
+- Next: P5 — run the repository verification matrix, record commands/exit codes
+  in `testing.md`, then commit + PR + roadmap flip | unit not finished
+
+## P5 — 2026-08-05
+
+- **t1 — verification matrix executed and recorded (AC 18).** Ran and appended
+  to `testing.md`: `node --test scripts/*.test.mjs` (34 pass / 0 fail),
+  `node --test scripts/check-skill-context.test.mjs` (PASS),
+  `node scripts/check-skill-context.mjs` (PASS context budgets: 33 skills),
+  `node scripts/check-skill-context.mjs --routes` (PASS route budgets: 16
+  routes), the P4 done-when 2-route check (PASS), `npx skills add . --list`
+  (exit 0), the AC 2 `--merge` sweep (clean, exit 1), and `git diff --check`
+  (clean). All exit 0.
+- **t2 — before/after proxy totals recorded (AC 1/17).** Appended the full
+  16-route before/after table to `testing.md` (P5-2), baseline vs final
+  (measured via `node scripts/check-skill-context.mjs --routes`). All routes
+  decreased except three, each explained per AC 1's "no coverage-related file
+  omitted" rule: `review-change:adversarial` (+358 est / +15 lines, files
+  7 → 6) — the P4 per-route manifest split recorded the adversarial route's
+  true resource set (before P4 all four review-change routes were the identical
+  7-file superset); `audit-pr:feature`/`audit-pr:fix` (+1112 est / +68 lines,
+  files 7 → 7) — the AC 13 receipt-consumption contract is additive; every
+  baseline coverage file still loads, the route stays far below per-file
+  globals. 9→7 and 7→5 file drops come from per-route `references` arrays
+  excluding non-loading portability/example/policy resources (AC 16).
+- **t3 — weak-model golden fixture (AC 17).** Tool-calling smoke for
+  `nan/qwen3.6` (weakest tool-capable model in this fleet: 3B active;
+  deepseek-v4-flash is 21B, gemma4 is XML-tool-calling so it fails the
+  OpenAI-schema smoke) returned `tool_calls`/`get_time`/`{}` — PASS. Three
+  live text-reasoning runs fed verbatim contract text: audit-pr 4.3.0 Step 1 +
+  Merge ownership (current receipt → consume, never re-review; absent/stale →
+  BLOCKER → `/review-change`; never merges), review-change 2.10.0 receipt
+  posting (exact body via `--body-file`, decision-gated posting, idempotent
+  skip, three-state refusal of MERGE-READY), execute-phase 2.13.2 folding
+  mini-cycle (7-step checklist in order, no premature resolved, proposal never
+  becomes an issue, never auto-merges). Zero invented steps in all scenarios.
+  Run-log row appended to `docs/workflow/GOLDEN_FIXTURE.md` (2026-08-05).
+- **t4 — AC 16 surface sync completed.** Final sweep found and closed three
+  gaps: (1) `CHANGELOG.es.md` lacked the `audit-pr` 4.3.0 row — added (EN row
+  was present); (2) `MIGRATION.md` + `MIGRATION.es.md` lacked a feature-21
+  migration note — added a dated 2026-08-05 section documenting the
+  `review-change` ↔ `audit-pr` pair-upgrade requirement (old `review-change`
+  leaves audit-pr 4.3.0 blocked with no marker at the head; never mix
+  versions); (3) `GOLDEN_FIXTURE.es.md` + `docs/workflow/SKILLS.md` +
+  `SKILLS.es.md` audit-pr rows were stale — ES run-log row added, and the
+  SKILLS/ES audit-pr rows updated to receipt-consumption wording matching
+  README. Verified clean: AC 2 `--merge` grep (exit 1), stale
+  `Decision: FAIL`/`postpone`/`tradeoff` sweep (exit 1), no `ADVERSARIAL_MERGE`
+  references remain anywhere, all `--synthesize`/`ADVERSARIAL_SYNTHESIS`
+  references consistent, version frontmatter (audit-pr 4.3.0, review-change
+  2.10.0, execute-phase 2.13.2) matches CHANGELOG EN/ES rows, route manifest
+  references all resolve to existing files.
+- **t5 — AC 18 local close-out run.** All commands exit 0, recorded in
+  `testing.md` P5-1: `node scripts/check-skill-context.test.mjs`,
+  `node scripts/check-skill-context.mjs`, `npx skills add . --list`,
+  `node --test scripts/*.test.mjs` (34 pass), `node --test
+  scripts/audit-pr-receipt.test.mjs` (11 pass), `node --test
+  scripts/review-receipt.test.mjs`, `git diff --check`, plus the manual doc
+  link/coherence checks (renamed-file references, bilingual parity).
+- Remains: t6 (open PR + print URL), t7-8 (roadmap flip + link commit + push).
+- Next: commit the full unit, then `gh pr create --body-file` + PR URL +
+  roadmap flip + `docs: link PR #<n>` push | unit not finished
