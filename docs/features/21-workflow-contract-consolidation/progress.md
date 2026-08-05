@@ -77,9 +77,27 @@ Last reviewed: —
   (feature/small 9600/670, fix 9750/670, legacy 9400/660, final-pr 9500/660,
   descope 9400/670, finding 10100/690); all 16 routes pass and stay far below
   the 13284/866 baseline.
-- Remains: P3-4 (fake-forge PR-surface kill switches + merge-time source
-  hash verification), P3-5 (receipt snapshots prove the exact per-phase gate
-  sequence), P3-6 (bump-skill pass over execute-phase + changelogs).
+- Done: Execution safety boxes preserved read-verified (P3-4) — every
+  pre-consolidation universal safety box (11 boxes, cut at `5c71105^`) is
+  preserved in the compact Turn contract and maps to exactly one unique owner
+  resource that carries its normative detail. Owner map verified by reading the
+  files: box 1 branch-first, 3 architectural-invariant gate, 4 gate-RUN
+  (commands + exit codes), 5 git add/commit (Docs COMMITTED gate), 7 clean-tree
+  → `EXECUTION_CONTRACT.md`; box 2 phase-lint pre-flight guard →
+  `PREFLIGHT.md` (proxying `skills/phase-contract/SKILL.md`, the owner of the
+  8-box lint rules); box 6 finishing-a-unit push + PR → `CLOSEOUT.md`; box 8
+  artifact language → `FORGE_BODY.md`; box 9 descope → `DESCOPE.md`; box 10
+  finding classification → `OPPORTUNISTIC_FINDING.md`; box 11 `→ Next:` block →
+  `CLOSEOUT.md`. Observable behavior preserved: each of the 7 execute routes
+  loads only its own mode workflow (feature/small/fix/legacy exactly one
+  `WORKFLOWS_*`) and policy routes load no mode workflow, no mode route loads a
+  policy file, and every execute route still PASSes on its own. Enforced by
+  `scripts/check-skill-context.test.mjs` (read-verified owner map + mode/policy
+  disjointness + per-route PASS); `node --test scripts/*.test.mjs` → 11 pass.
+- Remains: P3-5 (bump-skill pass over execute-phase + sync docs/migration
+  surfaces, gated by `check-skill-context.mjs --routes --route
+  execute-phase:feature --route execute-phase:final-pr` exiting 0 below
+  baseline).
 - Gotchas: SKILL.md step-3 conditional edit pushed the main estimate to 2863
   (over 2800); ~113 bytes of prose were trimmed (single-pass unit summary,
   PR-URL contract parenthetical, step-2 wording) to land at 2799 — only 1 est
@@ -94,6 +112,6 @@ Last reviewed: —
   skills/execute-phase/references/ISSUE_POLICY.md (deleted),
   skills/execute-phase/references/PREFLIGHT.md,
   docs/workflow/SKILL_CONTEXT_BUDGETS.json, scripts/check-skill-context.mjs,
-  scripts/check-skill-context.test.mjs, scripts/dependency-gate.test.mjs (new),
+  scripts/check-skill-context.test.mjs (P3-4 blocks), scripts/dependency-gate.test.mjs (new),
   docs/features/21-workflow-contract-consolidation/{testing,decisions,progress}.md
-- Next: P3-4 — fake-forge PR-surface kill switches | unit not finished
+- Next: P3-5 — bump-skill pass over execute-phase + docs/migration sync | unit not finished

@@ -85,3 +85,26 @@
   the fingerprint and fast-path logic, cross-checks the git blob hash against
   `git hash-object --stdin`, and asserts every invalidation case fails closed.
 
+## 2026-08-04 — Owner map for the 11 safety boxes (P3-4)
+
+- The pre-consolidation universal execution checklist (11 boxes at `5c71105^`)
+  had no single authority; each box lived inline in the old monolithic
+  entrypoint. P3-4 fixes that by designating, per box, exactly one owner
+  resource whose normative detail the box points to, while the box line stays
+  resident in the compact Turn contract (preservation). Owner assignments:
+  `EXECUTION_CONTRACT.md` owns branch-first, architectural-invariant gate,
+  gate-RUN, git-add/commit, and clean-tree; `PREFLIGHT.md` owns the phase-lint
+  pre-flight guard (proxying `skills/phase-contract/SKILL.md`, the owner of the
+  8-box lint rules); `CLOSEOUT.md` owns finishing-a-unit push + PR and the
+  `→ Next:` block; `FOLDING.md` owns the clean-tree check; `FORGE_BODY.md` owns
+  artifact language; `DESCOPE.md` the descope guard; `OPPORTUNISTIC_FINDING.md`
+  finding classification.
+- "Unique owner" means one owner per box, not one box per owner — several boxes
+  legitimately share `EXECUTION_CONTRACT.md`. The fixture enforces the 1:1 box
+  mapping and that every owner exists and carries its marker (read-verified:
+  the test reads the actual files, never assumes).
+- No SKILL.md prose change was needed: the box lines were already identical to
+  the pre-consolidation checklist, so P3-4 is pure verification + fixtures
+  (`scripts/check-skill-context.test.mjs` owner-map + observable-behavior
+  blocks), leaving the 2799/177 main budget untouched.
+

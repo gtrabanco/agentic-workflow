@@ -54,20 +54,20 @@ named contract comparison and cited file evidence in `testing.md`.
 
 ## P3 — Execution route consolidation
 
-- [ ] Split `WORKFLOWS.md` into feature, small/phased, fix, and legacy resources;
+- [x] Split `WORKFLOWS.md` into feature, small/phased, fix, and legacy resources;
       select exactly one before loading mode detail.
       Check: route fixtures record one selected workflow resource per mode.
-- [ ] Split `ISSUE_POLICY.md` into forge-body, descope, and opportunistic-finding
+- [x] Split `ISSUE_POLICY.md` into forge-body, descope, and opportunistic-finding
       resources with independent load conditions.
       Check: final-PR, descope, and finding fixtures each record only their
       required policy resource.
-- [ ] Add the versioned dependency receipt and its fail-closed local fingerprint
+- [x] Add the versioned dependency receipt and its fail-closed local fingerprint
       fast path for later phases.
       Check: dependency fixtures cover fast path plus every invalidation case.
-- [ ] Preserve the existing universal execution safety boxes in the compact
+- [x] Preserve the existing universal execution safety boxes in the compact
       Turn contract.
       Check: `read-verified` maps every previous safety box to its unique owner.
-- [ ] Preserve route-specific observable behavior without loading its contract
+- [x] Preserve route-specific observable behavior without loading its contract
       on unrelated routes.
       Check: existing and new execute fixtures pass with unchanged observable outcomes.
 - [ ] Run `bump-skill` for `execute-phase` and synchronize its docs/migration
