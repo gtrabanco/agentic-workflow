@@ -152,4 +152,30 @@ Fixture evidence:
 - `scripts/dependency-gate.test.mjs` models the contract as pure functions (`gitBlobSha` implements the git blob hash; `dependencyFingerprint` hashes SPEC line + roadmap rows; `fastPathEligible` returns `{ eligible, reason }`). 10 cases: the fingerprint primitive cross-checks `git hash-object --stdin`; a full gate pass produces a receipt that fast-paths; and each documented invalidation case fails closed — SPEC/roadway amendment (fingerprint mismatch), missing receipt, older-version (v0) receipt, later `--force`, unmet dependency, ambiguous (no-fingerprint) receipt — plus `--force` predating the receipt does not invalidate it, and the matrix asserts exactly the six documented reasons.
 - `node --test scripts/check-skill-context.test.mjs` still passes (route/policy fixtures unchanged).
 
+#### P3-4 — preserve universal execution safety boxes + observable behavior
+
+Gate: `node --test scripts/*.test.mjs` → 11 pass, exit 0; `node scripts/check-skill-context.mjs --routes` → `PASS route budgets: 16 routes`, exit 0.
+
+The compaction preserved every pre-consolidation universal execution safety box (11 boxes, cut at `5c71105^`) in the compact Turn contract. `scripts/check-skill-context.test.mjs` now carries a **read-verified owner map**: it reads the actual files and asserts (a) the compact contract still has all 11 `✓ N.` box lines and (b) each box maps to exactly one designated owner resource containing the box's normative marker. The 1:1 table:
+
+| Box | Owner resource | Normative marker |
+|---|---|---|
+| 1 Branch verified FIRST | `EXECUTION_CONTRACT.md` | `## Branch` |
+| 2 Phase-lint pre-flight guard | `PREFLIGHT.md` | `## Phase-lint pre-flight guard` |
+| 3 Architectural-invariant gate | `EXECUTION_CONTRACT.md` | `## Architectural invariants` |
+| 4 Gate RUN (not assumed) | `EXECUTION_CONTRACT.md` | `actually RUN (paste exit` |
+| 5 git add/commit executed | `EXECUTION_CONTRACT.md` | `Docs COMMITTED with the phase` |
+| 6 Unit finished → push + PR | `CLOSEOUT.md` | `gh pr create` |
+| 7 Clean-tree check LAST | `FOLDING.md` | `git status --porcelain` |
+| 8 Artifact language | `FORGE_BODY.md` | `Language precedence` |
+| 9 Descope guard | `DESCOPE.md` | `## Descope guard` |
+| 10 Out-of-scope finding classification | `OPPORTUNISTIC_FINDING.md` | `## Opportunistic finding policy` |
+| 11 `→ Next:` block ABSOLUTE last | `CLOSEOUT.md` | `→ Next: /review-change` |
+
+Observable-behavior fixtures preserve route-specific behavior without loading another route's contract: each mode route loads exactly its own `WORKFLOWS_*` (feature/small/fix/legacy) and no policy file; the policy routes (`final-pr`/`descope`/`finding`) load no mode workflow; and each of the 7 execute routes is run individually and must still exit 0 with its route name in the output (unchanged observable outcome).
+
+Fixture evidence:
+- `scripts/check-skill-context.test.mjs` gains two P3-4 blocks: the read-verified owner map (11 boxes; asserts contract line count == 11, unique per-box owner, owner exists, marker present) and the observable-behavior block (per-mode workflow + policy disjointness + per-route `--routes --route execute-phase:<mode>` PASS). `node --test scripts/*.test.mjs` → 11 pass.
+- Owner markers verified by grep (see the box/owner table above); no `ISSUE_POLICY.md` reappears on any route.
+
 
