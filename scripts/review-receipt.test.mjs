@@ -28,8 +28,9 @@ const parseReceipt = (body) => {
 };
 
 const newestReceipt = (comments) => {
-  for (const comment of comments ?? []) {
-    const receipt = parseReceipt(comment.body);
+  const list = comments ?? [];
+  for (let i = list.length - 1; i >= 0; i--) {
+    const receipt = parseReceipt(list[i].body);
     if (receipt && receipt.contract === CONTRACT) return receipt;
   }
   return null;
@@ -73,6 +74,15 @@ test("REVIEW-PASS is idempotent: same SHA already commented is skipped", () => {
   const comments = [{ body: receiptBody({ sha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }];
   const result = postReceipt({ decision: "REVIEW-PASS", hasPr: true, comments, headSha: sha });
   assert.equal(result.action, "skip", result.reason);
+});
+
+test("newestReceipt selects last matching marker (newest wins for chronological oldest-first list)", () => {
+  const sha1 = "a".repeat(40);
+  const sha2 = "b".repeat(40);
+  const c1 = { body: receiptBody({ sha: sha1, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) };
+  const c2 = { body: receiptBody({ sha: sha2, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) };
+  assert.equal(newestReceipt([c1, c2]).sha, sha2, "last in list wins");
+  assert.equal(newestReceipt([c2, c1]).sha, sha1, "last in reversed list wins");
 });
 
 test("stale SHA (later commit) posts a new receipt; newest matching marker wins", () => {
