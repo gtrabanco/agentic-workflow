@@ -118,7 +118,7 @@ named contract comparison and cited file evidence in `testing.md`.
 - [x] Synchronize every versioned, migration, workflow, template, and bilingual
       documentation surface required by AC 16.
 - [x] Run the complete local close-out command set from AC 18.
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push
   Done-when: `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs && npx skills add . --list` → all exit 0 with golden evidence recorded.
