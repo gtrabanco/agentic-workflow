@@ -106,5 +106,4 @@
 - No SKILL.md prose change was needed: the box lines were already identical to
   the pre-consolidation checklist, so P3-4 is pure verification + fixtures
   (`scripts/check-skill-context.test.mjs` owner-map + observable-behavior
-  blocks), leaving the 2799/177 main budget untouched.
-
+  blocks),   leaving the 2799/177 main budget untouched.
