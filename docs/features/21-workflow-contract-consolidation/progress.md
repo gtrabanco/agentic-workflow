@@ -311,6 +311,7 @@ Last reviewed: —
   scripts/audit-pr-receipt.test.mjs` (11 pass), `node --test
   scripts/review-receipt.test.mjs`, `git diff --check`, plus the manual doc
   link/coherence checks (renamed-file references, bilingual parity).
-- Remains: t6 (open PR + print URL), t7-8 (roadmap flip + link commit + push).
-- Next: commit the full unit, then `gh pr create --body-file` + PR URL +
-  roadmap flip + `docs: link PR #<n>` push | unit not finished
+- **t6 — PR opened and linked.** Pushed `feat/21-workflow-contract-consolidation` and opened **PR #121** (`https://github.com/gtrabanco/agentic-workflow/pull/121`, `gh pr create --body-file`, Markdown body with real backticks). Title: "feat(workflow): consume review receipt in audit-pr; consolidate workflow contracts". No feature issue exists (row 21 is user-requested), so the body notes "Closes roadmap row 21".
+- **t7-8 — roadmap flip + link commit.** `docs/features/ROADMAP.md` row 21 flipped `planned` → `done · [#121](https://github.com/gtrabanco/agentic-workflow/pull/121)`, committed `docs: link PR #121` (`db3a8c6`), pushed. `git status --porcelain` empty; branch not ahead of remote.
+- **Unit complete.** P1–P5 all done: measured route tooling, planning/execution consolidation, review-to-audit boundary with SHA-bound receipt consumption, full P5 hardening. Done-when (`node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs && npx skills add . --list`) all exit 0 with golden evidence recorded.
+- Next: `/review-change` on the merged-unit surface of PR #121 (accumulation > 400 lines / > 8 files) → `/audit-pr` for the merge gate | unit finished
