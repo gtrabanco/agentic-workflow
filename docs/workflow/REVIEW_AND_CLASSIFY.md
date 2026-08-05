@@ -56,26 +56,35 @@ violations (whatever the project's docs mandate).
 
 | Finding | Axis | Sev | Class | WHY | Impl risk | Long-term impact | Premature-opt? | Route |
 |---|---|---|---|---|---|---|---|---|
-| Unbounded query on hot path | perf | low | postpone | Negligible now | Low (cache) | Grows with data | no | issue + trigger |
-| Helper duplicated in 2 files | maintainability | low | intentional-tradeoff | Coupling 2 features is worse | — | Near-zero divergence | no | document in code |
-| Secret committed to a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | plan-fix |
-| New module without tests | tests | med | fix-now | Untested failure path | Low | Regression risk | no | fold into phase |
+| API token committed to a config file | security | high | fix-now | Credential exposure | Low (move to secret store) | Incident risk | no | fold into phase |
+| Fixing this backend bug pulls in an auth redesign | correctness | high | decision-required | Unavoidable product/architecture decision | — | Blocking | no | surface decision, block |
+| Rate limiter reusable across the fleet | architecture | low | proposal | Independent of this unit (D3) | — | — | yes | batch proposal + trigger |
+| Single-caller wrapper around a stdlib call | overengineering | low | ignore | Indirection with no payoff | — | Negligible | no | note rationale |
 
-Classes: **fix-now / postpone / ignore / intentional-tradeoff**.
+Classes: **fix-now / replan-in-unit / decision-required / proposal / ignore** — where `ignore`
+claims "this is not a real defect" (decided first, on the claim alone). For current-unit work
+only **fix-now** (folds into the open phase), **replan-in-unit** (new user-confirmed phases),
+and **decision-required** (blocks until the user decides) exist; `postpone` / `tradeoff` /
+`wontfix` / `disputed` and reviewer-created issues are **forbidden** for current-unit work
+(AC 10). Only a truly independent future capability becomes a **proposal**.
 
 ## What you do with the output
 
-`review-change` is **mandatory before every merge** (every unit gets it), and it
-runs **every non-fix-now finding through `triage-issue`** so each has a real
-destination — never silently lost:
+`review-change` is **mandatory before every merge** (every unit gets it). Every
+finding gets a real destination — never silently lost, and no backlog created by
+the review (D3):
 
-- **fix-now** → `plan-fix` → `execute-phase --fix` (or fold into the
-  current feature phase if it's unmerged work).
-- **postpone** → `triage-issue` → tracked issue **with a trigger**. Do **not**
-  implement inline.
-- **intentional-tradeoff** → `triage-issue` → document it (code comment,
-  `decisions.md`, or an issue) so it isn't re-flagged next review.
-- **ignore** → `triage-issue` → note the rationale (or confirm it needs nothing).
+- **fix-now** → folds directly into the current unit's open phase. Never a
+  tracked issue, never `plan-fix` (AC 12).
+- **fix-now / replan-in-unit** → new user-confirmed phase(s) appended to the
+  unit's SPEC `## Phases` ledger (before the hardening close-out, or after it
+  plus a fresh final hardening phase if it already ran), then `execute-phase`
+  on the same branch — never a downgrade (AC 12).
+- **fix-now / decision-required** → stop and surface the decision; the unit
+  blocks until the user decides.
+- **proposal** (independent future capability) → batched in the report with a
+  trigger; the **user** decides whether to route it to `triage-issue` (D3).
+- **ignore** → note the rationale in the report; no further action.
 
 Then it prints the next step (clean → `/audit-pr`).
 
@@ -109,5 +118,6 @@ gate, because the whole point is to catch what one reviewer would miss.
 
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
 `/verify`. It adds the **classification + project-aware axes** those don't, in
-one pass. Routes `fix-now` into `plan-fix`, and **every non-fix-now finding**
-(postpone / ignore / intentional-tradeoff) into `triage-issue`.
+one pass. Routes **fix-now** into the current unit's open phase, **replan-in-unit**
+into new user-confirmed SPEC phases, surfaces **decision-required** to the user,
+and batches independent **proposals** for the user to route to `triage-issue`.

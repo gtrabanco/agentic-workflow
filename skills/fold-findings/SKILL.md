@@ -43,7 +43,7 @@ first on purpose).
 
 ## When to use
 
-- After a `/review-change` run reports `Decision: FAIL` with one or more
+- After a `/review-change` run reports `Decision: REVIEW-FAIL` with one or more
   fix-now findings on the unit's `review-findings.md` ledger.
 - After an `/audit-pr` run reports `VERDICT: BLOCKED` — every blocker on a
   BLOCKED verdict is fix-now by definition and should already be persisted to
