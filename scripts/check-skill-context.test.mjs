@@ -215,4 +215,71 @@ runFixtureRoute(
   assert.ok(!fs.existsSync(path.join(executeRefsDir, "ISSUE_POLICY.md")), "ISSUE_POLICY.md must be split");
 }
 
+// P3-4 (read-verified): every pre-consolidation universal safety box (11 boxes
+// at the compact Turn contract, `5c71105^`) must be (a) preserved in the compact
+// contract and (b) map to exactly one unique owner resource that carries its
+// normative detail. The box line stays resident in SKILL.md; the owner carries
+// the authority.
+
+{
+  const contract = fs.readFileSync(path.join(repoRoot, "skills/execute-phase/SKILL.md"), "utf8");
+  const boxLines = contract.split("\n").filter((l) => /^✓ \d+\./.test(l));
+  assert.equal(boxLines.length, 11, "compact Turn contract must preserve all 11 safety boxes");
+
+  const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
+  const owners = [
+    { box: "Branch verified FIRST", owner: "EXECUTION_CONTRACT.md", marker: "## Branch" },
+    { box: "Phase-lint pre-flight guard RUN", owner: "PREFLIGHT.md", marker: "## Phase-lint pre-flight guard" },
+    { box: "Architectural-invariant gate RUN", owner: "EXECUTION_CONTRACT.md", marker: "## Architectural invariants" },
+    { box: "gate was RUN (not assumed)", owner: "EXECUTION_CONTRACT.md", marker: "actually RUN (paste exit" },
+    { box: "`git add <files>` and `git commit", owner: "EXECUTION_CONTRACT.md", marker: "Docs COMMITTED with the phase" },
+    { box: "Unit finished", owner: "CLOSEOUT.md", marker: "gh pr create" },
+    { box: "Clean-tree check LAST", owner: "FOLDING.md", marker: "git status --porcelain" },
+    { box: "Artifact language", owner: "FORGE_BODY.md", marker: "Language precedence" },
+    { box: "Descope guard applied", owner: "DESCOPE.md", marker: "## Descope guard" },
+    { box: "out-of-scope finding", owner: "OPPORTUNISTIC_FINDING.md", marker: "## Opportunistic finding policy" },
+    { box: "→ Next:` block", owner: "CLOSEOUT.md", marker: "→ Next: /review-change" },
+  ];
+  assert.equal(new Set(owners.map((o) => o.box)).size, 11, "owner map must designate exactly one owner per box");
+  for (const { box, owner, marker } of owners) {
+    assert(boxLines.some((l) => l.includes(box)), `box preserved in compact contract: ${box}`);
+    const ownerText = fs.readFileSync(path.join(executeRefsDir, owner), "utf8");
+    assert(ownerText.includes(marker), `${owner} must carry the normative detail for "${box}" (missing marker: "${marker}")`);
+  }
+}
+
+// P3-4 (observable behavior): route-specific contracts stay out of unrelated
+// routes and every execute route still PASSes on its own with unchanged
+// observable outcomes.
+
+{
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
+  const modeWorkflow = {
+    feature: "WORKFLOWS_FEATURE.md",
+    small: "WORKFLOWS_SMALL_PHASED.md",
+    fix: "WORKFLOWS_FIX.md",
+    legacy: "WORKFLOWS_LEGACY.md",
+  };
+  const policyFiles = ["FORGE_BODY.md", "DESCOPE.md", "OPPORTUNISTIC_FINDING.md"];
+  for (const [mode, workflow] of Object.entries(modeWorkflow)) {
+    const refs = manifest.routes[`execute-phase:${mode}`].references["execute-phase"];
+    assert.ok(refs.includes(workflow), `execute-phase:${mode} must load ${workflow}`);
+    for (const name of refs) {
+      if (name.startsWith("WORKFLOWS_")) assert.equal(name, workflow, `execute-phase:${mode} must not load other mode workflows`);
+      assert.ok(!policyFiles.includes(name), `execute-phase:${mode} must not load policy files`);
+    }
+  }
+  for (const route of ["execute-phase:final-pr", "execute-phase:descope", "execute-phase:finding"]) {
+    const refs = manifest.routes[route].references["execute-phase"];
+    assert.equal(refs.filter((n) => n.startsWith("WORKFLOWS_")).length, 0, `${route} must not load a mode workflow`);
+    for (const name of refs) assert(fs.existsSync(path.join(executeRefsDir, name)), `missing referenced file: ${name}`);
+  }
+  for (const mode of ["feature", "small", "fix", "legacy", "final-pr", "descope", "finding"]) {
+    const res = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--route", `execute-phase:${mode}`], { encoding: "utf8" });
+    assert.equal(res.status, 0, `execute-phase:${mode} must still PASS: ${res.stderr}`);
+    assert.ok(res.stdout.includes(`execute-phase:${mode}`), `execute-phase:${mode} must appear in its own route output`);
+  }
+}
+
 console.log("PASS context checker: nested, missing, unreachable, heading, budget, argument, route, and route-reference failures rejected");
