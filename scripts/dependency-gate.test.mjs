@@ -23,7 +23,12 @@ const fastPathEligible = (receipt, localFingerprint, forceRecords) => {
     return { eligible: false, reason: "ambiguous receipt" };
   if (receipt.fingerprint !== localFingerprint) return { eligible: false, reason: "fingerprint mismatch" };
   if (receipt.fullyMerged !== true) return { eligible: false, reason: "unmet dependency" };
-  const laterForce = forceRecords.some((f) => Date.parse(f.date) > Date.parse(receipt.verified));
+  const recv = Date.parse(receipt.verified);
+  if (!receipt.verified || !Number.isFinite(recv)) return { eligible: false, reason: "ambiguous receipt" };
+  const laterForce = forceRecords.some((f) => {
+    const fd = Date.parse(f.date);
+    return !f.date || !Number.isFinite(fd) || fd > recv;
+  });
   if (laterForce) return { eligible: false, reason: "prior --force" };
   return { eligible: true, reason: "receipt current and fully merged" };
 };
@@ -100,13 +105,31 @@ test("ambiguous receipt (no fingerprint) never skips the forge", () => {
   assert.equal(result.reason, "ambiguous receipt");
 });
 
+test("malformed or missing verified date on receipt fails closed as ambiguous", () => {
+  const badDate = { version: VERSION, fingerprint: "x", fullyMerged: true, verified: "2026-08-0x" };
+  let result = fastPathEligible(badDate, "x", []);
+  assert.equal(result.eligible, false);
+  assert.equal(result.reason, "ambiguous receipt");
+  const noDate = { version: VERSION, fingerprint: "x", fullyMerged: true };
+  result = fastPathEligible(noDate, "x", []);
+  assert.equal(result.eligible, false);
+  assert.equal(result.reason, "ambiguous receipt");
+});
+
+test("malformed force date invalidates (fails closed)", () => {
+  const receipt = { version: VERSION, fingerprint: "x", fullyMerged: true, verified: "2026-08-04" };
+  const result = fastPathEligible(receipt, "x", [{ date: "not-a-date" }]);
+  assert.equal(result.eligible, false);
+  assert.equal(result.reason, "prior --force");
+});
+
 test("every invalidation case is covered by the fixture matrix", () => {
   const cases = ["missing receipt", "older-version receipt", "ambiguous receipt", "fingerprint mismatch", "prior --force", "unmet dependency"];
   const receipt = { version: VERSION, fingerprint: "x", fullyMerged: true, verified: "2026-08-04" };
   const scenarios = [
     fastPathEligible(null, "x", []),
     fastPathEligible({ version: "v0", fingerprint: "x", fullyMerged: true, verified: "2026-08-04" }, "x", []),
-    fastPathEligible({ version: VERSION, fullyMerged: true, verified: "2026-08-04" }, "x", []),
+    fastPathEligible({ version: VERSION, fingerprint: "x", fullyMerged: true, verified: "bad-date" }, "x", []),
     fastPathEligible(receipt, "y", []),
     fastPathEligible(receipt, "x", [{ date: "2026-08-05" }]),
     fastPathEligible({ version: VERSION, fingerprint: "x", fullyMerged: false, verified: "2026-08-04" }, "x", []),
