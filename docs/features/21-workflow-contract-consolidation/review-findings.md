@@ -8,4 +8,4 @@
 | F6 | Review receipt | Review receipt | high | fix-now | /review-change | yes |
 | F7 | scripts/check-skill-context.mjs:78 | code | major | fix-now | fold into branch | yes |
 | F8 | docs/workflow/WORKFLOW_INVARIANTS.md:72 | spec-drift | major | fix-now | fold into branch | yes |
-| F9 | docs/workflow/SKILLS.md:101 | brand | major | fix-now | fold into branch | no |
+| F9 | docs/workflow/SKILLS.md:101 | brand | major | fix-now | fold into branch | yes |

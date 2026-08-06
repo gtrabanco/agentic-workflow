@@ -69,12 +69,12 @@ limits.
 |---|---|
 | `plan-feature-from-issue` | Feature-request issue → scoped SPEC product half (satisfies capability closure), with `Closes #N` (invoked by `plan-feature`) |
 | `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
-| `review-implementation` | Two-phase find → classify → decision table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
+| `review-implementation` | Classification engine over synthesized table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
 | `orchestration-envelope` | The machine-envelope contract: canonical driver-injected system-prompt snippet, repair loop, and JSON schema. `user-invocable: false` — the piece an external driver injects, not a menu entry |
 | `review-code` | Correctness + reuse/simplification/efficiency checklist over the diff. `user-invocable: false` — one axis of `review-change`'s internal review pack |
 | `review-security` | OWASP-shaped security checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-verify` | Runtime-behavior verification checklist (does the change actually do what it claims). `user-invocable: false` — internal review pack |
-| `review-debt` | Tech-debt / TODO / dead-code checklist over the diff. `user-invocable: false` — internal review pack |
+| `review-debt` | Tech-debt transform over classified table (does not rescan diff). `user-invocable: false` — internal review pack |
 | `review-design` | Architecture/layering-consistency checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-a11y` | Accessibility checklist over UI changes. `user-invocable: false` — internal review pack |
 | `review-brand` | Brand/voice-consistency checklist over user-facing copy. `user-invocable: false` — internal review pack |
@@ -91,14 +91,14 @@ limits.
 
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
-| `review-change` | the **change** | Run only the reviews that apply to this platform — **each pass isolated by default** (context-clean, returns only its findings table; the orchestrator holds tables, never sources) — + a structural **SPEC drift check** (per-criterion coverage table + diff-hunk mapping) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | `plan-fix` (fix-now) / `triage-issue` (independent proposals) |
+| `review-change` | the **change** | Run only the reviews that apply to this platform — **each pass isolated by default** (context-clean, returns only its findings table; the orchestrator holds tables, never sources) — + a structural **SPEC drift check** (per-criterion coverage table + diff-hunk mapping) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | folds fix-now into open phase / `triage-issue` (independent proposals) |
 | `fold-findings` | the **findings ledger** | Repair each fix-now finding from `review-change`/`audit-pr` for real, one at a time — frozen classification (never reclassifies), a fixed forbidden list closes the known-issues-dump/downgrade/test-loosening/suppression escape hatches; per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict | re-run `review-change` (all folded) / `triage-issue` (disputed) |
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges. Active `ship-roadmap --fullauto` is the only consumer allowed to execute an automated merge | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
 
 > `review-change`'s findings engine is the internal `review-implementation`
-> (`user-invocable: false`) — the two-phase find → classify pass it composes, and
+> (`user-invocable: false`) — the synthesized-table classifier it composes, and
 > that `audit-pr` / `product-audit` reuse. It's not a menu entry; see
 > [Internal steps](#internal-steps-hidden-from-the-menu-composed-for-you).
 
