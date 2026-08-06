@@ -9,3 +9,4 @@
 | F7 | scripts/check-skill-context.mjs:78 | code | major | fix-now | fold into branch | yes |
 | F8 | docs/workflow/WORKFLOW_INVARIANTS.md:72 | spec-drift | major | fix-now | fold into branch | yes |
 | F9 | docs/workflow/SKILLS.md:101 | brand | major | fix-now | fold into branch | yes |
+| F10 | docs/features/21-workflow-contract-consolidation/testing.md:256 | review-verify | major | fix-now | fold into branch | yes |
