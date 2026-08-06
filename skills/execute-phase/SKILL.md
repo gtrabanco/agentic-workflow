@@ -46,7 +46,7 @@ Three modes:
      The PR body is NEVER empty: what it does, why, evidence, and
      `Closes #<n>` when issue-born. The body is passed with `--body-file`
       (real Markdown, NO `\`-escaped backticks — see Forge body policy). AND the roadmap row (or fix-index entry)
-     was updated to `done · [#<pr>](<pr-url>)` in a follow-up
+      was updated to `done · [#<pr>](<pr-url>)` in a follow-up
      `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
      without its PR link is an UNFINISHED unit. Unit not finished? Then
      NOTHING was pushed.
