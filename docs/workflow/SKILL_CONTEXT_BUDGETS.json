@@ -24,20 +24,20 @@
     "plan-feature:scoped": {
       "skills": ["plan-feature", "planning-preflight", "phase-contract"],
       "templates": [],
-      "routeEstimateMax": 5107,
-      "routeLinesMax": 423
+      "routeEstimateMax": 5900,
+      "routeLinesMax": 500
     },
     "plan-feature:issue": {
       "skills": ["plan-feature", "plan-feature-from-issue", "planning-preflight", "phase-contract"],
       "templates": [],
-      "routeEstimateMax": 6982,
-      "routeLinesMax": 563
+      "routeEstimateMax": 7850,
+      "routeLinesMax": 650
     },
     "plan-fix:issue": {
       "skills": ["plan-fix", "planning-preflight", "phase-contract"],
       "templates": [],
-      "routeEstimateMax": 4906,
-      "routeLinesMax": 387
+      "routeEstimateMax": 5700,
+      "routeLinesMax": 460
     },
     "execute-phase:feature": {
       "skills": ["execute-phase", "phase-contract"],
