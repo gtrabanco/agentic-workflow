@@ -123,6 +123,37 @@ const bareRoute = spawnSync(process.execPath, [path.join(repoRoot, "scripts/chec
 assert.notEqual(bareRoute.status, 0);
 assert.match(`${bareRoute.stdout}\n${bareRoute.stderr}`, /--route requires a name/);
 
+const routesBudgets = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes", "--budgets"], { encoding: "utf8" });
+assert.equal(routesBudgets.status, 0, routesBudgets.stderr);
+assert.match(routesBudgets.stdout, /PASS route budgets/);
+assert.match(routesBudgets.stdout, /PASS context budgets/);
+
+const bareBudgets = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--budgets"], { encoding: "utf8" });
+assert.equal(bareBudgets.status, 0, bareBudgets.stderr);
+assert.match(bareBudgets.stdout, /PASS context budgets/);
+
+const runFixtureRouteBudgets = (label, setup, expected) => {
+  const fixture = createFixture();
+  try {
+    setup(fixture);
+    const result = spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), "--routes", "--budgets"], { encoding: "utf8" });
+    assert.notEqual(result.status, 0, `${label} should fail closed`);
+    assert.match(`${result.stdout}\n${result.stderr}`, expected, label);
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+};
+
+runFixtureRouteBudgets(
+  "route plus context budget failure",
+  (fixture) => {
+    const skillPath = path.join(fixture, "skills/workflow-status/SKILL.md");
+    const body = fs.readFileSync(skillPath, "utf8");
+    fs.writeFileSync(skillPath, `${body}\n${"x".repeat(12_000)}\n`);
+  },
+  /workflow-status: main estimate/,
+);
+
 const runFixtureRoute = (label, setup, expected) => {
   const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "agentic-route-check-"));
   try {
