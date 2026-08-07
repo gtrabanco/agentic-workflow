@@ -321,4 +321,4 @@ Last reviewed: —
 - Remains: none.
 - Gotchas: preservation test (added for P3-4) expected inline ✓ boxes in execute-phase/SKILL.md; post D11 canonical move the source is the orchestration-envelope ref — test now points to canonical (no behavior change).
 - Files: scripts/check-skill-context.test.mjs, docs/features/21-workflow-contract-consolidation/progress.md
-- Next: P2 — Planning contract consolidation | unit not finished
+- Next: `/review-change` on the merged-unit surface of PR #121 (accumulation > 400 lines / > 8 files) → `/audit-pr` for the merge gate | unit finished

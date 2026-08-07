@@ -18,8 +18,11 @@ description: >
 # Machine envelope (internal contract)
 
 The **envelope** is one fenced `json` block, the **absolute last output** of
-a turn, that lets an external orchestrator route on the outcome. **Who emits
-it** (since feature 10 — see `docs/workflow/MIGRATION.md`):
+a turn, that lets an external orchestrator route on the outcome. This skill
+also owns the canonical [Turn contract](references/TURN_CONTRACT.md) (the
+eleven safety boxes; `orchestration-envelope` is its single owner — other
+skills load it plus skill-specific additions only). **Who emits it** (since
+feature 10 — see `docs/workflow/MIGRATION.md`):
 
 - **`workflow-status` — always**, as part of its own contract (emitting the
   envelope *is* the sensor's function).
