@@ -99,6 +99,9 @@ const resolveRouteFiles = (routeDef) => {
         }
       }
     } else {
+      if (!fs.existsSync(skillFile)) {
+        throw new Error(`resolveRouteFiles: skill SKILL.md not found: ${skillFile}`);
+      }
       const body = fs.readFileSync(skillFile, "utf8");
       const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
       if (fs.existsSync(referencesDir)) {
