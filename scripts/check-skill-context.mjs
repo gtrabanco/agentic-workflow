@@ -104,15 +104,6 @@ const resolveRouteFiles = (routeDef) => {
       }
       const body = fs.readFileSync(skillFile, "utf8");
       const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
-      if (fs.existsSync(referencesDir)) {
-        for (const name of fs.readdirSync(referencesDir).filter((n) => n.endsWith(".md")).sort()) {
-          const refPath = path.join(referencesDir, name);
-          if (!seen.has(refPath)) {
-            files.push(refPath);
-            seen.add(refPath);
-          }
-        }
-      }
       for (const name of linked) {
         const refPath = path.join(referencesDir, name);
         if (!seen.has(refPath)) {
