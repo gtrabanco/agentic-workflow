@@ -9,7 +9,6 @@ tmp/
 
 # Local MCP configuration
 .mcp.json
-.pi
 
 # Agents & MCPs
 .serena
