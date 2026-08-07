@@ -107,3 +107,23 @@
   the pre-consolidation checklist, so P3-4 is pure verification + fixtures
   (`scripts/check-skill-context.test.mjs` owner-map + observable-behavior
   blocks),   leaving the 2799/177 main budget untouched.
+
+## 2026-08-07 — Turn Contract ownership redesign
+
+- The interrupted P5 follow-up identified fifteen workflow skills that still
+  carry inline `## Turn contract` copies. This is an incomplete part of feature
+  21, not a new feature: replan it on the existing feature folder, branch, and
+  PR.
+- `skills/orchestration-envelope/references/TURN_CONTRACT.md` is the one
+  authority for the existing eleven boxes. The redesign preserves those boxes
+  unchanged and makes the owner SKILL.md link the resource; a missing resource
+  remains a STOP, never an inline fallback.
+- Each migrated skill retains only its unique verification rules in the
+  semantically relevant linked reference. If no suitable reference exists, add
+  one for those additions rather than leaving an inline duplicate.
+- The user selected patch semver bumps for every changed skill. `bump-skill`
+  remains responsible for synchronized changelog/readme distribution updates.
+
+## 2026-08-07 — P1 gate reconcile (execute 21 P1)
+- Reality vs plan: `scripts/check-skill-context.test.mjs` (P1-extended) asserted 11 ✓ boxes inside `execute-phase/SKILL.md` and owner markers; after canonical consolidation the boxes live only in `orchestration-envelope/references/TURN_CONTRACT.md` and some normative detail moved. Updated test source + box phrases + markers so P1 done-when (`test && --routes`) passes while preserving the read-verified intent. Recorded per "when reality contradicts the plan" rule; no TASKS change needed (all boxes already checked, evidence now green).
+- No architecture change; P1 scope (route measurement + its test) only.

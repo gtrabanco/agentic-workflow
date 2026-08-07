@@ -50,6 +50,13 @@ The `--merge` name inside adversarial review also collides with repository/PR
 merge semantics. Review synthesis must never expose an ambiguous merge-shaped
 entry point or emit merge-readiness language.
 
+After P5, interrupted in-branch work exposed a remaining source of drift: the
+fixed `## Turn contract` checklist remains copied inline in fifteen workflow
+skills. The canonical eleven-box resource already exists, and three skills
+already load it, but the owner skill does not yet link the resource and the
+remaining copies prevent a single, reachable authority. This redesign completes
+that ownership consolidation without changing any checklist behavior.
+
 ### Business goals
 
 - Lower the fixed context cost paid on every planned and executed feature.
@@ -60,6 +67,8 @@ entry point or emit merge-readiness language.
   permission.
 - Preserve the independent final delivery gate and every safety property that
   protects branch, CI, traceability, scope, and explicit architectural decisions.
+- Give every migrated workflow skill one reachable canonical Turn Contract while
+  retaining its unique verification rules in the semantically relevant resource.
 
 ### Scope
 
@@ -100,6 +109,17 @@ entry point or emit merge-readiness language.
 - Update versions, migration guidance, bilingual workflow docs, context budgets,
   and weak-model golden fixtures for every changed contract. (AC 16, AC 17,
   AC 18)
+- Finish canonical Turn Contract ownership: link
+  `skills/orchestration-envelope/references/TURN_CONTRACT.md` from its owner,
+  and migrate `audit-docs`, `audit-pr`, `bump-skill`,
+  `discover-repository-state`, `fold-findings`, `generate-docs`,
+  `init-workspace`, `log-session`, `plan-feature`, `plan-fix`, `product-audit`,
+  `resolve-repository-state`, `ship-roadmap`, `triage-issue`, and
+  `workflow-status` from inline copies to that resource. Each skill retains its
+  unique checks in the semantically relevant reference, creating one only when
+  the skill has no appropriate reference resource. (AC 19, AC 20)
+- Verify the migrated reference graph and progressive context budgets, then make
+  a patch release of every changed skill through `bump-skill`. (AC 21, AC 22)
 
 #### Out of scope / non-goals
 
@@ -116,6 +136,9 @@ entry point or emit merge-readiness language.
 - Provider billing instrumentation or claims that the deterministic byte/4
   proxy equals billed tokens.
 - Retrofitting historical feature folders or renumbering prior findings.
+- Weakening, removing, or changing the eleven fixed boxes in the canonical Turn
+  Contract, changing the machine-envelope schema, or changing workflow
+  authority/behavior as part of this migration.
 
 ### Capability closure
 
@@ -159,6 +182,16 @@ entry point or emit merge-readiness language.
 | Delete | n/a: historical evidence remains | n/a | n/a | n/a |
 | State transitions | review-ready → audited → merge-ready/blocked | fixed audit output | delivery gates | no review command emits merge readiness |
 
+#### Entity: canonical Turn Contract reference
+
+| Operation | Resolution | UI | Command/API | Test |
+|---|---|---|---|---|
+| Create | in-scope | one canonical checklist resource | owner reference file | owner file exists and is linked from its SKILL.md |
+| Read/list | in-scope | each migrated skill's Turn Contract section | canonical link plus semantic additions link | checker resolves every reference and no named skill retains an inline copy |
+| Update | in-scope: only the owner changes shared boxes | owner resource and semantic per-skill references | explicit owner/additions links | migration fixture preserves every skill-specific verification |
+| Delete | n/a: the shared checklist is required | n/a | missing resource stops | missing-reference checker failure |
+| State transitions | inline copies → canonical link plus semantic additions → checker-verified | skill contract surface | context checker and budgets | all migrated skills resolve with no budget regression |
+
 #### Capability role matrix
 
 Every workflow role is listed for every capability; `allowed` means the role
@@ -174,6 +207,7 @@ owns or may invoke the capability, not that it may bypass its contract.
 | Emit final `REVIEW-PASS` receipt | denied | denied | denied | allowed | denied | invoke-only |
 | Emit `MERGE-READY | BLOCKED` | denied | denied | denied | denied | allowed | invoke-only |
 | Merge a PR | allowed, manual | denied | denied | denied | denied | allowed only inside active `ship-roadmap --fullauto` authority |
+| Own/load canonical Turn Contract | allowed | read-only | read-only | read-only | read-only | read-only |
 
 #### Integration closure
 
@@ -198,6 +232,9 @@ Derived inventory because this repository has no root `docs/CAPABILITIES.md`.
 | Bilingual documentation/versioning | in-scope: EN/ES and per-skill semver stay synchronized | AC 16 |
 | Golden-fixture verification | in-scope: weak-model behavior and no-merge/no-deferral failures are exercised | AC 17 |
 | Envelope schema package | n/a: no machine-envelope field change is required | n/a |
+| Skill reference reachability | in-scope: owner and migrated skills link only canonical/shared and semantic additions resources | AC 19, AC 21 |
+| Progressive context budgets | in-scope: migration preserves reachable route budgets | AC 21 |
+| Skill version/changelog distribution | in-scope: every changed skill receives a patch bump and synchronized changelog rows | AC 22 |
 
 ### Expectation sweep
 
@@ -219,6 +256,11 @@ Derived inventory because this repository has no root `docs/CAPABILITIES.md`.
 | 14 | Examples and portability detail do not load on supported normal routes | in-scope | AC 1, AC 16 |
 | 15 | Before/after context savings are measured rather than claimed | in-scope | AC 1, AC 17 |
 | 16 | Provider-specific billing telemetry is added | out-of-scope | Non-goals: deterministic proxy only |
+| 17 | A missing canonical or skill-specific Turn Contract reference is tolerated | out-of-scope | AC 19, AC 21: missing reference stops |
+| 18 | Shared Turn Contract boxes are changed while removing copies | out-of-scope | Non-goals; D11 |
+| 19 | A migrated skill loses its unique close-out verification rules | out-of-scope | AC 20; semantic additions preserve them |
+| 20 | Context budgets are assumed unchanged after reference migration | in-scope | AC 21 |
+| 21 | Version/changelog updates are deferred because the behavior is preserved | out-of-scope | AC 22; patch bump required |
 
 ### Acceptance criteria
 
@@ -284,6 +326,20 @@ Derived inventory because this repository has no root `docs/CAPABILITIES.md`.
 18. **command:** `npx skills add . --list`, `node scripts/check-skill-context.test.mjs`,
     `node scripts/check-skill-context.mjs`, `git diff --check`, documentation
     link/coherence checks, and every new route/receipt fixture exit 0.
+19. **read-verified:** `skills/orchestration-envelope/SKILL.md` links its
+    `references/TURN_CONTRACT.md` resource; that resource is the single owner of
+    the unchanged eleven-box checklist; and none of the fifteen named migrated
+    skills retains an inline copy of that checklist.
+20. **read-verified:** Every named migrated skill loads the canonical Turn
+    Contract and retains every skill-specific verification in a semantically
+    relevant linked reference; a skill without an appropriate existing reference
+    has one created for those additions.
+21. **command:** `node scripts/check-skill-context.mjs --routes --budgets`
+    exits 0 after the migration, including reference reachability and configured
+    progressive context-budget checks.
+22. **read-verified:** `bump-skill` applies a patch semver bump to every changed
+    skill and synchronizes the required English and Spanish changelog/readme
+    distribution artifacts.
 
 ### Tooling
 
@@ -325,6 +381,14 @@ Derived inventory because this repository has no root `docs/CAPABILITIES.md`.
   behind conditional references.
 - D10: only `audit-pr` says `MERGE-READY`; review reports
   `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION`.
+- D11: retain the eleven canonical Turn Contract boxes unchanged. Every migrated
+  skill loads the single owner at
+  `skills/orchestration-envelope/references/TURN_CONTRACT.md`; only its unique
+  verification rules live in a linked semantic reference. A missing reference
+  stops rather than falling back to an inline copy.
+- D12: place unique migration additions in the semantically relevant existing
+  reference where one exists; otherwise create a dedicated additions reference.
+  Every changed skill receives a patch bump.
 
 ### Deferred decisions
 
@@ -332,10 +396,10 @@ none
 
 ### Spec-lint (product boxes)
 
-PASS: the Product half has no placeholders; non-goals, four entity closures,
-the complete six-role matrix, the full derived integration inventory, sixteen
-resolved expectations, eighteen verifiable acceptance criteria, and no deferred
-decision.
+PASS: the Product half has no placeholders; non-goals, five entity closures,
+the complete six-role matrix, the full derived integration inventory, twenty-one
+resolved expectations, twenty-two verifiable acceptance criteria, and no
+deferred decision.
 
 ## Design status
 
