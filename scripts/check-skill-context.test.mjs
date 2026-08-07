@@ -222,23 +222,23 @@ runFixtureRoute(
 // the authority.
 
 {
-  const contract = fs.readFileSync(path.join(repoRoot, "skills/execute-phase/SKILL.md"), "utf8");
+  const contract = fs.readFileSync(path.join(repoRoot, "skills/orchestration-envelope/references/TURN_CONTRACT.md"), "utf8");
   const boxLines = contract.split("\n").filter((l) => /^✓ \d+\./.test(l));
-  assert.equal(boxLines.length, 11, "compact Turn contract must preserve all 11 safety boxes");
+  assert.equal(boxLines.length, 11, "canonical Turn contract must preserve all 11 safety boxes");
 
   const executeRefsDir = path.join(repoRoot, "skills/execute-phase/references");
   const owners = [
     { box: "Branch verified FIRST", owner: "EXECUTION_CONTRACT.md", marker: "## Branch" },
-    { box: "Phase-lint pre-flight guard RUN", owner: "PREFLIGHT.md", marker: "## Phase-lint pre-flight guard" },
-    { box: "Architectural-invariant gate RUN", owner: "EXECUTION_CONTRACT.md", marker: "## Architectural invariants" },
-    { box: "gate was RUN (not assumed)", owner: "EXECUTION_CONTRACT.md", marker: "actually RUN (paste exit" },
-    { box: "`git add <files>` and `git commit", owner: "EXECUTION_CONTRACT.md", marker: "Docs COMMITTED with the phase" },
-    { box: "Unit finished", owner: "CLOSEOUT.md", marker: "gh pr create" },
-    { box: "Clean-tree check LAST", owner: "FOLDING.md", marker: "git status --porcelain" },
-    { box: "Artifact language", owner: "FORGE_BODY.md", marker: "Language precedence" },
-    { box: "Descope guard applied", owner: "DESCOPE.md", marker: "## Descope guard" },
-    { box: "out-of-scope finding", owner: "OPPORTUNISTIC_FINDING.md", marker: "## Opportunistic finding policy" },
-    { box: "→ Next:` block", owner: "CLOSEOUT.md", marker: "→ Next: /review-change" },
+    { box: "All pre-edit gates (phase-lint, architectural invariants, dependency) RUN", owner: "PREFLIGHT.md", marker: "## Phase-lint pre-flight guard" },
+    { box: "`git add`, `git commit -m", owner: "EXECUTION_CONTRACT.md", marker: "Docs COMMITTED with the phase" },
+    { box: "Unit finished (single-pass/--fix/final phase)", owner: "CLOSEOUT.md", marker: "gh pr create" },
+    { box: "Clean-tree check LAST (`git status --porcelain` RUN", owner: "FOLDING.md", marker: "git status --porcelain" },
+    { box: "Artifact language: explicit user > project docs > English", owner: "FORGE_BODY.md", marker: "Language precedence" },
+    { box: "Descope guard applied to every issue created this turn", owner: "DESCOPE.md", marker: "## Descope guard" },
+    { box: "Out-of-scope findings classified per Opportunistic finding policy", owner: "OPPORTUNISTIC_FINDING.md", marker: "## Opportunistic finding policy" },
+    { box: "Closing `→ Next:` block printed as ABSOLUTE last output", owner: "CLOSEOUT.md", marker: "→ Next:" },
+    { box: "Envelope emitted if driver requested", owner: "EXECUTION_CONTRACT.md", marker: "## Normalized Repository State" },
+    { box: "No reconstruction from memory — missing reference → STOP", owner: "EXECUTION_CONTRACT.md", marker: "## Architectural invariants" },
   ];
   assert.equal(new Set(owners.map((o) => o.box)).size, 11, "owner map must designate exactly one owner per box");
   for (const { box, owner, marker } of owners) {

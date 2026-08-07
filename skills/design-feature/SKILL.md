@@ -18,42 +18,9 @@ Product definition — the stage that turns an idea or a feature request into an
 exhaustive, checkable set of acceptance criteria, before any engineering
 planning happens. **Docs only — no code, no branch.**
 
-## Turn contract — verify before ending the turn
+## Turn contract
 
-```
-✓ The Product half of the SPEC is filled (Context, Business goals, Scope,
-  Capability closure, Expectation sweep, Tooling, Product decisions, Deferred
-  decisions) OR a `NEEDS_INPUT` question is pending — never a half-filled
-  section left silently incomplete
-✓ Every Capability closure row resolves to a filled surface (UI + API + test)
-  or an explicit `n/a: <reason>` — a blank row is not a valid end state
-✓ Integration closure walked the capability inventory (`docs/CAPABILITIES.md`,
-  or the derived inventory when the project has none) with one resolved row
-  per subsystem — zero subsystems skipped; every capability's role matrix
-  lists EVERY inventory role as `allowed`/`denied`
-✓ The Expectation sweep table is present and fully resolved (≥ 10 rows M/L,
-  ≥ 5 XS/S; each `in-scope`/`out-of-scope`/`deferred` with a pointer) — an
-  enumerated expectation left unresolved is not a valid end state
-✓ Interview questions (when any were needed) went out ONE per turn — never a
-  batched round
-✓ `## Design status` is set to `designed` only when the Spec-lint product
-  boxes all tick (closure complete included) — otherwise it stays
-  `not designed` and the turn reports the failed boxes
-✓ The roadmap row's status is set to `defined` in lockstep with `designed`
-  (added at `idea` first if it didn't exist) — never `defined` with an
-  incomplete closure, never `designed` with the roadmap row left at `idea`
-✓ Upsert discipline honored: an existing SPEC/decisions.md was re-read first;
-  nothing recorded there was destroyed; revisions were appended, not overwritten
-✓ Artifact language: explicit user instruction > the project's declared docs
-  language > English. The CONVERSATION language never decides — a Spanish
-  prompt still produces an English SPEC/decisions unless one of the first two
-  says otherwise
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
-```
-
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Design-specific closure boxes (product half, capability/role matrix, expectation sweep, upsert) live only in [INTERVIEW.md](references/INTERVIEW.md). Missing reference → STOP.
 
 ## When to use
 

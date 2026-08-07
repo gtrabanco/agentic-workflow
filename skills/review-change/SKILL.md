@@ -18,19 +18,9 @@ The quality gate for a change: get every review that *applies* — and skip the 
 that don't — in one synthesized, classified report. **Findings only; never edits
 or refactors.**
 
-## Turn contract — verify before ending the turn
+## Turn contract
 
-```
-✓ This review runs in a conversation that did NOT implement the change; if this conversation wrote the diff, STOP and hand off to a fresh one (the reviewer works from the diff + the SPEC, not the author's mental state).
-✓ The synthesized decision table + manual-verification checklist + the three-state `Decision: REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` were returned in the fixed output format (D10: review never says MERGE-READY)
-✓ Architectural-invariant preservation was stated explicitly as pass / finding / n-a
-✓ Every finding has a destination (fix-now folds; replan-in-unit phases confirmed; decision-required surfaced; independent proposals batched for the user)
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
-```
-
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (isolation rule, applicability) live only in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
 
 ## When to use
 

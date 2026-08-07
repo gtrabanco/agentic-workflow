@@ -312,3 +312,4 @@ The F7 budget fold is why the maxima equal the measured totals: each hot route's
 - AC 2 sweep: `grep -Rni -- '--merge' skills/review-change docs/workflow`
   (excl. legacy/migration) → clean (exit 1); stale `Decision: FAIL` /
   `postpone` / `tradeoff` sweep → clean (exit 1).
+- P1 gate (2026-08-07 reconcile): `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs --routes` → both 0; test updated for canonical TURN_CONTRACT 11-box source (see progress P1 2026-08-07).

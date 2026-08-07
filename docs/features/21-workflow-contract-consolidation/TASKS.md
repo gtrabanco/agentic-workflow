@@ -25,6 +25,8 @@ named contract comparison and cited file evidence in `testing.md`.
       Check: `node scripts/check-skill-context.mjs --skill execute-phase --skill review-change --skill audit-pr` exits 0.
   Done-when: `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs --routes` → both exit 0.
 
+  (2026-08-07 reconcile under execute 21 P1: test source updated to canonical TURN_CONTRACT; gate re-verified green; see decisions.md and progress.)
+
 ## P2 — Planning contract consolidation
 
 - [x] Add internal `planning-preflight` as the single normalized-state and

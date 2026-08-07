@@ -315,3 +315,10 @@ Last reviewed: —
 - **t7-8 — roadmap flip + link commit.** `docs/features/ROADMAP.md` row 21 flipped `planned` → `done · [#121](https://github.com/gtrabanco/agentic-workflow/pull/121)`, committed `docs: link PR #121` (`db3a8c6`), pushed. `git status --porcelain` empty; branch not ahead of remote.
 - **Unit complete.** P1–P5 all done: measured route tooling, planning/execution consolidation, review-to-audit boundary with SHA-bound receipt consumption, full P5 hardening. Done-when (`node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs && npx skills add . --list`) all exit 0 with golden evidence recorded.
 - Next: `/review-change` on the merged-unit surface of PR #121 (accumulation > 400 lines / > 8 files) → `/audit-pr` for the merge gate | unit finished
+
+## P1 — 2026-08-07 (gate reconcile)
+- Done: P1 verification gate re-run after canonical Turn Contract migration; updated test to load 11-box list from `skills/orchestration-envelope/references/TURN_CONTRACT.md` and aligned owner markers to current normative files; `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs --routes` both exit 0 and print all named baselines (P1 done-when green).
+- Remains: none.
+- Gotchas: preservation test (added for P3-4) expected inline ✓ boxes in execute-phase/SKILL.md; post D11 canonical move the source is the orchestration-envelope ref — test now points to canonical (no behavior change).
+- Files: scripts/check-skill-context.test.mjs, docs/features/21-workflow-contract-consolidation/progress.md
+- Next: P2 — Planning contract consolidation | unit not finished
