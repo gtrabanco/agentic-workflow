@@ -240,7 +240,7 @@ Done-when gates, all exit 0 (recorded verbatim):
 
 | Command | Result |
 |---|---|
-| `node --test scripts/*.test.mjs` | 34 pass / 0 fail |
+| `node --test scripts/*.test.mjs` | 39 pass / 0 fail |
 | `node --test scripts/check-skill-context.test.mjs` | PASS |
 | `node scripts/check-skill-context.mjs` | PASS context budgets: 33 skills |
 | `node scripts/check-skill-context.mjs --routes` | PASS route budgets: 16 routes |
@@ -290,9 +290,9 @@ The F7 budget fold is why the maxima equal the measured totals: each hot route's
 | `node scripts/check-skill-context.test.mjs` | exit 0 (PASS) |
 | `node scripts/check-skill-context.mjs` | exit 0 (PASS context budgets: 33 skills) |
 | `npx skills add . --list` | exit 0 |
-| `node --test scripts/*.test.mjs` | 34 pass / 0 fail |
-| `node --test scripts/audit-pr-receipt.test.mjs` | 11 pass / 0 fail |
-| `node --test scripts/review-receipt.test.mjs` | pass / 0 fail |
+| `node --test scripts/*.test.mjs` | 39 pass / 0 fail |
+| `node --test scripts/audit-pr-receipt.test.mjs` | 13 pass / 0 fail |
+| `node --test scripts/review-receipt.test.mjs` | 13 pass / 0 fail |
 | `git diff --check` | clean |
 | Manual doc link/coherence | no `ADVERSARIAL_MERGE` reference anywhere; all `--synthesize` / `ADVERSARIAL_SYNTHESIS` references resolve; route-manifest reference files all exist |
 
