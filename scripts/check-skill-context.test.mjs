@@ -9,8 +9,11 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
+const tmpBase = process.env.TMPDIR || "/var/tmp";
+const mktemp = (prefix) => fs.mkdtempSync(path.join(tmpBase, prefix));
+
 const createFixture = () => {
-  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "agentic-context-check-"));
+  const fixture = mktemp("agentic-context-check-");
   fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
   fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
   fs.copyFileSync(
@@ -155,7 +158,7 @@ runFixtureRouteBudgets(
 );
 
 const runFixtureRoute = (label, setup, expected) => {
-  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "agentic-route-check-"));
+  const fixture = mktemp("agentic-route-check-");
   try {
     fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
     fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
