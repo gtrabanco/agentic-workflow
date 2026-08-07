@@ -660,11 +660,15 @@ none
   Layer: `hardening`. Done-when:
   `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs && npx skills add . --list`
   → all exit 0 with golden-fixture evidence recorded.
+- P6 — Preflight two-stage
+  Layer: `docs`. Done-when:
+  `node scripts/check-skill-context.test.mjs && node scripts/check-skill-context.mjs --routes --budgets`
+  → all exit 0, `planning-preflight` has explicit Stage 1 and Stage 2 in a single
+  document, with planners using Stage 1 and executor using Stage 2.
 
 Every phase has one concern, no open design decision, no conditional scope
 mutation, no more than eight implementation tasks (the final close-out chain
-uses the allowed hardening exception), and a locally runnable gate. Five phases
-do not trigger the mandatory feature-split rule.
+uses the allowed hardening exception), and a locally runnable gate.
 
 ### Deploy & rollback
 
