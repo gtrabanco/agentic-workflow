@@ -31,8 +31,9 @@ independently evaluates only the delivery gates below.
 
 ```
 ✓ The review receipt was consumed: newest matching `review-change:pass` marker
-  fetched; absent → blocker routed to `/review-change`, stale → blocker routed
-  to `/review-change`, current → its scope/axes/acceptance coverage/manual
+  fetched; absent → blocker routed to `/review-change`, stale → diff check:
+  empty-diff accepted with receipt acknowledged; non-empty-diff → blocker
+  routed to `/review-change`, current → its scope/axes/acceptance coverage/manual
   checks acknowledged without re-review
 ✓ The verdict block was printed in the fixed format: `VERDICT: MERGE-READY | BLOCKED` with ranked, evidenced blockers
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
@@ -114,8 +115,12 @@ gh pr view <N> --json comments
   review evidence, then evaluate the delivery gates below.
 - **absent** — no matching marker on the PR → **BLOCKER**: no review evidence at
   the head; route to `/review-change`.
-- **stale** — a marker exists but its `sha` predates the current head → **BLOCKER**:
-  any later commit voids the receipt; route to `/review-change` for a re-review.
+- **stale** — a marker exists but its `sha` predates the current head. Before
+  blocking, verify the diff: `git diff <marker-sha>..HEAD --stat`. If **empty**
+  (no meaningful changes landed between receipt and head), the receipt is still
+  valid — acknowledge its scope/axes and proceed to the delivery gates. If
+  **non-empty**, the receipt is void → **BLOCKER**: route to `/review-change`
+  for a re-review.
 
 Never compose, reconstruct, or "spot-check" the review from the diff to clear a
 missing/stale receipt — that is `review-change`'s turn, and re-litigating axes
