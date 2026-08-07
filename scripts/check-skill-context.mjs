@@ -18,6 +18,7 @@ const requested = [];
 const requestedRoutes = [];
 let manifestOnly = false;
 let routeMode = false;
+let budgetsMode = false;
 let jsonOutput = false;
 
 for (let index = 0; index < args.length; index += 1) {
@@ -30,6 +31,8 @@ for (let index = 0; index < args.length; index += 1) {
     index += 1;
   } else if (args[index] === "--routes") {
     routeMode = true;
+  } else if (args[index] === "--budgets") {
+    budgetsMode = true;
   } else if (args[index] === "--json") {
     jsonOutput = true;
   } else if (args[index] === "--route") {
@@ -156,6 +159,91 @@ const computeRouteMetrics = (files) => {
   return { error: null, totalEstimate, totalLines, files: fileResults };
 };
 
+const runContextBudgetChecks = (selected) => {
+  const failures = [];
+  const rows = [];
+
+  for (const skill of selected) {
+    const budget = { ...manifest.defaults, ...(manifest.skills[skill] ?? {}) };
+    const skillDir = path.join(repoRoot, "skills", skill);
+    const skillFile = path.join(skillDir, "SKILL.md");
+    const body = fs.readFileSync(skillFile, "utf8");
+    const mainEstimate = estimate(body);
+    const mainLines = lineCount(body);
+    const frontmatter = body.match(/^---\n([\s\S]*?)\n---/);
+    const description = frontmatter?.[1].match(/^description:\s*>\n((?:[ \t]+.*\n?)*)/m)?.[1] ?? "";
+    const descriptionEstimate = estimate(description);
+
+    if (mainEstimate > budget.mainEstimateMax) {
+      failures.push(`${skill}: main estimate ${mainEstimate} > ${budget.mainEstimateMax}`);
+    }
+    if (mainLines > budget.mainLinesMax) {
+      failures.push(`${skill}: main lines ${mainLines} > ${budget.mainLinesMax}`);
+    }
+    if (descriptionEstimate > budget.descriptionEstimateMax) {
+      failures.push(`${skill}: description estimate ${descriptionEstimate} > ${budget.descriptionEstimateMax}`);
+    }
+
+    const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
+    const referencesDir = path.join(skillDir, "references");
+    const existing = fs.existsSync(referencesDir)
+      ? fs.readdirSync(referencesDir).filter((name) => name.endsWith(".md")).sort()
+      : [];
+    for (const name of nestedEntries(referencesDir)) {
+      if (name.includes(path.sep)) failures.push(`${skill}: nested reference path exceeds depth 1: ${name}`);
+    }
+
+    for (const name of linked) {
+      if (name.includes("/") || name.includes("\\") || name.includes("..")) {
+        failures.push(`${skill}: nested reference link exceeds depth 1: ${name}`);
+        continue;
+      }
+      const referenceFile = path.join(referencesDir, name);
+      if (!fs.existsSync(referenceFile)) {
+        failures.push(`${skill}: linked reference is missing: ${name}`);
+      }
+    }
+    for (const name of existing) {
+      if (!linked.has(name)) failures.push(`${skill}: unreachable reference: ${name}`);
+      const referenceBody = fs.readFileSync(path.join(referencesDir, name), "utf8");
+      const referenceEstimate = estimate(referenceBody);
+      const referenceLines = lineCount(referenceBody);
+      const firstContentLine = referenceBody.split("\n").find((line) => line.trim() !== "") ?? "";
+      if (referenceEstimate > budget.referenceEstimateMax) {
+        failures.push(`${skill}/${name}: estimate ${referenceEstimate} > ${budget.referenceEstimateMax}`);
+      }
+      if (referenceLines > budget.referenceLinesMax) {
+        failures.push(`${skill}/${name}: lines ${referenceLines} > ${budget.referenceLinesMax}`);
+      }
+      if (!/^#{1,3} /.test(firstContentLine)) {
+        failures.push(`${skill}/${name}: first content line must be a heading`);
+      }
+      if (/\]\((?:\.\.\/)?references\//.test(referenceBody)) {
+        failures.push(`${skill}/${name}: nested reference link exceeds depth 1`);
+      }
+    }
+
+    rows.push({ skill, mainEstimate, mainLines, references: existing.length, descriptionEstimate });
+  }
+
+  return { failures, rows };
+};
+
+const reportContextBudgets = (result) => {
+  console.log("skill              main-est  lines  refs  desc-est");
+  for (const row of result.rows) {
+    console.log(
+      `${row.skill.padEnd(18)} ${String(row.mainEstimate).padStart(8)} ${String(row.mainLines).padStart(6)} ${String(row.references).padStart(5)} ${String(row.descriptionEstimate).padStart(9)}`,
+    );
+  }
+  if (result.failures.length > 0) {
+    console.error("\nContext budget failures:");
+    for (const failure of result.failures) console.error(`- ${failure}`);
+    process.exit(1);
+  }
+  console.log(`PASS context budgets: ${result.rows.length} skills`);
+};
+
 // Route mode
 if (routeMode) {
   if (!manifest.routes) {
@@ -213,7 +301,12 @@ if (routeMode) {
   }
 
   if (jsonOutput) {
-    console.log(JSON.stringify({ routes: routeRows, failures: routeFailures }, null, 2));
+    const payload = { routes: routeRows, failures: routeFailures };
+    if (budgetsMode) {
+      const context = runContextBudgetChecks(selected);
+      payload.contextBudgets = { failures: context.failures };
+    }
+    console.log(JSON.stringify(payload, null, 2));
     if (routeFailures.length > 0) process.exit(1);
     process.exit(0);
   }
@@ -232,87 +325,13 @@ if (routeMode) {
   }
 
   console.log(`PASS route budgets: ${routeRows.length} routes`);
+
+  if (budgetsMode) {
+    reportContextBudgets(runContextBudgetChecks(selected));
+  }
+
   process.exit(0);
 }
 
 // Per-file budget mode
-const failures = [];
-const rows = [];
-
-for (const skill of selected) {
-  const budget = { ...manifest.defaults, ...(manifest.skills[skill] ?? {}) };
-  const skillDir = path.join(repoRoot, "skills", skill);
-  const skillFile = path.join(skillDir, "SKILL.md");
-  const body = fs.readFileSync(skillFile, "utf8");
-  const mainEstimate = estimate(body);
-  const mainLines = lineCount(body);
-  const frontmatter = body.match(/^---\n([\s\S]*?)\n---/);
-  const description = frontmatter?.[1].match(/^description:\s*>\n((?:[ \t]+.*\n?)*)/m)?.[1] ?? "";
-  const descriptionEstimate = estimate(description);
-
-  if (mainEstimate > budget.mainEstimateMax) {
-    failures.push(`${skill}: main estimate ${mainEstimate} > ${budget.mainEstimateMax}`);
-  }
-  if (mainLines > budget.mainLinesMax) {
-    failures.push(`${skill}: main lines ${mainLines} > ${budget.mainLinesMax}`);
-  }
-  if (descriptionEstimate > budget.descriptionEstimateMax) {
-    failures.push(`${skill}: description estimate ${descriptionEstimate} > ${budget.descriptionEstimateMax}`);
-  }
-
-  const linked = new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((match) => match[1]));
-  const referencesDir = path.join(skillDir, "references");
-  const existing = fs.existsSync(referencesDir)
-    ? fs.readdirSync(referencesDir).filter((name) => name.endsWith(".md")).sort()
-    : [];
-  for (const name of nestedEntries(referencesDir)) {
-    if (name.includes(path.sep)) failures.push(`${skill}: nested reference path exceeds depth 1: ${name}`);
-  }
-
-  for (const name of linked) {
-    if (name.includes("/") || name.includes("\\") || name.includes("..")) {
-      failures.push(`${skill}: nested reference link exceeds depth 1: ${name}`);
-      continue;
-    }
-    const referenceFile = path.join(referencesDir, name);
-    if (!fs.existsSync(referenceFile)) {
-      failures.push(`${skill}: linked reference is missing: ${name}`);
-    }
-  }
-  for (const name of existing) {
-    if (!linked.has(name)) failures.push(`${skill}: unreachable reference: ${name}`);
-    const referenceBody = fs.readFileSync(path.join(referencesDir, name), "utf8");
-    const referenceEstimate = estimate(referenceBody);
-    const referenceLines = lineCount(referenceBody);
-    const firstContentLine = referenceBody.split("\n").find((line) => line.trim() !== "") ?? "";
-    if (referenceEstimate > budget.referenceEstimateMax) {
-      failures.push(`${skill}/${name}: estimate ${referenceEstimate} > ${budget.referenceEstimateMax}`);
-    }
-    if (referenceLines > budget.referenceLinesMax) {
-      failures.push(`${skill}/${name}: lines ${referenceLines} > ${budget.referenceLinesMax}`);
-    }
-    if (!/^#{1,3} /.test(firstContentLine)) {
-      failures.push(`${skill}/${name}: first content line must be a heading`);
-    }
-    if (/\]\((?:\.\.\/)?references\//.test(referenceBody)) {
-      failures.push(`${skill}/${name}: nested reference link exceeds depth 1`);
-    }
-  }
-
-  rows.push({ skill, mainEstimate, mainLines, references: existing.length, descriptionEstimate });
-}
-
-console.log("skill              main-est  lines  refs  desc-est");
-for (const row of rows) {
-  console.log(
-    `${row.skill.padEnd(18)} ${String(row.mainEstimate).padStart(8)} ${String(row.mainLines).padStart(6)} ${String(row.references).padStart(5)} ${String(row.descriptionEstimate).padStart(9)}`,
-  );
-}
-
-if (failures.length > 0) {
-  console.error("\nContext budget failures:");
-  for (const failure of failures) console.error(`- ${failure}`);
-  process.exit(1);
-}
-
-console.log(`PASS context budgets: ${rows.length} skills`);
+reportContextBudgets(runContextBudgetChecks(selected));
