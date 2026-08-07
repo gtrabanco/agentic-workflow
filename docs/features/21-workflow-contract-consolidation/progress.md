@@ -322,3 +322,10 @@ Last reviewed: —
 - Gotchas: preservation test (added for P3-4) expected inline ✓ boxes in execute-phase/SKILL.md; post D11 canonical move the source is the orchestration-envelope ref — test now points to canonical (no behavior change).
 - Files: scripts/check-skill-context.test.mjs, docs/features/21-workflow-contract-consolidation/progress.md
 - Next: `/review-change` on the merged-unit surface of PR #121 (accumulation > 400 lines / > 8 files) → `/audit-pr` for the merge gate | unit finished
+
+## Post-close-out reconcile — 2026-08-07 (gate fix + state repair)
+- Done: head-gate failure fixed — `orchestration-envelope` reported `unreachable reference: TURN_CONTRACT.md` (reconcile commit `339c23b` added `references/TURN_CONTRACT.md` but never linked it); linked it from `skills/orchestration-envelope/SKILL.md` (canonical 11-box Turn contract owner). Also restored ROADMAP row 21 `planned` → `done · [#121]` (the reconcile commit regressed the P5 close-out flip while PR #121 is open) and corrected the stale `progress.md` handoff. Committed `662e08e`, pushed. All gates green at head (`check-skill-context.mjs` PASS 33 skills, `--routes` PASS 16, `node --test scripts/*.test.mjs` fail 0, `git diff --check` clean).
+- Remains: F12 (`Review receipt`, route `/review-change`) unfolded — prior REVIEW-PASS/MERGE-READY receipts stamped at `7d33396` are voided by the head move past that sha. Fresh conversation must re-run `/review-change` at `662e08e` (this conversation authored `662e08e`, so it cannot review per the turn contract), then `/audit-pr` for a fresh MERGE-READY before merging PR #121.
+- Gotchas: the reconcile commit `339c23b` also bundled a ROADMAP regression and a stale "Next: P2 | unit not finished" handoff — both repaired here.
+- Files: skills/orchestration-envelope/SKILL.md, docs/features/ROADMAP.md, docs/features/21-workflow-contract-consolidation/progress.md
+- Next: fresh conversation → `/review-change` (fold F12) → `/audit-pr` at head `662e08e` | unit finished
