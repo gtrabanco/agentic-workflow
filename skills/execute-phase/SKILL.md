@@ -21,68 +21,9 @@ Three modes:
 - **single-pass unit** — a small feature (SPEC `Size: XS/S`, only a `SPEC.md`): run its SPEC's `## Phases` **one phase per invocation**; no `## Phases` → end-to-end in one pass (legacy fallback).
 - **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`: same phased consumption and legacy fallback.
 
-## Turn contract — every invocation, verify before ending the turn
+## Turn contract
 
-```
-✓ 1. Branch verified FIRST: `git branch --show-current` was RUN and its output
-     pasted. Output = the default branch → `git switch -c <branch>` was RUN
-     before any edit. NEVER work on main/master.
-✓ 2. Phase-lint pre-flight guard RUN against the target phase (after the
-     dependency/own-status gates, before any edit) — its 8 boxes were checked,
-     not assumed. Any FAIL without `--force` → STOP with the fixed block; no
-     edit happens on a non-atomic phase.
-✓ 3. Architectural-invariant gate RUN before any edit: every applicable project
-     rule was classified with cited repository evidence. `violates`,
-     `introduces`, or `changes` → STOP for an explicit architectural decision;
-     no edit turns the result into a phase task. An absent invariant document is
-     recorded as `n/a: no project invariants declared` and remains compatible.
-✓ 4. The gate was RUN (not assumed): commands + exit codes pasted.
-✓ 5. `git add <files>` and `git commit -m "<type>(<scope>): <summary>"` were
-     EXECUTED and the resulting sha is pasted. Describing a commit you did not
-     run counts as NOT committed.
-✓ 6. Unit finished (single-pass, --fix, or final phase)? Then `git push` and
-     `gh pr create` were EXECUTED and **the PR URL is printed in the chat**
-     (the chat link is the contract).
-     The PR body is NEVER empty: what it does, why, evidence, and
-     `Closes #<n>` when issue-born. The body is passed with `--body-file`
-      (real Markdown, NO `\`-escaped backticks — see Forge body policy). AND the roadmap row (or fix-index entry)
-      was updated to `done · [#<pr>](<pr-url>)` in a follow-up
-     `docs: link PR #<n>` commit, pushed to the same branch. A `done` row
-     without its PR link is an UNFINISHED unit. Unit not finished? Then
-     NOTHING was pushed.
-✓ 7. Clean-tree check LAST: `git status --porcelain` was RUN and its output
-     pasted immediately before ending the turn. Any tracked modification —
-     CODE OR DOCS (`docs/**` counts; doc updates left uncommitted are the #1
-     close-out failure) — was committed before the turn ended. AND if the
-     branch has an open PR: `git status -sb` shows the branch is NOT ahead of
-     its remote (every commit pushed). A dirty tree or an unpushed commit on a
-     PR-backed branch = the turn is NOT done.
-✓ 8. Artifact language: explicit user instruction > the project's declared
-     docs language > English. The CONVERSATION language never decides — a
-     Spanish prompt still produces English commits/PRs/issues unless one of
-     the first two says otherwise.
-✓ 9. Descope guard applied to every issue created this turn (see *Descope
-      guard*): each classified discovered vs. descope; any
-     descope has a user-approved, dated `## Amendments` entry in the governing
-     SPEC created BEFORE the issue, and the issue links it. No issue created
-     this turn is the first record of a descope. No issues created this turn?
-     Box passes trivially — state so.
-✓ 10. Every out-of-scope finding discovered during implementation was classified
-     with the Opportunistic finding policy, recorded in `decisions.md`, and
-     handled only by its recorded decision. No finding? State `none`.
-✓ 11. The closing `→ Next:` block is printed as the ABSOLUTE last output.
-```
-
-**Push policy — two regimes, by whether the PR exists yet.** Before the PR:
-push happens exactly once, at the PR step — never mid-phase, never unasked,
-never to the default branch. **After the PR exists:** every subsequent commit
-on that branch (folded review findings, audit-blocker fixes, doc updates, the
-`docs: link PR` commit) is pushed **immediately after committing** — an open
-PR must always show the branch's latest state; CI and the merge gate judge
-the remote, not your working copy. If, about to end the turn, any box is
-unchecked: STOP and complete it now — a turn that ends with work implemented
-but uncommitted, committed but unpushed (PR open), or committed but missing
-its PR (finished units), is a FAILED turn, not a done one.
+Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions and push policy live only in [PREFLIGHT.md](references/PREFLIGHT.md). Missing reference → STOP.
 
 ## Hard rules
 
