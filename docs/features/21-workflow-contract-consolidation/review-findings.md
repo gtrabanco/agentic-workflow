@@ -14,4 +14,4 @@
 | F12 | Review receipt | Review receipt | high | fix-now | /review-change | no |
 | F13 | .pi (mode 160000 gitlink, dangling 2e2645fc, no .gitmodules) | review-code | high | fix-now | fold into branch | yes |
 | F14 | scripts/check-skill-context.mjs:1 (EOF newline dropped) | review-code | low | fix-now | fold into branch | yes |
-| F15 | docs/features/21-workflow-contract-consolidation/testing.md:243,293 | review-verify | medium | fix-now | fold into branch | no |
+| F15 | docs/features/21-workflow-contract-consolidation/testing.md:243,293 | review-verify | medium | fix-now | fold into branch | yes |
