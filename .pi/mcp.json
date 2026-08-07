@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "@modelcontextprotocol/server-filesystem@2026.7.10",
         "."
       ],
       "disabled": false,
@@ -14,7 +14,7 @@
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/oraios/serena",
+        "git+https://github.com/oraios/serena@c7af2c09ef45faa4367c0e2a9f770fb73a62a612",
         "serena",
         "start-mcp-server",
         "--project-from-cwd"
