@@ -83,7 +83,7 @@ Route budget check: all 16 routes within SKILL_CONTEXT_BUDGETS.json limits.
 
 All progressive-loading references verified:
 - `FORGE_BODY.md` ✅
-- `DESCOPE.md` ✅  
+- `DESCOPE.md` ✅
 - `OPPORTUNISTIC_FINDING.md` ✅ (renamed from ISSUE_POLICY.md)
 - `WORKFLOWS_FEATURE.md` ✅
 - `WORKFLOWS_SMALL_PHASED.md` ✅
