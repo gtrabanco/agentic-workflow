@@ -21,6 +21,6 @@
 | F19 | REVIEW-FEATURE21.md:86 | review-code | low | fix-now | fold into branch | yes |
 | F20 | SPEC.md:669-672 | spec-drift | high | fix-now | fold into branch | yes |
 | F21 | scripts/check-skill-context.mjs:82-110 | review-code | medium | fix-now | fold into branch — triage adversarial R1-01 2026-08-07 | yes |
-| F22 | scripts/check-skill-context.mjs:82-110 | design | low | fix-now | fold into branch — triage adversarial R1-02 2026-08-07 | no |
+| F22 | scripts/check-skill-context.mjs:82-110 | design | low | fix-now | fold into branch — triage adversarial R1-02 2026-08-07 | yes |
 | F23 | .claude/skills/audit-pr/SKILL.md:Step1 | design | low | fix-now | fold into branch — triage adversarial R1-06 2026-08-07 | no |
 | F24 | skills/orchestration-envelope/references/TURN_CONTRACT.md:Box4 | design | medium | fix-now | fold into branch — triage adversarial R1-09 2026-08-07 | no |
