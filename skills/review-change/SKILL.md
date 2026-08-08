@@ -1,15 +1,15 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.9.1
-argument-hint: <path-or-glob> [--adversarial N] [--merge]
+version: 2.10.0
+argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Review a change with only applicable internal axes, classify every finding,
   persist fix-now work, and return one evidence-backed decision. Findings only;
-  --adversarial N uses isolated reviewers. Triggers: "review-change", "review
-  this change", "adversarial review".
+  --adversarial N uses isolated reviewers; --synthesize fuses supplied reviewer
+  tables. Triggers: "review-change", "review this change", "adversarial review".
 ---
 
 # Review Change
@@ -18,19 +18,9 @@ The quality gate for a change: get every review that *applies* — and skip the 
 that don't — in one synthesized, classified report. **Findings only; never edits
 or refactors.**
 
-## Turn contract — verify before ending the turn
+## Turn contract
 
-```
-✓ This review runs in a conversation that did NOT implement the change; if this conversation wrote the diff, STOP and hand off to a fresh one (the reviewer works from the diff + the SPEC, not the author's mental state).
-✓ The synthesized decision table + manual-verification checklist + `Decision: PASS | FAIL` were returned in the fixed output format
-✓ Architectural-invariant preservation was stated explicitly as pass / finding / n-a
-✓ Every non-fix-now finding got a destination (triaged — issue / decision / drop)
-✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
-```
-
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (isolation rule, applicability) live only in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
 
 ## When to use
 
@@ -73,11 +63,9 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
 | Axis — internal pack skill | Web | Mobile | Console/CLI | Lib/SDK | Backend/Infra |
 |---|---|---|---|---|---|
-| `review-implementation` (bugs, arch, security, dead code, perf, tests, rules) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `review-code` (correctness + simplification) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-code` (correctness, simplification, dead code, duplication, arch) | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `review-security` | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `review-verify` (run it, confirm real behavior) | ✓ | ✓ | ✓ | ✓ | ✓ |
-| `review-debt` | ✓ | ✓ | ✓ | ✓ | ✓ |
+| `review-verify` (run it, confirm real behavior, tests) | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `review-design` (UI/UX) | ✓ | ✓ | TUI only | ✗ | ✗ |
 | `review-a11y` | ✓ | ✓ | rare | ✗ | ✗ |
 | `review-brand` (voice/copy) | ✓ | ✓ | output text | ✗ | ✗ |
@@ -85,11 +73,16 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 | `review-seo` | ✓ | ✗ | ✗ | ✗ | ✗ |
 | API ergonomics / usage docs (inline pass) | if API | if API | flags/help | ✓✓ | ✓ |
 
+> `review-implementation` (the single classifier over the synthesized table —
+> process step 7) and `review-debt` (the debt transform over the classified
+> table — process step 8) are not axis finders: they run once per review, not
+> per axis.
+
 ## Isolation rule (default — every pass, not only adversarial)
 
-Each review pass (`review-implementation` in step 1 and every applicable pack
-pass in step 4) runs **isolated and context-clean**, and returns **only its
-fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
+Each review pass (every applicable pack pass in step 4, the classifier in step
+7, and the debt transform in step 8) runs **isolated and context-clean**, and
+returns **only its fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
 
 - **Spawn**: on Claude Code, one subagent per pass; on an agent with headless
   invocation, one headless run per pass; with neither, a fresh conversation
@@ -100,8 +93,8 @@ fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
   non-diff files read in full** (targeted ≤ 50-line reads and greps don't
   count).
 - **The orchestrator holds tables, not sources.** After dispatch it never
-  re-reads the diff or the files — it merges the returned tables (step 6)
-  and runs steps 7–11 on them.
+  re-reads the diff or the files — it fuses the returned tables (step 6)
+  and runs steps 7–13 on them.
 - **Inline fallback** (an agent that cannot spawn any fresh context):
   compose the passes in-turn as before — sequentially, and each pass must
   end by reducing to its table before the next pass starts; never hold two
@@ -114,14 +107,26 @@ fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
 
 After applicability and isolation are established:
 
-The reference allowlist is exactly the six linked paths below. Never invent or
+The reference allowlist is exactly the seven linked paths below. Never invent or
 read another `references/` path.
 
 | Invocation route | LOAD in this order | SKIP |
 |---|---|---|
-| Default review | [review process](references/REVIEW_PROCESS.md) → [adversarial setup](references/ADVERSARIAL_SETUP.md) → [persist and decide](references/PERSIST_AND_DECIDE.md) → [output and guardrails](references/OUTPUT_AND_GUARDRAILS.md) | adversarial merge, portability |
-| `--adversarial N` | review process → [adversarial setup](references/ADVERSARIAL_SETUP.md) before reviewers → [adversarial merge](references/ADVERSARIAL_MERGE.md) before synthesis → persist/decide → output/guardrails | portability |
-| `--merge` | review process → adversarial setup → adversarial merge plus the supplied reviewer tables → persist/decide → output/guardrails | portability |
+| Default review | [review process](references/REVIEW_PROCESS.md) → [adversarial recommendation](references/ADVERSARIAL_RECOMMENDATION.md) → [persist and decide](references/PERSIST_AND_DECIDE.md) → [output and guardrails](references/OUTPUT_AND_GUARDRAILS.md) | synthesis, portability, adversarial setup |
+| `--adversarial N` | review process → [adversarial setup](references/ADVERSARIAL_SETUP.md) before reviewers → [adversarial synthesis](references/ADVERSARIAL_SYNTHESIS.md) before fusion → persist/decide → output/guardrails | portability |
+| `--synthesize` | review process → [adversarial synthesis](references/ADVERSARIAL_SYNTHESIS.md) plus the supplied reviewer tables → persist/decide → output/guardrails | adversarial setup, portability |
+| legacy `--merge` | print the fixed migration refusal below and stop — zero git/forge mutation | everything |
+
+**Legacy `--merge` is removed — not an alias.** Calling `/review-change --merge` prints this fixed **migration refusal** and stops **before any git or forge mutation command runs**:
+
+```
+migration: --merge is removed. Table fusion is --synthesize: pass the fixed
+reviewer tables the same way and the synthesis contract fuses them. No
+repository merge is performed by this skill.
+```
+
+Only the word `merge` survives as this migration/refusal text; every active
+review path uses `--synthesize`/fusion language.
 
 Add [portability](references/PORTABILITY.md) only when independent contexts,
 parallelism, slash commands, or tier controls are actually unavailable. The
@@ -129,7 +134,7 @@ project artifact `docs/workflow/REPOSITORY_STATE.md` is evidence consumed by
 output/guardrails; it is not a skill reference. Output/guardrails owns those NRS
 evidence rules and Architectural invariants review.
 
-Resources are one hop from this file. Fixed reviewer/merge/output contracts are
+Resources are one hop from this file. Fixed reviewer/synthesis/output contracts are
 literal. Missing required resource → stop; never approximate a review contract.
 
 ## Portability
@@ -140,17 +145,19 @@ collapse independent adversarial passes into one context.
 
 ## Relationship to other skills
 
-- Orchestrates `review-implementation` (engine) and the internal review pack
-  (`review-code`, `review-security`, `review-verify`, `review-debt`,
-  `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`)
-  — isolated per pass by default (see *Isolation rule*; in-turn composition is
-  the fallback) — plus `triage-issue` (every non-fix-now finding — equal tier,
-  in-turn), and — as optional extras only — any platform review skills the
-  project installed.
+- Orchestrates the internal review pack — the finders (`review-code`,
+  `review-security`, `review-verify`, `review-design`, `review-a11y`,
+  `review-brand`, `review-perf`, `review-seo`), then `review-implementation`
+  (the single classifier over the synthesized table) and `review-debt` (the
+  debt transform) — isolated per pass by default (see *Isolation rule*;
+  in-turn composition is the fallback) — and, as optional extras only, any
+  platform review skills the project installed. `triage-issue` is only ever
+  user-invoked on independent proposals (D3).
 - Sits in Stage 4 of the feature workflow; `execute-phase` recommends it at its
   trigger-based checkpoints (optional) and hands off for the **mandatory end
-  review** (it runs in its own turn). `fix-now` → `plan-fix`; everything else →
-  `triage-issue`.
+  review** (it runs in its own turn). `fix-now` folds into the current unit;
+  `replan-in-unit` appends user-confirmed phases; independent work becomes
+  proposals the user routes to `triage-issue` (D3).
 - `audit-pr` is the PR-level gate it feeds; `product-audit` the periodic full sweep.
 
 ## Done when
@@ -158,8 +165,9 @@ collapse independent adversarial passes into one context.
 - One synthesized, classified decision table across all **applicable** axes exists,
   the skipped axes are listed with reasons, and the manual-verification checklist is
   explicit.
-- **Every finding has a destination:** fix-now routed, and every non-fix-now finding
-  put through `triage-issue` (issue / documented decision / justified drop) — none
-  silently lost.
+- **Every finding has a destination:** fix-now folds into the unit, replan-in-unit
+  phases are confirmed, decision-required is surfaced, and independent future
+  capabilities are batched as proposals for the user — none silently lost, and no
+  backlog created by the review (D3).
 - The **closing `→ Next:` block is printed** (clean → `/audit-pr`; recurring drift →
   `/product-audit`), and **no code changed**.

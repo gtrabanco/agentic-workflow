@@ -263,16 +263,18 @@ the forge); the final review and the merge gate then run over the PR:
   - `review-implementation` — two-phase review across bugs, architecture
     violations, removable/dead code (minus planned-feature code), security,
     platform/runtime incompatibilities, overengineering, bundle risks, and tests
-    (failing **and** missing), each classified fix-now / postpone / ignore /
-    intentional-tradeoff with WHY, impl risk, long-term impact, and a
-    premature-opt flag.
+    (failing **and** missing), each classified fix-now / replan-in-unit /
+    decision-required / proposal / ignore with WHY, impl risk, long-term
+    impact, and a premature-opt flag.
   - `/code-review`, `/security-review`, `/verify`, and — for UI —
     `design-review`, `accessibility-review`, `brand-review` (only the applicable
     ones; never an irrelevant pass).
 
-  Findings only, no refactor; `fix-now` routes to `plan-fix` (or folds into the
-  current phase if it's unmerged work); **every non-fix-now finding goes through
-  `triage-issue`** (issue / documented decision / justified drop), never silently lost.
+  Findings only, no refactor; `fix-now` folds into the current phase (never a
+  tracked issue, never `plan-fix`); `replan-in-unit` appends new user-confirmed
+  phases to the unit's SPEC; `decision-required` blocks until the user decides;
+  independent **proposals** are batched for the user to route to `triage-issue`,
+  never lost and no backlog created by the review.
 - **`audit-pr`** — the merge gate. Acceptance criteria met, all phases complete,
   docs/tests/CI green (**never merge with pending docs**), `Closes #N` present, the
   issue/fix-index entry still tracked (removed only after merge), branch independently

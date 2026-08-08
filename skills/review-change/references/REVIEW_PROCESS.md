@@ -1,14 +1,11 @@
 ## Process
 
-1. **Findings engine.** No flag → run `review-implementation` once over the
-   scope (isolated, per the *Isolation rule* above) → its classified decision
-   table (fix-now / postpone / ignore / intentional-tradeoff), unchanged from
-   before this mode existed. With
+1. **Route selection.** No flag → the default single-reviewer review. With
    `--adversarial N` → run the **adversarial multi-reviewer mode** below
-   instead. With `--merge` → skip straight to that mode's fusion step (N
-   findings tables pasted in, per the merge contract). Either way, everything
-   from step 2 onward runs once, over the merged table, exactly as in the
-   no-flag case.
+   instead (N reviewers FIND, per the *Isolation rule*). With `--synthesize` →
+   skip straight to that mode's fusion step (N findings tables pasted in, per
+   the synthesis contract). Either way, everything from step 2 onward runs
+   once, over the fused table.
 2. **SPEC drift check (structural).** Locate the governing SPEC (feature or
    fix) and build a **per-criterion coverage table** — one row per acceptance
    criterion, no free-form comparison:
@@ -36,32 +33,45 @@
    `workflow` finding: the PR and CI are judging a stale branch). Both are
    **fix-now** — a review verdict on a branch whose real state isn't pushed
    is worthless. Run the greps/`git log`/`git status` — don't infer compliance.
-4. **Applicable pack passes.** For each axis the matrix + footprint mark as
-   relevant, run the workflow's own internal skill for it (`review-code`,
-   `review-security`, `review-verify`, `review-debt`, `review-design`,
+4. **Applicable pack passes (the finders).** For each axis the matrix +
+   footprint mark as relevant, run the workflow's own internal skill for it
+   (`review-code`, `review-security`, `review-verify`, `review-design`,
    `review-a11y`, `review-brand`, `review-perf`, `review-seo`) — **isolated,
-   per the *Isolation rule* above** (in-turn composition only as its stated
-   inline fallback), each returning ONLY its fixed-format table + PASS|FAIL.
-   **Skip the rest** and say which you skipped and why. The pack ships with the
-   workflow, so an applicable pass can never be "missing".
+   per the *Isolation rule* above**, each returning ONLY its fixed-format
+   findings table + `PASS|FAIL`. **Skip the rest** and say which you skipped and
+   why. The pack ships with the workflow, so an applicable pass can never be
+   "missing". Passes **FIND** only — none of them classifies.
 5. **Optional extras.** If the project recorded additional platform review skills
    (stack-specific linters, framework skills) and they are installed, run them
    **in addition** — their findings merge into the same table. Never treat an
    absent extra as a gap; the pack already covered the axis.
-6. **Synthesize.** Merge all findings into **one** decision table, deduped by
-   `file:line`. Keep `review-implementation`'s columns (Sev, Class, WHY, impl risk,
-   long-term impact, premature-opt?, route) and add an **Axis** column — plus a
-   **`Reviewers n/N`** column when running in `--adversarial N` mode (omitted
-   entirely in the default single-reviewer case).
-7. **Manual-verification checklist.** List what automated review **cannot** confirm
+6. **Synthesize.** Fuse all findings into **one** findings table, deduped by
+   `file:line` + axis, per the synthesis contract (the same fusion rules apply
+   in the default single-reviewer case). Columns: `# | Finding | Axis | Sev |
+   Evidence | Suggested fix` — **unclassified**. Overlapping signals on the same
+   defect collapse into one row. Add a **`Reviewers n/N`** column when running
+   in `--adversarial N` mode (omitted entirely in the default single-reviewer
+   case).
+7. **Classify (once).** Run `review-implementation` over the synthesized table
+   (isolated, per the *Isolation rule*) — the single classification engine
+   (D5). It verifies axis coverage (every applicable axis represented; a
+   missing axis is a `coverage` finding) and applies the current-unit contract:
+   `ignore` first, then fix-now / replan-in-unit / decision-required for
+   current-unit work, `proposal` for genuinely independent future capabilities
+   → the **classified decision table** (Sev, Class, WHY, impl risk, long-term
+   impact, premature-opt?, Route). No per-pass or per-reviewer classification,
+   no re-litigation.
+8. **Debt transform.** Run `review-debt` over the classified table — it
+   transforms debt-shaped findings into explicit TRIGGER-carrying debt items;
+   it does not rescan the diff (SPEC contract).
+9. **Manual-verification checklist.** List what automated review **cannot** confirm
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
-8. **Triage everything not fixed now.** For **every** finding you don't route to
-   `fix-now` (postpone / ignore / intentional-tradeoff), run it through
-   `triage-issue` (compose in-turn — i.e. within this same conversation/run; equal
-   tier) to decide and record its home: a
-   tracked issue with a trigger, a documented decision (`decisions.md` / a comment),
-   or a justified drop. **No non-fix-now finding may end without a destination** — the
-   point is to never silently lose one, and to catch the few that actually deserve an
-   issue or a doc note.
+10. **Route the outcomes.** fix-now findings fold into the current unit (or gain
+    user-confirmed phases via replan-in-unit); decision-required stops for the
+    user's decision; genuinely independent future capabilities become
+    **non-blocking proposals** — batched in the report with a trigger, and
+    **never** sent to `triage-issue` automatically (D3). `review-change` creates
+    no backlog work. No non-fix-now finding may end without a destination — none
+    silently lost.

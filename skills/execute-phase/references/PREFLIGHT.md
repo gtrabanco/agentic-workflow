@@ -31,6 +31,31 @@ before touching anything:
    user-forced <date>") before implementation begins. `--force` is a
    user-only escape hatch — the autopilot (`ship-roadmap`) must never pass it.
 
+### Dependency receipt (v1) + fail-closed fast path
+
+After a full pass with every dependency merged, append to the unit's `progress.md`:
+
+```
+## Dependency receipt v1
+- Fingerprint: <sha> · Closure: <NN>-<slug> ← <dep> …
+- Merged PRs: <dep> #<n> @ <merge sha> · Fully merged: yes · Verified: <date>
+```
+
+Fingerprint = `git hash-object --stdin` over the SPEC `Depends on:` line and
+each closure roadmap row (rows encode the merged PR, e.g. `22-other #7 @ a1b2c3
+merged`). PR identities are provenance in the receipt, never fingerprint input —
+the fingerprint covers only inputs the fast path can re-derive locally.
+
+**Fast path (local only, no forge calls):** recompute the fingerprint (SPEC +
+roadmap rows). Skip forge traversal **only when** a `v1` receipt exists, the
+recomputed fingerprint matches, it records `Fully merged: yes`, and no `--force`
+is recorded in `decisions.md` after the receipt date.
+
+**Fail closed — invalidate and rerun the full gate** on any of: fingerprint
+mismatch (graph changed), missing or older-version receipt (format drift), a
+later `--force`, or the full gate itself finding an unmet dependency. On any
+ambiguity never skip forge traversal; rewrite the receipt after every full pass.
+
 ### Own-status precondition (runs after the dependency closure is met, still before any edit)
 
 Feature mode only (a fix has no roadmap-status equivalent — its own state is
@@ -76,14 +101,15 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
 **Legacy-SPEC carve-out (check this first, before anything else in this
 section):** if the target SPEC has **no `## Phases` section**, skip this
 guard entirely — no lint run, no STOP — and fall straight through to the
-*Workflows* section's legacy single-pass flow ("A SPEC without `## Phases`
-… runs the legacy flow … end-to-end in one pass"). The guard below applies
+legacy single-pass flow ("A SPEC without `## Phases`
+… runs the legacy flow … end-to-end in one pass" — see
+[legacy workflow](WORKFLOWS_LEGACY.md)). The guard below applies
 only to a SPEC that carries a `## Phases` ledger.
 
-Before touching any code, run the canonical 8-box phase-lint
-(`docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint" — the authoritative
-copy, also quoted in `docs/features/_TEMPLATE/SPEC.md` `### Phases`) against
-the **target phase** (its title, declared layer, task list, and done-when).
+Before touching any code, run the canonical 8-box phase-lint owned by
+`skills/phase-contract/SKILL.md` (the fixed PASS/BLOCKED block and the
+normalized phase fingerprint) against the **target phase** (its title,
+declared layer, task list, and done-when).
 
 1. **All 8 boxes tick** → proceed to the normal workflow.
 2. **Any box FAILs → STOP before any edit** and print exactly:

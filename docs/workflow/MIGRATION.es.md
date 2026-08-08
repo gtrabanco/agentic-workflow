@@ -2,6 +2,27 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-05 — `review-change` publica un recibo ligado al SHA; `audit-pr` lo consume
+
+**Feature 21 (consolidación del contrato de workflow).** `review-change` 2.10.0
+ahora termina una revisión final obligatoria limpia publicando un comentario de
+PR idempotente ligado al SHA con `<!-- review-change:pass sha=<40-hex> contract=v1 -->` y el
+cuerpo fijo del recibo (vía `--body-file`, nunca commiteado a la rama).
+`audit-pr` 4.3.0 consume ese recibo como la evidencia de revisión en lugar de
+re-revisar el diff: un marcador vigente se reconoce, uno ausente u obsoleto es
+un bloqueante enrutado a `/review-change`, y la auditoría nunca compone una
+revisión. Las puertas de merge se estrechan al conjunto solo-auditoría del SPEC
+(la puerta `Tests` y el re-mapeo de criterios de aceptación por diff se
+sustituyen por los campos del recibo).
+
+**Migración.** Actualiza las skills **juntas** — `review-change` y `audit-pr`
+deben moverse como par. Un `review-change` antiguo (sin recibo) deja a
+`audit-pr` 4.3.0 bloqueado sin marcador en el head: re-ejecuta la revisión
+final para que el head actual lleve un recibo antes de auditar. No mezcles
+versiones: un recibo publicado por 2.10.0 queda invalidado por cualquier commit
+posterior, y un `review-change` previo al recibo no tiene marcador que consumir.
+No hay cambio de autoridad de merge — audit-pr sigue sin fusionar nunca.
+
 ## 2026-07-31 — el merge automatizado se mueve exclusivamente a `ship-roadmap --fullauto`
 
 **Cambio incompatible.** `audit-pr` 4.0.0 ya no fusiona bajo una política

@@ -1,91 +1,108 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.3.1
+version: 1.4.0
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Internal findings engine composed by review-change (and reused by the audit
-  skills): two-phase find → classify pass ending in a classified decision table
-  (fix-now / postpone / ignore / intentional-tradeoff). Findings only — never
-  refactors.
+  Internal scope/classification engine composed by review-change (and reused by
+  the audit skills): consumes the synthesized findings table, verifies every
+  applicable axis is represented, and classifies each finding into a decision
+  table (fix-now / replan-in-unit / decision-required / proposal / ignore).
+  Findings only — never refactors.
 ---
 
-# Review Implementation (internal engine)
+# Review Implementation (internal scope/classification engine)
 
-The findings engine the review/audit skills compose: it **produces findings and a
-decision table, and stops** — never refactors or edits code. It owns the **review
-axes** (Phase 1) and the **classification rubric** (Phase 2) that `review-change`,
-`audit-pr`, and `product-audit` reference instead of restating.
+The classification engine the review/audit skills compose: it consumes the
+**synthesized findings table** (the fused output of the applicable per-axis
+passes), verifies every applicable axis is represented, and returns the
+classified decision table — then stops. Never refactors or edits code. It owns
+the **scope/axis-coverage contract** and the **classification rubric** (the
+current-unit contract + routing) that `review-change`, `audit-pr`, and
+`product-audit` reference instead of restating.
+
+It does **not** scan the diff: every finding concern has exactly one owning
+pass (see the [axis ownership map](references/FIND.md)) — the per-axis passes
+(`review-code`, `review-security`, `review-verify`, `review-perf`,
+design/a11y/brand/SEO) find, and this engine classifies. No broad findings
+scan here.
 
 ## When to use
 
-- Invoked by `review-change` (the user-facing review entry) as its engine; the
-  audit skills reference its rubric.
-- Run directly only when you want the raw classified pass without the
-  platform-adaptive orchestration `review-change` adds.
+- Invoked by `review-change` (the user-facing review entry) as its
+  classification engine, over the fused findings table.
+- The audit skills reference its rubric and coverage contract.
 
 ## Scope
 
-Default target is the **current change** (branch diff vs. the default branch);
-accept an explicit path/glob to widen or narrow it. State the scope at the top of
-the report so the reader knows what was and wasn't reviewed.
+The caller's scope statement (the branch diff vs. the default branch, or the
+passed path/glob) is authoritative; the synthesized table was gathered over it.
+State the scope at the top of the classified report.
 
 ## Step 0 — Discover the project (always first)
 
-Per the agent guide's **Workflow conventions** + **documentation map**, then read
+Per the agent guide's **Workflow conventions** + **documentation map**, read
 what THIS skill needs: the architecture/layering rules, the testing philosophy,
 and any runtime/platform, security, money, i18n/SEO/a11y and bundle rules. Pull
-the project's specific risk axes from its guardrail skills where present
-(architecture-pattern, runtime/platform, domain-rules). The `FIND.md` axis list
-is the default; the project's docs refine it.
+the project's specific risk axes from its guardrail skills where present. The
+`FIND.md` axis map is the default; the project's docs refine which axes are
+applicable.
 
-## Context budget (hard rule)
+## Step 1 — Verify axis coverage (the synthesized table)
 
-The scope is the diff. Beyond it, read **at most 10 non-diff files in full**
-for surrounding context (callers, contracts, tests); targeted reads (≤ 50
-lines of a named range) and grep/glob results don't count. Record each
-finding as its table row **immediately** (id, `file:line`, axis, one-line
-evidence) and drop the raw file content — Phase 2 classifies the table, never
-the sources. Never quote whole files into the report.
+For the declared scope, confirm **every applicable axis is represented** in the
+synthesized findings table — one finding owner per axis, per the `FIND.md`
+map: an axis the change touches that the table says nothing about is a
+**missing-axis finding** (axis `coverage`), not a silent pass. Overlapping
+signals from different passes on the same defect collapse into one row during
+synthesis — the table must contain neither duplicates nor gaps. State which
+axes were applicable and confirm each appears.
 
-## Progressive loading — find, then classify
+## Step 2 — Classify (the current-unit contract)
 
-The reference allowlist is exactly the two paths below. Every review executes
-them sequentially:
+Read [Classify and route](references/CLASSIFY.md) and classify every row of the
+synthesized table without reopening source files: `ignore` first (the claim),
+then the current-unit contract (fix-now / replan-in-unit / decision-required
+for in-scope work), then `proposal` for genuinely independent future
+capabilities. One pass — no per-pass or per-reviewer classification.
 
-1. Read [Phase 1 — Find](references/FIND.md), produce the findings rows, then
-   discard raw source context as required by the context budget.
-2. Read [Phase 2 — Classify and route](references/CLASSIFY.md) and classify every
-   row without reopening source files.
+## Context budget
 
-Both resources are normative and one hop from this file. Missing resource →
-stop; never invent an axis, class, override, or route.
+The input is the synthesized table, not the diff. Read at most 10 non-diff
+files in full for surrounding context (callers, contracts, SPEC); targeted
+reads (≤ 50 lines of a named range) and grep/glob results don't count. Record
+each classification as its table row immediately and drop raw file content.
 
 ## Guardrails
 
 - **Findings + table only. Never refactor or edit code in this skill.**
+- **One classifier.** Classification happens HERE, once, over the fused
+  table — never per-reviewer, never re-litigated in the per-axis passes.
 - Honor the dead-code exception — staged/planned code is not dead code.
 - Don't inflate severity; separate "correctness/security" from "taste".
-- Don't deflate either: never classify a confirmed real defect as `postpone`/
-  `intentional-tradeoff` without running the fix-now override checks, and
-  never downgrade an in-scope fix-now because it is big — size routes to
-  `replan-in-unit`, not to postpone.
-- Otherwise per the project's **Workflow conventions** (docs-language, evidence):
-  cite `file:line`, mark uncertainties *verify*.
+- Don't deflate either: current-unit work is never `postpone`/`tradeoff`/
+  `wontfix`/`disputed` and never a new issue — size routes to
+  `replan-in-unit`, not to a downgrade (current-unit contract in `CLASSIFY.md`).
+- Otherwise per the project's **Workflow conventions** (docs-language,
+  evidence): cite `file:line`, mark uncertainties *verify*.
 
 ## Relationship to other skills
 
-- **Engine of `review-change`** — the user-facing review skill composes this plus
-  the internal review pack's applicable passes (`review-code`, `review-security`,
-  `review-verify`, `review-debt`, design/a11y/brand/perf/seo). `audit-pr` and
-  `product-audit` reuse this rubric.
+- **Classification engine of `review-change`** — the user-facing review skill
+  runs the applicable per-axis passes (the finders), fuses their tables, then
+  composes this engine to classify. `audit-pr` and `product-audit` reuse this
+  rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
-- `fix-now`/`postpone` outcomes hand off to `plan-fix` / `triage-issue`.
+- `fix-now` folds into the current unit; `replan-in-unit` appends
+  user-confirmed phases then `execute-phase` on the same branch;
+  `decision-required` blocks for the user; independent work becomes proposals
+  the user routes to `triage-issue` (D3).
 
 ## Done when
 
-- A scoped findings list (Phase 1) and a complete decision table (Phase 2) exist,
-  every finding classified with reasoning, each routed — and **no code changed**.
+- A synthesized table consumed, axis coverage verified (no applicable axis
+  missing, no duplicate rows), every finding classified with reasoning and
+  routed — and **no code changed**.
