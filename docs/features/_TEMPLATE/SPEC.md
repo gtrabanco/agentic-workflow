@@ -200,7 +200,8 @@ Engineering boxes (additionally, at scaffold time):
 
 - [ ] `### Dev scenarios` has ≥ 1 failure-mode row, or an explicit
       `n/a: <reason>`.
-- [ ] Every phase passes the 8-box Phase-lint below (already mandatory).
+- [ ] Every phase passes the 8-box Phase-lint below (already mandatory,
+      owned by `skills/phase-contract/SKILL.md`).
 - [ ] No template placeholders left anywhere in the file (same grep, whole
       file).
 
@@ -290,32 +291,14 @@ hardening>. Done-when: <command> → <expected outcome>.` before its task list
 "one declared layer" and "machine-checkable done-when" boxes need somewhere to
 be filled in, not invented.
 
-#### Phase-lint (quoted — authoritative copy is `docs/fix/_TEMPLATE/SPEC.md` `## Phases` "Phase-lint"; keep in sync)
+#### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
 Every implementation phase below must pass all 8 boxes before it is emitted
 (planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
 unticked box blocks emission/execution until the phase is re-cut or split.
-
-- [ ] Title names ONE deliverable — FAIL if it joins nouns with `+`, `,`,
-      `&`, `and`/`y`, or `/`.
-- [ ] One declared layer — each phase declares exactly one of the fixed enum
-      `schema/db | domain | api | ui | config/infra | docs | hardening |
-      close-out`; FAIL if any task's target file belongs to another. Tests
-      for the phase's own layer belong to the phase; a test-only phase
-      declares `hardening`.
-- [ ] ≤ 8 tasks (close-out phase: ≤ 10, only the literal close-out chain).
-- [ ] One checkbox = one deliverable — FAIL if a task contains a `→` chain
-      of implementation steps, enumerates > 3 cases/scenarios, or creates
-      > 1 file of distinct concerns.
-- [ ] Zero decision words — FAIL on `Decide`, `choose`, `OR` between
-      alternatives, `If … then <change scope>`.
-- [ ] No conditional scope mutation — a task may not move work between
-      phases at runtime.
-- [ ] No external/manual gates inside implementation phases —
-      human/out-of-repo verifications live in the hardening/close-out phase,
-      marked `manual`.
-- [ ] Machine-checkable done-when — every phase ends with one verifiable
-      invariant (a command + expected outcome).
+Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
+record the result here as `Phase-lint: PASS (8/8) · fingerprint
+<P<n>:<layer>:<n-tasks>:<title-deliverable>>` (or `BLOCKED — box <n>: …`).
 
 ### Deploy & rollback
 

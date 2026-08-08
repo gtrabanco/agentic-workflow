@@ -165,6 +165,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.13.2 | 2026-08-05 | parche | Divide el monolito `WORKFLOWS.md` en recursos de workflow por modo (feature, small/phased, fix, legacy) cargados exactamente uno a la vez, divide `ISSUE_POLICY.md` en tres recursos de política cargados de forma independiente (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) elegidos según la situación, y añade un recibo de dependencia versionado con una ruta rápida de huella local fail-closed. Conserva el comportamiento: cada casilla universal de seguridad de ejecución permanece residente en el contrato de turno compacto, cada una mapeada read-verified a su recurso dueño único, y cada ruta de ejecución sigue pasando con resultados observables sin cambios. |
 | 2.13.1 | 2026-08-02 | parche | Mueve el esquema fijo de handoff de `progress.md` tras una ruta explícita de un salto, conservando todos sus campos y reglas de cierre mientras reduce el contexto de activación directa. |
 | 2.13.0 | 2026-07-31 | menor | La carga progresiva reduce la estimación de activación de la skill más usada de unos 13k a 3k: las reglas universales de turno/handoff quedan en `SKILL.md`, mientras preflight, gates de ejecución, política de issues, workflows de modo, closeout/folding y portabilidad por lotes cargan solo cuando hacen falta. |
 | 2.12.0 | 2026-07-31 | menor | Añade una puerta de invariantes arquitectónicas antes de editar con clasificación basada en evidencia, parada para decisión explícita y compatibilidad NRS opcional. |
@@ -226,6 +227,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.4.0 | 2026-08-04 | menor | Añade los contratos internos de un salto planning preflight y phase contract (rutas 2-3 de carga progresiva) y fija un único contexto de planificación inmutable — un snapshot del roadmap más payload opcional de issue — reutilizado entre internals compuestas, nunca re-consultado a mitad de plan. |
 | 3.3.2 | 2026-08-03 | parche | Hace explícito el contrato de routing derivado de issues: después de que `PLANNING_GATES.md` permita planificar, compone `plan-feature-from-issue` y después `plan-feature-scaffold`, en ese orden. |
 | 3.3.1 | 2026-08-02 | parche | Enruta la detección de estado y los gates de repositorio/invariantes mediante dos referencias explícitas de un salto y recorta metadatos de activación; el comportamiento de planificación y los handoffs fijos no cambian. |
 | 3.3.0 | 2026-07-31 | menor | Evalúa invariantes arquitectónicas opcionales antes del scaffolding y restaura la compatibilidad con repositorios sin ledger de Estado Normalizado del Repositorio. |
@@ -251,6 +253,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.0 | 2026-08-04 | menor | Consume el planning preflight compartido (lectura del estado normalizado del repositorio + una única clasificación arquitectónica final) y el phase contract (phase-lint canónico de 8 casillas + fingerprint de fase) antes de redactar y emitir un SPEC de fix; prosa comprimida para que la ruta se mantenga bajo su presupuesto base. |
 | 2.4.1 | 2026-08-02 | parche | Mueve la validación/planificación y los contratos detallados del SPEC a rutas explícitas de un salto y comprime la prosa explicativa conservando todas las reglas fijas multi-issue, de fases, commit y handoff. |
 | 2.4.0 | 2026-07-19 | menor | La auto-revisión (paso 14) ahora ejecuta también el nuevo `### Spec-lint` de la plantilla de fix — comprobaciones mecánicas de presencia (sin placeholders, fuera-de-alcance no vacío, cada criterio de aceptación un comando ejecutable o etiquetado `read-verified`) — antes del commit del borrador. |
 | 2.3.0 | 2026-07-17 | menor | Fix #80: `plan-fix` ahora acepta varios números de issue con semántica plenamente definida — una checklist fija de 4 casillas de causa-raíz-compartida decide si se fusionan en UNA unidad (primaria = número de issue más bajo, `Closes #<n>` por issue) o si la skill se niega con una división verbatim (`plan these separately`). La invocación de un solo número queda sin cambios. `argument-hint`, `## Input`, `## Output` y `## Hand-off` actualizados en consonancia. |
@@ -272,6 +275,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.10.0 | 2026-08-05 | menor | Decisión del informe en tres estados D10 `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` (nunca MERGE-READY). La revisión final obligatoria publica un recibo `REVIEW-PASS` idempotente y ligado al SHA exacto como comentario de PR mediante un archivo Markdown temporal `--body-file` (cuerpo fijo: marcador `<!-- review-change:pass sha=… contract=v1 -->`, SHA de head, alcance/ejes, cobertura de aceptación, invariantes, cero hallazgos abiertos, nº de propuestas, verificaciones manuales; D6 — nunca se commitea a la rama, gana el marcador coincidente más nuevo, un commit posterior lo vuelve obsoleto). `REVIEW-FAIL` persiste los hallazgos en el ledger de fold y no publica recibo; `NEEDS-DECISION` bloquea sin crear una issue. Los checkpoints previos al PR conservan el marcador de `progress.md` y no publican recibo (D7). Nueva suite de fixtures de recibo fake-forge (`scripts/review-receipt.test.mjs`). |
 | 2.9.1 | 2026-07-31 | parche | Hace que `--merge` sea autocontenido cargando el proceso de revisión y el setup adversarial antes del merge adversarial, para fusionar las tablas suministradas bajo el mismo contrato de revisión. |
 | 2.9.0 | 2026-07-31 | menor | La carga progresiva separa el proceso de review por defecto, persistencia/decisión, setup/merge adversarial, salida/guardrails y portabilidad; el aislamiento y el contrato de turno permanecen en el cuerpo de activación. |
 | 2.8.0 | 2026-07-31 | menor | Revisa explícitamente invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio e informa violaciones, introducciones o cambios no documentados como hallazgos de arquitectura. |
@@ -314,6 +318,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.3.0 | 2026-08-05 | menor | **Consume el recibo de revisión de `review-change`** en lugar de re-revisar el diff (feature 21): el Paso 1 obtiene los comentarios del PR y toma el marcador `<!-- review-change:pass sha=<40-hex> contract=v1 -->` más nuevo; un recibo vigente se reconoce como la evidencia de revisión, uno ausente/obsoleto es un bloqueante enrutado a `/review-change` (nunca se re-revisa aquí). Las puertas de merge se estrechan al conjunto solo-auditoría del SPEC — se retira la puerta `Tests` (calidad de pruebas) y el re-mapeo de criterios de aceptación por diff (sustituido por el campo de cobertura de aceptación del recibo); la puerta de Invariantes arquitectónicas ahora refleja el resultado del recibo en lugar de reclasificar. Pasos de proceso renumerados; el comentario MERGE-READY cita el recibo consumido. Requiere un `review-change` que publique el recibo ligado al SHA; las versiones antiguas de `review-change` dejan a audit-pr bloqueado sin recibo en el head. |
 | 4.2.0 | 2026-07-31 | menor | Sincroniza el contrato consumidor de merge con la frontera de autoridad fullauto verificable desde el forge; las auditorías standalone siguen limitadas a veredicto/comentario. |
 | 4.1.0 | 2026-07-31 | menor | La carga progresiva mueve gates de merge, checks de cierre/descope, proceso de auditoría, veredicto fijo, enrutamiento/guardrails y portabilidad detrás de una ruta de auditoría obligatoria de un salto; la propiedad del merge permanece en el entrypoint. |
 | 4.0.0 | 2026-07-31 | mayor | **Cambio incompatible:** elimina el auto-merge standalone o autorizado por una política documental. La skill queda estrictamente limitada a veredicto/comentario y nunca fusiona; solo una etapa AUDIT activa de `ship-roadmap --fullauto` puede consumir su resultado MERGE-READY ligado al SHA e invocar el wrapper transitorio. |
@@ -438,6 +443,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `phase-contract` | 1.0.0 | 2026-08-04 | — | Nuevo contrato interno: propietario canónico del phase-lint de ocho cajas, con salida fija `PASS (8/8)`/`BLOCKED — casilla <n>` y el fingerprint de fase normalizado (`P<n>:<layer>:<n-tasks>:<title-deliverable>`). |
+| `planning-preflight` | 1.0.0 | 2026-08-04 | — | Nuevo contrato interno: único consumidor del estado normalizado del repositorio y único propietario de la única clasificación arquitectónica final de un plan completo, con línea de resultado preflight fija. |
+| `plan-feature-scaffold` | 1.13.0 | 2026-08-04 | menor | Consume el planning preflight (lectura NRS + una única clasificación arquitectónica final) y el phase contract (phase-lint de 8 casillas + fingerprint de fase) en lugar de duplicar reglas de invariantes y lint. |
+| `plan-feature-from-issue` | 1.7.0 | 2026-08-04 | menor | La sección de invariantes arquitectónicas ahora consume el planning preflight para la lectura del estado normalizado del repositorio y la única clasificación arquitectónica final. |
 | `bump-skill` | 2.3.2 | 2026-08-02 | parche | Separa el descubrimiento/lint de cambios de la sincronización de versión/documentación y condensa ambas referencias sin cambiar semver, lint de siete reglas, changelogs bilingües, READMEs, routing ni migraciones. |
 | `plan-feature-scaffold` | 1.12.1 | 2026-08-02 | parche | Mueve el procedimiento completo de scaffold a un recurso obligatorio de un salto y comprime prosa repetida de fases conservando todas las reglas de mitad de producto, artefactos, lint, relectura de roadmap e informe fijo. |
 | `review-implementation` | 1.3.1 | 2026-08-02 | parche | Separa el hallazgo adversarial de la clasificación/routing en dos recursos secuenciales obligatorios; ejes, límites de override, clases y comportamiento de solo lectura no cambian. |
@@ -520,6 +529,26 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-05 — consolidación del contrato de ejecución (feature 21, P3).**
+  `execute-phase` 2.13.2 divide su monolito `WORKFLOWS.md` en cuatro recursos de
+  workflow por modo (feature, small/phased, fix, legacy) cargados exactamente uno
+  a la vez, divide `ISSUE_POLICY.md` en tres recursos de política cargados de
+  forma independiente (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`)
+  y añade un recibo de dependencia versionado con una ruta rápida de huella local
+  fail-closed. Las once casillas universales de seguridad de ejecución siguen
+  residentes en el contrato de turno compacto, cada una mapeada read-verified a
+  su recurso dueño único; conserva el comportamiento.
+
+- **2026-08-04 — consolidación del contrato de planificación (feature 21, P2).**
+  Los cuatro entrypoints de planificación (`plan-feature` 3.4.0, `plan-fix`
+  2.5.0, `plan-feature-from-issue` 1.7.0, `plan-feature-scaffold` 1.13.0)
+  consumen ahora dos contratos internos nuevos — `planning-preflight` 1.0.0
+  (lectura del estado normalizado del repositorio + la única clasificación
+  arquitectónica final) y `phase-contract` 1.0.0 (phase-lint canónico de ocho
+  cajas + fingerprint de fase). Las plantillas feature/fix conservan un único
+  puntero al phase-contract en lugar de cajas de lint duplicadas; las rutas de
+  planificación llevan máximos de contexto reducidos commiteados.
 
 - **2026-08-02 — contexto progresivo de skills más estricto.** Nueve
   entrypoints grandes enrutan ahora contratos detallados mediante referencias

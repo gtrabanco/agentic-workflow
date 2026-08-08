@@ -1,71 +1,11 @@
-## Issue policy
-
-Forge operations use the project's declared forge CLI (Workflow conventions —
-examples use `gh`; translate if the project declares another forge).
-
-> **Forge bodies are Markdown, not shell — never hand-escape them.** Backticks,
-> `*`, `_`, `#`, `|` in an issue / PR / comment body are **formatting**; a `\`
-> before them renders **literally** (`` \`code\` `` instead of `` `code` ``) —
-> the #1 forge-formatting bug (worse on some agents than others). Fix it at the
-> source: **never pass a Markdown body inline** (`--body "…"`, a quoted
-> `<<'EOF'` heredoc, or single quotes — all of these preserve a stray `\` or
-> mangle backticks). Instead **write the body to a file with the Write tool**
-> (plain Markdown — real backticks, zero backslashes; scratchpad is fine) and
-> pass **`--body-file <path>`**: `gh issue create --body-file <path>`,
-> `gh pr create --body-file <path>`, `gh issue comment <n> --body-file <path>`
-> (or the declared forge's equivalent). Short one-liners with no Markdown (e.g.
-> a bare `Closes #12`) may stay inline. **Verify after creating:**
-> `gh issue view <n> --json body` / `gh pr view <n> --json body` must show
-> backticks rendering — a literal `` \` `` in the output means redo it with
-> `--body-file`.
-
-- **`--fix`:** every fix needs a tracked issue; create with `gh issue create --template fix.yml --body-file <path>` if missing, populating the body from the SPEC (body as a Markdown file — see the Markdown rule above). Use the returned number for branch and folder.
-- **feature:** if it came from an issue, include `Closes #<n>` in the PR body. Don't create issues for features that didn't originate from one.
-- **Language precedence for every artifact** (issues, PRs, commits, SPECs, docs): (1) an explicit user instruction in the prompt, else (2) the project's declared docs language (Workflow conventions), else (3) English. The conversation language is NOT a signal — being asked in Spanish never makes the PR Spanish. Non-matching source material gets translated first.
-
-### Descope guard (run before creating any issue during this unit)
-
-A cheap way to look finished is to quietly convert unfinished SPEC scope into a
-follow-up issue — the unit reads as done, the scope silently moved to the
-backlog. Before creating **any** issue while executing this unit, classify it
-with the fixed **descope test**:
-
-- **Descope** — the issue's content overlaps a SPEC acceptance criterion or a
-  phase task that is **not fully delivered** in this unit.
-- **Discovered work** — everything else (genuinely new, outside the SPEC's
-  promises) — file it freely; that's what `triage-issue` is for.
-
-**On a descope → STOP before creating the issue.** An issue may never be the
-first record of a descope. The descope must first be recorded as an explicit,
-**user-approved, dated SPEC amendment**:
-
-1. Get explicit user approval for the descope **first** (ask; never
-   self-authorize moving a criterion out of scope — the amendment row must
-   never be written before approval is in hand).
-2. **Only then** move the criterion/task out of the active `## Acceptance` (or
-   `## Phases` ledger), and log it in the governing SPEC's `## Amendments`
-   section (create the section if absent) with this canonical row format:
-   ```
-   - <YYYY-MM-DD> — descoped: "<criterion/task>" — approved by user — follow-up: #<n>
-   ```
-3. **Only then** create the follow-up issue, and **link the amendment** in its
-   body. Immediately after, edit the `## Amendments` row to replace the
-   `#<n>` placeholder with the real issue number, and commit that edit — a
-   row still reading the literal `#<n>` placeholder is unlinked and fails
-   `audit-pr`'s symmetric check.
-
-`audit-pr`'s scope-bleed gate and `product-audit`'s recurrence signal both key
-off this same `## Amendments` log — it is the single authoritative record of
-every descope, defined once here.
-
-### Opportunistic finding policy (run when implementation discovers work)
+## Opportunistic finding policy (run when implementation discovers work)
 
 This policy applies to a **real, out-of-scope finding discovered while
 implementing the current unit**: a lint warning, dead code, missing defensive
 check, documentation defect, or similar work that the current phase did not
 promise. A missing acceptance criterion or phase task is **not** a finding to
 route: it remains in-scope work and must be delivered (or follows the descope
-guard above).
+guard — see [descope guard](DESCOPE.md)).
 
 **Current policy — one source of truth.** Use the complete policy below for
 every target project. The target project's agent guide and docs may supply

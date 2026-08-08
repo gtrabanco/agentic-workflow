@@ -76,8 +76,8 @@ architectural change:
 | `design-feature` and `plan-feature-from-issue` | Classify whether the proposed capability preserves or needs an architectural decision before marking product design complete. |
 | `plan-feature` and `plan-feature-scaffold` | Record applicable invariants and the evidence/decision in the engineering half; do not turn a violation into a phase task. |
 | `execute-phase` | Verify that the phase preserves recorded invariants before edits; stop on a violation or a needed architectural decision. |
-| `review-change` | Review invariant preservation explicitly and report a violation as a finding before recommending modifications. |
-| `audit-pr` | Require evidence that all applicable invariants were preserved or explicitly decided before a merge-ready verdict. |
+| `review-change` | Authoritative for final diff quality, SPEC completeness, current-unit classification (fix-now / replan-in-unit / decision-required / proposal), and invariant preservation. Reports findings; posts exact-SHA REVIEW-PASS receipt on clean table. Never emits MERGE-READY. |
+| `audit-pr` | Consumes current review-change REVIEW-PASS receipt (absent/stale → BLOCKED, never re-reviews diff). Owns delivery gates only (phases/docs/CI/mergeability/traceability/closure + receipt invariants result). Emits MERGE-READY or evidenced BLOCKED; never edits/merges. |
 
 ## Evidence and compatibility
 

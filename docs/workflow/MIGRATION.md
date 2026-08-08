@@ -2,7 +2,28 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-05 — `review-change` posts a SHA-bound receipt; `audit-pr` consumes it
+
+**Feature 21 (workflow-contract-consolidation).** `review-change` 2.10.0 now
+ends a clean mandatory final review by posting one idempotent SHA-bound PR
+comment carrying `<!-- review-change:pass sha=<40-hex> contract=v1 -->` and
+the fixed receipt body (via `--body-file`, never committed to the branch).
+`audit-pr` 4.3.0 consumes that receipt as the review evidence instead of
+re-reviewing the diff: a current marker is acknowledged, an absent or stale one
+is a blocker routed to `/review-change`, and audit never composes a review.
+The merge gates narrow to the SPEC's audit-only set (the `Tests` gate and the
+acceptance-criteria diff-remapping are replaced by the receipt's fields).
+
+**Migration.** Update the skills **together** — `review-change` and
+`audit-pr` must move as one pair. An old `review-change` (no receipt) leaves
+`audit-pr` 4.3.0 blocked with no marker at the head: re-run the final review so
+the current head carries a receipt before auditing. Do not mix versions: a
+receipt posted by 2.10.0 is voided by any later commit, and a pre-receipt
+`review-change` has no marker to consume. No merge-authority change — audit-pr
+still never merges.
+
 ## 2026-07-31 — automated merge moves exclusively to `ship-roadmap --fullauto`
+
 
 **Breaking.** `audit-pr` 4.0.0 no longer merges under a documented project
 policy or a standalone instruction. It always returns a SHA-bound verdict and
