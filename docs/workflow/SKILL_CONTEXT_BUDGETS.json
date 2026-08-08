@@ -141,14 +141,14 @@
     "audit-pr:feature": {
       "skills": ["audit-pr"],
       "templates": [],
-      "routeEstimateMax": 7964,
-      "routeLinesMax": 517
+      "routeEstimateMax": 8164,
+      "routeLinesMax": 617
     },
     "audit-pr:fix": {
       "skills": ["audit-pr"],
       "templates": [],
-      "routeEstimateMax": 7964,
-      "routeLinesMax": 517
+      "routeEstimateMax": 8164,
+      "routeLinesMax": 617
     }
   }
 }
