@@ -24,3 +24,6 @@
 | F22 | scripts/check-skill-context.mjs:82-110 | design | low | fix-now | fold into branch — triage adversarial R1-02 2026-08-07 | yes |
 | F23 | .claude/skills/audit-pr/SKILL.md:Step1 | design | low | fix-now | fold into branch — triage adversarial R1-06 2026-08-07 | yes |
 | F24 | skills/orchestration-envelope/references/TURN_CONTRACT.md:Box4 | design | medium | fix-now | fold into branch — triage adversarial R1-09 2026-08-07 | yes |
+| F25 | review-findings.md:14 | review-verify | low | ignore | fold into branch | yes |
+| F26 | review-findings.md:8,14 | code | low | ignore | fold into branch | yes |
+| F27 | review-findings.md:14 | security | low | ignore | fold into branch | yes |
