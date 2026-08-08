@@ -72,12 +72,12 @@ aplicados.
 |---|---|
 | `plan-feature-from-issue` | Issue de solicitud de feature → mitad de producto del SPEC acotada (satisface el cierre de capacidades), con `Closes #N` (invocado por `plan-feature`) |
 | `plan-feature-scaffold` | Rellena la **mitad de ingeniería** del SPEC + artefactos de planificación **escalados al tamaño de la feature** (XS/S → solo SPEC; M/L → conjunto completo terminando en una fase de hardening obligatoria); registra en el roadmap (solo docs) (invocado por `plan-feature`) |
-| `review-implementation` | Encontrar → clasificar → tabla de decisión en dos fases (fix-now / postpone / ignore / intentional-tradeoff); solo hallazgos, sin refactorizar. `user-invocable: false` — el motor que compone `review-change` (y que reutilizan `audit-pr` / `product-audit`) |
+| `review-implementation` | Motor de clasificación sobre tabla sintetizada (fix-now / replan-in-unit / decision-required / proposal); solo hallazgos, sin refactorizar. `user-invocable: false` — el motor que compone `review-change` (y que reutilizan `audit-pr` / `product-audit`) |
 | `orchestration-envelope` | El contrato del sobre-máquina: fragmento canónico de system-prompt inyectado por el driver, bucle de reparación, y esquema JSON. `user-invocable: false` — la pieza que inyecta un driver externo, no una entrada de menú |
 | `review-code` | Checklist de corrección + reutilización/simplificación/eficiencia sobre el diff. `user-invocable: false` — un eje del paquete de revisión interno de `review-change` |
 | `review-security` | Checklist de seguridad con forma OWASP sobre el diff. `user-invocable: false` — paquete de revisión interno |
 | `review-verify` | Checklist de verificación de comportamiento en tiempo de ejecución (¿el cambio realmente hace lo que promete?). `user-invocable: false` — paquete de revisión interno |
-| `review-debt` | Checklist de deuda técnica / TODO / código muerto sobre el diff. `user-invocable: false` — paquete de revisión interno |
+| `review-debt` | Transformación de deuda técnica sobre tabla clasificada (no reescanea el diff). `user-invocable: false` — paquete de revisión interno |
 | `review-design` | Checklist de consistencia arquitectónica/de capas sobre el diff. `user-invocable: false` — paquete de revisión interno |
 | `review-a11y` | Checklist de accesibilidad sobre cambios de UI. `user-invocable: false` — paquete de revisión interno |
 | `review-brand` | Checklist de consistencia de marca/voz sobre el texto de cara al usuario. `user-invocable: false` — paquete de revisión interno |
@@ -94,15 +94,15 @@ aplicados.
 
 | Skill | Alcance | Rol | Entrega a |
 |---|---|---|---|
-| `review-change` | el **cambio** | Ejecuta solo las revisiones que aplican a esta plataforma — **cada pasada aislada por defecto** (contexto limpio, devuelve solo su tabla de hallazgos; el orquestador retiene tablas, nunca fuentes) — + una **comprobación estructural de desviación del SPEC** (tabla de cobertura por criterio + mapeo de hunks del diff) + clasifica → una tabla de decisión + checklist de verificación manual; **obligatorio antes de cada merge** | `plan-fix` (fix-now) / `triage-issue` (cada hallazgo no-fix-now: postpone / ignore / intentional-tradeoff) |
+| `review-change` | el **cambio** | Ejecuta solo las revisiones que aplican a esta plataforma — **cada pasada aislada por defecto** (contexto limpio, devuelve solo su tabla de hallazgos; el orquestador retiene tablas, nunca fuentes) — + una **comprobación estructural de desviación del SPEC** (tabla de cobertura por criterio + mapeo de hunks del diff) + clasifica → una tabla de decisión + checklist de verificación manual; **obligatorio antes de cada merge** | incorpora fix-now a la fase abierta / `triage-issue` (propuestas independientes) |
 | `fold-findings` | el **ledger de hallazgos** | Repara de verdad, uno por uno, cada hallazgo fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica), una lista de prohibiciones fija cierra las válvulas de escape (volcado a known-issues, downgrade, aflojar tests, supresión); veredicto por hallazgo `FOLDED \| DISPUTED \| BLOCKED` | re-ejecutar `review-change` (todo foldeado) / `triage-issue` (disputado) |
-| `audit-pr` | el **PR** | Puerta de merge de solo lectura → comentario MERGE-READY ligado al SHA o bloqueantes con evidencia; nunca edita ni fusiona. Solo un `ship-roadmap --fullauto` activo puede ejecutar un merge automatizado | `execute-phase` / `plan-fix` / `triage-issue` |
+| `audit-pr` | el **PR** | Puerta de merge de solo lectura que **consume el recibo `REVIEW-PASS` vigente de `review-change`** (ausente/obsoleto → bloqueante enrutado a `/review-change`, nunca se re-revisa) → comentario MERGE-READY ligado al SHA o bloqueantes con evidencia; nunca edita ni fusiona. Solo un `ship-roadmap --fullauto` activo puede ejecutar un merge automatizado | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; extrae de los docs de feature → propone issues + cambios de roadmap (nunca arregla automáticamente); recurrencia de exportación de alcance (≥ 2 unidades consecutivas exportando alcance → hallazgo de calidad de planificación enrutado a #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | los **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones | informe (+ arreglos opcionales de bajo riesgo) |
 
 > El motor de hallazgos de `review-change` es el `review-implementation`
-> interno (`user-invocable: false`) — el pase de dos fases encontrar →
-> clasificar que compone, y que reutilizan `audit-pr` / `product-audit`. No es
+> interno (`user-invocable: false`) — el clasificador de la tabla sintetizada que
+> compone, y que reutilizan `audit-pr` / `product-audit`. No es
 > una entrada de menú; ver
 > [Pasos internos](#pasos-internos-ocultos-del-menú-compuestos-por-ti).
 
@@ -198,7 +198,8 @@ ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-
 
 review-change ── runs the applicable reviews + classifies a change (Stage 4, mandatory);
                  composes review-implementation + the platform's companion skills;
-                 fix-now ─▶ plan-fix · every non-fix-now (postpone/ignore/tradeoff) ─▶ triage-issue
+                 fix-now ─▶ se incorpora a la fase abierta · replan-in-unit ─▶ nuevas fases confirmadas por el usuario
+                 decision-required ─▶ presentar, bloquear · proposals ─▶ el usuario las enruta a triage-issue
 audit-pr ─────── PR-level merge gate (merge-ready or blockers)
 product-audit ── periodic product-wide sweep → proposes issues + roadmap changes
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime

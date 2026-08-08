@@ -125,18 +125,21 @@ the frozen ledger and route missing or contradictory state to these skills.
    code intentionally staged for an in-progress/planned feature — cross-check
    roadmap/SPEC/known-issues), security/cybersecurity, platform/runtime
    incompatibilities, overengineering & premature optimization, bundle-size
-   risk, and tests (failing AND missing). Phase 2 CLASSIFY each finding as
-   fix-now / postpone / ignore / intentional-tradeoff in a decision table with
-   WHY, implementation risk, long-term impact, and a premature-optimization flag.
+    risk, and tests (failing AND missing). Phase 2 CLASSIFY each finding as
+    fix-now / replan-in-unit / decision-required / proposal / ignore in a
+    decision table with WHY, implementation risk, long-term impact, and a
+    premature-optimization flag.
    Findings only — never refactor.
 8. `review-change` — platform-adaptive orchestrator, **mandatory before every
    merge**: run only the reviews that apply to this project + change (compose
    `review-implementation` + the project's companion review skills), check **SPEC
    drift** (diff vs. the governing SPEC's scope and acceptance criteria — nothing
    contradicted, silently exceeded, or left untouched), and synthesize ONE classified
-   table + an explicit manual-verification checklist. Run **every non-fix-now finding
-   through `triage-issue`** (compose in-turn — equal tier) so each gets a destination
-   (issue / documented decision / justified drop), never silently lost. Findings only;
+   table + an explicit manual-verification checklist. Give **every finding a
+   destination**: fix-now folds into the current unit's open phase, replan-in-unit
+   appends user-confirmed phases, decision-required surfaces to the user, and
+   independent proposals are batched for the user to route to `triage-issue`
+   (never create backlog yourself). Findings only;
    print the next step (`audit-pr`).
 9. `audit-pr` — PR-level merge gate: SPEC acceptance met, all phases complete,
    docs updated (**never merge with pending docs**), `Closes #N`, the issue/fix-index
