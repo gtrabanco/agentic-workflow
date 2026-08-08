@@ -11,7 +11,7 @@
 | F9 | docs/workflow/SKILLS.md:101 | brand | major | fix-now | fold into branch | yes |
 | F10 | docs/features/21-workflow-contract-consolidation/testing.md:256 | review-verify | major | fix-now | fold into branch | yes |
 | F11 | .claude/skills/execute-phase/SKILL.md:48-49 | review-verify | low | fix-now | fold into branch | yes |
-| F12 | Review receipt | Review receipt | high | fix-now | /review-change | no |
+| F12 | Review receipt | Review receipt | high | fix-now | /review-change | yes |
 | F13 | .pi (gitlink, no .gitmodules; intentional MCP config -> tracked as regular file) | review-code | high | fix-now | fold into branch | yes |
 | F14 | scripts/check-skill-context.mjs:1 (EOF newline dropped) | review-code | low | fix-now | fold into branch | yes |
 | F15 | docs/features/21-workflow-contract-consolidation/testing.md:243,293 | review-verify | medium | fix-now | fold into branch | yes |
