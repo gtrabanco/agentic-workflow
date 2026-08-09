@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.10.0
+version: 2.11.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -21,6 +21,10 @@ or refactors.**
 ## Turn contract
 
 Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (isolation rule, applicability) live only in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
+
+Consume the internal [verification contract](<../verification-contract/SKILL.md>);
+the reviewer checks the same frozen `ACCEPTANCE.md` blob as the executor before
+mapping candidate evidence.
 
 ## When to use
 
@@ -159,6 +163,8 @@ collapse independent adversarial passes into one context.
   `replan-in-unit` appends user-confirmed phases; independent work becomes
   proposals the user routes to `triage-issue` (D3).
 - `audit-pr` is the PR-level gate it feeds; `product-audit` the periodic full sweep.
+- `loop-review-fold` may orchestrate this skill in a fresh context and route a
+  FAIL through `fold-findings`; it never changes this skill's read-only contract.
 
 ## Done when
 

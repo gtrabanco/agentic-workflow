@@ -1,25 +1,36 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 2.13.2
-argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--force]
+version: 3.0.0
+argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Implement exactly one planned feature or fix phase with pre-edit gates,
-  verified commit discipline, and final PR close-out. Use --fix for fix SPECs;
-  --force is user-only. Triggers: "execute-phase", "implement phase", "build
-  feature from spec", "execute fix".
+  Implement all remaining phases of a planned feature/fix by default, or one
+  explicit P<n>, with frozen acceptance, phase-local gates, commits, recovery,
+  and final PR close-out. Use --fix for fix SPECs; --force is user-only.
 ---
 
 # Execute Phase
 
-Three modes:
+Execution modes:
 
-- **feature phase** (default) — implement one phase of `docs/features/<NN>-<slug>/` using its `TASKS.md`.
-- **single-pass unit** — a small feature (SPEC `Size: XS/S`, only a `SPEC.md`): run its SPEC's `## Phases` **one phase per invocation**; no `## Phases` → end-to-end in one pass (legacy fallback).
-- **`--fix`** — implement a fix from `docs/fix/<n>-<topic>/`: same phased consumption and legacy fallback.
+- **unit loop** (default when `P<n>` is omitted) — execute every remaining
+  phase through close-out, with one phase-local gate and commit per phase.
+- **explicit phase** — passing `P<n>` executes exactly that phase and stops.
+- **legacy single-pass** — a SPEC without `## Phases` runs end-to-end once.
+- **`--fix`** selects a fix unit; the same omitted/explicit phase dispatch applies.
+
+First matching row wins:
+
+| Invocation shape | Queue |
+|---|---|
+| target + explicit `P<n>` | only the literal `P<n>` argument; ignore other unfinished phases |
+| target, no phase | only the literal unfinished phase IDs found in the ledger, in order |
+| legacy SPEC without phases | one legacy pass |
+
+Never infer a phase ID absent from the invocation/ledger.
 
 ## Turn contract
 
@@ -29,7 +40,9 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
 
 - Honor the project's **Workflow conventions** (branch/PR, gate-before-commit, docs-language). Run `git branch --show-current` before any edit/commit; if `main`, create the working branch first (assistant only; the user may use `main`).
 - **Phases are `P1, P2, …`.** The `<phase>` argument and every reference in `PLAN.md`/`TASKS.md`/`progress.md`/commits is `P1, P2, …` ("phase N") — **never** `S1`/`S2`/"Step N". If a plan you're handed uses `S1`-style labels, normalize it to `P1, …` before executing and note it in `decisions.md`.
-- Implement only the requested scope — one phase (feature mode) or the whole SPEC (single-pass/fix). Never bundle phases unless asked.
+- Implement only the requested scope — all remaining planned phases when no
+  phase is passed, or exactly the explicit `P<n>`. Never invent/bundle tasks
+  across phase boundaries; unit-loop mode still gates and commits each phase.
 - Stop after the gate passes; keep commits small and reviewable.
 - Feature mode: update `TASKS.md`, `progress.md`, `testing.md`, `known-issues.md` each phase (and `decisions.md` if architecture moved).
 - **When reality contradicts the plan** (a task is impossible, an assumption is wrong, a better path appears): update `TASKS.md`/`PLAN.md` and record why in `decisions.md` — never silently diverge from the written plan.
@@ -56,6 +69,10 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
   declared `Layer:` + the optional invariant document when the documentation
   map declares one. Nothing else by default; every additional doc counts
   against the file cap.
+- **Unit-loop reset.** After each phase commit reduce working state to the
+  phase receipt in `progress.md`; discard raw source/test output before selecting
+  the next phase. Use a fresh worker context per phase when the host provides
+  one; otherwise continue inline from receipts, never by re-reading prior files.
 
 ## Progressive loading — mandatory route before acting
 
@@ -63,10 +80,12 @@ This entrypoint carries only the universal turn contract and handoff schema.
 Load route detail from the links below **before** the step that needs it. Read
 only the listed files; every resource is one hop from this file.
 
-1. Every invocation: read [preflight gates](references/PREFLIGHT.md), run them,
+1. Every invocation: consume the [verification contract](<../verification-contract/SKILL.md>),
+   then read [preflight gates](references/PREFLIGHT.md), run them,
    and stop on any contracted blocker before editing. This mandatory route owns
    the `docs/workflow/REPOSITORY_STATE.md` and Architectural invariants gates.
-2. Before implementation: read [execution contract](references/EXECUTION_CONTRACT.md),
+2. When no explicit `P<n>` is passed, read [unit loop](references/UNIT_LOOP.md).
+   Then, before implementation, read [execution contract](references/EXECUTION_CONTRACT.md),
    then select **exactly one** mode from the artifacts and read only its
    workflow: [feature](references/WORKFLOWS_FEATURE.md), [small/phased](references/WORKFLOWS_SMALL_PHASED.md),
    [`--fix`](references/WORKFLOWS_FIX.md), or [legacy](references/WORKFLOWS_LEGACY.md)
@@ -95,11 +114,11 @@ fallback; never skip the underlying workflow step.
 ## Relationship to other skills
 
 - Planned by `plan-feature` (features) or `plan-fix` (fixes); executes their SPEC.
-- **Hands off** to `review-change` — recommended at a trigger-based checkpoint
+- In explicit-phase mode, **hands off** to `review-change` when a trigger-based checkpoint
   (layer boundary, accumulation, or sensitivity; skippable), **mandatory** when
-  finishing a unit — it runs at its own model/effort, not composed in this
-  skill's turn. `fix-now` findings fold back here; non-fix-now routes through
-  `triage-issue`.
+  finishing a unit. Unit-loop mode skips intermediate checkpoints and recommends
+  `loop-review-fold` after the PR opens; direct `review-change` remains the
+  manual alternative. Independent work stays a proposal until user triage.
 - A finished unit (single-pass, `--fix`, or final phase) **always opens its PR and
   flips to `done`**; `audit-pr` then gates the merge (it blocks on pending docs or a
   prematurely-dropped issue entry).
@@ -107,12 +126,13 @@ fallback; never skip the underlying workflow step.
 
 ## Done when
 
-- The requested scope is implemented (one phase, or the whole SPEC for
-  single-pass/`--fix`), the project's gate is green, per-phase docs are updated, and
+- The requested scope is implemented (all remaining phases by default, one
+  explicit phase, or the legacy single pass), the project's gate is green, per-phase docs are updated, and
   the work is committed on the correct branch — nothing bundled beyond the requested
   scope.
 - **The tree is clean and the remote current:** `git status --porcelain` is empty
   (docs included) and, when the branch has an open PR, nothing is left unpushed.
 - **A finished unit additionally:** is flipped to `done`, has its PR opened (never
   branch-only) with **the PR URL printed in the chat**, and prints the mandatory
-  `/review-change` hand-off as the next step.
+  `/loop-review-fold` hand-off as the recommended next step, with direct
+  `/review-change` listed as the manual alternative.

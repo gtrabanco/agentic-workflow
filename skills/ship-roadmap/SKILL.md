@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 3.2.0
+version: 4.0.0
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -20,10 +20,10 @@ loop (Claude Code's `/loop`, an external orchestrator, or manual re-invocation
 — see the launch contract) that plans, implements, reviews, opens and
 (optionally) merges one PR per
 feature until the roadmap is done — then keeps going: an **issue sweep**
-inventories open issues and the run's own documented residue (known-issues,
-trade-offs, postponed findings), triages it all, and ships what's fix-now —
-ending in a final report that recommends
-issues, newly discovered features, and the product-audit cadence.
+inventories and triages existing issues, ships what's fix-now, and deduplicates
+the run's untracked residue as report proposals without creating backlog —
+ending in a final report that recommends issue groups, newly discovered
+features, and the product-audit cadence.
 
 This is the **expensive** skill: a full run burns planning, implementation and
 review tokens for every roadmap feature. It exists to spend them well — strong
@@ -133,17 +133,19 @@ primitive; do not change the stage sequence or safety floors.
 - **Composes in-turn** (all ≤ its tier): `init-workspace` (founding, answers
   pre-fed), `design-feature` + `plan-feature-scaffold` (JIT design for a
   mid-run `idea`/`defined` unit, derive-only from the locked founding
-  decisions), `plan-feature` (JIT planning, scoped path), `review-change`
-  (checkpoints), `audit-pr` (verdict/comment merge gate; never the merge
+  decisions), `plan-feature` (JIT planning, scoped path), `loop-review-fold`
+  (bounded final review/correction), `audit-pr` (verdict/comment merge gate; never the merge
   executor), `audit-docs` (docs-only founding /
   report PR coherence).
-- **Spawns as sonnet subagents:** `execute-phase` discipline — phases,
-  XS/S single passes, fix-now folding, audit-blocker fixes.
+- **Spawns as cheap-tier workers:** `execute-phase` discipline — one fresh
+  context per phase, mechanical folds, and audit-blocker fixes. On the derived
+  Claude branch this role maps to `sonnet`; portable drivers choose their
+  validated worker model.
 - **Hands off to the human:** every merge in default mode; `product-audit`
   always (its effort max exceeds the conductor's high — composing it would
   under-power it, the exact regression the ≥ rule exists to prevent); `triage-issue` for the
   report's issue batch.
-- The manual flow (`plan-feature` → `execute-phase` → `review-change` →
+- The manual flow (`plan-feature` → `execute-phase` → `loop-review-fold` →
   `audit-pr`, feature by feature) remains the default way of working —
   ship-roadmap is the same flow with the human moved to its edges.
 - **External-orchestration sibling:** `workflow-status` + the driver-injected
@@ -157,7 +159,8 @@ primitive; do not change the stage sequence or safety floors.
 - The run reached a terminal banner with the final report written and its PR
   open; the roadmap's statuses are true; every PR is merged, open-and-audited,
   or parked with its reason recorded; on `SHIP: COMPLETE` the issue sweep is
-  accounted for — inventory, triage verdicts, fix-now issues shipped or parked.
+  accounted for — existing issues inventoried/triaged, fix-now issues shipped
+  or parked, and untracked residue reported as proposals.
 - Every decision of the run is traceable: locked answers in
   `SHIP_DECISIONS.md`, iteration evidence in the run log, outcomes and
   recommendations in the report.

@@ -99,6 +99,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `discover-repository-state`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-08-09 | minor | Routes implementation-ready work to target-only `execute-phase`, so the new whole-unit default is not accidentally forced back to explicit `P1`. |
 | 1.1.2 | 2026-07-31 | patch | Routes a contradicted snapshot to `resolve-repository-state` before recommending planning. |
 | 1.1.1 | 2026-07-31 | patch | Removes the undeclared `--refresh` argument and clarifies that discovery preserves each ledger category separately. |
 | 1.1.0 | 2026-07-31 | minor | Preserves `contradicted` snapshot status when discovery records a conflict instead of freezing unresolved contradictions. |
@@ -107,6 +108,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `resolve-repository-state`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-08-09 | minor | Resumes interrupted implementation through target-only `execute-phase`; explicit phase selection remains available to the user. |
 | 1.1.1 | 2026-07-31 | patch | Routes `needs-input` outcomes to the missing evidence or decision instead of recommending planning. |
 | 1.1.0 | 2026-07-31 | minor | Stops without freezing when a contradiction needs human input, keeping the snapshot contradicted until evidence or a decision is supplied. |
 | 1.0.0 | 2026-07-30 | — | New skill: sole writer for explicit repository-state contradiction resolution and next frozen snapshots. |
@@ -121,6 +123,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.10.0 | 2026-08-09 | minor | Planned-unit recommendations now emit target-only `execute-phase`, preserving the default all-remaining-phases route for humans and external drivers. |
 | 1.9.0 | 2026-07-31 | minor | Progressive loading: the activation body is now a compact read-only sensor route; command sequence, crash recovery, envelope fields, guardrails, and portability live in one-hop resources with mandatory load order. |
 | 1.7.0 | 2026-07-19 | minor | Fix #79: four new Process steps (10-13) attach per-unit `review` (`last_checkpoint_sha`, `unreviewed_diff`, `terminal_done` reused from the existing `review_pending` computation, `adversarial: {ran, n}` — honestly `null` unless real evidence exists, never guessed), `closure.state` (reusing `audit-pr`'s own grep), and `issues_born: {n, with_descope_amendment}` (reusing `audit-pr`'s scope-bleed detection, widened by #79/#89) to each `detail.features[]`/`detail.fixes[]` entry — schema-opaque, no package change (same precedent as `detail.urgent`). New top-level `next.suggested[]` (`{command, trigger, source_skill}`, optional) surfaces fired triggers from `execute-phase`/`review-change`/`audit-pr`/`fold-findings`, each quoting its owning skill's own condition — advisory only, never replaces `next.recommended`/`next.tier`. Mirrored in `packages/agentic-workflow-schema` 2.1.0 (same PR). |
 | 1.6.1 | 2026-07-14 | patch | Step 11 (untriaged-issue backlog) reworded: the `postponed`/`promoted`/`wontfix` disposition label (owned by `triage-issue`, triage+-permission-gated, unforgeable) is now stated as the **authoritative** triaged signal; the `VERDICT:` comment is kept as an explicit **legacy fallback** for issues triaged before the label existed, with an accepted-residual note (a spoofed comment can still under-count the backlog — no privilege/injection impact, `detail.urgent` untouched). No field-shape change — `detail.untriaged_issues: {count, oldest_open}` is unchanged. Part of fix `#54`. |
@@ -137,6 +140,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.0.0 | 2026-08-09 | major | **Breaking:** EXECUTE runs each unit's remaining phases through fresh cheap-worker contexts; REVIEW is one bounded `loop-review-fold` stage; issue-sweep residue remains proposals instead of creating backlog. See `docs/workflow/MIGRATION.md`. |
 | 3.2.0 | 2026-07-31 | minor | Fullauto now invokes the wrapper with only PR and run identifiers; the wrapper derives and verifies the forge head, default base, SHA-bound audit evidence, and head-pinned decision instead of trusting caller-controlled inputs. |
 | 3.1.1 | 2026-07-31 | patch | Routes an existing-repository founding run invoked with `--fullauto` through the audit-and-merge policy, while keeping default and greenfield founding routes free of audit resources. |
 | 3.1.0 | 2026-07-31 | minor | Progressive loading splits founding, continuation recovery/selection, stage advancement, runtime/merge policy, terminal reporting, guardrails, and portability into explicit one-hop routes; the main activation body retains the turn contract and route selection. |
@@ -164,6 +168,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-08-09 | major | **Breaking default:** a target-only feature/fix invocation executes all remaining phases with a fresh worker receipt per phase, bounded repairs, frozen acceptance, and no intermediate reviews; explicit `P<n>` remains the one-phase form. Independent findings become proposals, never auto-created issues. See `docs/workflow/MIGRATION.md`. |
 | 2.13.2 | 2026-08-05 | patch | Splits the monolith `WORKFLOWS.md` into per-mode workflow resources (feature, small/phased, fix, legacy) loaded exactly one at a time, splits `ISSUE_POLICY.md` into three independently loaded policy resources (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) chosen by situation, and adds a versioned dependency receipt with a fail-closed local fingerprint fast path. Behavior-preserving: every universal execution safety box stays resident in the compact Turn contract, each mapped read-verified to its unique owner resource, and every execute route still passes with unchanged observable outcomes. |
 | 2.13.1 | 2026-08-02 | patch | Moves the fixed `progress.md` handoff schema behind an explicit one-hop route, preserving every field and close-out rule while reducing direct activation context. |
 | 2.13.0 | 2026-07-31 | minor | Progressive loading reduces the most-used skill's activation estimate from about 13k to 3k: universal turn/handoff rules stay in `SKILL.md`, while preflight, execution gates, issue policy, mode workflows, closeout/folding, and batch portability load only when required. |
@@ -226,6 +231,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 3.5.0 | 2026-08-09 | minor | Clean and already-planned hand-offs now recommend target-only `execute-phase` for whole-unit delivery and list explicit `P1` only as the atomic alternative. |
 | 3.4.0 | 2026-08-04 | minor | Adds the planning preflight and phase contract as one-hop internal contracts (progressive-loading paths 2-3) and pins a single immutable planning context — one roadmap snapshot plus optional issue payload — reused across composed internals, never re-fetched mid-plan. |
 | 3.3.2 | 2026-08-03 | patch | Makes the issue-derived routing contract explicit: after `PLANNING_GATES.md` permits planning, compose `plan-feature-from-issue` and then `plan-feature-scaffold` in that order. |
 | 3.3.1 | 2026-08-02 | patch | Routes status detection and repository/invariant gates through two explicit one-hop references and trims activation metadata; planning behavior and fixed hand-offs are unchanged. |
@@ -252,6 +258,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 2.6.0 | 2026-08-09 | minor | Accepts compatible capability bundles and homogeneous mechanical issue batches using set-level outcome, verification, isolation, release/rollback, and aggregate-size checks; shared files/root cause/severity are no longer gates, and failed sets return the fewest maximal compatible groups. Emits frozen `ACCEPTANCE.md`. |
 | 2.5.0 | 2026-08-04 | minor | Consumes the shared planning preflight (normalized repository state read + one final architectural classification) and phase contract (canonical 8-box phase-lint + phase fingerprint) before drafting and emitting a fix SPEC; prose compressed so the route stays below its baseline budget. |
 | 2.4.1 | 2026-08-02 | patch | Moves validation/planning and SPEC-detail contracts into explicit one-hop routes, then compresses explanatory prose while retaining every fixed multi-issue, phase, commit, and hand-off rule. |
 | 2.4.0 | 2026-07-19 | minor | Self-review (step 14) now also runs the fix template's new `### Spec-lint` — mechanical presence checks (no placeholders left, out-of-scope non-empty, every acceptance criterion a runnable command or labelled `read-verified`) — before the draft commit. |
@@ -274,6 +281,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.0 | 2026-08-09 | minor | Verifies the frozen acceptance blob before review and recommends bounded `loop-review-fold` on failure while preserving its read-only, exact-SHA receipt contract. |
 | 2.10.0 | 2026-08-05 | minor | D10 three-state report decision `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` (never MERGE-READY). Mandatory final review posts one idempotent exact-SHA `REVIEW-PASS` receipt as a PR comment through a temporary Markdown `--body-file` (fixed body: `<!-- review-change:pass sha=… contract=v1 -->` marker, head SHA, scope/axes, acceptance coverage, invariants, zero open findings, proposals count, manual checks; D6 — never committed into the branch, newest matching marker wins, later commit makes it stale). `REVIEW-FAIL` persists findings to the fold ledger and posts no receipt; `NEEDS-DECISION` blocks without creating an issue. Pre-PR checkpoints keep the `progress.md` marker and post no receipt (D7). New fake-forge receipt fixture suite (`scripts/review-receipt.test.mjs`). |
 | 2.9.1 | 2026-07-31 | patch | Makes `--merge` self-contained by loading the review process and adversarial setup before adversarial merge, so the supplied tables are fused under the same review contract. |
 | 2.9.0 | 2026-07-31 | minor | Progressive loading separates the default review process, persistence/decision, adversarial setup/merge, output/guardrails, and portability; isolation and the turn contract remain in the activation body. |
@@ -310,9 +318,15 @@ How pinning actually works, verified against the `skills` CLI:
 #### `fold-findings`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.0 | 2026-08-09 | minor | Repairs the selected queue in compatible atomic batches while retaining one ledger verdict and evidence record per finding; disputes stop for user decision and no fold path auto-creates an issue. |
 | 1.1.1 | 2026-08-02 | patch | Splits frozen policy from the per-finding procedure behind mandatory one-hop routes and shortens activation metadata; classifications, forbidden actions, verdicts, and commit/push behavior are unchanged. |
 | 1.1.0 | 2026-07-19 | minor | Two additions: (1) **ledger reconstruction** — invoked after an `audit-pr` `VERDICT: BLOCKED` with the ledger absent or missing blockers, the skill now appends the missing rows from the verdict itself (fixed schema, `class: fix-now`, deduped by `file:line`+axis, committed) and proceeds; ending with "no findings" while a BLOCKED verdict lists blockers is a contract violation. (2) New **`REPLAN`** per-finding verdict for `replan-in-unit` rows (and any finding whose smallest correct fix proves too large to fold in one commit): never implemented inline, never downgraded — hand-off to user-confirmed SPEC phase(s) + `execute-phase` on the same branch; tally gains an optional `· Replan: r` field (omitted when 0). |
 | 1.0.0 | 2026-07-17 | — | New skill (fix #65): repairs `review-change`/`audit-pr` fix-now findings one at a time — frozen classification (never reclassifies; a genuine objection produces `DISPUTED` → `/triage-issue`), a fixed forbidden list (no known-issues dump, no `decisions.md` tradeoff note, no test loosening/skipping, no lint-suppression-as-fix, no `TODO` stub, no ticking `folded: yes` without a diff), and a fixed per-finding `FOLDED <sha> \| DISPUTED <reason> \| BLOCKED <missing input>` output contract ending in a `Folded: n/m · Disputed: k · Blocked: j` tally. `execute-phase`'s embedded fold-cycle checklist remains the in-context/portability fallback. |
+
+#### `loop-review-fold`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-08-09 | — | New bounded final review/correction conductor: reuses exact-SHA receipts, alternates fresh read-only review and batched fold contexts only for changed HEADs, defaults to two correction cycles, and stops on pass, decision, blocker, no progress, or budget exhaustion. Never merges or creates issues. |
 
 #### `audit-pr`
 | Version | Date | Type | What changed |
@@ -442,6 +456,9 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `verification-contract` | 1.0.0 | 2026-08-09 | — | New internal contract: freezes one compact `ACCEPTANCE.md` per unit, binds execution/review evidence to its blob, defines validation states, and forbids weakening tests or acceptance to manufacture green. |
+| `orchestration-envelope` | 1.5.0 | 2026-08-09 | minor | The canonical turn contract carries the frozen acceptance blob and forbids automatic issue creation for independent proposals, enabling bounded whole-unit and review/fold drivers without changing the JSON schema. |
+| `plan-feature-scaffold` | 1.14.0 | 2026-08-09 | minor | Emits the frozen acceptance manifest for every feature size and hands target-only execution all remaining phases by default. |
 | `phase-contract` | 1.0.0 | 2026-08-04 | — | New internal contract: canonical owner of the eight-box phase-lint, with fixed `PASS (8/8)`/`BLOCKED — box <n>` output and the normalized phase fingerprint (`P<n>:<layer>:<n-tasks>:<title-deliverable>`). |
 | `planning-preflight` | 1.0.0 | 2026-08-04 | — | New internal contract: single consumer of the normalized repository state and sole owner of the ONE final architectural classification for a complete plan, with a fixed preflight result line. |
 | `plan-feature-scaffold` | 1.13.0 | 2026-08-04 | minor | Consumes the planning preflight (NRS read + one final architectural classification) and the phase contract (8-box phase-lint + phase fingerprint) instead of duplicating invariant and lint rules. |
@@ -528,6 +545,12 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-09 — bounded delivery loops (feature 22).** Frozen acceptance,
+  target-only whole-unit execution with fresh phase workers, compatible
+  multi-issue fix batching, batched finding folds, and the bounded
+  `loop-review-fold` final gate. Execution/review findings no longer create
+  issues automatically; independent work is reported as proposals.
 
 - **2026-08-05 — execution contract consolidation (feature 21, P3).** `execute-phase`
   2.13.2 splits its monolith `WORKFLOWS.md` into four per-mode workflow resources

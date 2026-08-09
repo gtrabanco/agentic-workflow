@@ -39,7 +39,7 @@ idea ──design-feature / plan-feature-from-issue──▶ defined
   status: designed`, capability closure filled). Next action: `/plan-feature
   <slug>`. Set by `design-feature` or `plan-feature-from-issue`.
 - `planned` — full SPEC (**engineering half filled**) + planning artifacts
-  exist. Next action: `/execute-phase <NN> P1`. Set by `plan-feature-scaffold`
+  exist. Next action: `/execute-phase <NN>`. Set by `plan-feature-scaffold`
   (XS/S SPEC-only sizes included — scaffold still runs and lands here).
 - `in-progress` — branch open, phases executing. Set by `execute-phase` P1.
 - `done` — built and its PR open (the last step opened the PR); **merge state

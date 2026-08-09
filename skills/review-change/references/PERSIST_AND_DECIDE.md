@@ -84,9 +84,9 @@
    passing receipt was posted** (step 13):
 
    ```
-   → Next: /fold-findings — repair each fix-now finding for real (frozen
-     classification, no known-issues dump/downgrade/suppression escape hatch),
-     then re-run /review-change
+   → Next: /loop-review-fold <unit> — repair compatible fix-now batches and
+     re-review changed HEADs within the bounded correction budget
+     · manual path → /fold-findings, then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),
         then /execute-phase on this same branch (yes: list the finding ids; no:

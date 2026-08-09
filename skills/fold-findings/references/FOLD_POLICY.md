@@ -6,9 +6,8 @@ never moves a finding out of fix-now. Those fields belong to `review-change` /
 let a fix turn into a reclassification. If, while investigating, the finding
 genuinely looks wrong (not reproducible, already fixed elsewhere, or the
 axis/severity is mistaken), that is **evidence for a dispute**, not a
-license to edit the row: mark it `DISPUTED` with the evidence and route it to
-`/triage-issue` — the row's `severity`/`class`/`route` stay exactly as
-written until `triage-issue` (or a human) says otherwise.
+license to edit the row: mark it `DISPUTED` with the evidence and stop for a
+user decision — the row's `severity`/`class`/`route` stay exactly as written.
 
 ## Definition of fixed (checklist — every box, every finding)
 
@@ -36,8 +35,8 @@ A finding is `FOLDED` only when **all** of these hold:
 ✗ A TODO/FIXME stub left in place of the actual fix
 ✗ Ticking `folded: yes` without a reviewer-mappable diff behind it
 ✗ Fixing anything NOT on the ledger (or not in the explicit finding-ID
-  scope this turn was given) — an opportunistic extra fix belongs to
-  /triage-issue as its own finding, never bundled in silently
+  scope this turn was given) — record an independent proposal for explicit
+  user triage, never bundle it silently or create an issue
 ```
 
 Something forbidden looks like the only option → stop, do not apply it, and

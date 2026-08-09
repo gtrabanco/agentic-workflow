@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.9.0
+version: 1.10.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -29,7 +29,7 @@ and what the recommended next command is.** Built for external orchestrators
 ✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare
   `/plan-feature`) AND staged by the target unit's resolved status:
   `idea`/undesigned → `/design-feature <slug>`; `defined` → `/plan-feature
-  <slug>`; `planned` → `/execute-phase <NN> P1`
+  <slug>`; `planned` → `/execute-phase <NN>`
 ✓ A missing or non-frozen repository-state ledger emits a machine-readable
   substrate blocker and routes to discovery or resolution before any unit is
   listed as startable

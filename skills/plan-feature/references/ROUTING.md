@@ -19,8 +19,9 @@ SPEC's `## Design status` marker is the SPEC-local record and the
    Print exactly:
 
    ```
-   → Next: /execute-phase <NN> P1 — this feature is already planned; start
-     implementation, don't re-plan it.
+   → Next: /execute-phase <NN> — this feature is already planned; execute every
+     remaining phase, don't re-plan it.
+     · explicit atomic mode → /execute-phase <NN> P1
    ```
 3. **Roadmap row status `in-progress`** → **STOP**. Print exactly:
 
