@@ -96,6 +96,25 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
    dependency gate: recorded in `decisions.md` before implementation begins;
    the autopilot (`ship-roadmap`) must never pass it.
 
+## Acceptance-manifest gate (after dependency/own-status, before phase-lint)
+
+Consume `skills/verification-contract/SKILL.md`. For a current-format unit,
+validate sibling `ACCEPTANCE.md`, run `git hash-object` on it, and compare the
+blob to `progress.md`'s `Acceptance receipt v1`.
+
+- No receipt on the first phase → append the receipt before edits; it rides the
+  first phase/planning-artifact commit. The just-computed blob is the baseline.
+- Exact receipt match → continue.
+- Missing/mismatched manifest → print the verification contract's fixed
+  `ACCEPTANCE GATE` block and stop. `--force` never bypasses a changed finish line.
+- Legacy unit with no manifest reference in its planning artifacts → hash the
+  committed `SPEC.md`, record `Manifest: legacy SPEC.md`, and apply the same
+  exact-blob rule.
+
+Run this check again immediately before each phase in whole-unit mode and before
+final close-out. The executor may add tests but may not narrow commands, weaken
+assertions, or edit acceptance to make a candidate pass.
+
 ## Phase-lint pre-flight guard (always, before any edit — after the dependency/own-status gates)
 
 **Legacy-SPEC carve-out (check this first, before anything else in this

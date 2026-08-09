@@ -16,3 +16,7 @@ The base template at `docs/fix/_TEMPLATE/SPEC.md` is mandatory. Add these sectio
 - **Cross-issue notes** — open issues / PRs that may absorb, block, or be blocked by this fix; decision for each.
 - **Effort** — T-shirt size with one-line justification.
 - **Decisions made during drafting** — non-blocking assumptions made by the architect, so the implementer can re-question.
+
+After the SPEC is complete, write `ACCEPTANCE.md` using the canonical
+`verification-contract`. For merged issues, keep at least one stable criterion
+ID per source issue so a shared implementation cannot hide an unclosed report.

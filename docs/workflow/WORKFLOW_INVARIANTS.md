@@ -75,8 +75,10 @@ architectural change:
 |---|---|
 | `design-feature` and `plan-feature-from-issue` | Classify whether the proposed capability preserves or needs an architectural decision before marking product design complete. |
 | `plan-feature` and `plan-feature-scaffold` | Record applicable invariants and the evidence/decision in the engineering half; do not turn a violation into a phase task. |
-| `execute-phase` | Verify that the phase preserves recorded invariants before edits; stop on a violation or a needed architectural decision. |
-| `review-change` | Authoritative for final diff quality, SPEC completeness, current-unit classification (fix-now / replan-in-unit / decision-required / proposal), and invariant preservation. Reports findings; posts exact-SHA REVIEW-PASS receipt on clean table. Never emits MERGE-READY. |
+| `verification-contract` | Own the frozen acceptance bytes and validation ladder. Execution and correction may strengthen coverage but may not weaken the finish line. |
+| `execute-phase` | Verify frozen acceptance and recorded invariants before each phase; use a fresh worker context, bounded repair attempts, and stop on no progress or a required decision. |
+| `review-change` | Authoritative for final diff quality, frozen-acceptance coverage, current-unit classification (fix-now / replan-in-unit / decision-required / proposal), and invariant preservation. Reports findings; posts exact-SHA REVIEW-PASS receipt on clean table. Never emits MERGE-READY. |
+| `loop-review-fold` | Own bounded review/correction orchestration: reuse current receipts, batch compatible folds, re-review only changed HEADs, and never create issues or merge. |
 | `audit-pr` | Consumes current review-change REVIEW-PASS receipt (absent/stale → BLOCKED, never re-reviews diff). Owns delivery gates only (phases/docs/CI/mergeability/traceability/closure + receipt invariants result). Emits MERGE-READY or evidenced BLOCKED; never edits/merges. |
 
 ## Evidence and compatibility

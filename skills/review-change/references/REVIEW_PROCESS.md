@@ -6,15 +6,20 @@
    skip straight to that mode's fusion step (N findings tables pasted in, per
    the synthesis contract). Either way, everything from step 2 onward runs
    once, over the fused table.
-2. **SPEC drift check (structural).** Locate the governing SPEC (feature or
-   fix) and build a **per-criterion coverage table** — one row per acceptance
+2. **Frozen acceptance + SPEC drift check (structural).** Locate sibling
+   `ACCEPTANCE.md`, recompute its blob, and require an exact match with the
+   execution receipt before assessing the candidate. Missing/mismatch is a
+   `workflow` fix-now finding and no passing receipt may be posted. Legacy units
+   use the verification contract's committed SPEC-blob fallback. Then build a
+   **per-criterion coverage table** from the manifest — one row per acceptance
    criterion, no free-form comparison:
 
    ```
    | criterion | evidence (file:line or command run) | met | unmet | untouched |
    ```
 
-   Then map each diff hunk to a criterion — or to `none`. Findings, axis
+   Cross-check manifest IDs against the governing SPEC so neither silently
+   omits a criterion. Then map each diff hunk to a criterion — or to `none`. Findings, axis
    `spec-drift`: (a) every criterion marked `unmet`/`untouched` that the unit
    claims delivered, and (b) every `none`-mapped hunk (work the SPEC never
    asked for — silent scope excess). Catching drift at a phase checkpoint is

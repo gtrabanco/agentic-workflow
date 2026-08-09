@@ -70,20 +70,18 @@ turns:
          open forge issue and fix-index entry; (b) every *documented residue*
          the run itself generated — each feature's `known-issues.md`, the
          trade-offs in `decisions.md`, and every review report's
-         postponed/intentional-tradeoff findings. For residue items that are
-         real defects/gaps but have no tracked issue yet, **file the issue
-         now** (forge CLI; body cites the doc + trigger). **The issue body is
-         Markdown — write it to a file and pass `--body-file`, never an inline
-         `--body "…"`/heredoc that leaves `\`-escaped backticks** (see
-         Guardrails). Log the full inventory (issue #s + sources) to the run log.
+         proposals/trade-offs. Residue without an existing issue remains a
+         deduplicated **proposal** in the report; the run never creates backlog
+         to make inventory look complete. Log existing issue numbers and
+         proposal sources separately.
       2. **TRIAGE (compose `triage-issue` in-turn, equal tier).** Classify
-         each inventoried issue against the CURRENT codebase. fix-now → it
+         each existing inventoried issue against the CURRENT codebase. fix-now → it
          becomes a selectable unit; postpone / wontfix / promote-to-feature →
          the dated verdict is recorded on the issue and carried into the
-         report (promotions become report feature-proposals, never in-run
-         scope).
+         report (promotions and untracked residue become report proposals,
+         never in-run scope or automatically-created issues).
       3. **SHIP the fix-now issues** one unit at a time through the normal
-         stages (`plan-fix` → EXECUTE (`--fix`) → REVIEW → PR → AUDIT), same
+         stages (`plan-fix` → EXECUTE (`--fix`) → PR → REVIEW → AUDIT), same
          budget caps, floors, and merge policy as features.
    6. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
       #12 unblocks 05 and 07") and the resume command.

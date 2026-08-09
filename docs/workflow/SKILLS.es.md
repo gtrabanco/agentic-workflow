@@ -63,8 +63,8 @@ aplicados.
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `plan-feature` | **Router, solo planificación de ingeniería.** Dada una feature sin diseñar (sin `## Design status: designed`), **SE DETIENE y redirige** a `/design-feature <slug>` (sin flag de bypass). Dada una feature/issue diseñada `#N` (issue → mitad de producto acotada → `design-feature` para issues escuetos), enruta a rellenar la **mitad de ingeniería**, **dimensiona la feature** (`XS/S/M/L`), y luego registra la entrada del roadmap | `execute-phase <NN> P1` (M/L y XS/S por igual — las fases XS/S viven en el SPEC) |
-| `plan-fix` | Redacta como arquitecto un SPEC de fix estrechamente acotado a partir de un issue; confirma en una rama de fix; se detiene para revisión | `execute-phase --fix` |
+| `plan-feature` | **Router, solo planificación de ingeniería.** Dada una feature sin diseñar (sin `## Design status: designed`), **SE DETIENE y redirige** a `/design-feature <slug>` (sin flag de bypass). Dada una feature/issue diseñada `#N` (issue → mitad de producto acotada → `design-feature` para issues escuetos), enruta a rellenar la **mitad de ingeniería**, **dimensiona la feature** (`XS/S/M/L`), y luego registra la entrada del roadmap | `execute-phase <NN>` (todas las fases restantes) o `execute-phase <NN> P1` (una fase explícita) |
+| `plan-fix` | Redacta una unidad de fix desde un issue o un conjunto compatible. La agrupación acepta un bloque de capacidad o un lote mecánico homogéneo cuando el conjunto tiene un resultado, plan de verificación y rollback atómico; no exige compartir ficheros, causa raíz ni severidad | `execute-phase --fix <n>` (todas las fases restantes) |
 
 ### Pasos internos (ocultos del menú; compuestos por ti)
 
@@ -74,6 +74,7 @@ aplicados.
 | `plan-feature-scaffold` | Rellena la **mitad de ingeniería** del SPEC + artefactos de planificación **escalados al tamaño de la feature** (XS/S → solo SPEC; M/L → conjunto completo terminando en una fase de hardening obligatoria); registra en el roadmap (solo docs) (invocado por `plan-feature`) |
 | `review-implementation` | Motor de clasificación sobre tabla sintetizada (fix-now / replan-in-unit / decision-required / proposal); solo hallazgos, sin refactorizar. `user-invocable: false` — el motor que compone `review-change` (y que reutilizan `audit-pr` / `product-audit`) |
 | `orchestration-envelope` | El contrato del sobre-máquina: fragmento canónico de system-prompt inyectado por el driver, bucle de reparación, y esquema JSON. `user-invocable: false` — la pieza que inyecta un driver externo, no una entrada de menú |
+| `verification-contract` | Congela la aceptación antes de implementar, define niveles de validación y liga la evidencia al blob de aceptación y al recibo de código actuales. `user-invocable: false` — lo componen planificadores, ejecutores y revisores |
 | `review-code` | Checklist de corrección + reutilización/simplificación/eficiencia sobre el diff. `user-invocable: false` — un eje del paquete de revisión interno de `review-change` |
 | `review-security` | Checklist de seguridad con forma OWASP sobre el diff. `user-invocable: false` — paquete de revisión interno |
 | `review-verify` | Checklist de verificación de comportamiento en tiempo de ejecución (¿el cambio realmente hace lo que promete?). `user-invocable: false` — paquete de revisión interno |
@@ -88,14 +89,15 @@ aplicados.
 
 | Skill | Rol |
 |---|---|
-| `execute-phase` | Ejecuta una fase de feature (por defecto), una feature `XS/S` pequeña en un solo pase, o un fix (`--fix`); **tests primero** en trabajo de dominio/orquestación, nunca confirma en rojo, en P1 confirma los artefactos de planificación por separado; **conversación nueva por fase bajo un presupuesto de contexto explícito** (≤ 10 lecturas de fichero completo), con handoff mediante el esquema fijo de entradas `Done / Remains / Gotchas / Files / Next` de `progress.md`; seguridad de rama + disciplina de docs por fase + puerta; **guardia de descope** (todo issue creado se clasifica trabajo-descubierto vs. descope — un descope PARA hasta que exista una entrada `## Amendments` fechada y aprobada por el usuario); **recomienda un checkpoint de `review-change` según disparadores — límite de capa, acumulación o sensibilidad (se puede saltar) — y entrega el control una vez al final (obligatorio)**; una unidad terminada **siempre abre su PR y pasa a `done`** (construida, no fusionada) |
+| `execute-phase` | Con solo una feature o fix, ejecuta **todas las fases restantes** mediante un loop acotado de unidad; un `P<k>` explícito sigue siendo atómico. Cada fase recibe un contexto de worker limpio y un recibo compacto, implementación tests-first, tres intentos de reparación por defecto, detección de falta de progreso y ninguna ceremonia de review intermedia. La aceptación se congela antes del código. Los hallazgos dentro de la unidad se arreglan ahí; los ajenos quedan como propuestas y nunca crean issues automáticamente. Una unidad terminada abre su PR y pasa a `done` |
 
 ## Review & audit — *cambio → PR → producto*
 
 | Skill | Alcance | Rol | Entrega a |
 |---|---|---|---|
-| `review-change` | el **cambio** | Ejecuta solo las revisiones que aplican a esta plataforma — **cada pasada aislada por defecto** (contexto limpio, devuelve solo su tabla de hallazgos; el orquestador retiene tablas, nunca fuentes) — + una **comprobación estructural de desviación del SPEC** (tabla de cobertura por criterio + mapeo de hunks del diff) + clasifica → una tabla de decisión + checklist de verificación manual; **obligatorio antes de cada merge** | incorpora fix-now a la fase abierta / `triage-issue` (propuestas independientes) |
-| `fold-findings` | el **ledger de hallazgos** | Repara de verdad, uno por uno, cada hallazgo fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica), una lista de prohibiciones fija cierra las válvulas de escape (volcado a known-issues, downgrade, aflojar tests, supresión); veredicto por hallazgo `FOLDED \| DISPUTED \| BLOCKED` | re-ejecutar `review-change` (todo foldeado) / `triage-issue` (disputado) |
+| `review-change` | el **cambio** | Ejecuta las revisiones aisladas aplicables, verifica el blob de aceptación congelado contra el recibo de código actual, mapea criterios a evidencia del diff, clasifica una vez y persiste un veredicto ligado al SHA. **Obligatorio antes del merge** | `loop-review-fold` (recomendado si falla) / `fold-findings` manual |
+| `fold-findings` | el **ledger de hallazgos** | Repara la cola seleccionada en lotes atómicos compatibles. Cada hallazgo conserva un veredicto y evidencia individuales; solo se agrupan miembros con una regla de corrección, validador y límite de rollback comunes | re-ejecutar `review-change` / presentar una disputa real al usuario |
+| `loop-review-fold` | el **loop acotado de corrección** | Ejecuta una review con contexto limpio, incorpora toda la cola fix-now por lotes y revisa solo el nuevo HEAD. Para al aprobar, requerir una decisión, bloquearse, repetir estado o agotar presupuesto; el presupuesto por defecto es de dos ciclos de corrección | `audit-pr` al aprobar / decisión del usuario ante una parada terminal |
 | `audit-pr` | el **PR** | Puerta de merge de solo lectura que **consume el recibo `REVIEW-PASS` vigente de `review-change`** (ausente/obsoleto → bloqueante enrutado a `/review-change`, nunca se re-revisa) → comentario MERGE-READY ligado al SHA o bloqueantes con evidencia; nunca edita ni fusiona. Solo un `ship-roadmap --fullauto` activo puede ejecutar un merge automatizado | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; extrae de los docs de feature → propone issues + cambios de roadmap (nunca arregla automáticamente); recurrencia de exportación de alcance (≥ 2 unidades consecutivas exportando alcance → hallazgo de calidad de planificación enrutado a #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | los **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones | informe (+ arreglos opcionales de bajo riesgo) |
@@ -151,13 +153,14 @@ indicado aquí.
 | `audit-pr` | `/audit-pr [pr-number]` | Por defecto, el PR de la rama actual. Un número apunta a otro PR. |
 | `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | Una idea en bruto → entrevista desde cero. Un `NN-slug` existente a secas → **modo revisión**: imprime un resumen de lo que hará la feature y pregunta qué añadir/quitar/cambiar. `NN-slug + instrucción` → aplica el cambio directamente, sin preguntas, acotado a la instrucción. Siempre upsert — el único reinicio desde cero es una instrucción explícita de "borrar y rediseñar". |
 | `discover-repository-state` | `/discover-repository-state` | Lee la evidencia del repositorio y escribe un Estado Normalizado del Repositorio congelado; las contradicciones se enrutan a `/resolve-repository-state`. |
-| `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` solo → pase único (features `XS/S` solo-SPEC). `NN P<k>` → exactamente una fase de una feature M/L. `--fix <n>` → implementa la unidad de fix `docs/fix/<n>-*`. `--force` → invalida la puerta de dependencias/estado (válvula de escape solo para el usuario; la invalidación se registra en `decisions.md`; el autopiloto nunca la pasa). |
-| `fold-findings` | `/fold-findings [finding-id …]` | Sin argumentos: repara, uno por uno, cada fila fix-now (`folded: no`) del ledger `review-findings.md` de la unidad. Uno o más IDs de hallazgo → acota la cola a exactamente esas filas. |
+| `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] [--max-attempts N] \| [--force]` | Solo objetivo → ejecuta todas las fases restantes y cierra la unidad. `P<k>` explícito → ejecuta exactamente esa fase. `--max-attempts N` acota los intentos de reparación por fase (3 por defecto). `--force` es la excepción de dependencia/estado, solo del usuario y registrada. |
+| `fold-findings` | `/fold-findings [finding-id …]` | Sin argumentos: repara toda la cola fix-now pendiente, agrupando solo correcciones compatibles. Los IDs restringen la cola. Cada miembro conserva su propio resultado `FOLDED \| DISPUTED \| BLOCKED`. |
 | `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | El alcance por defecto es el diff de la rama actual frente a la rama por defecto; un slug/fix/ruta lo acota o redirige. `--review` → además exporta el informe más reciente de `review-change` como una página de docs (opt-in, nunca automático). |
 | `init-workspace` | `/init-workspace [target-dir]` | Por defecto el directorio actual. En un repositorio que ya tiene el andamiaje, cambia automáticamente al **modo actualización** (propone solo los bloques de plantilla nuevos/faltantes; solo aditivo). |
 | `log-session` | `/log-session [note]` | La nota opcional se antepone al Resumen de la entrada. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | Un slug o referencia de issue se detecta automáticamente; los flags fuerzan una ruta: `--from-issue N` (issue → mitad de producto acotada), `--scaffold <slug>` (directo al andamiaje de la mitad de ingeniería), `--next` (siguiente entrada del roadmap). Una feature sin diseñar (fila del roadmap por debajo de `defined`) → se detiene y redirige a `/design-feature` — sin flag de bypass. |
-| `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Obligatorio, uno o más. Un número → redacta `docs/fix/<n>-<topic>/SPEC.md` en una rama de fix y se detiene para revisión. Varios números → una checklist fija de causa-raíz-compartida decide: si todas se cumplen, los fusiona en UNA unidad con clave el número más bajo; si alguna falla, se niega e imprime la división (`/plan-fix <a>`, `/plan-fix <b>` …). |
+| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n> [--max-cycles N] [--adversarial N]` | Ejecuta el loop acotado de revisión/corrección. Por defecto permite dos ciclos de corrección; `--adversarial N` se pasa a cada review. Se detiene en lugar de girar cuando se repite el estado o hace falta intervención humana. |
+| `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Un issue → una unidad de fix. Varios issues → un bloque de capacidad compatible o un lote mecánico homogéneo cuando todo el conjunto comparte resultado, plan de verificación y release/rollback atómico. Si el conjunto falla, devuelve el mínimo número de grupos compatibles máximos en vez de separar por reflejo un PR por issue. |
 | `product-audit` | `/product-audit [path-or-area]` | Solo por invocación explícita. Por defecto, el producto entero; una ruta/área acota el barrido. Solo propone — nunca arregla. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifica ambas fuentes de evidencia y publica el siguiente snapshot congelado, o se detiene con el input faltante explícito. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Por defecto, el cambio actual (diff de la rama frente a la rama por defecto); una ruta amplía/acota. `--adversarial N` → N revisores adversariales independientes, de contexto limpio, solo-diff, en paralelo, hallazgos fusionados y deduplicados (opt-in; auto-recomendado para cambios `L`/sensibles). |
@@ -186,17 +189,18 @@ IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
                           → `## Design status: designed` ─┐
                    ┌──────────────── plan-feature (router, engineering-planning only) ─┐
 DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (todas las fases) ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (lote compatible) ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-review-change ── runs the applicable reviews + classifies a change (Stage 4, mandatory);
+loop-review-fold ── bounded final review → compatible fold batches → changed-HEAD review;
+review-change ── runs the applicable read-only reviews + classifies a change;
                  composes review-implementation + the platform's companion skills;
                  fix-now ─▶ se incorpora a la fase abierta · replan-in-unit ─▶ nuevas fases confirmadas por el usuario
                  decision-required ─▶ presentar, bloquear · proposals ─▶ el usuario las enruta a triage-issue
@@ -205,8 +209,8 @@ product-audit ── periodic product-wide sweep → proposes issues + roadmap c
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
 
 ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
-                 roadmap → /loop { plan-feature → execute-phase (sonnet subagents)
-                 → review-change → PR → audit-pr → merge } → final report;
+                 roadmap → /loop { plan-feature → execute-phase (fresh cheap workers)
+                 → PR → loop-review-fold → audit-pr → merge } → final report;
                  human at the merges (default) and at product-audit (always)
 ```
 
@@ -218,8 +222,8 @@ ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → f
 2. **Respetar arquitectura y estilo.** Reglas de capas, reglas de
    dominio/i18n/SEO/a11y, límites de runtime/plataforma, convenciones de
    nombres — todo respetado, nunca eludido.
-3. **Planificar antes de programar; una fase a la vez; un PR por unidad
-   contra la rama por defecto; nunca `main`, nunca apilado.**
+3. **Planificar antes de programar; aislar los contextos de fase; un PR por
+   unidad contra la rama por defecto; nunca `main`, nunca apilado.**
 4. **Evidencia sobre reflejo.** Verificar disparadores, citar rutas/recuentos.
 5. **Rastrear, no implementar sobre la marcha, el trabajo diferido.**
    Mantener los issues y los docs coherentes e informados.

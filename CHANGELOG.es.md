@@ -100,6 +100,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `discover-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-08-09 | menor | Enruta el trabajo listo para implementar a `execute-phase` solo-con-objetivo, evitando que el nuevo default de unidad completa vuelva accidentalmente a `P1` explícita. |
 | 1.1.2 | 2026-07-31 | parche | Enruta un snapshot contradicho a `resolve-repository-state` antes de recomendar la planificación. |
 | 1.1.1 | 2026-07-31 | parche | Elimina el argumento `--refresh` no declarado y aclara que discovery conserva separada cada categoría del ledger. |
 | 1.1.0 | 2026-07-31 | minor | Conserva el estado `contradicted` del snapshot cuando discovery registra un conflicto en vez de congelar contradicciones sin resolver. |
@@ -108,6 +109,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `resolve-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.0 | 2026-08-09 | menor | Reanuda la implementación interrumpida mediante `execute-phase` solo-con-objetivo; la selección de fase explícita sigue disponible para el usuario. |
 | 1.1.1 | 2026-07-31 | parche | Enruta los resultados `needs-input` hacia la evidencia o decisión pendiente en vez de recomendar la planificación. |
 | 1.1.0 | 2026-07-31 | minor | Se detiene sin congelar cuando una contradicción necesita input humano, manteniendo el snapshot contradicho hasta recibir evidencia o una decisión. |
 | 1.0.0 | 2026-07-30 | — | Nueva skill: único escritor para resolver contradicciones explícitas y publicar el siguiente snapshot congelado. |
@@ -122,6 +124,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.10.0 | 2026-08-09 | menor | Las recomendaciones de unidades planificadas ahora emiten `execute-phase` solo-con-objetivo, conservando la ruta por defecto de todas las fases restantes para humanos y drivers externos. |
 | 1.9.0 | 2026-07-31 | menor | Carga progresiva: el cuerpo de activación es ahora una ruta compacta del sensor de solo lectura; secuencia de comandos, recuperación de caídas, campos del envelope, guardrails y portabilidad viven en recursos de un salto con orden obligatorio. |
 | 1.7.0 | 2026-07-19 | menor | Fix #79: cuatro nuevos pasos de proceso (10-13) añaden a cada entrada `detail.features[]`/`detail.fixes[]` señales por-unidad `review` (`last_checkpoint_sha`, `unreviewed_diff`, `terminal_done` reutilizado del cómputo existente de `review_pending`, `adversarial: {ran, n}` — honestamente `null` salvo evidencia real, nunca adivinado), `closure.state` (reutilizando el propio grep de `audit-pr`), e `issues_born: {n, with_descope_amendment}` (reutilizando la detección de scope-bleed de `audit-pr`, ampliada por #79/#89) — opaco al esquema, sin cambio de paquete (mismo precedente que `detail.urgent`). Nuevo `next.suggested[]` de nivel superior (`{command, trigger, source_skill}`, opcional) muestra los triggers disparados de `execute-phase`/`review-change`/`audit-pr`/`fold-findings`, cada uno citando la condición de su propia skill dueña — solo consultivo, nunca reemplaza `next.recommended`/`next.tier`. Reflejado en `packages/agentic-workflow-schema` 2.1.0 (misma PR). |
 | 1.6.1 | 2026-07-14 | parche | El paso 11 (backlog de issues sin triar) se reescribe: la etiqueta de disposición `postponed`/`promoted`/`wontfix` (propiedad de `triage-issue`, protegida por permiso triage+, imposible de falsificar) pasa a ser la señal de triado **autoritativa**; el comentario `VERDICT:` se mantiene como **fallback heredado** explícito para issues triados antes de que existiera la etiqueta, con una nota de residual aceptado (un comentario falseado todavía puede infra-contar el backlog — sin impacto de privilegios/inyección, `detail.urgent` intacto). Sin cambio de forma — `detail.untriaged_issues: {count, oldest_open}` no cambia. Parte del fix `#54`. |
@@ -138,6 +141,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.0.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime activación, gates de descubrimiento, selección de rutas, relaciones y cierre para reducir contexto repetido. |
+| 4.0.0 | 2026-08-09 | mayor | **Cambio incompatible:** EXECUTE recorre las fases restantes de cada unidad con contextos de worker baratos y limpios; REVIEW es una única etapa acotada `loop-review-fold`; el residuo del barrido queda como propuestas en vez de crear backlog. Ver `docs/workflow/MIGRATION.es.md`. |
 | 3.2.0 | 2026-07-31 | menor | Fullauto ahora invoca el wrapper solo con identificadores de PR y ejecución; el wrapper deriva y verifica desde el forge el head, la base por defecto, la evidencia de auditoría ligada al SHA y la decisión fijada al head, sin confiar en entradas controladas por el invocador. |
 | 3.1.1 | 2026-07-31 | parche | Enruta una fundación de repositorio existente invocada con `--fullauto` por la política de auditoría y merge, manteniendo las rutas de founding por defecto y greenfield sin recursos de auditoría. |
 | 3.1.0 | 2026-07-31 | menor | La carga progresiva separa fundación, recuperación/selección de continuación, avance de etapa, política de runtime/merge, informe terminal, guardrails y portabilidad en rutas explícitas de un salto; el cuerpo principal conserva el contrato de turno y la selección de ruta. |
@@ -165,6 +170,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime dispatch, presupuesto de contexto, carga progresiva, portabilidad, relaciones y cierre. |
+| 3.0.0 | 2026-08-09 | mayor | **Cambio incompatible por defecto:** una invocación solo-con-objetivo de feature/fix ejecuta todas las fases restantes con un recibo de worker limpio por fase, reparaciones acotadas, aceptación congelada y sin reviews intermedias; `P<n>` explícito conserva la forma de una fase. Los hallazgos independientes son propuestas, nunca issues creados automáticamente. Ver `docs/workflow/MIGRATION.es.md`. |
 | 2.13.2 | 2026-08-05 | parche | Divide el monolito `WORKFLOWS.md` en recursos de workflow por modo (feature, small/phased, fix, legacy) cargados exactamente uno a la vez, divide `ISSUE_POLICY.md` en tres recursos de política cargados de forma independiente (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) elegidos según la situación, y añade un recibo de dependencia versionado con una ruta rápida de huella local fail-closed. Conserva el comportamiento: cada casilla universal de seguridad de ejecución permanece residente en el contrato de turno compacto, cada una mapeada read-verified a su recurso dueño único, y cada ruta de ejecución sigue pasando con resultados observables sin cambios. |
 | 2.13.1 | 2026-08-02 | parche | Mueve el esquema fijo de handoff de `progress.md` tras una ruta explícita de un salto, conservando todos sus campos y reglas de cierre mientras reduce el contexto de activación directa. |
 | 2.13.0 | 2026-07-31 | menor | La carga progresiva reduce la estimación de activación de la skill más usada de unos 13k a 3k: las reglas universales de turno/handoff quedan en `SKILL.md`, mientras preflight, gates de ejecución, política de issues, workflows de modo, closeout/folding y portabilidad por lotes cargan solo cuando hacen falta. |
@@ -227,6 +234,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.5.0 | 2026-08-09 | menor | Los hand-offs limpios y ya-planificados recomiendan ahora `execute-phase` solo-con-objetivo para entregar la unidad completa y dejan `P1` explícita únicamente como alternativa atómica. |
 | 3.4.0 | 2026-08-04 | menor | Añade los contratos internos de un salto planning preflight y phase contract (rutas 2-3 de carga progresiva) y fija un único contexto de planificación inmutable — un snapshot del roadmap más payload opcional de issue — reutilizado entre internals compuestas, nunca re-consultado a mitad de plan. |
 | 3.3.2 | 2026-08-03 | parche | Hace explícito el contrato de routing derivado de issues: después de que `PLANNING_GATES.md` permita planificar, compone `plan-feature-from-issue` y después `plan-feature-scaffold`, en ese orden. |
 | 3.3.1 | 2026-08-02 | parche | Enruta la detección de estado y los gates de repositorio/invariantes mediante dos referencias explícitas de un salto y recorta metadatos de activación; el comportamiento de planificación y los handoffs fijos no cambian. |
@@ -253,6 +261,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.6.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime input/output, hard rules, carga progresiva, portabilidad y criterios de cierre, preservando agrupación multi-issue y contratos. |
+| 2.6.0 | 2026-08-09 | menor | Acepta bloques de capacidad compatibles y lotes mecánicos homogéneos usando comprobaciones de resultado, verificación, aislamiento, release/rollback y tamaño agregado; compartir ficheros/causa raíz/severidad deja de ser una puerta, y los conjuntos fallidos devuelven el mínimo número de grupos compatibles máximos. Emite `ACCEPTANCE.md` congelado. |
 | 2.5.0 | 2026-08-04 | menor | Consume el planning preflight compartido (lectura del estado normalizado del repositorio + una única clasificación arquitectónica final) y el phase contract (phase-lint canónico de 8 casillas + fingerprint de fase) antes de redactar y emitir un SPEC de fix; prosa comprimida para que la ruta se mantenga bajo su presupuesto base. |
 | 2.4.1 | 2026-08-02 | parche | Mueve la validación/planificación y los contratos detallados del SPEC a rutas explícitas de un salto y comprime la prosa explicativa conservando todas las reglas fijas multi-issue, de fases, commit y handoff. |
 | 2.4.0 | 2026-07-19 | menor | La auto-revisión (paso 14) ahora ejecuta también el nuevo `### Spec-lint` de la plantilla de fix — comprobaciones mecánicas de presencia (sin placeholders, fuera-de-alcance no vacío, cada criterio de aceptación un comando ejecutable o etiquetado `read-verified`) — antes del commit del borrador. |
@@ -275,6 +285,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.11.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime introducción, aislamiento, guardrails de rutas, relaciones y cierre, preservando aplicabilidad y contrato de solo lectura. |
+| 2.11.0 | 2026-08-09 | menor | Verifica el blob de aceptación congelado antes de la review y recomienda `loop-review-fold` acotado ante fallo, preservando su contrato de solo lectura y recibo ligado al SHA exacto. |
 | 2.10.0 | 2026-08-05 | menor | Decisión del informe en tres estados D10 `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` (nunca MERGE-READY). La revisión final obligatoria publica un recibo `REVIEW-PASS` idempotente y ligado al SHA exacto como comentario de PR mediante un archivo Markdown temporal `--body-file` (cuerpo fijo: marcador `<!-- review-change:pass sha=… contract=v1 -->`, SHA de head, alcance/ejes, cobertura de aceptación, invariantes, cero hallazgos abiertos, nº de propuestas, verificaciones manuales; D6 — nunca se commitea a la rama, gana el marcador coincidente más nuevo, un commit posterior lo vuelve obsoleto). `REVIEW-FAIL` persiste los hallazgos en el ledger de fold y no publica recibo; `NEEDS-DECISION` bloquea sin crear una issue. Los checkpoints previos al PR conservan el marcador de `progress.md` y no publican recibo (D7). Nueva suite de fixtures de recibo fake-forge (`scripts/review-receipt.test.mjs`). |
 | 2.9.1 | 2026-07-31 | parche | Hace que `--merge` sea autocontenido cargando el proceso de revisión y el setup adversarial antes del merge adversarial, para fusionar las tablas suministradas bajo el mismo contrato de revisión. |
 | 2.9.0 | 2026-07-31 | menor | La carga progresiva separa el proceso de review por defecto, persistencia/decisión, setup/merge adversarial, salida/guardrails y portabilidad; el aislamiento y el contrato de turno permanecen en el cuerpo de activación. |
@@ -311,9 +323,16 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `fold-findings`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime descubrimiento de cola, guardrails, portabilidad, relaciones y cierre; permanecen veredictos/tally y reglas de fold congeladas. |
+| 1.2.0 | 2026-08-09 | menor | Repara la cola seleccionada en lotes atómicos compatibles, conservando un veredicto y registro de evidencia por hallazgo; las disputas se detienen para decisión del usuario y ninguna ruta de fold crea issues automáticamente. |
 | 1.1.1 | 2026-08-02 | parche | Separa la política congelada del procedimiento por hallazgo tras rutas obligatorias de un salto y acorta metadatos de activación; clasificaciones, prohibiciones, veredictos y conducta de commit/push no cambian. |
 | 1.1.0 | 2026-07-19 | menor | Dos adiciones: (1) **reconstrucción del ledger** — invocada tras un `VERDICT: BLOCKED` de `audit-pr` con el ledger ausente o sin filas para algún blocker, la skill añade ella misma las filas que faltan a partir del propio veredicto (esquema fijo, `class: fix-now`, dedupe por `file:line`+eje, con commit) y continúa; terminar con "no hay hallazgos" mientras un veredicto BLOCKED lista blockers es una violación del contrato. (2) Nuevo veredicto por hallazgo **`REPLAN`** para filas `replan-in-unit` (y cualquier hallazgo cuyo arreglo mínimo correcto resulte demasiado grande para plegarse en un commit): nunca se implementa en línea ni se degrada — se traspasa a fase(s) del SPEC confirmadas por el usuario + `execute-phase` en la misma rama; el total gana un campo opcional `· Replan: r` (omitido cuando es 0). |
 | 1.0.0 | 2026-07-17 | — | Nueva skill (fix #65): repara uno por uno los hallazgos fix-now de `review-change`/`audit-pr` — clasificación congelada (nunca reclasifica; una objeción genuina produce `DISPUTED` → `/triage-issue`), una lista de prohibiciones fija (nada de volcado a known-issues, nota de tradeoff en `decisions.md`, aflojar/saltar tests, supresión de lint como arreglo, stub `TODO`, ni marcar `folded: yes` sin un diff), y un contrato de salida fijo por hallazgo `FOLDED <sha> \| DISPUTED <razón> \| BLOCKED <input faltante>` que termina en un total `Folded: n/m · Disputed: k · Blocked: j`. La checklist del ciclo de fold embebida en `execute-phase` se mantiene como fallback en contexto/portabilidad. |
+
+#### `loop-review-fold`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-08-09 | — | Nuevo conductor final acotado de review/corrección: reutiliza recibos al SHA exacto, alterna review de solo lectura y fold por lotes en contextos limpios solo para HEADs distintos, permite dos ciclos por defecto y se detiene al aprobar, requerir decisión, bloquearse, no progresar o agotar presupuesto. Nunca fusiona ni crea issues. |
 
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
@@ -443,6 +462,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `orchestration-envelope` | 1.5.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime emisión, reglas de campos, repair loop, sincronización de paquete, relaciones y NRS preservando esquema y protocolo del driver. |
+| `verification-contract` | 1.0.0 | 2026-08-09 | — | Nuevo contrato interno: congela un `ACCEPTANCE.md` compacto por unidad, liga la evidencia de ejecución/review a su blob, define estados de validación y prohíbe debilitar tests o aceptación para fabricar verde. |
+| `orchestration-envelope` | 1.5.0 | 2026-08-09 | menor | El contrato canónico de turno lleva el blob de aceptación congelado y prohíbe crear issues automáticamente para propuestas independientes, habilitando drivers acotados de unidad completa y review/fold sin cambiar el esquema JSON. |
+| `plan-feature-scaffold` | 1.14.0 | 2026-08-09 | menor | Emite el manifiesto de aceptación congelado para cualquier tamaño de feature y entrega por defecto todas las fases restantes a la ejecución solo-con-objetivo. |
 | `phase-contract` | 1.0.0 | 2026-08-04 | — | Nuevo contrato interno: propietario canónico del phase-lint de ocho cajas, con salida fija `PASS (8/8)`/`BLOCKED — casilla <n>` y el fingerprint de fase normalizado (`P<n>:<layer>:<n-tasks>:<title-deliverable>`). |
 | `planning-preflight` | 1.0.0 | 2026-08-04 | — | Nuevo contrato interno: único consumidor del estado normalizado del repositorio y único propietario de la única clasificación arquitectónica final de un plan completo, con línea de resultado preflight fija. |
 | `plan-feature-scaffold` | 1.13.0 | 2026-08-04 | menor | Consume el planning preflight (lectura NRS + una única clasificación arquitectónica final) y el phase contract (phase-lint de 8 casillas + fingerprint de fase) en lugar de duplicar reglas de invariantes y lint. |
@@ -529,6 +552,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-09 — loops acotados de entrega (feature 22).** Aceptación
+  congelada, ejecución de unidad completa solo-con-objetivo con workers limpios
+  por fase, agrupación compatible de fixes multi-issue, folds de hallazgos por
+  lotes y gate final acotado `loop-review-fold`. Los hallazgos de
+  ejecución/review ya no crean issues automáticamente; el trabajo independiente
+  se informa como propuestas.
 
 - **2026-08-05 — consolidación del contrato de ejecución (feature 21, P3).**
   `execute-phase` 2.13.2 divide su monolito `WORKFLOWS.md` en cuatro recursos de
