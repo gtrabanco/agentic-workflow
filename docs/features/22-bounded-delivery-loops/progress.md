@@ -9,10 +9,11 @@ Last reviewed: 2026-08-09
 ## Current run
 
 - Done: contracts, skills, templates, routing, bilingual docs, static fixtures,
-  weak-model probes, and the complete repository gate.
-- Remains: open and link the PR.
+  weak-model probes, the complete repository gate, and PR
+  [#122](https://github.com/gtrabanco/agentic-workflow/pull/122).
+- Remains: external review and merge.
 - Gotchas: Qwen3 8B without thinking is suitable for deterministic worker routes,
   not for conducting the loop; Qwen3 14B with thinking passed the conductor
   fixture. Provider-specific RLM execution remains intentionally out of scope.
 - Files: feature 22 artifacts plus the changed workflow surfaces listed by git.
-- Next: commit, push, open the PR, then link it from the roadmap.
+- Next: review PR #122, then merge when its gates remain green.
