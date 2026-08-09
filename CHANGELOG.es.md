@@ -463,6 +463,9 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime emisión, reglas de campos, repair loop, sincronización de paquete, relaciones y NRS preservando esquema y protocolo del driver. |
+| `verification-contract` | 1.0.1 | 2026-08-09 | parche | Registra esta dependencia de ejecución para su distribución y la mantiene fuera del menú invocable por el usuario, de modo que el `skills add` normal instala el contrato consumido por planificadores, ejecutores, revisores y loops. |
+| `planning-preflight` | 1.1.1 | 2026-08-09 | parche | Registra esta dependencia de ejecución para su distribución y la mantiene fuera del menú invocable por el usuario. |
+| `phase-contract` | 1.0.1 | 2026-08-09 | parche | Registra esta dependencia de ejecución para su distribución y la mantiene fuera del menú invocable por el usuario. |
 | `verification-contract` | 1.0.0 | 2026-08-09 | — | Nuevo contrato interno: congela un `ACCEPTANCE.md` compacto por unidad, liga la evidencia de ejecución/review a su blob, define estados de validación y prohíbe debilitar tests o aceptación para fabricar verde. |
 | `orchestration-envelope` | 1.5.0 | 2026-08-09 | menor | El contrato canónico de turno lleva el blob de aceptación congelado y prohíbe crear issues automáticamente para propuestas independientes, habilitando drivers acotados de unidad completa y review/fold sin cambiar el esquema JSON. |
 | `plan-feature-scaffold` | 1.14.0 | 2026-08-09 | menor | Emite el manifiesto de aceptación congelado para cualquier tamaño de feature y entrega por defecto todas las fases restantes a la ejecución solo-con-objetivo. |
@@ -552,6 +555,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-09 — distribuir contratos de ejecución.** La ruta normal de
+  `skills add` ahora instala `phase-contract`, `planning-preflight` y
+  `verification-contract` junto a los entrypoints que los consumen, manteniendo
+  los tres fuera del menú invocable por el usuario.
 
 - **2026-08-09 — loops acotados de entrega (feature 22).** Aceptación
   congelada, ejecución de unidad completa solo-con-objetivo con workers limpios
