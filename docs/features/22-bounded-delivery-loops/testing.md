@@ -28,5 +28,9 @@ Live weak-model probes:
 - Qwen3 14B with thinking passed OpenAI-style tool calling, frozen-manifest
   preservation, remaining/explicit phase routing, proposal-only discoveries,
   and exact loop terminal/counter traces.
-- `nan/qwen3.6` could not be retested because Pi had no configured providers in
-  this session; no result was inferred from that absence.
+- `nan/qwen3.6` is now reachable through the configured Pi provider. It used the
+  read tool successfully, preserved the frozen-manifest rule, selected literal
+  target/explicit phases, kept an unrelated enhancement as a proposal, and
+  returned exact bounded-loop terminal/counter traces. DeepSeek Flash, MiMo,
+  and Gemma4 are also visible in the configured provider catalog; they were not
+  promoted to conductor evidence without their own fixture runs.
