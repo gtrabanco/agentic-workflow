@@ -1,23 +1,21 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.2.0
+version: 1.2.1
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Repair persisted fix-now findings in compatible atomic batches: root-cause
-  fixes, green gate, commit/push, and per-row `folded: yes` updates. Never reclassify or substitute
-  backlog notes. Triggers: "fold-findings", "fix the review findings",
-  "repair audit blockers".
+  fixes, green gate, commit/push, and per-row `folded: yes` updates. Never
+  reclassify or substitute backlog notes. Triggers: "fold-findings", "fix the
+  review findings", "repair audit blockers".
 ---
 
 # Fold Findings
 
-Repair fix-now findings for real. `review-change` and `audit-pr` already
-classify — this skill's only job is to make each classified fix-now finding
-disappear by fixing its root cause, never by relabeling, deferring, or
-weakening the check that caught it.
+Repair persisted fix-now findings. `review-change` and `audit-pr` classify; this
+skill fixes each root cause, never relabeling, deferring, or weakening its check.
 
 ## Turn contract — verify before ending the turn
 
@@ -26,123 +24,88 @@ weakening the check that caught it.
      line (FOLDED <sha> | DISPUTED <reason> | BLOCKED <missing input> |
      REPLAN <proposed phase(s)>) — no finding silently skipped.
 ✓ 2. For each FOLDED batch: the gate was RUN (not assumed) and green, one
-     atomic commit was RUN with its sha pasted, and (if the branch has an
-     open PR) `git push` was RUN immediately after that commit.
+     atomic commit was RUN with its sha pasted, and (if the branch has an open PR)
+     `git push` was RUN immediately after that commit.
 ✓ 3. The ledger row for each FOLDED finding was flipped `folded: no → yes`
      in the same commit — never a bare code fix with the ledger left stale.
 ✓ 4. No finding was reclassified: no severity downgrade, no fix-now →
      non-fix-now, no "actually this is fine" — a genuine objection produced
      `DISPUTED` with evidence for a user decision, never a silent drop/issue.
-✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` tally and the
-     outcome-branched `→ Next:` block are printed as the ABSOLUTE last output.
+✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` tally
+     and outcome-branched `→ Next:` block are printed as the ABSOLUTE last output.
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Any unchecked box means the turn is not done.
 
 ## When to use
 
-- After a `/review-change` run reports `Decision: REVIEW-FAIL` with one or more
-  fix-now findings on the unit's `review-findings.md` ledger.
-- After an `/audit-pr` run reports `VERDICT: BLOCKED` — every blocker on a
-  BLOCKED verdict is fix-now by definition and should already be persisted to
-  the same ledger (see `skills/audit-pr/SKILL.md` step 5). If it isn't —
-  ledger absent or blockers missing — this skill reconstructs the rows from
-  the verdict itself (Step 0) instead of reporting "no findings".
-- Never for findings not yet routed fix-now (postpone / wontfix / promote /
-  documented-tradeoff) — those are `/triage-issue`'s job, not this skill's.
+After `/review-change` reports `REVIEW-FAIL` with fix-now rows, or `/audit-pr`
+reports `VERDICT: BLOCKED` (every blocker is fix-now). If the ledger is absent or
+incomplete, reconstruct rows from the verdict in Step 0. Never process
+postpone/wontfix/promote/documented-tradeoff rows; those belong to `/triage-issue`.
 
 ## Step 0 — Discover the project (always first)
 
-Per the agent guide's **Workflow conventions**, then read what this skill
-needs:
+Per Workflow conventions, read:
 
-1. The unit's `review-findings.md` ledger — `docs/features/<NN>-<slug>/` for a
-   feature or `docs/fix/<n>-<topic>/` for a fix. Fixed schema (owned by
-   `review-change`/`audit-pr`, never redefined here):
+1. The unit's `review-findings.md` under `docs/features/<NN>-<slug>/` or
+   `docs/fix/<n>-<topic>/`; schema is owned by `review-change`/`audit-pr`:
 
    ```
    | id | file:line | axis | severity | class | route | folded |
    ```
 
-   **Ledger missing or missing blockers after an `audit-pr` BLOCKED verdict →
-   reconstruct, never report "no findings".** If this run was invoked after a
-   `VERDICT: BLOCKED` (the verdict is in the conversation, pasted by the user,
-   or in the PR's audit comment — read it via the forge CLI when needed) and
-   the ledger file is absent or lacks rows for one or more listed blockers:
-   append one row per missing blocker yourself, in the ledger's fixed schema
-   (`class: fix-now`, `folded: no`, next free `Fn` ids, dedupe by
-   `file:line`+axis), commit it as `docs(<unit>): reconstruct fold ledger from
-   audit-pr blockers`, and proceed with the fold. Ending the turn with
-   "no findings" while a BLOCKED verdict lists blockers is a contract
-   violation.
-2. Rows with `folded: no` are this turn's queue. If invoked with explicit
-   finding IDs as arguments, restrict the queue to those IDs only — everything
-   else on the ledger is left untouched. Group compatible queue members by
-   root cause + verifier + rollback boundary before editing.
-3. The project's verification gate (type-check, tests, build — per its own
-   docs) and its forge CLI (examples use `gh`; translate if the project
-   declares another forge).
-4. Whether the branch already has an open PR (`gh pr view` or equivalent) —
-   this decides whether each commit pushes immediately (see the fold process).
+   After `VERDICT: BLOCKED`, append missing rows (`class: fix-now`, `folded: no`,
+   next free `Fn`, dedupe `file:line`+axis), commit as
+   `docs(<unit>): reconstruct fold ledger from audit-pr blockers`, then fold;
+   never report “no findings”.
+2. Queue `folded: no` rows; explicit IDs restrict it and leave other rows
+   untouched. Group by root cause, verifier and rollback boundary.
+3. The project's verification gate and forge CLI (use the declared forge).
+4. Whether the branch has an open PR; this decides immediate push after commit.
 
 ## Progressive loading — fold queue
 
-The reference allowlist is exactly the two paths below. Every invocation reads
-both, in order, before changing code or the ledger:
+The allowlist is exactly these two paths; read both, in order, before changing
+code or the ledger:
 
 1. [frozen classification, definition of fixed, and forbidden actions](references/FOLD_POLICY.md)
 2. [per-finding fold process](references/FOLD_PROCESS.md)
 
-Both resources are normative and one hop from this file. Missing resource →
-stop; never infer a classification or fold procedure.
+Both are normative and one hop from this file. Missing resource → stop; never
+infer a classification or fold procedure.
 
 ## Report — return exactly this structure (fixed output contract)
 
-Per finding, in the order processed:
+Per finding, in processing order:
 
 ```
 | <finding-id> | verdict: FOLDED <sha> | DISPUTED <reason → user decision> | BLOCKED <missing input> | REPLAN <proposed phase(s) → /execute-phase> |
 ```
 
-Then the tally line, exactly:
+Then exactly:
 
 ```
 Folded: n/m · Disputed: k · Blocked: j · Replan: r
 ```
 
-(`· Replan: r` is omitted when r = 0 — existing consumers of the tally line
-see the unchanged three-field format.)
+Omit `· Replan: r` when `r = 0` (preserves the existing three-field format).
 
 ## Guardrails
 
-- Scope is the ledger (or the explicit finding-ID argument subset) — nothing
-  else. A finding you notice in passing that isn't on the ledger is not this
-  turn's to fix; record it as a proposal for explicit user triage.
-- Batch findings only when one root-cause correction, validator set, and
-  rollback boundary own them. One batch = one commit/push; every finding still
-  gets its own ledger tick and output line. Otherwise split groups.
-- Never widen a fix beyond the finding's own `file:line`/axis unless the root
-  cause genuinely requires it — state why in the commit message when it does.
-- Artifact language: explicit user instruction > the project's declared docs
-  language > English. The conversation language never decides.
+Scope is the ledger (or explicit ID subset); unlisted discoveries are proposals
+for user triage. Batch only when one root-cause correction, validator set and
+rollback boundary own the rows: one commit/push, individual ticks/lines. Split
+otherwise. Do not widen beyond a finding's file/line/axis unless its root cause
+requires it; explain that in the commit. Artifact language follows user
+instruction > project docs language > English; conversation language never decides.
 
 ## Portability (agents other than Claude Code)
 
-The workflow is the contract; Claude Code features are conveniences. On an
-agent that lacks one, apply the fallback — never skip the step the feature
-enables:
-
-- **No slash-command menu** — where this skill says `/<skill>`, open that
-  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
-  literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — pick tiers yourself: a subtle
-  logic/security finding deserves your strongest available model for that one
-  finding even if the rest of the run uses a cheaper tier (see fold process 2c);
-  never fold a finding with a model weaker than the one that wrote the code.
-- **No loop conductor** — this skill still processes the full compatible queue
-  once; manually re-run review/fold only after new review evidence.
+Use explicit fallbacks when a primitive is absent: open named `SKILL.md` files in
+a fresh context; use the strongest model for subtle logic/security and never
+weaker than the author; process the compatible queue once and re-run only after
+new review evidence.
 
 ## Relationship to other skills
 
@@ -153,25 +116,17 @@ audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED─�
                        │                  ──BLOCKED──▶ user supplies missing input
 ```
 
-- `review-change` and `audit-pr` **classify and persist** to
-  `review-findings.md`; this skill never reclassifies, only reads `folded: no`
-  rows and flips them to `yes` after a real fix.
-- `execute-phase`'s embedded fold-cycle checklist (§ *Folding review / audit
-  findings*) remains the in-context / portability fallback for agents that
-  fold inline within a phase's own turn; this skill is the standalone,
-  independently-invocable path with the frozen-classification and forbidden-
-  list contract made explicit. It hands off rather than composing, and never
-  runs above its own tier.
-- `DISPUTED` findings stop for an evidence-grounded user decision; no issue is
-  created by the fold path.
+`review-change`/`audit-pr` classify and persist; this skill only flips
+`folded: no` to `yes` after a real fix. `execute-phase`'s embedded fold checklist
+is the inline fallback; this standalone path keeps frozen classification and its
+forbidden list and never runs above its tier. `DISPUTED` stops for user evidence;
+no issue is created.
 
 ## Done when
 
-- Every finding in this turn's queue has a per-finding `FOLDED`/`DISPUTED`/
-  `BLOCKED`/`REPLAN` line and the tally is printed.
-- Every `FOLDED` finding belongs to a pushed atomic batch commit and has a
-  ticked ledger row.
-- Nothing was reclassified, and nothing outside the queue was touched.
+Every queued finding has its per-finding verdict and tally; every `FOLDED`
+finding belongs to a pushed atomic batch and ticked row. Nothing is reclassified
+or touched outside the queue.
 
 ```
 → Next: (branches on outcome)
