@@ -1,7 +1,7 @@
 ---
 name: loop-review-fold
 user-invocable: true
-version: 1.0.0
+version: 1.0.1
 argument-hint: <NN> | --fix <n> [--max-cycles N] [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -29,6 +29,8 @@ its candidate.
 ✓ One terminal state and its evidence were printed; closing → Next: block was last
 ```
 
+Any unchecked box means the turn is not done.
+
 ## Input
 
 - `loop-review-fold <NN>` — feature unit and its open PR.
@@ -52,6 +54,17 @@ Read exactly, in order:
 Consume the internal [verification contract](<../verification-contract/SKILL.md>).
 Compose `review-change` and `fold-findings`; never copy their finder,
 classification, ledger, or correction checklists into this skill.
+
+## Portability (agents other than Claude Code)
+
+- Without a slash-command menu, open this `SKILL.md` in a fresh conversation and
+  follow it literally.
+- Without native fresh contexts, subagents, or tier controls, use the
+  `PORTABILITY.md` fallbacks; never claim a context-clean review after the same
+  context authored a correction.
+- Without `/loop`, re-invoke this skill manually and follow the terminal
+  `→ Next:` block. Keep the same remote-HEAD, receipt, finding, and cycle
+  counters.
 
 ## Relationship to other skills
 

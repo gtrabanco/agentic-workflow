@@ -284,6 +284,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.2 | 2026-08-10 | patch | Makes the final PR receipt closeout explicit and fail-closed before the review can recommend `audit-pr`; clarifies that the fixed report block does not end the turn. |
 | 2.11.1 | 2026-08-09 | patch | No behavior change: compresses review introduction, isolation, route guardrails, relationships, and close-out prose while preserving applicability and read-only contracts. |
 | 2.11.0 | 2026-08-09 | minor | Verifies the frozen acceptance blob before review and recommends bounded `loop-review-fold` on failure while preserving its read-only, exact-SHA receipt contract. |
 | 2.10.0 | 2026-08-05 | minor | D10 three-state report decision `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` (never MERGE-READY). Mandatory final review posts one idempotent exact-SHA `REVIEW-PASS` receipt as a PR comment through a temporary Markdown `--body-file` (fixed body: `<!-- review-change:pass sha=… contract=v1 -->` marker, head SHA, scope/axes, acceptance coverage, invariants, zero open findings, proposals count, manual checks; D6 — never committed into the branch, newest matching marker wins, later commit makes it stale). `REVIEW-FAIL` persists findings to the fold ledger and posts no receipt; `NEEDS-DECISION` blocks without creating an issue. Pre-PR checkpoints keep the `progress.md` marker and post no receipt (D7). New fake-forge receipt fixture suite (`scripts/review-receipt.test.mjs`). |
@@ -331,6 +332,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `loop-review-fold`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.0.1 | 2026-08-09 | patch | Makes the turn fail-closed on unchecked contract boxes and states the non-Claude portability fallbacks in the user-facing skill. |
 | 1.0.0 | 2026-08-09 | — | New bounded final review/correction conductor: reuses exact-SHA receipts, alternates fresh read-only review and batched fold contexts only for changed HEADs, defaults to two correction cycles, and stops on pass, decision, blocker, no progress, or budget exhaustion. Never merges or creates issues. |
 
 #### `audit-pr`

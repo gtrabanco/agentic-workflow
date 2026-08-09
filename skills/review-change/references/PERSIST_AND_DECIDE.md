@@ -23,8 +23,10 @@
    their destinations from step 10 (outcome routing): independent future
    capabilities batch as proposals; only the user routes them to `triage-issue`
    (D3).
-12. **Report — Return exactly this structure** (fixed output contract; nothing
-   more, nothing less):
+12. **Report block — Return exactly this structure** (fixed chat-report block;
+   this is not the end of the turn). After printing its `Decision:` line, run
+   step 13 before step 14; the receipt action and verification are outside this
+   block:
 
    ```
    REVIEW CHANGE — scope: <scope>
