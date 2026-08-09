@@ -462,6 +462,9 @@ How pinning actually works, verified against the `skills` CLI:
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | patch | No behavior change: compresses emission, field-rule, repair-loop, package-sync, relationship, and NRS prose while preserving the schema and driver protocol. |
+| `verification-contract` | 1.0.1 | 2026-08-09 | patch | Registers this runtime dependency for distribution and keeps it out of the user-invocable menu, so default `skills add` installs the contract consumed by planners, executors, reviewers, and loops. |
+| `planning-preflight` | 1.1.1 | 2026-08-09 | patch | Registers this runtime dependency for distribution while keeping it out of the user-invocable menu. |
+| `phase-contract` | 1.0.1 | 2026-08-09 | patch | Registers this runtime dependency for distribution while keeping it out of the user-invocable menu. |
 | `verification-contract` | 1.0.0 | 2026-08-09 | — | New internal contract: freezes one compact `ACCEPTANCE.md` per unit, binds execution/review evidence to its blob, defines validation states, and forbids weakening tests or acceptance to manufacture green. |
 | `orchestration-envelope` | 1.5.0 | 2026-08-09 | minor | The canonical turn contract carries the frozen acceptance blob and forbids automatic issue creation for independent proposals, enabling bounded whole-unit and review/fold drivers without changing the JSON schema. |
 | `plan-feature-scaffold` | 1.14.0 | 2026-08-09 | minor | Emits the frozen acceptance manifest for every feature size and hands target-only execution all remaining phases by default. |
@@ -551,6 +554,11 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-09 — distribute runtime contracts.** The default `skills add` path now
+  installs `phase-contract`, `planning-preflight`, and `verification-contract`
+  alongside the entrypoints that consume them, while keeping all three out of
+  the user-invocable menu.
 
 - **2026-08-09 — bounded delivery loops (feature 22).** Frozen acceptance,
   target-only whole-unit execution with fresh phase workers, compatible
