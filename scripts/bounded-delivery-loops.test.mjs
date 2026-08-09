@@ -60,7 +60,13 @@ assert.match(verification, /git hash-object/);
 assert.match(verification, /deleting, skipping, narrowing, or loosening a validator/);
 
 const pluginSkills = plugin.skills.map((entry) => entry.replace("./skills/", ""));
-assert.ok(pluginSkills.includes("loop-review-fold"));
+for (const requiredDependency of ["loop-review-fold", "phase-contract", "planning-preflight", "verification-contract"]) {
+  assert.ok(pluginSkills.includes(requiredDependency), `${requiredDependency} must be distributed by plugin.json`);
+}
+for (const distributedDependency of ["phase-contract", "planning-preflight", "verification-contract"]) {
+  assert.doesNotMatch(read(`skills/${distributedDependency}/SKILL.md`), /^metadata:\n  internal: true$/m,
+    `${distributedDependency} must remain discoverable by the skills CLI`);
+}
 assert.deepEqual(pluginSkills, [...pluginSkills].sort(), "plugin skills must stay alphabetical");
 
 console.log("PASS bounded delivery loop contracts");
