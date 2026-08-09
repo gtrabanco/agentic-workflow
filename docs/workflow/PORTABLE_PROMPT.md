@@ -100,8 +100,8 @@ the frozen ledger and route missing or contradictory state to these skills.
    Docs only; no code, no branch.
 
 **Execute**
-6. `execute-phase` — implement one phase per invocation: of a feature
-   (default), of a small `XS/S` feature, or of a fix (`--fix`) — XS/S and fix
+6. `execute-phase` — with only a feature or fix target, implement all remaining
+   phases; an explicit `P<n>` executes exactly one phase. XS/S and fix
    phases live in the SPEC's `## Phases` (their final phase is always
    `Hardening & PR`, the close-out); a legacy SPEC without `## Phases` runs
    end-to-end in one pass. Branch safety; on P1 commit the planning
@@ -110,10 +110,9 @@ the frozen ledger and route missing or contradictory state to these skills.
    The project's verification gate before every commit — **never commit red**
    (unfixable-in-scope failures → known-issues + stop). When reality contradicts
    the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
-   doc discipline; hand off to `review-change` at trigger-based checkpoints
-   (layer boundary, accumulation, or sensitivity) AND for the
-   **mandatory** end review (suggest it rather than composing it, so it runs at its
-   own model/effort). A finished unit (the final `Hardening & PR` phase for
+   doc discipline; no intermediate reviews in unit-loop mode. A finished unit
+   hands off to mandatory bounded `loop-review-fold`, which keeps review and
+   correction contexts separate. A finished unit (the final `Hardening & PR` phase for
    XS/S and fixes, a feature's final phase, or a legacy single pass)
    **always opens its PR** (never branch-only) and **flips to `done` at PR-open**
    (built, not merged — merge state lives in the forge). Print the next step.
@@ -138,9 +137,9 @@ the frozen ledger and route missing or contradictory state to these skills.
    table + an explicit manual-verification checklist. Give **every finding a
    destination**: fix-now folds into the current unit's open phase, replan-in-unit
    appends user-confirmed phases, decision-required surfaces to the user, and
-   independent proposals are batched for the user to route to `triage-issue`
-   (never create backlog yourself). Findings only;
-   print the next step (`audit-pr`).
+   independent proposals are batched for explicit user triage (never create
+   backlog yourself). Findings only; on failure recommend `loop-review-fold`;
+   only a clean current receipt proceeds to `audit-pr`.
 9. `audit-pr` — PR-level merge gate: SPEC acceptance met, all phases complete,
    docs updated (**never merge with pending docs**), `Closes #N`, the issue/fix-index
    entry still tracked (removed only after merge), tests, CI green, branch

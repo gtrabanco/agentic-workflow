@@ -1,13 +1,13 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.1.1
+version: 1.2.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Repair persisted fix-now findings one at a time: root-cause fix, green gate,
-  commit/push, and `folded: yes` ledger update. Never reclassify or substitute
+  Repair persisted fix-now findings in compatible atomic batches: root-cause
+  fixes, green gate, commit/push, and per-row `folded: yes` updates. Never reclassify or substitute
   backlog notes. Triggers: "fold-findings", "fix the review findings",
   "repair audit blockers".
 ---
@@ -25,14 +25,14 @@ weakening the check that caught it.
 ✓ 1. Every finding taken up this turn produced its fixed per-finding output
      line (FOLDED <sha> | DISPUTED <reason> | BLOCKED <missing input> |
      REPLAN <proposed phase(s)>) — no finding silently skipped.
-✓ 2. For each FOLDED finding: the gate was RUN (not assumed) and green, a
-     single commit was RUN with its sha pasted, and (if the branch has an
+✓ 2. For each FOLDED batch: the gate was RUN (not assumed) and green, one
+     atomic commit was RUN with its sha pasted, and (if the branch has an
      open PR) `git push` was RUN immediately after that commit.
 ✓ 3. The ledger row for each FOLDED finding was flipped `folded: no → yes`
      in the same commit — never a bare code fix with the ledger left stale.
 ✓ 4. No finding was reclassified: no severity downgrade, no fix-now →
      non-fix-now, no "actually this is fine" — a genuine objection produced
-     `DISPUTED` with evidence, routed to `/triage-issue`, never a silent drop.
+     `DISPUTED` with evidence for a user decision, never a silent drop/issue.
 ✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` tally and the
      outcome-branched `→ Next:` block are printed as the ABSOLUTE last output.
 ```
@@ -79,7 +79,8 @@ needs:
    violation.
 2. Rows with `folded: no` are this turn's queue. If invoked with explicit
    finding IDs as arguments, restrict the queue to those IDs only — everything
-   else on the ledger is left untouched (never opportunistically folded).
+   else on the ledger is left untouched. Group compatible queue members by
+   root cause + verifier + rollback boundary before editing.
 3. The project's verification gate (type-check, tests, build — per its own
    docs) and its forge CLI (examples use `gh`; translate if the project
    declares another forge).
@@ -102,7 +103,7 @@ stop; never infer a classification or fold procedure.
 Per finding, in the order processed:
 
 ```
-| <finding-id> | verdict: FOLDED <sha> | DISPUTED <reason → /triage-issue> | BLOCKED <missing input> | REPLAN <proposed phase(s) → /execute-phase> |
+| <finding-id> | verdict: FOLDED <sha> | DISPUTED <reason → user decision> | BLOCKED <missing input> | REPLAN <proposed phase(s) → /execute-phase> |
 ```
 
 Then the tally line, exactly:
@@ -118,9 +119,10 @@ see the unchanged three-field format.)
 
 - Scope is the ledger (or the explicit finding-ID argument subset) — nothing
   else. A finding you notice in passing that isn't on the ledger is not this
-  turn's to fix; note it and let `/triage-issue` decide its home.
-- Never batch multiple findings into one commit — one finding, one commit,
-  one push, one ledger tick; this keeps the fold reviewable finding-by-finding.
+  turn's to fix; record it as a proposal for explicit user triage.
+- Batch findings only when one root-cause correction, validator set, and
+  rollback boundary own them. One batch = one commit/push; every finding still
+  gets its own ledger tick and output line. Otherwise split groups.
 - Never widen a fix beyond the finding's own `file:line`/axis unless the root
   cause genuinely requires it — state why in the commit message when it does.
 - Artifact language: explicit user instruction > the project's declared docs
@@ -139,15 +141,15 @@ enables:
   logic/security finding deserves your strongest available model for that one
   finding even if the rest of the run uses a cheaper tier (see fold process 2c);
   never fold a finding with a model weaker than the one that wrote the code.
-- **No `/loop`** — re-invoke this skill by hand for the next unfolded finding,
-  following the closing `→ Next:` block each time.
+- **No loop conductor** — this skill still processes the full compatible queue
+  once; manually re-run review/fold only after new review evidence.
 
 ## Relationship to other skills
 
 ```
 review-change ──FAIL──┐
 audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED──▶ re-run review-change / audit-pr
-                       │                  ──DISPUTED─▶ triage-issue
+                       │                  ──DISPUTED─▶ user decision
                        │                  ──BLOCKED──▶ user supplies missing input
 ```
 
@@ -160,20 +162,21 @@ audit-pr ──BLOCKED─────┼──▶ fold-findings ──FOLDED─�
   independently-invocable path with the frozen-classification and forbidden-
   list contract made explicit. It hands off rather than composing, and never
   runs above its own tier.
-- `DISPUTED` findings route to `/triage-issue`, which reaches its own
-  evidence-grounded verdict — this skill never re-litigates a dispute itself.
+- `DISPUTED` findings stop for an evidence-grounded user decision; no issue is
+  created by the fold path.
 
 ## Done when
 
 - Every finding in this turn's queue has a per-finding `FOLDED`/`DISPUTED`/
   `BLOCKED`/`REPLAN` line and the tally is printed.
-- Every `FOLDED` finding has a pushed commit and a ticked ledger row.
+- Every `FOLDED` finding belongs to a pushed atomic batch commit and has a
+  ticked ledger row.
 - Nothing was reclassified, and nothing outside the queue was touched.
 
 ```
 → Next: (branches on outcome)
   · all FOLDED → /review-change — re-review the branch now that findings are fixed
-  · any DISPUTED → /triage-issue <ids> — get an evidence-grounded verdict on the dispute(s)
+  · any DISPUTED → user decision — resolve the evidenced dispute(s) without creating backlog
   · any BLOCKED → supply the missing input listed above, then re-run /fold-findings
   · any REPLAN → confirm the proposed SPEC phase(s), then /execute-phase on this same branch
 ```

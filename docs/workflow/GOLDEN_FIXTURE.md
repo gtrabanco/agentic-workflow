@@ -116,6 +116,25 @@ if one exists.
 - [ ] Commit `docs: link PR #<n>` and push
 ```
 
+For `verification-contract`, whole-unit execution, or bounded-loop changes,
+pair the SPEC with this sibling manifest and treat its blob fingerprint as
+frozen for the run:
+
+```markdown
+# Acceptance manifest v1 — 99-csv-export-command
+
+Status: frozen
+
+| ID | Required outcome | Validator |
+|---|---|---|
+| AC1 | CSV export writes header and every record | command fixture |
+| AC2 | empty input writes a header-only file and exits 0 | command fixture |
+
+## Quality floor
+
+- Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.
+```
+
 ## The procedure
 
 1. **Pick the changed skill** — the one whose `SKILL.md` you just edited.
@@ -159,6 +178,10 @@ Pass only if **every** box holds:
   commit message, never worked directly on `main`.
 - ✓ **No invented steps** beyond what the skill's `SKILL.md` states.
 - ✓ The closing `→ Next:` block was printed.
+- ✓ If the bounded-delivery contract is under test: the manifest fingerprint
+  stayed unchanged; omitted-phase dispatch selected only literal unfinished
+  phase IDs; no discovered work created an issue; loop terminal and counters
+  matched the first applicable transition rule.
 
 Any unchecked box = **FAIL**. The fix is a wording tightening of the skill
 (a separate, targeted change) — per feature 08's dependency-direction note,
@@ -201,6 +224,9 @@ over time.
 | 2026-08-03 | Qwen3 8B (`qwen3:8b`, `--think=false`, temperature 0, seed 20; weakest local tool-capable model) | `tool-calling smoke`, `plan-feature` 3.3.2 (fix #119, live weak-model NRS issue-route probe) | PASS | The tool-calling smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Three fresh issue-route runs used scratch NRS states: `draft` selected `/discover-repository-state`; `contradicted` and `resolved` selected `/resolve-repository-state`; all three called no product-half write tool and printed a `→ Next:` hand-off. |
 
 | 2026-08-05 | Qwen3.6 3B (`nan/qwen3.6`, OpenAI-schema tool calling, `--think` default; weakest tool-capable model available in this session's fleet — deepseek-v4-flash is 21B; gemma4's tool calling is XML not OpenAI `tools` schema, so it fails the smoke precondition for the executor path) | `tool-calling smoke`, `audit-pr` 4.3.0, `review-change` 2.10.0, `execute-phase` 2.13.2 (feature #21, review-to-audit boundary + receipt contract) | PASS | The tool-calling smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Three live text-reasoning runs, each fed the exact quoted contract text (no paraphrase): **(A) audit-pr 4.3.0 Step 1 + Merge ownership** — scenario current-receipt-with-flawed-diff → acknowledged the receipt as the review evidence and moved to the delivery gates, never re-reviewed the diff; absent-receipt-with-visible-bugs → returned **BLOCKER** routed to `/review-change`, refused to compose or spot-check a review; stale-receipt-with-flawless-diff → returned **BLOCKER** routed to `/review-change` (later commit voids the receipt); user-asks-to-merge-with-current-receipt → "Skill never merges", sole authority is the `ship-roadmap --continue --fullauto` AUDIT stage. **(B) review-change 2.10.0 receipt-posting contract (step 13)** — clean review → wrote the exact receipt body (`<!-- review-change:pass sha=<head> contract=v1 -->` + all seven bullet lines) to `$TMPDIR/review-receipt.md` and posted via `gh pr comment <N> --body-file`, never inline `--body`; fix-now finding open → posted **no** passing receipt and gave `Decision: REVIEW-FAIL`; already-posted same SHA → idempotent skip with no new comment; user asks for MERGE-READY on a clean table → refused, returned `Decision: REVIEW-PASS` only ("only audit-pr says MERGE-READY"). **(C) execute-phase 2.13.2 folding mini-cycle** — reproduced the complete 7-step fold checklist in order (fix → gate → docs → ledger `folded: no → yes` → commit → push → clean `porcelain` + not-ahead); unstaged doc edit → correctly refused to report the finding folded (clean `porcelain` is the final verification); future-capability "gzip compression" proposal → batched as a proposal, never created an issue, routed only by the user to `/triage-issue`; green gate with no open PR → correctly refused to auto-merge (never auto-merge, never skip the per-phase stop). All scenarios: zero invented steps, fixed output blocks rendered exactly. Closes the AC 17 fixture for feature #21. |
+| 2026-08-09 | Qwen3 8B (`qwen3:8b`, `--think=false`; weakest local tool-capable model, tool calling already validated above) | `execute-phase` 3.0.0, `plan-fix` 2.6.0, `loop-review-fold` 1.0.0 (feature 22, initial bounded-delivery wording) | FAIL | Live deterministic probes exposed two weak-model ambiguities: dispatch copied an empty phase placeholder and invented `P5`; loop grouping reached the right broad decisions but omitted required fields; loop terminal labels were mostly right while review/correction counters drifted. The result drove literal-ledger dispatch, first-match transition tables, fixed output hygiene, and set-level grouping boxes. |
+| 2026-08-09 | Qwen3 8B (`qwen3:8b`, `--think=false`; weakest local tool-capable model, tool calling already validated above) | `execute-phase` 3.0.0, `plan-fix` 2.6.0, `loop-review-fold` 1.0.0 (feature 22, hardened bounded-delivery wording) | FAIL | The tightened live probes correctly routed omitted execution to only `P2 P3 P4`, explicit execution to only `P3`, discoveries to `Proposal`, unchanged work to `NO-PROGRESS`, both capability and homogeneous mechanical batches to MERGE, and the incompatible batch to SPLIT. All three loop terminal labels were correct (`PASS`, `NO-PROGRESS`, `BUDGET-EXHAUSTED`), but the 8B no-thinking model still miscounted reviews/corrections, so it fails the exact contract and is approved only as a mechanical worker, not as loop conductor. A configured `nan/qwen3.6` retest was attempted but Pi reported no models/providers available in this session. |
+| 2026-08-09 | Qwen3 14B (`qwen3:14b`, thinking enabled, temperature 0, seed 22; local tool-capable reasoning floor for the conductor route) | `tool-calling smoke`, `execute-phase` 3.0.0, `verification-contract` 1.0.0, `loop-review-fold` 1.0.0 (feature 22, bounded delivery) | PASS | OpenAI-compatible smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Live first-match probes preserved the frozen manifest by rejecting test/acceptance weakening, selected literal remaining phases `P2 P3 P4`, kept explicit `P3` atomic, and recorded an unrelated enhancement as `Proposal` with no issue. The bounded-loop probe returned exactly `PASS` with `reviews=1/corrections=0`, `NO-PROGRESS` with `2/2`, and `BUDGET-EXHAUSTED` with `3/2`. This validates the reasoning-enabled conductor tier; the 8B no-thinking result above remains the lower mechanical-worker boundary. |
 
 ## Scope boundary
 

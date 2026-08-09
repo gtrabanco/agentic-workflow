@@ -122,6 +122,25 @@ if one exists.
 - [ ] Commit `docs: link PR #<n>` and push
 ```
 
+Para cambios de `verification-contract`, ejecución de unidad completa o loops
+acotados, acompaña el SPEC con este manifiesto hermano y trata su huella de
+blob como congelada durante la ejecución:
+
+```markdown
+# Acceptance manifest v1 — 99-csv-export-command
+
+Status: frozen
+
+| ID | Required outcome | Validator |
+|---|---|---|
+| AC1 | CSV export writes header and every record | command fixture |
+| AC2 | empty input writes a header-only file and exits 0 | command fixture |
+
+## Quality floor
+
+- Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.
+```
+
 ## El procedimiento
 
 1. **Elige la skill modificada** — la cuyo `SKILL.md` acabas de editar.
@@ -172,6 +191,10 @@ Aprueba solo si **todas** las casillas se cumplen:
 - ✓ **Sin pasos inventados** más allá de lo que declara el `SKILL.md` de
   la skill.
 - ✓ Se imprimió el bloque de cierre `→ Next:`.
+- ✓ Si se prueba el contrato de bounded delivery: la huella del manifiesto
+  no cambió; el dispatch sin fase seleccionó solo IDs de fase pendientes y
+  literales; ningún trabajo descubierto creó una issue; el terminal y los
+  contadores del loop coincidieron con la primera regla de transición aplicable.
 
 Cualquier casilla sin marcar = **FAIL**. El arreglo es un ajuste de
 redacción de la skill (un cambio separado y dirigido) — según la nota de
@@ -212,6 +235,9 @@ la cobertura se mantenga auditable a lo largo del tiempo.
 | 2026-08-03 | n/a — sonda de shell de solo lectura verificada; no hubo ejecución de modelo | `plan-feature` 3.3.1 (fix #119, gate NRS de ruta de issue) | PASS | Tres sondas aisladas en scratch para los estados NRS `draft`, `contradicted` y `resolved` confirmaron que la ruta padre carga `PLANNING_GATES.md` antes de componer `plan-feature-from-issue`; cada estado no congelado se detuvo antes de escribir la mitad de producto y se enrutó a discovery o resolution. |
 | 2026-08-03 | Qwen3 8B (`qwen3:8b`, `--think=false`, temperatura 0, seed 20; modelo local más débil con tool-calling) | `tool-calling smoke`, `plan-feature` 3.3.2 (fix #119, sonda viva de ruta NRS con modelo débil) | PASS | El smoke de tool-calling devolvió `finish_reason: tool_calls`, `get_time` y argumentos `{}` parseables. Tres ejecuciones nuevas de la ruta de issue usaron estados NRS en scratch: `draft` seleccionó `/discover-repository-state`; `contradicted` y `resolved` seleccionaron `/resolve-repository-state`; ninguna llamó a la herramienta de escritura de la mitad de producto y las tres imprimieron un hand-off `→ Next:`. |
 | 2026-08-05 | Qwen3.6 3B (`nan/qwen3.6`, tool-calling con esquema OpenAI, `--think` por defecto; modelo con tool-calling más débil disponible en esta sesión — deepseek-v4-flash es 21B; gemma4 usa tool-calling en XML, no el esquema `tools` de OpenAI, así que falla el smoke del precondicionamiento para la ruta ejecutora) | `tool-calling smoke`, `audit-pr` 4.3.0, `review-change` 2.10.0, `execute-phase` 2.13.2 (feature #21, frontera review-a-audit + contrato de recibo) | PASS | El smoke de tool-calling devolvió `finish_reason: tool_calls`, `get_time` y argumentos `{}` parseables. Tres ejecuciones vivas de razonamiento de texto, cada una alimentada con el texto de contrato citado literalmente (sin paráfrasis): **(A) audit-pr 4.3.0 Paso 1 + propiedad del merge** — escenario recibo-vigente-con-diff-defectuoso → reconoció el recibo como la evidencia de revisión y pasó a las puertas de entrega, nunca re-revisó el diff; recibo-ausente-con-bugs-visibles → devolvió **BLOCKER** enrutado a `/review-change`, se negó a componer o "spot-checkear" una revisión; recibo-obsoleto-con-diff-impecable → devolvió **BLOCKER** enrutado a `/review-change` (un commit posterior invalida el recibo); el-usuario-pide-merge-con-recibo-vigente → "la skill nunca fusiona", la única autoridad es la etapa AUDIT de `ship-roadmap --continue --fullauto`. **(B) contrato de publicación de recibo de review-change 2.10.0 (paso 13)** — revisión limpia → escribió el cuerpo exacto del recibo (`<!-- review-change:pass sha=<head> contract=v1 -->` + las siete líneas de bullets) en `$TMPDIR/review-receipt.md` y lo publicó vía `gh pr comment <N> --body-file`, nunca `--body` inline; hallazgo fix-now abierto → no publicó **ningún** recibo de pase y dio `Decision: REVIEW-FAIL`; mismo SHA ya publicado → skip idempotente sin comentario nuevo; el usuario pide MERGE-READY con la tabla limpia → lo rechazó, devolvió solo `Decision: REVIEW-PASS` ("solo audit-pr dice MERGE-READY"). **(C) miniciclo de fold de execute-phase 2.13.2** — reprodujo la checklist completa de 7 pasos en orden (fix → gate → docs → ledger `folded: no → yes` → commit → push → `porcelain` limpio + no-adelantado); edición de docs sin commitear → se negó correctamente a reportar el hallazgo como plegado (`porcelain` limpio es la verificación final); propuesta futura "gzip compression" → la agrupó como propuesta, nunca creó una issue, el usuario la enruta solo a `/triage-issue`; gate verde sin PR abierto → se negó correctamente a auto-fusionar (nunca auto-merge, nunca saltarse la parada por fase). Todos los escenarios: cero pasos inventados, bloques de salida fija renderizados exactamente. Cierra el fixture AC 17 de la feature #21. |
+| 2026-08-09 | Qwen3 8B (`qwen3:8b`, `--think=false`; modelo local más débil con tool-calling, ya validado arriba) | `execute-phase` 3.0.0, `plan-fix` 2.6.0, `loop-review-fold` 1.0.0 (feature 22, redactado inicial de bounded delivery) | FAIL | Las sondas deterministas reales expusieron dos ambigüedades para modelos débiles: el dispatch copió un placeholder de fase vacío e inventó `P5`; el agrupado del loop llegó a decisiones generales correctas pero omitió campos exigidos; las etiquetas terminales fueron mayormente correctas mientras derivaron los contadores de review/corrección. El resultado forzó dispatch desde IDs literales del ledger, tablas de transición first-match, higiene de salida fija y casillas de agrupación a nivel de conjunto. |
+| 2026-08-09 | Qwen3 8B (`qwen3:8b`, `--think=false`; modelo local más débil con tool-calling, ya validado arriba) | `execute-phase` 3.0.0, `plan-fix` 2.6.0, `loop-review-fold` 1.0.0 (feature 22, redactado endurecido de bounded delivery) | FAIL | Las sondas reales endurecidas enrutaron correctamente la ejecución omitida solo a `P2 P3 P4`, la explícita solo a `P3`, los descubrimientos a `Proposal`, el trabajo sin cambios a `NO-PROGRESS`, los lotes de capacidad y mecánico homogéneo a MERGE y el lote incompatible a SPLIT. Las tres etiquetas terminales del loop fueron correctas (`PASS`, `NO-PROGRESS`, `BUDGET-EXHAUSTED`), pero el modelo 8B sin thinking aún contó mal reviews/correcciones, así que falla el contrato exacto y queda aprobado solo como worker mecánico, no como conductor del loop. Se intentó repetir con `nan/qwen3.6`, pero Pi informó que no había modelos/proveedores disponibles en esta sesión. |
+| 2026-08-09 | Qwen3 14B (`qwen3:14b`, thinking activado, temperatura 0, seed 22; suelo local con tool-calling y razonamiento para la ruta conductora) | `tool-calling smoke`, `execute-phase` 3.0.0, `verification-contract` 1.0.0, `loop-review-fold` 1.0.0 (feature 22, bounded delivery) | PASS | El smoke compatible con OpenAI devolvió `finish_reason: tool_calls`, `get_time` y argumentos `{}` parseables. Las sondas reales first-match preservaron el manifiesto congelado rechazando debilitar tests/aceptación, seleccionaron las fases pendientes literales `P2 P3 P4`, mantuvieron `P3` explícita como atómica y registraron una mejora no relacionada como `Proposal` sin issue. La sonda del loop acotado devolvió exactamente `PASS` con `reviews=1/corrections=0`, `NO-PROGRESS` con `2/2` y `BUDGET-EXHAUSTED` con `3/2`. Esto valida el tier conductor con reasoning; el resultado 8B sin thinking superior permanece como frontera inferior de worker mecánico. |
 
 ## Límite de alcance
 

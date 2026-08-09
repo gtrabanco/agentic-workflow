@@ -38,6 +38,9 @@ init-workspace:
 log-session:
   model: sonnet
   effort: medium
+loop-review-fold:
+  model: opus
+  effort: high
 orchestration-envelope:
   model: sonnet
   effort: medium

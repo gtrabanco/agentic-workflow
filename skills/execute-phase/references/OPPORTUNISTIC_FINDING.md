@@ -1,58 +1,45 @@
-## Opportunistic finding policy (run when implementation discovers work)
+## Opportunistic finding policy
 
-This policy applies to a **real, out-of-scope finding discovered while
-implementing the current unit**: a lint warning, dead code, missing defensive
-check, documentation defect, or similar work that the current phase did not
-promise. A missing acceptance criterion or phase task is **not** a finding to
-route: it remains in-scope work and must be delivered (or follows the descope
-guard — see [descope guard](DESCOPE.md)).
+Use this only for genuinely out-of-scope work discovered while implementing the
+current unit. Missing acceptance, correctness, security, accessibility, required
+UX/error behavior, or a phase task remains current-unit work — fix/replan/decide
+inside the unit; it is never a proposal or issue.
 
-**Current policy — one source of truth.** Use the complete policy below for
-every target project. The target project's agent guide and docs may supply
-evidence for a finding, but they do not override its thresholds, decision
-order, actions, or decision-log fields. Do not combine local heuristics with
-this policy. A configurable project override is future work: it needs a
-versioned, machine-checkable schema before it can be introduced safely. Record
-`source: workflow` in every decision row.
+### Closed decision ladder
 
-**Fallback policy — classify every finding in this order; the first matching
-row wins.** Estimates are the smallest complete fix, including tests and docs.
-Before assigning a decision, write a pass/fail result for every box in the
-candidate row. Each row uses **its own** limits: never reuse an Autofix limit
-for an Opportunistic Fix, or vice versa. A failed row cannot be selected; move
-to the next row and record the failed box in `Why`.
+Evaluate rows in order; every box in a selected row must pass. Estimates include
+tests and docs.
 
 | Decision | Pass only if every box is true | Action |
 |---|---|---|
-| **Autofix** | ✓ ≤15 changed lines; ✓ ≤2 files; ✓ every file is already modified in this phase; ✓ low implementation and regression risk; ✓ no public API, schema, migration, dependency, permission, architecture, or user-visible behavior change; ✓ the primary phase objective remains unchanged | Fix now in the current phase commit; run the normal verification gate. |
-| **Opportunistic Fix** | ✓ ≤40 changed lines; ✓ ≤3 files; ✓ every file is already modified in this phase or directly covered by its test; ✓ directly supports the current phase's behavior or makes its touched code consistent; ✓ low implementation and regression risk; ✓ no public API, schema, migration, dependency, permission, or architecture change; ✓ no acceptance criterion is added, removed, or changed; ✓ the primary phase objective remains unchanged | Fix in the current phase commit; add or update the focused test when behavior is affected; run the normal verification gate. |
-| **Create Issue** | Any Autofix or Opportunistic Fix box fails, the evidence is uncertain, the finding is independent of the current phase, or it needs product/risk judgment | Do not change code for the finding. Apply the descope guard before filing; then create a tracked issue and route it through `triage-issue`. |
+| **Autofix** | ≤15 lines; ≤2 files; files already touched; low risk; no public API/schema/migration/dependency/permission/architecture/user-visible change; objective unchanged | Fix in the current phase commit and run its gate. |
+| **Opportunistic Fix** | ≤40 lines; ≤3 files; files touched or directly covered by the phase test; supports touched behavior/consistency; low risk; no public API/schema/migration/dependency/permission/architecture/acceptance change; objective unchanged | Fix in the phase commit, add focused behavior coverage, run the gate. |
+| **Proposal** | Either fix row fails, evidence is uncertain, work is independent, or product/risk judgment is needed | Do not edit or create an issue. Record a compact proposal with evidence and trigger for explicit user batch triage. |
 
-**Numerical boundary check — run before the remaining boxes.** `≤` is
-inclusive. An estimate of 16–40 lines and 1–3 files **fails Autofix size** and
-**passes Opportunistic Fix size**. An estimate of more than 40 lines or more
-than 3 files fails both fix decisions. At 0–15 lines and 1–2 files, check
-Autofix first; if any non-size Autofix box fails, still check Opportunistic
-Fix rather than creating an issue immediately.
+`≤` is inclusive. Check Opportunistic Fix even after a non-size Autofix failure.
+More than 40 lines/3 files is a Proposal unless it is current-unit work, in
+which case it is `replan-in-unit` and stays on the same branch/PR.
 
-**Decision ladder — follow literally.** If the estimate is 16–40 lines, never
-write `Autofix`: write `Opportunistic Fix` only when every other Opportunistic
-Fix box passes; otherwise write `Create Issue`. If the estimate is more than
-40 lines, write `Create Issue`. Only a 0–15-line finding may be `Autofix`.
+### Record before acting
 
-**Record before acting — no silent scope expansion.** For each finding append a
-row to `decisions.md` (create `## Opportunistic finding decisions` and its
-header if absent) before editing or filing:
+Append one row to `decisions.md` before editing/recording:
 
-```
-| Date | Finding | Evidence | Estimate (lines/files) | Risk | Local files | Decision | Why | Policy source | Record |
+```markdown
+| Date | Finding | Evidence | Estimate | Risk | Local files | Decision | Why | Trigger | Record |
 |---|---|---|---|---|---|---|---|---|---|
-| <YYYY-MM-DD> | <one line> | <file:line or command> | <n lines>/<n files> | <low/med/high> | <yes/no + paths> | <Autofix/Opportunistic Fix/Create Issue> | <failed/passed boxes> | <workflow> | <pending commit, commit sha, or issue #n> |
+| <date> | <finding> | <file:line/command> | <lines/files> | <low/med/high> | <yes/no + paths> | <Autofix/Opportunistic Fix/Proposal> | <boxes> | <when to reconsider> | <commit sha|proposal> |
 ```
 
-For `Create Issue`, write `pending issue` in `Record`, create the issue only
-after the descope guard passes, then replace it with the real `issue #<n>` in
-the same phase commit. If the decision is not deterministic from the evidence,
-record `Create Issue — judgment required` and ask the user before filing or
-changing code. This table is the execution log required for later review;
-`known-issues.md` remains for blockers, not a substitute for this decision.
+For a Proposal, `Record` stays `proposal`; no forge operation runs. Batch the
+proposal in the unit's final report. Only an explicit user invocation of
+`triage-issue`/the project's backlog intake may create tracked work, where it
+must dedupe against existing issues first.
+
+### Guardrails
+
+- No automatic `gh issue create` or equivalent from execution, review, fold,
+  audit, or their loops.
+- Never use Proposal to move unfinished SPEC/task scope out of the unit.
+- An uncertain classification becomes Proposal and may stop for user judgment;
+  it never authorizes adjacent edits.
+- `known-issues.md` records blockers, not a substitute backlog.

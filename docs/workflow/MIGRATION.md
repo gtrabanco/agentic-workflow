@@ -2,6 +2,28 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-09 — target-only execution becomes a bounded whole-unit loop
+
+**Breaking default; feature 22, not an extension of feature 21.**
+`execute-phase <NN>` and `execute-phase --fix <n>` now execute every remaining
+phase, using a fresh worker context and bounded repair attempts per phase. To
+retain the previous one-phase behavior, pass the phase explicitly:
+`execute-phase <NN> P1` or `execute-phase --fix <n> P1`.
+
+Planning now emits a frozen `ACCEPTANCE.md`. `plan-fix` may group compatible
+capability bundles or homogeneous mechanical batches without requiring a shared
+root cause/file/severity. Final review should use `loop-review-fold`, which
+defaults to two correction cycles and stops on repeated state or required human
+input. Discovered independent work is a proposal; no execution, review, or fold
+path creates an issue unless the user explicitly requests it.
+
+**Migration.** Update `execute-phase`, the planner/review/fold skills, and the
+workspace scaffold together; run `init-workspace` upgrade mode to add the
+acceptance templates. Existing units without an acceptance manifest use the
+committed SPEC blob as a legacy frozen finish line. Drivers should replace
+per-phase default calls with one target-only call, or keep explicit `P<n>` calls
+when they intentionally own the phase loop.
+
 ## 2026-08-05 — `review-change` posts a SHA-bound receipt; `audit-pr` consumes it
 
 **Feature 21 (workflow-contract-consolidation).** `review-change` 2.10.0 now

@@ -3,8 +3,8 @@
 > Fix specification. Copy this folder to
 > `docs/fix/<issue-number>-<topic>/`, fill every section, register the
 > entry in `docs/fix/README.md`. Lighter than a feature spec — no
-> separate planning artifacts: the SPEC alone is the source of truth,
-> and its `## Phases` section is the execution ledger.
+> separate planning artifacts: the SPEC and sibling `ACCEPTANCE.md` are the
+> source of truth, and its `## Phases` section is the execution ledger.
 
 ## Goal
 
@@ -68,8 +68,9 @@ judgement. Any FAIL → fix the SPEC before the commit.
 
 ## Phases
 
-Execution ledger — `execute-phase --fix` runs **one phase per invocation**
-and ticks tasks here. **Always ≥ 2 phases**: `P1..Pn` implement the fix
+Execution ledger — `execute-phase --fix <n>` runs **all remaining phases by
+default** and ticks tasks here; an explicit `P<n>` runs exactly one phase.
+**Always ≥ 2 phases**: `P1..Pn` implement the fix
 (each task independently checkable, no judgement); the final phase is
 always `Hardening & PR` — keep its pre-written tasks **literally**, never
 paraphrase or merge them into an implementation phase.

@@ -6,8 +6,8 @@
 | Recovery, routing, logging | opus/high | in-turn (tiny token volume; a subagent would add cost, not save it) |
 | JIT feature design (mid-run `idea`/`defined` unit) | opus/high | compose `design-feature` + `plan-feature-scaffold` in-turn (equal tier, deriving only from `SHIP_DECISIONS.md` — no new questions) |
 | JIT feature planning | opus/high | compose `plan-feature` in-turn (its internals are opus/high–medium: ≥ holds) |
-| Phase execution, single-pass, fixes | **sonnet** | subagent per phase with explicit `model: sonnet` override, following `execute-phase`'s SKILL.md |
-| Review checkpoints | opus/high | compose `review-change` in-turn (equal tier — orchestrators compose what they synthesize) |
+| Phase execution, single-pass, fixes | **cheap worker** | fresh context per phase following `execute-phase`; Claude branch maps this role to `sonnet`, portable drivers use their validated worker tier |
+| Final review/correction loop | opus/high | compose `loop-review-fold`; it invokes context-clean review and severity-routed fold workers, max two correction cycles by default |
 | Merge gate | opus/high | compose `audit-pr` in-turn (the highest-stakes automated verdict; must share one turn with the floor checks) |
 | Forge/git mechanics | — | Bash tool calls; no model judgment involved |
 | Final-report evidence gathering | haiku (optional) | fan-out subagents for grep-shaped per-feature log collection when ultracode is on; synthesis stays opus |

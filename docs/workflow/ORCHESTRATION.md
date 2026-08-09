@@ -103,11 +103,11 @@ a driver that wants the envelope must supply it itself:
 |---|---|---|---|
 | `OK` | Skill finished its job | Invoke `next.recommended` | per `next.tier` |
 | `CONTINUE` | Same unit, more work (next phase / iteration) | Re-invoke `next.recommended` | `cheap` |
-| `READY_FOR_REVIEW` | Checkpoint or unit end | `/review-change` | `strong` |
+| `READY_FOR_REVIEW` | Unit end | `/loop-review-fold <unit>` | `strong` conductor; routed fold tier |
 | `READY_FOR_AUDIT` | Review clean | `/audit-pr` | `strong` |
 | `MERGE_READY` | Audit passed; PR comment posted | Human merges, or your policy merges (respect the skill's pre-merge checklist) | — |
 | `MERGED` | Authorized auto-merge executed | Next unit: `workflow-status` → route | `cheap` (sensor) |
-| `NEEDS_FIXES` | fix-now findings / in-scope blockers | `/execute-phase` fold cycle, then re-run the gate that emitted them | `cheap` fold, `strong` re-gate |
+| `NEEDS_FIXES` | fix-now findings / in-scope blockers | Continue the bounded `/loop-review-fold <unit>` cycle | `cheap` fold, `strong` re-gate |
 | `BLOCKED` | Unmet dependency / external cause | Follow `dependencies.build_order` (plan+execute the deepest unmet unit first) or resolve `blockers[]` | per blocked step |
 | `NEEDS_INPUT` | Human decision required | Surface `needs_input.question` + `options`; resume with the answer | — |
 | `FAILED` | Retries exhausted (red gate, substrate) | Stop this unit; a human looks | — |
@@ -311,21 +311,29 @@ only if the driver doesn't fight the model provider's prompt cache:
   `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost* for why a
   fresh context per step is the cheap path, not just a safe one.
 
-## Replacing subagents (per-phase cheap contexts)
+## Bounded unit execution and fresh phase contexts
 
-`ship-roadmap` spawns one Claude Code subagent per `execute-phase` phase to
-run implementation below the conductor's tier. The external equivalent is
-built into the loop above: each `execute-phase NN Pk` invocation IS a fresh
-headless session, and the driver picks the cheap tier for it. Fresh context
-per phase, cheap model, `execute-phase`'s own discipline inside — same
-properties, no subagent primitive required.
+The normal command is now `execute-phase NN` (or `--fix N`): one outer unit
+invocation advances through every remaining phase. The execution contract still
+requires a fresh worker context per phase. An external driver can satisfy that
+contract by treating the outer unit loop as a small state machine: invoke a
+cheap headless worker with the current phase plus the frozen acceptance blob,
+persist only its compact receipt, then start the next worker. Passing `P<k>` to
+`execute-phase` remains the manual/driver primitive for exactly one phase.
+
+After the PR opens, invoke `loop-review-fold`. It reuses an exact-SHA pass
+receipt, otherwise alternates a fresh read-only review and a fresh writer fold.
+The default permits two correction cycles and stops on a human decision,
+blocker, repeated state, or exhausted budget. An RLM may hold receipts and
+failure summaries, but acceptance bytes and repository/forge state remain the
+authority.
 
 ## What remains Claude Code-only (and its status)
 
 | Feature | Status |
 |---|---|
 | `/loop` | Convenience. Fully replaced by the driver loop above. |
-| Subagents | Convenience. Replaced by one headless invocation per phase. |
+| Subagents | Convenience. Replaced by one headless worker per phase behind the unit invocation. |
 | Per-skill `model:`/`effort:` frontmatter | `#claude` branch only; the default branch inherits the session — the driver picks tiers instead. |
 | `ultracode` session setting | Optional Claude Code accelerator for ship-roadmap's fan-out; no equivalent needed — a driver parallelizes by running independent units concurrently itself (respect the project's declared git workflow before parallelizing). |
 | `.claude/` session hooks (log-session capture) | Optional extra; `log-session` invoked by the driver at run end covers it. |

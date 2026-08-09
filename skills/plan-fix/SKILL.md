@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.5.0
+version: 2.6.0
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -13,8 +13,9 @@ description: >
 
 # Plan Fix
 
-The fix-flow counterpart of `plan-feature`: draft the fix SPEC and **stop for
-review**, then `execute-phase --fix` implements it.
+The fix-flow counterpart of `plan-feature`: draft the fix SPEC plus a frozen
+acceptance manifest and **stop for review**, then `execute-phase --fix`
+implements every remaining phase by default.
 
 ## Turn contract — verify before ending the turn
 
@@ -38,8 +39,9 @@ One or more GitHub issue numbers from this repo, space-separated.
 
 - **One number** → `plan-fix 17`. Today's single-issue behavior, unchanged.
 - **Multiple numbers** → `plan-fix 71 72 73`. Planning-process step 5 ingests all
-  issues, then a fixed shared-root-cause checklist decides whether they merge into
-  ONE unit or the skill refuses and prints the split.
+  issues, then an atomic-delivery checklist decides whether they form one
+  capability bundle or homogeneous mechanical batch. Different symptoms/files
+  are compatible when one outcome, validator, and rollback boundary own them.
 - **Invalid input** (a non-number token, or an issue number that doesn't exist in
   this repo) → usage error naming the bad token; never proceed partially (see
   planning-process step 5).
@@ -53,6 +55,8 @@ One or more GitHub issue numbers from this repo, space-separated.
   a one-number invocation, or the **lowest** when multiple issues merge into
   one unit (planning-process step 5); merged SPECs list every issue with its own
   acceptance criteria.
+- `docs/fix/<primary-issue-number>-<topic>/ACCEPTANCE.md` — the compact frozen
+  finish line from `verification-contract`, retaining one criterion per issue.
 - Branch `fix/<primary-issue-number>-<topic>` created from `main`.
 - One commit on that branch with the SPEC and the updated `docs/fix/README.md`
   entry (status `pending`, referencing every merged issue when applicable).
@@ -66,7 +70,7 @@ One or more GitHub issue numbers from this repo, space-separated.
 
 ## Progressive loading — validate before drafting
 
-The reference allowlist is exactly the four paths below:
+The reference allowlist is exactly the five paths below:
 
 1. Every invocation: read [planning process](references/PLANNING_PROCESS.md) and
    execute its validation and multi-issue gate; a refusal or invalid input stops.
@@ -75,6 +79,8 @@ The reference allowlist is exactly the four paths below:
 3. Any route that can write a fix SPEC: consume the [planning preflight](<../planning-preflight/SKILL.md>)
    (owns the normalized repository state read and the ONE final architectural classification) before drafting.
 4. Before emitting phases: load the [phase contract](<../phase-contract/SKILL.md>) for the 8-box phase-lint and phase fingerprint.
+5. Before commit: consume the [verification contract](<../verification-contract/SKILL.md>)
+   and write the frozen `ACCEPTANCE.md`.
 
 Resources are normative and one hop from this file. Missing required resource → stop; never approximate the fixed blocks or phase rules.
 
@@ -87,7 +93,8 @@ SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md
 Branch: fix/<primary>-<topic> (local, not pushed)
 Commit: <short hash>
 
-→ Next: review the SPEC, then /execute-phase --fix <primary> — execute P1 (one phase per invocation)
+→ Next: review the SPEC, then /execute-phase --fix <primary> — execute every remaining phase and open the PR
+  · explicit atomic mode → /execute-phase --fix <primary> P<n>
   · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<primary>`
     (and `Closes #<n2>`, `Closes #<n3>`, … — one line per merged issue, when applicable)
   · scope looks wrong → adjust the SPEC and re-run /plan-fix
@@ -109,7 +116,7 @@ agent that lacks one, apply the fallback — never skip the step it enables:
 
 ## Done when
 
-- The fix SPEC is drafted from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections,
+- The fix SPEC and frozen `ACCEPTANCE.md` are drafted from the canonical contracts,
   scoped tightly with risks/blockers surfaced, registered in `docs/fix/README.md`,
   and committed locally on the `fix/<n>-<topic>` branch (not pushed, no PR).
 - **The closing `→ Next:` block is printed** — the Hand-off block above (review the

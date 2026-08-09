@@ -1,15 +1,16 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 1.13.0
+version: 1.14.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal step of plan-feature: from an already-designed SPEC (product half
   `designed`), fill the **engineering half** and generate the planning
   artifact set scaled to the feature's size (XS/S → SPEC-only with ≥ 2 phases
-  in the SPEC, last = Hardening & PR; M/L → full set with a hardening phase)
-  and register the roadmap entry. Docs only — never code.
+  in the SPEC, last = Hardening & PR; M/L → full set with a hardening phase),
+  freeze one compact ACCEPTANCE.md for every size, and register the roadmap
+  entry. Docs only — never code.
 ---
 
 # Plan Feature — Scaffold (internal)
@@ -51,6 +52,10 @@ phase-lint and the normalized phase fingerprint.
 The resource is normative and one hop from this file. Missing resource → stop;
 never reconstruct phase or close-out wording from memory.
 
+The [verification contract](<../verification-contract/SKILL.md>) owns the
+`ACCEPTANCE.md` schema, validation ladder, and anti-weakening rules. Consume it
+after the engineering plan is complete and before registering `planned`.
+
 ## Guardrails
 
 - Docs only. No source edits, migrations, or dependencies.
@@ -80,7 +85,7 @@ already-designed scoped slug/SPEC). Hands off to `execute-phase` for P1;
 ## Done when
 
 - `docs/features/<NN>-<slug>/` exists with the SPEC's engineering half +
-  every planning artifact filled — the product half untouched from what
+  `ACCEPTANCE.md` + every scaled planning artifact filled — the product half untouched from what
   `design-feature` / `plan-feature-from-issue` wrote.
 - The roadmap lists the feature with correct number, order, dependencies, and
   **status `planned`** (the `defined → planned` write this skill owns) —

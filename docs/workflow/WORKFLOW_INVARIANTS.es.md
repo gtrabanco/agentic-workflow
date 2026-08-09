@@ -80,8 +80,10 @@ arquitectónico:
 |---|---|
 | `design-feature` y `plan-feature-from-issue` | Clasificar si la capacidad propuesta preserva las invariantes o necesita una decisión arquitectónica antes de marcar el diseño de producto como completo. |
 | `plan-feature` y `plan-feature-scaffold` | Registrar las invariantes aplicables y la evidencia/decisión en la mitad de ingeniería; no convertir una violación en una tarea de fase. |
-| `execute-phase` | Verificar antes de editar que la fase preserva las invariantes registradas; detenerse ante una violación o una decisión arquitectónica necesaria. |
-| `review-change` | Autoritativo para calidad final del diff, completitud del SPEC, clasificación de trabajo de la unidad actual (fix-now / replan-in-unit / decision-required / proposal) y preservación de invariantes. Informa hallazgos; publica recibo REVIEW-PASS ligado al SHA exacto en tabla limpia. Nunca emite MERGE-READY. |
+| `verification-contract` | Poseer los bytes de aceptación congelados y la escalera de validación. La ejecución y corrección pueden reforzar cobertura, pero no debilitar la meta. |
+| `execute-phase` | Verificar la aceptación congelada y las invariantes registradas antes de cada fase; usar un contexto de worker limpio, intentos acotados y detenerse ante falta de progreso o una decisión necesaria. |
+| `review-change` | Autoritativo para calidad final del diff, cobertura de la aceptación congelada, clasificación de trabajo de la unidad actual (fix-now / replan-in-unit / decision-required / proposal) y preservación de invariantes. Informa hallazgos; publica recibo REVIEW-PASS ligado al SHA exacto en tabla limpia. Nunca emite MERGE-READY. |
+| `loop-review-fold` | Poseer la orquestación acotada de review/corrección: reutilizar recibos vigentes, agrupar folds compatibles, volver a revisar solo HEADs distintos y nunca crear issues ni fusionar. |
 | `audit-pr` | Consume el recibo REVIEW-PASS vigente de review-change (ausente/obsoleto → BLOCKED, nunca re-revisa el diff). Solo posee las puertas de entrega (fases/docs/CI/fusionabilidad/traceabilidad/cierre + resultado de invariantes del recibo). Emite MERGE-READY o BLOCKED con evidencia; nunca edita ni fusiona. |
 
 ## Evidencia y compatibilidad
