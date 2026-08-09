@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.10.0
+version: 2.11.1
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -14,29 +14,24 @@ description: >
 
 # Review Change
 
-The quality gate for a change: get every review that *applies* — and skip the ones
-that don't — in one synthesized, classified report. **Findings only; never edits
-or refactors.**
+Quality gate: run every applicable review and skip the rest, then synthesize and
+classify one report. **Findings only; never edit or refactor.**
 
 ## Turn contract
 
 Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (isolation rule, applicability) live only in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
 
+Consume the internal [verification contract](<../verification-contract/SKILL.md>);
+the reviewer checks the same frozen `ACCEPTANCE.md` blob as the executor before
+mapping candidate evidence.
+
 ## When to use
 
-- **Mandatory before every merge** — every unit (feature, single-pass, or fix) gets a
-  `review-change` pass before its merge gate; that end review is never skipped, and
-  it must run in a conversation that did **not** implement the change — the
-  conversation that wrote a diff shares the author's mental model and tends to
-  catch only mechanical issues, missing design defects a context-clean,
-  adversarial reviewer would find (see the turn-contract box above). If the
-  reviewing conversation authored the diff, stop and hand off to a fresh one
-  before reviewing.
-  `execute-phase` additionally **recommends** a hand-off at its trigger-based
-  checkpoints (layer boundary, accumulation, or sensitivity — see `#77`) — an
-  optional checkpoint the user may skip.
-- When you want the *right* reviews for this change without running irrelevant
-  passes (e.g. accessibility on a backend change).
+- **Mandatory before every merge.** Review in a context that did not implement
+  the change; if it did, stop and hand off to a fresh one. `execute-phase` may
+  also recommend optional checkpoints at layer boundary, accumulation or
+  sensitivity (`#77`).
+- Use when you need applicable reviews without irrelevant passes.
 
 ## Scope
 
@@ -45,16 +40,12 @@ accept a path/glob to widen or narrow. State the scope at the top of the report.
 
 ## Step 0 — Discover the project & the change (always first)
 
-Per the agent guide's **Workflow conventions** + **documentation map**, then
-decide which axes apply from two inputs:
+Per Workflow conventions + documentation map, decide axes from:
 
-1. **Project nature** — from the guide/map: is there a UI (`docs/frontend/`
-   present)? Is it web, mobile, console/CLI, library/SDK, or backend/infra? Note
-   any optional platform review skills the project recorded (its `init-workspace`
-   notes them) — extras, never requirements.
-2. **Change footprint** — what the diff actually touches (UI components? an API?
-   infra? domain logic?). An axis applies only if **both** the project has it
-   **and** the change touches it.
+1. **Project nature:** UI (`docs/frontend/`), web/mobile/CLI/library/backend,
+   and optional recorded platform skills (extras only).
+2. **Footprint:** what the diff touches (UI, API, infra, domain). An axis applies
+   only when both project and footprint support it.
 
 ## Applicability matrix (default; the project's docs refine it)
 
@@ -80,27 +71,14 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 
 ## Isolation rule (default — every pass, not only adversarial)
 
-Each review pass (every applicable pack pass in step 4, the classifier in step
-7, and the debt transform in step 8) runs **isolated and context-clean**, and
-returns **only its fixed-format findings table + `PASS | FAIL`** — never the diff, never prose:
-
-- **Spawn**: on Claude Code, one subagent per pass; on an agent with headless
-  invocation, one headless run per pass; with neither, a fresh conversation
-  per pass (same three tiers as the adversarial spawn below).
-- **Each pass receives ONLY**: (a) the scope (branch/diff reference or
-  path-glob), (b) its own `SKILL.md` checklist, (c) the specific project docs
-  its Step 0 names. Context budget per pass: the diff plus **at most 10
-  non-diff files read in full** (targeted ≤ 50-line reads and greps don't
-  count).
-- **The orchestrator holds tables, not sources.** After dispatch it never
-  re-reads the diff or the files — it fuses the returned tables (step 6)
-  and runs steps 7–13 on them.
-- **Inline fallback** (an agent that cannot spawn any fresh context):
-  compose the passes in-turn as before — sequentially, and each pass must
-  end by reducing to its table before the next pass starts; never hold two
-  passes' raw context at once.
-- The composition tier rule is unchanged: a spawned pass runs at ≥ its own
-  tier (the session model or stronger — never a weaker override).
+Each applicable pass, the classifier (step 7), and debt transform (step 8) runs
+**isolated/context-clean** and returns only its fixed findings table plus
+`PASS | FAIL`—never diff or prose. Spawn one fresh subagent/headless run per
+pass; without those, use a fresh conversation. Pass only scope, its checklist,
+and Step 0 docs; cap full non-diff reads at 10 (targeted ≤50-line reads/greps
+excluded). The orchestrator retains tables, not sources, and fuses them in step
+6. Inline fallback is sequential table reduction. A pass runs at its own tier or
+stronger, never weaker.
 
 
 ## Progressive loading — choose one review route
@@ -125,49 +103,37 @@ reviewer tables the same way and the synthesis contract fuses them. No
 repository merge is performed by this skill.
 ```
 
-Only the word `merge` survives as this migration/refusal text; every active
-review path uses `--synthesize`/fusion language.
-
-Add [portability](references/PORTABILITY.md) only when independent contexts,
-parallelism, slash commands, or tier controls are actually unavailable. The
-project artifact `docs/workflow/REPOSITORY_STATE.md` is evidence consumed by
-output/guardrails; it is not a skill reference. Output/guardrails owns those NRS
-evidence rules and Architectural invariants review.
+Active review paths use only `--synthesize`/fusion language. Add
+[portability](references/PORTABILITY.md) only when contexts, parallelism, slash
+commands or tier controls are unavailable. `docs/workflow/REPOSITORY_STATE.md`
+is evidence for output/guardrails, not a skill reference; that route owns NRS and
+Architectural invariants rules.
 
 Resources are one hop from this file. Fixed reviewer/synthesis/output contracts are
 literal. Missing required resource → stop; never approximate a review contract.
 
 ## Portability
 
-Keep reviewer contexts isolated on every platform. Use
-[portability](references/PORTABILITY.md) for sequential/headless fallbacks; never
-collapse independent adversarial passes into one context.
+Keep reviewer contexts isolated. Use [portability](references/PORTABILITY.md) for
+sequential/headless fallbacks; never collapse independent adversarial passes.
 
 ## Relationship to other skills
 
-- Orchestrates the internal review pack — the finders (`review-code`,
-  `review-security`, `review-verify`, `review-design`, `review-a11y`,
-  `review-brand`, `review-perf`, `review-seo`), then `review-implementation`
-  (the single classifier over the synthesized table) and `review-debt` (the
-  debt transform) — isolated per pass by default (see *Isolation rule*;
-  in-turn composition is the fallback) — and, as optional extras only, any
-  platform review skills the project installed. `triage-issue` is only ever
-  user-invoked on independent proposals (D3).
-- Sits in Stage 4 of the feature workflow; `execute-phase` recommends it at its
-  trigger-based checkpoints (optional) and hands off for the **mandatory end
-  review** (it runs in its own turn). `fix-now` folds into the current unit;
-  `replan-in-unit` appends user-confirmed phases; independent work becomes
-  proposals the user routes to `triage-issue` (D3).
-- `audit-pr` is the PR-level gate it feeds; `product-audit` the periodic full sweep.
+Orchestrates internal finders (`review-code`, `review-security`, `review-verify`,
+`review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`), then
+one `review-implementation` classifier and `review-debt` transform, isolated by
+default; installed platform packs are optional. `triage-issue` is user-invoked
+only for independent proposals (D3). It is Stage 4: checkpoint reviews are
+optional, the end review is mandatory and fresh. `fix-now` folds in-unit,
+`replan-in-unit` adds user-confirmed phases, and independent work becomes
+proposals. `audit-pr` consumes the result; `product-audit` is the periodic sweep;
+`loop-review-fold` may run this skill fresh and route FAIL to `fold-findings`.
 
 ## Done when
 
-- One synthesized, classified decision table across all **applicable** axes exists,
-  the skipped axes are listed with reasons, and the manual-verification checklist is
-  explicit.
-- **Every finding has a destination:** fix-now folds into the unit, replan-in-unit
-  phases are confirmed, decision-required is surfaced, and independent future
-  capabilities are batched as proposals for the user — none silently lost, and no
-  backlog created by the review (D3).
-- The **closing `→ Next:` block is printed** (clean → `/audit-pr`; recurring drift →
-  `/product-audit`), and **no code changed**.
+- One synthesized/classified table covers every applicable axis, lists skipped
+  axes with reasons, and includes manual checks. Every finding has a destination:
+  fold, confirmed replan phase, surfaced decision, or user-routed proposal; none
+  is silently lost and review creates no backlog (D3). Print the closing
+  `→ Next:` block (clean → `/audit-pr`; recurring drift → `/product-audit`) and
+  change no code.

@@ -1,49 +1,54 @@
-## Batch execution with `/loop`
+## Whole-unit execution and portability
 
-To run all phases without manual re-invocation, use Claude Code's self-paced
-`/loop` with a goal rather than a direct command (the skill requires a phase
-argument, so `/loop /execute-phase NN` alone won't advance automatically):
+The normal omitted-phase command is already the batch:
 
-```
-/loop implement all phases of feature NN one by one using /execute-phase,
-commit each phase, and stop when TASKS.md shows all phases checked
+```text
+/execute-phase <NN>
+/execute-phase --fix <n>
 ```
 
-The loop reads `TASKS.md` to pick the next uncompleted phase, implements it,
-and terminates naturally when nothing remains — no explicit stop condition
-needed. **Trigger-based checkpoints are skipped in this mode, but the end review is
-not optional:** at the end, **mark done + open the PR**, then run `/review-change`
-once (the mandatory final review) → `audit-pr`.
+It selects every unfinished phase, gates and commits each one, skips
+intermediate review stops, opens the PR, then recommends
+`/loop-review-fold`. An explicit `P<n>` keeps the atomic/manual path.
 
-Use this when the SPEC is solid and you want to review the whole branch at once
-rather than at each intermediate checkpoint. For incremental, phase-by-phase
-review, stick to the default (manual re-invocation + checkpoint hand-offs).
+### Fresh-context driver (recommended for cheap models)
 
-**No `/loop` on your agent?** Two vendor-neutral equivalents: (a) an
-**external orchestrator** loops this skill headless, injecting the
-driver-facing envelope requirement (see `orchestration-envelope`) so each
-invocation's `state`/`next.recommended` say exactly what to run next
-(`CONTINUE` → next phase on a cheap tier, `READY_FOR_REVIEW` → review on a
-strong tier); protocol + driver skeleton in `docs/workflow/ORCHESTRATION.md`.
-(b) Run the same loop by hand: after each phase, re-invoke this skill with the
-next phase (`execute-phase <NN> <next>`) — the closing block always names the
-exact next command — and keep the mandatory end review. The sequence is
-identical; only the automation differs.
+When the host has subagents or headless invocation, the unit-loop conductor
+uses one fresh worker per phase and carries only `ACCEPTANCE.md`, the phase task
+slice, and compact receipts. An external driver may implement the same contract:
 
-## Portability (agents other than Claude Code)
+1. Call `workflow-status` and choose the next unfinished phase.
+2. Invoke `/execute-phase <unit> P<n>` on the cheap tool-capable tier.
+3. Repeat `CONTINUE`; route `READY_FOR_REVIEW` to `/loop-review-fold` on the
+   required review/fold tiers.
+4. Stop on `NEEDS_INPUT`, `HALT`, repeated unchanged evidence, or the declared
+   attempt budget.
 
-The workflow is the contract; Claude Code features are conveniences. On an
-agent that lacks one, apply the fallback — never skip the step the feature
-enables:
+The protocol and envelope repair loop live in
+`docs/workflow/ORCHESTRATION.md`. The user still starts one driver run; fresh
+contexts are an implementation detail.
 
-- **No slash-command menu** — where this skill says `/<skill>`, open that
-  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
-  literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
-  planning, review, and audit need your **strongest** model; mechanical
-  execution may run cheaper. Never review a change with a model weaker than
-  the one that wrote it — and prefer a different model family than the
-  writer's: same-family instances share training blind spots, cross-family
-  decorrelates errors.
-- **No `/loop`** — re-invoke the skill by hand per phase, following its closing
-  `→ Next:` block each time (see *Batch execution* above).
+### Inline fallback
+
+A host without fresh-worker primitives executes the same queue inline. After
+each phase it reduces state to `progress.md`'s unit-loop receipt and never
+re-reads prior raw context. This is less context-efficient but behaviorally
+equivalent. A user who wants maximum control may pass explicit phases manually.
+
+### Model routing
+
+- Planning and acceptance freezing use the strongest available model.
+- Mechanical phase execution may use a cheaper tool-capable model.
+- Review is never weaker than the writer and should use a different family
+  where practical.
+- A subtle security/logic fold uses the strongest required tier even when
+  surrounding mechanical folds are cheap.
+- Cap parallel workers below the provider's concurrency limit; on 429 reduce
+  fan-out rather than retrying at the same concurrency.
+
+### Missing platform features
+
+- No slash menu → open the named `SKILL.md` and follow it literally.
+- No model tiers → select tiers manually using the rules above.
+- No subagents/headless runs → use the inline fallback.
+- No external driver → the built-in omitted-phase loop remains available.

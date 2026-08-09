@@ -21,8 +21,10 @@ Write `docs/features/<NN>-<slug>/CHECKLIST.md`: schema migration applied (if any
 
 ## Review checkpoint & finishing a unit
 
-**`review-change` is mandatory — every unit gets a final review before merge, no
-exceptions.** It runs in its own turn (hand-off, not composed): a skill's model and
+**Independent final review is mandatory — every unit gets one before merge.**
+Recommend `loop-review-fold` because it preserves fresh review contexts while
+handling bounded corrections; direct `review-change` is the manual path. Review
+runs in its own turn (hand-off, not composed): a skill's model and
 effort are fixed at turn start, so invoking `review-change` from here would run it at
 execute-phase's `sonnet`/`medium` rather than its own `opus`/`high` — under-powering
 the review. So **suggest** it; don't compose it. (General rule: across a model/effort
@@ -30,11 +32,12 @@ boundary, hand off; don't compose.) On agents without per-skill model config the
 rule holds by hand: run the review as a **separate, fresh invocation** on your
 strongest model — never inline in the implementation run.
 
-**Cadence.** Feature mode: after each completed phase, the closing block
+**Cadence.** Explicit-phase feature mode: after each completed phase, the closing block
 **recommends** the hand-off whenever a *Review checkpoint trigger* fires
 (layer boundary, accumulation, or sensitivity — see above), naming which one —
-a suggestion the user may skip to keep executing phases; the skill never
-blocks on an intermediate review. What is **never optional** is the end: every
+a suggestion the user may skip to keep executing phases. Whole-unit mode records
+triggers and continues without intermediate hand-offs; the skill never blocks
+on an intermediate review. What is **never optional** is the end: every
 unit gets one `review-change` pass before merge (single-pass and `--fix`
 included — they have no intermediate phases, so the end review is their only
 one).
@@ -42,7 +45,8 @@ one).
 **Finishing a unit (single-pass, `--fix`, or a feature's final phase): the last step
 is always an open PR.** Mark the unit `done`, commit the flip, push, and `gh pr create`
 (see the mode steps above) — regardless of the review/audit still to come. Then hand
-off to `/review-change` (mandatory), which feeds `audit-pr` (the merge gate).
+off to `/loop-review-fold` (recommended) or direct `/review-change`, which feeds
+`audit-pr` (the merge gate).
 
 **Adversarial pass at that mandatory end review.** `review-change` evaluates its
 own recommendation checklist there (`L`/sensitive change, reviewer not the
@@ -60,7 +64,7 @@ listed alternative — the user picks):
 Phase <N> done and committed. Review checkpoint (recommended) — <trigger name> fired: <one-line reason>.
 → Next: /review-change — it reviews the branch at its own model/effort
   · skip the checkpoint → /execute-phase <NN> <next phase> (the mandatory end review still covers everything)
-  · findings (if you review) → fold fix-now into the branch; non-fix-now → /triage-issue; then re-review
+  · findings (if you review) → fold fix-now into the branch; independent work stays a proposal until user triage; then re-review
 ```
 
 `<trigger name>` is one of `layer boundary`, `accumulation`, or `sensitivity`

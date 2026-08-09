@@ -13,24 +13,50 @@
    prerequisite, parallel, absorbable, or unrelated. Record dependencies and
    Cross-issue notes.
 5. **Resolve one vs. many issues before drafting.** One issue proceeds as the
-   primary. For multiple issues, all four boxes must pass:
+   primary. Multiple issues may form one unit through either supported mode:
 
-   - same defect class in the same cited files/surfaces;
-   - one fix naturally covers all in the same commits;
-   - no issue needs a design decision the others do not;
-   - no conflicting severity/route in their triage verdicts.
+   - **Capability bundle** — different symptoms/root causes jointly prevent one
+     user-visible or operational outcome (for example, login succeeds end to
+     end). They may touch different layers or the same file repeatedly.
+   - **Homogeneous mechanical batch** — the same low-risk transformation is
+     repeated across independent surfaces (for example, CSS token replacement,
+     documentation correction, or one API rename).
+
+   Evaluate the set as one atomic delivery boundary, not every pair by file
+   coincidence. All five boxes must pass:
+
+   Select the mode by first match: (1) different corrections jointly unblock
+   one named end-to-end outcome → `capability bundle`; (2) otherwise, the same
+   literal low-risk transformation repeats on every member → `homogeneous
+   mechanical batch`; (3) otherwise → split. Different files/layers never turn
+   an end-to-end capability bundle into a mechanical batch.
+
+   - one sentence names the shared outcome **or** the repeated mechanical rule;
+   - one verification plan proves every issue's separate acceptance criteria;
+   - the set can ship and roll back together without leaving a partial state;
+   - no conflicting dependency, release order, product/architecture decision,
+     permission/schema migration, or triage route requires isolation;
+   - aggregate work fits one reviewable fix PR (XS/S/M); an L bundle is promoted
+     to one feature rather than fragmented into fixes.
+
+   Shared files, one root cause, and equal severities are useful evidence but
+   are **not requirements**. A security-critical member raises the whole unit's
+   verification/routing floor instead of forcing a separate PR when the atomic
+   boundary still holds.
 
    All pass → one unit whose primary is the lowest number; every issue retains
-   separate acceptance criteria, the fix index names all, and the PR later uses
-   one `Closes #<n>` line per issue. Print exactly:
+   separate acceptance criteria and manifest IDs, the fix index names all, and
+   the PR later uses one `Closes #<n>` line per issue. Print exactly:
 
    ```text
    MULTI-ISSUE MERGE — #<primary> (+#<n2>, #<n3>, …)
-   Shared-root-cause checklist: ALL 4 boxes ticked
-     ✓ same defect class/files: <paths>
-     ✓ one fix covers all in the same commits
-     ✓ no issue needs a design decision the others don't
-     ✓ no conflicting severities/routes in triage verdicts
+   Atomic-delivery mode: <capability bundle|homogeneous mechanical batch>
+   Checklist: ALL 5 boxes ticked
+     ✓ shared outcome/rule: <one sentence>
+     ✓ one verification plan covers every issue: <commands/checks>
+     ✓ one release + rollback boundary: <evidence>
+     ✓ no isolation conflict: <evidence>
+     ✓ aggregate size: <XS|S|M>
    Unit: docs/fix/<primary>-<topic>/SPEC.md
    Issues merged: #<primary> (primary), #<n2>, #<n3>, …
    PR will carry: Closes #<primary>
@@ -38,17 +64,18 @@
                  Closes #<n3>
    ```
 
-   Any box fails → write nothing, name each failing pair, print exactly, and end:
+   Any box fails → write nothing. Partition the input into the **fewest maximal
+   compatible groups** that do pass (singletons only when no bundle exists),
+   cite the set-level boundary that prevents their combination, print exactly,
+   and end:
 
    ```text
-   MULTI-ISSUE REFUSAL — cannot merge #<a>, #<b>[, …]
-   Failing box(es):
-     #<a> vs #<b>: <failing box name> — <one-line evidence>
-     [repeat per failing pair]
-   No SPEC written. Plan these separately:
-     /plan-fix <a>
-     /plan-fix <b>
-     ...
+   MULTI-ISSUE SPLIT — the full set is not one atomic delivery unit
+   Boundary: <failing box> — <one-line repository/issue evidence>
+   No SPEC written. Recommended maximal groups:
+     /plan-fix <a> <b> <c> — <shared outcome/rule + verifier>
+     /plan-fix <d> <e> — <shared outcome/rule + verifier>
+     [/plan-fix <f> — singleton only because <reason>]
    ```
 
    Invalid/unknown token → print exactly and end without partial work:
