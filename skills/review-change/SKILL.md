@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.11.1
+version: 2.11.2
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -19,7 +19,17 @@ classify one report. **Findings only; never edit or refactor.**
 
 ## Turn contract
 
-Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (isolation rule, applicability) live only in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
+Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-envelope/references/TURN_CONTRACT.md) (11 boxes) before ending every turn. Skill-specific additions (receipt closeout, isolation rule, applicability) live here and in [REVIEW_PROCESS.md](references/REVIEW_PROCESS.md). Missing reference → STOP.
+
+For a final PR review, the turn is incomplete until this additional box passes:
+
+```text
+✓ Decision: REVIEW-PASS + PR exists → `gh pr comment <N> --body-file <path>` RUN;
+  then `gh pr view <N> --json comments` RUN and the newest exact-HEAD
+  `review-change:pass` marker is confirmed before printing `→ Next:`
+```
+
+A clean report without that current receipt must not recommend `/audit-pr`.
 
 Consume the internal [verification contract](<../verification-contract/SKILL.md>);
 the reviewer checks the same frozen `ACCEPTANCE.md` blob as the executor before
