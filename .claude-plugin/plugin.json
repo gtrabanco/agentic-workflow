@@ -29,10 +29,12 @@
     "./skills/log-session",
     "./skills/loop-review-fold",
     "./skills/orchestration-envelope",
+    "./skills/phase-contract",
     "./skills/plan-feature",
     "./skills/plan-feature-from-issue",
     "./skills/plan-feature-scaffold",
     "./skills/plan-fix",
+    "./skills/planning-preflight",
     "./skills/product-audit",
     "./skills/resolve-repository-state",
     "./skills/review-a11y",
@@ -48,6 +50,7 @@
     "./skills/review-verify",
     "./skills/ship-roadmap",
     "./skills/triage-issue",
+    "./skills/verification-contract",
     "./skills/workflow-status"
   ]
 }

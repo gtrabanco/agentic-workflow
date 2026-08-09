@@ -1,11 +1,9 @@
 ---
 name: phase-contract
 user-invocable: false
-version: 1.0.0
+version: 1.0.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
-metadata:
-  internal: true
 description: >
   Internal contract: the single owner of the eight phase-lint rules, the fixed
   PASS/BLOCKED result, and the normalized phase fingerprint. Consumed by
