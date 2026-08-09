@@ -1,11 +1,9 @@
 ---
 name: planning-preflight
 user-invocable: false
-version: 1.1.0
+version: 1.1.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
-metadata:
-  internal: true
 description: >
   Internal planning gate: consumes the normalized repository state and makes
   the ONE final architectural classification, using a two-stage contract that
