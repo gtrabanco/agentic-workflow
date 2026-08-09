@@ -140,6 +140,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `ship-roadmap`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.0.1 | 2026-08-09 | patch | No behavior change: compresses activation, discovery gates, route selection, relationships and close-out prose to reduce repeated context. |
 | 4.0.0 | 2026-08-09 | major | **Breaking:** EXECUTE runs each unit's remaining phases through fresh cheap-worker contexts; REVIEW is one bounded `loop-review-fold` stage; issue-sweep residue remains proposals instead of creating backlog. See `docs/workflow/MIGRATION.md`. |
 | 3.2.0 | 2026-07-31 | minor | Fullauto now invokes the wrapper with only PR and run identifiers; the wrapper derives and verifies the forge head, default base, SHA-bound audit evidence, and head-pinned decision instead of trusting caller-controlled inputs. |
 | 3.1.1 | 2026-07-31 | patch | Routes an existing-repository founding run invoked with `--fullauto` through the audit-and-merge policy, while keeping default and greenfield founding routes free of audit resources. |
@@ -168,6 +169,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.1 | 2026-08-09 | patch | No behavior change: compresses mode dispatch, context-budget, progressive-loading, portability, relationship, and completion prose. |
 | 3.0.0 | 2026-08-09 | major | **Breaking default:** a target-only feature/fix invocation executes all remaining phases with a fresh worker receipt per phase, bounded repairs, frozen acceptance, and no intermediate reviews; explicit `P<n>` remains the one-phase form. Independent findings become proposals, never auto-created issues. See `docs/workflow/MIGRATION.md`. |
 | 2.13.2 | 2026-08-05 | patch | Splits the monolith `WORKFLOWS.md` into per-mode workflow resources (feature, small/phased, fix, legacy) loaded exactly one at a time, splits `ISSUE_POLICY.md` into three independently loaded policy resources (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) chosen by situation, and adds a versioned dependency receipt with a fail-closed local fingerprint fast path. Behavior-preserving: every universal execution safety box stays resident in the compact Turn contract, each mapped read-verified to its unique owner resource, and every execute route still passes with unchanged observable outcomes. |
 | 2.13.1 | 2026-08-02 | patch | Moves the fixed `progress.md` handoff schema behind an explicit one-hop route, preserving every field and close-out rule while reducing direct activation context. |
@@ -258,6 +260,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 2.6.1 | 2026-08-09 | patch | No behavior change: compresses input/output, hard-rule, progressive-loading, portability, and done-criteria prose while retaining multi-issue grouping semantics and contracts. |
 | 2.6.0 | 2026-08-09 | minor | Accepts compatible capability bundles and homogeneous mechanical issue batches using set-level outcome, verification, isolation, release/rollback, and aggregate-size checks; shared files/root cause/severity are no longer gates, and failed sets return the fewest maximal compatible groups. Emits frozen `ACCEPTANCE.md`. |
 | 2.5.0 | 2026-08-04 | minor | Consumes the shared planning preflight (normalized repository state read + one final architectural classification) and phase contract (canonical 8-box phase-lint + phase fingerprint) before drafting and emitting a fix SPEC; prose compressed so the route stays below its baseline budget. |
 | 2.4.1 | 2026-08-02 | patch | Moves validation/planning and SPEC-detail contracts into explicit one-hop routes, then compresses explanatory prose while retaining every fixed multi-issue, phase, commit, and hand-off rule. |
@@ -281,6 +284,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.1 | 2026-08-09 | patch | No behavior change: compresses review introduction, isolation, route guardrails, relationships, and close-out prose while preserving applicability and read-only contracts. |
 | 2.11.0 | 2026-08-09 | minor | Verifies the frozen acceptance blob before review and recommends bounded `loop-review-fold` on failure while preserving its read-only, exact-SHA receipt contract. |
 | 2.10.0 | 2026-08-05 | minor | D10 three-state report decision `REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION` (never MERGE-READY). Mandatory final review posts one idempotent exact-SHA `REVIEW-PASS` receipt as a PR comment through a temporary Markdown `--body-file` (fixed body: `<!-- review-change:pass sha=… contract=v1 -->` marker, head SHA, scope/axes, acceptance coverage, invariants, zero open findings, proposals count, manual checks; D6 — never committed into the branch, newest matching marker wins, later commit makes it stale). `REVIEW-FAIL` persists findings to the fold ledger and posts no receipt; `NEEDS-DECISION` blocks without creating an issue. Pre-PR checkpoints keep the `progress.md` marker and post no receipt (D7). New fake-forge receipt fixture suite (`scripts/review-receipt.test.mjs`). |
 | 2.9.1 | 2026-07-31 | patch | Makes `--merge` self-contained by loading the review process and adversarial setup before adversarial merge, so the supplied tables are fused under the same review contract. |
@@ -318,6 +322,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `fold-findings`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.1 | 2026-08-09 | patch | No behavior change: compresses queue discovery, guardrails, portability, relationships, and completion prose; fixed verdict/tally and frozen fold rules remain. |
 | 1.2.0 | 2026-08-09 | minor | Repairs the selected queue in compatible atomic batches while retaining one ledger verdict and evidence record per finding; disputes stop for user decision and no fold path auto-creates an issue. |
 | 1.1.1 | 2026-08-02 | patch | Splits frozen policy from the per-finding procedure behind mandatory one-hop routes and shortens activation metadata; classifications, forbidden actions, verdicts, and commit/push behavior are unchanged. |
 | 1.1.0 | 2026-07-19 | minor | Two additions: (1) **ledger reconstruction** — invoked after an `audit-pr` `VERDICT: BLOCKED` with the ledger absent or missing blockers, the skill now appends the missing rows from the verdict itself (fixed schema, `class: fix-now`, deduped by `file:line`+axis, committed) and proceeds; ending with "no findings" while a BLOCKED verdict lists blockers is a contract violation. (2) New **`REPLAN`** per-finding verdict for `replan-in-unit` rows (and any finding whose smallest correct fix proves too large to fold in one commit): never implemented inline, never downgraded — hand-off to user-confirmed SPEC phase(s) + `execute-phase` on the same branch; tally gains an optional `· Replan: r` field (omitted when 0). |
@@ -456,6 +461,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `orchestration-envelope` | 1.5.1 | 2026-08-09 | patch | No behavior change: compresses emission, field-rule, repair-loop, package-sync, relationship, and NRS prose while preserving the schema and driver protocol. |
 | `verification-contract` | 1.0.0 | 2026-08-09 | — | New internal contract: freezes one compact `ACCEPTANCE.md` per unit, binds execution/review evidence to its blob, defines validation states, and forbids weakening tests or acceptance to manufacture green. |
 | `orchestration-envelope` | 1.5.0 | 2026-08-09 | minor | The canonical turn contract carries the frozen acceptance blob and forbids automatic issue creation for independent proposals, enabling bounded whole-unit and review/fold drivers without changing the JSON schema. |
 | `plan-feature-scaffold` | 1.14.0 | 2026-08-09 | minor | Emits the frozen acceptance manifest for every feature size and hands target-only execution all remaining phases by default. |
