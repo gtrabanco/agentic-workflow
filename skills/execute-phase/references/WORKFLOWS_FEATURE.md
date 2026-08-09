@@ -1,6 +1,7 @@
 ## Feature mode workflow
 
-**Feature phase (default)** — `docs/features/<NN>-<slug>/`
+**Atomic feature phase** — `docs/features/<NN>-<slug>/`. An explicit `P<n>`
+runs this once; whole-unit mode calls it once per remaining phase.
 
 1. Verify branch (create if on `main`). **P1 only:** if the planning artifacts
    (`docs/features/<NN>-<slug>/`) are still uncommitted, commit them first on the
@@ -19,7 +20,10 @@
    uncommitted, and stop with a clear report.
 5. Update the per-phase docs.
 6. Stage and commit: `git add <changed files>` then `git commit -m "<type>(<scope>): <summary>"` — one commit per phase, conventional format. Run this; don't just describe what should be committed.
-7. **Review checkpoint (recommended, not blocking)** — check the *Review checkpoint triggers* above; when one fires, **recommend** a hand-off to `/review-change` in the closing block, naming the trigger (see below). The user decides: review now, or continue straight to the next phase — the skill never forces the intermediate stop. The **end-of-unit review stays mandatory** (it feeds `audit-pr`, the merge gate). Never run the review in this skill's turn.
+7. **Explicit-phase mode only:** check the review checkpoint triggers and make
+   the existing non-blocking recommendation when one fires. Whole-unit mode
+   records the trigger in its phase receipt and continues; it never interrupts
+   for an intermediate review. The end review stays mandatory.
 
 **Resuming an interrupted phase (stated contract — any agent must honor it).**
 If, on entry, the unit branch already carries dirty files or commits belonging

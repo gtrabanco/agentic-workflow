@@ -5,8 +5,8 @@
 What happens to an issue from the moment it lands to a defensible, recorded
 decision. The hub skill is `triage-issue`; the spokes route to fix, feature, or
 deferral. Several issues can be triaged in one batch (`triage-issue 12 14 17`) —
-independent verdicts, one summary table; any resulting fix still gets its own
-branch and PR.
+independent verdicts, one summary table. Compatible fix-now issues may then be
+planned as one atomic delivery unit instead of one branch and PR per issue.
 
 > Forge commands below use `gh` (GitHub) — the canonical example. The project's
 > **Workflow conventions** declare its forge; on GitLab/Gitea run the declared
@@ -71,19 +71,28 @@ ledger/phase, or an incremental replan), never through a new `fix/<N>-<topic>`
 branch. Everything below applies only to a genuine `fix-now` (no open unit
 claims the issue).
 
-`plan-fix` (senior-architect persona) drafts
-`docs/fix/<N>-<topic>/SPEC.md` from the issue, scopes it tightly, surfaces
-blockers/risks, registers it in `docs/fix/README.md`, and commits on a fix
-branch — then **stops for review**. Then `execute-phase --fix`:
+`plan-fix` accepts one or more issues. It groups the set when all boxes pass:
+one user-visible capability outcome or one homogeneous mechanical rule, one
+verification plan, compatible release/rollback, no isolation conflict, and an
+aggregate size no larger than M. Shared root cause, files, and severity are not
+requirements. If the full set fails, it returns the fewest maximal compatible
+groups rather than defaulting to one PR per issue.
 
-1. Ensures the GitHub issue exists (creates via `gh issue create` if missing).
+For each group it drafts `docs/fix/<N>-<topic>/SPEC.md` plus frozen
+`ACCEPTANCE.md`, surfaces blockers/risks, registers every member in the fix
+index, and commits on one fix branch. Then `execute-phase --fix <N>`:
+
+1. Verifies every referenced issue and the frozen acceptance manifest; it does
+   not create unrelated issues for findings.
 2. Verifies/creates branch `fix/<N>-<topic>` (never `main`).
-3. Implements the fix (the SPEC is the only planning artifact — no phases).
+3. Implements every remaining phase in the unit, using a fresh worker context
+   and bounded repair attempts per phase.
 4. Runs the gate (type-check, tests, build).
 5. **Marks the fix `done` and opens the PR with `Closes #N` (always — never
    branch-only).** `done` means built, not merged.
-6. **Mandatory `/review-change`** (non-fix-now findings → `triage-issue`), then
-   `/audit-pr` as the merge gate (never merge with pending docs).
+6. Runs mandatory `/loop-review-fold --fix <N>`; unrelated findings remain
+   proposals unless the user explicitly asks to file them. Then `/audit-pr`
+   acts as the merge gate (never merge with pending docs).
 7. **Only after merge:** removes the entry from `docs/fix/README.md` — never before
    (don't drop issue tracking early).
 

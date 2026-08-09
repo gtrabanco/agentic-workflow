@@ -1,12 +1,10 @@
 ## Small/phased mode workflow
 
 **Phased single-pass units — the default for small (XS/S) feature SPECs.**
-Every XS/S feature SPEC drafted since `plan-feature-scaffold` 1.8.0 carries a
-`## Phases` section (**≥ 2 phases**; the final one is always
-`Hardening & PR`). When the SPEC has it, run **one phase per invocation**:
-`execute-phase <NN> [P<k>]` — `P<k>` omitted → the **first phase with an
-unticked task** (deterministic; no judgement). The SPEC's checkboxes are the
-execution ledger (there is no `TASKS.md`): tick each task with evidence.
+Every current XS/S feature SPEC carries `## Phases` (**≥ 2 phases**; final =
+`Hardening & PR`). `execute-phase <NN>` runs every remaining phase; explicit
+`P<k>` runs one. The SPEC's checkboxes are the execution ledger (there is no
+`TASKS.md`): tick each task with evidence.
 
 **Resuming an interrupted phase (stated contract — any agent must honor it).**
 If, on entry, the unit branch already carries dirty files or commits belonging
@@ -21,11 +19,10 @@ instead of guessing (that is its `AMBIGUOUS` verdict — a human decides).
 
 Each phase appends its handoff entry to a `progress.md` beside the SPEC
 (created on P1 — see *Phase handoff record*). An implementation phase runs the
-per-phase steps below but **STOPs after the phase commit — no push, no PR**
-(the per-phase stop and the turn contract's box 5 "unit not finished" rule).
-The final `Hardening & PR` phase runs the close-out — the mode's "Mark done +
-open the PR" step — **in its own invocation**: its pre-written tasks ARE the
-close-out chain; execute them literally, in order.
+per-phase steps below. Explicit-phase mode **STOPs after the phase commit — no
+push, no PR** (the turn contract's box 5 "unit not finished" rule); unit-loop
+mode continues. The final `Hardening & PR` phase runs close-out after every
+prior phase is green; its pre-written tasks ARE the close-out chain.
 
 Per-phase steps (implementation phases only):
 

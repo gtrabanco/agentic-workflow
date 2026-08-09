@@ -27,8 +27,9 @@ One paragraph: what this feature delivers and why it exists now.
 ## Size
 
 `XS | S | M | L` — estimated in planning, drives how much ceremony follows.
-**XS/S** (≤ one commit / ≤ half a day): this SPEC is the only planning artifact —
-implement with `execute-phase <NN>` in a single pass. **M/L** (phased work): the
+**XS/S** (≤ one commit / ≤ half a day): this SPEC plus compact frozen
+`ACCEPTANCE.md` are the planning artifacts — implement with
+`execute-phase <NN>`. **M/L** (phased work): the
 full artifact set (`PLAN.md`, `TASKS.md`, …) is generated and execution goes phase
 by phase. **Split — mandatory, not advisory**: an M/L feature MUST be split into
 `Depends on:`-chained features if the plan would exceed ~5 phases, OR a single
@@ -274,7 +275,8 @@ otherwise list them as prose.
 
 High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
 **Phases are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or
-"Steps".** Planning (producing the planning artifacts) is done by `plan-feature`
+"Steps".** `execute-phase <NN>` runs all remaining phases by default; an
+explicit `P<n>` runs one atomic phase. Planning (producing the planning artifacts) is done by `plan-feature`
 before execution, so it is **not** a numbered phase here. `P1` is the first
 implementation phase (it also commits the planning artifacts); the **last phase
 is always hardening** (edge cases + the dev-scenario failure modes). For **M/L**,
@@ -283,8 +285,8 @@ checklist ends with the literal close-out tasks), not a phase of its own. For
 **XS/S** (SPEC-only, no `TASKS.md`), list the phases **here, with checkbox
 tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
 carrying the literal close-out tasks (fixed wording — see
-`docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` runs one phase per
-invocation and ticks this section as its ledger. Each implementation phase
+`docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` ticks this section as
+its ledger. Each implementation phase
 header is followed by `Layer: <schema/db|domain|api|ui|config/infra|docs|
 hardening>. Done-when: <command> → <expected outcome>.` before its task list
 (same scaffold as `docs/fix/_TEMPLATE/SPEC.md` `### P1`) — the phase-lint's

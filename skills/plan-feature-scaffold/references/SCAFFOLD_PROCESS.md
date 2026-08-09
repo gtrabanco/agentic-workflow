@@ -12,10 +12,10 @@
    outage cases. Leave no placeholders; put genuine unknowns in `decisions.md`.
 4. **Scale by size:**
 
-   - **XS/S:** SPEC only. Its `### Phases` has checkbox tasks and at least `P1`
+   - **XS/S:** SPEC + `ACCEPTANCE.md`. Its `### Phases` has checkbox tasks and at least `P1`
      implementation plus final `P2 — Hardening & PR`. Copy the final phase's
      literal tasks from `docs/fix/_TEMPLATE/SPEC.md`; never paraphrase them.
-   - **M/L:** create `PLAN.md`, `TASKS.md`, `progress.md`, `testing.md`,
+   - **M/L:** create `ACCEPTANCE.md`, `PLAN.md`, `TASKS.md`, `progress.md`, `testing.md`,
      `known-issues.md`, `decisions.md`, and `architecture-notes.md`.
    - **Mandatory split:** use `Depends on:`-chained features when the plan would
      exceed about five phases, any phase spans multiple layers/concerns, or a
@@ -30,6 +30,11 @@
    - Run the feature template's full Spec-lint after the Engineering half is
      filled, including Product-half regression boxes. Fix every presence failure
      before reporting.
+   - Consume the canonical [verification contract](<../../verification-contract/SKILL.md>)
+     and write one compact, frozen `ACCEPTANCE.md` for every size. Map every SPEC
+     criterion to a deterministic command, labelled read check, or exact manual
+     observation. The manifest is the implementation/review finish line, not a
+     second specification.
 
 ### M/L artifact contract
 
@@ -49,6 +54,8 @@
   fixed-schema handoff entry after each phase with `Done`, `Remains`, `Gotchas`,
   `Files`, and `Next`.
 - `testing.md`: test layers, preferring integration; use the same command rule.
+- `ACCEPTANCE.md`: required for every size; frozen validation manifest owned by
+  `verification-contract`, with the literal quality floor.
 - `known-issues.md`: deferred items linked to/destined for issues, never inline.
 - `decisions.md`: architecture/scope decisions and open questions.
 - `architecture-notes.md`: layer, port, schema, and binding impact.
@@ -61,7 +68,7 @@
 
 ```
 SCAFFOLD <NN>-<slug> — size: <XS|S|M|L>
-Artifacts written: <SPEC.md [+ PLAN.md TASKS.md progress.md testing.md
+Artifacts written: <SPEC.md ACCEPTANCE.md [+ PLAN.md TASKS.md progress.md testing.md
   known-issues.md decisions.md architecture-notes.md for M/L]>
 Roadmap: registered as <NN> (deps: <list|none>)   Phases: <n> (P1…P<n>, last = <hardening (M/L) | Hardening & PR (XS/S)>)
 Spec-lint: PASS (<n>/<n> boxes)   Phase-lint: PASS (all phases)

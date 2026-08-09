@@ -62,7 +62,7 @@ live evidence against a frozen ledger remains a contradiction candidate.
      `/design-feature <slug>`. Never `startable_now`, regardless of deps.
    - status `defined` or `planned`, deps met → `startable_now`, with the next
      command matched to the exact status: `defined` → `/plan-feature <slug>`,
-     `planned` → `/execute-phase <NN> P1`.
+     `planned` → `/execute-phase <NN>`.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
 7. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
    phase, total phases, per-phase checkbox completion.

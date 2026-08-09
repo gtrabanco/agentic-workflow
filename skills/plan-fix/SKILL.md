@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.5.0
+version: 2.6.1
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -13,8 +13,8 @@ description: >
 
 # Plan Fix
 
-The fix-flow counterpart of `plan-feature`: draft the fix SPEC and **stop for
-review**, then `execute-phase --fix` implements it.
+Fix-flow counterpart of `plan-feature`: draft the SPEC plus frozen acceptance,
+stop for review, then `execute-phase --fix` implements every remaining phase.
 
 ## Turn contract — verify before ending the turn
 
@@ -30,43 +30,41 @@ missing box first (weak models drop end-of-document duties).
 
 ## Persona
 
-Senior software architect. Skeptical, scope-disciplined, evidence-based. Refuses overengineering, names the smallest possible change set, surfaces second-order effects, and cites paths/sections/decisions before recommending anything.
+Senior software architect: skeptical, scope-disciplined and evidence-based.
+Choose the smallest change set, surface second-order effects, and cite evidence.
 
 ## Input
 
 One or more GitHub issue numbers from this repo, space-separated.
 
-- **One number** → `plan-fix 17`. Today's single-issue behavior, unchanged.
-- **Multiple numbers** → `plan-fix 71 72 73`. Planning-process step 5 ingests all
-  issues, then a fixed shared-root-cause checklist decides whether they merge into
-  ONE unit or the skill refuses and prints the split.
-- **Invalid input** (a non-number token, or an issue number that doesn't exist in
-  this repo) → usage error naming the bad token; never proceed partially (see
-  planning-process step 5).
+- **One number:** unchanged single-issue behavior (`plan-fix 17`).
+- **Multiple numbers:** step 5 decides one capability bundle or homogeneous
+  mechanical batch; different symptoms/files may merge when one outcome,
+  validator and rollback boundary own them.
+- **Invalid input:** name the bad token and stop; never proceed partially.
 
 ## Output
 
-- `docs/fix/<primary-issue-number>-<topic>/SPEC.md` — filled from
-  `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections below, including its
-  `## Phases` execution ledger (**always ≥ 2 phases**; final =
-  `Hardening & PR`). `<primary-issue-number>` is the single issue number for
-  a one-number invocation, or the **lowest** when multiple issues merge into
-  one unit (planning-process step 5); merged SPECs list every issue with its own
-  acceptance criteria.
-- Branch `fix/<primary-issue-number>-<topic>` created from `main`.
-- One commit on that branch with the SPEC and the updated `docs/fix/README.md`
-  entry (status `pending`, referencing every merged issue when applicable).
-- **Stop. Do not push. Do not open the PR.** Hand off to `execute-phase --fix`.
+- `docs/fix/<primary>-<topic>/SPEC.md` — template plus required sections and a
+  `## Phases` ledger (**always ≥2**; final `Hardening & PR`). Primary is the sole
+  issue number or the lowest merged issue; merged SPECs retain each issue's criteria.
+- `docs/fix/<primary-issue-number>-<topic>/ACCEPTANCE.md` — the compact frozen
+  finish line from `verification-contract`, retaining one criterion per issue.
+- Branch `fix/<primary>-<topic>` from `main`.
+- One local commit with SPEC and `docs/fix/README.md` (`pending`, all merged issues).
+- **Stop: do not push/open PR.** Hand off to `execute-phase --fix`.
 
 ## Hard rules
 
-- Honor the project's **Workflow conventions** (branch/PR — create the `fix/<n>-<topic>` branch first, never `main`; gate; docs-language; evidence — every codebase claim cites a file path, every doc claim its section; track-don't-inline — new problems become separate `docs/fix/` entries or roadmap items, never part of this SPEC).
+- Honor Workflow conventions: create `fix/<n>-<topic>` first, never `main`; gate,
+  docs language and evidence apply. Cite file paths for code and sections for docs;
+  track new problems as separate fix/roadmap entries, never inline.
 - **Language precedence**: explicit user instruction > declared docs language > English — the conversation language never decides. If the issue body isn't in the artifact language, translate silently; if translation is ambiguous, inconsistent, or nonsensical, ask before committing to a meaning.
 - Never push, never open the PR — that's `execute-phase --fix`.
 
 ## Progressive loading — validate before drafting
 
-The reference allowlist is exactly the four paths below:
+The allowlist is exactly these five paths:
 
 1. Every invocation: read [planning process](references/PLANNING_PROCESS.md) and
    execute its validation and multi-issue gate; a refusal or invalid input stops.
@@ -75,8 +73,11 @@ The reference allowlist is exactly the four paths below:
 3. Any route that can write a fix SPEC: consume the [planning preflight](<../planning-preflight/SKILL.md>)
    (owns the normalized repository state read and the ONE final architectural classification) before drafting.
 4. Before emitting phases: load the [phase contract](<../phase-contract/SKILL.md>) for the 8-box phase-lint and phase fingerprint.
+5. Before commit: consume the [verification contract](<../verification-contract/SKILL.md>)
+   and write the frozen `ACCEPTANCE.md`.
 
-Resources are normative and one hop from this file. Missing required resource → stop; never approximate the fixed blocks or phase rules.
+Resources are normative and one hop from this file. Missing required resource →
+stop; never approximate fixed blocks or phase rules.
 
 ## Hand-off
 
@@ -87,7 +88,8 @@ SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md
 Branch: fix/<primary>-<topic> (local, not pushed)
 Commit: <short hash>
 
-→ Next: review the SPEC, then /execute-phase --fix <primary> — execute P1 (one phase per invocation)
+→ Next: review the SPEC, then /execute-phase --fix <primary> — execute every remaining phase and open the PR
+  · explicit atomic mode → /execute-phase --fix <primary> P<n>
   · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<primary>`
     (and `Closes #<n2>`, `Closes #<n3>`, … — one line per merged issue, when applicable)
   · scope looks wrong → adjust the SPEC and re-run /plan-fix
@@ -97,20 +99,12 @@ Then end in the user's language with a 2-3 sentence summary: what the SPEC ships
 
 ## Portability (agents other than Claude Code)
 
-The workflow is the contract; Claude Code features are conveniences. On an
-agent that lacks one, apply the fallback — never skip the step it enables:
-
-- **No slash-command menu** — where this skill says `/<skill>`, open that
-  skill's `SKILL.md` (wherever your agent installed the skills) and follow it
-  literally, in a fresh conversation: hand-offs assume a clean context.
-- **No per-skill `model:`/`effort:`** — pick tiers yourself: architect-level
-  scoping is judgment work — run it on your **strongest** model. The
-  implementation it hands off to may run cheaper.
+Use explicit fallbacks when a primitive is absent: open named `SKILL.md` files in
+a fresh context; run architect-level scoping on the strongest model, then hand
+implementation to a cheaper worker.
 
 ## Done when
 
-- The fix SPEC is drafted from `docs/fix/_TEMPLATE/SPEC.md` plus the extra sections,
-  scoped tightly with risks/blockers surfaced, registered in `docs/fix/README.md`,
-  and committed locally on the `fix/<n>-<topic>` branch (not pushed, no PR).
-- **The closing `→ Next:` block is printed** — the Hand-off block above (review the
-  SPEC, then `/execute-phase --fix`).
+- The SPEC and frozen `ACCEPTANCE.md` follow canonical contracts, surface
+  risks/blockers, register in `docs/fix/README.md`, and are committed locally on
+  `fix/<n>-<topic>` (not pushed/no PR). The closing `→ Next:` Hand-off is printed.

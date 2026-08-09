@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 3.2.0
+version: 4.0.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -14,27 +14,12 @@ description: >
 
 # Ship the roadmap (autopilot)
 
-Run the entire agentic workflow unattended between human decision points: one
-interactive founding turn that asks **everything**, then a driver-fired build
-loop (Claude Code's `/loop`, an external orchestrator, or manual re-invocation
-— see the launch contract) that plans, implements, reviews, opens and
-(optionally) merges one PR per
-feature until the roadmap is done — then keeps going: an **issue sweep**
-inventories open issues and the run's own documented residue (known-issues,
-trade-offs, postponed findings), triages it all, and ships what's fix-now —
-ending in a final report that recommends
-issues, newly discovered features, and the product-audit cadence.
-
-This is the **expensive** skill: a full run burns planning, implementation and
-review tokens for every roadmap feature. It exists to spend them well — strong
-tiers only where judgment lives, cheap tiers where code gets typed, humans only
-where a wrong call is expensive to undo.
-
-> **Ultracode tip:** for large roadmaps, the user can enable the `ultracode`
-> session setting (`/effort ultracode`) before starting the loop — the conductor
-> then fans out independent sub-work (review axes, report evidence gathering)
-> more aggressively. It is a session toggle only the user can set; this skill
-> cannot declare or enable it (`effort:` accepts only low/medium/high/xhigh/max).
+Found once, then run the driver-fired loop (Claude `/loop`, external driver, or
+manual re-invocation): plan, implement, review, open and optionally merge one PR
+per roadmap unit. After the roadmap, sweep existing issues, ship fix-now work,
+report residue as proposals (never create backlog automatically), and print the
+final report. Use strong tiers for judgment, cheap tiers for typing, and humans
+at expensive-to-undo decisions.
 
 ## Turn contract — verify before ending the turn
 
@@ -46,55 +31,38 @@ where a wrong call is expensive to undo.
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
 
-About to end the turn with any box unchecked? The turn is NOT done — complete
-the missing box first (weak models drop end-of-document duties; this list is
-first on purpose).
+Any unchecked box means the turn is not done.
 
 ## When to use
 
-- You have a roadmap — or at least a product idea and a feature list in your
-  head — and want the whole application built with supervision only at merge
-  points and at the end.
-- **Not** for one feature (`plan-feature` → `execute-phase`), one bug
-  (`plan-fix`), or exploratory work. The autopilot ships a locked scope; it is
-  the wrong tool when the scope is still being discovered.
+Use for a locked roadmap with supervision at merge/end points. For one feature,
+one bug, or exploratory work use the manual planning/execution flow instead.
 
 ## Step 0 — Discover the project (always first)
 
-Read before acting: the agent guide (`CLAUDE.md`/`AGENTS.md`) and its
-**Workflow conventions** (forge CLI, verification gate, docs language), the
-documentation map, `docs/features/ROADMAP.md`, the fix index, the architecture
-doc, and `.github/` templates. Then establish run context:
+Read before acting: `CLAUDE.md`/`AGENTS.md` Workflow conventions, documentation
+map, `docs/features/ROADMAP.md`, fix index, architecture doc, and `.github/`
+templates. Then establish:
 
-1. **Substrate present?** CLAUDE.md with Workflow conventions + doc map +
-   roadmap + fix index → founding is skipped and interview rounds 3–4 collapse
-   to confirmations of what the docs already state. Missing pieces → founding
-   will create them.
-2. **Workflow skills installed?** Verify `plan-feature`, `execute-phase`,
-   `review-change`, and `audit-pr` are actually available in this environment
-   (e.g. listed by the skills CLI or present under the skills directory), and
-   **record the discovered skills-directory path in the decision record** —
-   subagent prompts reference it. Missing → stop and instruct:
-   `npx skills add gtrabanco/agentic-workflow`. Without these files the loop
-   silently degrades.
-   When this invocation carries `--fullauto`, also require executable
-   `.agentic-workflow/hooks/fullauto-merge.sh` plus the active platform guard.
-   Missing → stop and route to `init-workspace` upgrade; never fall back to a
-   direct forge merge command.
-3. **Run in progress?** `docs/features/SHIP_DECISIONS.md` exists — on any
-   branch — or a `docs/ship-founding` PR is open → a run exists: `--continue`
-   resumes it; a bare `/ship-roadmap` prints run status and the resume command
-   instead of re-interviewing (never a second founding).
-4. **Repo shape:** empty greenfield vs existing history; current branch; dirty
-   tree (an unexplained dirty default branch is a stop condition, never
-   something to clean up silently).
+1. **Substrate:** if the guide, map, roadmap and fix index exist, skip founding
+   and confirm their answers; otherwise founding creates missing pieces.
+2. **Skills:** verify `plan-feature`, `execute-phase`, `review-change`, and
+   `audit-pr` are installed and record their directory for worker prompts. If
+   absent, stop with `npx skills add gtrabanco/agentic-workflow`. With
+   `--fullauto`, also require executable `.agentic-workflow/hooks/fullauto-merge.sh`
+   and its platform guard; otherwise route to `init-workspace`, never direct merge.
+3. **Run:** existing `docs/features/SHIP_DECISIONS.md` or an open
+   `docs/ship-founding` PR means resume with `--continue`; bare invocation reports
+   status instead of founding again.
+4. **Shape:** greenfield/existing, branch, and dirty tree; unexplained dirty
+   default branch stops (never clean it silently).
 
 
 ## Progressive loading — select the invocation route
 
-The reference allowlist is exactly the ten linked paths below. Never invent or
-read another `references/` path. Every route first loads
-[guardrails](references/GUARDRAILS.md), then adds only the matching row:
+The allowlist is exactly the linked paths below. Never invent another reference.
+Every route starts with [guardrails](references/GUARDRAILS.md), then loads only
+its matching row:
 
 **Hard rule for `--continue` at AUDIT:** LOAD exactly, in this order,
 `references/GUARDRAILS.md`, `references/RECOVERY_AND_SELECTION.md`,
@@ -113,53 +81,36 @@ primitives exist, every other reference is forbidden for that turn.
 | Terminal stop/report | the active row above, then [terminal report](references/TERMINAL_REPORT.md) | unrelated rows |
 | A named platform primitive is absent | the active row above, then [portability](references/PORTABILITY.md) | unrelated rows |
 
-Do not load terminal reporting before a terminal condition. Do not load
-portability when all named primitives exist. Model routing is mandatory before
-each stage; audit/merge is mandatory before every AUDIT stage, even without
-`--fullauto`.
+Do not load terminal reporting before terminal state or portability when all
+primitives exist. Model routing precedes every stage; audit/merge precedes every
+AUDIT stage, including non-`--fullauto` runs.
 
-Every selected resource is one hop from this file. Fixed banners, state
-transitions, floor checks, and output blocks remain normative. A required
-resource that cannot be read stops the run; never improvise from an older run.
+Selected resources are one hop from this file. Fixed banners, transitions, floor
+checks and output blocks are normative; an unreadable required resource stops the
+run—never improvise from an older run.
 
 ## Portability
 
-The workflow is driver-neutral. Use the exact fallback in
-[portability](references/PORTABILITY.md) only when the current platform lacks a
-primitive; do not change the stage sequence or safety floors.
+The workflow is driver-neutral. Use the exact [portability](references/PORTABILITY.md)
+fallback only when a primitive is unavailable; keep stage order and safety floors.
 
 ## Relationship to other skills
 
-- **Composes in-turn** (all ≤ its tier): `init-workspace` (founding, answers
-  pre-fed), `design-feature` + `plan-feature-scaffold` (JIT design for a
-  mid-run `idea`/`defined` unit, derive-only from the locked founding
-  decisions), `plan-feature` (JIT planning, scoped path), `review-change`
-  (checkpoints), `audit-pr` (verdict/comment merge gate; never the merge
-  executor), `audit-docs` (docs-only founding /
-  report PR coherence).
-- **Spawns as sonnet subagents:** `execute-phase` discipline — phases,
-  XS/S single passes, fix-now folding, audit-blocker fixes.
-- **Hands off to the human:** every merge in default mode; `product-audit`
-  always (its effort max exceeds the conductor's high — composing it would
-  under-power it, the exact regression the ≥ rule exists to prevent); `triage-issue` for the
-  report's issue batch.
-- The manual flow (`plan-feature` → `execute-phase` → `review-change` →
-  `audit-pr`, feature by feature) remains the default way of working —
-  ship-roadmap is the same flow with the human moved to its edges.
-- **External-orchestration sibling:** `workflow-status` + the driver-injected
-  envelope (see `docs/workflow/ORCHESTRATION.md`) run this same loop from OUTSIDE the
-  agent — sensor → route → invoke the skill directly, choosing the model per
-  step. Prefer that when you want per-step model control or your agent lacks
-  `/loop`/subagents; ship-roadmap remains the in-agent packaging of the loop.
+| Relation | Skills/policy |
+|---|---|
+| Compose (same/lower tier) | `init-workspace`; JIT `design-feature` + `plan-feature-scaffold`; `plan-feature`; `loop-review-fold`; verdict-only `audit-pr`; `audit-docs`. |
+| Cheap workers | `execute-phase` (fresh context/phase), mechanical folds, audit-blocker fixes; use the validated worker model. |
+| Human hand-off | Default merges, `product-audit` (higher effort), and report issue batches via `triage-issue`. |
+| Sibling | `workflow-status` + injected envelope runs the same loop externally with per-step model choice. |
+
+Manual feature-by-feature flow remains the default; this skill packages it with
+the human at its edges.
 
 ## Done when
 
-- The run reached a terminal banner with the final report written and its PR
-  open; the roadmap's statuses are true; every PR is merged, open-and-audited,
-  or parked with its reason recorded; on `SHIP: COMPLETE` the issue sweep is
-  accounted for — inventory, triage verdicts, fix-now issues shipped or parked.
-- Every decision of the run is traceable: locked answers in
-  `SHIP_DECISIONS.md`, iteration evidence in the run log, outcomes and
-  recommendations in the report.
-- The human knows exactly what to do next — merge list, triage batch, accepted
-  proposals, product-audit timing — without reading anything but the report.
+- A terminal banner and final report exist with an open PR; roadmap statuses are
+  true; every PR is merged, open/audited, or parked with a reason. `SHIP: COMPLETE`
+  also accounts for the issue sweep and reports residue as proposals.
+- Locked answers, iteration evidence, outcomes and recommendations are traceable
+  in `SHIP_DECISIONS.md`, the run log and report; the report states exact next
+  human actions (merges, triage, proposals, product-audit timing).

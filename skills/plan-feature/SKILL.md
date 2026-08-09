@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.4.0
+version: 3.5.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -147,16 +147,17 @@ enables:
   its result** — clean:
 
   ```
-  → Next: /execute-phase <NN> P1 — start phase 1 (M/L, phased)
-    · XS/S feature → /execute-phase <NN> (single-pass)
+  → Next: /execute-phase <NN> — execute every remaining phase and open the PR
+    · explicit atomic mode → /execute-phase <NN> P1
     · adjust scope first → re-run /design-feature <slug>   · audit the planning docs → /audit-docs
   ```
 
   already-planned feature (redirect gate stopped, never re-scaffolded):
 
   ```
-  → Next: /execute-phase <NN> P1 — this feature is already planned; start
-    implementation, don't re-plan it.
+  → Next: /execute-phase <NN> — this feature is already planned; execute every
+    remaining phase, don't re-plan it.
+    · explicit atomic mode → /execute-phase <NN> P1
   ```
 
   undesigned feature (redirect gate stopped):
@@ -172,5 +173,5 @@ enables:
   → Next: /plan-feature <deepest-unmet-dep> (or /execute-phase <dep> …) — build the
     dependency chain first: <chain, deepest → NN>
     · blocking fix-now issue #<n> in the same area → /plan-fix <n> before executing
-    · proceed anyway → /execute-phase <NN> P1 --force (the gate logs the override)
+    · proceed anyway → /execute-phase <NN> --force (the gate logs the override)
   ```

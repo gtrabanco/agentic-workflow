@@ -39,9 +39,10 @@ Final-phase / single-pass / fix hand-off:
 <unit> implemented, gate green, marked done.
 PR opened: <FULL PR URL — always printed here; not every agent shows open PRs>
 Roadmap/fix-index row: done · #<n> (linked and pushed)
-→ Next: /review-change (mandatory final review)
+→ Next: /loop-review-fold <unit> (recommended bounded final review/correction loop)
+  · manual path → /review-change
   · clean    → /audit-pr (merge gate) → human merges
-  · findings → fold fix-now into this PR; non-fix-now → /triage-issue; re-review
+  · findings → fold fix-now into this PR; independent work remains a proposal until user triage; re-review
   · docs site declared (documentation map has a `Docs site` block) →
     /generate-docs <unit> — document what this unit changed; the generated
     pages ride this same PR (commit + push them before the merge gate)
@@ -51,8 +52,8 @@ The `/generate-docs` line appears **only** when the project's documentation
 map declares a `Docs site` block — never suggest it otherwise (a project
 without a docs site has nowhere to publish).
 
-This never auto-merges and never skips the per-phase stop: one phase at a time,
-human in the loop, gate enforced each phase, every unit reviewed before merge.
+This never auto-merges. Explicit `P<n>` stops after one phase; omitted-phase
+mode gates and commits every remaining phase before the same final review.
 
 ### Marking done (status semantics)
 
@@ -66,9 +67,7 @@ PR-bound commit (never a lone commit on the default branch). **Never merge with 
 still pending, and never drop the issue / fix-index entry before merge** — those are
 `audit-pr`'s gates, not removed at done-time.
 
-**One phase = one session.** Never execute two phases in one conversation on a
-non-frontier model — models degrade over long horizons; a fresh session per
-phase preserves the cheap-execution guarantee. The `/loop` batch shape below
-already clears and re-invokes per phase; this rule is *why* it does — an
-external orchestrator or a by-hand loop must honor it the same way (see
-*Portability*, "No `/loop`").
+**One phase = one worker context when available.** Whole-unit mode is one user
+invocation, not one growing raw context: subagent/headless hosts use a fresh
+worker per phase; inline-only hosts reduce state to compact receipts. Explicit
+phase invocation remains the strict fresh-conversation fallback.

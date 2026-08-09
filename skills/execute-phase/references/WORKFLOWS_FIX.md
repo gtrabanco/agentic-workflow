@@ -1,6 +1,9 @@
 ## Fix mode workflow
 
-**`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`, index `docs/fix/README.md`. A fix SPEC carries `## Phases` → run **one phase per invocation** (`execute-phase --fix <n> [P<k>]`), the final `Hardening & PR` phase running the close-out (steps 7–9) in its own invocation; otherwise legacy, all steps in one pass.
+**`--fix`** — `docs/fix/<n>-<topic>/`, template `docs/fix/_TEMPLATE/SPEC.md`,
+index `docs/fix/README.md`. A phased fix runs every remaining phase when `P<k>`
+is omitted and one phase when it is explicit. The final `Hardening & PR` phase
+runs close-out (steps 7–9) after prior phases are green; legacy SPECs run once.
 
 1. Verify the issue exists (`gh issue view <n>`); if it doesn't, create it
    (`gh issue create --template fix.yml --body-file <path>`, body from the SPEC
@@ -9,10 +12,9 @@
 3. Verify branch (`fix/<n>-<topic>`).
 4. Implement the fix (no separate planning artifacts; the SPEC and its `## Phases` ledger are enough).
 5. Run the gate.
-6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`. In phased mode, an implementation phase **STOPs here — no push, no PR** (per-phase stop and the turn contract's box 5 "unit not finished" rule).
+6. Stage and commit: `git add <changed files>` then `git commit -m "fix(<scope>): <summary>"`. An explicit implementation phase **STOPs here — no push, no PR**; whole-unit mode continues to the next phase.
 7. **Mark done + open the PR — always (the close-out; in a phased SPEC these
-   are the final `Hardening & PR` phase's tasks, run in their own
-   invocation).** Set the
+   are the final `Hardening & PR` phase's tasks).** Set the
    `docs/fix/README.md` entry's status to `done` (built, not yet merged), commit,
    `git push`, then open the PR with the body written to a Markdown file (per the
    Markdown rule above): `gh pr create --base main --title "fix(<scope>): <summary>" --body-file <path>`

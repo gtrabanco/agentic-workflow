@@ -6,7 +6,8 @@ Qué le pasa a un issue desde el momento en que aterriza hasta una decisión
 defendible y registrada. La skill central es `triage-issue`; los radios
 enrutan hacia fix, feature, o aplazamiento. Varios issues se pueden triar en
 un solo lote (`triage-issue 12 14 17`) — veredictos independientes, una sola
-tabla resumen; cualquier fix resultante sigue recibiendo su propia rama y PR.
+tabla resumen. Los fixes compatibles pueden planificarse después como una sola
+unidad atómica de entrega en vez de una rama y PR por issue.
 
 > Los comandos de forja de abajo usan `gh` (GitHub) — el ejemplo canónico.
 > Las **convenciones del flujo de trabajo** del proyecto declaran su forja;
@@ -78,23 +79,29 @@ completo este camino del fix — el issue se resuelve en la rama de la unidad
 través de una rama `fix/<N>-<topic>` nueva. Todo lo que sigue aplica solo a
 un `fix-now` genuino (ninguna unidad abierta reclama el issue).
 
-`plan-fix` (persona de arquitecto senior) redacta
-`docs/fix/<N>-<topic>/SPEC.md` a partir del issue, lo acota estrictamente,
-expone bloqueadores/riesgos, lo registra en `docs/fix/README.md`, y confirma
-(commit) en una rama de fix — luego **se detiene para revisión**. Después
-`execute-phase --fix`:
+`plan-fix` acepta uno o varios issues. Agrupa el conjunto cuando pasan todas
+las casillas: un resultado de capacidad visible para el usuario o una regla
+mecánica homogénea, un plan de verificación, release/rollback compatibles, sin
+conflicto de aislamiento y tamaño agregado no mayor que M. No exige compartir
+causa raíz, ficheros ni severidad. Si falla el conjunto completo, devuelve el
+mínimo número de grupos compatibles máximos en vez de un PR por issue.
 
-1. Asegura que el issue de GitHub existe (lo crea vía `gh issue create` si
-   falta).
+Para cada grupo redacta `docs/fix/<N>-<topic>/SPEC.md` junto a un
+`ACCEPTANCE.md` congelado, expone bloqueadores/riesgos, registra cada miembro
+en el índice y confirma en una rama de fix. Después
+`execute-phase --fix <N>`:
+
+1. Verifica cada issue referenciado y el manifiesto de aceptación congelado;
+   no crea issues ajenos para los hallazgos.
 2. Verifica/crea la rama `fix/<N>-<topic>` (nunca `main`).
-3. Implementa el fix (el SPEC es el único artefacto de planificación — sin
-   fases).
+3. Implementa todas las fases restantes de la unidad, con contexto de worker
+   limpio e intentos de reparación acotados por fase.
 4. Ejecuta la puerta (chequeo de tipos, tests, build).
 5. **Marca el fix como `done` y abre el PR con `Closes #N` (siempre — nunca
    solo-en-rama).** `done` significa construido, no fusionado.
-6. **`/review-change` obligatorio** (los hallazgos que no son fix-now →
-   `triage-issue`), luego `/audit-pr` como puerta de merge (nunca fusionar
-   con docs pendientes).
+6. Ejecuta `/loop-review-fold --fix <N>` obligatorio; los hallazgos ajenos
+   quedan como propuestas salvo que el usuario pida archivarlos. Después
+   `/audit-pr` actúa como puerta de merge (nunca fusionar con docs pendientes).
 7. **Solo después del merge:** elimina la entrada de
    `docs/fix/README.md` — nunca antes (no dejes de rastrear el issue antes
    de tiempo).
