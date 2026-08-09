@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const reviewSkill = fs.readFileSync(path.join(repoRoot, "skills/review-change/SKILL.md"), "utf8");
+const persistAndDecide = fs.readFileSync(path.join(repoRoot, "skills/review-change/references/PERSIST_AND_DECIDE.md"), "utf8");
 
 const CONTRACT = "v1";
 const MARKER_RE = /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ ]+) -->/;
@@ -52,6 +59,12 @@ const postReceipt = ({ decision, hasPr, comments, headSha }) => {
 };
 
 const EMPTY = {};
+
+test("final PR REVIEW-PASS requires a posted and re-read current receipt", () => {
+  assert.match(reviewSkill, /Decision: REVIEW-PASS \+ PR exists.*gh pr comment.*gh pr view/s);
+  assert.match(reviewSkill, /must not recommend `\/audit-pr`/);
+  assert.match(persistAndDecide, /this is not the end of the turn.*run\s+step 13 before step 14/s);
+});
 
 test("REVIEW-PASS receipt body carries the exact marker and fixed fields", () => {
   const sha = "a".repeat(40);
