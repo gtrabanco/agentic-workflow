@@ -1,7 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 1.5.0
+version: 1.5.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -17,22 +17,16 @@ description: >
 
 # Machine envelope (internal contract)
 
-The **envelope** is one fenced `json` block, the **absolute last output** of
-a turn, that lets an external orchestrator route on the outcome. This skill
-also owns the canonical [Turn contract](references/TURN_CONTRACT.md) (the
-eleven safety boxes; `orchestration-envelope` is its single owner — other
-skills load it plus skill-specific additions only). **Who emits it** (since
-feature 10 — see `docs/workflow/MIGRATION.md`):
+The **envelope** is one fenced `json` block, the **absolute last output** of a
+turn, used by an external orchestrator to route the outcome. This skill also
+owns the canonical [Turn contract](references/TURN_CONTRACT.md) (11 boxes;
+other skills load it plus their additions). **Emission** (feature 10):
 
-- **`workflow-status` — always**, as part of its own contract (emitting the
-  envelope *is* the sensor's function).
-- **Every other skill — only when a driver asks for it**, by injecting the
-  canonical system-prompt snippet below into the headless invocation. In an
-  interactive/human session, no skill prints an envelope and none should be
-  expected.
-- Internal skills (the review pack, the planning steps, this one) never emit
-  it in any mode: they return their fixed completion reports to the composing
-  caller; at most one envelope exists per turn, for the whole turn.
+- **`workflow-status` always** (emitting it is the sensor's function).
+- **Other user-facing skills only on driver request**, via the canonical
+  injected snippet below; interactive sessions emit none.
+- Internal skills never emit one; they return their fixed reports. At most one
+  envelope exists per turn.
 
 **Parse contract for orchestrators:** take the **last fenced ```json block**
 of the final assistant message. Exactly one envelope per turn; parse failure
@@ -59,68 +53,35 @@ of the final assistant message. Exactly one envelope per turn; parse failure
 }
 ```
 
-Field rules — checkable, no interpretation:
+Field rules (checkable):
 
-- **`state`** (the orchestrator's routing key — exactly one of the 11):
-  - `OK` — the skill's job finished; nothing pending from it. Follow `next`.
-  - `CONTINUE` — same unit has more of the same work (next phase, next loop
-    iteration). Re-invoke per `next.recommended`.
-  - `READY_FOR_REVIEW` — implementation checkpoint or unit end; `review-change`
-    is the mandatory next step (`gates.review_pending: true`).
-  - `READY_FOR_AUDIT` — review clean; `audit-pr` is next.
-  - `MERGE_READY` — audit passed; the human (or the documented auto-merge
-    policy) merges. `pr.merge_ready: true`.
-  - `MERGED` — an authorized auto-merge was executed this turn.
-  - `NEEDS_FIXES` — findings/blockers exist that fold into the CURRENT branch
-    (`findings.fix_now` non-empty); fold, then re-run the gate that sent them.
-  - `BLOCKED` — cannot proceed; `blockers` says why and `dependencies` gives
-    the build order when the cause is an unmet dependency.
-  - `NEEDS_INPUT` — a decision only the human can make; `needs_input.question`
-    + `needs_input.options` filled. Nothing was guessed.
-  - `FAILED` — an error the in-skill retries didn't clear (red gate past its
-    cap, unrunnable substrate). A human looks before anything continues.
-  - `HALT` — **stop-the-world**: a discovery that invalidates continuing ANY
-    unit (critical security hole in merged code, broken substrate invariant,
-    data-loss risk). Every `blockers[]` entry carries `"scope": "run"`. The
-    orchestrator must stop the whole run and surface it, not just park a unit.
-- **`findings`** — `fix_now` is an array of objects
-  `{"ref": "F1", "title": "…", "file": "path:line"}` (they have no issue
-  numbers yet); `issues_filed` is an **array of issue numbers** (integers)
-  created/updated this turn; `untriaged` counts findings still without a
-  destination (must be 0 when the skill's own contract requires routing all).
-- **`blockers[]`** — objects
-  `{"kind": "dependency | issue | gate | merge-conflict | substrate | input", "id": "<NN-slug | #N | check-name>", "scope": "unit | run", "detail": "<one line>"}`.
-- **`dependencies`** — `unmet`: roadmap ids / `#issue` refs whose merge must
-  land first; `build_order`: deepest-first order to unblock (mirrors
-  execute-phase's dependency-gate output).
-- **`next.tier`** — `strong` when the recommended command is judgment work
-  (plan / review / audit / triage), `cheap` when it is mechanical execution.
-  This is the model-routing hint for the orchestrator.
-- **`next.suggested[]`** — optional, `workflow-status`-only: trigger-attributed
-  suggestions `{command, trigger, source_skill}`, one entry per fired trigger
-  the driver can act on right now. `trigger` **quotes** the owning skill's own
-  condition verbatim — never a second, drifting copy of that skill's logic.
-  Advisory only: it rides beside `next.recommended`/`next.tier`, never
-  replaces or reorders them. Absent/empty on any envelope that doesn't emit
-  it — old consumers ignore an unknown key, so this is additive. Mirrored in
-  `packages/agentic-workflow-schema` 2.1.0 (`EnvelopeSuggestion[]`, optional)
-  — see that package's `## Versioning` for the additive-minor rule this
-  followed.
-- **`detail`** — optional skill-specific payload (object), documented in the
-  emitting skill's `## Machine envelope` section; `null` otherwise.
-- **Truthfulness:** every value reflects what actually happened — sha/PR/issue
-  numbers pasted from real command output, never invented. A value you did not
-  verify is `null`, not a guess.
-- **Placement:** fenced ```json, ONE object, absolute last output — nothing
-  after it, not even a sign-off line.
+- **`state`** is exactly one of the 11 schema values. Route semantics: `OK`
+  finished; `CONTINUE` has more same-unit work; `READY_FOR_REVIEW` requires
+  `review-change` and `gates.review_pending: true`; `READY_FOR_AUDIT` requires
+  `audit-pr`; `MERGE_READY` permits documented human/auto merge and sets
+  `pr.merge_ready: true`; `MERGED` means authorized auto-merge ran;
+  `NEEDS_FIXES` has current-branch `findings.fix_now`; `BLOCKED` cannot proceed;
+  `NEEDS_INPUT` fills `needs_input.question` and `.options`; `FAILED` exhausted
+  in-skill retries; `HALT` stops the whole run and every blocker has `scope: run`.
+- **`findings`**: `fix_now` objects are `{ref,title,file}`; `issues_filed` is
+  integer issue numbers; `untriaged` counts findings without a destination.
+- **`blockers[]`** objects are `{kind,id,scope,detail}` where `kind` is
+  `dependency|issue|gate|merge-conflict|substrate|input` and `scope` is
+  `unit|run`.
+  `dependencies.unmet` lists prerequisite ids; `build_order` is deepest-first.
+- **`next.tier`** is `strong` for plan/review/audit/triage judgment and `cheap`
+  for mechanical work. `next.suggested[]` is optional and workflow-status-only;
+  each `{command,trigger,source_skill}` quotes the owning condition and is
+  advisory beside `next.recommended`/`next.tier` (mirrored in schema package 2.1.0).
+- **`detail`** is an optional emitter-defined object, otherwise `null`.
+  Truthfulness: use verified command output; unverified values are `null`.
+  Placement: one fenced ```json object, absolutely last, with nothing after it.
 
 ## Driver system-prompt snippet + repair loop
 
-As of feature 10, user-facing skills (all except `workflow-status`) no longer
-print the envelope inline — the requirement moved to this layer, the one a
-driver can actually enforce. A driver that wants the envelope injects the
-following **canonical system-prompt snippet**, verbatim, into every headless
-invocation:
+User-facing skills (except `workflow-status`) do not print an envelope inline.
+A driver that wants one injects this **canonical system-prompt snippet**
+verbatim into every headless invocation:
 
 ```text
 Every turn you produce MUST end with exactly one fenced ```json block matching
@@ -128,61 +89,37 @@ the orchestration envelope schema (all top-level keys present; values only
 from verified command output). Emit nothing after it.
 ```
 
-**Repair loop (driver protocol).** If `parseEnvelope(lastTurn)` fails (no
-fenced json block, or it doesn't validate), do not treat the turn as failed:
-re-invoke the **same session** with the single-line prompt
-`Emit only the machine envelope for the turn above.` and parse that reply.
-Rationale: a weak model that won't spontaneously emit JSON at the end of a
-long document almost always can when it is the only thing being asked — this
-is why the snippet, not a per-skill turn-contract box, is the enforcement
-point. Bound the retry: **one repair attempt per turn**; a second parse
-failure is a driver-level `FAILED` for that step, surfaced to a human rather
-than looped indefinitely.
+**Repair loop:** if `parseEnvelope(lastTurn)` fails, re-invoke the **same
+session** once with `Emit only the machine envelope for the turn above.` and
+parse that reply. A second failure is driver-level `FAILED`; never retry
+indefinitely.
 
-**Structured-outputs shortcut (provider-conditional).** If the provider/model
-supports strict structured outputs (`response_format: {type: "json_schema",
-strict: true}` — many OpenAI-compatible providers offer it on selected models;
-check your provider's docs for which), the driver can force the envelope
-rather than hope for it: send the
-envelope-only turn (the repair prompt above, or a dedicated final "emit the
-envelope" turn) with the package's `envelope.schema.json` as the response
-format, and the reply validates by construction. The repair loop remains the
-fallback for models without the feature. Never set a response format on the
-working turns themselves — it forces the entire output to JSON and suppresses
-the prose and tool use the turn still needs.
+**Structured-output shortcut (optional):** when supported, send only the
+envelope/repair turn with `response_format: {type: "json_schema", strict: true}`
+and the package schema. Keep working turns unrestricted; otherwise prose/tool
+use is suppressed. The repair loop remains the fallback.
 
-`workflow-status` is the one exception: it still emits the envelope inline as
-part of its own output (emitting it *is* its function — `--json-only` is
-meaningless without it), so a driver polling it needs no repair loop for that
-call; the snippet above and the repair loop apply only to the other
-user-facing skills.
+`workflow-status` still emits inline (`--json-only` depends on it), so polling
+it needs no repair loop; the snippet applies only to other user-facing skills.
 
 ## Companion npm package (keep it in sync)
 
-The schema ships as **`@gtrabanco/agentic-workflow-schema`**
-(`packages/agentic-workflow-schema/` in this repo): TypeScript types, a JSON
-Schema, and `parseEnvelope()` implementing the last-fenced-json parse
-contract. **Any change to the schema in this file changes the package in the
-same PR** — update `src/index.ts` + `envelope.schema.json` + tests, and bump
-the package version by the contract's own semver (key/state removed or
-renamed → major; additive key/state → minor; fixes → patch). CI
-(`.github/workflows/publish-schema.yml`) publishes to npm automatically on
-merge when the version is new. A schema change that skips the package is an
-incomplete change.
+The schema ships as **`@gtrabanco/agentic-workflow-schema`** in
+`packages/agentic-workflow-schema/` (types, JSON Schema, `parseEnvelope()`).
+Any schema change must update `src/index.ts`, `envelope.schema.json`, tests and
+the package semver in the same PR (removed/renamed key or state = major,
+additive = minor, fix = patch). CI publishes new versions on merge; skipping
+the package makes the change incomplete.
 
 ## Relationship to other skills
 
-- Every `user-invocable: true` skill of the pack carries a `## Machine
-  envelope` section stating which states it can emit and what it puts in
-  `detail`; this file is the single source of truth for the shared schema.
-- `workflow-status` is the read-only sensor that emits the richest envelope
-  (full feature/fix dependency tree in `detail`).
-- `docs/workflow/ORCHESTRATION.md` documents the external driver loop
-  (state → next command → model tier) that replaces Claude Code's `/loop`
-  and subagents on any agent.
+Every user-facing skill carries a `## Machine envelope` section for its states
+and `detail`; this file owns the shared schema. `workflow-status` is the
+read-only sensor with the richest `detail`. `docs/workflow/ORCHESTRATION.md`
+documents the external state → command → tier loop.
 
 ## Normalized Repository State
 
 Drivers call `discover-repository-state` before planning and pass the frozen
-`docs/workflow/REPOSITORY_STATE.md` ledger reference to later skills. A contradiction routes to
-`resolve-repository-state`; drivers never silently replace the snapshot.
+`docs/workflow/REPOSITORY_STATE.md` reference forward. Contradictions route to
+`resolve-repository-state`; never silently replace the snapshot.
