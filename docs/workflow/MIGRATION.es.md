@@ -2,6 +2,30 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-09 — la ejecución solo-con-objetivo pasa a un loop acotado de unidad completa
+
+**Cambio incompatible por defecto; feature 22, no una ampliación de la feature
+21.** `execute-phase <NN>` y `execute-phase --fix <n>` ahora ejecutan todas las
+fases restantes, con un contexto de worker limpio e intentos de reparación
+acotados por fase. Para conservar el comportamiento anterior de una fase, pasa
+la fase explícitamente: `execute-phase <NN> P1` o
+`execute-phase --fix <n> P1`.
+
+La planificación ahora emite un `ACCEPTANCE.md` congelado. `plan-fix` puede
+agrupar bloques de capacidad compatibles o lotes mecánicos homogéneos sin exigir
+causa raíz/fichero/severidad compartidos. La review final debe usar
+`loop-review-fold`, que permite dos ciclos de corrección por defecto y se detiene
+ante estado repetido o input humano necesario. El trabajo independiente
+descubierto es una propuesta; ninguna ruta de ejecución, review o fold crea un
+issue salvo petición explícita del usuario.
+
+**Migración.** Actualiza juntos `execute-phase`, las skills de planificación,
+review y fold, y el scaffold; ejecuta `init-workspace` en modo upgrade para
+añadir las plantillas de aceptación. Las unidades existentes sin manifiesto usan
+el blob del SPEC confirmado como meta congelada heredada. Los drivers deben
+sustituir las llamadas por fase por una sola llamada solo-con-objetivo, o
+mantener `P<n>` explícito cuando posean intencionadamente el loop de fases.
+
 ## 2026-08-05 — `review-change` publica un recibo ligado al SHA; `audit-pr` lo consume
 
 **Feature 21 (consolidación del contrato de workflow).** `review-change` 2.10.0

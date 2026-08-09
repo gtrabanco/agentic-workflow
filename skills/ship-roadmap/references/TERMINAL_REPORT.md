@@ -9,11 +9,12 @@ audit-gated like any PR), and printed in full under the banner:
 2. **Per-feature outcomes** — size planned vs final, phases, gate history,
    review findings folded vs postponed, audit verdict + SHA, PR + final state,
    merged by human or autopilot.
-3. **Issues** — the sweep's full inventory and outcomes: fix-now issues
+3. **Issues** — the sweep's existing-issue inventory and outcomes: fix-now issues
    shipped (PR links), postponed/wontfix verdicts with the trigger that
    should reopen each (feeds `triage-issue`'s verification model), and
    anything the sweep could not finish (budget/parked) as the explicit
-   remaining triage batch.
+   remaining triage batch. Untracked residue is listed separately as proposals;
+   the run created no backlog for it.
 4. **New feature proposals** — capabilities discovered during the build that
    serve the product goal (Round 1 quoted as the yardstick), each sized with a
    suggested roadmap slot. Recommend-only.

@@ -112,11 +112,11 @@ un driver que quiera el sobre debe suministrarlo él mismo:
 |---|---|---|---|
 | `OK` | La skill terminó su trabajo | Invocar `next.recommended` | según `next.tier` |
 | `CONTINUE` | Misma unidad, más trabajo (siguiente fase / iteración) | Reinvocar `next.recommended` | `cheap` |
-| `READY_FOR_REVIEW` | Checkpoint o fin de unidad | `/review-change` | `strong` |
+| `READY_FOR_REVIEW` | Fin de unidad | `/loop-review-fold <unidad>` | conductor `strong`; tier de fold enrutado |
 | `READY_FOR_AUDIT` | Revisión limpia | `/audit-pr` | `strong` |
 | `MERGE_READY` | Auditoría aprobada; comentario publicado en el PR | El humano fusiona, o tu política fusiona (respeta la checklist pre-merge de la skill) | — |
 | `MERGED` | Auto-merge autorizado ejecutado | Siguiente unidad: `workflow-status` → enrutar | `cheap` (sensor) |
-| `NEEDS_FIXES` | Hallazgos fix-now / bloqueadores dentro de alcance | Ciclo de incorporación de `/execute-phase`, luego reejecutar la puerta que los emitió | `cheap` para incorporar, `strong` para repuerta |
+| `NEEDS_FIXES` | Hallazgos fix-now / bloqueadores dentro de alcance | Continuar el ciclo acotado `/loop-review-fold <unidad>` | `cheap` para incorporar, `strong` para repuerta |
 | `BLOCKED` | Dependencia no cumplida / causa externa | Seguir `dependencies.build_order` (planificar+ejecutar primero la unidad no cumplida más profunda) o resolver `blockers[]` | según el paso bloqueado |
 | `NEEDS_INPUT` | Se requiere una decisión humana | Mostrar `needs_input.question` + `options`; reanudar con la respuesta | — |
 | `FAILED` | Reintentos agotados (puerta en rojo, sustrato) | Detener esta unidad; un humano la revisa | — |
@@ -345,22 +345,30 @@ proveedor del modelo:
   *Higiene de contexto y coste* para saber por qué un contexto nuevo por
   paso es el camino barato, no solo uno seguro.
 
-## Reemplazando subagentes (contextos baratos por fase)
+## Ejecución acotada de unidad y contextos limpios por fase
 
-`ship-roadmap` genera un subagente de Claude Code por cada fase de
-`execute-phase` para ejecutar la implementación por debajo del nivel del
-conductor. El equivalente externo está integrado en el bucle de arriba:
-cada invocación `execute-phase NN Pk` ES una sesión headless nueva, y el
-driver elige el nivel barato para ella. Contexto nuevo por fase, modelo
-barato, la propia disciplina de `execute-phase` por dentro — las mismas
-propiedades, sin necesitar la primitiva de subagente.
+El comando normal ahora es `execute-phase NN` (o `--fix N`): una invocación
+exterior de unidad avanza por todas las fases restantes. El contrato sigue
+exigiendo un contexto de worker limpio por fase. Un driver externo lo satisface
+tratando el loop de unidad como una pequeña máquina de estados: invoca un worker
+headless barato con la fase actual y el blob de aceptación congelado, persiste
+solo su recibo compacto e inicia el siguiente worker. Pasar `P<k>` a
+`execute-phase` sigue siendo la primitiva manual/del driver para exactamente una
+fase.
+
+Después de abrir el PR, invoca `loop-review-fold`. Reutiliza un recibo de pase
+ligado al SHA exacto; si no existe, alterna una review de solo lectura y contexto
+limpio con un fold escritor también limpio. Por defecto permite dos ciclos de
+corrección y se detiene ante una decisión humana, bloqueo, estado repetido o
+presupuesto agotado. Un RLM puede conservar recibos y resúmenes de fallo, pero
+los bytes de aceptación y el estado del repositorio/forja siguen mandando.
 
 ## Qué sigue siendo exclusivo de Claude Code (y su estado)
 
 | Característica | Estado |
 |---|---|
 | `/loop` | Comodidad. Completamente reemplazada por el bucle del driver de arriba. |
-| Subagentes | Comodidad. Reemplazados por una invocación headless por fase. |
+| Subagentes | Comodidad. Reemplazados por un worker headless por fase detrás de la invocación de unidad. |
 | Frontmatter `model:`/`effort:` por skill | Solo en la rama `#claude`; la rama por defecto hereda la sesión — el driver elige los niveles en su lugar. |
 | Ajuste de sesión `ultracode` | Acelerador opcional de Claude Code para el fan-out de ship-roadmap; sin equivalente necesario — un driver paraleliza ejecutando unidades independientes él mismo simultáneamente (respeta el flujo de git declarado del proyecto antes de paralelizar). |
 | Hooks de sesión de `.claude/` (captura de log-session) | Extra opcional; `log-session` invocado por el driver al final de la ejecución lo cubre. |

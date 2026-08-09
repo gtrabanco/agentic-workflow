@@ -60,8 +60,8 @@ limits.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `plan-feature` | **Router, engineering-planning only.** Given an undesigned feature (no `## Design status: designed`), **STOPS and redirects** to `/design-feature <slug>` (no bypass flag). Given a designed feature or issue `#N` (issue → scoped product half → `design-feature` for thin issues), routes to fill the **engineering half**, **sizes the feature** (`XS/S/M/L`), then registers the roadmap entry | `execute-phase <NN> P1` (M/L and XS/S alike — XS/S phases live in the SPEC) |
-| `plan-fix` | Architect-drafts a tightly-scoped fix SPEC from an issue; commits on a fix branch; stops for review | `execute-phase --fix` |
+| `plan-feature` | **Router, engineering-planning only.** Given an undesigned feature (no `## Design status: designed`), **STOPS and redirects** to `/design-feature <slug>` (no bypass flag). Given a designed feature or issue `#N` (issue → scoped product half → `design-feature` for thin issues), routes to fill the **engineering half**, **sizes the feature** (`XS/S/M/L`), then registers the roadmap entry | `execute-phase <NN>` (all remaining phases) or `execute-phase <NN> P1` (one explicit phase) |
+| `plan-fix` | Drafts one fix unit from one issue or a compatible issue set. Grouping accepts a capability bundle or homogeneous mechanical batch when the set has one outcome, verification plan, and atomic rollback; shared files, root cause, and severity are not required | `execute-phase --fix <n>` (all remaining phases) |
 
 ### Internal steps (hidden from the menu; composed for you)
 
@@ -71,6 +71,7 @@ limits.
 | `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
 | `review-implementation` | Classification engine over synthesized table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
 | `orchestration-envelope` | The machine-envelope contract: canonical driver-injected system-prompt snippet, repair loop, and JSON schema. `user-invocable: false` — the piece an external driver injects, not a menu entry |
+| `verification-contract` | Freezes acceptance before implementation, defines validation levels, and binds evidence to the current acceptance blob and code receipt. `user-invocable: false` — planners, executors, and reviewers compose it |
 | `review-code` | Correctness + reuse/simplification/efficiency checklist over the diff. `user-invocable: false` — one axis of `review-change`'s internal review pack |
 | `review-security` | OWASP-shaped security checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-verify` | Runtime-behavior verification checklist (does the change actually do what it claims). `user-invocable: false` — internal review pack |
@@ -85,14 +86,15 @@ limits.
 
 | Skill | Role |
 |---|---|
-| `execute-phase` | Execute one feature phase (default), a small `XS/S` feature in a single pass, or a fix (`--fix`); **tests-first** on domain/orchestration work, never commits red, P1 commits planning artifacts separately; **fresh conversation per phase under an explicit context budget** (≤ 10 full-file reads), handing off through `progress.md`'s fixed `Done / Remains / Gotchas / Files / Next` entry schema; branch safety + per-phase doc discipline + gate; **descope guard** (any issue created is classified discovered-work vs. descope — a descope STOPs for a user-approved, dated `## Amendments` entry before the issue may exist); **recommends a `review-change` checkpoint at trigger-based cadence — layer boundary, accumulation, or sensitivity (skippable) — and hands off once at the end (mandatory)**; a finished unit **always opens its PR and flips to `done`** (built, not merged) |
+| `execute-phase` | With only a feature/fix target, executes **all remaining phases** through a bounded unit loop; an explicit `P<k>` remains atomic. Each phase gets a fresh worker context and compact receipt, tests-first implementation, a three-attempt default repair budget, no-progress detection, and no intermediate review ceremony. Acceptance is frozen before code. Findings inside the current unit are fixed there; unrelated findings remain proposals and never create issues automatically. A completed unit opens its PR and flips to `done` |
 
 ## Review & audit — *change → PR → product*
 
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
-| `review-change` | the **change** | Run only the reviews that apply to this platform — **each pass isolated by default** (context-clean, returns only its findings table; the orchestrator holds tables, never sources) — + a structural **SPEC drift check** (per-criterion coverage table + diff-hunk mapping) + classify → one decision table + manual-verification checklist; **mandatory before every merge** | folds fix-now into open phase / `triage-issue` (independent proposals) |
-| `fold-findings` | the **findings ledger** | Repair each fix-now finding from `review-change`/`audit-pr` for real, one at a time — frozen classification (never reclassifies), a fixed forbidden list closes the known-issues-dump/downgrade/test-loosening/suppression escape hatches; per-finding `FOLDED \| DISPUTED \| BLOCKED` verdict | re-run `review-change` (all folded) / `triage-issue` (disputed) |
+| `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | `loop-review-fold` (recommended on failure) / manual `fold-findings` |
+| `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
+| `loop-review-fold` | the **bounded correction loop** | Run a fresh-context review, fold the complete fix-now queue in batches, and review only the new HEAD. Stops on pass, decision, blocker, repeated state, or budget exhaustion; default correction budget is two cycles | `audit-pr` on pass / user decision on a terminal stop |
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges. Active `ship-roadmap --fullauto` is the only consumer allowed to execute an automated merge | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
@@ -146,13 +148,14 @@ with no arguments uses the default stated here.
 | `audit-pr` | `/audit-pr [pr-number]` | Defaults to the current branch's PR. A number targets another PR. |
 | `design-feature` | `/design-feature <idea \| NN-slug> [instruction]` | A raw idea → interview from zero. A bare existing `NN-slug` → **review mode**: prints a summary of what the feature will do and asks what to add/remove/change. `NN-slug + instruction` → applies the change directly, no questions, scoped to the instruction. Upsert always — the only from-zero reset is an explicit "delete and redesign" in the instruction. |
 | `discover-repository-state` | `/discover-repository-state` | Reads repository evidence and writes a frozen Normalized Repository State; contradictions route to `/resolve-repository-state`. |
-| `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] \| [--force]` | `NN` alone → single-pass (XS/S SPEC-only features). `NN P<k>` → exactly one phase of an M/L feature. `--fix <n>` → implement the fix unit `docs/fix/<n>-*`. `--force` → override the dependency/status gate (user-only escape hatch; the override is recorded in `decisions.md`; the autopilot never passes it). |
-| `fold-findings` | `/fold-findings [finding-id …]` | No args: repairs every fix-now (`folded: no`) row on the unit's `review-findings.md` ledger, one at a time. One or more finding IDs → restricts the queue to exactly those rows. |
+| `execute-phase` | `/execute-phase <NN> [P<k>] \| --fix <n> [P<k>] [--max-attempts N] \| [--force]` | Target only → execute every remaining phase and close the unit. Explicit `P<k>` → execute exactly that phase. `--max-attempts N` bounds phase repair attempts (default 3). `--force` is the recorded user-only dependency/status override. |
+| `fold-findings` | `/fold-findings [finding-id …]` | No args: repairs the complete pending fix-now queue, grouping only compatible corrections. IDs restrict the queue. Every member still receives its own `FOLDED \| DISPUTED \| BLOCKED` result. |
 | `generate-docs` | `/generate-docs [NN-slug \| fix-n \| path/glob] [--review]` | Scope defaults to the current branch's diff vs the default branch; a slug/fix/path narrows or redirects it. `--review` → additionally export the most recent `review-change` report as a docs page (opt-in, never automatic). |
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (proposes only the new/missing template blocks; additive-only). |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |
-| `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Required, one or more. One number → drafts `docs/fix/<n>-<topic>/SPEC.md` on a fix branch and stops for review. Multiple numbers → a fixed shared-root-cause checklist decides: all-tick merges them into ONE unit keyed to the lowest number; any-fail refuses and prints the split (`/plan-fix <a>`, `/plan-fix <b>` …). |
+| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n> [--max-cycles N] [--adversarial N]` | Runs the bounded review/correction loop. Default: two correction cycles; `--adversarial N` is passed to each review. Stops rather than spinning when state repeats or human input is required. |
+| `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | One issue → one fix unit. Multiple issues → one compatible capability bundle or homogeneous mechanical batch when the whole set shares an outcome, verification plan, and atomic release/rollback. If the set fails, returns the fewest maximal compatible groups instead of splitting reflexively into one PR per issue. |
 | `product-audit` | `/product-audit [path-or-area]` | Explicit invocation only. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
@@ -180,17 +183,18 @@ IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
                           → `## Design status: designed` ─┐
                    ┌──────────────── plan-feature (router, engineering-planning only) ─┐
 DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (all phases) ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ review-change ─▶ audit-pr ─▶ merge
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible batch) ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-review-change ── runs the applicable reviews + classifies a change (Stage 4, mandatory);
+loop-review-fold ── bounded final review → compatible fold batches → changed-HEAD review;
+review-change ── runs the applicable read-only reviews + classifies a change;
                  composes review-implementation + the platform's companion skills;
                  fix-now ─▶ folds into the open phase · replan-in-unit ─▶ new user-confirmed phases
                  decision-required ─▶ surface, block · proposals ─▶ user routes to triage-issue
@@ -199,8 +203,8 @@ product-audit ── periodic product-wide sweep → proposes issues + roadmap c
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
 
 ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
-                 roadmap → /loop { plan-feature → execute-phase (sonnet subagents)
-                 → review-change → PR → audit-pr → merge } → final report;
+                 roadmap → /loop { plan-feature → execute-phase (fresh cheap workers)
+                 → PR → loop-review-fold → audit-pr → merge } → final report;
                  human at the merges (default) and at product-audit (always)
 ```
 
@@ -210,8 +214,8 @@ ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → f
    roadmap, and relevant domain/style docs before acting. Adapt to the project.
 2. **Respect architecture & style.** Layer rules, domain/i18n/SEO/a11y rules,
    runtime/platform limits, naming conventions — all honored, not bypassed.
-3. **Plan before code; one phase at a time; one PR per unit against the default
-   branch; never `main`, never stacked.**
+3. **Plan before code; isolate phase contexts; one PR per unit against the
+   default branch; never `main`, never stacked.**
 4. **Evidence over reflex.** Verify triggers, cite paths/counts.
 5. **Track, don't inline-implement, deferred work.** Keep issues and docs
    coherent and reported.

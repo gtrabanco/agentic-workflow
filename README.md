@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  the 31 source skills (17 user-facing + 14 internal; 30 installable)
+skills/                  35 source skills (18 user-facing + 15 workflow internals + 2 maintenance contracts; 31 plugin-listed)
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
@@ -77,7 +77,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**17 user-facing skills** (one menu entry each) + **14 internal** ones composed
+**18 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the `plan-feature` router's two planning steps, the `review-change`
 engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
@@ -109,7 +109,7 @@ plan → execute → review → audit → merge.**
 | Skill          | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `plan-feature` | **Engineering-planning router for an already-designed feature.** The redirect gate keys on the **roadmap status** first — `idea`/absent → STOP → `design-feature`, no bypass flag; `defined` → proceed to Routing; **`planned`/`in-progress`/`done` → STOP, hand off to `/execute-phase` (never re-scaffolds an already-planned feature)**; the SPEC `## Design status` marker is only the legacy-compat fallback for a pre-migration `planned` row. Given a designed feature, an issue `#N` (issue → scoped product half), or a scoped slug/SPEC (straight to engineering-half scaffolding), routes to the right step, checks optional architectural invariants with evidence, then registers the roadmap entry (re-reading the `defined → planned` write to confirm it landed). `--next` plans the next **`defined`** roadmap item. **Sizes every feature** (`XS/S/M/L`): small ones get a SPEC-only path with ≥ 2 phases in the SPEC (last = `Hardening & PR`) — no artifact ceremony; M/L get the full set with a mandatory hardening phase. |
-| `plan-fix`     | The fix-flow counterpart: architect-drafts a tightly-scoped fix SPEC from one or more issues (`/plan-fix <n> [<n2> …]` — multiple numbers merge into ONE unit only when a fixed shared-root-cause checklist ticks, else it refuses and prints the split) — always with a `## Phases` ledger (≥ 2 phases, last = `Hardening & PR`) — commits on a fix branch, **stops for review**.                                                                                                                                                                                                                                                                                                            |
+| `plan-fix`     | Drafts one fix SPEC + frozen `ACCEPTANCE.md` from one or more issues. Multi-issue units group by an atomic delivery boundary: one capability outcome or homogeneous mechanical rule, one verification plan, and one release/rollback boundary; shared files/root cause/equal severity are not required. Incompatible inputs return the fewest maximal groups instead of one issue per PR. |
 
 > `design-feature` (product definition, folds in the raw-idea interview) must
 > mark a feature `designed` before `plan-feature` will plan it — `plan-feature`
@@ -121,14 +121,15 @@ plan → execute → review → audit → merge.**
 
 | Skill           | What it does                                                                                                                                                                                                                                                                                                                                                                      |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `execute-phase` | Implements one phase per invocation — of a feature (default), of a small `XS/S` feature, or of a fix (`--fix`); XS/S and fix phases live in the SPEC's `## Phases` (≥ 2 phases, the final one always `Hardening & PR` — the close-out chain in its own turn), and a legacy SPEC without `## Phases` runs end-to-end in a single pass. **Dependency gate first**: the unit's transitive `Depends on:` closure must be merged, or it stops with the unmet chain and build order (`--force` overrides, logged); an **own-status precondition** then redirects a sub-`planned` unit (`idea` → `/design-feature`, `defined` → `/plan-feature`); a **phase-lint pre-flight guard** then runs the canonical 8-box atomicity checklist against the target phase, STOPping with a fixed block on any FAIL (`--force` overrides, logged). **Architectural-invariant gate**: classifies optional project rules against repository evidence before edits; violations and new/changed rules stop for an explicit decision. **Tests-first** on domain/orchestration work, never commits red, gate-verified, one commit per phase; **recommends a `review-change` checkpoint on a trigger-based cadence — layer boundary, accumulation, or sensitivity (skippable) — and hands off once at the end (mandatory)**. **Opportunistic-finding policy**: a discovered out-of-scope finding is deterministically recorded as `Autofix`, `Opportunistic Fix`, or `Create Issue`; only a low-risk local fix within the declared limits may join the phase commit. **Descope guard**: before creating any issue, classifies it discovered-work (file freely) vs. descope (overlaps an unmet acceptance criterion/task) — a descope STOPs for a user-approved, dated `## Amendments` entry before the issue may exist; an issue is never the first record of a descope. **One phase = one session** on non-frontier models (never two phases per conversation — the `/loop` batch shape already re-invokes per phase). A finished unit **always opens its PR, prints the PR URL in the chat, and flips to `done`** (built, not merged); no turn ends with a dirty tree, and once the PR exists every commit is pushed immediately. |
+| `execute-phase` | With no phase argument, executes **all remaining feature/fix phases** through PR close-out; explicit `P<n>` keeps one-phase atomic mode. Every phase retains its own acceptance-blob check, phase/invariant/dependency gates, tests, docs, and commit. Unit-loop mode uses fresh workers where available, compact receipts otherwise, skips intermediate review stops, and halts on red/no-progress/attempt budget. Discoveries become `Autofix`, `Opportunistic Fix`, or a proposal—never an automatic issue. |
 
 ### Review & audit — _change → PR → product_
 
 | Skill           | Scope           | What it does                                                                                                                                                                                   |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) — adversarially by default, assuming the diff is wrong until proven otherwise — and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits on the PR branch are fix-now `workflow` findings. The mandatory end review **must run in a conversation that did not implement the change** — if it did, stop and hand off to a fresh one. Opt-in `--adversarial N`: N independent context-clean reviewers, each an index-assigned role (correctness/security/SPEC-coverage), run in parallel (subagents / headless / sequential-fallback), findings merged by `file:line` at an inclusion threshold of ≥1 — default off, auto-recommended (never forced) when the change is `L`/sensitive, the reviewer isn't the fleet's strongest or is weaker than the diff's author, or only one model family is available on a `≥M` change. `--synthesize` is the standalone fusion entry point for manually-run reviewers. Fix-now findings on an unmerged unit persist to that unit's fix-now fold ledger (`review-findings.md`), deduped by `file:line`+axis. Classification honors the engine's **fix-now override checks**: a cheap fix or an in-scope defect is always fix-now (never a postpone/known-issue/tradeoff escape), and a too-large in-scope fix-now routes to `replan-in-unit` — user-confirmed SPEC phase(s) on the same branch, never a downgrade |
-| `fold-findings` | the **findings ledger** | Repairs each fix-now finding from `review-change`/`audit-pr` for real, one at a time — **frozen classification** (never reclassifies; a genuine objection produces `DISPUTED` → `triage-issue`) and a fixed **forbidden list** closing the known-issues-dump/severity-downgrade/test-loosening/lint-suppression/`TODO`-stub escape hatches, ending in a per-finding `FOLDED \| DISPUTED \| BLOCKED \| REPLAN` verdict + tally (`REPLAN` hands a too-large in-scope finding off to user-confirmed SPEC phase(s) + `execute-phase` on the same branch). After an `audit-pr` BLOCKED verdict with a missing/incomplete ledger it reconstructs the rows from the verdict itself — never "no findings" while blockers are listed. `execute-phase`'s embedded fold-cycle checklist remains the in-context/portability fallback |
+| `fold-findings` | the **findings ledger** | Repairs the full queue in the fewest compatible atomic batches, grouping by root cause/mechanical rule + validator + rollback boundary. One batch gets one commit, while every finding retains its ledger tick and output receipt. Classification stays frozen; disputes stop for a user decision and no fold creates backlog. |
+| `loop-review-fold` | the **candidate loop** | Reuses a current exact-SHA receipt or runs context-clean `review-change`, batches corrections through `fold-findings`, and re-reviews only changed HEADs. Defaults to two correction cycles and stops `PASS`, `NEEDS-DECISION`, `BLOCKED`, `NO-PROGRESS`, or `BUDGET-EXHAUSTED`; never merges or creates issues. |
 | `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. It never edits or merges: only an active `ship-roadmap --fullauto` stage may consume its verdict and invoke the transient wrapper. |
 | `product-audit` | the **product** | Explicit-invocation-only, periodic full-spectrum health check persisted as `docs/audits/<id>-<date>.md`; mines code and feature history into severity-ranked findings plus issue/roadmap/tooling proposals, checks capability-inventory freshness and repeated scope export, and never auto-fixes. |
 | `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
@@ -242,9 +243,10 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `design-feature` | Opus       | high   | product-definition judgement: raw-idea interview + capability closure, composed by callers only at ≥ this tier                                                                          |
 | `plan-feature`   | Opus       | high   | router + engineering planning: its internal scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                           |
 | `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |
-| `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — one phase per invocation (Opus if the logic is subtle)                                                                                              |
+| `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — whole unit by default, fresh/compact phase transactions (Opus if logic is subtle)                                                                  |
 | `review-change`  | Opus       | high   | platform-adaptive review orchestration + synthesis                                                                                                                                       |
 | `fold-findings`  | Opus       | high   | never weaker than the review tier that produced the finding; a subtle logic/security finding earns its own strongest-available pass                                                     |
+| `loop-review-fold` | Opus     | high   | bounded conductor for independent review and severity-routed correction workers                                                                                                          |
 | `audit-pr`       | Opus       | high   | whole-PR merge-readiness judgement                                                                                                                                                       |
 | `product-audit`  | Opus       | max    | product-wide multi-axis sweep + proposals (max effort for the widest context sweep)                                                                                                      |
 | `audit-docs`     | Sonnet     | medium | mostly mechanical cross-document checks (Opus for deep audits)                                                                                                                           |
@@ -299,15 +301,15 @@ fast; sanity-check against a current leaderboard before pinning):
 ### Running the whole flow on a small/cheap fleet
 
 The skills are hardened for small executor models (modest context windows, no
-prompt caching): fixed checklists instead of judgment calls, the Phase-lint
-and Spec-lint presence gates, a fixed `progress.md` handoff schema with a
-fresh conversation per phase, per-phase/per-pass context budgets, and reviews
-isolated per axis returning findings tables only. On a fleet with no
+prompt caching): frozen acceptance, fixed checklists instead of judgment calls,
+Phase-lint and Spec-lint gates, compact phase receipts, bounded repair loops,
+and reviews isolated per axis returning findings tables only. On a fleet with no
 frontier-class model at all:
 
 - **Execution** (`execute-phase`, `log-session`, doc bookkeeping) is designed
-  for the cheapest tier — one phase per conversation, handoff via
-  `progress.md`, at most 10 full-file reads per phase.
+  for the cheapest tier — one fresh worker context per phase, compact handoff
+  via `progress.md`, at most 10 full-file reads per phase. The outer invocation
+  continues through every remaining phase unless an explicit `P<n>` is passed.
 - **Planning, review, and audit** (`design-feature`, `plan-feature`,
   `plan-fix`, `review-change`, `audit-pr`, `product-audit`) still get the
   **strongest model you have**, even if that model isn't frontier-class —
@@ -502,10 +504,9 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 /plan-feature "<your idea>"     # or  /plan-feature <N> (issue)  ·  /plan-feature --next (next roadmap item)
         → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
         → fills the SPEC + PLAN + TASKS + … and registers the roadmap entry
-/execute-phase <NN> <phase>     # one phase at a time, gate-verified, one commit each
-        → review checkpoint recommended on trigger (layer boundary/accumulation/sensitivity; mandatory at the end)
+/execute-phase <NN>             # all remaining phases; fresh worker + bounded repairs per phase
         → a finished unit always opens its PR + flips to `done` (built, not merged)
-/review-change                  # mandatory: applicable reviews, classified; non-fix-now → triage-issue
+/loop-review-fold <NN>          # mandatory bounded review → batch correction → changed-HEAD review
 /audit-pr                       # merge gate: merge-ready or blockers (never merge with pending docs)
         → human merges
 ```

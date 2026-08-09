@@ -143,15 +143,19 @@ router ejecuta `plan-feature-scaffold`, que rellena la **mitad de
 ingeniería** y escribe **solo docs** en `docs/features/<NN>-<slug>/`. **El
 conjunto de artefactos escala según el `Size` del SPEC:**
 
-- **XS/S** (≤ un commit / ≤ medio día) — `SPEC.md` es el **único** artefacto
-  de planificación; sin ceremonia PLAN/TASKS, pero su sección `### Phases`
+- **XS/S** (≤ un commit / ≤ medio día) — `SPEC.md` junto al manifiesto
+  congelado `ACCEPTANCE.md` son los únicos artefactos de planificación; sin
+  ceremonia PLAN/TASKS, pero su sección `### Phases`
   lista **≥ 2 fases** (`P1` implementación, `P2 — Hardening & PR` = el
-  cierre). Siguiente paso: `execute-phase <NN>` (ejecuta `P1`; una fase por
-  invocación).
+  cierre). Siguiente paso: `execute-phase <NN>` (ejecuta todas las fases
+  restantes).
 - **M/L** (trabajo por fases) — el conjunto completo:
   - `SPEC.md` — cada sección rellenada (objetivos, impacto en arquitectura,
     aceptación, rama, tamaño, dependencias, testing, escenarios de
     desarrollo).
+  - `ACCEPTANCE.md` — manifiesto de aceptación y validación congelado y
+    direccionado por contenido. La implementación no puede debilitarlo; un
+    cambio de producto debe enmendarlo y volverlo a congelar explícitamente.
   - `PLAN.md` — plan por fases cuya **última fase de implementación es
     siempre una fase de hardening** (casos límite + los modos de fallo de los
     escenarios de desarrollo del SPEC, implementados y probados — no solo
@@ -179,28 +183,32 @@ equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
 > Las incógnitas se convierten en preguntas abiertas en `decisions.md` —
 > nunca en placeholders en blanco.
 
-## Etapa 2 — Ejecutar, una fase a la vez (`execute-phase`)
+## Etapa 2 — Ejecutar la unidad (`execute-phase`)
 
-`execute-phase` (modo por defecto) implementa **una fase** por ejecución:
+`execute-phase <NN>` o `execute-phase --fix <n>` implementa **todas las fases
+restantes** en una ejecución acotada de unidad. Pasar un `P<k>` explícito
+conserva el comportamiento atómico anterior y ejecuta exactamente esa fase:
 
 1. Verifica la rama — crea `feat/<NN>-<slug>` si estás en `main` (nunca
    trabaja sobre `main`). **En P1 primero confirma los artefactos de
    planificación por separado** (`docs(NN-slug): planning artifacts`), de
    modo que el historial de planificación quede aparte de la implementación.
-2. Lee `progress.md` (el **registro de handoff de fase** — una entrada fija
+2. Verifica el `ACCEPTANCE.md` congelado y después lee `progress.md` (el **registro de handoff de fase** — una entrada fija
    `Done / Remains / Gotchas / Files / Next` por fase), luego `SPEC.md` +
    `TASKS.md` de la fase solicitada. Ese es todo el handoff — cada fase corre
    en una conversación nueva bajo un presupuesto de contexto explícito (≤ 10
    lecturas de fichero completo más allá de los docs propios de la unidad).
-3. Implementa **solo esa fase** — **tests primero** en el trabajo de
+3. Entrega la fase actual a un contexto de worker limpio e implementa **solo
+   esa fase** — **tests primero** en el trabajo de
    core/dominio y orquestación: los tests de aceptación/integración de la
    fase se escriben en rojo, y luego se implementa hasta verde (los
    escenarios de desarrollo del SPEC son la lista de tests). Sin agrupar
    fases, sin abstracción prematura, sin refactors no relacionados. Un
    hallazgo nuevo fuera de alcance se clasifica con la política documentada
-   **Autofix / Opportunistic Fix / Create Issue** antes de actuar; solo un fix
+   **Autofix / Opportunistic Fix / Proposal** antes de actuar; solo un fix
    local de bajo riesgo que pase todas las casillas puede entrar en el commit
-   de la fase, y su evidencia y decisión se registran en `decisions.md`.
+   de la fase, y su evidencia y decisión se registran en `decisions.md`. Una
+   propuesta se informa sin crear un issue salvo petición explícita del usuario.
 4. Ejecuta la puerta de verificación del proyecto (chequeo de tipos, tests,
    build). **Nunca confirma en rojo** — un fallo que no se puede arreglar
    dentro del alcance va a `known-issues.md` y la ejecución se detiene con un
@@ -210,28 +218,21 @@ equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
    `decisions.md` si la arquitectura se movió). Cuando la realidad
    contradice el plan, se actualizan `TASKS.md`/`PLAN.md` y el porqué se
    registra en `decisions.md` — nunca una divergencia silenciosa.
-6. Confirma (commit) en formato convencional — un commit por fase.
-7. Se detiene para revisión (fases intermedias). **La fase final** (para
-   XS/S, su `P2 — Hardening & PR`) en cambio **cambia la fila del roadmap a
-   `done` y abre el PR** (nunca solo-rama) — ver Etapa 5 — luego el
-   obligatorio `/review-change` → `/audit-pr`.
+6. Confirma en formato convencional — un commit por fase — y devuelve solo un
+   recibo compacto de fase al controlador de unidad.
+7. El controlador avanza a la siguiente fase pendiente sin review intermedia.
+   Cada fase dispone de tres intentos de reparación por defecto; repetir
+   evidencia sin cambiar el recibo de código/tests termina en `NO-PROGRESS`.
+8. La fase final cambia la fila del roadmap a `done`, abre el PR (nunca
+   solo-rama) y entrega al gate obligatorio y acotado
+   `/loop-review-fold <NN>` → `/audit-pr`.
 
-**Una fase = una sesión.** Nunca ejecutar dos fases en una sola conversación
-con un modelo no puntero — los modelos se degradan en horizontes largos, y
-una sesión nueva por fase es lo que preserva la garantía de ejecución barata
-(la economía "el SPEC caro y cerrado compra ejecución barata ilimitada"). La
-forma de lote de `/loop` ya limpia y reinvoca por fase; en un agente sin
-`/loop`, reinvoca `execute-phase` a mano para cada fase en una conversación
-nueva.
-
-Repetir para cada fase (P1, P2, …). Las features pequeñas (`Size: XS/S`) se
-manejan con `execute-phase <NN>` en un solo pase — sin skill separada; el
-pase único termina cambiando la fila del roadmap a `done` y abriendo el PR,
-luego el obligatorio `/review-change` → `/audit-pr`. Para ejecutar todas las
-fases sin supervisión (los checkpoints basados en disparadores se saltan, pero la
-revisión final **obligatoria** no — sigue corriendo una vez antes del PR),
-ver el patrón de **ejecución por lotes con `/loop`** en la skill
-`execute-phase`.
+**El contexto limpio es un límite de fase, no un límite de intervención del
+usuario.** Un agente capaz usa un subagente/worker limpio por fase mientras la
+ejecución exterior continúa. Un driver headless abre un contexto nuevo y
+persiste el recibo. Sin esas capacidades, se puede ejecutar inline usando solo
+el recibo compacto y los docs de la unidad; la invocación manual por fase sigue
+disponible con un `P<k>` explícito, pero ya no es el valor por defecto.
 
 > ¿Quieres construir **todo el roadmap** así — cada feature a través de cada
 > etapa, con tu única intervención en los merges? Ese es el autopiloto
@@ -279,17 +280,22 @@ verificada por la puerta como cualquier fase.
 
 ## Etapa 4 — Review & audit (rama completa)
 
-`execute-phase` **recomienda** un checkpoint de `review-change` según su
-cadencia basada en disparadores — límite de capa completado, umbral de
-acumulación, o fase sensible (una sugerencia que se puede saltar — continuar a
-la siguiente fase es una alternativa listada) **y entrega el control una vez
-al final (obligatorio —
-cada unidad recibe una revisión final antes de su puerta de merge)**. Una
+La ejecución en loop de unidad registra los disparadores de riesgo, pero no
+interrumpe con reviews intermedias. Entrega una vez al final al obligatorio
+`loop-review-fold`, que revisa una candidata congelada, agrupa correcciones
+compatibles y solo vuelve a revisar HEADs distintos bajo un presupuesto fijo.
+Una
 unidad terminada **siempre abre su PR y pasa a `done`** (construida, no
 fusionada — el estado de merge vive en la forja); la revisión final y la
 puerta de merge se ejecutan entonces sobre el PR:
 
-- **`review-change`** — el orquestador. Ejecuta solo las revisiones que
+- **`loop-review-fold`** — el conductor acotado. Reutiliza un recibo
+  `REVIEW-PASS` ligado al SHA exacto o invoca `review-change` en un contexto
+  limpio de solo lectura; si falla, invoca `fold-findings` en otro contexto
+  escritor y solo revisa el nuevo HEAD. Se detiene al aprobar, requerir una
+  decisión, bloquearse, no progresar o agotar el presupuesto (dos ciclos de
+  corrección por defecto).
+- **`review-change`** — el motor de review de solo lectura. Ejecuta solo las revisiones que
   **aplican a esta plataforma**, comprueba **desviación del SPEC** (¿el diff
   realmente hace lo que promete el SPEC — nada contradicho, superado
   silenciosamente, o dejado sin tocar?), y sintetiza una **tabla de decisión
@@ -309,8 +315,8 @@ puerta de merge se ejecutan entonces sobre el PR:
   (nunca un issue rastreado, nunca `plan-fix`); `replan-in-unit` añade nuevas
   fases confirmadas por el usuario al SPEC de la unidad; `decision-required`
   bloquea hasta que el usuario decida; las **proposals** independientes se
-  agrupan para que el usuario las enrute a `triage-issue`, nunca se pierden y
-  la revisión no crea backlog.
+  agrupan para triaje explícito del usuario, nunca se pierden y la revisión no
+  crea backlog.
 - **`audit-pr`** — la puerta de merge. Criterios de aceptación cumplidos,
   todas las fases completas, docs/tests/CI en verde (**nunca fusionar con
   docs pendientes**), `Closes #N` presente, la entrada de issue/índice de
@@ -346,19 +352,14 @@ Vuelve a ejecutar la puerta (chequeo de tipos, tests, build) en verde.
    → product half of SPEC filled, `## Design status: designed` (offers to open a tracking issue)
 /plan-feature  NN                   → gate reads `designed` → proceeds (no redirect)
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
-/execute-phase  NN  P1              → data/domain layer, gate green, commit
-/execute-phase  NN  P2              → orchestration + adapter, gate green, commit
-   → recommended review checkpoint (trigger-based: layer boundary/accumulation/sensitivity, skippable): /review-change → classified table + manual checks
-/execute-phase  NN  hardening       → edge cases, gate green, commit
+/execute-phase  NN                  → P1…hardening, fresh worker per phase, gate green, one commit each
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
-/review-change                      → mandatory final review; non-fix-now → triage-issue
+/loop-review-fold NN                → review → batch corrections → changed-HEAD review, bounded to two correction cycles by default
 /audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
    → human merges
 ```
 
-(Para una feature `XS/S` o un `--fix`, `execute-phase` ejecuta la sección
-`## Phases` del SPEC una por invocación — la fase final `Hardening & PR`
-hace el cierre de marcar-como-done → abrir-PR. Un SPEC heredado sin
-`## Phases` ejecuta implementar → marcar-como-done → abrir-PR en un solo
-pase. De cualquier forma, sigue el mismo obligatorio `/review-change` →
-`/audit-pr`.)
+(Pasa `P1`, `P2`, … solo cuando quieras intencionadamente una fase atómica.
+Un SPEC heredado sin `## Phases` aún ejecuta implementar → marcar-como-done →
+abrir-PR en un solo pase. Todos los caminos terminan en el mismo gate
+obligatorio `/loop-review-fold` → `/audit-pr`.)

@@ -1,46 +1,41 @@
 ## Process
 
-1. **Build the queue.** Fix-now rows with `folded: no` on the ledger (or the
-   explicit finding-ID subset passed as arguments), in ledger order (id
-   ascending), which is also roughly severity order since higher-severity
-   findings are appended first by the writer skills.
-   **`replan-in-unit` rows are not folded directly.** A row whose `route` is
-   `replan-in-unit` (an in-scope fix-now too large for a single fold) is
-   emitted as `REPLAN` instead of entering the per-finding loop — this skill
-   never implements it inline. Its fold path is: confirm with the user the new
-   phase(s) to append to the unit's SPEC `## Phases` ledger — before the final
-   `Hardening & PR` phase if it has not run yet; after it, PLUS a fresh final
-   `Hardening & PR` phase, if it already ran (a completed hardening never
-   vouches for work added after it) — then `/execute-phase` on this same
-   branch executes them;
-   the executing phase flips the row `folded: yes`. The same applies if, while
-   diagnosing any other finding, the smallest correct fix turns out too large
-   to fold in one commit: do NOT downgrade or defer — emit `REPLAN` with the
-   proposed phase(s) in the reason.
-2. **One finding at a time.** For each:
-   a. Read the finding's `file:line`, axis, severity, and route.
-   b. Diagnose the actual root cause — not the symptom the finding names.
-   c. Implement the smallest correct fix. Model-tier note: the model fixing a
-      finding should never be weaker than the model that wrote the code, nor
-      weaker than the finding's own subtlety warrants — a subtle logic or
-      security finding earns your strongest available model for this one
-      finding, even if the rest of the run is on a cheaper tier.
-   d. Add/update a test for behavioral findings (see checklist).
-   e. Run the gate. Red → keep fixing within this finding's scope; if it
-      cannot be made green without touching work outside this finding, stop
-      and mark it `BLOCKED` with what's missing — never commit red.
-   f. Flip this finding's ledger row `folded: no → yes`.
-   g. `git add` the diff + the ledger; `git commit -m "fix(<scope>): fold
-      <finding-id> — <summary>"` — one commit per finding, never batched.
-   h. If the branch has an open PR: `git push` immediately — every open PR
-      always reflects the latest folded state.
-   i. Emit this finding's line (see *Report*) before moving to the next.
-3. **Disputes.** If frozen classification (above) blocks a fix you believe is
-   wrong to apply as specified, do not silently skip it — emit `DISPUTED` with
-   the evidence gathered in step 2b, and note it for the `/triage-issue`
-   hand-off in the closing block. The ledger row is left `folded: no`;
-   `triage-issue` (or a human) decides its fate, not this skill.
-4. **Blocked.** If a finding needs an input only the user can supply (a
-   product decision, a credential, an external system state) — mark it
-   `BLOCKED` with exactly what's missing, leave `folded: no`, and continue to
-   the next finding rather than stalling the whole run.
+1. **Build the queue.** Take every `folded: no` fix-now row, or the explicit ID
+   subset, in severity/id order. `replan-in-unit` rows emit `REPLAN`; they stay
+   on the same SPEC/branch/PR and never become issues.
+2. **Form the fewest atomic correction groups.** Findings may share one group
+   only when all boxes pass:
+
+   - one root cause or one homogeneous mechanical correction owns them;
+   - one validator set proves every member fixed;
+   - they can ship and roll back together without partial correctness;
+   - no member needs a separate product/architecture decision or stronger
+     release sequence;
+   - the combined diff remains reviewable and inside the current unit.
+
+   Shared files are neither required nor sufficient. A cross-file auth repair
+   may group; two unrelated nits in one file may not. Record each group's IDs,
+   shared cause, validators, and rollback boundary before editing.
+3. **Repair one group at a time.** Diagnose the shared cause, implement the
+   smallest complete correction, and add/update regression coverage for every
+   behavioral member. Use the strongest tier required by the most subtle member.
+4. **Verify.** Run the group's validators plus the normal project gate. Red →
+   continue repairing only this group. Same failure with no diff twice →
+   `BLOCKED NO-PROGRESS`; never commit red or weaken a check.
+5. **Persist atomically.** Flip every group row `folded: no → yes`; stage the
+   group diff + ledger; commit:
+
+   ```text
+   fix(<scope>): fold <F1+F2+…> — <shared correction>
+   ```
+
+   If the PR is open, push immediately. Emit one `FOLDED <same-sha>` line per
+   member so no finding disappears inside the batch.
+6. **Continue groups.** A blocked/disputed group does not prevent independent
+   groups from folding. Leave its rows `no` and emit individual outcomes.
+7. **Disputes.** Non-reproducible/already-fixed/wrong findings become
+   `DISPUTED <evidence → user decision>`; never edit classification or create an
+   issue.
+8. **Replan.** If the smallest correct group exceeds a reviewable correction,
+   emit `REPLAN` with proposed phases appended to the same unit. After user
+   confirmation, `/execute-phase <unit>` completes them and ticks the rows.

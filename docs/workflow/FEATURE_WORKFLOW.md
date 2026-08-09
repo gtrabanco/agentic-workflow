@@ -127,13 +127,17 @@ Once the feature is designed (`## Design status: designed`), the router runs
 **docs only** into `docs/features/<NN>-<slug>/`. **The artifact set scales to the
 SPEC's `Size`:**
 
-- **XS/S** (≤ one commit / ≤ half a day) — `SPEC.md` is the **only** planning
-  artifact; no PLAN/TASKS ceremony, but its `### Phases` section lists **≥ 2
+- **XS/S** (≤ one commit / ≤ half a day) — `SPEC.md` plus the frozen
+  `ACCEPTANCE.md` manifest are the only planning artifacts; no PLAN/TASKS
+  ceremony, but its `### Phases` section lists **≥ 2
   phases** (`P1` implementation, `P2 — Hardening & PR` = the close-out).
-  Next step: `execute-phase <NN>` (runs `P1`; one phase per invocation).
+  Next step: `execute-phase <NN>` (runs every remaining phase).
 - **M/L** (phased work) — the full set:
   - `SPEC.md` — every section filled (goals, architecture impact, acceptance,
     branch, size, dependencies, testing, dev scenarios).
+  - `ACCEPTANCE.md` — the frozen, content-addressed acceptance and validation
+    manifest. Implementation cannot weaken it; a product change must amend and
+    re-freeze it explicitly.
   - `PLAN.md` — phased plan whose **last implementation phase is always a
     hardening phase** (edge cases + the SPEC's dev-scenario failure modes,
     implemented and tested — not just documented).
@@ -157,27 +161,31 @@ ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
 
 > Unknowns become open questions in `decisions.md` — never blank placeholders.
 
-## Stage 2 — Execute, one phase at a time (`execute-phase`)
+## Stage 2 — Execute the unit (`execute-phase`)
 
-`execute-phase` (default mode) implements **one phase** per run:
+`execute-phase <NN>` or `execute-phase --fix <n>` implements **all remaining
+phases** in one bounded unit run. Passing an explicit `P<k>` preserves the old
+atomic behavior and executes exactly that phase:
 
 1. Verifies the branch — creates `feat/<NN>-<slug>` if you're on `main`
    (it never works on `main`). **On P1 it first commits the planning artifacts
    separately** (`docs(NN-slug): planning artifacts`), so planning history
    stays apart from implementation.
-2. Reads `progress.md` (the **phase handoff record** — a fixed
+2. Verifies the frozen `ACCEPTANCE.md`, then reads `progress.md` (the **phase handoff record** — a fixed
    `Done / Remains / Gotchas / Files / Next` entry per phase), then `SPEC.md`
    + `TASKS.md` for the requested phase. That is the whole handoff — each
    phase runs in a fresh conversation under an explicit context budget (≤ 10
    full-file reads beyond the unit's own docs).
-3. Implements **only that phase** — **tests first** on core/domain and
+3. Gives the current phase to a fresh worker context and implements **only that
+   phase** — **tests first** on core/domain and
    orchestration work: the phase's acceptance/integration tests are written
    red, then implemented to green (the SPEC's dev scenarios are the test
    list). No bundling, no premature abstraction, no unrelated refactors. A
    newly discovered, out-of-scope finding is classified by the documented
-   **Autofix / Opportunistic Fix / Create Issue** policy before action; only a
+   **Autofix / Opportunistic Fix / Proposal** policy before action; only a
    low-risk local fix that passes every policy box may join the phase commit,
-   and its evidence and decision are recorded in `decisions.md`.
+   and its evidence and decision are recorded in `decisions.md`. A proposal is
+   reported without creating an issue unless the user explicitly requests it.
 4. Runs the project's verification gate (type-check, tests, build). **Never
    commits red** — an unfixable-within-scope failure goes to
    `known-issues.md` and execution stops with a report.
@@ -186,26 +194,22 @@ ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
    `decisions.md` if architecture moved). When reality contradicts the plan,
    `TASKS.md`/`PLAN.md` are updated and the why recorded in `decisions.md` —
    never a silent divergence.
-6. Commits in conventional format — one commit per phase.
-7. Stops for review (intermediate phases). The **final phase (for XS/S, its
-   `P2 — Hardening & PR`) instead flips the roadmap row to `done` and opens
-   the PR** (never branch-only) — see Stage 5 — then the mandatory
-   `/review-change` → `/audit-pr`.
+6. Commits in conventional format — one commit per phase — and returns only a
+   compact phase receipt to the unit controller.
+7. The controller advances to the next pending phase without an intermediate
+   review. A phase gets three repair attempts by default; repeated evidence
+   without a changed code/test receipt stops as `NO-PROGRESS` instead of
+   spinning.
+8. The final phase flips the roadmap row to `done` and opens the PR (never
+   branch-only), then hands off to the mandatory bounded
+   `/loop-review-fold <NN>` → `/audit-pr` gate.
 
-**One phase = one session.** Never execute two phases in one conversation on a
-non-frontier model — models degrade over long horizons, and a fresh session per
-phase is what preserves the cheap-execution guarantee (the "expensive, closed
-SPEC buys unlimited cheap execution" economics). The `/loop` batch shape already
-clears and re-invokes per phase; on an agent without `/loop`, re-invoke
-`execute-phase` by hand for each phase in a fresh conversation instead.
-
-Repeat for each phase (P1, P2, …). Small features (`Size: XS/S`) are handled by
-`execute-phase <NN>` in a single pass — no separate skill; the single pass ends by
-flipping the roadmap row to `done` and opening the PR, then the mandatory
-`/review-change` → `/audit-pr`. To run all phases unattended (the trigger-based
-checkpoints are skipped, but the **mandatory** end review is not — it still runs once
-before the PR), see the **batch execution with `/loop`** pattern in the
-`execute-phase` skill.
+**Fresh context is a phase boundary, not a user-intervention boundary.** A
+capable agent uses a fresh subagent/worker for each phase while the outer unit
+run continues. A headless driver opens a new context and persists the phase
+receipt. An agent without either facility may run inline using only the compact
+receipt and unit docs; manual per-phase invocation remains available through an
+explicit `P<k>`, but is no longer the default.
 
 > Want the **whole roadmap** built this way — every feature through every stage,
 > with you only at the merges? That's the `ship-roadmap` autopilot: one upfront
@@ -247,15 +251,19 @@ like any phase.
 
 ## Stage 4 — Review & audit (whole branch)
 
-`execute-phase` **recommends** a `review-change` checkpoint at its trigger-based
-cadence — a completed layer boundary, an accumulation threshold, or a sensitive
-phase (a skippable suggestion — continuing to the next phase is a listed
-alternative) **and hands off once at the end (mandatory — every unit gets a final review
-before its merge gate)**. A finished unit
+Unit-loop execution records risk triggers but does not interrupt for intermediate
+reviews. It hands off once at the end to mandatory `loop-review-fold`, which
+reviews a frozen candidate, batches compatible corrections, and re-reviews only
+changed HEADs under a fixed cycle budget. A finished unit
 **always opens its PR and flips to `done`** (built, not merged — merge state lives in
 the forge); the final review and the merge gate then run over the PR:
 
-- **`review-change`** — the orchestrator. Runs only the reviews that **apply to
+- **`loop-review-fold`** — the bounded conductor. Reuses an exact-SHA
+  `REVIEW-PASS` receipt or invokes `review-change` in a fresh read-only context;
+  on failure it invokes `fold-findings` in a separate writer context, then
+  reviews only the new HEAD. It stops on pass, decision, blocker, no progress,
+  or budget exhaustion (two correction cycles by default).
+- **`review-change`** — the read-only review engine. Runs only the reviews that **apply to
   this platform**, checks **SPEC drift** (does the diff actually do what the
   SPEC promises — nothing contradicted, silently exceeded, or left untouched?),
   and synthesizes one **classified decision table** plus an explicit
@@ -273,8 +281,8 @@ the forge); the final review and the merge gate then run over the PR:
   Findings only, no refactor; `fix-now` folds into the current phase (never a
   tracked issue, never `plan-fix`); `replan-in-unit` appends new user-confirmed
   phases to the unit's SPEC; `decision-required` blocks until the user decides;
-  independent **proposals** are batched for the user to route to `triage-issue`,
-  never lost and no backlog created by the review.
+  independent **proposals** are batched for explicit user triage, never lost and
+  no backlog created by the review.
 - **`audit-pr`** — the merge gate. Acceptance criteria met, all phases complete,
   docs/tests/CI green (**never merge with pending docs**), `Closes #N` present, the
   issue/fix-index entry still tracked (removed only after merge), branch independently
@@ -305,18 +313,14 @@ Re-run the gate (type-check, tests, build) green.
    → product half of SPEC filled, `## Design status: designed` (offers to open a tracking issue)
 /plan-feature  NN                   → gate reads `designed` → proceeds (no redirect)
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
-/execute-phase  NN  P1              → data/domain layer, gate green, commit
-/execute-phase  NN  P2              → orchestration + adapter, gate green, commit
-   → recommended review checkpoint (trigger-based: layer boundary/accumulation/sensitivity, skippable): /review-change → classified table + manual checks
-/execute-phase  NN  hardening       → edge cases, gate green, commit
+/execute-phase  NN                  → P1…hardening, fresh worker per phase, gate green, one commit each
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
-/review-change                      → mandatory final review; non-fix-now → triage-issue
+/loop-review-fold NN                → review → batch corrections → changed-HEAD review, bounded to two correction cycles by default
 /audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
    → human merges
 ```
 
-(For an `XS/S` feature or a `--fix`, `execute-phase` runs the SPEC's `## Phases`
-one per invocation — the final `Hardening & PR` phase does the mark-done →
-open-PR close-out. A legacy SPEC without `## Phases` runs implement →
-mark-done → open-PR in one pass. Either way, the same mandatory
-`/review-change` → `/audit-pr` follows.)
+(Pass `P1`, `P2`, … only when you intentionally want a single atomic phase.
+Legacy SPECs without `## Phases` still run implement → mark-done → open-PR in
+one pass. Every path ends in the same mandatory
+`/loop-review-fold` → `/audit-pr` gate.)

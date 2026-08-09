@@ -18,7 +18,7 @@ leans on them harder than any other — here is the manual equivalent of each:
   headless invocation (or conversation) on a cheaper model** following the
   installed `execute-phase` SKILL.md for exactly one phase (same two autopilot
   overrides) — the external-driver pattern in `docs/workflow/ORCHESTRATION.md`
-  does exactly this. The conductor stages (recover/plan/review/PR/audit) stay
+  does exactly this. The conductor stages (recover/plan/PR/review/audit) stay
   on your strongest model.
 - **No slash-command menu** — where this skill says `/<skill>`, open that
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
