@@ -680,8 +680,9 @@ npx skills add gtrabanco/agentic-workflow
 ```
 
 Para una instalación global, añade `--global` a ambos comandos. Estos nombres
-no los publica el pack actual: `plan-feature-interview` fue sustituida por
-`design-feature`, y `bump-skill` es interna del repositorio.
+no los publica el pack actual: `plan-feature-interview` fue una helper interna
+instalada por versiones antiguas antes de mover su lógica a `design-feature`, y
+`bump-skill` fue reclasificada después como interna del repositorio.
 
 ### Actualizar una instalación existente
 
