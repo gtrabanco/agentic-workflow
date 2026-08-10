@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 2.11.2
+version: 2.11.4
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -30,6 +30,10 @@ For a final PR review, the turn is incomplete until this additional box passes:
 ```
 
 A clean report without that current receipt must not recommend `/audit-pr`.
+
+For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the closing
+recommendation, joined with ` + `; the review must never hand off only the first
+finding.
 
 Consume the internal [verification contract](<../verification-contract/SKILL.md>);
 the reviewer checks the same frozen `ACCEPTANCE.md` blob as the executor before

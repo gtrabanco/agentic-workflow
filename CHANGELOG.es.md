@@ -234,6 +234,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.5.1 | 2026-08-10 | parche | Hace que los hand-offs por dependencias bloqueantes enumeren la cadena completa, de la más profunda a la final, en lugar de dejar un placeholder sin expandir. |
 | 3.5.0 | 2026-08-09 | menor | Los hand-offs limpios y ya-planificados recomiendan ahora `execute-phase` solo-con-objetivo para entregar la unidad completa y dejan `P1` explícita únicamente como alternativa atómica. |
 | 3.4.0 | 2026-08-04 | menor | Añade los contratos internos de un salto planning preflight y phase contract (rutas 2-3 de carga progresiva) y fija un único contexto de planificación inmutable — un snapshot del roadmap más payload opcional de issue — reutilizado entre internals compuestas, nunca re-consultado a mitad de plan. |
 | 3.3.2 | 2026-08-03 | parche | Hace explícito el contrato de routing derivado de issues: después de que `PLANNING_GATES.md` permita planificar, compone `plan-feature-from-issue` y después `plan-feature-scaffold`, en ese orden. |
@@ -261,6 +262,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.7.0 | 2026-08-10 | menor | Hace que el hand-off conserve explícitamente el alcance completo de una unidad multi-issue (`#primary + #n2 + …`) manteniendo el comando ejecutable ligado al issue primario. |
 | 2.6.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime input/output, hard rules, carga progresiva, portabilidad y criterios de cierre, preservando agrupación multi-issue y contratos. |
 | 2.6.0 | 2026-08-09 | menor | Acepta bloques de capacidad compatibles y lotes mecánicos homogéneos usando comprobaciones de resultado, verificación, aislamiento, release/rollback y tamaño agregado; compartir ficheros/causa raíz/severidad deja de ser una puerta, y los conjuntos fallidos devuelven el mínimo número de grupos compatibles máximos. Emite `ACCEPTANCE.md` congelado. |
 | 2.5.0 | 2026-08-04 | menor | Consume el planning preflight compartido (lectura del estado normalizado del repositorio + una única clasificación arquitectónica final) y el phase contract (phase-lint canónico de 8 casillas + fingerprint de fase) antes de redactar y emitir un SPEC de fix; prosa comprimida para que la ruta se mantenga bajo su presupuesto base. |
@@ -285,6 +287,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.11.4 | 2026-08-10 | parche | Exige que los hand-offs REVIEW-FAIL y NEEDS-DECISION enumeren todos los IDs de findings afectados, en lugar de nombrar solo uno genérico o el primero. |
 | 2.11.2 | 2026-08-10 | parche | Hace explícito y fail-closed el cierre del recibo final de PR antes de que la review pueda recomendar `audit-pr`; aclara que el bloque fijo del informe no termina el turno. |
 | 2.11.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime introducción, aislamiento, guardrails de rutas, relaciones y cierre, preservando aplicabilidad y contrato de solo lectura. |
 | 2.11.0 | 2026-08-09 | menor | Verifica el blob de aceptación congelado antes de la review y recomienda `loop-review-fold` acotado ante fallo, preservando su contrato de solo lectura y recibo ligado al SHA exacto. |
@@ -324,6 +327,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `fold-findings`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.2 | 2026-08-10 | parche | Exige que los hand-offs según resultado enumeren todos los IDs de findings afectados y su ruta. |
 | 1.2.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime descubrimiento de cola, guardrails, portabilidad, relaciones y cierre; permanecen veredictos/tally y reglas de fold congeladas. |
 | 1.2.0 | 2026-08-09 | menor | Repara la cola seleccionada en lotes atómicos compatibles, conservando un veredicto y registro de evidencia por hallazgo; las disputas se detienen para decisión del usuario y ninguna ruta de fold crea issues automáticamente. |
 | 1.1.1 | 2026-08-02 | parche | Separa la política congelada del procedimiento por hallazgo tras rutas obligatorias de un salto y acorta metadatos de activación; clasificaciones, prohibiciones, veredictos y conducta de commit/push no cambian. |
@@ -333,6 +337,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `loop-review-fold`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.0.2 | 2026-08-10 | parche | Exige que las rutas no terminales de review/fold repitan todos los IDs de findings afectados en la recomendación de siguiente paso. |
 | 1.0.1 | 2026-08-09 | parche | Hace que el turno falle de forma cerrada ante casillas de contrato sin marcar y explicita los fallbacks de portabilidad para agentes que no usan Claude Code. |
 | 1.0.0 | 2026-08-09 | — | Nuevo conductor final acotado de review/corrección: reutiliza recibos al SHA exacto, alterna review de solo lectura y fold por lotes en contextos limpios solo para HEADs distintos, permite dos ciclos por defecto y se detiene al aprobar, requerir decisión, bloquearse, no progresar o agotar presupuesto. Nunca fusiona ni crea issues. |
 
@@ -369,6 +374,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.3 | 2026-08-10 | parche | Exige que el hand-off de auditoría enumere el conjunto completo de findings antes de agrupar el triage. |
 | 3.0.2 | 2026-08-03 | parche | Carga la matriz de aplicabilidad de dimensiones antes de seleccionar las dimensiones de revisión, para que el Paso 0 no decida ejes incompletos antes de la lista autoritativa. |
 | 3.0.1 | 2026-08-02 | parche | Mueve las dimensiones de auditoría y el barrido de nueve pasos tras rutas obligatorias de un salto y elimina prosa repetida de activación manteniendo intactos el informe fijo persistido y el contrato solo-recomendación. |
 | 3.0.0 | 2026-07-31 | mayor | **Cambio incompatible de invocación:** este barrido costoso y solo de recomendación pasa a ser manual-only en Claude Code y OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). La invocación explícita `/product-audit` no cambia; orquestadores y otras skills deben mantenerla como hand-off humano. |
@@ -415,6 +421,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.5.1 | 2026-08-10 | parche | Hace que los hand-offs de triage por lotes asignen a cada issue/finding su propio comando concreto siguiente. |
 | 2.5.0 | 2026-07-31 | menor | La carga progresiva selecciona primero issue del forge frente a hallazgo de auditoría persistido y después carga el detalle de propiedad de etiquetas y ledger de fold solo para los veredictos que lo necesitan. |
 | 2.4.0 | 2026-07-19 | menor | Nuevo **modo hallazgo-de-auditoría** (`triage-issue <audit-id> F<k> …`): tría hallazgos de un informe persistido de `product-audit` — re-verifica el hallazgo contra el código actual, deduplica contra issues existentes, abre el issue de GitHub solo con un veredicto fix-now/postpone/promote (el cuerpo cita `Origin: product audit <id>, finding F<k>`), y marca el hallazgo como triado en el fichero de auditoría con una nota datada `↳ triaged`. Las invocaciones por número de issue no cambian. |
 | 2.3.0 | 2026-07-18 | menor | Añade conciencia de unidad abierta (complemento del lado consumidor de `#66`): un chequeo de pertenencia de alcance se ejecuta antes de clasificar (enumerar unidades abiertas → comparación issue↔SPEC/fase citando ambos lados) y un quinto veredicto `fix-in-unit <unit>` resuelve los issues miembros en la propia rama de la unidad abierta — fold en su ledger `review-findings.md` (fila con marca de procedencia `triage #<n> <fecha>`) o en su fase actual/siguiente, un replan incremental (`design-feature`/`plan-feature`/una entrada `## Amendments` en el SPEC), o una restauración de scope-bleed. Los issues sin unidad se enrutan sin cambios, byte a byte. Corrige `#86`+`#87`. |

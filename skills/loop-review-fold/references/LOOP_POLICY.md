@@ -54,16 +54,18 @@ LOOP REVIEW FOLD — <PASS|NEEDS-DECISION|BLOCKED|NO-PROGRESS|BUDGET-EXHAUSTED>
 Unit: <unit> · PR: <url> · HEAD: <sha>
 Acceptance: <blob> (<match|mismatch>)
 Reviews: <n> · Correction cycles: <used>/<max>
-Open findings: <ids|none> · Receipt: <current sha|none>
+Open findings: <F1 + F2 + …|none> · Receipt: <current sha|none>
 Evidence: <one concise line>
 
-→ Next: <terminal mapping>
+→ Next: <terminal mapping; repeat every affected finding ID once, joined with ` + `>
   · PASS → /audit-pr — delivery/merge gate
-  · NEEDS-DECISION → resolve the named decision, then re-run /loop-review-fold <unit>
-  · BLOCKED → supply/fix the named prerequisite, then re-run the same command
-  · NO-PROGRESS → inspect the repeated validator/finding; use an explicit stronger-model fold or decide
-  · BUDGET-EXHAUSTED → inspect the remaining findings; raise the budget only with a concrete correction hypothesis
+  · NEEDS-DECISION (<F1> + <F2> + …) → resolve all named decisions, then re-run /loop-review-fold <unit>
+  · BLOCKED (<F1> + <F2> + …) → supply/fix all named prerequisites, then re-run the same command
+  · NO-PROGRESS (<F1> + <F2> + …) → inspect all repeated findings; use an explicit stronger-model fold or decide
+  · BUDGET-EXHAUSTED (<F1> + <F2> + …) → inspect all remaining findings; raise the budget only with a concrete correction hypothesis
 ```
 
 Print only the matching recommended line first; retain the other applicable
-alternatives as sub-bullets. Never recommend audit on a non-PASS state.
+alternatives as sub-bullets. Replace placeholders with every actual finding ID
+before printing; never print a literal placeholder or ellipsis. Never recommend
+audit on a non-PASS state.
