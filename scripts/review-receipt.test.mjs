@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const reviewSkill = fs.readFileSync(path.join(repoRoot, "skills/review-change/SKILL.md"), "utf8");
+const reviewProcess = fs.readFileSync(path.join(repoRoot, "skills/review-change/references/REVIEW_PROCESS.md"), "utf8");
 const persistAndDecide = fs.readFileSync(path.join(repoRoot, "skills/review-change/references/PERSIST_AND_DECIDE.md"), "utf8");
 
 const CONTRACT = "v1";
@@ -65,6 +66,13 @@ test("final PR REVIEW-PASS requires a posted and re-read current receipt", () =>
   assert.match(reviewSkill, /must not recommend `\/audit-pr`/);
   assert.match(persistAndDecide, /receipt is a precondition of the report/);
   assert.match(persistAndDecide, /After posting.*confirm\s+the newest marker equals the reviewed head SHA/s);
+});
+
+test("review-change resolves and freezes the PR head before it can post a receipt", () => {
+  assert.match(reviewProcess, /git rev-parse HEAD/);
+  assert.match(persistAndDecide, /gh pr view --json number,headRefOid/);
+  assert.match(persistAndDecide, /headRefOid.*reviewed head SHA|reviewed head SHA.*headRefOid/s);
+  assert.match(persistAndDecide, /do not post.*re-run.*review-change|re-run.*review-change.*do not post/s);
 });
 
 test("receipt closeout precedes the fixed report block", () => {
