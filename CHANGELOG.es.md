@@ -285,6 +285,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.11.3 | 2026-08-10 | parche | Hace que el recibo PR verificado sea una precondición del informe de revisión, evitando que el bloque fijo termine el turno antes de publicar y releer el recibo. |
 | 2.11.2 | 2026-08-10 | parche | Hace explícito y fail-closed el cierre del recibo final de PR antes de que la review pueda recomendar `audit-pr`; aclara que el bloque fijo del informe no termina el turno. |
 | 2.11.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime introducción, aislamiento, guardrails de rutas, relaciones y cierre, preservando aplicabilidad y contrato de solo lectura. |
 | 2.11.0 | 2026-08-09 | menor | Verifica el blob de aceptación congelado antes de la review y recomienda `loop-review-fold` acotado ante fallo, preservando su contrato de solo lectura y recibo ligado al SHA exacto. |

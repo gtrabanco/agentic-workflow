@@ -23,37 +23,28 @@
    their destinations from step 10 (outcome routing): independent future
    capabilities batch as proposals; only the user routes them to `triage-issue`
    (D3).
-12. **Report block — Return exactly this structure** (fixed chat-report block;
-   this is not the end of the turn). After printing its `Decision:` line, run
-   step 13 before step 14; the receipt action and verification are outside this
-   block:
+12. **Close out the final-review receipt before reporting.** First derive the
+   `Decision` from step 6 and persist step 11. Then, before printing any line of
+   the fixed report block or the `→ Next:` block, complete the receipt action
+   below. The receipt is a precondition of the report, not a follow-up.
 
-   ```
-   REVIEW CHANGE — scope: <scope>
-   Axes run: <list>   Skipped: <list + why>
-   Architectural invariants: pass | finding (<ID>) | n/a: no project invariants declared
+   The durable, audit-consumable receipt is one idempotent SHA-bound PR comment
+   (D6, D7). **Only on `Decision: REVIEW-PASS` AND when the PR exists** (the
+   mandatory final review; the PR always exists by then — the phase gate created
+   it). `REVIEW-FAIL` and `NEEDS-DECISION` post **no** passing receipt; continue
+   to step 13 after recording that status.
 
-   <the synthesized decision table (step 6)>
-
-   Manual verification (a human must check):
-   - <item> …
-
-   Proposals (step 10): <n> — batched for the user, no issues created (D3)
-
-   Summary: <1-2 sentences>
-   Decision: REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION   (D10: review says these three; only audit-pr says MERGE-READY)
-   ```
-
-13. **Post the final-review receipt.** The durable, audit-consumable receipt is
-   one idempotent SHA-bound PR comment (D6, D7). **Only on `Decision:
-   REVIEW-PASS` AND when the PR exists** (the mandatory final review; the PR
-   always exists by then — the phase gate created it). `REVIEW-FAIL` and
-   `NEEDS-DECISION` post **no** passing receipt; they take their step-11/14
-   paths instead. When it does fire, write the body below to a **temporary**
-   Markdown file (e.g. `$TMPDIR/review-receipt.md`), then post with
+   For `REVIEW-PASS` with a PR, write the body below to a **temporary** Markdown
+   file (e.g. `$TMPDIR/review-receipt.md`), then run
    `gh pr comment <N> --body-file <path>` — never inline `--body`, never commit
-   the file into the branch (D6: a review-report commit would invalidate its own
-   SHA). Use **exactly** this body:
+   the file into the branch. Before posting, run `gh pr view <N> --json comments`
+   and inspect the newest matching marker. Same SHA → skip the post; older or
+   absent SHA → post. After posting, run the same comment query again and confirm
+   the newest marker equals the reviewed head SHA. If that confirmation fails,
+   retry the receipt action; do not print a `REVIEW-PASS` report or recommend
+   `/audit-pr` while the receipt is not current.
+
+   Use **exactly** this body:
 
    ```markdown
    <!-- review-change:pass sha=<head SHA> contract=v1 -->
@@ -68,22 +59,34 @@
    - Manual verification: <items or none>
    ```
 
-   **Idempotent and exact-SHA:** before posting, list existing comments
-   (`gh pr view <N> --json comments`) and look for the newest
-   `<!-- review-change:pass sha=... contract=v1 -->` marker. Same SHA already
-   commented → **skip** (the receipt is already current; say so). Older SHA →
-   post the new comment (newest matching marker wins). Any later commit makes it
-   stale — the marker is bound to the head SHA it reviewed, and stale receipts
-   are rejected by audit-pr.
+13. **Report block — Return exactly this structure** after step 12 succeeds
+   (fixed chat-report block; this is not the end of the turn):
+
+   ```
+   REVIEW CHANGE — scope: <scope>
+   Axes run: <list>   Skipped: <list + why>
+   Architectural invariants: pass | finding (<ID>) | n/a: no project invariants declared
+   Receipt: current at <head SHA> | n/a: no PR | none: REVIEW-FAIL/NEEDS-DECISION
+
+   <the synthesized decision table (step 6)>
+
+   Manual verification (a human must check):
+   - <item> …
+
+   Proposals (step 10): <n> — batched for the user, no issues created (D3)
+
+   Summary: <1-2 sentences>
+   Decision: REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION   (D10: review says these three; only audit-pr says MERGE-READY)
+   ```
 
 14. **Next step.** The `→ Next:` block is **never one static template** — branch
-   on the `Decision` value from step 12 and emit the matching block **verbatim,
+   on the `Decision` value from step 6 and emit the matching block **verbatim,
    as multiple literal lines**. Never join the `·` sub-bullets into one prose
    line — each sub-bullet is its own line, exactly as quoted below.
 
    **`Decision: REVIEW-FAIL`** (any fix-now finding open) — the recommended line
    is the fold, never the merge gate. Findings were persisted in step 11; **no
-   passing receipt was posted** (step 13):
+   passing receipt was posted** (step 12):
 
    ```
    → Next: /loop-review-fold <unit> — repair compatible fix-now batches and
@@ -105,7 +108,7 @@
    ```
 
    **`Decision: REVIEW-PASS`** (table clean) — the recommended line is the merge
-   gate. Receipt: PR exists → posted in step 13 (exact-SHA `REVIEW-PASS` at
+   gate. Receipt: PR exists → current after step 12 (exact-SHA `REVIEW-PASS` at
    `<head SHA>`); pre-PR checkpoint → no receipt, the `progress.md` compact
    marker covers it (D7):
 
@@ -129,7 +132,7 @@
    ```
    → Next: decision required — the unit blocks until the user decides
      · present the decision-required finding(s) with evidence; no issue is
-       created (D3) and no passing receipt was posted (step 13)
+       created (D3) and no passing receipt was posted (step 12)
      · once the user decides, re-run /review-change on this same branch
    ```
 
