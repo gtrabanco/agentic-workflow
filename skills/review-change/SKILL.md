@@ -29,7 +29,9 @@ For a final PR review, the turn is incomplete until this additional box passes:
   `review-change:pass` marker is confirmed before printing `→ Next:`
 ```
 
-A clean report without that current receipt must not recommend `/audit-pr`.
+The receipt closeout is a precondition of the report, not a follow-up: do not
+print the fixed report block until the comment is current. A clean report
+without that current receipt must not recommend `/audit-pr`.
 
 For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the closing
 recommendation, joined with ` + `; the review must never hand off only the first
@@ -140,7 +142,8 @@ default; installed platform packs are optional. `triage-issue` is user-invoked
 only for independent proposals (D3). It is Stage 4: checkpoint reviews are
 optional, the end review is mandatory and fresh. `fix-now` folds in-unit,
 `replan-in-unit` adds user-confirmed phases, and independent work becomes
-proposals. `audit-pr` consumes the result; `product-audit` is the periodic sweep;
+proposals. `audit-pr` consumes only the verified PR-comment receipt, never the
+chat report; `product-audit` is the periodic sweep;
 `loop-review-fold` may run this skill fresh and route FAIL to `fold-findings`.
 
 ## Done when
