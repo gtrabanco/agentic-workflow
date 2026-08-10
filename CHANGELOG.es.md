@@ -287,6 +287,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.11.5 | 2026-08-11 | parche | Congela el commit revisado y exige que el `headRefOid` de la PR coincida antes de publicar un recibo REVIEW-PASS; si el head de la PR cambia, se re-revisa en vez de publicar un recibo irresoluble. |
 | 2.11.3 | 2026-08-10 | parche | Hace que el recibo PR verificado sea una precondición del informe de revisión, evitando que el bloque fijo termine el turno antes de publicar y releer el recibo. |
 | 2.11.4 | 2026-08-10 | parche | Exige que los hand-offs REVIEW-FAIL y NEEDS-DECISION enumeren todos los IDs de findings afectados, en lugar de nombrar solo uno genérico o el primero. |
 | 2.11.2 | 2026-08-10 | parche | Hace explícito y fail-closed el cierre del recibo final de PR antes de que la review pueda recomendar `audit-pr`; aclara que el bloque fijo del informe no termina el turno. |
@@ -345,6 +346,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.3.1 | 2026-08-11 | parche | Obtiene `headRefOid` junto con los comentarios de la PR y acepta un recibo REVIEW-PASS solo en ese snapshot exacto; cualquier diferencia de SHA es obsoleta y se enruta a una revisión nueva. |
 | 4.3.0 | 2026-08-05 | menor | **Consume el recibo de revisión de `review-change`** en lugar de re-revisar el diff (feature 21): el Paso 1 obtiene los comentarios del PR y toma el marcador `<!-- review-change:pass sha=<40-hex> contract=v1 -->` más nuevo; un recibo vigente se reconoce como la evidencia de revisión, uno ausente/obsoleto es un bloqueante enrutado a `/review-change` (nunca se re-revisa aquí). Las puertas de merge se estrechan al conjunto solo-auditoría del SPEC — se retira la puerta `Tests` (calidad de pruebas) y el re-mapeo de criterios de aceptación por diff (sustituido por el campo de cobertura de aceptación del recibo); la puerta de Invariantes arquitectónicas ahora refleja el resultado del recibo en lugar de reclasificar. Pasos de proceso renumerados; el comentario MERGE-READY cita el recibo consumido. Requiere un `review-change` que publique el recibo ligado al SHA; las versiones antiguas de `review-change` dejan a audit-pr bloqueado sin recibo en el head. |
 | 4.2.0 | 2026-07-31 | menor | Sincroniza el contrato consumidor de merge con la frontera de autoridad fullauto verificable desde el forge; las auditorías standalone siguen limitadas a veredicto/comentario. |
 | 4.1.0 | 2026-07-31 | menor | La carga progresiva mueve gates de merge, checks de cierre/descope, proceso de auditoría, veredicto fijo, enrutamiento/guardrails y portabilidad detrás de una ruta de auditoría obligatoria de un salto; la propiedad del merge permanece en el entrypoint. |

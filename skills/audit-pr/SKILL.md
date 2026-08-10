@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 4.3.0
+version: 4.3.1
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -30,11 +30,10 @@ independently evaluates only the delivery gates below.
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The review receipt was consumed: newest matching `review-change:pass` marker
-  fetched; absent → blocker routed to `/review-change`, stale → diff check:
-  empty-diff accepted with receipt acknowledged; non-empty-diff → blocker
-  routed to `/review-change`, current → its scope/axes/acceptance coverage/manual
-  checks acknowledged without re-review
+✓ The review receipt was consumed from one PR snapshot: `headRefOid` + newest
+  matching `review-change:pass` marker fetched together; absent or any SHA
+  mismatch → blocker routed to `/review-change`, current → its scope/axes/
+  acceptance coverage/manual checks acknowledged without re-review
 ✓ The verdict block was printed in the fixed format: `VERDICT: MERGE-READY | BLOCKED` with ranked, evidenced blockers
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is
@@ -89,7 +88,7 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
 2. **The PR.** Identify it and read it in full (forge CLI per the project's
    Workflow conventions — examples use `gh`):
    ```sh
-   gh pr view <N> --json number,title,body,baseRefName,headRefName,isDraft,mergeable,mergeStateStatus,files,commits,statusCheckRollup,closingIssuesReferences
+   gh pr view <N> --json number,url,title,body,baseRefName,headRefName,headRefOid,isDraft,mergeable,mergeStateStatus,files,commits,statusCheckRollup,closingIssuesReferences
    ```
    If no PR number is given, resolve the current branch's PR
    (`gh pr view --json ...`). If none exists yet, audit the branch vs. the default
@@ -102,25 +101,23 @@ CI. Default target is the current branch's PR; accept a PR number to target anot
 ## Step 1 — Consume the review receipt (always, before any gate)
 
 The review evidence is the SHA-bound `REVIEW-PASS` receipt `review-change` posts
-on the PR — **never** a re-review composed here. Fetch the PR's comments and find
-the **newest** comment carrying the marker
+on the PR — **never** a re-review composed here. Fetch `headRefOid` and the PR's
+comments together, then find the **newest** comment carrying the marker
 `<!-- review-change:pass sha=<40-hex> contract=v1 -->`:
 
 ```sh
-gh pr view <N> --json comments
+gh pr view <N> --json headRefOid,comments
 ```
 
-- **current** — marker `sha` equals the PR's head SHA (from Step 0). Acknowledge
+- **current** — marker `sha` equals that snapshot's `headRefOid` (the current
+  head SHA). Acknowledge
   its scope/axes, acceptance coverage, invariant result, and manual checks as the
   review evidence, then evaluate the delivery gates below.
 - **absent** — no matching marker on the PR → **BLOCKER**: no review evidence at
   the head; route to `/review-change`.
-- **stale** — a marker exists but its `sha` predates the current head. Before
-  blocking, verify the diff: `git diff <marker-sha>..HEAD --stat`. If **empty**
-  (no meaningful changes landed between receipt and head), the receipt is still
-  valid — acknowledge its scope/axes and proceed to the delivery gates. If
-  **non-empty**, the receipt is void → **BLOCKER**: route to `/review-change`
-  for a re-review.
+- **stale** — a marker exists but its `sha` does not equal `headRefOid`. Any SHA
+  mismatch voids the receipt → **BLOCKER**: route to `/review-change` for a
+  re-review. Do not use a local `git diff` to override the PR-head comparison.
 
 Never compose, reconstruct, or "spot-check" the review from the diff to clear a
 missing/stale receipt — that is `review-change`'s turn, and re-litigating axes
