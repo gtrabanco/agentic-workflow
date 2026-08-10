@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.5.0
+version: 3.5.1
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -31,6 +31,7 @@ one — the routed redirect gate enforces that split.
   AFTER the write and literally reads `planned` — a dropped `defined→planned`
   write fails this box; do not end the turn until it's fixed
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
+✓ An unmet dependency? The closing block lists the complete dependency chain, deepest first, joined with ` + `
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -170,8 +171,9 @@ enables:
   unmet dependency and/or blocking fix-now issue:
 
   ```
-  → Next: /plan-feature <deepest-unmet-dep> (or /execute-phase <dep> …) — build the
-    dependency chain first: <chain, deepest → NN>
+  Dependency chain (deepest first): <deepest> + <dependency> + <NN> (replace with every actual member; never print `…`)
+  → Next: /plan-feature <deepest-unmet-dep> (or /execute-phase <deepest-unmet-dep>) — build the
+    complete dependency chain first: <deepest> + <dependency> + <NN>
     · blocking fix-now issue #<n> in the same area → /plan-fix <n> before executing
     · proceed anyway → /execute-phase <NN> --force (the gate logs the override)
   ```

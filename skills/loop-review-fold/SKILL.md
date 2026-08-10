@@ -1,7 +1,7 @@
 ---
 name: loop-review-fold
 user-invocable: true
-version: 1.0.1
+version: 1.0.2
 argument-hint: <NN> | --fix <n> [--max-cycles N] [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -27,6 +27,7 @@ its candidate.
 ✓ At most --max-cycles correction cycles ran (default 2); no hidden retry budget
 ✓ No issue or merge command ran; independent work remained proposals
 ✓ One terminal state and its evidence were printed; closing → Next: block was last
+✓ When findings are open, the matching terminal recommendation names every finding ID once, joined with ` + `
 ```
 
 Any unchecked box means the turn is not done.
@@ -82,5 +83,5 @@ classification, ledger, or correction checklists into this skill.
 - Every non-PASS state names a deterministic resume or decision path.
 
 ```text
-→ Next: (terminal-dependent; use LOOP_POLICY.md's exact block)
+→ Next: (terminal-dependent; use LOOP_POLICY.md's exact block and repeat every open finding ID joined with ` + `)
 ```
