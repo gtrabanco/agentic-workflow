@@ -63,7 +63,16 @@ const EMPTY = {};
 test("final PR REVIEW-PASS requires a posted and re-read current receipt", () => {
   assert.match(reviewSkill, /Decision: REVIEW-PASS \+ PR exists.*gh pr comment.*gh pr view/s);
   assert.match(reviewSkill, /must not recommend `\/audit-pr`/);
-  assert.match(persistAndDecide, /this is not the end of the turn.*run\s+step 13 before step 14/s);
+  assert.match(persistAndDecide, /receipt is a precondition of the report/);
+  assert.match(persistAndDecide, /After posting.*confirm\s+the newest marker equals the reviewed head SHA/s);
+});
+
+test("receipt closeout precedes the fixed report block", () => {
+  const receiptStep = persistAndDecide.indexOf("12. **Close out the final-review receipt before reporting.**");
+  const reportStep = persistAndDecide.indexOf("13. **Report block — Return exactly this structure**");
+  assert.ok(receiptStep >= 0, "receipt step must exist");
+  assert.ok(reportStep >= 0, "report step must exist");
+  assert.ok(receiptStep < reportStep, "the report must not be printed before the receipt is current");
 });
 
 test("REVIEW-PASS receipt body carries the exact marker and fixed fields", () => {

@@ -284,6 +284,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.3 | 2026-08-10 | patch | Makes the verified PR receipt a precondition of the review report, preventing the fixed report from ending the turn before the receipt is posted and re-read. |
 | 2.11.2 | 2026-08-10 | patch | Makes the final PR receipt closeout explicit and fail-closed before the review can recommend `audit-pr`; clarifies that the fixed report block does not end the turn. |
 | 2.11.1 | 2026-08-09 | patch | No behavior change: compresses review introduction, isolation, route guardrails, relationships, and close-out prose while preserving applicability and read-only contracts. |
 | 2.11.0 | 2026-08-09 | minor | Verifies the frozen acceptance blob before review and recommends bounded `loop-review-fold` on failure while preserving its read-only, exact-SHA receipt contract. |
