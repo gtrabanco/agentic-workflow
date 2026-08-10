@@ -2,7 +2,7 @@
 name: product-audit
 user-invocable: true
 disable-model-invocation: true
-version: 3.0.2
+version: 3.0.3
 metadata:
   opencode/autoinvoke: false
 argument-hint: <path-or-area> (optional — defaults to the whole product)
@@ -129,10 +129,14 @@ Verdict: <one-line honest health verdict>
 ## Manual-verification checklist (what automation can't confirm)
   - <item> …
 
-→ Next: /triage-issue <id> F<k> F<j> … — classify the proposed issues in one batch (opens the ones that warrant it)
+Finding set: F<k> + F<j> + F<m> (print every proposed finding; one finding → F<k>)
+→ Next: /triage-issue <id> F<k> F<j> F<m> — classify the complete finding set in one batch (opens the ones that warrant it)
   · accepted bug/debt → /plan-fix   · accepted capability → /plan-feature
   · nothing to act on → the persisted report is the record; move on
 ```
+
+Replace every finding placeholder with the complete actual set before printing;
+never print `…` or only the first finding in a live hand-off.
 
 `<id>` is the audit's incremental number (Process step 8). A finding is
 addressable forever as `<audit-id> F<k>` — e.g. `triage-issue 3 F2` reads

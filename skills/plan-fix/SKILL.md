@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.6.1
+version: 2.7.0
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -21,6 +21,7 @@ stop for review, then `execute-phase --fix` implements every remaining phase.
 ```
 ✓ The fix SPEC is committed on its `fix/<n>-<topic>` branch (commit sha pasted) — NOT pushed, NO PR
 ✓ The Hand-off block was printed exactly as specified
+✓ A multi-issue unit? The hand-off names every issue once as `#primary + #n2 + …`; a single-issue unit names only its issue
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English artifacts unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -87,13 +88,17 @@ After commit, print exactly:
 SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md
 Branch: fix/<primary>-<topic> (local, not pushed)
 Commit: <short hash>
+Issue set: #<primary> + #<n2> + #<n3> (print every issue in this unit; single issue → #<primary>)
 
-→ Next: review the SPEC, then /execute-phase --fix <primary> — execute every remaining phase and open the PR
-  · explicit atomic mode → /execute-phase --fix <primary> P<n>
+→ Next: review the SPEC, then /execute-phase --fix <primary> — execute every remaining phase in issue set #<primary> + #<n2> + #<n3> and open the PR
+  · explicit atomic mode → /execute-phase --fix <primary> P<n> (same issue set: #<primary> + #<n2> + #<n3>)
   · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<primary>`
-    (and `Closes #<n2>`, `Closes #<n3>`, … — one line per merged issue, when applicable)
+    plus one `Closes #<n>` line for every other issue listed in the Issue set
   · scope looks wrong → adjust the SPEC and re-run /plan-fix
 ```
+
+Replace every placeholder with the complete actual issue set before printing;
+never print `<n2>`, `<n3>`, or `…` in a live hand-off.
 
 Then end in the user's language with a 2-3 sentence summary: what the SPEC ships, the biggest risk, and any open decisions left for the implementer.
 

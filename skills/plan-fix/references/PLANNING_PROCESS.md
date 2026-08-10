@@ -49,7 +49,7 @@
    the PR later uses one `Closes #<n>` line per issue. Print exactly:
 
    ```text
-   MULTI-ISSUE MERGE — #<primary> (+#<n2>, #<n3>, …)
+   MULTI-ISSUE MERGE — #<primary> + #<n2> + #<n3>
    Atomic-delivery mode: <capability bundle|homogeneous mechanical batch>
    Checklist: ALL 5 boxes ticked
      ✓ shared outcome/rule: <one sentence>
@@ -58,11 +58,14 @@
      ✓ no isolation conflict: <evidence>
      ✓ aggregate size: <XS|S|M>
    Unit: docs/fix/<primary>-<topic>/SPEC.md
-   Issues merged: #<primary> (primary), #<n2>, #<n3>, …
+   Issues merged: #<primary> (primary) + #<n2> + #<n3>
    PR will carry: Closes #<primary>
                  Closes #<n2>
-                 Closes #<n3>
+   Closes #<n3>
    ```
+
+   Replace the placeholders with every actual issue number before printing;
+   use ` + ` between all members and never print a literal ellipsis.
 
    Any box fails → write nothing. Partition the input into the **fewest maximal
    compatible groups** that do pass (singletons only when no bundle exists),
