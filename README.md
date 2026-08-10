@@ -622,13 +622,34 @@ npx skills remove --yes \
   resolve-repository-state review-a11y review-brand review-change review-code \
   review-debt review-design review-implementation review-perf review-security \
   review-seo review-verify ship-roadmap triage-issue verification-contract \
-  workflow-status
+  workflow-status plan-feature-interview bump-skill
 ```
 
 Use the same command with `--global` to remove the global installation. The
 command targets only these `agentic-workflow` names; unrelated skills remain
-installed. Avoid `npx skills remove --all` unless you intend to remove every
-skill installed in that scope.
+installed. The final two names are retired legacy entries included to clean
+older lockfiles. Avoid `npx skills remove --all` unless you intend to remove
+every skill installed in that scope.
+
+For installations created before the retirement of `plan-feature-interview` or
+the internal exclusion of `bump-skill`, the command above also clears their
+legacy lock entries.
+
+### Repairing an older install
+
+`npx skills add` refreshes existing skills but does not prune retired names from
+an existing `skills-lock.json`. If the installer reports a skill claimed in the
+lockfile but missing on disk, remove the retired entries and reinstall:
+
+```sh
+npx skills remove --yes plan-feature-interview bump-skill
+npx skills add gtrabanco/agentic-workflow
+```
+
+For a global installation, add `--global` to both commands. These names are not
+published by the current pack: `plan-feature-interview` was an internal helper
+installed by older releases before its logic moved to `design-feature`, and
+`bump-skill` was later reclassified as repository-internal.
 
 ### Updating an existing install
 
