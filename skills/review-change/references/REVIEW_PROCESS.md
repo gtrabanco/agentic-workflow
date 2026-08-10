@@ -6,6 +6,10 @@
    skip straight to that mode's fusion step (N findings tables pasted in, per
    the synthesis contract). Either way, everything from step 2 onward runs
    once, over the fused table.
+   **Freeze the reviewed commit before any pass:** after the clean/remote-current
+   check, run `git rev-parse HEAD` once and retain its 40-hex output as the
+   **reviewed head SHA**. The final PR receipt may be written only for that exact
+   commit; a PR whose head changes during the review requires a fresh review.
 2. **Frozen acceptance + SPEC drift check (structural).** Locate sibling
    `ACCEPTANCE.md`, recompute its blob, and require an exact match with the
    execution receipt before assessing the candidate. Missing/mismatch is a

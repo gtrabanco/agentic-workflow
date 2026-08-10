@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const auditSkill = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/SKILL.md"), "utf8");
+const auditProcess = fs.readFileSync(path.join(repoRoot, "skills/audit-pr/references/03_AUDIT_PROCESS.md"), "utf8");
 
 const REVIEW_CONTRACT = "v1";
 const REVIEW_MARKER_RE = /<!-- review-change:pass sha=([0-9a-f]{40}) contract=([^ ]+) -->/;
@@ -128,6 +135,13 @@ test("stale receipt (any later commit) → BLOCKED routed to /review-change; no 
   assert.equal(result.route, "/review-change");
   assert.equal(result.gatesEvaluated, false);
   assert.equal(receiptStatus([{ body: reviewBody({ sha: oldSha, scope: "s", axes: "a", coverage: "c", invariants: "pass", proposals: "0", manual: "none" }) }], headSha).status, "stale");
+});
+
+test("audit-pr fetches the PR head with comments and treats every SHA mismatch as stale", () => {
+  assert.match(auditSkill, /--json[^\n]*headRefOid[^\n]*comments|--json[^\n]*comments[^\n]*headRefOid/);
+  assert.match(auditProcess, /headRefOid.*current head SHA|current head SHA.*headRefOid/s);
+  assert.doesNotMatch(auditSkill, /If \*\*empty\*\*.*receipt is still valid/s);
+  assert.match(auditProcess, /\*\*absent \/ stale\*\* → \*\*BLOCKER\*\*/);
 });
 
 test("missing receipt is a blocker even when every gate is nominally pass (receipt gate is first)", () => {
