@@ -1,7 +1,7 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.5.0
+version: 2.5.1
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -23,6 +23,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
 ✓ Nothing deferred was implemented inline
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
+✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
 ```
@@ -111,14 +112,20 @@ triage-issue ────┤                    or fold-findings (ledger row)
 - **The closing `→ Next:` block is printed** per verdict:
 
   ```
-  → Next: act on the verdict(s)
-    · fix-now → /plan-fix   · promote → /plan-feature
-    · fix-in-unit → /execute-phase <NN> P<k> (fold into phase) or
-      /fold-findings (ledger row) — never /plan-fix
+  Single issue:
+  → Next: <command for the recorded verdict> — act on the issue's evidence-backed action
+
+  Batch:
+  → Next: apply every verdict: #<n1> → <command> + #<n2> → <command> + #<n3> → <command>
+    · fix-now → /plan-fix <n>   · promote → /plan-feature <n>
+    · fix-in-unit → /execute-phase <NN> P<k> or /fold-findings — never /plan-fix
     · postpone → dated comment, leave open   · wontfix → propose close
     · same inconsistency across several issues → /product-audit (a recurring pattern,
       not isolated tickets — sweep the product rather than triaging one by one)
   ```
+
+  Replace every placeholder with every actual issue/finding ID and its recorded
+  route before printing; never print `<n2>`, `<command>`, or `…` in a live batch.
 
   The `/product-audit` line fires **only on a recurring inconsistency** — the same
   underlying problem behind multiple issues, not any single triage.
