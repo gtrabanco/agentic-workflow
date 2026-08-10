@@ -60,6 +60,12 @@ assert.match(verification, /git hash-object/);
 assert.match(verification, /deleting, skipping, narrowing, or loosening a validator/);
 
 const pluginSkills = plugin.skills.map((entry) => entry.replace("./skills/", ""));
+assert.ok(!pluginSkills.includes("bump-skill"), "bump-skill is repository-internal and must not be distributed");
+assert.ok(!pluginSkills.includes("plan-feature-interview"), "plan-feature-interview is retired and must not be distributed");
+assert.equal(fs.existsSync(path.join(root, "skills", "plan-feature-interview")), false,
+  "retired plan-feature-interview must remain absent from the source tree");
+assert.match(read("skills/bump-skill/SKILL.md"), /^user-invocable: false$/m);
+assert.match(read("skills/bump-skill/SKILL.md"), /^  internal: true$/m);
 for (const requiredDependency of ["loop-review-fold", "phase-contract", "planning-preflight", "verification-contract"]) {
   assert.ok(pluginSkills.includes(requiredDependency), `${requiredDependency} must be distributed by plugin.json`);
 }
