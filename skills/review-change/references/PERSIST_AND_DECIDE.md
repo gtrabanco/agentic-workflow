@@ -34,6 +34,13 @@
    it). `REVIEW-FAIL` and `NEEDS-DECISION` post **no** passing receipt; continue
    to step 13 after recording that status.
 
+   The reviewed head SHA is the value frozen by `git rev-parse HEAD` in the
+   review process. Resolve the PR identity immediately before this action with
+   `gh pr view --json number,headRefOid`. No PR → take the documented pre-PR
+   path. With a PR, its `headRefOid` **must equal the reviewed head SHA** before
+   querying or posting comments. A mismatch means the candidate changed during
+   review: do not post a receipt and re-run `/review-change` at the PR head.
+
    For `REVIEW-PASS` with a PR, write the body below to a **temporary** Markdown
    file (e.g. `$TMPDIR/review-receipt.md`), then run
    `gh pr comment <N> --body-file <path>` — never inline `--body`, never commit

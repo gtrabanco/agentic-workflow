@@ -1,10 +1,12 @@
 ## Process
 
 1. **Gather** — Step 0: project contract, PR, SPEC + artifacts, CI status.
-2. **Consume the review receipt** — Step 1: fetch the PR's comments
-   (`gh pr view <N> --json comments`) and take the **newest** marker
+2. **Consume the review receipt** — Step 1: fetch the PR's `headRefOid` and
+   comments in one query (`gh pr view <N> --json headRefOid,comments`) and take
+   the **newest** marker
    `<!-- review-change:pass sha=<40-hex> contract=v1 -->`. Its `sha` must equal
-   the PR's current head SHA.
+   that query's `headRefOid` current head SHA. Any mismatch is stale; do not
+   use a local diff to preserve a receipt for a different PR head.
    - **current** → acknowledge scope/axes, acceptance coverage, invariant result,
      manual checks; continue to the gates.
    - **absent / stale** → **BLOCKER** (no review evidence at the head), routed to

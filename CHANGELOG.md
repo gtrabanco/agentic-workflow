@@ -286,6 +286,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.5 | 2026-08-11 | patch | Freezes the reviewed commit and requires the PR's `headRefOid` to match it before publishing a REVIEW-PASS receipt; a changed PR head is re-reviewed instead of receiving an unresolvable receipt. |
 | 2.11.3 | 2026-08-10 | patch | Makes the verified PR receipt a precondition of the review report, preventing the fixed report from ending the turn before the receipt is posted and re-read. |
 | 2.11.4 | 2026-08-10 | patch | Requires REVIEW-FAIL and NEEDS-DECISION hand-offs to enumerate every affected finding ID instead of naming only a generic or first finding. |
 | 2.11.2 | 2026-08-10 | patch | Makes the final PR receipt closeout explicit and fail-closed before the review can recommend `audit-pr`; clarifies that the fixed report block does not end the turn. |
@@ -344,6 +345,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.3.1 | 2026-08-11 | patch | Fetches `headRefOid` with PR comments and accepts a REVIEW-PASS receipt only on that exact snapshot; any SHA mismatch is stale and routes to a fresh review. |
 | 4.3.0 | 2026-08-05 | minor | **Consumes the `review-change` review receipt** instead of re-reviewing the diff (feature 21): Step 1 fetches the PR's comments and takes the newest `<!-- review-change:pass sha=<40-hex> contract=v1 -->` marker; a current receipt is acknowledged as the review evidence, an absent/stale one is a blocker routed to `/review-change` (never re-reviewed here). The merge gates narrow to the SPEC's audit-only set — dropped the `Tests` (test-quality) gate and the acceptance-criteria diff-remapping (replaced by the receipt's acceptance-coverage field); the Architectural-invariants gate now mirrors the receipt's result instead of reclassifying. Process steps renumbered; the MERGE-READY comment cites the consumed receipt. Requires a `review-change` that posts the SHA-bound receipt; older `review-change` versions leave audit-pr blocked with no receipt at the head. |
 | 4.2.0 | 2026-07-31 | minor | Synchronizes the merge-consumer contract with the forge-verifiable fullauto authority boundary; standalone audits remain verdict/comment-only. |
 | 4.1.0 | 2026-07-31 | minor | Progressive loading moves merge gates, closure/descope checks, audit process, fixed verdict, routing/guardrails, and portability behind a mandatory one-hop audit route; merge ownership remains in the entrypoint. |
