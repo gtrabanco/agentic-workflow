@@ -124,6 +124,14 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > but every skill must run correctly on any agent and any model — see the README
 > model-equivalence table.
 
+> **Complete dynamic hand-offs.** When the invocation or artifact contains more
+> than one issue, dependency, finding, or other target, the closing recommendation
+> must name every actual ID once, in order, joined with ` + ` (for example,
+> `#71 + #72 + #73`). A command may use the designated primary when its syntax
+> requires one, but the full set must remain visible beside it. Never emit only
+> the primary, a generic "act on the verdicts", or literal placeholders/ellipsis
+> in a live hand-off.
+
 > **Turn contract at the top.** Every user-facing skill opens with a
 > `## Turn contract` section: the 2–6 boxes every invocation must tick before
 > the turn may end (the deliverable in its fixed format; the closing `→ Next:`

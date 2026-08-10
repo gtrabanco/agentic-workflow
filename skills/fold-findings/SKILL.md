@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.2.1
+version: 1.2.2
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -33,6 +33,7 @@ skill fixes each root cause, never relabeling, deferring, or weakening its check
      `DISPUTED` with evidence for a user decision, never a silent drop/issue.
 ✓ 5. The closing `Folded: n/m · Disputed: k · Blocked: j[ · Replan: r]` tally
      and outcome-branched `→ Next:` block are printed as the ABSOLUTE last output.
+     Every affected finding ID is named in that block, joined with ` + `.
 ```
 
 Any unchecked box means the turn is not done.
@@ -129,9 +130,12 @@ finding belongs to a pushed atomic batch and ticked row. Nothing is reclassified
 or touched outside the queue.
 
 ```
-→ Next: (branches on outcome)
-  · all FOLDED → /review-change — re-review the branch now that findings are fixed
-  · any DISPUTED → user decision — resolve the evidenced dispute(s) without creating backlog
-  · any BLOCKED → supply the missing input listed above, then re-run /fold-findings
-  · any REPLAN → confirm the proposed SPEC phase(s), then /execute-phase on this same branch
+→ Next: (branches on outcome; list every affected finding ID once as `F1 + F2 + …`)
+  · all FOLDED (<F1> + <F2> + …) → /review-change — re-review the branch now that all listed findings are fixed
+  · any DISPUTED (<F1> + <F2> + …) → user decision — resolve every evidenced dispute without creating backlog
+  · any BLOCKED (<F1> + <F2> + …) → supply the listed missing inputs, then re-run /fold-findings
+  · any REPLAN (<F1> + <F2> + …) → confirm all proposed SPEC phases, then /execute-phase on this same branch
 ```
+
+Replace placeholders with every actual affected finding ID before printing; never
+print `<F2>`, `…`, or a single representative ID in a live hand-off.

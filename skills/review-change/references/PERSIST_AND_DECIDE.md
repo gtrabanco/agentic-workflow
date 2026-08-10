@@ -80,14 +80,16 @@
    on the `Decision` value from step 12 and emit the matching block **verbatim,
    as multiple literal lines**. Never join the `·` sub-bullets into one prose
    line — each sub-bullet is its own line, exactly as quoted below.
+   For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the
+   closing recommendation, joined with ` + `; never hand off only the first.
 
    **`Decision: REVIEW-FAIL`** (any fix-now finding open) — the recommended line
    is the fold, never the merge gate. Findings were persisted in step 11; **no
    passing receipt was posted** (step 13):
 
    ```
-   → Next: /loop-review-fold <unit> — repair compatible fix-now batches and
-     re-review changed HEADs within the bounded correction budget
+   → Next: /loop-review-fold <unit> — repair all open fix-now findings: <F1> + <F2> + <F3>,
+     then re-review changed HEADs within the bounded correction budget
      · manual path → /fold-findings, then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),
@@ -127,7 +129,8 @@
    alone resolves it:
 
    ```
-   → Next: decision required — the unit blocks until the user decides
+   → Next: decision required — resolve all open findings: <F1> + <F2> + <F3>
+     before the unit continues
      · present the decision-required finding(s) with evidence; no issue is
        created (D3) and no passing receipt was posted (step 13)
      · once the user decides, re-run /review-change on this same branch

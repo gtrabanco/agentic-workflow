@@ -233,6 +233,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 3.5.1 | 2026-08-10 | patch | Makes blocked dependency hand-offs enumerate the complete deepest-first dependency chain instead of leaving it as an unexpanded placeholder. |
 | 3.5.0 | 2026-08-09 | minor | Clean and already-planned hand-offs now recommend target-only `execute-phase` for whole-unit delivery and list explicit `P1` only as the atomic alternative. |
 | 3.4.0 | 2026-08-04 | minor | Adds the planning preflight and phase contract as one-hop internal contracts (progressive-loading paths 2-3) and pins a single immutable planning context — one roadmap snapshot plus optional issue payload — reused across composed internals, never re-fetched mid-plan. |
 | 3.3.2 | 2026-08-03 | patch | Makes the issue-derived routing contract explicit: after `PLANNING_GATES.md` permits planning, compose `plan-feature-from-issue` and then `plan-feature-scaffold` in that order. |
@@ -260,6 +261,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 2.7.0 | 2026-08-10 | minor | Makes the hand-off preserve the complete multi-issue unit scope (`#primary + #n2 + …`) while keeping the executable command keyed to the primary issue. |
 | 2.6.1 | 2026-08-09 | patch | No behavior change: compresses input/output, hard-rule, progressive-loading, portability, and done-criteria prose while retaining multi-issue grouping semantics and contracts. |
 | 2.6.0 | 2026-08-09 | minor | Accepts compatible capability bundles and homogeneous mechanical issue batches using set-level outcome, verification, isolation, release/rollback, and aggregate-size checks; shared files/root cause/severity are no longer gates, and failed sets return the fewest maximal compatible groups. Emits frozen `ACCEPTANCE.md`. |
 | 2.5.0 | 2026-08-04 | minor | Consumes the shared planning preflight (normalized repository state read + one final architectural classification) and phase contract (canonical 8-box phase-lint + phase fingerprint) before drafting and emitting a fix SPEC; prose compressed so the route stays below its baseline budget. |
@@ -284,6 +286,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-change`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.11.4 | 2026-08-10 | patch | Requires REVIEW-FAIL and NEEDS-DECISION hand-offs to enumerate every affected finding ID instead of naming only a generic or first finding. |
 | 2.11.2 | 2026-08-10 | patch | Makes the final PR receipt closeout explicit and fail-closed before the review can recommend `audit-pr`; clarifies that the fixed report block does not end the turn. |
 | 2.11.1 | 2026-08-09 | patch | No behavior change: compresses review introduction, isolation, route guardrails, relationships, and close-out prose while preserving applicability and read-only contracts. |
 | 2.11.0 | 2026-08-09 | minor | Verifies the frozen acceptance blob before review and recommends bounded `loop-review-fold` on failure while preserving its read-only, exact-SHA receipt contract. |
@@ -323,6 +326,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `fold-findings`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.2.2 | 2026-08-10 | patch | Requires outcome hand-offs to enumerate every affected finding ID and its route. |
 | 1.2.1 | 2026-08-09 | patch | No behavior change: compresses queue discovery, guardrails, portability, relationships, and completion prose; fixed verdict/tally and frozen fold rules remain. |
 | 1.2.0 | 2026-08-09 | minor | Repairs the selected queue in compatible atomic batches while retaining one ledger verdict and evidence record per finding; disputes stop for user decision and no fold path auto-creates an issue. |
 | 1.1.1 | 2026-08-02 | patch | Splits frozen policy from the per-finding procedure behind mandatory one-hop routes and shortens activation metadata; classifications, forbidden actions, verdicts, and commit/push behavior are unchanged. |
@@ -332,6 +336,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `loop-review-fold`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.0.2 | 2026-08-10 | patch | Requires non-terminal review/fold routes to repeat every affected finding ID in the next-step recommendation. |
 | 1.0.1 | 2026-08-09 | patch | Makes the turn fail-closed on unchecked contract boxes and states the non-Claude portability fallbacks in the user-facing skill. |
 | 1.0.0 | 2026-08-09 | — | New bounded final review/correction conductor: reuses exact-SHA receipts, alternates fresh read-only review and batched fold contexts only for changed HEADs, defaults to two correction cycles, and stops on pass, decision, blocker, no progress, or budget exhaustion. Never merges or creates issues. |
 
@@ -368,6 +373,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.3 | 2026-08-10 | patch | Requires the audit hand-off to enumerate the complete finding set before batching triage. |
 | 3.0.2 | 2026-08-03 | patch | Load the audit-dimensions applicability matrix before selecting review dimensions, so Step 0 cannot make an incomplete axis decision ahead of the authoritative list. |
 | 3.0.1 | 2026-08-02 | patch | Moves audit dimensions and the nine-step sweep behind mandatory one-hop routes and removes repeated activation prose while keeping the fixed persisted report and recommend-only contract intact. |
 | 3.0.0 | 2026-07-31 | major | **Breaking invocation change:** this high-cost, recommend-only sweep is manual-only on Claude Code and OpenCode (`disable-model-invocation: true`, `opencode/autoinvoke: false`). Explicit `/product-audit` invocation remains unchanged; orchestrators and other skills must keep it as a human hand-off. |
@@ -414,6 +420,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.5.1 | 2026-08-10 | patch | Makes batched triage hand-offs map every issue/finding to its own concrete next command. |
 | 2.5.0 | 2026-07-31 | minor | Progressive loading selects forge-issue vs. persisted-audit input first, then loads label ownership and fold-ledger detail only for verdicts that need them. |
 | 2.4.0 | 2026-07-19 | minor | New **audit-finding mode** (`triage-issue <audit-id> F<k> …`): triages findings from a persisted `product-audit` report — re-verifies the finding against current code, dedupes against existing issues, opens the GitHub issue only on a fix-now/postpone/promote verdict (body cites `Origin: product audit <id>, finding F<k>`), and marks the finding triaged in the audit file with a dated `↳ triaged` note. Issue-number invocations are unchanged. |
 | 2.3.0 | 2026-07-18 | minor | Adds open-unit awareness (consumer-side complement of `#66`): a scope-membership check runs before classification (enumerate open units → both-sides-quoted issue↔SPEC/phase comparison) and a fifth verdict `fix-in-unit <unit>` resolves member issues on the open unit's own branch — fold into its `review-findings.md` ledger (provenance-marked `triage #<n> <date>` row) or its current/next phase, an incremental replan (`design-feature`/`plan-feature`/a SPEC `## Amendments` entry), or a scope-bleed restore. Non-member issues route byte-for-byte unchanged. Fixes `#86`+`#87`. |
