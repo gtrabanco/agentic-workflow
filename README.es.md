@@ -638,6 +638,29 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   Ver CHANGELOG.es.md → "Instalar y pinear una versión" para cómo funciona el pinning.
 ```
 
+## Desinstalación
+
+Para eliminar la instalación completa de `agentic-workflow` del proyecto actual
+sin seleccionar las skills de forma interactiva, pasa todos los nombres de las
+skills publicadas a un único comando `remove`:
+
+```sh
+npx skills remove --yes \
+  audit-docs audit-pr design-feature discover-repository-state execute-phase \
+  fold-findings generate-docs init-workspace log-session loop-review-fold \
+  orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
+  plan-feature-scaffold plan-fix planning-preflight product-audit \
+  resolve-repository-state review-a11y review-brand review-change review-code \
+  review-debt review-design review-implementation review-perf review-security \
+  review-seo review-verify ship-roadmap triage-issue verification-contract \
+  workflow-status
+```
+
+Usa el mismo comando con `--global` para eliminar la instalación global. El
+comando solo afecta a estos nombres de `agentic-workflow`; las skills ajenas
+permanecen instaladas. Evita `npx skills remove --all` salvo que quieras
+eliminar todas las skills instaladas en ese ámbito.
+
 ### Actualizar una instalación existente
 
 `npx skills add …` / `npx skills update` solo refresca las **skills**
