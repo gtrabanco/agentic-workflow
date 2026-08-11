@@ -339,6 +339,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `loop-review-fold`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.0.3 | 2026-08-11 | parche | Elimina prosa redundante de composición y relaciones entre skills para centrar el punto de entrada en el loop del PR objetivo. |
 | 1.0.2 | 2026-08-10 | parche | Exige que las rutas no terminales de review/fold repitan todos los IDs de findings afectados en la recomendación de siguiente paso. |
 | 1.0.1 | 2026-08-09 | parche | Hace que el turno falle de forma cerrada ante casillas de contrato sin marcar y explicita los fallbacks de portabilidad para agentes que no usan Claude Code. |
 | 1.0.0 | 2026-08-09 | — | Nuevo conductor final acotado de review/corrección: reutiliza recibos al SHA exacto, alterna review de solo lectura y fold por lotes en contextos limpios solo para HEADs distintos, permite dos ciclos por defecto y se detiene al aprobar, requerir decisión, bloquearse, no progresar o agotar presupuesto. Nunca fusiona ni crea issues. |
