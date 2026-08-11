@@ -338,6 +338,8 @@ How pinning actually works, verified against the `skills` CLI:
 #### `loop-review-fold`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-08-11 | minor | Adds first-action selection: resume an open fix-now queue with `fold-findings` before a new review; otherwise reuse PASS or review first. |
+| 1.0.4 | 2026-08-11 | patch | Adds trigger-rich routing metadata and an explicit target-execution guard so invocation cannot be mistaken for skill authoring or file inspection. |
 | 1.0.3 | 2026-08-11 | patch | Removes redundant skill-composition and relationship prose, leaving the entry point focused on the target PR loop. |
 | 1.0.2 | 2026-08-10 | patch | Requires non-terminal review/fold routes to repeat every affected finding ID in the next-step recommendation. |
 | 1.0.1 | 2026-08-09 | patch | Makes the turn fail-closed on unchecked contract boxes and states the non-Claude portability fallbacks in the user-facing skill. |
