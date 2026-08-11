@@ -338,6 +338,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `loop-review-fold`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.0.3 | 2026-08-11 | patch | Removes redundant skill-composition and relationship prose, leaving the entry point focused on the target PR loop. |
 | 1.0.2 | 2026-08-10 | patch | Requires non-terminal review/fold routes to repeat every affected finding ID in the next-step recommendation. |
 | 1.0.1 | 2026-08-09 | patch | Makes the turn fail-closed on unchecked contract boxes and states the non-Claude portability fallbacks in the user-facing skill. |
 | 1.0.0 | 2026-08-09 | — | New bounded final review/correction conductor: reuses exact-SHA receipts, alternates fresh read-only review and batched fold contexts only for changed HEADs, defaults to two correction cycles, and stops on pass, decision, blocker, no progress, or budget exhaustion. Never merges or creates issues. |
