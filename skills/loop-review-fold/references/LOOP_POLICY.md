@@ -9,6 +9,11 @@
   create backlog.
 - A valid current-HEAD `REVIEW-PASS` receipt is authoritative: return PASS
   without reopening review for identical bytes.
+- When there is no clean current `REVIEW-PASS` (exact SHA, matching acceptance,
+  and zero open rows) and the unit ledger contains an open `fix-now` row
+  (`class: fix-now`, `folded: no`), resume with `fold-findings` before starting
+  a new review. The queue is durable evidence of previously classified work,
+  not a passing review receipt.
 - Default correction budget is two; budget counts mutating fold passes.
 - Same HEAD may never enter review twice in one run. Same normalized open
   finding set after a fold with no new commit is NO-PROGRESS.
@@ -38,6 +43,8 @@ blank IDs, counters, states, evidence, arrays, or strings are invalid.
 | Observed state | Return |
 |---|---|
 | current exact-SHA pass receipt + matching acceptance + zero open rows | `PASS` (reviews 0, cycles 0) |
+| no clean current pass receipt + open `class: fix-now`, `folded: no` rows | start with `fold-findings`; do not spend a new review first |
+| no clean current pass receipt + no open fix-now rows | start with `review-change` |
 | review/fold needs a product, architecture, manifest, dispute, or replan choice | `NEEDS-DECISION` |
 | fold produces no new HEAD, or repeats the same findings without relevant diff | `NO-PROGRESS` (do not increment cycle) |
 | required command/input/environment is unavailable | `BLOCKED` |
@@ -55,7 +62,7 @@ Unit: <unit> · PR: <url> · HEAD: <sha>
 Acceptance: <blob> (<match|mismatch>)
 Reviews: <n> · Correction cycles: <used>/<max>
 Open findings: <F1 + F2 + …|none> · Receipt: <current sha|none>
-Evidence: <one concise line>
+Evidence: <one concise line including first action: PASS|FOLD|REVIEW and why>
 
 → Next: <terminal mapping; repeat every affected finding ID once, joined with ` + `>
   · PASS → /audit-pr — delivery/merge gate
