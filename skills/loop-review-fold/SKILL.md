@@ -1,7 +1,7 @@
 ---
 name: loop-review-fold
 user-invocable: true
-version: 1.0.2
+version: 1.0.3
 argument-hint: <NN> | --fix <n> [--max-cycles N] [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -41,46 +41,26 @@ Any unchecked box means the turn is not done.
 - `--adversarial N` — forwards the final-review mode to `review-change`.
 
 Invalid/missing unit, no open PR, dirty/unpushed branch, or non-positive budget
-stops before review with the exact evidence and recovery command.
+stops as `BLOCKED` with the recovery command.
 
-## Progressive loading
+## Process
 
-Read exactly, in order:
-
-1. [loop policy and terminal states](references/LOOP_POLICY.md)
-2. [review/fold process](references/LOOP_PROCESS.md)
-3. [portability and model routing](references/PORTABILITY.md) only when a named
-   fresh-context/tier primitive is unavailable.
-
-Consume the internal [verification contract](<../verification-contract/SKILL.md>).
-Compose `review-change` and `fold-findings`; never copy their finder,
-classification, ledger, or correction checklists into this skill.
+Read [loop policy and terminal states](references/LOOP_POLICY.md), then the
+[review/fold process](references/LOOP_PROCESS.md). Read
+[portability and model routing](references/PORTABILITY.md) only when a named
+fresh-context/tier primitive is unavailable.
 
 ## Portability (agents other than Claude Code)
 
-- Without a slash-command menu, open this `SKILL.md` in a fresh conversation and
-  follow it literally.
 - Without native fresh contexts, subagents, or tier controls, use the
   `PORTABILITY.md` fallbacks; never claim a context-clean review after the same
   context authored a correction.
 - Without `/loop`, re-invoke this skill manually and follow the terminal
-  `→ Next:` block. Keep the same remote-HEAD, receipt, finding, and cycle
-  counters.
-
-## Relationship to other skills
-
-- Starts after `execute-phase` opens a PR.
-- `review-change` owns immutable-candidate findings and the exact-SHA receipt.
-- `fold-findings` owns all mutation and per-finding ledger transitions.
-- `audit-pr` is the next gate only after terminal `PASS`.
-- `ship-roadmap` may use this as its REVIEW stage; it does not change merge
-  authority (`--fullauto` AUDIT wrapper only).
+  `→ Next:` block.
 
 ## Done when
 
-- One terminal state is reached with HEAD/receipt/findings/cycle evidence.
-- PASS has a current exact-SHA review receipt and zero open fix-now rows.
-- Every non-PASS state names a deterministic resume or decision path.
+Return the terminal state required by `LOOP_POLICY.md`.
 
 ```text
 → Next: (terminal-dependent; use LOOP_POLICY.md's exact block and repeat every open finding ID joined with ` + `)
