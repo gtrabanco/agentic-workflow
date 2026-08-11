@@ -13,6 +13,8 @@ const unitLoop = read("skills/execute-phase/references/UNIT_LOOP.md");
 const findingPolicy = read("skills/execute-phase/references/OPPORTUNISTIC_FINDING.md");
 const planFix = read("skills/plan-fix/references/PLANNING_PROCESS.md");
 const fold = read("skills/fold-findings/references/FOLD_PROCESS.md");
+const loopEntry = read("skills/loop-review-fold/SKILL.md");
+const loopProcess = read("skills/loop-review-fold/references/LOOP_PROCESS.md");
 const loop = read("skills/loop-review-fold/references/LOOP_POLICY.md");
 const verification = read("skills/verification-contract/SKILL.md");
 const planFeature = read("skills/plan-feature/SKILL.md");
@@ -48,6 +50,33 @@ assert.match(findingPolicy, /No automatic `gh issue create`/);
 assert.match(fold, /fewest atomic correction groups/);
 assert.match(fold, /one `FOLDED <same-sha>` line per\s+member/s);
 assert.match(fold, /never edit classification or create an\s+issue/s);
+
+assert.match(loopEntry, /Triggers: "loop-review-fold"/);
+assert.match(loopEntry, /not a skill-authoring or\s+installation task/);
+assert.match(loopEntry, /## When to use/);
+assert.match(loopEntry, /## Step 0 — Discover and execute the target \(always first\)/);
+assert.match(loopEntry, /Do not create, edit, install, or merely\s+inventory this skill/);
+assert.match(loopEntry, /Reading the references alone is not completion/);
+assert.match(loopEntry, /## Guardrails/);
+assert.match(loopEntry, /## Relationship to other skills/);
+assert.match(loopEntry, /thin state router/);
+assert.match(loopProcess, /Select the first action/);
+assert.match(loopProcess, /no clean current pass receipt .*any `class: fix-now`, `folded: no` row → invoke/s);
+assert.match(loopProcess, /must not spend a new review first/);
+assert.match(loopProcess, /no clean current pass receipt \+ no open fix-now rows → invoke/);
+assert.match(loopProcess, /A\s+successful fold always reviews the changed HEAD/);
+assert.match(loopProcess, /selected `first_action` only in the turn state/);
+assert.match(loop, /open `class: fix-now`, `folded: no` rows/);
+assert.match(loop, /first action: PASS\|FOLD\|REVIEW/);
+const firstAction = loopProcess.slice(
+  loopProcess.indexOf("2. **Select the first action."),
+  loopProcess.indexOf("3. **Initialize receipts."),
+);
+assert.ok(
+  firstAction.indexOf("current exact-SHA") < firstAction.indexOf("`fold-findings` first")
+    && firstAction.indexOf("`fold-findings` first") < firstAction.indexOf("`review-change` first"),
+  "first-action order must be PASS, fold-findings, then review-change",
+);
 
 for (const state of ["PASS", "NEEDS-DECISION", "BLOCKED", "NO-PROGRESS", "BUDGET-EXHAUSTED"]) {
   assert.match(loop, new RegExp(`\\b${state}\\b`));
