@@ -94,7 +94,7 @@ limits.
 |---|---|---|---|
 | `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | `loop-review-fold` (recommended on failure) / manual `fold-findings` |
 | `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
-| `loop-review-fold` | the **bounded correction loop** | Run a fresh-context review, fold the complete fix-now queue in batches, and review only the new HEAD. Stops on pass, decision, blocker, repeated state, or budget exhaustion; default correction budget is two cycles | `audit-pr` on pass / user decision on a terminal stop |
+| `loop-review-fold` | the **review/fold router** | Check persisted evidence, run `fold-findings` first when a previous `review-change` left an open queue, otherwise run `review-change`; after a changed HEAD, review again. Unresolved findings route to `triage-issue --prioritize-now`, with oversized work replanned into new manual phases | `audit-pr` on pass / user triage and manual execution on unresolved findings |
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges. Active `ship-roadmap --fullauto` is the only consumer allowed to execute an automated merge | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
@@ -108,7 +108,7 @@ limits.
 
 | Skill | Role | Hands off to |
 |---|---|---|
-| `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, or a dated comment |
+| `triage-issue` | Classify fix-now / fix-in-unit / promote / postpone / wontfix; a scope-membership check (before classification) routes an issue that already belongs to an open unit onto that unit's own branch; verify triggers vs. real code; accepts several issues in one batch; `--prioritize-now` triages unresolved review findings and routes oversized work to a plan with new phases | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, or a dated comment |
 
 ## Document
 
@@ -154,13 +154,13 @@ with no arguments uses the default stated here.
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (proposes only the new/missing template blocks; additive-only). |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |
-| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n> [--max-cycles N] [--adversarial N]` | Runs the bounded review/correction loop. Default: two correction cycles; `--adversarial N` is passed to each review. Stops rather than spinning when state repeats or human input is required. |
+| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n>` | Runs the simple review/fold router. It selects review or fold from persisted evidence, then routes unresolved findings to `/triage-issue --prioritize-now`; oversized work becomes new `P<n>` phases that the user executes manually. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | One issue → one fix unit. Multiple issues → one compatible capability bundle or homogeneous mechanical batch when the whole set shares an outcome, verification plan, and atomic release/rollback. If the set fails, returns the fewest maximal compatible groups instead of splitting reflexively into one PR per issue. |
 | `product-audit` | `/product-audit [path-or-area]` | Explicit invocation only. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Defaults to the current change (branch diff vs the default branch); a path widens/narrows. `--adversarial N` → N independent, context-clean, diff-only adversarial reviewers in parallel, findings merged and deduped (opt-in; auto-recommended for `L`/sensitive changes). |
 | `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Default: opens PRs, the human merges. `--fullauto` must be present on each iteration and uses the repository wrapper after a fresh MERGE-READY verdict. `--continue` resumes one stage. |
-| `triage-issue` | `/triage-issue <n> [n…]` | One or many issue numbers — batch runs produce independent verdicts plus one summary table, grouped by home unit for any `fix-in-unit` verdicts. |
+| `triage-issue` | `/triage-issue <n> [n…] \| --prioritize-now <unit> F<k> [F<j>…]` | Issue batches produce independent verdicts plus one summary table; review-finding mode attempts every unresolved finding now and routes oversized work to `plan-feature`/`plan-fix` plus new manual phases. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Default: human summary + the machine envelope. `--json-only` → envelope only (driver mode). `--last-envelope` → the driver's persisted envelope as a crash-recovery **hint** (diffed against recomputed state; never authoritative). No argument passing on your agent? Paste the JSON in the message — the last fenced json block of the *request* is read as the hint. |
 
 ## Built-in companions (Claude Code)
@@ -193,7 +193,8 @@ ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible bat
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-loop-review-fold ── bounded final review → compatible fold batches → changed-HEAD review;
+loop-review-fold ── persisted-state selection → review-change ↔ fold-findings;
+                    unresolved findings → triage-issue → replan + manual phases;
 review-change ── runs the applicable read-only reviews + classifies a change;
                  composes review-implementation + the platform's companion skills;
                  fix-now ─▶ folds into the open phase · replan-in-unit ─▶ new user-confirmed phases

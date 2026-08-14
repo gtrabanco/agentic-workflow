@@ -97,7 +97,7 @@ aplicados.
 |---|---|---|---|
 | `review-change` | el **cambio** | Ejecuta las revisiones aisladas aplicables, verifica el blob de aceptación congelado contra el recibo de código actual, mapea criterios a evidencia del diff, clasifica una vez y persiste un veredicto ligado al SHA. **Obligatorio antes del merge** | `loop-review-fold` (recomendado si falla) / `fold-findings` manual |
 | `fold-findings` | el **ledger de hallazgos** | Repara la cola seleccionada en lotes atómicos compatibles. Cada hallazgo conserva un veredicto y evidencia individuales; solo se agrupan miembros con una regla de corrección, validador y límite de rollback comunes | re-ejecutar `review-change` / presentar una disputa real al usuario |
-| `loop-review-fold` | el **loop acotado de corrección** | Ejecuta una review con contexto limpio, incorpora toda la cola fix-now por lotes y revisa solo el nuevo HEAD. Para al aprobar, requerir una decisión, bloquearse, repetir estado o agotar presupuesto; el presupuesto por defecto es de dos ciclos de corrección | `audit-pr` al aprobar / decisión del usuario ante una parada terminal |
+| `loop-review-fold` | el **router review/fold** | Comprueba la evidencia persistida, ejecuta primero `fold-findings` cuando una `review-change` anterior dejó una cola abierta; si no, ejecuta `review-change` y vuelve a revisar tras un HEAD cambiado. Los hallazgos no resueltos pasan a `triage-issue --prioritize-now`, y el trabajo grande se replantea en nuevas fases manuales | `audit-pr` al aprobar / triaje del usuario y ejecución manual ante hallazgos no resueltos |
 | `audit-pr` | el **PR** | Puerta de merge de solo lectura que **consume el recibo `REVIEW-PASS` vigente de `review-change`** (ausente/obsoleto → bloqueante enrutado a `/review-change`, nunca se re-revisa) → comentario MERGE-READY ligado al SHA o bloqueantes con evidencia; nunca edita ni fusiona. Solo un `ship-roadmap --fullauto` activo puede ejecutar un merge automatizado | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; extrae de los docs de feature → propone issues + cambios de roadmap (nunca arregla automáticamente); recurrencia de exportación de alcance (≥ 2 unidades consecutivas exportando alcance → hallazgo de calidad de planificación enrutado a #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | los **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones | informe (+ arreglos opcionales de bajo riesgo) |
@@ -112,7 +112,7 @@ aplicados.
 
 | Skill | Rol | Entrega a |
 |---|---|---|
-| `triage-issue` | Clasifica fix-now / fix-in-unit / promote / postpone / wontfix; un chequeo de pertenencia de alcance (antes de clasificar) enruta un issue que ya pertenece a una unidad abierta a la propia rama de esa unidad; verifica disparadores contra el código real; acepta varios issues en un solo lote | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, o un comentario fechado |
+| `triage-issue` | Clasifica fix-now / fix-in-unit / promote / postpone / wontfix; un chequeo de pertenencia de alcance (antes de clasificar) enruta un issue que ya pertenece a una unidad abierta a la propia rama de esa unidad; verifica disparadores contra el código real; acepta varios issues en un solo lote; `--prioritize-now` tría hallazgos de review no resueltos y lleva el trabajo grande a un plan con nuevas fases | `plan-fix`, `execute-phase`/`fold-findings` (fix-in-unit), `plan-feature`, o un comentario fechado |
 
 ## Documentar
 
@@ -159,13 +159,13 @@ indicado aquí.
 | `init-workspace` | `/init-workspace [target-dir]` | Por defecto el directorio actual. En un repositorio que ya tiene el andamiaje, cambia automáticamente al **modo actualización** (propone solo los bloques de plantilla nuevos/faltantes; solo aditivo). |
 | `log-session` | `/log-session [note]` | La nota opcional se antepone al Resumen de la entrada. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | Un slug o referencia de issue se detecta automáticamente; los flags fuerzan una ruta: `--from-issue N` (issue → mitad de producto acotada), `--scaffold <slug>` (directo al andamiaje de la mitad de ingeniería), `--next` (siguiente entrada del roadmap). Una feature sin diseñar (fila del roadmap por debajo de `defined`) → se detiene y redirige a `/design-feature` — sin flag de bypass. |
-| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n> [--max-cycles N] [--adversarial N]` | Ejecuta el loop acotado de revisión/corrección. Por defecto permite dos ciclos de corrección; `--adversarial N` se pasa a cada review. Se detiene en lugar de girar cuando se repite el estado o hace falta intervención humana. |
+| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n>` | Ejecuta el router simple review/fold. Elige review o fold según la evidencia persistida y lleva los hallazgos no resueltos a `/triage-issue --prioritize-now`; el trabajo grande se convierte en fases `P<n>` que el usuario ejecuta manualmente. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Un issue → una unidad de fix. Varios issues → un bloque de capacidad compatible o un lote mecánico homogéneo cuando todo el conjunto comparte resultado, plan de verificación y release/rollback atómico. Si el conjunto falla, devuelve el mínimo número de grupos compatibles máximos en vez de separar por reflejo un PR por issue. |
 | `product-audit` | `/product-audit [path-or-area]` | Solo por invocación explícita. Por defecto, el producto entero; una ruta/área acota el barrido. Solo propone — nunca arregla. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifica ambas fuentes de evidencia y publica el siguiente snapshot congelado, o se detiene con el input faltante explícito. |
 | `review-change` | `/review-change [path-or-glob] [--adversarial N]` | Por defecto, el cambio actual (diff de la rama frente a la rama por defecto); una ruta amplía/acota. `--adversarial N` → N revisores adversariales independientes, de contexto limpio, solo-diff, en paralelo, hallazgos fusionados y deduplicados (opt-in; auto-recomendado para cambios `L`/sensibles). |
 | `ship-roadmap` | `/ship-roadmap [--fullauto]` · `/ship-roadmap --continue [--fullauto]` | Por defecto abre PRs y el humano fusiona. `--fullauto` debe estar presente en cada iteración y usa el wrapper del repositorio tras un veredicto MERGE-READY fresco. `--continue` reanuda una etapa. |
-| `triage-issue` | `/triage-issue <n> [n…]` | Uno o varios números de issue — las ejecuciones en lote producen veredictos independientes más una tabla resumen, agrupada por unidad de origen para los veredictos `fix-in-unit`. |
+| `triage-issue` | `/triage-issue <n> [n…] \| --prioritize-now <unit> F<k> [F<j>…]` | Los lotes de issues producen veredictos independientes más una tabla resumen; el modo de hallazgos intenta arreglar ahora cada hallazgo no resuelto y lleva el trabajo grande a `plan-feature`/`plan-fix` más nuevas fases manuales. |
 | `workflow-status` | `/workflow-status [--json-only] [--last-envelope <json\|path>]` | Por defecto: resumen humano + el sobre-máquina. `--json-only` → solo el sobre (modo driver). `--last-envelope` → el sobre persistido del driver como **pista** de recuperación ante caídas (comparado contra el estado recalculado; nunca autoritativo). ¿Tu agente no pasa argumentos? Pega el JSON en el mensaje — se lee el último bloque json entre comillas de la *solicitud* como la pista. |
 
 ## Compañeras integradas (Claude Code)
@@ -199,7 +199,8 @@ ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (lote compatibl
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-loop-review-fold ── bounded final review → compatible fold batches → changed-HEAD review;
+loop-review-fold ── selección por estado persistido → review-change ↔ fold-findings;
+                    hallazgos no resueltos → triage-issue → replan + fases manuales;
 review-change ── runs the applicable read-only reviews + classifies a change;
                  composes review-implementation + the platform's companion skills;
                  fix-now ─▶ se incorpora a la fase abierta · replan-in-unit ─▶ nuevas fases confirmadas por el usuario

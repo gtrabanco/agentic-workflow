@@ -14,8 +14,8 @@ const findingPolicy = read("skills/execute-phase/references/OPPORTUNISTIC_FINDIN
 const planFix = read("skills/plan-fix/references/PLANNING_PROCESS.md");
 const fold = read("skills/fold-findings/references/FOLD_PROCESS.md");
 const loopEntry = read("skills/loop-review-fold/SKILL.md");
-const loopProcess = read("skills/loop-review-fold/references/LOOP_PROCESS.md");
-const loop = read("skills/loop-review-fold/references/LOOP_POLICY.md");
+const triage = read("skills/triage-issue/SKILL.md");
+const findingTriage = read("skills/triage-issue/references/REVIEW_FINDING_PROCESS.md");
 const verification = read("skills/verification-contract/SKILL.md");
 const planFeature = read("skills/plan-feature/SKILL.md");
 const workflowStatus = read("skills/workflow-status/SKILL.md");
@@ -52,37 +52,24 @@ assert.match(fold, /one `FOLDED <same-sha>` line per\s+member/s);
 assert.match(fold, /never edit classification or create an\s+issue/s);
 
 assert.match(loopEntry, /Triggers: "loop-review-fold"/);
-assert.match(loopEntry, /not a skill-authoring or\s+installation task/);
+assert.match(loopEntry, /review-change ── findings ──▶ fold-findings/);
 assert.match(loopEntry, /## When to use/);
-assert.match(loopEntry, /## Step 0 — Discover and execute the target \(always first\)/);
-assert.match(loopEntry, /Do not create, edit, install, or merely\s+inventory this skill/);
-assert.match(loopEntry, /Reading the references alone is not completion/);
+assert.match(loopEntry, /## Step 0 — Discover the project \(always first\)/);
+assert.match(loopEntry, /Apply this first-match table exactly/);
 assert.match(loopEntry, /## Guardrails/);
 assert.match(loopEntry, /## Relationship to other skills/);
-assert.match(loopEntry, /thin state router/);
-assert.match(loopProcess, /Select the first action/);
-assert.match(loopProcess, /no clean current pass receipt .*any `class: fix-now`, `folded: no` row → invoke/s);
-assert.match(loopProcess, /must not spend a new review first/);
-assert.match(loopProcess, /no clean current pass receipt \+ no open fix-now rows → invoke/);
-assert.match(loopProcess, /A\s+successful fold always reviews the changed HEAD/);
-assert.match(loopProcess, /selected `first_action` only in the turn state/);
-assert.match(loop, /open `class: fix-now`, `folded: no` rows/);
-assert.match(loop, /first action: PASS\|FOLD\|REVIEW/);
-const firstAction = loopProcess.slice(
-  loopProcess.indexOf("2. **Select the first action."),
-  loopProcess.indexOf("3. **Initialize receipts."),
-);
-assert.ok(
-  firstAction.indexOf("current exact-SHA") < firstAction.indexOf("`fold-findings` first")
-    && firstAction.indexOf("`fold-findings` first") < firstAction.indexOf("`review-change` first"),
-  "first-action order must be PASS, fold-findings, then review-change",
-);
-
-for (const state of ["PASS", "NEEDS-DECISION", "BLOCKED", "NO-PROGRESS", "BUDGET-EXHAUSTED"]) {
-  assert.match(loop, new RegExp(`\\b${state}\\b`));
-}
-assert.match(loop, /Default correction budget is two/);
-assert.match(loop, /Same HEAD may never enter review twice/);
+assert.match(loopEntry, /The loop ends at the first `PASS`, blocked\s+prerequisite, unresolved finding/);
+assert.match(loopEntry, /TRIAGE-REQUIRED/);
+assert.match(loopEntry, /triage-issue --prioritize-now/);
+assert.match(loopEntry, /plan-feature <slug>/);
+assert.match(loopEntry, /plan-fix <issue-number>/);
+assert.match(loopEntry, /execute those phases manually/);
+assert.match(triage, /--prioritize-now <unit> F<k>/);
+assert.match(triage, /Review findings/);
+assert.match(triage, /new `P<n>` phases/);
+assert.match(findingTriage, /complete correction that fits the current unit/);
+assert.match(findingTriage, /too large for the current fold/);
+assert.match(findingTriage, /execute.*phases.*manually/);
 
 assert.match(verification, /Status: frozen/);
 assert.match(verification, /git hash-object/);
