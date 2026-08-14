@@ -39,7 +39,7 @@ Final-phase / single-pass / fix hand-off:
 <unit> implemented, gate green, marked done.
 PR opened: <FULL PR URL — always printed here; not every agent shows open PRs>
 Roadmap/fix-index row: done · #<n> (linked and pushed)
-→ Next: /loop-review-fold <unit> (recommended bounded final review/correction loop)
+→ Next: /loop-review-fold <unit> (recommended review/fold router; unresolved findings go to triage/replan)
   · manual path → /review-change
   · clean    → /audit-pr (merge gate) → human merges
   · findings → fold fix-now into this PR; independent work remains a proposal until user triage; re-review

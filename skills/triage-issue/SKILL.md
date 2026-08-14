@@ -1,14 +1,16 @@
 ---
 name: triage-issue
 user-invocable: true
-version: 2.5.1
-argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…]
+version: 2.6.0
+argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
-  Verify an issue or persisted audit finding against current code, classify it,
-  and write only the contracted forge/ledger outcome. Supports independent
-  batches. Triggers: "triage-issue", "triage issue N", "is this trigger met".
+  Verify an issue, persisted audit finding, or unresolved review finding against
+  current code, classify it, and write only the contracted forge/ledger
+  outcome. Supports independent batches and an immediate-fix review-finding
+  route. Triggers: "triage-issue", "triage issue N", "triage this finding",
+  "is this trigger met".
 ---
 
 # Triage Issue
@@ -23,6 +25,7 @@ premature work (acting on a deferred item whose trigger is unmet) and silent rot
 ✓ One fixed-format verdict block per issue (Trigger / Checked / Evidence / VERDICT / Action) — plus the summary table when batched
 ✓ Nothing deferred was implemented inline
 ✓ Audit-finding mode (`<audit-id> F<k>`): the audit file carries its `↳ triaged` note, and any opened issue cites `Origin: product audit <id>, finding F<k>`
+✓ Review-finding mode (`--prioritize-now <unit> F<k>`): every named unresolved finding gets a verdict, an immediate-fix attempt, or an explicit replan/user-decision route
 ✓ Batched input? The closing recommendation maps every issue/finding ID to its own next command, joined with ` + `; it never collapses to one generic action
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
 ✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
@@ -43,14 +46,21 @@ first on purpose).
 - **Audit findings** — `triage-issue <audit-id> F<k> [F<j> …]` triages findings
   from a persisted `product-audit` report instead of existing issues (see
   *Audit-finding mode* below). Batching works the same way.
+- **Review findings** — `triage-issue --prioritize-now <unit> F<k> [F<j> …]`
+  triages unresolved rows from the current feature/fix unit's
+  `review-findings.md`. This route is for findings that `fold-findings` could
+  not close. `--prioritize-now` means attempt to resolve every named finding
+  immediately; it does not permit a downgrade, postponement, or silent drop.
 
 
 ## Step 0 — Discover the project (always first)
 
 Per the agent guide's **Workflow conventions** + **documentation map**, then read
 what THIS skill needs: the fix index (e.g. `docs/fix/README.md`) and fix SPEC
-template, and the roadmap. Then read the issue in full, including comments and
-labels (forge CLI per the project's Workflow conventions — examples use `gh`):
+template, and the roadmap. In review-finding mode, read the target unit's SPEC,
+acceptance, `review-findings.md`, current diff, and PR instead of looking for an
+issue comment. Otherwise read the issue in full, including comments and labels
+(forge CLI per the project's Workflow conventions — examples use `gh`):
 
 ```sh
 gh issue view <N> --json number,title,body,labels,state,comments
@@ -59,10 +69,11 @@ gh issue view <N> --json number,title,body,labels,state,comments
 
 ## Progressive loading — select the triage source
 
-The reference allowlist is exactly the four linked paths below. Never invent or
+The reference allowlist is exactly the five linked paths below. Never invent or
 read another `references/` path. After Step 0:
 
 - Forge issue number(s): read [issue process](references/ISSUE_PROCESS.md).
+- Review finding(s): read [review finding process](references/REVIEW_FINDING_PROCESS.md).
 - Persisted audit finding(s): first read
   [audit findings](references/AUDIT_FINDINGS.md), then use the verification and
   decision steps in [issue process](references/ISSUE_PROCESS.md).
@@ -104,9 +115,15 @@ triage-issue ────┤                    or fold-findings (ledger row)
                  └─ wontfix ─────────▶ propose close
 ```
 
+In review-finding mode, `replan-in-unit` routes to `/plan-feature` for a
+feature or `/plan-fix` for a fix, with new `P<n>` phases appended to the same
+unit. The user manually runs those phases; this skill never implements them.
+
 ## Done when
 
 - The issue has a clear verdict with cited evidence.
+- Each review finding has a clear verdict with cited evidence; an oversized
+  finding has an explicit planning command and a manual `/execute-phase` hand-off.
 - The verdict is recorded (routed, commented, and/or index-updated), and nothing
   deferred was implemented inline.
 - **The closing `→ Next:` block is printed** per verdict:

@@ -253,16 +253,16 @@ like any phase.
 
 Unit-loop execution records risk triggers but does not interrupt for intermediate
 reviews. It hands off once at the end to mandatory `loop-review-fold`, which
-reviews a frozen candidate, batches compatible corrections, and re-reviews only
-changed HEADs under a fixed cycle budget. A finished unit
+selects review or fold from persisted evidence and re-reviews only changed
+HEADs. A finished unit
 **always opens its PR and flips to `done`** (built, not merged — merge state lives in
 the forge); the final review and the merge gate then run over the PR:
 
-- **`loop-review-fold`** — the bounded conductor. Reuses an exact-SHA
-  `REVIEW-PASS` receipt or invokes `review-change` in a fresh read-only context;
-  on failure it invokes `fold-findings` in a separate writer context, then
-  reviews only the new HEAD. It stops on pass, decision, blocker, no progress,
-  or budget exhaustion (two correction cycles by default).
+- **`loop-review-fold`** — the simple router. A previous review with an open
+  queue invokes `fold-findings` first; otherwise it invokes `review-change`.
+  After a changed HEAD it reviews again. Unresolved findings go to
+  `triage-issue --prioritize-now`; oversized work is replanned into new `P<n>`
+  phases that the user executes manually.
 - **`review-change`** — the read-only review engine. Runs only the reviews that **apply to
   this platform**, checks **SPEC drift** (does the diff actually do what the
   SPEC promises — nothing contradicted, silently exceeded, or left untouched?),
@@ -315,7 +315,7 @@ Re-run the gate (type-check, tests, build) green.
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN                  → P1…hardening, fresh worker per phase, gate green, one commit each
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
-/loop-review-fold NN                → review → batch corrections → changed-HEAD review, bounded to two correction cycles by default
+/loop-review-fold NN                → select review/fold from persisted evidence → review changed HEAD; triage unresolved findings
 /audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
    → human merges
 ```
