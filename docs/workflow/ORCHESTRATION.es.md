@@ -112,11 +112,11 @@ un driver que quiera el sobre debe suministrarlo él mismo:
 |---|---|---|---|
 | `OK` | La skill terminó su trabajo | Invocar `next.recommended` | según `next.tier` |
 | `CONTINUE` | Misma unidad, más trabajo (siguiente fase / iteración) | Reinvocar `next.recommended` | `cheap` |
-| `READY_FOR_REVIEW` | Fin de unidad | `/loop-review-fold <unidad>` | conductor `strong`; tier de fold enrutado |
+| `READY_FOR_REVIEW` | Fin de unidad | `/loop-review-fold <unidad>` | router de estado `strong`; tier delegado de review/fold |
 | `READY_FOR_AUDIT` | Revisión limpia | `/audit-pr` | `strong` |
 | `MERGE_READY` | Auditoría aprobada; comentario publicado en el PR | El humano fusiona, o tu política fusiona (respeta la checklist pre-merge de la skill) | — |
 | `MERGED` | Auto-merge autorizado ejecutado | Siguiente unidad: `workflow-status` → enrutar | `cheap` (sensor) |
-| `NEEDS_FIXES` | Hallazgos fix-now / bloqueadores dentro de alcance | Continuar el ciclo acotado `/loop-review-fold <unidad>` | `cheap` para incorporar, `strong` para repuerta |
+| `NEEDS_FIXES` | Hallazgos fix-now / bloqueadores dentro de alcance | Continuar `/loop-review-fold <unidad>`; las filas pendientes pasan a triaje/replan | `cheap` para incorporar, `strong` para repuerta |
 | `BLOCKED` | Dependencia no cumplida / causa externa | Seguir `dependencies.build_order` (planificar+ejecutar primero la unidad no cumplida más profunda) o resolver `blockers[]` | según el paso bloqueado |
 | `NEEDS_INPUT` | Se requiere una decisión humana | Mostrar `needs_input.question` + `options`; reanudar con la respuesta | — |
 | `FAILED` | Reintentos agotados (puerta en rojo, sustrato) | Detener esta unidad; un humano la revisa | — |
@@ -356,12 +356,13 @@ solo su recibo compacto e inicia el siguiente worker. Pasar `P<k>` a
 `execute-phase` sigue siendo la primitiva manual/del driver para exactamente una
 fase.
 
-Después de abrir el PR, invoca `loop-review-fold`. Reutiliza un recibo de pase
-ligado al SHA exacto; si no existe, alterna una review de solo lectura y contexto
-limpio con un fold escritor también limpio. Por defecto permite dos ciclos de
-corrección y se detiene ante una decisión humana, bloqueo, estado repetido o
-presupuesto agotado. Un RLM puede conservar recibos y resúmenes de fallo, pero
-los bytes de aceptación y el estado del repositorio/forja siguen mandando.
+Después de abrir el PR, invoca `loop-review-fold`. Comprueba la evidencia
+persistida, incorpora primero una cola abierta dejada por `review-change` y
+solo revisa un HEAD cambiado. Los hallazgos no resueltos pasan a
+`triage-issue --prioritize-now`; el trabajo grande se convierte en nuevas fases
+que el usuario ejecuta manualmente. Un RLM puede conservar recibos y resúmenes
+de fallo, pero los bytes de aceptación y el estado del repositorio/forja siguen
+mandando.
 
 ## Qué sigue siendo exclusivo de Claude Code (y su estado)
 

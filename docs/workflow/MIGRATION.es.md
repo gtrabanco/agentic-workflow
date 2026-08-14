@@ -2,6 +2,32 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-14 — `loop-review-fold` pasa a ser un router simple review/fold
+
+**Contrato incompatible; `loop-review-fold` 2.0.0.** Se eliminan el contrato
+del antiguo conductor acotado y sus flags de loop `--max-cycles` /
+`--adversarial`. La skill ahora lee la evidencia persistida y elige exactamente
+una primera acción: `REVIEW-PASS` vigente → parar; review anterior con cola
+abierta en el ledger → `fold-findings`; en otro caso → `review-change`. Después
+de un fold correcto vuelve a revisar el HEAD cambiado.
+
+Los hallazgos no resueltos ya no se convierten en estados terminales opacos del
+loop. Se llevan a `triage-issue --prioritize-now <unit> F<k> [F<j> …]`, que debe
+intentar arreglar inmediatamente todos los hallazgos nombrados. Si el arreglo
+correcto más pequeño es demasiado grande, el triaje vuelve a ejecutar
+`plan-feature` o `plan-fix`, añade fases `P<n>` explícitas y pide al usuario que
+las ejecute manualmente antes de reanudar el loop. `triage-issue` 2.6.0 añade
+este modo de hallazgos de review.
+
+**Migración.** Sustituye las llamadas que pasan `--max-cycles` o
+`--adversarial`; el loop ya no los acepta. Actualiza los drivers para persistir
+y exponer el recibo de review actual y `review-findings.md`. Después de un fold
+que no pueda cerrar todas las filas, invoca `triage-issue --prioritize-now` para
+cada hallazgo restante, sigue la ruta de planificación devuelta, ejecuta las
+nuevas fases manualmente y vuelve a ejecutar `loop-review-fold` sobre el nuevo
+HEAD. Una parada del loop con hallazgos pendientes no significa que esté listo
+para merge.
+
 ## 2026-08-09 — la ejecución solo-con-objetivo pasa a un loop acotado de unidad completa
 
 **Cambio incompatible por defecto; feature 22, no una ampliación de la feature

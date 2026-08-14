@@ -103,11 +103,11 @@ a driver that wants the envelope must supply it itself:
 |---|---|---|---|
 | `OK` | Skill finished its job | Invoke `next.recommended` | per `next.tier` |
 | `CONTINUE` | Same unit, more work (next phase / iteration) | Re-invoke `next.recommended` | `cheap` |
-| `READY_FOR_REVIEW` | Unit end | `/loop-review-fold <unit>` | `strong` conductor; routed fold tier |
+| `READY_FOR_REVIEW` | Unit end | `/loop-review-fold <unit>` | `strong` state router; delegated review/fold tier |
 | `READY_FOR_AUDIT` | Review clean | `/audit-pr` | `strong` |
 | `MERGE_READY` | Audit passed; PR comment posted | Human merges, or your policy merges (respect the skill's pre-merge checklist) | — |
 | `MERGED` | Authorized auto-merge executed | Next unit: `workflow-status` → route | `cheap` (sensor) |
-| `NEEDS_FIXES` | fix-now findings / in-scope blockers | Continue the bounded `/loop-review-fold <unit>` cycle | `cheap` fold, `strong` re-gate |
+| `NEEDS_FIXES` | fix-now findings / in-scope blockers | Continue `/loop-review-fold <unit>`; unresolved rows route to triage/replan | `cheap` fold, `strong` re-gate |
 | `BLOCKED` | Unmet dependency / external cause | Follow `dependencies.build_order` (plan+execute the deepest unmet unit first) or resolve `blockers[]` | per blocked step |
 | `NEEDS_INPUT` | Human decision required | Surface `needs_input.question` + `options`; resume with the answer | — |
 | `FAILED` | Retries exhausted (red gate, substrate) | Stop this unit; a human looks | — |
@@ -321,12 +321,12 @@ cheap headless worker with the current phase plus the frozen acceptance blob,
 persist only its compact receipt, then start the next worker. Passing `P<k>` to
 `execute-phase` remains the manual/driver primitive for exactly one phase.
 
-After the PR opens, invoke `loop-review-fold`. It reuses an exact-SHA pass
-receipt, otherwise alternates a fresh read-only review and a fresh writer fold.
-The default permits two correction cycles and stops on a human decision,
-blocker, repeated state, or exhausted budget. An RLM may hold receipts and
-failure summaries, but acceptance bytes and repository/forge state remain the
-authority.
+After the PR opens, invoke `loop-review-fold`. It checks persisted evidence,
+folds an open queue left by `review-change` before reviewing again, and reviews
+only a changed HEAD. Unresolved findings go to
+`triage-issue --prioritize-now`; oversized work becomes new phases that the
+user executes manually. An RLM may hold receipts and failure summaries, but
+acceptance bytes and repository/forge state remain the authority.
 
 ## What remains Claude Code-only (and its status)
 
