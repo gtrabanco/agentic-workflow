@@ -54,13 +54,13 @@ test("batch triage maps each issue to its own next command", () => {
 test("product audit and loop review preserve complete finding sets", () => {
   const productAudit = readSkill("product-audit");
   const loop = readSkill("loop-review-fold");
-  const policy = readReference("loop-review-fold", "LOOP_POLICY.md");
 
   assert.match(productAudit, /Finding set: F<k> \+ F<j> \+ F<m>/);
   assert.match(productAudit, /complete actual set/);
-  assert.match(loop, /every finding ID once, joined with ` \+ `/);
-  assert.match(policy, /repeat every affected finding ID once, joined with ` \+ `/);
-  assert.match(policy, /never print a literal placeholder or ellipsis/);
+  assert.match(loop, /list each actual finding ID exactly\s+once joined with ` \+ `/);
+  assert.match(loop, /Replace every placeholder, list each actual finding ID/);
+  assert.match(loop, /never emit a literal ellipsis/);
+  assert.match(loop, /triage-issue --prioritize-now/);
 });
 
 console.log("PASS next recommendations: complete issue, dependency, and finding sets are required");

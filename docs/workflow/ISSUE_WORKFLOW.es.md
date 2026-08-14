@@ -99,8 +99,10 @@ en el índice y confirma en una rama de fix. Después
 4. Ejecuta la puerta (chequeo de tipos, tests, build).
 5. **Marca el fix como `done` y abre el PR con `Closes #N` (siempre — nunca
    solo-en-rama).** `done` significa construido, no fusionado.
-6. Ejecuta `/loop-review-fold --fix <N>` obligatorio; los hallazgos ajenos
-   quedan como propuestas salvo que el usuario pida archivarlos. Después
+6. Ejecuta `/loop-review-fold --fix <N>` obligatorio; el router reanuda con la
+   cola de fold si `review-change` ya se ejecutó. Los hallazgos no resueltos
+   pasan a `/triage-issue --prioritize-now`; el trabajo grande se replantea en
+   nuevas fases y el usuario retoma `/execute-phase` manualmente. Después
    `/audit-pr` actúa como puerta de merge (nunca fusionar con docs pendientes).
 7. **Solo después del merge:** elimina la entrada de
    `docs/fix/README.md` — nunca antes (no dejes de rastrear el issue antes

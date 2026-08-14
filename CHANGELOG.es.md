@@ -339,6 +339,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `loop-review-fold`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.0 | 2026-08-14 | mayor | **Cambio incompatible:** sustituye el conductor acotado y sus flags eliminados por un router simple basado en estado persistido entre `review-change` y `fold-findings`; los hallazgos no resueltos pasan a `triage-issue --prioritize-now` y el trabajo grande se convierte en fases `plan-feature`/`plan-fix` confirmadas por el usuario. |
 | 1.1.0 | 2026-08-11 | menor | Añade la selección de la primera acción: reanuda una cola fix-now abierta con `fold-findings` antes de una review nueva; si no, reutiliza PASS o empieza por review. |
 | 1.0.4 | 2026-08-11 | parche | Añade metadatos de activación y una protección explícita para ejecutar sobre el target, evitando confundir la invocación con autoría o inspección de la skill. |
 | 1.0.3 | 2026-08-11 | parche | Elimina prosa redundante de composición y relaciones entre skills para centrar el punto de entrada en el loop del PR objetivo. |
@@ -427,6 +428,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `triage-issue`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.6.0 | 2026-08-14 | menor | Añade el modo de hallazgos de review `--prioritize-now <unit> F<k> …`: intenta arreglar inmediatamente cada hallazgo no resuelto o lleva el trabajo grande a `plan-feature`/`plan-fix`, nuevas fases `P<n>` y ejecución manual del usuario. |
 | 2.5.1 | 2026-08-10 | parche | Hace que los hand-offs de triage por lotes asignen a cada issue/finding su propio comando concreto siguiente. |
 | 2.5.0 | 2026-07-31 | menor | La carga progresiva selecciona primero issue del forge frente a hallazgo de auditoría persistido y después carga el detalle de propiedad de etiquetas y ledger de fold solo para los veredictos que lo necesitan. |
 | 2.4.0 | 2026-07-19 | menor | Nuevo **modo hallazgo-de-auditoría** (`triage-issue <audit-id> F<k> …`): tría hallazgos de un informe persistido de `product-audit` — re-verifica el hallazgo contra el código actual, deduplica contra issues existentes, abre el issue de GitHub solo con un veredicto fix-now/postpone/promote (el cuerpo cita `Origin: product audit <id>, finding F<k>`), y marca el hallazgo como triado en el fichero de auditoría con una nota datada `↳ triaged`. Las invocaciones por número de issue no cambian. |
@@ -570,6 +572,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-14 — simplificar el loop review/fold.** `loop-review-fold` 2.0.0
+  ahora elige `review-change` o `fold-findings` según la evidencia persistida y
+  lleva los hallazgos no resueltos a `triage-issue --prioritize-now`; el trabajo
+  grande se replantea en nuevas fases para que el usuario las ejecute manualmente.
 
 - **2026-08-09 — distribuir contratos de ejecución.** La ruta normal de
   `skills add` ahora instala `phase-contract`, `planning-preflight` y
