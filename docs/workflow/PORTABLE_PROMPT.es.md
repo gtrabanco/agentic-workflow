@@ -117,8 +117,9 @@ the frozen ledger and route missing or contradictory state to these skills.
    (unfixable-in-scope failures → known-issues + stop). When reality contradicts
    the plan, update TASKS/PLAN and record why — never silently diverge. Per-phase
    doc discipline; no intermediate reviews in unit-loop mode. A finished unit
-   hands off to mandatory bounded `loop-review-fold`, which keeps review and
-   correction contexts separate. A finished unit (the final `Hardening & PR` phase for
+   hands off to mandatory `loop-review-fold`, que selecciona review o fold según
+   la evidencia persistida y mantiene separados los contextos de review y
+   corrección. Una unidad terminada (la fase final `Hardening & PR` para
    XS/S and fixes, a feature's final phase, or a legacy single pass)
    **always opens its PR** (never branch-only) and **flips to `done` at PR-open**
    (built, not merged — merge state lives in the forge). Print the next step.
@@ -145,7 +146,8 @@ the frozen ledger and route missing or contradictory state to these skills.
    appends user-confirmed phases, decision-required surfaces to the user, and
    independent proposals are batched for explicit user triage (never create
    backlog yourself). Findings only; on failure recommend `loop-review-fold`;
-   only a clean current receipt proceeds to `audit-pr`.
+   los hallazgos no resueltos pasan a `triage-issue --prioritize-now`; solo un
+   recibo actual y limpio permite continuar a `audit-pr`.
 9. `audit-pr` — PR-level merge gate: SPEC acceptance met, all phases complete,
    docs updated (**never merge with pending docs**), `Closes #N`, the issue/fix-index
    entry still tracked (removed only after merge), tests, CI green, branch

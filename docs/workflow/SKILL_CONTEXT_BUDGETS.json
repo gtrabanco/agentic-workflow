@@ -148,15 +148,16 @@
       "routeLinesMax": 980
     },
     "loop-review-fold:default": {
-      "skills": ["loop-review-fold", "review-change", "fold-findings", "verification-contract"],
+      "skills": ["loop-review-fold", "review-change", "fold-findings", "triage-issue", "verification-contract"],
       "references": {
-        "loop-review-fold": ["LOOP_POLICY.md", "LOOP_PROCESS.md"],
+        "loop-review-fold": [],
         "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_RECOMMENDATION.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"],
-        "fold-findings": ["FOLD_POLICY.md", "FOLD_PROCESS.md"]
+        "fold-findings": ["FOLD_POLICY.md", "FOLD_PROCESS.md"],
+        "triage-issue": ["REVIEW_FINDING_PROCESS.md"]
       },
       "templates": [],
-      "routeEstimateMax": 20000,
-      "routeLinesMax": 1400
+      "routeEstimateMax": 21000,
+      "routeLinesMax": 1450
     },
     "audit-pr:feature": {
       "skills": ["audit-pr"],
