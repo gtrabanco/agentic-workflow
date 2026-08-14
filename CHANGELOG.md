@@ -338,6 +338,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `loop-review-fold`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.0.0 | 2026-08-14 | major | **Breaking:** replaces the bounded conductor and removed loop flags with a simple persisted-state router between `review-change` and `fold-findings`; unresolved findings route to `triage-issue --prioritize-now`, and oversized work becomes user-confirmed `plan-feature`/`plan-fix` phases. |
 | 1.1.0 | 2026-08-11 | minor | Adds first-action selection: resume an open fix-now queue with `fold-findings` before a new review; otherwise reuse PASS or review first. |
 | 1.0.4 | 2026-08-11 | patch | Adds trigger-rich routing metadata and an explicit target-execution guard so invocation cannot be mistaken for skill authoring or file inspection. |
 | 1.0.3 | 2026-08-11 | patch | Removes redundant skill-composition and relationship prose, leaving the entry point focused on the target PR loop. |
@@ -426,6 +427,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `triage-issue`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 2.6.0 | 2026-08-14 | minor | Adds `--prioritize-now <unit> F<k> …` review-finding mode: attempt every unresolved finding immediately, or route oversized work to `plan-feature`/`plan-fix`, new `P<n>` phases, and manual user execution. |
 | 2.5.1 | 2026-08-10 | patch | Makes batched triage hand-offs map every issue/finding to its own concrete next command. |
 | 2.5.0 | 2026-07-31 | minor | Progressive loading selects forge-issue vs. persisted-audit input first, then loads label ownership and fold-ledger detail only for verdicts that need them. |
 | 2.4.0 | 2026-07-19 | minor | New **audit-finding mode** (`triage-issue <audit-id> F<k> …`): triages findings from a persisted `product-audit` report — re-verifies the finding against current code, dedupes against existing issues, opens the GitHub issue only on a fix-now/postpone/promote verdict (body cites `Origin: product audit <id>, finding F<k>`), and marks the finding triaged in the audit file with a dated `↳ triaged` note. Issue-number invocations are unchanged. |
@@ -569,6 +571,11 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-14 — simplify the review/fold loop.** `loop-review-fold` 2.0.0
+  now selects `review-change` or `fold-findings` from persisted evidence and
+  sends unresolved findings through `triage-issue --prioritize-now`; oversized
+  work is replanned into new phases for manual user execution.
 
 - **2026-08-09 — distribute runtime contracts.** The default `skills add` path now
   installs `phase-contract`, `planning-preflight`, and `verification-contract`

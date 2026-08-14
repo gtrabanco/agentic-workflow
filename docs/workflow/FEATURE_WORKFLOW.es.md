@@ -283,18 +283,18 @@ verificada por la puerta como cualquier fase.
 La ejecución en loop de unidad registra los disparadores de riesgo, pero no
 interrumpe con reviews intermedias. Entrega una vez al final al obligatorio
 `loop-review-fold`, que revisa una candidata congelada, agrupa correcciones
-compatibles y solo vuelve a revisar HEADs distintos bajo un presupuesto fijo.
+compatibles y solo vuelve a revisar HEADs cambiados según la evidencia
+persistida.
 Una
 unidad terminada **siempre abre su PR y pasa a `done`** (construida, no
 fusionada — el estado de merge vive en la forja); la revisión final y la
 puerta de merge se ejecutan entonces sobre el PR:
 
-- **`loop-review-fold`** — el conductor acotado. Reutiliza un recibo
-  `REVIEW-PASS` ligado al SHA exacto o invoca `review-change` en un contexto
-  limpio de solo lectura; si falla, invoca `fold-findings` en otro contexto
-  escritor y solo revisa el nuevo HEAD. Se detiene al aprobar, requerir una
-  decisión, bloquearse, no progresar o agotar el presupuesto (dos ciclos de
-  corrección por defecto).
+- **`loop-review-fold`** — el router simple. Una review anterior con una cola
+  abierta invoca primero `fold-findings`; si no, invoca `review-change`. Después
+  de un HEAD cambiado vuelve a revisar. Los hallazgos no resueltos pasan a
+  `triage-issue --prioritize-now`; el trabajo grande se replantea en nuevas
+  fases `P<n>` que el usuario ejecuta manualmente.
 - **`review-change`** — el motor de review de solo lectura. Ejecuta solo las revisiones que
   **aplican a esta plataforma**, comprueba **desviación del SPEC** (¿el diff
   realmente hace lo que promete el SPEC — nada contradicho, superado
@@ -354,7 +354,7 @@ Vuelve a ejecutar la puerta (chequeo de tipos, tests, build) en verde.
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN                  → P1…hardening, fresh worker per phase, gate green, one commit each
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
-/loop-review-fold NN                → review → batch corrections → changed-HEAD review, bounded to two correction cycles by default
+/loop-review-fold NN                → seleccionar review/fold por evidencia persistida → revisar HEAD cambiado; triar hallazgos pendientes
 /audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
    → human merges
 ```

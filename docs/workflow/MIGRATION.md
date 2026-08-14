@@ -2,6 +2,30 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-14 — `loop-review-fold` is a simple review/fold router
+
+**Breaking contract; `loop-review-fold` 2.0.0.** The old bounded conductor
+contract and its `--max-cycles` / `--adversarial` loop flags are removed. The
+skill now reads persisted evidence and selects exactly one first action:
+current `REVIEW-PASS` → stop; a previous review with an open ledger queue →
+`fold-findings`; otherwise → `review-change`. A successful fold is followed by
+review on the changed HEAD.
+
+Unresolved findings no longer become opaque terminal loop states. Route them to
+`triage-issue --prioritize-now <unit> F<k> [F<j> …]`, which must attempt every
+named correction immediately. If the smallest correct correction is too large,
+the triage route re-runs `plan-feature` or `plan-fix`, appends explicit `P<n>`
+phases, and asks the user to execute those phases manually before resuming the
+loop. `triage-issue` 2.6.0 adds this review-finding mode.
+
+**Migration.** Replace calls that pass `--max-cycles` or `--adversarial`; the
+loop no longer accepts them. Update drivers to persist and expose the current
+review receipt and `review-findings.md`. After a fold that cannot close every
+row, invoke `triage-issue --prioritize-now` for every remaining finding, follow
+the returned plan route, run the new phases manually, and then re-run
+`loop-review-fold` on the new HEAD. Do not treat a loop stop with unresolved
+findings as merge-ready.
+
 ## 2026-08-09 — target-only execution becomes a bounded whole-unit loop
 
 **Breaking default; feature 22, not an extension of feature 21.**
