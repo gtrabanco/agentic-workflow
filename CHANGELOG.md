@@ -572,6 +572,17 @@ How pinning actually works, verified against the `skills` CLI:
 
 ## Release log (chronological, newest first)
 
+- **2026-08-20 — schema 2.2.0: render noise normalized to canonical enums.**
+  `parseEnvelope`/`validateEnvelope` now fold real-world state spellings the
+  agent copies from tool output onto the canonical envelope vocabulary before
+  checking — GitHub check conclusions (`failing`/`failed` → `red`,
+  `success`/`passing` → `green`, `queued`/`in_progress` → `pending`,
+  `skipped`/`neutral` → `none`), PR verdict (`CLOSED` → `none`), the project
+  gate (`failed` → `red`, `not_run` → `not-run`), any capitalization, and the
+  lowercase forms of `state`. The returned envelope always carries canonical
+  values; a spelling with no mapping is still rejected. Fixes hard-failed
+  workflow drives (e.g. `pr.ci: "failing"` was rejected by the strict enum).
+  Packaged in `packages/agentic-workflow-schema` → `2.2.0`.
 - **2026-08-14 — simplify the review/fold loop.** `loop-review-fold` 2.0.0
   now selects `review-change` or `fold-findings` from persisted evidence and
   sends unresolved findings through `triage-issue --prioritize-now`; oversized

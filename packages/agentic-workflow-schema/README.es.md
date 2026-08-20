@@ -64,6 +64,21 @@ funciona:
 import schema from "@gtrabanco/agentic-workflow-schema/envelope.schema.json" with { type: "json" };
 ```
 
+## Los veredictos renderizados se normalizan
+
+Los agentes copian el estado real desde la salida de las herramientas, así
+que el parser mapea las grafías comunes a los enums canónicos **antes** de
+validar, y el sobre devuelto siempre lleva valores canónicos: conclusiones
+de checks de GitHub (`failing` / `failed` / `failure` → `red`;
+`success` / `passing` → `green`; `queued` / `running` / `in_progress` →
+`pending`; `skipped` / `neutral` / `cancelled` → `none`), veredicto de PR
+(`CLOSED` → `none`), el gate de verificación (`failed` → `red`, `not_run` →
+`not-run`), y también cualquier capitalización y las grafías en minúscula
+de los 11 valores de `state`. Los enums cerrados de abajo siguen siendo **el
+contrato canónico** del sobre devuelto; un valor sin mapeo se sigue
+rechazando — la normalización repara el ruido de representación, nunca
+inventa hechos ni debilita el vocabulario.
+
 ## El sobre, campo por campo
 
 Cada clave de nivel superior está **siempre presente** (`required` en el

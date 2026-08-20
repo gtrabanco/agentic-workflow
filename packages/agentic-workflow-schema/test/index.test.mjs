@@ -154,7 +154,7 @@ test("extracts the last block across CRLF line endings", () => {
 
 test("rejects out-of-enum values throughout the envelope", () => {
   const cases = [
-    { ...VALID, pr: { ...VALID.pr, state: "closed" } },
+    { ...VALID, pr: { ...VALID.pr, state: "forged" } },
     { ...VALID, pr: { ...VALID.pr, ci: "purple" } },
     { ...VALID, gates: { ...VALID.gates, verification: "yellow" } },
     { ...VALID, blockers: [{ kind: "planet", id: "x", scope: "unit", detail: "d" }] },
@@ -165,6 +165,54 @@ test("rejects out-of-enum values throughout the envelope", () => {
     const result = validateEnvelope(bad);
     assert.equal(result.ok, false, `expected rejection for ${JSON.stringify(bad)}`);
   }
+});
+
+test("normalizes rendered CI verdicts into the canonical pr.ci vocabulary", () => {
+  const rendered = [
+    ["failing", "red"],
+    ["failure", "red"],
+    ["action_required", "red"],
+    ["passing", "green"],
+    ["SUCCESS", "green"],
+    ["queued", "pending"],
+    ["in_progress", "pending"],
+    ["skipped", "none"],
+  ];
+  for (const [spelling, canonical] of rendered) {
+    const result = parseEnvelope(wrap({ ...VALID, pr: { ...VALID.pr, ci: spelling } }));
+    assert.equal(result.ok, true, spelling);
+    assert.equal(result.envelope.pr.ci, canonical, spelling);
+  }
+});
+
+test("parseEnvelope returns the canonical envelope for state, pr.state and verification", () => {
+  const result = parseEnvelope(
+    wrap({
+      ...VALID,
+      state: "blocked",
+      pr: { ...VALID.pr, state: "CLOSED", ci: "failed" },
+      gates: { ...VALID.gates, verification: "failed" },
+    })
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.envelope.state, "BLOCKED");
+  assert.equal(result.envelope.pr.state, "none");
+  assert.equal(result.envelope.pr.ci, "red");
+  assert.equal(result.envelope.gates.verification, "red");
+});
+
+test("validateEnvelope normalizes too and never mutates its input", () => {
+  const input = { ...VALID, pr: { ...VALID.pr, ci: "failing" } };
+  const result = validateEnvelope(input);
+  assert.equal(result.ok, true);
+  assert.equal(result.envelope.pr.ci, "red");
+  assert.equal(input.pr.ci, "failing", "caller object must be left untouched");
+});
+
+test("still rejects a ci spelling with no canonical mapping", () => {
+  const result = validateEnvelope({ ...VALID, pr: { ...VALID.pr, ci: "flaky" } });
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("pr.ci")));
 });
 
 test("accepts every documented enum value (no false positives)", () => {

@@ -212,6 +212,147 @@ const BLOCKER_KINDS = [
 const BLOCKER_SCOPES = ["unit", "run"];
 const FIX_NOW_SEVERITIES = ["high", "med", "low"];
 
+// ---------------------------------------------------------------------------
+// Enum normalization — rendered real-world verdicts → canonical vocabulary
+// ---------------------------------------------------------------------------
+
+const CI_STATE_ALIASES: Record<string, CiState> = {
+  failing: "red",
+  failed: "red",
+  failure: "red",
+  fail: "red",
+  timed_out: "red",
+  "timed-out": "red",
+  action_required: "red",
+  "action-required": "red",
+  startup_failure: "red",
+  "startup-failure": "red",
+  faulted: "red",
+  passing: "green",
+  passed: "green",
+  pass: "green",
+  success: "green",
+  succeeded: "green",
+  successful: "green",
+  neutral: "none",
+  cancelled: "none",
+  canceled: "none",
+  skipped: "none",
+  stale: "none",
+  queued: "pending",
+  in_progress: "pending",
+  "in-progress": "pending",
+  running: "pending",
+  waiting: "pending",
+};
+
+const VERIFICATION_STATE_ALIASES: Record<string, VerificationState> = {
+  failing: "red",
+  failed: "red",
+  failure: "red",
+  fail: "red",
+  passing: "green",
+  passed: "green",
+  pass: "green",
+  success: "green",
+  succeeded: "green",
+  successful: "green",
+  not_run: "not-run",
+  "not-run": "not-run",
+  skipped: "not-run",
+};
+
+const PR_STATE_ALIASES: Record<string, PrState> = {
+  closed: "none",
+};
+
+/**
+ * Map one scalar onto its canonical enum spelling: case-insensitive canonical
+ * match first, then a strict alias table. Unknown values are returned
+ * untouched so validation below still rejects them — a sloppy spelling is
+ * corrected, an unrecognized one is never silently accepted.
+ */
+function canonicalEnumValue<T extends string>(
+  value: unknown,
+  canonical: readonly T[],
+  aliases: Record<string, T> = {}
+): unknown {
+  if (typeof value !== "string") return value;
+  const folded = value.trim().toLowerCase();
+  const exact = canonical.find((entry) => entry.toLowerCase() === folded);
+  return (exact ?? aliases[folded]) ?? value;
+}
+
+/**
+ * Render the real-world spellings a model copies from tool output (GitHub
+ * check conclusions like `failing`, `timed_out`, `queued`; verdict words like
+ * `success`, `failed`, `closed`; any capitalization) onto the canonical
+ * envelope vocabulary, on a shallow copy of the input. The canonical types
+ * (`CiState`, `PrState`, ...) are unchanged — this only makes the parser
+ * tolerant of how those facts are spelled on the wire while still returning a
+ * canonical envelope.
+ */
+function normalizeEnvelopeEnums(value: Record<string, unknown>): Record<string, unknown> {
+  const normalized: Record<string, unknown> = { ...value };
+  normalized.state = canonicalEnumValue(value.state, ENVELOPE_STATES as readonly string[]);
+  if (isObj(value.unit)) {
+    normalized.unit = {
+      ...value.unit,
+      type: canonicalEnumValue(value.unit.type, UNIT_TYPES),
+    };
+  }
+  if (isObj(value.pr)) {
+    normalized.pr = {
+      ...value.pr,
+      state: canonicalEnumValue(value.pr.state, PR_STATES, PR_STATE_ALIASES),
+      ci: canonicalEnumValue(value.pr.ci, CI_STATES, CI_STATE_ALIASES),
+    };
+  }
+  if (isObj(value.gates)) {
+    normalized.gates = {
+      ...value.gates,
+      verification: canonicalEnumValue(
+        value.gates.verification,
+        VERIFICATION_STATES,
+        VERIFICATION_STATE_ALIASES
+      ),
+    };
+  }
+  if (isObj(value.next)) {
+    normalized.next = {
+      ...value.next,
+      tier: canonicalEnumValue(value.next.tier, ["strong", "cheap"]),
+    };
+  }
+  if (Array.isArray(value.blockers)) {
+    normalized.blockers = value.blockers.map((blocker) =>
+      isObj(blocker)
+        ? {
+            ...blocker,
+            kind: canonicalEnumValue(blocker.kind, BLOCKER_KINDS),
+            scope: canonicalEnumValue(blocker.scope, BLOCKER_SCOPES),
+          }
+        : blocker
+    );
+  }
+  const findings = value.findings;
+  if (isObj(findings) && Array.isArray(findings.fix_now)) {
+    normalized.findings = {
+      ...findings,
+      fix_now: (findings.fix_now as unknown[]).map((finding) =>
+        isObj(finding)
+          ? {
+              ...finding,
+              severity: canonicalEnumValue(finding.severity, FIX_NOW_SEVERITIES),
+              suggested_tier: canonicalEnumValue(finding.suggested_tier, ["strong", "cheap"]),
+            }
+          : finding
+      ),
+    };
+  }
+  return normalized;
+}
+
 const REQUIRED_KEYS = [
   "skill",
   "state",
@@ -230,10 +371,18 @@ const REQUIRED_KEYS = [
 
 /**
  * Structural validation of a parsed value against the envelope contract.
+ *
+ * Rendered enum spellings are normalized first (see `normalizeEnvelopeEnums`:
+ * `pr.ci: "failing"` validates as the canonical `red`, `SUCCESS` as `green`,
+ * `CLOSED` as `none`), so the returned envelope always carries canonical
+ * values. Unknown spellings are still rejected — normalization corrects
+ * recognizable render noise, it never invents facts.
+ *
  * Checks required keys, the state enum, and the shape of the routing-critical
  * fields (an orchestrator routes on these; `detail` is intentionally opaque).
  */
-export function validateEnvelope(value: unknown): ValidationResult {
+export function validateEnvelope(rawValue: unknown): ValidationResult {
+  const value = isObj(rawValue) ? normalizeEnvelopeEnums(rawValue) : rawValue;
   const errors: string[] = [];
   if (!isObj(value)) {
     return { ok: false, errors: ["envelope is not a JSON object"] };

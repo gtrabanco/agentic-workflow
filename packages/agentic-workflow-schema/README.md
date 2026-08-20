@@ -61,6 +61,20 @@ On Node 20.10+/22, the newer import-attributes form also works:
 import schema from "@gtrabanco/agentic-workflow-schema/envelope.schema.json" with { type: "json" };
 ```
 
+## Rendered verdicts are normalized
+
+Agents copy real-world state words from tool output, so the parser maps
+common renderings onto the canonical enums **before** checking, and the
+parsed envelope always carries canonical values: GitHub check conclusions
+(`failing` / `failed` / `failure` → `red`; `success` / `passing` → `green`;
+`queued` / `running` / `in_progress` → `pending`; `skipped` / `neutral` /
+`cancelled` → `none`), PR verdict (`CLOSED` → `none`), the project gate
+(`failed` → `red`, `not_run` → `not-run`), plus any capitalization and the
+lowercase spellings of the 11 `state` values. The closed enums below remain
+**the canonical contract** of the returned envelope; a spelling with no
+mapping is still rejected — normalization repairs render noise, it never
+invents facts or weakens the vocabulary.
+
 ## The envelope, field by field
 
 Every top-level key is **always present** (`required` in the JSON Schema) —

@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Types, JSON Schema, and parser/validator for the agentic-workflow machine envelope — the fixed JSON block a driven agent turn ends with (workflow-status always; other skills under the driver-injected snippet), for programmatic orchestration.",
   "keywords": [
     "agentic-workflow",

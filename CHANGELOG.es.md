@@ -573,6 +573,17 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 ## Registro cronológico (más reciente primero)
 
+- **2026-08-20 — schema 2.2.0: ruido de representación normalizado a enums canónicos.**
+  `parseEnvelope`/`validateEnvelope` ahora pliegan las grafías de estado que el
+  agente copia de la salida de las herramientas sobre los enums canónicos del
+  sobre antes de validar — conclusiones de GitHub (`failing`/`failed` → `red`,
+  `success`/`passing` → `green`, `queued`/`in_progress` → `pending`,
+  `skipped`/`neutral` → `none`), veredicto de PR (`CLOSED` → `none`), el gate
+  de verificación (`failed` → `red`, `not_run` → `not-run`), cualquier
+  capitalización y las formas en minúscula de `state`. El sobre devuelto
+  siempre lleva valores canónicos; un valor sin mapeo se sigue rechazando.
+  Corrige los drives de workflow que fallaban (p. ej. `pr.ci: "failing"` era
+  rechazado). Empaquetado en `packages/agentic-workflow-schema` → `2.2.0`.
 - **2026-08-14 — simplificar el loop review/fold.** `loop-review-fold` 2.0.0
   ahora elige `review-change` o `fold-findings` según la evidencia persistida y
   lleva los hallazgos no resueltos a `triage-issue --prioritize-now`; el trabajo
