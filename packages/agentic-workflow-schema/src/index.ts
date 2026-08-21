@@ -961,39 +961,69 @@ function parseNativeTurn(skill: string, text: string): TurnParseResult | null {
   const lines = text.trim().split(/\r?\n/).filter((line) => line.trim().length > 0);
   if (lines.length === 0) return null;
   const nextIndex = lines.findIndex((line) => /^→\s*Next:/i.test(line.trim()));
-  const nextIsFinal = nextIndex === lines.length - 1 ||
-    (nextIndex === lines.length - 2 && /^·/.test(lines[nextIndex + 1]?.trim() ?? ""));
-  if (nextIndex < 0 || !nextIsFinal) return null;
+  if (nextIndex < 0) return null;
   const command = /^→\s*Next:\s*(\/[-a-z]+(?:\s+[^\n—]+)?)\s+—/i.exec(lines[nextIndex].trim())?.[1]?.trim();
-  if (command === undefined) return null;
   if (skill === "loop-review-fold") {
+    const nextIsFinal = lines.slice(nextIndex + 1).every((line) => /^·/.test(line.trim()));
+    if (!nextIsFinal || command === undefined || nextIntent(command) === "none") return null;
     const verdict = /^REVIEW-FOLD LOOP\s+[—-]\s+(PASS|TRIAGE-REQUIRED|BLOCKED)\s*$/i.exec(lines[0])?.[1]?.toUpperCase();
     if (verdict === undefined) return null;
-    if (!lines.some((line) => /^Review:\s*(PASS|FAIL|not-run)\s+·\s+Fold:/i.test(line))) return null;
+    if (!lines.some((line) => /^Unit:\s*.+\s+·\s+PR:\s*\S+\s+·\s+HEAD:\s*\S+\s*$/i.test(line.trim()))) return null;
+    if (!lines.some((line) => /^First action:\s*(PASS|review-change|fold-findings)\s*$/i.test(line.trim()))) return null;
+    if (!lines.some((line) => /^Review:\s*(PASS|FAIL|not-run)\s+·\s+Fold:\s*(changed|unchanged|not-run)\s*$/i.test(line.trim()))) return null;
+    if (!lines.some((line) => /^Unresolved:\s*(none|F\d+(?:\s*\+\s*F\d+)*)\s*$/i.test(line.trim()))) return null;
+    if (!lines.some((line) => /^Evidence:\s*\S+/i.test(line.trim()))) return null;
     const status: SkillOutcomeStatus = verdict === "PASS" ? "completed" : verdict === "BLOCKED" ? "blocked" : "continue";
     return nativeOutcome(skill, status, `loop-review-fold returned ${verdict}.`, command, []);
   }
   if (skill === "audit-pr") {
-    const verdict = /^VERDICT:\s*(MERGE-READY|BLOCKED(?:\s*\([^\n)]*\))?)\s*$/i.exec(lines[0])?.[1]?.toUpperCase();
+    const auditBody = lines.slice(0, nextIndex).join("\n");
+    const nextLines = lines.slice(nextIndex + 1);
+    const nextIsFinal = nextLines.length > 0 && nextLines.every((line) => /^·/.test(line.trim()));
+    const nextBulletCommand = nextLines
+      .flatMap((line) => [...line.matchAll(/\/[-a-z]+(?:\s+--[-a-z]+(?:\s+\S+)?)?/g)].map((match) => match[0]))
+      .find((value): value is string => value !== undefined && nextIntent(value) !== "none");
+    if (!nextIsFinal || (command !== undefined && nextIntent(command) === "none") || (command === undefined && nextBulletCommand === undefined)) {
+      return null;
+    }
+    if (!lines.some((line) => /^PR #\d+\s+[—-]\s+\S+/i.test(line.trim()))) return null;
+    if (!lines.some((line) => /^URL:\s*https?:\/\/\S+$/i.test(line.trim()))) return null;
+    if (!lines.some((line) => /^Base:\s*\S+\s+←\s+Head:\s*\S+\s+@\s+\S+\s+CI:\s*(green|failing|pending)\s*$/i.test(line.trim()))) return null;
+    const verdicts = lines
+      .slice(0, nextIndex)
+      .map((line) => /^VERDICT:\s*(MERGE-READY|BLOCKED\s*\((\d+)\s+blockers?\))\s*$/i.exec(line.trim()))
+      .filter((value): value is RegExpExecArray => value !== null);
+    if (verdicts.length !== 1) return null;
+    const verdict = verdicts[0]?.[1]?.toUpperCase();
     if (verdict === undefined) return null;
     const blockers: SkillOutcomeBlocker[] = [];
-    for (const match of lines.slice(1, nextIndex).join("\n").matchAll(/^\s*\d+\.\s*\[(dependency|issue|gate|merge-conflict|substrate|input)\]\s+([^—\n]+?)\s+[—-]\s+(.+?)(?:\s+→|\s*$)/gim)) {
-      const kind = match[1]?.toLowerCase();
-      const id = match[2]?.trim();
-      const detail = match[3]?.trim();
-      if (isBlockerKind(kind) && id !== undefined && detail !== undefined) {
+    for (const match of auditBody.matchAll(/^\s*\d+\.\s*\[([^\]\n]+)\]\s+([^—\n]+?)\s+[—-]\s+(.+?)(?:\s+→|\s*$)/gim)) {
+      const label = match[1]?.trim();
+      const reportedKind = label?.toLowerCase();
+      const kind = isBlockerKind(reportedKind) ? reportedKind : "gate";
+      const id = isBlockerKind(reportedKind) ? match[2]?.trim() : label;
+      const detail = isBlockerKind(reportedKind)
+        ? match[3]?.trim()
+        : `${match[2]?.trim()} — ${match[3]?.trim()}`;
+      if (id !== undefined && detail !== undefined) {
         blockers.push({ kind, id, scope: "unit", detail });
       }
     }
     const status: SkillOutcomeStatus = verdict.startsWith("MERGE-READY") ? "completed" : "blocked";
-    if (status === "blocked" && blockers.length === 0) {
+    const expectedBlockers = Number(verdicts[0]?.[2]);
+    if (status === "blocked" && (!/^Blockers \(ranked\):$/im.test(auditBody) || blockers.length !== expectedBlockers)) {
       return {
         ok: false,
-        errors: ["audit-pr BLOCKED verdict has no deterministic blocker rows"],
+        errors: ["audit-pr BLOCKED verdict has no complete deterministic blocker rows"],
         diagnostics: [],
       };
     }
-    return nativeOutcome(skill, status, `audit-pr returned ${verdict}.`, command, blockers);
+    if (status === "completed" && !lines.some((line) => /^Nothing blocks merge\.$/i.test(line.trim()))) return null;
+    const rawBlockerRoute = /→\s*fix:?\s*[^\n(]*\((\/[-a-z]+(?:\s+[^\n)]*)?)\)/i.exec(auditBody)?.[1]?.trim();
+    const blockerRoute = rawBlockerRoute !== undefined && nextIntent(rawBlockerRoute) !== "none" ? rawBlockerRoute : undefined;
+    const nextCommand = status === "blocked" ? blockerRoute ?? command ?? nextBulletCommand : "/merge";
+    if (nextCommand === undefined) return null;
+    return nativeOutcome(skill, status, `audit-pr returned ${verdict}.`, nextCommand, blockers);
   }
   return null;
 }
@@ -1181,12 +1211,18 @@ function roadmapFeature(document: WorkflowDocument | undefined): { id: string; s
   for (const row of document.content.split("\n")) {
     const cells = row.split("|").map((cell) => cell.trim()).filter(Boolean);
     if (cells.length < 3 || !/^\d{2}$/.test(cells[0] ?? "")) continue;
-    const id = `${cells[0]}-${cells[1]}`;
+    const slug = cells[1]?.replace(/^`|`$/g, "");
+    if (slug === undefined || slug.length === 0) continue;
+    const id = `${cells[0]}-${slug}`;
     candidates.push({ id, status: cells[2] ?? "unknown", row });
   }
-  return candidates.find((candidate) => candidate.status === "in-progress")
-    ?? candidates.find((candidate) => candidate.status !== "done")
+  return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
+    ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
     ?? null;
+}
+
+function indexStatus(value: string): string {
+  return value.split("·", 1)[0]?.trim().toLowerCase() ?? "unknown";
 }
 
 function fixUnit(document: WorkflowDocument | undefined): { id: string; status: string; row: string } | null {
@@ -1199,8 +1235,8 @@ function fixUnit(document: WorkflowDocument | undefined): { id: string; status: 
     if (!/^\d+-[A-Za-z0-9._-]+$/.test(id)) continue;
     candidates.push({ id, status: cells[2] ?? "unknown", row });
   }
-  return candidates.find((candidate) => candidate.status === "in-progress")
-    ?? candidates.find((candidate) => candidate.status !== "done")
+  return candidates.find((candidate) => indexStatus(candidate.status) === "in-progress")
+    ?? candidates.find((candidate) => indexStatus(candidate.status) !== "done")
     ?? null;
 }
 
@@ -1370,6 +1406,14 @@ export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowS
           : `docs/fix/${selected.id}/SPEC.md`,
       );
   const phases = phasesFrom(spec);
+  const hasPhaseDefinitions = spec !== undefined && phases.length > 0;
+  const phaseDefinitionReason = spec === undefined
+    ? "The active unit SPEC.md is absent."
+    : "The active unit SPEC.md has no recognized phase headings.";
+  if (selected !== null && !hasPhaseDefinitions) {
+    unknowns.push({ field: "phase.names", reason: phaseDefinitionReason });
+    unknowns.push({ field: "phase.total", reason: phaseDefinitionReason });
+  }
   const progress = selected === null
     ? undefined
     : documentFor(
@@ -1391,20 +1435,24 @@ export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowS
   }
   const remains = progress === undefined ? undefined : /(?:^|\n)-\s*Remains:\s*(P\d+)\b/.exec(progress.content)?.[1];
   const current = remains !== undefined && phaseIds.has(remains) ? remains : null;
-  if (remains !== undefined && !phaseIds.has(remains)) {
+  if (selected !== null && !hasPhaseDefinitions) {
+    unknowns.push({ field: "phase.current", reason: phaseDefinitionReason });
+  } else if (remains !== undefined && !phaseIds.has(remains)) {
     unknowns.push({ field: "phase.current", reason: `Progress names unknown phase ${remains}.` });
   } else if (current !== null && progress !== undefined) {
     provenance.push({ field: "phase.current", source: progress.path, line: lineNumber(progress.content, `Remains: ${current}`) });
   } else if (phases.length > 0) {
     unknowns.push({ field: "phase.current", reason: "No explicit remaining phase receipt was found." });
   }
-  if (spec !== undefined && phases.length > 0) {
+  if (hasPhaseDefinitions && spec !== undefined) {
     const specLine = lineNumber(spec.content, phases[0]?.line ?? "");
     provenance.push({ field: "phase.names", source: spec.path, line: specLine });
     provenance.push({ field: "phase.total", source: spec.path, line: specLine });
   }
   let completed: number | null = null;
-  if (progress !== undefined && doneReceiptLines.length > 0 && unknownCompletedIds.size === 0) {
+  if (selected !== null && !hasPhaseDefinitions) {
+    unknowns.push({ field: "phase.completed", reason: phaseDefinitionReason });
+  } else if (progress !== undefined && doneReceiptLines.length > 0 && unknownCompletedIds.size === 0) {
     completed = completedIds.size;
     provenance.push({
       field: "phase.completed",
