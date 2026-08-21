@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/workflow-snapshot.schema.json",
+  "title": "agentic-workflow workflow snapshot v1",
+  "description": "Deterministic workflow facts compiled from versioned documents and caller-supplied repository facts. Unknown and contradictory facts are explicit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "sourceRevision", "repository", "repositoryState", "unit", "phase", "provenance", "contradictions", "unknowns"],
+  "properties": {
+    "contract": { "const": "agentic-workflow/workflow-snapshot" },
+    "version": { "const": 1 },
+    "sourceRevision": { "type": "string", "minLength": 1 },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch", "headSha", "dirty"],
+      "properties": {
+        "branch": { "type": "string" },
+        "headSha": { "type": "string" },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "repositoryState": { "enum": ["missing", "draft", "frozen", "contradicted", "needs-input", "unknown"] },
+    "unit": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "status"],
+          "properties": {
+            "kind": { "enum": ["feature", "fix"] },
+            "id": { "type": "string" },
+            "status": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current", "total", "completed", "names"],
+      "properties": {
+        "current": { "type": ["string", "null"] },
+        "total": { "type": ["integer", "null"] },
+        "completed": { "type": ["integer", "null"] },
+        "names": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "source", "line"],
+        "properties": {
+          "field": { "type": "string" },
+          "source": { "type": "string" },
+          "line": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "reason"],
+        "properties": {
+          "field": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "contradictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["field", "source", "line", "detail"],
+        "properties": {
+          "field": { "type": "string" },
+          "source": { "type": "string" },
+          "line": { "type": "integer", "minimum": 1 },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -271,7 +271,7 @@ runFixtureRoute(
     { box: "Descope guard applied to every issue created this turn", owner: "DESCOPE.md", marker: "## Descope guard" },
     { box: "Out-of-scope findings classified per Opportunistic finding policy", owner: "OPPORTUNISTIC_FINDING.md", marker: "## Opportunistic finding policy" },
     { box: "Closing `→ Next:` block printed as ABSOLUTE last output", owner: "CLOSEOUT.md", marker: "→ Next:" },
-    { box: "Envelope emitted if driver requested", owner: "EXECUTION_CONTRACT.md", marker: "## Normalized Repository State" },
+    { box: "Machine result emitted if driver requested", owner: "EXECUTION_CONTRACT.md", marker: "## Normalized Repository State" },
     { box: "No reconstruction from memory — missing reference → STOP", owner: "EXECUTION_CONTRACT.md", marker: "## Architectural invariants" },
   ];
   assert.equal(new Set(owners.map((o) => o.box)).size, 11, "owner map must designate exactly one owner per box");

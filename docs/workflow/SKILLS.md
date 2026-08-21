@@ -70,7 +70,7 @@ limits.
 | `plan-feature-from-issue` | Feature-request issue → scoped SPEC product half (satisfies capability closure), with `Closes #N` (invoked by `plan-feature`) |
 | `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
 | `review-implementation` | Classification engine over synthesized table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
-| `orchestration-envelope` | The machine-envelope contract: canonical driver-injected system-prompt snippet, repair loop, and JSON schema. `user-invocable: false` — the piece an external driver injects, not a menu entry |
+| `orchestration-envelope` | Package-owned machine-result contracts (strict Envelope v2, compact SkillOutcome v1, compatibility parsing, and deterministic snapshots) for driven worker/sensor skills. `user-invocable: false` — `ship-roadmap` remains a native-banner conductor |
 | `verification-contract` | Freezes acceptance before implementation, defines validation levels, and binds evidence to the current acceptance blob and code receipt. `user-invocable: false` — planners, executors, and reviewers compose it |
 | `review-code` | Correctness + reuse/simplification/efficiency checklist over the diff. `user-invocable: false` — one axis of `review-change`'s internal review pack |
 | `review-security` | OWASP-shaped security checklist over the diff. `user-invocable: false` — internal review pack |
