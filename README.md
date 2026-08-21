@@ -162,7 +162,7 @@ Projects that do not declare the document remain compatible.
 | Skill         | What it does                                                                                                                                                                                                                                                                                                                                               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `log-session` | Appends a structured entry to `docs/LOGS.md` — what the session did, files touched, decisions + _why_, and the next step — so you (or anyone) can resume cold. Run it before `/clear` or before closing. The `template/` also ships **free, opt-in hooks** that auto-append a mechanical entry on `/clear`/exit and can re-inject the last entry on start. |
-| `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine (`idea`/`defined`/`planned`/`in-progress`/`done`), what is startable right now (status ≥ `defined`, deps met) and in which build order, `idea` rows reported separately as design candidates, open PRs + audit state, pending fixes and findings awaiting triage, the untriaged open-issue backlog (`detail.untriaged_issues`, label-authoritative with a `VERDICT:`-comment legacy fallback), each unit's unfolded fix-now findings from its `review-findings.md` ledger as structured `findings.fix_now[]` items carrying a derived `suggested_tier`, plus the injection-safe `detail.urgent` field (labels-only `urgent`/`fix-next` issues + in-flight interruptibility facts) and, per unit, `review` (last-reviewed sha, unreviewed diff, terminal-review/adversarial evidence), `closure.state`, and `issues_born` (descope-amendment provenance) — and emits it as one fixed JSON machine envelope, with a top-level `next.suggested[]` of trigger-attributed suggestions single-sourced from each owning skill's own condition, self-checked against the bundled schema and a fixed command→tier map before printing. With `--last-envelope`, a **no-progress guard** flags a stalled `/plan-feature`/`/design-feature` hint (unit still at its pre-advance status) as a `workflow_observations` note instead of silently repeating it. The piece an external driver calls between steps (see [Programmatic orchestration](#programmatic-orchestration)). Never edits anything. |
+| `workflow-status` | **Read-only sensor for programmatic orchestration.** Computes the full project state — every feature/fix with its transitive dependency closure (met/unmet), the roadmap's five-state machine (`idea`/`defined`/`planned`/`in-progress`/`done`), what is startable right now (status ≥ `defined`, deps met) and in which build order, `idea` rows reported as `detail.design_candidates`, open PRs + audit state, pending fixes and findings awaiting triage, the untriaged open-issue backlog (`detail.untriaged_issues`, label-authoritative with a `VERDICT:`-comment legacy fallback), each unit's unfolded fix-now findings from its `review-findings.md` ledger as structured `findings.fix_now[]` items carrying a derived `suggested_tier`, plus the injection-safe `detail.urgent` field (labels-only `urgent`/`fix-next` issues + in-flight interruptibility facts) and, per unit, `review` (last-reviewed sha, unreviewed diff, terminal-review/adversarial evidence), `closure.state`, and `issues_born` (descope-amendment provenance) — and emits it as one fixed JSON machine envelope, with a top-level `next.suggested[]` of trigger-attributed suggestions single-sourced from each owning skill's own condition, self-checked against the bundled schema and a fixed command→tier map before printing. With `--last-envelope`, a **no-progress guard** flags a stalled `/plan-feature`/`/design-feature` hint (unit still at its pre-advance status) as a `workflow_observations` note instead of silently repeating it. The piece an external driver calls between steps (see [Programmatic orchestration](#programmatic-orchestration)). Never edits anything. |
 
 ### Repo maintenance
 
@@ -470,29 +470,16 @@ produce shallower judgment; the discipline holds, the ceiling moves.
 
 ## Programmatic orchestration
 
-The skills read cleanly in interactive chat — no trailing JSON. A driver that
-wants to orchestrate them (a shell loop, CI, your own program) injects the
-canonical **system-prompt snippet** so each invocation ends with a **machine
-envelope** — one fixed, fenced JSON block (state, unit, phase, PR, findings,
-blockers, dependency build order, recommended next command + model-tier
-hint) — and runs a **repair loop** when a turn omits it (re-ask with a
-one-line prompt; one retry, then a driver-level failure). On providers with
-strict structured outputs (`response_format: {type: "json_schema", strict}` —
-on NaN: `qwen3.6` and `gemma4`), prefer forcing the envelope by passing the
-npm package's `envelope.schema.json` as the response format on the final
-envelope turn; keep the repair loop as the fallback for models without it.
-The driver then
-parses the envelope and invokes the next skill on the model you choose per
-step. This is the vendor-neutral replacement for Claude Code's `/loop` and
-subagents: the same loop `ship-roadmap` runs in-agent, hosted outside any
-agent. `workflow-status` is the one skill that still emits the envelope
-inline — it's a read-only sensor reporting the full dependency tree and
-what's startable, so emitting it is its whole job. Protocol, snippet, repair
-loop, state machine, and a driver skeleton:
-**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. For
-JS/TS drivers, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
-(npm) ships the types, the JSON Schema, and `parseEnvelope()` implementing the
-parse contract — auto-published by CI on every schema change.
+Interactive skills stay text-first. A headless driver adds a compact machine
+result only at the invocation boundary, parses it with
+**[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**,
+and combines it with deterministic facts compiled from selected workflow
+documents. `workflow-status` retains its full Envelope v2 sensor result;
+other driven skills return the smaller SkillOutcome v1. The driver owns I/O,
+sessions, authorization, and one bounded repair attempt; the package owns the
+strict JSON Schemas, parsing, compatibility diagnostics, and
+WorkflowSnapshot v1. See **[programmatic orchestration](docs/workflow/ORCHESTRATION.md)**
+for the protocol and driver example.
 
 ## How to use them
 

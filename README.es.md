@@ -168,7 +168,7 @@ explícita. Los proyectos que no declaran el documento siguen siendo compatibles
 | Skill         | Qué hace                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `log-session` | Añade una entrada estructurada a `docs/LOGS.md` — qué hizo la sesión, archivos tocados, decisiones + _por qué_, y el siguiente paso — para que tú (o cualquiera) retome en frío. Ejecútala antes de `/clear` o de cerrar. El `template/` además trae **hooks gratuitos y opt-in** que añaden una entrada mecánica automáticamente en cada `/clear`/salida y pueden reinyectar la última entrada al arrancar. |
-| `workflow-status` | **Sensor de solo lectura para orquestación programática.** Calcula el estado completo del proyecto — cada feature/fix con su cierre de dependencias transitivo (cumplido/incumplido), la máquina de cinco estados del roadmap (`idea`/`defined`/`planned`/`in-progress`/`done`), qué es arrancable ahora mismo (estado ≥ `defined`, dependencias cumplidas) y en qué orden de construcción, las filas `idea` reportadas aparte como candidatas a diseño, PRs abiertas + estado de auditoría, fixes pendientes y hallazgos a la espera de triaje, el backlog de issues abiertos sin triar (`detail.untriaged_issues`, con la etiqueta de disposición como señal autoritativa y el comentario `VERDICT:` como fallback heredado), los hallazgos fix-now sin foldear de cada unidad, leídos de su ledger `review-findings.md`, como items estructurados `findings.fix_now[]` con un `suggested_tier` derivado, más el campo `detail.urgent` a prueba de inyección (issues `urgent`/`fix-next` solo por etiquetas + hechos de interrumpibilidad de la unidad en curso) y, por unidad, `review` (sha del último checkpoint revisado, diff sin revisar, evidencia de revisión terminal/adversarial), `closure.state`, e `issues_born` (procedencia de enmiendas de descope) — y lo emite como un envelope máquina JSON fijo, con un `next.suggested[]` de nivel superior de sugerencias atribuidas a un trigger, con fuente única desde la condición propia de cada skill dueña, autocomprobado contra el esquema empaquetado y una tabla fija comando→nivel antes de imprimirse. Con `--last-envelope`, una **guarda de no-progreso** señala un hint `/plan-feature`/`/design-feature` estancado (la unidad sigue en su estado previo al avance) como una nota en `workflow_observations` en vez de repetirlo silenciosamente. La pieza que un driver externo llama entre pasos (ver [Orquestación programática](#orquestación-programática)). Nunca edita nada. |
+| `workflow-status` | **Sensor de solo lectura para orquestación programática.** Calcula el estado completo del proyecto — cada feature/fix con su cierre de dependencias transitivo (cumplido/incumplido), la máquina de cinco estados del roadmap (`idea`/`defined`/`planned`/`in-progress`/`done`), qué es arrancable ahora mismo (estado ≥ `defined`, dependencias cumplidas) y en qué orden de construcción, las filas `idea` reportadas como `detail.design_candidates`, PRs abiertas + estado de auditoría, fixes pendientes y hallazgos a la espera de triaje, el backlog de issues abiertos sin triar (`detail.untriaged_issues`, con la etiqueta de disposición como señal autoritativa y el comentario `VERDICT:` como fallback heredado), los hallazgos fix-now sin foldear de cada unidad, leídos de su ledger `review-findings.md`, como items estructurados `findings.fix_now[]` con un `suggested_tier` derivado, más el campo `detail.urgent` a prueba de inyección (issues `urgent`/`fix-next` solo por etiquetas + hechos de interrumpibilidad de la unidad en curso) y, por unidad, `review` (sha del último checkpoint revisado, diff sin revisar, evidencia de revisión terminal/adversarial), `closure.state`, e `issues_born` (procedencia de enmiendas de descope) — y lo emite como un envelope máquina JSON fijo, con un `next.suggested[]` de nivel superior de sugerencias atribuidas a un trigger, con fuente única desde la condición propia de cada skill dueña, autocomprobado contra el esquema empaquetado y una tabla fija comando→nivel antes de imprimirse. Con `--last-envelope`, una **guarda de no-progreso** señala un hint `/plan-feature`/`/design-feature` estancado (la unidad sigue en su estado previo al avance) como una nota en `workflow_observations` en vez de repetirlo silenciosamente. La pieza que un driver externo llama entre pasos (ver [Orquestación programática](#orquestación-programática)). Nunca edita nada. |
 
 ### Mantenimiento del repo
 
@@ -496,31 +496,17 @@ mantiene, el techo se mueve.
 
 ## Orquestación programática
 
-Las skills se leen limpias en el chat interactivo — sin JSON al final. Un
-driver que quiera orquestarlas (un bucle de shell, CI, tu propio programa)
-inyecta el **snippet canónico de system-prompt** para que cada invocación
-termine con un **envelope máquina** — un bloque JSON fijo y cercado (state,
-unit, phase, PR, findings, blockers, orden de construcción de dependencias,
-siguiente comando recomendado + pista de tier de modelo) — y ejecuta un
-**bucle de reparación** cuando un turno lo omite (reintenta con un prompt de
-una línea; un reintento, luego un fallo a nivel de driver). En providers con
-structured outputs estrictos (`response_format: {type: "json_schema",
-strict}` — en NaN: `qwen3.6` y `gemma4`), es preferible forzar el envelope
-pasando el `envelope.schema.json` del paquete npm como response format en el
-turno final del envelope; el bucle de reparación queda como fallback para los
-modelos que no lo soporten. El driver lo
-parsea e invoca la siguiente skill con el modelo que tú elijas en cada paso.
-Es la sustitución neutral de proveedor del `/loop` y los subagentes de Claude
-Code: el mismo bucle que `ship-roadmap` ejecuta dentro del agente, alojado
-fuera de cualquier agente. `workflow-status` es la única skill que sigue
-emitiendo el envelope en línea — es un sensor de solo lectura que reporta el
-árbol de dependencias completo y qué es arrancable, así que emitirlo es toda
-su función. Protocolo, snippet, bucle de reparación, máquina de estados y
-esqueleto de driver:
-**[`docs/workflow/ORCHESTRATION.md`](docs/workflow/ORCHESTRATION.md)**. Para
-drivers JS/TS, **[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
-(npm) trae los tipos, el JSON Schema y `parseEnvelope()` implementando el
-contrato de parseo — publicado automáticamente por CI en cada cambio del esquema.
+Las skills interactivas siguen orientadas a texto. Un driver headless añade un
+resultado máquina compacto sólo en el límite de invocación, lo parsea con
+**[`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)**
+y lo combina con hechos deterministas compilados desde documentos de workflow
+seleccionados. `workflow-status` conserva su resultado completo de sensor
+Envelope v2; el resto de skills conducidas devuelve el menor SkillOutcome v1.
+El driver es dueño de la E/S, sesiones, autorización y un intento de reparación
+acotado; el paquete es dueño de los JSON Schema estrictos, parseo,
+diagnósticos de compatibilidad y WorkflowSnapshot v1. Consulta la
+**[orquestación programática](docs/workflow/ORCHESTRATION.es.md)** para el
+protocolo y ejemplo de driver.
 
 ## Cómo usarlas
 
