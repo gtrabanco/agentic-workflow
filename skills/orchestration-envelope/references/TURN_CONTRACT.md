@@ -12,7 +12,7 @@
 ✓ 7. Descope guard applied to every issue created this turn (dated ## Amendments in SPEC before issue).
 ✓ 8. Out-of-scope findings classified per Opportunistic finding policy, recorded in decisions.md; proposals created no issue without explicit user triage.
 ✓ 9. Closing `→ Next:` block printed as ABSOLUTE last output.
-✓ 10. Envelope emitted if driver requested (orchestration-envelope schema).
+✓ 10. Machine result emitted if driver requested (package output profile).
 ✓ 11. No reconstruction from memory — missing reference → STOP.
 ```
 

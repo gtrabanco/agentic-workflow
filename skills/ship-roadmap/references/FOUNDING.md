@@ -70,7 +70,7 @@ contract; who re-invokes it is an implementation detail):
 | Driver | When | Launch |
 |---|---|---|
 | **`/loop`** (Claude Code) | The agent has a self-re-invoking loop primitive | `/loop /ship-roadmap --continue` |
-| **External orchestrator** | Any agent invocable headless (a shell loop, CI, your own program) | loop: invoke `/ship-roadmap --continue` with the injected envelope requirement (see `orchestration-envelope`), parse the resulting envelope, re-invoke while `state: "CONTINUE"` — see `docs/workflow/ORCHESTRATION.md` |
+| **External orchestrator** | Any agent invocable headless (a shell loop, CI, your own program) | loop: invoke `/ship-roadmap --continue`, parse its native `SHIP:`/`→ Next:` contract, and re-invoke while the turn is non-terminal — see `docs/workflow/ORCHESTRATION.md` |
 | **Manual** | Neither of the above | re-run `/ship-roadmap --continue` yourself after each iteration; each ends with the exact next command |
 
 Default launch contract text (adapt the first line to the detected driver):
@@ -80,8 +80,8 @@ Founded. Start the autopilot with:
 
   /loop /ship-roadmap --continue        (Claude Code)
   — or loop `/ship-roadmap --continue` from your orchestrator/by hand;
-    with the driver-injected envelope requirement, re-invoke while
-    state is CONTINUE (see docs/workflow/ORCHESTRATION.md)
+    parse the native `SHIP:` banner and `→ Next:` block, then re-invoke
+    while the turn is non-terminal (see docs/workflow/ORCHESTRATION.md)
 
 Stop when an iteration's first line is SHIP: COMPLETE, SHIP: BLOCKED, or
 SHIP: STOPPED (envelope state OK, BLOCKED, or FAILED). Iterations are

@@ -21,12 +21,12 @@ side). The recommendation itself is unaffected — this only adds visibility.
   "findings": {"fix_now": [{"id": "F1", "file": "src/export/handler.ts:88", "axis": "security", "severity": "high", "class": "fix-now", "route": "fold into phase", "suggested_tier": "strong"}], "issues_filed": [], "untriaged": 2, "decisions_recorded": 0},
   "blockers": [],
   "dependencies": {"unmet": [], "build_order": []},
-  "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/design-feature 08-billing-webhooks"}],
   "recommendations": {"product_audit": false, "reason": null},
   "needs_input": null,
   "next": {"recommended": "/review-change", "alternatives": ["/plan-feature 05"], "tier": "strong",
            "suggested": [{"command": "/review-change", "trigger": "accumulation: 420 changed lines since last-reviewed sha", "source_skill": "execute-phase"}]},
   "detail": {
+    "design_candidates": [{"id": "08-billing-webhooks", "status": "idea", "next": "/design-feature 08-billing-webhooks"}],
     "features": [
       {"id": "07-csv-export", "status": "in-progress", "deps": ["01"], "deps_unmet": [],
        "phase": {"current": "P2", "total": 4}, "pr": null,
@@ -67,11 +67,11 @@ side). The recommendation itself is unaffected — this only adds visibility.
 }
 ```
 
-`startable_now`, `blocked_units` (with build orders), `design_candidates` and
-`pending_triage` are the keys an orchestrator routes on; every id in
-`startable_now`/`blocked_units` must appear fully in `features`/`fixes` — an
-`idea` unit appears ONLY in `design_candidates` (and `detail.features`), never
-in `startable_now`, since it has no deps-met check to pass (design precedes
-dependency startability). `05-auth` above illustrates `defined` (not yet
-`planned`): startable, next `/plan-feature`, `phase` fields null (no planning
-artifacts yet).
+`detail.startable_now`, `detail.blocked_units` (with build orders),
+`detail.design_candidates`, and `detail.pending_triage` are the keys an
+orchestrator routes on; every id in `startable_now`/`blocked_units` must appear
+fully in `features`/`fixes` — an `idea` unit appears ONLY in
+`design_candidates` (and `detail.features`), never in `startable_now`, since
+it has no deps-met check to pass (design precedes dependency startability).
+`05-auth` above illustrates `defined` (not yet `planned`): startable, next
+`/plan-feature`, phase fields null (no planning artifacts yet).

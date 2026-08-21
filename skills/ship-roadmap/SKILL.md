@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 4.0.1
+version: 4.0.2
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -20,6 +20,10 @@ per roadmap unit. After the roadmap, sweep existing issues, ship fix-now work,
 report residue as proposals (never create backlog automatically), and print the
 final report. Use strong tiers for judgment, cheap tiers for typing, and humans
 at expensive-to-undo decisions.
+
+`ship-roadmap` is the conductor of the loop. It emits its native fixed `SHIP:`
+banner and closing `→ Next:` block; the package-owned machine-result profiles
+apply to the worker and sensor skills that a driver invokes inside the loop.
 
 ## Turn contract — verify before ending the turn
 
@@ -101,7 +105,7 @@ fallback only when a primitive is unavailable; keep stage order and safety floor
 | Compose (same/lower tier) | `init-workspace`; JIT `design-feature` + `plan-feature-scaffold`; `plan-feature`; `loop-review-fold`; verdict-only `audit-pr`; `audit-docs`. |
 | Cheap workers | `execute-phase` (fresh context/phase), mechanical folds, audit-blocker fixes; use the validated worker model. |
 | Human hand-off | Default merges, `product-audit` (higher effort), and report issue batches via `triage-issue`. |
-| Sibling | `workflow-status` + injected envelope runs the same loop externally with per-step model choice. |
+| Sibling | `workflow-status` supplies the strict sensor result; worker skills use the package-owned output profiles, while the conductor keeps its native `SHIP:` turn contract. |
 
 Manual feature-by-feature flow remains the default; this skill packages it with
 the human at its edges.

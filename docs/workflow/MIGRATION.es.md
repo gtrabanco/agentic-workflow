@@ -2,6 +2,31 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-21 — resultados máquina híbridos y snapshots deterministas
+
+**Contrato de driver incompatible; `@gtrabanco/agentic-workflow-schema` 3.0.0,
+`orchestration-envelope` 2.0.1 y `workflow-status` 2.0.0.** El Envelope v2 completo ya no es el
+resultado solicitado a cada skill de trabajo headless. `workflow-status` lo
+conserva como salida estable de sensor; el resto de skills conducidas usa el
+menor SkillOutcome v1. El driver es dueño de compilar estado determinista con
+WorkflowSnapshot v1, en vez de pedir a un modelo que repita hechos del
+repositorio.
+
+**Migración.** Actualiza consumidores directos del sensor desde
+`design_candidates` raíz a `detail.design_candidates`. Sustituye texto de prompt copiado en el driver por
+`renderOutputInstruction(skill)` y extracción ad hoc por
+`parseTurn({skill, text, context})`. Conserva exactamente una reparación en
+la misma sesión con `Emit only the machine result for the turn above.`; el
+segundo fallo es FAILED a nivel de driver. `ship-roadmap` sigue siendo un
+conductor con banner nativo; los perfiles del paquete se aplican a las skills
+worker y sensor que invoca. Compila snapshots desde los documentos y hechos
+del repositorio ya leídos por el driver, y enruta
+contradicciones explícitas a `resolve-repository-state`. Los consumidores
+existentes de sólo sensor pueden mantener `parseEnvelope()` inicialmente,
+pero deben pasar a `parseEnvelopeV2Strict()` antes de depender de extensiones
+v2. Las tres reparaciones de compatibilidad nombradas son soporte diagnóstico
+de migración, no un parser genérico de prosa.
+
 ## 2026-08-14 — `loop-review-fold` pasa a ser un router simple review/fold
 
 **Contrato incompatible; `loop-review-fold` 2.0.0.** Se eliminan el contrato

@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 1.10.0
+version: 2.0.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -33,7 +33,7 @@ and what the recommended next command is.** Built for external orchestrators
 ✓ A missing or non-frozen repository-state ledger emits a machine-readable
   substrate blocker and routes to discovery or resolution before any unit is
   listed as startable
-✓ Every `design_candidates[].next` begins with `/design-feature ` — design
+✓ Every `detail.design_candidates[].next` begins with `/design-feature ` — design
   candidates always route to design, regardless of anything else
 ✓ When `--last-envelope` is supplied: the no-progress guard ran (crash-recovery
   checklist) — a hint that recommended `/plan-feature`/`/design-feature` for a
@@ -126,8 +126,8 @@ the JSON contract.
   `/plan-feature`/`/design-feature` hint surfaces as a `workflow_observations`
   note, never a silent bland repeat, with no new write path introduced.
 - The human summary (unless `--json-only`) and the envelope — with
-  `design_candidates` top-level and `detail` carrying features, fixes,
-  startable_now, blocked_units, open_prs, pending_triage, `untriaged_issues`
+  `detail` carrying design_candidates, features, fixes, startable_now,
+  blocked_units, open_prs, pending_triage, `untriaged_issues`
   (count + oldest_open) and `urgent` (labels-only issue list +
   interruptibility facts) — are printed, envelope last.
 - Each `detail.features[]`/`detail.fixes[]` entry additionally carries

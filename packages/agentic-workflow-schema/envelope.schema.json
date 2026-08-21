@@ -1,9 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/envelope.schema.json",
-  "title": "agentic-workflow machine envelope",
-  "description": "The fixed JSON block a driven agentic-workflow agent turn ends with (emitted by workflow-status always, and by any other skill when the driver injects the canonical system-prompt snippet). Source of truth: skills/orchestration-envelope/SKILL.md.",
+  "title": "agentic-workflow machine envelope v2",
+  "description": "The strict v2 machine envelope emitted by workflow-status and accepted by compatibility-aware drivers. Source of truth: @gtrabanco/agentic-workflow-schema.",
   "type": "object",
+  "additionalProperties": false,
   "required": [
     "skill",
     "state",
@@ -17,7 +18,8 @@
     "dependencies",
     "recommendations",
     "needs_input",
-    "next"
+    "next",
+    "detail"
   ],
   "properties": {
     "skill": { "type": "string", "minLength": 1 },
@@ -39,6 +41,7 @@
     "summary": { "type": "string" },
     "unit": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["type", "id", "issue", "branch"],
       "properties": {
         "type": { "enum": ["feature", "fix", "docs", "none"] },
@@ -49,6 +52,7 @@
     },
     "phase": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["current", "total", "completed"],
       "properties": {
         "current": { "type": ["string", "null"] },
@@ -58,6 +62,7 @@
     },
     "pr": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["number", "url", "state", "head_sha", "merge_ready", "ci"],
       "properties": {
         "number": { "type": ["integer", "null"] },
@@ -70,6 +75,7 @@
     },
     "gates": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["verification", "review_pending", "audit_pending"],
       "properties": {
         "verification": { "enum": ["green", "red", "not-run", null] },
@@ -79,12 +85,14 @@
     },
     "findings": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["fix_now", "issues_filed", "untriaged", "decisions_recorded"],
       "properties": {
         "fix_now": {
           "type": "array",
           "items": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["id", "file", "axis", "severity", "class", "route", "suggested_tier"],
             "properties": {
               "id": { "type": "string" },
@@ -106,6 +114,7 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["kind", "id", "scope", "detail"],
         "properties": {
           "kind": {
@@ -119,6 +128,7 @@
     },
     "dependencies": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["unmet", "build_order"],
       "properties": {
         "unmet": { "type": "array", "items": { "type": "string" } },
@@ -127,6 +137,7 @@
     },
     "recommendations": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["product_audit", "reason"],
       "properties": {
         "product_audit": { "type": "boolean" },
@@ -138,6 +149,7 @@
         { "type": "null" },
         {
           "type": "object",
+          "additionalProperties": false,
           "required": ["question", "options"],
           "properties": {
             "question": { "type": "string" },
@@ -148,6 +160,7 @@
     },
     "next": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["recommended", "alternatives", "tier"],
       "properties": {
         "recommended": { "type": "string" },
@@ -157,6 +170,7 @@
           "type": "array",
           "items": {
             "type": "object",
+            "additionalProperties": false,
             "required": ["command", "trigger", "source_skill"],
             "properties": {
               "command": { "type": "string" },

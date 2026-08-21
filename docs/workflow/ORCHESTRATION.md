@@ -1,343 +1,146 @@
-# Programmatic orchestration — driving the workflow without Claude Code
+# Programmatic orchestration
 
 > 🇪🇸 [Versión en español](ORCHESTRATION.es.md)
 
-The workflow's skills are plain instructions any agent can follow — but two
-conveniences of Claude Code made the *autopilot* feel native there: **`/loop`**
-(auto re-invocation) and **subagents** (a fresh cheap-model context per phase).
-Neither is part of the contract. This document specifies the vendor-neutral
-replacement: an **external driver** — a shell loop, a CI job, your own
-program — injects the envelope requirement into every invocation (see below),
-parses the resulting **machine envelope** (a fixed JSON block) from each
-turn, and decides the next command and the model to run it on.
+Skills are text-first instructions. An external driver may run them headlessly
+without turning every skill into a large JSON prompt: it asks for a small
+machine result at the invocation boundary and combines it with facts compiled
+from the repository documents.
 
 ```
-            ┌──────────────────────────────────────────────┐
-            │              YOUR ORCHESTRATOR                │
-            │  parse envelope → route on state → pick tier  │
-            └────────┬─────────────────────────▲────────────┘
-                     │ invoke (headless)       │ last fenced ```json block
-                     ▼                         │
-      agent session running ONE skill: workflow-status /
-      plan-feature / execute-phase / review-change / audit-pr / …
+  selected docs + repository facts ──► WorkflowSnapshot v1
+                                         │
+  one skill turn ──► parseTurn ──► SkillOutcome v1 / Envelope v2
+                                         │
+                                         ▼
+                              driver policy and next invocation
 ```
 
-This is exactly `ship-roadmap`'s loop with the conductor moved outside the
-agent — you gain per-step model choice (run `execute-phase` on a cheap model,
-`audit-pr` on your strongest) and lose nothing: the skills' own gates (branch
-safety, verification gate, mandatory review, merge gate) still bind inside
-every step.
+The driver owns sessions, file reads, Git/forge commands, retries, persistence,
+and authorization. The package owns portable contracts and pure parsing:
+[`@gtrabanco/agentic-workflow-schema`](../../packages/agentic-workflow-schema/).
 
-## The envelope
+## Contracts and ownership
 
-Full schema in [`skills/orchestration-envelope/SKILL.md`](../../skills/orchestration-envelope/SKILL.md).
-Contract in one line: **the last fenced ```json block of the final message is
-the envelope; exactly one per turn; all top-level keys always present.**
+| Result | Producer | What it contains | What it must not replace |
+| --- | --- | --- | --- |
+| Envelope v2 | `workflow-status` | Full read-only sensor state; stable legacy contract. | Driver state or authorization. |
+| SkillOutcome v1 | A driven working skill | Outcome, next intent/targets, blockers, questions, discoveries, evidence references. | Repository facts inferred from prose. |
+| WorkflowSnapshot v1 | Driver + package | Selected document facts, phase state, provenance, unknowns, contradictions. | Filesystem, Git, or forge access in the package. |
 
-### Parsing with the official package
+Envelope v2 remains the `workflow-status` contract. `detail` is required and
+all sensor-specific extensions, including `design_candidates`, live under it.
+The package validates new v2 results strictly; `parseEnvelope()` remains for
+existing legacy consumers.
 
-**`@gtrabanco/agentic-workflow-schema`** (npm) implements the contract:
-`parseEnvelope(text)` extracts the last fenced ```json block, validates it,
-and returns a fully-typed envelope; helpers `isTerminal(state)` and
-`isRunHalt(envelope)` cover the two stop rules; the raw JSON Schema is
-exported for non-JS drivers. Source lives in
-[`packages/agentic-workflow-schema/`](../../packages/agentic-workflow-schema/)
-and is version-locked to this contract (see its README).
+## Drive one turn
+
+Use the profile inventory and generated instruction instead of maintaining a
+second prompt copy in every skill:
 
 ```ts
-import { parseEnvelope, isRunHalt, isTerminal } from "@gtrabanco/agentic-workflow-schema";
-const r = parseEnvelope(agentOutput);
-if (!r.ok) throw new Error(r.errors.join("; "));
-if (isRunHalt(r.envelope)) stopRun(r.envelope.blockers);
-else if (!isTerminal(r.envelope.state)) invoke(r.envelope.next.recommended, r.envelope.next.tier);
-```
+import {
+  parseTurn,
+  renderOutputInstruction,
+  WORKFLOW_SKILL_PROFILES,
+} from "@gtrabanco/agentic-workflow-schema";
 
-## Injecting the envelope requirement (system-prompt snippet + repair loop)
+async function runTurn(skill: string, prompt: string, session: Session) {
+  const profile = WORKFLOW_SKILL_PROFILES.find((item) => item.skill === skill);
+  if (profile === undefined) throw new Error(`Unsupported skill: ${skill}`);
 
-As of feature 10, the envelope is no longer a per-skill turn-contract
-obligation — every user-facing skill except `workflow-status` dropped its
-inline `## Machine envelope` section, since the only consumer is a driver
-like this one, and a static `SKILL.md` instruction cannot detect or recover
-from an omission the way a driver can. The contract now lives here and in
-[`skills/orchestration-envelope/SKILL.md`](../../skills/orchestration-envelope/SKILL.md);
-a driver that wants the envelope must supply it itself:
+  let text = await session.invoke(prompt, {
+    systemAppend: renderOutputInstruction(skill),
+  });
+  let parsed = parseTurn({ skill, text, context: { unitId: session.unitId } });
 
-1. **Inject the canonical system-prompt snippet** into every headless
-   invocation (verbatim, from `orchestration-envelope/SKILL.md`):
-   ```text
-   Every turn you produce MUST end with exactly one fenced ```json block matching
-   the orchestration envelope schema (all top-level keys present; values only
-   from verified command output). Emit nothing after it.
-   ```
-2. **Repair loop on parse failure.** Call `parseEnvelope(lastTurn)`
-   (`@gtrabanco/agentic-workflow-schema`) after every invocation. If it fails —
-   no fenced json block, or it doesn't validate — do not treat the step as
-   failed yet: re-invoke the **same session** with the single-line prompt
-   `Emit only the machine envelope for the turn above.` and parse that reply.
-   Rationale: a weak model that drops JSON at the end of a long document
-   almost always produces it when asked for nothing else — repairing per-turn
-   at the driver layer is strictly more reliable than a static instruction the
-   model was always going to skip.
-3. **Retry bound.** One repair attempt per turn. If the repair reply also
-   fails to parse, treat the step as a driver-level `FAILED` and surface it to
-   a human — do not loop the repair prompt indefinitely.
-4. **`workflow-status` needs no repair loop.** It is the sole skill that still
-   emits the envelope inline (emitting it is its function), so polling it is a
-   normal call with no injected snippet or repair step required.
+  if (!parsed.ok) {
+    text = await session.invoke("Emit only the machine result for the turn above.");
+    parsed = parseTurn({ skill, text, context: { unitId: session.unitId } });
+  }
+  if (!parsed.ok) throw new DriverFailure(skill, parsed.errors);
 
-> **Structured-outputs shortcut.** On providers/models with strict structured
-> outputs (`response_format: {type: "json_schema", strict: true}` — many
-> OpenAI-compatible providers offer it on selected models; check your
-> provider's docs for which), the driver can *force*
-> the envelope instead of hoping for it: send the envelope-only turn (the
-> repair prompt of step 2, or a dedicated final "emit the envelope" turn)
-> with the package's `envelope.schema.json` as the response format — the
-> reply then validates by construction. Keep steps 2–3 as the fallback for
-> models without the feature, and never set a response format on the
-> *working* turns themselves: it would force the whole output to JSON and
-> suppress the prose and tool use the turn still needs.
-
-## The state machine (route on `state`)
-
-| `state` | Meaning | Orchestrator action | Suggested tier |
-|---|---|---|---|
-| `OK` | Skill finished its job | Invoke `next.recommended` | per `next.tier` |
-| `CONTINUE` | Same unit, more work (next phase / iteration) | Re-invoke `next.recommended` | `cheap` |
-| `READY_FOR_REVIEW` | Unit end | `/loop-review-fold <unit>` | `strong` state router; delegated review/fold tier |
-| `READY_FOR_AUDIT` | Review clean | `/audit-pr` | `strong` |
-| `MERGE_READY` | Audit passed; PR comment posted | Human merges, or your policy merges (respect the skill's pre-merge checklist) | — |
-| `MERGED` | Authorized auto-merge executed | Next unit: `workflow-status` → route | `cheap` (sensor) |
-| `NEEDS_FIXES` | fix-now findings / in-scope blockers | Continue `/loop-review-fold <unit>`; unresolved rows route to triage/replan | `cheap` fold, `strong` re-gate |
-| `BLOCKED` | Unmet dependency / external cause | Follow `dependencies.build_order` (plan+execute the deepest unmet unit first) or resolve `blockers[]` | per blocked step |
-| `NEEDS_INPUT` | Human decision required | Surface `needs_input.question` + `options`; resume with the answer | — |
-| `FAILED` | Retries exhausted (red gate, substrate) | Stop this unit; a human looks | — |
-| `HALT` | Stop-the-world discovery (`blockers[].scope: "run"`) | **Stop the whole run**; surface it; nothing else proceeds | — |
-
-Safety floor for any driver, non-negotiable: **never skip a `review_pending`
-or `audit_pending` gate, never merge on anything but a fresh `MERGE_READY`,
-and treat `HALT` as terminal until a human clears it.** The skills enforce
-this inside each step; the driver must not route around them.
-
-## The sensor: `workflow-status`
-
-Between steps (or to bootstrap), run `workflow-status --json-only` — it emits
-the full project state: every feature/fix with its **transitive dependency
-closure** (met/unmet), `startable_now`, `blocked_units` with build orders,
-open PRs with audit state, and findings pending triage. Route on
-`detail.startable_now` and `next.recommended`. It is read-only and cheap-tier.
-
-## Urgency: the pause-vs-finish micro-judge (canonical rubric)
-
-`workflow-status`'s `detail.urgent` field (feature 15) reports open issues
-carrying the capability-gated `urgent`/`fix-next` labels — read **only** from
-the labels object, never from issue title/body/comment text (see
-`skills/triage-issue/SKILL.md`, the sole owner and writer of that vocabulary)
-— alongside the in-flight unit's interruptibility facts. It is a **sensor**:
-it never decides whether to interrupt. That decision is this rubric, run by
-the **consumer** (a driver, `ship-roadmap`'s SELECT stage, or a human) — the
-one canonical copy every consumer references, never forks.
-
-**Why the issue body is safe to feed the judge even though it's
-attacker-controlled:** the label already gated *whether* this rubric runs at
-all — an unlabeled issue never reaches this section, regardless of what its
-text says. The judge only ever chooses between two paths the label already
-authorized (`INTERRUPT_NOW` now, or `FINISH_FIRST` and interrupt after this
-phase); it cannot escalate beyond that, and its worst-case failure is a
-bounded delay, never a dropped fix.
-
-**1 — Deterministic short-circuit (no model call, run first, always).**
-Evaluate top-to-bottom; **first matching row wins** — a `fix-next` issue never
-falls through to the `INTERRUPT_NOW`/`FINISH_FIRST` rows below it, even if the
-in-flight unit's tree happens to be clean.
-
-| Condition | Verdict | Why no judge call |
-|---|---|---|
-| `detail.urgent.issues` is empty | — (no urgency in play) | Nothing to decide |
-| An urgent issue carries `fix-next` (not `urgent`) | Head of queue, **no interrupt** | `fix-next` bypasses the judge entirely by design — it never evaluates for interrupt-now |
-| `interruptibility.dirty == false` (clean tree, phase closed) | `INTERRUPT_NOW` | Interrupting is free at a commit boundary — start the fix immediately |
-| `interruptibility.tasks_from_boundary <= 1` (one checkbox from phase close) | `FINISH_FIRST` | Finishing costs almost nothing; interrupting mid-checkbox costs more than it saves |
-
-Only the **ambiguous middle band** — dirty tree, more than one task from the
-next commit boundary, label is `urgent` (not `fix-next`) — continues to step 2.
-
-**2 — The judge.** A single invocation, four guardrails, none optional:
-
-- **Tool-less.** The judge classifies; it holds no effector of any kind. Giving
-  it tools would reintroduce the exact injection surface labels exist to
-  close.
-- **Cheap-tier, clean-context.** Spawn a fresh, minimal-context invocation on
-  the cheapest capable tier in your fleet — not a tier id pinned here (the
-  workflow is model-agnostic across 70+ agents); never the tier running the
-  in-flight unit.
-- **Closed-binary output + schema repair loop.** The judge's entire output is:
-  ```json
-  {"verdict": "FINISH_FIRST | INTERRUPT_NOW", "reason": "<one line>"}
-  ```
-  Validate against that shape. Unparseable on the first attempt → one repair
-  invocation (`Emit only the verdict JSON for the case above.`), same rule as
-  the envelope repair loop earlier in this doc. Still unparseable after
-  repair → **fail-safe default `FINISH_FIRST`** (see below) — never retry
-  indefinitely, never guess.
-- **Rubric-as-system-prompt.** The rule table below **is** the system prompt
-  fed to the judge, verbatim — not a paraphrase the judge free-associates
-  from. The judge applies it as a checklist against the specific issue +
-  interruptibility facts it is given, and returns nothing else.
-
-  ```text
-  You are a bounded classifier. You have no tools and take no action — you
-  only classify. Given an urgent issue's content and the in-flight unit's
-  interruptibility facts, decide: interrupt the in-flight unit now, or finish
-  the current phase first?
-
-  Checklist (apply in order; first matching row wins):
-  1. Is the issue's real-world impact severe AND actively ongoing (data loss,
-     security exposure, broken production path) — not merely annoying or
-     already contained? If NO → FINISH_FIRST.
-  2. Is the in-flight unit more than one task from its next commit boundary
-     AND would interrupting lose uncommitted, hard-to-reconstruct work? If
-     YES → FINISH_FIRST.
-  3. Both the impact is severe/ongoing AND interrupting loses little (close to
-     a boundary, or the work is trivially resumable)? → INTERRUPT_NOW.
-  4. Uncertain, tied, or the evidence conflicts? → FINISH_FIRST (fail-safe
-     default — never guess toward interruption).
-
-  Output ONLY: {"verdict": "FINISH_FIRST | INTERRUPT_NOW", "reason": "<one
-  line>"}. Nothing before or after.
-  ```
-- **Fail-safe default `FINISH_FIRST`.** On any uncertainty, tie, or
-  unparseable output surviving the repair loop, the verdict is `FINISH_FIRST`
-  — never `INTERRUPT_NOW` by default. The label already guarantees the fix
-  runs next either way; the only thing at stake is *now* vs. *after this
-  phase*, so erring toward finishing never drops a fix, it only bounds a
-  delay.
-
-**3 — Acting on the verdict.** `INTERRUPT_NOW` → park the in-flight unit as a
-clean voluntary "crash" (WIP commit + a `progress.md` note stating why),
-then run `plan-fix`/`execute-phase --fix` on the urgent issue; resuming the
-parked unit later reuses `workflow-status`'s `RESUMABLE` verdict +
-`execute-phase`'s idempotent phase re-entry — no new park/resume machinery.
-`FINISH_FIRST` → finish the current phase's commit, then the urgent fix is
-next in queue (same as `fix-next`'s head-of-queue treatment) before any other
-unit starts.
-
-## Driver restart protocol (crash recovery)
-
-A driver process will eventually die mid-turn. The recovery rule: **the
-driver's persisted state is a hint; ground truth (git, forge, docs) is the
-source** — never "repair" your journal, recompute from reality.
-
-1. **Journal (recommended shape).** Persist every envelope **append-only**,
-   one entry per turn with a timestamp and the current head SHA — never
-   overwrite a single state file. The last entry is your *hypothesis* on
-   restart; the full log is your audit trail.
-2. **On restart**, call the sensor with the hypothesis:
-   `workflow-status --json-only --last-envelope <last-entry.json>` (agents
-   without argument passing: paste the JSON into the invocation message —
-   the skill reads the last fenced json block of the request as the hint).
-3. **Route on the recomputed envelope** — three cases:
-   - `state: OK` (verdict `CLEAN`) — no interruption; follow
-     `next.recommended` as on any normal tick.
-   - `state: CONTINUE` (verdict `RESUMABLE`) — a turn died mid-phase but the
-     ledger points to a unique next task; `next.recommended` is the resume
-     command (`execute-phase <NN> <phase>` re-enters idempotently — it
-     reconciles `TASKS.md` ticks against evidence and continues from the
-     first unticked task).
-   - `state: NEEDS_INPUT` (verdict `AMBIGUOUS`) — the ledger contradicts the
-     commits (ticks without evidence, unknown branch); surface
-     `needs_input.question` + `options` to a human. Do not auto-pick.
-4. **Divergence line.** The report's `Hint envelope: matched | diverged: …`
-   tells you whether work completed after your last journal entry (reality
-   ahead of the journal is normal — a skill finished and pushed before the
-   crash); adopt the recomputed state and append it to the journal.
-
-Nothing above requires filesystem or git access in the driver itself — the
-sensor does the reading; the driver only parses envelopes, which is the point
-for REST-API-only drivers (e.g. a Node server talking to an agent's HTTP API).
-
-## Replacing `/loop` (the driver loop)
-
-Invoke the agent headless, one skill per invocation, and loop. Invocation is
-per-agent (`claude -p "…"` on Claude Code CLI; `opencode run "…"`; any agent's
-non-interactive mode; even a fresh chat via API) — the pattern is identical:
-
-```bash
-#!/usr/bin/env bash
-# Generic driver skeleton. AGENT_STRONG / AGENT_CHEAP are whatever commands
-# start a headless session on that tier for your agent(s) — they may even be
-# different agents/vendors per step.
-set -euo pipefail
-
-run() { # run <tier> <prompt> -> prints the envelope (last fenced json block)
-  local out; out="$("$@" 2>/dev/null)"
-  printf '%s\n' "$out" | awk '/^```json$/{f=1;j="";next} /^```$/{if(f){last=j};f=0} f{j=j $0 "\n"} END{printf "%s", last}'
+  journal.append({ skill, source: parsed.source, diagnostics: parsed.diagnostics, outcome: parsed.outcome });
+  return parsed;
 }
-
-while true; do
-  env_json="$(run $AGENT_CHEAP "Follow .agents/skills/workflow-status/SKILL.md with --json-only")"
-  state=$(jq -r .state <<<"$env_json"); next=$(jq -r .next.recommended <<<"$env_json")
-  tier=$(jq -r .next.tier <<<"$env_json")
-  case "$state" in
-    HALT|FAILED|NEEDS_INPUT) echo "$env_json" | jq .; exit 1 ;;
-    MERGE_READY)             echo "merge pending: $(jq -r .pr.url <<<"$env_json")"; exit 0 ;;
-    *) driver=$([ "$tier" = cheap ] && echo "$AGENT_CHEAP" || echo "$AGENT_STRONG")
-       env_json="$(run $driver "Follow the installed SKILL.md for: $next")" ;;
-  esac
-done
 ```
 
-The skeleton is deliberately minimal — a real driver adds per-state handling
-(fold cycles, build-order recursion on `BLOCKED`, merge policy on
-`MERGE_READY`) using the table above. The point: **nothing here is
-Claude Code-specific.**
+The repair bound is exactly one re-invocation of the same session. A second
+failure is a driver-level `FAILED`; do not retry indefinitely and never parse
+arbitrary prose as a route. When a provider supports strict structured output,
+use the selected JSON Schema on the small final-result or repair turn, not on a
+working turn that still needs prose or tool use.
 
-## Prompt-cache economics
+`parseTurn` accepts, in order: SkillOutcome v1, strict Envelope v2, named
+legacy envelope repairs, then the two fixed native verdict formats
+(`loop-review-fold`, `audit-pr`). No other prose fallback exists.
 
-Each `run()` call above is a fresh headless invocation — cheap by design, but
-only if the driver doesn't fight the model provider's prompt cache:
+## Compile the snapshot before deciding
 
-- **Keep the system prompt / preamble byte-stable across invocations.** Same
-  skill → same prefix, every time (no timestamp, run id, or other per-call
-  noise injected into the cached portion). A stable prefix is what makes a
-  cache hit possible at all; a single byte of drift invalidates it.
-- **Group a unit's invocations within a short window.** Cache TTL is
-  typically on the order of ~5 minutes — running a unit's steps back-to-back
-  keeps hitting the warm cache; leaving long gaps between steps lets it expire
-  and pay full price again.
-- **Never switch model mid-unit.** Beyond invalidating the cache (each
-  provider's cache is model-specific), it also breaks stylistic continuity
-  across the unit's steps — pick the tier per step (per the state table above)
-  but keep it fixed for that step's full lifetime, not swapped mid-way.
-- **A one-invocation-per-step driver never needs compaction at all** — see
-  `docs/workflow/FEATURE_WORKFLOW.md` → *Context hygiene & cost* for why a
-  fresh context per step is the cheap path, not just a safe one.
+Compile the project facts from the exact documents and repository state already
+read by the driver. The package does no I/O, making the output reproducible and
+safe to cache by source revision.
 
-## Bounded unit execution and fresh phase contexts
+```ts
+import { compileWorkflowSnapshot } from "@gtrabanco/agentic-workflow-schema";
 
-The normal command is now `execute-phase NN` (or `--fix N`): one outer unit
-invocation advances through every remaining phase. The execution contract still
-requires a fresh worker context per phase. An external driver can satisfy that
-contract by treating the outer unit loop as a small state machine: invoke a
-cheap headless worker with the current phase plus the frozen acceptance blob,
-persist only its compact receipt, then start the next worker. Passing `P<k>` to
-`execute-phase` remains the manual/driver primitive for exactly one phase.
+const result = compileWorkflowSnapshot({
+  sourceRevision: repository.headSha,
+  repository,
+  documents: await readWorkflowDocuments(repository),
+});
+if (!result.ok) throw new DriverFailure("snapshot", result.errors);
 
-After the PR opens, invoke `loop-review-fold`. It checks persisted evidence,
-folds an open queue left by `review-change` before reviewing again, and reviews
-only a changed HEAD. Unresolved findings go to
-`triage-issue --prioritize-now`; oversized work becomes new phases that the
-user executes manually. An RLM may hold receipts and failure summaries, but
-acceptance bytes and repository/forge state remain the authority.
+const snapshot = result.snapshot;
+if (snapshot.contradictions.length > 0) {
+  await runTurn("resolve-repository-state", "Resolve the declared repository-state contradiction.", session);
+}
+```
 
-## What remains Claude Code-only (and its status)
+`WorkflowSnapshot v1` exposes the active feature or fix, phase identifiers and
+names, document provenance, explicit unknowns, and declared repository-state
+contradictions. It does not invent a current phase if progress is ambiguous.
+Read richer project-specific state only from the `workflow-status` Envelope v2
+`detail` payload, with its own documented shape.
 
-| Feature | Status |
-|---|---|
-| `/loop` | Convenience. Fully replaced by the driver loop above. |
-| Subagents | Convenience. Replaced by one headless worker per phase behind the unit invocation. |
-| Per-skill `model:`/`effort:` frontmatter | `#claude` branch only; the default branch inherits the session — the driver picks tiers instead. |
-| `ultracode` session setting | Optional Claude Code accelerator for ship-roadmap's fan-out; no equivalent needed — a driver parallelizes by running independent units concurrently itself (respect the project's declared git workflow before parallelizing). |
-| `.claude/` session hooks (log-session capture) | Optional extra; `log-session` invoked by the driver at run end covers it. |
+## Routing and safety floor
 
-`ship-roadmap` remains the *in-agent* way to run this same loop when you'd
-rather not host a driver — the two are equivalent by design, and both consume
-the same skills underneath.
+The driver may route on `outcome.status` and `outcome.next`, but it must retain
+the skills' safeguards:
+
+- `blocked`, `needs-input`, and `failed` stop normal advancement and surface
+  canonical blockers or questions.
+- A discovery outside the current unit is a proposal: it must not silently
+  create an issue or expand the acceptance boundary.
+- A `workflow-status` run-scoped blocker or `HALT` state stops the whole run.
+- Never skip a review or audit gate; merge only after a fresh, current-head
+  `MERGE_READY` result and the driver's explicit merge authorization.
+- Treat `snapshot.unknowns` as missing evidence, not permission to guess.
+
+The driver should persist each parsed outcome, its source/diagnostics, the
+source revision, and the compiled snapshot append-only. On restart, recompute
+the snapshot and poll `workflow-status`; the journal is a hypothesis, not
+ground truth.
+
+## Compatibility is a migration aid, not a policy engine
+
+The package can repair only facts it can prove: missing `detail`, legacy root
+`design_candidates`, a matching trusted unit id, a zero issue count, and the
+reported native `audit-pr` blocker rows. It rejects a nonzero count without
+issue identities and any unmatched or invented value. Keep the diagnostics in
+the journal so an upgrade can quantify and then remove legacy emissions.
+
+## Cost and performance
+
+- Keep the static system prefix and selected skill stable to retain provider
+  prompt-cache hits.
+- Compile only the documents needed for the active decision and cache the
+  snapshot by revision; invalidate it after a repository-changing turn.
+- Pass structured outcomes and snapshots between contexts, not raw transcripts.
+- Use the cheapest capable model for mechanical work, but keep planning,
+  review, and audit at the project's required quality bar.
+
+This protocol is portable across interactive agents, CLIs, API sessions, and
+CI jobs. Agents without session resumption may perform the one repair in a
+fresh invocation containing the prior turn, but must still keep the one-repair
+bound and record that weaker recovery mode.
