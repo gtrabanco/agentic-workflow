@@ -180,34 +180,66 @@ test("public validators reject undeclared model outcomes and malformed snapshots
   assert.ok(snapshot.errors.includes("unknowns[0].reason must be a string"));
 });
 
-test("parseTurn extracts only fixed native contracts and leaves arbitrary prose unresolved", () => {
+test("parseTurn accepts only the complete loop-review-fold native contract", () => {
   const known = parseTurn({
     skill: "loop-review-fold",
-    text: "REVIEW-FOLD LOOP — BLOCKED\nReview: FAIL · Fold: unchanged\n\n→ Next: /review-change — obtain a current receipt",
+    text:
+      "REVIEW-FOLD LOOP — BLOCKED\nUnit: 134-machine-contract · PR: https://github.com/example/repo/pull/134 · HEAD: abc123\nFirst action: review-change\nReview: FAIL · Fold: unchanged\nUnresolved: none\nEvidence: The current review receipt is stale.\n\n→ Next: /review-change — obtain a current receipt",
   });
   assert.equal(known.ok, true);
   assert.equal(known.source, "native");
   assert.equal(known.outcome.status, "blocked");
   assert.equal(known.outcome.next.intent, "review-change");
 
-  const unknown = parseTurn({ skill: "loop-review-fold", text: "Probably ready; maybe check later." });
-  assert.equal(unknown.ok, false);
-  assert.ok(unknown.errors.includes("no deterministic workflow result found"));
+  const incomplete = parseTurn({
+    skill: "loop-review-fold",
+    text: "REVIEW-FOLD LOOP — BLOCKED\nReview: FAIL · Fold: unchanged\n\n→ Next: /review-change — obtain a current receipt",
+  });
+  assert.equal(incomplete.ok, false);
+
+  const unknownCommand = parseTurn({
+    skill: "loop-review-fold",
+    text:
+      "REVIEW-FOLD LOOP — BLOCKED\nUnit: 134-machine-contract · PR: https://github.com/example/repo/pull/134 · HEAD: abc123\nFirst action: review-change\nReview: FAIL · Fold: unchanged\nUnresolved: none\nEvidence: The current review receipt is stale.\n\n→ Next: /made-up — do not invent routes",
+  });
+  assert.equal(unknownCommand.ok, false);
+
+  const invalidFold = parseTurn({
+    skill: "loop-review-fold",
+    text:
+      "REVIEW-FOLD LOOP — BLOCKED\nUnit: 134-machine-contract · PR: https://github.com/example/repo/pull/134 · HEAD: abc123\nFirst action: review-change\nReview: FAIL · Fold: invented\nUnresolved: none\nEvidence: The current review receipt is stale.\n\n→ Next: /review-change — obtain a current receipt",
+  });
+  assert.equal(invalidFold.ok, false);
 });
 
-test("parseTurn recognizes the fixed audit-pr verdict without requiring a duplicate envelope", () => {
-  const result = parseTurn({
+test("parseTurn recognizes the complete audit-pr native verdict without requiring a duplicate envelope", () => {
+  const blocked = parseTurn({
     skill: "audit-pr",
     text:
-      "VERDICT: BLOCKED (1 blockers)\n1. [gate] review-receipt — receipt is stale → fix (/review-change)\n\n→ Next: /review-change — refresh review evidence",
+      "PR #142 — Add CSV export\nURL: https://github.com/example/repo/pull/142\nBase: main ← Head: fix/142-csv-export @ abc123   CI: green\n\nVERDICT: BLOCKED (1 blocker)\n\nBlockers (ranked):\n  1. [Tests] Export handler has no test — acceptance criterion is unverified\n     → fix: add an integration test (fold into the current phase)\n\n→ Next:\n  · BLOCKED → clear the top blocker, then re-run /audit-pr",
   });
 
-  assert.equal(result.ok, true);
-  assert.equal(result.source, "native");
-  assert.equal(result.outcome.status, "blocked");
-  assert.deepEqual(result.outcome.blockers, [
-    { kind: "gate", id: "review-receipt", scope: "unit", detail: "receipt is stale" },
+  assert.equal(blocked.ok, true);
+  assert.equal(blocked.source, "native");
+  assert.equal(blocked.outcome.status, "blocked");
+  assert.equal(blocked.outcome.next.intent, "audit-pr");
+  assert.deepEqual(blocked.outcome.blockers, [
+    { kind: "gate", id: "Tests", scope: "unit", detail: "Export handler has no test — acceptance criterion is unverified" },
   ]);
+
+  const mergeReady = parseTurn({
+    skill: "audit-pr",
+    text:
+      "PR #142 — Add CSV export\nURL: https://github.com/example/repo/pull/142\nBase: main ← Head: fix/142-csv-export @ abc123   CI: green\n\nVERDICT: MERGE-READY\n\nNothing blocks merge.\n\n→ Next:\n  · MERGE-READY → you merge https://github.com/example/repo/pull/142, then /plan-feature --next",
+  });
+  assert.equal(mergeReady.ok, true);
+  assert.equal(mergeReady.outcome.next.intent, "merge");
+
+  const malformed = parseTurn({
+    skill: "audit-pr",
+    text: "unrelated prose\nVERDICT: MERGE-READY\n→ Next:",
+  });
+  assert.equal(malformed.ok, false);
 });
 
 test("machine profiles cover exactly the skills AWL can invoke", () => {
@@ -331,6 +363,31 @@ test("compileWorkflowSnapshot refuses to infer a phase from ambiguous progress",
   assert.equal(result.ok, true);
   assert.equal(result.snapshot.phase.current, null);
   assert.ok(result.snapshot.unknowns.some((entry) => entry.field === "phase.current"));
+});
+
+test("compileWorkflowSnapshot records missing phase documents for the active unit", () => {
+  const result = compileWorkflowSnapshot({
+    sourceRevision: "0123456789abcdef",
+    repository: { branch: "main", headSha: "abcdef012345", dirty: false },
+    documents: [
+      { path: "docs/workflow/REPOSITORY_STATE.md", content: "Status: frozen\n" },
+      {
+        path: "docs/features/ROADMAP.md",
+        content: "| 22 | `machine-contract` | in-progress · [#134](https://example.test/pr/134) | — | Machine contract |\n",
+      },
+    ],
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.snapshot.unit, {
+    kind: "feature",
+    id: "22-machine-contract",
+    status: "in-progress · [#134](https://example.test/pr/134)",
+  });
+  assert.deepEqual(result.snapshot.phase, { current: null, total: null, completed: null, names: [] });
+  for (const field of ["phase.names", "phase.total", "phase.current", "phase.completed"]) {
+    assert.ok(result.snapshot.unknowns.some((entry) => entry.field === field));
+  }
 });
 
 test("compileWorkflowSnapshot preserves contradictory repository state as a fact", () => {
