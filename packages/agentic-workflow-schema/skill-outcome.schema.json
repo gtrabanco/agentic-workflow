@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/skill-outcome.schema.json",
+  "title": "agentic-workflow skill outcome v1",
+  "description": "The small model-owned semantic result for a driven skill turn. Deterministic repository facts belong to workflow-snapshot instead.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "version", "skill", "status", "summary", "next", "blockers", "questions", "discoveries", "evidence_refs"],
+  "properties": {
+    "contract": { "const": "agentic-workflow/skill-outcome" },
+    "version": { "const": 1 },
+    "skill": { "type": "string", "minLength": 1 },
+    "status": { "enum": ["completed", "continue", "blocked", "needs-input", "failed"] },
+    "summary": { "type": "string" },
+    "next": { "$ref": "#/definitions/next" },
+    "blockers": { "type": "array", "items": { "$ref": "#/definitions/blocker" } },
+    "questions": { "type": "array", "items": { "$ref": "#/definitions/question" } },
+    "discoveries": { "type": "array", "items": { "$ref": "#/definitions/discovery" } },
+    "evidence_refs": { "type": "array", "items": { "type": "string" } }
+  },
+  "definitions": {
+    "intent": {
+      "enum": ["init-workspace", "status", "discover-repository-state", "resolve-repository-state", "design-feature", "plan-feature", "plan-fix", "triage-issue", "execute-phase", "review-change", "loop-review-fold", "audit-pr", "merge", "ask-human", "stop", "none"]
+    },
+    "next": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intent", "targets"],
+      "properties": {
+        "intent": { "$ref": "#/definitions/intent" },
+        "targets": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id", "scope", "detail"],
+      "properties": {
+        "kind": { "enum": ["dependency", "issue", "gate", "merge-conflict", "substrate", "input"] },
+        "id": { "type": "string" },
+        "scope": { "enum": ["unit", "run"] },
+        "detail": { "type": "string" }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "question", "options"],
+      "properties": {
+        "id": { "type": "string" },
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "scope", "summary", "evidence_refs", "proposed_intent"],
+      "properties": {
+        "kind": { "enum": ["defect", "risk", "opportunity", "environment", "scope-gap", "unknown"] },
+        "scope": { "enum": ["current-unit", "outside-unit", "run"] },
+        "summary": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "proposed_intent": { "$ref": "#/definitions/intent" }
+      }
+    }
+  }
+}

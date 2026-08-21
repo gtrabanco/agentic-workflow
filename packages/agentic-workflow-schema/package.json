@@ -1,7 +1,7 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "2.1.0",
-  "description": "Types, JSON Schema, and parser/validator for the agentic-workflow machine envelope — the fixed JSON block a driven agent turn ends with (workflow-status always; other skills under the driver-injected snippet), for programmatic orchestration.",
+  "version": "3.0.0",
+  "description": "Versioned machine contracts, JSON Schemas, parsers, and deterministic document snapshots for agentic-workflow orchestration.",
   "keywords": [
     "agentic-workflow",
     "agent",
@@ -26,11 +26,15 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./envelope.schema.json": "./envelope.schema.json"
+    "./envelope.schema.json": "./envelope.schema.json",
+    "./skill-outcome.schema.json": "./skill-outcome.schema.json",
+    "./workflow-snapshot.schema.json": "./workflow-snapshot.schema.json"
   },
   "files": [
     "dist",
     "envelope.schema.json",
+    "skill-outcome.schema.json",
+    "workflow-snapshot.schema.json",
     "README.md",
     "README.es.md",
     "LICENSE"
@@ -43,7 +47,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node --test test/index.test.mjs",
+    "test": "tsc && node --test test/*.test.mjs",
     "prepublishOnly": "npm test"
   },
   "devDependencies": {

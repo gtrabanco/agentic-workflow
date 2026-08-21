@@ -2,6 +2,29 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-21 — hybrid machine results and deterministic snapshots
+
+**Breaking driver contract; `@gtrabanco/agentic-workflow-schema` 3.0.0,
+`orchestration-envelope` 2.0.1, and `workflow-status` 2.0.0.** The full Envelope v2 is no longer the
+requested result for every headless working skill. `workflow-status` retains
+it as its stable sensor output; other driven skills use the smaller
+SkillOutcome v1. The driver owns deterministic state compilation through
+WorkflowSnapshot v1, rather than asking a model to restate repository facts.
+
+**Migration.** Update direct sensor consumers from root `design_candidates`
+to `detail.design_candidates`. Replace copied driver prompt text with
+`renderOutputInstruction(skill)` and replace ad hoc extraction with
+`parseTurn({skill, text, context})`. Keep exactly one same-session repair
+using `Emit only the machine result for the turn above.`; the second failure
+is driver-level FAILED. `ship-roadmap` remains a native-banner conductor; the
+package profiles apply to the worker and sensor skills it invokes. Compile
+snapshots from the documents and repository facts already read by the driver,
+and route explicit contradictions to
+`resolve-repository-state`. Existing sensor-only consumers can keep
+`parseEnvelope()` initially, but should move to `parseEnvelopeV2Strict()`
+before depending on v2 extensions. The three named compatibility repairs are
+diagnostic migration support, not a generic prose parser.
+
 ## 2026-08-14 — `loop-review-fold` is a simple review/fold router
 
 **Breaking contract; `loop-review-fold` 2.0.0.** The old bounded conductor

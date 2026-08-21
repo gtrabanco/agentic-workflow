@@ -4,16 +4,14 @@ The workflow is the contract; Claude Code features are conveniences. This skill
 leans on them harder than any other — here is the manual equivalent of each:
 
 - **No `/loop`** — two equivalent replacements, both vendor-neutral: (a) an
-  **external orchestrator** loops `/ship-roadmap --continue` headless,
-  injecting the envelope requirement (see `orchestration-envelope`) and
-  routing on the resulting `state` (`"CONTINUE"` → re-invoke; full
+  **external orchestrator** loops `/ship-roadmap --continue` headless and
+  routes its native fixed `SHIP:` banner plus closing `→ Next:` block (full
   protocol + driver skeleton in `docs/workflow/ORCHESTRATION.md`); (b) manual
   re-invocation after each iteration. Iterations are
   stateless-by-reconstruction, so any driver is exactly equivalent; stop when
-  the first line is a terminal `SHIP:` banner (envelope state OK / BLOCKED /
-  FAILED / HALT). **Every iteration ending is announced** — "iteration
-  complete (normal; re-invoke to continue)" vs a parked/terminal reason — so
-  a stop is never ambiguous.
+  the first line is a terminal `SHIP:` banner. **Every iteration ending is
+  announced** — "iteration complete (normal; re-invoke to continue)" vs a
+  parked/terminal reason — so a stop is never ambiguous.
 - **No subagents** — execute phases sequentially: for each phase, one **fresh
   headless invocation (or conversation) on a cheaper model** following the
   installed `execute-phase` SKILL.md for exactly one phase (same two autopilot
