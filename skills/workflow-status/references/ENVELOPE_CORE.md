@@ -17,9 +17,10 @@ states** (the schema package needs no release):
 
 `next` always carries the single best command for the project right now, and
 `detail` the full tree (plus `crash_recovery: {verdict, branches: [...]}`).
-**`design_candidates`** is a top-level array beside `startable_now` /
-`blocked_units` — every `idea`-status unit, deps-agnostic (design happens
-before dependency startability matters).
+**`detail.design_candidates`** is an array beside `detail.startable_now` /
+`detail.blocked_units` — every `idea`-status unit, deps-agnostic (design
+happens before dependency startability matters). It is never a top-level
+envelope key.
 
 **`detail.urgent`** — the injection-safe urgency channel (feature 15):
 `{issues: [...], interruptibility: {...}}`. `issues` lists every **open**
