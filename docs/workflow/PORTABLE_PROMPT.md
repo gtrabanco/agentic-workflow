@@ -159,7 +159,7 @@ the frozen ledger and route missing or contradictory state to these skills.
 - `generate-docs` — write incremental developer documentation through the
   project's declared docs adapter.
 - `log-session` — append a structured session handoff to the project journal.
-- `workflow-status` — emit the read-only machine envelope for external drivers.
+- `workflow-status` — emit the read-only Envelope v2 sensor result for external drivers.
 
 **Decide**
 12. `triage-issue` — classify an issue (fix-now / promote-to-feature / postpone /
@@ -192,27 +192,20 @@ Compose with (do not duplicate) the project's own companion review skills
 skills) — `review-change` and `product-audit` invoke only the applicable ones. If
 a needed one is absent, note the gap rather than failing.
 
-## 2b. The envelope is a driver-injected contract, not a per-skill duty
+## 2b. Machine results are profile-owned at the invocation boundary
 
-Every user-facing skill except `workflow-status` stays clean for humans: no
-trailing JSON block, no turn-contract line about emitting one. The envelope
-requirement lives at the orchestration layer instead — a driver that wants
-machine-parseable turns injects this system-prompt snippet into every
-headless invocation:
+Interactive skills remain text-first. A headless driver selects the named
+profile from `@gtrabanco/agentic-workflow-schema`, appends the generated
+`renderOutputInstruction(skill)` to a worker invocation, and parses the final
+result with `parseTurn({skill, text, context})`. `workflow-status` keeps the
+strict Envelope v2 sensor result; other driven workers return compact
+SkillOutcome v1. `ship-roadmap` is the conductor and keeps its native `SHIP:`
+banner and closing `→ Next:` block, so it is not a worker profile.
 
-```text
-Every turn you produce MUST end with exactly one fenced ```json block matching
-the orchestration envelope schema (all top-level keys present; values only
-from verified command output). Emit nothing after it.
-```
-
-If a turn comes back without a valid envelope, the driver's repair loop
-re-invokes the same session with `Emit only the machine envelope for the turn
-above.` (one attempt; a second failure is a driver-level `FAILED`, surfaced to
-a human) — see `docs/workflow/ORCHESTRATION.md` for the full protocol.
-`workflow-status` is the one skill that keeps emitting the envelope inline
-(emitting it is its function), so it needs neither the snippet nor the repair
-loop.
+On an absent, malformed, or invalid result, the driver re-invokes the same
+session exactly once with `Emit only the machine result for the turn above.` A
+second failure is driver-level `FAILED`; arbitrary prose is never promoted to
+workflow facts. See `docs/workflow/ORCHESTRATION.md` for the full protocol.
 
 ## 3. Write a `docs/workflow/` copy
 Create

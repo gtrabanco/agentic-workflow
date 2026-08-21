@@ -77,6 +77,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### [`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-08-21 | mayor | **Contrato de driver incompatible:** añade parseo estricto de Envelope v2, SkillOutcome v1 compacto, WorkflowSnapshot v1 determinista, validadores públicos, perfiles, diagnósticos de compatibilidad y los tres JSON Schema publicados. `workflow-status` conserva Envelope v2; las skills de trabajo conducidas pasan al resultado compacto. Ver `docs/workflow/MIGRATION.es.md`. |
 | 1.0.1 | 2026-07-05 | parche | `validateEnvelope()` ahora comprueba todos los enums/tipos que declara el JSON Schema (`unit.type`, `pr.state`/`.ci`, `gates.verification`, `blockers[].kind`/`.scope`, tipos de los elementos de arrays) — antes era más laxo que `envelope.schema.json`, así que un valor malformado como `blockers[].scope: "planet"` pasaba en silencio. Tests añadidos para la ruta de fallo de validación estructural a través de `parseEnvelope()` y para fences con CRLF. La CI (`publish-schema.yml`) migró a Bun para instalar/testear (`bun install --frozen-lockfile`; se elimina `package-lock.json`, `bun.lock` es el único lockfile) — npm se mantiene solo para el paso final `npm publish --provenance`. Se añadió `LICENSE` dentro del directorio del paquete (el auto-include de npm solo recoge una LICENSE de la propia carpeta del paquete publicado). El ejemplo de importación del JSON Schema en el README se corrigió para funcionar en el `engines.node: ">=18"` declarado (antes solo funcionaba en Node 20.10+/22). |
 | 1.0.0 | 2026-07-05 | — | Primer release publicado. Tipos, JSON Schema y `parseEnvelope()`/`validateEnvelope()`/`isTerminal()`/`isRunHalt()` para el envelope máquina de agentic-workflow. |
 
@@ -124,6 +125,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.0.0 | 2026-08-21 | mayor | **Contrato de sensor incompatible:** mueve las candidatas a diseño de la extensión raíz antes documentada a `detail.design_candidates`, la única ubicación Envelope v2 estricta. Los drivers deben usar la ruta de parser/migración del paquete v3. Ver `docs/workflow/MIGRATION.es.md`. |
 | 1.10.0 | 2026-08-09 | menor | Las recomendaciones de unidades planificadas ahora emiten `execute-phase` solo-con-objetivo, conservando la ruta por defecto de todas las fases restantes para humanos y drivers externos. |
 | 1.9.0 | 2026-07-31 | menor | Carga progresiva: el cuerpo de activación es ahora una ruta compacta del sensor de solo lectura; secuencia de comandos, recuperación de caídas, campos del envelope, guardrails y portabilidad viven en recursos de un salto con orden obligatorio. |
 | 1.7.0 | 2026-07-19 | menor | Fix #79: cuatro nuevos pasos de proceso (10-13) añaden a cada entrada `detail.features[]`/`detail.fixes[]` señales por-unidad `review` (`last_checkpoint_sha`, `unreviewed_diff`, `terminal_done` reutilizado del cómputo existente de `review_pending`, `adversarial: {ran, n}` — honestamente `null` salvo evidencia real, nunca adivinado), `closure.state` (reutilizando el propio grep de `audit-pr`), e `issues_born: {n, with_descope_amendment}` (reutilizando la detección de scope-bleed de `audit-pr`, ampliada por #79/#89) — opaco al esquema, sin cambio de paquete (mismo precedente que `detail.urgent`). Nuevo `next.suggested[]` de nivel superior (`{command, trigger, source_skill}`, opcional) muestra los triggers disparados de `execute-phase`/`review-change`/`audit-pr`/`fold-findings`, cada uno citando la condición de su propia skill dueña — solo consultivo, nunca reemplaza `next.recommended`/`next.tier`. Reflejado en `packages/agentic-workflow-schema` 2.1.0 (misma PR). |
@@ -141,6 +143,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.0.2 | 2026-08-21 | parche | Aclara que el conductor conserva su contrato de turno nativo `SHIP:`/`→ Next:`; los perfiles de resultado máquina del paquete se aplican a las skills worker y sensor que invoca. |
 | 4.0.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime activación, gates de descubrimiento, selección de rutas, relaciones y cierre para reducir contexto repetido. |
 | 4.0.0 | 2026-08-09 | mayor | **Cambio incompatible:** EXECUTE recorre las fases restantes de cada unidad con contextos de worker baratos y limpios; REVIEW es una única etapa acotada `loop-review-fold`; el residuo del barrido queda como propuestas en vez de crear backlog. Ver `docs/workflow/MIGRATION.es.md`. |
 | 3.2.0 | 2026-07-31 | menor | Fullauto ahora invoca el wrapper solo con identificadores de PR y ejecución; el wrapper deriva y verifica desde el forge el head, la base por defecto, la evidencia de auditoría ligada al SHA y la decisión fijada al head, sin confiar en entradas controladas por el invocador. |
@@ -479,6 +482,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `orchestration-envelope` | 2.0.1 | 2026-08-21 | parche | Aclara que `ship-roadmap` es un conductor con banner nativo fuera de los perfiles de resultado máquina de workers/sensors, y alinea la guía de perfiles y drivers. |
+| `orchestration-envelope` | 2.0.0 | 2026-08-21 | mayor | **Contrato de driver incompatible:** sustituye el prompt duplicado del envelope completo por perfiles de salida del paquete, SkillOutcome v1 compacto, snapshots deterministas, compatibilidad nombrada y una reparación genérica acotada de resultado máquina. Ver `docs/workflow/MIGRATION.es.md`. |
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime emisión, reglas de campos, repair loop, sincronización de paquete, relaciones y NRS preservando esquema y protocolo del driver. |
 | `verification-contract` | 1.0.1 | 2026-08-09 | parche | Registra esta dependencia de ejecución para su distribución y la mantiene fuera del menú invocable por el usuario, de modo que el `skills add` normal instala el contrato consumido por planificadores, ejecutores, revisores y loops. |
 | `planning-preflight` | 1.1.1 | 2026-08-09 | parche | Registra esta dependencia de ejecución para su distribución y la mantiene fuera del menú invocable por el usuario. |
@@ -572,6 +577,12 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-21 — contratos máquina híbridos.** El paquete de esquema 3.0.0
+  separa el Envelope v2 estable de `workflow-status`, el SkillOutcome v1
+  compacto y el WorkflowSnapshot v1 determinista. Los drivers reciben parseo
+  estricto, diagnósticos de compatibilidad estrechos y un protocolo de una
+  reparación acotada sin ampliar los prompts de skills de cara al usuario.
 
 - **2026-08-14 — simplificar el loop review/fold.** `loop-review-fold` 2.0.0
   ahora elige `review-change` o `fold-findings` según la evidencia persistida y
