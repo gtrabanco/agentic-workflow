@@ -425,19 +425,19 @@ Phase-lint: PASS (8/8) · fingerprint P1:schema:8:Export capability vocabularies
 Layer: schema. Preserve the new immutable built-in capability inventory without
 narrowing the pre-existing public `WorkflowSkillProfile` write contract.
 
-- [ ] Add `test/fixtures/workflow-skill-profile-compat.ts` and a test-runner assertion
+- [x] Add `test/fixtures/workflow-skill-profile-compat.ts` and a test-runner assertion
   that first reproduces TS2540 when assigning `skill`, `output`, and
   `nativeFallback` on the current declaration while still allowing omission of
   `capabilities` (F3, AC3).
-- [ ] Restore source-compatible writability for the three legacy
+- [x] Restore source-compatible writability for the three legacy
   `WorkflowSkillProfile` fields; keep the new `capabilities` boundary optional.
-- [ ] Introduce a dedicated deeply readonly type boundary for shipped built-in
+- [x] Introduce a dedicated deeply readonly type boundary for shipped built-in
   profiles so `WORKFLOW_SKILL_PROFILES` stays immutable at compile time and
   runtime without narrowing externally constructed profiles.
-- [ ] Retarget the compile-time readonly invariant and internal profile lookup to
+- [x] Retarget the compile-time readonly invariant and internal profile lookup to
   the built-in boundary; confirm the guard emits no JavaScript or declaration
   artifacts.
-- [ ] Re-run the schema-package regression suite, including exact AC2 inventory,
+- [x] Re-run the schema-package regression suite, including exact AC2 inventory,
   fail-closed behavior, runtime freezing, and the new compatibility fixture.
 
 Done-when: `cd packages/agentic-workflow-schema && npm test` exits 0 and the

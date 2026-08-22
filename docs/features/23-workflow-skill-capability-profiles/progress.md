@@ -48,5 +48,23 @@ Last reviewed: 2026-08-22
 - Acceptance amendment: user-approved SPEC row recorded; replacement frozen
   manifest blob `b47e831108671c9a6993b2762ae6e84e5ec8552e` matches the receipt above and
   strengthens AC3 plus the affected validators without loosening outcomes.
-- Remains: P3, P4, P5
-- Next: `/execute-phase 23 P3`
+- Remains: P4, P5
+- Next: /execute-phase 23 P4
+
+## P3 — 2026-08-22
+
+- Done: P3 — restored public profile source-compatibility. Removed `readonly`
+  from `skill`, `output`, and `nativeFallback` on the public `WorkflowSkillProfile`
+  interface; introduced `BuiltInSkillProfile` as a deeply readonly type boundary
+  for shipped profiles; `WORKFLOW_SKILL_PROFILES` typed as `readonly
+  BuiltInSkillProfile[]`; compile-time readonly assertions retargeted to the
+  built-in boundary.
+  - Gate: `npm test` → exit 0 (47/47); fixture `tsc` → clean (no TS2540);
+    `Object.isFrozen(WORKFLOW_SKILL_PROFILES)` → true
+- Remains: P4, P5
+- Gotchas: `WorkflowSkillCapabilities` still has readonly on all fields (correct —
+  it is a deeply readonly interface); the `capabilities` field on the public
+  boundary is optional and writable for assignment
+- Files: `packages/agentic-workflow-schema/src/index.ts` (WorkflowSkillProfile
+  readonly removal + BuiltInSkillProfile type + type assertions); `packages/agentic-workflow-schema/test/capabilities.test.mjs` (compat runtime tests); `packages/agentic-workflow-schema/test/fixtures/workflow-skill-profile-compat.ts` (TS2540 fixture); `packages/agentic-workflow-schema/tsconfig.test.json` (compile-time check)
+- Next: /execute-phase 23 P4 — Harden release evidence
