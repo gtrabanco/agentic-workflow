@@ -11,7 +11,7 @@ Last reviewed: 2026-08-22
 
 ## Acceptance receipt v1
 
-- Manifest: `docs/features/23-workflow-skill-capability-profiles/ACCEPTANCE.md` · Blob: `42457ccba493b50283bf81b063943d6c2c33df27` · Status: frozen · Verified: 2026-08-22
+- Manifest: `docs/features/23-workflow-skill-capability-profiles/ACCEPTANCE.md` · Blob: `b47e831108671c9a6993b2762ae6e84e5ec8552e` · Status: frozen · Verified: 2026-08-22
 
 ## Phase P1 handoff
 
@@ -32,4 +32,21 @@ Last reviewed: 2026-08-22
 - Remains: none
 - Gotchas: dependency-receipt fingerprint from the plan was not reproducible from the current PREFLIGHT input spec — fail-closed rule triggered a full forge pass (PR #135 MERGED) and a receipt rewrite with the recomputed fingerprint `b17a5a86…`; no acceptance-manifest change (blob `42457ccb…` still matches).
 - Files: `packages/agentic-workflow-schema/src/index.ts`, `packages/agentic-workflow-schema/test/capabilities.test.mjs`, `packages/agentic-workflow-schema/README.md`, `README.es.md`, `packages/agentic-workflow-schema/package.json` (P1); `docs/features/23-workflow-skill-capability-profiles/{SPEC,progress}.md`, `docs/features/ROADMAP.md` (P2)
-- Next: unit finished
+- Next: historical P2 close-out superseded by the approved P3–P5 replan below
+
+## Replan P3–P5 — 2026-08-22
+
+- Done: acceptance audit classified AC1, AC4, AC5, AC6, AC9, and AC10 as
+  acceptable; reopened F3 (public TypeScript source-compatibility regression)
+  and F4 (non-deterministic AC2/AC7/AC8 validators) on the same branch.
+- Evidence: a declaration consumer assigning `skill`, `output`, and
+  `nativeFallback` fails with TS2540; `grep -c "capabilities"` returns 13 rather
+  than 12; the AC7 English-only grep has no Spanish match; the AC8 alternation
+  succeeds when any one artifact is present instead of requiring all four.
+- Plan: P3 restores the additive public profile boundary; P4 adds deterministic
+  release evidence; P5 repeats the literal final hardening and PR close-out.
+- Acceptance amendment: user-approved SPEC row recorded; replacement frozen
+  manifest blob `b47e831108671c9a6993b2762ae6e84e5ec8552e` matches the receipt above and
+  strengthens AC3 plus the affected validators without loosening outcomes.
+- Remains: P3, P4, P5
+- Next: `/execute-phase 23 P3`
