@@ -68,3 +68,32 @@ Last reviewed: 2026-08-22
 - Files: `packages/agentic-workflow-schema/src/index.ts` (WorkflowSkillProfile
   readonly removal + BuiltInSkillProfile type + type assertions); `packages/agentic-workflow-schema/test/capabilities.test.mjs` (compat runtime tests); `packages/agentic-workflow-schema/test/fixtures/workflow-skill-profile-compat.ts` (TS2540 fixture); `packages/agentic-workflow-schema/tsconfig.test.json` (compile-time check)
 - Next: /execute-phase 23 P4 — Harden release evidence
+
+## P4 — 2026-08-22
+
+- Done: P4 — hardened release evidence. New `test/release-contract.test.mjs`
+  makes the validators deterministic: language-aware EN/ES assertions prove
+  the AC7 semantics in both package references verbatim (English
+  authoritative/advisory, Spanish autoritativa/orientativo); the AC8 pack
+  manifest is parsed from a live `npm pack --dry-run --json` run and requires
+  `dist/index.js`, `dist/index.d.ts`, `README.md`, and `README.es.md`
+  independently; the AC2 exact-table test is proven the sole 12-profile
+  inventory validator — the frozen `EXPECTED` table drives the count, no other
+  committed test hard-codes the inventory size, and a source-word count is
+  disproven as a proxy (14 `capabilities` occurrences in `src/index.ts`).
+  - Failure-proof probes: the committed test file is run, data-only mutated
+    (missing built-in, duplicate built-in, mismatched capability), in a
+    spawned `node --test` and each mutation is proven to fail — every probe
+    exits nonzero while the unmutated baseline exits 0.
+  - Gate: `npm test` → exit 0 (53/53); `npm pack --dry-run --json` manifest
+    lists `dist/index.js`, `dist/index.d.ts`, `README.md`, `README.es.md`
+    (plus LICENSE, package.json, and the three JSON Schemas).
+- Remains: P5 — Hardening & PR (fresh exact-HEAD review and audit receipt)
+- Gotchas: `node --test` spawned from a test file inherits the parent runner's
+  `NODE_TEST_CONTEXT` env var and then **skips running files** (exits 0 with
+  no tests) — the probe spawns with `NODE_TEST_CONTEXT` deleted from `env`;
+  the import rewrite in the probe keeps the module specifier quoted
+  (`JSON.stringify`) or the ESM syntax breaks.
+- Files: `packages/agentic-workflow-schema/test/release-contract.test.mjs` (new);
+  `docs/features/23-workflow-skill-capability-profiles/{SPEC,progress}.md`
+- Next: /execute-phase 23 P5 — Hardening & PR (or /loop-review-fold once the PR head is pushed)
