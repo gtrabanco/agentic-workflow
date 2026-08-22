@@ -930,20 +930,24 @@ function buildEvidenceRefs(
   return refs;
 }
 
-/** Check effect authorization: the target skill must declare at least one effect. */
+/** Check effect authorization: the target skill must declare at least one effect.
+ * Built-in terminal actions without a capability profile are allowed.
+ */
 function checkEffectAuth(intent: WorkflowIntent): boolean {
   const profile = workflowSkillProfile(intent);
-  if (profile === undefined) return false;
+  if (profile === undefined) return true; // no profile → allowed (built-in terminal)
   return profile.capabilities !== undefined && profile.capabilities.effects.length > 0;
 }
 
-/** Check evidence authorization: all required evidence must be present. */
+/** Check evidence authorization: all required evidence must be present.
+ * Intents without a capability profile are allowed (no required evidence).
+ */
 function checkEvidenceAuth(
   intent: WorkflowIntent,
   evidenceRefs: string[],
 ): boolean {
   const profile = workflowSkillProfile(intent);
-  if (profile === undefined) return false;
+  if (profile === undefined) return true; // no profile → allowed
   const required = profile.capabilities?.requiredEvidence;
   if (required === undefined || required.length === 0) return true;
   for (const req of required) {
@@ -1050,14 +1054,15 @@ export function decideWorkflowAction(
 
   // Recommendation → closed-table match
   const proposal = input.lastOutcome.next.intent;
-  const targets = input.lastOutcome.next.targets;
+  const targets = input.lastOutcome.next.targets || [];
+  const lastSkill = input.lastOutcome.skill;
 
-  const entry = WORKFLOW_TRANSITION_TABLE.find((r) => r.key === proposal);
+  const entry = WORKFLOW_TRANSITION_TABLE.find((r) => r.key === lastSkill);
   if (entry === undefined) {
-    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `unlisted transition: ${proposal}` };
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `unlisted transition: ${lastSkill}` };
   }
 
-  // Check if proposal is in the allowed list
+  // Check if proposal is in the allowed list for the last skill
   if (!entry.allowed.includes(proposal)) {
     return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `${proposal} not allowed after ${entry.key}` };
   }
@@ -1068,7 +1073,7 @@ export function decideWorkflowAction(
       return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "repository not frozen" };
     }
   }
-  if (proposal === "resolve-repository-state") {
+  if (lastSkill === "resolve-repository-state") {
     const contradictionFields = snapshot.contradictions.map((c) => c.field);
     if (contradictionFields.length > 0 && !contradictionFields.includes(targets[0])) {
       return { kind: "stop", intent: "stop", targets, reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: `target ${targets[0]} does not match contradiction fields` };
@@ -1093,6 +1098,11 @@ export function decideWorkflowAction(
   // Non-invocable intents can never reach invoke
   if (proposal === "status" || proposal === "ask-human" || proposal === "stop" || proposal === "none") {
     return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: "non-invocable intent" };
+  }
+
+  // Target count validation for audit-pr: exactly 1 target
+  if (lastSkill === "audit-pr" && targets.length !== 1) {
+    return { kind: "stop", intent: "stop", targets, reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: targets.length === 0 ? "missing target" : "extra targets" };
   }
 
   // Proven transition — invoke
