@@ -481,6 +481,7 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `orchestration-envelope` | 2.0.2 | 2026-08-22 | patch | Restores default `skills add` distribution by removing erroneous discovery-exclusion metadata, so consumers install the canonical turn contract required by `design-feature`, `execute-phase`, and `review-change`. |
 | `orchestration-envelope` | 2.0.1 | 2026-08-21 | patch | Clarifies that `ship-roadmap` is a native-banner conductor outside the worker/sensor machine-result profiles, and aligns the profile and driver guidance. |
 | `orchestration-envelope` | 2.0.0 | 2026-08-21 | major | **Breaking driver contract:** replaces the duplicated full-envelope prompt with package-owned output profiles, compact SkillOutcome v1, deterministic snapshots, named compatibility, and one bounded generic machine-result repair. See `docs/workflow/MIGRATION.md`. |
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | patch | No behavior change: compresses emission, field-rule, repair-loop, package-sync, relationship, and NRS prose while preserving the schema and driver protocol. |
@@ -576,6 +577,11 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-22 — restore the canonical turn contract.**
+  `orchestration-envelope` 2.0.2 is discoverable again through the default
+  `skills add` path, so installed workflow entrypoints can load its required
+  `TURN_CONTRACT.md` while the contract remains outside the user-invocable menu.
 
 - **2026-08-21 — hybrid machine contracts.** The schema package 3.0.0
   separates the stable `workflow-status` Envelope v2, compact SkillOutcome v1,

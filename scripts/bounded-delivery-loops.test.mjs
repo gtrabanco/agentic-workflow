@@ -82,12 +82,18 @@ assert.equal(fs.existsSync(path.join(root, "skills", "plan-feature-interview")),
   "retired plan-feature-interview must remain absent from the source tree");
 assert.match(read("skills/bump-skill/SKILL.md"), /^user-invocable: false$/m);
 assert.match(read("skills/bump-skill/SKILL.md"), /^  internal: true$/m);
-for (const requiredDependency of ["loop-review-fold", "phase-contract", "planning-preflight", "verification-contract"]) {
+for (const requiredDependency of [
+  "loop-review-fold",
+  "orchestration-envelope",
+  "phase-contract",
+  "planning-preflight",
+  "verification-contract",
+]) {
   assert.ok(pluginSkills.includes(requiredDependency), `${requiredDependency} must be distributed by plugin.json`);
 }
-for (const distributedDependency of ["phase-contract", "planning-preflight", "verification-contract"]) {
-  assert.doesNotMatch(read(`skills/${distributedDependency}/SKILL.md`), /^metadata:\n  internal: true$/m,
-    `${distributedDependency} must remain discoverable by the skills CLI`);
+for (const distributedSkill of pluginSkills) {
+  assert.doesNotMatch(read(`skills/${distributedSkill}/SKILL.md`), /^metadata:\n  internal: true$/m,
+    `${distributedSkill} must remain discoverable by the skills CLI`);
 }
 assert.deepEqual(pluginSkills, [...pluginSkills].sort(), "plugin skills must stay alphabetical");
 
