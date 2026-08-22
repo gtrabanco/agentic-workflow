@@ -267,42 +267,8 @@ test("no undeclared fields on profiles or capability objects", () => {
   }
 });
 
-// P3 compatibility: the public WorkflowSkillProfile boundary is source-compatible.
-// External consumers can construct and mutate profiles without TS2540.
-// This runtime test mirrors the compile-time fixture at test/fixtures/workflow-skill-profile-compat.ts.
-test("public boundary accepts external profile construction without capabilities (AC3 compat)", () => {
-  // Construct a profile omitting capabilities — must be accepted.
-  const external = {
-    skill: "custom-skill",
-    output: "skill-outcome-v1",
-    nativeFallback: "none",
-  };
-  assert.equal(external.skill, "custom-skill");
-  assert.equal(external.output, "skill-outcome-v1");
-  assert.equal(external.nativeFallback, "none");
-  assert.equal(external.capabilities, undefined);
 
-  // Mutate the legacy fields — must work at runtime.
-  external.skill = "modified";
-  external.output = "envelope-v2";
-  external.nativeFallback = "fixed-verdict";
-  assert.equal(external.skill, "modified");
-  assert.equal(external.output, "envelope-v2");
-  assert.equal(external.nativeFallback, "fixed-verdict");
-});
-
-test("public boundary accepts capabilities assignment (AC3 compat)", () => {
-  const external = {
-    skill: "with-caps",
-    output: "skill-outcome-v1",
-    nativeFallback: "none",
-  };
-  external.capabilities = {
-    role: "sensor",
-    reasoning: "mechanical",
-    effects: ["repository-read"],
-    contextSources: ["repository"],
-    requiredEvidence: [],
-  };
-  assert.equal(external.capabilities.role, "sensor");
-});
+// AC3 source-compatibility is enforced by the compile-time fixture
+// test/fixtures/workflow-skill-profile-compat.ts, compiled by tsconfig.test.json
+// as part of `npm test`. The former runtime AC3-compat tests are removed (F6):
+// they mutated untyped object literals and could never catch TS2540.
