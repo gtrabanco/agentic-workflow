@@ -268,44 +268,183 @@ Written by `plan-feature-scaffold` after this Product half.
 
 ### Technical goals
 
-Pending `plan-feature-scaffold`.
+- Export readonly vocabulary arrays and TypeScript unions for exactly the closed
+  vocabularies defined by issue #136 (roles, effects, reasoning, context sources,
+  required evidence).
+- Add an optional `capabilities` object to `WorkflowSkillProfile` and populate it
+  for every built-in entry with the exact corrected profile table.
+- Preserve `output` and `nativeFallback`, existing parser/rendering behavior, and
+  compatibility for externally constructed profiles that omit `capabilities`.
+- Require capability-aware consumers to fail closed when metadata is absent and
+  forbid runtime profile widening (immutable exports only).
 
 ### Architecture impact
 
-Pending `plan-feature-scaffold`.
+The schema package `@gtrabanco/agentic-workflow-schema` v3.0.0 gains additive
+metadata; no existing export meaning changes, no breaking changes.
+
+Preflight: NRS `consumed` · invariant classification: `n/a` (no project
+invariants declared; `docs/ARCHITECTURAL_INVARIANTS.md` is empty). Every
+applicable rule from NRS accepted decisions (AD-002 bilingual, AD-004 one-PR-per-unit,
+AD-007 schema package strict contracts) is preserved.
+
+- **Schema/package boundary**: `WorkflowSkillProfile` gains optional `capabilities`;
+  all other fields (`skill`, `output`, `nativeFallback`) retain their existing
+  semantics — preserves NRS AD-007 (package strict contracts) and NRS
+  AD-002 (bilingual docs rule).
+- **NRS status**: frozen → consumed. No contradictions detected.
 
 ### Design
 
-Pending `plan-feature-scaffold`.
+- **Vocabulary arrays and unions**: Export five readonly const arrays and derive
+  TypeScript union types for roles (`sensor | planner | executor | reviewer | auditor | publisher`),
+  effects (`repository-read | repository-write | git-write | forge-read | forge-write`),
+  reasoning (`mechanical | semantic | critical`), context sources (`repository | semantic-context | episodic-memory | execution-state`),
+  and required evidence (`workflow-snapshot | current-candidate | verification | independent-review | audit | issue-state | pull-request-state`).
+  The `as const` annotation on arrays guarantees compile-time immutability; derived
+  unions (`typeof ARR[number]`) reject unknown values at compile time.
+- **Capabilities interface**: Define `WorkflowSkillCapabilities` with fields
+  `role`, `reasoning`, `effects` (readonly array), `contextSources` (readonly array),
+  `requiredEvidence` (readonly array). Add optional `capabilities?: WorkflowSkillCapabilities`
+  to `WorkflowSkillProfile` (D2 — optional boundary, complete built-ins).
+- **Profile population**: Populate `capabilities` on all 12 built-in profiles from the
+  exact AC2 table. Each profile gets the correct role, reasoning, effects, context
+  sources, and required evidence per the specification.
+- **Immutability**: Export the vocabulary arrays and profile table through the
+  package's public entry point (`packages/agentic-workflow-schema/src/index.ts`)
+  with `as const` and readonly array types. No runtime create/update/delete/widen
+  surface is introduced (AC9).
+- **Fail-closed**: The optional `capabilities` field means consumers must check
+  for its presence before using it. A capability-aware consumer presented with a
+  profile lacking `capabilities` must fail closed (AC4). No inference from skill
+  name is permitted.
+- **Table-driven tests**: New `packages/agentic-workflow-schema/test/capabilities.test.mjs`:
+  exact-table coverage for all 12 built-ins, duplicate-skill rejection, unknown
+  vocabulary rejection, missing-capability rejection, and Object.isFrozen assertions
+  on exported arrays/objects (AC6, AC8).
 
 ### Decisions to confirm
 
-Pending `plan-feature-scaffold`.
+- **D1 — Correct maximum-effects evidence before drafting.** The project lead
+  accepted adding `git-write` to `init-workspace` and
+  `discover-repository-state`, plus `repository-write` to `audit-pr`, based on
+  their current skill contracts. Issue #136 records the dated evidence.
+- **D2 — Optional boundary, complete built-ins.** `capabilities` remains optional
+  for source compatibility, but every built-in profile is populated and a
+  capability-aware consumer fails closed on absence.
+- **D3 — Size `S`.** The change is one package-scoped delivery unit and should
+  fit one implementation commit plus hardening/PR closeout.
+- **D4 — Derived inventory only.** The package surfaces listed under Capability
+  closure are sufficient for this feature; seeding project-wide
+  `docs/CAPABILITIES.md` would expand issue scope.
+- **D5 — Repository preflight.** `Preflight: NRS consumed · invariant classification: n/a (no project invariants declared; docs/ARCHITECTURAL_INVARIANTS.md is empty)`. Every applicable rule from NRS accepted decisions (AD-002 bilingual, AD-004 one-PR-per-unit, AD-007 schema package strict contracts) is preserved.
+- **D6 — Traceability.** Origin: issue #136. The implementation PR must include
+  `Closes #136`.
 
 ### Testing requirements
 
-Pending `plan-feature-scaffold`.
+- **Table-driven tests**: `packages/agentic-workflow-schema/test/capabilities.test.mjs`
+  — exact-table coverage for all 12 built-ins, duplicate-skill rejection, unknown
+  vocabulary rejection (each of the 5 vocabularies), missing-capability rejection
+  (fail-closed consumer), and `Object.isFrozen` assertions on exported arrays/objects.
+- **Regression tests**: existing `npm test` suite remains green —
+  `renderOutputInstruction()`, `parseTurn()`, Envelope v2, SkillOutcome v1, and
+  WorkflowSnapshot v1 regressions.
+- **Read-verified**: `packages/agentic-workflow-schema/README.md` and `README.es.md`
+  contain synchronized capability-profile guidance (evidence authoritative,
+  semantic/episodic context advisory) — AC7.
 
 ### Dev scenarios
 
-Pending `plan-feature-scaffold`.
+n/a — no runtime behavior; the schema package adds static metadata and TypeScript
+unions only. No dev-scenario harness applicable.
 
 ### Phases
 
-Pending `plan-feature-scaffold`.
+### P1 — Export capability vocabularies, types, and populate built-in profiles
+
+Layer: schema. Done-when: `cd packages/agentic-workflow-schema && npm test` →
+exit 0 and coverage includes the new `capabilities.test.mjs` table-driven suite.
+
+- [ ] Define and export readonly `as const` arrays and derived TypeScript unions for
+  roles, effects, reasoning, context sources, and required evidence (AC1).
+- [ ] Define `WorkflowSkillCapabilities` interface with role, reasoning, effects,
+  contextSources, and requiredEvidence fields; add optional `capabilities?:
+  WorkflowSkillCapabilities` to `WorkflowSkillProfile` (AC2, AC3, D2).
+- [ ] Populate `capabilities` on all 12 built-in profiles from the exact AC2 table
+  (`init-workspace`, `workflow-status`, `discover-repository-state`,
+  `resolve-repository-state`, `design-feature`, `plan-feature`, `plan-fix`,
+  `triage-issue`, `execute-phase`, `review-change`, `loop-review-fold`,
+  `audit-pr`) with the correct role, reasoning, effects, context sources,
+  and required evidence per the specification.
+- [ ] Add table-driven `packages/agentic-workflow-schema/test/capabilities.test.mjs`:
+  exact-table coverage for all 12 built-ins, duplicate-skill rejection,
+  unknown vocabulary rejection for each of the 5 vocabularies, and
+  missing-capability rejection (fail-closed consumer fixture).
+- [ ] Add `Object.isFrozen` assertions on exported vocabulary arrays and profile
+  entries (forbid runtime widening — AC5, AC9).
+- [ ] Verify existing regression tests remain green —
+  `renderOutputInstruction()`, `parseTurn()`, Envelope v2, SkillOutcome v1,
+  and WorkflowSnapshot v1.
+- [ ] Add synchronized capability-profile guidance to
+  `packages/agentic-workflow-schema/README.md` and `README.es.md` (evidence
+  authoritative, semantic/episodic context advisory — AC7).
+- [ ] Bump `packages/agentic-workflow-schema/package.json` version
+  `3.0.0 → 3.1.0` (minor release — AC8).
+
+### P2 — Hardening & PR
+
+- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Set the roadmap row status to `done` and commit the flip
+- [ ] `git push`
+- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+      Markdown file, real backticks, never inline `--body`/heredoc) and
+      PRINT THE PR URL in the chat; the body includes `Closes #<n>`
+- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [ ] Commit `docs: link PR #<n>` and push
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P1:schema:8:Export capability vocabularies, types, and populate built-in profiles
 
 ### Deploy & rollback
 
-Pending `plan-feature-scaffold`.
+The package ships as a minor release (v3.0.0 → v3.1.0). No migration, no feature
+flag, no config change. Rollback: revert the PR to restore prior package version
+v3.0.0.
 
 ### Open questions / risks
 
-Pending `plan-feature-scaffold`.
+- **Risk**: the capability table in AC2 reflects current skill contracts;
+  if a skill's actual permissions change later, the table needs updating.
+  Accepted: D5 — the package enforces fail-closed on absence so any
+  consumer relying on stale metadata fails safely (not guessing from skill name).
+  Issue #136 records the dated evidence for the current table.
+- **Risk**: `as const` arrays provide compile-time immutability but not
+  runtime freezing by default. Mitigated: `Object.isFrozen` assertions in tests
+  ensure frozen arrays at runtime (AC9).
 
 ### Deliverables
 
-Pending `plan-feature-scaffold`.
+- Updated `packages/agentic-workflow-schema/src/index.ts` — vocabulary arrays,
+  TypeScript unions, `WorkflowSkillCapabilities` interface, optional
+  `capabilities` on `WorkflowSkillProfile`, populated profiles, immutable
+  exports.
+- New `packages/agentic-workflow-schema/test/capabilities.test.mjs` — table-driven
+  tests for exact coverage, duplicate rejection, unknown value rejection,
+  fail-closed consumer, and `Object.isFrozen`.
+- Updated `packages/agentic-workflow-schema/README.md` and `README.es.md` —
+  synchronized capability-profile guidance.
+- Updated `packages/agentic-workflow-schema/package.json` — version bump
+  3.0.0 → 3.1.0 (minor).
+- Updated `docs/features/23-workflow-skill-capability-profiles/SPEC.md` —
+  engineering half filled.
+- Updated `docs/features/23-workflow-skill-capability-profiles/ACCEPTANCE.md` —
+  frozen acceptance manifest.
 
 ### Post-merge next feature
 
-Pending `plan-feature-scaffold`.
+None specified — the roadmap's next `defined` entry (if any) will be evaluated.
+Feature 23's capability profiles are additive metadata for headless consumers;
+the schema package is now instrumented for capability-aware routing.
