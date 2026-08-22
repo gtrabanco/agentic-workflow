@@ -61,16 +61,16 @@ green).
 Layer: hardening. Done-when: `cd packages/agentic-workflow-schema && npm test` →
 exit 0 with the full twelve-class suite plus property tests.
 
-- [ ] Add `test/workflow-decision.test.mjs` table-driven assertions covering the twelve scenario classes: fresh, stale, blocked, needs-input, failed, contradictory, unknown, unauthorized-effect, missing-evidence, review, audit, and merge.
-- [ ] Add `test/workflow-decision-property.test.mjs` with a seeded,
+- [x] Add `test/workflow-decision.test.mjs` table-driven assertions covering the twelve scenario classes: fresh, stale, blocked, needs-input, failed, contradictory, unknown, unauthorized-effect, missing-evidence, review, audit, and merge.
+- [x] Add `test/workflow-decision-property.test.mjs` with a seeded,
   deterministic fuzz loop proving malformed or unrecognized input values never
   produce `invoke` and never throw.
-- [ ] Add determinism assertions: identical input produces deeply equal
+- [x] Add determinism assertions: identical input produces deeply equal
   decisions on repeated calls.
-- [ ] Add the target-contract negative matrix: free-form, additional, and
+- [x] Add the target-contract negative matrix: free-form, additional, and
   mismatched targets return `stop-forbidden-transition`; missing required
   identities return `sense-missing-evidence`.
-- [ ] Re-run the full package suite and record that every pre-existing test
+- [x] Re-run the full package suite and record that every pre-existing test
   remains green.
 
 ## P4 — Release the bilingual decision reference
