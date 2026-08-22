@@ -97,3 +97,16 @@ Last reviewed: 2026-08-22
 - Files: `packages/agentic-workflow-schema/test/release-contract.test.mjs` (new);
   `docs/features/23-workflow-skill-capability-profiles/{SPEC,progress}.md`
 - Next: /execute-phase 23 P5 — Hardening & PR (or /loop-review-fold once the PR head is pushed)
+
+## P5 — 2026-08-22
+
+- Done: P5 — hardening & PR close-out. All verification gates green:
+  - `npm test` → exit 0 (53/53)
+  - `node scripts/check-skill-context.mjs` → PASS (35 skills)
+  - `npx skills add . --list` → exit 0 (33 skills)
+  - `npm pack --dry-run --json` → contains `dist/index.js`, `dist/index.d.ts`, `README.md`, `README.es.md`
+  - `git status --porcelain` → clean tree
+  - Roadmap row flipped to `done` and committed; branch pushed
+  - `review-change:pass` PR comment posted at exact HEAD `171015f`
+- Remains: none
+- Next: /loop-review-fold 23 — select the persisted review/fold route, then triage or replan unresolved findings
