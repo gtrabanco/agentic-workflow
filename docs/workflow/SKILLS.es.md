@@ -11,14 +11,15 @@ internos** compuestos por ti (los dos pasos de planificación del router
 de lint `phase-contract`, el guardián de aceptación `verification-contract`, el
 paquete de revisión interno de 9 skills del propio flujo de trabajo: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
-`review-a11y`, `review-brand`, `review-perf`, `review-seo`), más **2
-metadata-internal** no descubribles por la CLI `skills` (`orchestration-envelope`,
-`bump-skill`; llevan `metadata.internal: true` en el frontmatter, lo que la CLI
-respeta para excluirlas del descubrimiento `npx skills add`). Las 18 skills
-orientadas al usuario cubren configuración, descubrimiento/resolución de estado
-del repositorio, diseño, planificación, ejecución, review, auditoría, fold de
-hallazgos, generación de docs, triage de issues, envío del roadmap, diario de
-sesión y estado del workflow.
+`review-a11y`, `review-brand`, `review-perf`, `review-seo`), más **1
+metadata-internal** no descubrible por la CLI `skills` (`orchestration-envelope`;
+leva `metadata.internal: true` en el frontmatter, lo que la CLI respeta para
+excluirlo del descubrimiento `npx skills add`). La skill `bump-skill` es una
+herramienta de mantenimiento del repo (no es skill del workflow) y no aparece
+en este índice. Las 18 skills orientadas al usuario cubren configuración,
+descubrimiento/resolución de estado del repositorio, diseño, planificación,
+ejecución, review, auditoría, fold de hallazgos, generación de docs, triage de
+issues, envío del roadmap, diario de sesión y estado del workflow.
 
 ## Presupuesto de contexto y carga progresiva
 
