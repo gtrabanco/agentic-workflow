@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  35 source skills (18 user-facing + 15 workflow internals + 2 maintenance contracts; 31 plugin-listed)
+skills/                  35 source skills (18 user-facing + 15 workflow internals + 2 metadata-internal; 33 discoverable)
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)

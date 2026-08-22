@@ -4,13 +4,17 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**17 user-facing skills** (one menu entry each) + **14 internal** steps composed
-for you (the `plan-feature` router's two planning steps, the `review-change`
-findings engine `review-implementation`, the `orchestration-envelope` contract,
-the workflow's own 9-skill internal review pack: `review-code`,
-`review-security`, `review-verify`, `review-debt`, `review-design`,
-`review-a11y`, `review-brand`, `review-perf`, `review-seo`, and the repo-only
-`bump-skill` maintenance helper). The 17 user-facing skills cover setup,
+**18 user-facing skills** (one menu entry each) + **15 internal steps**
+composed for you (the `plan-feature` router's two planning steps, the
+`review-change` findings engine `review-implementation`, the
+`planning-preflight` planning gate, the `phase-contract` lint contract,
+the `verification-contract` acceptance guard, the workflow's own 9-skill
+internal review pack: `review-code`, `review-security`, `review-verify`,
+`review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
+`review-seo`), plus **2 metadata-internal** not discoverable by the `skills`
+CLI (`orchestration-envelope`, `bump-skill`; they carry
+`metadata.internal: true` in frontmatter, which the CLI respects to exclude
+from `npx skills add` discovery). The 18 user-facing skills cover setup,
 repository-state discovery/resolution, design, planning, execution, review,
 audit, finding folds, docs generation, issue triage, roadmap shipping, session
 logging, and workflow status.
