@@ -4,16 +4,19 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**17 skills orientadas al usuario** (una entrada de menú cada una) + **14 pasos
+**18 skills orientadas al usuario** (una entrada de menú cada una) + **15 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, el motor de hallazgos `review-implementation` de
-`review-change`, el contrato `orchestration-envelope`, el paquete de revisión
-interno de 9 skills del propio flujo de trabajo: `review-code`,
+`review-change`, la puerta de planificación `planning-preflight`, el contrato
+de lint `phase-contract`, el guardián de aceptación `verification-contract`, el
+paquete de revisión interno de 9 skills del propio flujo de trabajo: `review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
-`review-a11y`, `review-brand`, `review-perf`, `review-seo`, y el ayudante de
-mantenimiento `bump-skill` propio del repositorio). Las 17 skills orientadas
-al usuario cubren configuración, descubrimiento/resolución de estado del
-repositorio, diseño, planificación, ejecución, review, auditoría, fold de
+`review-a11y`, `review-brand`, `review-perf`, `review-seo`), más **2
+metadata-internal** no descubribles por la CLI `skills` (`orchestration-envelope`,
+`bump-skill`; llevan `metadata.internal: true` en el frontmatter, lo que la CLI
+respeta para excluirlas del descubrimiento `npx skills add`). Las 18 skills
+orientadas al usuario cubren configuración, descubrimiento/resolución de estado
+del repositorio, diseño, planificación, ejecución, review, auditoría, fold de
 hallazgos, generación de docs, triage de issues, envío del roadmap, diario de
 sesión y estado del workflow.
 
