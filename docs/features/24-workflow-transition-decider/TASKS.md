@@ -92,14 +92,14 @@ exit 0; `grep '"version"' packages/agentic-workflow-schema/package.json` →
 
 Layer: close-out. Done-when: PR opened with URL printed.
 
-- [ ] Run the full repository verification gate: `npm test`,
+- [x] Run the full repository verification gate: `npm test`,
   `node scripts/check-skill-context.mjs`, `npx skills add . --list`.
-- [ ] Verify no changes to `WorkflowSnapshot v1`, `Envelope v2`, `SkillOutcome v1`,
+- [x] Verify no changes to `WorkflowSnapshot v1`, `Envelope v2`, `SkillOutcome v1`,
   and the three shipped `*.schema.json` files.
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
-- [ ] Open a pull request on GitHub against the default branch (`gh pr create --body-file <path>` — body written as a
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
+- [x] Open a pull request on GitHub against the default branch (`gh pr create --body-file <path>` — body written as a
   Markdown file, real backticks, never inline `--body`/heredoc that leaves
   `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes
   `Closes #137`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<pr>` and push
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<pr>` and push
