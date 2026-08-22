@@ -692,15 +692,31 @@ export interface WorkflowSkillCapabilities {
   readonly requiredEvidence: readonly SkillRequiredEvidence[];
 }
 
+/**
+ * Public profile boundary — source-compatible for external consumers that
+ * construct or mutate profiles. The three legacy fields are writable so
+ * third-party code can assign to them without TS2540.
+ */
 export interface WorkflowSkillProfile {
-  readonly skill: string;
-  readonly output: "envelope-v2" | "skill-outcome-v1";
-  readonly nativeFallback: "none" | "fixed-verdict";
+  skill: string;
+  output: "envelope-v2" | "skill-outcome-v1";
+  nativeFallback: "none" | "fixed-verdict";
   /**
    * Optional for source compatibility; every built-in populates it and a
    * capability-aware consumer fails closed when it is absent.
    */
-  readonly capabilities?: WorkflowSkillCapabilities;
+  capabilities?: WorkflowSkillCapabilities;
+}
+
+/**
+ * Deeply readonly boundary for shipped built-in profiles. The immutable type
+ * guarantees compile-time immutability without narrowing the public boundary.
+ */
+export interface BuiltInSkillProfile {
+  readonly skill: string;
+  readonly output: "envelope-v2" | "skill-outcome-v1";
+  readonly nativeFallback: "none" | "fixed-verdict";
+  readonly capabilities?: Readonly<WorkflowSkillCapabilities>;
 }
 
 /** Recursively freezes exported metadata so runtime widening is impossible. */
@@ -718,7 +734,7 @@ function deepFreeze<T>(value: T): T {
  * The portable skill inventory consumed by headless drivers. Profiles are
  * programmatic metadata, not duplicated prompt sections in user-facing skills.
  */
-export const WORKFLOW_SKILL_PROFILES: readonly WorkflowSkillProfile[] = deepFreeze([
+export const WORKFLOW_SKILL_PROFILES: readonly BuiltInSkillProfile[] = deepFreeze([
   {
     skill: "init-workspace",
     output: "skill-outcome-v1",
@@ -878,7 +894,7 @@ type _CapabilitiesDeeplyReadonly = _AssertTrue<
   _IfEquals<WorkflowSkillCapabilities, Readonly<WorkflowSkillCapabilities>>
 >;
 type _ProfilesDeeplyReadonly = _AssertTrue<
-  _IfEquals<WorkflowSkillProfile, Readonly<WorkflowSkillProfile>>
+  _IfEquals<BuiltInSkillProfile, Readonly<BuiltInSkillProfile>>
 >;
 
 function workflowSkillProfile(skill: string): WorkflowSkillProfile | undefined {
