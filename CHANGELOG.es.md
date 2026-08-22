@@ -482,6 +482,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `orchestration-envelope` | 2.0.2 | 2026-08-22 | parche | Restaura la distribución mediante el `skills add` predeterminado al retirar los metadatos erróneos de exclusión del descubrimiento, para que los consumidores instalen el contrato de turno canónico requerido por `design-feature`, `execute-phase` y `review-change`. |
 | `orchestration-envelope` | 2.0.1 | 2026-08-21 | parche | Aclara que `ship-roadmap` es un conductor con banner nativo fuera de los perfiles de resultado máquina de workers/sensors, y alinea la guía de perfiles y drivers. |
 | `orchestration-envelope` | 2.0.0 | 2026-08-21 | mayor | **Contrato de driver incompatible:** sustituye el prompt duplicado del envelope completo por perfiles de salida del paquete, SkillOutcome v1 compacto, snapshots deterministas, compatibilidad nombrada y una reparación genérica acotada de resultado máquina. Ver `docs/workflow/MIGRATION.es.md`. |
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime emisión, reglas de campos, repair loop, sincronización de paquete, relaciones y NRS preservando esquema y protocolo del driver. |
@@ -577,6 +578,12 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-22 — restaurar el contrato de turno canónico.**
+  `orchestration-envelope` 2.0.2 vuelve a ser descubrible mediante la ruta
+  predeterminada de `skills add`, para que los entrypoints instalados del
+  workflow puedan cargar su `TURN_CONTRACT.md` obligatorio mientras el contrato
+  permanece fuera del menú invocable por el usuario.
 
 - **2026-08-21 — contratos máquina híbridos.** El paquete de esquema 3.0.0
   separa el Envelope v2 estable de `workflow-status`, el SkillOutcome v1
