@@ -625,30 +625,245 @@ export const WORKFLOW_INTENTS: readonly WorkflowIntent[] = [
   "none",
 ] as const;
 
+// ---------------------------------------------------------------------------
+// Capability metadata — closed vocabularies, immutable exports (issue #136)
+// ---------------------------------------------------------------------------
+
+/** Role a built-in skill plays in the workflow pipeline. */
+export const SKILL_ROLES = Object.freeze([
+  "sensor",
+  "planner",
+  "executor",
+  "reviewer",
+  "auditor",
+  "publisher",
+] as const);
+export type SkillRole = (typeof SKILL_ROLES)[number];
+
+/** Maximum repository/forge effects permitted by a built-in profile. */
+export const SKILL_EFFECTS = Object.freeze([
+  "repository-read",
+  "repository-write",
+  "git-write",
+  "forge-read",
+  "forge-write",
+] as const);
+export type SkillEffect = (typeof SKILL_EFFECTS)[number];
+
+/** Reasoning class a profile declares for its primary route. */
+export const SKILL_REASONING = Object.freeze([
+  "mechanical",
+  "semantic",
+  "critical",
+] as const);
+export type SkillReasoning = (typeof SKILL_REASONING)[number];
+
+/** Context sources a profile may consult. */
+export const SKILL_CONTEXT_SOURCES = Object.freeze([
+  "repository",
+  "semantic-context",
+  "episodic-memory",
+  "execution-state",
+] as const);
+export type SkillContextSource = (typeof SKILL_CONTEXT_SOURCES)[number];
+
+/** Evidence a capability-aware driver should require before trusting results. */
+export const SKILL_REQUIRED_EVIDENCE = Object.freeze([
+  "workflow-snapshot",
+  "current-candidate",
+  "verification",
+  "independent-review",
+  "audit",
+  "issue-state",
+  "pull-request-state",
+] as const);
+export type SkillRequiredEvidence = (typeof SKILL_REQUIRED_EVIDENCE)[number];
+
+/**
+ * Declarative, closed-vocabulary capability metadata for a built-in profile.
+ * Repository evidence is the authoritative limit; semantic and episodic
+ * context is advisory and never extends the declared maximum effects.
+ */
+export interface WorkflowSkillCapabilities {
+  role: SkillRole;
+  reasoning: SkillReasoning;
+  effects: readonly SkillEffect[];
+  contextSources: readonly SkillContextSource[];
+  requiredEvidence: readonly SkillRequiredEvidence[];
+}
+
 export interface WorkflowSkillProfile {
   skill: string;
   output: "envelope-v2" | "skill-outcome-v1";
   nativeFallback: "none" | "fixed-verdict";
+  /**
+   * Optional for source compatibility; every built-in populates it and a
+   * capability-aware consumer fails closed when it is absent.
+   */
+  capabilities?: WorkflowSkillCapabilities;
+}
+
+/** Recursively freezes exported metadata so runtime widening is impossible. */
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === "object") {
+    for (const key of Object.keys(value as Record<string, unknown>)) {
+      deepFreeze((value as Record<string, unknown>)[key]);
+    }
+    Object.freeze(value);
+  }
+  return value;
 }
 
 /**
  * The portable skill inventory consumed by headless drivers. Profiles are
  * programmatic metadata, not duplicated prompt sections in user-facing skills.
  */
-export const WORKFLOW_SKILL_PROFILES: readonly WorkflowSkillProfile[] = [
-  { skill: "init-workspace", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "workflow-status", output: "envelope-v2", nativeFallback: "none" },
-  { skill: "discover-repository-state", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "resolve-repository-state", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "design-feature", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "plan-feature", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "plan-fix", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "triage-issue", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "execute-phase", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "review-change", output: "skill-outcome-v1", nativeFallback: "none" },
-  { skill: "loop-review-fold", output: "skill-outcome-v1", nativeFallback: "fixed-verdict" },
-  { skill: "audit-pr", output: "skill-outcome-v1", nativeFallback: "fixed-verdict" },
-] as const;
+export const WORKFLOW_SKILL_PROFILES: readonly WorkflowSkillProfile[] = deepFreeze([
+  {
+    skill: "init-workspace",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "executor",
+      reasoning: "semantic",
+      effects: ["repository-read", "repository-write", "git-write", "forge-read", "forge-write"],
+      contextSources: ["repository", "semantic-context"],
+      requiredEvidence: [],
+    },
+  },
+  {
+    skill: "workflow-status",
+    output: "envelope-v2",
+    nativeFallback: "none",
+    capabilities: {
+      role: "sensor",
+      reasoning: "mechanical",
+      effects: ["repository-read", "forge-read"],
+      contextSources: ["repository", "execution-state"],
+      requiredEvidence: ["workflow-snapshot"],
+    },
+  },
+  {
+    skill: "discover-repository-state",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "sensor",
+      reasoning: "semantic",
+      effects: ["repository-read", "repository-write", "git-write"],
+      contextSources: ["repository", "semantic-context"],
+      requiredEvidence: [],
+    },
+  },
+  {
+    skill: "resolve-repository-state",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "planner",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write"],
+      contextSources: ["repository", "semantic-context", "execution-state"],
+      requiredEvidence: ["workflow-snapshot"],
+    },
+  },
+  {
+    skill: "design-feature",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "planner",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "forge-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot"],
+    },
+  },
+  {
+    skill: "plan-feature",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "planner",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "forge-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot"],
+    },
+  },
+  {
+    skill: "plan-fix",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "planner",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "git-write", "forge-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "issue-state"],
+    },
+  },
+  {
+    skill: "triage-issue",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "planner",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "forge-read", "forge-write"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "issue-state"],
+    },
+  },
+  {
+    skill: "execute-phase",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "executor",
+      reasoning: "semantic",
+      effects: ["repository-read", "repository-write", "git-write", "forge-read", "forge-write"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "current-candidate"],
+    },
+  },
+  {
+    skill: "review-change",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "reviewer",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "forge-read", "forge-write"],
+      contextSources: ["repository", "semantic-context", "execution-state"],
+      requiredEvidence: ["current-candidate", "verification"],
+    },
+  },
+  {
+    skill: "loop-review-fold",
+    output: "skill-outcome-v1",
+    nativeFallback: "fixed-verdict",
+    capabilities: {
+      role: "reviewer",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "git-write", "forge-read", "forge-write"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["current-candidate", "independent-review"],
+    },
+  },
+  {
+    skill: "audit-pr",
+    output: "skill-outcome-v1",
+    nativeFallback: "fixed-verdict",
+    capabilities: {
+      role: "auditor",
+      reasoning: "critical",
+      effects: ["repository-read", "repository-write", "forge-read", "forge-write"],
+      contextSources: ["repository", "semantic-context", "execution-state"],
+      requiredEvidence: ["current-candidate", "verification", "independent-review", "pull-request-state"],
+    },
+  },
+] as const);
 
 function workflowSkillProfile(skill: string): WorkflowSkillProfile | undefined {
   return WORKFLOW_SKILL_PROFILES.find((profile) => profile.skill === skill);
