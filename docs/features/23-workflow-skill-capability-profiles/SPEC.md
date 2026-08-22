@@ -453,13 +453,13 @@ Phase-lint: PASS (8/8) · fingerprint P3:schema:5:Restore public profile compati
 Layer: hardening. Make the frozen AC2, AC7, and AC8 validators deterministic and
 prove that each named artifact or bilingual semantic is independently present.
 
-- [ ] Add `test/release-contract.test.mjs` with language-aware EN/ES capability
+- [x] Add `test/release-contract.test.mjs` with language-aware EN/ES capability
   semantics assertions and exact required-file assertions over
   `npm pack --dry-run --json` (F4, AC7, AC8).
-- [ ] Prove the AC2 exact-table test, rather than a source-word count, is the
+- [x] Prove the AC2 exact-table test, rather than a source-word count, is the
   sole 12-profile inventory validator and fails on a missing, duplicate, or
   mismatched built-in.
-- [ ] Run the full schema package test suite and inspect the JSON pack manifest
+- [x] Run the full schema package test suite and inspect the JSON pack manifest
   for the four independently required public artifacts.
 
 Done-when: `cd packages/agentic-workflow-schema && npm test` exits 0 and the
