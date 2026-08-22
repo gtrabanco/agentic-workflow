@@ -1,9 +1,7 @@
 ---
 name: orchestration-envelope
 user-invocable: false
-version: 2.0.1
-metadata:
-  internal: true
+version: 2.0.2
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
