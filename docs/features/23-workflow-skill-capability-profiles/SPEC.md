@@ -394,8 +394,8 @@ exit 0 and coverage includes the new `capabilities.test.mjs` table-driven suite.
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0 (45/45); `node scripts/check-skill-context.mjs` → PASS (35 skills); `npx skills add . --list` → exit 0; `npm pack --dry-run` lists `dist/index.js`, `dist/index.d.ts`, `README.md`, `README.es.md` (AC8)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the roadmap row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
