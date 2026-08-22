@@ -626,6 +626,289 @@ export const WORKFLOW_INTENTS: readonly WorkflowIntent[] = [
 ] as const;
 
 // ---------------------------------------------------------------------------
+// Workflow transition decider — reason codes, decision types, transition table
+// ---------------------------------------------------------------------------
+
+/** Sense reason codes: transition cannot proceed without more sensor input. */
+export const WORKFLOW_DECISION_SENSE_CODES = Object.freeze([
+  "sense-initial",
+  "sense-stale-revision",
+  "sense-missing-evidence",
+  "sense-unknown-state",
+  "sense-unlisted-transition",
+] as const);
+export type WorkflowDecisionSenseReason = (typeof WORKFLOW_DECISION_SENSE_CODES)[number];
+
+/** Stop reason codes: the transition is explicitly blocked or must terminate. */
+export const WORKFLOW_DECISION_STOP_CODES = Object.freeze([
+  "stop-blocked",
+  "stop-needs-input",
+  "stop-failed",
+  "stop-contradiction",
+  "stop-policy-denied",
+  "stop-forbidden-transition",
+] as const);
+export type WorkflowDecisionStopReason = (typeof WORKFLOW_DECISION_STOP_CODES)[number];
+
+/** Invoke reason codes: transition is proven and allowed. */
+export const WORKFLOW_DECISION_INVOKE_CODES = Object.freeze([
+  "invoke-proven-transition",
+] as const);
+export type WorkflowDecisionInvokeReason = (typeof WORKFLOW_DECISION_INVOKE_CODES)[number];
+
+export type WorkflowDecisionReasonCode =
+  | WorkflowDecisionSenseReason
+  | WorkflowDecisionStopReason
+  | WorkflowDecisionInvokeReason;
+
+/** Policy a caller provides to control the transition decision. */
+export interface WorkflowDecisionPolicy {
+  /** Intents the caller is permitted to invoke. */
+  readonly allowedIntents: readonly WorkflowIntent[];
+  /** Whether the caller has forge-write authorization. */
+  readonly forgeWriteAuthorized: boolean;
+}
+
+/** Input to the transition decision function. */
+export interface WorkflowDecisionInput {
+  /** A validated WorkflowSnapshot v1. */
+  readonly snapshot: WorkflowSnapshot;
+  /** The last validated SkillOutcome v1, or null. */
+  readonly lastOutcome: SkillOutcome | null;
+  /** The revision at which the last outcome was recorded. */
+  readonly lastOutcomeSourceRevision: string | null;
+  /** Closed caller policy governing what transitions are permitted. */
+  readonly policy: WorkflowDecisionPolicy;
+}
+
+/** Intent values that may be directly invoked (excludes non-invocation intents). */
+export type WorkflowInvocableIntent = Exclude<WorkflowIntent,
+  "status" | "ask-human" | "stop" | "none">;
+
+export type WorkflowActionDecision =
+  | { readonly kind: "invoke"; readonly intent: WorkflowInvocableIntent;
+      readonly targets: readonly string[]; readonly reasonCode: "invoke-proven-transition";
+      readonly evidenceRefs: readonly string[]; readonly detail: string }
+  | { readonly kind: "sense"; readonly intent: "status"; readonly targets: readonly [];
+      readonly reasonCode: WorkflowDecisionSenseReason;
+      readonly evidenceRefs: readonly string[]; readonly detail: string }
+  | { readonly kind: "stop"; readonly intent: "ask-human" | "stop";
+      readonly targets: readonly string[];
+      readonly reasonCode: WorkflowDecisionStopReason;
+      readonly evidenceRefs: readonly string[]; readonly detail: string };
+
+/** One row of the direct-invocation transition table. */
+export interface WorkflowTransitionTableRow {
+  /** The last validated skill / workflow intent. */
+  readonly key: WorkflowIntent;
+  /** Allowed next intents (may be empty, or contain a single literal "*" for wildcard). */
+  readonly allowed: readonly string[];
+  /** Description of the row conditions (arity, identity, state constraints). */
+  readonly condition: string;
+}
+
+/**
+ * Frozen, versioned direct-invocation transition table.
+ *
+ * Maps each last-validated skill to its allowed next intents. Rows whose
+ * `allowed` array contains a literal "frozen" permit transitions only when
+ * the snapshot repository state is "frozen"; rows with an empty array
+ * explicitly forbid any transition (return sense/stop rather than invoke).
+ *
+ * Derived condition semantics (from the Design):
+ *   none        → sense-initial
+ *   init-workspace → exactly discover-repository-state
+ *   workflow-status → broad set of planning/execution skills
+ *   discover-repository-state → row allowed iff snapshot.state === "frozen"
+ *   resolve-repository-state  → row allowed iff snapshot.contradictions.length > 0
+ *   design-feature, plan-feature → 0..n allowed, each must be a plan/execute skill
+ *   plan-fix → exactly 1, must be triage-issue
+ *   triage-issue → 1..n allowed, each must be an issue identity string
+ *   init-workspace, discover-repository-state → 0 allowed → stop-forbidden-transition
+ *   resolve-repository-state → each allowed must match a contradiction field
+ *   merge → exactly 1, must be the PR identity from audit-pr
+ */
+export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = Object.freeze([
+  // Last skill = none → no transition possible
+  {
+    key: "none",
+    allowed: [],
+    condition: "no last validated skill; return sense-initial",
+  },
+  // init-workspace → discover-repository-state only
+  {
+    key: "init-workspace",
+    allowed: ["discover-repository-state"],
+    condition: "exactly 1 target; any other target → stop-forbidden-transition",
+  },
+  // status → broad planning and execution set
+  {
+    key: "status",
+    allowed: [
+      "init-workspace",
+      "discover-repository-state",
+      "resolve-repository-state",
+      "design-feature",
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "all allowed intents after status",
+  },
+  // discover-repository-state → planning allowed only when repo is frozen
+  {
+    key: "discover-repository-state",
+    allowed: [
+      "resolve-repository-state",
+      "design-feature",
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "row allowed only when snapshot.repositoryState === 'frozen';"
+      + " any target when state is not frozen → sense-missing-evidence",
+  },
+  // resolve-repository-state → contradiction targets only
+  {
+    key: "resolve-repository-state",
+    allowed: ["resolve-repository-state"],
+    condition: "0..n allowed, each === a snapshot contradiction field identity;"
+      + " non-contradiction target → stop-forbidden-transition",
+  },
+  // design-feature → next roadmap unit or the active unit / named dependency
+  {
+    key: "design-feature",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be the next roadmap unit, the active unit id,"
+      + " or the named dependency unit recorded by the last outcome;"
+      + " non-allowed target → stop-forbidden-transition",
+  },
+  // plan-feature → active or dependency unit, max 1
+  {
+    key: "plan-feature",
+    allowed: [
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..1 allowed; 0 → next roadmap unit; 1 → active unit id or named dependency;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // plan-fix → triage-issue only, exactly 1
+  {
+    key: "plan-fix",
+    allowed: ["triage-issue"],
+    condition: "exactly 1 target (the issue identity); 0 → sense-missing-evidence;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // triage-issue → issue identities, 1..n
+  {
+    key: "triage-issue",
+    allowed: [
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "1..n allowed, each must be an issue identity recorded by the last outcome;"
+      + " 0 → sense-missing-evidence",
+  },
+  // execute-phase → planning and execution, max 1
+  {
+    key: "execute-phase",
+    allowed: [
+      "design-feature",
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..1 allowed; each must be a plan/execute skill or ask-human/stop;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // review-change → planning and execution
+  {
+    key: "review-change",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be a plan/execute/review skill or ask-human/stop;"
+      + " non-allowed target → stop-forbidden-transition",
+  },
+  // loop-review-fold → planning and execution
+  {
+    key: "loop-review-fold",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be a plan/execute/review skill or ask-human/stop;"
+      + " non-allowed target → stop-forbidden-transition",
+  },
+  // audit-pr → merge, execute-phase, or stop
+  {
+    key: "audit-pr",
+    allowed: ["merge", "execute-phase", "ask-human", "stop"],
+    condition: "exactly 1 allowed: merge, execute-phase, ask-human, or stop;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // merge → none (end of pipeline)
+  {
+    key: "merge",
+    allowed: [],
+    condition: "merge is the terminal action; no allowed transitions;"
+      + " any target → stop-forbidden-transition",
+  },
+] as const);
+
+// ---------------------------------------------------------------------------
 // Capability metadata — closed vocabularies, immutable exports (issue #136)
 // ---------------------------------------------------------------------------
 
