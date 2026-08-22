@@ -909,6 +909,206 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
 ] as const);
 
 // ---------------------------------------------------------------------------
+// Workflow transition decider — decideWorkflowAction pipeline
+// ---------------------------------------------------------------------------
+
+/** Build evidence refs from snapshot provenance and contradictions. */
+function buildEvidenceRefs(
+  snapshot: WorkflowSnapshot,
+  lastOutcome: SkillOutcome | null,
+): string[] {
+  const refs: string[] = [];
+  for (const p of snapshot.provenance) {
+    refs.push(`${p.field}@${p.source}:${p.line}`);
+  }
+  for (const c of snapshot.contradictions) {
+    refs.push(`contradiction:${c.field}`);
+  }
+  if (lastOutcome && lastOutcome.evidence_refs.length > 0) {
+    refs.push(...lastOutcome.evidence_refs);
+  }
+  return refs;
+}
+
+/** Check effect authorization: the target skill must declare at least one effect. */
+function checkEffectAuth(intent: WorkflowIntent): boolean {
+  const profile = workflowSkillProfile(intent);
+  if (profile === undefined) return false;
+  return profile.capabilities !== undefined && profile.capabilities.effects.length > 0;
+}
+
+/** Check evidence authorization: all required evidence must be present. */
+function checkEvidenceAuth(
+  intent: WorkflowIntent,
+  evidenceRefs: string[],
+): boolean {
+  const profile = workflowSkillProfile(intent);
+  if (profile === undefined) return false;
+  const required = profile.capabilities?.requiredEvidence;
+  if (required === undefined || required.length === 0) return true;
+  for (const req of required) {
+    if (!evidenceRefs.includes(req)) return false;
+  }
+  return true;
+}
+
+/** Policy gate: check allowed intents and forge-write authorization. */
+function checkPolicyGate(
+  intent: WorkflowIntent,
+  policy: WorkflowDecisionPolicy,
+): boolean {
+  if (!policy.allowedIntents.includes(intent)) return false;
+  if (policy.forgeWriteAuthorized === false && intent === "merge") return false;
+  return true;
+}
+
+/**
+ * Decide whether a headless consumer may invoke the next skill, must refresh
+ * with workflow-status, or must stop.
+ *
+ * Pure, deterministic, fail-closed — no I/O, no randomness, no locale.
+ */
+export function decideWorkflowAction(
+  input: WorkflowDecisionInput,
+): WorkflowActionDecision {
+  // Defensive: malformed input never throws
+  if (
+    typeof input !== "object" || input === null ||
+    !("snapshot" in input) || !("lastOutcome" in input) || !("policy" in input)
+  ) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "malformed input" };
+  }
+  const policy = (input as { policy?: unknown }).policy;
+  if (typeof policy !== "object" || policy === null || !("allowedIntents" in policy) || !("forgeWriteAuthorized" in policy)) {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-policy-denied", evidenceRefs: [], detail: "malformed policy" };
+  }
+  const typedPolicy = policy as WorkflowDecisionPolicy;
+
+  // Validate snapshot
+  const snapshotResult = validateWorkflowSnapshotV1(input.snapshot);
+  if (!snapshotResult.ok) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: `malformed snapshot: ${snapshotResult.errors.join(", ")}` };
+  }
+  const snapshot = snapshotResult.snapshot;
+
+  // Initial: no last outcome
+  if (input.lastOutcome === null) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-initial", evidenceRefs: [], detail: "no last validated outcome" };
+  }
+
+  // Freshness: stale revision
+  if (
+    input.lastOutcomeSourceRevision !== null &&
+    snapshot.sourceRevision !== input.lastOutcomeSourceRevision
+  ) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-stale-revision", evidenceRefs: [], detail: `outcome from revision ${input.lastOutcomeSourceRevision} does not match current ${snapshot.sourceRevision}` };
+  }
+
+  // Build evidence refs
+  const evidenceRefs = buildEvidenceRefs(snapshot, input.lastOutcome);
+
+  // Outcome-status stop routing
+  const status = input.lastOutcome.status;
+  if (status === "blocked") {
+    return { kind: "stop", intent: "stop", targets: input.lastOutcome.blockers.map((b) => b.id), reasonCode: "stop-blocked", evidenceRefs: [], detail: "outcome blocked" };
+  }
+  if (status === "needs-input") {
+    return { kind: "stop", intent: "stop", targets: input.lastOutcome.questions.map((q) => q.id), reasonCode: "stop-needs-input", evidenceRefs: [], detail: "outcome needs input" };
+  }
+  if (status === "failed") {
+    const targets: string[] = input.lastOutcome.discoveries.length > 0
+      ? input.lastOutcome.discoveries.map((d) => d.summary)
+      : [];
+    return { kind: "stop", intent: "stop", targets, reasonCode: "stop-failed", evidenceRefs: [], detail: "outcome failed" };
+  }
+
+  // Contradiction routing
+  if (snapshot.contradictions.length > 0) {
+    const proposal = input.lastOutcome.next.intent;
+    if (proposal === "resolve-repository-state") {
+      const contradictionFields = snapshot.contradictions.map((c) => c.field);
+      const allowedContradictionTargets = contradictionFields.length > 0
+        ? ["resolve-repository-state"]
+        : [];
+      if (allowedContradictionTargets.includes(proposal)) {
+        return {
+          kind: "stop", intent: "stop", targets: contradictionFields,
+          reasonCode: "stop-contradiction",
+          evidenceRefs: snapshot.contradictions.map((c) => `contradiction:${c.field}`),
+          detail: "snapshot contradictions present",
+        };
+      }
+    }
+    // Non-matching proposal under contradiction
+    return {
+      kind: "stop", intent: "stop", targets: [],
+      reasonCode: "stop-contradiction",
+      evidenceRefs: snapshot.contradictions.map((c) => `contradiction:${c.field}`),
+      detail: "snapshot contradictions present",
+    };
+  }
+
+  // Recommendation → closed-table match
+  const proposal = input.lastOutcome.next.intent;
+  const targets = input.lastOutcome.next.targets;
+
+  const entry = WORKFLOW_TRANSITION_TABLE.find((r) => r.key === proposal);
+  if (entry === undefined) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `unlisted transition: ${proposal}` };
+  }
+
+  // Check if proposal is in the allowed list
+  if (!entry.allowed.includes(proposal)) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `${proposal} not allowed after ${entry.key}` };
+  }
+
+  // Row condition checks
+  if (proposal === "discover-repository-state") {
+    if (snapshot.repositoryState !== "frozen") {
+      return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "repository not frozen" };
+    }
+  }
+  if (proposal === "resolve-repository-state") {
+    const contradictionFields = snapshot.contradictions.map((c) => c.field);
+    if (contradictionFields.length > 0 && !contradictionFields.includes(targets[0])) {
+      return { kind: "stop", intent: "stop", targets, reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: `target ${targets[0]} does not match contradiction fields` };
+    }
+  }
+
+  // Effect authorization
+  if (!checkEffectAuth(proposal)) {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: "unauthorized effect" };
+  }
+
+  // Evidence authorization
+  if (!checkEvidenceAuth(proposal, evidenceRefs)) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "missing required evidence" };
+  }
+
+  // Policy gate
+  if (!checkPolicyGate(proposal, typedPolicy)) {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-policy-denied", evidenceRefs: [], detail: "policy denied" };
+  }
+
+  // Non-invocable intents can never reach invoke
+  if (proposal === "status" || proposal === "ask-human" || proposal === "stop" || proposal === "none") {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: "non-invocable intent" };
+  }
+
+  // Proven transition — invoke
+  const invocable: WorkflowInvocableIntent = proposal;
+
+  // Proven transition — invoke
+  return {
+    kind: "invoke", intent: invocable,
+    targets: targets.length > 0 ? targets : [],
+    reasonCode: "invoke-proven-transition",
+    evidenceRefs,
+    detail: `invoke-proven-transition: ${proposal} to [${targets.join(", ") || "*"}]`,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Capability metadata — closed vocabularies, immutable exports (issue #136)
 // ---------------------------------------------------------------------------
 

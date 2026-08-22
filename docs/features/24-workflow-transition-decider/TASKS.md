@@ -29,32 +29,32 @@ Layer: schema. Done-when: `cd packages/agentic-workflow-schema && npm test` →
 exit 0 (compiles; existing suites and the P1 exhaustiveness suite remain
 green).
 
-- [ ] Implement the `decideWorkflowAction` entry with defensive runtime
+- [x] Implement the `decideWorkflowAction` entry with defensive runtime
   validation: a malformed snapshot or outcome returns `sense` with
   `sense-missing-evidence`, a malformed policy returns `stop` with
   `stop-policy-denied`, and unknown values never throw.
-- [ ] Implement initial and freshness routing: an absent last outcome returns
+- [x] Implement initial and freshness routing: an absent last outcome returns
   `sense-initial`; an outcome revision mismatch returns `sense-stale-revision`.
-- [ ] Implement outcome-status stop routing for `blocked`, `needs-input`, and
+- [x] Implement outcome-status stop routing for `blocked`, `needs-input`, and
   `failed`, preserving canonical blockers and questions into targets,
   evidence refs, and detail.
-- [ ] Implement contradiction routing: a declared contradiction with a
+- [x] Implement contradiction routing: a declared contradiction with a
   table-allowed `resolve-repository-state` proposal proceeds toward invoke;
   every other proposal under contradiction returns `stop-contradiction` with
   the contradiction evidence.
-- [ ] Implement recommendation routing for `status`, `ask-human`, `stop`, and
+- [x] Implement recommendation routing for `status`, `ask-human`, `stop`, and
   `none`, plus the closed-table match with row conditions: unlisted
   transitions return `sense-unlisted-transition`, unmet row conditions return
   `sense-missing-evidence` (or `sense-unknown-state` when the state is
   unknown).
-- [ ] Implement auth checks: effect authorization uses capability profiles
+- [x] Implement auth checks: effect authorization uses capability profiles
   from `WORKFLOW_SKILL_PROFILES`, evidence authorization cross-references
   outcome `evidence_refs` and snapshot provenance, and the `policy` gates
   both allowed intents and forge-write authorization.
-- [ ] Build the `evidenceRefs` array: outcome evidence_refs, snapshot
+- [x] Build the `evidenceRefs` array: outcome evidence_refs, snapshot
   provenance `field@source:line`, and contradiction fields where relevant.
   Build `detail` from the table condition template.
-- [ ] Re-export `decideWorkflowAction` from the package entry point.
+- [x] Re-export `decideWorkflowAction` from the package entry point.
 
 ## P3 — Prove decision behavior with the full test matrix
 
