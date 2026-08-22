@@ -869,19 +869,17 @@ export const WORKFLOW_SKILL_PROFILES: readonly WorkflowSkillProfile[] = deepFree
 // type contract matches the deep-frozen runtime surface (AC5/AC9). The
 // identical-type discriminator below is true only when an interface is
 // already fully readonly; removing any `readonly` modifier from
-// WorkflowSkillCapabilities or WorkflowSkillProfile flips it to false and
-// this assignment stops compiling.
+// WorkflowSkillCapabilities or WorkflowSkillProfile makes the resolution
+// `false`, which fails the `extends true` constraint below. Type-level only:
+// nothing is emitted to compiled JS or the declarations.
 type _IfEquals<X, Y> = (<T>() => T extends X ? 1 : 2) extends (<T>() => T extends Y ? 1 : 2) ? true : false;
-const _capabilitiesDeeplyReadonly: _IfEquals<
-  WorkflowSkillCapabilities,
-  Readonly<WorkflowSkillCapabilities>
-> = true;
-const _profilesDeeplyReadonly: _IfEquals<
-  WorkflowSkillProfile,
-  Readonly<WorkflowSkillProfile>
-> = true;
-void _capabilitiesDeeplyReadonly;
-void _profilesDeeplyReadonly;
+type _AssertTrue<T extends true> = T;
+type _CapabilitiesDeeplyReadonly = _AssertTrue<
+  _IfEquals<WorkflowSkillCapabilities, Readonly<WorkflowSkillCapabilities>>
+>;
+type _ProfilesDeeplyReadonly = _AssertTrue<
+  _IfEquals<WorkflowSkillProfile, Readonly<WorkflowSkillProfile>>
+>;
 
 function workflowSkillProfile(skill: string): WorkflowSkillProfile | undefined {
   return WORKFLOW_SKILL_PROFILES.find((profile) => profile.skill === skill);
