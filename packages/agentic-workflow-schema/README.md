@@ -63,6 +63,30 @@ driver-level failure. Do not promote arbitrary prose to structured facts.
 continue to use `parseEnvelope(text)`; new consumers use
 `parseEnvelopeV2Strict(text)` or the uniform `parseTurn({skill, text})`.
 
+## Capability profiles
+
+Every built-in profile in `WORKFLOW_SKILL_PROFILES` carries an optional,
+immutable `capabilities` object: role, reasoning class, **maximum effects**,
+context sources, and required evidence, all from the exported closed
+vocabularies (`SKILL_ROLES`, `SKILL_EFFECTS`, `SKILL_REASONING`,
+`SKILL_CONTEXT_SOURCES`, `SKILL_REQUIRED_EVIDENCE`).
+
+Capability semantics:
+
+- **Repository evidence is authoritative.** `effects`, `contextSources` and
+  `requiredEvidence` document the reviewed maximum capabilities from the
+  workflow's own documents (`docs/`); they never promise anything about a
+  model or provider runtime.
+- **Context is advisory.** `semantic-context` and `episodic-memory` describe
+  context that *may* help; they never change what a skill may do.
+- **Exports are immutable.** Vocabulary arrays and every profile are frozen at
+  runtime (`Object.isFrozen`); widening a profile at runtime is unsupported.
+  Any vocabulary or profile change is a reviewed package release.
+
+`capabilities` is optional for source compatibility. A capability-aware
+consumer must **fail closed** when it is absent — never infer a skill's role
+or effects from its name.
+
 ## Compile deterministic state
 
 The package never reads the filesystem, Git, or a forge. The caller supplies
