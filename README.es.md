@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  35 skills fuente (18 de cara al usuario + 15 internas del workflow + 2 contratos de mantenimiento; 31 listadas por el plugin)
+skills/                  35 skills fuente (18 de cara al usuario + 15 internas del workflow + 2 metadata-internal; 33 descubribles)
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)

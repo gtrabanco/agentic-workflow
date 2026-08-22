@@ -65,6 +65,32 @@ estructurados.
 pueden continuar con `parseEnvelope(text)`; los nuevos usan
 `parseEnvelopeV2Strict(text)` o el uniforme `parseTurn({skill, text})`.
 
+## Perfiles de capacidades
+
+Cada perfil integrado de `WORKFLOW_SKILL_PROFILES` lleva un objeto `capabilities`
+opcional e inmutable: rol, clase de razonamiento, **efectos máximos**, fuentes
+de contexto y evidencia requerida, todos dentro de los vocabularios cerrados
+exportados (`SKILL_ROLES`, `SKILL_EFFECTS`, `SKILL_REASONING`,
+`SKILL_CONTEXT_SOURCES`, `SKILL_REQUIRED_EVIDENCE`).
+
+Semántica de las capacidades:
+
+- **La evidencia del repositorio es autoritativa.** `effects`, `contextSources`
+  y `requiredEvidence` documentan las capacidades máximas revisadas de los
+  documentos del propio workflow (`docs/`); nunca prometen nada sobre un modelo
+  o un runtime de proveedor.
+- **El contexto es orientativo.** `semantic-context` y `episodic-memory`
+  describen contexto que *puede* ayudar; nunca cambian lo que una skill puede
+  hacer.
+- **Las exportaciones son inmutables.** Los arrays de vocabulario y cada perfil
+  quedan congelados en runtime (`Object.isFrozen`); no se soporta ensanchar un
+  perfil en runtime. Cualquier cambio de vocabulario o perfil es una release
+  revisada del paquete.
+
+`capabilities` es opcional por compatibilidad de fuente. Un consumidor que
+entiende capacidades debe **fallar cerrado** cuando está ausente: nunca inferir
+el rol o los efectos de una skill por su nombre.
+
 ## Compilar estado determinista
 
 El paquete nunca lee el sistema de archivos, Git ni una forja. El llamador
