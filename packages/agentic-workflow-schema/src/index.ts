@@ -685,22 +685,22 @@ export type SkillRequiredEvidence = (typeof SKILL_REQUIRED_EVIDENCE)[number];
  * context is advisory and never extends the declared maximum effects.
  */
 export interface WorkflowSkillCapabilities {
-  role: SkillRole;
-  reasoning: SkillReasoning;
-  effects: readonly SkillEffect[];
-  contextSources: readonly SkillContextSource[];
-  requiredEvidence: readonly SkillRequiredEvidence[];
+  readonly role: SkillRole;
+  readonly reasoning: SkillReasoning;
+  readonly effects: readonly SkillEffect[];
+  readonly contextSources: readonly SkillContextSource[];
+  readonly requiredEvidence: readonly SkillRequiredEvidence[];
 }
 
 export interface WorkflowSkillProfile {
-  skill: string;
-  output: "envelope-v2" | "skill-outcome-v1";
-  nativeFallback: "none" | "fixed-verdict";
+  readonly skill: string;
+  readonly output: "envelope-v2" | "skill-outcome-v1";
+  readonly nativeFallback: "none" | "fixed-verdict";
   /**
    * Optional for source compatibility; every built-in populates it and a
    * capability-aware consumer fails closed when it is absent.
    */
-  capabilities?: WorkflowSkillCapabilities;
+  readonly capabilities?: WorkflowSkillCapabilities;
 }
 
 /** Recursively freezes exported metadata so runtime widening is impossible. */
@@ -864,6 +864,24 @@ export const WORKFLOW_SKILL_PROFILES: readonly WorkflowSkillProfile[] = deepFree
     },
   },
 ] as const);
+
+// Compile-time invariant: the exported profiles are deeply readonly so the
+// type contract matches the deep-frozen runtime surface (AC5/AC9). The
+// identical-type discriminator below is true only when an interface is
+// already fully readonly; removing any `readonly` modifier from
+// WorkflowSkillCapabilities or WorkflowSkillProfile flips it to false and
+// this assignment stops compiling.
+type _IfEquals<X, Y> = (<T>() => T extends X ? 1 : 2) extends (<T>() => T extends Y ? 1 : 2) ? true : false;
+const _capabilitiesDeeplyReadonly: _IfEquals<
+  WorkflowSkillCapabilities,
+  Readonly<WorkflowSkillCapabilities>
+> = true;
+const _profilesDeeplyReadonly: _IfEquals<
+  WorkflowSkillProfile,
+  Readonly<WorkflowSkillProfile>
+> = true;
+void _capabilitiesDeeplyReadonly;
+void _profilesDeeplyReadonly;
 
 function workflowSkillProfile(skill: string): WorkflowSkillProfile | undefined {
   return WORKFLOW_SKILL_PROFILES.find((profile) => profile.skill === skill);
