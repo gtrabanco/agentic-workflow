@@ -79,12 +79,12 @@ Layer: schema. Done-when: `cd packages/agentic-workflow-schema && npm test` →
 exit 0; `grep '"version"' packages/agentic-workflow-schema/package.json` →
 `3.2.0`; `npm pack --dry-run` lists the unchanged public artifact set.
 
-- [ ] Add the `decideWorkflowAction` section to `README.md`: contract summary,
+- [x] Add the `decideWorkflowAction` section to `README.md`: contract summary,
   one safe model-call-elision example, one mandatory `workflow-status`
   fallback example, mandatory sensor points list.
-- [ ] Add the same section to `README.es.md` using the equivalent autoritativa/orientativo semantics.
-- [ ] Bump version `3.1.0` → `3.2.0` in `package.json`.
-- [ ] Verify: `cd packages/agentic-workflow-schema && npm test` → exit 0;
+- [x] Add the same section to `README.es.md` using the equivalent autoritativa/orientativo semantics.
+- [x] Bump version `3.1.0` → `3.2.0` in `package.json`.
+- [x] Verify: `cd packages/agentic-workflow-schema && npm test` → exit 0;
   `grep '"version"' packages/agentic-workflow-schema/package.json` → `3.2.0`;
   `npm pack --dry-run` lists unchanged artifact set.
 

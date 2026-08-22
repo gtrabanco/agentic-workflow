@@ -155,3 +155,30 @@ publicado. Los campos aditivos son minor; arreglos de parser, documentación o
 implementación son patch. Consulta la
 [orquestación programática](../../docs/workflow/ORCHESTRATION.es.md) para el
 protocolo de driver.
+
+## Decisor de transición del workflow
+
+Exporta `decideWorkflowAction(input)` — una función pura y determinista que
+combina un `WorkflowSnapshot v1`, el último `SkillOutcome v1` validado y una
+`WorkflowDecisionPolicy` provista por el driver para decidir si puede invocar
+la siguiente habilidad, debe refrescar con `workflow-status` o debe detenerse.
+
+```ts
+function decideWorkflowAction(input: WorkflowDecisionInput): WorkflowActionDecision
+```
+
+- **Elisión segura:** cuando el snapshot está congelado y la habilidad →
+  siguiente intento está probada por la tabla congelada
+  `WORKFLOW_TRANSITION_TABLE`, el driver invoca directamente sin llamar a
+  `workflow-status`.
+- **Respaldo obligatorio:** en evidencia ausente, revisión obsoleta, estado
+  bloqueado, contradicciones, efectos no autorizados o cualquier transición
+  no reconocida, la función retorna `sense` (llamar `workflow-status`) o
+  `stop` (terminar).
+
+**Puntos obligatorios de sensor:** ejecución inicial (sin outcome), ejecución
+recuperada (revisión obsoleta), snapshot desconocido o contradicho, siguiente
+intento no reconocido, y cualquier transición no en la tabla cerrada.
+
+Consulta el [SPEC](../features/24-workflow-transition-decider/SPEC.md) para el
+diseño completo, tablas de transición y vocabulario de códigos de razón.
