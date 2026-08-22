@@ -27,3 +27,14 @@
 ## Unit-loop receipt — P2
 - Commit: pending · Gate: cd packages/agentic-workflow-schema && npm test (exit 0) · Acceptance blob: ad5e17020510ae78c883548502d0b1f2f8bb5ce7
 - Next: P3 · Attempts: 0
+
+## P4 — 2026-08-22
+- Done: added decideWorkflowAction section to README.md and README.es.md with contract summary, elision example, fallback example, sensor points list; bumped version 3.1.0 → 3.2.0
+- Remains: P5 (close-out PR)
+- Gotchas: none
+- Files: packages/agentic-workflow-schema/README.md, packages/agentic-workflow-schema/README.es.md, packages/agentic-workflow-schema/package.json
+- Next: P5 — Hardening & PR
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: cd packages/agentic-workflow-schema && npm test (exit 0) · Acceptance blob: ad5e17020510ae78c883548502d0b1f2f8bb5ce7
+- Next: P5 · Attempts: 0
