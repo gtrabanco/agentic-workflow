@@ -11,13 +11,14 @@ composed for you (the `plan-feature` router's two planning steps, the
 the `verification-contract` acceptance guard, the workflow's own 9-skill
 internal review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
-`review-seo`), plus **2 metadata-internal** not discoverable by the `skills`
-CLI (`orchestration-envelope`, `bump-skill`; they carry
-`metadata.internal: true` in frontmatter, which the CLI respects to exclude
-from `npx skills add` discovery). The 18 user-facing skills cover setup,
-repository-state discovery/resolution, design, planning, execution, review,
-audit, finding folds, docs generation, issue triage, roadmap shipping, session
-logging, and workflow status.
+`review-seo`). Additionally, **one metadata-internal** contract not discoverable
+by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
+which the CLI respects to exclude from `npx skills add` discovery). The 18
+user-facing skills cover setup, repository-state discovery/resolution, design,
+planning, execution, review, audit, finding folds, docs generation, issue triage,
+roadmap shipping, session logging, and workflow status. **bump-skill** is a
+repo-only maintenance tool (not a workflow skill) and is excluded from the
+workflow skill index entirely.
 
 ## Context budget and progressive loading
 

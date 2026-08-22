@@ -249,6 +249,7 @@ none
 | Date | Approved by | Change | Traceability |
 |---|---|---|---|
 | 2026-08-22 | user (`Revisa si los findings AC* son aceptables... planifica los fixes en esta misma rama`) | Reopen PR #140 on the same branch after acceptance review proved that the minor release made the three pre-existing `WorkflowSkillProfile` fields readonly and that AC2, AC7, and AC8 used non-deterministic validators. Strengthen AC3 to preserve source-compatible writability, replace the affected validators without loosening their outcomes, and append corrective phases plus a fresh final close-out. | Issue #136 · PR #140 · F3 + F4 |
+| 2026-08-22 | user (fold-findings) | Replaced repo-only `bump-skill` with `docs(workflow): sync SKILLS.md/ES counts` to correct stale skill counts from features 19-23; removed stale fix index entry for issue #142. | Issue #142 · PR #140 · F9 + F10 + F11 |
 
 ### Spec-lint (mechanical — product boxes)
 
