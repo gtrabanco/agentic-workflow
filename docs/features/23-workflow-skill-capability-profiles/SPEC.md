@@ -396,13 +396,11 @@ exit 0 and coverage includes the new `capabilities.test.mjs` table-driven suite.
 
 - [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0 (45/45); `node scripts/check-skill-context.mjs` → PASS (35 skills); `npx skills add . --list` → exit 0; `npm pack --dry-run` lists `dist/index.js`, `dist/index.d.ts`, `README.md`, `README.es.md` (AC8)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the roadmap row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
-      Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #<n>`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] Set the roadmap row status to `done` and commit the flip — commit `e0f99b3`
+- [x] `git push` — branch pushed, PR branch remote-current
+- [x] Open the PR (`gh pr create --body-file .pr-feature-23-body.md`) — [PR #140](https://github.com/gtrabanco/agentic-workflow/pull/140), body includes `Closes #136`
+- [x] Update the roadmap row to `done · [#140](https://github.com/gtrabanco/agentic-workflow/pull/140)`
+- [x] Commit `docs: link PR #140` and push
 
 #### Phase-lint
 
