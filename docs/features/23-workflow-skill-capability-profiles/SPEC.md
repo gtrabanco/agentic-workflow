@@ -185,9 +185,10 @@ maintainer`.
   | `loop-review-fold` | reviewer | critical | repository-read, repository-write, git-write, forge-read, forge-write | repository, semantic-context, episodic-memory, execution-state | current-candidate, independent-review |
   | `audit-pr` | auditor | critical | repository-read, repository-write, forge-read, forge-write | repository, semantic-context, execution-state | current-candidate, verification, independent-review, pull-request-state |
 
-- [ ] **AC3 — read-verified:** `capabilities` is optional on the public
+- [ ] **AC3 — command-verified:** `capabilities` is optional on the public
   `WorkflowSkillProfile` TypeScript boundary, every shipped built-in profile
-  populates it, and `output` plus `nativeFallback` retain their current meanings.
+  populates it, and the pre-existing `skill`, `output`, and `nativeFallback`
+  fields retain their types and source-compatible writability.
 - [ ] **AC4 — read-verified:** A capability-aware consumer presented with a
   profile lacking `capabilities` must fail closed instead of inferring values
   from the skill name.
@@ -224,8 +225,9 @@ existing TypeScript compiler and schema-package test scripts are authoritative.
   `discover-repository-state`, plus `repository-write` to `audit-pr`, based on
   their current skill contracts. Issue #136 records the dated evidence.
 - **D2 — Optional boundary, complete built-ins.** `capabilities` remains optional
-  for source compatibility, but every built-in profile is populated and a
-  capability-aware consumer fails closed on absence.
+  and the three legacy profile fields retain source-compatible writability, but
+  every built-in profile is populated, deeply readonly, and a capability-aware
+  consumer fails closed on absence.
 - **D3 — Size `S`.** The change is one package-scoped delivery unit and should
   fit one implementation commit plus hardening/PR closeout.
 - **D4 — Derived inventory only.** The package surfaces listed under Capability
@@ -241,6 +243,12 @@ existing TypeScript compiler and schema-package test scripts are authoritative.
 ### Deferred decisions
 
 none
+
+## Amendments
+
+| Date | Approved by | Change | Traceability |
+|---|---|---|---|
+| 2026-08-22 | user (`Revisa si los findings AC* son aceptables... planifica los fixes en esta misma rama`) | Reopen PR #140 on the same branch after acceptance review proved that the minor release made the three pre-existing `WorkflowSkillProfile` fields readonly and that AC2, AC7, and AC8 used non-deterministic validators. Strengthen AC3 to preserve source-compatible writability, replace the affected validators without loosening their outcomes, and append corrective phases plus a fresh final close-out. | Issue #136 · PR #140 · F3 + F4 |
 
 ### Spec-lint (mechanical — product boxes)
 
@@ -273,8 +281,9 @@ Written by `plan-feature-scaffold` after this Product half.
   required evidence).
 - Add an optional `capabilities` object to `WorkflowSkillProfile` and populate it
   for every built-in entry with the exact corrected profile table.
-- Preserve `output` and `nativeFallback`, existing parser/rendering behavior, and
-  compatibility for externally constructed profiles that omit `capabilities`.
+- Preserve the types and source-compatible writability of `skill`, `output`, and
+  `nativeFallback`, existing parser/rendering behavior, and compatibility for
+  externally constructed profiles that omit `capabilities`.
 - Require capability-aware consumers to fail closed when metadata is absent and
   forbid runtime profile widening (immutable exports only).
 
@@ -290,8 +299,9 @@ AD-007 schema package strict contracts) is preserved.
 
 - **Schema/package boundary**: `WorkflowSkillProfile` gains optional `capabilities`;
   all other fields (`skill`, `output`, `nativeFallback`) retain their existing
-  semantics — preserves NRS AD-007 (package strict contracts) and NRS
-  AD-002 (bilingual docs rule).
+  types and writability. A separate deeply readonly built-in boundary protects
+  the shipped inventory without narrowing externally constructed profiles —
+  preserves NRS AD-007 (package strict contracts) and NRS AD-002 (bilingual docs rule).
 - **NRS status**: frozen → consumed. No contradictions detected.
 
 ### Design
@@ -306,7 +316,8 @@ AD-007 schema package strict contracts) is preserved.
 - **Capabilities interface**: Define `WorkflowSkillCapabilities` with fields
   `role`, `reasoning`, `effects` (readonly array), `contextSources` (readonly array),
   `requiredEvidence` (readonly array). Add optional `capabilities?: WorkflowSkillCapabilities`
-  to `WorkflowSkillProfile` (D2 — optional boundary, complete built-ins).
+  to the source-compatible `WorkflowSkillProfile`; use a separate deeply readonly
+  boundary for shipped built-ins (D2 — optional boundary, complete built-ins).
 - **Profile population**: Populate `capabilities` on all 12 built-in profiles from the
   exact AC2 table. Each profile gets the correct role, reasoning, effects, context
   sources, and required evidence per the specification.
@@ -330,8 +341,9 @@ AD-007 schema package strict contracts) is preserved.
   `discover-repository-state`, plus `repository-write` to `audit-pr`, based on
   their current skill contracts. Issue #136 records the dated evidence.
 - **D2 — Optional boundary, complete built-ins.** `capabilities` remains optional
-  for source compatibility, but every built-in profile is populated and a
-  capability-aware consumer fails closed on absence.
+  and the three legacy profile fields retain source-compatible writability, but
+  every built-in profile is populated, deeply readonly, and a capability-aware
+  consumer fails closed on absence.
 - **D3 — Size `S`.** The change is one package-scoped delivery unit and should
   fit one implementation commit plus hardening/PR closeout.
 - **D4 — Derived inventory only.** The package surfaces listed under Capability
@@ -350,9 +362,11 @@ AD-007 schema package strict contracts) is preserved.
 - **Regression tests**: existing `npm test` suite remains green —
   `renderOutputInstruction()`, `parseTurn()`, Envelope v2, SkillOutcome v1, and
   WorkflowSnapshot v1 regressions.
-- **Read-verified**: `packages/agentic-workflow-schema/README.md` and `README.es.md`
-  contain synchronized capability-profile guidance (evidence authoritative,
-  semantic/episodic context advisory) — AC7.
+- **Type compatibility fixture**: `test/fixtures/workflow-skill-profile-compat.ts`
+  compiles omission of `capabilities` and assignments to all three legacy fields,
+  while the exported built-in inventory remains deeply readonly — AC3.
+- **Release-contract tests**: language-aware EN/ES capability semantics and the
+  four independently required `npm pack --dry-run --json` artifacts — AC7, AC8.
 
 ### Dev scenarios
 
@@ -406,6 +420,80 @@ exit 0 and coverage includes the new `capabilities.test.mjs` table-driven suite.
 
 Phase-lint: PASS (8/8) · fingerprint P1:schema:8:Export capability vocabularies, types, and populate built-in profiles
 
+### P3 — Restore public profile compatibility
+
+Layer: schema. Preserve the new immutable built-in capability inventory without
+narrowing the pre-existing public `WorkflowSkillProfile` write contract.
+
+- [ ] Add `test/fixtures/workflow-skill-profile-compat.ts` and a test-runner assertion
+  that first reproduces TS2540 when assigning `skill`, `output`, and
+  `nativeFallback` on the current declaration while still allowing omission of
+  `capabilities` (F3, AC3).
+- [ ] Restore source-compatible writability for the three legacy
+  `WorkflowSkillProfile` fields; keep the new `capabilities` boundary optional.
+- [ ] Introduce a dedicated deeply readonly type boundary for shipped built-in
+  profiles so `WORKFLOW_SKILL_PROFILES` stays immutable at compile time and
+  runtime without narrowing externally constructed profiles.
+- [ ] Retarget the compile-time readonly invariant and internal profile lookup to
+  the built-in boundary; confirm the guard emits no JavaScript or declaration
+  artifacts.
+- [ ] Re-run the schema-package regression suite, including exact AC2 inventory,
+  fail-closed behavior, runtime freezing, and the new compatibility fixture.
+
+Done-when: `cd packages/agentic-workflow-schema && npm test` exits 0 and the
+compatibility fixture compiles assignments to all three legacy fields while
+`Object.isFrozen(WORKFLOW_SKILL_PROFILES)` remains true.
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P3:schema:5:Restore public profile compatibility
+
+### P4 — Harden release evidence
+
+Layer: hardening. Make the frozen AC2, AC7, and AC8 validators deterministic and
+prove that each named artifact or bilingual semantic is independently present.
+
+- [ ] Add `test/release-contract.test.mjs` with language-aware EN/ES capability
+  semantics assertions and exact required-file assertions over
+  `npm pack --dry-run --json` (F4, AC7, AC8).
+- [ ] Prove the AC2 exact-table test, rather than a source-word count, is the
+  sole 12-profile inventory validator and fails on a missing, duplicate, or
+  mismatched built-in.
+- [ ] Run the full schema package test suite and inspect the JSON pack manifest
+  for the four independently required public artifacts.
+
+Done-when: `cd packages/agentic-workflow-schema && npm test` exits 0 and the
+release-contract test proves both language-specific semantics plus all four
+packed files independently.
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P4:hardening:3:Harden release evidence
+
+### P5 — Hardening & PR
+
+Layer: close-out. Re-establish a clean exact-HEAD review and audit receipt after
+P3 and P4 invalidate the completed P2 close-out.
+
+- [ ] Run `cd packages/agentic-workflow-schema && npm test` and record exit 0.
+- [ ] Run `node scripts/check-skill-context.mjs` and record PASS.
+- [ ] Run `npx skills add . --list` and record exit 0.
+- [ ] Run `cd packages/agentic-workflow-schema && npm pack --dry-run --json` and
+  confirm the release-contract assertions cover every required artifact.
+- [ ] Run `git status --porcelain -- docs/` and `git status --porcelain`; require
+  a clean committed tree before review.
+- [ ] Set roadmap row 23 to `done · [#140]`, commit with Conventional Commits,
+  and push the branch so PR #140 is remote-current.
+- [ ] Run a fresh `/review-change` at the pushed HEAD and require its exact-SHA
+  `review-change:pass` PR receipt before handing off to `/audit-pr`.
+
+Done-when: every project gate is green, PR #140 points at the reviewed HEAD, and
+the newest PR comment carries the exact-HEAD `review-change:pass` marker.
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P5:close-out:7:Hardening & PR
+
 ### Deploy & rollback
 
 The package ships as a minor release (v3.0.0 → v3.1.0). No migration, no feature
@@ -432,6 +520,9 @@ v3.0.0.
 - New `packages/agentic-workflow-schema/test/capabilities.test.mjs` — table-driven
   tests for exact coverage, duplicate rejection, unknown value rejection,
   fail-closed consumer, and `Object.isFrozen`.
+- Planned `packages/agentic-workflow-schema/test/fixtures/workflow-skill-profile-compat.ts`
+  plus `test/release-contract.test.mjs` — legacy public-type compatibility,
+  language-aware docs semantics, and exact packed-file coverage.
 - Updated `packages/agentic-workflow-schema/README.md` and `README.es.md` —
   synchronized capability-profile guidance.
 - Updated `packages/agentic-workflow-schema/package.json` — version bump
