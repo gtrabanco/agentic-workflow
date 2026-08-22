@@ -14,5 +14,5 @@ Fix-now fold ledger for feature unit 23 (PR #140). Schema:
 | F4 | docs/features/23-workflow-skill-capability-profiles/ACCEPTANCE.md:8,13-14 (AC2 count is 13, AC7 English grep misses Spanish, AC8 alternation proves only one artifact) | workflow | major | fix-now | replan-in-unit P4 | no |
 | F5 | packages/agentic-workflow-schema/package.json:50 | code | high | fix-now | fold into current unit | yes |
 | F6 | packages/agentic-workflow-schema/test/capabilities.test.mjs:273-308 | code | low | fix-now | fold into current unit | yes |
-| F7 | docs/workflow/REPOSITORY_STATE.md | spec-drift | high | fix-now | fold into current unit | no |
+| F7 | docs/workflow/REPOSITORY_STATE.md | spec-drift | high | fix-now | fold into current unit | yes |
 | F8 | docs/features/23-workflow-skill-capability-profiles/review-findings.md:13-14 | workflow | low | fix-now | fold into current unit | no |
