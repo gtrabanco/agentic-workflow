@@ -38,3 +38,10 @@
 ## Unit-loop receipt — P4
 - Commit: pending · Gate: cd packages/agentic-workflow-schema && npm test (exit 0) · Acceptance blob: ad5e17020510ae78c883548502d0b1f2f8bb5ce7
 - Next: P5 · Attempts: 0
+
+## P5 — 2026-08-22
+- Done: full repo verification (npm test 76/76, check-skill-context PASS, skills add exit 0), no contract changes, PR #143 opened, roadmap updated
+- Remains: none — unit finished
+- Gotchas: none
+- Files: docs/features/ROADMAP.md
+- Next: unit finished
