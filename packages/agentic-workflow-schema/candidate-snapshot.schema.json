@@ -58,7 +58,17 @@
         "hex": {
           "type": "string"
         }
-      }
+      },
+      "anyOf": [
+        {
+          "if": { "properties": { "algorithm": { "const": "sha1" } }, "required": ["algorithm"] },
+          "then": { "properties": { "hex": { "type": "string", "pattern": "^[a-f0-9]{40}$" } } }
+        },
+        {
+          "if": { "properties": { "algorithm": { "const": "sha256" } }, "required": ["algorithm"] },
+          "then": { "properties": { "hex": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } }
+        }
+      ]
     },
     "manifestEntryV1": {
       "type": "object",
@@ -66,7 +76,8 @@
       "required": ["path", "status", "oldPath", "mode", "objectSha", "sizeBytes", "binary"],
       "properties": {
         "path": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(?!\\0)(?!\\/)(?!.*(?:^|\\/)(?:\\.\\.|\\./))[^\\0]*$"
         },
         "status": {
           "enum": ["added", "modified", "deleted", "renamed", "copied", "type-changed"]
@@ -75,8 +86,10 @@
           "type": ["string", "null"]
         },
         "mode": {
-          "enum": ["100644", "100755", "120000", "160000"],
-          "nullable": true
+          "oneOf": [
+            { "enum": ["100644", "100755", "120000", "160000"] },
+            { "type": "null" }
+          ]
         },
         "objectSha": {
           "oneOf": [
@@ -96,7 +109,17 @@
             { "type": "null" }
           ]
         }
-      }
+      },
+      "anyOf": [
+        {
+          "if": { "properties": { "status": { "const": "deleted" } }, "required": ["status"] },
+          "then": { "properties": { "oldPath": { "const": null } } }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["renamed", "copied"] } }, "required": ["status"] },
+          "then": { "properties": { "oldPath": { "not": { "const": null } } } }
+        }
+      ]
     }
   }
 }

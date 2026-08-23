@@ -55,6 +55,7 @@
     "prepublishOnly": "npm test"
   },
   "devDependencies": {
+    "ajv": "^8.20.0",
     "typescript": "6"
   }
 }
