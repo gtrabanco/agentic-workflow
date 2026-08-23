@@ -191,7 +191,9 @@ test("returns fresh when snapshot matches and acceptance + policy match", async 
 });
 
 test("returns stale-base-tree when snapshot digest differs", async () => {
+  const acceptedFP = await computeAcceptanceFingerprint([]);
   const snap = makeSnapshot();
+  snap.acceptanceFingerprint = acceptedFP;
   const receipt = makeReceipt("different-digest");
   const result = await compareReceiptToCurrentSnapshot(receipt, snap, [], "v1");
   assert.deepEqual(result, { fresh: false, reasonCode: "stale-base-tree" });
