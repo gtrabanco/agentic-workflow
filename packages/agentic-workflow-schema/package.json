@@ -29,7 +29,8 @@
     "./envelope.schema.json": "./envelope.schema.json",
     "./skill-outcome.schema.json": "./skill-outcome.schema.json",
     "./workflow-snapshot.schema.json": "./workflow-snapshot.schema.json",
-    "./candidate-snapshot.schema.json": "./candidate-snapshot.schema.json"
+    "./candidate-snapshot.schema.json": "./candidate-snapshot.schema.json",
+    "./review-receipt.schema.json": "./review-receipt.schema.json"
   },
   "files": [
     "dist",
@@ -37,6 +38,7 @@
     "skill-outcome.schema.json",
     "workflow-snapshot.schema.json",
     "candidate-snapshot.schema.json",
+    "review-receipt.schema.json",
     "README.md",
     "README.es.md",
     "LICENSE"

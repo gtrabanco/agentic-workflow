@@ -22,13 +22,13 @@ exit 0 including the new candidate-snapshot suites.
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` →
 exit 0 including the new review-receipt suites.
 
-- [ ] `test/review-receipt.test.mjs` written FIRST through the public entry (red before validator)
-- [ ] Export `REVIEW_KINDS`, `FINDING_SEVERITIES`, contract-id constant, `FindingV1`, `FindingEvidenceV1`
-- [ ] Export `ReviewReceiptV1`: id, digest, kind, verdict, findings, identities, timestamps, diagnostics, policyVersion
-- [ ] `validateReviewReceiptV1`: undeclared fields, vocabularies, formats, unique finding ids, `line ≥ 1`
-- [ ] `review-receipt.schema.json` + parity test on shared fixtures
-- [ ] Surface exported from `src/index.ts`
-- [ ] P1+P2 suites green together — no export collisions
+- [x] `test/review-receipt.test.mjs` written FIRST through the public entry (red before validator)
+- [x] Export `REVIEW_KINDS` (10 values), `FINDING_SEVERITIES` (5 values), contract-id constant, `FindingV1`, `FindingEvidenceV1`
+- [x] Export `ReviewReceiptV1`: id, digest, kind, verdict, findings, identities, timestamps, diagnostics, policyVersion
+- [x] `validateReviewReceiptV1`: undeclared fields, vocabularies, formats, unique finding ids, `line ≥ 1`
+- [x] `review-receipt.schema.json` + parity test on shared fixtures
+- [x] Surface exported from `src/index.ts`
+- [x] P1+P2 suites green together — no export collisions
 
 ## P3 — Implement the canonical content-binding core
 
