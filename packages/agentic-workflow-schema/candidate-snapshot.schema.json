@@ -118,6 +118,10 @@
         {
           "if": { "properties": { "status": { "enum": ["renamed", "copied"] } }, "required": ["status"] },
           "then": { "properties": { "oldPath": { "not": { "const": null } } } }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["added", "modified", "type-changed"] } }, "required": ["status"] },
+          "then": { "properties": { "oldPath": { "const": null } } }
         }
       ]
     }
