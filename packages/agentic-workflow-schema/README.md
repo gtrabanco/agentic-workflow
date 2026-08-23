@@ -27,6 +27,49 @@ on Envelope v2 (use `null` when empty); skill-specific extensions belong inside
 it. The schemas are exported at `./envelope.schema.json`,
 `./skill-outcome.schema.json`, and `./workflow-snapshot.schema.json`.
 
+## Content-bound review receipts (v1)
+
+Two new versioned contracts prove exactly which diff a review evaluated:
+
+- **CandidateSnapshot v1** — `baseCommit`, `candidateCommit`, `baseTree`,
+  `candidateTree`, ordered `changedPaths` manifest, and `acceptanceFingerprint`.
+  Strict validators reject undeclared fields, mixed hash algorithms, path
+  injection, and unsupported statuses.
+- **ReviewReceipt v1** — opaque `id`, `candidateSnapshotDigest`, closed `kind`
+  vocabulary (10 values), `verdict`, structured `findings`, and
+  `policyVersion`.
+
+### Hashing and fingerprinting
+
+```ts
+import {
+  digestCandidateSnapshot,
+  digestReviewReceipt,
+  computeAcceptanceFingerprint,
+  canonicalizeCandidateSnapshot,
+  canonicalizeReviewReceipt,
+} from "@gtrabanco/agentic-workflow-schema";
+
+const digest = await digestCandidateSnapshot(snapshot);
+const fingerprint = await computeAcceptanceFingerprint([{ id: "AC-001", blobSha256: "..." }]);
+```
+
+### Freshness predicate
+
+```ts
+import { compareReceiptToCurrentSnapshot } from "@gtrabanco/agentic-workflow-schema";
+
+const result = await compareReceiptToCurrentSnapshot(
+  receipt, currentSnapshot, currentAcceptanceInputs, policyVersion
+);
+// { fresh: true } | { fresh: false, reasonCode: "stale-base-tree" | "stale-candidate-tree" | "stale-manifest" | "stale-acceptance-fingerprint" | "stale-review-policy" }
+```
+
+> ⚠️ **Schema validity ≠ review correctness.** A valid schema proves the
+> structure was preserved, not that the review was accurate. Content binding
+> is mandatory — never trust a receipt that is not content-bound to the current
+> candidate snapshot and acceptance boundary.
+
 ## Parse a driven turn
 
 Use the profile metadata to select the required result, append the generated
