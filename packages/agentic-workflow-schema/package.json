@@ -28,13 +28,15 @@
     },
     "./envelope.schema.json": "./envelope.schema.json",
     "./skill-outcome.schema.json": "./skill-outcome.schema.json",
-    "./workflow-snapshot.schema.json": "./workflow-snapshot.schema.json"
+    "./workflow-snapshot.schema.json": "./workflow-snapshot.schema.json",
+    "./candidate-snapshot.schema.json": "./candidate-snapshot.schema.json"
   },
   "files": [
     "dist",
     "envelope.schema.json",
     "skill-outcome.schema.json",
     "workflow-snapshot.schema.json",
+    "candidate-snapshot.schema.json",
     "README.md",
     "README.es.md",
     "LICENSE"

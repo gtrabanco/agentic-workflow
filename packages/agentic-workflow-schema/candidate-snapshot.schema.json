@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/candidate-snapshot.schema.json",
+  "title": "agentic-workflow candidate snapshot v1",
+  "description": "A content-bound candidate snapshot proving exactly which diff a review evaluated. Source of truth: @gtrabanco/agentic-workflow-schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "objectFormat",
+    "baseCommit",
+    "candidateCommit",
+    "baseTree",
+    "candidateTree",
+    "acceptanceFingerprint",
+    "changedPaths"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/candidate-snapshot@1"
+    },
+    "objectFormat": {
+      "enum": ["sha1", "sha256"]
+    },
+    "baseCommit": {
+      "$ref": "#/$defs/gitObjectId"
+    },
+    "candidateCommit": {
+      "$ref": "#/$defs/gitObjectId"
+    },
+    "baseTree": {
+      "$ref": "#/$defs/gitObjectId"
+    },
+    "candidateTree": {
+      "$ref": "#/$defs/gitObjectId"
+    },
+    "acceptanceFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "changedPaths": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/manifestEntryV1"
+      }
+    }
+  },
+  "$defs": {
+    "gitObjectId": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "hex"],
+      "properties": {
+        "algorithm": {
+          "enum": ["sha1", "sha256"]
+        },
+        "hex": {
+          "type": "string"
+        }
+      }
+    },
+    "manifestEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "status", "oldPath", "mode", "objectSha", "sizeBytes", "binary"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "status": {
+          "enum": ["added", "modified", "deleted", "renamed", "copied", "type-changed"]
+        },
+        "oldPath": {
+          "type": ["string", "null"]
+        },
+        "mode": {
+          "enum": ["100644", "100755", "120000", "160000"],
+          "nullable": true
+        },
+        "objectSha": {
+          "oneOf": [
+            { "$ref": "#/$defs/gitObjectId" },
+            { "type": "null" }
+          ]
+        },
+        "sizeBytes": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "binary": {
+          "oneOf": [
+            { "type": "boolean" },
+            { "type": "null" }
+          ]
+        }
+      }
+    }
+  }
+}

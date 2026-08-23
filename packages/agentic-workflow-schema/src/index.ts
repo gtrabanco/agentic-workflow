@@ -2228,3 +2228,275 @@ export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowS
     ? { ok: true, snapshot: validation.snapshot }
     : { ok: false, errors: validation.errors };
 }
+
+// ===========================================================================
+// Content-bound review receipts — CandidateSnapshot v1
+// ===========================================================================
+
+/** Contract identifier for CandidateSnapshot v1. */
+export const CANDIDATE_SNAPSHOT_CONTRACT_ID = "agentic-workflow/candidate-snapshot@1";
+
+/** Git object hash algorithm. */
+export type GitObjectFormat = "sha1" | "sha256";
+
+/** A fully-qualified Git object identifier — algorithm + hex digest. */
+export interface GitObjectId {
+  readonly algorithm: GitObjectFormat;
+  readonly hex: string;
+}
+
+/** Allowed change statuses in a manifest entry. */
+export type ChangeStatus = "added" | "modified" | "deleted" | "renamed" | "copied" | "type-changed";
+
+/** Git file mode — serialized as string; null when not applicable. */
+export type GitMode = "100644" | "100755" | "120000" | "160000";
+
+/** A single entry in the changed-paths manifest. */
+export interface ManifestEntryV1 {
+  readonly path: string;
+  readonly status: ChangeStatus;
+  readonly oldPath: string | null;
+  readonly mode: GitMode | null;
+  readonly objectSha: GitObjectId | null;
+  readonly sizeBytes: number | null;
+  readonly binary: boolean | null;
+}
+
+/** A content-bound candidate snapshot — proves exactly what a review evaluated. */
+export interface CandidateSnapshotV1 {
+  readonly contract: typeof CANDIDATE_SNAPSHOT_CONTRACT_ID;
+  readonly objectFormat: GitObjectFormat;
+  readonly baseCommit: GitObjectId;
+  readonly candidateCommit: GitObjectId;
+  readonly baseTree: GitObjectId;
+  readonly candidateTree: GitObjectId;
+  readonly acceptanceFingerprint: string;
+  readonly changedPaths: readonly ManifestEntryV1[];
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+const SHA1_RE = /^[a-f0-9]{40}$/;
+const SHA256_RE = /^[a-f0-9]{64}$/;
+const FP_RE = /^[a-f0-9]{64}$/;
+const VALID_MODES = new Set(["100644", "100755", "120000", "160000"]);
+const VALID_STATUSES = new Set(["added", "modified", "deleted", "renamed", "copied", "type-changed"]);
+
+function isGitObjectId(v: unknown): v is GitObjectId {
+  if (!isObj(v)) return false;
+  const keys = Object.keys(v);
+  if (keys.length !== 2) return false;
+  if (v.algorithm !== "sha1" && v.algorithm !== "sha256") return false;
+  if (v.hex === undefined || typeof v.hex !== "string") return false;
+  if (v.algorithm === "sha1" && !SHA1_RE.test(v.hex)) return false;
+  if (v.algorithm === "sha256" && !SHA256_RE.test(v.hex)) return false;
+  return true;
+}
+
+function hasUndeclaredKeys(actual: Record<string, unknown>, known: ReadonlyArray<string>): string[] {
+  return Object.keys(actual).filter((k) => !known.includes(k));
+}
+
+/**
+ * Compare two UTF-8 strings in ascending unsigned-byte order.
+ * Returns < 0 if a < b, > 0 if a > b, 0 if equal.
+ */
+function utf8ByteCompare(a: string, b: string): number {
+  const encoder = new TextEncoder();
+  const ba = encoder.encode(a);
+  const bb = encoder.encode(b);
+  const len = Math.min(ba.length, bb.length);
+  for (let i = 0; i < len; i++) {
+    const diff = ba[i] - bb[i];
+    if (diff !== 0) return diff;
+  }
+  return ba.length - bb.length;
+}
+
+// ---------------------------------------------------------------------------
+// Validator: validateCandidateSnapshotV1
+// ---------------------------------------------------------------------------
+
+export type CandidateSnapshotValidationResult =
+  | { ok: true; snapshot: CandidateSnapshotV1 }
+  | { ok: false; errors: string[] };
+
+/**
+ * Structural validation of a CandidateSnapshot v1.
+ * Rejects undeclared fields, enforces GitObjectId format, path-byte ordering,
+ * null-applicability matrix, and the empty-diff rule.
+ */
+export function validateCandidateSnapshotV1(
+  value: unknown
+): CandidateSnapshotValidationResult {
+  const errors: string[] = [];
+
+  if (!isObj(value)) {
+    return { ok: false, errors: ["candidate snapshot is not a JSON object"] };
+  }
+
+  // --- contract id ---
+  if (value.contract !== CANDIDATE_SNAPSHOT_CONTRACT_ID) {
+    errors.push(
+      `contract must be "${CANDIDATE_SNAPSHOT_CONTRACT_ID}" (got: ${String((value as any).contract)})`
+    );
+  }
+
+  // --- top-level undeclared keys ---
+  const knownTopKeys = [
+    "contract", "objectFormat", "baseCommit", "candidateCommit",
+    "baseTree", "candidateTree", "acceptanceFingerprint", "changedPaths",
+  ];
+  const topExtra = hasUndeclaredKeys(value, knownTopKeys);
+  for (const k of topExtra) {
+    errors.push(`${k} is not a valid candidate-snapshot field`);
+  }
+
+  // --- objectFormat ---
+  const objectFormat = value.objectFormat;
+  if (objectFormat !== "sha1" && objectFormat !== "sha256") {
+    errors.push(
+      `objectFormat must be "sha1" | "sha256" (got: ${String(objectFormat)})`
+    );
+  }
+
+  // --- GitObjectId fields (baseCommit, candidateCommit, baseTree, candidateTree) ---
+  for (const key of ["baseCommit", "candidateCommit", "baseTree", "candidateTree"] as const) {
+    if (value[key] !== null) {
+      if (!isGitObjectId(value[key])) {
+        errors.push(
+          `${key} must be a GitObjectId {algorithm:"${objectFormat}", hex:/^[a-f0-9]{${objectFormat === "sha1" ? 40 : 64}}$/}`
+        );
+      } else if ((value[key] as GitObjectId).algorithm !== objectFormat) {
+        errors.push(
+          `${key}.algorithm must match objectFormat "${objectFormat}" (got: ${(value[key] as GitObjectId).algorithm})`
+        );
+      }
+    }
+  }
+
+  // --- acceptanceFingerprint ---
+  if (typeof value.acceptanceFingerprint !== "string" || !FP_RE.test(value.acceptanceFingerprint)) {
+    errors.push(
+      "acceptanceFingerprint must be a lowercase SHA-256 hex string (64 chars)"
+    );
+  }
+
+  // --- changedPaths ---
+  if (!Array.isArray(value.changedPaths)) {
+    errors.push("changedPaths must be an array");
+  } else {
+    const entries = value.changedPaths as ManifestEntryV1[];
+    let seenPaths = new Set<string>();
+    let prevPath = "";
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const prefix = `changedPaths[${i}]`;
+
+      if (!isObj(entry)) {
+        errors.push(`${prefix} must be an object`);
+        continue;
+      }
+
+      // Unknown keys
+      const knownEntryKeys = ["path", "status", "oldPath", "mode", "objectSha", "sizeBytes", "binary"];
+      const extra = hasUndeclaredKeys(entry, knownEntryKeys);
+      for (const k of extra) {
+        errors.push(`${prefix}.${k} is not a valid field`);
+      }
+
+      // path
+      if (typeof entry.path !== "string") {
+        errors.push(`${prefix}.path must be a string`);
+      } else {
+        if (entry.path.includes("\0")) {
+          errors.push(`${prefix}.path must not contain NUL`);
+        }
+        if (entry.path.startsWith("/")) {
+          errors.push(`${prefix}.path must not be absolute`);
+        }
+        const segments = entry.path.split("/");
+        if (segments.some((s) => s === ".." || s.startsWith(".."))) {
+          errors.push(`${prefix}.path must not contain a ".." segment`);
+        }
+        // Byte-order check
+        if (utf8ByteCompare(entry.path, prevPath) < 0) {
+          errors.push(`${prefix}.path is not in ascending byte order`);
+        }
+        prevPath = entry.path;
+        // Duplicate check
+        if (seenPaths.has(entry.path)) {
+          errors.push(`${prefix}.path is a duplicate`);
+        }
+        seenPaths.add(entry.path);
+      }
+
+      // status
+      if (typeof entry.status !== "string" || !VALID_STATUSES.has(entry.status)) {
+        errors.push(
+          `${prefix}.status must be one of added|modified|deleted|renamed|copied|type-changed (got: ${String(entry.status)})`
+        );
+      }
+
+      // oldPath
+      const status = entry.status;
+      if ((status === "renamed" || status === "copied") && entry.oldPath === null) {
+        errors.push(`${prefix}.renamed/copied entries require a non-null oldPath`);
+      } else if ((status !== "renamed" && status !== "copied") && entry.oldPath !== null) {
+        errors.push(`${prefix}.oldPath must be null when status is ${status}`);
+      }
+
+      // objectSha
+      if (status === "deleted" && entry.objectSha !== null) {
+        errors.push(`${prefix}.objectSha must be null for deleted entries`);
+      } else if (status !== "deleted" && !isGitObjectId(entry.objectSha)) {
+        // For non-deleted, objectSha should be a GitObjectId
+        if (entry.objectSha !== null && !isGitObjectId(entry.objectSha)) {
+          errors.push(`${prefix}.objectSha must be a GitObjectId or null`);
+        }
+      }
+
+      // mode
+      if (entry.mode !== null && !VALID_MODES.has(entry.mode)) {
+        errors.push(`${prefix}.mode must be one of 100644|100755|120000|160000 or null (got: ${String(entry.mode)})`);
+      }
+
+      // sizeBytes
+      if (entry.sizeBytes !== null) {
+        if (typeof entry.sizeBytes !== "number" || entry.sizeBytes < 0 || !Number.isInteger(entry.sizeBytes)) {
+          errors.push(`${prefix}.sizeBytes must be a non-negative integer or null`);
+        } else if (entry.mode === "160000") {
+          errors.push(`${prefix}.sizeBytes must be null for gitlinks (mode 160000)`);
+        }
+      }
+
+      // binary
+      if (entry.binary !== null && typeof entry.binary !== "boolean") {
+        errors.push(`${prefix}.binary must be a boolean or null`);
+      } else if (entry.mode === "160000" && entry.binary !== null) {
+        errors.push(`${prefix}.binary must be null for gitlinks (mode 160000)`);
+      }
+    }
+  }
+
+  // --- Empty-diff rule ---
+  if (Array.isArray(value.changedPaths) && value.changedPaths.length === 0) {
+    // Check if baseTree equals candidateTree
+    if (isGitObjectId(value.baseTree) && isGitObjectId(value.candidateTree)) {
+      if (value.baseTree.hex !== value.candidateTree.hex) {
+        errors.push(
+          "empty changedPaths requires baseTree and candidateTree to be identical (empty diff rule)"
+        );
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  return { ok: true, snapshot: value as unknown as CandidateSnapshotV1 };
+}
