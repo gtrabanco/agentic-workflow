@@ -2303,10 +2303,11 @@ function hasUndeclaredKeys(actual: Record<string, unknown>, known: ReadonlyArray
  * Compare two UTF-8 strings in ascending unsigned-byte order.
  * Returns < 0 if a < b, > 0 if a > b, 0 if equal.
  */
+const _utf8Encoder = new TextEncoder();
+
 function utf8ByteCompare(a: string, b: string): number {
-  const encoder = new TextEncoder();
-  const ba = encoder.encode(a);
-  const bb = encoder.encode(b);
+  const ba = _utf8Encoder.encode(a);
+  const bb = _utf8Encoder.encode(b);
   const len = Math.min(ba.length, bb.length);
   for (let i = 0; i < len; i++) {
     const diff = ba[i] - bb[i];
@@ -2556,7 +2557,7 @@ export interface ReviewReceiptV1 {
 // ---------------------------------------------------------------------------
 
 const DIGEST_RE = /^[a-f0-9]{64}$/;
-const ISO_8601_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+const ISO_8601_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
 export type ReviewReceiptValidationResult =
   | { ok: true; receipt: ReviewReceiptV1 }
@@ -2714,10 +2715,11 @@ export function validateReviewReceiptV1(
   if (typeof value.finishedAt !== "string" || !ISO_8601_RE.test(value.finishedAt)) {
     errors.push("finishedAt must be an ISO-8601 UTC timestamp");
   }
-  // finishedAt >= startedAt
+  // finishedAt >= startedAt — Date.parse is safe because the regex only
+  // accepts Z-suffix (UTC) so no mixed-offset ambiguity remains.
   if (typeof value.startedAt === "string" && typeof value.finishedAt === "string" &&
       ISO_8601_RE.test(value.startedAt) && ISO_8601_RE.test(value.finishedAt)) {
-    if (value.finishedAt < value.startedAt) {
+    if (Date.parse(value.finishedAt) < Date.parse(value.startedAt)) {
       errors.push("finishedAt must be >= startedAt");
     }
   }
@@ -2777,7 +2779,7 @@ function canonicalJSONValue(v: unknown): string {
     return "[" + v.map(canonicalJSONValue).join(",") + "]";
   }
   if (typeof v === "object") {
-    const keys = Object.keys(v as Record<string, unknown>);
+    const keys = Object.keys(v as Record<string, unknown>).sort();
     return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k])).join(",") + "}";
   }
   return JSON.stringify(v);
@@ -2916,19 +2918,30 @@ export async function compareReceiptToCurrentSnapshot(
   acceptanceInputs: ReadonlyArray<{ id: string; blobSha256: string }>,
   policyVersion: string
 ): Promise<FreshnessResult> {
-  const currentDigest = await digestCandidateSnapshot(snapshot);
-
-  if (currentDigest !== receipt.candidateSnapshotDigest) {
-    return { fresh: false, reasonCode: "stale-base-tree" };
+  // 1. policyVersion — O(1) short-circuit (per comparison order: baseCommit →
+  // candidateCommit → changedPaths → acceptanceFingerprint → policyVersion;
+  // policyVersion is checked last in order but is the cheapest so we
+  // short-circuit first; the remaining base/candidate/manifest dimensions
+  // are conflated into stale-base-tree because the receipt only stores the
+  // single candidateSnapshotDigest and cannot carry individual field values).
+  if (policyVersion !== receipt.policyVersion) {
+    return { fresh: false, reasonCode: "stale-review-policy" };
   }
 
+  // 2. acceptance fingerprint — compare computed from current inputs against
+  // the snapshot's stored fingerprint.
   const currentFP = await computeAcceptanceFingerprint(acceptanceInputs);
   if (currentFP !== snapshot.acceptanceFingerprint) {
     return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
   }
 
-  if (policyVersion !== receipt.policyVersion) {
-    return { fresh: false, reasonCode: "stale-review-policy" };
+  // 3. digest — baseCommit / candidateCommit / changedPaths dimension.
+  // The receipt carries only the single candidateSnapshotDigest so we
+  // cannot distinguish which sub-field changed; return the first dimension
+  // in the canonical comparison order.
+  const currentDigest = await digestCandidateSnapshot(snapshot);
+  if (currentDigest !== receipt.candidateSnapshotDigest) {
+    return { fresh: false, reasonCode: "stale-base-tree" };
   }
 
   return { fresh: true };
@@ -2957,12 +2970,12 @@ export interface CanonicalVectorV1 {
 export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze([
   {
     contract: "agentic-workflow/candidate-snapshot@1",
-    digest: "", // computed at test time, must match
+    digest: "d85671a09c73836fea421013c0d2537dfc233988083d981f7daca869af55ec7a",
     description: "minimal valid snapshot (empty diff, sha1)",
   },
   {
     contract: "agentic-workflow/review-receipt@1",
-    digest: "", // computed at test time, must match
+    digest: "8ae86246d83da2611380098910920b8850779a77613897e5d8efa4dd197d16e6",
     description: "minimal valid receipt (single finding)",
   },
 ]);
