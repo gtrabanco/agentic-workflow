@@ -2500,3 +2500,250 @@ export function validateCandidateSnapshotV1(
 
   return { ok: true, snapshot: value as unknown as CandidateSnapshotV1 };
 }
+
+// ===========================================================================
+// Content-bound review receipts — ReviewReceipt v1
+// ===========================================================================
+
+/** Contract identifier for ReviewReceipt v1. */
+export const REVIEW_RECEIPT_CONTRACT_ID = "agentic-workflow/review-receipt@1";
+
+/** All review kinds supported by the workflow. */
+export const REVIEW_KINDS = [
+  "implementation", "security", "verification", "debt",
+  "design", "accessibility", "brand", "performance", "seo", "audit",
+] as const;
+
+/** Finding severity levels. */
+export const FINDING_SEVERITIES = [
+  "info", "low", "medium", "high", "critical",
+] as const;
+
+const REVIEW_KINDS_SET = new Set(REVIEW_KINDS);
+const FINDING_SEVERITIES_SET = new Set(FINDING_SEVERITIES);
+
+/** A line-level piece of evidence attached to a finding. */
+export interface FindingEvidenceV1 {
+  readonly path: string;
+  readonly line?: number;
+}
+
+/** A single finding within a review receipt. */
+export interface FindingV1 {
+  readonly id: string;
+  readonly severity: (typeof FINDING_SEVERITIES)[number];
+  readonly summary: string;
+  readonly evidence?: FindingEvidenceV1;
+  readonly refs: readonly string[];
+}
+
+/** A content-bound review receipt — proves exactly what was reviewed. */
+export interface ReviewReceiptV1 {
+  readonly contract: typeof REVIEW_RECEIPT_CONTRACT_ID;
+  readonly id: string;
+  readonly candidateSnapshotDigest: string;
+  readonly kind: (typeof REVIEW_KINDS)[number];
+  readonly verdict: "pass" | "fail";
+  readonly findings: readonly FindingV1[];
+  readonly reviewer: string;
+  readonly sessionId: string;
+  readonly startedAt: string;
+  readonly finishedAt: string;
+  readonly diagnostics: readonly string[];
+  readonly policyVersion: string;
+}
+
+// ---------------------------------------------------------------------------
+// Validator: validateReviewReceiptV1
+// ---------------------------------------------------------------------------
+
+const DIGEST_RE = /^[a-f0-9]{64}$/;
+const ISO_8601_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
+export type ReviewReceiptValidationResult =
+  | { ok: true; receipt: ReviewReceiptV1 }
+  | { ok: false; errors: string[] };
+
+/**
+ * Structural validation of a ReviewReceipt v1.
+ * Rejects undeclared fields, enforces closed vocabularies, format rules,
+ * and constraints on timestamps and finding structure.
+ */
+export function validateReviewReceiptV1(
+  value: unknown
+): ReviewReceiptValidationResult {
+  const errors: string[] = [];
+
+  if (!isObj(value)) {
+    return { ok: false, errors: ["review receipt is not a JSON object"] };
+  }
+
+  // --- contract id ---
+  if (value.contract !== REVIEW_RECEIPT_CONTRACT_ID) {
+    errors.push(
+      `contract must be "${REVIEW_RECEIPT_CONTRACT_ID}" (got: ${String((value as any).contract)})`
+    );
+  }
+
+  // --- top-level undeclared keys ---
+  const knownReceiptKeys = [
+    "contract", "id", "candidateSnapshotDigest", "kind", "verdict",
+    "findings", "reviewer", "sessionId", "startedAt", "finishedAt",
+    "diagnostics", "policyVersion",
+  ];
+  const topExtra = hasUndeclaredKeys(value, knownReceiptKeys);
+  for (const k of topExtra) {
+    errors.push(`${k} is not a valid review-receipt field`);
+  }
+
+  // --- id ---
+  if (typeof value.id !== "string" || value.id.length === 0) {
+    errors.push("id must be a non-empty string");
+  }
+
+  // --- candidateSnapshotDigest ---
+  if (typeof value.candidateSnapshotDigest !== "string" || !DIGEST_RE.test(value.candidateSnapshotDigest)) {
+    errors.push("candidateSnapshotDigest must be a lowercase SHA-256 hex string (64 chars)");
+  }
+
+  // --- kind ---
+  if (typeof value.kind !== "string" || !REVIEW_KINDS_SET.has(value.kind as typeof REVIEW_KINDS[number])) {
+    errors.push(
+      `kind must be one of ${REVIEW_KINDS.join("|")} (got: ${String(value.kind)})`
+    );
+  }
+
+  // --- verdict ---
+  if (value.verdict !== "pass" && value.verdict !== "fail") {
+    errors.push(`verdict must be "pass" | "fail" (got: ${String(value.verdict)})`);
+  }
+
+  // --- findings ---
+  if (!Array.isArray(value.findings)) {
+    errors.push("findings must be an array");
+  } else {
+    const findings = value.findings as FindingV1[];
+    let seenFindingIds = new Set<string>();
+
+    for (let i = 0; i < findings.length; i++) {
+      const f = findings[i];
+      const prefix = `findings[${i}]`;
+
+      if (!isObj(f)) {
+        errors.push(`${prefix} must be an object`);
+        continue;
+      }
+
+      // Unknown keys on finding
+      const knownFindingKeys = ["id", "severity", "summary", "evidence", "refs"];
+      const findingExtra = hasUndeclaredKeys(f, knownFindingKeys);
+      for (const k of findingExtra) {
+        errors.push(`${prefix}.${k} is not a valid field`);
+      }
+
+      // id
+      if (typeof f.id !== "string" || f.id.length === 0) {
+        errors.push(`${prefix}.id must be a non-empty string`);
+      } else {
+        if (seenFindingIds.has(f.id)) {
+          errors.push(`${prefix}.id is a duplicate`);
+        }
+        seenFindingIds.add(f.id);
+      }
+
+      // severity
+      if (typeof f.severity !== "string" || !FINDING_SEVERITIES_SET.has(f.severity)) {
+        errors.push(
+          `${prefix}.severity must be one of ${FINDING_SEVERITIES.join("|")} (got: ${String(f.severity)})`
+        );
+      }
+
+      // summary
+      if (typeof f.summary !== "string" || f.summary.length === 0) {
+        errors.push(`${prefix}.summary must be a non-empty string`);
+      }
+
+      // evidence
+      if (f.evidence !== undefined && f.evidence !== null) {
+        if (isObj(f.evidence)) {
+          const evidenceKeys = Object.keys(f.evidence);
+          const knownEvidenceKeys = ["path", "line"];
+          const evidenceExtra = hasUndeclaredKeys(f.evidence, knownEvidenceKeys);
+          for (const k of evidenceExtra) {
+            errors.push(`${prefix}.evidence.${k} is not a valid field`);
+          }
+          if (typeof f.evidence.path !== "string") {
+            errors.push(`${prefix}.evidence.path must be a string`);
+          }
+          if (f.evidence.line !== undefined && f.evidence.line !== null) {
+            if (typeof f.evidence.line !== "number" || !Number.isInteger(f.evidence.line) || f.evidence.line < 1) {
+              errors.push(`${prefix}.evidence.line must be an integer >= 1`);
+            }
+          }
+        } else {
+          errors.push(`${prefix}.evidence must be an object or null`);
+        }
+      }
+
+      // refs
+      if (!Array.isArray(f.refs)) {
+        errors.push(`${prefix}.refs must be an array`);
+      } else {
+        for (let j = 0; j < f.refs.length; j++) {
+          if (typeof f.refs[j] !== "string") {
+            errors.push(`${prefix}.refs[${j}] must be a string`);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // --- reviewer ---
+  if (typeof value.reviewer !== "string" || value.reviewer.length === 0) {
+    errors.push("reviewer must be a non-empty string");
+  }
+
+  // --- sessionId ---
+  if (typeof value.sessionId !== "string" || value.sessionId.length === 0) {
+    errors.push("sessionId must be a non-empty string");
+  }
+
+  // --- startedAt / finishedAt (ISO-8601 UTC) ---
+  if (typeof value.startedAt !== "string" || !ISO_8601_RE.test(value.startedAt)) {
+    errors.push("startedAt must be an ISO-8601 UTC timestamp");
+  }
+  if (typeof value.finishedAt !== "string" || !ISO_8601_RE.test(value.finishedAt)) {
+    errors.push("finishedAt must be an ISO-8601 UTC timestamp");
+  }
+  // finishedAt >= startedAt
+  if (typeof value.startedAt === "string" && typeof value.finishedAt === "string" &&
+      ISO_8601_RE.test(value.startedAt) && ISO_8601_RE.test(value.finishedAt)) {
+    if (value.finishedAt < value.startedAt) {
+      errors.push("finishedAt must be >= startedAt");
+    }
+  }
+
+  // --- diagnostics ---
+  if (!Array.isArray(value.diagnostics)) {
+    errors.push("diagnostics must be an array");
+  } else {
+    for (let i = 0; i < value.diagnostics.length; i++) {
+      if (typeof value.diagnostics[i] !== "string") {
+        errors.push(`diagnostics[${i}] must be a string`);
+        break;
+      }
+    }
+  }
+
+  // --- policyVersion ---
+  if (typeof value.policyVersion !== "string" || value.policyVersion.length === 0) {
+    errors.push("policyVersion must be a non-empty string");
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  return { ok: true, receipt: value as unknown as ReviewReceiptV1 };
+}
