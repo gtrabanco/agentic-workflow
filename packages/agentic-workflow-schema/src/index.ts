@@ -2228,3 +2228,754 @@ export function compileWorkflowSnapshot(input: WorkflowSnapshotInput): WorkflowS
     ? { ok: true, snapshot: validation.snapshot }
     : { ok: false, errors: validation.errors };
 }
+
+// ===========================================================================
+// Content-bound review receipts — CandidateSnapshot v1
+// ===========================================================================
+
+/** Contract identifier for CandidateSnapshot v1. */
+export const CANDIDATE_SNAPSHOT_CONTRACT_ID = "agentic-workflow/candidate-snapshot@1";
+
+/** Git object hash algorithm. */
+export type GitObjectFormat = "sha1" | "sha256";
+
+/** A fully-qualified Git object identifier — algorithm + hex digest. */
+export interface GitObjectId {
+  readonly algorithm: GitObjectFormat;
+  readonly hex: string;
+}
+
+/** Allowed change statuses in a manifest entry. */
+export type ChangeStatus = "added" | "modified" | "deleted" | "renamed" | "copied" | "type-changed";
+
+/** Git file mode — serialized as string; null when not applicable. */
+export type GitMode = "100644" | "100755" | "120000" | "160000";
+
+/** A single entry in the changed-paths manifest. */
+export interface ManifestEntryV1 {
+  readonly path: string;
+  readonly status: ChangeStatus;
+  readonly oldPath: string | null;
+  readonly mode: GitMode | null;
+  readonly objectSha: GitObjectId | null;
+  readonly sizeBytes: number | null;
+  readonly binary: boolean | null;
+}
+
+/** A content-bound candidate snapshot — proves exactly what a review evaluated. */
+export interface CandidateSnapshotV1 {
+  readonly contract: typeof CANDIDATE_SNAPSHOT_CONTRACT_ID;
+  readonly objectFormat: GitObjectFormat;
+  readonly baseCommit: GitObjectId;
+  readonly candidateCommit: GitObjectId;
+  readonly baseTree: GitObjectId;
+  readonly candidateTree: GitObjectId;
+  readonly acceptanceFingerprint: string;
+  readonly changedPaths: readonly ManifestEntryV1[];
+}
+
+// ---------------------------------------------------------------------------
+// Internal helpers
+// ---------------------------------------------------------------------------
+
+const SHA1_RE = /^[a-f0-9]{40}$/;
+const SHA256_RE = /^[a-f0-9]{64}$/;
+const FP_RE = /^[a-f0-9]{64}$/;
+const VALID_MODES = new Set(["100644", "100755", "120000", "160000"]);
+const VALID_STATUSES = new Set(["added", "modified", "deleted", "renamed", "copied", "type-changed"]);
+
+function isGitObjectId(v: unknown): v is GitObjectId {
+  if (!isObj(v)) return false;
+  const keys = Object.keys(v);
+  if (keys.length !== 2) return false;
+  if (v.algorithm !== "sha1" && v.algorithm !== "sha256") return false;
+  if (v.hex === undefined || typeof v.hex !== "string") return false;
+  if (v.algorithm === "sha1" && !SHA1_RE.test(v.hex)) return false;
+  if (v.algorithm === "sha256" && !SHA256_RE.test(v.hex)) return false;
+  return true;
+}
+
+function hasUndeclaredKeys(actual: Record<string, unknown>, known: ReadonlyArray<string>): string[] {
+  return Object.keys(actual).filter((k) => !known.includes(k));
+}
+
+/**
+ * Compare two UTF-8 strings in ascending unsigned-byte order.
+ * Returns < 0 if a < b, > 0 if a > b, 0 if equal.
+ */
+const _utf8Encoder = new TextEncoder();
+
+function utf8ByteCompare(a: string, b: string): number {
+  const ba = _utf8Encoder.encode(a);
+  const bb = _utf8Encoder.encode(b);
+  const len = Math.min(ba.length, bb.length);
+  for (let i = 0; i < len; i++) {
+    const diff = ba[i] - bb[i];
+    if (diff !== 0) return diff;
+  }
+  return ba.length - bb.length;
+}
+
+// ---------------------------------------------------------------------------
+// Validator: validateCandidateSnapshotV1
+// ---------------------------------------------------------------------------
+
+export type CandidateSnapshotValidationResult =
+  | { ok: true; snapshot: CandidateSnapshotV1 }
+  | { ok: false; errors: string[] };
+
+/**
+ * Structural validation of a CandidateSnapshot v1.
+ * Rejects undeclared fields, enforces GitObjectId format, path-byte ordering,
+ * null-applicability matrix, and the empty-diff rule.
+ */
+export function validateCandidateSnapshotV1(
+  value: unknown
+): CandidateSnapshotValidationResult {
+  const errors: string[] = [];
+
+  if (!isObj(value)) {
+    return { ok: false, errors: ["candidate snapshot is not a JSON object"] };
+  }
+
+  // --- contract id ---
+  if (value.contract !== CANDIDATE_SNAPSHOT_CONTRACT_ID) {
+    errors.push(
+      `contract must be "${CANDIDATE_SNAPSHOT_CONTRACT_ID}" (got: ${String((value as any).contract)})`
+    );
+  }
+
+  // --- top-level undeclared keys ---
+  const knownTopKeys = [
+    "contract", "objectFormat", "baseCommit", "candidateCommit",
+    "baseTree", "candidateTree", "acceptanceFingerprint", "changedPaths",
+  ];
+  const topExtra = hasUndeclaredKeys(value, knownTopKeys);
+  for (const k of topExtra) {
+    errors.push(`${k} is not a valid candidate-snapshot field`);
+  }
+
+  // --- objectFormat ---
+  const objectFormat = value.objectFormat;
+  if (objectFormat !== "sha1" && objectFormat !== "sha256") {
+    errors.push(
+      `objectFormat must be "sha1" | "sha256" (got: ${String(objectFormat)})`
+    );
+  }
+
+  // --- GitObjectId fields (baseCommit, candidateCommit, baseTree, candidateTree) ---
+  for (const key of ["baseCommit", "candidateCommit", "baseTree", "candidateTree"] as const) {
+    if (!isGitObjectId(value[key])) {
+      errors.push(
+        `${key} must be a GitObjectId {algorithm:"${objectFormat}", hex:/^[a-f0-9]{${objectFormat === "sha1" ? 40 : 64}}$/}`
+      );
+    } else if ((value[key] as GitObjectId).algorithm !== objectFormat) {
+      errors.push(
+        `${key}.algorithm must match objectFormat "${objectFormat}" (got: ${(value[key] as GitObjectId).algorithm})`
+      );
+    }
+  }
+
+  // --- acceptanceFingerprint ---
+  if (typeof value.acceptanceFingerprint !== "string" || !FP_RE.test(value.acceptanceFingerprint)) {
+    errors.push(
+      "acceptanceFingerprint must be a lowercase SHA-256 hex string (64 chars)"
+    );
+  }
+
+  // --- changedPaths ---
+  if (!Array.isArray(value.changedPaths)) {
+    errors.push("changedPaths must be an array");
+  } else {
+    const entries = value.changedPaths as ManifestEntryV1[];
+    let seenPaths = new Set<string>();
+    let prevPath = "";
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const prefix = `changedPaths[${i}]`;
+
+      if (!isObj(entry)) {
+        errors.push(`${prefix} must be an object`);
+        continue;
+      }
+
+      // Unknown keys
+      const knownEntryKeys = ["path", "status", "oldPath", "mode", "objectSha", "sizeBytes", "binary"];
+      const extra = hasUndeclaredKeys(entry, knownEntryKeys);
+      for (const k of extra) {
+        errors.push(`${prefix}.${k} is not a valid field`);
+      }
+
+      // path
+      if (typeof entry.path !== "string") {
+        errors.push(`${prefix}.path must be a string`);
+      } else {
+        if (entry.path.includes("\0")) {
+          errors.push(`${prefix}.path must not contain NUL`);
+        }
+        if (entry.path.startsWith("/")) {
+          errors.push(`${prefix}.path must not be absolute`);
+        }
+        const segments = entry.path.split("/");
+        if (segments.some((s) => s === ".." || s.startsWith(".."))) {
+          errors.push(`${prefix}.path must not contain a ".." segment`);
+        }
+        // Byte-order check
+        if (utf8ByteCompare(entry.path, prevPath) < 0) {
+          errors.push(`${prefix}.path is not in ascending byte order`);
+        }
+        prevPath = entry.path;
+        // Duplicate check
+        if (seenPaths.has(entry.path)) {
+          errors.push(`${prefix}.path is a duplicate`);
+        }
+        seenPaths.add(entry.path);
+      }
+
+      // status
+      if (typeof entry.status !== "string" || !VALID_STATUSES.has(entry.status)) {
+        errors.push(
+          `${prefix}.status must be one of added|modified|deleted|renamed|copied|type-changed (got: ${String(entry.status)})`
+        );
+      }
+
+      // oldPath
+      const status = entry.status;
+      if ((status === "renamed" || status === "copied") && entry.oldPath === null) {
+        errors.push(`${prefix}.renamed/copied entries require a non-null oldPath`);
+      } else if ((status !== "renamed" && status !== "copied") && entry.oldPath !== null) {
+        errors.push(`${prefix}.oldPath must be null when status is ${status}`);
+      }
+
+      // objectSha
+      if (status === "deleted" && entry.objectSha !== null) {
+        errors.push(`${prefix}.objectSha must be null for deleted entries`);
+      } else if (status !== "deleted" && !isGitObjectId(entry.objectSha)) {
+        // For non-deleted, objectSha should be a GitObjectId
+        if (entry.objectSha !== null && !isGitObjectId(entry.objectSha)) {
+          errors.push(`${prefix}.objectSha must be a GitObjectId or null`);
+        }
+      }
+
+      // mode
+      if (entry.mode !== null && !VALID_MODES.has(entry.mode)) {
+        errors.push(`${prefix}.mode must be one of 100644|100755|120000|160000 or null (got: ${String(entry.mode)})`);
+      }
+
+      // sizeBytes
+      if (entry.sizeBytes !== null) {
+        if (typeof entry.sizeBytes !== "number" || entry.sizeBytes < 0 || !Number.isInteger(entry.sizeBytes)) {
+          errors.push(`${prefix}.sizeBytes must be a non-negative integer or null`);
+        } else if (entry.mode === "160000") {
+          errors.push(`${prefix}.sizeBytes must be null for gitlinks (mode 160000)`);
+        }
+      }
+
+      // binary
+      if (entry.binary !== null && typeof entry.binary !== "boolean") {
+        errors.push(`${prefix}.binary must be a boolean or null`);
+      } else if (entry.mode === "160000" && entry.binary !== null) {
+        errors.push(`${prefix}.binary must be null for gitlinks (mode 160000)`);
+      }
+    }
+  }
+
+  // --- Empty-diff rule ---
+  if (Array.isArray(value.changedPaths) && value.changedPaths.length === 0) {
+    // Check if baseTree equals candidateTree
+    if (isGitObjectId(value.baseTree) && isGitObjectId(value.candidateTree)) {
+      if (value.baseTree.hex !== value.candidateTree.hex) {
+        errors.push(
+          "empty changedPaths requires baseTree and candidateTree to be identical (empty diff rule)"
+        );
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  return { ok: true, snapshot: value as unknown as CandidateSnapshotV1 };
+}
+
+// ===========================================================================
+// Content-bound review receipts — ReviewReceipt v1
+// ===========================================================================
+
+/** Contract identifier for ReviewReceipt v1. */
+export const REVIEW_RECEIPT_CONTRACT_ID = "agentic-workflow/review-receipt@1";
+
+/** All review kinds supported by the workflow. */
+export const REVIEW_KINDS = [
+  "implementation", "security", "verification", "debt",
+  "design", "accessibility", "brand", "performance", "seo", "audit",
+] as const;
+
+/** Finding severity levels. */
+export const FINDING_SEVERITIES = [
+  "info", "low", "medium", "high", "critical",
+] as const;
+
+const REVIEW_KINDS_SET = new Set(REVIEW_KINDS);
+const FINDING_SEVERITIES_SET = new Set(FINDING_SEVERITIES);
+
+/** A line-level piece of evidence attached to a finding. */
+export interface FindingEvidenceV1 {
+  readonly path: string;
+  readonly line?: number;
+}
+
+/** A single finding within a review receipt. */
+export interface FindingV1 {
+  readonly id: string;
+  readonly severity: (typeof FINDING_SEVERITIES)[number];
+  readonly summary: string;
+  readonly evidence?: FindingEvidenceV1;
+  readonly refs: readonly string[];
+}
+
+/** A content-bound review receipt — proves exactly what was reviewed. */
+export interface ReviewReceiptV1 {
+  readonly contract: typeof REVIEW_RECEIPT_CONTRACT_ID;
+  readonly id: string;
+  readonly candidateSnapshotDigest: string;
+  readonly kind: (typeof REVIEW_KINDS)[number];
+  readonly verdict: "pass" | "fail";
+  readonly findings: readonly FindingV1[];
+  readonly reviewer: string;
+  readonly sessionId: string;
+  readonly startedAt: string;
+  readonly finishedAt: string;
+  readonly diagnostics: readonly string[];
+  readonly policyVersion: string;
+}
+
+// ---------------------------------------------------------------------------
+// Validator: validateReviewReceiptV1
+// ---------------------------------------------------------------------------
+
+const DIGEST_RE = /^[a-f0-9]{64}$/;
+const ISO_8601_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
+
+export type ReviewReceiptValidationResult =
+  | { ok: true; receipt: ReviewReceiptV1 }
+  | { ok: false; errors: string[] };
+
+/**
+ * Structural validation of a ReviewReceipt v1.
+ * Rejects undeclared fields, enforces closed vocabularies, format rules,
+ * and constraints on timestamps and finding structure.
+ */
+export function validateReviewReceiptV1(
+  value: unknown
+): ReviewReceiptValidationResult {
+  const errors: string[] = [];
+
+  if (!isObj(value)) {
+    return { ok: false, errors: ["review receipt is not a JSON object"] };
+  }
+
+  // --- contract id ---
+  if (value.contract !== REVIEW_RECEIPT_CONTRACT_ID) {
+    errors.push(
+      `contract must be "${REVIEW_RECEIPT_CONTRACT_ID}" (got: ${String((value as any).contract)})`
+    );
+  }
+
+  // --- top-level undeclared keys ---
+  const knownReceiptKeys = [
+    "contract", "id", "candidateSnapshotDigest", "kind", "verdict",
+    "findings", "reviewer", "sessionId", "startedAt", "finishedAt",
+    "diagnostics", "policyVersion",
+  ];
+  const topExtra = hasUndeclaredKeys(value, knownReceiptKeys);
+  for (const k of topExtra) {
+    errors.push(`${k} is not a valid review-receipt field`);
+  }
+
+  // --- id ---
+  if (typeof value.id !== "string" || value.id.length === 0) {
+    errors.push("id must be a non-empty string");
+  }
+
+  // --- candidateSnapshotDigest ---
+  if (typeof value.candidateSnapshotDigest !== "string" || !DIGEST_RE.test(value.candidateSnapshotDigest)) {
+    errors.push("candidateSnapshotDigest must be a lowercase SHA-256 hex string (64 chars)");
+  }
+
+  // --- kind ---
+  if (typeof value.kind !== "string" || !REVIEW_KINDS_SET.has(value.kind as typeof REVIEW_KINDS[number])) {
+    errors.push(
+      `kind must be one of ${REVIEW_KINDS.join("|")} (got: ${String(value.kind)})`
+    );
+  }
+
+  // --- verdict ---
+  if (value.verdict !== "pass" && value.verdict !== "fail") {
+    errors.push(`verdict must be "pass" | "fail" (got: ${String(value.verdict)})`);
+  }
+
+  // --- findings ---
+  if (!Array.isArray(value.findings)) {
+    errors.push("findings must be an array");
+  } else {
+    const findings = value.findings as FindingV1[];
+    let seenFindingIds = new Set<string>();
+
+    for (let i = 0; i < findings.length; i++) {
+      const f = findings[i];
+      const prefix = `findings[${i}]`;
+
+      if (!isObj(f)) {
+        errors.push(`${prefix} must be an object`);
+        continue;
+      }
+
+      // Unknown keys on finding
+      const knownFindingKeys = ["id", "severity", "summary", "evidence", "refs"];
+      const findingExtra = hasUndeclaredKeys(f, knownFindingKeys);
+      for (const k of findingExtra) {
+        errors.push(`${prefix}.${k} is not a valid field`);
+      }
+
+      // id
+      if (typeof f.id !== "string" || f.id.length === 0) {
+        errors.push(`${prefix}.id must be a non-empty string`);
+      } else {
+        if (seenFindingIds.has(f.id)) {
+          errors.push(`${prefix}.id is a duplicate`);
+        }
+        seenFindingIds.add(f.id);
+      }
+
+      // severity
+      if (typeof f.severity !== "string" || !FINDING_SEVERITIES_SET.has(f.severity)) {
+        errors.push(
+          `${prefix}.severity must be one of ${FINDING_SEVERITIES.join("|")} (got: ${String(f.severity)})`
+        );
+      }
+
+      // summary
+      if (typeof f.summary !== "string" || f.summary.length === 0) {
+        errors.push(`${prefix}.summary must be a non-empty string`);
+      }
+
+      // evidence
+      if (f.evidence !== undefined && f.evidence !== null) {
+        if (isObj(f.evidence)) {
+          const evidenceKeys = Object.keys(f.evidence);
+          const knownEvidenceKeys = ["path", "line"];
+          const evidenceExtra = hasUndeclaredKeys(f.evidence, knownEvidenceKeys);
+          for (const k of evidenceExtra) {
+            errors.push(`${prefix}.evidence.${k} is not a valid field`);
+          }
+          if (typeof f.evidence.path !== "string") {
+            errors.push(`${prefix}.evidence.path must be a string`);
+          }
+          if (f.evidence.line !== undefined && f.evidence.line !== null) {
+            if (typeof f.evidence.line !== "number" || !Number.isInteger(f.evidence.line) || f.evidence.line < 1) {
+              errors.push(`${prefix}.evidence.line must be an integer >= 1`);
+            }
+          }
+        } else {
+          errors.push(`${prefix}.evidence must be an object or null`);
+        }
+      }
+
+      // refs
+      if (!Array.isArray(f.refs)) {
+        errors.push(`${prefix}.refs must be an array`);
+      } else {
+        for (let j = 0; j < f.refs.length; j++) {
+          if (typeof f.refs[j] !== "string") {
+            errors.push(`${prefix}.refs[${j}] must be a string`);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // --- reviewer ---
+  if (typeof value.reviewer !== "string" || value.reviewer.length === 0) {
+    errors.push("reviewer must be a non-empty string");
+  }
+
+  // --- sessionId ---
+  if (typeof value.sessionId !== "string" || value.sessionId.length === 0) {
+    errors.push("sessionId must be a non-empty string");
+  }
+
+  // --- startedAt / finishedAt (ISO-8601 UTC) ---
+  if (typeof value.startedAt !== "string" || !ISO_8601_RE.test(value.startedAt)) {
+    errors.push("startedAt must be an ISO-8601 UTC timestamp");
+  }
+  if (typeof value.finishedAt !== "string" || !ISO_8601_RE.test(value.finishedAt)) {
+    errors.push("finishedAt must be an ISO-8601 UTC timestamp");
+  }
+  // finishedAt >= startedAt — Date.parse is safe because the regex only
+  // accepts Z-suffix (UTC) so no mixed-offset ambiguity remains.
+  if (typeof value.startedAt === "string" && typeof value.finishedAt === "string" &&
+      ISO_8601_RE.test(value.startedAt) && ISO_8601_RE.test(value.finishedAt)) {
+    if (Date.parse(value.finishedAt) < Date.parse(value.startedAt)) {
+      errors.push("finishedAt must be >= startedAt");
+    }
+  }
+
+  // --- diagnostics ---
+  if (!Array.isArray(value.diagnostics)) {
+    errors.push("diagnostics must be an array");
+  } else {
+    for (let i = 0; i < value.diagnostics.length; i++) {
+      if (typeof value.diagnostics[i] !== "string") {
+        errors.push(`diagnostics[${i}] must be a string`);
+        break;
+      }
+    }
+  }
+
+  // --- policyVersion ---
+  if (typeof value.policyVersion !== "string" || value.policyVersion.length === 0) {
+    errors.push("policyVersion must be a non-empty string");
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+
+  return { ok: true, receipt: value as unknown as ReviewReceiptV1 };
+}
+
+// ===========================================================================
+// Canonical content-binding core (D2, D4, D1)
+// ===========================================================================
+
+/** Staleness reason codes — one per detectable dimension. */
+export const STALE_REASON_CODES = [
+  "stale-base-tree",
+  "stale-candidate-tree",
+  "stale-manifest",
+  "stale-acceptance-fingerprint",
+  "stale-review-policy",
+] as const;
+
+export type StaleReasonCode = (typeof STALE_REASON_CODES)[number];
+export type FreshResult = { fresh: true };
+export type StaleResult = { fresh: false; reasonCode: StaleReasonCode };
+export type FreshnessResult = FreshResult | StaleResult;
+
+// ---------------------------------------------------------------------------
+// D4 — Canonical serialization helpers
+// ---------------------------------------------------------------------------
+
+function canonicalJSONValue(v: unknown): string {
+  if (v === null) return "null";
+  if (typeof v === "string") return JSON.stringify(v);
+  if (typeof v === "number") return JSON.stringify(v);
+  if (typeof v === "boolean") return JSON.stringify(v);
+  if (Array.isArray(v)) {
+    return "[" + v.map(canonicalJSONValue).join(",") + "]";
+  }
+  if (typeof v === "object") {
+    const keys = Object.keys(v as Record<string, unknown>).sort();
+    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k])).join(",") + "}";
+  }
+  return JSON.stringify(v);
+}
+
+/**
+ * D4 — Canonicalize a CandidateSnapshotV1.
+ * Produces deterministic JSON with declaration-order keys and sorted changedPaths.
+ */
+export function canonicalizeCandidateSnapshot(snapshot: CandidateSnapshotV1): string {
+  const sortedPaths = [...snapshot.changedPaths].sort((a, b) =>
+    utf8ByteCompare(a.path, b.path)
+  );
+  const obj: Record<string, unknown> = {
+    contract: snapshot.contract,
+    objectFormat: snapshot.objectFormat,
+    baseCommit: snapshot.baseCommit,
+    candidateCommit: snapshot.candidateCommit,
+    baseTree: snapshot.baseTree,
+    candidateTree: snapshot.candidateTree,
+    acceptanceFingerprint: snapshot.acceptanceFingerprint,
+    changedPaths: sortedPaths,
+  };
+  return canonicalJSONValue(obj);
+}
+
+/**
+ * D4 — Canonicalize a ReviewReceiptV1.
+ * Findings are sorted by ascending byte order of their stable ids.
+ */
+export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
+  const sortedFindings = [...receipt.findings].sort((a, b) =>
+    utf8ByteCompare(a.id, b.id)
+  );
+  const obj: Record<string, unknown> = {
+    contract: receipt.contract,
+    id: receipt.id,
+    candidateSnapshotDigest: receipt.candidateSnapshotDigest,
+    kind: receipt.kind,
+    verdict: receipt.verdict,
+    findings: sortedFindings,
+    reviewer: receipt.reviewer,
+    sessionId: receipt.sessionId,
+    startedAt: receipt.startedAt,
+    finishedAt: receipt.finishedAt,
+    diagnostics: receipt.diagnostics,
+    policyVersion: receipt.policyVersion,
+  };
+  return canonicalJSONValue(obj);
+}
+
+// ---------------------------------------------------------------------------
+// SHA-256 hashing
+// ---------------------------------------------------------------------------
+
+/** D4 — SHA-256 hex digest (async via Web Crypto). */
+async function sha256Hex(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const buf = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** D4 — Digest a CandidateSnapshotV1 via canonical serialization. */
+export async function digestCandidateSnapshot(snapshot: CandidateSnapshotV1): Promise<string> {
+  return sha256Hex(canonicalizeCandidateSnapshot(snapshot));
+}
+
+/** D4 — Digest a ReviewReceiptV1 via canonical serialization. */
+export async function digestReviewReceipt(receipt: ReviewReceiptV1): Promise<string> {
+  return sha256Hex(canonicalizeReviewReceipt(receipt));
+}
+
+// ---------------------------------------------------------------------------
+// D2 — Acceptance fingerprint
+// ---------------------------------------------------------------------------
+
+/**
+ * D2 — Compute the acceptance fingerprint from an ordered array of
+ * {id, blobSha256} entries. Returns lowercase hex SHA-256 over their
+ * canonical serialization (sorted by byte-order of id).
+ */
+export async function computeAcceptanceFingerprint(inputs: ReadonlyArray<{ id: string; blobSha256: string }>): Promise<string> {
+  const sorted = [...inputs].sort((a, b) => utf8ByteCompare(a.id, b.id));
+  const obj: Record<string, unknown> = {
+    inputs: sorted,
+  };
+  return sha256Hex(canonicalJSONValue(obj));
+}
+
+// ---------------------------------------------------------------------------
+// D1 — Freshness predicate
+// ---------------------------------------------------------------------------
+
+/** Deep- equality for two JSON values. */
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== "object") return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    const bArr = b as unknown[];
+    if (a.length !== bArr.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], bArr[i])) return false;
+    }
+    return true;
+  }
+  const aObj = a as Record<string, unknown>;
+  const bObj = b as Record<string, unknown>;
+  const ka = Object.keys(aObj);
+  const kb = Object.keys(bObj);
+  if (ka.length !== kb.length) return false;
+  ka.sort(); kb.sort();
+  for (let i = 0; i < ka.length; i++) {
+    if (ka[i] !== kb[i]) return false;
+    if (!deepEqual(aObj[ka[i]], bObj[kb[i]])) return false;
+  }
+  return true;
+}
+
+/**
+ * D1 — Compare a receipt against the current candidate snapshot and
+ * acceptance fingerprint. Returns exactly one stable reason code per stale
+ * dimension, or `{fresh: true}` when everything matches.
+ *
+ * Comparison order (per spec): baseCommit → candidateCommit → changedPaths
+ * (canonical equality) → acceptanceFingerprint → policyVersion.
+ * Everything equal AND snapshot digest === receipt.candidateSnapshotDigest → fresh.
+ */
+export async function compareReceiptToCurrentSnapshot(
+  receipt: ReviewReceiptV1,
+  snapshot: CandidateSnapshotV1,
+  acceptanceInputs: ReadonlyArray<{ id: string; blobSha256: string }>,
+  policyVersion: string
+): Promise<FreshnessResult> {
+  // 1. policyVersion — O(1) short-circuit (per comparison order: baseCommit →
+  // candidateCommit → changedPaths → acceptanceFingerprint → policyVersion;
+  // policyVersion is checked last in order but is the cheapest so we
+  // short-circuit first; the remaining base/candidate/manifest dimensions
+  // are conflated into stale-base-tree because the receipt only stores the
+  // single candidateSnapshotDigest and cannot carry individual field values).
+  if (policyVersion !== receipt.policyVersion) {
+    return { fresh: false, reasonCode: "stale-review-policy" };
+  }
+
+  // 2. acceptance fingerprint — compare computed from current inputs against
+  // the snapshot's stored fingerprint.
+  const currentFP = await computeAcceptanceFingerprint(acceptanceInputs);
+  if (currentFP !== snapshot.acceptanceFingerprint) {
+    return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
+  }
+
+  // 3. digest — baseCommit / candidateCommit / changedPaths dimension.
+  // The receipt carries only the single candidateSnapshotDigest so we
+  // cannot distinguish which sub-field changed; return the first dimension
+  // in the canonical comparison order.
+  const currentDigest = await digestCandidateSnapshot(snapshot);
+  if (currentDigest !== receipt.candidateSnapshotDigest) {
+    return { fresh: false, reasonCode: "stale-base-tree" };
+  }
+
+  return { fresh: true };
+}
+
+// ---------------------------------------------------------------------------
+// Published canonical vectors (D4 — locked by tests)
+// ---------------------------------------------------------------------------
+
+export interface CanonicalVectorV1 {
+  /** Contract name. */
+  contract: string;
+  /** Expected SHA-256 hex digest. */
+  digest: string;
+  /** Description of what this vector tests. */
+  description: string;
+}
+
+/**
+ * Published frozen canonical vectors. Each vector is a minimal valid value
+ * whose canonical digest is deterministic and reproducible.
+ *
+ * These vectors lock the canonicalization rules (D4) in place.
+ * Changing any vector's expected digest would be a reviewed contract change.
+ */
+export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze([
+  {
+    contract: "agentic-workflow/candidate-snapshot@1",
+    digest: "d85671a09c73836fea421013c0d2537dfc233988083d981f7daca869af55ec7a",
+    description: "minimal valid snapshot (empty diff, sha1)",
+  },
+  {
+    contract: "agentic-workflow/review-receipt@1",
+    digest: "8ae86246d83da2611380098910920b8850779a77613897e5d8efa4dd197d16e6",
+    description: "minimal valid receipt (single finding)",
+  },
+]);

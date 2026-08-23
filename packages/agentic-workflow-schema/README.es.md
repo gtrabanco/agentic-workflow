@@ -28,6 +28,51 @@ de cada skill van dentro. Los esquemas se exportan en
 `./envelope.schema.json`, `./skill-outcome.schema.json` y
 `./workflow-snapshot.schema.json`.
 
+## Recibos de revisión con vínculo de contenido (v1)
+
+Dos nuevos contratos versionados prueban exactamente qué diff evaluó una revisión:
+
+- **CandidateSnapshot v1** — `baseCommit`, `candidateCommit`, `baseTree`,
+  `candidateTree`, manifiesto ordenado `changedPaths` y
+  `acceptanceFingerprint`. Los validadores estrictos rechazan claves no
+  declaradas, algoritmos de hash mezclados, inyección de rutas y estados
+  no soportados.
+- **ReviewReceipt v1** — `id` opaco, `candidateSnapshotDigest`, vocabulario
+  cerrado de `kind` (10 valores), `verdict`, `findings` estructurados y
+  `policyVersion`.
+
+### Hash y fingerprint
+
+```ts
+import {
+  digestCandidateSnapshot,
+  digestReviewReceipt,
+  computeAcceptanceFingerprint,
+  canonicalizeCandidateSnapshot,
+  canonicalizeReviewReceipt,
+} from "@gtrabanco/agentic-workflow-schema";
+
+const digest = await digestCandidateSnapshot(snapshot);
+const fingerprint = await computeAcceptanceFingerprint([{ id: "AC-001", blobSha256: "..." }]);
+```
+
+### Predicado de frescura
+
+```ts
+import { compareReceiptToCurrentSnapshot } from "@gtrabanco/agentic-workflow-schema";
+
+const result = await compareReceiptToCurrentSnapshot(
+  receipt, currentSnapshot, currentAcceptanceInputs, policyVersion
+);
+// { fresh: true } | { fresh: false, reasonCode: "stale-base-tree" | "stale-candidate-tree" | "stale-manifest" | "stale-acceptance-fingerprint" | "stale-review-policy" }
+```
+
+> ⚠️ **La validez del esquema ≠ corrección de la revisión.** Un esquema válido
+> prueba que la estructura se preservó, no que la revisión fue precisa. El
+ vínculo de contenido es obligatorio: nunca confíes un recibo que no está
+ vinculado de contenido al snapshot candidato actual y a la frontera de
+ aceptación.
+
 ## Parsear un turno conducido
 
 Usa los perfiles para seleccionar el resultado requerido, añade la instrucción
