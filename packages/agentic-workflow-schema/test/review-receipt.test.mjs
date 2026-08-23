@@ -333,7 +333,7 @@ test("accepts receipt with multiple findings", () => {
   assert.equal(result.ok, true);
 });
 
-test("rejects receipt with fail verdict", () => {
+test("accepts receipt with fail verdict", () => {
   const r = validReceipt([{ id: "f1", severity: "critical", summary: "security flaw", refs: [] }]);
   r.verdict = "fail";
   const result = validateReviewReceiptV1(r);

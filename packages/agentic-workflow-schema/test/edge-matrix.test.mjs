@@ -183,12 +183,13 @@ test("validates type-changed with oldPath: null", () => {
 // ---------------------------------------------------------------------------
 
 test("detects base change via digest mismatch (candidate unchanged)", async () => {
-  const snap1 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(0) }, candidateCommit: { ...FAKE_SHA1, hex: hex(1) } });
+  const acceptedFP = await computeAcceptanceFingerprint([]);
+  const snap1 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(0) }, candidateCommit: { ...FAKE_SHA1, hex: hex(1) }, acceptanceFingerprint: acceptedFP });
   const digest1 = await digestCandidateSnapshot(snap1);
   const receipt = makeReceipt(digest1);
 
   // Base changed
-  const snap2 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(99) }, candidateCommit: { ...FAKE_SHA1, hex: hex(1) } });
+  const snap2 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(99) }, candidateCommit: { ...FAKE_SHA1, hex: hex(1) }, acceptanceFingerprint: acceptedFP });
   const result = await compareReceiptToCurrentSnapshot(receipt, snap2, [], "v1");
   assert.deepEqual(result, { fresh: false, reasonCode: "stale-base-tree" });
 });
@@ -198,12 +199,13 @@ test("detects base change via digest mismatch (candidate unchanged)", async () =
 // ---------------------------------------------------------------------------
 
 test("detects candidate change via digest mismatch (base unchanged)", async () => {
-  const snap1 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(0) }, candidateCommit: { ...FAKE_SHA1, hex: hex(1) } });
+  const acceptedFP = await computeAcceptanceFingerprint([]);
+  const snap1 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(0) }, candidateCommit: { ...FAKE_SHA1, hex: hex(1) }, acceptanceFingerprint: acceptedFP });
   const digest1 = await digestCandidateSnapshot(snap1);
   const receipt = makeReceipt(digest1);
 
   // Candidate changed
-  const snap2 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(0) }, candidateCommit: { ...FAKE_SHA1, hex: hex(99) } });
+  const snap2 = makeSnapshot([], { baseCommit: { ...FAKE_SHA1, hex: hex(0) }, candidateCommit: { ...FAKE_SHA1, hex: hex(99) }, acceptanceFingerprint: acceptedFP });
   const result = await compareReceiptToCurrentSnapshot(receipt, snap2, [], "v1");
   assert.deepEqual(result, { fresh: false, reasonCode: "stale-base-tree" });
 });
@@ -213,12 +215,13 @@ test("detects candidate change via digest mismatch (base unchanged)", async () =
 // ---------------------------------------------------------------------------
 
 test("detects full revert (candidate reverted to base, manifest changed)", async () => {
-  const snap1 = makeSnapshot([{ path: "file.txt", status: "added", oldPath: null, mode: "100644", objectSha: { ...FAKE_SHA1, hex: hex(0) }, sizeBytes: 100, binary: false }]);
+  const acceptedFP = await computeAcceptanceFingerprint([]);
+  const snap1 = makeSnapshot([{ path: "file.txt", status: "added", oldPath: null, mode: "100644", objectSha: { ...FAKE_SHA1, hex: hex(0) }, sizeBytes: 100, binary: false }], { acceptanceFingerprint: acceptedFP });
   const digest1 = await digestCandidateSnapshot(snap1);
   const receipt = makeReceipt(digest1);
 
   // Full revert: manifest cleared
-  const snap2 = makeSnapshot([]);
+  const snap2 = makeSnapshot([], { acceptanceFingerprint: acceptedFP });
   const result = await compareReceiptToCurrentSnapshot(receipt, snap2, [], "v1");
   assert.deepEqual(result, { fresh: false, reasonCode: "stale-base-tree" });
 });
