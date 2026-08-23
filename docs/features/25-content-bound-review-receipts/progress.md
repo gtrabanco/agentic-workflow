@@ -27,3 +27,9 @@ Gate: `npm test` → exit 0 (188 tests)
 Layer: close-out
 Status: ✅ done
 Gate: `npm test` → exit 0, PR opened
+
+## Acceptance receipt v1
+Manifest: docs/features/25-content-bound-review-receipts/ACCEPTANCE.md · Blob: 531f4793c507cb9744310e290a0146f371996e79 · Status: frozen · Verified: 2026-08-23
+Layer: close-out
+Status: ✅ done
+Gate: `npm test` → exit 0, PR opened
