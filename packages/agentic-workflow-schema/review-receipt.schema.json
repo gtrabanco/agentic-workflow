@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/gtrabanco/agentic-workflow/packages/agentic-workflow-schema/review-receipt.schema.json",
+  "title": "agentic-workflow review receipt v1",
+  "description": "A content-bound review receipt proving exactly which diff and acceptance boundary a review evaluated. Source of truth: @gtrabanco/agentic-workflow-schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "id",
+    "candidateSnapshotDigest",
+    "kind",
+    "verdict",
+    "findings",
+    "reviewer",
+    "sessionId",
+    "startedAt",
+    "finishedAt",
+    "diagnostics",
+    "policyVersion"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/review-receipt@1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "candidateSnapshotDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "kind": {
+      "enum": [
+        "implementation",
+        "security",
+        "verification",
+        "debt",
+        "design",
+        "accessibility",
+        "brand",
+        "performance",
+        "seo",
+        "audit"
+      ]
+    },
+    "verdict": {
+      "enum": ["pass", "fail"]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/findingV1"
+      }
+    },
+    "reviewer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "finishedAt": {
+      "type": "string"
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "$defs": {
+    "findingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "summary", "refs"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "enum": ["info", "low", "medium", "high", "critical"]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "oneOf": [
+            { "$ref": "#/$defs/findingEvidenceV1" },
+            { "type": "null" }
+          ]
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "findingEvidenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}
