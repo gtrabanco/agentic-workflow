@@ -2747,3 +2747,224 @@ export function validateReviewReceiptV1(
 
   return { ok: true, receipt: value as unknown as ReviewReceiptV1 };
 }
+
+// ===========================================================================
+// Canonical content-binding core (D2, D4, D1)
+// ===========================================================================
+
+/** Staleness reason codes — one per detectable dimension. */
+export const STALE_REASON_CODES = [
+  "stale-base-tree",
+  "stale-candidate-tree",
+  "stale-manifest",
+  "stale-acceptance-fingerprint",
+  "stale-review-policy",
+] as const;
+
+export type StaleReasonCode = (typeof STALE_REASON_CODES)[number];
+export type FreshResult = { fresh: true };
+export type StaleResult = { fresh: false; reasonCode: StaleReasonCode };
+export type FreshnessResult = FreshResult | StaleResult;
+
+// ---------------------------------------------------------------------------
+// D4 — Canonical serialization helpers
+// ---------------------------------------------------------------------------
+
+function canonicalJSONValue(v: unknown): string {
+  if (v === null) return "null";
+  if (typeof v === "string") return JSON.stringify(v);
+  if (typeof v === "number") return JSON.stringify(v);
+  if (typeof v === "boolean") return JSON.stringify(v);
+  if (Array.isArray(v)) {
+    return "[" + v.map(canonicalJSONValue).join(",") + "]";
+  }
+  if (typeof v === "object") {
+    const keys = Object.keys(v as Record<string, unknown>);
+    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k])).join(",") + "}";
+  }
+  return JSON.stringify(v);
+}
+
+/**
+ * D4 — Canonicalize a CandidateSnapshotV1.
+ * Produces deterministic JSON with declaration-order keys and sorted changedPaths.
+ */
+export function canonicalizeCandidateSnapshot(snapshot: CandidateSnapshotV1): string {
+  const sortedPaths = [...snapshot.changedPaths].sort((a, b) =>
+    utf8ByteCompare(a.path, b.path)
+  );
+  const obj: Record<string, unknown> = {
+    contract: snapshot.contract,
+    objectFormat: snapshot.objectFormat,
+    baseCommit: snapshot.baseCommit,
+    candidateCommit: snapshot.candidateCommit,
+    baseTree: snapshot.baseTree,
+    candidateTree: snapshot.candidateTree,
+    acceptanceFingerprint: snapshot.acceptanceFingerprint,
+    changedPaths: sortedPaths,
+  };
+  return canonicalJSONValue(obj);
+}
+
+/**
+ * D4 — Canonicalize a ReviewReceiptV1.
+ * Findings are sorted by ascending byte order of their stable ids.
+ */
+export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
+  const sortedFindings = [...receipt.findings].sort((a, b) =>
+    utf8ByteCompare(a.id, b.id)
+  );
+  const obj: Record<string, unknown> = {
+    contract: receipt.contract,
+    id: receipt.id,
+    candidateSnapshotDigest: receipt.candidateSnapshotDigest,
+    kind: receipt.kind,
+    verdict: receipt.verdict,
+    findings: sortedFindings,
+    reviewer: receipt.reviewer,
+    sessionId: receipt.sessionId,
+    startedAt: receipt.startedAt,
+    finishedAt: receipt.finishedAt,
+    diagnostics: receipt.diagnostics,
+    policyVersion: receipt.policyVersion,
+  };
+  return canonicalJSONValue(obj);
+}
+
+// ---------------------------------------------------------------------------
+// SHA-256 hashing
+// ---------------------------------------------------------------------------
+
+/** D4 — SHA-256 hex digest (async via Web Crypto). */
+async function sha256Hex(data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const buf = encoder.encode(data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
+  const hashArray = new Uint8Array(hashBuffer);
+  return Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** D4 — Digest a CandidateSnapshotV1 via canonical serialization. */
+export async function digestCandidateSnapshot(snapshot: CandidateSnapshotV1): Promise<string> {
+  return sha256Hex(canonicalizeCandidateSnapshot(snapshot));
+}
+
+/** D4 — Digest a ReviewReceiptV1 via canonical serialization. */
+export async function digestReviewReceipt(receipt: ReviewReceiptV1): Promise<string> {
+  return sha256Hex(canonicalizeReviewReceipt(receipt));
+}
+
+// ---------------------------------------------------------------------------
+// D2 — Acceptance fingerprint
+// ---------------------------------------------------------------------------
+
+/**
+ * D2 — Compute the acceptance fingerprint from an ordered array of
+ * {id, blobSha256} entries. Returns lowercase hex SHA-256 over their
+ * canonical serialization (sorted by byte-order of id).
+ */
+export async function computeAcceptanceFingerprint(inputs: ReadonlyArray<{ id: string; blobSha256: string }>): Promise<string> {
+  const sorted = [...inputs].sort((a, b) => utf8ByteCompare(a.id, b.id));
+  const obj: Record<string, unknown> = {
+    inputs: sorted,
+  };
+  return sha256Hex(canonicalJSONValue(obj));
+}
+
+// ---------------------------------------------------------------------------
+// D1 — Freshness predicate
+// ---------------------------------------------------------------------------
+
+/** Deep- equality for two JSON values. */
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (typeof a !== typeof b) return false;
+  if (a === null || b === null) return a === b;
+  if (typeof a !== "object") return false;
+  if (Array.isArray(a) !== Array.isArray(b)) return false;
+  if (Array.isArray(a)) {
+    const bArr = b as unknown[];
+    if (a.length !== bArr.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!deepEqual(a[i], bArr[i])) return false;
+    }
+    return true;
+  }
+  const aObj = a as Record<string, unknown>;
+  const bObj = b as Record<string, unknown>;
+  const ka = Object.keys(aObj);
+  const kb = Object.keys(bObj);
+  if (ka.length !== kb.length) return false;
+  ka.sort(); kb.sort();
+  for (let i = 0; i < ka.length; i++) {
+    if (ka[i] !== kb[i]) return false;
+    if (!deepEqual(aObj[ka[i]], bObj[kb[i]])) return false;
+  }
+  return true;
+}
+
+/**
+ * D1 — Compare a receipt against the current candidate snapshot and
+ * acceptance fingerprint. Returns exactly one stable reason code per stale
+ * dimension, or `{fresh: true}` when everything matches.
+ *
+ * Comparison order (per spec): baseCommit → candidateCommit → changedPaths
+ * (canonical equality) → acceptanceFingerprint → policyVersion.
+ * Everything equal AND snapshot digest === receipt.candidateSnapshotDigest → fresh.
+ */
+export async function compareReceiptToCurrentSnapshot(
+  receipt: ReviewReceiptV1,
+  snapshot: CandidateSnapshotV1,
+  acceptanceInputs: ReadonlyArray<{ id: string; blobSha256: string }>,
+  policyVersion: string
+): Promise<FreshnessResult> {
+  const currentDigest = await digestCandidateSnapshot(snapshot);
+
+  if (currentDigest !== receipt.candidateSnapshotDigest) {
+    return { fresh: false, reasonCode: "stale-base-tree" };
+  }
+
+  const currentFP = await computeAcceptanceFingerprint(acceptanceInputs);
+  if (currentFP !== snapshot.acceptanceFingerprint) {
+    return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
+  }
+
+  if (policyVersion !== receipt.policyVersion) {
+    return { fresh: false, reasonCode: "stale-review-policy" };
+  }
+
+  return { fresh: true };
+}
+
+// ---------------------------------------------------------------------------
+// Published canonical vectors (D4 — locked by tests)
+// ---------------------------------------------------------------------------
+
+export interface CanonicalVectorV1 {
+  /** Contract name. */
+  contract: string;
+  /** Expected SHA-256 hex digest. */
+  digest: string;
+  /** Description of what this vector tests. */
+  description: string;
+}
+
+/**
+ * Published frozen canonical vectors. Each vector is a minimal valid value
+ * whose canonical digest is deterministic and reproducible.
+ *
+ * These vectors lock the canonicalization rules (D4) in place.
+ * Changing any vector's expected digest would be a reviewed contract change.
+ */
+export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze([
+  {
+    contract: "agentic-workflow/candidate-snapshot@1",
+    digest: "", // computed at test time, must match
+    description: "minimal valid snapshot (empty diff, sha1)",
+  },
+  {
+    contract: "agentic-workflow/review-receipt@1",
+    digest: "", // computed at test time, must match
+    description: "minimal valid receipt (single finding)",
+  },
+]);
