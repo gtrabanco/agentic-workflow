@@ -6,7 +6,7 @@ Review: `review-change` on HEAD `fb3e93c19722766d28351b2a93d297f1ef238bef` (PR #
 |---|---|---|---|---|---|---|
 | F17 | docs/features/25-content-bound-review-receipts/progress.md:25 | workflow | high | fix-now | fold into phase | yes |
 | F18 | packages/agentic-workflow-schema/candidate-snapshot.schema.json:114-121 | code | high | fix-now | fold into phase | yes |
-| F19 | packages/agentic-workflow-schema/src/index.ts:2666 | code | low | proposal | batch proposal | triaged |
+| F19 | packages/agentic-workflow-schema/src/index.ts:2666 | code | low | proposal | batch proposal | n/a |
 | F1 | packages/agentic-workflow-schema/test/candidate-snapshot.test.mjs:471-472 | code | high | fix-now | fold into phase | yes |
 | F2 | packages/agentic-workflow-schema/src/index.ts:2915-2934 | code | high | fix-now | fold into phase | yes |
 | F3 | packages/agentic-workflow-schema/src/index.ts:2366-2368 | code | med | fix-now | fold into phase | yes |
