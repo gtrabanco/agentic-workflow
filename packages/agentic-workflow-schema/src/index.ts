@@ -2364,16 +2364,14 @@ export function validateCandidateSnapshotV1(
 
   // --- GitObjectId fields (baseCommit, candidateCommit, baseTree, candidateTree) ---
   for (const key of ["baseCommit", "candidateCommit", "baseTree", "candidateTree"] as const) {
-    if (value[key] !== null) {
-      if (!isGitObjectId(value[key])) {
-        errors.push(
-          `${key} must be a GitObjectId {algorithm:"${objectFormat}", hex:/^[a-f0-9]{${objectFormat === "sha1" ? 40 : 64}}$/}`
-        );
-      } else if ((value[key] as GitObjectId).algorithm !== objectFormat) {
-        errors.push(
-          `${key}.algorithm must match objectFormat "${objectFormat}" (got: ${(value[key] as GitObjectId).algorithm})`
-        );
-      }
+    if (!isGitObjectId(value[key])) {
+      errors.push(
+        `${key} must be a GitObjectId {algorithm:"${objectFormat}", hex:/^[a-f0-9]{${objectFormat === "sha1" ? 40 : 64}}$/}`
+      );
+    } else if ((value[key] as GitObjectId).algorithm !== objectFormat) {
+      errors.push(
+        `${key}.algorithm must match objectFormat "${objectFormat}" (got: ${(value[key] as GitObjectId).algorithm})`
+      );
     }
   }
 
