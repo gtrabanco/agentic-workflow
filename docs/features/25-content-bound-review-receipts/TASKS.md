@@ -35,36 +35,36 @@ exit 0 including the new review-receipt suites.
 Layer: schema · Done-when: `npm test` → exit 0 (vector/determinism/freshness);
 `grep '"version"' package.json` → `"3.3.0"`.
 
-- [ ] `canonicalize` per D4 + unit tests
-- [ ] `digestCandidateSnapshot` + `computeAcceptanceFingerprint` + unit tests
-- [ ] `compareReceiptToCurrentSnapshot` with D1 reason codes in fixed order + unit tests
-- [ ] Published frozen `CANONICAL_VECTORS` + fixtures with expected digests
-- [ ] Vector agreement: TS path == JSON-Schema path == published digests; determinism deep-equal
-- [ ] `README.md` contracts section (validity ≠ correctness; mandatory binding)
-- [ ] `README.es.md` synchronized section
-- [ ] Version `3.2.0 → 3.3.0`; `npm pack --dry-run` lists both new schema files
+- [x] `canonicalize` per D4 + unit tests
+- [x] `digestCandidateSnapshot` + `computeAcceptanceFingerprint` + unit tests
+- [x] `compareReceiptToCurrentSnapshot` with D1 reason codes in fixed order + unit tests
+- [x] Published frozen `CANONICAL_VECTORS` + fixtures with expected digests
+- [x] Vector agreement: TS path == JSON-Schema path == published digests; determinism deep-equal
+- [x] `README.md` contracts section (validity ≠ correctness; mandatory binding)
+- [x] `README.es.md` synchronized section
+- [x] Version `3.2.0 → 3.3.0`; `npm pack --dry-run` lists both new schema files
 
 ## P4 — Cover the edge-condition matrix
 
 Layer: hardening · Done-when: `npm test` → exit 0 with edge-matrix suites.
 
-- [ ] >32 changed paths: validate → canonicalize → digest → compare pass
-- [ ] >4 MiB file represented (`sizeBytes` true value, generated at test time)
-- [ ] Binary content: `binary: true`, manifest-present, evidence-reference reviewable
-- [ ] renamed/copied/type-changed: oldPath required-vs-forbidden both ways
-- [ ] Base advancement → `stale-base-tree`; candidate mutation → `stale-candidate-tree`
-- [ ] Acceptance mutation → `stale-acceptance-fingerprint`; policy mutation → `stale-review-policy`
-- [ ] Full revert stale; symlink/submodule modes; empty diff valid only trees-match, never reuses older receipt
+- [x] >32 changed paths: validate → canonicalize → digest → compare pass
+- [x] >4 MiB file represented (`sizeBytes` true value, generated at test time)
+- [x] Binary content: `binary: true`, manifest-present, evidence-reference reviewable
+- [x] renamed/copied/type-changed: oldPath required-vs-forbidden both ways
+- [x] Base advancement → `stale-base-tree`; candidate mutation → `stale-candidate-tree`
+- [x] Acceptance mutation → `stale-acceptance-fingerprint`; policy mutation → `stale-review-policy`
+- [x] Full revert stale; symlink/submodule modes; empty diff valid only trees-match, never reuses older receipt
 
 ## P5 — Hardening & PR
 
 Layer: close-out · Done-when: gates green, PR open with `Closes #138`,
 roadmap row `done · [#<pr>](<pr-url>)`.
 
-- [ ] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the roadmap row status to `done` and commit the flip
-- [ ] `git push` — branch pushed, PR branch remote-current
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #138`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<pr>` and push
+- [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the roadmap row status to `done` and commit the flip
+- [x] `git push` — branch pushed, PR branch remote-current
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #138`
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<pr>` and push
