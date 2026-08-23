@@ -626,6 +626,499 @@ export const WORKFLOW_INTENTS: readonly WorkflowIntent[] = [
 ] as const;
 
 // ---------------------------------------------------------------------------
+// Workflow transition decider — reason codes, decision types, transition table
+// ---------------------------------------------------------------------------
+
+/** Sense reason codes: transition cannot proceed without more sensor input. */
+export const WORKFLOW_DECISION_SENSE_CODES = Object.freeze([
+  "sense-initial",
+  "sense-stale-revision",
+  "sense-missing-evidence",
+  "sense-unknown-state",
+  "sense-unlisted-transition",
+] as const);
+export type WorkflowDecisionSenseReason = (typeof WORKFLOW_DECISION_SENSE_CODES)[number];
+
+/** Stop reason codes: the transition is explicitly blocked or must terminate. */
+export const WORKFLOW_DECISION_STOP_CODES = Object.freeze([
+  "stop-blocked",
+  "stop-needs-input",
+  "stop-failed",
+  "stop-contradiction",
+  "stop-policy-denied",
+  "stop-forbidden-transition",
+] as const);
+export type WorkflowDecisionStopReason = (typeof WORKFLOW_DECISION_STOP_CODES)[number];
+
+/** Invoke reason codes: transition is proven and allowed. */
+export const WORKFLOW_DECISION_INVOKE_CODES = Object.freeze([
+  "invoke-proven-transition",
+] as const);
+export type WorkflowDecisionInvokeReason = (typeof WORKFLOW_DECISION_INVOKE_CODES)[number];
+
+export type WorkflowDecisionReasonCode =
+  | WorkflowDecisionSenseReason
+  | WorkflowDecisionStopReason
+  | WorkflowDecisionInvokeReason;
+
+/** Policy a caller provides to control the transition decision. */
+export interface WorkflowDecisionPolicy {
+  /** Intents the caller is permitted to invoke. */
+  readonly allowedIntents: readonly WorkflowIntent[];
+  /** Whether the caller has forge-write authorization. */
+  readonly forgeWriteAuthorized: boolean;
+}
+
+/** Input to the transition decision function. */
+export interface WorkflowDecisionInput {
+  /** A validated WorkflowSnapshot v1. */
+  readonly snapshot: WorkflowSnapshot;
+  /** The last validated SkillOutcome v1, or null. */
+  readonly lastOutcome: SkillOutcome | null;
+  /** The revision at which the last outcome was recorded. */
+  readonly lastOutcomeSourceRevision: string | null;
+  /** Closed caller policy governing what transitions are permitted. */
+  readonly policy: WorkflowDecisionPolicy;
+}
+
+/** Intent values that may be directly invoked (excludes non-invocation intents). */
+export type WorkflowInvocableIntent = Exclude<WorkflowIntent,
+  "status" | "ask-human" | "stop" | "none">;
+
+export type WorkflowActionDecision =
+  | { readonly kind: "invoke"; readonly intent: WorkflowInvocableIntent;
+      readonly targets: readonly string[]; readonly reasonCode: "invoke-proven-transition";
+      readonly evidenceRefs: readonly string[]; readonly detail: string }
+  | { readonly kind: "sense"; readonly intent: "status"; readonly targets: readonly [];
+      readonly reasonCode: WorkflowDecisionSenseReason;
+      readonly evidenceRefs: readonly string[]; readonly detail: string }
+  | { readonly kind: "stop"; readonly intent: "ask-human" | "stop";
+      readonly targets: readonly string[];
+      readonly reasonCode: WorkflowDecisionStopReason;
+      readonly evidenceRefs: readonly string[]; readonly detail: string };
+
+/** One row of the direct-invocation transition table. */
+export interface WorkflowTransitionTableRow {
+  /** The last validated skill / workflow intent. */
+  readonly key: WorkflowIntent;
+  /** Allowed next intents (may be empty, or contain a single literal "*" for wildcard). */
+  readonly allowed: readonly string[];
+  /** Description of the row conditions (arity, identity, state constraints). */
+  readonly condition: string;
+}
+
+/**
+ * Frozen, versioned direct-invocation transition table.
+ *
+ * Maps each last-validated skill to its allowed next intents. Rows whose
+ * `allowed` array contains a literal "frozen" permit transitions only when
+ * the snapshot repository state is "frozen"; rows with an empty array
+ * explicitly forbid any transition (return sense/stop rather than invoke).
+ *
+ * Derived condition semantics (from the Design):
+ *   none        → sense-initial
+ *   init-workspace → exactly discover-repository-state
+ *   workflow-status → broad set of planning/execution skills
+ *   discover-repository-state → row allowed iff snapshot.state === "frozen"
+ *   resolve-repository-state  → row allowed iff snapshot.contradictions.length > 0
+ *   design-feature, plan-feature → 0..n allowed, each must be a plan/execute skill
+ *   plan-fix → exactly 1, must be triage-issue
+ *   triage-issue → 1..n allowed, each must be an issue identity string
+ *   init-workspace, discover-repository-state → 0 allowed → stop-forbidden-transition
+ *   resolve-repository-state → each allowed must match a contradiction field
+ *   merge → exactly 1, must be the PR identity from audit-pr
+ */
+export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = Object.freeze([
+  // Last skill = none → no transition possible
+  {
+    key: "none",
+    allowed: [],
+    condition: "no last validated skill; return sense-initial",
+  },
+  // init-workspace → discover-repository-state only
+  {
+    key: "init-workspace",
+    allowed: ["discover-repository-state"],
+    condition: "exactly 1 target; any other target → stop-forbidden-transition",
+  },
+  // status → broad planning and execution set
+  {
+    key: "status",
+    allowed: [
+      "init-workspace",
+      "discover-repository-state",
+      "resolve-repository-state",
+      "design-feature",
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "all allowed intents after status",
+  },
+  // discover-repository-state → planning allowed only when repo is frozen
+  {
+    key: "discover-repository-state",
+    allowed: [
+      "resolve-repository-state",
+      "design-feature",
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "row allowed only when snapshot.repositoryState === 'frozen';"
+      + " any target when state is not frozen → sense-missing-evidence",
+  },
+  // resolve-repository-state → contradiction targets only
+  {
+    key: "resolve-repository-state",
+    allowed: ["resolve-repository-state"],
+    condition: "0..n allowed, each === a snapshot contradiction field identity;"
+      + " non-contradiction target → stop-forbidden-transition",
+  },
+  // design-feature → next roadmap unit or the active unit / named dependency
+  {
+    key: "design-feature",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be the next roadmap unit, the active unit id,"
+      + " or the named dependency unit recorded by the last outcome;"
+      + " non-allowed target → stop-forbidden-transition",
+  },
+  // plan-feature → active or dependency unit, max 1
+  {
+    key: "plan-feature",
+    allowed: [
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..1 allowed; 0 → next roadmap unit; 1 → active unit id or named dependency;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // plan-fix → triage-issue only, exactly 1
+  {
+    key: "plan-fix",
+    allowed: ["triage-issue"],
+    condition: "exactly 1 target (the issue identity); 0 → sense-missing-evidence;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // triage-issue → issue identities, 1..n
+  {
+    key: "triage-issue",
+    allowed: [
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "1..n allowed, each must be an issue identity recorded by the last outcome;"
+      + " 0 → sense-missing-evidence",
+  },
+  // execute-phase → planning and execution, max 1
+  {
+    key: "execute-phase",
+    allowed: [
+      "design-feature",
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..1 allowed; each must be a plan/execute skill or ask-human/stop;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // review-change → planning and execution
+  {
+    key: "review-change",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be a plan/execute/review skill or ask-human/stop;"
+      + " non-allowed target → stop-forbidden-transition",
+  },
+  // loop-review-fold → planning and execution
+  {
+    key: "loop-review-fold",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "triage-issue",
+      "execute-phase",
+      "review-change",
+      "loop-review-fold",
+      "audit-pr",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be a plan/execute/review skill or ask-human/stop;"
+      + " non-allowed target → stop-forbidden-transition",
+  },
+  // audit-pr → merge, execute-phase, or stop
+  {
+    key: "audit-pr",
+    allowed: ["merge", "execute-phase", "ask-human", "stop"],
+    condition: "exactly 1 allowed: merge, execute-phase, ask-human, or stop;"
+      + ">1 → stop-forbidden-transition",
+  },
+  // merge → none (end of pipeline)
+  {
+    key: "merge",
+    allowed: [],
+    condition: "merge is the terminal action; no allowed transitions;"
+      + " any target → stop-forbidden-transition",
+  },
+] as const);
+
+// ---------------------------------------------------------------------------
+// Workflow transition decider — decideWorkflowAction pipeline
+// ---------------------------------------------------------------------------
+
+/** Build evidence refs from snapshot provenance and contradictions. */
+function buildEvidenceRefs(
+  snapshot: WorkflowSnapshot,
+  lastOutcome: SkillOutcome | null,
+): string[] {
+  const refs: string[] = [];
+  for (const p of snapshot.provenance) {
+    refs.push(`${p.field}@${p.source}:${p.line}`);
+  }
+  for (const c of snapshot.contradictions) {
+    refs.push(`contradiction:${c.field}`);
+  }
+  if (lastOutcome && lastOutcome.evidence_refs.length > 0) {
+    refs.push(...lastOutcome.evidence_refs);
+  }
+  return refs;
+}
+
+/** Check effect authorization: the target skill must declare at least one effect.
+ * Built-in terminal actions without a capability profile are allowed.
+ */
+function checkEffectAuth(intent: WorkflowIntent): boolean {
+  const profile = workflowSkillProfile(intent);
+  if (profile === undefined) return true; // no profile → allowed (built-in terminal)
+  return profile.capabilities !== undefined && profile.capabilities.effects.length > 0;
+}
+
+/** Check evidence authorization: all required evidence must be present.
+ * Intents without a capability profile are allowed (no required evidence).
+ */
+function checkEvidenceAuth(
+  intent: WorkflowIntent,
+  evidenceRefs: string[],
+): boolean {
+  const profile = workflowSkillProfile(intent);
+  if (profile === undefined) return true; // no profile → allowed
+  const required = profile.capabilities?.requiredEvidence;
+  if (required === undefined || required.length === 0) return true;
+  for (const req of required) {
+    if (!evidenceRefs.includes(req)) return false;
+  }
+  return true;
+}
+
+/** Policy gate: check allowed intents and forge-write authorization. */
+function checkPolicyGate(
+  intent: WorkflowIntent,
+  policy: WorkflowDecisionPolicy,
+): boolean {
+  if (!policy.allowedIntents.includes(intent)) return false;
+  if (policy.forgeWriteAuthorized === false && intent === "merge") return false;
+  return true;
+}
+
+/**
+ * Decide whether a headless consumer may invoke the next skill, must refresh
+ * with workflow-status, or must stop.
+ *
+ * Pure, deterministic, fail-closed — no I/O, no randomness, no locale.
+ */
+export function decideWorkflowAction(
+  input: WorkflowDecisionInput,
+): WorkflowActionDecision {
+  // Defensive: malformed input never throws
+  if (
+    typeof input !== "object" || input === null ||
+    !("snapshot" in input) || !("lastOutcome" in input) || !("policy" in input)
+  ) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "malformed input" };
+  }
+  const policy = (input as { policy?: unknown }).policy;
+  if (typeof policy !== "object" || policy === null || !("allowedIntents" in policy) || !("forgeWriteAuthorized" in policy)) {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-policy-denied", evidenceRefs: [], detail: "malformed policy" };
+  }
+  const typedPolicy = policy as WorkflowDecisionPolicy;
+
+  // Validate snapshot
+  const snapshotResult = validateWorkflowSnapshotV1(input.snapshot);
+  if (!snapshotResult.ok) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: `malformed snapshot: ${snapshotResult.errors.join(", ")}` };
+  }
+  const snapshot = snapshotResult.snapshot;
+
+  // Initial: no last outcome
+  if (input.lastOutcome === null) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-initial", evidenceRefs: [], detail: "no last validated outcome" };
+  }
+
+  // Freshness: stale revision
+  if (
+    input.lastOutcomeSourceRevision !== null &&
+    snapshot.sourceRevision !== input.lastOutcomeSourceRevision
+  ) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-stale-revision", evidenceRefs: [], detail: `outcome from revision ${input.lastOutcomeSourceRevision} does not match current ${snapshot.sourceRevision}` };
+  }
+
+  // Build evidence refs
+  const evidenceRefs = buildEvidenceRefs(snapshot, input.lastOutcome);
+
+  // Outcome-status stop routing
+  const status = input.lastOutcome.status;
+  if (status === "blocked") {
+    return { kind: "stop", intent: "stop", targets: input.lastOutcome.blockers.map((b) => b.id), reasonCode: "stop-blocked", evidenceRefs: [], detail: "outcome blocked" };
+  }
+  if (status === "needs-input") {
+    return { kind: "stop", intent: "stop", targets: input.lastOutcome.questions.map((q) => q.id), reasonCode: "stop-needs-input", evidenceRefs: [], detail: "outcome needs input" };
+  }
+  if (status === "failed") {
+    const targets: string[] = input.lastOutcome.discoveries.length > 0
+      ? input.lastOutcome.discoveries.map((d) => d.summary)
+      : [];
+    return { kind: "stop", intent: "stop", targets, reasonCode: "stop-failed", evidenceRefs: [], detail: "outcome failed" };
+  }
+
+  // Contradiction routing
+  if (snapshot.contradictions.length > 0) {
+    const proposal = input.lastOutcome.next.intent;
+    if (proposal === "resolve-repository-state") {
+      const contradictionFields = snapshot.contradictions.map((c) => c.field);
+      const allowedContradictionTargets = contradictionFields.length > 0
+        ? ["resolve-repository-state"]
+        : [];
+      if (allowedContradictionTargets.includes(proposal)) {
+        return {
+          kind: "stop", intent: "stop", targets: contradictionFields,
+          reasonCode: "stop-contradiction",
+          evidenceRefs: snapshot.contradictions.map((c) => `contradiction:${c.field}`),
+          detail: "snapshot contradictions present",
+        };
+      }
+    }
+    // Non-matching proposal under contradiction
+    return {
+      kind: "stop", intent: "stop", targets: [],
+      reasonCode: "stop-contradiction",
+      evidenceRefs: snapshot.contradictions.map((c) => `contradiction:${c.field}`),
+      detail: "snapshot contradictions present",
+    };
+  }
+
+  // Recommendation → closed-table match
+  const proposal = input.lastOutcome.next.intent;
+  const targets = input.lastOutcome.next.targets || [];
+  const lastSkill = input.lastOutcome.skill;
+
+  const entry = WORKFLOW_TRANSITION_TABLE.find((r) => r.key === lastSkill);
+  if (entry === undefined) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `unlisted transition: ${lastSkill}` };
+  }
+
+  // Check if proposal is in the allowed list for the last skill
+  if (!entry.allowed.includes(proposal)) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-unlisted-transition", evidenceRefs: [], detail: `${proposal} not allowed after ${entry.key}` };
+  }
+
+  // Row condition checks
+  if (proposal === "discover-repository-state") {
+    if (snapshot.repositoryState !== "frozen") {
+      return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "repository not frozen" };
+    }
+  }
+  if (lastSkill === "resolve-repository-state") {
+    const contradictionFields = snapshot.contradictions.map((c) => c.field);
+    if (contradictionFields.length > 0 && !contradictionFields.includes(targets[0])) {
+      return { kind: "stop", intent: "stop", targets, reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: `target ${targets[0]} does not match contradiction fields` };
+    }
+  }
+
+  // Effect authorization
+  if (!checkEffectAuth(proposal)) {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: "unauthorized effect" };
+  }
+
+  // Evidence authorization
+  if (!checkEvidenceAuth(proposal, evidenceRefs)) {
+    return { kind: "sense", intent: "status", targets: [], reasonCode: "sense-missing-evidence", evidenceRefs: [], detail: "missing required evidence" };
+  }
+
+  // Policy gate
+  if (!checkPolicyGate(proposal, typedPolicy)) {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-policy-denied", evidenceRefs: [], detail: "policy denied" };
+  }
+
+  // Non-invocable intents can never reach invoke
+  if (proposal === "status" || proposal === "ask-human" || proposal === "stop" || proposal === "none") {
+    return { kind: "stop", intent: "stop", targets: [], reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: "non-invocable intent" };
+  }
+
+  // Target count validation for audit-pr: exactly 1 target
+  if (lastSkill === "audit-pr" && targets.length !== 1) {
+    return { kind: "stop", intent: "stop", targets, reasonCode: "stop-forbidden-transition", evidenceRefs: [], detail: targets.length === 0 ? "missing target" : "extra targets" };
+  }
+
+  // Proven transition — invoke
+  const invocable: WorkflowInvocableIntent = proposal;
+
+  // Proven transition — invoke
+  return {
+    kind: "invoke", intent: invocable,
+    targets: targets.length > 0 ? targets : [],
+    reasonCode: "invoke-proven-transition",
+    evidenceRefs,
+    detail: `invoke-proven-transition: ${proposal} to [${targets.join(", ") || "*"}]`,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Capability metadata — closed vocabularies, immutable exports (issue #136)
 // ---------------------------------------------------------------------------
 
