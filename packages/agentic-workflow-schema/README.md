@@ -145,6 +145,31 @@ It refuses a nonzero issue count without identities, an unmatched unit id, and
 unstructured prose. The compatibility diagnostics make every repair visible to
 the driver.
 
+## Workflow transition decider
+
+Export `decideWorkflowAction(input)` — a pure, deterministic function that
+combines a `WorkflowSnapshot v1`, the last validated `SkillOutcome v1`, and a
+caller-provided `WorkflowDecisionPolicy` to decide whether a headless driver
+may invoke the next skill, must refresh with `workflow-status`, or must stop.
+
+```ts
+function decideWorkflowAction(input: WorkflowDecisionInput): WorkflowActionDecision
+```
+
+- **Safe elision:** when the snapshot is frozen and the last skill → next intent
+  is proven by the frozen `WORKFLOW_TRANSITION_TABLE`, the driver invokes
+  directly without calling `workflow-status`.
+- **Mandatory fallback:** on missing evidence, stale revision, blocked status,
+  contradictions, unauthorized effects, or any unrecognized transition, the
+  function returns `sense` (call `workflow-status`) or `stop` (terminate).
+
+**Mandatory sensor points:** initial run (no outcome), recovered run (stale
+revision), snapshot state unknown or contradicted, unrecognized next intent,
+and any transition not in the closed table.
+
+See [SPEC](../features/24-workflow-transition-decider/SPEC.md) for the full
+design, transition tables, and reason-code vocabulary.
+
 Package major versions signal a breaking change to any published contract.
 Additive contract fields are minor; parser, documentation, or implementation
 fixes are patch releases. See
