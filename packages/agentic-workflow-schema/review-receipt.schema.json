@@ -26,7 +26,8 @@
     },
     "id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
     },
     "candidateSnapshotDigest": {
       "type": "string",
@@ -64,10 +65,12 @@
       "minLength": 1
     },
     "startedAt": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
     },
     "finishedAt": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$"
     },
     "diagnostics": {
       "type": "array",
@@ -88,7 +91,8 @@
       "properties": {
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
         },
         "severity": {
           "enum": ["info", "low", "medium", "high", "critical"]
@@ -98,10 +102,7 @@
           "minLength": 1
         },
         "evidence": {
-          "oneOf": [
-            { "$ref": "#/$defs/findingEvidenceV1" },
-            { "type": "null" }
-          ]
+          "$ref": "#/$defs/findingEvidenceV1"
         },
         "refs": {
           "type": "array",

@@ -464,12 +464,9 @@ test("accepts a fully valid sha256 snapshot", () => {
 
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-import { validateEnvelope, ENVELOPE_STATES } from "../dist/index.js";
 
 // eslint-disable-next-line no-sync — schema parity test
 const snapshotSchema = require("../candidate-snapshot.schema.json");
-const Ajv = (await import("ajv")).default;
-const ajv = new Ajv();
 
 // Note: package.json does not list ajv as a dependency, so the parity test
 // uses a minimal manual JSON-Schema path rather than importing Ajv at runtime.
