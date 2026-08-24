@@ -23,3 +23,10 @@
 | F21 | packages/agentic-workflow-schema/src/index.ts:3658-3708 | code + perf + API ergonomics/docs | low | fix-now | fold into current unit with F14 | yes |
 | F22 | docs/features/26-staged-verification-contracts/TASKS.md:64-70 | workflow | high | fix-now | fold into current unit before completion is re-attested | yes |
 | F23 | docs/features/26-staged-verification-contracts/review-findings.md:3-10 | workflow + verify | high | fix-now | fold after root-cause fixes are verified | yes |
+| F24 | packages/agentic-workflow-schema/src/index.ts:3703-3719 | code | minor | fix-now | dead code `_canonObj` and `_canon` never called | yes |
+| F25 | packages/agentic-workflow-schema/src/index.ts:3729 | code | minor | fix-now | unnecessary `_sha256` wrapper indirection over sha256Hex | yes |
+| F26 | packages/agentic-workflow-schema/src/index.ts:3791-3794 | code | minor | fix-now | redundant `incomplete-stage-coverage` loop (logically unreachable) | yes |
+| F27 | packages/agentic-workflow-schema/src/index.ts:3324-3329 | verify | minor | ignore | variable shadowing `m`/`parts` — cosmetic, no functional impact | no |
+| F28 | packages/agentic-workflow-schema/test/release-contract.test.mjs:62 | verify | minor | fix-now | npm-pack test omits new schema files from required list | yes |
+| F29 | packages/agentic-workflow-schema/src/index.ts:3685-3690,3774-3781 | perf | minor | ignore | DRY stage-required-set duplication — not a defect, extracting helper adds code | no |
+| F30 | docs/features/26-staged-verification-contracts/TASKS.md:66-70 | workflow | high | fix-now | P5 checkboxes 66-70 remain unchecked despite work verified done (roadmap flipped, PR #145 open, branch remote-current) | yes |

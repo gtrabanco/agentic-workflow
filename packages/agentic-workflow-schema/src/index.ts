@@ -3700,25 +3700,6 @@ export function deriveVerificationVerdict(
 }
 
 /** D6 — Canonical serialization. */
-function _canonObj(v: unknown): string {
-  if (v === null) return "null";
-  if (typeof v === "string") return JSON.stringify(v);
-  if (typeof v === "number") return JSON.stringify(v);
-  if (typeof v === "boolean") return JSON.stringify(v);
-  if (Array.isArray(v)) {
-    return "[" + v.map(_canonObj).join(",") + "]";
-  }
-  if (typeof v === "object") {
-    const keys = Object.keys(v as Record<string, unknown>).sort();
-    return "{" + keys.map((k: string) => JSON.stringify(k) + ":" + _canonObj((v as Record<string, unknown>)[k])).join(",") + "}";
-  }
-  return JSON.stringify(v);
-}
-
-function _canon(obj: unknown): string {
-  return _canonObj(obj);
-}
-
 export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string {
   return canonicalJSONValue(plan);
 }
@@ -3726,12 +3707,8 @@ export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1):
   return canonicalJSONValue(receipt);
 }
 
-async function _sha256(input: string): Promise<string> {
-  return sha256Hex(input);
-}
-
 export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
-  return _sha256(canonicalizeVerificationPlan(plan));
+  return sha256Hex(canonicalizeVerificationPlan(plan));
 }
 
 export function digestVerificationPlanSync(plan: VerificationPlanV1): string {
@@ -3739,7 +3716,7 @@ export function digestVerificationPlanSync(plan: VerificationPlanV1): string {
 }
 
 export async function digestVerificationReceipt(receipt: VerificationReceiptV1): Promise<string> {
-  return _sha256(canonicalizeVerificationReceipt(receipt));
+  return sha256Hex(canonicalizeVerificationReceipt(receipt));
 }
 
 /**
@@ -3782,11 +3759,7 @@ export async function compareVerificationReceiptToCurrent(
 
   for (const id of req) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" }; }
   for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
-  // Requested-full coverage gap: a full receipt must cover every declared command
-  if (rs === "full") {
-    const fullIds = p.commands.map((c: VerificationCommandV1) => c.id);
-    for (const id of fullIds) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" }; }
-  }
+  // Requested-full coverage gap is already checked above (req === all commands when rs === "full")
 
   return { fresh: true };
 }
