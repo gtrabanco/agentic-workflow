@@ -218,3 +218,34 @@ Additive contract fields are minor; parser, documentation, or implementation
 fixes are patch releases. See
 [programmatic orchestration](../../docs/workflow/ORCHESTRATION.md) for the
 driver protocol.
+
+## Staged Verification Contracts (feature 26)
+
+Two versioned wire contracts for staged verification:
+
+- `VerificationPlan v1` (`agentic-workflow/verification-plan@1`) — an ordered,
+  non-empty command list where each command carries a stable `id`,
+  `stage: fast | full`, an `executable` and ordered `args` (never a shell
+  string), a working-directory policy (`candidate-root` or `relative-path` with
+  validated relative path), a positive `timeoutMs`, `stopOnFailure`, and a
+  cost class.
+
+- `VerificationReceipt v1` (`agentic-workflow/receipts@1`) — a receipt that
+  binds to the plan digest, candidate-snapshot digest, and acceptance
+  fingerprint, carrying per-command results with status (`passed | failed |
+  timed-out | skipped | infrastructure-error`), exit-code/signal per the D4
+  matrix, bounded evidence references, and an explicit skip reason. The
+  overall verdict (`pass | fail | incomplete`) is derived from the receipt
+  content.
+
+**Two-stage model:** requesting `fast` executes only fast commands; requesting
+`full` executes every fast and full command. The freshness predicate returns
+stable reason codes (`stale-plan | stale-candidate-snapshot |
+stale-acceptance-fingerprint | incomplete-missing-results |
+incomplete-unjustified-skip | incomplete-stage-coverage`) or `{fresh: true}`.
+
+**Delivery-gate rule:** a delivery verification gate is satisfied ONLY by a
+receipt that is fresh, requests `full`, and has verdict `pass`.
+
+**No-execution boundary:** the package validates, canonicalizes, digests,
+derives, and compares — it does not execute commands. The caller owns execution.

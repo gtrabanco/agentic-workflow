@@ -35,13 +35,13 @@ exit 0 including the new verification-receipt suites.
 Layer: schema · Done-when: `npm test` → exit 0 (vector/determinism/verdict/
 freshness); `grep '"version"' package.json` → `"3.4.0"`.
 
-- [ ] `validateVerificationReceiptAgainstPlan`: plan-validated + receipt-validated + result ids exist + declared order + fast-stage subset + D3 fail-fast attribution + `planDigest` match + verdict consistency + unit tests
-- [ ] `deriveVerificationVerdict` per D2 precedence (incomplete > fail > pass) + unit tests
-- [ ] Canonical digest surface: `canonicalizeVerificationPlan` / `canonicalizeVerificationReceipt` / `digestVerificationPlan` / `digestVerificationReceipt` (D6) + unit tests
-- [ ] `compareVerificationReceiptToCurrent` with D1 codes in fixed order + unit tests
-- [ ] Published frozen `VERIFICATION_CANONICAL_VECTORS` + agreement tests: TS path == JSON-Schema path == published digests; determinism deep-equal
-- [ ] Synchronized README.md + README.es.md staged-verification section (AD-002 same-change pair)
-- [ ] Version `3.3.0 → 3.4.0`; `npm pack --dry-run` lists both new schema files
+- [x] `validateVerificationReceiptAgainstPlan`: plan-validated + receipt-validated + result ids exist + declared order + fast-stage subset + D3 fail-fast attribution + `planDigest` match + verdict consistency + unit tests
+- [x] `deriveVerificationVerdict` per D2 precedence (incomplete > fail > pass) + unit tests
+- [x] Canonical digest surface: `canonicalizeVerificationPlan` / `canonicalizeVerificationReceipt` / `digestVerificationPlan` / `digestVerificationReceipt` (D6) + unit tests
+- [x] `compareVerificationReceiptToCurrent` with D1 codes in fixed order + unit tests
+- [x] Published frozen `VERIFICATION_CANONICAL_VECTORS` + agreement tests: TS path == JSON-Schema path == published digests; determinism deep-equal
+- [x] Synchronized README.md + README.es.md staged-verification section (AD-002 same-change pair)
+- [x] Version `3.3.0 → 3.4.0`; `npm pack --dry-run` lists both new schema files
 
 ## P4 — Cover the mandated verification scenario matrix
 
