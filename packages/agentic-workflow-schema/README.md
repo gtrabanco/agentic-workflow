@@ -230,7 +230,7 @@ Two versioned wire contracts for staged verification:
   validated relative path), a positive `timeoutMs`, `stopOnFailure`, and a
   cost class.
 
-- `VerificationReceipt v1` (`agentic-workflow/receipts@1`) — a receipt that
+- `VerificationReceipt v1` (`agentic-workflow/verification-receipt@1`) — a receipt that
   binds to the plan digest, candidate-snapshot digest, and acceptance
   fingerprint, carrying per-command results with status (`passed | failed |
   timed-out | skipped | infrastructure-error`), exit-code/signal per the D4
@@ -249,3 +249,75 @@ receipt that is fresh, requests `full`, and has verdict `pass`.
 
 **No-execution boundary:** the package validates, canonicalizes, digests,
 derives, and compares — it does not execute commands. The caller owns execution.
+
+### Consumer example
+
+```ts
+import {
+  validateVerificationPlanV1,
+  validateVerificationReceiptV1,
+  validateVerificationReceiptAgainstPlan,
+  deriveVerificationVerdict,
+  compareVerificationReceiptToCurrent,
+  VERIFICATION_PLAN_CONTRACT_ID,
+  VERIFICATION_RECEIPT_CONTRACT_ID,
+  digestVerificationPlan,
+} from "@gtrabanco/agentic-workflow-schema";
+
+// 1. Build and validate a plan
+const plan = {
+  contract: VERIFICATION_PLAN_CONTRACT_ID,
+  commands: [
+    { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"],
+      workingDirectoryPolicy: "candidate-root", workingDirectory: null,
+      timeoutMs: 30000, stopOnFailure: true, costClass: "cheap" },
+    { id: "test", stage: "full", executable: "npm", args: ["test"],
+      workingDirectoryPolicy: "candidate-root", workingDirectory: null,
+      timeoutMs: 120000, stopOnFailure: false, costClass: "moderate" },
+  ],
+};
+const pv = validateVerificationPlanV1(plan);
+if (!pv.ok) throw new Error(pv.errors.join(", "));
+
+// 2. Build and validate a receipt
+const planDigest = await digestVerificationPlan(plan);
+const receipt = {
+  contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+  planDigest,
+  candidateSnapshotDigest: "a".repeat(64),
+  acceptanceFingerprint: "b".repeat(64),
+  stageRequested: "full",
+  results: [
+    { commandId: "lint", status: "passed", exitCode: 0, signal: null,
+      startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
+      stdout: null, stderr: null, skipReason: null },
+    { commandId: "test", status: "passed", exitCode: 0, signal: null,
+      startedAt: "2025-01-01T00:01:00Z", endedAt: "2025-01-01T00:05:00Z",
+      stdout: null, stderr: null, skipReason: null },
+  ],
+  verdict: "pass",
+};
+const rv = validateVerificationReceiptV1(receipt);
+if (!rv.ok) throw new Error(rv.errors.join(", "));
+
+// 3. Plan-bound validation
+const pbv = validateVerificationReceiptAgainstPlan({ plan, receipt });
+if (!pbv.ok) throw new Error(pbv.errors.join(", "));
+
+// 4. Verdict derivation (must match stored verdict)
+const derived = deriveVerificationVerdict(receipt, plan);
+// => "pass" if all full commands passed, "fail" if any failed,
+//    "incomplete" if any result is missing
+
+// 5. Freshness check
+const freshness = await compareVerificationReceiptToCurrent(
+  receipt, plan,
+  "a".repeat(64), "b".repeat(64)
+);
+// => { fresh: true } or { fresh: false, reasonCode: "stale-..." }
+
+// 6. Delivery-gate composition
+if (freshness.fresh && receipt.stageRequested === "full" && derived === "pass") {
+  console.log("Delivery verified");
+}
+```

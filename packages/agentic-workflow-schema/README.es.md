@@ -228,9 +228,9 @@ intento no reconocido, y cualquier transición no en la tabla cerrada.
 Consulta el [SPEC](../features/24-workflow-transition-decider/SPEC.md) para el
 diseño completo, tablas de transición y vocabulario de códigos de razón.
 
-## Contratos de Verificación Escalonada (feature 26)
+## Contratos de Verificación por Etapas (feature 26)
 
-Dos contratos wire versionados para verificación escalonada:
+Dos contratos wire versionados para verificación por etapas:
 
 - `VerificationPlan v1` (`agentic-workflow/verification-plan@1`) — una lista
   de comandos ordenada y no vacía donde cada comando lleva un `id` estable,
@@ -239,7 +239,7 @@ Dos contratos wire versionados para verificación escalonada:
   `relative-path` con ruta relativa validada), un `timeoutMs` positivo,
   `stopOnFailure`, y una clase de costo.
 
-- `VerificationReceipt v1` (`agentic-workflow/receipts@1`) — un recibo que se
+- `VerificationReceipt v1` (`agentic-workflow/verification-receipt@1`) — un recibo que se
   vincula al digest del plan, al digest del snapshot del candidato y al
   fingerprint de aceptación, llevando resultados por comando con estado
   (`passed | failed | timed-out | skipped | infrastructure-error`), matriz
@@ -258,3 +258,75 @@ SOLAMENTE por un recibo que sea fresco, solicite `full`, y tenga veredicto `pass
 
 **Límite de no-ejecución:** el paquete valida, canonicaliza, digiere, deriva y
 compara — no ejecuta comandos. El llamante es dueño de la ejecución.
+
+### Ejemplo de consumo
+
+```ts
+import {
+  validateVerificationPlanV1,
+  validateVerificationReceiptV1,
+  validateVerificationReceiptAgainstPlan,
+  deriveVerificationVerdict,
+  compareVerificationReceiptToCurrent,
+  VERIFICATION_PLAN_CONTRACT_ID,
+  VERIFICATION_RECEIPT_CONTRACT_ID,
+  digestVerificationPlan,
+} from "@gtrabanco/agentic-workflow-schema";
+
+// 1. Construir y validar un plan
+const plan = {
+  contract: VERIFICATION_PLAN_CONTRACT_ID,
+  commands: [
+    { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"],
+      workingDirectoryPolicy: "candidate-root", workingDirectory: null,
+      timeoutMs: 30000, stopOnFailure: true, costClass: "cheap" },
+    { id: "test", stage: "full", executable: "npm", args: ["test"],
+      workingDirectoryPolicy: "candidate-root", workingDirectory: null,
+      timeoutMs: 120000, stopOnFailure: false, costClass: "moderate" },
+  ],
+};
+const pv = validateVerificationPlanV1(plan);
+if (!pv.ok) throw new Error(pv.errors.join(", "));
+
+// 2. Construir y validar un recibo
+const planDigest = await digestVerificationPlan(plan);
+const receipt = {
+  contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+  planDigest,
+  candidateSnapshotDigest: "a".repeat(64),
+  acceptanceFingerprint: "b".repeat(64),
+  stageRequested: "full",
+  results: [
+    { commandId: "lint", status: "passed", exitCode: 0, signal: null,
+      startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
+      stdout: null, stderr: null, skipReason: null },
+    { commandId: "test", status: "passed", exitCode: 0, signal: null,
+      startedAt: "2025-01-01T00:01:00Z", endedAt: "2025-01-01T00:05:00Z",
+      stdout: null, stderr: null, skipReason: null },
+  ],
+  verdict: "pass",
+};
+const rv = validateVerificationReceiptV1(receipt);
+if (!rv.ok) throw new Error(rv.errors.join(", "));
+
+// 3. Validación vinculada al plan
+const pbv = validateVerificationReceiptAgainstPlan({ plan, receipt });
+if (!pbv.ok) throw new Error(pbv.errors.join(", "));
+
+// 4. Derivación de veredicto (debe coincidir con el veredicto almacenado)
+const derived = deriveVerificationVerdict(receipt, plan);
+// => "pass" si todos los comandos full pasaron, "fail" si alguno falló,
+//    "incomplete" si falta algún resultado
+
+// 5. Verificación de frescura
+const freshness = await compareVerificationReceiptToCurrent(
+  receipt, plan,
+  "a".repeat(64), "b".repeat(64)
+);
+// => { fresh: true } o { fresh: false, reasonCode: "stale-..." }
+
+// 6. Composición del gate de entrega
+if (freshness.fresh && receipt.stageRequested === "full" && derived === "pass") {
+  console.log("Verificación de entrega completada");
+}
+```

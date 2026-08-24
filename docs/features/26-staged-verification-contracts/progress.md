@@ -1,6 +1,9 @@
 # progress — 26-staged-verification-contracts
 
-Last reviewed: —
+Last reviewed: 2026-08-24 (initial review)
+
+## Acceptance receipt v1
+- Manifest: docs/features/26-staged-verification-contracts/ACCEPTANCE.md · Blob: a4c643dabe8105293c76a1013713c4a3919a96cb · Status: frozen · Verified: 2026-08-24
 
 ## P1 — Deliver the VerificationPlan v1 contract
 - **Status**: Done
@@ -55,5 +58,6 @@ Last reviewed: —
 - **Next**: P5 — Hardening & PR
 
 ## P5 — Hardening & PR
-- **Status**: Remains
-- **Next**: none (final phase)
+- **Status**: In progress
+- **Remains**: Fold F1–F12 (semantic, validator, schema, docs, progress fixes)
+- **Next**: Re-run npm test, update roadmap, push, update PR
