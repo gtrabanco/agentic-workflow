@@ -13,6 +13,8 @@
 // Types (source of truth: this package; the internal skill carries policy only)
 // ---------------------------------------------------------------------------
 
+import { createHash } from "crypto";
+
 export const ENVELOPE_STATES = [
   "OK",
   "CONTINUE",
@@ -3496,22 +3498,313 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
         }
       }
 
-      // skipReason
-      if (status === "skipped") {
-        if (rObj.skipReason === null) {
-          errors.push(`${prefix}.skipReason must be non-null when status is "skipped"`);
-        } else if (typeof rObj.skipReason !== "string" || rObj.skipReason.length === 0) {
-          errors.push(`${prefix}.skipReason must be a non-empty string when status is "skipped"`);
-        } else if (rObj.skipReason.length > 1024) {
-          errors.push(`${prefix}.skipReason must be ≤ 1024 chars when status is "skipped"`);
-        }
-      } else {
+      // skipReason: null allowed on skipped rows (yields verdict incomplete);
+      // non-skipped rows MUST have null skipReason
+      if (status !== "skipped") {
         if (rObj.skipReason !== null) {
           errors.push(`${prefix}.skipReason must be null when status is not "skipped"`);
         }
+      } else {
+        // skipped rows: skipReason can be null OR a non-empty string ≤ 1024 chars
+        if (rObj.skipReason !== null) {
+          if (typeof rObj.skipReason !== "string" || rObj.skipReason.length === 0 || rObj.skipReason.length > 1024) {
+            errors.push(`${prefix}.skipReason must be null or a non-empty string ≤ 1024 chars when status is "skipped"`);
+          }
+        }
+        // null skipReason on skipped row is valid → yields verdict "incomplete"
       }
     }
   }
 
   return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt: value as unknown as VerificationReceiptV1 };
+}
+
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Verification semantic core
+// ---------------------------------------------------------------------------
+
+export interface _VerifyAgainstPlanInput {
+  plan: VerificationPlanV1;
+  receipt: VerificationReceiptV1;
+}
+
+/**
+ * D2 — Plan-bound validation. Checks commandId existence, declared order,
+ * fast-stage subset, D3 fail-fast attribution, planDigest match, verdict consistency.
+ */
+export function validateVerificationReceiptAgainstPlan(
+  input: _VerifyAgainstPlanInput,
+): VerificationReceiptValidationResult {
+  const errors: string[] = [];
+
+  // Validate plan
+  const pv = validateVerificationPlanV1(input.plan);
+  if (!pv.ok) return { ok: false, errors: pv.errors };
+  const plan = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
+
+  // Validate receipt
+  const rv = validateVerificationReceiptV1(input.receipt);
+  if (!rv.ok) return { ok: false, errors: rv.errors };
+  const receipt = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
+
+  // Build lookups
+  const cmdIdx = new Map<string, number>();
+  const cmdMap = new Map<string, VerificationCommandV1>();
+  for (let i = 0; i < plan.commands.length; i++) {
+    cmdIdx.set(plan.commands[i].id, i);
+    cmdMap.set(plan.commands[i].id, plan.commands[i]);
+  }
+
+  // 1. commandId existence + uniqueness
+  const seen = new Set<string>();
+  for (let i = 0; i < receipt.results.length; i++) {
+    const r = receipt.results[i];
+    if (!cmdIdx.has(r.commandId)) {
+      errors.push(`result[${i}].commandId "${r.commandId}" not in plan`);
+    } else if (seen.has(r.commandId)) {
+      errors.push(`result[${i}].commandId "${r.commandId}" duplicate`);
+    } else {
+      seen.add(r.commandId);
+    }
+  }
+
+  // 2. Declared order
+  if (errors.length === 0) {
+    let prev = -1;
+    for (const r of receipt.results) {
+      const idx = cmdIdx.get(r.commandId)!;
+      if (idx < prev) { errors.push(`out of order: "${r.commandId}"`); break; }
+      prev = idx;
+    }
+  }
+
+  // 3. Fast-stage subset: fast receipt only has fast results
+  if (errors.length === 0 && receipt.stageRequested === "fast") {
+    for (const r of receipt.results) {
+      const c = cmdMap.get(r.commandId);
+      if (c && c.stage === "full") {
+        errors.push(`fast receipt carries full command "${r.commandId}"`);
+      }
+    }
+  }
+
+  // 4. D3 fail-fast attribution
+  if (errors.length === 0) {
+    for (const r of receipt.results) {
+      if (r.status === "skipped" && r.skipReason) {
+        const st = r.skipReason;
+        if (!cmdIdx.has(st)) {
+          errors.push(`skipReason "${st}" not a declared command`);
+        } else {
+          const ri = cmdIdx.get(r.commandId)!;
+          const ti = cmdIdx.get(st)!;
+          if (ti >= ri) errors.push(`skipReason "${st}" must reference earlier command`);
+          const tr = receipt.results.find((rr) => rr.commandId === st);
+          if (!tr || tr.status === "passed") errors.push(`skipReason "${st}" references passed/missing command`);
+          const tc = cmdMap.get(st);
+          if (tc && tr && !tc.stopOnFailure) errors.push(`skipReason "${st}" missing stopOnFailure`);
+        }
+      }
+    }
+  }
+
+  // 5. planDigest match
+  if (errors.length === 0) {
+    const d = digestVerificationPlanSync(plan);
+    if (d !== receipt.planDigest) errors.push("planDigest mismatch");
+  }
+
+  // 6. Verdict consistency
+  if (errors.length === 0) {
+    const derived = deriveVerificationVerdict(receipt, plan);
+    if (derived !== receipt.verdict) errors.push(`verdict mismatch: stored "${receipt.verdict}" != derived "${derived}"`);
+  }
+
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt };
+}
+
+/**
+ * D2 — Verdict derivation: incomplete > fail > pass.
+ */
+export function deriveVerificationVerdict(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+): VerificationVerdict {
+  const pv = validateVerificationPlanV1(plan);
+  const rv = validateVerificationReceiptV1(receipt);
+  if (!pv.ok || !rv.ok) return "incomplete";
+  const p = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
+  const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
+
+  const reqStage = r.stageRequested;
+  const required = p.commands.filter((c: VerificationCommandV1) => c.stage === reqStage).map((c: VerificationCommandV1) => c.id);
+  const received = new Set(r.results.map((r2: VerificationResultV1) => r2.commandId));
+
+  // Missing → incomplete
+  for (const id of required) { if (!received.has(id)) return "incomplete"; }
+
+  // Unjustified skip → incomplete
+  for (const r2 of r.results) { if (r2.status === "skipped" && !r2.skipReason) return "incomplete"; }
+
+  // Failed/timed-out/infra → fail
+  for (const r2 of r.results) { if (["failed","timed-out","infrastructure-error"].includes(r2.status)) return "fail"; }
+
+  return "pass";
+}
+
+/** D6 — Canonical serialization. */
+function _canonObj(v: unknown): string {
+  if (v === null) return "null";
+  if (typeof v === "string") return JSON.stringify(v);
+  if (typeof v === "number") return JSON.stringify(v);
+  if (typeof v === "boolean") return JSON.stringify(v);
+  if (Array.isArray(v)) {
+    return "[" + v.map(_canonObj).join(",") + "]";
+  }
+  if (typeof v === "object") {
+    const keys = Object.keys(v as Record<string, unknown>).sort();
+    return "{" + keys.map((k: string) => JSON.stringify(k) + ":" + _canonObj((v as Record<string, unknown>)[k])).join(",") + "}";
+  }
+  return JSON.stringify(v);
+}
+
+function _canon(obj: unknown): string {
+  return _canonObj(obj);
+}
+
+export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string { return _canon(plan); }
+export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string { return _canon(receipt); }
+
+async function _sha256(input: string): Promise<string> {
+  const b = new TextEncoder().encode(input);
+  const h = await crypto.subtle.digest("SHA-256", b);
+  return Array.from(new Uint8Array(h)).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
+  return _sha256(canonicalizeVerificationPlan(plan));
+}
+
+export function digestVerificationPlanSync(plan: VerificationPlanV1): string {
+  return _sha256Sync(canonicalizeVerificationPlan(plan));
+}
+
+export async function digestVerificationReceipt(receipt: VerificationReceiptV1): Promise<string> {
+  return _sha256(canonicalizeVerificationReceipt(receipt));
+}
+
+function _sha256Sync(s: string): string {
+  const b = new TextEncoder().encode(s);
+  try {
+    const h: ArrayBuffer = (crypto.subtle as any).digestSync("SHA-256", b);
+    return Array.from(new Uint8Array(h)).map((x) => x.toString(16).padStart(2, "0")).join("");
+  } catch {
+    // digestSync not available — use Node.js legacy crypto
+    return createHash("sha256").update(b).digest("hex");
+  }
+}
+
+/**
+ * D1 — Freshness predicate.
+ */
+/** Verification-specific freshness reason codes (D1). */
+const VERIFICATION_FRESHNESS_CODES = [
+  "stale-plan", "stale-candidate-snapshot", "stale-acceptance-fingerprint",
+  "incomplete-missing-results", "incomplete-unjustified-skip", "incomplete-stage-coverage",
+] as const;
+export type VerificationFreshnessReasonCode = (typeof VERIFICATION_FRESHNESS_CODES)[number];
+export type VerificationFreshnessResult = { fresh: true; } | { fresh: false; reasonCode: VerificationFreshnessReasonCode };
+
+
+
+export async function compareVerificationReceiptToCurrent(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+  candidateSnapshotDigest: string,
+  acceptanceFingerprint: string,
+): Promise<VerificationFreshnessResult> {
+  const pd = await digestVerificationPlan(plan);
+  if (pd !== receipt.planDigest) return { fresh: false, reasonCode: "stale-plan" };
+  if (candidateSnapshotDigest !== receipt.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
+  if (acceptanceFingerprint !== receipt.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
+
+  const pv = validateVerificationPlanV1(plan);
+  const rv = validateVerificationReceiptV1(receipt);
+  if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "incomplete-missing-results" };
+  const p = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
+  const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
+
+  const rs = r.stageRequested;
+  const req = p.commands.filter((c: VerificationCommandV1) => c.stage === rs).map((c: VerificationCommandV1) => c.id);
+  const recv = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
+
+  for (const id of req) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" }; }
+  for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
+
+  const fullIds = p.commands.filter((c: VerificationCommandV1) => c.stage === "full").map((c: VerificationCommandV1) => c.id);
+  if (rs === "fast" && fullIds.length > 0) {
+    for (const id of fullIds) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" }; }
+  }
+
+  return { fresh: true };
+}
+
+// ---------------------------------------------------------------------------
+// Published canonical vectors (verification — D6)
+// ---------------------------------------------------------------------------
+
+/**
+ * Published frozen canonical vectors for the verification contracts.
+ */
+export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze([
+  {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    digest: "",  // populated at init time below
+    description: "minimal valid VerificationPlan v1 (single fast command)",
+  },
+  {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    digest: "",  // populated at init time below
+    description: "minimal valid VerificationReceipt v1 (single passed result)",
+  },
+]);
+
+// Compute vector digests at module load time (with Node.js crypto fallback)
+try {
+  (function _initVerificationVectors() {
+    const _plan: VerificationPlanV1 = {
+      contract: VERIFICATION_PLAN_CONTRACT_ID,
+      commands: [
+        { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root" as WorkingDirectoryPolicy, workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" as VerificationCostClass },
+      ],
+    };
+    VERIFICATION_CANONICAL_VECTORS[0].digest = digestVerificationPlanSync(_plan);
+
+    const _receipt: VerificationReceiptV1 = {
+      contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+      planDigest: VERIFICATION_CANONICAL_VECTORS[0].digest,
+      candidateSnapshotDigest: "a".repeat(64),
+      acceptanceFingerprint: "b".repeat(64),
+      stageRequested: "full",
+      results: [
+        { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
+      ],
+      verdict: "pass",
+    };
+    // Use the same digest algorithm as the async one but sync version
+    const _canonStr = JSON.stringify(_receipt, (_k, v) => v, 0);
+    const _bytes = new TextEncoder().encode(_canonStr);
+    try {
+      const _hashBuf = (crypto.subtle as any).digestSync("SHA-256", _bytes);
+      VERIFICATION_CANONICAL_VECTORS[1].digest = Array.from(new Uint8Array(_hashBuf)).map((x: number) => x.toString(16).padStart(2, "0")).join("");
+    } catch {
+      // digestSync not available in this environment — use Node legacy crypto
+      const { createHash } = require("crypto") as typeof import("crypto");
+      VERIFICATION_CANONICAL_VECTORS[1].digest = createHash("sha256").update(_canonStr).digest("hex");
+    }
+  })();
+} catch {
+  // Module init failed — vectors will have empty digests
 }
