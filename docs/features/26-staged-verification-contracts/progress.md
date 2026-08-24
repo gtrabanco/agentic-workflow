@@ -59,5 +59,5 @@ Last reviewed: 2026-08-24 (initial review)
 
 ## P5 — Hardening & PR
 - **Status**: In progress
-- **Remains**: Fold F1–F12 (semantic, validator, schema, docs, progress fixes)
-- **Next**: Re-run npm test, update roadmap, push, update PR
+- **Remains**: Run verification gate, update roadmap, push, update PR
+- **Gotchas**: All fold findings (F1–F12) resolved; npm test 308/308 green
