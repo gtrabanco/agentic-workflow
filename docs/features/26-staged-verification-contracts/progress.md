@@ -58,6 +58,7 @@ Last reviewed: 2026-08-24 (initial review)
 - **Next**: P5 — Hardening & PR
 
 ## P5 — Hardening & PR
-- **Status**: In progress
-- **Remains**: Run verification gate, update roadmap, push, update PR
-- **Gotchas**: All fold findings (F1–F12) resolved; npm test 308/308 green
+- **Status**: Done
+- **Done**: npm test 308/308, acceptance receipt v1 recorded, bilingual docs updated (contract ID, Spanish phrase, consumer examples), schema NUL/path/policy constraints, validator exitCode/signal type checks, Windows path rejection, O(n²)→O(1) lookup, _VerifyAgainstPlanInput → VerifyAgainstPlanInput export, ledger F1–F12 folded
+- **Remains**: none (final phase)
+- **Next**: none
