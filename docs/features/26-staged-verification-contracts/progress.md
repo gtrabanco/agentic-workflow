@@ -29,8 +29,20 @@ Last reviewed: —
 - **Next**: P3 — Implement the staged verification semantic core
 
 ## P3 — Implement the staged verification semantic core
-- **Status**: Remains
-- **Next**: P4
+- **Status**: Done
+- **Done**: validateVerificationReceiptAgainstPlan, deriveVerificationVerdict, canonicalize/digest core, compareVerificationReceiptToCurrent freshness predicate, VERIFICATION_CANONICAL_VECTORS, bilingual docs (README.md + README.es.md), version 3.3.0 → 3.4.0
+- **Files**:
+  - `packages/agentic-workflow-schema/src/index.ts` — added semantic core functions, types, constants, vectors
+  - `packages/agentic-workflow-schema/test/verification-core.test.mjs` — 36 test cases for verdict, digest, freshness
+  - `packages/agentic-workflow-schema/test/release-contract.test.mjs` — version updated to 3.4.0
+  - `packages/agentic-workflow-schema/README.md` — staged-verification section added
+  - `packages/agentic-workflow-schema/README.es.md` — sección de verificación escalonada added
+  - `packages/agentic-workflow-schema/package.json` — version 3.4.0
+  - `packages/agentic-workflow-schema/tsconfig.json` — added @types/node for crypto types
+  - `docs/features/26-staged-verification-contracts/TASKS.md` — P3 checkboxes checked
+- **Remains**: P4, P5
+- **Gotchas**: digestSync not available on crypto.subtle in Node.js 24 — used node:crypto.createHash as fallback; required adding @types/node devDependency
+- **Next**: P4 — Cover the mandated verification scenario matrix
 
 ## P4 — Cover the mandated verification scenario matrix
 - **Status**: Remains

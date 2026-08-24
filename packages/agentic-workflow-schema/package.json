@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Versioned machine contracts, JSON Schemas, parsers, and deterministic document snapshots for agentic-workflow orchestration.",
   "keywords": [
     "agentic-workflow",
@@ -59,6 +59,7 @@
     "prepublishOnly": "npm test"
   },
   "devDependencies": {
+    "@types/node": "^26.2.0",
     "ajv": "^8.20.0",
     "typescript": "6"
   }

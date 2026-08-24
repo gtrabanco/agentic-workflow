@@ -227,3 +227,34 @@ intento no reconocido, y cualquier transición no en la tabla cerrada.
 
 Consulta el [SPEC](../features/24-workflow-transition-decider/SPEC.md) para el
 diseño completo, tablas de transición y vocabulario de códigos de razón.
+
+## Contratos de Verificación Escalonada (feature 26)
+
+Dos contratos wire versionados para verificación escalonada:
+
+- `VerificationPlan v1` (`agentic-workflow/verification-plan@1`) — una lista
+  de comandos ordenada y no vacía donde cada comando lleva un `id` estable,
+  `stage: fast | full`, un `executable` y `args` ordenados (nunca una cadena
+  de shell), una política de directorio de trabajo (`candidate-root` o
+  `relative-path` con ruta relativa validada), un `timeoutMs` positivo,
+  `stopOnFailure`, y una clase de costo.
+
+- `VerificationReceipt v1` (`agentic-workflow/receipts@1`) — un recibo que se
+  vincula al digest del plan, al digest del snapshot del candidato y al
+  fingerprint de aceptación, llevando resultados por comando con estado
+  (`passed | failed | timed-out | skipped | infrastructure-error`), matriz
+  exitCode/signal según D4, referencias de evidencia acotadas, y una razón de
+  salto explícita. El veredicto global (`pass | fail | incomplete`) se deriva
+  del contenido del recibo.
+
+**Modelo de dos etapas:** solicitar `fast` ejecuta solo comandos fast; solicitar
+`full` ejecuta todos los comandos fast y full. El predicado de frescura retorna
+códigos de razón estables (`stale-plan | stale-candidate-snapshot |
+stale-acceptance-fingerprint | incomplete-missing-results |
+incomplete-unjustified-skip | incomplete-stage-coverage`) o `{fresh: true}`.
+
+**Regla del gate de entrega:** un gate de verificación de entrega se satisface
+SOLAMENTE por un recibo que sea fresco, solicite `full`, y tenga veredicto `pass`.
+
+**Límite de no-ejecución:** el paquete valida, canonicaliza, digiere, deriva y
+compara — no ejecuta comandos. El llamante es dueño de la ejecución.
