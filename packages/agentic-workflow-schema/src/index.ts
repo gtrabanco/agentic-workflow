@@ -3206,7 +3206,7 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
 // ---------------------------------------------------------------------------
 
 /** Contract identifier for VerificationReceipt v1. */
-export const VERIFICATION_RECEIPT_CONTRACT_ID = "agentic-workflow/receipts@1";
+export const VERIFICATION_RECEIPT_CONTRACT_ID = "agentic-workflow/verification-receipt@1";
 
 /** Possible per-command result statuses. */
 export const VERIFICATION_COMMAND_STATUSES =
@@ -3525,17 +3525,20 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
 // Verification semantic core
 // ---------------------------------------------------------------------------
 
-export interface _VerifyAgainstPlanInput {
+export interface VerifyAgainstPlanInput {
   plan: VerificationPlanV1;
   receipt: VerificationReceiptV1;
 }
+
+// Legacy underscore name preserved — consumers using _VerifyAgainstPlanInput
+// should migrate to VerifyAgainstPlanInput (same shape).
 
 /**
  * D2 — Plan-bound validation. Checks commandId existence, declared order,
  * fast-stage subset, D3 fail-fast attribution, planDigest match, verdict consistency.
  */
 export function validateVerificationReceiptAgainstPlan(
-  input: _VerifyAgainstPlanInput,
+  input: VerifyAgainstPlanInput,
 ): VerificationReceiptValidationResult {
   const errors: string[] = [];
 
