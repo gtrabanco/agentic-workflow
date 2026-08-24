@@ -61,8 +61,8 @@ suites.
 Layer: close-out · Done-when: gates green, PR open with `Closes #139`,
 roadmap row `done · [#<pr>](<pr-url>)`.
 
-- [ ] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0 (310/310 pass); `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty (all docs committed)
 - [ ] Set the roadmap row status to `done` and commit the flip
 - [ ] `git push` — branch pushed, PR branch remote-current
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139`

@@ -3167,7 +3167,8 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
         if (cmdObj.workingDirectory === null || typeof cmdObj.workingDirectory !== "string") {
           errors.push(`${prefix}.workingDirectory must be a non-empty string when workingDirectoryPolicy is "relative-path"`);
         } else {
-          // Relative path validation: non-empty, no NUL, no leading /, no .. segment
+          // Relative path validation: non-empty, no NUL, no absolute path,
+        // no backslash/UNC/drive-letter, no .. segments (cross-platform)
           const wd = cmdObj.workingDirectory as string;
           if (wd.length === 0) {
             errors.push(`${prefix}.workingDirectory must be a non-empty string`);
@@ -3175,7 +3176,11 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
             errors.push(`${prefix}.workingDirectory must not contain NUL characters`);
           } else if (wd.startsWith("/")) {
             errors.push(`${prefix}.workingDirectory must not be an absolute path`);
-          } else if (wd.split("/").includes("..")) {
+          } else if (/^[A-Za-z]:/.test(wd)) {
+            errors.push(`${prefix}.workingDirectory must not be a drive-letter path`);
+          } else if (wd.includes("\\")) {
+            errors.push(`${prefix}.workingDirectory must not contain backslashes`);
+          } else if (wd.includes("..") && wd.split(/[\\/]/).includes("..")) {
             errors.push(`${prefix}.workingDirectory must not contain ".." segments`);
           }
         }
@@ -3311,11 +3316,28 @@ function isLowercase64Hex(v: unknown): boolean {
   return typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
 }
 
-/** Checks if a string is a valid ISO-8601 UTC timestamp. */
+/** Checks if a string is a valid ISO-8601 UTC timestamp (calendar-valid). */
 function isISO8601UTC(v: unknown): boolean {
   if (typeof v !== "string") return false;
   // Must match ISO-8601 format with Z timezone
-  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(v);
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(v)) return false;
+  // Also validate the calendar values (rejects e.g. 2025-99-99T99:99:99Z)
+  const m = v.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
+  if (!m) return false;
+  const d = new Date(v);
+  if (!Number.isFinite(d.getTime())) return false;
+  // Verify calendar round-trip: UTC components must match the input
+  const parts = v.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!parts) return false;
+  const [, Y, M, D, h, m_, s] = parts;
+  return (
+    d.getUTCFullYear() === Number(Y) &&
+    d.getUTCMonth() + 1 === Number(M) &&
+    d.getUTCDate() === Number(D) &&
+    d.getUTCHours() === Number(h) &&
+    d.getUTCMinutes() === Number(m_) &&
+    d.getUTCSeconds() === Number(s)
+  );
 }
 
 /**
@@ -3421,9 +3443,17 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
         errors.push(`${prefix}.status must be one of ${VERIFICATION_COMMAND_STATUSES.join("|")} (got: "${String(rObj.status)}")`);
       }
 
-      // D4 — exitCode/signal matrix
+      // Base type checks before D4 matrix
       const exitCode = rObj.exitCode;
       const signal = rObj.signal;
+      if (exitCode !== null && (typeof exitCode !== "number" || !Number.isInteger(exitCode))) {
+        errors.push(`${prefix}.exitCode must be an integer or null (got: ${JSON.stringify(exitCode)})`);
+      }
+      if (signal !== null && (typeof signal !== "string" || signal.length === 0)) {
+        errors.push(`${prefix}.signal must be a non-empty string or null (got: ${JSON.stringify(signal)})`);
+      }
+
+      // D4 — exitCode/signal matrix
       const status = rObj.status as VerificationCommandStatus;
 
       if (status === "passed" || status === "failed") {
@@ -3437,9 +3467,12 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
           errors.push(`${prefix}.status is "${status}" but both exitCode and signal are present (need exactly one)`);
         }
       } else if (status === "timed-out") {
-        // exitCode must be null; signal nullable
+        // exitCode must be null; signal nullable (string or null)
         if (exitCode !== null) {
           errors.push(`${prefix}.exitCode must be null when status is "timed-out"`);
+        }
+        if (signal !== null && typeof signal !== "string") {
+          errors.push(`${prefix}.signal must be a string or null when status is "timed-out"`);
         }
       } else if (status === "infrastructure-error" || status === "skipped") {
         // Both must be null
@@ -3593,6 +3626,11 @@ export function validateVerificationReceiptAgainstPlan(
     }
   }
 
+  // Build commandId → result map for O(1) lookups
+  const resultByCmd = new Map<string, VerificationResultV1>(
+    receipt.results.map(r => [r.commandId, r]),
+  );
+
   // 4. D3 fail-fast attribution
   if (errors.length === 0) {
     for (const r of receipt.results) {
@@ -3604,7 +3642,7 @@ export function validateVerificationReceiptAgainstPlan(
           const ri = cmdIdx.get(r.commandId)!;
           const ti = cmdIdx.get(st)!;
           if (ti >= ri) errors.push(`skipReason "${st}" must reference earlier command`);
-          const tr = receipt.results.find((rr) => rr.commandId === st);
+          const tr = resultByCmd.get(st);
           if (!tr || tr.status === "passed") errors.push(`skipReason "${st}" references passed/missing command`);
           const tc = cmdMap.get(st);
           if (tc && tr && !tc.stopOnFailure) errors.push(`skipReason "${st}" missing stopOnFailure`);
@@ -3642,7 +3680,11 @@ export function deriveVerificationVerdict(
   const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
 
   const reqStage = r.stageRequested;
-  const required = p.commands.filter((c: VerificationCommandV1) => c.stage === reqStage).map((c: VerificationCommandV1) => c.id);
+  // Stage required set: fast → fast commands; full → every declared command
+  const required =
+    reqStage === "full"
+      ? p.commands.map((c: VerificationCommandV1) => c.id)
+      : p.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
   const received = new Set(r.results.map((r2: VerificationResultV1) => r2.commandId));
 
   // Missing → incomplete
@@ -3677,13 +3719,15 @@ function _canon(obj: unknown): string {
   return _canonObj(obj);
 }
 
-export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string { return _canon(plan); }
-export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string { return _canon(receipt); }
+export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string {
+  return canonicalJSONValue(plan);
+}
+export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string {
+  return canonicalJSONValue(receipt);
+}
 
 async function _sha256(input: string): Promise<string> {
-  const b = new TextEncoder().encode(input);
-  const h = await crypto.subtle.digest("SHA-256", b);
-  return Array.from(new Uint8Array(h)).map((x) => x.toString(16).padStart(2, "0")).join("");
+  return sha256Hex(input);
 }
 
 export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
@@ -3691,32 +3735,21 @@ export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<
 }
 
 export function digestVerificationPlanSync(plan: VerificationPlanV1): string {
-  return _sha256Sync(canonicalizeVerificationPlan(plan));
+  return createHash("sha256").update(canonicalizeVerificationPlan(plan)).digest("hex");
 }
 
 export async function digestVerificationReceipt(receipt: VerificationReceiptV1): Promise<string> {
   return _sha256(canonicalizeVerificationReceipt(receipt));
 }
 
-function _sha256Sync(s: string): string {
-  const b = new TextEncoder().encode(s);
-  try {
-    const h: ArrayBuffer = (crypto.subtle as any).digestSync("SHA-256", b);
-    return Array.from(new Uint8Array(h)).map((x) => x.toString(16).padStart(2, "0")).join("");
-  } catch {
-    // digestSync not available — use Node.js legacy crypto
-    return createHash("sha256").update(b).digest("hex");
-  }
-}
-
 /**
  * D1 — Freshness predicate.
  */
 /** Verification-specific freshness reason codes (D1). */
-const VERIFICATION_FRESHNESS_CODES = [
+export const VERIFICATION_FRESHNESS_CODES = Object.freeze([
   "stale-plan", "stale-candidate-snapshot", "stale-acceptance-fingerprint",
   "incomplete-missing-results", "incomplete-unjustified-skip", "incomplete-stage-coverage",
-] as const;
+] as const);
 export type VerificationFreshnessReasonCode = (typeof VERIFICATION_FRESHNESS_CODES)[number];
 export type VerificationFreshnessResult = { fresh: true; } | { fresh: false; reasonCode: VerificationFreshnessReasonCode };
 
@@ -3740,14 +3773,18 @@ export async function compareVerificationReceiptToCurrent(
   const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
 
   const rs = r.stageRequested;
-  const req = p.commands.filter((c: VerificationCommandV1) => c.stage === rs).map((c: VerificationCommandV1) => c.id);
+  // Stage required set: fast → fast commands; full → every declared command
+  const req =
+    rs === "full"
+      ? p.commands.map((c: VerificationCommandV1) => c.id)
+      : p.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
   const recv = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
 
   for (const id of req) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" }; }
   for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
-
-  const fullIds = p.commands.filter((c: VerificationCommandV1) => c.stage === "full").map((c: VerificationCommandV1) => c.id);
-  if (rs === "fast" && fullIds.length > 0) {
+  // Requested-full coverage gap: a full receipt must cover every declared command
+  if (rs === "full") {
+    const fullIds = p.commands.map((c: VerificationCommandV1) => c.id);
     for (const id of fullIds) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" }; }
   }
 
@@ -3774,40 +3811,26 @@ export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = 
   },
 ]);
 
-// Compute vector digests at module load time (with Node.js crypto fallback)
-try {
-  (function _initVerificationVectors() {
-    const _plan: VerificationPlanV1 = {
-      contract: VERIFICATION_PLAN_CONTRACT_ID,
-      commands: [
-        { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root" as WorkingDirectoryPolicy, workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" as VerificationCostClass },
-      ],
-    };
-    VERIFICATION_CANONICAL_VECTORS[0].digest = digestVerificationPlanSync(_plan);
+// Compute vector digests at module load time (immutable, non-swallowing)
+(function _initVerificationVectors() {
+  const _plan: VerificationPlanV1 = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root" as WorkingDirectoryPolicy, workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" as VerificationCostClass },
+    ],
+  };
+  VERIFICATION_CANONICAL_VECTORS[0].digest = digestVerificationPlanSync(_plan);
 
-    const _receipt: VerificationReceiptV1 = {
-      contract: VERIFICATION_RECEIPT_CONTRACT_ID,
-      planDigest: VERIFICATION_CANONICAL_VECTORS[0].digest,
-      candidateSnapshotDigest: "a".repeat(64),
-      acceptanceFingerprint: "b".repeat(64),
-      stageRequested: "full",
-      results: [
-        { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
-      ],
-      verdict: "pass",
-    };
-    // Use the same digest algorithm as the async one but sync version
-    const _canonStr = JSON.stringify(_receipt, (_k, v) => v, 0);
-    const _bytes = new TextEncoder().encode(_canonStr);
-    try {
-      const _hashBuf = (crypto.subtle as any).digestSync("SHA-256", _bytes);
-      VERIFICATION_CANONICAL_VECTORS[1].digest = Array.from(new Uint8Array(_hashBuf)).map((x: number) => x.toString(16).padStart(2, "0")).join("");
-    } catch {
-      // digestSync not available in this environment — use Node legacy crypto
-      const { createHash } = require("crypto") as typeof import("crypto");
-      VERIFICATION_CANONICAL_VECTORS[1].digest = createHash("sha256").update(_canonStr).digest("hex");
-    }
-  })();
-} catch {
-  // Module init failed — vectors will have empty digests
-}
+  const _receipt: VerificationReceiptV1 = {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    planDigest: VERIFICATION_CANONICAL_VECTORS[0].digest,
+    candidateSnapshotDigest: "a".repeat(64),
+    acceptanceFingerprint: "b".repeat(64),
+    stageRequested: "full",
+    results: [
+      { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
+    ],
+    verdict: "pass",
+  };
+  VERIFICATION_CANONICAL_VECTORS[1].digest = createHash("sha256").update(canonicalizeVerificationReceipt(_receipt)).digest("hex");
+})();
