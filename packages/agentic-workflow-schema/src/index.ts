@@ -3711,7 +3711,7 @@ export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<
   return sha256Hex(canonicalizeVerificationPlan(plan));
 }
 
-export function digestVerificationPlanSync(plan: VerificationPlanV1): string {
+function digestVerificationPlanSync(plan: VerificationPlanV1): string {
   return createHash("sha256").update(canonicalizeVerificationPlan(plan)).digest("hex");
 }
 

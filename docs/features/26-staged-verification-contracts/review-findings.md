@@ -30,3 +30,12 @@
 | F28 | packages/agentic-workflow-schema/test/release-contract.test.mjs:62 | verify | minor | fix-now | npm-pack test omits new schema files from required list | yes |
 | F29 | packages/agentic-workflow-schema/src/index.ts:3685-3690,3774-3781 | perf | minor | ignore | DRY stage-required-set duplication — not a defect, extracting helper adds code | no |
 | F30 | docs/features/26-staged-verification-contracts/TASKS.md:66-70 | workflow | high | fix-now | P5 checkboxes 66-70 remain unchecked despite work verified done (roadmap flipped, PR #145 open, branch remote-current) | yes |
+| F31 | packages/agentic-workflow-schema/src/index.ts:3725-3764 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | replan-in-unit: define distinct reachable freshness outcomes, then fresh Hardening & PR | no |
+| F32 | packages/agentic-workflow-schema/src/index.ts:3774-3808 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | replan-in-unit: publish fixed immutable vectors with independent TS/JSON-Schema tests | no |
+| F33 | packages/agentic-workflow-schema/src/index.ts:3735-3748 | code | high | fix-now | replan-in-unit: validate before hashing/dereferencing and prove no-throw behavior | no |
+| F34 | packages/agentic-workflow-schema/src/index.ts:3714-3716 | code + API ergonomics/docs + spec-drift | med | fix-now | replan-in-unit: remove the unspecified public synchronous digest surface | yes |
+| F35 | packages/agentic-workflow-schema/README.md:267-320 | API ergonomics/docs + verify | high | fix-now | replan-in-unit: synchronize compilable EN/ES examples and add a compile test | no |
+| F36 | packages/agentic-workflow-schema/src/index.ts:2993-3001 | API ergonomics/docs + security | high | fix-now | replan-in-unit: freeze exported vocabularies and add immutability tests | no |
+| F37 | packages/agentic-workflow-schema/package-lock.json:3-8 | API ergonomics/docs + workflow | med | fix-now | replan-in-unit: regenerate release metadata and verify the packed artifact | yes |
+| F38 | docs/features/26-staged-verification-contracts/progress.md:60-64 | workflow + spec-drift | high | fix-now | replan-in-unit: refresh progress only after corrective phases and final gates | no |
+| F39 | docs/features/26-staged-verification-contracts/review-findings.md:6,29,31 | workflow + spec-drift | high | fix-now | replan-in-unit: restore the fixed ledger schema and remove non-fix-now rows | no |
