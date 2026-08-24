@@ -59,7 +59,7 @@ test("AC8: npm pack manifest independently contains all four required public art
   assert.ok(record && Array.isArray(record.files), "pack manifest exposes a files list");
   const paths = new Set(record.files.map((entry) => entry.path));
 
-  const required = ["dist/index.js", "dist/index.d.ts", "README.md", "README.es.md"];
+  const required = ["dist/index.js", "dist/index.d.ts", "README.md", "README.es.md", "verification-plan.schema.json", "verification-receipt.schema.json"];
   for (const artifact of required) {
     assert.ok(paths.has(artifact), `required packed artifact missing: ${artifact}`);
   }
