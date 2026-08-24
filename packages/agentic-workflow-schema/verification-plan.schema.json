@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VerificationPlan v1",
+  "description": "An ordered, non-empty command list for staged verification (fast/full).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "commands"],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/verification-plan@1",
+      "description": "Contract identifier."
+    },
+    "commands": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/VerificationCommandV1"
+      }
+    }
+  },
+  "$defs": {
+    "VerificationCommandV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "stage", "executable", "args", "workingDirectoryPolicy", "workingDirectory", "timeoutMs", "stopOnFailure", "costClass"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable, non-empty, unique within the plan."
+        },
+        "stage": {
+          "type": "string",
+          "enum": ["fast", "full"],
+          "description": "Verification stage."
+        },
+        "executable": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Non-empty executable path; no NUL characters."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ordered arguments; each without NUL."
+        },
+        "workingDirectoryPolicy": {
+          "type": "string",
+          "enum": ["candidate-root", "relative-path"],
+          "description": "Working directory policy."
+        },
+        "workingDirectory": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "minLength": 1 }
+          ],
+          "description": "Null iff candidate-root; validated relative path iff relative-path."
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Positive integer timeout in milliseconds."
+        },
+        "stopOnFailure": {
+          "type": "boolean",
+          "description": "Whether to stop executing subsequent commands on failure."
+        },
+        "costClass": {
+          "type": "string",
+          "enum": ["cheap", "moderate", "expensive"],
+          "description": "Project-declared cost class."
+        }
+      }
+    }
+  }
+}
