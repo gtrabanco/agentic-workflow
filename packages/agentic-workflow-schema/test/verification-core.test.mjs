@@ -7,6 +7,7 @@ import {
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_VERDICTS,
+  VERIFICATION_FRESHNESS_CODES,
   validateVerificationPlanV1,
   validateVerificationReceiptV1,
   validateVerificationReceiptAgainstPlan,
@@ -524,7 +525,9 @@ test("incomplete-unjustified-skip: skipped without reason", async () => {
   assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-unjustified-skip" });
 });
 
-test("incomplete-stage-coverage: fast receipt but full commands in plan", async () => {
+test("fresh: complete fast receipt is fresh even when full commands exist in plan", async () => {
+  // Fast stage only requires fast commands; the delivery gate requires full,
+  // so a complete fast receipt is fresh but cannot satisfy delivery (gate check).
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "deploy", stage: "full" }),
@@ -542,7 +545,30 @@ test("incomplete-stage-coverage: fast receipt but full commands in plan", async 
     verdict: "pass",
   };
   const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-stage-coverage" });
+  assert.deepStrictEqual(result, { fresh: true });
+});
+
+test("incomplete-missing-results: full receipt missing declared command", async () => {
+  // A full receipt missing a required command is caught by incomplete-missing-results.
+  const plan = makePlan([
+    makeValidPlanCommand({ id: "lint", stage: "fast" }),
+    makeValidPlanCommand({ id: "deploy", stage: "full" }),
+  ]);
+  const planDigest = await digestVerificationPlan(plan);
+  const receipt = {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    planDigest,
+    candidateSnapshotDigest: "e".repeat(64),
+    acceptanceFingerprint: "f".repeat(64),
+    stageRequested: "full",
+    results: [
+      { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
+      // Missing deploy (full) command
+    ],
+    verdict: "pass",
+  };
+  const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
 });
 
 // ---------------------------------------------------------------------------
@@ -563,9 +589,23 @@ test("vectors have expected shape", () => {
 
 test("vector plans pass validation", () => {
   for (const v of VERIFICATION_CANONICAL_VECTORS) {
-    if (v.contract === VERIFICATION_PLAN_CONTRACT_ID) {
-      // This vector is for plan — verify its digest matches
-      // (the actual plan content is constructed in the test/fixtures)
-    }
+    assert.ok(v.digest.length > 0, `Vector ${v.contract} must have non-empty digest`);
+    assert.ok(/^[a-f0-9]{64}$/.test(v.digest), `Vector ${v.contract} digest must be lowercase 64-hex`);
   }
+});
+
+test("exports VERIFICATION_FRESHNESS_CODES with 6 codes", () => {
+  assert.ok(Array.isArray(VERIFICATION_FRESHNESS_CODES));
+  assert.equal(VERIFICATION_FRESHNESS_CODES.length, 6);
+  assert.deepStrictEqual(
+    VERIFICATION_FRESHNESS_CODES,
+    [
+      "stale-plan",
+      "stale-candidate-snapshot",
+      "stale-acceptance-fingerprint",
+      "incomplete-missing-results",
+      "incomplete-unjustified-skip",
+      "incomplete-stage-coverage",
+    ],
+  );
 });
