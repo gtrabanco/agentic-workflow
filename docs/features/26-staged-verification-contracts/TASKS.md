@@ -48,23 +48,23 @@ freshness); `grep '"version"' package.json` → `"3.4.0"`.
 Layer: hardening · Done-when: `npm test` → exit 0 with verification-scenario
 suites.
 
-- [ ] Fast success + fast fail-fast scenarios end-to-end (verdicts `pass` / `fail`)
-- [ ] Full success + full fail-fast scenarios end-to-end, including D3 skip attribution to the failed command id
-- [ ] Timeout + infrastructure-error scenarios: distinct statuses, D4 matrix, verdict `fail`, never `pass`
-- [ ] Skipped-with-reason vs skipped-without-reason scenarios (verdict `fail` vs `incomplete`, code `incomplete-unjustified-skip`)
-- [ ] Missing-results + requested-full coverage-gap scenarios (codes `incomplete-missing-results` / `incomplete-stage-coverage`) + D9 vacuous-fast pin
-- [ ] Stale candidate + stale acceptance + stale plan scenarios (codes `stale-candidate-snapshot` / `stale-acceptance-fingerprint` / `stale-plan`)
-- [ ] Path-traversal + duplicate-id rejection scenarios through validate → canonicalize → digest → compare
+- [x] Fast success + fast fail-fast scenarios end-to-end (verdicts `pass` / `fail`)
+- [x] Full success + full fail-fast scenarios end-to-end, including D3 skip attribution to the failed command id
+- [x] Timeout + infrastructure-error scenarios: distinct statuses, D4 matrix, verdict `fail`, never `pass`
+- [x] Skipped-with-reason vs skipped-without-reason scenarios (verdict `fail` vs `incomplete`, code `incomplete-unjustified-skip`)
+- [x] Missing-results + requested-full coverage-gap scenarios (codes `incomplete-missing-results` / `incomplete-stage-coverage`) + D9 vacuous-fast pin
+- [x] Stale candidate + stale acceptance + stale plan scenarios (codes `stale-candidate-snapshot` / `stale-acceptance-fingerprint` / `stale-plan`)
+- [x] Path-traversal + duplicate-id rejection scenarios through validate → canonicalize → digest → compare
 
 ## P5 — Hardening & PR
 
 Layer: close-out · Done-when: gates green, PR open with `Closes #139`,
 roadmap row `done · [#<pr>](<pr-url>)`.
 
-- [ ] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the roadmap row status to `done` and commit the flip
-- [ ] `git push` — branch pushed, PR branch remote-current
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<pr>` and push
+- [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the roadmap row status to `done` and commit the flip
+- [x] `git push` — branch pushed, PR branch remote-current
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139`
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<pr>` and push
