@@ -8,7 +8,7 @@
   "properties": {
     "contract": {
       "type": "string",
-      "const": "agentic-workflow/receipts@1",
+      "const": "agentic-workflow/verification-receipt@1",
       "description": "Contract identifier."
     },
     "planDigest": {

@@ -19,7 +19,7 @@ const __dirname = dirname(__filename);
 // ---------------------------------------------------------------------------
 
 test("exports the receipt contract ID", () => {
-  assert.equal(VERIFICATION_RECEIPT_CONTRACT_ID, "agentic-workflow/receipts@1");
+  assert.equal(VERIFICATION_RECEIPT_CONTRACT_ID, "agentic-workflow/verification-receipt@1");
 });
 
 test("exports VERIFICATION_COMMAND_STATUSES with 5 values", () => {

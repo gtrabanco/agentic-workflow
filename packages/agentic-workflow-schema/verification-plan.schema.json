@@ -54,8 +54,8 @@
         },
         "workingDirectory": {
           "oneOf": [
-            { "type": "null" },
-            { "type": "string", "minLength": 1 }
+            { "type": "null", "description": "Null when workingDirectoryPolicy is 'candidate-root'." },
+            { "type": "string", "pattern": "^(?![/\\\\])(?!.*\\.\\.(\\/|\\\\))[^\\\\/\\\\0]*$", "minLength": 1, "description": "Relative path when workingDirectoryPolicy is 'relative-path': no absolute path, no NUL, no .. traversal, no backslashes." }
           ],
           "description": "Null iff candidate-root; validated relative path iff relative-path."
         },
@@ -72,6 +72,21 @@
           "type": "string",
           "enum": ["cheap", "moderate", "expensive"],
           "description": "Project-declared cost class."
+        }
+      },
+      "if": {
+        "properties": {
+          "workingDirectoryPolicy": { "const": "candidate-root" }
+        }
+      },
+      "then": {
+        "properties": {
+          "workingDirectory": { "type": "null" }
+        }
+      },
+      "else": {
+        "properties": {
+          "workingDirectory": { "not": { "type": "null" } }
         }
       }
     }
