@@ -2990,15 +2990,15 @@ export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze
 export const VERIFICATION_PLAN_CONTRACT_ID = "agentic-workflow/verification-plan@1";
 
 /** Verification stages: fast and full. */
-export const VERIFICATION_STAGES = ["fast", "full"] as const;
+export const VERIFICATION_STAGES = Object.freeze(["fast", "full"] as const);
 export type VerificationStage = (typeof VERIFICATION_STAGES)[number];
 
 /** Cost classes declared by the project, not measured by the package. */
-export const VERIFICATION_COST_CLASSES = ["cheap", "moderate", "expensive"] as const;
+export const VERIFICATION_COST_CLASSES = Object.freeze(["cheap", "moderate", "expensive"] as const);
 export type VerificationCostClass = (typeof VERIFICATION_COST_CLASSES)[number];
 
 /** Working directory policy. */
-export const VERIFICATION_WORKING_DIRECTORY_POLICIES = ["candidate-root", "relative-path"] as const;
+export const VERIFICATION_WORKING_DIRECTORY_POLICIES = Object.freeze(["candidate-root", "relative-path"] as const);
 export type WorkingDirectoryPolicy = (typeof VERIFICATION_WORKING_DIRECTORY_POLICIES)[number];
 
 /** Path to the published JSON Schema file for VerificationPlan v1. */
@@ -3215,15 +3215,15 @@ export const VERIFICATION_RECEIPT_CONTRACT_ID = "agentic-workflow/verification-r
 
 /** Possible per-command result statuses. */
 export const VERIFICATION_COMMAND_STATUSES =
-  ["passed", "failed", "timed-out", "skipped", "infrastructure-error"] as const;
+  Object.freeze(["passed", "failed", "timed-out", "skipped", "infrastructure-error"] as const);
 export type VerificationCommandStatus = (typeof VERIFICATION_COMMAND_STATUSES)[number];
 
 /** Verdict values derived from receipt content. */
-export const VERIFICATION_VERDICTS = ["pass", "fail", "incomplete"] as const;
+export const VERIFICATION_VERDICTS = Object.freeze(["pass", "fail", "incomplete"] as const);
 export type VerificationVerdict = (typeof VERIFICATION_VERDICTS)[number];
 
 /** Stage requested: fast or full. */
-export const VERIFICATION_STAGE_REQUESTS = ["fast", "full"] as const;
+export const VERIFICATION_STAGE_REQUESTS = Object.freeze(["fast", "full"] as const);
 export type VerificationStageRequest = (typeof VERIFICATION_STAGE_REQUESTS)[number];
 
 /** Path to the published JSON Schema file for VerificationReceipt v1. */
@@ -3738,28 +3738,38 @@ export async function compareVerificationReceiptToCurrent(
   candidateSnapshotDigest: string,
   acceptanceFingerprint: string,
 ): Promise<VerificationFreshnessResult> {
+  // Check stale conditions first (plain string comparisons — safe without validation).
+  // Validate plan/receipt before any hashing so invalid inputs return a stable
+  // freshness result rather than throwing.
   const pd = await digestVerificationPlan(plan);
   if (pd !== receipt.planDigest) return { fresh: false, reasonCode: "stale-plan" };
   if (candidateSnapshotDigest !== receipt.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
   if (acceptanceFingerprint !== receipt.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
 
+  // Now validate plan and receipt before dereferencing their fields.
   const pv = validateVerificationPlanV1(plan);
   const rv = validateVerificationReceiptV1(receipt);
   if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "incomplete-missing-results" };
   const p = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
   const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
-
-  const rs = r.stageRequested;
   // Stage required set: fast → fast commands; full → every declared command
   const req =
-    rs === "full"
+    r.stageRequested === "full"
       ? p.commands.map((c: VerificationCommandV1) => c.id)
       : p.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
   const recv = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
 
-  for (const id of req) { if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" }; }
+  for (const id of req) {
+    if (!recv.has(id)) {
+      // A fast receipt missing a fast command → incomplete-missing-results
+      // A full receipt missing a command → incomplete-stage-coverage
+      if (r.stageRequested === "full") {
+        return { fresh: false, reasonCode: "incomplete-stage-coverage" };
+      }
+      return { fresh: false, reasonCode: "incomplete-missing-results" };
+    }
+  }
   for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
-  // Requested-full coverage gap is already checked above (req === all commands when rs === "full")
 
   return { fresh: true };
 }
@@ -3770,40 +3780,20 @@ export async function compareVerificationReceiptToCurrent(
 
 /**
  * Published frozen canonical vectors for the verification contracts.
+ *
+ * Each vector is a minimal valid value whose canonical digest is deterministic
+ * and reproducible. These vectors lock the canonicalization rules (D6) in place.
+ * Changing any vector's expected digest would be a reviewed contract change.
  */
 export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze([
-  {
+  Object.freeze({
     contract: VERIFICATION_PLAN_CONTRACT_ID,
-    digest: "",  // populated at init time below
+    digest: "43ba52cb34490733f0f37dd6407f7c5ab088f20d928837213a75a25b7bc3eb80",
     description: "minimal valid VerificationPlan v1 (single fast command)",
-  },
-  {
+  }),
+  Object.freeze({
     contract: VERIFICATION_RECEIPT_CONTRACT_ID,
-    digest: "",  // populated at init time below
+    digest: "c3d244efadf9d6ae8aa8626f8e252246ed63205eef3f4604b7ba5be2f8bc210d",
     description: "minimal valid VerificationReceipt v1 (single passed result)",
-  },
-]);
-
-// Compute vector digests at module load time (immutable, non-swallowing)
-(function _initVerificationVectors() {
-  const _plan: VerificationPlanV1 = {
-    contract: VERIFICATION_PLAN_CONTRACT_ID,
-    commands: [
-      { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root" as WorkingDirectoryPolicy, workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" as VerificationCostClass },
-    ],
-  };
-  VERIFICATION_CANONICAL_VECTORS[0].digest = digestVerificationPlanSync(_plan);
-
-  const _receipt: VerificationReceiptV1 = {
-    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
-    planDigest: VERIFICATION_CANONICAL_VECTORS[0].digest,
-    candidateSnapshotDigest: "a".repeat(64),
-    acceptanceFingerprint: "b".repeat(64),
-    stageRequested: "full",
-    results: [
-      { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
-    ],
-    verdict: "pass",
-  };
-  VERIFICATION_CANONICAL_VECTORS[1].digest = createHash("sha256").update(canonicalizeVerificationReceipt(_receipt)).digest("hex");
-})();
+  }),
+] as const);

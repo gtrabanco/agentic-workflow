@@ -7,6 +7,8 @@ import {
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_VERDICTS,
+  VERIFICATION_WORKING_DIRECTORY_POLICIES,
+  VERIFICATION_STAGE_REQUESTS,
   VERIFICATION_FRESHNESS_CODES,
   validateVerificationPlanV1,
   validateVerificationReceiptV1,
@@ -548,8 +550,8 @@ test("fresh: complete fast receipt is fresh even when full commands exist in pla
   assert.deepStrictEqual(result, { fresh: true });
 });
 
-test("incomplete-missing-results: full receipt missing declared command", async () => {
-  // A full receipt missing a required command is caught by incomplete-missing-results.
+test("incomplete-stage-coverage: full receipt missing declared command", async () => {
+  // A full receipt missing a required command returns incomplete-stage-coverage.
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "deploy", stage: "full" }),
@@ -568,7 +570,7 @@ test("incomplete-missing-results: full receipt missing declared command", async 
     verdict: "pass",
   };
   const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-stage-coverage" });
 });
 
 // ---------------------------------------------------------------------------
@@ -608,4 +610,84 @@ test("exports VERIFICATION_FRESHNESS_CODES with 6 codes", () => {
       "incomplete-stage-coverage",
     ],
   );
+});
+
+// ---------------------------------------------------------------------------
+// F36 — Runtime immutability of exported vocabulary arrays
+// ---------------------------------------------------------------------------
+
+test("exported vocabulary arrays are frozen at runtime", () => {
+  assert.ok(Object.isFrozen(VERIFICATION_STAGES));
+  assert.ok(Object.isFrozen(VERIFICATION_COST_CLASSES));
+  assert.ok(Object.isFrozen(VERIFICATION_WORKING_DIRECTORY_POLICIES));
+  assert.ok(Object.isFrozen(VERIFICATION_COMMAND_STATUSES));
+  assert.ok(Object.isFrozen(VERIFICATION_VERDICTS));
+  assert.ok(Object.isFrozen(VERIFICATION_STAGE_REQUESTS));
+});
+
+test("mutating frozen vocabulary arrays throws in strict mode", () => {
+  const frozen = [
+    VERIFICATION_STAGES,
+    VERIFICATION_COST_CLASSES,
+    VERIFICATION_WORKING_DIRECTORY_POLICIES,
+    VERIFICATION_COMMAND_STATUSES,
+    VERIFICATION_VERDICTS,
+    VERIFICATION_STAGE_REQUESTS,
+  ];
+  for (const arr of frozen) {
+    assert.throws(
+      () => { arr.push("__mutate_me__"); },
+      { name: "TypeError" },
+      `Expected ${arr.toString()} to throw on mutation`,
+    );
+  }
+});
+
+// ---------------------------------------------------------------------------
+// F32 — Canonical vector digest tests
+// ---------------------------------------------------------------------------
+
+import { createHash } from "node:crypto";
+
+function computePlanDigest() {
+  const fixture = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const canon = canonicalizeVerificationPlan(fixture);
+  return createHash("sha256").update(canon).digest("hex");
+}
+
+function computeReceiptDigest(planDigest) {
+  const fixture = {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    planDigest,
+    candidateSnapshotDigest: "a".repeat(64),
+    acceptanceFingerprint: "b".repeat(64),
+    stageRequested: "full",
+    results: [
+      { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
+    ],
+    verdict: "pass",
+  };
+  const canon = canonicalizeVerificationReceipt(fixture);
+  return createHash("sha256").update(canon).digest("hex");
+}
+
+test("vector digests match independently computed values", () => {
+  const planDigest = computePlanDigest();
+  const expectedPlanDigest = VERIFICATION_CANONICAL_VECTORS[0].digest;
+  assert.equal(planDigest, expectedPlanDigest, "Plan vector digest must match independently computed value");
+
+  const recvDigest = computeReceiptDigest(planDigest);
+  const expectedRecvDigest = VERIFICATION_CANONICAL_VECTORS[1].digest;
+  assert.equal(recvDigest, expectedRecvDigest, "Receipt vector digest must match independently computed value");
+});
+
+test("vector entries are deeply frozen (immutable digest)", () => {
+  for (const v of VERIFICATION_CANONICAL_VECTORS) {
+    assert.ok(Object.isFrozen(v), `Vector entry for ${v.contract} must be deeply frozen`);
+  }
 });
