@@ -2979,3 +2979,222 @@ export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze
     description: "minimal valid receipt (single finding)",
   },
 ]);
+
+// ---------------------------------------------------------------------------
+// VerificationPlan v1 — staged verification contracts
+// ---------------------------------------------------------------------------
+
+/** Contract identifier for VerificationPlan v1. */
+export const VERIFICATION_PLAN_CONTRACT_ID = "agentic-workflow/verification-plan@1";
+
+/** Verification stages: fast and full. */
+export const VERIFICATION_STAGES = ["fast", "full"] as const;
+export type VerificationStage = (typeof VERIFICATION_STAGES)[number];
+
+/** Cost classes declared by the project, not measured by the package. */
+export const VERIFICATION_COST_CLASSES = ["cheap", "moderate", "expensive"] as const;
+export type VerificationCostClass = (typeof VERIFICATION_COST_CLASSES)[number];
+
+/** Working directory policy. */
+export const VERIFICATION_WORKING_DIRECTORY_POLICIES = ["candidate-root", "relative-path"] as const;
+export type WorkingDirectoryPolicy = (typeof VERIFICATION_WORKING_DIRECTORY_POLICIES)[number];
+
+/** Path to the published JSON Schema file for VerificationPlan v1. */
+export const VERIFICATION_PLAN_SCHEMA_PATH = "./verification-plan.schema.json";
+
+/**
+ * A single verification command within a plan.
+ *
+ * `executable` + `args` are represented separately (never a shell string);
+ * shell composition is reserved for a future versioned contract.
+ */
+export interface VerificationCommandV1 {
+  /** Stable, non-empty, unique within the plan. */
+  readonly id: string;
+  /** `fast` or `full` — which stage this command belongs to. */
+  readonly stage: VerificationStage;
+  /** Non-empty executable path; no NUL characters. Never a shell string. */
+  readonly executable: string;
+  /** Ordered arguments; each without NUL; may be empty. */
+  readonly args: readonly string[];
+  /** Whether the command runs at the candidate root or a relative subdirectory. */
+  readonly workingDirectoryPolicy: WorkingDirectoryPolicy;
+  /** `null` iff `candidate-root`; a validated relative path iff `relative-path`. */
+  readonly workingDirectory: string | null;
+  /** Positive integer timeout in milliseconds. */
+  readonly timeoutMs: number;
+  /** Whether to stop executing subsequent commands on failure. */
+  readonly stopOnFailure: boolean;
+  /** Project-declared cost class (not measured billing truth). */
+  readonly costClass: VerificationCostClass;
+}
+
+/**
+ * An ordered, non-empty command list for staged verification.
+ *
+ * The package validates, canonicalizes, and digests the plan; it does NOT
+ * execute commands. The caller owns execution.
+ */
+export interface VerificationPlanV1 {
+  /** Must equal `VERIFICATION_PLAN_CONTRACT_ID`. */
+  readonly contract: typeof VERIFICATION_PLAN_CONTRACT_ID;
+  /** Non-empty command list in declared order. */
+  readonly commands: readonly VerificationCommandV1[];
+}
+
+// ---------------------------------------------------------------------------
+// VerificationPlan v1 — validators
+// ---------------------------------------------------------------------------
+
+export type VerificationPlanValidationResult =
+  | { ok: true; plan: VerificationPlanV1 }
+  | { ok: false; errors: string[] };
+
+/**
+ * Validates a value against the VerificationPlan v1 structural contract.
+ *
+ * Checks:
+ *   - `contract` matches `VERIFICATION_PLAN_CONTRACT_ID`
+ *   - `commands` is a non-empty array
+ *   - Each command: unique non-empty id, valid stage, valid costClass,
+ *     non-empty executable, no NUL in executable or args,
+ *     workingDirectory policy ↔ nullness, relative-path validation,
+ *     positive-integer timeoutMs, boolean stopOnFailure
+ *   - No undeclared fields at top-level or per-command
+ */
+export function validateVerificationPlanV1(value: unknown): VerificationPlanValidationResult {
+  const errors: string[] = [];
+
+  if (!isObj(value)) {
+    return { ok: false, errors: ["value is not a JSON object"] };
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // ---- Top-level field validation ----
+  const allowedTopLevel = new Set(["contract", "commands"]);
+  for (const key of Object.keys(obj)) {
+    if (!allowedTopLevel.has(key)) {
+      errors.push(`unexpected top-level key: "${key}"`);
+    }
+  }
+
+  // contract id
+  if (obj.contract !== VERIFICATION_PLAN_CONTRACT_ID) {
+    errors.push(`contract must be "${VERIFICATION_PLAN_CONTRACT_ID}" (got: "${String(obj.contract)}")`);
+  }
+
+  // commands — non-empty array
+  if (!Array.isArray(obj.commands)) {
+    errors.push("commands must be an array");
+  } else if (obj.commands.length === 0) {
+    errors.push("commands must not be empty");
+  } else {
+    // ---- Per-command validation ----
+    const seenIds = new Set<string>();
+    for (let i = 0; i < obj.commands.length; i++) {
+      const cmd = obj.commands[i];
+      const prefix = `commands[${i}]`;
+
+      if (!isObj(cmd)) {
+        errors.push(`${prefix} must be an object`);
+        continue;
+      }
+
+      const cmdObj = cmd as Record<string, unknown>;
+
+      // Check undeclared fields
+      const allowedCmdFields = new Set([
+        "id", "stage", "executable", "args",
+        "workingDirectoryPolicy", "workingDirectory",
+        "timeoutMs", "stopOnFailure", "costClass",
+      ]);
+      for (const key of Object.keys(cmdObj)) {
+        if (!allowedCmdFields.has(key)) {
+          errors.push(`unexpected key in ${prefix}: "${key}"`);
+        }
+      }
+
+      // id: non-empty, unique
+      if (typeof cmdObj.id !== "string" || cmdObj.id.length === 0) {
+        errors.push(`${prefix}.id must be a non-empty string`);
+      } else {
+        if (seenIds.has(cmdObj.id)) {
+          errors.push(`${prefix}.id "${cmdObj.id}" is a duplicate`);
+        } else {
+          seenIds.add(cmdObj.id);
+        }
+      }
+
+      // stage: vocabulary check
+      if (!VERIFICATION_STAGES.includes(cmdObj.stage as VerificationStage)) {
+        errors.push(`${prefix}.stage must be one of ${VERIFICATION_STAGES.join("|")} (got: "${String(cmdObj.stage)}")`);
+      }
+
+      // executable: non-empty, no NUL
+      if (typeof cmdObj.executable !== "string" || cmdObj.executable.length === 0) {
+        errors.push(`${prefix}.executable must be a non-empty string`);
+      } else if (cmdObj.executable.includes("\0")) {
+        errors.push(`${prefix}.executable must not contain NUL characters`);
+      }
+
+      // args: array of strings, no NUL
+      if (!Array.isArray(cmdObj.args)) {
+        errors.push(`${prefix}.args must be an array`);
+      } else {
+        for (let j = 0; j < cmdObj.args.length; j++) {
+          if (typeof cmdObj.args[j] !== "string") {
+            errors.push(`${prefix}.args[${j}] must be a string`);
+          } else if (cmdObj.args[j].includes("\0")) {
+            errors.push(`${prefix}.args[${j}] must not contain NUL characters`);
+          }
+        }
+      }
+
+      // workingDirectoryPolicy
+      if (!VERIFICATION_WORKING_DIRECTORY_POLICIES.includes(cmdObj.workingDirectoryPolicy as WorkingDirectoryPolicy)) {
+        errors.push(`${prefix}.workingDirectoryPolicy must be one of ${VERIFICATION_WORKING_DIRECTORY_POLICIES.join("|")} (got: "${String(cmdObj.workingDirectoryPolicy)}")`);
+      }
+
+      // workingDirectory — policy ↔ nullness
+      if (cmdObj.workingDirectoryPolicy === "candidate-root") {
+        if (cmdObj.workingDirectory !== null) {
+          errors.push(`${prefix}.workingDirectory must be null when workingDirectoryPolicy is "candidate-root"`);
+        }
+      } else if (cmdObj.workingDirectoryPolicy === "relative-path") {
+        if (cmdObj.workingDirectory === null || typeof cmdObj.workingDirectory !== "string") {
+          errors.push(`${prefix}.workingDirectory must be a non-empty string when workingDirectoryPolicy is "relative-path"`);
+        } else {
+          // Relative path validation: non-empty, no NUL, no leading /, no .. segment
+          const wd = cmdObj.workingDirectory as string;
+          if (wd.length === 0) {
+            errors.push(`${prefix}.workingDirectory must be a non-empty string`);
+          } else if (wd.includes("\0")) {
+            errors.push(`${prefix}.workingDirectory must not contain NUL characters`);
+          } else if (wd.startsWith("/")) {
+            errors.push(`${prefix}.workingDirectory must not be an absolute path`);
+          } else if (wd.split("/").includes("..")) {
+            errors.push(`${prefix}.workingDirectory must not contain ".." segments`);
+          }
+        }
+      }
+
+      // timeoutMs: positive integer
+      if (typeof cmdObj.timeoutMs !== "number" || !Number.isInteger(cmdObj.timeoutMs) || cmdObj.timeoutMs <= 0) {
+        errors.push(`${prefix}.timeoutMs must be a positive integer (got: ${JSON.stringify(cmdObj.timeoutMs)})`);
+      }
+
+      // stopOnFailure: boolean
+      if (typeof cmdObj.stopOnFailure !== "boolean") {
+        errors.push(`${prefix}.stopOnFailure must be a boolean (got: ${JSON.stringify(cmdObj.stopOnFailure)})`);
+      }
+
+      // costClass: vocabulary check
+      if (!VERIFICATION_COST_CLASSES.includes(cmdObj.costClass as VerificationCostClass)) {
+        errors.push(`${prefix}.costClass must be one of ${VERIFICATION_COST_CLASSES.join("|")} (got: "${String(cmdObj.costClass)}")`);
+      }
+    }
+  }
+
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, plan: value as unknown as VerificationPlanV1 };
+}
