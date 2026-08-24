@@ -49,3 +49,21 @@
 none — all residual mechanical gaps are resolved above; changing any
 decision later is a reviewed, versioned package change (v1 contracts are
 frozen).
+
+## Review proposals (2026-08-24, second review round)
+
+Non-blocking, independent of this unit; no issue created — the user alone
+routes these via `triage-issue` (D3):
+
+- **Pre-existing README.ts blocks do not compile standalone** — blocks at
+  `packages/agentic-workflow-schema/README.md:44-172` (outside this unit's
+  diff) reference undeclared placeholders (`snapshot`, `receipt`,
+  `invokeAgent`, …). Trigger: the next change that touches the package
+  README adds `declare` stubs or placeholder declarations so every snippet
+  compiles verbatim.
+- **No declared Performance commands block** — the repo declares no `bench`
+  command while the package now ships algorithmic code on input that can
+  grow (validators, canonicalization, digests). Trigger: run the
+  `init-workspace` performance-tooling round (e.g. a node:test micro-bench
+  on validate+canonicalize+digest with a synthetic 100/1000-command plan)
+  when validation cost on large plans matters to a consumer.
