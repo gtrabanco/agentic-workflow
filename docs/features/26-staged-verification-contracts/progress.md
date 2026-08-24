@@ -45,8 +45,14 @@ Last reviewed: —
 - **Next**: P4 — Cover the mandated verification scenario matrix
 
 ## P4 — Cover the mandated verification scenario matrix
-- **Status**: Remains
-- **Next**: P5
+- **Status**: Done
+- **Done**: 23 scenario tests covering fast/success, fail-fast, full success/fail-fast, timeout, infrastructure-error, skipped-with/without reason, missing-results, coverage-gap, vacuous-fast, stale plan/candidate/acceptance, path-traversal, duplicate-id, and full pipeline
+- **Files**:
+  - `packages/agentic-workflow-schema/test/verification-scenarios.test.mjs` — 23 scenario tests
+  - `docs/features/26-staged-verification-contracts/TASKS.md` — P4 checkboxes checked
+- **Remains**: P5
+- **Gotchas**: D4 exit/signal matrix required careful helper construction — made `makeResult` respect explicit opts while defaulting per D4 rules
+- **Next**: P5 — Hardening & PR
 
 ## P5 — Hardening & PR
 - **Status**: Remains
