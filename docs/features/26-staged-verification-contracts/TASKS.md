@@ -61,10 +61,10 @@ suites.
 Layer: close-out · Done-when: gates green, PR open with `Closes #139`,
 roadmap row `done · [#<pr>](<pr-url>)`.
 
-- [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
-- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [x] Set the roadmap row status to `done` and commit the flip
-- [x] `git push` — branch pushed, PR branch remote-current
-- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139`
-- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [x] Commit `docs: link PR #<pr>` and push
+- [ ] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0; `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Set the roadmap row status to `done` and commit the flip
+- [ ] `git push` — branch pushed, PR branch remote-current
+- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139`
+- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [ ] Commit `docs: link PR #<pr>` and push
