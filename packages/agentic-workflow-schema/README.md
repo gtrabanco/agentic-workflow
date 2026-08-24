@@ -268,56 +268,56 @@ import {
 const plan = {
   contract: VERIFICATION_PLAN_CONTRACT_ID,
   commands: [
-    { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"],
-      workingDirectoryPolicy: "candidate-root", workingDirectory: null,
-      timeoutMs: 30000, stopOnFailure: true, costClass: "cheap" },
-    { id: "test", stage: "full", executable: "npm", args: ["test"],
-      workingDirectoryPolicy: "candidate-root", workingDirectory: null,
-      timeoutMs: 120000, stopOnFailure: false, costClass: "moderate" },
+    { id: "lint", stage: "fast" as const, executable: "npm", args: ["run", "lint"],
+      workingDirectoryPolicy: "candidate-root" as const, workingDirectory: null,
+      timeoutMs: 30000, stopOnFailure: true, costClass: "cheap" as const },
+    { id: "test", stage: "full" as const, executable: "npm", args: ["test"],
+      workingDirectoryPolicy: "candidate-root" as const, workingDirectory: null,
+      timeoutMs: 120000, stopOnFailure: false, costClass: "moderate" as const },
   ],
-};
+} as const;
 const pv = validateVerificationPlanV1(plan);
 if (!pv.ok) throw new Error(pv.errors.join(", "));
 
 // 2. Build and validate a receipt
-const planDigest = await digestVerificationPlan(plan);
+const planDigest = await digestVerificationPlan(pv.plan);
 const receipt = {
   contract: VERIFICATION_RECEIPT_CONTRACT_ID,
   planDigest,
   candidateSnapshotDigest: "a".repeat(64),
   acceptanceFingerprint: "b".repeat(64),
-  stageRequested: "full",
+  stageRequested: "full" as const,
   results: [
-    { commandId: "lint", status: "passed", exitCode: 0, signal: null,
+    { commandId: "lint", status: "passed" as const, exitCode: 0, signal: null,
       startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
       stdout: null, stderr: null, skipReason: null },
-    { commandId: "test", status: "passed", exitCode: 0, signal: null,
+    { commandId: "test", status: "passed" as const, exitCode: 0, signal: null,
       startedAt: "2025-01-01T00:01:00Z", endedAt: "2025-01-01T00:05:00Z",
       stdout: null, stderr: null, skipReason: null },
   ],
-  verdict: "pass",
-};
+  verdict: "pass" as const,
+} as const;
 const rv = validateVerificationReceiptV1(receipt);
 if (!rv.ok) throw new Error(rv.errors.join(", "));
 
 // 3. Plan-bound validation
-const pbv = validateVerificationReceiptAgainstPlan({ plan, receipt });
+const pbv = validateVerificationReceiptAgainstPlan({ plan: pv.plan, receipt: rv.receipt });
 if (!pbv.ok) throw new Error(pbv.errors.join(", "));
 
 // 4. Verdict derivation (must match stored verdict)
-const derived = deriveVerificationVerdict(receipt, plan);
+const derived = deriveVerificationVerdict(rv.receipt, pv.plan);
 // => "pass" if all full commands passed, "fail" if any failed,
 //    "incomplete" if any result is missing
 
 // 5. Freshness check
 const freshness = await compareVerificationReceiptToCurrent(
-  receipt, plan,
+  rv.receipt, pv.plan,
   "a".repeat(64), "b".repeat(64)
 );
 // => { fresh: true } or { fresh: false, reasonCode: "stale-..." }
 
 // 6. Delivery-gate composition
-if (freshness.fresh && receipt.stageRequested === "full" && derived === "pass") {
+if (freshness.fresh && rv.receipt.stageRequested === "full" && derived === "pass") {
   console.log("Delivery verified");
 }
 ```

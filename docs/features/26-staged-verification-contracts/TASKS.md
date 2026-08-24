@@ -68,3 +68,19 @@ roadmap row `done · [#<pr>](<pr-url>)`.
 - [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139` (PR #145 open, base main, head 950a445, body includes `Closes #139`)
 - [x] Update the roadmap row to `done · [#145](https://github.com/gtrabanco/agentic-workflow/pull/145)` (ROADMAP.md line 36)
 - [x] Commit `docs: link PR #145` and push (commit 74dac36: `docs(26): set roadmap row to done · [#145](PR), close P5`)
+
+## P6 — Staged-verification contract correction
+
+Layer: schema · Done-when: `npm test` → exit 0 with all tests passing (≥ 310 tests).
+
+- [x] Fix `compareVerificationReceiptToCurrent` to distinguish missing-results from full-coverage-gap (F31): a requested-full receipt missing declared commands must return `incomplete-stage-coverage` instead of `incomplete-missing-results` for the full commands.
+- [x] Replace self-derived canonical vectors with independently fixed expected digests (F32): compute digests from fixed fixtures, hard-code them, and add tests verifying both the TypeScript path and the AJV path agree on every vector digest.
+- [x] Freeze all exported vocabulary arrays (F36): add `Object.freeze()` to every closed-vocabulary array and add runtime immutability tests that attempt mutation.
+- [x] Pre-validate before hashing/dereferencing in `compareVerificationReceiptToCurrent` (F33): validate the plan and receipt before any digest computation so invalid inputs return a stable freshness result rather than throwing.
+- [x] Correct EN/ES README examples so they compile against TypeScript (F35): use `pv.plan` and `rv.receipt` after validation or annotate/satisfy the exported contract types.
+- [x] Add immutability tests for the frozen exports.
+- [x] Fix ledger structure: add the missing `class`/`route` columns to F4 and remove `ignore`-class rows (F27, F29) from the fix-now ledger (F39).
+- [x] Refresh progress.md/P5 receipt after correction (F38).
+- [x] Run `npm test` and confirm ≥ 310 tests.
+- [x] Run `node scripts/check-skill-context.mjs` and confirm PASS.
+- [x] Run `npx skills add . --list` and confirm exit 0.
