@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VerificationReceipt v1",
+  "description": "A verification receipt bound to a plan, candidate snapshot, and acceptance fingerprint.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract", "planDigest", "candidateSnapshotDigest", "acceptanceFingerprint", "stageRequested", "results", "verdict"],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/receipts@1",
+      "description": "Contract identifier."
+    },
+    "planDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase 64-hex SHA-256 digest of the plan."
+    },
+    "candidateSnapshotDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase 64-hex SHA-256 from #138's candidate-snapshot digest."
+    },
+    "acceptanceFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase 64-hex acceptance fingerprint from #138."
+    },
+    "stageRequested": {
+      "type": "string",
+      "enum": ["fast", "full"],
+      "description": "Which stage was requested."
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/VerificationResultV1"
+      }
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["pass", "fail", "incomplete"],
+      "description": "Must equal deriveVerificationVerdict(receipt, plan)."
+    }
+  },
+  "$defs": {
+    "EvidenceReferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref", "bytes", "sha256"],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "Non-empty opaque pointer to stored evidence."
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the captured evidence in bytes."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Lowercase 64-hex SHA-256 digest of the captured evidence."
+        }
+      }
+    },
+    "VerificationResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commandId", "status", "exitCode", "signal", "startedAt", "endedAt", "stdout", "stderr", "skipReason"],
+      "properties": {
+        "commandId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Must exist in the bound plan's commands."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["passed", "failed", "timed-out", "skipped", "infrastructure-error"],
+          "description": "The terminal status of this command execution."
+        },
+        "exitCode": {
+          "oneOf": [
+            { "type": "integer" },
+            { "type": "null" }
+          ],
+          "description": "Per the D4 exit-code/signal matrix."
+        },
+        "signal": {
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            { "type": "null" }
+          ],
+          "description": "Per the D4 exit-code/signal matrix."
+        },
+        "startedAt": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+          "description": "ISO-8601 UTC start timestamp."
+        },
+        "endedAt": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+          "description": "ISO-8601 UTC end timestamp, >= startedAt."
+        },
+        "stdout": {
+          "oneOf": [
+            { "$ref": "#/$defs/EvidenceReferenceV1" },
+            { "type": "null" }
+          ],
+          "description": "Bounded stdout evidence reference or null."
+        },
+        "stderr": {
+          "oneOf": [
+            { "$ref": "#/$defs/EvidenceReferenceV1" },
+            { "type": "null" }
+          ],
+          "description": "Bounded stderr evidence reference or null."
+        },
+        "skipReason": {
+          "oneOf": [
+            { "type": "string", "minLength": 1, "maxLength": 1024 },
+            { "type": "null" }
+          ],
+          "description": "Null on non-skipped rows; non-empty string ≤ 1024 chars on skipped."
+        }
+      }
+    }
+  }
+}

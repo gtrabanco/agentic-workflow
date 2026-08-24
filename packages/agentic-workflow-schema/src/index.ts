@@ -3198,3 +3198,320 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
 
   return errors.length > 0 ? { ok: false, errors } : { ok: true, plan: value as unknown as VerificationPlanV1 };
 }
+
+// ---------------------------------------------------------------------------
+// VerificationReceipt v1 — staged verification contracts
+// ---------------------------------------------------------------------------
+
+/** Contract identifier for VerificationReceipt v1. */
+export const VERIFICATION_RECEIPT_CONTRACT_ID = "agentic-workflow/receipts@1";
+
+/** Possible per-command result statuses. */
+export const VERIFICATION_COMMAND_STATUSES =
+  ["passed", "failed", "timed-out", "skipped", "infrastructure-error"] as const;
+export type VerificationCommandStatus = (typeof VERIFICATION_COMMAND_STATUSES)[number];
+
+/** Verdict values derived from receipt content. */
+export const VERIFICATION_VERDICTS = ["pass", "fail", "incomplete"] as const;
+export type VerificationVerdict = (typeof VERIFICATION_VERDICTS)[number];
+
+/** Stage requested: fast or full. */
+export const VERIFICATION_STAGE_REQUESTS = ["fast", "full"] as const;
+export type VerificationStageRequest = (typeof VERIFICATION_STAGE_REQUESTS)[number];
+
+/** Path to the published JSON Schema file for VerificationReceipt v1. */
+export const VERIFICATION_RECEIPT_SCHEMA_PATH = "./verification-receipt.schema.json";
+
+/**
+ * Bounded reference to captured evidence (stdout/stderr output).
+ *
+ * Output contents stay outside the portable receipt; only the reference,
+ * size, and digest are carried.
+ */
+export interface EvidenceReferenceV1 {
+  /** Non-empty opaque pointer to stored evidence, ≤ 1024 chars, no NUL. */
+  readonly ref: string;
+  /** Size of the captured evidence in bytes (≥ 0). */
+  readonly bytes: number;
+  /** Lowercase 64-hex SHA-256 digest of the captured evidence. */
+  readonly sha256: string;
+}
+
+/**
+ * Per-command verification result.
+ *
+ * The D4 exit-code/signal matrix:
+ *   - passed/failed: exactly one of exitCode (integer) / signal (non-empty string)
+ *   - timed-out: exitCode null, signal nullable
+ *   - infrastructure-error: both null
+ *   - skipped: both null
+ */
+export interface VerificationResultV1 {
+  /** Must exist in the bound plan's commands. */
+  readonly commandId: string;
+  /** The terminal status of this command execution. */
+  readonly status: VerificationCommandStatus;
+  /** Integer exit code; per the D4 matrix (null for timed-out/infrastructure-error/skipped). */
+  readonly exitCode: number | null;
+  /** Kill signal; per the D4 matrix (nullable for timed-out, null otherwise). */
+  readonly signal: string | null;
+  /** ISO-8601 UTC start timestamp. */
+  readonly startedAt: string;
+  /** ISO-8601 UTC end timestamp, ≥ startedAt. */
+  readonly endedAt: string;
+  /** Bounded stdout evidence reference or null. */
+  readonly stdout: EvidenceReferenceV1 | null;
+  /** Bounded stderr evidence reference or null. */
+  readonly stderr: EvidenceReferenceV1 | null;
+  /** Skip reason: null on non-skipped rows; when skipped, a stable id ≤ 1024 chars.
+   * For fail-fast: MUST equal the stable id of an earlier-declared command
+   * whose result is non-passed and whose plan entry declares stopOnFailure: true.
+   * Any other non-null value makes the receipt invalid.
+   */
+  readonly skipReason: string | null;
+}
+
+/**
+ * A verification receipt bound to a plan, candidate snapshot, and acceptance
+ * fingerprint.
+ *
+ * The verdict field must equal deriveVerificationVerdict(receipt, plan)
+ * — a stored verdict that disagrees with the derived verdict makes the
+ * receipt invalid.
+ */
+export interface VerificationReceiptV1 {
+  /** Must equal `VERIFICATION_RECEIPT_CONTRACT_ID`. */
+  readonly contract: typeof VERIFICATION_RECEIPT_CONTRACT_ID;
+  /** Lowercase 64-hex SHA-256 of `digestVerificationPlan(plan)`. */
+  readonly planDigest: string;
+  /** Lowercase 64-hex SHA-256 from #138's candidate-snapshot digest. */
+  readonly candidateSnapshotDigest: string;
+  /** Lowercase 64-hex acceptance fingerprint from #138. */
+  readonly acceptanceFingerprint: string;
+  /** Which stage was requested: fast or full. */
+  readonly stageRequested: VerificationStageRequest;
+  /** Ordered per-command results. */
+  readonly results: readonly VerificationResultV1[];
+  /** Must equal `deriveVerificationVerdict(receipt, plan)`. */
+  readonly verdict: VerificationVerdict;
+}
+
+// ---------------------------------------------------------------------------
+// VerificationReceipt v1 — validators
+// ---------------------------------------------------------------------------
+
+export type VerificationReceiptValidationResult =
+  | { ok: true; receipt: VerificationReceiptV1 }
+  | { ok: false; errors: string[] };
+
+/** Checks if a string is a valid lowercase 64-hex digest. */
+function isLowercase64Hex(v: unknown): boolean {
+  return typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
+}
+
+/** Checks if a string is a valid ISO-8601 UTC timestamp. */
+function isISO8601UTC(v: unknown): boolean {
+  if (typeof v !== "string") return false;
+  // Must match ISO-8601 format with Z timezone
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(v);
+}
+
+/**
+ * Validates a value against the VerificationReceipt v1 structural contract.
+ *
+ * Checks:
+ *   - `contract` matches `VERIFICATION_RECEIPT_CONTRACT_ID`
+ *   - Digest formats (planDigest, candidateSnapshotDigest, acceptanceFingerprint)
+ *   - `stageRequested` vocabulary (fast/full)
+ *   - Closed status, verdict vocabularies
+ *   - D4 exit/signal matrix
+ *   - D5 evidence bounds
+ *   - Skip reason rules
+ *   - Duplicate result command-id rejection
+ *   - No undeclared fields at any level
+ */
+export function validateVerificationReceiptV1(value: unknown): VerificationReceiptValidationResult {
+  const errors: string[] = [];
+
+  if (!isObj(value)) {
+    return { ok: false, errors: ["value is not a JSON object"] };
+  }
+
+  const obj = value as Record<string, unknown>;
+
+  // ---- Top-level field validation ----
+  const allowedTopLevel = new Set([
+    "contract", "planDigest", "candidateSnapshotDigest",
+    "acceptanceFingerprint", "stageRequested", "results", "verdict",
+  ]);
+  for (const key of Object.keys(obj)) {
+    if (!allowedTopLevel.has(key)) {
+      errors.push(`unexpected top-level key: "${key}"`);
+    }
+  }
+
+  // contract id
+  if (obj.contract !== VERIFICATION_RECEIPT_CONTRACT_ID) {
+    errors.push(`contract must be "${VERIFICATION_RECEIPT_CONTRACT_ID}" (got: "${String(obj.contract)}")`);
+  }
+
+  // Digest formats
+  if (!isLowercase64Hex(obj.planDigest)) {
+    errors.push(`planDigest must be a lowercase 64-hex string`);
+  }
+  if (!isLowercase64Hex(obj.candidateSnapshotDigest)) {
+    errors.push(`candidateSnapshotDigest must be a lowercase 64-hex string`);
+  }
+  if (!isLowercase64Hex(obj.acceptanceFingerprint)) {
+    errors.push(`acceptanceFingerprint must be a lowercase 64-hex string`);
+  }
+
+  // stageRequested
+  if (!VERIFICATION_STAGE_REQUESTS.includes(obj.stageRequested as VerificationStageRequest)) {
+    errors.push(`stageRequested must be one of ${VERIFICATION_STAGE_REQUESTS.join("|")} (got: "${String(obj.stageRequested)}")`);
+  }
+
+  // verdict
+  if (!VERIFICATION_VERDICTS.includes(obj.verdict as VerificationVerdict)) {
+    errors.push(`verdict must be one of ${VERIFICATION_VERDICTS.join("|")} (got: "${String(obj.verdict)}")`);
+  }
+
+  // ---- results ----
+  if (!Array.isArray(obj.results)) {
+    errors.push("results must be an array");
+  } else {
+    const seenCmdIds = new Set<string>();
+    for (let i = 0; i < obj.results.length; i++) {
+      const r = obj.results[i];
+      const prefix = `results[${i}]`;
+
+      if (!isObj(r)) {
+        errors.push(`${prefix} must be an object`);
+        continue;
+      }
+
+      const rObj = r as Record<string, unknown>;
+
+      // Check undeclared fields
+      const allowedResultFields = new Set([
+        "commandId", "status", "exitCode", "signal",
+        "startedAt", "endedAt", "stdout", "stderr", "skipReason",
+      ]);
+      for (const key of Object.keys(rObj)) {
+        if (!allowedResultFields.has(key)) {
+          errors.push(`unexpected key in ${prefix}: "${key}"`);
+        }
+      }
+
+      // commandId: non-empty
+      if (typeof rObj.commandId !== "string" || rObj.commandId.length === 0) {
+        errors.push(`${prefix}.commandId must be a non-empty string`);
+      } else {
+        if (seenCmdIds.has(rObj.commandId)) {
+          errors.push(`${prefix}.commandId "${rObj.commandId}" is a duplicate`);
+        } else {
+          seenCmdIds.add(rObj.commandId);
+        }
+      }
+
+      // status: vocabulary
+      if (!VERIFICATION_COMMAND_STATUSES.includes(rObj.status as VerificationCommandStatus)) {
+        errors.push(`${prefix}.status must be one of ${VERIFICATION_COMMAND_STATUSES.join("|")} (got: "${String(rObj.status)}")`);
+      }
+
+      // D4 — exitCode/signal matrix
+      const exitCode = rObj.exitCode;
+      const signal = rObj.signal;
+      const status = rObj.status as VerificationCommandStatus;
+
+      if (status === "passed" || status === "failed") {
+        // Must have exactly one: either exitCode (non-null) xor signal (non-null)
+        const hasExitCode = exitCode !== null && typeof exitCode === "number" && Number.isInteger(exitCode);
+        const hasSignal = signal !== null && typeof signal === "string" && signal.length > 0;
+        if (!hasExitCode && !hasSignal) {
+          errors.push(`${prefix}.status is "${status}" but both exitCode and signal are null/absent (need exactly one)`);
+        }
+        if (hasExitCode && hasSignal) {
+          errors.push(`${prefix}.status is "${status}" but both exitCode and signal are present (need exactly one)`);
+        }
+      } else if (status === "timed-out") {
+        // exitCode must be null; signal nullable
+        if (exitCode !== null) {
+          errors.push(`${prefix}.exitCode must be null when status is "timed-out"`);
+        }
+      } else if (status === "infrastructure-error" || status === "skipped") {
+        // Both must be null
+        if (exitCode !== null) {
+          errors.push(`${prefix}.exitCode must be null when status is "${status}"`);
+        }
+        if (signal !== null) {
+          errors.push(`${prefix}.signal must be null when status is "${status}"`);
+        }
+      }
+
+      // Timestamps: ISO-8601 UTC, endedAt >= startedAt
+      if (!isISO8601UTC(rObj.startedAt)) {
+        errors.push(`${prefix}.startedAt must be an ISO-8601 UTC timestamp`);
+      }
+      if (!isISO8601UTC(rObj.endedAt)) {
+        errors.push(`${prefix}.endedAt must be an ISO-8601 UTC timestamp`);
+      } else if (isISO8601UTC(rObj.startedAt) && isISO8601UTC(rObj.endedAt)) {
+        const started = new Date(rObj.startedAt as string);
+        const ended = new Date(rObj.endedAt as string);
+        if (ended < started) {
+          errors.push(`${prefix}.endedAt must be >= startedAt`);
+        }
+      }
+
+      // Evidence references
+      for (const field of ["stdout", "stderr"] as const) {
+        const ev = rObj[field];
+        if (ev === null) continue;
+        if (!isObj(ev)) {
+          errors.push(`${prefix}.${field} must be null or an object`);
+          continue;
+        }
+        const evObj = ev as Record<string, unknown>;
+        const allowedEvFields = new Set(["ref", "bytes", "sha256"]); // additionalProperties false
+        for (const key of Object.keys(evObj)) {
+          if (!allowedEvFields.has(key)) {
+            errors.push(`unexpected key in ${prefix}.${field}: "${key}"`);
+          }
+        }
+        // ref: non-empty, ≤ 1024, no NUL
+        if (typeof evObj.ref !== "string" || evObj.ref.length === 0) {
+          errors.push(`${prefix}.${field}.ref must be a non-empty string`);
+        } else if (evObj.ref.length > 1024) {
+          errors.push(`${prefix}.${field}.ref must be ≤ 1024 chars`);
+        } else if (evObj.ref.includes("\0")) {
+          errors.push(`${prefix}.${field}.ref must not contain NUL`);
+        }
+        // bytes: integer ≥ 0
+        if (typeof evObj.bytes !== "number" || !Number.isInteger(evObj.bytes) || evObj.bytes < 0) {
+          errors.push(`${prefix}.${field}.bytes must be an integer ≥ 0`);
+        }
+        // sha256: lowercase 64-hex
+        if (!isLowercase64Hex(evObj.sha256)) {
+          errors.push(`${prefix}.${field}.sha256 must be a lowercase 64-hex string`);
+        }
+      }
+
+      // skipReason
+      if (status === "skipped") {
+        if (rObj.skipReason === null) {
+          errors.push(`${prefix}.skipReason must be non-null when status is "skipped"`);
+        } else if (typeof rObj.skipReason !== "string" || rObj.skipReason.length === 0) {
+          errors.push(`${prefix}.skipReason must be a non-empty string when status is "skipped"`);
+        } else if (rObj.skipReason.length > 1024) {
+          errors.push(`${prefix}.skipReason must be ≤ 1024 chars when status is "skipped"`);
+        }
+      } else {
+        if (rObj.skipReason !== null) {
+          errors.push(`${prefix}.skipReason must be null when status is not "skipped"`);
+        }
+      }
+    }
+  }
+
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt: value as unknown as VerificationReceiptV1 };
+}

@@ -22,13 +22,13 @@ exit 0 including the new verification-plan suites.
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` →
 exit 0 including the new verification-receipt suites.
 
-- [ ] `test/verification-receipt.test.mjs` written FIRST through the public entry (red before validator)
-- [ ] Export `VERIFICATION_RECEIPT_CONTRACT_ID`, `VERIFICATION_COMMAND_STATUSES` (5), `VERIFICATION_VERDICTS` (3), `EvidenceReferenceV1`, `VerificationResultV1`, `VerificationReceiptV1`
-- [ ] `validateVerificationReceiptV1` shape rules: undeclared fields, contract id, digest formats ×3, `stageRequested` vocabulary, duplicate result command-id rejection
-- [ ] Per-result rules: status vocabulary, exit/signal matrix (D4), ISO-8601 UTC timestamps with `endedAt ≥ startedAt`
-- [ ] Evidence + skip rules: ref ≤ 1024 / bytes ≥ 0 / sha256 64-hex (D5), `skipReason` null on non-skipped rows and ≤ 1024 chars when present
-- [ ] `verification-receipt.schema.json` + parity test on shared fixtures
-- [ ] Surface exported from `src/index.ts`; P1+P2 suites green together — no export collisions
+- [x] `test/verification-receipt.test.mjs` written FIRST through the public entry (red before validator)
+- [x] Export `VERIFICATION_RECEIPT_CONTRACT_ID`, `VERIFICATION_COMMAND_STATUSES` (5), `VERIFICATION_VERDICTS` (3), `EvidenceReferenceV1`, `VerificationResultV1`, `VerificationReceiptV1`
+- [x] `validateVerificationReceiptV1` shape rules: undeclared fields, contract id, digest formats ×3, `stageRequested` vocabulary, duplicate result command-id rejection
+- [x] Per-result rules: status vocabulary, exit/signal matrix (D4), ISO-8601 UTC timestamps with `endedAt ≥ startedAt`
+- [x] Evidence + skip rules: ref ≤ 1024 / bytes ≥ 0 / sha256 64-hex (D5), `skipReason` null on non-skipped rows and ≤ 1024 chars when present
+- [x] `verification-receipt.schema.json` + parity test on shared fixtures
+- [x] Surface exported from `src/index.ts`; P1+P2 suites green together — no export collisions
 
 ## P3 — Implement the staged verification semantic core
 
