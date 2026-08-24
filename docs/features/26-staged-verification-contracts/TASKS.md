@@ -63,8 +63,8 @@ roadmap row `done · [#<pr>](<pr-url>)`.
 
 - [x] Re-run the project's full verification gate — `cd packages/agentic-workflow-schema && npm test` → exit 0 (310/310 pass); `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty (all docs committed)
-- [ ] Set the roadmap row status to `done` and commit the flip
-- [ ] `git push` — branch pushed, PR branch remote-current
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<pr>` and push
+- [x] Set the roadmap row status to `done` and commit the flip (commit 74dac36: `docs(26): set roadmap row to done · [#145](PR), close P5`)
+- [x] `git push` — branch pushed, PR branch remote-current (verified: `git status -sb` shows branch up to date with origin/feat/26-staged-verification-contracts)
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat; the body includes `Closes #139` (PR #145 open, base main, head 950a445, body includes `Closes #139`)
+- [x] Update the roadmap row to `done · [#145](https://github.com/gtrabanco/agentic-workflow/pull/145)` (ROADMAP.md line 36)
+- [x] Commit `docs: link PR #145` and push (commit 74dac36: `docs(26): set roadmap row to done · [#145](PR), close P5`)
