@@ -31,6 +31,7 @@
     "./workflow-snapshot.schema.json": "./workflow-snapshot.schema.json",
     "./candidate-snapshot.schema.json": "./candidate-snapshot.schema.json",
     "./review-receipt.schema.json": "./review-receipt.schema.json",
+    "./verification-receipt.schema.json": "./verification-receipt.schema.json",
     "./verification-plan.schema.json": "./verification-plan.schema.json"
   },
   "files": [
@@ -40,6 +41,7 @@
     "workflow-snapshot.schema.json",
     "candidate-snapshot.schema.json",
     "review-receipt.schema.json",
+    "verification-receipt.schema.json",
     "verification-plan.schema.json",
     "README.md",
     "README.es.md",
