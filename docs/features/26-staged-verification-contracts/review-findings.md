@@ -12,25 +12,14 @@
 | F10 | docs/features/26-staged-verification-contracts/ACCEPTANCE.md:12 | verify + spec-drift | high | fix-now | fold into current phase | yes |
 | F11 | docs/features/26-staged-verification-contracts/progress.md:1 | workflow | high | fix-now | fold into current phase | yes |
 | F12 | docs/features/26-staged-verification-contracts/progress.md:57-59 | workflow | high | fix-now | fold into current phase | yes |
-| F13 | packages/agentic-workflow-schema/src/index.ts:3644-3650,3742-3754 | code + security + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit with shared required-set tests | no |
-| F14 | packages/agentic-workflow-schema/src/index.ts:3764-3812 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit | no |
-| F15 | packages/agentic-workflow-schema/verification-plan.schema.json:38-59 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit with shared AJV fixtures | no |
-| F16 | packages/agentic-workflow-schema/src/index.ts:3424-3464 | code + security + verify | high | fix-now | fold into current unit with parity regressions | no |
-| F17 | packages/agentic-workflow-schema/src/index.ts:3161-3182 | security + code | high | fix-now | fold into current unit with cross-platform path tests | no |
-| F18 | packages/agentic-workflow-schema/src/index.ts:3596-3608 | perf + code | high | fix-now | fold into current unit | no |
-| F19 | packages/agentic-workflow-schema/README.md:268-304 | API ergonomics/docs + verify | med | fix-now | fold into current unit; update EN and ES together | no |
-| F20 | packages/agentic-workflow-schema/src/index.ts:3715-3721 | API ergonomics/docs + spec-drift | high | fix-now | fold into current unit | no |
-| F21 | packages/agentic-workflow-schema/src/index.ts:3658-3708 | code + perf + API ergonomics/docs | low | fix-now | fold into current unit with F14 | no |
-| F22 | docs/features/26-staged-verification-contracts/TASKS.md:64-70 | workflow | high | fix-now | fold into current unit before completion is re-attested | no |
-| F23 | docs/features/26-staged-verification-contracts/review-findings.md:3-10 | workflow + verify | high | fix-now | fold after root-cause fixes are verified | no |
-| F13 | packages/agentic-workflow-schema/src/index.ts:3644-3650,3742-3754 | code + security + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit with shared required-set tests | no |
-| F14 | packages/agentic-workflow-schema/src/index.ts:3764-3812 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit | no |
-| F15 | packages/agentic-workflow-schema/verification-plan.schema.json:38-59 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit with shared AJV fixtures | no |
-| F16 | packages/agentic-workflow-schema/src/index.ts:3424-3464 | code + security + verify | high | fix-now | fold into current unit with parity regressions | no |
-| F17 | packages/agentic-workflow-schema/src/index.ts:3161-3182 | security + code | high | fix-now | fold into current unit with cross-platform path tests | no |
-| F18 | packages/agentic-workflow-schema/src/index.ts:3596-3608 | perf + code | high | fix-now | fold into current unit | no |
-| F19 | packages/agentic-workflow-schema/README.md:268-304 | API ergonomics/docs + verify | med | fix-now | fold into current unit; update EN and ES together | no |
-| F20 | packages/agentic-workflow-schema/src/index.ts:3715-3721 | API ergonomics/docs + spec-drift | high | fix-now | fold into current unit | no |
-| F21 | packages/agentic-workflow-schema/src/index.ts:3658-3708 | code + perf + API ergonomics/docs | low | fix-now | fold into current unit with F14 | no |
-| F22 | docs/features/26-staged-verification-contracts/TASKS.md:64-70 | workflow | high | fix-now | fold into current unit before completion is re-attested | no |
-| F23 | docs/features/26-staged-verification-contracts/review-findings.md:3-10 | workflow + verify | high | fix-now | fold after root-cause fixes are verified | no |
+| F13 | packages/agentic-workflow-schema/src/index.ts:3644-3650,3742-3754 | code + security + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit with shared required-set tests | yes |
+| F14 | packages/agentic-workflow-schema/src/index.ts:3764-3812 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit | yes |
+| F15 | packages/agentic-workflow-schema/verification-plan.schema.json:38-59 | code + verify + API ergonomics/docs + spec-drift | high | fix-now | fold into current unit with shared AJV fixtures | yes |
+| F16 | packages/agentic-workflow-schema/src/index.ts:3424-3464 | code + security + verify | high | fix-now | fold into current unit with parity regressions | yes |
+| F17 | packages/agentic-workflow-schema/src/index.ts:3161-3182 | security + code | high | fix-now | fold into current unit with cross-platform path tests | yes |
+| F18 | packages/agentic-workflow-schema/src/index.ts:3596-3608 | perf + code | high | fix-now | fold into current unit | yes |
+| F19 | packages/agentic-workflow-schema/README.md:268-304 | API ergonomics/docs + verify | med | fix-now | fold into current unit; update EN and ES together | yes |
+| F20 | packages/agentic-workflow-schema/src/index.ts:3715-3721 | API ergonomics/docs + spec-drift | high | fix-now | fold into current unit | yes |
+| F21 | packages/agentic-workflow-schema/src/index.ts:3658-3708 | code + perf + API ergonomics/docs | low | fix-now | fold into current unit with F14 | yes |
+| F22 | docs/features/26-staged-verification-contracts/TASKS.md:64-70 | workflow | high | fix-now | fold into current unit before completion is re-attested | yes |
+| F23 | docs/features/26-staged-verification-contracts/review-findings.md:3-10 | workflow + verify | high | fix-now | fold after root-cause fixes are verified | yes |
