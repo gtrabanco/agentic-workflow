@@ -95,14 +95,20 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P9 — Repair verification semantics
 
 ## Unit-loop receipt — P8
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 365/365) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: c899d06 · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 365/365) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P9 · Attempts: 1 · Review-checkpoint trigger recorded: **accumulation fired** — 8 files / 443 changed lines since `aeb2b92` (no `Last reviewed:` marker in this unit, so the merge-base baseline is even larger); layer unchanged (schema), no sensitivity surface (no auth/secrets/CI/destructive migration touched). Whole-unit mode records it and continues; the mandatory end review covers the frozen final candidate.
 
 ## P9 — Repair verification semantics
-- **Status**: Planned
-- **Done**: Corrected D1/D3 targets and AC5 authoritative evidence scope frozen.
-- **Remains**: 8 schema tasks; F65–F67 and F72 roots.
-- **Next**: after P8, `execute-phase 26 P9`
+- **Status**: Done
+- Done: `validateVerificationReceiptAgainstPlan` now enforces **complete `stopOnFailure` sequencing and attribution** — the trigger is the earliest row whose command declares `stopOnFailure: true` and whose status is `failed | timed-out | infrastructure-error`; every later row must be `skipped`, and a reason present after the trigger must name that trigger (F65). The misnamed fast-stage fixture really submits a full-stage row now (F66), `VERIFICATION_CANONICAL_VECTORS` is `ReadonlyArray<Readonly<CanonicalVectorV1>>` so consumer writes fail to compile (F67), and AC5's authoritative-entry + repeatability evidence is pinned with shared vector payloads (F72).
+- Remains: P10–P15. F65–F77 ledger rows stay `folded: no` — P15 owns the flip.
+- Gotchas: (1) The sequencing rule deliberately does **not** invalidate a `skipped` row with a null reason after the trigger, nor a later command with no row: D3 calls the null reason representable incompleteness (verdict `incomplete`) and D7 calls a missing row representable — invalidating either would erase AC3's `skipped-without-reason` scenario. (2) Error text is still `errors: string[]`; P11 replaces it with the bounded diagnostic rows, and the new assertions match on `stopOnFailure` / `skipReason` substrings so that swap stays mechanical. (3) `CanonicalVectorV1` is a pre-existing feature-25 export — readonly-ness was applied at the feature-26 declaration site, never by editing that interface (AC8). (4) Vector payloads moved to `test/fixtures/verification-vectors.mjs`; the digest assertions still compute expected values through `node:crypto` independently (F32), so the fixture is shared but not self-derived. (5) The projection files are unchanged: sequencing is semantic and Draft-07 cannot express it.
+- Files: `packages/agentic-workflow-schema/src/index.ts`, `test/verification-semantics.test.mjs` (new), `test/fixtures/verification-vectors.mjs` (new), `test/fixtures/verification-vector-readonly.ts` (new), `test/verification-core.test.mjs`, `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,testing}.md`
+- Next: P10 — Bound verification shapes
+
+## Unit-loop receipt — P9
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 380/380) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P10 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired again (5 files / 452 changed lines since `c899d06`); layer unchanged (schema); no sensitivity surface.
 
 ## P10 — Bound verification shapes
 - **Status**: Planned

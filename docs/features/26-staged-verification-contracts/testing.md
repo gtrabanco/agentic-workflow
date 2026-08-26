@@ -33,7 +33,16 @@
 ## Fixtures
 
 - Canonical vectors + expected digests: `VERIFICATION_CANONICAL_VECTORS` and
-  deterministic test fixtures validated through the authoritative entries.
+  deterministic test fixtures validated through the authoritative entries. The
+  payloads live once in `test/fixtures/verification-vectors.mjs`; expected
+  digests are computed independently through `node:crypto`, and
+  `test/fixtures/verification-vector-readonly.ts` proves the vector entries are
+  readonly in the public type through the `tsc` pass of `npm test`.
+- Fail-fast semantics: `test/verification-semantics.test.mjs` pins the trigger
+  definition (earliest non-passed row of a `stopOnFailure` command), the
+  sequencing rejection of any later row that is not `skipped`, the
+  attribution-to-trigger rule, and the two cases that must stay representable
+  (`skipReason: null` after the trigger; a later command with no row).
 - Projection fixtures cover every Draft-07-expressible accepted/rejected shape;
   generator drift is a separate gate, not an independent semantic validator.
 - Freshness reachability matrix: `test/verification-freshness.test.mjs` — every
