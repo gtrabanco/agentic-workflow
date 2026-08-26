@@ -113,6 +113,46 @@
   `README.es.md:267,309` still import the retired validator; docs are P14's
   layer, so P7 did not edit them.
 
+### P8 — Repair freshness classification (2026-08-26)
+
+- **F63 root cause, stated precisely:** the predicate scanned the required set of
+  the *requested* stage and returned `incomplete-missing-results` from it, so a
+  full receipt with a coverage gap answered `missing-results` and
+  `incomplete-stage-coverage` had no input left that could produce it — AC4's
+  "every stable code on a reachable, disjoint condition" was unmet. The F62 fold
+  had widened `missing-results` to any stage without re-partitioning,
+  re-introducing the same unreachability (recorded in the P6 gotcha).
+- **Resolution (SPEC-frozen, no new contract):** partition the incomplete block by
+  **the stage of the missing command**. `incomplete-missing-results` answers a
+  missing FAST-stage row for either requested stage — which preserves F62's
+  clause that missing results are not restricted to fast receipts — and
+  `incomplete-stage-coverage` answers a missing FULL-stage row, reachable only
+  when `stageRequested: "full"` because a fast receipt legitimately owes no
+  full-stage rows (D7). Both codes are reachable; the requested stage never
+  switches off the missing-results condition.
+- **Malformed inputs → `stale-plan`, not an incompleteness:** the plan binding is
+  the first precedence point, and a payload that fails its own contract cannot
+  establish it. Returning `incomplete-missing-results` there claimed a verified
+  binding and gave that code a second, unrelated trigger. The no-throw guarantee
+  from F33/F40 is unchanged and still pinned.
+- **Test correction, not test weakening (project rule "never change a test to
+  pass it"):** three assertions in the pre-existing suites
+  (`verification-core.test.mjs`: full receipt missing a full-stage command, and
+  the combined coverage-gap + unjustified-skip precedence case;
+  `verification-scenarios.test.mjs`: requested-full coverage gap) encoded the
+  F63 defect and contradicted the frozen manifest and `decisions.md` D1, which
+  already stated the two conditions are disjoint. They now assert the SPEC codes
+  with identical strength (`deepStrictEqual` on the whole result object, one
+  exact code each) and the phase adds 15 independent matrix cases; nothing was
+  deleted, skipped, or loosened. The precedence case now proves the F42 question
+  directly: skip-before-coverage ordering under a simultaneous coverage gap.
+- **Ledger untouched:** F63–F77 keep `folded: no`; P15 finalizes the fix-now
+  ledger. `known-issues.md` needed no change (no new independent item surfaced);
+  `testing.md` gains only the pointer to the new freshness matrix file.
+- **Gates:** `npm test` 365/365 (was 350) and
+  `node scripts/generate-verification-schemas.mjs --check` drift-free — the
+  canonical definition was not touched, so no projection regeneration needed.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.
