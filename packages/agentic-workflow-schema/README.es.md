@@ -310,7 +310,7 @@ const rv = validateVerificationReceiptV1(receipt);
 if (!rv.ok) throw new Error(rv.errors.join(", "));
 
 // 3. Validación vinculada al plan
-const pbv = validateVerificationReceiptAgainstPlan({ plan: pv.plan, receipt: rv.receipt });
+const pbv = await validateVerificationReceiptAgainstPlan(rv.receipt, pv.plan);
 if (!pbv.ok) throw new Error(pbv.errors.join(", "));
 
 // 4. Derivación de veredicto (debe coincidir con el veredicto almacenado)

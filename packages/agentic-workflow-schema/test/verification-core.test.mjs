@@ -94,7 +94,7 @@ test("rejects result commandId not in plan", async () => {
     ],
     verdict: "pass",
   };
-  const result = validateVerificationReceiptAgainstPlan({ plan, receipt });
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("nonexistent")), result.errors.join(", "));
 });
@@ -115,7 +115,7 @@ test("rejects result commandId outside declared order", async () => {
     ],
     verdict: "pass",
   };
-  const result = validateVerificationReceiptAgainstPlan({ plan, receipt });
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("order")), result.errors.join(", "));
 });
@@ -143,7 +143,7 @@ test("rejects full-command result in fast-stage receipt", async () => {
     ],
     verdict: "pass",
   };
-  const result = validateVerificationReceiptAgainstPlan({ plan: planWithMixed, receipt: mixedReceipt });
+  const result = await validateVerificationReceiptAgainstPlan(mixedReceipt, planWithMixed);
   assert.equal(result.ok, true); // fast receipt with only fast result is valid
 });
 
@@ -161,7 +161,7 @@ test("planDigest must match", async () => {
     ],
     verdict: "pass",
   };
-  const result = validateVerificationReceiptAgainstPlan({ plan, receipt });
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("planDigest") || e.includes("digest")), result.errors.join(", "));
 });
@@ -182,7 +182,7 @@ test("stored verdict must match deriveVerificationVerdict", async () => {
     ],
     verdict: "pass", // wrong — should be "fail"
   };
-  const result = validateVerificationReceiptAgainstPlan({ plan, receipt });
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("verdict")), result.errors.join(", "));
 });
@@ -202,7 +202,7 @@ test("accepts valid plan-bound receipt", async () => {
     ],
     verdict: "pass",
   };
-  const result = validateVerificationReceiptAgainstPlan({ plan, receipt });
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, true);
 });
 
