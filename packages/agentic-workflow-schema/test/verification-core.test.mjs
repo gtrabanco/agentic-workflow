@@ -573,6 +573,43 @@ test("incomplete-stage-coverage: full receipt missing declared command", async (
   assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-stage-coverage" });
 });
 
+test("full receipt with coverage gap AND unjustified skip returns incomplete-unjustified-skip (F42 order)", async () => {
+  // SPEC fixes the check order: incomplete-missing-results → incomplete-unjustified-skip
+  // → incomplete-stage-coverage. A full receipt degraded on BOTH dimensions must
+  // report the earlier-in-order code (unjustified-skip), not stage-coverage.
+  const plan = makePlan([
+    makeValidPlanCommand({ id: "lint", stage: "fast" }),
+    makeValidPlanCommand({ id: "deploy", stage: "full" }),
+  ]);
+  const planDigest = await digestVerificationPlan(plan);
+  const receipt = {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    planDigest,
+    candidateSnapshotDigest: "e".repeat(64),
+    acceptanceFingerprint: "f".repeat(64),
+    stageRequested: "full",
+    results: [
+      // skipped without reason → incomplete-unjustified-skip condition
+      { commandId: "lint", status: "skipped", exitCode: null, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
+      // deploy (full) result missing → incomplete-stage-coverage condition
+    ],
+    verdict: "incomplete",
+  };
+  const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-unjustified-skip" });
+});
+
+test("compareVerificationReceiptToCurrent throws nothing on non-JSON-serializable plans (F40)", async () => {
+  // A BigInt field makes canonicalJSONValue/JSON.stringify throw; the SPEC promises
+  // the predicate is pure and throws nothing, so validation must reject it first
+  // and return a stable freshness code instead.
+  const plan = makePlan([makeValidPlanCommand()]);
+  const badPlan = { ...plan, commands: [{ ...plan.commands[0], timeoutMs: 10n }] };
+  const receipt = makeValidReceipt(plan.commands);
+  const result = await compareVerificationReceiptToCurrent(receipt, badPlan, "e".repeat(64), "f".repeat(64));
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
+});
+
 // ---------------------------------------------------------------------------
 // VERIFICATION_CANONICAL_VECTORS
 // ---------------------------------------------------------------------------
