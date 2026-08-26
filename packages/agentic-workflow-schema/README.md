@@ -306,8 +306,9 @@ if (!pbv.ok) throw new Error(pbv.errors.join(", "));
 
 // 4. Verdict derivation (must match stored verdict)
 const derived = deriveVerificationVerdict(rv.receipt, pv.plan);
-// => "pass" if all full commands passed, "fail" if any failed,
-//    "incomplete" if any result is missing
+// => "pass" only if every command of the requested stage is present and passed,
+//    "fail" if any failed / timed-out / infrastructure-error (or a justified skip with
+//    no attributed failure), "incomplete" if a result is missing or an unjustified skip
 
 // 5. Freshness check
 const freshness = await compareVerificationReceiptToCurrent(

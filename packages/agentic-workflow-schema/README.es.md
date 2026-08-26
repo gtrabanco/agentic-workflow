@@ -315,8 +315,10 @@ if (!pbv.ok) throw new Error(pbv.errors.join(", "));
 
 // 4. Derivación de veredicto (debe coincidir con el veredicto almacenado)
 const derived = deriveVerificationVerdict(rv.receipt, pv.plan);
-// => "pass" si todos los comandos full pasaron, "fail" si alguno falló,
-//    "incomplete" si falta algún resultado
+// => "pass" solo si todos los comandos de la etapa solicitada están presentes y pasaron,
+//    "fail" si alguno falló / agotó el tiempo / error de infraestructura (o un salto
+//    justificado sin una falla atribuida), "incomplete" si falta un resultado o hay un
+//    salto injustificado
 
 // 5. Verificación de frescura
 const freshness = await compareVerificationReceiptToCurrent(
