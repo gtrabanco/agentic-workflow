@@ -1,42 +1,64 @@
 # PLAN — 26-staged-verification-contracts
 
-Phases only (`P1…P6`). Detail lives in `SPEC.md` (Design) and `TASKS.md`.
-Last implementation phase hardens; close-out tasks end P6.
+Phases only (`P1…P15`). Detail lives in `SPEC.md` (Design) and `TASKS.md`.
+P1–P6 are historical completed phases. The user-approved 2026-08-26 replan
+adds P7–P15; P15 is the final close-out after all implementation layers.
 
 ## P1 — Deliver the VerificationPlan v1 contract
-Layer: schema · red-first suite, types + constants, strict validator
-(structural / executable-args / working-directory / timeout rules),
-`verification-plan.schema.json` + parity, exports.
+Layer: schema · historical plan contract, validator, schema and exports.
 
 ## P2 — Deliver the VerificationReceipt v1 contract
-Layer: schema · red-first suite, status/verdict/stage vocabularies,
-`EvidenceReferenceV1` + result shapes, strict validator (digests,
-timestamps, exit/signal matrix, evidence bounds, skip rules),
-`verification-receipt.schema.json` + parity, exports, coexistence check
-with P1 surface.
+Layer: schema · historical receipt contract, validator, schema and exports.
 
 ## P3 — Implement the staged verification semantic core
-Layer: schema · `validateVerificationReceiptAgainstPlan` (binding +
-stage-coverage + fail-fast attribution + verdict consistency),
-`deriveVerificationVerdict` (D2 precedence), canonical digest surface ×2
-contracts, freshness predicate with D1 codes, published
-`VERIFICATION_CANONICAL_VECTORS` + agreement tests, bilingual README
-sections, release `3.4.0`.
+Layer: schema · historical binding, verdict, canonical digest, freshness,
+vectors, README and package-release work.
 
 ## P4 — Cover the mandated verification scenario matrix
-Layer: hardening · fast success/fail-fast, full success/fail-fast,
-timeout, infrastructure error, skipped with/without reason, missing
-results, full coverage gap, vacuous-fast pin, stale candidate/acceptance/
-plan, path traversal, duplicate ids — end-to-end through validate →
-canonicalize → digest → compare.
+Layer: hardening · historical fast/full, failure, skip, stale, path and duplicate
+scenarios.
 
 ## P5 — Hardening & PR
-Layer: close-out · full gate re-run, pending-docs check, roadmap flip to
-`done`, push, open PR with `Closes #139`, link PR in roadmap, commit + push.
+Layer: close-out · historical full-gate run, roadmap flip, push, PR #145 and
+roadmap link.
 
 ## P6 — Staged-verification contract correction
-Layer: schema · post-review replan-in-unit (2026-08-24 amendment): distinct
-reachable freshness outcomes (F31), independent canonical vectors (F32),
-pre-validate-then-hash + residual no-throw order (F33/F40), frozen exports
-(F36), compile-safe EN/ES README examples (F35), regenerated lockfile (F37),
-fresh progress/ledger (F38/F39) — execution ledger in `TASKS.md`/`progress.md`.
+Layer: schema · historical post-review corrections for F31–F62.
+
+## P7 — Unify validation authority
+Layer: schema · one canonical internal contract definition, exactly two public
+validation entries, normalized own-property DTOs and deterministic generated
+structural projections.
+
+## P8 — Repair freshness classification
+Layer: schema · red-first stale/incomplete matrices, disjoint precedence and
+reachable stable freshness outcomes.
+
+## P9 — Repair verification semantics
+Layer: schema · complete fail-fast enforcement, negative stage coverage,
+readonly vectors and authoritative determinism evidence.
+
+## P10 — Bound verification shapes
+Layer: schema · command/result/argument cardinalities and identifier/command
+string limits projected wherever Draft-07 can express them.
+
+## P11 — Bound verification payloads
+Layer: schema · canonical byte budgets, existing skip/evidence bounds and one
+closed, bounded, redacted diagnostic result contract.
+
+## P12 — Bound verification time
+Layer: schema · per-command fast/full timeout ceilings and aggregate fast/full
+stage budgets, with projection/runtime boundaries made explicit.
+
+## P13 — Build package qualification tooling
+Layer: config/infra · synchronized npm/Bun dependency metadata plus deterministic
+schema, docs, package-content, benchmark and aggregate gate scripts.
+
+## P14 — Document the verification contract
+Layer: docs · synchronized EN/ES authority and limits reference, content-bound
+consumer examples, structural-projection warning and deferred AWL adoption note.
+
+## P15 — Requalify the delivery candidate
+Layer: close-out · frozen installs, aggregate package/repository gates,
+replacement-acceptance evidence, ledger/progress close-out, PR-body refresh and
+publication of the exact candidate for fresh independent review.

@@ -1,9 +1,10 @@
 # progress — 26-staged-verification-contracts
 
-Last reviewed: 2026-08-24 (initial review)
+Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 
-## Acceptance receipt v1
-- Manifest: docs/features/26-staged-verification-contracts/ACCEPTANCE.md · Blob: a4c643dabe8105293c76a1013713c4a3919a96cb · Status: frozen · Verified: 2026-08-24
+## Acceptance receipt v2 (replacement)
+- Manifest: docs/features/26-staged-verification-contracts/ACCEPTANCE.md · Blob: 2e8058860b2c805cc30507053f15f91e2f273249 · Status: frozen · Verified: 2026-08-26
+- Supersedes: a4c643dabe8105293c76a1013713c4a3919a96cb under the 2026-08-26 user-approved SPEC amendment
 
 ## P1 — Deliver the VerificationPlan v1 contract
 - **Status**: Done
@@ -65,17 +66,63 @@ Last reviewed: 2026-08-24 (initial review)
 - **Next**: P6 — Staged-verification contract correction
 
 ## P6 — Staged-verification contract correction
-- **Status**: Done
-- **Done**: F31 fix — distinguish missing-results from full-coverage-gap in compareVerificationReceiptToCurrent; F32 — hard-code canonical vector digests, deep-freeze entries; F33 — validate before hashing/dereferencing; F35 — compile-safe EN/ES README examples with `as const`; F36 — freeze all 6 vocabulary arrays + immutability tests; F39 — restore ledger columns, remove `ignore` rows; added 4 immutability/vector tests (310→314)
-- **Remains**: none
-- **Gotchas**: F31 fix requires moving pre-validation after stale-checks to preserve original stale-plan/fingerprint error precedence; vector digests computed from canonicalJSONValue and verified independently via node:crypto
-- **Files**:
-  - `packages/agentic-workflow-schema/src/index.ts` — validate-then-stale-checks in compareVerificationReceiptToCurrent, fixed vector digests, deep-frozen vocabulary arrays
-  - `packages/agentic-workflow-schema/README.md` — compile-safe EN consumer example
-  - `packages/agentic-workflow-schema/README.es.md` — compile-safe ES consumer example
-  - `packages/agentic-workflow-schema/test/verification-core.test.mjs` — immutability tests, vector digest tests
-  - `packages/agentic-workflow-schema/test/verification-scenarios.test.mjs` — updated coverage-gap test
-  - `docs/features/26-staged-verification-contracts/review-findings.md` — F4 fixed, F27/F29 removed, all folded
-  - `docs/features/26-staged-verification-contracts/progress.md` — P5 updated, P6 appended
-  - `docs/features/26-staged-verification-contracts/TASKS.md` — P6 appended and checked
-- **Next**: unit finished
+- **Status**: Done (historical; superseded by the P7–P15 replan)
+- **Done**: Folded F31–F62 across validator order, freshness, vector, schema-projection, API, docs and lockfile corrections; latest pre-replan package gate reported 327 tests.
+- **Remains**: S1/S12 decisions are resolved; F63–F77 remain open and map to P7–P15.
+- **Gotchas**: the final F62 fold made `incomplete-stage-coverage` unreachable again; separate validation authorities continued to drift; progress and PR metadata lagged the candidate.
+- **Files**: source, generated projections, verification suites, bilingual README, package metadata, planning docs and fold ledger.
+- **Next**: P7 — Unify validation authority
+
+## P7 — Unify validation authority
+- **Status**: Planned
+- **Done**: D12/D13/D16 surface, tasks and replacement acceptance frozen.
+- **Remains**: 8 schema tasks; F64, F69 and F76 roots.
+- **Next**: `execute-phase 26 P7`
+
+## P8 — Repair freshness classification
+- **Status**: Planned
+- **Done**: Disjoint D1 precedence and the seven-outcome matrix frozen.
+- **Remains**: 6 schema tasks; F63 root.
+- **Next**: after P7, `execute-phase 26 P8`
+
+## P9 — Repair verification semantics
+- **Status**: Planned
+- **Done**: Corrected D1/D3 targets and AC5 authoritative evidence scope frozen.
+- **Remains**: 8 schema tasks; F65–F67 and F72 roots.
+- **Next**: after P8, `execute-phase 26 P9`
+
+## P10 — Bound verification shapes
+- **Status**: Planned
+- **Done**: D14 shape limits frozen after user approval.
+- **Remains**: 8 schema tasks; F77 shape roots.
+- **Next**: after P9, `execute-phase 26 P10`
+
+## P11 — Bound verification payloads
+- **Status**: Planned
+- **Done**: D14 payload limits and the D16 diagnostic contract frozen.
+- **Remains**: 8 schema tasks; F71 and F77 payload roots.
+- **Next**: after P10, `execute-phase 26 P11`
+
+## P12 — Bound verification time
+- **Status**: Planned
+- **Done**: D14 timeout ceilings and stage budgets frozen.
+- **Remains**: 6 schema tasks; F77 time roots.
+- **Next**: after P11, `execute-phase 26 P12`
+
+## P13 — Build package qualification tooling
+- **Status**: Planned
+- **Done**: Package/lock/script scope frozen.
+- **Remains**: 7 config/infra tasks; F70 and benchmark/package-gate roots.
+- **Next**: after P12, `execute-phase 26 P13`
+
+## P14 — Document the verification contract
+- **Status**: Planned
+- **Done**: EN/ES authority, limits and example requirements frozen.
+- **Remains**: 8 docs tasks; F68 and the deferred AWL boundary.
+- **Next**: after P13, `execute-phase 26 P14`
+
+## P15 — Requalify the delivery candidate
+- **Status**: Planned
+- **Done**: Fresh close-out chain frozen.
+- **Remains**: 10 close-out tasks; AC1–AC10 evidence, F73–F75 metadata/ledger close-out and fresh review.
+- **Next**: after P14, `execute-phase 26 P15`

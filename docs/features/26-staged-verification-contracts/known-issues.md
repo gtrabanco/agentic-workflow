@@ -1,10 +1,13 @@
 # known-issues — 26-staged-verification-contracts
 
-Deferred items destined for issues, never inline work:
+Deferred independent items; no issue exists unless the user routes one:
 
-- **Consumer-side wiring** — `execute-phase` / `review-change` emitting real
-  verification plans and receipts (the producer-side adoption of these
-  contracts). Deferred by SPEC decision; file a new issue when demand lands.
+- **Consumer-side wiring** — AWL emitting real verification plans/receipts and
+  calling the package's authoritative validators. Deferred by D15 until AWL
+  upgrades to the released schema package; only the user may route a new issue.
+- **AWL validation dialect/runner** — consumer/runtime architecture, explicitly
+  outside this package feature. Trigger: post-upgrade AWL needs a runtime-
+  specific dialect or execution adapter; only the user may route a new issue.
 - **Shell composition / command strings** — pipelines, redirects,
   interpolation reserved for a future versioned contract by the issue itself.
   File a new issue when a consumer needs it.
