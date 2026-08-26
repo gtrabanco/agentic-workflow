@@ -13,8 +13,6 @@
 // Types (source of truth: this package; the internal skill carries policy only)
 // ---------------------------------------------------------------------------
 
-import { createHash } from "crypto";
-
 export const ENVELOPE_STATES = [
   "OK",
   "CONTINUE",
@@ -3545,29 +3543,23 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
 // Verification semantic core
 // ---------------------------------------------------------------------------
 
-export interface VerifyAgainstPlanInput {
-  plan: VerificationPlanV1;
-  receipt: VerificationReceiptV1;
-}
-
 /**
  * D2 — Plan-bound validation. Checks commandId existence, declared order,
  * fast-stage subset, D3 fail-fast attribution, planDigest match, verdict consistency.
+ * Async because the planDigest match composes the async digest (SPEC designs digests async).
  */
-export function validateVerificationReceiptAgainstPlan(
-  input: VerifyAgainstPlanInput,
-): VerificationReceiptValidationResult {
+export async function validateVerificationReceiptAgainstPlan(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+): Promise<VerificationReceiptValidationResult> {
   const errors: string[] = [];
 
   // Validate plan
-  const pv = validateVerificationPlanV1(input.plan);
+  const pv = validateVerificationPlanV1(plan);
   if (!pv.ok) return { ok: false, errors: pv.errors };
-  const plan = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
-
   // Validate receipt
-  const rv = validateVerificationReceiptV1(input.receipt);
+  const rv = validateVerificationReceiptV1(receipt);
   if (!rv.ok) return { ok: false, errors: rv.errors };
-  const receipt = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
 
   // Build lookups
   const cmdIdx = new Map<string, number>();
@@ -3637,7 +3629,7 @@ export function validateVerificationReceiptAgainstPlan(
 
   // 5. planDigest match
   if (errors.length === 0) {
-    const d = digestVerificationPlanSync(plan);
+    const d = await digestVerificationPlan(plan);
     if (d !== receipt.planDigest) errors.push("planDigest mismatch");
   }
 
@@ -3693,10 +3685,6 @@ export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1):
 
 export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
   return sha256Hex(canonicalizeVerificationPlan(plan));
-}
-
-function digestVerificationPlanSync(plan: VerificationPlanV1): string {
-  return createHash("sha256").update(canonicalizeVerificationPlan(plan)).digest("hex");
 }
 
 export async function digestVerificationReceipt(receipt: VerificationReceiptV1): Promise<string> {
