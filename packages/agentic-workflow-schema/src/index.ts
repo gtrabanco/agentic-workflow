@@ -3392,6 +3392,17 @@ export async function digestVerificationReceipt(receipt: VerificationReceiptV1):
 
 /**
  * D1 — Freshness predicate.
+ *
+ * Pure, async, deterministic and it throws nothing. Fixed check order (SPEC §
+ * Stage, verdict, and freshness semantics): plan digest → candidate-snapshot
+ * digest → acceptance fingerprint → a missing fast-stage result → an
+ * unjustified skip → a missing full-stage result → `{ fresh: true }`.
+ *
+ * The two coverage codes are partitioned by the STAGE OF THE MISSING COMMAND,
+ * which is what keeps them disjoint while `incomplete-missing-results` still
+ * answers a full receipt that skipped a fast command:
+ * `incomplete-stage-coverage` only fires on a `full` receipt whose declared
+ * full-stage commands are not covered.
  */
 /** Verification-specific freshness reason codes (D1). */
 export const VERIFICATION_FRESHNESS_CODES = Object.freeze([
@@ -3413,39 +3424,44 @@ export async function compareVerificationReceiptToCurrent(
   // stable freshness result rather than throwing from canonicalJSONValue or
   // JSON.stringify — the SPEC promises this predicate is pure and throws nothing.
   // Validation rejects BigInt fields, circular references, and unknown fields
-  // before any hashing runs.
+  // before any hashing runs. A payload that fails its own contract cannot
+  // establish the plan binding, and the plan binding is the FIRST precedence
+  // point, so the honest stable code is `stale-plan` — never an incomplete code,
+  // which would claim a binding this predicate never verified (F63).
   const pv = validateVerificationPlanV1(plan);
   const rv = validateVerificationReceiptShape(receipt);
-  if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "incomplete-missing-results" };
+  if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "stale-plan" };
   const p = pv.plan;
   const r = rv.receipt;
 
   // Then check stale conditions (plain string comparisons — safe after validation).
   const pd = await digestVerificationPlan(p);
-  if (pd !== receipt.planDigest) return { fresh: false, reasonCode: "stale-plan" };
-  if (candidateSnapshotDigest !== receipt.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
-  if (acceptanceFingerprint !== receipt.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
+  if (pd !== r.planDigest) return { fresh: false, reasonCode: "stale-plan" };
+  if (candidateSnapshotDigest !== r.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
+  if (acceptanceFingerprint !== r.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
 
-  // Stage required set: fast → fast commands; full → every declared command
-  const req =
-    r.stageRequested === "full"
-      ? p.commands.map((c: VerificationCommandV1) => c.id)
-      : p.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
-  const recv = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
+  // All three bindings are current: from here on the predicate answers only
+  // incompleteness, so the stale and incomplete blocks are mutually disjoint.
+  const present = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
+  const fastIds: string[] = [];
+  const fullIds: string[] = [];
+  for (const c of p.commands) (c.stage === "fast" ? fastIds : fullIds).push(c.id);
 
-  // SPEC fixed check order (D1): incomplete-missing-results →
-  // incomplete-unjustified-skip → incomplete-stage-coverage.
-  // Missing-results check applies to ALL stages (fast: fast commands missing;
-  // full: all commands missing) — the reason code reflects *why* it's incomplete.
-  for (const id of req) {
-    if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" };
+  // 1. a missing fast-stage result — every fast command is owed a row by a fast
+  //    AND a full receipt (D2 required set), in either case `missing-results`.
+  for (const id of fastIds) {
+    if (!present.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" };
   }
-  // A skipped command without a reason → incomplete-unjustified-skip (any stage)
-  for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
-  // A full receipt not covering every declared command → incomplete-stage-coverage
+  // 2. a skipped row without a reason.
+  for (const rr of r.results) {
+    if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" };
+  }
+  // 3. a requested-full receipt that does not cover every declared full-stage
+  //    command. A fast receipt legitimately carries no full-stage rows (D7), so
+  //    the coverage gap is scoped to `stageRequested: "full"`.
   if (r.stageRequested === "full") {
-    for (const id of req) {
-      if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" };
+    for (const id of fullIds) {
+      if (!present.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" };
     }
   }
 

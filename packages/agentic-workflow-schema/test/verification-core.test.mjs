@@ -565,9 +565,12 @@ test("fresh: complete fast receipt is fresh even when full commands exist in pla
   assert.deepStrictEqual(result, { fresh: true });
 });
 
-test("incomplete-missing-results: full receipt missing declared command", async () => {
-  // A full receipt missing a required command returns incomplete-missing-results
-  // (SPEC D1 order: missing-results → unjustified-skip → stage-coverage).
+test("incomplete-stage-coverage: full receipt missing a full-stage command", async () => {
+  // SPEC § Stage/verdict/freshness: `incomplete-missing-results` answers a missing
+  // FAST-stage result, `incomplete-stage-coverage` a missing FULL-stage result on a
+  // requested-full receipt. AC4 requires both codes on reachable, disjoint
+  // conditions (F63) — the earlier `incomplete-missing-results` expectation here made
+  // `incomplete-stage-coverage` unreachable and contradicted the frozen manifest.
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "deploy", stage: "full" }),
@@ -581,18 +584,19 @@ test("incomplete-missing-results: full receipt missing declared command", async 
     stageRequested: "full",
     results: [
       { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
-      // Missing deploy (full) command
+      // Missing deploy (full) command → incomplete-stage-coverage
     ],
     verdict: "pass",
   };
   const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-stage-coverage" });
 });
 
-test("full receipt with coverage gap AND unjustified skip returns incomplete-missing-results (D1 order)", async () => {
+test("full receipt with coverage gap AND unjustified skip returns incomplete-unjustified-skip (D1 order)", async () => {
   // SPEC fixed check order: incomplete-missing-results → incomplete-unjustified-skip
   // → incomplete-stage-coverage. A full receipt degraded on BOTH dimensions returns
-  // the earliest-in-order code (missing-results for deploy, before unjustified-skip for lint).
+  // the earliest-in-order code: the only missing row is a FULL-stage command
+  // (stage-coverage, checked last), so the unjustified skip on `lint` wins (F42).
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "deploy", stage: "full" }),
@@ -605,25 +609,28 @@ test("full receipt with coverage gap AND unjustified skip returns incomplete-mis
     acceptanceFingerprint: "f".repeat(64),
     stageRequested: "full",
     results: [
-      // skipped without reason → incomplete-unjustified-skip condition
+      // skipped without reason → incomplete-unjustified-skip (checked before
+      // stage-coverage, which is what the missing deploy row would answer)
       { commandId: "lint", status: "skipped", exitCode: null, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
-      // deploy (full) result missing → incomplete-missing-results (checked first)
+      // deploy (full) result missing → incomplete-stage-coverage (checked last)
     ],
     verdict: "incomplete",
   };
   const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-unjustified-skip" });
 });
 
 test("compareVerificationReceiptToCurrent throws nothing on non-JSON-serializable plans (F40)", async () => {
   // A BigInt field makes canonicalJSONValue/JSON.stringify throw; the SPEC promises
   // the predicate is pure and throws nothing, so validation must reject it first
-  // and return a stable freshness code instead.
+  // and return a stable freshness code instead. The code is the FIRST precedence
+  // point (`stale-plan`): an input that fails its own contract cannot establish the
+  // plan binding, and reporting an incompleteness would claim a verified binding.
   const plan = makePlan([makeValidPlanCommand()]);
   const badPlan = { ...plan, commands: [{ ...plan.commands[0], timeoutMs: 10n }] };
   const receipt = makeValidReceipt(plan.commands);
   const result = await compareVerificationReceiptToCurrent(receipt, badPlan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "stale-plan" });
 });
 
 // ---------------------------------------------------------------------------

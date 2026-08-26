@@ -36,6 +36,10 @@
   deterministic test fixtures validated through the authoritative entries.
 - Projection fixtures cover every Draft-07-expressible accepted/rejected shape;
   generator drift is a separate gate, not an independent semantic validator.
+- Freshness reachability matrix: `test/verification-freshness.test.mjs` — every
+  D1 code from a one-dimension mutation of the fresh baseline, the fixed
+  stale/incomplete precedence, stale-masks-incomplete disjointness, and the
+  `{fresh: true}` outcome including the D9 vacuous-fast case.
 - Boundary fixtures cover 128/129 commands/results, 64/65 args, every string/
   byte/timeout threshold, aggregate stage budgets and 50/51 diagnostics.
 - Diagnostic fixtures prove code vocabulary, RFC 6901 paths, the truncation
