@@ -23,13 +23,13 @@ absences. Origin: issue
 
 ## Size
 
-`M` — two new versioned wire contracts (strict TypeScript types, validators,
-two new JSON Schema files), a canonical digest core with published vectors, a
-stage/verdict semantic engine, a pure freshness predicate with stable
-stale/incomplete reason codes, an extensive mandated scenario matrix,
-bilingual package reference, additive minor release. Five single-layer phases;
-no split trigger applies (≤ ~5 phases, one layer per phase, zero unresolved
-design decisions).
+`L` — two new versioned wire contracts plus one authoritative validation
+surface, deterministic structural-schema projection, canonical digests,
+stage/verdict/freshness semantics, bounded verification-plan usability,
+bilingual package reference, and an additive minor release. The original five
+phases plus P6 corrections and the user-approved P7–P15 replan remain one unit
+because every correction changes the same unshipped v1 contract and must land
+atomically before PR #145 can merge.
 
 ## Dependencies
 
@@ -82,22 +82,27 @@ feature delivers them as pure, portable data contracts.
 
 #### In scope
 
-- **S1:** Strict TypeScript types, validators, JSON Schemas, and exported
-  constants for `agentic-workflow/verification-plan@1` and
-  `agentic-workflow/verification-receipt@1`, both rejecting undeclared
-  fields.
-- **S2:** `VerificationPlan v1` — an ordered, non-empty command list where
-  each command carries: stable `id`; `stage: fast | full`; `executable` plus
-  ordered `args` represented separately (never an inferred shell string);
-  working-directory policy `candidate-root | relative-path` with a validated
-  relative path when applicable; positive integer `timeoutMs`;
-  `stopOnFailure` boolean; cost class `cheap | moderate | expensive`.
+- **S1:** Strict TypeScript types plus exactly two authoritative public
+  validators — `validateVerificationPlanV1(value: unknown)` and
+  `validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)` —
+  for `agentic-workflow/verification-plan@1` and
+  `agentic-workflow/verification-receipt@1`. JSON Schemas are deterministic,
+  generated structural tooling projections, not a second semantic authority.
+- **S2:** `VerificationPlan v1` — an ordered, non-empty list of at most 128
+  commands. Each command carries: stable bounded `id`; `stage: fast | full`;
+  bounded `executable` plus at most 64 bounded ordered `args` (never an
+  inferred shell string); working-directory policy `candidate-root |
+  relative-path` with a bounded validated relative path; stage-bounded
+  positive integer `timeoutMs`; `stopOnFailure`; and cost class `cheap |
+  moderate | expensive`. The canonical plan is at most 256 KiB; aggregate
+  declared timeouts are bounded by stage.
 - **S3:** `VerificationReceipt v1` — plan digest and candidate-snapshot
-  digest from #138; acceptance fingerprint; ordered per-command results with
-  status `passed | failed | timed-out | skipped | infrastructure-error`;
-  exit code or signal, start/end timestamps, bounded stdout/stderr evidence
-  references, and an explicit skip reason; overall verdict
-  `pass | fail | incomplete` and the stage actually requested.
+  digest from #138; acceptance fingerprint; at most 128 ordered per-command
+  results with status `passed | failed | timed-out | skipped |
+  infrastructure-error`; exit code or signal, start/end timestamps, bounded
+  stdout/stderr evidence references, and an explicit skip reason; overall
+  verdict `pass | fail | incomplete` and the stage actually requested. The
+  canonical receipt is at most 512 KiB.
 - **S4:** Stage rules — requesting `fast` executes only fast commands;
   requesting `full` executes every fast and full command in declared order;
   `stopOnFailure: true` marks later commands `skipped` with the failed
@@ -106,9 +111,11 @@ feature delivers them as pure, portable data contracts.
 - **S5:** Verdict semantics — `pass | fail | incomplete` rules with a fixed
   precedence, enumerated in this SPEC (never delegated to "consumer
   behavior").
-- **S6:** Validation failures — duplicate command ids, an empty plan, an
-  absolute/traversing relative path, a non-positive timeout, or unknown
-  vocabulary fails validation.
+- **S6:** Validation failures — inherited/undeclared fields, duplicate ids,
+  an empty or over-limit plan, absolute/traversing paths, over-limit strings
+  or payloads, invalid per-command/aggregate timeouts, unknown vocabulary,
+  and receipt/plan semantic mismatches fail through the authoritative entry
+  point with at most 50 redacted code+path diagnostics.
 - **S7:** A pure freshness predicate and stable stale/incomplete reason
   codes — a candidate, acceptance, or plan digest change makes a receipt
   stale; missing command results, a skipped command without a reason, or a
@@ -129,6 +136,9 @@ feature delivers them as pure, portable data contracts.
 - No automatic choice of which command is fast or full — `costClass` is
   declared project metadata, not measured billing truth.
 - No token/model budget contract; runtime budgets belong to consumers.
+- No AWL validation dialect, command runner, or consumer integration in this
+  package unit. AWL adoption follows only after it upgrades to the released
+  schema package and the user routes that independent work.
 - No replacement of the existing high-level verification state in Envelope v2.
 - No shell composition, interpolation, pipelines, redirects, or command
   strings — v1 deliberately represents executable plus arguments separately;
@@ -155,10 +165,10 @@ package documentation; package distribution. Roles: `headless consumer` and
   validators; consumers construct plans/receipts in their own memory · test:
   construction-shaped fixtures in the validation suites.
 - [x] Read/list — UI: n/a · API: package-root exports of both contract type
-  sets, validators (structural + plan-bound), verdict derivation, canonical
-  and digest functions, freshness predicate, published vectors, constants
-  (contract ids, stage/status/verdict/cost-class vocabularies, freshness
-  reason codes) · test: public-entry import suites.
+  sets, exactly two authoritative validation entries, verdict derivation,
+  canonical/digest functions, freshness predicate, readonly vectors and frozen
+  contract/limit vocabularies · generated schemas are tooling projections ·
+  test: public-entry import/export suites.
 - [x] Update — n/a at runtime; package maintainers evolve the contracts only
   through a reviewed package change and a new version (v1 is frozen) · test:
   strict validators reject mutated/undeclared fields.
@@ -188,8 +198,9 @@ package documentation; package distribution. Roles: `headless consumer` and
 
 **2. Integration closure — derived inventory**
 
-- [x] Public package API — additive exports only; existing export meanings
-  unchanged · test: full regression suite.
+- [x] Public package API — exactly two feature-26 runtime validation entries;
+  pre-feature-26 export meanings unchanged · test: public-export + regression
+  suites.
 - [x] Existing machine contracts — `Envelope v2`, `SkillOutcome v1`,
   `WorkflowSnapshot v1`, `CandidateSnapshot v1`, `ReviewReceipt v1` and
   their five JSON Schema files unchanged · test: existing suites plus
@@ -198,8 +209,9 @@ package documentation; package distribution. Roles: `headless consumer` and
   the synchronized staged-verification section (two-stage model,
   delivery-gate rule, no-execution boundary) · test: grep anchors in both
   files.
-- [x] Package distribution — minor release `3.4.0`; artifact set grows by
-  the two new schema files · test: `npm pack --dry-run`.
+- [x] Package distribution — minor release `3.4.0`; artifact set grows by two
+  generated structural projections plus deterministic check/benchmark scripts ·
+  test: `npm pack --dry-run`, generation check and npm/Bun lock gates.
 
 ### Expectation sweep
 
@@ -221,62 +233,41 @@ package documentation; package distribution. Roles: `headless consumer` and
 | 14 | Shell composition, pipelines, or command strings ship in v1 | out-of-scope | Shell non-goal |
 | 15 | The package picks which commands are fast or full, or executes anything | out-of-scope | Execution/classification non-goals |
 | 16 | The package replaces Envelope v2's high-level verification state | out-of-scope | Compatibility non-goal |
+| 17 | A standalone structural receipt check can claim runtime validity | denied | D12; AC2 |
+| 18 | Plans/receipts exceed the accepted capacity, byte, timeout or diagnostic limits | rejected | D14; AC10 |
+| 19 | Generated Draft-07 projections act as a second semantic authority | denied | D13; AC9 |
+| 20 | This feature implements an AWL dialect, runner or consumer adapter | out-of-scope | D15; deferred consumer work |
 
 ### Acceptance criteria
 
-- [ ] **AC1 — command-verified:** `cd packages/agentic-workflow-schema &&
-  npm test` exits 0 with a verification-plan suite proving: undeclared-field
-  rejection, non-empty command list, duplicate/empty id rejection,
-  `fast | full` stage vocabulary, `cheap | moderate | expensive` cost-class
-  vocabulary, non-empty NUL-free executable and args, working-directory
-  policy (null iff `candidate-root`; a validated relative path iff
-  `relative-path`: non-empty, no NUL, no leading `/`, no `..` segment),
-  positive-integer `timeoutMs`, boolean `stopOnFailure`.
-- [ ] **AC2 — command-verified:** `npm test` exits 0 with a
-  verification-receipt suite proving: undeclared-field rejection, closed
-  status (5 values) / verdict (3 values) / stage (2 values) vocabularies,
-  lowercase 64-hex digest formats (`planDigest`,
-  `candidateSnapshotDigest`, `acceptanceFingerprint`), ISO-8601 UTC
-  timestamps with `endedAt ≥ startedAt`, the exit-code/signal consistency
-  matrix, evidence-reference bounds (non-empty `ref` ≤ 1024 chars, integer
-  `bytes ≥ 0`, lowercase 64-hex `sha256`), skip-reason rules, duplicate
-  result command-id rejection, and verdict consistency with
-  `deriveVerificationVerdict`.
-- [ ] **AC3 — command-verified:** `npm test` exits 0 with a stage/verdict
-  suite covering: fast success, fast fail-fast, full success, full
-  fail-fast, timeout, infrastructure error, skipped commands (with and
-  without reason), missing results, a requested-full coverage gap, and the
-  pass rule — a full receipt cannot pass unless every declared fast and
-  full command has a current passed result.
-- [ ] **AC4 — command-verified:** `npm test` exits 0 with a freshness suite
-  returning exactly one stable reason code per dimension — `stale-plan`,
-  `stale-candidate-snapshot`, `stale-acceptance-fingerprint`,
-  `incomplete-missing-results`, `incomplete-unjustified-skip`,
-  `incomplete-stage-coverage` — plus `{fresh: true}`.
-- [ ] **AC5 — command-verified:** published canonical vectors for both
-  contracts pass identically on the TypeScript path and the JSON-Schema
-  path; repeated canonicalize/digest/compare calls are deeply equal
-  (determinism).
-- [ ] **AC6 — command-verified:** `grep` finds the staged-verification
-  section, the two-stage statement, and the delivery-gate rule ("only a
-  current, complete full receipt") in both
-  `packages/agentic-workflow-schema/README.md` and `README.es.md`.
-- [ ] **AC7 — command-verified:** existing verification passes unchanged —
-  `npm test` exit 0 including all pre-existing suites; `node
-  scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit
-  0; `grep '"version"' packages/agentic-workflow-schema/package.json` →
-  `3.4.0`; `npm pack --dry-run` lists the grown public artifact set (+ the
-  two new schema files).
-- [ ] **AC8 — read-verified:** `git diff` clean on
-  `envelope.schema.json`, `skill-outcome.schema.json`,
-  `workflow-snapshot.schema.json`, `candidate-snapshot.schema.json`,
-  `review-receipt.schema.json`, and all pre-existing contract types — no
-  meaning of any existing export changed.
+The frozen executable finish line is `ACCEPTANCE.md` v2 (AC1–AC10). In
+summary, it requires:
+
+- [ ] **AC1:** the sole plan validator rejects all malformed, inherited and
+  over-limit plans and returns normalized own-property data.
+- [ ] **AC2:** the sole receipt validator performs structural + plan-bound
+  validation in one call; no standalone receipt validator is exported.
+- [ ] **AC3:** the full stage/verdict matrix passes, including fail-fast.
+- [ ] **AC4:** all six freshness reason codes are reachable on disjoint
+  conditions, plus `{fresh: true}`.
+- [ ] **AC5:** canonical vectors, readonly typing and repeated
+  canonicalize/digest/derive/compare operations are deterministic through the
+  authoritative entry points.
+- [ ] **AC6:** synchronized EN/ES docs describe authority, projections,
+  limits, delivery-gate and no-execution semantics with coherent examples.
+- [ ] **AC7:** package/repository gates, pack and npm/Bun frozen installs pass.
+- [ ] **AC8:** all prior machine contracts and pre-feature-26 export meanings
+  remain unchanged.
+- [ ] **AC9:** generated Draft-07 structural projections match the canonical
+  internal contract definition and identify themselves as non-authoritative.
+- [ ] **AC10:** every accepted command/result/string/byte/timeout/diagnostic
+  bound is enforced, and the 128-command warm-process p95 gate is ≤100 ms.
 
 ### Tooling
 
-n/a: the existing TypeScript compiler and the schema-package test scripts
-are authoritative; no external skill or MCP is required.
+The TypeScript compiler, package tests, deterministic projection checker,
+128-command benchmark and npm/Bun lock gates are authoritative. No external
+skill, MCP, AWL dialect or consumer runtime is required.
 
 ### Product decisions
 
@@ -323,7 +314,7 @@ are authoritative; no external skill or MCP is required.
   Published vectors are exported as `VERIFICATION_CANONICAL_VECTORS` (same
   `CanonicalVectorV1` shape; the existing frozen `CANONICAL_VECTORS` array
   stays untouched) and lock the rules in place.
-- **D7 — Stage-coverage rules (schema level).** Every result's `commandId`
+- **D7 — Stage-coverage rules (authoritative validator).** Every result's `commandId`
   must exist in the bound plan; no duplicate result command ids; results
   appear in the plan's declared command order; a fast-stage receipt may
   carry results only for fast commands (a full-command result in a fast
@@ -337,17 +328,48 @@ are authoritative; no external skill or MCP is required.
   fast receipt with zero results and verdict `pass` (nothing fast failed);
   the delivery gate still requires a `full` receipt, so the vacuous pass
   cannot reach delivery verification. Pinned by a test.
-- **D10 — Size `M`, five phases, no split.** Two contracts + semantic core +
-  scenario matrix exceed one commit/half-day (not XS/S), yet cut cleanly
-  into five single-layer phases ≤ ~5 — the split trigger does not fire.
+- **D10 — Size `L`, fifteen phases, one atomic v1 unit.** P1–P6 are historical;
+  the 2026-08-26 user-approved replan adds P7–P15. The unit is not split
+  because the unshipped v1 validator authority, limits, docs and final gate
+  must agree in the same package release and PR.
 - **D11 — Traceability.** Origin: issue #139. The implementation PR must
   include `Closes #139`.
+- **D12 — One validation authority.** The only public runtime validation
+  entries are `validateVerificationPlanV1(value: unknown)` and
+  `validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)`.
+  The latter owns structural and plan-bound receipt validation; no structural
+  receipt validator remains public. Successful results contain normalized
+  own-property DTOs.
+- **D13 — Generated structural projections.** The two shipped Draft-07 files
+  are deterministic tooling projections from one internal canonical contract
+  definition. They carry explicit non-authoritative metadata and express every
+  Draft-07-representable structural rule, including D4 cross-field matrices;
+  semantic PASS comes exclusively from D12. A drift check forbids hand-edited
+  projections.
+- **D14 — Bounded usability.** V1 allows at most 128 commands/results and 64
+  args per command; ids are ≤128 chars, executable/working-directory/
+  skip-reason/evidence-reference values ≤1024, args ≤4096, canonical plan/
+  receipt sizes ≤256/512 KiB, diagnostics ≤50 stable-code + RFC 6901 path
+  entries, fast command/aggregate timeouts ≤10/15 minutes, full command/
+  aggregate full-stage timeouts ≤60/120 minutes. The 128-command warm
+  validation+digest p95 ceiling is 100 ms.
+- **D15 — Consumer boundary.** An AWL dialect/runner/adoption is not part of
+  this schema feature. It is independent future work only after AWL adopts
+  the released package; no issue is created automatically.
+- **D16 — Closed diagnostic result.** Each validation success is
+  `{ok: true, plan}` or `{ok: true, receipt}`. Each failure is `{ok: false,
+  diagnostics, truncated}` with at most 50 deterministic rows; every row has a
+  frozen diagnostic code and an RFC 6901 JSON Pointer made only from contract
+  property names and numeric indices. Messages and submitted values are never
+  returned. The unshipped feature-26 `errors: string[]` result is replaced,
+  with no compatibility alias that could become a second result contract.
 
 ### Deferred decisions
 
 | Decision | Why deferred | Decide by (trigger or phase) |
 |---|---|---|
 | Consumer-side wiring (`execute-phase`/`review-change` emitting real plans/receipts) | The package must exist first; producer-side adoption is a separate unit | After this feature lands; next driver-integration unit |
+| AWL validation dialect/runner integration | Consumer/runtime architecture is owned by AWL, not this schema package | After AWL upgrades to the released schema package and the user routes a dedicated issue |
 | Shell composition / command strings | The issue explicitly reserves it for a future versioned contract | First consumer needing pipelines/redirects (new issue) |
 | Receipt identity field | Not in the issue's closed enumeration; digest identification suffices in v1 | v2 contract decision (new issue) |
 
@@ -360,7 +382,7 @@ are authoritative; no external skill or MCP is required.
 - [x] Integration closure covers every subsystem in the recorded derived
   inventory.
 - [x] Every capability lists both roles as explicitly allowed or denied.
-- [x] Expectation sweep contains sixteen resolved rows with pointers.
+- [x] Expectation sweep contains twenty resolved rows with pointers.
 - [x] Every in-scope bullet maps to at least one acceptance criterion.
 - [x] Every acceptance criterion is command-verified or read-verified.
 - [x] Deferred decisions exists with decide-by triggers.
@@ -374,6 +396,7 @@ are authoritative; no external skill or MCP is required.
 | Date | Change | Approval |
 |---|---|---|
 | 2026-08-24 | Added **P6 — Staged-verification contract correction** (replan-in-unit): folds review findings F31–F39 (distinct freshness outcomes, independent canonical vectors, pre-validate-then-hash, frozen exports, compile-safe EN/ES README examples, regenerated lockfile, refreshed progress, restored ledger) plus second-round findings F40+ (validate-before-hash, schema parity, SPEC check order, async plan-bound validator, verdict semantics). Finish line (ACCEPTANCE.md blob `a4c643da…`) unchanged. | User-confirmed replan route from review-change (fold ledger F31–F39 replan-in-unit rows) |
+| 2026-08-26 | Added **P7–P15** after review findings S1/S12 and F63–F77: one authoritative validation system with two public entries, generated non-authoritative structural projections, bounded usable plans/receipts, synchronized package metadata/docs, and a fresh close-out. Replaced ACCEPTANCE v1 blob `a4c643da…` with user-approved ACCEPTANCE v2 (AC1–AC10); this removes an impossible dual-authority promise and strengthens runtime validity, limits, reproducibility and performance evidence. | User explicitly selected single-source/two-entry validation authority, accepted the bounded-plan proposal, kept AWL dialect work out of this feature, and requested the replan |
 
 ---
 
@@ -383,9 +406,11 @@ Written by `plan-feature-scaffold` after this Product half.
 
 ### Technical goals
 
-- Add both v1 contract surfaces (types, strict validators, two JSON Schema
-  files, exported constants) as additive package exports with no existing
-  meaning changed.
+- Deliver both v1 contract surfaces through exactly two public validation
+  entries backed by one canonical internal definition; ship deterministic
+  Draft-07 structural projections without presenting them as a second
+  semantic authority.
+- Enforce the D14 usability bounds and a measurable 128-command p95 ceiling.
 - Implement the staged verification semantic engine: plan-bound receipt
   validation, pure verdict derivation, canonical digests, and the pure
   freshness predicate with the D1 reason codes.
@@ -401,13 +426,15 @@ not exist at HEAD; the `template/` copy is a scaffold for target projects,
 not a declaration for this repo). Applicable NRS accepted decisions
 preserved: AD-002 (bilingual package docs in the same change), AD-004 (one
 PR per unit against `main`), AD-007 (schema-package strict contracts —
-`npm test` green, JSON schemas match TS types, version bump for any public
-API change).
+`npm test` green, generated JSON projections match their canonical definition,
+authoritative validators enforce full semantics, and public API changes require
+a version bump).
 
 - **Schema/package boundary:** all additions live inside
-  `packages/agentic-workflow-schema/` (single-file `src/index.ts` precedent);
-  the two NEW `*.schema.json` files join the shipped artifact set; the five
-  existing schema files and existing types are untouched.
+  `packages/agentic-workflow-schema/`; the canonical verification-contract
+  definition, authoritative validators and generator/check stay package-local.
+  The two generated `*.schema.json` projections join the shipped artifact set;
+  the five existing schema files and pre-feature-26 types remain untouched.
 - **Layering:** pure data contracts + pure functions — no I/O, no subprocess,
   no shell, no forge; the caller owns execution.
 - **NRS status:** frozen → consumed; W004 records this very issue as planned
@@ -416,7 +443,7 @@ API change).
 ### Design
 
 Reproduces the issue's rules verbatim where marked; residual mechanical gaps
-are closed by D1–D9 and locked by tests.
+are closed by D1–D16 and locked by the replacement acceptance manifest.
 
 #### VerificationPlan v1 (`agentic-workflow/verification-plan@1`)
 
@@ -425,32 +452,55 @@ export const VERIFICATION_PLAN_CONTRACT_ID = "agentic-workflow/verification-plan
 export const VERIFICATION_STAGES = ["fast", "full"] as const;
 export const VERIFICATION_COST_CLASSES = ["cheap", "moderate", "expensive"] as const;
 export type WorkingDirectoryPolicy = "candidate-root" | "relative-path";
+export const VERIFICATION_LIMITS = Object.freeze({
+  commands: 128, results: 128, argsPerCommand: 64,
+  idChars: 128, pathChars: 1024, argChars: 4096,
+  skipReasonChars: 1024, evidenceRefChars: 1024,
+  planBytes: 256 * 1024, receiptBytes: 512 * 1024,
+  fastCommandTimeoutMs: 10 * 60_000, fastBudgetMs: 15 * 60_000,
+  fullCommandTimeoutMs: 60 * 60_000, fullBudgetMs: 2 * 60 * 60_000,
+  diagnostics: 50,
+} as const);
+
+export const VERIFICATION_DIAGNOSTIC_CODES = [
+  "invalid-type", "missing-field", "unknown-field", "invalid-value",
+  "limit-exceeded", "duplicate-id", "unknown-command", "invalid-order",
+  "invalid-stage", "invalid-exit-state", "invalid-evidence", "invalid-skip",
+  "invalid-fail-fast", "digest-mismatch", "verdict-mismatch", "budget-exceeded",
+] as const;
+export type VerificationDiagnosticCodeV1 =
+  (typeof VERIFICATION_DIAGNOSTIC_CODES)[number];
+export interface VerificationDiagnosticV1 {
+  readonly code: VerificationDiagnosticCodeV1;
+  readonly path: string; // RFC 6901; static property names + decimal indices only
+}
 
 export interface VerificationCommandV1 {
-  readonly id: string;                     // stable, non-empty, unique within the plan
+  readonly id: string;                     // 1..128 chars; unique within plan
   readonly stage: "fast" | "full";
-  readonly executable: string;             // non-empty, no NUL — never a shell string
-  readonly args: readonly string[];        // ordered; each without NUL; may be empty
+  readonly executable: string;             // 1..1024 chars, no NUL; never shell text
+  readonly args: readonly string[];        // ≤64 ordered args, each ≤4096 chars, no NUL
   readonly workingDirectoryPolicy: WorkingDirectoryPolicy;
-  readonly workingDirectory: string | null; // null iff candidate-root; validated relative path iff relative-path
-  readonly timeoutMs: number;              // positive integer
+  readonly workingDirectory: string | null; // null iff root; bounded validated relative path otherwise
+  readonly timeoutMs: number;              // positive integer within the command's stage ceiling
   readonly stopOnFailure: boolean;
   readonly costClass: "cheap" | "moderate" | "expensive";
 }
 
 export interface VerificationPlanV1 {
   readonly contract: typeof VERIFICATION_PLAN_CONTRACT_ID;
-  readonly commands: readonly VerificationCommandV1[]; // non-empty, declared order
+  readonly commands: readonly VerificationCommandV1[]; // 1..128, declared order
 }
+export type VerificationPlanValidationResult =
+  | { readonly ok: true; readonly plan: VerificationPlanV1 }
+  | { readonly ok: false; readonly diagnostics: readonly VerificationDiagnosticV1[];
+      readonly truncated: boolean };
 ```
 
-`validateVerificationPlanV1(value)` rejects: unknown top-level/command
-fields; `contract` mismatch; an empty `commands` array; duplicate or empty
-command ids; `stage` or `costClass` outside vocabulary; an empty executable
-or NUL inside `executable`/`args`; `workingDirectoryPolicy` inconsistent
-with `workingDirectory` nullness; a relative path that is empty, contains
-NUL, has a leading `/`, or contains a `..` segment; `timeoutMs` that is not
-a positive integer; `stopOnFailure` that is not a boolean.
+`validateVerificationPlanV1(value: unknown)` is the sole plan-validation
+entry. It rejects inherited/unknown fields, structural failures and every D14
+limit; enforces per-command and aggregate stage budgets; caps diagnostics; and
+returns a normalized own-property `VerificationPlanV1` only on success.
 
 #### VerificationReceipt v1 (`agentic-workflow/verification-receipt@1`)
 
@@ -484,28 +534,28 @@ export interface VerificationReceiptV1 {
   readonly candidateSnapshotDigest: string; // from #138 — digestCandidateSnapshot(snapshot)
   readonly acceptanceFingerprint: string;   // from #138 — computeAcceptanceFingerprint(inputs)
   readonly stageRequested: "fast" | "full";
-  readonly results: readonly VerificationResultV1[]; // declared order; see D7
+  readonly results: readonly VerificationResultV1[]; // ≤128, declared order; see D7
   readonly verdict: "pass" | "fail" | "incomplete";  // must equal deriveVerificationVerdict (D2)
 }
+export type VerificationReceiptValidationResult =
+  | { readonly ok: true; readonly receipt: VerificationReceiptV1 }
+  | { readonly ok: false; readonly diagnostics: readonly VerificationDiagnosticV1[];
+      readonly truncated: boolean };
 ```
 
-`validateVerificationReceiptV1(value)` (structural, schema-mirrored)
-rejects: unknown fields at any level; `contract` mismatch; closed
-vocabularies (status/verdict/stage); digest formats (`planDigest`,
-`candidateSnapshotDigest`, `acceptanceFingerprint` lowercase 64-hex);
-non-ISO-8601 UTC timestamps or `endedAt < startedAt`; D4 exit/signal
-violations; D5 evidence-bound violations; `skipReason` non-null on a
-non-`skipped` row, empty, or longer than 1024 chars; duplicate result
-command ids.
+`validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)` is
+the sole receipt-validation entry. In one call it validates and normalizes the
+plan and receipt, then enforces result-id existence/uniqueness/order, fast-stage
+subset, complete `stopOnFailure` sequencing and attribution, plan digest,
+stored verdict, D14 cardinality/byte limits and bounded diagnostics. Missing
+required rows remain representable and yield verdict/freshness incompleteness.
+The former standalone structural receipt validator is internal-only and is not
+an alternate public PASS.
 
-`validateVerificationReceiptAgainstPlan(receipt, plan)` (binding +
-semantic) additionally rejects: a result `commandId` that does not exist in
-the plan; results out of declared order; a full-command result in a
-fast-stage receipt; a D3 fail-fast attribution violation (skipReason naming
-a non-existent, later, passed, or non-`stopOnFailure` command);
-`receipt.planDigest !== digestVerificationPlan(plan)`; a stored verdict that
-differs from `deriveVerificationVerdict(receipt, plan)`. Missing result
-rows are NOT rejected — they yield verdict `incomplete` / freshness codes.
+Both generated Draft-07 files are deterministic structural projections for
+editors, form tooling and non-authoritative shape checks. Each projection names
+the authoritative package validator and marks semantic validation as required;
+`npm run check:verification-schemas` fails on any generated-file drift.
 
 #### Stage, verdict, and freshness semantics
 
@@ -522,9 +572,10 @@ rows are NOT rejected — they yield verdict `incomplete` / freshness codes.
 - `compareVerificationReceiptToCurrent(receipt, plan,
   candidateSnapshotDigest, acceptanceFingerprint)` — pure, async,
   deterministic, throws nothing. Fixed check order: plan digest →
-  candidate-snapshot digest → acceptance fingerprint →
-  `incomplete-missing-results` → `incomplete-unjustified-skip` →
-  `incomplete-stage-coverage` → `{fresh: true}`, returning exactly one D1
+  candidate-snapshot digest → acceptance fingerprint → a missing fast-stage
+  result (`incomplete-missing-results`) → an unjustified skip → a missing
+  full-stage result (`incomplete-stage-coverage`) → `{fresh: true}`, returning
+  exactly one D1
   reason code. The predicate takes the digests directly (the consumer
   already holds them from the #138 review chain) and composes with
   `digestVerificationPlan`.
@@ -543,20 +594,17 @@ rows are NOT rejected — they yield verdict `incomplete` / freshness codes.
 - `digestVerificationPlan(plan)` / `digestVerificationReceipt(receipt)` →
   lowercase SHA-256 hex of the canonical bytes (async, like the existing
   digest functions).
-- `VERIFICATION_CANONICAL_VECTORS` — published frozen vectors (one minimal
-  valid plan, one minimal valid receipt) with expected digests; vector
-  agreement tests assert the TypeScript path, the JSON-Schema validation
-  path, and the published digests agree, and that repeated calls are deeply
-  equal.
+- `VERIFICATION_CANONICAL_VECTORS` — published deeply frozen vectors (one
+  minimal valid plan, one minimal valid receipt) with readonly entry types and
+  expected digests; tests pass both fixtures through the authoritative entries
+  and prove repeated canonicalize/digest/derive/compare calls deeply equal.
 
 ### Decisions to confirm
 
-- **D1–D11** as recorded in Product decisions (reason-code set, verdict
-  precedence, skip-reason semantics, exit/signal matrix, evidence bounds,
-  canonical form, stage-coverage rules, minimal receipt surface, vacuous
-  fast stage, sizing, traceability). These close the issue's residual
-  mechanical gaps; changing any later is a reviewed, versioned package
-  change.
+- **D1–D16** as recorded in Product decisions: the original semantic choices
+  plus one authoritative validation surface, generated structural projections,
+  bounded usability, reclassified sizing and the AWL consumer boundary. Any
+  later change is a reviewed, versioned package-contract change.
 
 ### Testing requirements
 
@@ -569,7 +617,13 @@ rows are NOT rejected — they yield verdict `incomplete` / freshness codes.
   capabilities, release-contract, index, workflow-decision*,
   candidate-snapshot, review-receipt, canonical-core, edge-matrix).
 - Property: determinism via deep-equality on repeated canonicalize/digest/
-  derive/compare calls.
+  derive/compare calls through authoritative validated values.
+- Generation: `npm run check:verification-schemas` regenerates both structural
+  projections in memory and fails on any byte drift.
+- Boundaries: exact-limit and over-limit fixtures for every D14 field, payload,
+  timeout and diagnostic ceiling.
+- Performance: a warm 128-command plan+receipt validation/digest benchmark has
+  a declared p95 ceiling of 100 ms.
 
 ### Dev scenarios
 
@@ -580,7 +634,9 @@ an existing test fixture.
 |---|---|---|
 | `plan:empty-command-list` | empty/zero state — an empty plan | fixture → rejected |
 | `plan:path-traversal` | invalid input — absolute/traversing/NUL working directory | fixture matrix → rejected |
-| `plan:timeout-boundary` | limit/threshold — `timeoutMs` 1 vs 0 | fixture pair → accepted/rejected |
+| `plan:timeout-boundary` | limit/threshold — stage command/aggregate budgets at and above D14 | fixture pairs → boundary accepted, overflow rejected |
+| `plan:command-boundary` | mass change — 128 vs 129 commands and 64 vs 65 args | fixture pairs → boundary accepted, overflow rejected |
+| `plan:byte-boundary` | payload pressure — 256 KiB plan / 512 KiB receipt ceilings | byte-count fixtures → boundary accepted, overflow rejected |
 | `receipt:vacuous-fast` | empty/zero state — plan with no fast commands, fast receipt | fixture → valid, verdict `pass`, delivery gate still requires full (D9) |
 | `receipt:fail-fast-chain` | degraded state — `stopOnFailure` marks later commands skipped with the failed id | fixture → verdict `fail`, skips attributed (D3) |
 | `receipt:unjustified-skip` | degraded state — skipped without a reason | fixture → verdict `incomplete`, code `incomplete-unjustified-skip` |
@@ -589,7 +645,7 @@ an existing test fixture.
 | `receipt:evidence-bound` | limit/threshold — `ref` exactly 1024 vs 1025 chars | fixture pair → accepted/rejected |
 | `receipt:duplicate-result` | concurrent/duplicate action — two results for one command | fixture → rejected |
 | permission denied | n/a — no ACL surface; the role matrix is compile-time | — |
-| mass changes | n/a — no size dimension beyond the evidence bounds and the >32-command ordering (covered by tests) | — |
+| mass changes | 128-command maximum-capacity plan/receipt | authoritative validate → canonicalize → digest + p95 benchmark |
 
 ### Phases
 
@@ -673,9 +729,9 @@ exit 0 with vector, determinism, verdict, and freshness suites green;
   `digestVerificationPlan`, `digestVerificationReceipt` (D6) + unit tests.
 - [ ] Implement `compareVerificationReceiptToCurrent` with the D1 reason
   codes in the fixed check order + unit tests.
-- [ ] Publish frozen `VERIFICATION_CANONICAL_VECTORS` + vector-agreement
-  tests: TypeScript path == JSON-Schema path == published digests; repeated
-  calls deeply equal (determinism).
+- [ ] Publish frozen `VERIFICATION_CANONICAL_VECTORS` + authoritative-entry,
+  generated-projection and digest agreement tests; repeated calls deeply equal
+  (the 2026-08-26 amendment replaces the historical dual-authority wording).
 - [ ] Add the synchronized staged-verification section to `README.md` and
   `README.es.md` in the same change (AD-002): two-stage model, stage rules,
   verdict semantics, freshness codes, the delivery-gate rule, the
@@ -751,20 +807,175 @@ Recorded by the 2026-08-24 amendment (post-review replan-in-unit); execution led
 
 #### Phase-lint
 
-Phase-lint: PASS (8/8) · fingerprint P6:schema:8:Staged-verification contract correction
+Phase-lint: PASS (8/8) · fingerprint P6:schema:6:Staged-verification contract correction
+
+### P7 — Unify validation authority
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test && node scripts/generate-verification-schemas.mjs --check` → exit 0 with authority-surface, ownership and projection suites green.
+
+- [ ] Add red-first public export-surface assertions for exactly two runtime validation entries
+- [ ] Add red-first own-property normalization fixtures for plan and receipt inputs
+- [ ] Introduce one internal canonical verification-contract definition consumed by runtime validation and deterministic projection (F76)
+- [ ] Make `validateVerificationPlanV1(value: unknown)` the sole plan entry and return a normalized plan DTO (F64)
+- [ ] Make `validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)` the sole receipt entry and return a normalized receipt DTO
+- [ ] Retire the standalone public receipt validator without a compatibility alias
+- [ ] Remove or register the duplicate verification constants so one public surface remains (F69)
+- [ ] Implement the deterministic two-file projection generator/check with explicit non-authoritative metadata
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P7:schema:8:Unify validation authority
+
+### P8 — Repair freshness classification
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with seven disjoint freshness outcomes reachable and stable.
+
+- [ ] Add red-first fixtures for stale plan, candidate snapshot and acceptance fingerprint
+- [ ] Add red-first fixtures for missing results, unjustified skip and stage-coverage gap
+- [ ] Implement the three stale-condition branches in fixed precedence
+- [ ] Implement the three incomplete-condition branches in fixed precedence
+- [ ] Make stale and incomplete predicates mutually disjoint (F63)
+- [ ] Prove the remaining fresh outcome is reachable and deterministic
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P8:schema:6:Repair freshness classification
+
+### P9 — Repair verification semantics
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with fail-fast, stage-rejection, readonly-vector and determinism suites green.
+
+- [ ] Add red-first fixtures for fail-fast sequencing and attribution
+- [ ] Enforce `stopOnFailure` result sequencing (F65)
+- [ ] Enforce `stopOnFailure` skip attribution (F65)
+- [ ] Make the fast-stage rejection fixture exercise a full-command result (F66)
+- [ ] Make frozen canonical-vector entries readonly in the public type (F67)
+- [ ] Validate both published vectors through their authoritative entries (F72)
+- [ ] Prove repeated canonicalize, digest and verdict calls deeply equal (F72)
+- [ ] Prove repeated freshness comparisons deeply equal (F72)
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P9:schema:8:Repair verification semantics
+
+### P10 — Bound verification shapes
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with every P10 exact-boundary/one-over pair green.
+
+- [ ] Add red-first boundary pairs for command, result and argument cardinalities
+- [ ] Add red-first boundary pairs for plan id and receipt command id lengths
+- [ ] Add red-first boundary pairs for executable and working-directory lengths
+- [ ] Add red-first boundary pairs for argument length and NUL rejection
+- [ ] Enforce the three cardinality ceilings from the canonical definition
+- [ ] Enforce both id ceilings from the canonical definition
+- [ ] Enforce executable, working-directory and argument string bounds
+- [ ] Export frozen shape-limit metadata and project every Draft-07-expressible shape bound
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P10:schema:8:Bound verification shapes
+
+### P11 — Bound verification payloads
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with byte, existing-string and diagnostic boundary suites green.
+
+- [ ] Add red-first boundary pairs for canonical plan and receipt byte sizes
+- [ ] Add red-first boundary pairs for skip-reason and evidence-reference lengths
+- [ ] Add red-first fixtures for diagnostic cap, truncation flag and value redaction
+- [ ] Enforce both canonical byte budgets before unbounded diagnostic allocation
+- [ ] Enforce the existing skip-reason and evidence-reference bounds
+- [ ] Publish the frozen diagnostic-code vocabulary and RFC 6901 path representation
+- [ ] Replace `errors: string[]` with the bounded diagnostic failure branch (F71)
+- [ ] Project expressible payload bounds and mark canonical byte budgets runtime-only
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P11:schema:8:Bound verification payloads
+
+### P12 — Bound verification time
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with all command and aggregate timeout boundary pairs green.
+
+- [ ] Add red-first boundary pairs for fast and full command timeout ceilings
+- [ ] Add red-first boundary pairs for fast and full aggregate stage budgets
+- [ ] Enforce both per-command timeout ceilings from the canonical definition
+- [ ] Enforce both aggregate stage budgets from the canonical definition
+- [ ] Export frozen timeout-limit metadata for consumers and tooling
+- [ ] Project command ceilings and mark aggregate sums authoritative-runtime-only
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P12:schema:6:Bound verification time
+
+### P13 — Build package qualification tooling
+
+Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && npm ci && bun install --frozen-lockfile && npm run check:verification-schemas && npm run bench:verification -- --commands 128 && npm run check:verification-package` → exit 0 with synchronized locks and p95 ≤100 ms.
+
+- [ ] Remove unused Node typing configuration and regenerate the npm lock (F70)
+- [ ] Regenerate the Bun lock from the same package manifest
+- [ ] Implement a warm-sample 128-command benchmark with a failing p95 ceiling
+- [ ] Implement a package-content checker that proves both generated projections ship
+- [ ] Register the deterministic `check:verification-schemas` command
+- [ ] Register the `test:verification-docs` command for P14's executable assertions
+- [ ] Register the benchmark, package-content and aggregate qualification commands
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P13:config/infra:7:Build package qualification tooling
+
+### P14 — Document the verification contract
+
+Layer: docs · Done-when: `cd packages/agentic-workflow-schema && npm run test:verification-docs` → exit 0 with extractable examples and synchronized EN/ES semantic assertions green.
+
+- [ ] Add red-first executable example and EN/ES semantic-parity assertions
+- [ ] Document the two-entry runtime authority and projection boundary in README.md
+- [ ] Publish the faithful Spanish authority/projection section in README.es.md
+- [ ] Correct the English example's content bindings and result timestamps (F68)
+- [ ] Apply the equivalent Spanish example correction (F68)
+- [ ] Document every v1 limit and aggregate budget in the English reference
+- [ ] Publish the equivalent limits and budgets in the Spanish reference
+- [ ] Record the deferred AWL consumer boundary in both references without creating an issue
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P14:docs:8:Document the verification contract
+
+### P15 — Requalify the delivery candidate
+
+Layer: close-out · Done-when: all declared commands exit 0, `git status -sb` is remote-current, PR #145 describes the exact pushed HEAD, and the replacement-manifest receipt is current.
+
+- [ ] Run `cd packages/agentic-workflow-schema && npm ci`
+- [ ] Run `cd packages/agentic-workflow-schema && bun install --frozen-lockfile`
+- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification`
+- [ ] Run `node scripts/check-skill-context.mjs`
+- [ ] Run `npx skills add . --list`
+- [ ] Record the exact AC1–AC10 replacement-manifest execution receipt
+- [ ] Finalize the fix-now ledger, including F62b relocation and F63–F77 folding
+- [ ] Synchronize feature progress and roadmap delivery state
+- [ ] Refresh PR #145 through `gh pr edit --body-file`
+- [ ] Publish the exact candidate commit and verify branch/PR head equality
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P15:close-out:10:Requalify the delivery candidate
+
+After P15, hand the exact pushed HEAD and replacement acceptance blob to a fresh
+`/review-change`; execution does not claim that independent review receipt.
 
 ### Spec-lint (mechanical — engineering boxes, run at scaffold time)
 
 - [x] `### Dev scenarios` has ≥ 1 failure-mode row (the fixed category list is
   walked; n/a rows carry reasons).
-- [x] Every phase passes the 8-box Phase-lint (records above).
+- [x] Every remaining phase P7–P15 passes the 8-box Phase-lint; historical
+  P1–P6 fingerprints are preserved as executed records.
 - [x] No template placeholders left anywhere in the file.
 
 ### Deploy & rollback
 
-The package ships as an additive minor release (`3.3.0` → `3.4.0`); no
-migration, flag, or config change; the artifact set grows by two schema
-files. Rollback: revert the PR to restore v3.3.0.
+The package ships as an additive minor release (`3.3.0` → `3.4.0`); the
+feature-26 API is still unshipped, so consolidating its validators before merge
+has no released migration. The artifact set grows by two generated structural
+projections. Rollback: revert PR #145 to restore v3.3.0.
 
 ### Open questions / risks
 
@@ -778,6 +989,13 @@ files. Rollback: revert the PR to restore v3.3.0.
 - **Risk — vacuous fast pass (D9).** A plan with no fast commands yields a
   trivially passing fast receipt; the delivery gate requires `full`, so it
   cannot reach delivery verification. Pinned by a test. Accepted.
+- **Risk — structural projections are not standalone semantic validators.** A
+  generic Draft-07 engine cannot prove plan-bound relationships. D12 makes the
+  package validator the single PASS authority; projection metadata, docs and
+  export tests prevent an alternate public entry. Accepted.
+- **Risk — fixed v1 capacity.** Projects needing >128 declared checks or >2 h
+  aggregate full-stage timeout must aggregate checks behind a runner or propose
+  a new versioned contract. This preserves usable repair/delivery loops. Accepted.
 - **Inherited — stale fix-index rows (134 marked `in-progress` though PR
   #135 merged; 100/101/117/119 marked `done` pending row removal):**
   documentation hygiene owned by `audit-docs`/the fix index; not touched by
@@ -786,24 +1004,28 @@ files. Rollback: revert the PR to restore v3.3.0.
 ### Deliverables
 
 - Updated `packages/agentic-workflow-schema/src/index.ts` — both v1 contract
-  surfaces, structural + plan-bound validators, verdict derivation,
-  canonical digest core, freshness predicate, published vectors,
-  package-root exports.
-- New `packages/agentic-workflow-schema/verification-plan.schema.json` +
-  `verification-receipt.schema.json`.
+  surfaces, one canonical internal definition, exactly two public validators,
+  D14 limits, verdict/freshness semantics, canonical core, readonly vectors and
+  bounded diagnostics.
+- Generated `packages/agentic-workflow-schema/verification-plan.schema.json` +
+  `verification-receipt.schema.json` structural projections and deterministic
+  drift check.
 - New `test/verification-plan.test.mjs`,
   `test/verification-receipt.test.mjs`, `test/verification-core.test.mjs`,
   `test/verification-scenarios.test.mjs`, fixtures.
 - Updated `README.md` + `README.es.md` — synchronized
   staged-verification section.
-- Updated `package.json` — version `3.4.0`, exports/files grown.
-- Updated `docs/features/ROADMAP.md` — row 26 registered (`planned`).
+- Updated package metadata — version `3.4.0`, exports/files/scripts grown,
+  npm/Bun locks synchronized, unused Node typing dependency removed.
+- Verification schema generator/check plus 128-command p95 benchmark.
+- Updated `docs/features/ROADMAP.md` — row 26 remains linked as
+  `done · #145` under the roadmap's PR-open state convention while the replan
+  reopens unit-local phases.
 - This SPEC.md + the M/L planning artifact set — frozen planning artifacts.
 
 ### Post-merge next feature
 
-No open issue follows #139 (it is the only open proposal at planning time).
-The natural successor is the deferred consumer-side wiring
-(`execute-phase`/`review-change` emitting real verification plans and
-receipts) — a new issue when demand lands; until then the package ships as
-pure contracts.
+The natural successor is consumer-side adoption after AWL upgrades to the
+released schema package: emitting plans/receipts, calling the two authoritative
+validators, and only then deciding whether AWL needs a dialect or runner. This
+remains a user-routed independent proposal; this replan creates no issue.
