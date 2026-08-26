@@ -1,18 +1,72 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_VERDICTS,
-  VERIFICATION_RECEIPT_SCHEMA_PATH,
-  validateVerificationReceiptV1,
+  validateVerificationPlanV1,
+  validateVerificationReceiptAgainstPlan,
+  digestVerificationPlan,
 } from "../dist/index.js";
+import { VERIFICATION_CONTRACT } from "../dist/verification-contract.js";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+/** The plan every receipt in this suite is bound to. */
+function makePlan() {
+  return {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      {
+        id: "lint",
+        stage: "fast",
+        executable: "npm",
+        args: ["run", "lint"],
+        workingDirectoryPolicy: "candidate-root",
+        workingDirectory: null,
+        timeoutMs: 30000,
+        stopOnFailure: false,
+        costClass: "cheap",
+      },
+    ],
+  };
+}
+
+/** Two-command plan whose first entry fails fast — needed for skip attribution. */
+function makeFailFastPlan() {
+  const plan = makePlan();
+  plan.commands.unshift({
+    ...plan.commands[0],
+    id: "setup",
+    args: ["run", "setup"],
+    stopOnFailure: true,
+  });
+  return plan;
+}
+
+function resultFor(overrides) {
+  return {
+    commandId: "lint",
+    status: "passed",
+    exitCode: 0,
+    signal: null,
+    startedAt: "2025-01-01T00:00:00Z",
+    endedAt: "2025-01-01T00:00:01Z",
+    stdout: null,
+    stderr: null,
+    skipReason: null,
+    ...overrides,
+  };
+}
+
+const PLAN = makePlan();
+validateVerificationPlanV1(PLAN);
+const PLAN_DIGEST = await digestVerificationPlan(makePlan());
 
 // ---------------------------------------------------------------------------
 // Contract ID and vocabulary tests
@@ -30,23 +84,23 @@ test("exports VERIFICATION_VERDICTS with 3 values", () => {
   assert.deepStrictEqual(VERIFICATION_VERDICTS, ["pass", "fail", "incomplete"]);
 });
 
-test("exports VERIFICATION_RECEIPT_SCHEMA_PATH", () => {
-  assert.equal(VERIFICATION_RECEIPT_SCHEMA_PATH, "./verification-receipt.schema.json");
+test("the canonical definition names the published projection file", () => {
+  assert.equal(VERIFICATION_CONTRACT.receipt.fileName, "verification-receipt.schema.json");
 });
 
 // ---------------------------------------------------------------------------
 // Structural validation: undeclared fields
 // ---------------------------------------------------------------------------
 
-test("rejects undeclared top-level fields", () => {
+test("rejects undeclared top-level fields", async () => {
   const receipt = makeValidReceipt();
   const bad = { ...receipt, extra: true };
-  const result = validateVerificationReceiptV1(bad);
+  const result = await validateVerificationReceiptAgainstPlan(bad, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("extra")), result.errors.join(", "));
 });
 
-test("rejects undeclared fields in results", () => {
+test("rejects undeclared fields in results", async () => {
   const receipt = makeValidReceipt();
   receipt.results = [{
     commandId: "lint",
@@ -60,14 +114,14 @@ test("rejects undeclared fields in results", () => {
     skipReason: null,
     extraField: true,
   }];
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("extraField")), result.errors.join(", "));
 });
 
-test("rejects wrong contract id", () => {
+test("rejects wrong contract id", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1({ ...receipt, contract: "wrong/contract@0" });
+  const result = await validateVerificationReceiptAgainstPlan({ ...receipt, contract: "wrong/contract@0" }, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("contract")), result.errors.join(", "));
 });
@@ -76,30 +130,30 @@ test("rejects wrong contract id", () => {
 // Digest formats
 // ---------------------------------------------------------------------------
 
-test("rejects invalid planDigest (not 64-hex)", () => {
+test("rejects invalid planDigest (not 64-hex)", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1({ ...receipt, planDigest: "not-a-digest" });
+  const result = await validateVerificationReceiptAgainstPlan({ ...receipt, planDigest: "not-a-digest" }, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("planDigest")), result.errors.join(", "));
 });
 
-test("rejects invalid candidateSnapshotDigest (not 64-hex)", () => {
+test("rejects invalid candidateSnapshotDigest (not 64-hex)", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1({ ...receipt, candidateSnapshotDigest: "abc" });
+  const result = await validateVerificationReceiptAgainstPlan({ ...receipt, candidateSnapshotDigest: "abc" }, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("candidateSnapshotDigest")), result.errors.join(", "));
 });
 
-test("rejects invalid acceptanceFingerprint (not 64-hex)", () => {
+test("rejects invalid acceptanceFingerprint (not 64-hex)", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1({ ...receipt, acceptanceFingerprint: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" });
+  const result = await validateVerificationReceiptAgainstPlan({ ...receipt, acceptanceFingerprint: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" }, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("acceptanceFingerprint")), result.errors.join(", "));
 });
 
-test("rejects uppercase hex digests", () => {
+test("rejects uppercase hex digests", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1({ ...receipt, planDigest: "A".repeat(64) });
+  const result = await validateVerificationReceiptAgainstPlan({ ...receipt, planDigest: "A".repeat(64) }, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("planDigest")), result.errors.join(", "));
 });
@@ -108,9 +162,9 @@ test("rejects uppercase hex digests", () => {
 // stageRequested vocabulary
 // ---------------------------------------------------------------------------
 
-test("rejects invalid stageRequested", () => {
+test("rejects invalid stageRequested", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1({ ...receipt, stageRequested: "ultra" });
+  const result = await validateVerificationReceiptAgainstPlan({ ...receipt, stageRequested: "ultra" }, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("stageRequested")), result.errors.join(", "));
 });
@@ -119,43 +173,43 @@ test("rejects invalid stageRequested", () => {
 // Duplicate result command-id rejection
 // ---------------------------------------------------------------------------
 
-test("rejects duplicate result command ids", () => {
+test("rejects duplicate result command ids", async () => {
   const receipt = makeValidReceipt();
   receipt.results = [
     { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
     { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:02Z", endedAt: "2025-01-01T00:00:03Z", stdout: null, stderr: null, skipReason: null },
   ];
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("duplicate")), result.errors.join(", "));
 });
 
-test("reject commandId with NUL (F50)", () => {
+test("reject commandId with NUL (F50)", async () => {
   const receipt = makeValidReceipt();
   receipt.results = [{
     commandId: "li\u0000nt", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null,
   }];
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
 });
 
-test("reject signal with NUL (F50)", () => {
+test("reject signal with NUL (F50)", async () => {
   const receipt = makeValidReceipt();
   receipt.results = [{
     commandId: "lint", status: "timed-out", exitCode: null, signal: "SIG\u0000TERM", startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null,
   }];
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
 });
 
-test("reject skipReason with NUL (F50)", () => {
+test("reject skipReason with NUL (F50)", async () => {
   const receipt = makeValidReceipt();
   receipt.results = [{
     commandId: "lint", status: "skipped", exitCode: null, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: "lint\u0000x",
   }];
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
 });
@@ -164,10 +218,10 @@ test("reject skipReason with NUL (F50)", () => {
 // Status vocabulary
 // ---------------------------------------------------------------------------
 
-test("rejects invalid status", () => {
+test("rejects invalid status", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].status = "cancelled";
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("status")), result.errors.join(", "));
 });
@@ -176,7 +230,7 @@ test("rejects invalid status", () => {
 // D4 — exitCode/signal matrix
 // ---------------------------------------------------------------------------
 
-test("passed: requires exactly one of exitCode or signal", () => {
+test("passed: requires exactly one of exitCode or signal", async () => {
   // Both present — only one allowed
   const receipt = makeValidReceipt();
   receipt.results[0] = {
@@ -184,7 +238,7 @@ test("passed: requires exactly one of exitCode or signal", () => {
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  let result = validateVerificationReceiptV1(receipt);
+  let result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("exitCode") || e.includes("signal")), result.errors.join(", "));
 
@@ -194,34 +248,34 @@ test("passed: requires exactly one of exitCode or signal", () => {
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  result = validateVerificationReceiptV1(receipt);
+  result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("exitCode") || e.includes("signal")), result.errors.join(", "));
 });
 
-test("passed: valid with exitCode only", () => {
+test("passed: valid with exitCode only", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0] = {
     commandId: "lint", status: "passed", exitCode: 0, signal: null,
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("passed: valid with signal only", () => {
+test("passed: valid with signal only", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0] = {
     commandId: "lint", status: "passed", exitCode: null, signal: "SIGINT",
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("failed: exactly one of exitCode or signal", () => {
+test("failed: exactly one of exitCode or signal", async () => {
   // Both null — invalid
   const receipt = makeValidReceipt();
   receipt.results[0] = {
@@ -229,16 +283,17 @@ test("failed: exactly one of exitCode or signal", () => {
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  let result = validateVerificationReceiptV1(receipt);
+  let result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
 
-  // exitCode present — valid
+  // exitCode present — valid (a failed row makes the derived verdict `fail`, D2)
+  receipt.verdict = "fail";
   receipt.results[0] = {
     commandId: "lint", status: "failed", exitCode: 1, signal: null,
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  result = validateVerificationReceiptV1(receipt);
+  result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 
   // signal present — valid
@@ -247,40 +302,54 @@ test("failed: exactly one of exitCode or signal", () => {
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  result = validateVerificationReceiptV1(receipt);
+  result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("timed-out: exitCode null, signal nullable", () => {
+test("timed-out: exitCode null, signal nullable", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0] = {
     commandId: "lint", status: "timed-out", exitCode: null, signal: "SIGTERM",
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  const result = validateVerificationReceiptV1(receipt);
+  receipt.verdict = "fail";
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("infrastructure-error: both exitCode and signal null", () => {
+test("infrastructure-error: both exitCode and signal null", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0] = {
     commandId: "lint", status: "infrastructure-error", exitCode: null, signal: null,
     startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
     stdout: null, stderr: null, skipReason: null,
   };
-  const result = validateVerificationReceiptV1(receipt);
+  receipt.verdict = "fail";
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("skipped: both exitCode and signal null", () => {
+test("skipped: both exitCode and signal null", async () => {
+  // Bound to the fail-fast plan so the skip carries a valid D3 attribution and
+  // only the D4 skipped-row matrix is under test.
+  const plan = makeFailFastPlan();
   const receipt = makeValidReceipt();
-  receipt.results[0] = {
-    commandId: "lint", status: "skipped", exitCode: null, signal: null,
-    startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
-    stdout: null, stderr: null, skipReason: "dependency failed",
-  };
-  const result = validateVerificationReceiptV1(receipt);
+  receipt.planDigest = await digestVerificationPlan(plan);
+  receipt.results = [
+    {
+      commandId: "setup", status: "failed", exitCode: 1, signal: null,
+      startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
+      stdout: null, stderr: null, skipReason: null,
+    },
+    {
+      commandId: "lint", status: "skipped", exitCode: null, signal: null,
+      startedAt: "2025-01-01T00:00:02Z", endedAt: "2025-01-01T00:00:02Z",
+      stdout: null, stderr: null, skipReason: "setup",
+    },
+  ];
+  receipt.verdict = "fail";
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, true);
 });
 
@@ -288,28 +357,28 @@ test("skipped: both exitCode and signal null", () => {
 // ISO-8601 UTC timestamps with endedAt >= startedAt
 // ---------------------------------------------------------------------------
 
-test("rejects non-UTC timestamp", () => {
+test("rejects non-UTC timestamp", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].startedAt = "2025-01-01T00:00:00";
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("startedAt") || e.includes("timestamp")), result.errors.join(", "));
 });
 
-test("rejects startedAt > endedAt", () => {
+test("rejects startedAt > endedAt", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].startedAt = "2025-01-01T00:00:02Z";
   receipt.results[0].endedAt = "2025-01-01T00:00:01Z";
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("endedAt") || e.includes("startedAt")), result.errors.join(", "));
 });
 
-test("accepts equal timestamps", () => {
+test("accepts equal timestamps", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].startedAt = "2025-01-01T00:00:00Z";
   receipt.results[0].endedAt = "2025-01-01T00:00:00Z";
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
@@ -317,49 +386,49 @@ test("accepts equal timestamps", () => {
 // D5 — evidence bounds
 // ---------------------------------------------------------------------------
 
-test("rejects empty evidence ref", () => {
+test("rejects empty evidence ref", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].stdout = { ref: "", bytes: 10, sha256: "a".repeat(64) };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("ref")), result.errors.join(", "));
 });
 
-test("rejects evidence ref > 1024 chars", () => {
+test("rejects evidence ref > 1024 chars", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].stdout = { ref: "x".repeat(1025), bytes: 10, sha256: "a".repeat(64) };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("ref")), result.errors.join(", "));
 });
 
-test("rejects evidence bytes < 0", () => {
+test("rejects evidence bytes < 0", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].stdout = { ref: "evidence-1", bytes: -1, sha256: "a".repeat(64) };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("bytes")), result.errors.join(", "));
 });
 
-test("rejects evidence sha256 not 64-hex", () => {
+test("rejects evidence sha256 not 64-hex", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].stdout = { ref: "evidence-1", bytes: 10, sha256: "invalid" };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("sha256")), result.errors.join(", "));
 });
 
-test("accepts valid evidence reference", () => {
+test("accepts valid evidence reference", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].stdout = { ref: "evidence-1", bytes: 1024, sha256: "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789" };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("accepts evidence ref exactly 1024 chars", () => {
+test("accepts evidence ref exactly 1024 chars", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].stdout = { ref: "x".repeat(1024), bytes: 0, sha256: "0".repeat(64) };
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
@@ -367,48 +436,61 @@ test("accepts evidence ref exactly 1024 chars", () => {
 // Skip reason rules
 // ---------------------------------------------------------------------------
 
-test("rejects non-null skipReason on non-skipped row", () => {
+test("rejects non-null skipReason on non-skipped row", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].status = "passed";
   receipt.results[0].skipReason = "some reason";
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("skipReason")), result.errors.join(", "));
 });
 
-test("accepts null skipReason on non-skipped row", () => {
+test("accepts null skipReason on non-skipped row", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].status = "passed";
   receipt.results[0].skipReason = null;
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
-test("rejects empty skipReason", () => {
+test("rejects empty skipReason", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].status = "skipped";
   receipt.results[0].skipReason = "";
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("skipReason")), result.errors.join(", "));
 });
 
-test("rejects skipReason > 1024 chars", () => {
+test("rejects skipReason > 1024 chars", async () => {
   const receipt = makeValidReceipt();
   receipt.results[0].status = "skipped";
   receipt.results[0].skipReason = "x".repeat(1025);
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("skipReason")), result.errors.join(", "));
 });
 
-test("accepts valid skipReason", () => {
+test("accepts valid skipReason", async () => {
+  // D3: a non-null skip reason is the stable id of an earlier, non-passed
+  // command that declares stopOnFailure.
+  const plan = makeFailFastPlan();
   const receipt = makeValidReceipt();
-  receipt.results[0].status = "skipped";
-  receipt.results[0].exitCode = null;
-  receipt.results[0].signal = null;
-  receipt.results[0].skipReason = "lint";
-  const result = validateVerificationReceiptV1(receipt);
+  receipt.planDigest = await digestVerificationPlan(plan);
+  receipt.results = [
+    {
+      commandId: "setup", status: "failed", exitCode: 1, signal: null,
+      startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
+      stdout: null, stderr: null, skipReason: null,
+    },
+    {
+      commandId: "lint", status: "skipped", exitCode: null, signal: null,
+      startedAt: "2025-01-01T00:00:02Z", endedAt: "2025-01-01T00:00:02Z",
+      stdout: null, stderr: null, skipReason: "setup",
+    },
+  ];
+  receipt.verdict = "fail";
+  const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, true);
 });
 
@@ -416,9 +498,9 @@ test("accepts valid skipReason", () => {
 // Valid receipt
 // ---------------------------------------------------------------------------
 
-test("accepts a fully valid receipt", () => {
+test("accepts a fully valid receipt", async () => {
   const receipt = makeValidReceipt();
-  const result = validateVerificationReceiptV1(receipt);
+  const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, true);
 });
 
@@ -452,7 +534,7 @@ test("schema is valid JSON with expected structure", () => {
 function makeValidReceipt() {
   return {
     contract: VERIFICATION_RECEIPT_CONTRACT_ID,
-    planDigest: "d".repeat(64),
+    planDigest: PLAN_DIGEST,
     candidateSnapshotDigest: "e".repeat(64),
     acceptanceFingerprint: "f".repeat(64),
     stageRequested: "full",

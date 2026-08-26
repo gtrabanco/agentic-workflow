@@ -9,6 +9,18 @@
  *   exactly one envelope per turn; all top-level keys always present.
  */
 
+import {
+  VERIFICATION_COMMAND_STATUSES,
+  VERIFICATION_CONTRACT,
+  VERIFICATION_COST_CLASSES,
+  VERIFICATION_PLAN_CONTRACT_ID,
+  VERIFICATION_RECEIPT_CONTRACT_ID,
+  VERIFICATION_STAGES,
+  VERIFICATION_VERDICTS,
+  projectStructure,
+  validateStructure,
+} from "./verification-contract.js";
+
 // ---------------------------------------------------------------------------
 // Types (source of truth: this package; the internal skill carries policy only)
 // ---------------------------------------------------------------------------
@@ -2984,23 +2996,19 @@ export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze
 // VerificationPlan v1 — staged verification contracts
 // ---------------------------------------------------------------------------
 
-/** Contract identifier for VerificationPlan v1. */
-export const VERIFICATION_PLAN_CONTRACT_ID = "agentic-workflow/verification-plan@1";
+/** Contract identifier for VerificationPlan v1 (re-exported from the canonical definition). */
+export { VERIFICATION_PLAN_CONTRACT_ID };
 
-/** Verification stages: fast and full. */
-export const VERIFICATION_STAGES = Object.freeze(["fast", "full"] as const);
+/** Verification stages: fast and full (re-exported from the canonical definition). */
+export { VERIFICATION_STAGES };
 export type VerificationStage = (typeof VERIFICATION_STAGES)[number];
 
 /** Cost classes declared by the project, not measured by the package. */
-export const VERIFICATION_COST_CLASSES = Object.freeze(["cheap", "moderate", "expensive"] as const);
+export { VERIFICATION_COST_CLASSES };
 export type VerificationCostClass = (typeof VERIFICATION_COST_CLASSES)[number];
 
-/** Working directory policy. */
-export const VERIFICATION_WORKING_DIRECTORY_POLICIES = Object.freeze(["candidate-root", "relative-path"] as const);
-export type WorkingDirectoryPolicy = (typeof VERIFICATION_WORKING_DIRECTORY_POLICIES)[number];
-
-/** Path to the published JSON Schema file for VerificationPlan v1. */
-export const VERIFICATION_PLAN_SCHEMA_PATH = "./verification-plan.schema.json";
+/** Working directory policy. The vocabulary itself lives in the canonical definition. */
+export type WorkingDirectoryPolicy = "candidate-root" | "relative-path";
 
 /**
  * A single verification command within a plan.
@@ -3051,171 +3059,41 @@ export type VerificationPlanValidationResult =
   | { ok: false; errors: string[] };
 
 /**
- * Validates a value against the VerificationPlan v1 structural contract.
+ * The sole plan-validation authority (D12).
  *
- * Checks:
- *   - `contract` matches `VERIFICATION_PLAN_CONTRACT_ID`
- *   - `commands` is a non-empty array
- *   - Each command: unique non-empty id, valid stage, valid costClass,
- *     non-empty executable, no NUL in executable or args,
- *     workingDirectory policy ↔ nullness, relative-path validation,
- *     positive-integer timeoutMs, boolean stopOnFailure
- *   - No undeclared fields at top-level or per-command
+ * Every structural rule comes from the canonical verification-contract
+ * definition: contract id, non-empty command list, unique non-empty ids,
+ * closed vocabularies, executable/args shapes, working-directory policy
+ * nullness and relative-path validation, positive-integer timeouts, and
+ * undeclared or inherited fields at every level.
+ *
+ * On success it returns a normalized own-property DTO — never the submitted
+ * reference — so digests and downstream semantics see exactly the declared
+ * contract fields.
  */
 export function validateVerificationPlanV1(value: unknown): VerificationPlanValidationResult {
   const errors: string[] = [];
-
-  if (!isObj(value)) {
-    return { ok: false, errors: ["value is not a JSON object"] };
-  }
-
-  const obj = value as Record<string, unknown>;
-
-  // ---- Top-level field validation ----
-  rejectUnexpectedKeys(obj, "plan", VERIFICATION_PLAN_TOP_KEYS, errors);
-
-  // contract id
-  if (obj.contract !== VERIFICATION_PLAN_CONTRACT_ID) {
-    errors.push(`contract must be "${VERIFICATION_PLAN_CONTRACT_ID}" (got: "${String(obj.contract)}")`);
-  }
-
-  // commands — non-empty array
-  if (!Array.isArray(obj.commands)) {
-    errors.push("commands must be an array");
-  } else if (obj.commands.length === 0) {
-    errors.push("commands must not be empty");
-  } else {
-    // ---- Per-command validation ----
-    const seenIds = new Set<string>();
-    for (let i = 0; i < obj.commands.length; i++) {
-      const cmd = obj.commands[i];
-      const prefix = `commands[${i}]`;
-
-      if (!isObj(cmd)) {
-        errors.push(`${prefix} must be an object`);
-        continue;
-      }
-
-      const cmdObj = cmd as Record<string, unknown>;
-
-      // Check undeclared fields
-      rejectUnexpectedKeys(cmdObj, prefix, VERIFICATION_COMMAND_KEYS, errors);
-
-      // id: non-empty, unique, NUL-free, bounded
-      if (typeof cmdObj.id !== "string" || cmdObj.id.length === 0) {
-        errors.push(`${prefix}.id must be a non-empty string`);
-      } else if (cmdObj.id.includes("\0")) {
-        errors.push(`${prefix}.id must not contain NUL characters`);
-      } else if (cmdObj.id.length > 1024) {
-        errors.push(`${prefix}.id must be at most 1024 characters`);
-      } else {
-        if (seenIds.has(cmdObj.id)) {
-          errors.push(`${prefix}.id "${cmdObj.id}" is a duplicate`);
-        } else {
-          seenIds.add(cmdObj.id);
-        }
-      }
-
-      // stage: vocabulary check
-      if (!VERIFICATION_STAGES.includes(cmdObj.stage as VerificationStage)) {
-        errors.push(`${prefix}.stage must be one of ${VERIFICATION_STAGES.join("|")} (got: "${String(cmdObj.stage)}")`);
-      }
-
-      // executable: non-empty, no NUL
-      if (typeof cmdObj.executable !== "string" || cmdObj.executable.length === 0) {
-        errors.push(`${prefix}.executable must be a non-empty string`);
-      } else if (cmdObj.executable.includes("\0")) {
-        errors.push(`${prefix}.executable must not contain NUL characters`);
-      }
-
-      // args: array of strings, no NUL
-      if (!Array.isArray(cmdObj.args)) {
-        errors.push(`${prefix}.args must be an array`);
-      } else {
-        for (let j = 0; j < cmdObj.args.length; j++) {
-          if (typeof cmdObj.args[j] !== "string") {
-            errors.push(`${prefix}.args[${j}] must be a string`);
-          } else if (cmdObj.args[j].includes("\0")) {
-            errors.push(`${prefix}.args[${j}] must not contain NUL characters`);
-          }
-        }
-      }
-
-      // workingDirectoryPolicy
-      if (!VERIFICATION_WORKING_DIRECTORY_POLICIES.includes(cmdObj.workingDirectoryPolicy as WorkingDirectoryPolicy)) {
-        errors.push(`${prefix}.workingDirectoryPolicy must be one of ${VERIFICATION_WORKING_DIRECTORY_POLICIES.join("|")} (got: "${String(cmdObj.workingDirectoryPolicy)}")`);
-      }
-
-      // workingDirectory — policy ↔ nullness
-      if (cmdObj.workingDirectoryPolicy === "candidate-root") {
-        if (cmdObj.workingDirectory !== null) {
-          errors.push(`${prefix}.workingDirectory must be null when workingDirectoryPolicy is "candidate-root"`);
-        }
-      } else if (cmdObj.workingDirectoryPolicy === "relative-path") {
-        if (cmdObj.workingDirectory === null || typeof cmdObj.workingDirectory !== "string") {
-          errors.push(`${prefix}.workingDirectory must be a non-empty string when workingDirectoryPolicy is "relative-path"`);
-        } else {
-          // Relative path validation: non-empty, no NUL, no absolute path,
-        // no backslash/UNC/drive-letter, no .. segments (cross-platform)
-          const wd = cmdObj.workingDirectory as string;
-          if (wd.length === 0) {
-            errors.push(`${prefix}.workingDirectory must be a non-empty string`);
-          } else if (wd.includes("\0")) {
-            errors.push(`${prefix}.workingDirectory must not contain NUL characters`);
-          } else if (wd.startsWith("/")) {
-            errors.push(`${prefix}.workingDirectory must not be an absolute path`);
-          } else if (/^[A-Za-z]:/.test(wd)) {
-            errors.push(`${prefix}.workingDirectory must not be a drive-letter path`);
-          } else if (wd.includes("\\")) {
-            errors.push(`${prefix}.workingDirectory must not contain backslashes`);
-          } else if (wd.split("/").includes("..")) {
-            errors.push(`${prefix}.workingDirectory must not contain ".." segments`);
-          }
-        }
-      }
-
-      // timeoutMs: positive integer
-      if (typeof cmdObj.timeoutMs !== "number" || !Number.isInteger(cmdObj.timeoutMs) || cmdObj.timeoutMs <= 0) {
-        errors.push(`${prefix}.timeoutMs must be a positive integer (got: ${String(cmdObj.timeoutMs)})`);
-      }
-
-      // stopOnFailure: boolean
-      if (typeof cmdObj.stopOnFailure !== "boolean") {
-        errors.push(`${prefix}.stopOnFailure must be a boolean (got: ${String(cmdObj.stopOnFailure)})`);
-      }
-
-      // costClass: vocabulary check
-      if (!VERIFICATION_COST_CLASSES.includes(cmdObj.costClass as VerificationCostClass)) {
-        errors.push(`${prefix}.costClass must be one of ${VERIFICATION_COST_CLASSES.join("|")} (got: "${String(cmdObj.costClass)}")`);
-      }
-    }
-  }
-
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, plan: value as unknown as VerificationPlanV1 };
+  const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, value, "", errors);
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, plan: plan as unknown as VerificationPlanV1 };
 }
 
 // ---------------------------------------------------------------------------
 // VerificationReceipt v1 — staged verification contracts
 // ---------------------------------------------------------------------------
 
-/** Contract identifier for VerificationReceipt v1. */
-export const VERIFICATION_RECEIPT_CONTRACT_ID = "agentic-workflow/verification-receipt@1";
+/** Contract identifier for VerificationReceipt v1 (re-exported from the canonical definition). */
+export { VERIFICATION_RECEIPT_CONTRACT_ID };
 
-/** Possible per-command result statuses. */
-export const VERIFICATION_COMMAND_STATUSES =
-  Object.freeze(["passed", "failed", "timed-out", "skipped", "infrastructure-error"] as const);
+/** Possible per-command result statuses (re-exported from the canonical definition). */
+export { VERIFICATION_COMMAND_STATUSES };
 export type VerificationCommandStatus = (typeof VERIFICATION_COMMAND_STATUSES)[number];
 
 /** Verdict values derived from receipt content. */
-export const VERIFICATION_VERDICTS = Object.freeze(["pass", "fail", "incomplete"] as const);
+export { VERIFICATION_VERDICTS };
 export type VerificationVerdict = (typeof VERIFICATION_VERDICTS)[number];
 
-/** Stage requested: fast or full. */
-export const VERIFICATION_STAGE_REQUESTS = Object.freeze(["fast", "full"] as const);
-export type VerificationStageRequest = (typeof VERIFICATION_STAGE_REQUESTS)[number];
-
-/** Path to the published JSON Schema file for VerificationReceipt v1. */
-export const VERIFICATION_RECEIPT_SCHEMA_PATH = "./verification-receipt.schema.json";
+/** Stage requested: fast or full — the same closed vocabulary as `stage`. */
+export type VerificationStageRequest = VerificationStage;
 
 /**
  * Bounded reference to captured evidence (stdout/stderr output).
@@ -3292,263 +3170,34 @@ export interface VerificationReceiptV1 {
 }
 
 // ---------------------------------------------------------------------------
-// VerificationReceipt v1 — validators
+// VerificationReceipt v1 — internal structural shape
 // ---------------------------------------------------------------------------
 
+/** Result of the sole public receipt entry point (D12). */
 export type VerificationReceiptValidationResult =
   | { ok: true; receipt: VerificationReceiptV1 }
   | { ok: false; errors: string[] };
 
-// Allowed-object-key lists for the verification validators' undeclared-field checks.
-// Module-scope sets so rejectUnexpectedKeys allocates nothing per element.
-const VERIFICATION_PLAN_TOP_KEYS: ReadonlySet<string> = new Set(["contract", "commands"]);
-const VERIFICATION_COMMAND_KEYS: ReadonlySet<string> = new Set([
-  "id", "stage", "executable", "args",
-  "workingDirectoryPolicy", "workingDirectory",
-  "timeoutMs", "stopOnFailure", "costClass",
-]);
-const VERIFICATION_RECEIPT_TOP_KEYS: ReadonlySet<string> = new Set([
-  "contract", "planDigest", "candidateSnapshotDigest",
-  "acceptanceFingerprint", "stageRequested", "results", "verdict",
-]);
-const VERIFICATION_RESULT_KEYS: ReadonlySet<string> = new Set([
-  "commandId", "status", "exitCode", "signal",
-  "startedAt", "endedAt", "stdout", "stderr", "skipReason",
-]);
-const VERIFICATION_EVIDENCE_KEYS: ReadonlySet<string> = new Set(["ref", "bytes", "sha256"]);
-
-/** Checks if a string is a valid lowercase 64-hex digest (reuses DIGEST_RE). */
-function isLowercase64Hex(v: unknown): boolean {
-  return typeof v === "string" && DIGEST_RE.test(v);
-}
-
 /**
- * Checks if a string is a valid ISO-8601 UTC timestamp (calendar-valid).
- * Format regex is shared with ReviewReceipt (ISO_8601_RE); the calendar
- * round-trip is intentionally verification-only — tightening the pre-existing
- * ReviewReceipt validator would change an existing export's meaning (AC8).
- */
-function isISO8601UTC(v: unknown): boolean {
-  if (typeof v !== "string") return false;
-  // Must match ISO-8601 format with Z timezone
-  if (!ISO_8601_RE.test(v)) return false;
-  // Also validate the calendar values (rejects e.g. 2025-99-99T99:99:99Z)
-  const d = new Date(v);
-  if (!Number.isFinite(d.getTime())) return false;
-  // Verify calendar round-trip: UTC components must match the input
-  const parts = v.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-  if (!parts) return false;
-  const [, Y, M, D, h, m_, s] = parts;
-  return (
-    d.getUTCFullYear() === Number(Y) &&
-    d.getUTCMonth() + 1 === Number(M) &&
-    d.getUTCDate() === Number(D) &&
-    d.getUTCHours() === Number(h) &&
-    d.getUTCMinutes() === Number(m_) &&
-    d.getUTCSeconds() === Number(s)
-  );
-}
-
-/**
- * Validates a value against the VerificationReceipt v1 structural contract.
+ * Package-internal structural shape check for VerificationReceipt v1, driven by
+ * the canonical definition (`src/verification-contract.ts`).
  *
- * Checks:
- *   - `contract` matches `VERIFICATION_RECEIPT_CONTRACT_ID`
- *   - Digest formats (planDigest, candidateSnapshotDigest, acceptanceFingerprint)
- *   - `stageRequested` vocabulary (fast/full)
- *   - Closed status, verdict vocabularies
- *   - D4 exit/signal matrix
- *   - D5 evidence bounds
- *   - Skip reason rules
- *   - Duplicate result command-id rejection
- *   - No undeclared fields at any level
+ * It is NOT a public entry point (D12): `validateVerificationReceiptAgainstPlan`
+ * is the only receipt authority, so a structural PASS here is never an
+ * alternate runtime validity claim.
  */
-export function validateVerificationReceiptV1(value: unknown): VerificationReceiptValidationResult {
+function validateVerificationReceiptShape(value: unknown): VerificationReceiptValidationResult {
   const errors: string[] = [];
-
-  if (!isObj(value)) {
-    return { ok: false, errors: ["value is not a JSON object"] };
-  }
-
-  const obj = value as Record<string, unknown>;
-
-  // ---- Top-level field validation ----
-  rejectUnexpectedKeys(obj, "receipt", VERIFICATION_RECEIPT_TOP_KEYS, errors);
-
-  // contract id
-  if (obj.contract !== VERIFICATION_RECEIPT_CONTRACT_ID) {
-    errors.push(`contract must be "${VERIFICATION_RECEIPT_CONTRACT_ID}" (got: "${String(obj.contract)}")`);
-  }
-
-  // Digest formats
-  if (!isLowercase64Hex(obj.planDigest)) {
-    errors.push(`planDigest must be a lowercase 64-hex string`);
-  }
-  if (!isLowercase64Hex(obj.candidateSnapshotDigest)) {
-    errors.push(`candidateSnapshotDigest must be a lowercase 64-hex string`);
-  }
-  if (!isLowercase64Hex(obj.acceptanceFingerprint)) {
-    errors.push(`acceptanceFingerprint must be a lowercase 64-hex string`);
-  }
-
-  // stageRequested
-  if (!VERIFICATION_STAGE_REQUESTS.includes(obj.stageRequested as VerificationStageRequest)) {
-    errors.push(`stageRequested must be one of ${VERIFICATION_STAGE_REQUESTS.join("|")} (got: "${String(obj.stageRequested)}")`);
-  }
-
-  // verdict
-  if (!VERIFICATION_VERDICTS.includes(obj.verdict as VerificationVerdict)) {
-    errors.push(`verdict must be one of ${VERIFICATION_VERDICTS.join("|")} (got: "${String(obj.verdict)}")`);
-  }
-
-  // ---- results ----
-  if (!Array.isArray(obj.results)) {
-    errors.push("results must be an array");
-  } else {
-    const seenCmdIds = new Set<string>();
-    for (let i = 0; i < obj.results.length; i++) {
-      const r = obj.results[i];
-      const prefix = `results[${i}]`;
-
-      if (!isObj(r)) {
-        errors.push(`${prefix} must be an object`);
-        continue;
-      }
-
-      const rObj = r as Record<string, unknown>;
-
-      // Check undeclared fields
-      rejectUnexpectedKeys(rObj, prefix, VERIFICATION_RESULT_KEYS, errors);
-
-      // commandId: non-empty, NUL-free, bounded
-      if (typeof rObj.commandId !== "string" || rObj.commandId.length === 0) {
-        errors.push(`${prefix}.commandId must be a non-empty string`);
-      } else if (rObj.commandId.includes("\0")) {
-        errors.push(`${prefix}.commandId must not contain NUL characters`);
-      } else if (rObj.commandId.length > 1024) {
-        errors.push(`${prefix}.commandId must be at most 1024 characters`);
-      } else {
-        if (seenCmdIds.has(rObj.commandId)) {
-          errors.push(`${prefix}.commandId "${rObj.commandId}" is a duplicate`);
-        } else {
-          seenCmdIds.add(rObj.commandId);
-        }
-      }
-
-      // status: vocabulary
-      if (!VERIFICATION_COMMAND_STATUSES.includes(rObj.status as VerificationCommandStatus)) {
-        errors.push(`${prefix}.status must be one of ${VERIFICATION_COMMAND_STATUSES.join("|")} (got: "${String(rObj.status)}")`);
-      }
-
-      // Base type checks before D4 matrix
-      const exitCode = rObj.exitCode;
-      const signal = rObj.signal;
-      if (exitCode !== null && (typeof exitCode !== "number" || !Number.isInteger(exitCode))) {
-        errors.push(`${prefix}.exitCode must be an integer or null (got: ${String(exitCode)})`);
-      }
-      if (signal !== null && (typeof signal !== "string" || signal.length === 0)) {
-        errors.push(`${prefix}.signal must be a non-empty string or null (got: ${String(signal)})`);
-      } else if (typeof signal === "string" && (signal.length > 1024 || signal.includes("\0"))) {
-        errors.push(`${prefix}.signal must be at most 1024 characters and NUL-free`);
-      }
-
-      // D4 — exitCode/signal matrix
-      const status = rObj.status as VerificationCommandStatus;
-
-      if (status === "passed" || status === "failed") {
-        // Must have exactly one: either exitCode (non-null) xor signal (non-null)
-        const hasExitCode = exitCode !== null && typeof exitCode === "number" && Number.isInteger(exitCode);
-        const hasSignal = signal !== null && typeof signal === "string" && signal.length > 0;
-        if (!hasExitCode && !hasSignal) {
-          errors.push(`${prefix}.status is "${status}" but both exitCode and signal are null/absent (need exactly one)`);
-        }
-        if (hasExitCode && hasSignal) {
-          errors.push(`${prefix}.status is "${status}" but both exitCode and signal are present (need exactly one)`);
-        }
-      } else if (status === "timed-out") {
-        // exitCode must be null; signal nullable (string or null)
-        if (exitCode !== null) {
-          errors.push(`${prefix}.exitCode must be null when status is "timed-out"`);
-        }
-        if (signal !== null && typeof signal !== "string") {
-          errors.push(`${prefix}.signal must be a string or null when status is "timed-out"`);
-        }
-      } else if (status === "infrastructure-error" || status === "skipped") {
-        // Both must be null
-        if (exitCode !== null) {
-          errors.push(`${prefix}.exitCode must be null when status is "${status}"`);
-        }
-        if (signal !== null) {
-          errors.push(`${prefix}.signal must be null when status is "${status}"`);
-        }
-      }
-
-      // Timestamps: ISO-8601 UTC, endedAt >= startedAt
-      const startedOk = isISO8601UTC(rObj.startedAt);
-      const endedOk = isISO8601UTC(rObj.endedAt);
-      if (!startedOk) {
-        errors.push(`${prefix}.startedAt must be an ISO-8601 UTC timestamp`);
-      }
-      if (!endedOk) {
-        errors.push(`${prefix}.endedAt must be an ISO-8601 UTC timestamp`);
-      }
-      if (startedOk && endedOk) {
-        const started = new Date(rObj.startedAt as string);
-        const ended = new Date(rObj.endedAt as string);
-        if (ended < started) {
-          errors.push(`${prefix}.endedAt must be >= startedAt`);
-        }
-      }
-
-      // Evidence references
-      for (const field of ["stdout", "stderr"] as const) {
-        const ev = rObj[field];
-        if (ev === null) continue;
-        if (!isObj(ev)) {
-          errors.push(`${prefix}.${field} must be null or an object`);
-          continue;
-        }
-        const evObj = ev as Record<string, unknown>;
-        rejectUnexpectedKeys(evObj, `${prefix}.${field}`, VERIFICATION_EVIDENCE_KEYS, errors);
-        // ref: non-empty, ≤ 1024, no NUL
-        if (typeof evObj.ref !== "string" || evObj.ref.length === 0) {
-          errors.push(`${prefix}.${field}.ref must be a non-empty string`);
-        } else if (evObj.ref.length > 1024) {
-          errors.push(`${prefix}.${field}.ref must be ≤ 1024 chars`);
-        } else if (evObj.ref.includes("\0")) {
-          errors.push(`${prefix}.${field}.ref must not contain NUL`);
-        }
-        // bytes: integer ≥ 0
-        if (typeof evObj.bytes !== "number" || !Number.isInteger(evObj.bytes) || evObj.bytes < 0) {
-          errors.push(`${prefix}.${field}.bytes must be an integer ≥ 0`);
-        }
-        // sha256: lowercase 64-hex
-        if (!isLowercase64Hex(evObj.sha256)) {
-          errors.push(`${prefix}.${field}.sha256 must be a lowercase 64-hex string`);
-        }
-      }
-
-      // skipReason: null allowed on skipped rows (yields verdict incomplete);
-      // non-skipped rows MUST have null skipReason
-      if (status !== "skipped") {
-        if (rObj.skipReason !== null) {
-          errors.push(`${prefix}.skipReason must be null when status is not "skipped"`);
-        }
-      } else {
-        // skipped rows: skipReason can be null OR a non-empty string ≤ 1024 chars
-        if (rObj.skipReason !== null) {
-          if (typeof rObj.skipReason !== "string" || rObj.skipReason.length === 0 || rObj.skipReason.length > 1024) {
-            errors.push(`${prefix}.skipReason must be null or a non-empty string ≤ 1024 chars when status is "skipped"`);
-          } else if (rObj.skipReason.includes("\0")) {
-            errors.push(`${prefix}.skipReason must not contain NUL characters`);
-          }
-        }
-        // null skipReason on skipped row is valid → yields verdict "incomplete"
-      }
-    }
-  }
-
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt: value as unknown as VerificationReceiptV1 };
+  const receipt = validateStructure(
+    VERIFICATION_CONTRACT.receipt,
+    VERIFICATION_CONTRACT.receipt.root,
+    value,
+    "",
+    errors,
+  );
+  return errors.length > 0
+    ? { ok: false, errors }
+    : { ok: true, receipt: receipt as unknown as VerificationReceiptV1 };
 }
 
 // ---------------------------------------------------------------------------
@@ -3556,35 +3205,46 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
 // ---------------------------------------------------------------------------
 
 /**
- * D2 — Plan-bound validation. Checks commandId existence, declared order,
- * fast-stage subset, D3 fail-fast attribution, planDigest match, verdict consistency.
- * Async because the planDigest match composes the async digest (SPEC designs digests async).
+ * The sole receipt-validation authority (D12): one call performs the
+ * VerificationReceipt v1 structural shape check, the VerificationPlan v1
+ * structural check, and every plan-bound rule — commandId existence, declared
+ * order, fast-stage subset, D3 fail-fast attribution, planDigest match and
+ * verdict consistency (D2).
+ *
+ * It accepts unknown input and returns a normalized own-property receipt DTO;
+ * no standalone structural receipt validator is exported, so a structural
+ * match alone can never claim runtime validity (D13). Async because the
+ * planDigest check composes the async digest.
  */
 export async function validateVerificationReceiptAgainstPlan(
-  receipt: VerificationReceiptV1,
-  plan: VerificationPlanV1,
+  receipt: unknown,
+  plan: unknown,
 ): Promise<VerificationReceiptValidationResult> {
   const errors: string[] = [];
 
-  // Validate plan
+  // Validate the plan first: nothing about a receipt is meaningful against a
+  // plan the authority itself rejects.
   const pv = validateVerificationPlanV1(plan);
   if (!pv.ok) return { ok: false, errors: pv.errors };
-  // Validate receipt
-  const rv = validateVerificationReceiptV1(receipt);
+  const rv = validateVerificationReceiptShape(receipt);
   if (!rv.ok) return { ok: false, errors: rv.errors };
+  // Every semantic check below runs on the normalized DTOs, never on the
+  // submitted references.
+  const normalizedPlan = pv.plan;
+  const normalizedReceipt = rv.receipt;
 
   // Build lookups
   const cmdIdx = new Map<string, number>();
   const cmdMap = new Map<string, VerificationCommandV1>();
-  for (let i = 0; i < plan.commands.length; i++) {
-    cmdIdx.set(plan.commands[i].id, i);
-    cmdMap.set(plan.commands[i].id, plan.commands[i]);
+  for (let i = 0; i < normalizedPlan.commands.length; i++) {
+    cmdIdx.set(normalizedPlan.commands[i].id, i);
+    cmdMap.set(normalizedPlan.commands[i].id, normalizedPlan.commands[i]);
   }
 
   // 1. commandId existence + uniqueness
   const seen = new Set<string>();
-  for (let i = 0; i < receipt.results.length; i++) {
-    const r = receipt.results[i];
+  for (let i = 0; i < normalizedReceipt.results.length; i++) {
+    const r = normalizedReceipt.results[i];
     if (!cmdIdx.has(r.commandId)) {
       errors.push(`result[${i}].commandId "${r.commandId}" not in plan`);
     } else if (seen.has(r.commandId)) {
@@ -3597,7 +3257,7 @@ export async function validateVerificationReceiptAgainstPlan(
   // 2. Declared order
   if (errors.length === 0) {
     let prev = -1;
-    for (const r of receipt.results) {
+    for (const r of normalizedReceipt.results) {
       const idx = cmdIdx.get(r.commandId)!;
       if (idx < prev) { errors.push(`out of order: "${r.commandId}"`); break; }
       prev = idx;
@@ -3605,8 +3265,8 @@ export async function validateVerificationReceiptAgainstPlan(
   }
 
   // 3. Fast-stage subset: fast receipt only has fast results
-  if (errors.length === 0 && receipt.stageRequested === "fast") {
-    for (const r of receipt.results) {
+  if (errors.length === 0 && normalizedReceipt.stageRequested === "fast") {
+    for (const r of normalizedReceipt.results) {
       const c = cmdMap.get(r.commandId);
       if (c && c.stage === "full") {
         errors.push(`fast receipt carries full command "${r.commandId}"`);
@@ -3616,12 +3276,12 @@ export async function validateVerificationReceiptAgainstPlan(
 
   // Build commandId → result map for O(1) lookups
   const resultByCmd = new Map<string, VerificationResultV1>(
-    receipt.results.map(r => [r.commandId, r]),
+    normalizedReceipt.results.map(r => [r.commandId, r]),
   );
 
   // 4. D3 fail-fast attribution
   if (errors.length === 0) {
-    for (const r of receipt.results) {
+    for (const r of normalizedReceipt.results) {
       if (r.status === "skipped" && r.skipReason) {
         const st = r.skipReason;
         if (!cmdIdx.has(st)) {
@@ -3641,18 +3301,18 @@ export async function validateVerificationReceiptAgainstPlan(
 
   // 5. planDigest match
   if (errors.length === 0) {
-    const d = await digestVerificationPlan(plan);
-    if (d !== receipt.planDigest) errors.push("planDigest mismatch");
+    const d = await digestVerificationPlan(normalizedPlan);
+    if (d !== normalizedReceipt.planDigest) errors.push("planDigest mismatch");
   }
 
   // 6. Verdict consistency
   if (errors.length === 0) {
     // Inputs already validated above — use the unchecked derivation (no re-validation).
-    const derived = deriveVerdictUnchecked(receipt, plan);
-    if (derived !== receipt.verdict) errors.push(`verdict mismatch: stored "${receipt.verdict}" != derived "${derived}"`);
+    const derived = deriveVerdictUnchecked(normalizedReceipt, normalizedPlan);
+    if (derived !== normalizedReceipt.verdict) errors.push(`verdict mismatch: stored "${normalizedReceipt.verdict}" != derived "${derived}"`);
   }
 
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt };
+  return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt: normalizedReceipt };
 }
 
 /**
@@ -3699,17 +3359,27 @@ export function deriveVerificationVerdict(
   plan: VerificationPlanV1,
 ): VerificationVerdict {
   const pv = validateVerificationPlanV1(plan);
-  const rv = validateVerificationReceiptV1(receipt);
+  const rv = validateVerificationReceiptShape(receipt);
   if (!pv.ok || !rv.ok) return "incomplete";
-  return deriveVerdictUnchecked(receipt, plan);
+  return deriveVerdictUnchecked(rv.receipt, pv.plan);
 }
 
-/** D6 — Canonical serialization. */
+/**
+ * D6 — Canonical serialization.
+ *
+ * Inputs are projected through the canonical definition first, so the bytes —
+ * and therefore every digest — describe the normalized own-property contract
+ * fields, never an inherited prototype value or an undeclared extra.
+ */
 export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string {
-  return canonicalJSONValue(plan);
+  return canonicalJSONValue(
+    projectStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, plan),
+  );
 }
 export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string {
-  return canonicalJSONValue(receipt);
+  return canonicalJSONValue(
+    projectStructure(VERIFICATION_CONTRACT.receipt, VERIFICATION_CONTRACT.receipt.root, receipt),
+  );
 }
 
 export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
@@ -3745,10 +3415,10 @@ export async function compareVerificationReceiptToCurrent(
   // Validation rejects BigInt fields, circular references, and unknown fields
   // before any hashing runs.
   const pv = validateVerificationPlanV1(plan);
-  const rv = validateVerificationReceiptV1(receipt);
+  const rv = validateVerificationReceiptShape(receipt);
   if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "incomplete-missing-results" };
-  const p = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
-  const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
+  const p = pv.plan;
+  const r = rv.receipt;
 
   // Then check stale conditions (plain string comparisons — safe after validation).
   const pd = await digestVerificationPlan(p);

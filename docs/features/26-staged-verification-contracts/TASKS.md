@@ -90,14 +90,14 @@ Layer: schema · Done-when: `npm test` → exit 0 with all tests passing (≥ 31
 
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test && node scripts/generate-verification-schemas.mjs --check` → exit 0 with authority-surface, ownership and projection suites green.
 
-- [ ] Add red-first public export-surface assertions for exactly two runtime validation entries
-- [ ] Add red-first own-property normalization fixtures for plan and receipt inputs
-- [ ] Introduce one internal canonical verification-contract definition consumed by runtime validation and deterministic projection (F76)
-- [ ] Make `validateVerificationPlanV1(value: unknown)` the sole plan entry and return a normalized plan DTO (F64)
-- [ ] Make `validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)` the sole receipt entry and return a normalized receipt DTO
-- [ ] Retire the standalone public receipt validator without a compatibility alias
-- [ ] Remove or register the duplicate verification constants so one public surface remains (F69)
-- [ ] Implement the deterministic two-file projection generator/check with explicit non-authoritative metadata
+- [x] Add red-first public export-surface assertions for exactly two runtime validation entries
+- [x] Add red-first own-property normalization fixtures for plan and receipt inputs
+- [x] Introduce one internal canonical verification-contract definition consumed by runtime validation and deterministic projection (F76)
+- [x] Make `validateVerificationPlanV1(value: unknown)` the sole plan entry and return a normalized plan DTO (F64)
+- [x] Make `validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)` the sole receipt entry and return a normalized receipt DTO
+- [x] Retire the standalone public receipt validator without a compatibility alias
+- [x] Remove or register the duplicate verification constants so one public surface remains (F69)
+- [x] Implement the deterministic two-file projection generator/check with explicit non-authoritative metadata
 
 ## P8 — Repair freshness classification
 
@@ -184,6 +184,7 @@ Layer: docs · Done-when: `cd packages/agentic-workflow-schema && npm run test:v
 - [ ] Document every v1 limit and aggregate budget in the English reference
 - [ ] Publish the equivalent limits and budgets in the Spanish reference
 - [ ] Record the deferred AWL consumer boundary in both references without creating an issue
+- [ ] Repoint both README examples at the two public entries (the retired standalone receipt validator must not appear in any example)
 
 ## P15 — Requalify the delivery candidate
 

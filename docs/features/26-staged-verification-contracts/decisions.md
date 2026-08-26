@@ -61,6 +61,58 @@
   echoed. The unshipped `errors: string[]` branch is replaced without a
   compatibility alias.
 
+## Execution records
+
+### P7 — Unify validation authority (2026-08-26)
+
+- **Canonical definition location:** `src/verification-contract.ts` holds the
+  one structural contract (closed field lists, vocabularies, bounds, patterns,
+  cross-field rules) plus the `validateStructure` engine. It compiles to
+  `dist/verification-contract.js`, which the published `exports` map does not
+  expose, so the definition stays package-internal while both consumers — the
+  runtime validators and `scripts/generate-verification-schemas.mjs` — read the
+  same bytes (F76).
+- **Ownership, not duplication:** the public `VERIFICATION_*` contract ids,
+  stage/cost-class/status/verdict vocabularies are now re-exported from that
+  definition instead of being declared twice (F64/F69). A test asserts the
+  public `VERIFICATION_*` surface is exactly the planned eight names.
+- **Normalized DTO shape:** a successful validation returns a fresh plain
+  object of declared own properties and deliberately does **not** freeze it —
+  freezing is specified for the published vectors and vocabularies, not for
+  consumer data. Non-plain prototypes (class instances, `Object.create(...)`)
+  and own `__proto__` keys are rejected rather than silently trusted.
+- **Diagnostics deferred on purpose:** the failure branch still carries
+  `errors: string[]`. D16's bounded `{code, path}` diagnostics are P11 work;
+  landing them here would bundle two phases' contract changes (F71).
+- **Projection metadata carrier:** `$comment` plus `description`. Ajv
+  `strict: true` — which the shipped parity fixtures compile with — rejects
+  unknown `x-*` keywords, and the alternative (`ignoreKeywords` /
+  `strictSchema: "log"`) would have loosened a test validator. `$comment` is a
+  Draft-07 annotation, so the non-authoritative declaration, the named
+  authority and the runtime-only rule list survive strict mode with no
+  weakened check.
+- **Projections are stronger than the files they replace:** the generated
+  output keeps every previously expressible rule and adds the D3-side
+  "non-skipped rows carry skipReason null" rule the hand-written file omitted.
+  A 65-fixture old-vs-new comparison across both files showed exactly that one
+  difference, in the direction of agreement with the authoritative validator.
+- **Test re-entry (not test weakening):** with the standalone structural
+  receipt validator retired, `test/verification-receipt.test.mjs` runs every
+  fixture through `validateVerificationReceiptAgainstPlan`. Inputs, expectations
+  and assertion text are unchanged; five accept-cases were re-bound to a
+  two-command fail-fast plan (or had their stored verdict set to the D2-derived
+  value) because a receipt that disagrees with its bound plan is invalid by
+  contract. Two retired-constant export tests were replaced by equal-strength
+  assertions over the canonical definition, and the frozen-vocabulary check now
+  scans the whole exported namespace instead of a fixed list.
+- **Ledger untouched:** F63–F77 keep `folded: no`; P15 finalizes the fix-now
+  ledger. `testing.md` and `known-issues.md` needed no change (the test plan
+  already describes this layer; no new independent item was found).
+- **Plan conflict recorded:** P14 gains one task — repoint the bilingual README
+  examples at the two public entries. `README.md:258,300` and
+  `README.es.md:267,309` still import the retired validator; docs are P14's
+  layer, so P7 did not edit them.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.

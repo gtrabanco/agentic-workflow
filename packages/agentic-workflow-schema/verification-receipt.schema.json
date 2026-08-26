@@ -1,10 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validateVerificationReceiptAgainstPlan | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): unique-result-command-ids, timestamp-order, timestamp-calendar-valid | regenerate with: node scripts/generate-verification-schemas.mjs",
   "title": "VerificationReceipt v1",
-  "description": "A verification receipt bound to a plan, candidate snapshot, and acceptance fingerprint.",
+  "description": "A verification receipt bound to a plan, candidate snapshot, and acceptance fingerprint. This document is a NON-AUTHORITATIVE Draft-07 structural projection generated from the package's canonical verification-contract definition. It is not a semantic authority: a Draft-07 match is not contract validity — use the authoritative runtime entry point named in $comment.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract", "planDigest", "candidateSnapshotDigest", "acceptanceFingerprint", "stageRequested", "results", "verdict"],
+  "required": [
+    "contract",
+    "planDigest",
+    "candidateSnapshotDigest",
+    "acceptanceFingerprint",
+    "stageRequested",
+    "results",
+    "verdict"
+  ],
   "properties": {
     "contract": {
       "type": "string",
@@ -14,7 +23,7 @@
     "planDigest": {
       "type": "string",
       "pattern": "^[a-f0-9]{64}$",
-      "description": "Lowercase 64-hex SHA-256 digest of the plan."
+      "description": "Lowercase 64-hex SHA-256 digest of the bound plan."
     },
     "candidateSnapshotDigest": {
       "type": "string",
@@ -28,26 +37,38 @@
     },
     "stageRequested": {
       "type": "string",
-      "enum": ["fast", "full"],
+      "enum": [
+        "fast",
+        "full"
+      ],
       "description": "Which stage was requested."
     },
     "results": {
       "type": "array",
       "items": {
         "$ref": "#/$defs/VerificationResultV1"
-      }
+      },
+      "description": "Ordered per-command results."
     },
     "verdict": {
       "type": "string",
-      "enum": ["pass", "fail", "incomplete"],
-      "description": "Must equal deriveVerificationVerdict(receipt, plan)."
+      "enum": [
+        "pass",
+        "fail",
+        "incomplete"
+      ],
+      "description": "Must equal deriveVerificationVerdict."
     }
   },
   "$defs": {
     "EvidenceReferenceV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["ref", "bytes", "sha256"],
+      "required": [
+        "ref",
+        "bytes",
+        "sha256"
+      ],
       "properties": {
         "ref": {
           "type": "string",
@@ -71,7 +92,17 @@
     "VerificationResultV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["commandId", "status", "exitCode", "signal", "startedAt", "endedAt", "stdout", "stderr", "skipReason"],
+      "required": [
+        "commandId",
+        "status",
+        "exitCode",
+        "signal",
+        "startedAt",
+        "endedAt",
+        "stdout",
+        "stderr",
+        "skipReason"
+      ],
       "properties": {
         "commandId": {
           "type": "string",
@@ -82,20 +113,37 @@
         },
         "status": {
           "type": "string",
-          "enum": ["passed", "failed", "timed-out", "skipped", "infrastructure-error"],
+          "enum": [
+            "passed",
+            "failed",
+            "timed-out",
+            "skipped",
+            "infrastructure-error"
+          ],
           "description": "The terminal status of this command execution."
         },
         "exitCode": {
           "oneOf": [
-            { "type": "integer" },
-            { "type": "null" }
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
           ],
           "description": "Per the D4 exit-code/signal matrix."
         },
         "signal": {
           "oneOf": [
-            { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^[^\\0]*$" },
-            { "type": "null" }
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "pattern": "^[^\\0]*$"
+            },
+            {
+              "type": "null"
+            }
           ],
           "description": "Per the D4 exit-code/signal matrix; NUL-free, at most 1024 chars."
         },
@@ -111,64 +159,147 @@
         },
         "stdout": {
           "oneOf": [
-            { "$ref": "#/$defs/EvidenceReferenceV1" },
-            { "type": "null" }
+            {
+              "$ref": "#/$defs/EvidenceReferenceV1"
+            },
+            {
+              "type": "null"
+            }
           ],
           "description": "Bounded stdout evidence reference or null."
         },
         "stderr": {
           "oneOf": [
-            { "$ref": "#/$defs/EvidenceReferenceV1" },
-            { "type": "null" }
+            {
+              "$ref": "#/$defs/EvidenceReferenceV1"
+            },
+            {
+              "type": "null"
+            }
           ],
           "description": "Bounded stderr evidence reference or null."
         },
         "skipReason": {
           "oneOf": [
-            { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^[^\\0]*$" },
-            { "type": "null" }
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "pattern": "^[^\\0]*$"
+            },
+            {
+              "type": "null"
+            }
           ],
           "description": "Null on non-skipped rows; non-empty NUL-free string ≤ 1024 chars on skipped."
         }
       },
       "allOf": [
         {
-          "description": "D4 exit-code/signal matrix enforcement: passed/failed require exactly one of exitCode/signal non-null; timed-out requires exitCode null; infrastructure-error and skipped require both null."
-        },
-        {
+          "description": "[d4-exactly-one-terminal-result] D4 exit-code/signal matrix: passed/failed carry exactly one of exitCode (integer) or signal (non-empty string).",
           "if": {
-            "properties": { "status": { "enum": ["passed", "failed"] } }
+            "properties": {
+              "status": {
+                "enum": [
+                  "passed",
+                  "failed"
+                ]
+              }
+            }
           },
           "then": {
-            "allOf": [
+            "anyOf": [
               {
-                "description": "At least one of exitCode/signal is non-null: if exitCode is integer, signal must be null"
+                "required": [
+                  "exitCode",
+                  "signal"
+                ],
+                "properties": {
+                  "exitCode": {
+                    "type": "integer"
+                  },
+                  "signal": {
+                    "type": "null"
+                  }
+                }
               },
               {
-                "if": { "properties": { "exitCode": { "type": "integer" } } },
-                "then": { "properties": { "signal": { "type": "null" } } }
-              },
-              {
-                "description": "if exitCode is null, signal must be a string"
-              },
-              {
-                "if": { "properties": { "exitCode": { "type": "null" } } },
-                "then": { "properties": { "signal": { "type": "string" } } }
+                "required": [
+                  "exitCode",
+                  "signal"
+                ],
+                "properties": {
+                  "exitCode": {
+                    "type": "null"
+                  },
+                  "signal": {
+                    "type": "string"
+                  }
+                }
               }
             ]
           }
         },
         {
-          "if": { "properties": { "status": { "const": "timed-out" } } },
-          "then": { "properties": { "exitCode": { "type": "null" } } }
+          "description": "[d4-timed-out-has-no-exit-code] D4: timed-out carries exitCode null and an optional captured kill signal.",
+          "if": {
+            "properties": {
+              "status": {
+                "const": "timed-out"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "exitCode": {
+                "type": "null"
+              }
+            }
+          }
         },
         {
-          "if": { "properties": { "status": { "enum": ["infrastructure-error", "skipped"] } } },
+          "description": "[d4-no-terminal-result] D4: infrastructure-error and skipped carry neither exitCode nor signal.",
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "infrastructure-error",
+                  "skipped"
+                ]
+              }
+            }
+          },
           "then": {
-            "allOf": [
-              { "properties": { "exitCode": { "type": "null" } } },
-              { "properties": { "signal": { "type": "null" } } }
-            ]
+            "properties": {
+              "exitCode": {
+                "type": "null"
+              },
+              "signal": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "description": "[skip-reason-only-when-skipped] Non-skipped rows carry skipReason null.",
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "passed",
+                  "failed",
+                  "timed-out",
+                  "infrastructure-error"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "skipReason": {
+                "type": "null"
+              }
+            }
           }
         }
       ]

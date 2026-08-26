@@ -6,6 +6,11 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Manifest: docs/features/26-staged-verification-contracts/ACCEPTANCE.md · Blob: 2e8058860b2c805cc30507053f15f91e2f273249 · Status: frozen · Verified: 2026-08-26
 - Supersedes: a4c643dabe8105293c76a1013713c4a3919a96cb under the 2026-08-26 user-approved SPEC amendment
 
+## Dependency receipt v1
+- Fingerprint: 0292879887688a0c94e59984ad9dd60dbb590623 · Closure: 26-staged-verification-contracts ← 25-content-bound-review-receipts
+- Inputs: SPEC `## Dependencies` hard row + ROADMAP row 25 (no literal `Depends on:` field exists in this SPEC)
+- Merged PRs: 25 #144 @ 11a8061639e0ea2bdfdbaabc270380543eb37002 · Fully merged: yes · Verified: 2026-08-26
+
 ## P1 — Deliver the VerificationPlan v1 contract
 - **Status**: Done
 - **Done**: Types, constants, validator, schema, test suite (34 new tests), exports from `src/index.ts`
@@ -73,11 +78,13 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - **Files**: source, generated projections, verification suites, bilingual README, package metadata, planning docs and fold ledger.
 - **Next**: P7 — Unify validation authority
 
-## P7 — Unify validation authority
-- **Status**: Planned
-- **Done**: D12/D13/D16 surface, tasks and replacement acceptance frozen.
-- **Remains**: 8 schema tasks; F64, F69 and F76 roots.
-- **Next**: `execute-phase 26 P7`
+## P7 — 2026-08-26
+- **Status**: Done
+- Done: One canonical internal definition (`src/verification-contract.ts`) now owns the field lists, vocabularies, bounds, patterns and cross-field rules, and is consumed by runtime validation (`validateStructure`, own-property only) and by the new deterministic projection generator/check (`scripts/generate-verification-schemas.mjs`, `--check`). `validateVerificationPlanV1(value: unknown)` is the sole plan entry and `validateVerificationReceiptAgainstPlan(receipt: unknown, plan: unknown)` the sole receipt entry; both return normalized own-property DTOs (never the submitted reference), and `canonicalize*/digest*` project through the definition first. The standalone public receipt validator is retired with no alias, and the duplicate/unplanned constants (`VERIFICATION_STAGE_REQUESTS`, `VERIFICATION_WORKING_DIRECTORY_POLICIES`, `VERIFICATION_PLAN_SCHEMA_PATH`, `VERIFICATION_RECEIPT_SCHEMA_PATH`) are gone, so the public `VERIFICATION_*` surface is exactly the planned eight. 23 red-first authority tests in `test/verification-authority.test.mjs`; gate: 350/350 tests + drift-free projections.
+- Remains: P8–P15. F63–F77 ledger rows stay `folded: no` — P15 owns the ledger flip; the diagnostic result (`errors: string[]` → bounded code+path rows) stays in P11 by D16.
+- Gotchas: (1) the receipt suites no longer have a structural-only entry — every receipt fixture must be plan-consistent (matching `planDigest`, declared order and derived verdict); five accept-cases were re-bound to a fail-fast plan for valid D3 attribution, assertions untouched. (2) Non-authoritative projection metadata lives in `$comment` + `description`: Ajv `strict: true` rejects `x-*` keywords and the strict-mode parity fixtures must not be loosened. (3) The generated projections are now strictly stronger than the hand-written files — they also express "non-skipped rows carry skipReason null"; regenerate, never hand-edit. (4) `README.md`/`README.es.md` examples still import the retired `validateVerificationReceiptV1`; P14 owns the docs layer (a P14 task line was added). (5) `canonicalize*`/`digest*` of the published `VERIFICATION_CANONICAL_VECTORS` are byte-identical after normalization — do not restate the vector digests.
+- Files: `packages/agentic-workflow-schema/src/verification-contract.ts`, `src/index.ts`, `scripts/generate-verification-schemas.mjs`, `verification-plan.schema.json`, `verification-receipt.schema.json`, `test/verification-authority.test.mjs`, `test/verification-{plan,receipt,core,scenarios}.test.mjs`, `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions}.md`
+- Next: P8 — Repair freshness classification
 
 ## P8 — Repair freshness classification
 - **Status**: Planned
