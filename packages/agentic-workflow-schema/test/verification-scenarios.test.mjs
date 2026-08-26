@@ -4,7 +4,7 @@ import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   validateVerificationPlanV1,
-  validateVerificationReceiptV1,
+  validateVerificationReceiptAgainstPlan,
   deriveVerificationVerdict,
   compareVerificationReceiptToCurrent,
   digestVerificationPlan,
@@ -400,7 +400,7 @@ test("scenario: validate → canonicalize → digest → compare pipeline works 
     ],
     verdict: "pass",
   };
-  const receiptResult = validateVerificationReceiptV1(receipt);
+  const receiptResult = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(receiptResult.ok, true);
 
   const verdict = deriveVerificationVerdict(receipt, plan);
