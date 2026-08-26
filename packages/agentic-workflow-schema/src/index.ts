@@ -3635,7 +3635,8 @@ export async function validateVerificationReceiptAgainstPlan(
 
   // 6. Verdict consistency
   if (errors.length === 0) {
-    const derived = deriveVerificationVerdict(receipt, plan);
+    // Inputs already validated above — use the unchecked derivation (no re-validation).
+    const derived = deriveVerdictUnchecked(receipt, plan);
     if (derived !== receipt.verdict) errors.push(`verdict mismatch: stored "${receipt.verdict}" != derived "${derived}"`);
   }
 
@@ -3643,7 +3644,43 @@ export async function validateVerificationReceiptAgainstPlan(
 }
 
 /**
- * D2 — Verdict derivation: incomplete > fail > pass.
+ * D2 — Verdict derivation: incomplete > fail > pass, assuming already-validated
+ * inputs (no validation here — callers that pre-validate avoid a full re-scan).
+ * A required row that is `skipped`-with-reason yields `fail`: D2's pass rule
+ * requires every required result row to be `passed`, and a justified skip only
+ * exists attributing to a failure (D3).
+ */
+function deriveVerdictUnchecked(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+): VerificationVerdict {
+  const reqStage = receipt.stageRequested;
+  // Stage required set: fast → fast commands; full → every declared command
+  const required =
+    reqStage === "full"
+      ? plan.commands.map((c: VerificationCommandV1) => c.id)
+      : plan.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
+  const received = new Set(receipt.results.map((r2: VerificationResultV1) => r2.commandId));
+
+  // Missing → incomplete
+  for (const id of required) { if (!received.has(id)) return "incomplete"; }
+
+  // Unjustified skip → incomplete
+  for (const r2 of receipt.results) { if (r2.status === "skipped" && !r2.skipReason) return "incomplete"; }
+
+  // Failed/timed-out/infra, or a required row skipped-with-reason → fail
+  const requiredSet = new Set(required);
+  for (const r2 of receipt.results) {
+    if (["failed", "timed-out", "infrastructure-error"].includes(r2.status)) return "fail";
+    if (requiredSet.has(r2.commandId) && r2.status === "skipped") return "fail";
+  }
+
+  return "pass";
+}
+
+/**
+ * D2 — Verdict derivation: incomplete > fail > pass. Validating wrapper around
+ * {@link deriveVerdictUnchecked} — safe to call standalone on unvalidated inputs.
  */
 export function deriveVerificationVerdict(
   receipt: VerificationReceiptV1,
@@ -3652,27 +3689,7 @@ export function deriveVerificationVerdict(
   const pv = validateVerificationPlanV1(plan);
   const rv = validateVerificationReceiptV1(receipt);
   if (!pv.ok || !rv.ok) return "incomplete";
-  const p = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
-  const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
-
-  const reqStage = r.stageRequested;
-  // Stage required set: fast → fast commands; full → every declared command
-  const required =
-    reqStage === "full"
-      ? p.commands.map((c: VerificationCommandV1) => c.id)
-      : p.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
-  const received = new Set(r.results.map((r2: VerificationResultV1) => r2.commandId));
-
-  // Missing → incomplete
-  for (const id of required) { if (!received.has(id)) return "incomplete"; }
-
-  // Unjustified skip → incomplete
-  for (const r2 of r.results) { if (r2.status === "skipped" && !r2.skipReason) return "incomplete"; }
-
-  // Failed/timed-out/infra → fail
-  for (const r2 of r.results) { if (["failed","timed-out","infrastructure-error"].includes(r2.status)) return "fail"; }
-
-  return "pass";
+  return deriveVerdictUnchecked(receipt, plan);
 }
 
 /** D6 — Canonical serialization. */

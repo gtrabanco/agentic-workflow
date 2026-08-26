@@ -286,6 +286,22 @@ test("skipped without reason → incomplete", () => {
   assert.equal(deriveVerificationVerdict(receipt, plan), "incomplete");
 });
 
+test("skipped with reason on a required row without an attributed failure → fail, never pass (F47)", () => {
+  // D2: pass requires every required result row to be "passed". A required row that
+  // is skipped-with-reason must not vacuously yield "pass" when no failure row exists.
+  const plan = makePlan([
+    makeValidPlanCommand({ id: "lint", stage: "fast" }),
+    makeValidPlanCommand({ id: "test", stage: "full", stopOnFailure: true }),
+  ]);
+  const receipt = makeValidReceipt(plan.commands);
+  receipt.results[1] = {
+    commandId: "test", status: "skipped", exitCode: null, signal: null,
+    startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
+    stdout: null, stderr: null, skipReason: "lint",
+  };
+  assert.equal(deriveVerificationVerdict(receipt, plan), "fail");
+});
+
 test("missing result row (fast stage) → incomplete", () => {
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
