@@ -153,6 +153,46 @@
   `node scripts/generate-verification-schemas.mjs --check` drift-free — the
   canonical definition was not touched, so no projection regeneration needed.
 
+### P9 — Repair verification semantics (2026-08-26)
+
+- **F65 — what "complete sequencing" means here:** the SPEC names the rule twice
+  (S4: `stopOnFailure: true` marks later commands `skipped` with the failed
+  command id; Design: "complete `stopOnFailure` sequencing and attribution") and
+  AC2 lists "invalid fail-fast sequencing" as a rejection class. Before this
+  phase the validator only checked rows that *already* carried a reason, so a
+  receipt could show the run continuing past a stop (`passed`/`failed`/`timed-out`
+  rows after the trigger) and a skip could be attributed to a command that never
+  executed. The trigger is now defined as the earliest non-passed row of a
+  `stopOnFailure` command, and everything after it must be `skipped` with that id.
+- **Deliberate boundary — do not tighten further:** two degraded cases stay
+  *valid* by contract, because the schema layer must not erase representable
+  incompleteness. (a) `skipped` with `skipReason: null` after the trigger → D3
+  says null is legal and yields verdict `incomplete`, which is AC3's
+  `skipped-without-reason` scenario. (b) A later declared command with **no** row
+  → D7 says missing rows are not schema errors. Both are pinned by acceptance
+  tests so a later phase cannot silently invalidate them.
+- **F66 was a coverage defect, not a behaviour defect:** the test named
+  `rejects full-command result in fast-stage receipt` submitted only the fast row
+  and asserted `ok: true`, so the D7 fast-stage subset rule had zero rejection
+  coverage while the accepted case was mislabelled as a rejection test. The
+  rejection fixture now carries the full-stage `build` row and a companion test
+  keeps the acceptance case — coverage strictly increased.
+- **F67 without touching a pre-existing export:** AC8 freezes
+  `CanonicalVectorV1` (feature 25), so readonly-ness is applied at the
+  feature-26 declaration (`ReadonlyArray<Readonly<CanonicalVectorV1>>`) instead of
+  by editing the shared interface. `test/fixtures/` is inside
+  `tsconfig.test.json`'s include set, so the `@ts-expect-error` directives are
+  enforced by `npm test` itself: while the properties were mutable the build
+  failed with three TS2578 "unused directive" errors (red-first, no new runner).
+- **F72 / AC5 evidence moved off self-derivation:** the vector payloads are now
+  one shared fixture module consumed by the digest, AJV-parity and
+  authoritative-entry tests; expected digests are still computed independently
+  through `node:crypto`, so sharing the payload does not make the digest claim
+  circular.
+- **Gates:** `npm test` 380/380 (was 365); projection check drift-free —
+  sequencing is semantic and not expressible in Draft-07, so no regeneration was
+  owed.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.

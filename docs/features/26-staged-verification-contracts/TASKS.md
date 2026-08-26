@@ -116,14 +116,16 @@ Evidence for every task: the new `test/verification-freshness.test.mjs` matrix (
 
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with fail-fast, stage-rejection, readonly-vector and determinism suites green.
 
-- [ ] Add red-first fixtures for fail-fast sequencing and attribution
-- [ ] Enforce `stopOnFailure` result sequencing (F65)
-- [ ] Enforce `stopOnFailure` skip attribution (F65)
-- [ ] Make the fast-stage rejection fixture exercise a full-command result (F66)
-- [ ] Make frozen canonical-vector entries readonly in the public type (F67)
-- [ ] Validate both published vectors through their authoritative entries (F72)
-- [ ] Prove repeated canonicalize, digest and verdict calls deeply equal (F72)
-- [ ] Prove repeated freshness comparisons deeply equal (F72)
+Evidence: `test/verification-semantics.test.mjs` (14 cases, 4 red before the fix), `test/fixtures/verification-vector-readonly.ts` (3 × TS2578 before the fix), `test/fixtures/verification-vectors.mjs`, `src/index.ts` checks 4-5 of `validateVerificationReceiptAgainstPlan`.
+
+- [x] Add red-first fixtures for fail-fast sequencing and attribution — `rejects a passed row that ran after the stopOnFailure trigger`, `… second non-passed row …`, `… timed-out and infrastructure-error rows …`, `… attributed to another command`, plus three acceptance guards against over-tightening
+- [x] Enforce `stopOnFailure` result sequencing (F65) — trigger = earliest non-passed row of a `stopOnFailure` command; every later row must be `skipped` (`NON_PASSED`/`trigger` block, check 4)
+- [x] Enforce `stopOnFailure` skip attribution (F65) — a reason present after the trigger must name the trigger; D3's per-row earlier/non-passed/`stopOnFailure` check retained as check 5
+- [x] Make the fast-stage rejection fixture exercise a full-command result (F66) — `rejects a full-stage result carried by a fast-stage receipt (F66)` now submits the `build` row; the previously misnamed case keeps its positive coverage as `accepts a fast-stage receipt that carries only fast-stage rows`
+- [x] Make frozen canonical-vector entries readonly in the public type (F67) — `ReadonlyArray<Readonly<CanonicalVectorV1>>` + `test/fixtures/verification-vector-readonly.ts` (pre-existing `CanonicalVectorV1` untouched, AC8)
+- [x] Validate both published vectors through their authoritative entries (F72) — `both published vectors pass their authoritative public entries`, `vector payloads are the ones the published digests lock`
+- [x] Prove repeated canonicalize, digest and verdict calls deeply equal (F72) — `repeated canonicalize, digest and verdict calls are deeply equal`, `canonical calls do not mutate the submitted vectors`
+- [x] Prove repeated freshness comparisons deeply equal (F72) — `repeated freshness comparisons are deeply equal`
 
 ## P10 — Bound verification shapes
 

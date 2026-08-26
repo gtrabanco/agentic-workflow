@@ -119,7 +119,35 @@ test("rejects result commandId outside declared order", async () => {
   assert.ok(result.errors.some((e) => e.includes("order")), result.errors.join(", "));
 });
 
-test("rejects full-command result in fast-stage receipt", async () => {
+test("rejects a full-stage result carried by a fast-stage receipt (F66)", async () => {
+  // D7: a fast receipt may carry results ONLY for fast commands. The fixture must
+  // actually submit the full-stage `build` row — the version of this test named
+  // "rejects full-command result" never did, so the rule had zero coverage.
+  const planWithMixed = makePlan([
+    makeValidPlanCommand({ id: "lint", stage: "fast" }),
+    makeValidPlanCommand({ id: "build", stage: "full" }),
+  ]);
+  const planDigest = await digestVerificationPlan(planWithMixed);
+  const receipt = {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    planDigest,
+    candidateSnapshotDigest: "e".repeat(64),
+    acceptanceFingerprint: "f".repeat(64),
+    stageRequested: "fast",
+    results: [
+      { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
+      { commandId: "build", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:02Z", endedAt: "2025-01-01T00:00:03Z", stdout: null, stderr: null, skipReason: null },
+    ],
+    verdict: "pass",
+  };
+  const result = await validateVerificationReceiptAgainstPlan(receipt, planWithMixed);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("build")), result.errors.join(", "));
+});
+
+test("accepts a fast-stage receipt that carries only fast-stage rows", async () => {
+  // Companion to the F66 rejection: the same mixed plan with the full row omitted
+  // stays valid (a fast receipt owes nothing to full-stage commands).
   const planWithMixed = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "build", stage: "full" }),
@@ -666,8 +694,8 @@ test("vector payloads validate against the published JSON Schemas (AC5 JSON-Sche
   const validatePlan = ajv.compile(planSchema);
   const validateReceipt = ajv.compile(receiptSchema);
 
-  const planFixture = computePlanFixture();
-  const receiptFixture = computeReceiptFixture(computePlanDigest());
+  const planFixture = planVector();
+  const receiptFixture = receiptVector(computePlanDigest());
   assert.equal(validatePlan(planFixture), true, "vector plan payload must pass JSON-Schema path: " + JSON.stringify(validatePlan.errors));
   assert.equal(validateReceipt(receiptFixture), true, "vector receipt payload must pass JSON-Schema path: " + JSON.stringify(validateReceipt.errors));
 });
@@ -724,37 +752,15 @@ test("mutating frozen vocabulary arrays throws in strict mode", async () => {
 // ---------------------------------------------------------------------------
 
 import { createHash } from "node:crypto";
-
-function computePlanFixture() {
-  return {
-    contract: VERIFICATION_PLAN_CONTRACT_ID,
-    commands: [
-      { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" },
-    ],
-  };
-}
+import { planVector, receiptVector } from "./fixtures/verification-vectors.mjs";
 
 function computePlanDigest() {
-  const canon = canonicalizeVerificationPlan(computePlanFixture());
+  const canon = canonicalizeVerificationPlan(planVector());
   return createHash("sha256").update(canon).digest("hex");
 }
 
-function computeReceiptFixture(planDigest) {
-  return {
-    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
-    planDigest,
-    candidateSnapshotDigest: "a".repeat(64),
-    acceptanceFingerprint: "b".repeat(64),
-    stageRequested: "full",
-    results: [
-      { commandId: "lint", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
-    ],
-    verdict: "pass",
-  };
-}
-
 function computeReceiptDigest(planDigest) {
-  const canon = canonicalizeVerificationReceipt(computeReceiptFixture(planDigest));
+  const canon = canonicalizeVerificationReceipt(receiptVector(planDigest));
   return createHash("sha256").update(canon).digest("hex");
 }
 

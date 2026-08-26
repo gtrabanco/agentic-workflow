@@ -3208,8 +3208,8 @@ function validateVerificationReceiptShape(value: unknown): VerificationReceiptVa
  * The sole receipt-validation authority (D12): one call performs the
  * VerificationReceipt v1 structural shape check, the VerificationPlan v1
  * structural check, and every plan-bound rule — commandId existence, declared
- * order, fast-stage subset, D3 fail-fast attribution, planDigest match and
- * verdict consistency (D2).
+ * order, fast-stage subset, complete `stopOnFailure` sequencing and attribution
+ * (D3/S4), planDigest match and verdict consistency (D2).
  *
  * It accepts unknown input and returns a normalized own-property receipt DTO;
  * no standalone structural receipt validator is exported, so a structural
@@ -3274,12 +3274,40 @@ export async function validateVerificationReceiptAgainstPlan(
     }
   }
 
+  // 4. D3/S4 — complete `stopOnFailure` SEQUENCING (F65). The trigger is the
+  //    earliest declared command whose own result is non-passed
+  //    (`failed | timed-out | infrastructure-error`) AND whose plan entry declares
+  //    `stopOnFailure: true`. Nothing runs after it, so every later row must be
+  //    `skipped`, and a skipped row that carries a reason must name THAT trigger:
+  //    an earlier command that was itself skipped by the stop never ran, so it
+  //    cannot be a reason. A `skipped` row with a null reason stays representable
+  //    (D3 -> verdict `incomplete`), and a later command with no row stays
+  //    representable (D7) — neither is a schema error.
+  const NON_PASSED = ["failed", "timed-out", "infrastructure-error"];
+  let trigger: string | null = null;
+  if (errors.length === 0) {
+    for (const r of normalizedReceipt.results) {
+      const c = cmdMap.get(r.commandId);
+      if (!c) continue; // unknown ids were reported by check 1
+      if (trigger === null) {
+        if (NON_PASSED.includes(r.status) && c.stopOnFailure) trigger = r.commandId;
+        continue;
+      }
+      if (r.status !== "skipped") {
+        errors.push(`result for "${r.commandId}" ran after stopOnFailure command "${trigger}" — later commands must be skipped`);
+      } else if (r.skipReason !== null && r.skipReason !== trigger) {
+        errors.push(`result for "${r.commandId}".skipReason "${r.skipReason}" must name the stopOnFailure command "${trigger}" that stopped the run`);
+      }
+    }
+  }
+
   // Build commandId → result map for O(1) lookups
   const resultByCmd = new Map<string, VerificationResultV1>(
     normalizedReceipt.results.map(r => [r.commandId, r]),
   );
 
-  // 4. D3 fail-fast attribution
+  // 5. D3 fail-fast attribution (per-row): a non-null reason must name an
+  //    earlier-declared, non-passed command that declares stopOnFailure.
   if (errors.length === 0) {
     for (const r of normalizedReceipt.results) {
       if (r.status === "skipped" && r.skipReason) {
@@ -3299,13 +3327,13 @@ export async function validateVerificationReceiptAgainstPlan(
     }
   }
 
-  // 5. planDigest match
+  // 6. planDigest match
   if (errors.length === 0) {
     const d = await digestVerificationPlan(normalizedPlan);
     if (d !== normalizedReceipt.planDigest) errors.push("planDigest mismatch");
   }
 
-  // 6. Verdict consistency
+  // 7. Verdict consistency
   if (errors.length === 0) {
     // Inputs already validated above — use the unchecked derivation (no re-validation).
     const derived = deriveVerdictUnchecked(normalizedReceipt, normalizedPlan);
@@ -3479,7 +3507,7 @@ export async function compareVerificationReceiptToCurrent(
  * and reproducible. These vectors lock the canonicalization rules (D6) in place.
  * Changing any vector's expected digest would be a reviewed contract change.
  */
-export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze([
+export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<Readonly<CanonicalVectorV1>> = Object.freeze([
   Object.freeze({
     contract: VERIFICATION_PLAN_CONTRACT_ID,
     digest: "43ba52cb34490733f0f37dd6407f7c5ab088f20d928837213a75a25b7bc3eb80",
