@@ -53,7 +53,8 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 1024,
-          "description": "Non-empty opaque pointer to stored evidence."
+          "pattern": "^[^\\0]*$",
+          "description": "Non-empty opaque pointer to stored evidence; NUL-free."
         },
         "bytes": {
           "type": "integer",
@@ -129,7 +130,48 @@
           ],
           "description": "Null on non-skipped rows; non-empty NUL-free string ≤ 1024 chars on skipped."
         }
-      }
+      },
+      "allOf": [
+        {
+          "description": "D4 exit-code/signal matrix enforcement: passed/failed require exactly one of exitCode/signal non-null; timed-out requires exitCode null; infrastructure-error and skipped require both null."
+        },
+        {
+          "if": {
+            "properties": { "status": { "enum": ["passed", "failed"] } }
+          },
+          "then": {
+            "allOf": [
+              {
+                "description": "At least one of exitCode/signal is non-null: if exitCode is integer, signal must be null"
+              },
+              {
+                "if": { "properties": { "exitCode": { "type": "integer" } } },
+                "then": { "properties": { "signal": { "type": "null" } } }
+              },
+              {
+                "description": "if exitCode is null, signal must be a string"
+              },
+              {
+                "if": { "properties": { "exitCode": { "type": "null" } } },
+                "then": { "properties": { "signal": { "type": "string" } } }
+              }
+            ]
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "timed-out" } } },
+          "then": { "properties": { "exitCode": { "type": "null" } } }
+        },
+        {
+          "if": { "properties": { "status": { "enum": ["infrastructure-error", "skipped"] } } },
+          "then": {
+            "allOf": [
+              { "properties": { "exitCode": { "type": "null" } } },
+              { "properties": { "signal": { "type": "null" } } }
+            ]
+          }
+        }
+      ]
     }
   }
 }

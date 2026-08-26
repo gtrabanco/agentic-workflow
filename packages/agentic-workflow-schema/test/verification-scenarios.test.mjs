@@ -256,9 +256,10 @@ test("scenario: missing results → incomplete-missing-results", async () => {
   assert.deepStrictEqual(freshness, { fresh: false, reasonCode: "incomplete-missing-results" });
 });
 
-test("scenario: requested-full coverage gap → incomplete-stage-coverage", async () => {
+test("scenario: requested-full coverage gap → incomplete-missing-results (D1 order)", async () => {
   // A full receipt that does not cover every declared command returns
-  // incomplete-stage-coverage (not incomplete-missing-results).
+  // incomplete-missing-results (checked first per SPEC D1 order before
+  // incomplete-unjustified-skip → incomplete-stage-coverage).
   const plan = makePlan([
     makePlanCommand({ id: "lint", stage: "fast" }),
     makePlanCommand({ id: "deploy", stage: "full" }),
@@ -279,7 +280,7 @@ test("scenario: requested-full coverage gap → incomplete-stage-coverage", asyn
   // deriveVerificationVerdict checks full required set (all commands) → incomplete
   assert.equal(deriveVerificationVerdict(receipt, plan), "incomplete");
   const freshness = await compareVerificationReceiptToCurrent(receipt, plan, "a".repeat(64), "b".repeat(64));
-  assert.deepStrictEqual(freshness, { fresh: false, reasonCode: "incomplete-stage-coverage" });
+  assert.deepStrictEqual(freshness, { fresh: false, reasonCode: "incomplete-missing-results" });
 });
 
 // ---------------------------------------------------------------------------

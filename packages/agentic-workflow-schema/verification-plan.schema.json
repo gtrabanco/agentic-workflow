@@ -40,12 +40,14 @@
         "executable": {
           "type": "string",
           "minLength": 1,
+          "pattern": "^[^\\0]*$",
           "description": "Non-empty executable path; no NUL characters."
         },
         "args": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\\0]*$"
           },
           "description": "Ordered arguments; each without NUL."
         },

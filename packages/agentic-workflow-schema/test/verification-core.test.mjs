@@ -568,8 +568,9 @@ test("fresh: complete fast receipt is fresh even when full commands exist in pla
   assert.deepStrictEqual(result, { fresh: true });
 });
 
-test("incomplete-stage-coverage: full receipt missing declared command", async () => {
-  // A full receipt missing a required command returns incomplete-stage-coverage.
+test("incomplete-missing-results: full receipt missing declared command", async () => {
+  // A full receipt missing a required command returns incomplete-missing-results
+  // (SPEC D1 order: missing-results → unjustified-skip → stage-coverage).
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "deploy", stage: "full" }),
@@ -588,13 +589,13 @@ test("incomplete-stage-coverage: full receipt missing declared command", async (
     verdict: "pass",
   };
   const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-stage-coverage" });
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
 });
 
-test("full receipt with coverage gap AND unjustified skip returns incomplete-unjustified-skip (F42 order)", async () => {
-  // SPEC fixes the check order: incomplete-missing-results → incomplete-unjustified-skip
-  // → incomplete-stage-coverage. A full receipt degraded on BOTH dimensions must
-  // report the earlier-in-order code (unjustified-skip), not stage-coverage.
+test("full receipt with coverage gap AND unjustified skip returns incomplete-missing-results (D1 order)", async () => {
+  // SPEC fixed check order: incomplete-missing-results → incomplete-unjustified-skip
+  // → incomplete-stage-coverage. A full receipt degraded on BOTH dimensions returns
+  // the earliest-in-order code (missing-results for deploy, before unjustified-skip for lint).
   const plan = makePlan([
     makeValidPlanCommand({ id: "lint", stage: "fast" }),
     makeValidPlanCommand({ id: "deploy", stage: "full" }),
@@ -609,12 +610,12 @@ test("full receipt with coverage gap AND unjustified skip returns incomplete-unj
     results: [
       // skipped without reason → incomplete-unjustified-skip condition
       { commandId: "lint", status: "skipped", exitCode: null, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null },
-      // deploy (full) result missing → incomplete-stage-coverage condition
+      // deploy (full) result missing → incomplete-missing-results (checked first)
     ],
     verdict: "incomplete",
   };
   const result = await compareVerificationReceiptToCurrent(receipt, plan, "e".repeat(64), "f".repeat(64));
-  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-unjustified-skip" });
+  assert.deepStrictEqual(result, { fresh: false, reasonCode: "incomplete-missing-results" });
 });
 
 test("compareVerificationReceiptToCurrent throws nothing on non-JSON-serializable plans (F40)", async () => {
