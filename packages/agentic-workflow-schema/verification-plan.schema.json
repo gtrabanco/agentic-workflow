@@ -28,7 +28,9 @@
         "id": {
           "type": "string",
           "minLength": 1,
-          "description": "Stable, non-empty, unique within the plan."
+          "maxLength": 1024,
+          "pattern": "^[^\\0]*$",
+          "description": "Stable, non-empty, NUL-free, at most 1024 chars, unique within the plan."
         },
         "stage": {
           "type": "string",

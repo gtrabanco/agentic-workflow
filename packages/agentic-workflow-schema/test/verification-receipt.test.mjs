@@ -130,6 +130,36 @@ test("rejects duplicate result command ids", () => {
   assert.ok(result.errors.some((e) => e.includes("duplicate")), result.errors.join(", "));
 });
 
+test("reject commandId with NUL (F50)", () => {
+  const receipt = makeValidReceipt();
+  receipt.results = [{
+    commandId: "li\u0000nt", status: "passed", exitCode: 0, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null,
+  }];
+  const result = validateVerificationReceiptV1(receipt);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+});
+
+test("reject signal with NUL (F50)", () => {
+  const receipt = makeValidReceipt();
+  receipt.results = [{
+    commandId: "lint", status: "timed-out", exitCode: null, signal: "SIG\u0000TERM", startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: null,
+  }];
+  const result = validateVerificationReceiptV1(receipt);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+});
+
+test("reject skipReason with NUL (F50)", () => {
+  const receipt = makeValidReceipt();
+  receipt.results = [{
+    commandId: "lint", status: "skipped", exitCode: null, signal: null, startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z", stdout: null, stderr: null, skipReason: "lint\u0000x",
+  }];
+  const result = validateVerificationReceiptV1(receipt);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+});
+
 // ---------------------------------------------------------------------------
 // Status vocabulary
 // ---------------------------------------------------------------------------

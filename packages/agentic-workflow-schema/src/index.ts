@@ -3101,9 +3101,13 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
       // Check undeclared fields
       rejectUnexpectedKeys(cmdObj, prefix, VERIFICATION_COMMAND_KEYS, errors);
 
-      // id: non-empty, unique
+      // id: non-empty, unique, NUL-free, bounded
       if (typeof cmdObj.id !== "string" || cmdObj.id.length === 0) {
         errors.push(`${prefix}.id must be a non-empty string`);
+      } else if (cmdObj.id.includes("\0")) {
+        errors.push(`${prefix}.id must not contain NUL characters`);
+      } else if (cmdObj.id.length > 1024) {
+        errors.push(`${prefix}.id must be at most 1024 characters`);
       } else {
         if (seenIds.has(cmdObj.id)) {
           errors.push(`${prefix}.id "${cmdObj.id}" is a duplicate`);
@@ -3416,9 +3420,13 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
       // Check undeclared fields
       rejectUnexpectedKeys(rObj, prefix, VERIFICATION_RESULT_KEYS, errors);
 
-      // commandId: non-empty
+      // commandId: non-empty, NUL-free, bounded
       if (typeof rObj.commandId !== "string" || rObj.commandId.length === 0) {
         errors.push(`${prefix}.commandId must be a non-empty string`);
+      } else if (rObj.commandId.includes("\0")) {
+        errors.push(`${prefix}.commandId must not contain NUL characters`);
+      } else if (rObj.commandId.length > 1024) {
+        errors.push(`${prefix}.commandId must be at most 1024 characters`);
       } else {
         if (seenCmdIds.has(rObj.commandId)) {
           errors.push(`${prefix}.commandId "${rObj.commandId}" is a duplicate`);
@@ -3440,6 +3448,8 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
       }
       if (signal !== null && (typeof signal !== "string" || signal.length === 0)) {
         errors.push(`${prefix}.signal must be a non-empty string or null (got: ${String(signal)})`);
+      } else if (typeof signal === "string" && (signal.length > 1024 || signal.includes("\0"))) {
+        errors.push(`${prefix}.signal must be at most 1024 characters and NUL-free`);
       }
 
       // D4 — exitCode/signal matrix
@@ -3529,6 +3539,8 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
         if (rObj.skipReason !== null) {
           if (typeof rObj.skipReason !== "string" || rObj.skipReason.length === 0 || rObj.skipReason.length > 1024) {
             errors.push(`${prefix}.skipReason must be null or a non-empty string ≤ 1024 chars when status is "skipped"`);
+          } else if (rObj.skipReason.includes("\0")) {
+            errors.push(`${prefix}.skipReason must not contain NUL characters`);
           }
         }
         // null skipReason on skipped row is valid → yields verdict "incomplete"
