@@ -144,6 +144,30 @@ test("rejects empty command id", () => {
   assert.ok(result.errors.some((e) => e.includes("id")), result.errors.join(", "));
 });
 
+test("rejects command id with NUL (F50)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "li\u0000nt", stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+});
+
+test("rejects command id longer than 1024 chars (F50)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "x".repeat(1025), stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("1024")), result.errors.join(", "));
+});
+
 test("accepts unique non-empty ids", () => {
   const plan = {
     contract: VERIFICATION_PLAN_CONTRACT_ID,

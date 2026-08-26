@@ -75,7 +75,9 @@
         "commandId": {
           "type": "string",
           "minLength": 1,
-          "description": "Must exist in the bound plan's commands."
+          "maxLength": 1024,
+          "pattern": "^[^\\0]*$",
+          "description": "Must exist in the bound plan's commands; NUL-free, at most 1024 chars."
         },
         "status": {
           "type": "string",
@@ -91,10 +93,10 @@
         },
         "signal": {
           "oneOf": [
-            { "type": "string", "minLength": 1 },
+            { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^[^\\0]*$" },
             { "type": "null" }
           ],
-          "description": "Per the D4 exit-code/signal matrix."
+          "description": "Per the D4 exit-code/signal matrix; NUL-free, at most 1024 chars."
         },
         "startedAt": {
           "type": "string",
@@ -122,10 +124,10 @@
         },
         "skipReason": {
           "oneOf": [
-            { "type": "string", "minLength": 1, "maxLength": 1024 },
+            { "type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^[^\\0]*$" },
             { "type": "null" }
           ],
-          "description": "Null on non-skipped rows; non-empty string ≤ 1024 chars on skipped."
+          "description": "Null on non-skipped rows; non-empty NUL-free string ≤ 1024 chars on skipped."
         }
       }
     }
