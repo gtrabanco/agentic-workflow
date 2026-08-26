@@ -55,7 +55,7 @@
         "workingDirectory": {
           "oneOf": [
             { "type": "null", "description": "Null when workingDirectoryPolicy is 'candidate-root'." },
-            { "type": "string", "pattern": "^(?![/\\\\])(?![A-Za-z]:)(?!.*\\.\\.(\\/|\\\\))[^\\\\/\\\\0]*$", "minLength": 1, "description": "Relative path when workingDirectoryPolicy is 'relative-path': no absolute path, no NUL, no .. traversal, no backslashes, no Windows drive letters." }
+            { "type": "string", "pattern": "^(?!\\/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(^|\\/)\\.\\.($|\\/))[^\\0]*$", "minLength": 1, "description": "Relative path when workingDirectoryPolicy is 'relative-path': non-empty, no NUL, no leading '/', no '..' segment, no backslashes, no Windows drive letters (mirrors validateVerificationPlanV1)." }
           ],
           "description": "Null iff candidate-root; validated relative path iff relative-path."
         },

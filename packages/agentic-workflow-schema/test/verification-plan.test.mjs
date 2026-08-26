@@ -8,6 +8,7 @@ import {
   validateVerificationPlanV1,
 } from "../dist/index.js";
 import { readFileSync } from "node:fs";
+import Ajv from "ajv";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -51,6 +52,30 @@ test("schema is valid JSON with expected structure", () => {
   assert.ok(s["$defs"]);
   assert.ok(s["$defs"].VerificationCommandV1);
   assert.equal(s["$defs"].VerificationCommandV1.additionalProperties, false);
+});
+
+test("workingDirectory schema pattern matches the TS validator (F41 parity)", () => {
+  const schemaPath = join(__dirname, "../verification-plan.schema.json");
+  const ajv = new Ajv({ strict: true });
+  const validate = ajv.compile(JSON.parse(readFileSync(schemaPath, "utf-8")));
+  const baseCmd = {
+    id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"],
+    workingDirectoryPolicy: "relative-path", workingDirectory: "src/test",
+    timeoutMs: 30000, stopOnFailure: false, costClass: "cheap",
+  };
+  const plan = { contract: VERIFICATION_PLAN_CONTRACT_ID, commands: [baseCmd] };
+
+  // A valid multi-segment relative path must be accepted by BOTH paths.
+  assert.equal(validate(structuredClone(plan)), true, "schema accepts multi-segment relative path");
+  assert.equal(validateVerificationPlanV1(structuredClone(plan)).ok, true, "TS validator accepts multi-segment relative path");
+
+  // Traversal/absolute/Windows forms must be rejected by BOTH paths.
+  const badDirs = ["..", "a/..", "a/../b", "../b", "src\\test", "C:\\x", "\\server\\share", "/abs", "a\u0000b"];
+  for (const wd of badDirs) {
+    const badPlan = { contract: VERIFICATION_PLAN_CONTRACT_ID, commands: [{ ...baseCmd, workingDirectory: wd }] };
+    assert.equal(validate(structuredClone(badPlan)), false, `schema rejects workingDirectory ${JSON.stringify(wd)}`);
+    assert.equal(validateVerificationPlanV1(structuredClone(badPlan)).ok, false, `TS validator rejects workingDirectory ${JSON.stringify(wd)}`);
+  }
 });
 
 // ---------------------------------------------------------------------------
