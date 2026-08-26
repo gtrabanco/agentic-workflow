@@ -3188,12 +3188,12 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
 
       // timeoutMs: positive integer
       if (typeof cmdObj.timeoutMs !== "number" || !Number.isInteger(cmdObj.timeoutMs) || cmdObj.timeoutMs <= 0) {
-        errors.push(`${prefix}.timeoutMs must be a positive integer (got: ${JSON.stringify(cmdObj.timeoutMs)})`);
+        errors.push(`${prefix}.timeoutMs must be a positive integer (got: ${String(cmdObj.timeoutMs)})`);
       }
 
       // stopOnFailure: boolean
       if (typeof cmdObj.stopOnFailure !== "boolean") {
-        errors.push(`${prefix}.stopOnFailure must be a boolean (got: ${JSON.stringify(cmdObj.stopOnFailure)})`);
+        errors.push(`${prefix}.stopOnFailure must be a boolean (got: ${String(cmdObj.stopOnFailure)})`);
       }
 
       // costClass: vocabulary check
@@ -3447,10 +3447,10 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
       const exitCode = rObj.exitCode;
       const signal = rObj.signal;
       if (exitCode !== null && (typeof exitCode !== "number" || !Number.isInteger(exitCode))) {
-        errors.push(`${prefix}.exitCode must be an integer or null (got: ${JSON.stringify(exitCode)})`);
+        errors.push(`${prefix}.exitCode must be an integer or null (got: ${String(exitCode)})`);
       }
       if (signal !== null && (typeof signal !== "string" || signal.length === 0)) {
-        errors.push(`${prefix}.signal must be a non-empty string or null (got: ${JSON.stringify(signal)})`);
+        errors.push(`${prefix}.signal must be a non-empty string or null (got: ${String(signal)})`);
       }
 
       // D4 — exitCode/signal matrix
@@ -3738,20 +3738,23 @@ export async function compareVerificationReceiptToCurrent(
   candidateSnapshotDigest: string,
   acceptanceFingerprint: string,
 ): Promise<VerificationFreshnessResult> {
-  // Check stale conditions first (plain string comparisons — safe without validation).
-  // Validate plan/receipt before any hashing so invalid inputs return a stable
-  // freshness result rather than throwing.
-  const pd = await digestVerificationPlan(plan);
-  if (pd !== receipt.planDigest) return { fresh: false, reasonCode: "stale-plan" };
-  if (candidateSnapshotDigest !== receipt.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
-  if (acceptanceFingerprint !== receipt.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
-
-  // Now validate plan and receipt before dereferencing their fields.
+  // Validate plan/receipt FIRST so invalid (non-JSON-serializable) inputs return a
+  // stable freshness result rather than throwing from canonicalJSONValue or
+  // JSON.stringify — the SPEC promises this predicate is pure and throws nothing.
+  // Validation rejects BigInt fields, circular references, and unknown fields
+  // before any hashing runs.
   const pv = validateVerificationPlanV1(plan);
   const rv = validateVerificationReceiptV1(receipt);
   if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "incomplete-missing-results" };
   const p = (pv as { ok: true; plan: VerificationPlanV1 }).plan;
   const r = (rv as { ok: true; receipt: VerificationReceiptV1 }).receipt;
+
+  // Then check stale conditions (plain string comparisons — safe after validation).
+  const pd = await digestVerificationPlan(p);
+  if (pd !== receipt.planDigest) return { fresh: false, reasonCode: "stale-plan" };
+  if (candidateSnapshotDigest !== receipt.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
+  if (acceptanceFingerprint !== receipt.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
+
   // Stage required set: fast → fast commands; full → every declared command
   const req =
     r.stageRequested === "full"
@@ -3759,17 +3762,22 @@ export async function compareVerificationReceiptToCurrent(
       : p.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
   const recv = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
 
-  for (const id of req) {
-    if (!recv.has(id)) {
-      // A fast receipt missing a fast command → incomplete-missing-results
-      // A full receipt missing a command → incomplete-stage-coverage
-      if (r.stageRequested === "full") {
-        return { fresh: false, reasonCode: "incomplete-stage-coverage" };
-      }
-      return { fresh: false, reasonCode: "incomplete-missing-results" };
+  // SPEC fixed check order (D1): incomplete-missing-results →
+  // incomplete-unjustified-skip → incomplete-stage-coverage.
+  if (r.stageRequested === "fast") {
+    // A fast command without a result row → incomplete-missing-results
+    for (const id of req) {
+      if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" };
     }
   }
+  // A skipped command without a reason → incomplete-unjustified-skip (any stage)
   for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
+  // A full receipt not covering every declared command → incomplete-stage-coverage
+  if (r.stageRequested === "full") {
+    for (const id of req) {
+      if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" };
+    }
+  }
 
   return { fresh: true };
 }

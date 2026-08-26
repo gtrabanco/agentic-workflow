@@ -330,21 +330,21 @@ test("scenario: stale acceptance fingerprint", async () => {
     contract: VERIFICATION_RECEIPT_CONTRACT_ID,
     planDigest,
     candidateSnapshotDigest: "a".repeat(64),
-    acceptanceFingerprint: "x".repeat(64), // mismatch
+    acceptanceFingerprint: "b".repeat(64), // valid hex, differs from the current value below
     stageRequested: "fast",
     results: [makeResult("lint", "passed")],
     verdict: "pass",
   };
-  const freshness = await compareVerificationReceiptToCurrent(receipt, plan, "a".repeat(64), "y".repeat(64));
+  const freshness = await compareVerificationReceiptToCurrent(receipt, plan, "a".repeat(64), "c".repeat(64));
   assert.deepStrictEqual(freshness, { fresh: false, reasonCode: "stale-acceptance-fingerprint" });
 });
 
 test("scenario: stale plan", async () => {
   const plan = makePlan([makePlanCommand({ id: "lint", stage: "fast" })]);
-  const planDigest = await digestVerificationPlan(plan);
+  await digestVerificationPlan(plan);
   const receipt = {
     contract: VERIFICATION_RECEIPT_CONTRACT_ID,
-    planDigest: "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz", // wrong
+    planDigest: "c".repeat(64), // valid hex, differs from digestVerificationPlan(plan)
     candidateSnapshotDigest: "a".repeat(64),
     acceptanceFingerprint: "b".repeat(64),
     stageRequested: "fast",
