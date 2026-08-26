@@ -1,5 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import Ajv from "ajv";
 import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_STAGES,
@@ -642,11 +644,27 @@ test("vectors have expected shape", () => {
   }
 });
 
-test("vector plans pass validation", () => {
+test("vector digests are well-formed lowercase 64-hex", () => {
   for (const v of VERIFICATION_CANONICAL_VECTORS) {
     assert.ok(v.digest.length > 0, `Vector ${v.contract} must have non-empty digest`);
     assert.ok(/^[a-f0-9]{64}$/.test(v.digest), `Vector ${v.contract} digest must be lowercase 64-hex`);
   }
+});
+
+test("vector payloads validate against the published JSON Schemas (AC5 JSON-Schema path)", () => {
+  // AC5: vectors pass identically on the TypeScript path and the JSON-Schema path.
+  // The canonical fixtures whose digests equal the published vectors must also
+  // satisfy the shipped draft-07 schemas (ajv), not just the TS validators.
+  const ajv = new Ajv({ strict: true });
+  const planSchema = JSON.parse(readFileSync(new URL("../verification-plan.schema.json", import.meta.url), "utf8"));
+  const receiptSchema = JSON.parse(readFileSync(new URL("../verification-receipt.schema.json", import.meta.url), "utf8"));
+  const validatePlan = ajv.compile(planSchema);
+  const validateReceipt = ajv.compile(receiptSchema);
+
+  const planFixture = computePlanFixture();
+  const receiptFixture = computeReceiptFixture(computePlanDigest());
+  assert.equal(validatePlan(planFixture), true, "vector plan payload must pass JSON-Schema path: " + JSON.stringify(validatePlan.errors));
+  assert.equal(validateReceipt(receiptFixture), true, "vector receipt payload must pass JSON-Schema path: " + JSON.stringify(validateReceipt.errors));
 });
 
 test("exports VERIFICATION_FRESHNESS_CODES with 6 codes", () => {
@@ -702,19 +720,22 @@ test("mutating frozen vocabulary arrays throws in strict mode", () => {
 
 import { createHash } from "node:crypto";
 
-function computePlanDigest() {
-  const fixture = {
+function computePlanFixture() {
+  return {
     contract: VERIFICATION_PLAN_CONTRACT_ID,
     commands: [
       { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" },
     ],
   };
-  const canon = canonicalizeVerificationPlan(fixture);
+}
+
+function computePlanDigest() {
+  const canon = canonicalizeVerificationPlan(computePlanFixture());
   return createHash("sha256").update(canon).digest("hex");
 }
 
-function computeReceiptDigest(planDigest) {
-  const fixture = {
+function computeReceiptFixture(planDigest) {
+  return {
     contract: VERIFICATION_RECEIPT_CONTRACT_ID,
     planDigest,
     candidateSnapshotDigest: "a".repeat(64),
@@ -725,7 +746,10 @@ function computeReceiptDigest(planDigest) {
     ],
     verdict: "pass",
   };
-  const canon = canonicalizeVerificationReceipt(fixture);
+}
+
+function computeReceiptDigest(planDigest) {
+  const canon = canonicalizeVerificationReceipt(computeReceiptFixture(planDigest));
   return createHash("sha256").update(canon).digest("hex");
 }
 

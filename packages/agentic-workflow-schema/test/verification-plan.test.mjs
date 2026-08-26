@@ -350,6 +350,42 @@ test("rejects traversing relative path (..)", () => {
   assert.ok(result.errors.some((e) => e.includes("..") || e.includes("travers") || e.includes("segment")), result.errors.join(", "));
 });
 
+test("rejects backslash-separated working directory (F51)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "src\\test", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("backslash")), result.errors.join(", "));
+});
+
+test("rejects drive-letter working directory (F51)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "C:\\x", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("drive-letter")), result.errors.join(", "));
+});
+
+test("rejects UNC working directory (F51)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "\\\\server\\share", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.includes("backslash")), result.errors.join(", "));
+});
+
 test("rejects empty workingDirectory for relative-path", () => {
   const plan = {
     contract: VERIFICATION_PLAN_CONTRACT_ID,
