@@ -493,11 +493,11 @@ const STRICT_V2_KEYS = [...REQUIRED_KEYS, "detail"] as const;
 function rejectUnexpectedKeys(
   value: unknown,
   path: string,
-  keys: readonly string[],
+  keys: readonly string[] | ReadonlySet<string>,
   errors: string[],
 ): void {
   if (!isObj(value)) return;
-  const allowed = new Set(keys);
+  const allowed = keys instanceof Set ? keys : new Set(keys);
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) errors.push(`unexpected key: ${path}.${key}`);
   }
@@ -3074,12 +3074,7 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
   const obj = value as Record<string, unknown>;
 
   // ---- Top-level field validation ----
-  const allowedTopLevel = new Set(["contract", "commands"]);
-  for (const key of Object.keys(obj)) {
-    if (!allowedTopLevel.has(key)) {
-      errors.push(`unexpected top-level key: "${key}"`);
-    }
-  }
+  rejectUnexpectedKeys(obj, "plan", VERIFICATION_PLAN_TOP_KEYS, errors);
 
   // contract id
   if (obj.contract !== VERIFICATION_PLAN_CONTRACT_ID) {
@@ -3106,16 +3101,7 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
       const cmdObj = cmd as Record<string, unknown>;
 
       // Check undeclared fields
-      const allowedCmdFields = new Set([
-        "id", "stage", "executable", "args",
-        "workingDirectoryPolicy", "workingDirectory",
-        "timeoutMs", "stopOnFailure", "costClass",
-      ]);
-      for (const key of Object.keys(cmdObj)) {
-        if (!allowedCmdFields.has(key)) {
-          errors.push(`unexpected key in ${prefix}: "${key}"`);
-        }
-      }
+      rejectUnexpectedKeys(cmdObj, prefix, VERIFICATION_COMMAND_KEYS, errors);
 
       // id: non-empty, unique
       if (typeof cmdObj.id !== "string" || cmdObj.id.length === 0) {
@@ -3180,7 +3166,7 @@ export function validateVerificationPlanV1(value: unknown): VerificationPlanVali
             errors.push(`${prefix}.workingDirectory must not be a drive-letter path`);
           } else if (wd.includes("\\")) {
             errors.push(`${prefix}.workingDirectory must not contain backslashes`);
-          } else if (wd.includes("..") && wd.split(/[\\/]/).includes("..")) {
+          } else if (wd.split("/").includes("..")) {
             errors.push(`${prefix}.workingDirectory must not contain ".." segments`);
           }
         }
@@ -3311,19 +3297,40 @@ export type VerificationReceiptValidationResult =
   | { ok: true; receipt: VerificationReceiptV1 }
   | { ok: false; errors: string[] };
 
-/** Checks if a string is a valid lowercase 64-hex digest. */
+// Allowed-object-key lists for the verification validators' undeclared-field checks.
+// Module-scope sets so rejectUnexpectedKeys allocates nothing per element.
+const VERIFICATION_PLAN_TOP_KEYS: ReadonlySet<string> = new Set(["contract", "commands"]);
+const VERIFICATION_COMMAND_KEYS: ReadonlySet<string> = new Set([
+  "id", "stage", "executable", "args",
+  "workingDirectoryPolicy", "workingDirectory",
+  "timeoutMs", "stopOnFailure", "costClass",
+]);
+const VERIFICATION_RECEIPT_TOP_KEYS: ReadonlySet<string> = new Set([
+  "contract", "planDigest", "candidateSnapshotDigest",
+  "acceptanceFingerprint", "stageRequested", "results", "verdict",
+]);
+const VERIFICATION_RESULT_KEYS: ReadonlySet<string> = new Set([
+  "commandId", "status", "exitCode", "signal",
+  "startedAt", "endedAt", "stdout", "stderr", "skipReason",
+]);
+const VERIFICATION_EVIDENCE_KEYS: ReadonlySet<string> = new Set(["ref", "bytes", "sha256"]);
+
+/** Checks if a string is a valid lowercase 64-hex digest (reuses DIGEST_RE). */
 function isLowercase64Hex(v: unknown): boolean {
-  return typeof v === "string" && /^[a-f0-9]{64}$/.test(v);
+  return typeof v === "string" && DIGEST_RE.test(v);
 }
 
-/** Checks if a string is a valid ISO-8601 UTC timestamp (calendar-valid). */
+/**
+ * Checks if a string is a valid ISO-8601 UTC timestamp (calendar-valid).
+ * Format regex is shared with ReviewReceipt (ISO_8601_RE); the calendar
+ * round-trip is intentionally verification-only — tightening the pre-existing
+ * ReviewReceipt validator would change an existing export's meaning (AC8).
+ */
 function isISO8601UTC(v: unknown): boolean {
   if (typeof v !== "string") return false;
   // Must match ISO-8601 format with Z timezone
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/.test(v)) return false;
+  if (!ISO_8601_RE.test(v)) return false;
   // Also validate the calendar values (rejects e.g. 2025-99-99T99:99:99Z)
-  const m = v.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/);
-  if (!m) return false;
   const d = new Date(v);
   if (!Number.isFinite(d.getTime())) return false;
   // Verify calendar round-trip: UTC components must match the input
@@ -3364,15 +3371,7 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
   const obj = value as Record<string, unknown>;
 
   // ---- Top-level field validation ----
-  const allowedTopLevel = new Set([
-    "contract", "planDigest", "candidateSnapshotDigest",
-    "acceptanceFingerprint", "stageRequested", "results", "verdict",
-  ]);
-  for (const key of Object.keys(obj)) {
-    if (!allowedTopLevel.has(key)) {
-      errors.push(`unexpected top-level key: "${key}"`);
-    }
-  }
+  rejectUnexpectedKeys(obj, "receipt", VERIFICATION_RECEIPT_TOP_KEYS, errors);
 
   // contract id
   if (obj.contract !== VERIFICATION_RECEIPT_CONTRACT_ID) {
@@ -3417,15 +3416,7 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
       const rObj = r as Record<string, unknown>;
 
       // Check undeclared fields
-      const allowedResultFields = new Set([
-        "commandId", "status", "exitCode", "signal",
-        "startedAt", "endedAt", "stdout", "stderr", "skipReason",
-      ]);
-      for (const key of Object.keys(rObj)) {
-        if (!allowedResultFields.has(key)) {
-          errors.push(`unexpected key in ${prefix}: "${key}"`);
-        }
-      }
+      rejectUnexpectedKeys(rObj, prefix, VERIFICATION_RESULT_KEYS, errors);
 
       // commandId: non-empty
       if (typeof rObj.commandId !== "string" || rObj.commandId.length === 0) {
@@ -3485,12 +3476,15 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
       }
 
       // Timestamps: ISO-8601 UTC, endedAt >= startedAt
-      if (!isISO8601UTC(rObj.startedAt)) {
+      const startedOk = isISO8601UTC(rObj.startedAt);
+      const endedOk = isISO8601UTC(rObj.endedAt);
+      if (!startedOk) {
         errors.push(`${prefix}.startedAt must be an ISO-8601 UTC timestamp`);
       }
-      if (!isISO8601UTC(rObj.endedAt)) {
+      if (!endedOk) {
         errors.push(`${prefix}.endedAt must be an ISO-8601 UTC timestamp`);
-      } else if (isISO8601UTC(rObj.startedAt) && isISO8601UTC(rObj.endedAt)) {
+      }
+      if (startedOk && endedOk) {
         const started = new Date(rObj.startedAt as string);
         const ended = new Date(rObj.endedAt as string);
         if (ended < started) {
@@ -3507,12 +3501,7 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
           continue;
         }
         const evObj = ev as Record<string, unknown>;
-        const allowedEvFields = new Set(["ref", "bytes", "sha256"]); // additionalProperties false
-        for (const key of Object.keys(evObj)) {
-          if (!allowedEvFields.has(key)) {
-            errors.push(`unexpected key in ${prefix}.${field}: "${key}"`);
-          }
-        }
+        rejectUnexpectedKeys(evObj, `${prefix}.${field}`, VERIFICATION_EVIDENCE_KEYS, errors);
         // ref: non-empty, ≤ 1024, no NUL
         if (typeof evObj.ref !== "string" || evObj.ref.length === 0) {
           errors.push(`${prefix}.${field}.ref must be a non-empty string`);
@@ -3553,8 +3542,6 @@ export function validateVerificationReceiptV1(value: unknown): VerificationRecei
 }
 
 // ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 // Verification semantic core
 // ---------------------------------------------------------------------------
 
@@ -3562,9 +3549,6 @@ export interface VerifyAgainstPlanInput {
   plan: VerificationPlanV1;
   receipt: VerificationReceiptV1;
 }
-
-// Legacy underscore name preserved — consumers using _VerifyAgainstPlanInput
-// should migrate to VerifyAgainstPlanInput (same shape).
 
 /**
  * D2 — Plan-bound validation. Checks commandId existence, declared order,
