@@ -103,12 +103,14 @@ Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test && 
 
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with seven disjoint freshness outcomes reachable and stable.
 
-- [ ] Add red-first fixtures for stale plan, candidate snapshot and acceptance fingerprint
-- [ ] Add red-first fixtures for missing results, unjustified skip and stage-coverage gap
-- [ ] Implement the three stale-condition branches in fixed precedence
-- [ ] Implement the three incomplete-condition branches in fixed precedence
-- [ ] Make stale and incomplete predicates mutually disjoint (F63)
-- [ ] Prove the remaining fresh outcome is reachable and deterministic
+Evidence for every task: the new `test/verification-freshness.test.mjs` matrix (15 cases) plus `src/index.ts` `compareVerificationReceiptToCurrent`.
+
+- [x] Add red-first fixtures for stale plan, candidate snapshot and acceptance fingerprint — `stale-plan: …`, `stale-candidate-snapshot: …`, `stale-acceptance-fingerprint: …`, `stale precedence: plan before candidate before acceptance`
+- [x] Add red-first fixtures for missing results, unjustified skip and stage-coverage gap — `incomplete-missing-results: fast receipt …`, `… a full receipt missing a FAST-stage row (F62)`, `incomplete-unjustified-skip: …`, `incomplete-stage-coverage: … (F63)`, `incomplete precedence: …`
+- [x] Implement the three stale-condition branches in fixed precedence — plan digest → candidate digest → acceptance fingerprint, each returning one code
+- [x] Implement the three incomplete-condition branches in fixed precedence — missing fast-stage row → unjustified skip → missing full-stage row on a `full` receipt
+- [x] Make stale and incomplete predicates mutually disjoint (F63) — the incomplete block runs only after all three bindings verify; `stale and incomplete are disjoint: stale bindings mask every incomplete condition` + `matrix: every D1 code is reachable and no code answers two dimensions`
+- [x] Prove the remaining fresh outcome is reachable and deterministic — `fresh: complete current full receipt is fresh`, `fresh: determination — repeated comparisons … deeply equal`, `fresh: vacuous fast receipt (D9) is fresh`
 
 ## P9 — Repair verification semantics
 

@@ -87,10 +87,16 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P8 — Repair freshness classification
 
 ## P8 — Repair freshness classification
-- **Status**: Planned
-- **Done**: Disjoint D1 precedence and the seven-outcome matrix frozen.
-- **Remains**: 6 schema tasks; F63 root.
-- **Next**: after P7, `execute-phase 26 P8`
+- **Status**: Done
+- Done: `compareVerificationReceiptToCurrent` now answers the six D1 codes on reachable, disjoint conditions in the SPEC's fixed order — three stale bindings first (plan digest → candidate snapshot → acceptance fingerprint), then the incomplete block (missing FAST-stage row → unjustified skip → missing FULL-stage row on a `full` receipt) — with `{fresh: true}` as the only remaining outcome. `incomplete-stage-coverage` is reachable again (F63 root), and the malformed-input fast path reports `stale-plan` instead of an incompleteness it never verified.
+- Remains: P9–P15. F63 is repaired by this phase but its ledger row stays `folded: no` — P15 owns the ledger flip.
+- Gotchas: (1) The partition that keeps the two coverage codes disjoint is **the stage of the missing command, not the requested stage of the receipt** — `decisions.md` P8 records why; do not re-tighten it to `stageRequested`. (2) Three pre-existing assertions (two in `test/verification-core.test.mjs`, one in `test/verification-scenarios.test.mjs`) pinned the F63 behaviour and were corrected to the SPEC-frozen codes; assertion strength is unchanged. (3) P9's determinism tasks still own repeatability for canonicalize/digest/verdict — this phase pinned only the fresh-path determinism its own task listed. (4) The projection files are untouched by this phase: `node scripts/generate-verification-schemas.mjs --check` still passes.
+- Files: `packages/agentic-workflow-schema/src/index.ts`, `packages/agentic-workflow-schema/test/verification-freshness.test.mjs` (new), `packages/agentic-workflow-schema/test/verification-core.test.mjs`, `packages/agentic-workflow-schema/test/verification-scenarios.test.mjs`, `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,testing}.md`
+- Next: P9 — Repair verification semantics
+
+## Unit-loop receipt — P8
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 365/365) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P9 · Attempts: 1 · Review-checkpoint trigger recorded: **accumulation fired** — 8 files / 443 changed lines since `aeb2b92` (no `Last reviewed:` marker in this unit, so the merge-base baseline is even larger); layer unchanged (schema), no sensitivity surface (no auth/secrets/CI/destructive migration touched). Whole-unit mode records it and continues; the mandatory end review covers the frozen final candidate.
 
 ## P9 — Repair verification semantics
 - **Status**: Planned
