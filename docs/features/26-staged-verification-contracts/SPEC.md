@@ -369,6 +369,12 @@ are authoritative; no external skill or MCP is required.
 
 `designed`
 
+### Amendments
+
+| Date | Change | Approval |
+|---|---|---|
+| 2026-08-24 | Added **P6 — Staged-verification contract correction** (replan-in-unit): folds review findings F31–F39 (distinct freshness outcomes, independent canonical vectors, pre-validate-then-hash, frozen exports, compile-safe EN/ES README examples, regenerated lockfile, refreshed progress, restored ledger) plus second-round findings F40+ (validate-before-hash, schema parity, SPEC check order, async plan-bound validator, verdict semantics). Finish line (ACCEPTANCE.md blob `a4c643da…`) unchanged. | User-confirmed replan route from review-change (fold ledger F31–F39 replan-in-unit rows) |
+
 ---
 
 ## Engineering half
@@ -729,6 +735,23 @@ Layer: close-out. Done-when: every project gate is green, the PR is open with
 #### Phase-lint
 
 Phase-lint: PASS (8/8) · fingerprint P5:close-out:7:Hardening & PR
+
+### P6 — Staged-verification contract correction
+
+Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with all tests passing (≥ 310 tests); `node scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0.
+
+Recorded by the 2026-08-24 amendment (post-review replan-in-unit); execution ledger lives in `TASKS.md`/`progress.md`.
+
+- [ ] Fix `compareVerificationReceiptToCurrent` to distinguish missing-results from full-coverage-gap (F31)
+- [ ] Replace self-derived canonical vectors with independently fixed expected digests (F32)
+- [ ] Pre-validate before hashing/dereferencing (F33) — completed; residual order defect folded as F40 in the second review round
+- [ ] Freeze all exported vocabulary arrays (F36)
+- [ ] Correct EN/ES README examples so they compile (F35)
+- [ ] Restore the fixed ledger schema and remove non-fix-now rows (F39)
+
+#### Phase-lint
+
+Phase-lint: PASS (8/8) · fingerprint P6:schema:8:Staged-verification contract correction
 
 ### Spec-lint (mechanical — engineering boxes, run at scaffold time)
 
