@@ -4,11 +4,11 @@ import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_STAGES,
   VERIFICATION_COST_CLASSES,
-  VERIFICATION_PLAN_SCHEMA_PATH,
   validateVerificationPlanV1,
 } from "../dist/index.js";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
+import { VERIFICATION_CONTRACT } from "../dist/verification-contract.js";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -31,8 +31,8 @@ test("exports VERIFICATION_COST_CLASSES with cheap, moderate, expensive", () => 
   assert.deepStrictEqual(VERIFICATION_COST_CLASSES, ["cheap", "moderate", "expensive"]);
 });
 
-test("exports VERIFICATION_PLAN_SCHEMA_PATH", () => {
-  assert.equal(VERIFICATION_PLAN_SCHEMA_PATH, "./verification-plan.schema.json");
+test("the canonical definition names the published projection file", () => {
+  assert.equal(VERIFICATION_CONTRACT.plan.fileName, "verification-plan.schema.json");
 });
 
 // ---------------------------------------------------------------------------

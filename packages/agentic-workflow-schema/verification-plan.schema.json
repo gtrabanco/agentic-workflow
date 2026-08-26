@@ -1,10 +1,14 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validateVerificationPlanV1 | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): unique-command-ids | regenerate with: node scripts/generate-verification-schemas.mjs",
   "title": "VerificationPlan v1",
-  "description": "An ordered, non-empty command list for staged verification (fast/full).",
+  "description": "An ordered, non-empty command list for staged verification (fast/full). This document is a NON-AUTHORITATIVE Draft-07 structural projection generated from the package's canonical verification-contract definition. It is not a semantic authority: a Draft-07 match is not contract validity — use the authoritative runtime entry point named in $comment.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["contract", "commands"],
+  "required": [
+    "contract",
+    "commands"
+  ],
   "properties": {
     "contract": {
       "type": "string",
@@ -13,17 +17,28 @@
     },
     "commands": {
       "type": "array",
-      "minItems": 1,
       "items": {
         "$ref": "#/$defs/VerificationCommandV1"
-      }
+      },
+      "minItems": 1,
+      "description": "Non-empty command list in declared order."
     }
   },
   "$defs": {
     "VerificationCommandV1": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "stage", "executable", "args", "workingDirectoryPolicy", "workingDirectory", "timeoutMs", "stopOnFailure", "costClass"],
+      "required": [
+        "id",
+        "stage",
+        "executable",
+        "args",
+        "workingDirectoryPolicy",
+        "workingDirectory",
+        "timeoutMs",
+        "stopOnFailure",
+        "costClass"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -34,14 +49,17 @@
         },
         "stage": {
           "type": "string",
-          "enum": ["fast", "full"],
+          "enum": [
+            "fast",
+            "full"
+          ],
           "description": "Verification stage."
         },
         "executable": {
           "type": "string",
           "minLength": 1,
           "pattern": "^[^\\0]*$",
-          "description": "Non-empty executable path; no NUL characters."
+          "description": "Non-empty executable path; no NUL characters. Never a shell string."
         },
         "args": {
           "type": "array",
@@ -53,13 +71,43 @@
         },
         "workingDirectoryPolicy": {
           "type": "string",
-          "enum": ["candidate-root", "relative-path"],
+          "enum": [
+            "candidate-root",
+            "relative-path"
+          ],
           "description": "Working directory policy."
         },
         "workingDirectory": {
           "oneOf": [
-            { "type": "null", "description": "Null when workingDirectoryPolicy is 'candidate-root'." },
-            { "type": "string", "pattern": "^(?!\\/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(^|\\/)\\.\\.($|\\/))[^\\0]*$", "minLength": 1, "description": "Relative path when workingDirectoryPolicy is 'relative-path': non-empty, no NUL, no leading '/', no '..' segment, no backslashes, no Windows drive letters (mirrors validateVerificationPlanV1)." }
+            {
+              "type": "string",
+              "minLength": 1,
+              "allOf": [
+                {
+                  "description": "[workingDirectory] must not contain NUL characters",
+                  "pattern": "^[^\\0]*$"
+                },
+                {
+                  "description": "[workingDirectory] must not be an absolute path (leading \"/\")",
+                  "pattern": "^(?!/)"
+                },
+                {
+                  "description": "[workingDirectory] must not be a Windows drive-letter path",
+                  "pattern": "^(?![A-Za-z]:)"
+                },
+                {
+                  "description": "[workingDirectory] must not contain backslashes",
+                  "pattern": "^(?!.*\\\\)"
+                },
+                {
+                  "description": "[workingDirectory] must not contain \"..\" segments (path traversal)",
+                  "pattern": "^(?!.*(\\/|^)\\.\\.($|\\/))"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
           ],
           "description": "Null iff candidate-root; validated relative path iff relative-path."
         },
@@ -74,25 +122,52 @@
         },
         "costClass": {
           "type": "string",
-          "enum": ["cheap", "moderate", "expensive"],
+          "enum": [
+            "cheap",
+            "moderate",
+            "expensive"
+          ],
           "description": "Project-declared cost class."
         }
       },
-      "if": {
-        "properties": {
-          "workingDirectoryPolicy": { "const": "candidate-root" }
+      "allOf": [
+        {
+          "description": "[working-directory-null-at-root] workingDirectory is null when workingDirectoryPolicy is candidate-root.",
+          "if": {
+            "properties": {
+              "workingDirectoryPolicy": {
+                "const": "candidate-root"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "workingDirectory": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "description": "[working-directory-set-for-relative-path] workingDirectory is a validated relative path when workingDirectoryPolicy is relative-path.",
+          "if": {
+            "properties": {
+              "workingDirectoryPolicy": {
+                "const": "relative-path"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "workingDirectory": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
         }
-      },
-      "then": {
-        "properties": {
-          "workingDirectory": { "type": "null" }
-        }
-      },
-      "else": {
-        "properties": {
-          "workingDirectory": { "not": { "type": "null" } }
-        }
-      }
+      ]
     }
   }
 }

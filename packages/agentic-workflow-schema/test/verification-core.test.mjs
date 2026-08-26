@@ -9,11 +9,8 @@ import {
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_VERDICTS,
-  VERIFICATION_WORKING_DIRECTORY_POLICIES,
-  VERIFICATION_STAGE_REQUESTS,
   VERIFICATION_FRESHNESS_CODES,
   validateVerificationPlanV1,
-  validateVerificationReceiptV1,
   validateVerificationReceiptAgainstPlan,
   deriveVerificationVerdict,
   canonicalizeVerificationPlan,
@@ -688,24 +685,24 @@ test("exports VERIFICATION_FRESHNESS_CODES with 6 codes", () => {
 // F36 — Runtime immutability of exported vocabulary arrays
 // ---------------------------------------------------------------------------
 
-test("exported vocabulary arrays are frozen at runtime", () => {
-  assert.ok(Object.isFrozen(VERIFICATION_STAGES));
-  assert.ok(Object.isFrozen(VERIFICATION_COST_CLASSES));
-  assert.ok(Object.isFrozen(VERIFICATION_WORKING_DIRECTORY_POLICIES));
-  assert.ok(Object.isFrozen(VERIFICATION_COMMAND_STATUSES));
-  assert.ok(Object.isFrozen(VERIFICATION_VERDICTS));
-  assert.ok(Object.isFrozen(VERIFICATION_STAGE_REQUESTS));
+// Every exported verification vocabulary must be frozen — asserted over the
+// whole namespace, so a newly added vocabulary array cannot ship unfrozen.
+test("exported vocabulary arrays are frozen at runtime", async () => {
+  const namespace = await import("../dist/index.js");
+  const arrays = Object.entries(namespace)
+    .filter(([name, value]) => /^VERIFICATION_/.test(name) && Array.isArray(value))
+    .map(([name]) => name);
+  assert.ok(arrays.length >= 4, `found ${arrays.join(", ")}`);
+  for (const name of arrays) {
+    assert.ok(Object.isFrozen(namespace[name]), `${name} must be frozen`);
+  }
 });
 
-test("mutating frozen vocabulary arrays throws in strict mode", () => {
-  const frozen = [
-    VERIFICATION_STAGES,
-    VERIFICATION_COST_CLASSES,
-    VERIFICATION_WORKING_DIRECTORY_POLICIES,
-    VERIFICATION_COMMAND_STATUSES,
-    VERIFICATION_VERDICTS,
-    VERIFICATION_STAGE_REQUESTS,
-  ];
+test("mutating frozen vocabulary arrays throws in strict mode", async () => {
+  const namespace = await import("../dist/index.js");
+  const frozen = Object.entries(namespace)
+    .filter(([name, value]) => /^VERIFICATION_/.test(name) && Array.isArray(value))
+    .map(([, value]) => value);
   for (const arr of frozen) {
     assert.throws(
       () => { arr.push("__mutate_me__"); },
