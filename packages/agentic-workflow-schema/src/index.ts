@@ -3765,11 +3765,10 @@ export async function compareVerificationReceiptToCurrent(
 
   // SPEC fixed check order (D1): incomplete-missing-results →
   // incomplete-unjustified-skip → incomplete-stage-coverage.
-  if (r.stageRequested === "fast") {
-    // A fast command without a result row → incomplete-missing-results
-    for (const id of req) {
-      if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" };
-    }
+  // Missing-results check applies to ALL stages (fast: fast commands missing;
+  // full: all commands missing) — the reason code reflects *why* it's incomplete.
+  for (const id of req) {
+    if (!recv.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" };
   }
   // A skipped command without a reason → incomplete-unjustified-skip (any stage)
   for (const rr of r.results) { if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" }; }
