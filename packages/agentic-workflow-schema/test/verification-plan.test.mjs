@@ -156,16 +156,20 @@ test("rejects command id with NUL (F50)", () => {
   assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
 });
 
-test("rejects command id longer than 1024 chars (F50)", () => {
+test("rejects a command id longer than the D14 idChars ceiling", () => {
+  // AC10 / D14: ids are bounded by `VERIFICATION_LIMITS.idChars` (128). The F50
+  // hardening used the 1024 char class; the ceiling tightened when the user
+  // approved the bounded-usability manifest, and `test/verification-bounds.test.mjs`
+  // now pins the 128/129 pair.
   const plan = {
     contract: VERIFICATION_PLAN_CONTRACT_ID,
     commands: [
-      { id: "x".repeat(1025), stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+      { id: "x".repeat(129), stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
     ],
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("1024")), result.errors.join(", "));
+  assert.ok(result.errors.some((e) => e.includes("128")), result.errors.join(", "));
 });
 
 test("accepts unique non-empty ids", () => {

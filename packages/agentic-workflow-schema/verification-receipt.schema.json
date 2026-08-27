@@ -48,7 +48,8 @@
       "items": {
         "$ref": "#/$defs/VerificationResultV1"
       },
-      "description": "Ordered per-command results."
+      "maxItems": 128,
+      "description": "Ordered per-command results; at most 128 rows in declared order."
     },
     "verdict": {
       "type": "string",
@@ -107,9 +108,9 @@
         "commandId": {
           "type": "string",
           "minLength": 1,
-          "maxLength": 1024,
+          "maxLength": 128,
           "pattern": "^[^\\0]*$",
-          "description": "Must exist in the bound plan's commands; NUL-free, at most 1024 chars."
+          "description": "Must exist in the bound plan's commands; NUL-free, at most 128 chars."
         },
         "status": {
           "type": "string",

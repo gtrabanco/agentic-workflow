@@ -107,14 +107,20 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P10 — Bound verification shapes
 
 ## Unit-loop receipt — P9
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 380/380) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: 8055343 · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 380/380) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P10 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired again (5 files / 452 changed lines since `c899d06`); layer unchanged (schema); no sensitivity surface.
 
 ## P10 — Bound verification shapes
-- **Status**: Planned
-- **Done**: D14 shape limits frozen after user approval.
-- **Remains**: 8 schema tasks; F77 shape roots.
-- **Next**: after P9, `execute-phase 26 P10`
+- **Status**: Done
+- Done: `VERIFICATION_LIMITS` (frozen, public, declared once in `src/verification-contract.ts`) now drives every shape ceiling — 128 commands, 128 results, 64 args/command, 128-char ids and commandIds, 1024-char executable/workingDirectory, 4096 chars per arg — and both Draft-07 projections were regenerated from it. 13 boundary pairs (exact limit / one over) are green.
+- Remains: P11–P15. `VERIFICATION_LIMITS` still lacks the payload fields (skipReasonChars, evidenceRefChars, planBytes, receiptBytes, diagnostics → P11) and the timeout fields (→ P12).
+- Gotchas: (1) The `stringArray` branch of `validateStructure` had **no** `maxItems` check while the generator already projected one — a silent validator/projection divergence on `args`; it is fixed and pinned. Any future string-array ceiling must be enforced in both places by that single branch. (2) `id`/`commandId` moved from the F50 1024 char class to D14's 128 — `test/verification-plan.test.mjs` now asserts the 128 boundary and the public-surface assertion in `test/verification-authority.test.mjs` lists `VERIFICATION_LIMITS`. (3) `workingDirectory` is nullable, so its projected bounds live on the **non-null `oneOf` branch**, not on the property root — boundary assertions must read the branch. (4) The generator consumes **`dist/`**, so after editing the definition the order is `npx tsc` → generate → `--check`; P13's registered command must build first or it will check a stale render.
+- Files: `packages/agentic-workflow-schema/src/verification-contract.ts`, `src/index.ts`, `verification-plan.schema.json`, `verification-receipt.schema.json` (regenerated), `test/verification-bounds.test.mjs` (new), `test/verification-plan.test.mjs`, `test/verification-authority.test.mjs`, `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,testing}.md`
+- Next: P11 — Bound verification payloads
+
+## Unit-loop receipt — P10
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 393/393) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P11 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired (9 files / 336 changed lines since `8055343`; regenerated projections included), layer unchanged (schema); no sensitivity surface. Projections changed in this phase, so the end review should re-check AC9's generated-file claims against the final candidate.
 
 ## P11 — Bound verification payloads
 - **Status**: Planned
