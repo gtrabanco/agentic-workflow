@@ -219,29 +219,29 @@ Layer: `docs`. Target: `skills/product-audit/references/AUDIT_PROCESS.md`
 `grep -c 'Fallback:' skills/product-audit/references/AUDIT_PROCESS.md` → ≥ 5
 AND `node scripts/check-skill-context.mjs --skill product-audit` → exit 0.
 
-- [ ] Insert the `Evidence-provenance gate (fixed):` block directly under
+- [x] Insert the `Evidence-provenance gate (fixed):` block directly under
       step 2 carrying the intro sentence binding it to every
       evidence-collecting sweep step, plus the `- Forge state —` item stating
       live forge authority (issue/PR status from the project-declared forge
       CLI/API) and drift-not-ledger treatment of fix-index/worklist/roadmap
       rows, ending `Fallback: mark unverified`.
-- [ ] Add the `- Command-derived metrics —` item: exact command + working
+- [x] Add the `- Command-derived metrics —` item: exact command + working
       directory or target + supporting output line or structured field bound
       per metric; an aggregate terminal summary cannot back a narrower-scope
       claim — `Fallback: rerun in scope`.
-- [ ] Add the `- Repository inventories —` item: ordered/inventory claims
+- [x] Add the `- Repository inventories —` item: ordered/inventory claims
       recomputed from the current tree with project-compatible tools citing
       the terminal path/item; no hardcoded products, runtimes, package
       managers, forge hosts, or non-portable recipes — `Fallback:
       rerun in scope`.
-- [ ] Add the `- Freshness/timestamps —` item recording capture time/method
+- [x] Add the `- Freshness/timestamps —` item recording capture time/method
       and requiring recompute before reuse of stale captures — `Fallback:
       mark unverified`.
-- [ ] Add the `- Conflicting sources —` item fixing the resolution order
+- [x] Add the `- Conflicting sources —` item fixing the resolution order
       (live forge > scope-bound command output > repository inventory >
       worklist index) with the winner recorded beside the claim — `Fallback:
       mark unverified`.
-- [ ] Append the ≤2-line Guardrails pointer in `SKILL.md` binding findings to
+- [x] Append the ≤2-line Guardrails pointer in `SKILL.md` binding findings to
       the fixed evidence-provenance checklist (uncertainties stay *verify*).
 
 ### P2 — Cross-audit delta reporting

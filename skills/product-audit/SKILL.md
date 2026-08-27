@@ -168,6 +168,8 @@ security items to track first").
   multiple feature docs into one proposal.
 - Honor the project's **Workflow conventions** (docs-language, evidence): every
   finding/proposal cites a `file:line`/metric/doc/issue source; mark uncertainties *verify*.
+- **Evidence also passes the fixed evidence-provenance gate** in
+  `references/AUDIT_PROCESS.md`; uncertainties stay marked *verify*.
 
 ## Portability (agents other than Claude Code)
 
