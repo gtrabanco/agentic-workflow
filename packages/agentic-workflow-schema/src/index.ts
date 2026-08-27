@@ -3146,6 +3146,14 @@ export { VERIFICATION_RECEIPT_CONTRACT_ID };
 export { VERIFICATION_COMMAND_STATUSES };
 export type VerificationCommandStatus = (typeof VERIFICATION_COMMAND_STATUSES)[number];
 
+/**
+ * The non-pass family, derived once from the frozen vocabulary so the D4
+ * fail-fast sequencing scan and the D8 verdict derivation can never drift
+ * apart (order follows the vocabulary: failed, timed-out, infrastructure-error).
+ */
+const NON_PASSED_STATUSES: readonly VerificationCommandStatus[] =
+  VERIFICATION_COMMAND_STATUSES.filter((s) => s !== "passed" && s !== "skipped");
+
 /** Verdict values derived from receipt content. */
 export { VERIFICATION_VERDICTS };
 export type VerificationVerdict = (typeof VERIFICATION_VERDICTS)[number];
@@ -3346,7 +3354,6 @@ export async function validateVerificationReceiptAgainstPlan(
   //    cannot be a reason. A `skipped` row with a null reason stays representable
   //    (D3 -> verdict `incomplete`), and a later command with no row stays
   //    representable (D7) — neither is a schema error.
-  const NON_PASSED = ["failed", "timed-out", "infrastructure-error"];
   let trigger: string | null = null;
   if (sink.count() === 0) {
     for (let i = 0; i < normalizedReceipt.results.length; i++) {
@@ -3354,7 +3361,7 @@ export async function validateVerificationReceiptAgainstPlan(
       const c = cmdMap.get(r.commandId);
       if (!c) continue; // unknown ids were reported by check 1
       if (trigger === null) {
-        if (NON_PASSED.includes(r.status) && c.stopOnFailure) trigger = r.commandId;
+        if (NON_PASSED_STATUSES.includes(r.status) && c.stopOnFailure) trigger = r.commandId;
         continue;
       }
       if (r.status !== "skipped") sink.push("invalid-fail-fast", atResult(i, "status"));
@@ -3437,7 +3444,7 @@ function deriveVerdictUnchecked(
   // Failed/timed-out/infra, or a required row skipped-with-reason → fail
   const requiredSet = new Set(required);
   for (const r2 of receipt.results) {
-    if (["failed", "timed-out", "infrastructure-error"].includes(r2.status)) return "fail";
+    if (NON_PASSED_STATUSES.includes(r2.status)) return "fail";
     if (requiredSet.has(r2.commandId) && r2.status === "skipped") return "fail";
   }
 
