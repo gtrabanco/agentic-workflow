@@ -750,7 +750,7 @@ function checkString(
     sink.push(typeCode(field), path);
     return undefined;
   }
-  if (field.minLength === 1 && value.length === 0) {
+  if (field.minLength !== undefined && value.length < field.minLength) {
     sink.push("limit-exceeded", path);
     return undefined;
   }
