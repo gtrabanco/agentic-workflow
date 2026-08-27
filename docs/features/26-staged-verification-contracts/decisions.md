@@ -419,5 +419,40 @@ Non-blocking and independent; no issue created — only the user routes these:
   throw becomes observable, or the package publishes a canonicalizer that accepts
   unvalidated input — then make the core total (serialize `BigInt` as a decimal
   string or reject it with a diagnostic) instead of crashing.
+  **Superseded by the relocated F80 fold below:** after the immediate fix at
+  9ef8c5d the core refuses these leaves with a named TypeError by design.
+- **`canonicalJSONValue` total-leaf guard (relocated F80, immediate fix at
+  9ef8c5d)** — five-axis review residual: the shared canonical core declared
+  `-> string` but returned `undefined` for function/symbol leaves, emitted bare
+  `undefined` fragments inside otherwise-canonical JSON for nested leaves, and
+  threw a bare TypeError on bigint; both public validators guarded it through
+  the `canonicalBudgetRefusal` try/catch, so the visible risk was direct
+  unvalidated use of the exported `canonicalize*` helpers. Triage measurement
+  proved it was a live collision class in the byte-level digest authority, not
+  a dormant residual: `digest([]) === digest([fn])` returned identical digests
+  and `["run", fn]` emitted the unparseable string `["run",]`. Fix: a named
+  TypeError for function/symbol/bigint/non-finite leaves, pinned by 7 red-first
+  tests; the guard is reachable only inside a projected field, because both
+  legacy canonicalizers project a fixed key set. Trigger for more work: a
+  consumer needs serializable totality (e.g. bigint decimal encoding) instead
+  of refusal.
+- **ajv devDependency caret range (relocated F81, watched debt)** —
+  `ajv: "^8.20.0"` coexists with the exact `typescript: "6"` pin; the package
+  has zero production dependencies and `bun.lock` pins resolution, so the
+  exposure is dev-tooling reproducibility only. Re-trigger: ajv is promoted
+  into `dependencies`, or the lockfile pin is dropped.
+- **Shared `TextEncoder` on the UTF-8 hot path (relocated F82, resolved at
+  9ef8c5d)** — `utf8Bytes` allocated a `TextEncoder` per call although a
+  module-scope `_utf8Encoder` existed. Now `utf8Bytes` and `sha256Hex` share
+  the single module-level encoder; bench p95 after the change: 14.87 ms against
+  the 100 ms D14 ceiling. Re-trigger moot (item closed).
+- **Hot-path set/array allocations (relocated F83, resolved at 9ef8c5d)** —
+  `deriveVerdictUnchecked` rebuilt a duplicate `requiredSet` beside the
+  already-materialized `required` array and evaluated a per-result status array
+  literal inside the loop; `rejectUnexpectedKeys` constructed a `new Set(keys)`
+  per call for fixed vocabularies. Fold: one required-id set per derivation;
+  memoized vocabulary sets (bounded by the static literal vocabularies);
+  pattern validation through a bounded `compiledPattern()` memo covering
+  `verification-contract.ts:764-769` and `:1077`. Re-trigger moot (item closed).
 - **AWL adoption/dialect work** — trigger: AWL upgrades to schema package 3.4.0
   and needs real plan/receipt emission or a runtime-specific dialect/runner.
