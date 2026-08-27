@@ -305,11 +305,11 @@ CHANGELOG.md/.es.md, README tables). Done-when:
 `grep -l '3\.1\.0' CHANGELOG.md CHANGELOG.es.md` lists both files AND
 context script exits 0 AND `npx skills add . --list` includes `product-audit`.
 
-- [ ] Run bump-skill for product-audit: minor bump `3.0.3` → `3.1.0`
+- [x] Run bump-skill for product-audit: minor bump `3.0.3` → `3.1.0`
       (backward-compatible capability addition), producing the frontmatter
       version, CHANGELOG.md row, CHANGELOG.es.md row, and README.md /
       README.es.md table updates.
-- [ ] Verify both language pairs agree (same version string and content-equ
+- [x] Verify both language pairs agree (same version string and content-equ
       ivalent changelog rows in EN + ES; README EN + ES tables consistent)
       and the full gate stays green (`node scripts/check-skill-context.mjs`,
       `npx skills add . --list`).
