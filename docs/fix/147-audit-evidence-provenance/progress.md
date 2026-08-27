@@ -70,3 +70,17 @@
 - Gotchas: the version bump is byte-neutral in SKILL.md (still 2786/2800) — do not add prose there. `npx skills add . --list` prints names in a box-drawing table: grep the parsed name list, not the raw lines (descriptions mention `product-audit` 11×, which can fake a pass). CHANGELOG/README ES parity was checked cell-by-cell against the EN text.
 - Files: skills/product-audit/SKILL.md, CHANGELOG.md, CHANGELOG.es.md, README.md, README.es.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
 - Next: P5 — Hardening & PR
+- Reconciliation: P4 committed as 0e87e70 (receipt `pending` → 0e87e70); P4 ticks verified against `skills/product-audit/SKILL.md:5`, both CHANGELOG tables and both README cells before starting P5.
+
+## Unit-loop receipt — P5 (close-out)
+- Commit: pending · Gate: `node scripts/check-skill-context.mjs` (exit 0, "PASS context budgets: 35 skills") + `npx skills add . --list` (34 discovered, `product-audit` present) · Acceptance blob: 42a91680cb09d470c921ddd663aa0a7ba599f459
+- Next: none (unit finished once the PR is open) · Attempts: 1
+- Phase-lint: PASS (8/8) · close-out chain kept literal (7 tasks ≤ 10) · triggers: accumulation not fired (whole unit = 12 files / 780 lines incl. the planning artifacts; no layer boundary — every phase declared `docs`; no sensitive surface)
+- Manual acceptance row EXECUTED: `nan/qwen3.6` run of the new audit-evidence provenance fixture rejected/mended T1–T4 and emitted the Delta section → PASS row appended to BOTH run logs (`GOLDEN_FIXTURE.md`, `GOLDEN_FIXTURE.es.md`). One soft drift recorded (delta class line order), not a contract violation.
+
+## P5 — 2026-08-27
+- Done: full project gate re-run green (context budgets exit 0 over 35 skills; skills CLI discovers `product-audit` among 34; AC1–AC10 validators all green; only non-empty product-token grep in `skills/product-audit/` is the pre-existing frontmatter author email; schema package untouched; every relative doc link resolves; new run-log rows table-balanced at 6 pipes); fix-index row flipped `pending → done`; weak-model fixture observation landed in both language run logs.
+- Remains: push, PR with `Closes #147`, row → `done · [#<pr>](<url>)`, link commit + push (unticked in the SPEC ledger until executed).
+- Gotchas: review must be run before merge (`loop-review-fold`) — `audit-pr` blocks merge without a REVIEW-PASS receipt; the ES fixture row is content-equivalent to EN, keep them paired if either changes.
+- Files: docs/fix/README.md, docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
+- Next: unit finished — PR open after this commit
