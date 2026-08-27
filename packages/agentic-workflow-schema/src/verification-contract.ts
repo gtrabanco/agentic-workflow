@@ -693,6 +693,109 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null;
 }
 
+/**
+ * F97 — the submitted accessor that cannot be observed as plain data.
+ *
+ * Carries the RFC 6901 pointer of the frame that owns the failing read so the
+ * public entry can answer with the same redacted `invalid-type` row an
+ * out-of-contract walk failure already produces (F92). The message never names
+ * the submitted key or value.
+ */
+class VerificationInputCaptureError extends Error {
+  constructor(readonly pointer: string) {
+    super("verification input: unreadable accessor");
+    this.name = "VerificationInputCaptureError";
+  }
+}
+
+/**
+ * F97 — capture one submitted value as data, reading every accessor exactly once.
+ *
+ * Plain objects become own-enumerable-key copies, arrays become element copies, and
+ * every container is frozen, so no later pass can observe a different document than
+ * the one the entry decided on. Two submissions are deliberately NOT rewritten by the
+ * capture, because the structural walk — not the capture — owns every refusal:
+ *   - a non-plain object (class instance, array-like prototype) is copied by
+ *     reference, so its frame still refuses it as `invalid-type`;
+ *   - an unsupported leaf (function, symbol, bigint, `undefined`, non-finite number)
+ *     is copied as submitted, so the field check still refuses it.
+ * An accessor that throws is reported at the frame that owns the read.
+ */
+function captureContractValue(value: unknown, pointer: string): unknown {
+  if (value === null) return null;
+  const kind = typeof value;
+  if (kind !== "object") return value;
+
+  if (Array.isArray(value)) {
+    const items: unknown[] = [];
+    for (let index = 0; index < value.length; index += 1) {
+      let item: unknown;
+      try {
+        item = Object.freeze(captureContractValue(value[index], `${pointer}/${index}`));
+      } catch (failure) {
+        throw failure instanceof VerificationInputCaptureError
+          ? failure
+          : new VerificationInputCaptureError(pointer);
+      }
+      items.push(item);
+    }
+    return Object.freeze(items);
+  }
+
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) return value;
+
+  const source = value as Record<string, unknown>;
+  const captured: Record<string, unknown> = {};
+  for (const key of Object.keys(source)) {
+    let item: unknown;
+    try {
+      item = Object.freeze(captureContractValue(source[key], `${pointer}/${key}`));
+    } catch (failure) {
+      // The frame that owns the read answers for it — the same pointer rule F92
+      // established for a walk failure, and it also bounds a self-referential
+      // submission (the recursion's RangeError lands on the frame that opened it).
+      throw failure instanceof VerificationInputCaptureError
+        ? failure
+        : new VerificationInputCaptureError(pointer);
+    }
+    // `defineProperty`, never assignment: a submitted own `__proto__` key (what
+    // `JSON.parse` produces) is an ordinary data property, but plain assignment
+    // would hit the inherited `Object.prototype.__proto__` setter and drop the key
+    // the structural pass exists to refuse (P7).
+    Object.defineProperty(captured, key, {
+      value: item,
+      enumerable: true,
+      writable: false,
+      configurable: false,
+    });
+  }
+  return Object.freeze(captured);
+}
+
+/**
+ * F97 — the one observation of a submitted document that both public entries and
+ * the canonical helpers decide on.
+ *
+ * `ok: false` names the frame whose accessor threw; the caller turns it into the
+ * redacted `invalid-type` row the D16 contract already requires (F92 parity). No
+ * attacker-chosen exception ever escapes the capture.
+ */
+export type VerificationInputCapture =
+  | { readonly ok: true; readonly value: unknown }
+  | { readonly ok: false; readonly pointer: string };
+
+export function captureVerificationInput(value: unknown): VerificationInputCapture {
+  try {
+    return { ok: true, value: Object.freeze(captureContractValue(value, "")) };
+  } catch (failure) {
+    return {
+      ok: false,
+      pointer: failure instanceof VerificationInputCaptureError ? failure.pointer : "",
+    };
+  }
+}
+
 function verificationFieldSpec(
   spec: VerificationObjectSpec,
   key: string,
