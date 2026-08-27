@@ -95,12 +95,12 @@ function memberSchema(field) {
       const patterns = [];
       if (field.nulFree) patterns.push({ regex: NUL_PATTERN, message: "must not contain NUL characters" });
       for (const rule of field.rules ?? []) patterns.push({ regex: rule.regex, message: rule.message });
-      if (patterns.length > 1) {
+      if (patterns.length > 1 || (patterns.length === 1 && schema.pattern !== undefined)) {
         schema.allOf = patterns.map(({ regex, message }) => ({
           description: `[${field.key}] ${message}`,
           pattern: regex,
         }));
-      } else if (patterns.length === 1 && schema.pattern === undefined) {
+      } else if (patterns.length === 1) {
         schema.pattern = patterns[0].regex;
       }
       return schema;
