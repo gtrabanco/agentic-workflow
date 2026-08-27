@@ -131,14 +131,16 @@ Evidence: `test/verification-semantics.test.mjs` (14 cases, 4 red before the fix
 
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with every P10 exact-boundary/one-over pair green.
 
-- [ ] Add red-first boundary pairs for command, result and argument cardinalities
-- [ ] Add red-first boundary pairs for plan id and receipt command id lengths
-- [ ] Add red-first boundary pairs for executable and working-directory lengths
-- [ ] Add red-first boundary pairs for argument length and NUL rejection
-- [ ] Enforce the three cardinality ceilings from the canonical definition
-- [ ] Enforce both id ceilings from the canonical definition
-- [ ] Enforce executable, working-directory and argument string bounds
-- [ ] Export frozen shape-limit metadata and project every Draft-07-expressible shape bound
+Evidence: `test/verification-bounds.test.mjs` (13 cases) + `src/verification-contract.ts` (`VERIFICATION_LIMITS`, field specs, `stringArray` cardinality) + regenerated projections.
+
+- [x] Add red-first boundary pairs for command, result and argument cardinalities — `commands: exactly …(128) is accepted` / `… one beyond … (129)`, `results: exactly the ceiling …` / `… (129)`, `args: exactly argsPerCommand (64) … / one beyond (65)`
+- [x] Add red-first boundary pairs for plan id and receipt command id lengths — `id: 128 chars accepted, 129 rejected (D14 idChars)`, `commandId: bounded by the same idChars ceiling as plan ids`
+- [x] Add red-first boundary pairs for executable and working-directory lengths — `executable: 1024/1025`, `workingDirectory: 1024/1025`
+- [x] Add red-first boundary pairs for argument length and NUL rejection — `arg: 4096 chars accepted, 4097 rejected, NUL still rejected (D14 argChars)`
+- [x] Enforce the three cardinality ceilings from the canonical definition — `commands.maxItems`, `results.maxItems`, `args.maxItems` all read `VERIFICATION_LIMITS`; the `stringArray` branch of `validateStructure` gained the missing `maxItems` check so validator and projection agree (AC10)
+- [x] Enforce both id ceilings from the canonical definition — `id.maxLength`/`commandId.maxLength` = `idChars` (128), replacing the F50 1024 char class
+- [x] Enforce executable, working-directory and argument string bounds — `pathChars` on both path fields, `argChars` per item
+- [x] Export frozen shape-limit metadata and project every Draft-07-expressible shape bound — public `VERIFICATION_LIMITS` (re-export of the canonical object), projections regenerated, `every Draft-07-expressible shape bound is projected into the schemas`
 
 ## P11 — Bound verification payloads
 

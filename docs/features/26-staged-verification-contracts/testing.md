@@ -50,7 +50,10 @@
   stale/incomplete precedence, stale-masks-incomplete disjointness, and the
   `{fresh: true}` outcome including the D9 vacuous-fast case.
 - Boundary fixtures cover 128/129 commands/results, 64/65 args, every string/
-  byte/timeout threshold, aggregate stage budgets and 50/51 diagnostics.
+  byte/timeout threshold, aggregate stage budgets and 50/51 diagnostics — the
+  shape half is `test/verification-bounds.test.mjs`, which also asserts every
+  Draft-07-expressible bound is present in the regenerated projections and that
+  the public `VERIFICATION_LIMITS` object is the single source of the numbers.
 - Diagnostic fixtures prove code vocabulary, RFC 6901 paths, the truncation
   flag and that no submitted value is echoed.
 - Docs fixtures extract every README example, compile it and assert EN/ES
