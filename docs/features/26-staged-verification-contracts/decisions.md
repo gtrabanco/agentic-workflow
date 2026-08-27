@@ -409,5 +409,15 @@ Non-blocking and independent; no issue created — only the user routes these:
 - **Pre-existing README.ts blocks do not compile standalone** — blocks outside
   feature 26 reference undeclared placeholders. Trigger: the next change to
   those blocks adds declarations so every snippet compiles verbatim.
+- **`canonicalJSONValue` throws on `BigInt` (relocated F62b, 2026-08-27)** — the
+  shared canonical core stringifies with `JSON.stringify`, so a `BigInt` value
+  reaching it directly raises a `TypeError`. No public path can deliver one today:
+  every `canonicalize*`/`digest*` call that the verification and snapshot entries
+  expose runs on a normalized DTO whose integer rules already rejected `BigInt`,
+  and the D14 budget pre-check swallows serialization failures. Trigger: a
+  third-party caller uses a `canonicalize*` export on a hand-built object and the
+  throw becomes observable, or the package publishes a canonicalizer that accepts
+  unvalidated input — then make the core total (serialize `BigInt` as a decimal
+  string or reject it with a diagnostic) instead of crashing.
 - **AWL adoption/dialect work** — trigger: AWL upgrades to schema package 3.4.0
   and needs real plan/receipt emission or a runtime-specific dialect/runner.
