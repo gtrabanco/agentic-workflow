@@ -15,9 +15,8 @@ import { join } from "node:path";
 const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const README_EN = read("../README.md");
 const README_ES = read("../README.es.md");
-const { VERIFICATION_LIMITS, VERIFICATION_FRESHNESS_CODES, VERIFICATION_DIAGNOSTIC_CODES } = await import(
-  "../dist/index.js"
-);
+const verificationModule = await import("../dist/index.js");
+const { VERIFICATION_LIMITS, VERIFICATION_FRESHNESS_CODES, VERIFICATION_DIAGNOSTIC_CODES } = verificationModule;
 
 const both = { "README.md": README_EN, "README.es.md": README_ES };
 
@@ -299,6 +298,124 @@ test("F96: both references name every frozen verification vocabulary export", ()
     for (const constant of VOCABULARY) {
       assert.ok(text.includes(constant), `${name} never names ${constant}`);
     }
+  }
+});
+
+// F102-F105 (adversarial review @3112e34): the published reference must be
+// usable from the tarball boundary, disclose the complete verification API,
+// name every public contract validator, and tell callers how to recover from
+// redacted diagnostics.
+test("F102: repository-only verification commands are marked source-checkout-only in both references", () => {
+  const sourceOnly = [
+    "check:verification-schemas",
+    "check:verification-package",
+    "bench:verification",
+    "test:verification-docs",
+    "gate:verification",
+  ];
+  for (const [name, text] of Object.entries(both)) {
+    assert.match(text, /source-checkout-only|solo (?:en|para) (?:un )?checkout (?:del código )?fuente/i, `${name} omits the source-checkout-only boundary`);
+    for (const command of sourceOnly) {
+      assert.ok(text.includes(command), `${name} never marks npm run ${command} as source-checkout-only`);
+    }
+    assert.doesNotMatch(
+      text,
+      /then run\s+`npm run check:verification-schemas`|y ejecuta\s+`npm run check:verification-schemas`/i,
+      `${name} still instructs installed-package consumers to run a missing target`,
+    );
+  }
+});
+
+test("F103: both references inventory the exact public verification runtime and type surfaces", () => {
+  const runtime = [
+    "VERIFICATION_CANONICAL_VECTORS",
+    "VERIFICATION_COMMAND_STATUSES",
+    "VERIFICATION_COST_CLASSES",
+    "VERIFICATION_DIAGNOSTIC_CODES",
+    "VERIFICATION_FRESHNESS_CODES",
+    "VERIFICATION_LIMITS",
+    "VERIFICATION_PLAN_CONTRACT_ID",
+    "VERIFICATION_RECEIPT_CONTRACT_ID",
+    "VERIFICATION_STAGES",
+    "VERIFICATION_VERDICTS",
+    "canonicalizeVerificationPlan",
+    "canonicalizeVerificationReceipt",
+    "compareVerificationReceiptToCurrent",
+    "deriveVerificationVerdict",
+    "digestVerificationPlan",
+    "digestVerificationReceipt",
+    "validateVerificationPlanV1",
+    "validateVerificationReceiptAgainstPlan",
+  ];
+  const runtimeOnDisk = Object.keys(verificationModule)
+    .filter((name) => name.startsWith("VERIFICATION_") || name.includes("Verification"))
+    .sort();
+  assert.deepEqual(runtimeOnDisk, runtime, "the pinned verification runtime inventory drifted");
+
+  const types = [
+    "EvidenceReferenceV1",
+    "VerificationCommandStatus",
+    "VerificationCommandV1",
+    "VerificationCostClass",
+    "VerificationDiagnosticCode",
+    "VerificationDiagnosticV1",
+    "VerificationFreshnessReasonCode",
+    "VerificationFreshnessResult",
+    "VerificationPlanV1",
+    "VerificationPlanValidationResult",
+    "VerificationReceiptV1",
+    "VerificationReceiptValidationResult",
+    "VerificationResultV1",
+    "VerificationStage",
+    "VerificationStageRequest",
+    "VerificationVerdict",
+    "WorkingDirectoryPolicy",
+  ];
+  const dts = read("../dist/index.d.ts");
+  const section = dts.slice(
+    dts.indexOf("export { VERIFICATION_PLAN_CONTRACT_ID };"),
+    dts.indexOf("export declare const VERIFICATION_CANONICAL_VECTORS"),
+  );
+  const declaredTypes = [
+    ...section.matchAll(/^export (?:type|interface) ([A-Za-z0-9_]+)/gm),
+  ].map((match) => match[1]);
+  if (section.includes("export type { VerificationDiagnosticV1 };")) declaredTypes.push("VerificationDiagnosticV1");
+  assert.deepEqual(declaredTypes.sort(), types, "the pinned verification type inventory drifted");
+
+  for (const [name, text] of Object.entries(both)) {
+    for (const identifier of [...runtime, ...types]) {
+      assert.ok(text.includes(identifier), `${name} omits public verification identifier ${identifier}`);
+    }
+  }
+});
+
+test("F104: both references name every public contract validator", () => {
+  const validators = [
+    "validateEnvelopeV2Strict",
+    "validateSkillOutcomeV1",
+    "validateWorkflowSnapshotV1",
+    "validateCandidateSnapshotV1",
+    "validateReviewReceiptV1",
+    "validateVerificationPlanV1",
+    "validateVerificationReceiptAgainstPlan",
+  ];
+  for (const [name, text] of Object.entries(both)) {
+    for (const validator of validators) {
+      assert.ok(text.includes(validator), `${name} omits public validator ${validator}`);
+    }
+  }
+});
+
+test("F105: every diagnostic row gives caller recovery without submitted values", () => {
+  for (const [name, text] of Object.entries(both)) {
+    for (const code of VERIFICATION_DIAGNOSTIC_CODES) {
+      const row = text.split("\n").find((line) => line.startsWith(`| \`${code}\` |`));
+      assert.ok(row, `${name} has no diagnostic row for ${code}`);
+      const cells = row.split("|").slice(1, -1).map((cell) => cell.trim());
+      assert.equal(cells.length, 3, `${name} ${code} row has no recovery column`);
+      assert.ok(cells[2].length > 0, `${name} ${code} recovery is empty`);
+    }
+    assert.match(text, /without copying submitted values|sin copiar los valores enviados/i, `${name} recovery guidance omits the no-echo rule`);
   }
 });
 
