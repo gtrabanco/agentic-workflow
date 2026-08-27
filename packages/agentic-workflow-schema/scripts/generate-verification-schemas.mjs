@@ -84,6 +84,7 @@ function memberSchema(field) {
       const schema = { type: "integer" };
       if (field.exclusiveMinimum !== undefined) schema.exclusiveMinimum = field.exclusiveMinimum;
       if (field.minimum !== undefined) schema.minimum = field.minimum;
+      if (field.maximum !== undefined) schema.maximum = field.maximum;
       return schema;
     }
     case "string": {
@@ -172,6 +173,16 @@ function ruleFragment(contract, spec, rule) {
     case "null-when": {
       const properties = {};
       for (const key of rule.fields ?? []) properties[key] = { type: "null" };
+      return { description, if: when, then: { properties } };
+    }
+    case "maximum-when": {
+      const properties = {};
+      for (const key of rule.fields ?? []) {
+        const field = spec.fields.find((candidate) => candidate.key === key);
+        // Strict Ajv needs the type next to a numeric keyword; the outer property
+        // schema still decides the real type, this only scopes the ceiling.
+        properties[key] = { type: jsonTypeOf(field) === "integer" ? "number" : jsonTypeOf(field), maximum: rule.maximum };
+      }
       return { description, if: when, then: { properties } };
     }
     case "non-null-when": {
