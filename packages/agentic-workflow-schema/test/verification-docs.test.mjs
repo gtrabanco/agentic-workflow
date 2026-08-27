@@ -1,43 +1,303 @@
-// P13 registration — the executable documentation suite named by AC7/P14.
+// P13 registration + P14 content — the executable documentation suite AC6 names.
 //
-// This file is the harness `npm run test:verification-docs` drives. P13 owns the
-// wiring (the command exists, resolves, and asserts the facts that must hold for
-// any documentation work); P14 owns the content assertions — example extraction
-// and compilation, EN/ES semantic parity, the limits/budgets reference and the
-// deferred AWL boundary. The coverage list below is what P14 must extend, so the
-// handoff is visible in the suite rather than implied.
+// Driven by `npm run test:verification-docs` (and by `npm test`, so docs drift can
+// never pass the main gate). P13 registered the harness; P14 added the content
+// assertions below: the six AC6 topics in both languages, every D14 limit with its
+// number, the projection boundary, the D16 diagnostic contract, the freshness
+// vocabulary, EN/ES code parity, and examples that compile AND run.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
-const readme = () => readFileSync(new URL("../README.md", import.meta.url), "utf8");
-const readmeEs = () => readFileSync(new URL("../README.es.md", import.meta.url), "utf8");
+const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
+const README_EN = read("../README.md");
+const README_ES = read("../README.es.md");
+const { VERIFICATION_LIMITS, VERIFICATION_FRESHNESS_CODES, VERIFICATION_DIAGNOSTIC_CODES } = await import(
+  "../dist/index.js"
+);
+
+const both = { "README.md": README_EN, "README.es.md": README_ES };
+
+/** Fenced TypeScript example blocks, in document order. */
+function tsBlocks(text) {
+  return [...text.matchAll(/```ts\n([\s\S]*?)```/g)].map((match) => match[1]);
+}
+
+/** Example code with comments and blank lines removed — the parity unit. */
+function codeOnly(block) {
+  return block
+    .split("\n")
+    .map((line) => line.replace(/\/\/.*$/, "").trimEnd())
+    .filter((line) => line.trim() !== "" && !/^\s*\/?\*/.test(line))
+    .join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// AC6 — the six statements, in both languages
+// ---------------------------------------------------------------------------
+
+const AC6_TOPICS = [
+  {
+    name: "two-stage model",
+    en: /\*\*Two-stage model:?\*\*|Two-stage model/i,
+    es: /modelo de dos etapas/i,
+  },
+  {
+    name: "delivery-gate rule",
+    en: /\*\*Delivery-gate rule:?\*\*|delivery gate is satisfied/i,
+    es: /regla del gate de entrega|regla de la puerta de entrega|gate de entrega se satisface/i,
+  },
+  {
+    name: "no-execution boundary",
+    en: /\*\*No-execution boundary:?\*\*|does not execute commands/i,
+    es: /límite de no-ejecución|no ejecuta comandos/i,
+  },
+  {
+    name: "single validation authority",
+    en: /two (public )?authoritative entr|sole plan-validation authority|single validation authority/i,
+    es: /dos entradas autoritativas|autoridad de validación única|única autoridad/i,
+  },
+  {
+    name: "structural-projection status",
+    en: /non-authoritative/i,
+    es: /no\s+autoritativa|no es autorizada|proyecci[oó]n(es)?\s+estructural/i,
+  },
+  {
+    name: "v1 usability limits",
+    en: /Usability limits/i,
+    es: /L[íi]mites de usabilidad/i,
+  },
+];
+
+test("AC6: both references state the two-stage model, gate rule, no-execution, authority, projection status and limits", () => {
+  for (const topic of AC6_TOPICS) {
+    assert.match(README_EN, topic.en, `README.md never states the ${topic.name}`);
+    assert.match(README_ES, topic.es, `README.es.md never states the ${topic.name}`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Every v1 usability limit, published with its number (AC6 / AC10)
+// ---------------------------------------------------------------------------
+
+/** `| key | value | … |` rows of the limits table in a reference. */
+function limitRows(text) {
+  const rows = new Map();
+  for (const line of text.split("\n")) {
+    const match = line.match(/^\|\s*`?([a-zA-Z]+)`?\s*\|\s*([^|]+)\|/);
+    if (match && match[1] in VERIFICATION_LIMITS) rows.set(match[1], match[2].trim());
+  }
+  return rows;
+}
+
+test("AC6: every published limit appears in the table with its exact number", () => {
+  const keys = Object.keys(VERIFICATION_LIMITS);
+  for (const [name, text] of Object.entries(both)) {
+    const rows = limitRows(text);
+    assert.deepEqual(
+      keys.filter((key) => !rows.has(key)),
+      [],
+      `${name} documents no row for these VERIFICATION_LIMITS keys`,
+    );
+    for (const key of keys) {
+      assert.ok(
+        rows.get(key).includes(String(VERIFICATION_LIMITS[key])),
+        `${name} states ${key} as "${rows.get(key)}", not ${VERIFICATION_LIMITS[key]}`,
+      );
+    }
+    assert.match(text, /VERIFICATION_LIMITS/, `${name} never names the published limits object`);
+  }
+});
+
+test("AC6: the aggregate stage budgets and the p95 ceiling are documented in both languages", () => {
+  for (const [name, text] of Object.entries(both)) {
+    for (const phrase of [/10 min|10 minutos/, /15 min|15 minutos/, /60 min|60 minutos/, /2 h|120 min|2 horas/]) {
+      assert.match(text, phrase, `${name} omits a D14 time bound (${phrase})`);
+    }
+    assert.match(text, /256 KiB/, `${name} omits the plan byte budget`);
+    assert.match(text, /512 KiB/, `${name} omits the receipt byte budget`);
+    assert.match(text, /100 ms/, `${name} omits the declared p95 ceiling`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Projection boundary + diagnostic contract
+// ---------------------------------------------------------------------------
+
+test("AC9: both references name the projections, their generator and their authority", () => {
+  for (const [name, text] of Object.entries(both)) {
+    for (const file of ["verification-plan.schema.json", "verification-receipt.schema.json"]) {
+      assert.ok(text.includes(file), `${name} never mentions ${file}`);
+    }
+    assert.match(text, /generate-verification-schemas\.mjs/, `${name} never names the generator`);
+    assert.match(text, /check:verification-schemas/, `${name} never names the drift check`);
+    for (const entry of ["validateVerificationPlanV1", "validateVerificationReceiptAgainstPlan"]) {
+      assert.ok(text.includes(entry), `${name} never documents ${entry}`);
+    }
+  }
+});
+
+test("D16: both references describe the bounded diagnostic failure shape", () => {
+  for (const [name, text] of Object.entries(both)) {
+    assert.match(text, /diagnostics/, `${name} never names the diagnostics field`);
+    assert.match(text, /truncated/, `${name} never names the truncation flag`);
+    assert.match(text, /RFC 6901|puntero RFC 6901/i, `${name} never states the path form`);
+    assert.match(
+      text,
+      /no[\s\S]{0,40}message|never[\s\S]{0,20}a message|sin mensajes|nunca[\s\S]{0,40}mensaje/i,
+      `${name} does not state that messages and values are never returned`,
+    );
+    assert.ok(text.includes(String(VERIFICATION_LIMITS.diagnostics)), `${name} omits the diagnostic ceiling`);
+  }
+});
+
+test("AC4: all six freshness reason codes appear in both references", () => {
+  for (const [name, text] of Object.entries(both)) {
+    for (const code of VERIFICATION_FRESHNESS_CODES) {
+      assert.ok(text.includes(code), `${name} omits freshness code ${code}`);
+    }
+  }
+});
+
+test("D16: the diagnostic vocabulary is disclosed, not just referenced", () => {
+  // Every code must be findable in each limits/diagnostics table row.
+  for (const [name, text] of Object.entries(both)) {
+    const missing = VERIFICATION_DIAGNOSTIC_CODES.filter((code) => !text.includes(code));
+    assert.deepEqual(missing, [], `${name} omits diagnostic codes: ${missing.join(", ")}`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Examples: compilable, runnable, coherent, and never stale
+// ---------------------------------------------------------------------------
+
+test("AC6: no reference mentions a validator the package does not export", async () => {
+  const exported = new Set(Object.keys(await import("../dist/index.js")));
+  for (const [name, text] of Object.entries(both)) {
+    // Only call-like identifiers: prose verbs such as "validates" are not API.
+    const candidates = new Set(
+      [...text.matchAll(/\b(validate[A-Z][A-Za-z0-9]*|canonicalize[A-Z][A-Za-z0-9]*|digest[A-Z][A-Za-z0-9]*|derive[A-Z][A-Za-z0-9]*|compare[A-Z][A-Za-z0-9]*)\(/g)]
+        .map((match) => match[1]),
+    );
+    for (const id of candidates) {
+      assert.ok(exported.has(id), `${name} calls ${id}(), which the package does not export`);
+    }
+  }
+});
+
+test("AC6: the retired standalone receipt validator appears in no example or section", () => {
+  for (const [name, text] of Object.entries(both)) {
+    assert.ok(!text.includes("validateVerificationReceiptV1"), `${name} still names validateVerificationReceiptV1`);
+  }
+});
+
+const TEMP_ROOT = join(fileURLToPath(new URL("..", import.meta.url)), ".tmp-verification-docs");
+
+/**
+ * Only the feature-26 example is compiled and run. The pre-existing blocks in both
+ * references use undeclared placeholders (`snapshot`, `headSha`, an `invokeAgent`
+ * the reader supplies) and are already tracked as a routed review proposal to make
+ * every snippet self-contained; asserting on them here would hide the claim this
+ * unit actually owns.
+ */
+const VERIFICATION_EXAMPLES = [...tsBlocks(README_EN), ...tsBlocks(README_ES)].filter((block) =>
+  block.includes("validateVerificationPlanV1"),
+);
+
+/**
+ * Compile (typecheck) and run one extracted example inside the package tree, so
+ * `../dist/index.js` resolves against the published types. The example imports the
+ * package by name, which the harness rewrites to that relative specifier: the
+ * shipped entry point is the same module, and a self-referential import would not
+ * prove anything about the local build.
+ */
+function compileAndRun(index, block) {
+  const dir = join(TEMP_ROOT, `example-${index}`);
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  const rewritten = block.replace(
+    /from "@gtrabanco\/agentic-workflow-schema"/g,
+    'from "../../dist/index.js"',
+  );
+  writeFileSync(join(dir, "example.ts"), rewritten, "utf8");
+  // Compiled through a project file: TypeScript 6 refuses command-line files when
+  // a tsconfig would otherwise be discovered upwards, and the project pins the same
+  // options the package builds with.
+  writeFileSync(
+    join(dir, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          target: "ES2022",
+          module: "NodeNext",
+          moduleResolution: "NodeNext",
+          strict: true,
+          skipLibCheck: true,
+          noEmit: true,
+        },
+        files: ["example.ts"],
+      },
+      null,
+      2,
+    ),
+    "utf8",
+  );
+  try {
+    execFileSync(
+      process.execPath,
+      [join(process.cwd(), "node_modules", "typescript", "bin", "tsc"), "-p", dir],
+      { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+    );
+  } catch (error) {
+    assert.fail(`example ${index + 1} does not typecheck:\n${error.stdout || error.stderr || error.message}`);
+  }
+  try {
+    execFileSync(process.execPath, [join(dir, "example.ts")], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    assert.fail(`example ${index + 1} failed at runtime:\n${error.stdout || ""}${error.stderr || error.message}`);
+  }
+}
+
+test("AC6: the feature-26 example in each reference typechecks against the published types and runs", () => {
+  assert.equal(VERIFICATION_EXAMPLES.length, 2, "exactly one verification example per reference");
+  mkdirSync(TEMP_ROOT, { recursive: true });
+  try {
+    VERIFICATION_EXAMPLES.forEach((block, index) => compileAndRun(index, block));
+  } finally {
+    rmSync(TEMP_ROOT, { recursive: true, force: true });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Deferred consumer boundary (D15) — documented, no issue created
+// ---------------------------------------------------------------------------
+
+test("D15: both references record the deferred AWL consumer boundary", () => {
+  for (const [name, text] of Object.entries(both)) {
+    assert.match(text, /AWL/, `${name} never mentions AWL`);
+    assert.match(text, /not\s+part\s+of|out of scope|no\s+forma\s+parte|fuera\s+del\s+alcance|no\s+es\s+parte/i, `${name} does not mark it deferred`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// P13 registration facts still hold (harness wiring)
+// ---------------------------------------------------------------------------
 
 test("both language references exist and carry content", () => {
-  for (const [name, text] of [["README.md", readme()], ["README.es.md", readmeEs()]]) {
+  for (const [name, text] of Object.entries(both)) {
     assert.ok(text.length > 4000, `${name} is unexpectedly short (${text.length} chars)`);
     assert.match(text, /^# /m, `${name} has no top-level heading`);
   }
 });
 
-test("the verification surface is documented in both languages", () => {
-  // Topic anchors, not sentences. P14 extends this list with the generated
-  // projections, every D14 limit/aggregate budget and the deferred AWL boundary —
-  // each of those is absent from both references today, so adding them here would
-  // pre-empt P14's own red-first evidence.
-  const topics = [
-    /validateVerificationPlanV1/,
-    /validateVerificationReceiptAgainstPlan/,
-  ];
-  const [en, es] = [readme(), readmeEs()];
-  for (const topic of topics) {
-    assert.match(en, topic, "README.md does not name the topic");
-    assert.match(es, topic, "README.es.md does not name the topic");
-  }
-});
-
 test("npm run test:verification-docs is the command the acceptance names", () => {
-  const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  const manifest = JSON.parse(read("../package.json"));
   assert.equal(
     manifest.scripts["test:verification-docs"],
     "node --test test/verification-docs.test.mjs",
