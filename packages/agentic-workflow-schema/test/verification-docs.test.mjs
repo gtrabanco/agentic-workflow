@@ -389,3 +389,26 @@ test("the changelog of record carries a row for the version being shipped", () =
     );
   }
 });
+
+// F90 (review @8213ebd): the shipped row claimed a "13-case" docs suite while
+// 15 cases were on disk — a number a human cannot re-derive. This case makes
+// the claim self-checking: the count BOTH changelog languages state must equal
+// the count this file's own source ships (1:1 with the registered cases the
+// runner reports). One changelog regex per language; both must exist.
+test("F90: the changelog's docs-suite case count equals this suite's real case count", () => {
+  const shipped = (read("../test/verification-docs.test.mjs").match(/^test\(/gm) || []).length;
+  const claims = {
+    "../../../CHANGELOG.md": /a (\d+)-case bilingual docs suite/,
+    "../../../CHANGELOG.es.md": /suite bilingüe de documentación de (\d+) casos/,
+  };
+  for (const [relative, claim] of Object.entries(claims)) {
+    const text = read(relative);
+    const start = text.indexOf(PACKAGE_HEADING);
+    const after = text.slice(start + PACKAGE_HEADING.length);
+    const end = after.search(/^#{2,4} /m);
+    const section = end === -1 ? after : after.slice(0, end);
+    const stated = section.match(claim);
+    assert.ok(stated, `${relative} no longer states the docs-suite case count (F90)`);
+    assert.equal(Number(stated[1]), shipped, `${relative} claims ${stated[1]} cases; the suite ships ${shipped}`);
+  }
+});
