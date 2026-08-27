@@ -49,13 +49,10 @@ Accept an optional path/area to focus a partial audit; state the scope and, if y
 sample rather than exhaust a dimension, **say what you sampled** — never imply full
 coverage you didn't do.
 
-> **Tip (provisional).** For the broadest, deepest run, the *user* can turn on
-> `ultracode` (`/effort ultracode` — a Claude Code session setting pairing xhigh
-> effort with automatic multi-agent orchestration) so this sweep fans out across
-> parallel subagents instead of one context window. It's a research-preview feature
-> and a **session choice** — not something this skill declares (no skill can set
-> `effort: ultracode`). On agents without it, run the audit as-is: sequential
-> passes over each dimension — only wall-clock changes, never coverage.
+> **Tip (provisional).** The *user* can turn on `ultracode` (a research-preview
+> Claude Code session setting — no skill can declare it) so this sweep fans out
+> across parallel subagents instead of one context window; without it, sweep the
+> dimensions sequentially — only wall-clock changes, never coverage.
 
 ## Step 0 — Discover the project (always first)
 
@@ -74,7 +71,7 @@ in order; they are normative and one hop from this entrypoint.
 
 1. Read [audit dimensions](references/AUDIT_DIMENSIONS.md), mark every dimension
    applicable or `n-a: <reason>`, and state any sampling.
-2. Read [audit process](references/AUDIT_PROCESS.md), execute all nine steps, then
+2. Read [audit process](references/AUDIT_PROCESS.md), execute all ten steps, then
    return the fixed report below.
 
 A missing resource stops the audit; never reconstruct it from memory. Optional
@@ -107,6 +104,12 @@ Verdict: <one-line honest health verdict>
     features are being cut too big for real capacity — evidence: <unit list +
     amendments/issues> — class: postpone — route: #64 (atomicity/split rules)
 
+## Delta vs audit <prior-id>
+  New: F<k>
+  Unchanged: F<k> <- audit <prior-id> F<j>
+  Resolved: <prior-id> F<j>
+  (none — <why no equivalent-scope prior exists>)
+
 ## Proposals — the user decides which to act on
 
 ### Issues to open
@@ -138,10 +141,10 @@ Finding set: F<k> + F<j> + F<m> (print every proposed finding; one finding → F
 Replace every finding placeholder with the complete actual set before printing;
 never print `…` or only the first finding in a live hand-off.
 
-`<id>` is the audit's incremental number (Process step 8). A finding is
+`<id>` is the audit's incremental number (Process step 9). A finding is
 addressable forever as `<audit-id> F<k>` — e.g. `triage-issue 3 F2` reads
 `docs/audits/3-*.md`, locates F2, and opens/classifies the issue if warranted.
-Suggest that routing in the proposals; **never run triage or open issues here**.
+Suggest that routing; **never run triage or open issues here**.
 
 Lead with the honest one-line health verdict (e.g. "shippable with 2 high-sev
 security items to track first").
@@ -154,9 +157,10 @@ security items to track first").
   docs/audits`) — nothing else in the repo is touched.
 - **Finding ids are `F1, F2, …` only** — one sequence per audit, severity-ranked
   order, never a different letter per problem type. Once persisted, ids are
-  frozen: a later audit gets a new audit id, never renumbers an old file. When the user
-  accepts, route: `triage-issue` files/classifies, `plan-feature` adds roadmap
-  work, `plan-fix` scopes a concrete fix.
+  frozen: a later audit gets a new audit id, never renumbers an old file; cross-audit
+  lineage lives only in Delta mappings as `<audit-id> F<k>`, never global slugs or
+  replaced ids. When the user accepts, route: `triage-issue` files/classifies,
+  `plan-feature` adds roadmap work, `plan-fix` scopes a concrete fix.
 - **Never registers tooling or edits `CLAUDE.md`.** The tooling sweep proposes a
   skill/MCP to register, but the user (or a routed `design-feature` run)
   performs the edit; a scope-affecting discovery routes to
