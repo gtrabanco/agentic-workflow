@@ -280,21 +280,21 @@ Layer: `docs`. Targets: `docs/workflow/GOLDEN_FIXTURE.md` +
 docs/workflow/GOLDEN_FIXTURE.es.md` → ≥ 1 match per file AND context script
 exit 0.
 
-- [ ] Add the `Audit-evidence provenance fixture` section part 1: toy repo
+- [x] Add the `Audit-evidence provenance fixture` section part 1: toy repo
       definition exposing `T1 wrong-scope aggregate tail` (root verification
       gate ends with a root-suite summary owning the visible totals) and
       `T2 stale worklist vs forge state` (persisted fix-index row lagging the
       project's declared forge state).
-- [ ] Add part 2: `T3 newer terminal inventory item` (ordered records file
+- [x] Add part 2: `T3 newer terminal inventory item` (ordered records file
       whose terminal entry outruns every reference elsewhere) and `T4 prior
       equivalent-scope finding` (stored earlier audit containing one
       addressable `<prior-id> F<j>` finding).
-- [ ] Add the expected-report contract subsection: reject/mend all four traps
+- [x] Add the expected-report contract subsection: reject/mend all four traps
       (mark unverified on the unattributed tail, prefer live forge state over
       the stale row, cite the actual terminal item) and emit the Delta section
       mapped onto `<prior-id> F<j>`, with a stated reason required for a
       same-date rerun.
-- [ ] Mirror the full scenario into GOLDEN_FIXTURE.es.md keeping trap labels
+- [x] Mirror the full scenario into GOLDEN_FIXTURE.es.md keeping trap labels
       T1–T4 verbatim (bilingual EN+ES pair updated in the same commit).
 
 ### P4 — Version bump bilingual sync

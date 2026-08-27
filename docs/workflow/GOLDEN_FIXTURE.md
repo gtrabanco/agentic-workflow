@@ -187,6 +187,71 @@ Any unchecked box = **FAIL**. The fix is a wording tightening of the skill
 (a separate, targeted change) — per feature 08's dependency-direction note,
 this procedure only surfaces the regression, it never edits the skill itself.
 
+## Audit-evidence provenance fixture
+
+Audit-path skills only (`product-audit`) — the CSV fixture above drives the
+executor path, this one drives an evidence sweep. Same preconditions: weakest
+model in your fleet, the changed `SKILL.md` followed literally, one run-log row
+per run. Load `references/AUDIT_DIMENSIONS.md` and
+`references/AUDIT_PROCESS.md` exactly as the skill instructs.
+
+### The toy audit target
+
+Build this scratch project (never commit it as a feature folder under
+`docs/features/`):
+
+- `README.md` declares the project's verification gate as `make verify`; the
+  gate's **last** command is the root test suite.
+- The root holds 7 test files; `packages/core/` holds 2 of its own (41 tests).
+  The terminal tail the model sees is the root summary — `packages/core` prints
+  nothing separately:
+
+      Test files  7
+      Tests       173
+
+- The worklist index (`docs/fix/README.md` in this repo's own shape) still
+  shows row `9 — stale-cache` as `in-progress`, while the project's declared
+  forge reports that issue closed and its PR merged.
+- `docs/adr/` holds numbered decision records ending at `0047-transport.md`;
+  every other document in the tree mentions `0046` as the newest.
+- `docs/audits/3-<earlier-date>.md` is the newest stored audit, scope "whole
+  product", carrying finding `F2` ("release notes missing for the last two
+  releases"). Nothing newer exists.
+
+### The four traps
+
+- `T1 wrong-scope aggregate tail` — the visible totals belong to the root
+  suite, not to `packages/core/`.
+- `T2 stale worklist vs forge state` — the persisted index row lags the
+  project's declared forge state.
+- `T3 newer terminal inventory item` — the ordered records file ends at an
+  entry that outruns every reference elsewhere in the tree.
+- `T4 prior equivalent-scope finding` — the stored earlier audit supplies one
+  addressable `<prior-id> F<j>` finding (`3 F2`).
+
+### Expected report (pass criteria for this fixture)
+
+Add these boxes to the fixed pass criteria above; never replace them. Pass only
+if **every** box holds:
+
+- ✓ T1: no metric is attributed to `packages/core/` from the aggregate tail —
+  the run reruns the gate scoped to that package or reports the package's test
+  count as *unverified*.
+- ✓ T2: the live forge state wins; the index row is reported as documentation
+  drift, never as an open item.
+- ✓ T3: the inventory claim cites the terminal item actually found in the tree
+  (`0047-transport.md`), not the number another document quotes.
+- ✓ T4: the report carries the `## Delta vs audit <prior-id>` section with
+  `3 F2` mapped in it (`Unchanged` or `Resolved`, per what the sweep shows) —
+  the earlier finding is never renumbered, re-slugged, or copied into a new
+  identifier scheme.
+- ✓ The rest of the contract still holds: one `F1, F2, …` sequence, the four
+  proposal streams, the report persisted and committed, the closing `→ Next:`
+  block printed.
+
+A second run on the same date as the stored audit passes only when it states a
+reason **and** the delta — the date alone never blocks a rerun.
+
 ## Run log
 
 One row per run. Append a row after every run so coverage stays auditable
