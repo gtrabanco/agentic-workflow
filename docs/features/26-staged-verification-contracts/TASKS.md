@@ -204,16 +204,16 @@ Evidence: `test/verification-docs.test.mjs` (13 cases, 12 of them red before the
 
 Layer: close-out · Done-when: all declared commands exit 0, `git status -sb` is remote-current, PR #145 describes the exact pushed HEAD, and the replacement-manifest receipt is current.
 
-- [ ] Run `cd packages/agentic-workflow-schema && npm ci`
-- [ ] Run `cd packages/agentic-workflow-schema && bun install --frozen-lockfile`
-- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification`
-- [ ] Run `node scripts/check-skill-context.mjs`
-- [ ] Run `npx skills add . --list`
-- [ ] Record the exact AC1–AC10 replacement-manifest execution receipt
-- [ ] Finalize the fix-now ledger, including F62b relocation and F63–F77 folding
-- [ ] Synchronize feature progress and roadmap delivery state
-- [ ] Refresh PR #145 through `gh pr edit --body-file`
-- [ ] Publish the exact candidate commit and verify branch/PR head equality
+- [x] Run `cd packages/agentic-workflow-schema && npm ci` — exit 0
+- [x] Run `cd packages/agentic-workflow-schema && bun install --frozen-lockfile` — exit 0 · "Checked 6 installs across 7 packages (no changes)"
+- [x] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0 · 442/442 · schemas drift-free (2 files) · package content PASS · docs 13/13 · p95 18.33 ms
+- [x] Run `node scripts/check-skill-context.mjs` — exit 0 · `PASS context budgets: 35 skills`
+- [x] Run `npx skills add . --list` — exit 0 · all 35 skills listed
+- [x] Record the exact AC1–AC10 replacement-manifest execution receipt — blob `2e80588…` recomputed and matched; AC-by-AC table in `progress.md`
+- [x] Finalize the fix-now ledger, including F62b relocation and F63–F77 folding — F63–F77 → `folded: yes` naming phase + commit; F62b row deleted, preserved as a review proposal with its trigger in `decisions.md`
+- [x] Synchronize feature progress and roadmap delivery state — P8–P15 receipts complete, roadmap row 26 `done · #145` verified against the replanned unit
+- [x] Refresh PR #145 through `gh pr edit --body-file` — title and body rebuilt from the exact pushed HEAD + observed evidence
+- [x] Publish the exact candidate commit and verify branch/PR head equality — `gh pr view --json headRefOid` equals the pushed HEAD
 
 After P15, hand the exact pushed HEAD and replacement acceptance blob to a fresh
 `/review-change`; execution does not claim that independent review receipt.

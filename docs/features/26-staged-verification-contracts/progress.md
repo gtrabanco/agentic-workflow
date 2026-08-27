@@ -6,6 +6,30 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Manifest: docs/features/26-staged-verification-contracts/ACCEPTANCE.md · Blob: 2e8058860b2c805cc30507053f15f91e2f273249 · Status: frozen · Verified: 2026-08-26
 - Supersedes: a4c643dabe8105293c76a1013713c4a3919a96cb under the 2026-08-26 user-approved SPEC amendment
 
+## AC1–AC10 execution receipt — candidate `5934702` (2026-08-27)
+
+- Manifest: docs/features/26-staged-verification-contracts/ACCEPTANCE.md · Blob: 2e8058860b2c805cc30507053f15f91e2f273249 · Status: frozen · Verified: recomputed at P15, exact match with receipt v2 above
+- Every validator below is the literal command from the frozen manifest, run against the pushed candidate. 254 verification cases inside 442 total package tests.
+- `5934702` is the last commit that changes anything the validators read. The close-out commit adds planning state only; the chain is re-run at the exact pushed HEAD and that observation is recorded in PR #145's body (P15 task 10).
+
+| AC | Validator as frozen | Observed | Evidence in the candidate |
+|---|---|---|---|
+| AC1 | `cd packages/agentic-workflow-schema && npm test` → exit 0 | exit 0, 442/442 | `verification-plan.test.mjs` (40) + `verification-core.test.mjs` (43) + `verification-bounds.test.mjs` (13) reject undeclared/inherited fields, empty/oversized lists, duplicate/empty/oversized ids, vocabulary, executable/args/working-directory shapes, invalid timeouts, budget violations and non-boolean `stopOnFailure`; `verification-authority.test.mjs` proves the returned plan is a normalized own-property DTO |
+| AC2 | same command → exit 0 | exit 0, 442/442 | `verification-receipt.test.mjs` (40) covers structural + every plan-bound rule in the one call; `verification-authority.test.mjs` asserts no standalone receipt validator is exported and that a rejection is exactly `{ diagnostics, ok, truncated }` |
+| AC3 | same command → exit 0 | exit 0, 442/442 | `verification-scenarios.test.mjs` (17) and `verification-semantics.test.mjs` (14): fast/full success, both fail-fast paths, timeout, infrastructure error, skipped with/without reason, missing results, requested-full coverage gap, vacuous-fast pin, and no `pass` unless every declared command of the stage passed |
+| AC4 | same command → exit 0 | exit 0, 442/442 | `verification-freshness.test.mjs` (15) — reachability matrix over all six reason codes plus `{ fresh: true }` on disjoint conditions (P8 repair) |
+| AC5 | same command → exit 0 | exit 0, 442/442 | shared `test/fixtures/verification-vectors.mjs` vectors pass through the authoritative entries, repeated canonicalize/digest/derive/compare calls are deep-equal, and `test/fixtures/verification-vector-readonly.ts` is compiled by `tsc -p tsconfig.test.json` to prove the frozen entries are readonly in the type |
+| AC6 | `npm run test:verification-docs` → exit 0 | exit 0, 13/13 | `verification-docs.test.mjs`: AC6's six claims in both languages, every `VERIFICATION_LIMITS` number per table row, budgets + p95 statement, projection/generator/drift boundary, D16 shape and 16-code vocabulary, six freshness codes, no unexported call in either reference, EN/ES example-code equality, and the extracted feature-26 example typechecked against the published types **and executed** to `Delivery verified` |
+| AC7 | `(cd packages/agentic-workflow-schema && npm ci && bun install --frozen-lockfile && npm test && npm run check:verification-package) && node scripts/check-skill-context.mjs && npx skills add . --list` → exit 0 | exit 0 end-to-end | `npm ci` clean; `bun install --frozen-lockfile` "no changes" (locks agree with the manifest, asserted in `verification-gates.test.mjs`); 442/442; package verifier: 15 packed files, both projections present, every `exports` target shipped, no dev path leaked; version `3.4.0`; `PASS context budgets: 35 skills`; skills CLI lists all and exits 0 |
+| AC8 | read-verified: `git diff main -- packages/agentic-workflow-schema/{envelope,skill-outcome,workflow-snapshot,candidate-snapshot,review-receipt}.schema.json` | empty diff (0 lines) | the five prior schema files are byte-identical to `main`; the only public-shape change in this unit is the unshipped feature-26 failure result (`errors: string[]` → bounded diagnostics), which no pre-existing suite or consumer depends on |
+| AC9 | `npm run check:verification-schemas` → exit 0; projection fixture tests in `npm test` → exit 0 | `verification schemas are generated and drift-free (2 files)`; suites green | one canonical definition (`src/verification-contract.ts`) renders both projections; `$comment`/`description` carry `authoritative: false`, the authority name and the runtime-only disclosures; strict-Ajv compile + parity fixtures prove the Draft-07-expressible rules agree with the validator, and semantic validity is claimed only by the two entries |
+| AC10 | `npm test` → boundary suites exit 0; `npm run bench:verification -- --commands 128` → exit 0 and p95 ≤ 100 ms | 442/442; `PASS · p95 18.33 ms ≤ 100 ms` | `verification-bounds.test.mjs` (128 commands / 128 results / 64 args / 128-char ids / 1024-char paths / 4096-char args), `verification-payload.test.mjs` (256 KiB plan at and one byte over, 512 KiB receipt invariant, 50-row diagnostic ceiling + `truncated` + redaction), `verification-timeouts.test.mjs` (10/15 min and 60/120 min pairs, per-stage isolation, first-crossing `budget-exceeded`); Ajv/validator parity on every projected ceiling; benchmark has no ceiling override |
+
+Passing the declared checks is necessary, not sufficient: the quality floor keeps the
+final **independent review** and the manual documentation read outstanding. This
+receipt does not claim either — it hands the exact pushed HEAD and the blob above to
+`/loop-review-fold 26-staged-verification-contracts`.
+
 ## Dependency receipt v1
 - Fingerprint: 0292879887688a0c94e59984ad9dd60dbb590623 · Closure: 26-staged-verification-contracts ← 25-content-bound-review-receipts
 - Inputs: SPEC `## Dependencies` hard row + ROADMAP row 25 (no literal `Depends on:` field exists in this SPEC)
@@ -167,11 +191,31 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P15 — Requalify the delivery candidate
 
 ## Unit-loop receipt — P14
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm run test:verification-docs` (exit 0, 13/13) + `npm run gate:verification` (exit 0: 442/442 tests, projections drift-free, package content PASS, p95 20.80 ms ≤ 100 ms) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: 5934702 · Gate: `cd packages/agentic-workflow-schema && npm run test:verification-docs` (exit 0, 13/13) + `npm run gate:verification` (exit 0: 442/442 tests, projections drift-free, package content PASS, p95 20.80 ms ≤ 100 ms) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P15 · Attempts: 1 · Review-checkpoint trigger recorded: **layer changed** (config/infra → docs). AC6 is the criterion this phase serves and it is only partly executable — the independent review must read both references (EN and ES) for semantic parity and honesty of claims, and confirm the example's runtime proof is the real gate chain, not a rigged fixture. (`npm run test:verification-docs` is live and drives `test/verification-docs.test.mjs`; the content assertions P14 must write are listed in that file's header)
 
 ## P15 — Requalify the delivery candidate
-- **Status**: Planned
-- **Done**: Fresh close-out chain frozen.
-- **Remains**: 10 close-out tasks; AC1–AC10 evidence, F73–F75 metadata/ledger close-out and fresh review.
-- **Next**: after P14, `execute-phase 26 P15`
+- **Status**: Done
+- Done: the ten close-out tasks ran against the pushed candidate. Frozen commands: `npm ci` ✓, `bun install --frozen-lockfile` ✓ ("no changes" — locks agree with the manifest), `npm run gate:verification` ✓ (442/442, projections drift-free, package content PASS, docs 13/13, p95 18.33 ms), `node scripts/check-skill-context.mjs` ✓ (`PASS context budgets: 35 skills`), `npx skills add . --list` ✓ exit 0, and AC7's literal chained command end-to-end ✓ exit 0. The **AC1–AC10 execution receipt** above records each frozen validator with what it printed. The fix-now ledger is finalized: F63–F77 flipped `folded: yes` naming the phase and commit that folded each one, and F62b was **removed** from the ledger and preserved as a user-routed review proposal with its trigger in `decisions.md` (F75). Roadmap row 26 already reads `done · #145` and names the approved replan, so delivery state is synchronized; `git diff main` on the five prior schema files is empty (AC8).
+- Remains: the independent review — this phase does **not** claim it. The quality floor holds that passing declared checks is necessary, not sufficient.
+- Gotchas: (1) The candidate named in the receipt is the last commit that touches anything the validators read; the close-out commit is planning state, so the chain is re-run at the pushed HEAD and cited in the PR body rather than quietly shifting the target. (2) Every `folded: yes` flip names its commit — a flip without evidence is the exact failure mode F1–F77 exist to catch. (3) PR #145's title still read `(P1-P5)` after a nine-phase replan: stale PR metadata is a finding (F70/F74), not cosmetics.
+- Files: `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,review-findings}.md`; PR #145 title and body through `gh`
+- Next: none for this unit — `/loop-review-fold 26-staged-verification-contracts` for the independent review/fold route (manual path: `/review-change`, then `/fold-findings` and re-review)
+
+## Unit-loop receipt — P15 (close-out)
+
+- Attempt: 1 · Result: PASS
+- Preflight: current · manifest v2 · blob `2e8058860b2c805cc30507053f15f91e2f273249` · receipt v2 · ledger current (F63–F77 folded with commit evidence, F62b relocated) · NRS frozen
+- Baseline: HEAD `5934702` remote-current (branch == PR head), fresh tree, 442/442
+- Scope: planning state only — `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,review-findings}.md` (no source, schema, test or README changes)
+- Task count: 10/10
+- Commands run (frozen): `npm ci` ✓ · `bun install --frozen-lockfile` ✓ · `npm run gate:verification` ✓ · `node scripts/check-skill-context.mjs` ✓ · `npx skills add . --list` ✓ · AC7's literal chain ✓ exit 0
+- Evidence: AC1–AC10 execution receipt above; AC8 diff empty; observed p95 18.33 ms vs the frozen 100 ms ceiling
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm run gate:verification`
+- Accepted: AC1–AC10 validators re-executed literally, fix-now ledger finalized and preserved, roadmap/progress state synchronized
+- Deferred: none
+- Issues created: none (F62b stays a review proposal — no issue; D15 AWL boundary stays a proposal; the route does not manufacture work items)
+- Review: not claimed here — the pushed HEAD and this receipt go to a fresh `/review-change` through `/loop-review-fold`
+- Residual risks: (1) the receipt names `5934702`, the last commit touching validator-read content, so the close-out commit is proven only by re-running the chain at the pushed HEAD (done, cited in the PR body); (2) independent review, the manual documentation read and maintainer merge remain outside execution; (3) routed proposals stay open (README older snippets, AWL node-22-only, `canonicalJSONValue` BigInt, consumer matrix)
+- → Next: /loop-review-fold 26-staged-verification-contracts — select the persisted review/fold route, then triage or replan unresolved findings
+- Manual path: /review-change → /fold-findings → re-review
