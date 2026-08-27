@@ -240,7 +240,11 @@ Dos contratos wire versionados para verificación por etapas:
   `stage: fast | full`, un `executable` y `args` ordenados (nunca una cadena
   de shell), una política de directorio de trabajo (`candidate-root` o
   `relative-path` con ruta relativa validada), un `timeoutMs` positivo,
-  `stopOnFailure` y una clase de coste.
+  `stopOnFailure` y una clase de coste. La ruta relativa validada es una cadena
+  **opaca**: resuélvela bajo la raíz candidata exactamente como se envió y nunca
+  la decodifique por porcentaje (percent-decode) antes de resolverla — la
+  decodificación puede convertir una ruta que el validador rechazó en una que
+  escapa de la raíz.
 
 - `VerificationReceipt v1` (`agentic-workflow/verification-receipt@1`) — un
   recibo vinculado al digest del plan, al digest del snapshot candidato y a la
