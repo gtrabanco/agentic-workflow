@@ -252,23 +252,23 @@ Guardrails), `references/AUDIT_PROCESS.md` (steps). Done-when:
 match AND `grep -n 'equivalent scope' skills/product-audit/references/AUDIT_PROCESS.md`
 → ≥ 2 matches AND context script exit 0.
 
-- [ ] Add the fixed `## Delta vs audit <prior-id>` section to the SKILL.md
+- [x] Add the fixed `## Delta vs audit <prior-id>` section to the SKILL.md
       output-format block between Findings and Proposals, carrying `New` /
       `Unchanged` / `Resolved` subsections, mapping entries with
       `F<k> <- audit <prior-id> F<j>`, and the empty case line
       `none — <why no equivalent-scope prior exists>` as the section body.
-- [ ] Renumber existing AUDIT_PROCESS.md steps 8 (Persist) → 9 and 9 (Report)
+- [x] Renumber existing AUDIT_PROCESS.md steps 8 (Persist) → 9 and 9 (Report)
       → 10, text otherwise unchanged.
-- [ ] Insert new step 8 (`Delta vs prior equivalent-scope audit`):
+- [x] Insert new step 8 (`Delta vs prior equivalent-scope audit`):
       independently synthesize first, then load the newest previous audit
       with an equivalent scope, fill the delta section including explicit
       mappings, and define the absent-prior case explicitly.
-- [ ] Add the same-date/equivalent-scope rerun rule inside step 8: permitted
+- [x] Add the same-date/equivalent-scope rerun rule inside step 8: permitted
       with a stated reason plus the required delta — never blocked by date
       alone.
-- [ ] Amend the persist step wording so the persisted report includes the
+- [x] Amend the persist step wording so the persisted report includes the
       delta section alongside the fixed format.
-- [ ] Extend the SKILL.md Guardrails F-ID bullet: lineage expressed only via
+- [x] Extend the SKILL.md Guardrails F-ID bullet: lineage expressed only via
       delta mappings using `<audit-id> F<k>`, never global slugs or replaced
       IDs.
 

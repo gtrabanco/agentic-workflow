@@ -60,15 +60,26 @@ step (2–5). Each item ends with exactly one fallback; never pick another one m
    in ranked order, regardless of dimension. Never use a different letter per
    dimension or per severity; `F` is the only prefix. Proposals reference the
    finding ids they derive from (`from: F3, F7`).
-8. **Persist the report** (the only mutation this skill makes):
+8. **Delta vs prior audit of equivalent scope** — only after the findings are
+   synthesized and numbered on your own (step 7), load the newest previous audit
+   in `docs/audits/` with an equivalent scope (whole product, or the same
+   declared area) and fill the `## Delta vs audit <prior-id>` section: **New** =
+   an `F<k>` here with no counterpart there; **Unchanged** =
+   `F<k> <- audit <prior-id> F<j>`; **Resolved** = a prior finding no longer
+   present. Two audits have equivalent scope when they cover the same product or
+   the same area. No equivalent-scope prior exists → the section body is
+   `none — <why no equivalent-scope prior exists>`. Re-auditing the same scope on
+   the same date is allowed when it states a reason plus this delta — a rerun is
+   not forbidden by date alone.
+9. **Persist the report** (the only mutation this skill makes):
    - Compute the audit id: `mkdir -p docs/audits`, then next id =
      highest `<n>` among existing `docs/audits/<n>-*.md` files + 1 (first audit
      → `1`). Plain incremental integer, no zero-padding.
-   - Write the full report (the exact fixed format below) to
-     `docs/audits/<id>-<YYYY-MM-DD>.md` (today's date).
+   - Write the full report (the exact fixed format below, delta section included)
+     to `docs/audits/<id>-<YYYY-MM-DD>.md` (today's date).
    - Commit it on the current branch with
      `docs(audits): product audit <id> <YYYY-MM-DD>` (and push if the project's
      conventions push on commit). If the working tree carries unrelated
      uncommitted changes, stage **only** the report file.
-9. **Report** — print the same report in chat. Recommend; do not act: filing
+10. **Report** — print the same report in chat. Recommend; do not act: filing
    the proposed issues is `triage-issue`'s job (suggest it, never run it).
