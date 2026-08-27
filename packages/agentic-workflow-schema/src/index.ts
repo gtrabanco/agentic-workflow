@@ -13,6 +13,7 @@ import {
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_CONTRACT,
   VERIFICATION_COST_CLASSES,
+  VERIFICATION_LIMITS,
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_STAGES,
@@ -3006,6 +3007,12 @@ export type VerificationStage = (typeof VERIFICATION_STAGES)[number];
 /** Cost classes declared by the project, not measured by the package. */
 export { VERIFICATION_COST_CLASSES };
 export type VerificationCostClass = (typeof VERIFICATION_COST_CLASSES)[number];
+
+/**
+ * D14 bounded usability — the published ceilings of the v1 contracts
+ * (re-exported from the canonical definition, which is where they are enforced).
+ */
+export { VERIFICATION_LIMITS };
 
 /** Working directory policy. The vocabulary itself lives in the canonical definition. */
 export type WorkingDirectoryPolicy = "candidate-root" | "relative-path";

@@ -135,6 +135,25 @@ export const VERIFICATION_COMMAND_STATUSES = Object.freeze(
 export const VERIFICATION_VERDICTS = Object.freeze(["pass", "fail", "incomplete"] as const);
 const WORKING_DIRECTORY_POLICIES = ["candidate-root", "relative-path"] as const;
 
+/**
+ * D14 — bounded usability: the SHAPE ceilings (cardinality + string length).
+ *
+ * Every number the validator enforces is read from this object, and the same
+ * object is published publicly so a consumer can size fixtures without
+ * restating a literal. `VERIFICATION_LIMITS` is extended with the payload
+ * budgets by P11 and the timeout budgets by P12; the canonical plan/receipt
+ * byte budgets and the aggregate stage sums are enforced at runtime and are
+ * listed here once those phases land.
+ */
+export const VERIFICATION_LIMITS = Object.freeze({
+  commands: 128,
+  results: 128,
+  argsPerCommand: 64,
+  idChars: 128,
+  pathChars: 1024,
+  argChars: 4096,
+} as const);
+
 // ---------------------------------------------------------------------------
 // VerificationPlan v1
 // ---------------------------------------------------------------------------
@@ -146,23 +165,26 @@ const COMMAND_SPEC: VerificationObjectSpec = {
       key: "id",
       type: "string",
       minLength: 1,
-      maxLength: 1024,
+      maxLength: VERIFICATION_LIMITS.idChars,
       nulFree: true,
-      description: "Stable, non-empty, NUL-free, at most 1024 chars, unique within the plan.",
+      description: `Stable, non-empty, NUL-free, at most ${VERIFICATION_LIMITS.idChars} chars, unique within the plan.`,
     },
     { key: "stage", type: "enum", enum: VERIFICATION_STAGES, description: "Verification stage." },
     {
       key: "executable",
       type: "string",
       minLength: 1,
+      maxLength: VERIFICATION_LIMITS.pathChars,
       nulFree: true,
-      description: "Non-empty executable path; no NUL characters. Never a shell string.",
+      description: `Non-empty executable path; NUL-free, at most ${VERIFICATION_LIMITS.pathChars} chars. Never a shell string.`,
     },
     {
       key: "args",
       type: "stringArray",
       itemNulFree: true,
-      description: "Ordered arguments; each without NUL.",
+      maxItems: VERIFICATION_LIMITS.argsPerCommand,
+      itemMaxLength: VERIFICATION_LIMITS.argChars,
+      description: `Ordered arguments; at most ${VERIFICATION_LIMITS.argsPerCommand} items, each NUL-free and at most ${VERIFICATION_LIMITS.argChars} chars.`,
     },
     {
       key: "workingDirectoryPolicy",
@@ -176,6 +198,7 @@ const COMMAND_SPEC: VerificationObjectSpec = {
       nullableOf: "string",
       nullableExpectation: "must be a string or null",
       minLength: 1,
+      maxLength: VERIFICATION_LIMITS.pathChars,
       nulFree: true,
       rules: [
         { regex: "^(?!/)", message: 'must not be an absolute path (leading "/")' },
@@ -263,9 +286,9 @@ const RESULT_SPEC: VerificationObjectSpec = {
       key: "commandId",
       type: "string",
       minLength: 1,
-      maxLength: 1024,
+      maxLength: VERIFICATION_LIMITS.idChars,
       nulFree: true,
-      description: "Must exist in the bound plan's commands; NUL-free, at most 1024 chars.",
+      description: `Must exist in the bound plan's commands; NUL-free, at most ${VERIFICATION_LIMITS.idChars} chars.`,
     },
     {
       key: "status",
@@ -398,7 +421,8 @@ const PLAN_ROOT_SPEC: VerificationObjectSpec = {
       type: "array",
       specName: "VerificationCommandV1",
       minItems: 1,
-      description: "Non-empty command list in declared order.",
+      maxItems: VERIFICATION_LIMITS.commands,
+      description: `Non-empty command list of at most ${VERIFICATION_LIMITS.commands} commands, in declared order.`,
     },
   ],
   rules: [
@@ -449,7 +473,8 @@ const RECEIPT_ROOT_SPEC: VerificationObjectSpec = {
       key: "results",
       type: "array",
       specName: "VerificationResultV1",
-      description: "Ordered per-command results.",
+      maxItems: VERIFICATION_LIMITS.results,
+      description: `Ordered per-command results; at most ${VERIFICATION_LIMITS.results} rows in declared order.`,
     },
     {
       key: "verdict",
@@ -741,6 +766,12 @@ export function validateStructure(
       case "stringArray": {
         if (!Array.isArray(raw)) {
           errors.push(`${fieldPath} must be an array`);
+          break;
+        }
+        // Cardinality first: a stringArray ceiling is expressible in Draft-07, so
+        // the projection and this validator must agree (AC10).
+        if (field.maxItems !== undefined && raw.length > field.maxItems) {
+          errors.push(`${fieldPath} must have at most ${field.maxItems} items`);
           break;
         }
         const items: string[] = [];

@@ -193,6 +193,33 @@
   sequencing is semantic and not expressible in Draft-07, so no regeneration was
   owed.
 
+### P10 — Bound verification shapes (2026-08-26)
+
+- **One number, read everywhere:** the D14 shape ceilings are declared once as
+  `VERIFICATION_LIMITS` inside the canonical definition and consumed by the field
+  specs, so a validator message, a projection and a boundary test can never quote
+  three different limits. The object is also the public metadata surface AC10
+  needs; P11 extends it with the payload fields and P12 with the timeout fields.
+- **A real divergence was found while wiring the ceilings:** the generator projected
+  `args.maxItems`, but the `stringArray` branch of `validateStructure` never
+  checked it — the authoritative validator accepted 65 arguments that the shipped
+  projection rejected. AC10 requires identical enforcement wherever Draft-07 can
+  express the rule, so the branch now performs the cardinality check before
+  iterating items (same early-`break` shape as the object-array branch).
+- **Ceiling tightening is authorized, not improvised:** ids move from the F50
+  hardening's 1024-char class to D14's 128. That is the user-approved bounded
+  usability decision (ACCEPTANCE v2 AC10), so the pre-existing
+  `rejects command id longer than 1024 chars (F50)` case was retargeted to the
+  128/129 boundary — the assertion still demands rejection, now at the approved
+  ceiling, and the 128-char accepted case was added.
+- **Nullable projection shape is part of the contract:** `workingDirectory` bounds
+  live on the non-null branch of its `oneOf`, which is why the boundary parity test
+  resolves the branch instead of reading the property root.
+- **Tool ordering for P13:** the generator renders from `dist/`, so a definition
+  edit without a rebuild makes `--check` green against a stale render. The
+  registered `check:verification-schemas` command must build first.
+- **Ledger untouched:** F77 keeps `folded: no`; P15 finalizes the ledger.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.
