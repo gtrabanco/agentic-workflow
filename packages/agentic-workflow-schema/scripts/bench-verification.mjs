@@ -31,7 +31,14 @@ function arg(name, fallback) {
   const index = argv.indexOf(`--${name}`);
   if (index === -1 || index + 1 >= argv.length) return fallback;
   const value = Number(argv[index + 1]);
-  if (!Number.isFinite(value)) throw new Error(`--${name} expects a number, got ${argv[index + 1]}`);
+  // F94 — a malformed flag is a USAGE failure: exit 2 with an echoed message.
+  // Throwing here died as an uncaught exception (exit 1) and letting a NaN
+  // through degraded it into an invalid-plan rejection — neither tells the
+  // operator "you passed garbage".
+  if (!Number.isFinite(value)) {
+    console.error(`--${name} expects a finite positive integer, got ${argv[index + 1]}`);
+    process.exit(2);
+  }
   return value;
 }
 
@@ -53,7 +60,15 @@ if (!Number.isInteger(samples) || samples < 5) {
 // A maximum-command-count plan must also satisfy the time and byte ceilings:
 // declared fast-stage timeouts are sized so 128 commands fit the 15-minute
 // budget, and each command carries a few short arguments.
-const timeoutMs = Math.floor(VERIFICATION_LIMITS.fastStageTimeoutMs / commands);
+// F94 — the stage-budget division alone is unsound at low command counts:
+// --commands 1 yields the whole 15-minute stage budget per command, above the
+// 600000 ms per-fast-command ceiling, so the bench used to self-reject its own
+// plan. The per-command ceiling clamps the split (at >= 2 commands the floor is
+// already 450000 ms or less, so the clamp is a no-op for the AC4 default).
+const timeoutMs = Math.min(
+  Math.floor(VERIFICATION_LIMITS.fastStageTimeoutMs / commands),
+  VERIFICATION_LIMITS.fastCommandTimeoutMs,
+);
 const plan = {
   contract: VERIFICATION_PLAN_CONTRACT_ID,
   commands: Array.from({ length: commands }, (_, i) => ({
