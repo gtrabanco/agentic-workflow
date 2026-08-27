@@ -164,8 +164,9 @@ overwriting it.
 ## Validate or use another language
 
 The public contract validators are `validateEnvelopeV2Strict`,
-`validateSkillOutcomeV1` and `validateWorkflowSnapshotV1`; the staged verification
-contracts add exactly the two authoritative entries named above,
+`validateSkillOutcomeV1`, `validateWorkflowSnapshotV1`,
+`validateCandidateSnapshotV1`, and `validateReviewReceiptV1`; the staged
+verification contracts add exactly the two authoritative entries named above,
 `validateVerificationPlanV1` and `validateVerificationReceiptAgainstPlan`. Import a
 JSON Schema when a non-TypeScript consumer needs the same structural boundary:
 
@@ -261,26 +262,27 @@ prose and no submitted value is ever returned. `code` comes from the closed
 built only from declared property names and array indices — `/commands/3/id`,
 `/results/1/commandId`, or `""` for the payload as a whole. An undeclared key is
 reported as `unknown-field` on its **container**, because the key name is itself
-submitted data.
+submitted data. Recover from diagnostics using only each stable `code` and `path`,
+without copying submitted values into logs, errors, or telemetry.
 
-| Diagnostic code | What it answers for |
-| --- | --- |
-| `invalid-type` | a field holds a value of the wrong JSON type |
-| `missing-field` | a declared field is absent |
-| `unknown-field` | the object carries an undeclared property |
-| `invalid-value` | a value breaks its own rule (vocabulary, pattern, NUL) |
-| `limit-exceeded` | a cardinality or length ceiling is crossed |
-| `duplicate-id` | the same command id appears twice |
-| `unknown-command` | a result or skip reason names no declared command |
-| `invalid-order` | results do not follow the plan's declared order |
-| `invalid-stage` | a receipt carries a row outside its requested stage |
-| `invalid-exit-state` | exit code and signal break the D4 matrix |
-| `invalid-evidence` | an evidence reference is malformed (D5 content rules) |
-| `invalid-skip` | a skip reason is not justified by a failed predecessor |
-| `invalid-fail-fast` | `stopOnFailure` sequencing is broken |
-| `digest-mismatch` | the receipt's `planDigest` is not the bound plan's |
-| `verdict-mismatch` | the stored verdict differs from the derived one |
-| `budget-exceeded` | a stage's declared timeouts exceed its aggregate budget |
+| Diagnostic code | What it answers for | Caller recovery |
+| --- | --- | --- |
+| `invalid-type` | a field holds a value of the wrong JSON type | Supply the declared JSON type at `path`. |
+| `missing-field` | a declared field is absent | Add the required field at `path`. |
+| `unknown-field` | the object carries an undeclared property | Remove undeclared keys from the container at `path`. |
+| `invalid-value` | a value breaks its own rule (vocabulary, pattern, NUL) | Replace it with an allowed vocabulary member or format-valid, NUL-free value. |
+| `limit-exceeded` | a cardinality or length ceiling is crossed | Reduce the indicated collection or string to `VERIFICATION_LIMITS`. |
+| `duplicate-id` | the same command id appears twice | Assign unique command ids, then update their result references. |
+| `unknown-command` | a result or skip reason names no declared command | Reference an id declared by the bound plan. |
+| `invalid-order` | results do not follow the plan's declared order | Reorder result rows to match plan order. |
+| `invalid-stage` | a receipt carries a row outside its requested stage | Remove out-of-stage rows or request the stage that includes them. |
+| `invalid-exit-state` | exit code and signal break the D4 matrix | Align `exitCode` and `signal` with the row's status matrix. |
+| `invalid-evidence` | an evidence reference is malformed (D5 content rules) | Provide a bounded `ref`, non-negative byte count, and lowercase SHA-256. |
+| `invalid-skip` | a skip reason is not justified by a failed predecessor | Use `null` when unattributed, or name an earlier actual non-pass trigger. |
+| `invalid-fail-fast` | `stopOnFailure` sequencing is broken | Mark rows after the trigger skipped and attribute them to that trigger. |
+| `digest-mismatch` | the receipt's `planDigest` is not the bound plan's | Recompute it from the validated, normalized bound plan. |
+| `verdict-mismatch` | the stored verdict differs from the derived one | Store the result of `deriveVerificationVerdict`. |
+| `budget-exceeded` | a stage's declared timeouts exceed its aggregate budget | Reduce command timeouts until the stage sum is within `VERIFICATION_LIMITS`. |
 
 **JSON Schema status.** `verification-plan.schema.json` and
 `verification-receipt.schema.json` are generated, **non-authoritative structural
@@ -288,9 +290,23 @@ projections** of the package's canonical contract definition. They exist for edi
 and transport checks; a Draft-07 match is not contract validity, and semantic rules
 (`unique-command-ids`, both aggregate stage budgets, both canonical byte budgets) are
 enforced only by the two runtime entries above — each projection discloses them in
-its `$comment`. Never hand-edit them: change the definition, then run
-`npm run check:verification-schemas`, which rebuilds and fails on any byte drift.
-`node scripts/generate-verification-schemas.mjs` is the only writer.
+its `$comment`. The projections are generated rather than hand-edited. In a source
+checkout, maintainers change the canonical definition; the only writer is
+`node scripts/generate-verification-schemas.mjs`, and the source-only drift check
+rebuilds before comparing bytes.
+
+**Source-checkout-only commands.** The published tarball intentionally omits the
+repository's `scripts/`, `test/`, source, and TypeScript configuration. These
+manifest commands are maintainer checks for a source checkout, not commands an
+installed-package consumer can run:
+
+| Source-checkout-only command | Purpose |
+| --- | --- |
+| `npm run check:verification-schemas` | rebuild and byte-check generated projections |
+| `npm run check:verification-package` | inspect the package tarball contract |
+| `npm run bench:verification -- --commands 128` | run the AC10 warm-process benchmark |
+| `npm run test:verification-docs` | run the executable bilingual documentation suite |
+| `npm run gate:verification` | compose all verification release checks |
 
 **Two-stage model:** requesting `fast` executes only fast commands; requesting
 `full` executes every fast and full command. The freshness predicate returns
@@ -303,6 +319,24 @@ receipt that is fresh, requests `full`, and has verdict `pass`.
 
 **No-execution boundary:** the package validates, canonicalizes, digests,
 derives, and compares — it does not execute commands. The caller owns execution.
+
+### Public verification API inventory
+
+The complete runtime surface for these contracts is:
+
+| Runtime group | Exports |
+| --- | --- |
+| Contract and vocabulary values | `VERIFICATION_PLAN_CONTRACT_ID`, `VERIFICATION_RECEIPT_CONTRACT_ID`, `VERIFICATION_STAGES`, `VERIFICATION_COST_CLASSES`, `VERIFICATION_COMMAND_STATUSES`, `VERIFICATION_VERDICTS`, `VERIFICATION_DIAGNOSTIC_CODES`, `VERIFICATION_FRESHNESS_CODES`, `VERIFICATION_LIMITS`, `VERIFICATION_CANONICAL_VECTORS` |
+| Validation and semantics | `validateVerificationPlanV1`, `validateVerificationReceiptAgainstPlan`, `deriveVerificationVerdict`, `compareVerificationReceiptToCurrent` |
+| Canonicalization and digests | `canonicalizeVerificationPlan`, `canonicalizeVerificationReceipt`, `digestVerificationPlan`, `digestVerificationReceipt` |
+
+TypeScript also publishes these type-only names:
+
+| Type group | Exports |
+| --- | --- |
+| Plan | `VerificationStage`, `VerificationCostClass`, `WorkingDirectoryPolicy`, `VerificationCommandV1`, `VerificationPlanV1`, `VerificationPlanValidationResult` |
+| Receipt | `VerificationCommandStatus`, `VerificationVerdict`, `VerificationStageRequest`, `EvidenceReferenceV1`, `VerificationResultV1`, `VerificationReceiptV1`, `VerificationReceiptValidationResult` |
+| Diagnostics and freshness | `VerificationDiagnosticCode`, `VerificationDiagnosticV1`, `VerificationFreshnessReasonCode`, `VerificationFreshnessResult` |
 
 ### Usability limits
 
