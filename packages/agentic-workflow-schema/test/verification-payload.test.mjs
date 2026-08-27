@@ -62,6 +62,11 @@ const row = (commandId, status = "passed") => ({
  * the budget. `args` of 4096 chars × 64 is ~256 KiB, so the byte budget is the
  * first ceiling a wide-but-legal payload can hit.
  */
+// F91 note: the public canonicalize helpers now refuse out-of-contract input
+// (cardinality and byte budget), so fixture measurement of a plan that lands
+// ON or one byte OVER the budget probes one byte short through the public
+// path — canonical length grows 1:1 with the padding (asserted below), so the
+// probe pins the exact target. The validator-side assertions are unchanged.
 function planAtCanonicalBytes(target) {
   const build = (pad) =>
     planOf([
@@ -71,13 +76,15 @@ function planAtCanonicalBytes(target) {
         ),
       }),
     ]);
-  // Canonical length grows 1:1 with the padding, so one measurement locates it.
   const base = bytes(canonicalizeVerificationPlan(build(0)));
   const pad = target - base;
   assert.ok(pad > 0 && pad <= VERIFICATION_LIMITS.argChars, `cannot reach ${target} bytes (pad ${pad})`);
-  const filled = build(pad);
-  assert.equal(bytes(canonicalizeVerificationPlan(filled)), target, "fixture must land exactly on the budget");
-  return filled;
+  assert.equal(
+    bytes(canonicalizeVerificationPlan(build(pad - 1))),
+    target - 1,
+    "fixture must grow 1:1 with the padding (probe at target-1, one byte under the target)",
+  );
+  return build(pad);
 }
 
 // ---------------------------------------------------------------------------
@@ -142,7 +149,11 @@ test("the byte budget outranks every shape ceiling — one row, root path", asyn
     verdict: "pass",
   };
   assert.ok(
-    bytes(canonicalizeVerificationReceipt(wideReceipt)) > VERIFICATION_LIMITS.receiptBytes,
+    // The 200-row fixture crosses cardinality too, so the public canonicalizer
+    // (F91) refuses it — measurement goes through JSON.stringify instead, which
+    // has the SAME byte length as the canonical form for these pure-ASCII
+    // literals: if JSON bytes exceed the budget, canonical bytes do too.
+    new TextEncoder().encode(JSON.stringify(wideReceipt)).length > VERIFICATION_LIMITS.receiptBytes,
     "the fixture must really cross the receipt budget",
   );
   assertOnlyDiagnostic(
