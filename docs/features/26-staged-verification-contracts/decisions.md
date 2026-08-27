@@ -277,6 +277,49 @@
   changes the disclosure automatically instead of leaving a stale sentence.
 - **Ledger untouched:** F71 and F77 keep `folded: no`; P15 finalizes the ledger.
 
+### P12 — Bound verification time (2026-08-27)
+
+- **Time bounds join the same single declaration.** The four D14 millisecond
+  ceilings (`fastCommandTimeoutMs`, `fastStageTimeoutMs`, `fullCommandTimeoutMs`,
+  `fullStageTimeoutMs`) live in `VERIFICATION_LIMITS` beside the shape and payload
+  fields, so the validator, the projection, the benchmark and P14's docs all quote
+  one number. The per-command ceiling is expressed as a field `maximum` (the
+  stage-independent 60 min) plus a `maximum-when` cross rule that tightens it to
+  10 min when `stage == "fast"` — the same two-layer shape the projection uses, so
+  neither authority can drift from the other.
+- **A conditional ceiling is expressible, so it must be projected.** AC10 asks for
+  identical enforcement "where Draft-07 can express" the rule. Projecting only the
+  60 min maximum would let the shipped schema accept an 11-minute fast command the
+  authoritative validator rejects — the P10 `args.maxItems` divergence in a new
+  form. `maximum-when` therefore renders as an `allOf` fragment
+  (`if stage=fast → timeoutMs ≤ 600000`), and the parity test walks all eight
+  boundary payloads through Ajv and the validator side by side.
+- **Sums are disclosed, not faked.** No Draft-07 keyword counts a list, so the two
+  aggregate stage budgets join `unique-command-ids` in the generated
+  `runtime-only rules:` disclosure. That list is derived from
+  `rule.projectable === false`, so declaring a rule non-projectable is the only
+  place the decision is written.
+- **An aggregate violation reports a member.** A sum has no single owner, but
+  "the plan is over budget" is not actionable. The rule walks the stage in declared
+  order and names the **first command that crosses** (`/commands/2/timeoutMs`),
+  which is deterministic, cheap, and points at the edit a human would make.
+- **Rules answer independently, so one payload can produce two kinds of row.** A
+  plan with two over-ceiling fast commands also breaks the stage budget and gets
+  three diagnostics. Suppressing the budget row behind the ceiling row would make
+  the diagnostic set depend on rule order; the 50-row ceiling is the real bound.
+- **The budgets reshaped the capacity fixtures, and that is worth watching.** With
+  a 15-minute fast stage budget, a 128-command plan cannot declare 30 seconds per
+  command. Three accepted-payload fixtures from P10/P11/core now size their
+  fixture timeout at `floor(fastStageTimeoutMs / commands)` = 7031 ms. The asserted
+  ceilings are untouched — this is fixture validity, not weakened expectations —
+  but it is exactly the kind of edit a reviewer should confirm, and P13's
+  128-command benchmark must make the same choice deliberately.
+- **`budget-exceeded` is no longer a spare.** P11 pinned "the only silent code is
+  `budget-exceeded`" with P12 as its owner; now that the aggregates emit it, the
+  guard tightened to **zero** silent codes, so the published vocabulary can never
+  accumulate an unreachable entry again.
+- **Ledger untouched:** F77 keeps `folded: no`; P15 finalizes the ledger.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.

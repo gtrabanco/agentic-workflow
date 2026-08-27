@@ -21,6 +21,10 @@ import {
   digestVerificationPlan,
 } from "../dist/index.js";
 
+// A maximum-capacity plan must ALSO fit the tightest D14 stage budget, so the
+// shared fixture timeout is sized for capacity: 7031 ms × 128 = 899,968 ≤ 900,000.
+const fixtureTimeoutMs = Math.floor(VERIFICATION_LIMITS.fastStageTimeoutMs / VERIFICATION_LIMITS.commands);
+
 // ---------------------------------------------------------------------------
 // Builders
 // ---------------------------------------------------------------------------
@@ -33,7 +37,7 @@ function command(overrides = {}) {
     args: ["test"],
     workingDirectoryPolicy: "candidate-root",
     workingDirectory: null,
-    timeoutMs: 30000,
+    timeoutMs: fixtureTimeoutMs,
     stopOnFailure: false,
     costClass: "cheap",
     ...overrides,

@@ -161,12 +161,14 @@ Evidence: `test/verification-payload.test.mjs` (14 cases) + `test/fixtures/verif
 
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with all command and aggregate timeout boundary pairs green.
 
-- [ ] Add red-first boundary pairs for fast and full command timeout ceilings
-- [ ] Add red-first boundary pairs for fast and full aggregate stage budgets
-- [ ] Enforce both per-command timeout ceilings from the canonical definition
-- [ ] Enforce both aggregate stage budgets from the canonical definition
-- [ ] Export frozen timeout-limit metadata for consumers and tooling
-- [ ] Project command ceilings and mark aggregate sums authoritative-runtime-only
+Evidence: `test/verification-timeouts.test.mjs` (12 cases, written red first) + `src/verification-contract.ts` (timeout fields in `VERIFICATION_LIMITS`, `maximum-when` + `stage-aggregate-budget` rule kinds) + regenerated `verification-plan.schema.json`.
+
+- [x] Add red-first boundary pairs for fast and full command timeout ceilings — `fast command timeout: exactly 10 min accepted, 1 ms over refused`, `full command timeout: exactly 60 min accepted, 1 ms over refused`, plus `the fast ceiling is stage-scoped: 11 min is fine for a full command` and `each command answers for its own ceiling, the stage budget for its sum`
+- [x] Add red-first boundary pairs for fast and full aggregate stage budgets — `fast aggregate budget: exactly 15 min accepted, 1 ms over refused`, `full aggregate budget: exactly 2 h accepted, 1 ms over refused`, plus `the budget row names the command that crossed, not the whole list`, `stage budgets are per-stage: a full plan of 15-min fast work is legal` and `the plan budget propagates through the receipt authority`
+- [x] Enforce both per-command timeout ceilings from the canonical definition — `timeoutMs.maximum` = `fullCommandTimeoutMs` on the field spec (so the projection and the validator share the number) and the new `fast-command-timeout` `maximum-when` rule tightens it for `stage: "fast"`; both report `limit-exceeded` at `/commands/i/timeoutMs`
+- [x] Enforce both aggregate stage budgets from the canonical definition — `fast-stage-aggregate-budget` / `full-stage-aggregate-budget` root rules declare `collection`/`when`/`fields`/`maximum` once; `applyCrossRule` sums the stage in declared order and reports one `budget-exceeded` row at the command that crossed
+- [x] Export frozen timeout-limit metadata for consumers and tooling — `VERIFICATION_LIMITS.fastCommandTimeoutMs` (600000), `fastStageTimeoutMs` (900000), `fullCommandTimeoutMs` (3600000), `fullStageTimeoutMs` (7200000), published in milliseconds by `the D14 timeout ceilings are published once, in milliseconds`, which also pins the 2 × ceiling = full-budget relation the SPEC's 60/120 pair implies
+- [x] Project command ceilings and mark aggregate sums authoritative-runtime-only — `the projection carries both command ceilings, including the stage condition` (field `maximum` + an `if stage=fast / then timeoutMs ≤ 600000` allOf fragment) and `projection and authoritative validator agree on every timeout boundary` (Ajv parity on 8 boundary payloads); the sums cannot be expressed, so `$comment` now discloses `fast-stage-aggregate-budget, full-stage-aggregate-budget` as runtime-only automatically
 
 ## P13 — Build package qualification tooling
 

@@ -131,20 +131,26 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P12 — Bound verification time
 
 ## Unit-loop receipt — P11
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 407/407) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: e912594 · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 407/407) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P12 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired again (14 files / 451 changed lines since `1a7eace`; public failure-shape change + regenerated projections). Layer unchanged (schema), but this phase **changed the public result type of both authoritative entries** (`errors: string[]` → `diagnostics`/`truncated`), so the end review must re-check AC8 (no pre-existing suite touched) and AC9/AC10 generated-file claims against the final candidate, and F71's ledger row against the shipped diagnostic shape.
 
 ## P12 — Bound verification time
-- **Status**: Planned
-- **Done**: D14 timeout ceilings and stage budgets frozen.
-- **Remains**: 6 schema tasks; F77 time roots.
-- **Next**: after P11, `execute-phase 26 P12` (P11 delivered `planBytes`/`receiptBytes`/`diagnostics` in `VERIFICATION_LIMITS`; the timeout fields are still missing)
+- **Status**: Done
+- Done: D14's four time bounds are now enforced from the canonical definition — `timeoutMs.maximum` = 60 min (full), a `maximum-when` rule tightening it to 10 min for `stage: "fast"`, and `fast-stage-aggregate-budget` / `full-stage-aggregate-budget` root rules that sum each stage in declared order. `VERIFICATION_LIMITS` gained `fastCommandTimeoutMs`, `fastStageTimeoutMs`, `fullCommandTimeoutMs`, `fullStageTimeoutMs`; `budget-exceeded` finally has an emitter, so the P11 guard now demands **zero** silent codes. 12 red-first cases in `test/verification-timeouts.test.mjs` (written before the implementation; all 12 failed, then all passed) + regenerated projection with an `if/then` fast ceiling.
+- Remains: P13–P15.
+- Gotchas: (1) **The budgets cross the capacity tests.** A 128-command fast plan with the old 30 s fixture timeout declares 3,840,000 ms against a 900,000 ms stage budget, so three pre-existing capacity fixtures (P10's 128-command acceptance, P11's maximum-capacity receipt, core's 128-result case) had to size their fixture timeout for capacity: `floor(fastStageTimeoutMs / commands)` = 7031 ms. That is fixture sizing, not a loosened assertion — the ceilings they test are unchanged. **P13's benchmark must do the same** or it will build an invalid 128-command plan. (2) `fastStageTimeoutMs` (15 min) is *smaller* than two fast command ceilings (2 × 10 min) by design — one 10-minute fast command leaves 5 minutes for the rest of the stage; pinned explicitly so nobody "fixes" it. (3) An aggregate violation names the **first crossing** command (`/commands/2/timeoutMs`), not the array: a sum has no single owner, and the earliest pointer that explains the overflow is the actionable one. (4) A plan can break a ceiling and a budget at once and gets **both** rows (per-command `limit-exceeded` ×2 + one `budget-exceeded`) — rules answer independently, which is what the diagnostic ceiling is for. (5) Draft-07 expresses a *conditional* ceiling (`if stage=fast then timeoutMs ≤ 600000`), so AC10 forbids projecting only the loose 60 min maximum; a sum cannot be expressed, so the two budget rule ids are disclosed as runtime-only through the existing generator mechanism. (6) Strict Ajv rejects a bare `maximum` in a `then` branch — the projected fragment carries `type: "number"` alongside the ceiling.
+- Files: `packages/agentic-workflow-schema/src/verification-contract.ts`, `scripts/generate-verification-schemas.mjs`, `verification-plan.schema.json` (regenerated), `test/verification-timeouts.test.mjs` (new), `test/verification-{bounds,payload,core}.test.mjs` (fixture timeout sizing + tightened vocabulary guard), `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,testing}.md`
+- Next: P13 — Build package qualification tooling
+
+## Unit-loop receipt — P12
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 419/419) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P13 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired (11 files / 241 changed lines since `e912594`). Layer unchanged (schema), but this phase retouched **three earlier phases' fixtures** (capacity timeout sizing) and added a public ceiling family, so the end review must confirm no assertion was weakened (AC8), that the projected conditional ceiling matches the runtime rule (AC10), and that `budget-exceeded`'s new emitter satisfies AC4/AC5 evidence. No sensitivity surface (no execution, no I/O). (P11 delivered `planBytes`/`receiptBytes`/`diagnostics` in `VERIFICATION_LIMITS`; the timeout fields are still missing)
 
 ## P13 — Build package qualification tooling
 - **Status**: Planned
 - **Done**: Package/lock/script scope frozen.
 - **Remains**: 7 config/infra tasks; F70 and benchmark/package-gate roots.
-- **Next**: after P12, `execute-phase 26 P13`
+- **Next**: after P12, `execute-phase 26 P13` (P12 delivered every `VERIFICATION_LIMITS` field AC10 names, so P13's benchmark and P15's requalification need no further limit work)
 
 ## P14 — Document the verification contract
 - **Status**: Planned
