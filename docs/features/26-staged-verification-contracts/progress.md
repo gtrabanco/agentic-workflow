@@ -219,3 +219,27 @@ receipt does not claim either — it hands the exact pushed HEAD and the blob ab
 - Residual risks: (1) the receipt names `5934702`, the last commit touching validator-read content, so the close-out commit is proven only by re-running the chain at the pushed HEAD (done, cited in the PR body); (2) independent review, the manual documentation read and maintainer merge remain outside execution; (3) routed proposals stay open (README older snippets, AWL node-22-only, `canonicalJSONValue` BigInt, consumer matrix)
 - → Next: /loop-review-fold 26-staged-verification-contracts — select the persisted review/fold route, then triage or replan unresolved findings
 - Manual path: /review-change → /fold-findings → re-review
+
+## Post-review debt sweep — user-directed immediate fix (2026-08-27)
+
+- Trigger: the user routed the batched review proposals to `/triage-issue` with an
+  explicit prioritize-and-fix instruction; nothing here was postponed silently.
+- Resolved at `9ef8c5d` (`fix(schema): refuse unrepresentable canonical leaves and
+  hoist per-call hot-path work`): F80, F82, F83 plus the two report-batched
+  proposals from the adversarial pass (unconsumed `ReadonlySet` parameter arm;
+  per-call `RegExp` compilation on the validation walk).
+- Evidence at this HEAD: `npm test` 451/451 pass (7 new red-first tests),
+  `check:verification-schemas` drift-free (2 files), `test:verification-docs`
+  15/15, `bench:verification --commands 128` p95 14.87 ms ≤ 100 ms,
+  `check:verification-package` PASS, `check-skill-context.mjs` PASS (35 skills),
+  AC8 five protected schema files still zero-diff vs `main`, AC5 plan vector still
+  locks `43ba52cb34490733...` (no canonical-form drift).
+- Not resolved, deliberately: F81 (`ajv` caret range) stays watched-debt — dev-only,
+  lockfile-pinned, zero production dependencies, trigger unmet. The Finding-C skip
+  attribution question is `disputed`, not debt: SPEC D3 mandates "non-passed AND
+  `stopOnFailure`" verbatim and P9/F65 pins the degraded-but-valid incompleteness
+  case as a do-not-tighten boundary.
+- Consequence: the `review-change:pass` marker bound to `36fa8cdc` no longer covers
+  this HEAD; `/audit-pr` needs a fresh review at ≥ `9ef8c5d`.
+- → Next: /loop-review-fold 26-staged-verification-contracts — re-review the moved
+  HEAD before the merge gate
