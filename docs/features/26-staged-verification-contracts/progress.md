@@ -143,20 +143,26 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P13 — Build package qualification tooling
 
 ## Unit-loop receipt — P12
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 419/419) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: 1572d6c · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 419/419) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P13 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired (11 files / 241 changed lines since `e912594`). Layer unchanged (schema), but this phase retouched **three earlier phases' fixtures** (capacity timeout sizing) and added a public ceiling family, so the end review must confirm no assertion was weakened (AC8), that the projected conditional ceiling matches the runtime rule (AC10), and that `budget-exceeded`'s new emitter satisfies AC4/AC5 evidence. No sensitivity surface (no execution, no I/O). (P11 delivered `planBytes`/`receiptBytes`/`diagnostics` in `VERIFICATION_LIMITS`; the timeout fields are still missing)
 
 ## P13 — Build package qualification tooling
-- **Status**: Planned
-- **Done**: Package/lock/script scope frozen.
-- **Remains**: 7 config/infra tasks; F70 and benchmark/package-gate roots.
-- **Next**: after P12, `execute-phase 26 P13` (P12 delivered every `VERIFICATION_LIMITS` field AC10 names, so P13's benchmark and P15's requalification need no further limit work)
+- **Status**: Done
+- Done: the package now carries its own qualification tooling. Two new scripts (`scripts/bench-verification.mjs`, `scripts/check-verification-package.mjs`), five new registered commands (`check:verification-schemas`, `check:verification-package`, `bench:verification`, `test:verification-docs`, `gate:verification`), 13 new cases (`test/verification-gates.test.mjs` 10, `test/verification-docs.test.mjs` 3), and F70 resolved: `"types": ["node"]` and the `@types/node` devDependency are gone with `package-lock.json` regenerated (−18 lines). Observed P13 Done-when chain: `npm ci` → `bun install --frozen-lockfile` → schemas drift-free → p95 **20.01 ms** (ceiling 100 ms) → package content PASS (15 files, both projections). Full `npm run gate:verification` exits 0 with 432/432 tests.
+- Remains: P14–P15. `test:verification-docs` is deliberately a harness with registration-level assertions only; P14 owns the content assertions (projections named in both references, every D14 limit/budget, executable examples, EN/ES semantic parity, AWL boundary) and the F68 example corrections.
+- Gotchas: (1) **F70 was npm-only.** `bun.lock` never listed `@types/node`, so "regenerate the Bun lock" is a no-op; the sync is now asserted (`npm and Bun locks agree with the manifest dependency ranges`) instead of performed. (2) The package compiles **without** Node typings: target `ES2022` pulls `TextEncoder`/`Crypto` from the default libs, so the `"types"` override was pure cost. (3) The packer found its own bug on first run — it looked up `exports` keys as bare filenames while the manifest uses `./x.schema.json` — which is why the checks are asserted from the manifest *and* the tarball. (4) The benchmark takes no ceiling argument on purpose (ACCEPTANCE quality floor: do not raise a threshold to pass); it also refuses `--commands` above the D14 capacity, so a "passing" run can never be built on an invalid payload. (5) `check:verification-schemas` starts with `tsc` because the generator renders from `dist/` — P10's staleness trap, now encoded in the command and pinned by a test. (6) A 128-command benchmark plan must respect the stage budgets P12 added: the fixture sizes `timeoutMs` at `floor(fastStageTimeoutMs / commands)`.
+- Files: `packages/agentic-workflow-schema/package.json`, `package-lock.json`, `tsconfig.json`, `scripts/bench-verification.mjs` (new), `scripts/check-verification-package.mjs` (new), `test/verification-gates.test.mjs` (new), `test/verification-docs.test.mjs` (new), `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,testing}.md`
+- Next: P14 — Document the verification contract
+
+## Unit-loop receipt — P13
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm ci && bun install --frozen-lockfile && npm run check:verification-schemas && npm run bench:verification -- --commands 128 && npm run check:verification-package` (exit 0, p95 20.01 ms ≤ 100 ms) + `npm run gate:verification` (exit 0, 432/432) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P14 · Attempts: 1 · Review-checkpoint trigger recorded: layer **changed** (schema → config/infra), 8 files / ~430 new lines since `1572d6c`, and this phase edited the dependency manifest + lock + tsconfig (F70). The end review must re-run AC7 (both frozen installs, `check-skill-context.mjs`, `npx skills add . --list`), confirm the benchmark is not self-referential (measured work equals the gate's real cycle), and confirm P13 did not pre-empt P14's red-first doc assertions. (P12 delivered every `VERIFICATION_LIMITS` field AC10 names, so P13's benchmark and P15's requalification need no further limit work)
 
 ## P14 — Document the verification contract
 - **Status**: Planned
 - **Done**: EN/ES authority, limits and example requirements frozen.
 - **Remains**: 8 docs tasks; F68 and the deferred AWL boundary.
-- **Next**: after P13, `execute-phase 26 P14`
+- **Next**: after P13, `execute-phase 26 P14` (`npm run test:verification-docs` is live and drives `test/verification-docs.test.mjs`; the content assertions P14 must write are listed in that file's header)
 
 ## P15 — Requalify the delivery candidate
 - **Status**: Planned

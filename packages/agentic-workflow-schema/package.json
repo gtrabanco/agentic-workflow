@@ -56,10 +56,14 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc && tsc -p tsconfig.test.json && node --test test/*.test.mjs",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "check:verification-schemas": "tsc && node scripts/generate-verification-schemas.mjs --check",
+    "check:verification-package": "node scripts/check-verification-package.mjs",
+    "bench:verification": "node scripts/bench-verification.mjs",
+    "test:verification-docs": "node --test test/verification-docs.test.mjs",
+    "gate:verification": "npm test && npm run check:verification-schemas && npm run check:verification-package && npm run test:verification-docs && npm run bench:verification -- --commands 128"
   },
   "devDependencies": {
-    "@types/node": "^26.2.0",
     "ajv": "^8.20.0",
     "typescript": "6"
   }
