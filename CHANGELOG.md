@@ -383,6 +383,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `product-audit`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.1.0 | 2026-08-27 | minor | Closes #147: every sweep obeys the fixed **evidence-provenance gate** (the project-declared forge is authoritative for live issue and pull-request status, command metrics bind their working directory or target, inventories are recomputed from the current tree, captures carry freshness, conflicts resolve in a declared order — exactly one fallback per domain) and every report publishes the new `## Delta vs audit <prior-id>` section against the newest prior audit of equivalent scope (`New` / `Unchanged` / `Resolved`, mapped as `F<k> <- audit <prior-id> F<j>`, `none — <why no equivalent-scope prior exists>` when there is no prior). A same-date rerun stays allowed with a stated reason; finding identity remains `F1, F2, …` — lineage never mints global slugs. |
 | 3.0.3 | 2026-08-10 | patch | Requires the audit hand-off to enumerate the complete finding set before batching triage. |
 | 3.0.2 | 2026-08-03 | patch | Load the audit-dimensions applicability matrix before selecting review dimensions, so Step 0 cannot make an incomplete axis decision ahead of the authoritative list. |
 | 3.0.1 | 2026-08-02 | patch | Moves audit dimensions and the nine-step sweep behind mandatory one-hop routes and removes repeated activation prose while keeping the fixed persisted report and recommend-only contract intact. |
@@ -577,6 +578,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-27 — audits must prove their evidence.** `product-audit` 3.1.0
+  adds the fixed evidence-provenance gate (forge authority for live status,
+  scope-bound command metrics, recomputed inventories, capture freshness, one
+  declared conflict order) and the mandatory `Delta vs audit <prior-id>`
+  section, so two audits of one scope can no longer publish the same false
+  product facts twice.
 
 - **2026-08-22 — restore the canonical turn contract.**
   `orchestration-envelope` 2.0.2 is discoverable again through the default
