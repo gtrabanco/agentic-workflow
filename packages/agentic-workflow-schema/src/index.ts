@@ -3415,14 +3415,16 @@ export async function validateVerificationReceiptAgainstPlan(
     }
   }
 
-  // Build commandId → result map for O(1) lookups
-  const resultByCmd = new Map<string, VerificationResultV1>(
-    normalizedReceipt.results.map(r => [r.commandId, r]),
-  );
-
   // 5. D3 fail-fast attribution (per-row): a non-null reason must name an
   //    earlier-declared, non-passed command that declares stopOnFailure.
   if (sink.count() === 0) {
+    // F95 — the commandId → result index serves ONLY this check, so it is
+    // built only when this check runs: an already-failing receipt never pays
+    // for an O(n) map it cannot use (and the neighboring checks all gate the
+    // same way).
+    const resultByCmd = new Map<string, VerificationResultV1>(
+      normalizedReceipt.results.map(r => [r.commandId, r]),
+    );
     for (let i = 0; i < normalizedReceipt.results.length; i++) {
       const r = normalizedReceipt.results[i];
       if (r.status !== "skipped" || r.skipReason === null) continue;
