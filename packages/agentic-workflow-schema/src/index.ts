@@ -21,12 +21,14 @@ import {
   VERIFICATION_VERDICTS,
   WORKING_DIRECTORY_POLICIES,
   createVerificationDiagnosticSink,
+  captureVerificationInput,
   projectStructure,
   validateStructure,
   type VerificationContractSpec,
   type VerificationDiagnosticCodeV1,
   type VerificationDiagnosticSink,
   type VerificationDiagnosticV1,
+  type VerificationInputCapture,
 } from "./verification-contract.js";
 
 // ---------------------------------------------------------------------------
@@ -3151,6 +3153,27 @@ function canonicalBudgetRefusal(value: unknown, limit: number): VerificationDiag
 }
 
 /**
+ * F97 — one captured observation of a submitted document.
+ *
+ * Every authority below runs on the snapshot, never on the submission: the byte
+ * budget, the structural walk, the cross-rules and the DTO would otherwise read the
+ * same accessor again and could decide on a document other than the one it blesses.
+ * An accessor that throws answers with the redacted `invalid-type` row F92 fixed.
+ */
+function captureSubmittedVerificationInput(value: unknown): VerificationInputCapture {
+  return captureVerificationInput(value);
+}
+
+/** The single refusal row an unreadable submission earns (D16 shape). */
+function unreadableInputResult(pointer: string): { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean } {
+  return {
+    ok: false,
+    diagnostics: [Object.freeze({ code: "invalid-type", path: pointer })],
+    truncated: false,
+  };
+}
+
+/**
  * The sole plan-validation authority (D12).
  *
  * Every structural rule comes from the canonical verification-contract
@@ -3171,10 +3194,13 @@ function canonicalBudgetRefusal(value: unknown, limit: number): VerificationDiag
  * `VERIFICATION_LIMITS.diagnostics` redacted code+path rows (D16).
  */
 export function validateVerificationPlanV1(value: unknown): VerificationPlanValidationResult {
-  const oversized = canonicalBudgetRefusal(value, VERIFICATION_LIMITS.planBytes);
+  const submitted = captureSubmittedVerificationInput(value);
+  if (!submitted.ok) return unreadableInputResult(submitted.pointer);
+  const document = submitted.value;
+  const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.planBytes);
   if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
   const sink = createVerificationDiagnosticSink();
-  const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, value, "", sink);
+  const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, document, "", sink);
   if (sink.count() > 0) return { ok: false, ...sink.finish() };
   return { ok: true, plan: plan as unknown as VerificationPlanV1 };
 }
@@ -3297,13 +3323,16 @@ export type VerificationReceiptValidationResult =
  * alternate runtime validity claim.
  */
 function validateVerificationReceiptShape(value: unknown): VerificationReceiptValidationResult {
-  const oversized = canonicalBudgetRefusal(value, VERIFICATION_LIMITS.receiptBytes);
+  const submitted = captureSubmittedVerificationInput(value);
+  if (!submitted.ok) return unreadableInputResult(submitted.pointer);
+  const document = submitted.value;
+  const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.receiptBytes);
   if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
   const sink = createVerificationDiagnosticSink();
   const receipt = validateStructure(
     VERIFICATION_CONTRACT.receipt,
     VERIFICATION_CONTRACT.receipt.root,
-    value,
+    document,
     "",
     sink,
   );
@@ -3537,8 +3566,19 @@ function canonicalizeWithinContract(
   budgetBytes: number,
   label: "plan" | "receipt",
 ): string {
-  if (value !== null && typeof value === "object") {
-    const items = (value as Record<string, unknown>)[collectionField];
+  // F97 — one observation, then every guard and the serialization itself consume
+  // that snapshot. Without the capture the cardinality guard above and
+  // `projectStructure` below would read the same submission twice, so a flipping
+  // accessor could make the digest cover a document the guard never saw.
+  const submitted = captureSubmittedVerificationInput(value);
+  if (!submitted.ok) {
+    throw new TypeError(
+      `verification ${label} input is not a readable JSON document — validate before canonicalizing`,
+    );
+  }
+  const document = submitted.value;
+  if (document !== null && typeof document === "object") {
+    const items = (document as Record<string, unknown>)[collectionField];
     if (Array.isArray(items) && items.length > maxItems) {
       throw new TypeError(
         `verification ${label} exceeds the D14 limit of at most ${maxItems} ${collectionField} — validate before canonicalizing`,
@@ -3546,7 +3586,7 @@ function canonicalizeWithinContract(
     }
   }
   const canonical = canonicalJSONValue(
-    projectStructure(contract, contract.root, value),
+    projectStructure(contract, contract.root, document),
   );
   if (utf8Bytes(canonical) > budgetBytes) {
     throw new TypeError(
