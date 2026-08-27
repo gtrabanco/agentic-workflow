@@ -456,3 +456,6 @@ Non-blocking and independent; no issue created — only the user routes these:
   `verification-contract.ts:764-769` and `:1077`. Re-trigger moot (item closed).
 - **AWL adoption/dialect work** — trigger: AWL upgrades to schema package 3.4.0
   and needs real plan/receipt emission or a runtime-specific dialect/runner.
+
+- **2026-08-27 corrective replan (user-ordered): phases P16–P21 appended; the F80 guard is scoped to the verification canonicalizers.** After two review rounds left F97/F99/F100/F106 open (replan-in-unit) and F107–F110 fold-directly, the user ordered a replan instead of another fold round. P17/P18 repair the two reproduced root causes (single-read input snapshot; bounded preflight refusal). P19 restores byte-identical 3.3.0 behavior for the legacy `canonicalize*`/`digest*` exports (golden vectors captured from merge base e84db167) and scopes the F80 named-TypeError guard to the feature-26 verification canonicalizers, making the 3.4.0 "additive release" record true without weakening any F92-era refusal. P20 recovers ledger fold provenance; P21 runs ONE `--adversarial 3` review as the bounded convergence gate. `ACCEPTANCE.md` stays untouched (blob `2e8058860b2c805cc30507053f15f91e2f273249`).
+

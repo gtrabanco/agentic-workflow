@@ -1,8 +1,10 @@
 # PLAN — 26-staged-verification-contracts
 
-Phases only (`P1…P15`). Detail lives in `SPEC.md` (Design) and `TASKS.md`.
-P1–P6 are historical completed phases. The user-approved 2026-08-26 replan
-adds P7–P15; P15 is the final close-out after all implementation layers.
+Phases only (`P1…P21`). Detail lives in `SPEC.md` (Design) and `TASKS.md`.
+P1–P6 are historical completed phases; the user-approved 2026-08-26 replan added
+P7–P15 (executed). The user-ordered 2026-08-27 corrective replan adds P16–P21;
+P21 is the final close-out after the review-mandated corrections. Execute
+P16→P20 back-to-back, then P21.
 
 ## P1 — Deliver the VerificationPlan v1 contract
 Layer: schema · historical plan contract, validator, schema and exports.
@@ -62,3 +64,43 @@ consumer examples, structural-projection warning and deferred AWL adoption note.
 Layer: close-out · frozen installs, aggregate package/repository gates,
 replacement-acceptance evidence, ledger/progress close-out, PR-body refresh and
 publication of the exact candidate for fresh independent review.
+
+## P16 — Correct published docs hygiene
+
+Layer: docs · ledger F107/F109/F110 fold here: six fold-commit annotations, honest
+roadmap state (`in-progress · [#145]`, re-flipped by P21) and the bilingual
+source-checkout qualifier for the bench sentence, docs-suite pinned.
+
+## P17 — Snapshot verification input at validation entry
+
+Layer: domain · F97 root cause: single frozen own-property capture at both public
+entries; validation and DTO construction read only the snapshot. Red-first
+hostile-getter suite (flip-at-every-read across all plan/receipt fields),
+diagnostic redaction parity, p95 benchmark parity.
+
+## P18 — Bound verification preflight refusal work
+
+Layer: domain · F99 root cause: raw cardinality refusal before capture, then an
+early-exit bounded serializer for the byte budget; entry sequence is raw
+cardinality → capture → bounded measure → full walk. 200k-command refusal drops
+from ~2.2 s to the ≤50 ms bound.
+
+## P19 — Restore legacy canonicalizer compatibility
+
+Layer: domain · F100: golden 3.3.0 vectors captured from the merge base; the
+F80 total-leaf guard is scoped to the feature-26 verification canonicalizers and
+the legacy `canonicalize*`/`digest*` exports regain byte-identical 3.3.0 output,
+making the ship record's "additive release" claim true without weakening any
+verification-surface refusal.
+
+## P20 — Recover ledger fold provenance
+
+Layer: docs · F106: scripted `git log -S` recovery over the 62 token-less rows;
+every provable fold gets its commit annotation, unprovable rows re-open honestly.
+
+## P21 — Requalify the corrected candidate
+
+Layer: close-out · full gate + frozen-manifest AC1–AC10 re-verification, ONE
+`--adversarial 3` review over the corrected candidate, bounded fold pass for its
+fix-now rows, PR body refresh at the terminal head (F108), loop to PASS, roadmap
+back to `done`.
