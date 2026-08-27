@@ -119,3 +119,37 @@ test("the package version matches the AC7 release contract", () => {
   assert.equal(npmLock.version, "3.4.0");
   assert.equal(npmLock.packages[""].version, "3.4.0");
 });
+
+// ---------------------------------------------------------------------------
+// F94 — bench-verification argument discipline (behavioral, spawned)
+// ---------------------------------------------------------------------------
+
+import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const benchPath = fileURLToPath(new URL("../scripts/bench-verification.mjs", import.meta.url));
+
+test("F94: an explicit --commands 1 run is accepted, not self-rejected", () => {
+  // A single-command plan divides the fast-stage budget by 1, which once
+  // produced a 900000 ms timeout above the 600000 ms per-fast-command ceiling
+  // — the bench generated a plan its own validator rejected. The ceiling must
+  // clamp, so the run exits 0 with a PASS verdict.
+  const run = spawnSync(process.execPath, [benchPath, "--commands", "1", "--warm", "2", "--samples", "5"], {
+    encoding: "utf8",
+  });
+  assert.equal(run.stderr, "", `bench must be silent on success: ${run.stderr}`);
+  assert.equal(run.status, 0, `--commands 1 must run clean (exit ${run.status}): ${run.stdout}`);
+  assert.match(run.stdout, /PASS · p95/);
+});
+
+test("F94: a non-numeric flag exits 2 with an echoed argument error", () => {
+  // Argument parsing must exit 2 BEFORE plan construction — a NaN silently
+  // degrading into an invalid-plan rejection (exit 1) conflates usage with
+  // contract failure.
+  const run = spawnSync(process.execPath, [benchPath, "--commands", "not-a-number"], {
+    encoding: "utf8",
+  });
+  assert.equal(run.status, 2, `expected usage exit 2, got ${run.status}`);
+  assert.match(run.stderr, /--commands expects a finite positive integer/);
+  assert.equal(run.stdout, "", "a usage failure must print no report");
+});
