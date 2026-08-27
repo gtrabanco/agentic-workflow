@@ -54,8 +54,14 @@
   shape half is `test/verification-bounds.test.mjs`, which also asserts every
   Draft-07-expressible bound is present in the regenerated projections and that
   the public `VERIFICATION_LIMITS` object is the single source of the numbers.
-- Diagnostic fixtures prove code vocabulary, RFC 6901 paths, the truncation
-  flag and that no submitted value is echoed.
+- Payload/diagnostic fixtures: `test/verification-payload.test.mjs` — canonical
+  byte budgets (exact-planBytes accepted, one over refused by the budget alone and
+  outranking the shape ceilings; maximum-capacity receipt proven inside its
+  budget), the 50-row diagnostic ceiling with `truncated`, RFC 6901 paths,
+  value redaction, the skip-reason/evidence-reference boundary pairs, and an
+  emitter for every published code except `budget-exceeded` (P12). Shared
+  assertions live in `test/fixtures/verification-diagnostics.mjs`, which every
+  feature-26 suite now uses instead of matching message prose.
 - Docs fixtures extract every README example, compile it and assert EN/ES
   semantic parity through `test:verification-docs`.
 - Prototype/inherited-field fixtures prove only normalized own-property data is

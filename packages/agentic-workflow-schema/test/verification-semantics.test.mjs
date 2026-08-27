@@ -4,6 +4,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
+import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   validateVerificationPlanV1,
@@ -80,7 +87,7 @@ test("accepts the canonical fail-fast chain: every later row skipped with the tr
     "fail",
   );
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
-  assert.equal(result.ok, true, (result.errors || []).join(", "));
+  assert.equal(result.ok, true, describeDiagnostics(result));
   assert.equal(deriveVerificationVerdict(receipt, PLAN), "fail");
 });
 
@@ -91,7 +98,7 @@ test("accepts a chain that stops early — a later command with NO row stays rep
     "incomplete",
   );
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
-  assert.equal(result.ok, true, (result.errors || []).join(", "));
+  assert.equal(result.ok, true, describeDiagnostics(result));
 });
 
 test("accepts a non-passed row after a failing command that does NOT stop on failure", async () => {
@@ -111,7 +118,7 @@ test("accepts a non-passed row after a failing command that does NOT stop on fai
     verdict: "fail",
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
-  assert.equal(result.ok, true, (result.errors || []).join(", "));
+  assert.equal(result.ok, true, describeDiagnostics(result));
 });
 
 // ---------------------------------------------------------------------------
@@ -125,7 +132,7 @@ test("rejects a passed row that ran after the stopOnFailure trigger", async () =
   );
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false, "a row after the stop cannot have executed");
-  assert.ok(result.errors.some((e) => e.includes("test") && e.includes("stopOnFailure")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-fail-fast", "status");
 });
 
 test("rejects a second non-passed row after the trigger — the run already stopped", async () => {
@@ -135,7 +142,7 @@ test("rejects a second non-passed row after the trigger — the run already stop
   );
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("stopOnFailure")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-fail-fast", "status");
 });
 
 test("rejects timed-out and infrastructure-error rows after the trigger", async () => {
@@ -172,8 +179,8 @@ test("rejects a skipped row after the trigger attributed to another command", as
     verdict: "fail",
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
-  assert.equal(result.ok, false, (result.errors || []).join(", "));
-  assert.ok(result.errors.some((e) => e.includes("skipReason") && e.includes("lint")), result.errors.join(", "));
+  assert.equal(result.ok, false, describeDiagnostics(result));
+  assertDiagnosticOn(result, "invalid-fail-fast", "skipReason");
 });
 
 test("an unattributed skip after the trigger stays valid but incomplete (D3 null rule)", async () => {
@@ -184,7 +191,7 @@ test("an unattributed skip after the trigger stays valid but incomplete (D3 null
     "incomplete",
   );
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
-  assert.equal(result.ok, true, (result.errors || []).join(", "));
+  assert.equal(result.ok, true, describeDiagnostics(result));
 });
 
 test("a timeout is a trigger too — later rows must be skipped with its id", async () => {

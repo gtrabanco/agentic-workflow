@@ -20,7 +20,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { VERIFICATION_CONTRACT } from "../dist/verification-contract.js";
+import { VERIFICATION_CONTRACT, VERIFICATION_LIMITS } from "../dist/verification-contract.js";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -218,6 +218,11 @@ function projectionComment(contract) {
     `authority: ${contract.authority}`,
     "semantic validation: required (a Draft-07 PASS is not contract validity)",
     `runtime-only rules (not expressible in Draft-07): ${runtimeOnly.join(", ") || "none"}`,
+    // D14 canonical payload budgets are measured on the normalized canonical
+    // bytes, which no Draft-07 keyword can express: disclosed, never asserted.
+    `payload budget: runtime-only (canonical ${contract.rootLabel} <= ${VERIFICATION_LIMITS[`${contract.rootLabel}Bytes`] / 1024} KiB)`,
+    `diagnostics: runtime-only (at most ${VERIFICATION_LIMITS.diagnostics} redacted code+path rows)`,
+    "values: never returned (D16 — diagnostics carry a frozen code and an RFC 6901 pointer only)",
     "regenerate with: node scripts/generate-verification-schemas.mjs",
   ].join(" | ");
 }

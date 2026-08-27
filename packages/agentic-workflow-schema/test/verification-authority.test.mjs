@@ -1,5 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -117,7 +124,7 @@ test("P7: both entries accept unknown input and report through one result shape"
 
   const planFailure = validateVerificationPlanV1(null);
   assert.equal(planFailure.ok, false);
-  assert.deepEqual(Object.keys(planFailure).sort(), ["errors", "ok"]);
+  assert.deepEqual(Object.keys(planFailure).sort(), ["diagnostics", "ok", "truncated"]);
 });
 
 // ---------------------------------------------------------------------------
@@ -133,6 +140,7 @@ test("P7: the public verification constant surface is exactly the planned one", 
       "VERIFICATION_CANONICAL_VECTORS",
       "VERIFICATION_COMMAND_STATUSES",
       "VERIFICATION_COST_CLASSES",
+      "VERIFICATION_DIAGNOSTIC_CODES",
       "VERIFICATION_FRESHNESS_CODES",
       "VERIFICATION_LIMITS",
       "VERIFICATION_PLAN_CONTRACT_ID",
@@ -167,7 +175,7 @@ test("P7: plan input with an inherited prototype is rejected", () => {
   const withInherited = Object.create(base);
   const result = validateVerificationPlanV1(withInherited);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.length > 0);
+  assert.ok(result.diagnostics.length > 0);
 
   class Plan {
     constructor() {
@@ -200,7 +208,7 @@ test("P7: an own __proto__ key is rejected as an undeclared field", () => {
   assert.ok(Object.prototype.hasOwnProperty.call(polluted, "__proto__"));
   const result = validateVerificationPlanV1(polluted);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("__proto__")), result.errors.join(", "));
+  assertDiagnosticAt(result, "unknown-field", "");
 });
 
 test("P7: a successful plan result is a normalized own-property DTO", () => {
@@ -357,13 +365,13 @@ test("P7: the canonical definition owns the closed field lists used by validatio
 test("P7: undeclared fields are rejected from the canonical field lists", () => {
   const plan = validateVerificationPlanV1({ ...makePlan(), extra: true });
   assert.equal(plan.ok, false);
-  assert.ok(plan.errors.some((e) => e.includes("extra")), plan.errors.join(", "));
+  assertDiagnosticAt(plan, "unknown-field", "");
 
   const cmd = makePlan().commands[0];
   cmd.extraCommandField = 1;
   const nested = validateVerificationPlanV1(makePlan({ commands: [cmd] }));
   assert.equal(nested.ok, false);
-  assert.ok(nested.errors.some((e) => e.includes("extraCommandField")), nested.errors.join(", "));
+  assertDiagnosticAt(nested, "unknown-field", "/commands/0");
 });
 
 test("P7: every canonical bound is enforced by validation, not hard-coded twice", async () => {
@@ -380,7 +388,7 @@ test("P7: every canonical bound is enforced by validation, not hard-coded twice"
   receipt.results[0].stdout = { ref: "r".repeat(refMax + 1), bytes: 0, sha256: "a".repeat(64) };
   const result = await validateVerificationReceiptAgainstPlan(receipt, makePlan());
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("ref")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "ref");
 });
 
 // ---------------------------------------------------------------------------

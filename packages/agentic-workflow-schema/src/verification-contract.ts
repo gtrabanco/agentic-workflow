@@ -48,8 +48,6 @@ export interface VerificationFieldSpec {
   readonly nulFree?: boolean;
   /** Single pattern a valid string must match (digest/timestamp shapes). */
   readonly pattern?: string;
-  /** Message tail used when `pattern` fails. */
-  readonly patternExpectation?: string;
   readonly minimum?: number;
   readonly exclusiveMinimum?: number;
   /** `stringArray` — per-item bounds. */
@@ -61,8 +59,13 @@ export interface VerificationFieldSpec {
   readonly specName?: string;
   /** `nullable` — the non-null member type. */
   readonly nullableOf?: "string" | "integer" | "object";
-  /** `nullable` — exact message tail for the type failure. */
-  readonly nullableExpectation?: string;
+  /**
+   * Specific code reported instead of the generic `invalid-value` when this
+   * field's *content* rule (pattern, NUL-free, const/enum vocabulary) fails.
+   * Capacity ceilings keep `limit-exceeded` and type errors keep `invalid-type`,
+   * so this only specializes "well-formed value" rules (D5 evidence references).
+   */
+  readonly violationCode?: VerificationDiagnosticCodeV1;
   /** Field-level pattern rules (path shapes). */
   readonly rules?: readonly VerificationPatternRule[];
 }
@@ -79,6 +82,8 @@ export type VerificationRuleKind =
 export interface VerificationCrossRule {
   readonly id: string;
   readonly description: string;
+  /** D16 code to report instead of this kind's default (see `CROSS_RULE_DEFAULT_CODE`). */
+  readonly code?: VerificationDiagnosticCodeV1;
   /** false → enforced by the authoritative validator only, disclosed in the projection. */
   readonly projectable: boolean;
   readonly kind: VerificationRuleKind;
@@ -91,8 +96,6 @@ export interface VerificationCrossRule {
   };
   /** Constrained fields (`exactly-one-non-null`, `null-when`, `non-null-when`, timestamp/ calendar rules). */
   readonly fields?: readonly string[];
-  /** `null-when`/`non-null-when` message tail override. */
-  readonly messageTail?: string;
   /** `unique` — the array field the rule scans. */
   readonly collection?: string;
 }
@@ -152,7 +155,84 @@ export const VERIFICATION_LIMITS = Object.freeze({
   idChars: 128,
   pathChars: 1024,
   argChars: 4096,
+  skipReasonChars: 1024,
+  evidenceRefChars: 1024,
+  planBytes: 256 * 1024,
+  receiptBytes: 512 * 1024,
+  diagnostics: 50,
 } as const);
+
+/**
+ * D16 — the closed diagnostic vocabulary. Every validation failure row carries
+ * exactly one of these codes plus an RFC 6901 path; adding a code is a reviewed,
+ * versioned contract change, and no code ever names the submitted value.
+ */
+export const VERIFICATION_DIAGNOSTIC_CODES = Object.freeze([
+  "invalid-type",
+  "missing-field",
+  "unknown-field",
+  "invalid-value",
+  "limit-exceeded",
+  "duplicate-id",
+  "unknown-command",
+  "invalid-order",
+  "invalid-stage",
+  "invalid-exit-state",
+  "invalid-evidence",
+  "invalid-skip",
+  "invalid-fail-fast",
+  "digest-mismatch",
+  "verdict-mismatch",
+  "budget-exceeded",
+] as const);
+
+export type VerificationDiagnosticCodeV1 = (typeof VERIFICATION_DIAGNOSTIC_CODES)[number];
+
+/** One D16 failure row: a frozen code and the pointer to the offending location. */
+export interface VerificationDiagnosticV1 {
+  readonly code: VerificationDiagnosticCodeV1;
+  /** RFC 6901 pointer over declared property names and decimal indices; `""` is the document root. */
+  readonly path: string;
+}
+
+/**
+ * Bounded diagnostic collector (D14/D16).
+ *
+ * Allocation is capped at `VERIFICATION_LIMITS.diagnostics`: past the ceiling the
+ * sink counts rows instead of building them, so an oversized payload can never
+ * make the validator allocate one diagnostic per byte it disliked. `count()` is
+ * the total number of failures seen (held + dropped) and is what the structural
+ * walk uses to decide whether anything failed — never the capped length.
+ */
+export interface VerificationDiagnosticSink {
+  push(code: VerificationDiagnosticCodeV1, path: string): void;
+  /** Failures seen so far, including the ones the ceiling dropped. */
+  count(): number;
+  /** Freeze the held rows and report whether the ceiling truncated them. */
+  finish(): { readonly diagnostics: readonly VerificationDiagnosticV1[]; readonly truncated: boolean };
+}
+
+export function createVerificationDiagnosticSink(
+  limit: number = VERIFICATION_LIMITS.diagnostics,
+): VerificationDiagnosticSink {
+  const rows: VerificationDiagnosticV1[] = [];
+  let dropped = 0;
+  return {
+    push(code, path) {
+      if (rows.length < limit) rows.push({ code, path });
+      else dropped += 1;
+    },
+    count() {
+      return rows.length + dropped;
+    },
+    finish() {
+      return {
+        diagnostics: Object.freeze(rows.map((row) => Object.freeze({ code: row.code, path: row.path }))),
+        truncated: dropped > 0,
+      };
+    },
+  };
+}
 
 // ---------------------------------------------------------------------------
 // VerificationPlan v1
@@ -196,7 +276,6 @@ const COMMAND_SPEC: VerificationObjectSpec = {
       key: "workingDirectory",
       type: "nullable",
       nullableOf: "string",
-      nullableExpectation: "must be a string or null",
       minLength: 1,
       maxLength: VERIFICATION_LIMITS.pathChars,
       nulFree: true,
@@ -241,7 +320,6 @@ const COMMAND_SPEC: VerificationObjectSpec = {
       projectable: true,
       when: { field: "workingDirectoryPolicy", equals: "relative-path" },
       fields: ["workingDirectory"],
-      messageTail: 'must be a non-empty string when workingDirectoryPolicy is "relative-path"',
       description: "workingDirectory is a validated relative path when workingDirectoryPolicy is relative-path.",
     },
   ],
@@ -258,8 +336,9 @@ const EVIDENCE_SPEC: VerificationObjectSpec = {
       key: "ref",
       type: "string",
       minLength: 1,
-      maxLength: 1024,
+      maxLength: VERIFICATION_LIMITS.evidenceRefChars,
       nulFree: true,
+      violationCode: "invalid-evidence",
       description: "Non-empty opaque pointer to stored evidence; NUL-free.",
     },
     {
@@ -272,7 +351,7 @@ const EVIDENCE_SPEC: VerificationObjectSpec = {
       key: "sha256",
       type: "string",
       pattern: LOWERCASE_64HEX_PATTERN,
-      patternExpectation: "must be a lowercase 64-hex string",
+      violationCode: "invalid-evidence",
       description: "Lowercase 64-hex SHA-256 digest of the captured evidence.",
     },
   ],
@@ -300,15 +379,15 @@ const RESULT_SPEC: VerificationObjectSpec = {
       key: "exitCode",
       type: "nullable",
       nullableOf: "integer",
-      nullableExpectation: "must be an integer or null",
       description: "Per the D4 exit-code/signal matrix.",
     },
     {
       key: "signal",
       type: "nullable",
       nullableOf: "string",
-      nullableExpectation: "must be a non-empty string or null",
       minLength: 1,
+      // F50 hardening, not a D14 limit: the SPEC's ceiling list does not name
+      // `signal`, so this bound stays local to the field it protects.
       maxLength: 1024,
       nulFree: true,
       description: "Per the D4 exit-code/signal matrix; NUL-free, at most 1024 chars.",
@@ -317,14 +396,12 @@ const RESULT_SPEC: VerificationObjectSpec = {
       key: "startedAt",
       type: "string",
       pattern: ISO_8601_PATTERN,
-      patternExpectation: "must be an ISO-8601 UTC timestamp",
       description: "ISO-8601 UTC start timestamp.",
     },
     {
       key: "endedAt",
       type: "string",
       pattern: ISO_8601_PATTERN,
-      patternExpectation: "must be an ISO-8601 UTC timestamp",
       description: "ISO-8601 UTC end timestamp, >= startedAt.",
     },
     {
@@ -332,7 +409,6 @@ const RESULT_SPEC: VerificationObjectSpec = {
       type: "nullable",
       nullableOf: "object",
       specName: "EvidenceReferenceV1",
-      nullableExpectation: "must be null or an object",
       description: "Bounded stdout evidence reference or null.",
     },
     {
@@ -340,16 +416,14 @@ const RESULT_SPEC: VerificationObjectSpec = {
       type: "nullable",
       nullableOf: "object",
       specName: "EvidenceReferenceV1",
-      nullableExpectation: "must be null or an object",
       description: "Bounded stderr evidence reference or null.",
     },
     {
       key: "skipReason",
       type: "nullable",
       nullableOf: "string",
-      nullableExpectation: 'must be null or a non-empty string ≤ 1024 chars when status is "skipped"',
       minLength: 1,
-      maxLength: 1024,
+      maxLength: VERIFICATION_LIMITS.skipReasonChars,
       nulFree: true,
       description: "Null on non-skipped rows; non-empty NUL-free string ≤ 1024 chars on skipped.",
     },
@@ -368,6 +442,7 @@ const RESULT_SPEC: VerificationObjectSpec = {
       id: "d4-timed-out-has-no-exit-code",
       kind: "null-when",
       projectable: true,
+      code: "invalid-exit-state",
       when: { field: "status", equals: "timed-out" },
       fields: ["exitCode"],
       description: "D4: timed-out carries exitCode null and an optional captured kill signal.",
@@ -376,6 +451,7 @@ const RESULT_SPEC: VerificationObjectSpec = {
       id: "d4-no-terminal-result",
       kind: "null-when",
       projectable: true,
+      code: "invalid-exit-state",
       when: { field: "status", in: ["infrastructure-error", "skipped"] },
       fields: ["exitCode", "signal"],
       description: "D4: infrastructure-error and skipped carry neither exitCode nor signal.",
@@ -384,9 +460,9 @@ const RESULT_SPEC: VerificationObjectSpec = {
       id: "skip-reason-only-when-skipped",
       kind: "null-when",
       projectable: true,
+      code: "invalid-skip",
       when: { field: "status", notIn: ["skipped"] },
       fields: ["skipReason"],
-      messageTail: 'must be null when status is not "skipped"',
       description: "Non-skipped rows carry skipReason null.",
     },
     {
@@ -451,21 +527,18 @@ const RECEIPT_ROOT_SPEC: VerificationObjectSpec = {
       key: "planDigest",
       type: "string",
       pattern: LOWERCASE_64HEX_PATTERN,
-      patternExpectation: "must be a lowercase 64-hex string",
       description: "Lowercase 64-hex SHA-256 digest of the bound plan.",
     },
     {
       key: "candidateSnapshotDigest",
       type: "string",
       pattern: LOWERCASE_64HEX_PATTERN,
-      patternExpectation: "must be a lowercase 64-hex string",
       description: "Lowercase 64-hex SHA-256 from #138's candidate-snapshot digest.",
     },
     {
       key: "acceptanceFingerprint",
       type: "string",
       pattern: LOWERCASE_64HEX_PATTERN,
-      patternExpectation: "must be a lowercase 64-hex string",
       description: "Lowercase 64-hex acceptance fingerprint from #138.",
     },
     { key: "stageRequested", type: "enum", enum: VERIFICATION_STAGES, description: "Which stage was requested." },
@@ -606,59 +679,48 @@ function ruleApplies(
   return false;
 }
 
-/** Message tail a field's value must satisfy; `got:` is appended by `fail()`. */
-function expectationFor(field: VerificationFieldSpec): string {
-  switch (field.type) {
-    case "const":
-      return `must be "${field.value}"`;
-    case "enum":
-      return `must be one of ${(field.enum ?? []).join("|")}`;
-    case "boolean":
-      return "must be a boolean";
-    case "string":
-      return field.minLength === 1 ? "must be a non-empty string" : "must be a string";
-    case "integer":
-      return field.exclusiveMinimum === 0
-        ? "must be a positive integer"
-        : field.minimum !== undefined
-          ? `must be an integer >= ${field.minimum}`
-          : "must be an integer";
-    case "stringArray":
-    case "array":
-      return "must be an array";
-    case "nullable":
-      return field.nullableExpectation ?? "must be present";
-  }
+/**
+ * Diagnostic code for a value that is not the declared shape of `field`: a
+ * const/enum mismatch is a wrong VALUE of an otherwise correct type, everything
+ * else is a type failure. D16 keeps the row to code + path, so a submitted value
+ * is never carried out of the validator.
+ */
+function typeCode(field: VerificationFieldSpec): VerificationDiagnosticCodeV1 {
+  return field.type === "const" || field.type === "enum" ? "invalid-value" : "invalid-type";
 }
 
-function fail(errors: string[], path: string, expectation: string, value: unknown): void {
-  errors.push(`${path} ${expectation} (got: ${typeof value === "string" ? JSON.stringify(value) : String(value)})`);
+/** Specialize a value-content failure to the field's own code (D5 evidence). */
+function valueCode(field: VerificationFieldSpec): VerificationDiagnosticCodeV1 {
+  return field.violationCode ?? "invalid-value";
 }
 
 function checkString(
   field: VerificationFieldSpec,
   value: unknown,
   path: string,
-  expectation: string,
-  errors: string[],
+  sink: VerificationDiagnosticSink,
 ): string | undefined {
-  if (typeof value !== "string" || (field.minLength === 1 && value.length === 0)) {
-    fail(errors, path, expectation, value);
+  if (typeof value !== "string") {
+    sink.push(typeCode(field), path);
+    return undefined;
+  }
+  if (field.minLength === 1 && value.length === 0) {
+    sink.push("limit-exceeded", path);
     return undefined;
   }
   if (field.nulFree && value.includes("\0")) {
-    errors.push(`${path} ${NUL_MESSAGE}`);
+    sink.push(valueCode(field), path);
     return undefined;
   }
   if (field.maxLength !== undefined && value.length > field.maxLength) {
-    errors.push(`${path} must be at most ${field.maxLength} characters`);
+    sink.push("limit-exceeded", path);
   }
   if (field.pattern !== undefined && !new RegExp(field.pattern).test(value)) {
-    errors.push(`${path} ${field.patternExpectation ?? "must match the required format"}`);
+    sink.push(valueCode(field), path);
     return undefined;
   }
   for (const rule of field.rules ?? []) {
-    if (!new RegExp(rule.regex).test(value)) errors.push(`${path} ${rule.message}`);
+    if (!new RegExp(rule.regex).test(value)) sink.push(valueCode(field), path);
   }
   return value;
 }
@@ -667,52 +729,61 @@ function checkInteger(
   field: VerificationFieldSpec,
   value: unknown,
   path: string,
-  expectation: string,
-  errors: string[],
+  sink: VerificationDiagnosticSink,
 ): number | undefined {
-  const positive = field.exclusiveMinimum === 0;
   if (typeof value !== "number" || !Number.isInteger(value)) {
-    fail(errors, path, expectation, value);
+    sink.push("invalid-type", path);
     return undefined;
   }
-  if (positive && value <= 0) {
-    fail(errors, path, "must be a positive integer", value);
+  // A declared bound that Draft-07 can express is a limit failure; the positivity
+  // rule for `timeoutMs` is a value rule, which is what the projection states as
+  // `exclusiveMinimum`.
+  if (field.exclusiveMinimum !== undefined && value <= field.exclusiveMinimum) {
+    sink.push("limit-exceeded", path);
     return undefined;
   }
   if (field.minimum !== undefined && value < field.minimum) {
-    errors.push(`${path} must be an integer >= ${field.minimum}`);
+    sink.push("limit-exceeded", path);
     return undefined;
   }
   return value;
 }
 
 /**
- * Validate one contract object against its spec, recording messages in
- * `errors`, and return its normalized own-property DTO — or `undefined` when
+ * Validate one contract object against its spec, recording D16 diagnostics in
+ * `sink`, and return its normalized own-property DTO — or `undefined` when
  * anything in this object (or below it) failed.
  *
  * Only own properties of declared keys are read, so inherited or prototype
  * values can never be mistaken for contract data; the returned object is a
  * fresh plain literal, so mutating the input afterwards cannot change it.
+ *
+ * Every path is an RFC 6901 JSON Pointer built from declared contract property
+ * names and decimal array indices (`/commands/3/id`; `""` is the document root),
+ * so a diagnostic identifies the offending location without naming — let alone
+ * echoing — the submitted value.
  */
 export function validateStructure(
   contract: VerificationContractSpec,
   spec: VerificationObjectSpec,
   value: unknown,
   path: string,
-  errors: string[],
+  sink: VerificationDiagnosticSink,
 ): Record<string, unknown> | undefined {
   if (!isPlainRecord(value)) {
-    errors.push(`${path === "" ? "value" : path} must be a plain JSON object`);
+    sink.push("invalid-type", path);
     return undefined;
   }
 
-  const before = errors.length;
-  const at = (key: string) => (path === "" ? key : `${path}.${key}`);
+  const before = sink.count();
+  const at = (key: string) => `${path}/${key}`;
 
   for (const key of Object.keys(value)) {
     if (!spec.fields.some((field) => field.key === key)) {
-      errors.push(`unexpected key: ${path === "" ? contract.rootLabel : path}.${key}`);
+      // The path names the CONTAINER, never the submitted key: an undeclared key
+      // is input data, and D16 allows only contract property names and indices in
+      // a pointer (so a probe like `__proto__` cannot echo itself back out).
+      sink.push("unknown-field", path);
     }
   }
 
@@ -721,72 +792,62 @@ export function validateStructure(
   for (const field of spec.fields) {
     const fieldPath = at(field.key);
     if (!Object.prototype.hasOwnProperty.call(value, field.key)) {
-      errors.push(`${fieldPath} ${expectationFor(field)}`);
+      sink.push("missing-field", fieldPath);
       continue;
     }
     const raw = value[field.key];
-    const expectation = expectationFor(field);
 
     switch (field.type) {
       case "const": {
-        if (raw !== field.value) {
-          fail(errors, fieldPath, expectation, raw);
-        } else {
-          normalized[field.key] = raw;
-        }
+        if (raw !== field.value) sink.push(valueCode(field), fieldPath);
+        else normalized[field.key] = raw;
         break;
       }
       case "enum": {
         const vocabulary = field.enum ?? [];
-        if (!vocabulary.includes(raw as string)) {
-          fail(errors, fieldPath, expectation, raw);
-        } else {
-          normalized[field.key] = raw;
-        }
+        if (!vocabulary.includes(raw as string)) sink.push(valueCode(field), fieldPath);
+        else normalized[field.key] = raw;
         break;
       }
       case "boolean": {
-        if (typeof raw !== "boolean") {
-          fail(errors, fieldPath, expectation, raw);
-        } else {
-          normalized[field.key] = raw;
-        }
+        if (typeof raw !== "boolean") sink.push("invalid-type", fieldPath);
+        else normalized[field.key] = raw;
         break;
       }
       case "string": {
-        const checked = checkString(field, raw, fieldPath, expectation, errors);
+        const checked = checkString(field, raw, fieldPath, sink);
         if (checked !== undefined) normalized[field.key] = checked;
         break;
       }
       case "integer": {
-        const checked = checkInteger(field, raw, fieldPath, expectation, errors);
+        const checked = checkInteger(field, raw, fieldPath, sink);
         if (checked !== undefined) normalized[field.key] = checked;
         break;
       }
       case "stringArray": {
         if (!Array.isArray(raw)) {
-          errors.push(`${fieldPath} must be an array`);
+          sink.push("invalid-type", fieldPath);
           break;
         }
-        // Cardinality first: a stringArray ceiling is expressible in Draft-07, so
-        // the projection and this validator must agree (AC10).
+        // Cardinality first: the ceiling is expressible in Draft-07, so the
+        // projection and this validator must agree (AC10).
         if (field.maxItems !== undefined && raw.length > field.maxItems) {
-          errors.push(`${fieldPath} must have at most ${field.maxItems} items`);
+          sink.push("limit-exceeded", fieldPath);
           break;
         }
         const items: string[] = [];
         for (let i = 0; i < raw.length; i++) {
           const item = raw[i];
           if (typeof item !== "string") {
-            errors.push(`${fieldPath}[${i}] must be a string`);
+            sink.push("invalid-type", `${fieldPath}/${i}`);
             continue;
           }
           if (field.itemNulFree && item.includes("\0")) {
-            errors.push(`${fieldPath}[${i}] ${NUL_MESSAGE}`);
+            sink.push("invalid-value", `${fieldPath}/${i}`);
             continue;
           }
           if (field.itemMaxLength !== undefined && item.length > field.itemMaxLength) {
-            errors.push(`${fieldPath}[${i}] must be at most ${field.itemMaxLength} characters`);
+            sink.push("limit-exceeded", `${fieldPath}/${i}`);
             continue;
           }
           items.push(item);
@@ -797,20 +858,20 @@ export function validateStructure(
       case "array": {
         const nested = verificationObjectSpec(contract, field.specName ?? "");
         if (!Array.isArray(raw)) {
-          errors.push(`${fieldPath} must be an array`);
+          sink.push("invalid-type", fieldPath);
           break;
         }
         if (field.minItems !== undefined && raw.length < field.minItems) {
-          errors.push(`${fieldPath} must not be empty`);
+          sink.push("limit-exceeded", fieldPath);
           break;
         }
         if (field.maxItems !== undefined && raw.length > field.maxItems) {
-          errors.push(`${fieldPath} must have at most ${field.maxItems} items`);
+          sink.push("limit-exceeded", fieldPath);
           break;
         }
         const children: unknown[] = [];
         for (let i = 0; i < raw.length; i++) {
-          const child = validateStructure(contract, nested, raw[i], `${fieldPath}[${i}]`, errors);
+          const child = validateStructure(contract, nested, raw[i], `${fieldPath}/${i}`, sink);
           if (child) children.push(child);
         }
         normalized[field.key] = children;
@@ -822,21 +883,21 @@ export function validateStructure(
           break;
         }
         if (field.nullableOf === "string") {
-          const checked = checkString(field, raw, fieldPath, expectation, errors);
+          const checked = checkString(field, raw, fieldPath, sink);
           if (checked !== undefined) normalized[field.key] = checked;
           break;
         }
         if (field.nullableOf === "integer") {
-          const checked = checkInteger(field, raw, fieldPath, expectation, errors);
+          const checked = checkInteger(field, raw, fieldPath, sink);
           if (checked !== undefined) normalized[field.key] = checked;
           break;
         }
         if (!isPlainRecord(raw)) {
-          errors.push(`${fieldPath} ${field.nullableExpectation ?? "must be null or an object"}`);
+          sink.push("invalid-type", fieldPath);
           break;
         }
         const nested = verificationObjectSpec(contract, field.specName ?? "");
-        const child = validateStructure(contract, nested, raw, fieldPath, errors);
+        const child = validateStructure(contract, nested, raw, fieldPath, sink);
         if (child) normalized[field.key] = child;
         break;
       }
@@ -844,19 +905,32 @@ export function validateStructure(
   }
 
   for (const rule of spec.rules) {
-    applyCrossRule(spec, rule, value, at, errors);
+    applyCrossRule(spec, rule, value, path, sink);
   }
 
-  return errors.length === before ? normalized : undefined;
+  return sink.count() === before ? normalized : undefined;
 }
+
+/** Fallback code per rule kind; a spec may name a narrower one with `code`. */
+const CROSS_RULE_DEFAULT_CODE: Readonly<Record<VerificationRuleKind, VerificationDiagnosticCodeV1>> = Object.freeze({
+  "exactly-one-non-null": "invalid-exit-state",
+  "null-when": "invalid-value",
+  "non-null-when": "invalid-value",
+  unique: "duplicate-id",
+  "timestamp-order": "invalid-value",
+  "calendar-roundtrip": "invalid-value",
+});
 
 function applyCrossRule(
   spec: VerificationObjectSpec,
   rule: VerificationCrossRule,
   value: Record<string, unknown>,
-  at: (key: string) => string,
-  errors: string[],
+  path: string,
+  sink: VerificationDiagnosticSink,
 ): void {
+  const code = rule.code ?? CROSS_RULE_DEFAULT_CODE[rule.kind];
+  const at = (key: string) => `${path}/${key}`;
+
   switch (rule.kind) {
     case "unique": {
       const collectionName = rule.collection ?? "";
@@ -868,11 +942,8 @@ function applyCrossRule(
         if (!isPlainRecord(item)) continue;
         const key = item[field];
         if (typeof key !== "string" || key.length === 0) continue;
-        if (seen.has(key)) {
-          errors.push(`${at(collectionName)}[${i}].${field} "${key}" is a duplicate`);
-        } else {
-          seen.add(key);
-        }
+        if (seen.has(key)) sink.push(code, `${at(collectionName)}/${i}/${field}`);
+        else seen.add(key);
       }
       break;
     }
@@ -883,40 +954,24 @@ function applyCrossRule(
       const present = fields.filter(
         (key) => Object.prototype.hasOwnProperty.call(value, key) && value[key] !== null,
       );
-      if (present.length === fields.length) {
-        errors.push(
-          `${at(whenField)} is "${String(value[whenField])}" but both ${fields.join(" and ")} are present (need exactly one)`,
-        );
-      } else if (present.length === 0) {
-        errors.push(
-          `${at(whenField)} is "${String(value[whenField])}" but both ${fields.join(" and ")} are null/absent (need exactly one)`,
-        );
-      }
+      // One row at the discriminator: the combination of its value with the
+      // nullness of `fields` is the violation, and D16 forbids naming the values.
+      if (present.length === fields.length || present.length === 0) sink.push(code, at(whenField));
       break;
     }
     case "null-when": {
       if (!ruleApplies(spec, rule, value)) break;
-      const whenField = rule.when?.field ?? "";
       for (const key of rule.fields ?? []) {
         if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-        if (value[key] !== null) {
-          errors.push(
-            `${at(key)} ${rule.messageTail ?? `must be null when ${whenField} is "${String(value[whenField])}"`}`,
-          );
-        }
+        if (value[key] !== null) sink.push(code, at(key));
       }
       break;
     }
     case "non-null-when": {
       if (!ruleApplies(spec, rule, value)) break;
-      const whenField = rule.when?.field ?? "";
       for (const key of rule.fields ?? []) {
         const present = Object.prototype.hasOwnProperty.call(value, key) && value[key] !== null;
-        if (!present) {
-          errors.push(
-            `${at(key)} ${rule.messageTail ?? `must not be null when ${whenField} is "${String(value[whenField])}"`}`,
-          );
-        }
+        if (!present) sink.push(code, at(key));
       }
       break;
     }
@@ -926,7 +981,7 @@ function applyCrossRule(
       const a = value[start];
       const b = value[end];
       if (typeof a === "string" && typeof b === "string" && new Date(b).getTime() < new Date(a).getTime()) {
-        errors.push(`${at(end)} must be >= ${start}`);
+        sink.push(code, at(end));
       }
       break;
     }
@@ -945,7 +1000,7 @@ function applyCrossRule(
           date.getUTCHours() === Number(parts[4]) &&
           date.getUTCMinutes() === Number(parts[5]) &&
           date.getUTCSeconds() === Number(parts[6]);
-        if (!ok) errors.push(`${at(key)} must be an ISO-8601 UTC timestamp`);
+        if (!ok) sink.push(code, at(key));
       }
       break;
     }

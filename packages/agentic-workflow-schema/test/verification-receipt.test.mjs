@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
+import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_COMMAND_STATUSES,
@@ -97,7 +104,7 @@ test("rejects undeclared top-level fields", async () => {
   const bad = { ...receipt, extra: true };
   const result = await validateVerificationReceiptAgainstPlan(bad, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("extra")), result.errors.join(", "));
+  assertDiagnosticAt(result, "unknown-field", "");
 });
 
 test("rejects undeclared fields in results", async () => {
@@ -116,14 +123,14 @@ test("rejects undeclared fields in results", async () => {
   }];
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("extraField")), result.errors.join(", "));
+  assertDiagnosticAt(result, "unknown-field", "/results/0");
 });
 
 test("rejects wrong contract id", async () => {
   const receipt = makeValidReceipt();
   const result = await validateVerificationReceiptAgainstPlan({ ...receipt, contract: "wrong/contract@0" }, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("contract")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "contract");
 });
 
 // ---------------------------------------------------------------------------
@@ -134,28 +141,28 @@ test("rejects invalid planDigest (not 64-hex)", async () => {
   const receipt = makeValidReceipt();
   const result = await validateVerificationReceiptAgainstPlan({ ...receipt, planDigest: "not-a-digest" }, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("planDigest")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "planDigest");
 });
 
 test("rejects invalid candidateSnapshotDigest (not 64-hex)", async () => {
   const receipt = makeValidReceipt();
   const result = await validateVerificationReceiptAgainstPlan({ ...receipt, candidateSnapshotDigest: "abc" }, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("candidateSnapshotDigest")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "candidateSnapshotDigest");
 });
 
 test("rejects invalid acceptanceFingerprint (not 64-hex)", async () => {
   const receipt = makeValidReceipt();
   const result = await validateVerificationReceiptAgainstPlan({ ...receipt, acceptanceFingerprint: "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" }, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("acceptanceFingerprint")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "acceptanceFingerprint");
 });
 
 test("rejects uppercase hex digests", async () => {
   const receipt = makeValidReceipt();
   const result = await validateVerificationReceiptAgainstPlan({ ...receipt, planDigest: "A".repeat(64) }, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("planDigest")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "planDigest");
 });
 
 // ---------------------------------------------------------------------------
@@ -166,7 +173,7 @@ test("rejects invalid stageRequested", async () => {
   const receipt = makeValidReceipt();
   const result = await validateVerificationReceiptAgainstPlan({ ...receipt, stageRequested: "ultra" }, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("stageRequested")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "stageRequested");
 });
 
 // ---------------------------------------------------------------------------
@@ -181,7 +188,7 @@ test("rejects duplicate result command ids", async () => {
   ];
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("duplicate")), result.errors.join(", "));
+  assertDiagnosticOn(result, "duplicate-id", "commandId");
 });
 
 test("reject commandId with NUL (F50)", async () => {
@@ -191,7 +198,7 @@ test("reject commandId with NUL (F50)", async () => {
   }];
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "commandId");
 });
 
 test("reject signal with NUL (F50)", async () => {
@@ -201,7 +208,7 @@ test("reject signal with NUL (F50)", async () => {
   }];
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "signal");
 });
 
 test("reject skipReason with NUL (F50)", async () => {
@@ -211,7 +218,7 @@ test("reject skipReason with NUL (F50)", async () => {
   }];
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "skipReason");
 });
 
 // ---------------------------------------------------------------------------
@@ -223,7 +230,7 @@ test("rejects invalid status", async () => {
   receipt.results[0].status = "cancelled";
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("status")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "status");
 });
 
 // ---------------------------------------------------------------------------
@@ -240,7 +247,7 @@ test("passed: requires exactly one of exitCode or signal", async () => {
   };
   let result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("exitCode") || e.includes("signal")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-exit-state", "status");
 
   // Both null
   receipt.results[0] = {
@@ -250,7 +257,7 @@ test("passed: requires exactly one of exitCode or signal", async () => {
   };
   result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("exitCode") || e.includes("signal")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-exit-state", "status");
 });
 
 test("passed: valid with exitCode only", async () => {
@@ -362,7 +369,7 @@ test("rejects non-UTC timestamp", async () => {
   receipt.results[0].startedAt = "2025-01-01T00:00:00";
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("startedAt") || e.includes("timestamp")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "startedAt");
 });
 
 test("rejects startedAt > endedAt", async () => {
@@ -371,7 +378,7 @@ test("rejects startedAt > endedAt", async () => {
   receipt.results[0].endedAt = "2025-01-01T00:00:01Z";
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("endedAt") || e.includes("startedAt")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "endedAt");
 });
 
 test("accepts equal timestamps", async () => {
@@ -391,7 +398,7 @@ test("rejects empty evidence ref", async () => {
   receipt.results[0].stdout = { ref: "", bytes: 10, sha256: "a".repeat(64) };
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("ref")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "ref");
 });
 
 test("rejects evidence ref > 1024 chars", async () => {
@@ -399,7 +406,7 @@ test("rejects evidence ref > 1024 chars", async () => {
   receipt.results[0].stdout = { ref: "x".repeat(1025), bytes: 10, sha256: "a".repeat(64) };
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("ref")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "ref");
 });
 
 test("rejects evidence bytes < 0", async () => {
@@ -407,7 +414,7 @@ test("rejects evidence bytes < 0", async () => {
   receipt.results[0].stdout = { ref: "evidence-1", bytes: -1, sha256: "a".repeat(64) };
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("bytes")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "bytes");
 });
 
 test("rejects evidence sha256 not 64-hex", async () => {
@@ -415,7 +422,7 @@ test("rejects evidence sha256 not 64-hex", async () => {
   receipt.results[0].stdout = { ref: "evidence-1", bytes: 10, sha256: "invalid" };
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("sha256")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-evidence", "sha256"); // D5 content rule owns its own code
 });
 
 test("accepts valid evidence reference", async () => {
@@ -442,7 +449,7 @@ test("rejects non-null skipReason on non-skipped row", async () => {
   receipt.results[0].skipReason = "some reason";
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("skipReason")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-skip", "skipReason");
 });
 
 test("accepts null skipReason on non-skipped row", async () => {
@@ -459,7 +466,7 @@ test("rejects empty skipReason", async () => {
   receipt.results[0].skipReason = "";
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("skipReason")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "skipReason");
 });
 
 test("rejects skipReason > 1024 chars", async () => {
@@ -468,7 +475,7 @@ test("rejects skipReason > 1024 chars", async () => {
   receipt.results[0].skipReason = "x".repeat(1025);
   const result = await validateVerificationReceiptAgainstPlan(receipt, PLAN);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("skipReason")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "skipReason");
 });
 
 test("accepts valid skipReason", async () => {

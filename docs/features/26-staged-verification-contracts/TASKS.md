@@ -146,14 +146,16 @@ Evidence: `test/verification-bounds.test.mjs` (13 cases) + `src/verification-con
 
 Layer: schema · Done-when: `cd packages/agentic-workflow-schema && npm test` → exit 0 with byte, existing-string and diagnostic boundary suites green.
 
-- [ ] Add red-first boundary pairs for canonical plan and receipt byte sizes
-- [ ] Add red-first boundary pairs for skip-reason and evidence-reference lengths
-- [ ] Add red-first fixtures for diagnostic cap, truncation flag and value redaction
-- [ ] Enforce both canonical byte budgets before unbounded diagnostic allocation
-- [ ] Enforce the existing skip-reason and evidence-reference bounds
-- [ ] Publish the frozen diagnostic-code vocabulary and RFC 6901 path representation
-- [ ] Replace `errors: string[]` with the bounded diagnostic failure branch (F71)
-- [ ] Project expressible payload bounds and mark canonical byte budgets runtime-only
+Evidence: `test/verification-payload.test.mjs` (14 cases) + `test/fixtures/verification-diagnostics.mjs` (shared diagnostic assertions) + `src/verification-contract.ts` (`VERIFICATION_LIMITS` payload fields, `VERIFICATION_DIAGNOSTIC_CODES`, capped sink) + `src/index.ts` (budget pre-check, `{ ok: false, diagnostics, truncated }` results) + regenerated projections.
+
+- [x] Add red-first boundary pairs for canonical plan and receipt byte sizes — `plan: a canonical form of exactly planBytes is accepted` / `plan: one byte beyond planBytes is rejected by the budget alone`; receipt pair: `the byte budget outranks every shape ceiling — one row, root path` (200-row/600 KiB rejected by the budget alone) + `receipt: a shape-legal maximum-capacity receipt stays inside receiptBytes` (440,331 B vs 524,288 B)
+- [x] Add red-first boundary pairs for skip-reason and evidence-reference lengths — `receipt: an evidence reference is accepted at the ceiling and rejected one over` and `receipt: the skip-reason ceiling is the rule that answers one char past it` (1024 → D3 `unknown-command`, 1025 → `limit-exceeded`)
+- [x] Add red-first fixtures for diagnostic cap, truncation flag and value redaction — `diagnostics stop at the published ceiling and say so` (49/50/51 violations, document order preserved), `diagnostics are redacted rows: code + path, never a message or a value` (sentinel never echoed), `assertRedacted` pins frozen code+path rows and pointer grammar on every failure
+- [x] Enforce both canonical byte budgets before unbounded diagnostic allocation — `canonicalBudgetRefusal` measures the submitted document with the canonical serializer **first**, so an oversized payload produces exactly one root-path row and no structural or semantic work
+- [x] Enforce the existing skip-reason and evidence-reference bounds — both bound to `VERIFICATION_LIMITS.skipReasonChars` / `evidenceRefChars` in the canonical field specs and projected (`oneOf[].maxLength`, `ref.maxLength`)
+- [x] Publish the frozen diagnostic-code vocabulary and RFC 6901 path representation — `VERIFICATION_DIAGNOSTIC_CODES` (16 codes, frozen, exported), `every published diagnostic code has an emitter (budget-exceeded lands in P12)` and `semantic rejections report their own codes and pointers` pin the path forms (`/commands/0/id`, `/results/1/commandId`, `""` for the whole payload)
+- [x] Replace `errors: string[]` with the bounded diagnostic failure branch (F71) — both public entries and the freshness/budget/verdict helpers now return `{ ok: false, diagnostics, truncated }`; 68 assertion sites across the seven pre-existing feature-26 suites moved to `assertDiagnosticOn`/`assertDiagnosticAt`/`assertOnlyDiagnostic` against one shared fixture; no feature-26 site reads a message string any more
+- [x] Project expressible payload bounds and mark canonical byte budgets runtime-only — projections regenerated with three new disclosed clauses (`payload budget: runtime-only … <= 256 KiB / <= 512 KiB`, `diagnostics: runtime-only (at most 50 …)`, `values: never returned …`), derived from `VERIFICATION_LIMITS` so they cannot go stale; `payload bounds are projected where Draft-07 can express them`
 
 ## P12 — Bound verification time
 

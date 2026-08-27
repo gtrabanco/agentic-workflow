@@ -1,5 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import {
@@ -95,7 +102,7 @@ test("rejects result commandId not in plan", async () => {
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("nonexistent")), result.errors.join(", "));
+  assertDiagnosticAt(result, "unknown-command", "/results/0/commandId");
 });
 
 test("rejects result commandId outside declared order", async () => {
@@ -116,7 +123,7 @@ test("rejects result commandId outside declared order", async () => {
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("order")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-order", "commandId");
 });
 
 test("rejects a full-stage result carried by a fast-stage receipt (F66)", async () => {
@@ -142,7 +149,7 @@ test("rejects a full-stage result carried by a fast-stage receipt (F66)", async 
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, planWithMixed);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("build")), result.errors.join(", "));
+  assertDiagnosticAt(result, "invalid-stage", "/results/1/commandId");
 });
 
 test("accepts a fast-stage receipt that carries only fast-stage rows", async () => {
@@ -190,7 +197,7 @@ test("planDigest must match", async () => {
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("planDigest") || e.includes("digest")), result.errors.join(", "));
+  assertDiagnosticOn(result, "digest-mismatch", "planDigest");
 });
 
 test("stored verdict must match deriveVerificationVerdict", async () => {
@@ -211,7 +218,7 @@ test("stored verdict must match deriveVerificationVerdict", async () => {
   };
   const result = await validateVerificationReceiptAgainstPlan(receipt, plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("verdict")), result.errors.join(", "));
+  assertDiagnosticOn(result, "verdict-mismatch", "verdict");
 });
 
 test("accepts valid plan-bound receipt", async () => {
