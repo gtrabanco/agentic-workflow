@@ -230,12 +230,12 @@ Layer: docs · Done-when: `cd packages/agentic-workflow-schema && npm run test:v
 
 ## P17 — Snapshot verification input at validation entry
 Layer: domain · Done-when: the hostile-getter suite proves both public entries decide and build DTOs from one captured document for every accessor, `npm run gate:verification` exits 0 with p95 ≤ 100 ms, and ledger F97 reads `folded: yes` naming the P17 commit.
-- [ ] Write the hostile-getter regression suite red-first: a getter whose value flips at each successive read — for every plan field (id, stage, executable, args, workingDirectoryPolicy, workingDirectory, timeoutMs, costClass, stopOnFailure) and every receipt field (commandId, status, skipReason, exitCode, durationMs, evidence) — must yield a refusal or a blessed DTO identical to the validated document, on both public entries
-- [ ] Capture the submitted value once at entry into a frozen own-property snapshot (the capture reads every submitted accessor exactly once); validate and build DTOs from the snapshot only
-- [ ] Route both public entries through the capture; a throwing getter surfaces as the existing redacted `invalid-type` refusal (F92 parity)
-- [ ] Keep diagnostic parity: every refusal after capture still carries only a frozen code plus RFC-6901 path
-- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0, benchmark p95 ≤ 100 ms
-- [ ] Flip F97 `folded: yes` naming the P17 commit; commit atomically and push
+- [x] Write the hostile-getter regression suite red-first: a getter whose value flips at each successive read — for every plan accessor (contract, commands, and per command id, stage, executable, args, workingDirectoryPolicy, workingDirectory, timeoutMs, costClass, stopOnFailure) and every receipt accessor (contract, planDigest, candidateSnapshotDigest, acceptanceFingerprint, results, stageRequested, verdict, and per row commandId, status, exitCode, signal, startedAt, endedAt, stdout + stdout.ref/bytes/sha256, stderr + stderr.ref/bytes/sha256, skipReason) — must yield a refusal or a blessed DTO identical to the validated document, on both public entries
+- [x] Capture the submitted value once at entry into a frozen own-property snapshot (the capture reads every submitted accessor exactly once); validate and build DTOs from the snapshot only
+- [x] Route both public entries through the capture; a throwing getter surfaces as the existing redacted `invalid-type` refusal (F92 parity)
+- [x] Keep diagnostic parity: every refusal after capture still carries only a frozen code plus RFC-6901 path
+- [x] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0, benchmark p95 ≤ 100 ms
+- [x] Flip F97 `folded: yes` naming the P17 commit; commit atomically and push
 
 ## P18 — Bound verification preflight refusal work
 Layer: domain · Done-when: a 200,000-command plan is refused `limit-exceeded` in ≤ 50 ms wall-clock, `npm run gate:verification` exits 0, and ledger F99 reads `folded: yes` naming the P18 commit.

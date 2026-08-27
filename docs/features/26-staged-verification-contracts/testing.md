@@ -85,6 +85,13 @@
   `check:verification-package`, `bench:verification`, `test:verification-docs`,
   `gate:verification`) that lacks the boundary qualifier in its own paragraph (F110), and keeps
   both CHANGELOGs' case count equal to the suite's real size (F90).
+- Hostile-accessor regression (`test/verification-hostile-input.test.mjs`, 14 cases, P17/F97): every
+  plan and receipt accessor is armed with a getter whose value flips read to read, and the suite
+  pins four properties — an entry never blesses a document its own rules refuse, each submitted
+  accessor is read at most once per entry call, a blessed DTO carries no live accessor, and a
+  throwing getter still answers as exactly one redacted `invalid-type` row naming its own frame.
+  Three of the cases are the literal F97 reproductions (fast-ceiling breach, duplicate command ids,
+  aggregate-budget re-scoping) plus the verdict-flip case.
 - Prototype/inherited-field fixtures prove only normalized own-property data is
   accepted and digest-bound.
 - Regression: every pre-existing suite stays green; the five prior schema files

@@ -474,3 +474,28 @@ Non-blocking and independent; no issue created — only the user routes these:
   PREFLIGHT's fail-closed rule applied: full gate pass re-run, forge traversal included, result
   written as receipt v2. Re-trigger: any future receipt whose fingerprint cannot be reproduced from
   its recorded inputs must be replaced, not skipped.
+
+- **2026-08-27 P17: capture the submitted document once; the capture never decides.** Both public
+  entries and the canonical/digest helpers now run every pass — byte budget, structural walk,
+  cross-rules, DTO construction — against one frozen own-property snapshot taken at entry
+  (`captureVerificationInput`, `src/verification-contract.ts`). Deliberate shape of the snapshot:
+  it copies, it does not police. A non-plain object is carried **by reference** and an unsupported
+  leaf (function, symbol, bigint, `undefined`, non-finite number) is carried **as submitted**, so
+  the codes a refusal reports stay exactly where the structural walk put them (AC1's
+  prototype-pollution and F91's unsupported-leaf tests are unchanged). The capture's only own
+  verdict is `invalid-type` at the frame that owns a throwing accessor, which is F92's rule.
+- **2026-08-27 P17: two disclosed tightenings, neither a weakened validator.** (1) A throwing
+  accessor now aborts *before* structural work, so a document that also carries an independent
+  violation yields one `invalid-type` row instead of two — earlier refusal, same redacted shape.
+  (2) A **non-enumerable own** declared key is no longer observable (the snapshot copies own
+  *enumerable* keys, like `Object.keys` and the canonical serializer already did); it is now
+  refused as `missing-field` rather than accepted. That input cannot come from `JSON.parse`, i.e.
+  outside the documented input domain of both entries. Re-trigger: any consumer that submits a
+  non-enumerable own field legitimately must reopen this decision.
+- **2026-08-27 P17: TASKS task 1 named two accessors the contract does not have.** The phase text
+  listed `durationMs` and `evidence` as receipt fields; `RESULT_SPEC` carries `startedAt`/`endedAt`
+  (duration is derived, never submitted) and `stdout`/`stderr` evidence references. The suite
+  covers **every real accessor** instead — a superset of the named list (22 receipt + 11 plan
+  pointers, plus the evidence sub-fields) — and a coverage case now fails the suite if the
+  contract grows an accessor with no hostile-getter case. `TASKS.md` is corrected in place; the
+  intent (exhaustive single-observation coverage) is unchanged and strictly better served.
