@@ -275,6 +275,19 @@ test("AC6: the feature-26 example in each reference typechecks against the publi
 });
 
 // ---------------------------------------------------------------------------
+// F93 / F96 (review @8213ebd) — runner-side disclosure of the opaque path and
+// of the frozen vocabulary exports. Red first: neither exists yet.
+// ---------------------------------------------------------------------------
+
+test("F93: both references disclose workingDirectory as an opaque, never-percent-decoded path", () => {
+  for (const [name, text] of Object.entries(both)) {
+    assert.match(text, /opaque|opaca/, `${name} never calls the validated path opaque`);
+    assert.match(text, /percent-decod/i, `${name} never warns against percent-decoding before resolution`);
+  }
+});
+
+
+// ---------------------------------------------------------------------------
 // Deferred consumer boundary (D15) — documented, no issue created
 // ---------------------------------------------------------------------------
 

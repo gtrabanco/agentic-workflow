@@ -230,7 +230,10 @@ Two versioned wire contracts for staged verification:
   `stage: fast | full`, an `executable` and ordered `args` (never a shell
   string), a working-directory policy (`candidate-root` or `relative-path` with
   validated relative path), a positive `timeoutMs`, `stopOnFailure`, and a
-  cost class.
+  cost class. The validated relative path is an **opaque** string: resolve it
+  under the candidate root exactly as submitted, and never percent-decode it
+  before resolution — decoding can turn a path the validator rejected into one
+  that escapes the root.
 
 - `VerificationReceipt v1` (`agentic-workflow/verification-receipt@1`) — a receipt that
   binds to the plan digest, candidate-snapshot digest, and acceptance
