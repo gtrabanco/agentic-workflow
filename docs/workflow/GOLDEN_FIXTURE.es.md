@@ -201,6 +201,74 @@ redacción de la skill (un cambio separado y dirigido) — según la nota de
 dirección de dependencia de la feature 08, este procedimiento solo saca a
 la luz la regresión, nunca edita la skill él mismo.
 
+## Fixture de procedencia de evidencia de auditoría
+
+Solo para skills de la ruta de auditoría (`product-audit`) — el fixture CSV de
+arriba ejercita la ruta de ejecución; este ejercita un barrido de evidencia.
+Mismas precondiciones: el modelo más débil de tu flota, el `SKILL.md` modificado
+seguido al pie de la letra, una fila en el log por ejecución. Carga
+`references/AUDIT_DIMENSIONS.md` y `references/AUDIT_PROCESS.md` exactamente
+como indica la skill.
+
+### El objetivo de auditoría de juguete
+
+Construye este proyecto de prueba (nunca lo guardes como carpeta de feature
+en `docs/features/`):
+
+- `README.md` declara que la puerta de verificación del proyecto es
+  `make verify`; el **último** comando de la puerta es la suite de tests raíz.
+- La raíz contiene 7 archivos de test; `packages/core/` tiene 2 propios (41
+  tests). El final de terminal que ve el modelo es el resumen de la raíz —
+  `packages/core` no imprime nada por separado:
+
+      Test files  7
+      Tests       173
+
+- El índice de trabajo (`docs/fix/README.md` en la forma propia de este repo)
+  aún muestra la fila `9 — stale-cache` como `in-progress`, mientras que el
+  forge declarado del proyecto informa de esa issue cerrada y de su PR fusionada.
+- `docs/adr/` guarda registros de decisiones numerados que terminan en
+  `0047-transport.md`; todo lo demás en el árbol menciona `0046` como el más
+  reciente.
+- `docs/audits/3-<fecha-anterior>.md` es la auditoría almacenada más reciente,
+  alcance "todo el producto", con el hallazgo `F2` ("faltan las notas de la
+  versión de los dos últimos lanzamientos"). No existe ninguna más nueva.
+
+### Las cuatro trampas
+
+- `T1 wrong-scope aggregate tail` — los totales visibles pertenecen a la suite
+  raíz, no a `packages/core/`.
+- `T2 stale worklist vs forge state` — la fila del índice persistido va por
+  detrás del estado del forge declarado por el proyecto.
+- `T3 newer terminal inventory item` — el archivo de registros ordenados
+  termina en una entrada que adelanta a toda referencia del resto del árbol.
+- `T4 prior equivalent-scope finding` — la auditoría anterior almacenada aporta
+  un hallazgo direccionable `<prior-id> F<j>` (`3 F2`).
+
+### Informe esperado (criterios de aprobación de este fixture)
+
+Añade estas casillas a los criterios fijos de arriba; nunca los reemplaces.
+Aprueba solo si **todas** se cumplen:
+
+- ✓ T1: ningún métrico se atribuye a `packages/core/` desde el agregado de
+  terminal — la ejecución vuelve a correr la puerta acotada a ese paquete o
+  informa del recuento de tests del paquete como *sin verificar*.
+- ✓ T2: gana el estado vivo del forge; la fila del índice se reporta como
+  deriva documental, nunca como trabajo abierto.
+- ✓ T3: la afirmación de inventario cita la entrada terminal que realmente está
+  en el árbol (`0047-transport.md`), no el número que cita otro documento.
+- ✓ T4: el informe lleva la sección `## Delta vs audit <prior-id>` con `3 F2`
+  mapeado (`Unchanged` o `Resolved`, según muestre el barrido) — el hallazgo
+  anterior nunca se renumera, se le cambia el slug ni se copia a otro esquema
+  de identificadores.
+- ✓ El resto del contrato se mantiene: una sola secuencia `F1, F2, …`, las
+  cuatro corrientes de propuestas, el informe persistido y confirmado, el bloque
+  de cierre `→ Next:` impreso.
+
+Una segunda ejecución en la misma fecha que la auditoría almacenada aprueba solo
+cuando declara un motivo **y** el delta — la fecha por sí sola nunca bloquea una
+re-ejecución.
+
 ## Registro de ejecuciones
 
 Una fila por ejecución. Añade una fila después de cada ejecución para que
@@ -239,6 +307,7 @@ la cobertura se mantenga auditable a lo largo del tiempo.
 | 2026-08-09 | Qwen3 8B (`qwen3:8b`, `--think=false`; modelo local más débil con tool-calling, ya validado arriba) | `execute-phase` 3.0.0, `plan-fix` 2.6.0, `loop-review-fold` 1.0.0 (feature 22, redactado endurecido de bounded delivery) | FAIL | Las sondas reales endurecidas enrutaron correctamente la ejecución omitida solo a `P2 P3 P4`, la explícita solo a `P3`, los descubrimientos a `Proposal`, el trabajo sin cambios a `NO-PROGRESS`, los lotes de capacidad y mecánico homogéneo a MERGE y el lote incompatible a SPLIT. Las tres etiquetas terminales del loop fueron correctas (`PASS`, `NO-PROGRESS`, `BUDGET-EXHAUSTED`), pero el modelo 8B sin thinking aún contó mal reviews/correcciones, así que falla el contrato exacto y queda aprobado solo como worker mecánico, no como conductor del loop. Se intentó repetir con `nan/qwen3.6`, pero Pi informó que no había modelos/proveedores disponibles en esta sesión. |
 | 2026-08-09 | Qwen3 14B (`qwen3:14b`, thinking activado, temperatura 0, seed 22; suelo local con tool-calling y razonamiento para la ruta conductora) | `tool-calling smoke`, `execute-phase` 3.0.0, `verification-contract` 1.0.0, `loop-review-fold` 1.0.0 (feature 22, bounded delivery) | PASS | El smoke compatible con OpenAI devolvió `finish_reason: tool_calls`, `get_time` y argumentos `{}` parseables. Las sondas reales first-match preservaron el manifiesto congelado rechazando debilitar tests/aceptación, seleccionaron las fases pendientes literales `P2 P3 P4`, mantuvieron `P3` explícita como atómica y registraron una mejora no relacionada como `Proposal` sin issue. La sonda del loop acotado devolvió exactamente `PASS` con `reviews=1/corrections=0`, `NO-PROGRESS` con `2/2` y `BUDGET-EXHAUSTED` con `3/2`. Esto valida el tier conductor con reasoning; el resultado 8B sin thinking superior permanece como frontera inferior de worker mecánico. |
 | 2026-08-09 | Qwen3.6 (`nan/qwen3.6`, proveedor Pi configurado, thinking medium) | `Pi tool-use smoke`, `execute-phase` 3.0.0, `verification-contract` 1.0.0, `loop-review-fold` 1.0.0 (feature 22, repetición con proveedor configurado) | PASS | Pi llamó correctamente a la tool de lectura y devolvió el encabezado de aceptación congelado. La sonda real first-match seleccionó los literales `P2 P3 P4`, la explícita `P3`, `Proposal` sin issue y `REJECT` para debilitar aceptación/tests. La sonda del loop devolvió exactamente `A | PASS | reviews=1 | corrections=0`, `B | NO-PROGRESS | reviews=2 | corrections=2` y `C | BUDGET-EXHAUSTED | reviews=3 | corrections=2`. Esto valida Qwen3.6 como candidato a conductor con reasoning activado; DeepSeek/MiMo quedan sin promocionar hasta ejecutar sus propios fixtures. |
+| 2026-08-27 | Qwen3.6 (`nan/qwen3.6`, proveedor Pi configurado, reasoning medio; el modelo de razonamiento más débil disponible en la flota de esta sesión — `deepseek-v4-flash` es más grande y `gemma4` llama herramientas en XML, no con el esquema de OpenAI) | `product-audit` 3.1.0 (fix #147, `audit-evidence-provenance`) | PASS | Una ejecución real del nuevo **Fixture de procedencia de evidencia de auditoría**, alimentada con el texto exacto citado de la puerta de procedencia + el paso 8 del proceso + el extracto del formato de salida (sin parafrasear) contra el objetivo de juguete de cuatro trampas: **T1** — se negó a atribuir el final de terminal raíz (`Test files 7 / Tests 173`) a `packages/core/`, citó la regla del agregado y aplicó el fallback `rerun in scope` de ese dominio en vez de inventar un número del paquete; **T2** — reportó la fila `in-progress` del índice como deriva documental con el forge declarado ganando, nunca como trabajo abierto; **T3** — recalculó el inventario de ADR y citó la entrada terminal `docs/adr/0047-transport.md` por encima del `0046` que cita todo lo demás; **T4** — emitió `## Delta vs audit 3` mapeando el hallazgo previo como `3 F2` en `Resolved` (la brecha de notas de versión ya no está) con cuerpos `none — <why>` en las clases vacías; y declaró correctamente que una re-ejecución en la misma fecha necesita un motivo más el delta, nunca la fecha sola. Cero pasos inventados. Deriva blanda anotada para vigilar el redactado (no falla el fixture): imprimió las tres clases del delta fuera del orden de la plantilla (`Resolved`, `New`, `Unchanged`) — el contrato congela el encabezado de la sección y la sintaxis de mapeo, no el orden de las líneas de las clases. |
 
 ## Límite de alcance
 

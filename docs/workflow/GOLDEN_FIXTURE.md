@@ -187,6 +187,71 @@ Any unchecked box = **FAIL**. The fix is a wording tightening of the skill
 (a separate, targeted change) — per feature 08's dependency-direction note,
 this procedure only surfaces the regression, it never edits the skill itself.
 
+## Audit-evidence provenance fixture
+
+Audit-path skills only (`product-audit`) — the CSV fixture above drives the
+executor path, this one drives an evidence sweep. Same preconditions: weakest
+model in your fleet, the changed `SKILL.md` followed literally, one run-log row
+per run. Load `references/AUDIT_DIMENSIONS.md` and
+`references/AUDIT_PROCESS.md` exactly as the skill instructs.
+
+### The toy audit target
+
+Build this scratch project (never commit it as a feature folder under
+`docs/features/`):
+
+- `README.md` declares the project's verification gate as `make verify`; the
+  gate's **last** command is the root test suite.
+- The root holds 7 test files; `packages/core/` holds 2 of its own (41 tests).
+  The terminal tail the model sees is the root summary — `packages/core` prints
+  nothing separately:
+
+      Test files  7
+      Tests       173
+
+- The worklist index (`docs/fix/README.md` in this repo's own shape) still
+  shows row `9 — stale-cache` as `in-progress`, while the project's declared
+  forge reports that issue closed and its PR merged.
+- `docs/adr/` holds numbered decision records ending at `0047-transport.md`;
+  every other document in the tree mentions `0046` as the newest.
+- `docs/audits/3-<earlier-date>.md` is the newest stored audit, scope "whole
+  product", carrying finding `F2` ("release notes missing for the last two
+  releases"). Nothing newer exists.
+
+### The four traps
+
+- `T1 wrong-scope aggregate tail` — the visible totals belong to the root
+  suite, not to `packages/core/`.
+- `T2 stale worklist vs forge state` — the persisted index row lags the
+  project's declared forge state.
+- `T3 newer terminal inventory item` — the ordered records file ends at an
+  entry that outruns every reference elsewhere in the tree.
+- `T4 prior equivalent-scope finding` — the stored earlier audit supplies one
+  addressable `<prior-id> F<j>` finding (`3 F2`).
+
+### Expected report (pass criteria for this fixture)
+
+Add these boxes to the fixed pass criteria above; never replace them. Pass only
+if **every** box holds:
+
+- ✓ T1: no metric is attributed to `packages/core/` from the aggregate tail —
+  the run reruns the gate scoped to that package or reports the package's test
+  count as *unverified*.
+- ✓ T2: the live forge state wins; the index row is reported as documentation
+  drift, never as an open item.
+- ✓ T3: the inventory claim cites the terminal item actually found in the tree
+  (`0047-transport.md`), not the number another document quotes.
+- ✓ T4: the report carries the `## Delta vs audit <prior-id>` section with
+  `3 F2` mapped in it (`Unchanged` or `Resolved`, per what the sweep shows) —
+  the earlier finding is never renumbered, re-slugged, or copied into a new
+  identifier scheme.
+- ✓ The rest of the contract still holds: one `F1, F2, …` sequence, the four
+  proposal streams, the report persisted and committed, the closing `→ Next:`
+  block printed.
+
+A second run on the same date as the stored audit passes only when it states a
+reason **and** the delta — the date alone never blocks a rerun.
+
 ## Run log
 
 One row per run. Append a row after every run so coverage stays auditable
@@ -228,6 +293,7 @@ over time.
 | 2026-08-09 | Qwen3 8B (`qwen3:8b`, `--think=false`; weakest local tool-capable model, tool calling already validated above) | `execute-phase` 3.0.0, `plan-fix` 2.6.0, `loop-review-fold` 1.0.0 (feature 22, hardened bounded-delivery wording) | FAIL | The tightened live probes correctly routed omitted execution to only `P2 P3 P4`, explicit execution to only `P3`, discoveries to `Proposal`, unchanged work to `NO-PROGRESS`, both capability and homogeneous mechanical batches to MERGE, and the incompatible batch to SPLIT. All three loop terminal labels were correct (`PASS`, `NO-PROGRESS`, `BUDGET-EXHAUSTED`), but the 8B no-thinking model still miscounted reviews/corrections, so it fails the exact contract and is approved only as a mechanical worker, not as loop conductor. A configured `nan/qwen3.6` retest was attempted but Pi reported no models/providers available in this session. |
 | 2026-08-09 | Qwen3 14B (`qwen3:14b`, thinking enabled, temperature 0, seed 22; local tool-capable reasoning floor for the conductor route) | `tool-calling smoke`, `execute-phase` 3.0.0, `verification-contract` 1.0.0, `loop-review-fold` 1.0.0 (feature 22, bounded delivery) | PASS | OpenAI-compatible smoke returned `finish_reason: tool_calls`, `get_time`, and parseable `{}` arguments. Live first-match probes preserved the frozen manifest by rejecting test/acceptance weakening, selected literal remaining phases `P2 P3 P4`, kept explicit `P3` atomic, and recorded an unrelated enhancement as `Proposal` with no issue. The bounded-loop probe returned exactly `PASS` with `reviews=1/corrections=0`, `NO-PROGRESS` with `2/2`, and `BUDGET-EXHAUSTED` with `3/2`. This validates the reasoning-enabled conductor tier; the 8B no-thinking result above remains the lower mechanical-worker boundary. |
 | 2026-08-09 | Qwen3.6 (`nan/qwen3.6`, configured Pi provider, thinking medium) | `Pi tool-use smoke`, `execute-phase` 3.0.0, `verification-contract` 1.0.0, `loop-review-fold` 1.0.0 (feature 22, configured-provider retest) | PASS | Pi successfully called the read tool and returned the frozen acceptance heading. The live first-match probe selected literal `P2 P3 P4`, explicit `P3`, `Proposal` with no issue, and `REJECT` for acceptance/test weakening. The bounded-loop probe returned exactly `A | PASS | reviews=1 | corrections=0`, `B | NO-PROGRESS | reviews=2 | corrections=2`, and `C | BUDGET-EXHAUSTED | reviews=3 | corrections=2`. This validates Qwen3.6 as a conductor candidate when reasoning is enabled; DeepSeek/MiMo remain unpromoted until separately fixture-tested. |
+| 2026-08-27 | Qwen3.6 (`nan/qwen3.6`, configured Pi provider, thinking medium; weakest reasoning model available in this session's fleet — `deepseek-v4-flash` is larger, `gemma4` calls tools in XML not the OpenAI schema) | `product-audit` 3.1.0 (fix #147, `audit-evidence-provenance`) | PASS | One live run of the new **Audit-evidence provenance fixture**, fed the exact quoted provenance gate + process step 8 + output-format excerpt (no paraphrase) against the four-trap toy target: **T1** — refused to attribute the root tail (`Test files 7 / Tests 173`) to `packages/core/`, quoted the aggregate-tail rule and applied that domain's `rerun in scope` fallback instead of inventing a package number; **T2** — reported the `in-progress` worklist row as documentation drift with the declared forge winning, never as an open item; **T3** — recomputed the ADR inventory and cited the terminal `docs/adr/0047-transport.md` over the `0046` every other document quotes; **T4** — emitted `## Delta vs audit 3` mapping the prior finding as `3 F2` under `Resolved` (release-notes gap gone) with `none — <why>` bodies on the empty classes; and stated correctly that a same-date rerun needs a reason plus the delta, never the date alone. Zero invented steps. Soft drift noted for wording watch (not a fixture failure): it printed the three delta classes out of template order (`Resolved`, `New`, `Unchanged`) — the contract freezes the section heading and the mapping syntax, not the line order of the classes. |
 
 ## Scope boundary
 
