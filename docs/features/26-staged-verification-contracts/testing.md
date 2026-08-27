@@ -73,10 +73,14 @@
   command registration, the rebuild-before-check ordering, the 100 ms ceiling with no
   CLI override, the 128-command default, F70's absence of Node typings, and npm/Bun
   lock agreement with the manifest.
-- Docs fixtures: `test/verification-docs.test.mjs` (driven by
-  `npm run test:verification-docs`) currently proves the harness and that both
-  references name the two public entries; P14 adds the executable-example
-  extraction/compilation and EN/ES semantic-parity assertions listed in its header.
+- Documentation fixtures: `test/verification-docs.test.mjs` (driven by
+  `npm run test:verification-docs`, and included in `npm test`) asserts AC6's six
+  claims in both languages, one exact `VERIFICATION_LIMITS` number per table row,
+  the aggregate budgets and the 100 ms p95 statement, the projection/generator/
+  drift-command boundary, the D16 shape plus the whole 16-code vocabulary, all six
+  freshness codes, that no example calls an unexported symbol, EN/ES example-code
+  equality, and that the extracted feature-26 example typechecks against the
+  published types **and runs** to its `Delivery verified` conclusion.
 - Prototype/inherited-field fixtures prove only normalized own-property data is
   accepted and digest-bound.
 - Regression: every pre-existing suite stays green; the five prior schema files
