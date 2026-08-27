@@ -201,6 +201,74 @@ redacción de la skill (un cambio separado y dirigido) — según la nota de
 dirección de dependencia de la feature 08, este procedimiento solo saca a
 la luz la regresión, nunca edita la skill él mismo.
 
+## Fixture de procedencia de evidencia de auditoría
+
+Solo para skills de la ruta de auditoría (`product-audit`) — el fixture CSV de
+arriba ejercita la ruta de ejecución; este ejercita un barrido de evidencia.
+Mismas precondiciones: el modelo más débil de tu flota, el `SKILL.md` modificado
+seguido al pie de la letra, una fila en el log por ejecución. Carga
+`references/AUDIT_DIMENSIONS.md` y `references/AUDIT_PROCESS.md` exactamente
+como indica la skill.
+
+### El objetivo de auditoría de juguete
+
+Construye este proyecto de prueba (nunca lo guardes como carpeta de feature
+en `docs/features/`):
+
+- `README.md` declara que la puerta de verificación del proyecto es
+  `make verify`; el **último** comando de la puerta es la suite de tests raíz.
+- La raíz contiene 7 archivos de test; `packages/core/` tiene 2 propios (41
+  tests). El final de terminal que ve el modelo es el resumen de la raíz —
+  `packages/core` no imprime nada por separado:
+
+      Test files  7
+      Tests       173
+
+- El índice de trabajo (`docs/fix/README.md` en la forma propia de este repo)
+  aún muestra la fila `9 — stale-cache` como `in-progress`, mientras que el
+  forge declarado del proyecto informa de esa issue cerrada y de su PR fusionada.
+- `docs/adr/` guarda registros de decisiones numerados que terminan en
+  `0047-transport.md`; todo lo demás en el árbol menciona `0046` como el más
+  reciente.
+- `docs/audits/3-<fecha-anterior>.md` es la auditoría almacenada más reciente,
+  alcance "todo el producto", con el hallazgo `F2` ("faltan las notas de la
+  versión de los dos últimos lanzamientos"). No existe ninguna más nueva.
+
+### Las cuatro trampas
+
+- `T1 wrong-scope aggregate tail` — los totales visibles pertenecen a la suite
+  raíz, no a `packages/core/`.
+- `T2 stale worklist vs forge state` — la fila del índice persistido va por
+  detrás del estado del forge declarado por el proyecto.
+- `T3 newer terminal inventory item` — el archivo de registros ordenados
+  termina en una entrada que adelanta a toda referencia del resto del árbol.
+- `T4 prior equivalent-scope finding` — la auditoría anterior almacenada aporta
+  un hallazgo direccionable `<prior-id> F<j>` (`3 F2`).
+
+### Informe esperado (criterios de aprobación de este fixture)
+
+Añade estas casillas a los criterios fijos de arriba; nunca los reemplaces.
+Aprueba solo si **todas** se cumplen:
+
+- ✓ T1: ningún métrico se atribuye a `packages/core/` desde el agregado de
+  terminal — la ejecución vuelve a correr la puerta acotada a ese paquete o
+  informa del recuento de tests del paquete como *sin verificar*.
+- ✓ T2: gana el estado vivo del forge; la fila del índice se reporta como
+  deriva documental, nunca como trabajo abierto.
+- ✓ T3: la afirmación de inventario cita la entrada terminal que realmente está
+  en el árbol (`0047-transport.md`), no el número que cita otro documento.
+- ✓ T4: el informe lleva la sección `## Delta vs audit <prior-id>` con `3 F2`
+  mapeado (`Unchanged` o `Resolved`, según muestre el barrido) — el hallazgo
+  anterior nunca se renumera, se le cambia el slug ni se copia a otro esquema
+  de identificadores.
+- ✓ El resto del contrato se mantiene: una sola secuencia `F1, F2, …`, las
+  cuatro corrientes de propuestas, el informe persistido y confirmado, el bloque
+  de cierre `→ Next:` impreso.
+
+Una segunda ejecución en la misma fecha que la auditoría almacenada aprueba solo
+cuando declara un motivo **y** el delta — la fecha por sí sola nunca bloquea una
+re-ejecución.
+
 ## Registro de ejecuciones
 
 Una fila por ejecución. Añade una fila después de cada ejecución para que

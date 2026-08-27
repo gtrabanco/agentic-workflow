@@ -43,3 +43,16 @@
 - Gotchas: `product-audit/SKILL.md` is now **2786/2800 est, 225/240 lines** — only 56 bytes free: P4's version bump is byte-neutral, and nothing else may be added there without an equal compression (AC10 runs the full budget gate on the final tree). Follow-on consequences of the renumber were fixed in this phase: "execute all ten steps" and "(Process step 9)" for the audit id. Deliberately **not** changed (no budget): the Turn-contract box still enumerates "health by dimension, F-numbered ranked findings, four proposal streams" without naming the delta — the box defers to "the fixed output format", which now contains it.
 - Files: skills/product-audit/SKILL.md, skills/product-audit/references/AUDIT_PROCESS.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
 - Next: P3 — Audit-evidence golden-fixture scenario
+- Reconciliation: P2 committed as 101b53c (receipt `pending` → 101b53c); P2 ticks verified against `SKILL.md:106-110,158-161` and `AUDIT_PROCESS.md:63-84` before starting P3.
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `node scripts/check-skill-context.mjs` (exit 0, 35 skills PASS) · Acceptance blob: 42a91680cb09d470c921ddd663aa0a7ba599f459
+- Next: P4 · Attempts: 1
+- Phase-lint: PASS (8/8) · fingerprint P3:docs:4:Audit-evidence golden-fixture scenario · triggers: none (docs layer, 3 files, no sensitive surface)
+
+## P3 — 2026-08-27
+- Done: appended the `## Audit-evidence provenance fixture` section to `GOLDEN_FIXTURE.md` (toy audit target + `### The four traps` T1–T4 + `### Expected report` pass boxes) and mirrored it faithfully into `GOLDEN_FIXTURE.es.md` with trap labels, `Delta vs audit <prior-id>`, `Unchanged`/`Resolved` and `<prior-id> F<j>` kept verbatim; both sections placed before the shared run log so the CSV fixture stays untouched. AC9 green (1 hit per label per file).
+- Remains: P4 bump surfaces (`3.0.3` → `3.1.0`, CHANGELOG EN+ES, README EN+ES), P5 hardening & PR (incl. the `manual` fixture run row).
+- Gotchas: the fixture is a *manual* procedure (docs/workflow/GOLDEN_FIXTURE.md "Scope boundary": no CI, no script) — P5 must actually drive a weakest-fleet model through T1–T4 and append the run-log row to BOTH language files' run tables, or record why it could not. ES wording reuses the repo's established Spanish terms (`confirmar` for commit, `deriva documental` for drift, `puerta de verificación` for gate); no new jargon.
+- Files: docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
+- Next: P4 — Version bump bilingual sync
