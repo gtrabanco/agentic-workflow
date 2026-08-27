@@ -459,3 +459,18 @@ Non-blocking and independent; no issue created — only the user routes these:
 
 - **2026-08-27 corrective replan (user-ordered): phases P16–P21 appended; the F80 guard is scoped to the verification canonicalizers.** After two review rounds left F97/F99/F100/F106 open (replan-in-unit) and F107–F110 fold-directly, the user ordered a replan instead of another fold round. P17/P18 repair the two reproduced root causes (single-read input snapshot; bounded preflight refusal). P19 restores byte-identical 3.3.0 behavior for the legacy `canonicalize*`/`digest*` exports (golden vectors captured from merge base e84db167) and scopes the F80 named-TypeError guard to the feature-26 verification canonicalizers, making the 3.4.0 "additive release" record true without weakening any F92-era refusal. P20 recovers ledger fold provenance; P21 runs ONE `--adversarial 3` review as the bounded convergence gate. `ACCEPTANCE.md` stays untouched (blob `2e8058860b2c805cc30507053f15f91e2f273249`).
 
+
+- **2026-08-27 P16: self-referential fold provenance is bound one commit later, never faked.** A
+  `folded: yes` flip cannot contain the SHA of the very commit that carries it. F107 and F110 are
+  therefore annotated "folded in P16" inside the P16 commit, and **P17's reconciliation note must
+  replace that with the real P16 short SHA** (the same pending→SHA rule UNIT_LOOP uses for phase
+  receipts). The alternative — amending a published commit to self-reference it — is forbidden, so
+  the deferral is recorded here rather than silently left dangling. F98/F101–F105 cite commits that
+  already exist (`e7a7f49`, `a76ad88`, `fdd2a98`), each verified by `git show --stat` to touch the
+  surface its row describes before being cited.
+- **2026-08-27 P16: dependency fast path is distrusted for this unit.** Recomputing receipt v1's
+  fingerprint from its own declared inputs does not reproduce `0292879…` under any reading tried
+  (SPEC hard-deps line alone, whole `## Dependencies` block, newline-joined with ROADMAP row 25), so
+  PREFLIGHT's fail-closed rule applied: full gate pass re-run, forge traversal included, result
+  written as receipt v2. Re-trigger: any future receipt whose fingerprint cannot be reproduced from
+  its recorded inputs must be replaced, not skipped.
