@@ -217,3 +217,57 @@ Layer: close-out · Done-when: all declared commands exit 0, `git status -sb` is
 
 After P15, hand the exact pushed HEAD and replacement acceptance blob to a fresh
 `/review-change`; execution does not claim that independent review receipt.
+
+## 2026-08-27 corrective replan (P16–P21, user-ordered) — tasks unchecked until executed
+
+## P16 — Correct published docs hygiene
+Layer: docs · Done-when: `cd packages/agentic-workflow-schema && npm run test:verification-docs` exits 0 with the new qualifier assertion, no unqualified `bench:verification` consumer sentence remains in either README, and ledger rows F107/F109/F110 read `folded: yes` naming the P16 commit.
+- [ ] Annotate ledger rows F98/F101–F105 with their fold commits (e7a7f49 / a76ad88 / fdd2a98) and flip F107 `folded: yes` in the same commit
+- [ ] Annotate ledger row F109 `folded: yes` citing the replan commit's roadmap flip plus the P21 close-out re-flip obligation
+- [ ] Add the source-checkout qualifier to the `bench:verification` proof sentence in both READMEs (F110), pin it with a red-first docs assertion, and synchronize the case-count line in both CHANGELOGs
+- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0, docs suite 23/23
+- [ ] Commit P16 atomically (fix plus ledger ticks) and push
+
+## P17 — Snapshot verification input at validation entry
+Layer: domain · Done-when: the hostile-getter suite proves both public entries decide and build DTOs from one captured document for every accessor, `npm run gate:verification` exits 0 with p95 ≤ 100 ms, and ledger F97 reads `folded: yes` naming the P17 commit.
+- [ ] Write the hostile-getter regression suite red-first: a getter whose value flips at each successive read — for every plan field (id, stage, executable, args, workingDirectoryPolicy, workingDirectory, timeoutMs, costClass, stopOnFailure) and every receipt field (commandId, status, skipReason, exitCode, durationMs, evidence) — must yield a refusal or a blessed DTO identical to the validated document, on both public entries
+- [ ] Capture the submitted value once at entry into a frozen own-property snapshot (the capture reads every submitted accessor exactly once); validate and build DTOs from the snapshot only
+- [ ] Route both public entries through the capture; a throwing getter surfaces as the existing redacted `invalid-type` refusal (F92 parity)
+- [ ] Keep diagnostic parity: every refusal after capture still carries only a frozen code plus RFC-6901 path
+- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0, benchmark p95 ≤ 100 ms
+- [ ] Flip F97 `folded: yes` naming the P17 commit; commit atomically and push
+
+## P18 — Bound verification preflight refusal work
+Layer: domain · Done-when: a 200,000-command plan is refused `limit-exceeded` in ≤ 50 ms wall-clock, `npm run gate:verification` exits 0, and ledger F99 reads `folded: yes` naming the P18 commit.
+- [ ] Write the red-first preflight budget probe: a cardinality-illegal payload must be refused without canonical serialization (the observed 2189 ms at 200k commands must drop under the 50 ms bound)
+- [ ] Refuse illegal raw cardinalities at entry from the raw shape (command/result array lengths against `VERIFICATION_LIMITS`) before snapshot capture
+- [ ] Measure the canonical byte budget with an early-exit serializer that aborts as soon as the running size passes the budget
+- [ ] Sequence both public entries: raw cardinality → capture → bounded byte measure → full validation walk
+- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0; re-run the 10k and 200k probes and record the new timings in the commit body
+- [ ] Flip F99 `folded: yes` naming the P18 commit; commit atomically and push
+
+## P19 — Restore legacy canonicalizer compatibility
+Layer: domain · Done-when: the golden-vector suite proves every legacy `canonicalize*`/`digest*` export returns byte-identical 3.3.0 output on the captured unsupported-leaf corpus, the verification surface's refusals stay green, `npm run gate:verification` exits 0, and ledger F100 reads `folded: yes` naming the P19 commit.
+- [ ] Capture golden vectors from the merge-base code (`git show e84db167:...` executed under Node): legacy `canonicalize*`/`digest*` outputs for documents containing undefined, function, symbol, bigint and non-finite leaves
+- [ ] Write the red-first compatibility suite from the golden vectors for every legacy export
+- [ ] Scope the named-TypeError total-leaf guard to the feature-26 verification canonicalizers; restore the captured 3.3.0 fallback serialization for the legacy exports only
+- [ ] Re-point the branch-local tests that pinned the interim throw on legacy exports to the golden vectors; never touch verification-surface refusal tests (F92 parity)
+- [ ] Precise the 3.4.0 ship record in both CHANGELOGs (byte-identical schemas AND unchanged legacy export behavior) and scope the F80 guard note in decisions.md to the verification canonicalizers
+- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0; flip F100 `folded: yes` naming the P19 commit; commit atomically and push
+
+## P20 — Recover ledger fold provenance
+Layer: docs · Done-when: a mechanical recount proves zero `folded: yes` rows lack a commit token, and ledger F106 reads `folded: yes` naming the P20 commit.
+- [ ] Run the scripted per-row `git log -S` recovery over the 62 token-less rows
+- [ ] Annotate every row whose fold commit is proven
+- [ ] Re-open every row whose fold cannot be proven (`folded: no` plus a BLOCKED note naming the missing evidence)
+- [ ] Flip F106 `folded: yes` naming the P20 commit; commit atomically and push
+
+## P21 — Requalify the corrected candidate
+Layer: close-out · Done-when: AC1–AC10 are re-verified against the frozen blob, an `--adversarial 3` review at the terminal head returns PASS with zero open findings, the PR #145 body describes the terminal head, and the roadmap row reads `done`.
+- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` and `node scripts/check-skill-context.mjs` — both exit 0
+- [ ] Verify AC1–AC10 against the frozen ACCEPTANCE.md blob `2e8058860b2c805cc30507053f15f91e2f273249` and record the execution receipt in progress.md
+- [ ] Run review-change `--adversarial 3` over the whole corrected candidate at the terminal head (isolated finder passes)
+- [ ] Fold every fix-now row the review produces within this phase (bounded correction pass); escalate only architectural or acceptance-level findings to the user
+- [ ] Refresh the PR #145 body to the terminal head and flip F108 `folded: yes`
+- [ ] Run loop-review-fold 26-staged-verification-contracts to PASS
+- [ ] Flip roadmap row 26 back to `done · [#145]` after PASS
