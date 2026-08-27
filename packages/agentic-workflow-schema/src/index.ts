@@ -3440,7 +3440,7 @@ export async function validateVerificationReceiptAgainstPlan(
         continue;
       }
       const tr = resultByCmd.get(st);
-      if (!tr || tr.status === "passed") {
+      if (!tr || !NON_PASSED_STATUSES.includes(tr.status)) {
         sink.push("invalid-skip", atResult(i, "skipReason"));
         continue;
       }

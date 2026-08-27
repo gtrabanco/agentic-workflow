@@ -207,6 +207,35 @@ test("a timeout is a trigger too — later rows must be skipped with its id", as
   assert.equal(bad.ok, false, "self-attribution must be rejected");
 });
 
+// F98 (adversarial review @3112e34): a skip reason must identify a command
+// that actually failed, timed out, or hit infrastructure error. A skipped row
+// never ran and therefore cannot trigger fail-fast for another row.
+test("rejects fail-fast attribution to a skipped command while accepting a failed trigger", async () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [command("a", "fast", true), command("b", "fast", false)],
+  };
+  const base = {
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    planDigest: await digestVerificationPlan(plan),
+    candidateSnapshotDigest: "e".repeat(64),
+    acceptanceFingerprint: "f".repeat(64),
+    stageRequested: "fast",
+  };
+
+  const skippedTrigger = await validateVerificationReceiptAgainstPlan(
+    { ...base, results: [row("a", "skipped"), row("b", "skipped", "a")], verdict: "incomplete" },
+    plan,
+  );
+  assertOnlyDiagnostic(skippedTrigger, "invalid-skip", "/results/1/skipReason");
+
+  const failedTrigger = await validateVerificationReceiptAgainstPlan(
+    { ...base, results: [row("a", "failed"), row("b", "skipped", "a")], verdict: "fail" },
+    plan,
+  );
+  assert.equal(failedTrigger.ok, true, describeDiagnostics(failedTrigger));
+});
+
 // ---------------------------------------------------------------------------
 // F72 — AC5: authoritative entries + determinism on the published vectors
 // ---------------------------------------------------------------------------
