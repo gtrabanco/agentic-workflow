@@ -49,6 +49,8 @@ export interface VerificationFieldSpec {
   /** Single pattern a valid string must match (digest/timestamp shapes). */
   readonly pattern?: string;
   readonly minimum?: number;
+  /** Ceiling for an integer field (D14 per-command timeout). */
+  readonly maximum?: number;
   readonly exclusiveMinimum?: number;
   /** `stringArray` — per-item bounds. */
   readonly itemMaxLength?: number;
@@ -76,7 +78,11 @@ export type VerificationRuleKind =
   | "non-null-when"
   | "unique"
   | "timestamp-order"
-  | "calendar-roundtrip";
+  | "calendar-roundtrip"
+  /** `fields` must stay ≤ `maximum` while `when` holds (stage-scoped ceiling). */
+  | "maximum-when"
+  /** Sum of `fields` over `collection` items matching `when` stays ≤ `maximum`. */
+  | "stage-aggregate-budget";
 
 /** Cross-field rule declared once; projected whenever Draft-07 can express it. */
 export interface VerificationCrossRule {
@@ -98,6 +104,8 @@ export interface VerificationCrossRule {
   readonly fields?: readonly string[];
   /** `unique` — the array field the rule scans. */
   readonly collection?: string;
+  /** `maximum-when` / `stage-aggregate-budget` — the declared ceiling. */
+  readonly maximum?: number;
 }
 
 /** One contract object: its fields and its cross-field rules. */
@@ -159,6 +167,12 @@ export const VERIFICATION_LIMITS = Object.freeze({
   evidenceRefChars: 1024,
   planBytes: 256 * 1024,
   receiptBytes: 512 * 1024,
+  // D14 time bounds, in milliseconds: 10/15 minutes for the fast stage and
+  // 60/120 minutes for the full stage (per command / whole stage).
+  fastCommandTimeoutMs: 10 * 60_000,
+  fastStageTimeoutMs: 15 * 60_000,
+  fullCommandTimeoutMs: 60 * 60_000,
+  fullStageTimeoutMs: 120 * 60_000,
   diagnostics: 50,
 } as const);
 
@@ -291,7 +305,10 @@ const COMMAND_SPEC: VerificationObjectSpec = {
       key: "timeoutMs",
       type: "integer",
       exclusiveMinimum: 0,
-      description: "Positive integer timeout in milliseconds.",
+      // The stage-independent ceiling; `fast-command-timeout` tightens it for the
+      // fast stage, exactly as the projection's conditional fragment does (AC10).
+      maximum: VERIFICATION_LIMITS.fullCommandTimeoutMs,
+      description: `Positive integer timeout in milliseconds; at most ${VERIFICATION_LIMITS.fullCommandTimeoutMs} (full stage) or ${VERIFICATION_LIMITS.fastCommandTimeoutMs} (fast stage).`,
     },
     {
       key: "stopOnFailure",
@@ -313,6 +330,15 @@ const COMMAND_SPEC: VerificationObjectSpec = {
       when: { field: "workingDirectoryPolicy", equals: "candidate-root" },
       fields: ["workingDirectory"],
       description: "workingDirectory is null when workingDirectoryPolicy is candidate-root.",
+    },
+    {
+      id: "fast-command-timeout",
+      kind: "maximum-when",
+      projectable: true,
+      when: { field: "stage", equals: "fast" },
+      fields: ["timeoutMs"],
+      maximum: VERIFICATION_LIMITS.fastCommandTimeoutMs,
+      description: `A fast-stage command times out within ${VERIFICATION_LIMITS.fastCommandTimeoutMs} ms (D14).`,
     },
     {
       id: "working-directory-set-for-relative-path",
@@ -510,8 +536,28 @@ const PLAN_ROOT_SPEC: VerificationObjectSpec = {
       fields: ["id"],
       description: "Command ids are unique within the plan.",
     },
+    {
+      id: "fast-stage-aggregate-budget",
+      kind: "stage-aggregate-budget",
+      projectable: false,
+      collection: "commands",
+      when: { field: "stage", equals: "fast" },
+      fields: ["timeoutMs"],
+      maximum: VERIFICATION_LIMITS.fastStageTimeoutMs,
+      description: `Declared fast-stage timeouts sum to at most ${VERIFICATION_LIMITS.fastStageTimeoutMs} ms (D14).`,
+    },
+    {
+      id: "full-stage-aggregate-budget",
+      kind: "stage-aggregate-budget",
+      projectable: false,
+      collection: "commands",
+      when: { field: "stage", equals: "full" },
+      fields: ["timeoutMs"],
+      maximum: VERIFICATION_LIMITS.fullStageTimeoutMs,
+      description: `Declared full-stage timeouts sum to at most ${VERIFICATION_LIMITS.fullStageTimeoutMs} ms (D14).`,
+    },
   ],
-};
+}
 
 /** VerificationReceipt v1 root object. */
 const RECEIPT_ROOT_SPEC: VerificationObjectSpec = {
@@ -746,6 +792,10 @@ function checkInteger(
     sink.push("limit-exceeded", path);
     return undefined;
   }
+  if (field.maximum !== undefined && value > field.maximum) {
+    sink.push("limit-exceeded", path);
+    return undefined;
+  }
   return value;
 }
 
@@ -919,6 +969,8 @@ const CROSS_RULE_DEFAULT_CODE: Readonly<Record<VerificationRuleKind, Verificatio
   unique: "duplicate-id",
   "timestamp-order": "invalid-value",
   "calendar-roundtrip": "invalid-value",
+  "maximum-when": "limit-exceeded",
+  "stage-aggregate-budget": "budget-exceeded",
 });
 
 function applyCrossRule(
@@ -972,6 +1024,40 @@ function applyCrossRule(
       for (const key of rule.fields ?? []) {
         const present = Object.prototype.hasOwnProperty.call(value, key) && value[key] !== null;
         if (!present) sink.push(code, at(key));
+      }
+      break;
+    }
+    case "maximum-when": {
+      if (!ruleApplies(spec, rule, value)) break;
+      for (const key of rule.fields ?? []) {
+        const raw = value[key];
+        if (typeof raw === "number" && rule.maximum !== undefined && raw > rule.maximum) {
+          sink.push(code, at(key));
+        }
+      }
+      break;
+    }
+    case "stage-aggregate-budget": {
+      // Sum the stage's declared timeouts in declared order and report the ONE
+      // command that crossed — the earliest pointer that explains the overflow.
+      const collectionName = rule.collection ?? "";
+      const collection = Array.isArray(value[collectionName]) ? (value[collectionName] as unknown[]) : [];
+      const discriminator = rule.when?.field ?? "";
+      const stage = rule.when?.equals ?? "";
+      const field = rule.fields?.[0] ?? "";
+      const ceiling = rule.maximum;
+      if (ceiling === undefined || !discriminator || !stage || !field) break;
+      let total = 0;
+      for (let i = 0; i < collection.length; i++) {
+        const item = collection[i];
+        if (!isPlainRecord(item) || item[discriminator] !== stage) continue;
+        const timeout = item[field];
+        if (typeof timeout !== "number") continue;
+        total += timeout;
+        if (total > ceiling) {
+          sink.push(code, `${at(collectionName)}/${i}/${field}`);
+          break;
+        }
       }
       break;
     }

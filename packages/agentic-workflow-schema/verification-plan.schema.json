@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validateVerificationPlanV1 | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): unique-command-ids | payload budget: runtime-only (canonical plan <= 256 KiB) | diagnostics: runtime-only (at most 50 redacted code+path rows) | values: never returned (D16 — diagnostics carry a frozen code and an RFC 6901 pointer only) | regenerate with: node scripts/generate-verification-schemas.mjs",
+  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validateVerificationPlanV1 | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): unique-command-ids, fast-stage-aggregate-budget, full-stage-aggregate-budget | payload budget: runtime-only (canonical plan <= 256 KiB) | diagnostics: runtime-only (at most 50 redacted code+path rows) | values: never returned (D16 — diagnostics carry a frozen code and an RFC 6901 pointer only) | regenerate with: node scripts/generate-verification-schemas.mjs",
   "title": "VerificationPlan v1",
   "description": "An ordered, non-empty command list for staged verification (fast/full). This document is a NON-AUTHORITATIVE Draft-07 structural projection generated from the package's canonical verification-contract definition. It is not a semantic authority: a Draft-07 match is not contract validity — use the authoritative runtime entry point named in $comment.",
   "type": "object",
@@ -119,7 +119,8 @@
         "timeoutMs": {
           "type": "integer",
           "exclusiveMinimum": 0,
-          "description": "Positive integer timeout in milliseconds."
+          "maximum": 3600000,
+          "description": "Positive integer timeout in milliseconds; at most 3600000 (full stage) or 600000 (fast stage)."
         },
         "stopOnFailure": {
           "type": "boolean",
@@ -149,6 +150,24 @@
             "properties": {
               "workingDirectory": {
                 "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "description": "[fast-command-timeout] A fast-stage command times out within 600000 ms (D14).",
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "fast"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "timeoutMs": {
+                "type": "number",
+                "maximum": 600000
               }
             }
           }

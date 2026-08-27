@@ -17,6 +17,7 @@ import {
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_VERDICTS,
   VERIFICATION_FRESHNESS_CODES,
+  VERIFICATION_LIMITS,
   validateVerificationPlanV1,
   validateVerificationReceiptAgainstPlan,
   deriveVerificationVerdict,
@@ -27,6 +28,10 @@ import {
   compareVerificationReceiptToCurrent,
   VERIFICATION_CANONICAL_VECTORS,
 } from "../dist/index.js";
+
+// A maximum-capacity plan must ALSO fit the tightest D14 stage budget, so the
+// shared fixture timeout is sized for capacity: 7031 ms × 128 = 899,968 ≤ 900,000.
+const fixtureTimeoutMs = Math.floor(VERIFICATION_LIMITS.fastStageTimeoutMs / VERIFICATION_LIMITS.commands);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -47,7 +52,7 @@ function makeValidPlanCommand(opts = {}) {
     args: opts.args || ["test"],
     workingDirectoryPolicy: opts.workingDirectoryPolicy || "candidate-root",
     workingDirectory: opts.workingDirectory || null,
-    timeoutMs: opts.timeoutMs || 30000,
+    timeoutMs: opts.timeoutMs || fixtureTimeoutMs,
     stopOnFailure: opts.stopOnFailure || false,
     costClass: opts.costClass || "cheap",
   };

@@ -54,6 +54,13 @@
   shape half is `test/verification-bounds.test.mjs`, which also asserts every
   Draft-07-expressible bound is present in the regenerated projections and that
   the public `VERIFICATION_LIMITS` object is the single source of the numbers.
+- Time-bound fixtures: `test/verification-timeouts.test.mjs` — the 10/15 min and
+  60/120 min D14 pairs (exact ceiling accepted, 1 ms over refused), stage-scoped
+  ceilings, per-stage isolation, first-crossing `budget-exceeded` pointers,
+  propagation through the receipt authority, and Ajv/validator parity on the
+  projected conditional ceiling. Capacity fixtures size their `timeoutMs` for the
+  128-command fast-stage budget (`floor(fastStageTimeoutMs / commands)`), which is
+  a fixture-satisfiability requirement of AC10, not a loosened assertion.
 - Payload/diagnostic fixtures: `test/verification-payload.test.mjs` — canonical
   byte budgets (exact-planBytes accepted, one over refused by the budget alone and
   outranking the shape ceilings; maximum-capacity receipt proven inside its

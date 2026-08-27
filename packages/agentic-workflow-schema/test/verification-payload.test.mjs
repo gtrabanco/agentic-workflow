@@ -13,6 +13,10 @@ import {
   canonicalizeVerificationReceipt,
   digestVerificationPlan,
 } from "../dist/index.js";
+
+// A maximum-capacity plan must ALSO fit the tightest D14 stage budget, so the
+// shared fixture timeout is sized for capacity: 7031 ms × 128 = 899,968 ≤ 900,000.
+const fixtureTimeoutMs = Math.floor(VERIFICATION_LIMITS.fastStageTimeoutMs / VERIFICATION_LIMITS.commands);
 import {
   assertDiagnosticAt,
   assertDiagnosticOn,
@@ -32,7 +36,7 @@ function command(overrides = {}) {
     args: ["test"],
     workingDirectoryPolicy: "candidate-root",
     workingDirectory: null,
-    timeoutMs: 30000,
+    timeoutMs: fixtureTimeoutMs,
     stopOnFailure: false,
     costClass: "cheap",
     ...overrides,
@@ -430,10 +434,13 @@ async function failurePerCode() {
   })); // invalid-fail-fast
   await push(await bound({ planDigest: "0".repeat(64) })); // digest-mismatch
   await push(await bound({ verdict: "fail" })); // verdict-mismatch
+  await push(validateVerificationPlanV1(planOf(
+    Array.from({ length: 4 }, (_, i) => command({ id: `b${i}`, timeoutMs: 400_000 })),
+  ))); // budget-exceeded: four 400s fast commands break the 900s stage budget
   return failures;
 }
 
-test("every published diagnostic code has an emitter (budget-exceeded lands in P12)", async () => {
+test("every published diagnostic code has an emitter", async () => {
   const failures = await failurePerCode();
   const emitted = new Set();
   for (const failure of failures) {
@@ -444,9 +451,8 @@ test("every published diagnostic code has an emitter (budget-exceeded lands in P
     }
   }
   const silent = VERIFICATION_DIAGNOSTIC_CODES.filter((code) => !emitted.has(code));
-  assert.deepEqual(
-    silent,
-    ["budget-exceeded"],
-    "the only unwired code is the aggregate-budget rule P12 owns (AC10 timeouts)",
-  );
+  // Since P12 wired `budget-exceeded` to the D14 aggregate stage budgets, no
+  // published code may be silent: a vocabulary entry nothing can emit is a
+  // contract lie, not a spare (the F63 lesson from P8, generalized).
+  assert.deepEqual(silent, [], "every published diagnostic code has a rule behind it");
 });
