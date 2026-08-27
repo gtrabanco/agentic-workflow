@@ -220,6 +220,63 @@
   registered `check:verification-schemas` command must build first.
 - **Ledger untouched:** F77 keeps `folded: no`; P15 finalizes the ledger.
 
+### P11 — Bound verification payloads (2026-08-27)
+
+- **Failure evidence moves from prose to codes, and keeps the field.** F71 asked
+  for bounded, redacted diagnostics "while preserving stable field evidence". A
+  rejection is now `{ ok: false, diagnostics, truncated }` with rows
+  `{ code, path }`: the code comes from a closed published vocabulary, the path is
+  an RFC 6901 pointer into the payload, so the field that failed is still exactly
+  identifiable (`/commands/3/id`) without shipping a human sentence that could
+  echo a submitted value. Messages were deleted, not translated.
+- **An undeclared key is data, so it cannot appear in a path.** The obvious
+  implementation pointed `unknown-field` at `/<submitted key>`, which leaks exactly
+  what D16 refuses to return (a probe named `__proto__`, a secret-bearing key, a
+  4 KiB junk key name). `unknown-field` rows now name the **container** (`""` for
+  the payload root, `/commands/0` for a bad command field), which keeps the
+  evidence actionable and the value redacted. Five assertions moved to
+  `assertDiagnosticAt` to pin that pointer instead of a key name.
+- **The budget is measured before the document is read.** P11's fourth task is an
+  ordering requirement: an oversized payload must be refused by the budget alone,
+  not after the structural pass spent the 50-row ceiling disliking it field by
+  field. `canonicalBudgetRefusal` therefore runs on the **submitted** value using
+  the same canonical serializer the canonicalizers use. That is exact rather than
+  approximate: the only thing a raw object can carry that a normalized DTO drops is
+  undeclared keys, and the structural pass rejects those — so for every document
+  that could be accepted, the two measurements are byte-identical. The cost of the
+  ordering is that the budget outranks every other rule, which the ranking test
+  asserts as a feature (129 wide commands → one root row, not 129 rows).
+- **A ceiling that cannot bind is disclosed, not hidden.** AC10 names a 512 KiB
+  canonical receipt budget. Measured against the other D14 ceilings, a
+  maximum-capacity shape-legal receipt is 440,331 bytes, so the receipt budget can
+  never be the first rule to fire on a payload that respects the cardinality and
+  length ceilings. The rule is kept (it is the published contract, and it is the
+  only thing standing between a future ceiling raise and an unbounded document) and
+  the invariant is pinned by a test, so the review can see it is defensive rather
+  than dead.
+- **`invalid-evidence` got a real owner; `budget-exceeded` waits for P12.** P8
+  established that a published code with no emitter is a finding. Two of the 16
+  codes were silent. `invalid-evidence` now answers the D5 *content* rules through
+  a new per-field `violationCode` (NUL in an evidence `ref`, a non-64-hex
+  `sha256`), while capacity ceilings keep `limit-exceeded` and type errors keep
+  `invalid-type` — specializing value rules only, so P10's uniform ceiling
+  semantics are untouched. `budget-exceeded` belongs to the fast/full aggregate and
+  timeout rules P12 owns; a new test asserts the *only* silent code is
+  `budget-exceeded`, so no other code can go dangling again.
+- **One shared fixture owns diagnostic assertions.** 68 assertion sites across the
+  seven pre-existing feature-26 suites previously matched prose substrings. They now
+  call `assertDiagnosticOn` / `assertDiagnosticAt` / `assertOnlyDiagnostic` /
+  `assertRedacted` in `test/fixtures/verification-diagnostics.mjs`, which also
+  enforces the pointer grammar and the frozen-row shape on every failure the suites
+  produce. Rewriting prose into 68 hand-edited expectations would have been the
+  DRY violation; the helper is the single place that knows what a row must look
+  like.
+- **Projections disclose what Draft-07 cannot say.** The regenerated
+  `$comment` carries three generated clauses — payload budget, diagnostic ceiling,
+  values-never-returned — rendered from `VERIFICATION_LIMITS`, so a ceiling change
+  changes the disclosure automatically instead of leaving a stale sentence.
+- **Ledger untouched:** F71 and F77 keep `folded: no`; P15 finalizes the ledger.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.
