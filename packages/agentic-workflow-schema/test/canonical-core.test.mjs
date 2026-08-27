@@ -244,3 +244,22 @@ test("vectors pass digest computation", async () => {
   assert.equal(digest1, digest2);
   assert.ok(digest1.length === 64);
 });
+// F80 — the shared canonical serializer is the digest authority for these legacy
+// contracts too. Both canonicalizers project a fixed key set, so an
+// unrepresentable leaf can only reach the serializer from INSIDE a projected
+// field; there it must fail loudly instead of silently dropping bytes.
+test("canonicalizeCandidateSnapshot refuses an unrepresentable leaf nested in a projected field", () => {
+  const snap = makeSnapshot(["a.txt"]);
+  assert.doesNotThrow(() => JSON.parse(canonicalizeCandidateSnapshot(snap)));
+  snap.baseCommit = { algorithm: "sha1", hex: () => {} };
+  assert.throws(() => canonicalizeCandidateSnapshot(snap), (err) =>
+    err instanceof TypeError && /unsupported leaf/.test(err.message));
+});
+
+test("canonicalizeReviewReceipt refuses a bigint leaf in a projected field", () => {
+  const receipt = makeReceipt();
+  assert.doesNotThrow(() => JSON.parse(canonicalizeReviewReceipt(receipt)));
+  receipt.id = 1n;
+  assert.throws(() => canonicalizeReviewReceipt(receipt), (err) =>
+    err instanceof TypeError && /unsupported leaf.*bigint/i.test(err.message));
+});
