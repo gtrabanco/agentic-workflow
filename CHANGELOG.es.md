@@ -384,6 +384,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `product-audit`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.1.0 | 2026-08-27 | menor | Cierra #147: todo barrido obedece la **puerta de procedencia de evidencia** fija (el forge declarado por el proyecto es autoritativo para el estado vivo de issues y pull-request, los métricos de comandos atan su directorio de trabajo o blanco, los inventarios se recalculan del árbol actual, cada captura lleva su frescura y los conflictos se resuelven en un orden declarado — exactamente un fallback por dominio) y todo informe publica la nueva sección `## Delta vs audit <prior-id>` frente a la auditoría previa más reciente de alcance equivalente (`New` / `Unchanged` / `Resolved`, mapeados como `F<k> <- audit <prior-id> F<j>`, `none — <why no equivalent-scope prior exists>` si no hay previa). Repetir la misma fecha sigue permitido con un motivo explícito; la identidad de hallazgos sigue siendo `F1, F2, …` — el linaje nunca crea slugs globales. |
 | 3.0.3 | 2026-08-10 | parche | Exige que el hand-off de auditoría enumere el conjunto completo de findings antes de agrupar el triage. |
 | 3.0.2 | 2026-08-03 | parche | Carga la matriz de aplicabilidad de dimensiones antes de seleccionar las dimensiones de revisión, para que el Paso 0 no decida ejes incompletos antes de la lista autoritativa. |
 | 3.0.1 | 2026-08-02 | parche | Mueve las dimensiones de auditoría y el barrido de nueve pasos tras rutas obligatorias de un salto y elimina prosa repetida de activación manteniendo intactos el informe fijo persistido y el contrato solo-recomendación. |
@@ -578,6 +579,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-27 — las auditorías deben probar su evidencia.** `product-audit`
+  3.1.0 añade la puerta fija de procedencia de evidencia (autoridad del forge para el estado
+  vivo, métricos acotados por alcance, inventarios recalculados, frescura de cada captura y un
+  único orden de conflicto declarado) y la sección obligatoria `Delta vs audit <prior-id>`, para
+  que dos auditorías de un mismo alcance no publiquen dos veces los mismos hechos falsos del
+  producto.
 
 - **2026-08-22 — restaurar el contrato de turno canónico.**
   `orchestration-envelope` 2.0.2 vuelve a ser descubrible mediante la ruta

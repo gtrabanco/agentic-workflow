@@ -56,3 +56,17 @@
 - Gotchas: the fixture is a *manual* procedure (docs/workflow/GOLDEN_FIXTURE.md "Scope boundary": no CI, no script) — P5 must actually drive a weakest-fleet model through T1–T4 and append the run-log row to BOTH language files' run tables, or record why it could not. ES wording reuses the repo's established Spanish terms (`confirmar` for commit, `deriva documental` for drift, `puerta de verificación` for gate); no new jargon.
 - Files: docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
 - Next: P4 — Version bump bilingual sync
+- Reconciliation: P3 committed as d9343ab (receipt `pending` → d9343ab); P3 ticks verified against `GOLDEN_FIXTURE.md:190-256` / `GOLDEN_FIXTURE.es.md:204-271` before starting P4.
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `node scripts/check-skill-context.mjs` (exit 0, 35 skills PASS) + `npx skills add . --list` (34 skills, `product-audit` present) · Acceptance blob: 42a91680cb09d470c921ddd663aa0a7ba599f459
+- Next: P5 (close-out) · Attempts: 1
+- Phase-lint: PASS (8/8) · fingerprint P4:docs:2:Version bump bilingual sync · triggers: none (docs layer, 6 files, no sensitive surface)
+- bump-skill summary: `product-audit 3.0.3 → 3.1.0` (minor — added sections/capability, no flag or contract removal); authoring lint 7/7 clean for product-audit (→ Next ✓, no `S1`/“Step N” labels ✓, `## Portability` ✓, `## Turn contract` ✓, listed in `.claude-plugin/plugin.json` ✓, plugin array + `model-routing.yml` keys alphabetical ✓, internal-discovery rule n/a for a user-facing skill). No migration note needed (minor).
+
+## P4 — 2026-08-27
+- Done: `version: 3.1.0` in `skills/product-audit/SKILL.md`; newest-first `3.1.0 · 2026-08-27 · minor` row in `CHANGELOG.md` + the `menor` sibling row in `CHANGELOG.es.md`; matching 2026-08-27 release-log entries at the top of both logs; `product-audit` behavior cell extended identically in `README.md` and `README.es.md` (evidence-provenance gate + prior-equivalent-scope delta). Model/tier tables unchanged (no tier moved). AC10 validators green on this tree.
+- Remains: P5 hardening & PR — full gate rerun, the `manual` weak-model fixture observation, fix-index flip to `done`, push, PR with `Closes #147`, PR link commit.
+- Gotchas: the version bump is byte-neutral in SKILL.md (still 2786/2800) — do not add prose there. `npx skills add . --list` prints names in a box-drawing table: grep the parsed name list, not the raw lines (descriptions mention `product-audit` 11×, which can fake a pass). CHANGELOG/README ES parity was checked cell-by-cell against the EN text.
+- Files: skills/product-audit/SKILL.md, CHANGELOG.md, CHANGELOG.es.md, README.md, README.es.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
+- Next: P5 — Hardening & PR
