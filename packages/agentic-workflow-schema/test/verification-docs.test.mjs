@@ -304,3 +304,60 @@ test("npm run test:verification-docs is the command the acceptance names", () =>
     "the docs command must drive this file",
   );
 });
+
+// ---------------------------------------------------------------------------
+// Review folds — guidance that must never drift back
+// ---------------------------------------------------------------------------
+
+// F78 — the consumer example's binding comment contradicted `computeAcceptanceFingerprint`,
+// which hashes the ordered `{ id, blobSha256 }` rows, not the raw `ACCEPTANCE.md` blob.
+// A consumer that followed the comment derives a fingerprint the predicate calls stale.
+const FALSE_FINGERPRINT_CLAIMS = [
+  /digest\s+of\s+the\s+`?ACCEPTANCE\.md`?\s+blob/i,
+  /digesto\s+del\s+blob\s+de\s+`?ACCEPTANCE\.md`?/i,
+];
+
+test("the acceptance-fingerprint guidance names the real derivation in both languages", () => {
+  for (const [name, text] of Object.entries(both)) {
+    for (const claim of FALSE_FINGERPRINT_CLAIMS) {
+      assert.doesNotMatch(
+        text,
+        claim,
+        `${name} still calls the acceptance fingerprint the digest of the raw ACCEPTANCE.md blob (F78)`,
+      );
+    }
+    assert.match(
+      text,
+      /computeAcceptanceFingerprint/,
+      `${name} must name the function that produces the acceptance fingerprint`,
+    );
+    assert.match(
+      text,
+      /\{\s*id\s*,\s*blobSha256\s*\}/,
+      `${name} must state the ordered { id, blobSha256 } rows the fingerprint hashes`,
+    );
+  }
+});
+
+// F79 — the CHANGELOG pair is the declared source of truth for what shipped, and its
+// package table had no row for the version the package was actually carrying. The check
+// is scoped to that table: `| 3.4.0 |` rows for unrelated skills must not mask the gap.
+const PACKAGE_HEADING = "#### [`@gtrabanco/agentic-workflow-schema`](packages/agentic-workflow-schema/)";
+
+test("the changelog of record carries a row for the version being shipped", () => {
+  const { version } = JSON.parse(read("../package.json"));
+  const row = new RegExp(`^\\|\\s*${version.replace(/\./g, "\\.")}\\s*\\|`, "m");
+  for (const relative of ["../../../CHANGELOG.md", "../../../CHANGELOG.es.md"]) {
+    const text = read(relative);
+    const start = text.indexOf(PACKAGE_HEADING);
+    assert.notStrictEqual(start, -1, `${relative} no longer carries the package table`);
+    const after = text.slice(start + PACKAGE_HEADING.length);
+    const end = after.search(/^#{2,4} /m);
+    const section = end === -1 ? after : after.slice(0, end);
+    assert.match(
+      section,
+      row,
+      `${relative} has no @gtrabanco/agentic-workflow-schema ${version} row (F79)`,
+    );
+  }
+});

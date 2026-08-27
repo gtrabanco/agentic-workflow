@@ -365,7 +365,9 @@ if (!pv.ok) throw new Error(`plan rejected: ${JSON.stringify(pv.diagnostics)}`);
 
 // 2. Bind the receipt to one candidate and one acceptance manifest. In a real
 //    gate `candidateDigest` comes from `digestCandidateSnapshot(snapshot)` and
-//    `acceptanceDigest` is the digest of the `ACCEPTANCE.md` blob under review.
+//    `acceptanceDigest` comes from `computeAcceptanceFingerprint(rows)`, which
+//    hashes the ordered `{ id, blobSha256 }` acceptance rows — not the raw
+//    `ACCEPTANCE.md` blob itself.
 const planDigest = await digestVerificationPlan(pv.plan);
 const receipt = {
   contract: VERIFICATION_RECEIPT_CONTRACT_ID,
