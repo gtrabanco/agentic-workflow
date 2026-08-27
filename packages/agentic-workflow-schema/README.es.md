@@ -237,10 +237,11 @@ Dos contratos wire versionados para verificación por etapas:
 
 - `VerificationPlan v1` (`agentic-workflow/verification-plan@1`) — una lista
   de comandos ordenada y no vacía donde cada comando lleva un `id` estable,
-  `stage: fast | full`, un `executable` y `args` ordenados (nunca una cadena
+  `stage: fast | full` (vocabulario cerrado `VERIFICATION_STAGES`), un
+  `executable` y `args` ordenados (nunca una cadena
   de shell), una política de directorio de trabajo (`candidate-root` o
   `relative-path` con ruta relativa validada), un `timeoutMs` positivo,
-  `stopOnFailure` y una clase de coste. La ruta relativa validada es una cadena
+  `stopOnFailure` y una clase de coste (`VERIFICATION_COST_CLASSES`). La ruta relativa validada es una cadena
   **opaca**: resuélvela bajo la raíz candidata exactamente como se envió y nunca
   la decodifique por porcentaje (percent-decode) antes de resolverla — la
   decodificación puede convertir una ruta que el validador rechazó en una que
@@ -306,7 +307,7 @@ que reconstruye y falla ante cualquier deriva de bytes.
 
 **Modelo de dos etapas:** solicitar `fast` ejecuta solo comandos fast; solicitar
 `full` ejecuta todos los comandos fast y full. El predicado de frescura devuelve
-códigos estables (`stale-plan | stale-candidate-snapshot |
+uno de los códigos estables de `VERIFICATION_FRESHNESS_CODES` (`stale-plan | stale-candidate-snapshot |
 stale-acceptance-fingerprint | incomplete-missing-results |
 incomplete-unjustified-skip | incomplete-stage-coverage`) o `{ fresh: true }`.
 
@@ -346,7 +347,11 @@ deliberadamente asimétricos: un comando fast de duración máxima deja 5 minuto
 el resto de la etapa fast. `npm run bench:verification -- --commands 128` prueba el
 límite de rendimiento declarado — un ciclo en caliente de validar → canonicalizar →
 digerir plan+recibo de 128 comandos con p95 ≤ 100 ms — y sale con código distinto de
-cero cuando no se cumple.
+cero cuando no se cumple. La interoperabilidad entre implementaciones la fija
+`VERIFICATION_CANONICAL_VECTORS`: los fixtures congelados
+`{ contract, digest, description }` cuyos digests debe reproducir cualquier
+canonicalizador correcto — los tests de digests del propio paquete consumen
+exactamente estos payloads.
 
 ### Ejemplo de consumo
 

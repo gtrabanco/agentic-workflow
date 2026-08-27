@@ -227,10 +227,11 @@ Two versioned wire contracts for staged verification:
 
 - `VerificationPlan v1` (`agentic-workflow/verification-plan@1`) — an ordered,
   non-empty command list where each command carries a stable `id`,
-  `stage: fast | full`, an `executable` and ordered `args` (never a shell
+  `stage: fast | full` (the closed `VERIFICATION_STAGES` vocabulary), an
+  `executable` and ordered `args` (never a shell
   string), a working-directory policy (`candidate-root` or `relative-path` with
   validated relative path), a positive `timeoutMs`, `stopOnFailure`, and a
-  cost class. The validated relative path is an **opaque** string: resolve it
+  cost class (`VERIFICATION_COST_CLASSES`). The validated relative path is an **opaque** string: resolve it
   under the candidate root exactly as submitted, and never percent-decode it
   before resolution — decoding can turn a path the validator rejected into one
   that escapes the root.
@@ -293,7 +294,7 @@ its `$comment`. Never hand-edit them: change the definition, then run
 
 **Two-stage model:** requesting `fast` executes only fast commands; requesting
 `full` executes every fast and full command. The freshness predicate returns
-stable reason codes (`stale-plan | stale-candidate-snapshot |
+one of the stable `VERIFICATION_FRESHNESS_CODES` reason codes (`stale-plan | stale-candidate-snapshot |
 stale-acceptance-fingerprint | incomplete-missing-results |
 incomplete-unjustified-skip | incomplete-stage-coverage`) or `{ fresh: true }`.
 
@@ -332,7 +333,11 @@ document is refused by the budget alone. The time ceilings are deliberately
 asymmetric: one maximum-length fast command leaves 5 minutes for the rest of the
 fast stage. `npm run bench:verification -- --commands 128` proves the declared
 performance bound — a warm 128-command plan+receipt validate → canonicalize →
-digest cycle at p95 ≤ 100 ms — and exits non-zero when it is not met.
+digest cycle at p95 ≤ 100 ms — and exits non-zero when it is not met. Cross-implementation
+interoperability is pinned by `VERIFICATION_CANONICAL_VECTORS`, the frozen
+`{ contract, digest, description }` fixtures whose digests any correct
+canonicalizer must reproduce — the package's own digest tests consume exactly
+these payloads.
 
 ### Consumer example
 

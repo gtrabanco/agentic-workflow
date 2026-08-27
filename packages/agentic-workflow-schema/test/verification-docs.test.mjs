@@ -287,6 +287,21 @@ test("F93: both references disclose workingDirectory as an opaque, never-percent
 });
 
 
+
+test("F96: both references name every frozen verification vocabulary export", () => {
+  const VOCABULARY = [
+    "VERIFICATION_STAGES",
+    "VERIFICATION_COST_CLASSES",
+    "VERIFICATION_FRESHNESS_CODES",
+    "VERIFICATION_CANONICAL_VECTORS",
+  ];
+  for (const [name, text] of Object.entries(both)) {
+    for (const constant of VOCABULARY) {
+      assert.ok(text.includes(constant), `${name} never names ${constant}`);
+    }
+  }
+});
+
 // ---------------------------------------------------------------------------
 // Deferred consumer boundary (D15) — documented, no issue created
 // ---------------------------------------------------------------------------
