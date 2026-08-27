@@ -84,3 +84,11 @@
 - Gotchas: review must be run before merge (`loop-review-fold`) — `audit-pr` blocks merge without a REVIEW-PASS receipt; the ES fixture row is content-equivalent to EN, keep them paired if either changes.
 - Files: docs/fix/README.md, docs/workflow/GOLDEN_FIXTURE.md, docs/workflow/GOLDEN_FIXTURE.es.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
 - Next: unit finished — PR open after this commit
+- Reconciliation: P5 flip committed as db9d8ef (receipt `pending` → db9d8ef); acceptance blob re-hashed at close-out = 42a91680cb09d470c921ddd663aa0a7ba599f459 (exact match, no drift through five phases).
+
+## P5 close-out — 2026-08-27 (terminal)
+- Done: pushed `fix/147-audit-evidence-provenance` → opened PR **#148** (<https://github.com/gtrabanco/agentic-workflow/pull/148>, base `main`, body via `--body-file` and verified backtick-clean in the forge, carries `Closes #147`); fix-index row now `done · [#148](...)`; every P5 ledger box ticked.
+- Remains: none in-unit. Merge is gated on `/loop-review-fold` (or `/review-change` then `/fold-findings`) and `/audit-pr`.
+- Gotchas: after merge, delete the `147-audit-evidence-provenance` row from `docs/fix/README.md` (and the folder per the project's fix-history convention) — never before.
+- Files: docs/fix/README.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
+- Next: unit finished
