@@ -170,7 +170,8 @@ vez de sobrescribirlo.
 ## Validar o usar otro lenguaje
 
 Los validadores públicos de contratos son `validateEnvelopeV2Strict`,
-`validateSkillOutcomeV1` y `validateWorkflowSnapshotV1`; los contratos de
+`validateSkillOutcomeV1`, `validateWorkflowSnapshotV1`,
+`validateCandidateSnapshotV1` y `validateReviewReceiptV1`; los contratos de
 verificación por etapas añaden exactamente las dos entradas autoritativas nombradas
 arriba, `validateVerificationPlanV1` y `validateVerificationReceiptAgainstPlan`.
 Importa un JSON Schema cuando un consumidor no TypeScript necesite el mismo límite
@@ -273,26 +274,27 @@ cerrado `VERIFICATION_DIAGNOSTIC_CODES` y `path` es un puntero RFC 6901 construi
 solo con nombres de propiedad declarados e índices de array — `/commands/3/id`,
 `/results/1/commandId` o `""` para el documento completo. Una clave no declarada se
 informa como `unknown-field` en su **contenedor**, porque el nombre de la clave es
-dato enviado por el cliente.
+dato enviado por el cliente. Recupérate de los diagnósticos usando solo cada `code`
+y `path` estables, sin copiar los valores enviados a logs, errores ni telemetría.
 
-| Código de diagnóstico | Qué responde |
-| --- | --- |
-| `invalid-type` | un campo tiene un valor del tipo JSON equivocado |
-| `missing-field` | falta un campo declarado |
-| `unknown-field` | el objeto lleva una propiedad no declarada |
-| `invalid-value` | un valor rompe su propia regla (vocabulario, patrón, NUL) |
-| `limit-exceeded` | se supera un tope de cardinalidad o de longitud |
-| `duplicate-id` | el mismo id de comando aparece dos veces |
-| `unknown-command` | un resultado o un motivo de omisión no nombra un comando declarado |
-| `invalid-order` | los resultados no siguen el orden declarado del plan |
-| `invalid-stage` | el recibo lleva una fila fuera de la etapa solicitada |
-| `invalid-exit-state` | código de salida y señal rompen la matriz D4 |
-| `invalid-evidence` | una referencia de evidencia está mal formada (reglas D5) |
-| `invalid-skip` | el motivo de omisión no se justifica en un fallo previo |
-| `invalid-fail-fast` | la secuencia de `stopOnFailure` está rota |
-| `digest-mismatch` | el `planDigest` del recibo no es el del plan vinculado |
-| `verdict-mismatch` | el veredicto guardado difiere del derivado |
-| `budget-exceeded` | los timeouts declarados de una etapa exceden su presupuesto agregado |
+| Código de diagnóstico | Qué responde | Recuperación del llamador |
+| --- | --- | --- |
+| `invalid-type` | un campo tiene un valor del tipo JSON equivocado | Proporciona el tipo JSON declarado en `path`. |
+| `missing-field` | falta un campo declarado | Añade el campo requerido en `path`. |
+| `unknown-field` | el objeto lleva una propiedad no declarada | Elimina claves no declaradas del contenedor en `path`. |
+| `invalid-value` | un valor rompe su propia regla (vocabulario, patrón, NUL) | Sustitúyelo por un miembro permitido o un valor con formato válido y sin NUL. |
+| `limit-exceeded` | se supera un tope de cardinalidad o de longitud | Reduce la colección o cadena indicada hasta `VERIFICATION_LIMITS`. |
+| `duplicate-id` | el mismo id de comando aparece dos veces | Asigna ids de comando únicos y actualiza sus referencias de resultado. |
+| `unknown-command` | un resultado o un motivo de omisión no nombra un comando declarado | Referencia un id declarado por el plan vinculado. |
+| `invalid-order` | los resultados no siguen el orden declarado del plan | Reordena las filas de resultado según el orden del plan. |
+| `invalid-stage` | el recibo lleva una fila fuera de la etapa solicitada | Elimina filas fuera de etapa o solicita la etapa que las incluye. |
+| `invalid-exit-state` | código de salida y señal rompen la matriz D4 | Alinea `exitCode` y `signal` con la matriz del status de la fila. |
+| `invalid-evidence` | una referencia de evidencia está mal formada (reglas D5) | Proporciona `ref` acotada, bytes no negativos y SHA-256 en minúsculas. |
+| `invalid-skip` | el motivo de omisión no se justifica en un fallo previo | Usa `null` sin atribución o nombra un trigger non-pass anterior real. |
+| `invalid-fail-fast` | la secuencia de `stopOnFailure` está rota | Marca como omitidas las filas posteriores y atribúyelas al trigger. |
+| `digest-mismatch` | el `planDigest` del recibo no es el del plan vinculado | Recalcúlalo desde el plan vinculado validado y normalizado. |
+| `verdict-mismatch` | el veredicto guardado difiere del derivado | Guarda el resultado de `deriveVerificationVerdict`. |
+| `budget-exceeded` | los timeouts declarados de una etapa exceden su presupuesto agregado | Reduce timeouts hasta que la suma quede dentro de `VERIFICATION_LIMITS`. |
 
 **Estado de JSON Schema.** `verification-plan.schema.json` y
 `verification-receipt.schema.json` son **proyecciones estructurales generadas y no
@@ -300,10 +302,25 @@ autoritativas** de la definición canónica del paquete. Existen para editores y
 comprobaciones de transporte; que coincidan con Draft-07 no es validez de contrato,
 y las reglas semánticas (`unique-command-ids`, los dos presupuestos agregados de
 etapa, los dos presupuestos de bytes canónicos) solo las aplican las dos entradas de
-tiempo de ejecución anteriores — cada proyección las declara en su `$comment`. No las
-edites a mano: cambia la definición y ejecuta `npm run check:verification-schemas`,
-que reconstruye y falla ante cualquier deriva de bytes.
-`node scripts/generate-verification-schemas.mjs` es el único que las escribe.
+tiempo de ejecución anteriores — cada proyección las declara en su `$comment`. Las
+proyecciones se generan en vez de editarse a mano. En un checkout del código fuente,
+los mantenedores cambian la definición canónica; el único escritor es
+`node scripts/generate-verification-schemas.mjs` y la comprobación de deriva exclusiva
+del código fuente reconstruye antes de comparar bytes.
+
+**Solo en un checkout del código fuente.** El tarball publicado omite
+intencionadamente `scripts/`, `test/`, el código fuente y la configuración de
+TypeScript del repositorio. Estos comandos del manifiesto son comprobaciones para
+mantenedores en un checkout fuente, no comandos ejecutables por consumidores del
+paquete instalado:
+
+| Comando solo para checkout fuente | Propósito |
+| --- | --- |
+| `npm run check:verification-schemas` | reconstruir y comparar por bytes las proyecciones generadas |
+| `npm run check:verification-package` | inspeccionar el contrato del tarball del paquete |
+| `npm run bench:verification -- --commands 128` | ejecutar el benchmark AC10 en proceso caliente |
+| `npm run test:verification-docs` | ejecutar la suite bilingüe de documentación |
+| `npm run gate:verification` | componer todas las comprobaciones de release de verificación |
 
 **Modelo de dos etapas:** solicitar `fast` ejecuta solo comandos fast; solicitar
 `full` ejecuta todos los comandos fast y full. El predicado de frescura devuelve
@@ -316,6 +333,24 @@ con un recibo fresco, que solicite `full` y tenga veredicto `pass`.
 
 **Límite de no-ejecución:** el paquete valida, canonicaliza, digiere, deriva y
 compara — no ejecuta comandos. La ejecución es responsabilidad del llamador.
+
+### Inventario de la API pública de verificación
+
+La superficie completa en runtime de estos contratos es:
+
+| Grupo de runtime | Exports |
+| --- | --- |
+| Contratos y vocabularios | `VERIFICATION_PLAN_CONTRACT_ID`, `VERIFICATION_RECEIPT_CONTRACT_ID`, `VERIFICATION_STAGES`, `VERIFICATION_COST_CLASSES`, `VERIFICATION_COMMAND_STATUSES`, `VERIFICATION_VERDICTS`, `VERIFICATION_DIAGNOSTIC_CODES`, `VERIFICATION_FRESHNESS_CODES`, `VERIFICATION_LIMITS`, `VERIFICATION_CANONICAL_VECTORS` |
+| Validación y semántica | `validateVerificationPlanV1`, `validateVerificationReceiptAgainstPlan`, `deriveVerificationVerdict`, `compareVerificationReceiptToCurrent` |
+| Canonicalización y digests | `canonicalizeVerificationPlan`, `canonicalizeVerificationReceipt`, `digestVerificationPlan`, `digestVerificationReceipt` |
+
+TypeScript también publica estos nombres de solo tipo:
+
+| Grupo de tipos | Exports |
+| --- | --- |
+| Plan | `VerificationStage`, `VerificationCostClass`, `WorkingDirectoryPolicy`, `VerificationCommandV1`, `VerificationPlanV1`, `VerificationPlanValidationResult` |
+| Recibo | `VerificationCommandStatus`, `VerificationVerdict`, `VerificationStageRequest`, `EvidenceReferenceV1`, `VerificationResultV1`, `VerificationReceiptV1`, `VerificationReceiptValidationResult` |
+| Diagnósticos y frescura | `VerificationDiagnosticCode`, `VerificationDiagnosticV1`, `VerificationFreshnessReasonCode`, `VerificationFreshnessResult` |
 
 ### Límites de usabilidad
 
