@@ -5,6 +5,27 @@
    `review-implementation` plus the internal review pack's applicable passes
    (each returns its fixed-format table + PASS|FAIL), and any optional installed
    extras. Classify findings (severity + fix-now / postpone / tradeoff).
+
+**Evidence-provenance gate (fixed):** applies during every evidence-collecting sweep
+step (2–5). Each item ends with exactly one fallback; never pick another one mid-audit.
+
+- Forge state — read live status from the project-declared forge CLI/API: it is
+  authoritative for live issue and pull-request status. Fix-index, worklist and roadmap rows
+  are audited for documentation drift, never treated as the live ledger.
+  Fallback: `mark unverified`.
+- Command-derived metrics — bind the exact command plus its working directory or target and the
+  supporting output line or structured field; an aggregate terminal summary may never be attributed
+  to a narrower scope without a scope-bound rerun. Fallback: `rerun in scope`.
+- Repository inventories — ordered or inventory claims ("decisions through N", "the newest row is
+  X") are recomputed from the current tree with project-compatible tools, citing the terminal
+  path/item found. No hardcoded product names, package managers, runtimes, forge hosts, or
+  non-portable shell recipes inside this portable contract. Fallback: `rerun in scope`.
+- Freshness/timestamps — record when each source was captured and by what method; a stale capture
+  older than the current tree is recomputed before use. Fallback: `mark unverified`.
+- Conflicting sources — resolve by declared authority order (live forge > scope-bound command
+  output > repository inventory > worklist index) and record the winner next to the claim.
+  Fallback: `mark unverified`.
+
 3. **Audit process & docs** — incomplete phases (`progress.md`/`TASKS.md`), aging
    open issues, **solvable known-issues** (trigger now met), doc-map completeness
    (compose `audit-docs`), missing/optimizable workflow docs, and **capability
