@@ -69,8 +69,14 @@
   emitter for every published code except `budget-exceeded` (P12). Shared
   assertions live in `test/fixtures/verification-diagnostics.mjs`, which every
   feature-26 suite now uses instead of matching message prose.
-- Docs fixtures extract every README example, compile it and assert EN/ES
-  semantic parity through `test:verification-docs`.
+- Qualification tooling: `test/verification-gates.test.mjs` pins the AC7/AC9/AC10
+  command registration, the rebuild-before-check ordering, the 100 ms ceiling with no
+  CLI override, the 128-command default, F70's absence of Node typings, and npm/Bun
+  lock agreement with the manifest.
+- Docs fixtures: `test/verification-docs.test.mjs` (driven by
+  `npm run test:verification-docs`) currently proves the harness and that both
+  references name the two public entries; P14 adds the executable-example
+  extraction/compilation and EN/ES semantic-parity assertions listed in its header.
 - Prototype/inherited-field fixtures prove only normalized own-property data is
   accepted and digest-bound.
 - Regression: every pre-existing suite stays green; the five prior schema files

@@ -174,13 +174,15 @@ Evidence: `test/verification-timeouts.test.mjs` (12 cases, written red first) + 
 
 Layer: config/infra · Done-when: `cd packages/agentic-workflow-schema && npm ci && bun install --frozen-lockfile && npm run check:verification-schemas && npm run bench:verification -- --commands 128 && npm run check:verification-package` → exit 0 with synchronized locks and p95 ≤100 ms.
 
-- [ ] Remove unused Node typing configuration and regenerate the npm lock (F70)
-- [ ] Regenerate the Bun lock from the same package manifest
-- [ ] Implement a warm-sample 128-command benchmark with a failing p95 ceiling
-- [ ] Implement a package-content checker that proves both generated projections ship
-- [ ] Register the deterministic `check:verification-schemas` command
-- [ ] Register the `test:verification-docs` command for P14's executable assertions
-- [ ] Register the benchmark, package-content and aggregate qualification commands
+Evidence: `scripts/bench-verification.mjs`, `scripts/check-verification-package.mjs`, `test/verification-gates.test.mjs` (10 cases), `test/verification-docs.test.mjs` (3 cases), `package.json` (7 scripts, `@types/node` dropped), `package-lock.json` (regenerated), `tsconfig.json` (`types` override dropped). Observed: 432/432 tests, schemas drift-free, p95 20–25 ms against the declared 100 ms ceiling, 15 packed files with both projections.
+
+- [x] Remove unused Node typing configuration and regenerate the npm lock (F70) — `"types": ["node"]` deleted from `tsconfig.json` and `@types/node` dropped from `devDependencies`; `tsc` still compiles src and the type-checked fixture with **zero** errors (target `ES2022` supplies `TextEncoder`/`Crypto`), and `package-lock.json` was regenerated (−18 lines, `node_modules/@types` no longer exists). `the package declares no unused Node typings (F70)` pins all four views
+- [x] Regenerate the Bun lock from the same package manifest — `bun install` reports "no changes" and `bun install --frozen-lockfile` exits 0: the F70 asymmetry was npm-only (Bun never carried `@types/node`), so the locks are now identical in dependency sets, proven by `npm and Bun locks agree with the manifest dependency ranges` rather than by a no-op rewrite
+- [x] Implement a warm-sample 128-command benchmark with a failing p95 ceiling — `scripts/bench-verification.mjs`: 15 discarded warm-up cycles, 60 measured nearest-rank samples, one sample being the full gate cycle (validate plan → canonicalize → digest → validate receipt → canonicalize → digest), exit 1 over the declared 100 ms, exit 2 for a payload that would not be a valid plan, and **no** ceiling flag. `the benchmark ceiling is the declared 100 ms and takes no override` refuses a silent lift
+- [x] Implement a package-content checker that proves both generated projections ship — `scripts/check-verification-package.mjs` runs `npm pack --dry-run --json` (writes nothing), then requires both projections in the tarball, in `files`, and in `exports`; every `exports` target packed; `dist/index.js`, `dist/index.d.ts`, both READMEs and `LICENSE` present; and no `src/`, `test/` or `scripts/` path leaked
+- [x] Register the deterministic `check:verification-schemas` command — `tsc && node scripts/generate-verification-schemas.mjs --check`, which encodes P10's gotcha (the generator renders from `dist/`, so an un-rebuilt definition would make `--check` green against a stale render); asserted by `the schema check rebuilds before comparing`
+- [x] Register the `test:verification-docs` command for P14's executable assertions — `node --test test/verification-docs.test.mjs`, seeded with the registration-level facts that must hold for any doc work (both references exist and are non-trivial, both name the two public entries, the command drives that file). The file's own header lists what P14 must add red-first — projections, every limit/budget, EN/ES semantic parity, the AWL boundary — and P14's `VERIFICATION_LIMITS` topic assertion was deliberately **not** written here because neither README mentions it yet
+- [x] Register the benchmark, package-content and aggregate qualification commands — `bench:verification`, `check:verification-package` and `gate:verification` (`npm test` → schemas → package → docs → `bench:verification -- --commands 128`), with `every command ACCEPTANCE v2 names is registered in the package` and `the aggregate gate runs every other verification command` keeping the registration answerable to the frozen manifest
 
 ## P14 — Document the verification contract
 

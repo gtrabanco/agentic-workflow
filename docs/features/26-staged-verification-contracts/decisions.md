@@ -320,6 +320,42 @@
   accumulate an unreachable entry again.
 - **Ledger untouched:** F77 keeps `folded: no`; P15 finalizes the ledger.
 
+### P13 — Build package qualification tooling (2026-08-27)
+
+- **F70 resolved by deletion, and the asymmetry was one-sided.** `tsconfig.json`
+  pinned `"types": ["node"]` and the manifest carried `@types/node`, yet the
+  package compiles with zero errors without either: target `ES2022` supplies
+  `TextEncoder` and `Crypto` from the default libraries, and `src/` imports no
+  `node:` module. `bun.lock` never listed the package, so only the npm lock needed
+  regeneration — "synchronize the locks" is therefore satisfied by an assertion that
+  both locks match the manifest, not by rewriting a file that was already right.
+- **A gate that can be loosened from the command line is not a gate.** The
+  benchmark accepts `--commands`, `--samples` and `--warm` but **no** ceiling
+  argument: 100 ms is AC10's declared number, and changing it requires a user-approved
+  SPEC amendment plus a replacement manifest. The ceiling is additionally pinned by a
+  test that reads the script source, so an edit that lifts it fails `npm test`.
+- **The measured unit is the delivery cycle, not a micro-operation.** One sample =
+  validate plan → canonicalize → digest → validate receipt against plan →
+  canonicalize → digest, on a 128-command plan whose timeouts fit the P12 stage
+  budgets. Measuring only `validateVerificationPlanV1` would have satisfied the
+  words of AC10 while the real gate work (digests are `await`ed per payload) stayed
+  unmeasured.
+- **Pack asserts from two directions.** `check:verification-package` re-reads the
+  manifest and the `npm pack --dry-run --json` file list: every `exports` target must
+  be shipped, both projections must be in `files` **and** `exports`, and no
+  `src`/`test`/`scripts` path may leak. The first run failed on the checker's own
+  lookup (`exports` keys carry a `./` prefix, the projection list did not), which is
+  the value of having the checker exist in the gate rather than as a manual step.
+- **Registration order for the docs suite.** P13 registers `test:verification-docs`
+  and seeds it with the facts that must hold whatever the prose says; P14 writes the
+  content assertions red-first. The temptation to assert `VERIFICATION_LIMITS`
+  coverage now was resisted deliberately — neither README mentions it today, so that
+  assertion belongs to P14's evidence, not P13's.
+- **Build-then-check is part of the command.** The generator renders from `dist/`,
+  so `check:verification-schemas` begins with `tsc`; a test asserts the order so the
+  trap P10 recorded cannot return through a renamed script.
+- **Ledger untouched:** F70's `folded: no` row and F77 stay for P15 to finalize.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.
