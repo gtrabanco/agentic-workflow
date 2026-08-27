@@ -92,3 +92,18 @@
 - Gotchas: after merge, delete the `147-audit-evidence-provenance` row from `docs/fix/README.md` (and the folder per the project's fix-history convention) — never before.
 - Files: docs/fix/README.md, docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/progress.md
 - Next: unit finished
+
+## Dependency receipt v2 (full gate re-run — fold cycle)
+- Fingerprint: ada95fc1625fe2e721fd11443f746af82d31767e · Closure: 147-audit-evidence-provenance ← (none)
+- Merged PRs: none required (SPEC `Depends on:` = None) · Fully merged: yes · Verified: 2026-08-27
+- Why rewritten: the v1 fingerprint (326676a43ec8cfb2d129915d9074b14c0aa9c812) predates this unit's
+  fix-index row flip `pending → done · [#148](https://github.com/gtrabanco/agentic-workflow/pull/148)`;
+  the row is fingerprint input, so the fast path invalidated and the full gate re-ran (empty closure →
+  nothing to traverse in the forge). `--force` recorded after the receipt date: none.
+
+## Fold (F1 + F2 from review-findings.md) — 2026-08-27
+- Done: `## Status` legend replaced with the resolved value `` `done` `` (matching `docs/fix/119-…`/`117-…`/`100-…` and this unit's terminal close-out); the four `### Spec-lint` boxes ticked after re-running each validator on this tree — placeholder grep `grep -nE '<(topic|n|task|command|expected)'` → no match (exit 1), `### Out of scope` = 4 concrete bullets, `ACCEPTANCE.md` states "read-verified rows: none … every row is command-validated" (the one `manual:` row is the P3 weak-model fixture observation, already executed in P5), phase-lint PASS (8/8) recorded for P1–P4 in the SPEC and for P5 here; both `review-findings.md` rows flipped `folded: no → yes` (the ledger's only permitted transition, owned by this cycle).
+- Remains: none in-unit — fold committed and pushed; re-review the changed HEAD, then the merge gate.
+- Gotchas: the fold touches **planning artifacts only** (`git diff --stat HEAD -- skills/ docs/workflow/` → empty), so AC1–AC10 were re-verified rather than re-implemented (all green: gate `node scripts/check-skill-context.mjs` exit 0 / "PASS context budgets: 35 skills", `npx skills add . --list` lists `product-audit`, `version: 3.1.0`, both CHANGELOGs match); the Spec-lint placeholder grep must stay **unticked-free** in the future too — writing the resolved status as `done` (not the legend) is what removes the last template text, and the parenthetical "Removed from `docs/fix/README.md` only after the PR merges" is not a placeholder (no `<…>` token). Any new commit here invalidates the `review-change` `REVIEW-PASS` receipt for the previous HEAD — re-review before `/audit-pr`.
+- Files: docs/fix/147-audit-evidence-provenance/SPEC.md, docs/fix/147-audit-evidence-provenance/review-findings.md, docs/fix/147-audit-evidence-provenance/progress.md
+- Next: unit finished
