@@ -144,7 +144,7 @@ export const VERIFICATION_COMMAND_STATUSES = Object.freeze(
   ["passed", "failed", "timed-out", "skipped", "infrastructure-error"] as const,
 );
 export const VERIFICATION_VERDICTS = Object.freeze(["pass", "fail", "incomplete"] as const);
-const WORKING_DIRECTORY_POLICIES = ["candidate-root", "relative-path"] as const;
+export const WORKING_DIRECTORY_POLICIES = ["candidate-root", "relative-path"] as const;
 
 /**
  * D14 — bounded usability: the SHAPE ceilings (cardinality + string length).
