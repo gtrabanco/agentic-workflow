@@ -506,14 +506,32 @@ export function isRunHalt(envelope: Envelope): boolean {
 /** The strict, driver-facing interpretation of the legacy envelope. */
 const STRICT_V2_KEYS = [...REQUIRED_KEYS, "detail"] as const;
 
+/**
+ * Memo for the key vocabularies below: they are static contract data repeated
+ * per parsed envelope, so the `Set` is built once per distinct vocabulary
+ * instead of once per call. The key joins on NUL, which no JSON member name can
+ * contain here, so two vocabularies can never alias each other.
+ */
+const _vocabularyKeys = new Map<string, ReadonlySet<string>>();
+
+function vocabularyKeys(keys: readonly string[]): ReadonlySet<string> {
+  const memo = keys.join("\0");
+  let allowed = _vocabularyKeys.get(memo);
+  if (allowed === undefined) {
+    allowed = new Set(keys);
+    _vocabularyKeys.set(memo, allowed);
+  }
+  return allowed;
+}
+
 function rejectUnexpectedKeys(
   value: unknown,
   path: string,
-  keys: readonly string[] | ReadonlySet<string>,
+  keys: readonly string[],
   errors: string[],
 ): void {
   if (!isObj(value)) return;
-  const allowed = keys instanceof Set ? keys : new Set(keys);
+  const allowed = vocabularyKeys(keys);
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) errors.push(`unexpected key: ${path}.${key}`);
   }
@@ -2788,19 +2806,38 @@ export type FreshnessResult = FreshResult | StaleResult;
 // D4 — Canonical serialization helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * D4/D6 — Canonical serialization of one value.
+ *
+ * The domain is the JSON data model only: `null`, string, finite number,
+ * boolean, array and plain object. Anything else is refused by name instead of
+ * being handed to `JSON.stringify`, which either throws an opaque serializer
+ * error (`bigint`), yields the JS value `undefined` (`function`, `symbol`) that
+ * string-interpolation then renders as a malformed fragment (`["run",]`) or an
+ * empty element (`[]` — colliding with a genuinely empty array), or silently
+ * drops the key. This function is the byte-level authority behind every digest
+ * in the package, so a leaf it cannot represent must fail loudly: a silent drop
+ * would let two different candidates share one digest.
+ */
 function canonicalJSONValue(v: unknown): string {
   if (v === null) return "null";
-  if (typeof v === "string") return JSON.stringify(v);
-  if (typeof v === "number") return JSON.stringify(v);
-  if (typeof v === "boolean") return JSON.stringify(v);
+  const kind = typeof v;
+  if (kind === "string") return JSON.stringify(v);
+  if (kind === "number") {
+    if (!Number.isFinite(v as number)) {
+      throw new TypeError(`canonical JSON: unsupported leaf (non-finite ${kind})`);
+    }
+    return JSON.stringify(v);
+  }
+  if (kind === "boolean") return JSON.stringify(v);
   if (Array.isArray(v)) {
     return "[" + v.map(canonicalJSONValue).join(",") + "]";
   }
-  if (typeof v === "object") {
+  if (kind === "object") {
     const keys = Object.keys(v as Record<string, unknown>).sort();
     return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k])).join(",") + "}";
   }
-  return JSON.stringify(v);
+  throw new TypeError(`canonical JSON: unsupported leaf (${kind})`);
 }
 
 /**
@@ -2855,8 +2892,7 @@ export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
 
 /** D4 — SHA-256 hex digest (async via Web Crypto). */
 async function sha256Hex(data: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const buf = encoder.encode(data);
+  const buf = _utf8Encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
   const hashArray = new Uint8Array(hashBuffer);
   return Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -3084,7 +3120,7 @@ export type { VerificationDiagnosticV1 };
 
 /** UTF-8 byte length of a canonical form — the unit D14 payload budgets use. */
 function utf8Bytes(text: string): number {
-  return new TextEncoder().encode(text).length;
+  return _utf8Encoder.encode(text).length;
 }
 
 /**
@@ -3428,21 +3464,23 @@ function deriveVerdictUnchecked(
   plan: VerificationPlanV1,
 ): VerificationVerdict {
   const reqStage = receipt.stageRequested;
-  // Stage required set: fast → fast commands; full → every declared command
-  const required =
+  // Stage required set: fast → fast commands; full → every declared command.
+  // One set is built here and reused by both scans below — the membership test
+  // is the only thing either pass needs from it.
+  const requiredSet = new Set<string>(
     reqStage === "full"
       ? plan.commands.map((c: VerificationCommandV1) => c.id)
-      : plan.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id);
+      : plan.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id),
+  );
   const received = new Set(receipt.results.map((r2: VerificationResultV1) => r2.commandId));
 
   // Missing → incomplete
-  for (const id of required) { if (!received.has(id)) return "incomplete"; }
+  for (const id of requiredSet) { if (!received.has(id)) return "incomplete"; }
 
   // Unjustified skip → incomplete
   for (const r2 of receipt.results) { if (r2.status === "skipped" && !r2.skipReason) return "incomplete"; }
 
   // Failed/timed-out/infra, or a required row skipped-with-reason → fail
-  const requiredSet = new Set(required);
   for (const r2 of receipt.results) {
     if (NON_PASSED_STATUSES.includes(r2.status)) return "fail";
     if (requiredSet.has(r2.commandId) && r2.status === "skipped") return "fail";

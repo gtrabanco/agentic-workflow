@@ -740,6 +740,26 @@ function valueCode(field: VerificationFieldSpec): VerificationDiagnosticCodeV1 {
   return field.violationCode ?? "invalid-value";
 }
 
+/**
+ * Compiled-pattern memo.
+ *
+ * Every pattern validated here is declared once in the frozen field-spec table
+ * above, so re-parsing it per string field of every walked document was pure
+ * repeat work; the cache holds that fixed handful of entries for the process
+ * lifetime. Safe to share instances: these patterns are compiled without `g`/`y`,
+ * so `test()` carries no lastIndex state between calls.
+ */
+const _compiledPatterns = new Map<string, RegExp>();
+
+function compiledPattern(pattern: string): RegExp {
+  let re = _compiledPatterns.get(pattern);
+  if (re === undefined) {
+    re = new RegExp(pattern);
+    _compiledPatterns.set(pattern, re);
+  }
+  return re;
+}
+
 function checkString(
   field: VerificationFieldSpec,
   value: unknown,
@@ -761,12 +781,12 @@ function checkString(
   if (field.maxLength !== undefined && value.length > field.maxLength) {
     sink.push("limit-exceeded", path);
   }
-  if (field.pattern !== undefined && !new RegExp(field.pattern).test(value)) {
+  if (field.pattern !== undefined && !compiledPattern(field.pattern).test(value)) {
     sink.push(valueCode(field), path);
     return undefined;
   }
   for (const rule of field.rules ?? []) {
-    if (!new RegExp(rule.regex).test(value)) sink.push(valueCode(field), path);
+    if (!compiledPattern(rule.regex).test(value)) sink.push(valueCode(field), path);
   }
   return value;
 }
@@ -1074,7 +1094,7 @@ function applyCrossRule(
     case "calendar-roundtrip": {
       for (const key of rule.fields ?? []) {
         const raw = value[key];
-        if (typeof raw !== "string" || !new RegExp(ISO_8601_PATTERN).test(raw)) continue;
+        if (typeof raw !== "string" || !compiledPattern(ISO_8601_PATTERN).test(raw)) continue;
         const date = new Date(raw);
         const parts = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
         const ok =

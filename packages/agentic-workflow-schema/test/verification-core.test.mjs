@@ -432,6 +432,44 @@ test("canonical forms are deterministic", () => {
   assert.deepStrictEqual(c1, c2);
 });
 
+// F80 — the canonical serializer is the digest authority, so a value it cannot
+// represent must fail loudly. Silently dropping a leaf emitted a non-canonical
+// string (`["run",]`) and, worse, let a one-element function array canonicalize
+// exactly like an empty array: two different candidates, one digest.
+test("canonical form refuses a function leaf instead of emitting a non-canonical string", () => {
+  const plan = makePlan([makeValidPlanCommand({ id: "c1", args: ["run", () => {}] })]);
+  assert.throws(() => canonicalizeVerificationPlan(plan), (err) =>
+    err instanceof TypeError && /unsupported leaf/.test(err.message));
+});
+
+test("canonical form refuses a symbol leaf", () => {
+  const plan = makePlan([makeValidPlanCommand({ id: "c1", args: [Symbol("s")] })]);
+  assert.throws(() => canonicalizeVerificationPlan(plan), (err) =>
+    err instanceof TypeError && /unsupported leaf/.test(err.message));
+});
+
+test("canonical form names the bigint leaf instead of leaking the JSON serializer error", () => {
+  const plan = makePlan([makeValidPlanCommand({ id: "c1", timeoutMs: 30000n })]);
+  assert.throws(() => canonicalizeVerificationPlan(plan), (err) =>
+    err instanceof TypeError && /unsupported leaf.*bigint/i.test(err.message));
+});
+
+test("a function element never shares a canonical form with an empty array (F80)", () => {
+  const empty = makePlan([makeValidPlanCommand({ id: "c1", args: [] })]);
+  const lone = makePlan([makeValidPlanCommand({ id: "c1", args: [() => {}] })]);
+  // Today `lone` canonicalizes identically to `empty`; after the guard the
+  // unrepresentable one is refused, so the collision class cannot recur.
+  assert.equal(JSON.parse(canonicalizeVerificationPlan(empty)).commands[0].args.length, 0);
+  assert.throws(() => canonicalizeVerificationPlan(lone), TypeError);
+});
+
+test("every canonical form the verification canonicalizers accept is parseable JSON", () => {
+  const plan = makeValidPlan();
+  assert.doesNotThrow(() => JSON.parse(canonicalizeVerificationPlan(plan)));
+  assert.doesNotThrow(() =>
+    JSON.parse(canonicalizeVerificationReceipt(makeValidReceipt(plan.commands))));
+});
+
 test("digestPlan returns 64-char lowercase hex", async () => {
   const plan = makeValidPlan();
   const digest = await digestVerificationPlan(plan);
