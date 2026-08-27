@@ -22,6 +22,7 @@ import {
   createVerificationDiagnosticSink,
   projectStructure,
   validateStructure,
+  type VerificationContractSpec,
   type VerificationDiagnosticCodeV1,
   type VerificationDiagnosticSink,
   type VerificationDiagnosticV1,
@@ -3157,6 +3158,12 @@ function canonicalBudgetRefusal(value: unknown, limit: number): VerificationDiag
  * nullness and relative-path validation, positive-integer timeouts, and
  * undeclared or inherited fields at every level.
  *
+ * The input domain is JSON documents — values `JSON.parse` produces or
+ * equivalent literals. An input outside that domain (e.g. an object with a
+ * throwing live getter) cannot smuggle its exception past this entry: the
+ * walk failure is refused as a redacted `invalid-type` row, so callers
+ * always observe the D16 diagnostic contract (F92).
+ *
  * On success it returns a normalized own-property DTO — never the submitted
  * reference — so digests and downstream semantics see exactly the declared
  * contract fields. On failure it returns at most
@@ -3317,7 +3324,10 @@ function validateVerificationReceiptShape(value: unknown): VerificationReceiptVa
  * It accepts unknown input and returns a normalized own-property receipt DTO;
  * no standalone structural receipt validator is exported, so a structural
  * match alone can never claim runtime validity (D13). Async because the
- * planDigest check composes the async digest.
+ * planDigest check composes the async digest. The input domain is JSON
+ * documents — like the plan entry, an out-of-domain object (a throwing live
+ * getter) is refused as a redacted `invalid-type` row rather than escaping an
+ * attacker-chosen exception (F92).
  */
 export async function validateVerificationReceiptAgainstPlan(
   receipt: unknown,
@@ -3504,27 +3514,83 @@ export function deriveVerificationVerdict(
 }
 
 /**
- * D6 — Canonical serialization.
+ * D6 — Canonical serialization, shared by both contract sides.
  *
  * Inputs are projected through the canonical definition first, so the bytes —
  * and therefore every digest — describe the normalized own-property contract
  * fields, never an inherited prototype value or an undeclared extra.
+ *
+ * The SPEC precondition ("inputs must first pass their validators") is
+ * enforced defensively here (F91): a declared-array cardinality beyond D14 is
+ * refused BEFORE any serialization work runs, and the canonical form itself
+ * must fit the contract's byte budget. A refusal is a named TypeError that
+ * quotes only the violated limit — never the submitted content.
+ */
+function canonicalizeWithinContract(
+  value: unknown,
+  contract: VerificationContractSpec,
+  collectionField: "commands" | "results",
+  maxItems: number,
+  budgetBytes: number,
+  label: "plan" | "receipt",
+): string {
+  if (value !== null && typeof value === "object") {
+    const items = (value as Record<string, unknown>)[collectionField];
+    if (Array.isArray(items) && items.length > maxItems) {
+      throw new TypeError(
+        `verification ${label} exceeds the D14 limit of at most ${maxItems} ${collectionField} — validate before canonicalizing`,
+      );
+    }
+  }
+  const canonical = canonicalJSONValue(
+    projectStructure(contract, contract.root, value),
+  );
+  if (utf8Bytes(canonical) > budgetBytes) {
+    throw new TypeError(
+      `verification ${label} canonical form exceeds the D14 ${budgetBytes}-byte budget — validate before canonicalizing`,
+    );
+  }
+  return canonical;
+}
+
+/**
+ * D6 — Canonical serialization of a validated `VerificationPlan v1`. The
+ * input must first pass `validateVerificationPlanV1`; out-of-contract
+ * cardinality or byte budgets throw a named TypeError (F91).
  */
 export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string {
-  return canonicalJSONValue(
-    projectStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, plan),
-  );
-}
-export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string {
-  return canonicalJSONValue(
-    projectStructure(VERIFICATION_CONTRACT.receipt, VERIFICATION_CONTRACT.receipt.root, receipt),
+  return canonicalizeWithinContract(
+    plan,
+    VERIFICATION_CONTRACT.plan,
+    "commands",
+    VERIFICATION_LIMITS.commands,
+    VERIFICATION_LIMITS.planBytes,
+    "plan",
   );
 }
 
+/**
+ * D6 — Canonical serialization of a validated `VerificationReceipt v1`. The
+ * input must first pass `validateVerificationReceiptAgainstPlan`;
+ * out-of-contract cardinality or byte budgets throw a named TypeError (F91).
+ */
+export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string {
+  return canonicalizeWithinContract(
+    receipt,
+    VERIFICATION_CONTRACT.receipt,
+    "results",
+    VERIFICATION_LIMITS.results,
+    VERIFICATION_LIMITS.receiptBytes,
+    "receipt",
+  );
+}
+
+/** D6 — Digest of a validated plan (inherits the F91 canonical-input guards). */
 export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
   return sha256Hex(canonicalizeVerificationPlan(plan));
 }
 
+/** D6 — Digest of a validated receipt (inherits the F91 canonical-input guards). */
 export async function digestVerificationReceipt(receipt: VerificationReceiptV1): Promise<string> {
   return sha256Hex(canonicalizeVerificationReceipt(receipt));
 }
