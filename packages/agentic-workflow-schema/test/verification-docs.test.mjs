@@ -326,6 +326,36 @@ test("F102: repository-only verification commands are marked source-checkout-onl
   }
 });
 
+// F110: marking the table is not enough — the prose that *offers* a source-only
+// command as proof has to carry the same boundary, or an installed consumer
+// follows the sentence and hits a missing script.
+test("F110: every prose mention of a source-checkout-only command carries the qualifier in both references", () => {
+  const qualifier =
+    /source[- ]checkout[- ]only|solo (?:en|para) (?:un )?checkout (?:del c[oó]digo )?fuente/i;
+  const sourceOnlyCommands = [
+    "check:verification-schemas",
+    "check:verification-package",
+    "bench:verification",
+    "test:verification-docs",
+    "gate:verification",
+  ];
+  for (const [name, text] of Object.entries(both)) {
+    const lines = text.split("\n");
+    for (const command of sourceOnlyCommands) {
+      lines.forEach((line, index) => {
+        if (!line.includes(command)) return;
+        // A ±6-line window is one markdown paragraph: the qualifier has to be in
+        // the sentence that offers the command, not somewhere in the file.
+        const window = lines.slice(Math.max(0, index - 6), index + 7).join(" ");
+        assert.ok(
+          qualifier.test(window),
+          `${name}:${index + 1} offers \`npm run ${command}\` without the source-checkout-only qualifier (F110)`,
+        );
+      });
+    }
+  }
+});
+
 test("F103: both references inventory the exact public verification runtime and type surfaces", () => {
   const runtime = [
     "VERIFICATION_CANONICAL_VECTORS",

@@ -365,9 +365,11 @@ rejected, never silently truncated.
 The canonical byte budget is measured before a payload is examined, so an oversized
 document is refused by the budget alone. The time ceilings are deliberately
 asymmetric: one maximum-length fast command leaves 5 minutes for the rest of the
-fast stage. `npm run bench:verification -- --commands 128` proves the declared
-performance bound — a warm 128-command plan+receipt validate → canonicalize →
-digest cycle at p95 ≤ 100 ms — and exits non-zero when it is not met. Cross-implementation
+fast stage. `npm run bench:verification -- --commands 128` is a
+source-checkout-only maintainer command: run it from a source checkout, never
+from the installed tarball, and it proves the declared performance bound — a warm
+128-command plan+receipt validate → canonicalize → digest cycle at p95 ≤ 100 ms —
+and exits non-zero when it is not met. Cross-implementation
 interoperability is pinned by `VERIFICATION_CANONICAL_VECTORS`, the frozen
 `{ contract, digest, description }` fixtures whose digests any correct
 canonicalizer must reproduce — the package's own digest tests consume exactly

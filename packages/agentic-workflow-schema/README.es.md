@@ -379,10 +379,12 @@ recibo que los excede se rechaza, nunca se trunca en silencio.
 El presupuesto de bytes canónicos se mide antes de examinar el documento, así que un
 payload desmedido se rechaza solo por el presupuesto. Los topes de tiempo son
 deliberadamente asimétricos: un comando fast de duración máxima deja 5 minutos para
-el resto de la etapa fast. `npm run bench:verification -- --commands 128` prueba el
-límite de rendimiento declarado — un ciclo en caliente de validar → canonicalizar →
-digerir plan+recibo de 128 comandos con p95 ≤ 100 ms — y sale con código distinto de
-cero cuando no se cumple. La interoperabilidad entre implementaciones la fija
+el resto de la etapa fast. `npm run bench:verification -- --commands 128` es un
+comando de mantenedor solo para checkout fuente: ejecútalo desde un checkout del
+código fuente, nunca desde el tarball instalado, y prueba el límite de rendimiento
+declarado — un ciclo en caliente de validar → canonicalizar → digerir plan+recibo
+de 128 comandos con p95 ≤ 100 ms — y sale con código distinto de cero cuando no se
+cumple. La interoperabilidad entre implementaciones la fija
 `VERIFICATION_CANONICAL_VECTORS`: los fixtures congelados
 `{ contract, digest, description }` cuyos digests debe reproducir cualquier
 canonicalizador correcto — los tests de digests del propio paquete consumen

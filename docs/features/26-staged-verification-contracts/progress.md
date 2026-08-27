@@ -35,6 +35,12 @@ receipt does not claim either — it hands the exact pushed HEAD and the blob ab
 - Inputs: SPEC `## Dependencies` hard row + ROADMAP row 25 (no literal `Depends on:` field exists in this SPEC)
 - Merged PRs: 25 #144 @ 11a8061639e0ea2bdfdbaabc270380543eb37002 · Fully merged: yes · Verified: 2026-08-26
 
+## Dependency receipt v2 (full pass at P16 entry — supersedes v1)
+- Fingerprint: not reproducible from the recorded inputs — recomputing `git hash-object --stdin` over the SPEC hard-deps line + ROADMAP row 25 yields `5b9bd433a59a369865eaa3de8842d2eecf035ba6` (and `98adf44849c4b23fd014cc14e41366a376fd7a0c` for the whole `## Dependencies` block, `3c3f2f1ddc6ada7a3b7bfb715d2ec137edec627c` newline-joined). v1's `0292879…` matches no reading of those inputs, so the fail-closed rule applied: forge traversal re-run, fast path not taken.
+- Closure: 26-staged-verification-contracts ← 25-content-bound-review-receipts (row 25 dep cell `—`, so the closure is depth 1)
+- Merged PRs: 25 #144 MERGED @ 11a8061639e0ea2bdfdbaabc270380543eb37002 (`gh pr view` 2026-08-27) · ancestor-of-HEAD verified · Fully merged: yes · Verified: 2026-08-27
+- Own status: roadmap row 26 `in-progress · [#145]` → `planned`+ → proceed. No `--force` is recorded in `decisions.md`.
+
 ## P1 — Deliver the VerificationPlan v1 contract
 - **Status**: Done
 - **Done**: Types, constants, validator, schema, test suite (34 new tests), exports from `src/index.ts`
@@ -243,3 +249,14 @@ receipt does not claim either — it hands the exact pushed HEAD and the blob ab
   this HEAD; `/audit-pr` needs a fresh review at ≥ `9ef8c5d`.
 - → Next: /loop-review-fold 26-staged-verification-contracts — re-review the moved
   HEAD before the merge gate
+
+## P16 — 2026-08-27
+- Done: ledger provenance repaired and published docs hygiene corrected — F98/F101–F105 now name their fold commits (e7a7f49 / a76ad88 / fdd2a98, each verified to touch the surface its row describes), F107/F109/F110 flipped `folded: yes`, and the `bench:verification` proof sentence in both READMEs carries the source-checkout-only boundary pinned by a new red-first docs case; both CHANGELOGs re-count the suite at 23.
+- Remains: P17–P21 (F97 hostile-getter snapshot, F99 preflight refusal work, F100 legacy canonicalizer compatibility, F106 ledger fold-provenance recovery, P21 requalify + close-out).
+- Gotchas: (1) A `folded: yes` flip cannot name its own commit — F107/F110 say "folded in P16" and **P17 must bind the real P16 short SHA** in its reconciliation note (UNIT_LOOP's pending→SHA rule); leaving that unbound re-creates F106/F107 as a finding. (2) The F110 case asserts a ±6-line window around *every* mention of all five source-checkout-only commands, so any future prose mention of `gate:verification`/`check:*` in either README must carry the qualifier too — do not narrow the case to `bench:verification`. (3) Adding any docs case makes the F90 case red until both CHANGELOG lines are re-counted in the same commit. (4) Dependency receipt v1's fingerprint is not reproducible from its own recorded inputs (see receipt v2): always take the full gate pass here, the fast path cannot be trusted for this unit.
+- Files: `packages/agentic-workflow-schema/{README.md,README.es.md,test/verification-docs.test.mjs}`, `CHANGELOG.md`, `CHANGELOG.es.md`, `docs/features/26-staged-verification-contracts/{TASKS,progress,review-findings}.md`
+- Next: P17 — Snapshot verification input at validation entry
+
+## Unit-loop receipt — P16
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm run gate:verification` (exit 0: 470/470 tests, projections drift-free, package content PASS, docs 23/23, p95 17.33 ms ≤ 100 ms) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P17 · Attempts: 1 · Review-checkpoint trigger recorded: **layer unchanged** (docs → domain at P17, so the layer-boundary trigger fires on *opening* P17 — the docs layer closes here); accumulation since the last reviewed marker is small (5 files); no sensitivity surface (no auth/secrets/CI/destructive migration). Whole-unit mode records it and continues; the mandatory end review covers the frozen final candidate.

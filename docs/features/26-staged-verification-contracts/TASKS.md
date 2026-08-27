@@ -222,11 +222,11 @@ After P15, hand the exact pushed HEAD and replacement acceptance blob to a fresh
 
 ## P16 — Correct published docs hygiene
 Layer: docs · Done-when: `cd packages/agentic-workflow-schema && npm run test:verification-docs` exits 0 with the new qualifier assertion, no unqualified `bench:verification` consumer sentence remains in either README, and ledger rows F107/F109/F110 read `folded: yes` naming the P16 commit.
-- [ ] Annotate ledger rows F98/F101–F105 with their fold commits (e7a7f49 / a76ad88 / fdd2a98) and flip F107 `folded: yes` in the same commit
-- [ ] Annotate ledger row F109 `folded: yes` citing the replan commit's roadmap flip plus the P21 close-out re-flip obligation
-- [ ] Add the source-checkout qualifier to the `bench:verification` proof sentence in both READMEs (F110), pin it with a red-first docs assertion, and synchronize the case-count line in both CHANGELOGs
-- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0, docs suite 23/23
-- [ ] Commit P16 atomically (fix plus ledger ticks) and push
+- [x] Annotate ledger rows F98/F101–F105 with their fold commits (e7a7f49 / a76ad88 / fdd2a98) and flip F107 `folded: yes` in the same commit
+- [x] Annotate ledger row F109 `folded: yes` citing the replan commit's roadmap flip plus the P21 close-out re-flip obligation
+- [x] Add the source-checkout qualifier to the `bench:verification` proof sentence in both READMEs (F110), pin it with a red-first docs assertion, and synchronize the case-count line in both CHANGELOGs
+- [x] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0, docs suite 23/23
+- [x] Commit P16 atomically (fix plus ledger ticks) and push
 
 ## P17 — Snapshot verification input at validation entry
 Layer: domain · Done-when: the hostile-getter suite proves both public entries decide and build DTOs from one captured document for every accessor, `npm run gate:verification` exits 0 with p95 ≤ 100 ms, and ledger F97 reads `folded: yes` naming the P17 commit.
