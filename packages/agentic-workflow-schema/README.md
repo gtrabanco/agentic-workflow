@@ -163,9 +163,11 @@ overwriting it.
 
 ## Validate or use another language
 
-The public validators are `validateEnvelopeV2Strict`, `validateSkillOutcomeV1`,
-and `validateWorkflowSnapshotV1`. Import a JSON Schema when a non-TypeScript
-consumer needs the same boundary:
+The public contract validators are `validateEnvelopeV2Strict`,
+`validateSkillOutcomeV1` and `validateWorkflowSnapshotV1`; the staged verification
+contracts add exactly the two authoritative entries named above,
+`validateVerificationPlanV1` and `validateVerificationReceiptAgainstPlan`. Import a
+JSON Schema when a non-TypeScript consumer needs the same structural boundary:
 
 ```ts
 import schema from "@gtrabanco/agentic-workflow-schema/skill-outcome.schema.json" with { type: "json" };
@@ -238,11 +240,59 @@ Two versioned wire contracts for staged verification:
   overall verdict (`pass | fail | incomplete`) is derived from the receipt
   content.
 
+**Validation authority.** Exactly two public authoritative entries decide runtime
+validity: `validateVerificationPlanV1(value)` for a plan, and
+`await validateVerificationReceiptAgainstPlan(receipt, plan)` for a receipt, which
+performs the structural check and every plan-bound rule in one call. No standalone
+receipt validator is exported — a receipt is only meaningful against the plan it
+binds to. Both accept unknown input and both return a **normalized** own-property
+DTO on success rather than the object you handed them, so digests and downstream
+semantics never depend on inherited, duplicated or undeclared properties.
+
+**Failure diagnostics.** A rejection is `{ ok: false, diagnostics, truncated }`.
+`diagnostics` holds at most 50 frozen `{ code, path }` rows in document order and
+`truncated` says whether that ceiling dropped any. A row is never a message: no
+prose and no submitted value is ever returned. `code` comes from the closed
+`VERIFICATION_DIAGNOSTIC_CODES` vocabulary and `path` is an RFC 6901 JSON Pointer
+built only from declared property names and array indices — `/commands/3/id`,
+`/results/1/commandId`, or `""` for the payload as a whole. An undeclared key is
+reported as `unknown-field` on its **container**, because the key name is itself
+submitted data.
+
+| Diagnostic code | What it answers for |
+| --- | --- |
+| `invalid-type` | a field holds a value of the wrong JSON type |
+| `missing-field` | a declared field is absent |
+| `unknown-field` | the object carries an undeclared property |
+| `invalid-value` | a value breaks its own rule (vocabulary, pattern, NUL) |
+| `limit-exceeded` | a cardinality or length ceiling is crossed |
+| `duplicate-id` | the same command id appears twice |
+| `unknown-command` | a result or skip reason names no declared command |
+| `invalid-order` | results do not follow the plan's declared order |
+| `invalid-stage` | a receipt carries a row outside its requested stage |
+| `invalid-exit-state` | exit code and signal break the D4 matrix |
+| `invalid-evidence` | an evidence reference is malformed (D5 content rules) |
+| `invalid-skip` | a skip reason is not justified by a failed predecessor |
+| `invalid-fail-fast` | `stopOnFailure` sequencing is broken |
+| `digest-mismatch` | the receipt's `planDigest` is not the bound plan's |
+| `verdict-mismatch` | the stored verdict differs from the derived one |
+| `budget-exceeded` | a stage's declared timeouts exceed its aggregate budget |
+
+**JSON Schema status.** `verification-plan.schema.json` and
+`verification-receipt.schema.json` are generated, **non-authoritative structural
+projections** of the package's canonical contract definition. They exist for editors
+and transport checks; a Draft-07 match is not contract validity, and semantic rules
+(`unique-command-ids`, both aggregate stage budgets, both canonical byte budgets) are
+enforced only by the two runtime entries above — each projection discloses them in
+its `$comment`. Never hand-edit them: change the definition, then run
+`npm run check:verification-schemas`, which rebuilds and fails on any byte drift.
+`node scripts/generate-verification-schemas.mjs` is the only writer.
+
 **Two-stage model:** requesting `fast` executes only fast commands; requesting
 `full` executes every fast and full command. The freshness predicate returns
 stable reason codes (`stale-plan | stale-candidate-snapshot |
 stale-acceptance-fingerprint | incomplete-missing-results |
-incomplete-unjustified-skip | incomplete-stage-coverage`) or `{fresh: true}`.
+incomplete-unjustified-skip | incomplete-stage-coverage`) or `{ fresh: true }`.
 
 **Delivery-gate rule:** a delivery verification gate is satisfied ONLY by a
 receipt that is fresh, requests `full`, and has verdict `pass`.
@@ -250,75 +300,121 @@ receipt that is fresh, requests `full`, and has verdict `pass`.
 **No-execution boundary:** the package validates, canonicalizes, digests,
 derives, and compares — it does not execute commands. The caller owns execution.
 
+### Usability limits
+
+Every v1 ceiling is published once, as the frozen `VERIFICATION_LIMITS` object, and
+is enforced by the two authoritative entries: an over-limit plan or receipt is
+rejected, never silently truncated.
+
+| Limit | Value | Applies to |
+| --- | --- | --- |
+| `commands` | 128 | commands declared in one plan |
+| `results` | 128 | result rows in one receipt |
+| `argsPerCommand` | 64 | arguments in one command |
+| `idChars` | 128 | a command `id` or result `commandId` |
+| `pathChars` | 1024 | `executable` and `workingDirectory` |
+| `argChars` | 4096 | a single argument string |
+| `skipReasonChars` | 1024 | a `skipReason` |
+| `evidenceRefChars` | 1024 | an evidence `ref` |
+| `planBytes` | 262144 | canonical plan size (256 KiB) |
+| `receiptBytes` | 524288 | canonical receipt size (512 KiB) |
+| `fastCommandTimeoutMs` | 600000 | one fast command's timeout (10 min) |
+| `fastStageTimeoutMs` | 900000 | every fast command's timeouts summed (15 min) |
+| `fullCommandTimeoutMs` | 3600000 | one full command's timeout (60 min) |
+| `fullStageTimeoutMs` | 7200000 | every full command's timeouts summed (2 h, i.e. 120 min) |
+| `diagnostics` | 50 | rows in one failure result |
+
+The canonical byte budget is measured before a payload is examined, so an oversized
+document is refused by the budget alone. The time ceilings are deliberately
+asymmetric: one maximum-length fast command leaves 5 minutes for the rest of the
+fast stage. `npm run bench:verification -- --commands 128` proves the declared
+performance bound — a warm 128-command plan+receipt validate → canonicalize →
+digest cycle at p95 ≤ 100 ms — and exits non-zero when it is not met.
+
 ### Consumer example
 
 ```ts
 import {
-  validateVerificationPlanV1,
-  validateVerificationReceiptV1,
-  validateVerificationReceiptAgainstPlan,
-  deriveVerificationVerdict,
   compareVerificationReceiptToCurrent,
+  deriveVerificationVerdict,
+  digestVerificationPlan,
+  validateVerificationPlanV1,
+  validateVerificationReceiptAgainstPlan,
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
-  digestVerificationPlan,
 } from "@gtrabanco/agentic-workflow-schema";
 
-// 1. Build and validate a plan
+const candidateDigest = "3f2a9c1e5b7d4f8a0c2e5b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a";
+const acceptanceDigest = "9c4e7b1d3f5a8c2e4b6d0f2a4c6e8b0d2f4a6c8e0b2d4f6a8c0e2b4d6f8a0c24";
+
+// 1. Declare the plan: a fast lint that stops the stage, then a full test run.
 const plan = {
   contract: VERIFICATION_PLAN_CONTRACT_ID,
   commands: [
     { id: "lint", stage: "fast" as const, executable: "npm", args: ["run", "lint"],
       workingDirectoryPolicy: "candidate-root" as const, workingDirectory: null,
-      timeoutMs: 30000, stopOnFailure: true, costClass: "cheap" as const },
+      timeoutMs: 30_000, stopOnFailure: true, costClass: "cheap" as const },
     { id: "test", stage: "full" as const, executable: "npm", args: ["test"],
       workingDirectoryPolicy: "candidate-root" as const, workingDirectory: null,
-      timeoutMs: 120000, stopOnFailure: false, costClass: "moderate" as const },
+      timeoutMs: 120_000, stopOnFailure: false, costClass: "moderate" as const },
   ],
 } as const;
-const pv = validateVerificationPlanV1(plan);
-if (!pv.ok) throw new Error(pv.errors.join(", "));
 
-// 2. Build and validate a receipt
+const pv = validateVerificationPlanV1(plan);
+if (!pv.ok) throw new Error(`plan rejected: ${JSON.stringify(pv.diagnostics)}`);
+
+// 2. Bind the receipt to one candidate and one acceptance manifest. In a real
+//    gate `candidateDigest` comes from `digestCandidateSnapshot(snapshot)` and
+//    `acceptanceDigest` is the digest of the `ACCEPTANCE.md` blob under review.
 const planDigest = await digestVerificationPlan(pv.plan);
 const receipt = {
   contract: VERIFICATION_RECEIPT_CONTRACT_ID,
   planDigest,
-  candidateSnapshotDigest: "a".repeat(64),
-  acceptanceFingerprint: "b".repeat(64),
+  candidateSnapshotDigest: candidateDigest,
+  acceptanceFingerprint: acceptanceDigest,
   stageRequested: "full" as const,
   results: [
     { commandId: "lint", status: "passed" as const, exitCode: 0, signal: null,
-      startedAt: "2025-01-01T00:00:00Z", endedAt: "2025-01-01T00:00:01Z",
+      startedAt: "2026-08-27T09:00:00Z", endedAt: "2026-08-27T09:00:12Z",
       stdout: null, stderr: null, skipReason: null },
     { commandId: "test", status: "passed" as const, exitCode: 0, signal: null,
-      startedAt: "2025-01-01T00:01:00Z", endedAt: "2025-01-01T00:05:00Z",
-      stdout: null, stderr: null, skipReason: null },
+      startedAt: "2026-08-27T09:00:12Z", endedAt: "2026-08-27T09:02:00Z",
+      stdout: { ref: "evidence/test/stdout.log", bytes: 18213,
+        sha256: "6b1f4d8a2c5e7b0d3f6a9c2e5b8d1f4a7c0e3b6d9f2a5c8e1b4d7f0a3c6e9b2d" },
+      stderr: null, skipReason: null },
   ],
   verdict: "pass" as const,
 } as const;
-const rv = validateVerificationReceiptV1(receipt);
-if (!rv.ok) throw new Error(rv.errors.join(", "));
 
-// 3. Plan-bound validation
-const pbv = await validateVerificationReceiptAgainstPlan(rv.receipt, pv.plan);
-if (!pbv.ok) throw new Error(pbv.errors.join(", "));
+// 3. One call proves receipt structure and plan binding.
+const rv = await validateVerificationReceiptAgainstPlan(receipt, plan);
+if (!rv.ok) throw new Error(`receipt rejected: ${JSON.stringify(rv.diagnostics)}`);
 
-// 4. Verdict derivation (must match stored verdict)
-const derived = deriveVerificationVerdict(rv.receipt, pv.plan);
-// => "pass" only if every command of the requested stage is present and passed,
-//    "fail" if any failed / timed-out / infrastructure-error (or a justified skip with
-//    no attributed failure), "incomplete" if a result is missing or an unjustified skip
+// 4. A row that ran longer than its command's declared timeout is incoherent.
+for (const result of rv.receipt.results) {
+  const declared = pv.plan.commands.find((command) => command.id === result.commandId);
+  if (declared === undefined || Date.parse(result.endedAt) - Date.parse(result.startedAt) > declared.timeoutMs) {
+    throw new Error(`${result.commandId} outran the timeout its command declared`);
+  }
+}
 
-// 5. Freshness check
+// 5. The verdict is derived from content; the payload's copy is never trusted.
+const derived = deriveVerificationVerdict(rv.receipt, pv.plan); // => "pass"
+
+// 6. Freshness compares the digests the receipt was bound to with the current ones.
 const freshness = await compareVerificationReceiptToCurrent(
-  rv.receipt, pv.plan,
-  "a".repeat(64), "b".repeat(64)
+  rv.receipt, pv.plan, candidateDigest, acceptanceDigest,
 );
-// => { fresh: true } or { fresh: false, reasonCode: "stale-..." }
 
-// 6. Delivery-gate composition
-if (freshness.fresh && rv.receipt.stageRequested === "full" && derived === "pass") {
+// 7. The delivery gate needs all three conditions at once.
+if (freshness.fresh === true && rv.receipt.stageRequested === "full" && derived === "pass") {
   console.log("Delivery verified");
 }
 ```
+
+### Consumer boundary
+
+An AWL dialect, runner or adapter that emits plans and executes them is **not part
+of this package**, and no issue tracks it: this schema owns the contracts, the
+canonical forms and the digests only. It becomes independent future work once AWL
+consumes the released package.

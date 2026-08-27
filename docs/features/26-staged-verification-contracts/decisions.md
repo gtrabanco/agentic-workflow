@@ -356,6 +356,48 @@
   trap P10 recorded cannot return through a renamed script.
 - **Ledger untouched:** F70's `folded: no` row and F77 stay for P15 to finalize.
 
+### P14 — Document the verification contract (2026-08-27)
+
+- **Documentation is asserted by running it, not by reading it.** The docs suite
+  extracts the feature-26 example from both references, typechecks it against the
+  **published types**, and executes it. That single decision is what makes AC6's
+  "coherent examples" claim falsifiable: the retired `validateVerificationReceiptV1`
+  import and the `pv.errors.join(…)` reads were compile errors, and the
+  timestamp/timeout incoherence becomes a thrown `Error` in the example itself, so
+  the documented chain has to reach `Delivery verified` for the phase to be green.
+- **Scope of the compile-and-run proof is the feature's own example.** The older
+  snippets in both READMEs use undeclared placeholders (`snapshot`, `headSha`,
+  `invokeAgent`) because they were written as illustrations of a call shape, not as
+  runnable programs. Making them self-contained is the review proposal already
+  recorded below and routed to the user; pretending to compile them here would have
+  either hidden that debt behind skipped blocks or dragged unrelated docs into this
+  unit. The scoping is stated in the test, not assumed.
+- **The F70 decision reaches the docs.** Removing `@types/node` means a documented
+  snippet may not import a `node:` specifier — the first version of the corrected
+  example imported `node:assert` for its coherence check and failed its own
+  typecheck. The example now throws a plain `Error`, which is also better for a
+  reader who copies it into any runtime.
+- **Prose assertions match claims, not formatting.** Two rounds of red came from
+  markdown line wrapping (`no` + newline + `autoritativas`, "not part" + newline +
+  "of"). The AC6/D15/D16 assertions use whitespace windows rather than single
+  spaces, so a reflowed sentence stays green while a missing claim cannot pass —
+  which is the difference between a documentation test and a line-length test.
+- **Spanish parity is asserted on code and structure, and prose is translated into
+  the terminology the reference already uses.** `the English and Spanish examples are
+  the same code` compares the two examples after comment stripping, and the limits
+  table is checked key-by-key against `VERIFICATION_LIMITS`. The ES section keeps
+  "gate de entrega", "frescura" and "canonicaliza" — the existing Spanish README's
+  vocabulary — instead of introducing a second dialect for the same concept.
+- **Both validator lists had to change.** The "Validate or use another language"
+  sections named three public validators. Leaving them there while the new authority
+  section named two more would have made the reference contradict itself in the same
+  file, so they now state that staged verification adds exactly
+  `validateVerificationPlanV1` and `validateVerificationReceiptAgainstPlan`.
+- **D15 boundary documented without an issue.** Both references say an AWL
+  dialect/runner/adapter is not part of the package and that no issue tracks it;
+  the trigger for opening that work stays in the review-proposal list below.
+- **Ledger untouched:** F68 keeps `folded: no` for P15; no ledger row was edited here.
+
 ## Open questions
 
 none — D12/D13 and D14 were explicitly resolved by the user on 2026-08-26.

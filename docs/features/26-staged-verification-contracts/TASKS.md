@@ -188,15 +188,17 @@ Evidence: `scripts/bench-verification.mjs`, `scripts/check-verification-package.
 
 Layer: docs · Done-when: `cd packages/agentic-workflow-schema && npm run test:verification-docs` → exit 0 with extractable examples and synchronized EN/ES semantic assertions green.
 
-- [ ] Add red-first executable example and EN/ES semantic-parity assertions
-- [ ] Document the two-entry runtime authority and projection boundary in README.md
-- [ ] Publish the faithful Spanish authority/projection section in README.es.md
-- [ ] Correct the English example's content bindings and result timestamps (F68)
-- [ ] Apply the equivalent Spanish example correction (F68)
-- [ ] Document every v1 limit and aggregate budget in the English reference
-- [ ] Publish the equivalent limits and budgets in the Spanish reference
-- [ ] Record the deferred AWL consumer boundary in both references without creating an issue
-- [ ] Repoint both README examples at the two public entries (the retired standalone receipt validator must not appear in any example)
+Evidence: `test/verification-docs.test.mjs` (13 cases, 12 of them red before the docs changed) + `packages/agentic-workflow-schema/README.md` / `README.es.md`. Observed: `npm run test:verification-docs` exit 0, and the extracted example **typechecks and runs** to `Delivery verified`.
+
+- [x] Add red-first executable example and EN/ES semantic-parity assertions — AC6's six topics per language, the exact `VERIFICATION_LIMITS` number per table row, the time/byte/p95 bounds, the projection + generator + drift-command claims, the D16 diagnostic shape and full 16-code vocabulary, the six freshness codes, no call to an unexported symbol, and byte-for-byte EN/ES example-code equality: 12 of 13 cases failed on the pre-P14 references
+- [x] Document the two-entry runtime authority and projection boundary in README.md — **Validation authority** (exactly two public authoritative entries, no standalone receipt validator, normalized own-property DTOs) and **JSON Schema status** (generated, non-authoritative structural projections; a Draft-07 match is not contract validity; `$comment` disclosure; one writer)
+- [x] Publish the faithful Spanish authority/projection section in README.es.md — **Autoridad de validación** and **Estado de JSON Schema** mirror the English claims one-for-one, in the terminology the existing Spanish reference already uses
+- [x] Correct the English example's content bindings and result timestamps (F68) — the receipt now binds to declared 64-hex `candidateDigest`/`acceptanceDigest` literals (no `"a".repeat(64)` placeholders), timestamps are 12 s and 108 s against 30 000/120 000 ms timeouts with the coherence check inline, and the run is proven by the docs suite rather than asserted in prose
+- [x] Apply the equivalent Spanish example correction (F68) — `README.es.md` carries the identical block; `the English and Spanish examples are the same code` compares the two after comment stripping, so the two languages cannot drift silently
+- [x] Document every v1 limit and aggregate budget in the English reference — **Usability limits** table lists all 15 `VERIFICATION_LIMITS` keys with their exact numbers (128/128/64/128/1024/4096/1024/1024/262144/524288/600000/900000/3600000/7200000/50), the stage-budget asymmetry, and the 100 ms p95 gate with its command
+- [x] Publish the equivalent limits and budgets in the Spanish reference — **Límites de usabilidad** with the same rows and numbers, prose in minutes/hours for both stages
+- [x] Record the deferred AWL consumer boundary in both references without creating an issue — **Consumer boundary** / **Límite del consumidor** state that an AWL dialect, runner or adapter is not part of the package and that no issue tracks it; D15's routing note in `decisions.md` already keeps it user-routed, and no issue was created
+- [x] Repoint both README examples at the two public entries (the retired standalone receipt validator must not appear in any example) — `validateVerificationReceiptV1` is gone from both references, both `pv.errors.join(…)`-style reads became `diagnostics`, and the validator lists in the "Validate or use another language" sections now name the two verification entries
 
 ## P15 — Requalify the delivery candidate
 
