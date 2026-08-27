@@ -19,6 +19,7 @@ import {
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_STAGES,
   VERIFICATION_VERDICTS,
+  WORKING_DIRECTORY_POLICIES,
   createVerificationDiagnosticSink,
   projectStructure,
   validateStructure,
@@ -3056,8 +3057,8 @@ export type VerificationCostClass = (typeof VERIFICATION_COST_CLASSES)[number];
  */
 export { VERIFICATION_LIMITS };
 
-/** Working directory policy. The vocabulary itself lives in the canonical definition. */
-export type WorkingDirectoryPolicy = "candidate-root" | "relative-path";
+/** Working directory policy derived from the canonical runtime vocabulary. */
+export type WorkingDirectoryPolicy = (typeof WORKING_DIRECTORY_POLICIES)[number];
 
 /**
  * A single verification command within a plan.
