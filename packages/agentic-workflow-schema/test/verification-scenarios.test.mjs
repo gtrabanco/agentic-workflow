@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
+import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   validateVerificationPlanV1,
@@ -367,7 +374,7 @@ test("scenario: path traversal rejected in plan validation", () => {
   ]);
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("..") || e.includes("travers")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("scenario: duplicate command id rejected in plan validation", () => {
@@ -377,7 +384,7 @@ test("scenario: duplicate command id rejected in plan validation", () => {
   ]);
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("duplicate")), result.errors.join(", "));
+  assertDiagnosticOn(result, "duplicate-id", "id");
 });
 
 test("scenario: validate → canonicalize → digest → compare pipeline works end-to-end", async () => {

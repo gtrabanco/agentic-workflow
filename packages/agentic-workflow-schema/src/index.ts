@@ -13,13 +13,18 @@ import {
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_CONTRACT,
   VERIFICATION_COST_CLASSES,
+  VERIFICATION_DIAGNOSTIC_CODES,
   VERIFICATION_LIMITS,
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_RECEIPT_CONTRACT_ID,
   VERIFICATION_STAGES,
   VERIFICATION_VERDICTS,
+  createVerificationDiagnosticSink,
   projectStructure,
   validateStructure,
+  type VerificationDiagnosticCodeV1,
+  type VerificationDiagnosticSink,
+  type VerificationDiagnosticV1,
 } from "./verification-contract.js";
 
 // ---------------------------------------------------------------------------
@@ -3063,7 +3068,49 @@ export interface VerificationPlanV1 {
 
 export type VerificationPlanValidationResult =
   | { ok: true; plan: VerificationPlanV1 }
-  | { ok: false; errors: string[] };
+  | { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean };
+
+/**
+ * D16 closed diagnostic result (re-exported from the canonical definition).
+ *
+ * A failure never carries a message or a submitted value — only the frozen code
+ * and the RFC 6901 pointer to the offending location, capped at
+ * `VERIFICATION_LIMITS.diagnostics` rows with `truncated` telling the consumer
+ * the list is not the whole story.
+ */
+export { VERIFICATION_DIAGNOSTIC_CODES };
+export type VerificationDiagnosticCode = VerificationDiagnosticCodeV1;
+export type { VerificationDiagnosticV1 };
+
+/** UTF-8 byte length of a canonical form — the unit D14 payload budgets use. */
+function utf8Bytes(text: string): number {
+  return new TextEncoder().encode(text).length;
+}
+
+/**
+ * D14 canonical payload budget (F77), measured BEFORE any diagnostic is
+ * allocated, so a wide document is refused by the budget alone instead of
+ * spending the diagnostic ceiling on its individual disliked fields.
+ *
+ * The measurement uses the same canonical serializer the canonicalizers use
+ * (`canonicalJSONValue`: sorted keys, compact separators), so it is byte-identical
+ * to the canonical payload size for every document the structural pass would
+ * accept: undeclared keys are the only thing a submitted object can carry that a
+ * normalized DTO drops, and the structural pass rejects those (F71 `unknown-field`).
+ * Returns the refusal rows, or `null` when the payload fits (or cannot be
+ * serialized at all, which the structural pass then rejects on type grounds).
+ */
+function canonicalBudgetRefusal(value: unknown, limit: number): VerificationDiagnosticV1[] | null {
+  let canonical: string;
+  try {
+    canonical = canonicalJSONValue(value);
+  } catch {
+    return null;
+  }
+  return utf8Bytes(canonical) > limit
+    ? [Object.freeze({ code: "limit-exceeded", path: "" })]
+    : null;
+}
 
 /**
  * The sole plan-validation authority (D12).
@@ -3076,12 +3123,16 @@ export type VerificationPlanValidationResult =
  *
  * On success it returns a normalized own-property DTO — never the submitted
  * reference — so digests and downstream semantics see exactly the declared
- * contract fields.
+ * contract fields. On failure it returns at most
+ * `VERIFICATION_LIMITS.diagnostics` redacted code+path rows (D16).
  */
 export function validateVerificationPlanV1(value: unknown): VerificationPlanValidationResult {
-  const errors: string[] = [];
-  const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, value, "", errors);
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, plan: plan as unknown as VerificationPlanV1 };
+  const oversized = canonicalBudgetRefusal(value, VERIFICATION_LIMITS.planBytes);
+  if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  const sink = createVerificationDiagnosticSink();
+  const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, value, "", sink);
+  if (sink.count() > 0) return { ok: false, ...sink.finish() };
+  return { ok: true, plan: plan as unknown as VerificationPlanV1 };
 }
 
 // ---------------------------------------------------------------------------
@@ -3180,10 +3231,10 @@ export interface VerificationReceiptV1 {
 // VerificationReceipt v1 — internal structural shape
 // ---------------------------------------------------------------------------
 
-/** Result of the sole public receipt entry point (D12). */
+/** Result of the sole public receipt entry point (D12/D16). */
 export type VerificationReceiptValidationResult =
   | { ok: true; receipt: VerificationReceiptV1 }
-  | { ok: false; errors: string[] };
+  | { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean };
 
 /**
  * Package-internal structural shape check for VerificationReceipt v1, driven by
@@ -3194,17 +3245,18 @@ export type VerificationReceiptValidationResult =
  * alternate runtime validity claim.
  */
 function validateVerificationReceiptShape(value: unknown): VerificationReceiptValidationResult {
-  const errors: string[] = [];
+  const oversized = canonicalBudgetRefusal(value, VERIFICATION_LIMITS.receiptBytes);
+  if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  const sink = createVerificationDiagnosticSink();
   const receipt = validateStructure(
     VERIFICATION_CONTRACT.receipt,
     VERIFICATION_CONTRACT.receipt.root,
     value,
     "",
-    errors,
+    sink,
   );
-  return errors.length > 0
-    ? { ok: false, errors }
-    : { ok: true, receipt: receipt as unknown as VerificationReceiptV1 };
+  if (sink.count() > 0) return { ok: false, ...sink.finish() };
+  return { ok: true, receipt: receipt as unknown as VerificationReceiptV1 };
 }
 
 // ---------------------------------------------------------------------------
@@ -3227,14 +3279,15 @@ export async function validateVerificationReceiptAgainstPlan(
   receipt: unknown,
   plan: unknown,
 ): Promise<VerificationReceiptValidationResult> {
-  const errors: string[] = [];
+  const sink = createVerificationDiagnosticSink();
 
   // Validate the plan first: nothing about a receipt is meaningful against a
-  // plan the authority itself rejects.
+  // plan the authority itself rejects. Its diagnostics are already capped and
+  // redacted, so they are propagated as-is rather than re-derived here.
   const pv = validateVerificationPlanV1(plan);
-  if (!pv.ok) return { ok: false, errors: pv.errors };
+  if (!pv.ok) return pv;
   const rv = validateVerificationReceiptShape(receipt);
-  if (!rv.ok) return { ok: false, errors: rv.errors };
+  if (!rv.ok) return rv;
   // Every semantic check below runs on the normalized DTOs, never on the
   // submitted references.
   const normalizedPlan = pv.plan;
@@ -3247,37 +3300,40 @@ export async function validateVerificationReceiptAgainstPlan(
     cmdIdx.set(normalizedPlan.commands[i].id, i);
     cmdMap.set(normalizedPlan.commands[i].id, normalizedPlan.commands[i]);
   }
+  /** `/results/<i>/<field>` — the only pointer shape the semantic block needs. */
+  const atResult = (index: number, field: string) => `/results/${index}/${field}`;
 
   // 1. commandId existence + uniqueness
   const seen = new Set<string>();
   for (let i = 0; i < normalizedReceipt.results.length; i++) {
     const r = normalizedReceipt.results[i];
     if (!cmdIdx.has(r.commandId)) {
-      errors.push(`result[${i}].commandId "${r.commandId}" not in plan`);
+      sink.push("unknown-command", atResult(i, "commandId"));
     } else if (seen.has(r.commandId)) {
-      errors.push(`result[${i}].commandId "${r.commandId}" duplicate`);
+      sink.push("duplicate-id", atResult(i, "commandId"));
     } else {
       seen.add(r.commandId);
     }
   }
 
   // 2. Declared order
-  if (errors.length === 0) {
+  if (sink.count() === 0) {
     let prev = -1;
-    for (const r of normalizedReceipt.results) {
-      const idx = cmdIdx.get(r.commandId)!;
-      if (idx < prev) { errors.push(`out of order: "${r.commandId}"`); break; }
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const idx = cmdIdx.get(normalizedReceipt.results[i].commandId)!;
+      if (idx < prev) {
+        sink.push("invalid-order", atResult(i, "commandId"));
+        break;
+      }
       prev = idx;
     }
   }
 
   // 3. Fast-stage subset: fast receipt only has fast results
-  if (errors.length === 0 && normalizedReceipt.stageRequested === "fast") {
-    for (const r of normalizedReceipt.results) {
-      const c = cmdMap.get(r.commandId);
-      if (c && c.stage === "full") {
-        errors.push(`fast receipt carries full command "${r.commandId}"`);
-      }
+  if (sink.count() === 0 && normalizedReceipt.stageRequested === "fast") {
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const c = cmdMap.get(normalizedReceipt.results[i].commandId);
+      if (c && c.stage === "full") sink.push("invalid-stage", atResult(i, "commandId"));
     }
   }
 
@@ -3292,19 +3348,17 @@ export async function validateVerificationReceiptAgainstPlan(
   //    representable (D7) — neither is a schema error.
   const NON_PASSED = ["failed", "timed-out", "infrastructure-error"];
   let trigger: string | null = null;
-  if (errors.length === 0) {
-    for (const r of normalizedReceipt.results) {
+  if (sink.count() === 0) {
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const r = normalizedReceipt.results[i];
       const c = cmdMap.get(r.commandId);
       if (!c) continue; // unknown ids were reported by check 1
       if (trigger === null) {
         if (NON_PASSED.includes(r.status) && c.stopOnFailure) trigger = r.commandId;
         continue;
       }
-      if (r.status !== "skipped") {
-        errors.push(`result for "${r.commandId}" ran after stopOnFailure command "${trigger}" — later commands must be skipped`);
-      } else if (r.skipReason !== null && r.skipReason !== trigger) {
-        errors.push(`result for "${r.commandId}".skipReason "${r.skipReason}" must name the stopOnFailure command "${trigger}" that stopped the run`);
-      }
+      if (r.status !== "skipped") sink.push("invalid-fail-fast", atResult(i, "status"));
+      else if (r.skipReason !== null && r.skipReason !== trigger) sink.push("invalid-fail-fast", atResult(i, "skipReason"));
     }
   }
 
@@ -3315,39 +3369,44 @@ export async function validateVerificationReceiptAgainstPlan(
 
   // 5. D3 fail-fast attribution (per-row): a non-null reason must name an
   //    earlier-declared, non-passed command that declares stopOnFailure.
-  if (errors.length === 0) {
-    for (const r of normalizedReceipt.results) {
-      if (r.status === "skipped" && r.skipReason) {
-        const st = r.skipReason;
-        if (!cmdIdx.has(st)) {
-          errors.push(`skipReason "${st}" not a declared command`);
-        } else {
-          const ri = cmdIdx.get(r.commandId)!;
-          const ti = cmdIdx.get(st)!;
-          if (ti >= ri) errors.push(`skipReason "${st}" must reference earlier command`);
-          const tr = resultByCmd.get(st);
-          if (!tr || tr.status === "passed") errors.push(`skipReason "${st}" references passed/missing command`);
-          const tc = cmdMap.get(st);
-          if (tc && tr && !tc.stopOnFailure) errors.push(`skipReason "${st}" missing stopOnFailure`);
-        }
+  if (sink.count() === 0) {
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const r = normalizedReceipt.results[i];
+      if (r.status !== "skipped" || r.skipReason === null) continue;
+      const st = r.skipReason;
+      if (!cmdIdx.has(st)) {
+        sink.push("unknown-command", atResult(i, "skipReason"));
+        continue;
       }
+      const ri = cmdIdx.get(r.commandId)!;
+      const ti = cmdIdx.get(st)!;
+      if (ti >= ri) {
+        sink.push("invalid-order", atResult(i, "skipReason"));
+        continue;
+      }
+      const tr = resultByCmd.get(st);
+      if (!tr || tr.status === "passed") {
+        sink.push("invalid-skip", atResult(i, "skipReason"));
+        continue;
+      }
+      if (!cmdMap.get(st)!.stopOnFailure) sink.push("invalid-fail-fast", atResult(i, "skipReason"));
     }
   }
 
   // 6. planDigest match
-  if (errors.length === 0) {
+  if (sink.count() === 0) {
     const d = await digestVerificationPlan(normalizedPlan);
-    if (d !== normalizedReceipt.planDigest) errors.push("planDigest mismatch");
+    if (d !== normalizedReceipt.planDigest) sink.push("digest-mismatch", "/planDigest");
   }
 
   // 7. Verdict consistency
-  if (errors.length === 0) {
+  if (sink.count() === 0) {
     // Inputs already validated above — use the unchecked derivation (no re-validation).
     const derived = deriveVerdictUnchecked(normalizedReceipt, normalizedPlan);
-    if (derived !== normalizedReceipt.verdict) errors.push(`verdict mismatch: stored "${normalizedReceipt.verdict}" != derived "${derived}"`);
+    if (derived !== normalizedReceipt.verdict) sink.push("verdict-mismatch", "/verdict");
   }
 
-  return errors.length > 0 ? { ok: false, errors } : { ok: true, receipt: normalizedReceipt };
+  return sink.count() > 0 ? { ok: false, ...sink.finish() } : { ok: true, receipt: normalizedReceipt };
 }
 
 /**

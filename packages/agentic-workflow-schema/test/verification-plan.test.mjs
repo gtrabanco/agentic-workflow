@@ -1,6 +1,13 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
+import {
   VERIFICATION_PLAN_CONTRACT_ID,
   VERIFICATION_STAGES,
   VERIFICATION_COST_CLASSES,
@@ -90,8 +97,7 @@ test("rejects undeclared top-level fields", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  const hasError = result.errors.some((e) => e.includes("extraField"));
-  assert.ok(hasError, "Should reject undeclared top-level field: " + result.errors.join(", "));
+  assertDiagnosticAt(result, "unknown-field", ""); // the undeclared key itself is never echoed (D16)
 });
 
 test("rejects wrong contract id", () => {
@@ -101,8 +107,7 @@ test("rejects wrong contract id", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  const hasError = result.errors.some((e) => e.includes("contract"));
-  assert.ok(hasError, "Should reject wrong contract id: " + result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "contract");
 });
 
 // ---------------------------------------------------------------------------
@@ -116,7 +121,7 @@ test("rejects empty command list", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("empty") || e.includes("commands")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "commands");
 });
 
 test("rejects duplicate command ids", () => {
@@ -129,7 +134,7 @@ test("rejects duplicate command ids", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("duplicate") || e.includes("id")), result.errors.join(", "));
+  assertDiagnosticOn(result, "duplicate-id", "id");
 });
 
 test("rejects empty command id", () => {
@@ -141,7 +146,7 @@ test("rejects empty command id", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("id")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "id");
 });
 
 test("rejects command id with NUL (F50)", () => {
@@ -153,7 +158,7 @@ test("rejects command id with NUL (F50)", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("NUL")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "id");
 });
 
 test("rejects a command id longer than the D14 idChars ceiling", () => {
@@ -169,7 +174,7 @@ test("rejects a command id longer than the D14 idChars ceiling", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("128")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "id");
 });
 
 test("accepts unique non-empty ids", () => {
@@ -197,7 +202,7 @@ test("rejects invalid stage value", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("stage")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "stage");
 });
 
 test("rejects unknown stage in command", () => {
@@ -209,7 +214,7 @@ test("rejects unknown stage in command", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("stage")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "stage");
 });
 
 // ---------------------------------------------------------------------------
@@ -225,7 +230,7 @@ test("rejects invalid costClass value", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("costClass")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "costClass");
 });
 
 // ---------------------------------------------------------------------------
@@ -241,7 +246,7 @@ test("rejects non-boolean stopOnFailure", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("stopOnFailure")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-type", "stopOnFailure");
 });
 
 test("accepts boolean stopOnFailure values", () => {
@@ -277,7 +282,7 @@ test("rejects empty executable", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("executable")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "executable");
 });
 
 test("rejects NUL in executable", () => {
@@ -289,7 +294,7 @@ test("rejects NUL in executable", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("executable") && (e.includes("NUL") || e.includes("null"))), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "executable");
 });
 
 test("rejects NUL in args", () => {
@@ -301,7 +306,7 @@ test("rejects NUL in args", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("args")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "args");
 });
 
 test("accepts valid executable and args", () => {
@@ -339,7 +344,7 @@ test("workingDirectory must be null for candidate-root", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("workingDirectory")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("workingDirectory must be present for relative-path", () => {
@@ -351,7 +356,7 @@ test("workingDirectory must be present for relative-path", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("workingDirectory")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("rejects absolute workingDirectory path", () => {
@@ -363,7 +368,7 @@ test("rejects absolute workingDirectory path", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("relative") || e.includes("leading") || e.includes("path")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("rejects traversing relative path (..)", () => {
@@ -375,7 +380,7 @@ test("rejects traversing relative path (..)", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("..") || e.includes("travers") || e.includes("segment")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("rejects backslash-separated working directory (F51)", () => {
@@ -387,7 +392,7 @@ test("rejects backslash-separated working directory (F51)", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("backslash")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("rejects drive-letter working directory (F51)", () => {
@@ -399,7 +404,7 @@ test("rejects drive-letter working directory (F51)", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("drive-letter")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("rejects UNC working directory (F51)", () => {
@@ -411,7 +416,7 @@ test("rejects UNC working directory (F51)", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("backslash")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("rejects empty workingDirectory for relative-path", () => {
@@ -423,7 +428,7 @@ test("rejects empty workingDirectory for relative-path", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("workingDirectory")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "workingDirectory");
 });
 
 test("rejects NUL in workingDirectory", () => {
@@ -435,7 +440,7 @@ test("rejects NUL in workingDirectory", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("workingDirectory")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
 });
 
 test("accepts valid relative-path workingDirectory", () => {
@@ -462,7 +467,7 @@ test("rejects zero timeoutMs", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("timeout")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "timeoutMs");
 });
 
 test("rejects negative timeoutMs", () => {
@@ -474,7 +479,7 @@ test("rejects negative timeoutMs", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("timeout")), result.errors.join(", "));
+  assertDiagnosticOn(result, "limit-exceeded", "timeoutMs");
 });
 
 test("rejects non-integer timeoutMs", () => {
@@ -486,7 +491,7 @@ test("rejects non-integer timeoutMs", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("timeout")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-type", "timeoutMs");
 });
 
 test("rejects string timeoutMs", () => {
@@ -498,7 +503,7 @@ test("rejects string timeoutMs", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("timeout")), result.errors.join(", "));
+  assertDiagnosticOn(result, "invalid-type", "timeoutMs");
 });
 
 test("accepts positive integer timeoutMs", () => {
@@ -536,5 +541,5 @@ test("rejects undeclared fields inside a command object", () => {
   };
   const result = validateVerificationPlanV1(plan);
   assert.equal(result.ok, false);
-  assert.ok(result.errors.some((e) => e.includes("extraCommandField")), result.errors.join(", "));
+  assertDiagnosticAt(result, "unknown-field", "/commands/0");
 });

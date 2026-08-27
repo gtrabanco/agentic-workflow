@@ -4,6 +4,13 @@
 // `VERIFICATION_LIMITS` metadata; the Draft-07 files are projections of them.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
 import { readFileSync } from "node:fs";
 import {
   VERIFICATION_PLAN_CONTRACT_ID,
@@ -64,12 +71,8 @@ const row = (commandId) => ({
 });
 
 /** Every ceiling must be reported by the rule that owns it, not by luck. */
-function assertRejected(result, expectedText, label) {
-  assert.equal(result.ok, false, `${label} must be rejected`);
-  assert.ok(
-    result.errors.some((e) => e.includes(expectedText)),
-    `${label}: no error mentioned "${expectedText}" — got ${result.errors.join(" | ")}`,
-  );
+function assertRejected(result, field, label) {
+  assertDiagnosticOn(result, "limit-exceeded", field, label);
 }
 
 // ---------------------------------------------------------------------------
@@ -83,7 +86,7 @@ test("commands: exactly VERIFICATION_LIMITS.commands (128) is accepted", async (
 
 test("commands: one beyond the ceiling is rejected (129)", async () => {
   const res = validateVerificationPlanV1(plan(commands(VERIFICATION_LIMITS.commands + 1)));
-  assertRejected(res, `at most ${VERIFICATION_LIMITS.commands}`, "129 commands");
+  assertRejected(res, "commands", "129 commands");
 });
 
 test("results: exactly the ceiling is accepted through the receipt entry", async () => {
@@ -92,7 +95,7 @@ test("results: exactly the ceiling is accepted through the receipt entry", async
   assert.equal(pv.ok, true);
   const rows = pv.plan.commands.map((c) => row(c.id));
   const res = await validateVerificationReceiptAgainstPlan(await fullReceiptFor(pv.plan, rows), pv.plan);
-  assert.equal(res.ok, true, (res.errors || []).join(" | "));
+  assert.equal(res.ok, true, describeDiagnostics(res));
 });
 
 test("results: one beyond the ceiling is rejected by the structural bound (129)", async () => {
@@ -100,14 +103,14 @@ test("results: one beyond the ceiling is rejected by the structural bound (129)"
   const pv = validateVerificationPlanV1(p);
   const rows = Array.from({ length: VERIFICATION_LIMITS.results + 1 }, () => row("solo"));
   const res = await validateVerificationReceiptAgainstPlan(await fullReceiptFor(pv.plan, rows), pv.plan);
-  assertRejected(res, `at most ${VERIFICATION_LIMITS.results}`, "129 results");
+  assertRejected(res, "results", "129 results");
 });
 
 test("args: exactly argsPerCommand (64) is accepted, one beyond (65) is rejected", async () => {
   const at = command({ args: Array.from({ length: VERIFICATION_LIMITS.argsPerCommand }, (_, i) => `a${i}`) });
   assert.equal(validateVerificationPlanV1(plan([at])).ok, true);
   const over = command({ args: Array.from({ length: VERIFICATION_LIMITS.argsPerCommand + 1 }, (_, i) => `a${i}`) });
-  assertRejected(validateVerificationPlanV1(plan([over])), `at most ${VERIFICATION_LIMITS.argsPerCommand} items`, "65 args");
+  assertRejected(validateVerificationPlanV1(plan([over])), "args", "65 args");
 });
 
 // ---------------------------------------------------------------------------
@@ -118,7 +121,7 @@ test("id: 128 chars accepted, 129 rejected (D14 idChars)", async () => {
   const at = "x".repeat(VERIFICATION_LIMITS.idChars);
   const over = "x".repeat(VERIFICATION_LIMITS.idChars + 1);
   assert.equal(validateVerificationPlanV1(plan([command({ id: at })])).ok, true);
-  assertRejected(validateVerificationPlanV1(plan([command({ id: over })])), `${VERIFICATION_LIMITS.idChars} characters`, "129-char id");
+  assertRejected(validateVerificationPlanV1(plan([command({ id: over })])), "id", "129-char id");
 });
 
 test("commandId: bounded by the same idChars ceiling as plan ids", async () => {
@@ -130,14 +133,14 @@ test("commandId: bounded by the same idChars ceiling as plan ids", async () => {
   const p2 = validateVerificationPlanV1(plan([command({ id: "ok" })]));
   const over = "x".repeat(VERIFICATION_LIMITS.idChars + 1);
   const res = await validateVerificationReceiptAgainstPlan(await fullReceiptFor(p2.plan, [row(over)]), p2.plan);
-  assertRejected(res, `${VERIFICATION_LIMITS.idChars} characters`, "129-char commandId");
+  assertRejected(res, "commandId", "129-char commandId");
 });
 
 test("executable: 1024 chars accepted, 1025 rejected (D14 pathChars)", async () => {
   const at = command({ executable: "/usr/bin/tool".padEnd(VERIFICATION_LIMITS.pathChars, "x") });
   assert.equal(validateVerificationPlanV1(plan([at])).ok, true);
   const over = command({ executable: "/usr/bin/tool".padEnd(VERIFICATION_LIMITS.pathChars + 1, "x") });
-  assertRejected(validateVerificationPlanV1(plan([over])), `${VERIFICATION_LIMITS.pathChars} characters`, "1025-char executable");
+  assertRejected(validateVerificationPlanV1(plan([over])), "executable", "1025-char executable");
 });
 
 test("workingDirectory: 1024 chars accepted, 1025 rejected (D14 pathChars)", async () => {
@@ -145,15 +148,15 @@ test("workingDirectory: 1024 chars accepted, 1025 rejected (D14 pathChars)", asy
   const at = command({ workingDirectoryPolicy: "relative-path", workingDirectory: rel(VERIFICATION_LIMITS.pathChars) });
   assert.equal(validateVerificationPlanV1(plan([at])).ok, true);
   const over = command({ workingDirectoryPolicy: "relative-path", workingDirectory: rel(VERIFICATION_LIMITS.pathChars + 1) });
-  assertRejected(validateVerificationPlanV1(plan([over])), `${VERIFICATION_LIMITS.pathChars} characters`, "1025-char workingDirectory");
+  assertRejected(validateVerificationPlanV1(plan([over])), "workingDirectory", "1025-char workingDirectory");
 });
 
 test("arg: 4096 chars accepted, 4097 rejected, NUL still rejected (D14 argChars)", async () => {
   const at = command({ args: ["x".repeat(VERIFICATION_LIMITS.argChars)] });
   assert.equal(validateVerificationPlanV1(plan([at])).ok, true);
   const over = command({ args: ["x".repeat(VERIFICATION_LIMITS.argChars + 1)] });
-  assertRejected(validateVerificationPlanV1(plan([over])), `${VERIFICATION_LIMITS.argChars} characters`, "4097-char arg");
-  assertRejected(validateVerificationPlanV1(plan([command({ args: ["bad\0arg"] })])), "NUL", "NUL arg");
+  assertRejected(validateVerificationPlanV1(plan([over])), "args", "4097-char arg");
+  assertDiagnosticOn(validateVerificationPlanV1(plan([command({ args: ["bad\0arg"] })])), "invalid-value", "args", "NUL arg");
 });
 
 // ---------------------------------------------------------------------------
@@ -208,6 +211,9 @@ test("the definition reads its bounds from the published limits (no second numbe
   for (const [value, bound] of cases) {
     const res = validateVerificationPlanV1(value);
     assert.equal(res.ok, false);
-    assert.ok(res.errors.some((e) => e.includes(String(bound))), `expected ${bound} in ${res.errors.join(" | ")}`);
+    assert.ok(
+      res.diagnostics.some((d) => d.code === "limit-exceeded"),
+      `expected limit-exceeded in ${describeDiagnostics(res)}`,
+    );
   }
 });

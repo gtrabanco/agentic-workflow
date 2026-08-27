@@ -119,20 +119,26 @@ Last replanned: 2026-08-26 (user-approved P7–P15 replan)
 - Next: P11 — Bound verification payloads
 
 ## Unit-loop receipt — P10
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 393/393) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: 1a7eace · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 393/393) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P11 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired (9 files / 336 changed lines since `8055343`; regenerated projections included), layer unchanged (schema); no sensitivity surface. Projections changed in this phase, so the end review should re-check AC9's generated-file claims against the final candidate.
 
 ## P11 — Bound verification payloads
-- **Status**: Planned
-- **Done**: D14 payload limits and the D16 diagnostic contract frozen.
-- **Remains**: 8 schema tasks; F71 and F77 payload roots.
-- **Next**: after P10, `execute-phase 26 P11`
+- **Status**: Done
+- Done: validation failures are now **bounded, redacted diagnostics**. Both public entries (and every helper that used to return `errors: string[]`) return `{ ok: false, diagnostics, truncated }` where each row is a frozen `{ code, path }`: `code` from the newly published `VERIFICATION_DIAGNOSTIC_CODES` (16 codes, SPEC-frozen), `path` an RFC 6901 pointer into the payload (`/commands/3/id`, `/results/1/commandId`, `""` for the whole document). The sink caps at `VERIFICATION_LIMITS.diagnostics` (50) in emission order and reports `truncated`. `VERIFICATION_LIMITS` gained the payload fields (`skipReasonChars`, `evidenceRefChars`, `planBytes` 256 KiB, `receiptBytes` 512 KiB, `diagnostics` 50), the canonical byte budget is enforced **before** any diagnostic is allocated, and the projections were regenerated with the runtime-only payload rules disclosed. 68 assertion sites in the seven pre-existing feature-26 suites were retargeted onto one shared fixture (`test/fixtures/verification-diagnostics.mjs`); 14 new cases in `test/verification-payload.test.mjs`.
+- Remains: P12–P15. `budget-exceeded` is the one published code with no emitter yet — P12 owns the fast/full aggregate-budget and timeout rules (AC10); the new vocabulary test fails if any *other* code stays silent.
+- Gotchas: (1) `unknown-field` rows now point at the **container**, not the submitted key — an undeclared key is input data, so echoing it would break D16 redaction (`__proto__` and `secret-token` probes proved this). (2) The receipt byte budget cannot bind through shape-legal payloads: a maximum-capacity legal receipt is 440,331 B against a 524,288 B ceiling (pinned by test), so the check is a defensive refusal that only ever fires on a document that also crosses a cardinality ceiling. (3) Measuring the budget on the **submitted** document is exact, not approximate: `validateStructure` rejects undeclared fields, so any document it accepts has a canonical form byte-identical to the raw one. (4) A skip-reason at exactly 1024 chars is never semantically valid (ids cap at 128, so it cannot name a trigger) — the boundary pair is proven by which *code* answers, `unknown-command` inside and `limit-exceeded` outside. (5) D5 evidence content rules (NUL in `ref`, non-64-hex `sha256`) now report `invalid-evidence` through a new per-field `violationCode`; capacity keeps `limit-exceeded` and type errors keep `invalid-type`.
+- Files: `packages/agentic-workflow-schema/src/verification-contract.ts`, `src/index.ts`, `scripts/generate-verification-schemas.mjs`, `verification-plan.schema.json`, `verification-receipt.schema.json` (regenerated), `test/verification-payload.test.mjs` (new), `test/fixtures/verification-diagnostics.mjs` (new), `test/verification-{plan,receipt,core,scenarios,authority,semantics,bounds}.test.mjs` (assertion migration), `docs/features/26-staged-verification-contracts/{TASKS,progress,decisions,testing}.md`
+- Next: P12 — Bound verification time
+
+## Unit-loop receipt — P11
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && npm test` (exit 0, 407/407) + `node scripts/generate-verification-schemas.mjs --check` (exit 0) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Next: P12 · Attempts: 1 · Review-checkpoint trigger recorded: accumulation fired again (14 files / 451 changed lines since `1a7eace`; public failure-shape change + regenerated projections). Layer unchanged (schema), but this phase **changed the public result type of both authoritative entries** (`errors: string[]` → `diagnostics`/`truncated`), so the end review must re-check AC8 (no pre-existing suite touched) and AC9/AC10 generated-file claims against the final candidate, and F71's ledger row against the shipped diagnostic shape.
 
 ## P12 — Bound verification time
 - **Status**: Planned
 - **Done**: D14 timeout ceilings and stage budgets frozen.
 - **Remains**: 6 schema tasks; F77 time roots.
-- **Next**: after P11, `execute-phase 26 P12`
+- **Next**: after P11, `execute-phase 26 P12` (P11 delivered `planBytes`/`receiptBytes`/`diagnostics` in `VERIFICATION_LIMITS`; the timeout fields are still missing)
 
 ## P13 — Build package qualification tooling
 - **Status**: Planned
