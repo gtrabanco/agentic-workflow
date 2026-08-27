@@ -840,6 +840,28 @@ export function validateStructure(
   path: string,
   sink: VerificationDiagnosticSink,
 ): Record<string, unknown> | undefined {
+  // F92 — the walk reads only declared keys of a JSON document (the input
+  // domain every public authority documents). An object outside that domain —
+  // a live getter that throws, not constructible by JSON.parse — must never
+  // smuggle an attacker-chosen exception past the D16 contract: the failure
+  // is refused here as exactly one redacted `invalid-type` row on this frame.
+  // Because the throw is caught by the frame that owns the read, nested rows
+  // report their own pointer (e.g. `/results/0`) and nothing else re-throws.
+  try {
+    return validateStructureFields(contract, spec, value, path, sink);
+  } catch {
+    sink.push("invalid-type", path);
+    return undefined;
+  }
+}
+
+function validateStructureFields(
+  contract: VerificationContractSpec,
+  spec: VerificationObjectSpec,
+  value: unknown,
+  path: string,
+  sink: VerificationDiagnosticSink,
+): Record<string, unknown> | undefined {
   if (!isPlainRecord(value)) {
     sink.push("invalid-type", path);
     return undefined;
