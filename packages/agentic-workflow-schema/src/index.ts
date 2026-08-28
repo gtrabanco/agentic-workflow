@@ -2811,37 +2811,66 @@ export type FreshnessResult = FreshResult | StaleResult;
 // ---------------------------------------------------------------------------
 
 /**
+ * F100 / AC8 — the two serialization domains one canonical core serves.
+ *
+ * `verification` is feature 26's: a leaf outside the JSON data model is refused by
+ * name, because a digest that silently drops bytes lets two different candidates
+ * bind one value (the collision class F80 measured: `digest([]) === digest([fn])`).
+ * `legacy` is the released 3.3.0 one: the leaf goes to `JSON.stringify`, which
+ * answers the JS value `undefined` for a function, symbol or `undefined` leaf —
+ * the enclosing fragment then interpolates the text `undefined` (an object field)
+ * or an EMPTY element (an array, because `Array.prototype.join` renders `undefined`
+ * as nothing) — and throws its own opaque TypeError for a bigint. Non-finite
+ * numbers serialize as `null`.
+ *
+ * Both domains agree byte-for-byte on every document inside the JSON data model,
+ * which is why the split moves no shipped digest: AC8 pins "pre-feature-26 export
+ * meanings remain unchanged", so the strict refusal belongs to the verification
+ * canonicalizers only, and the three legacy exports keep the bytes consumers
+ * already hold. The cost is stated in `decisions.md`, not hidden: the legacy
+ * collision class stays on the legacy path.
+ */
+type CanonicalLeafDomain = "legacy" | "verification";
+
+/**
  * D4/D6 — Canonical serialization of one value.
  *
- * The domain is the JSON data model only: `null`, string, finite number,
- * boolean, array and plain object. Anything else is refused by name instead of
- * being handed to `JSON.stringify`, which either throws an opaque serializer
- * error (`bigint`), yields the JS value `undefined` (`function`, `symbol`) that
- * string-interpolation then renders as a malformed fragment (`["run",]`) or an
- * empty element (`[]` — colliding with a genuinely empty array), or silently
- * drops the key. This function is the byte-level authority behind every digest
- * in the package, so a leaf it cannot represent must fail loudly: a silent drop
- * would let two different candidates share one digest.
+ * The domain is the JSON data model: `null`, string, finite number, boolean, array
+ * and plain object. What happens *outside* it is the `domain` argument above — a
+ * named refusal for the verification contracts, the 3.3.0 fallback for the legacy
+ * ones. This function is the byte-level authority behind every digest in the
+ * package, so the two domains are pinned by golden vectors
+ * (`test/fixtures/canonical-legacy-vectors.mjs`) and by the AC5 verification
+ * vectors, never by prose.
  */
-function canonicalJSONValue(v: unknown): string {
+function canonicalJSONValue(v: unknown, domain: CanonicalLeafDomain = "verification"): string {
   if (v === null) return "null";
   const kind = typeof v;
   if (kind === "string") return JSON.stringify(v);
   if (kind === "number") {
     if (!Number.isFinite(v as number)) {
-      throw new TypeError(`canonical JSON: unsupported leaf (non-finite ${kind})`);
+      if (domain === "verification") {
+        throw new TypeError(`canonical JSON: unsupported leaf (non-finite ${kind})`);
+      }
+      return JSON.stringify(v); // 3.3.0: NaN / ±Infinity serialize as `null`
     }
     return JSON.stringify(v);
   }
   if (kind === "boolean") return JSON.stringify(v);
   if (Array.isArray(v)) {
-    return "[" + v.map(canonicalJSONValue).join(",") + "]";
+    // An explicit arrow, never `.map(canonicalJSONValue)`: `map` would pass the
+    // element INDEX as the domain, silently selecting the legacy fallback for
+    // every array leaf.
+    return "[" + v.map((item) => canonicalJSONValue(item, domain)).join(",") + "]";
   }
   if (kind === "object") {
     const keys = Object.keys(v as Record<string, unknown>).sort();
-    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k])).join(",") + "}";
+    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k], domain)).join(",") + "}";
   }
-  throw new TypeError(`canonical JSON: unsupported leaf (${kind})`);
+  if (domain === "verification") {
+    throw new TypeError(`canonical JSON: unsupported leaf (${kind})`);
+  }
+  return JSON.stringify(v);
 }
 
 /**
@@ -2862,7 +2891,7 @@ export function canonicalizeCandidateSnapshot(snapshot: CandidateSnapshotV1): st
     acceptanceFingerprint: snapshot.acceptanceFingerprint,
     changedPaths: sortedPaths,
   };
-  return canonicalJSONValue(obj);
+  return canonicalJSONValue(obj, "legacy");
 }
 
 /**
@@ -2887,7 +2916,7 @@ export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
     diagnostics: receipt.diagnostics,
     policyVersion: receipt.policyVersion,
   };
-  return canonicalJSONValue(obj);
+  return canonicalJSONValue(obj, "legacy");
 }
 
 // ---------------------------------------------------------------------------
@@ -2926,7 +2955,7 @@ export async function computeAcceptanceFingerprint(inputs: ReadonlyArray<{ id: s
   const obj: Record<string, unknown> = {
     inputs: sorted,
   };
-  return sha256Hex(canonicalJSONValue(obj));
+  return sha256Hex(canonicalJSONValue(obj, "legacy"));
 }
 
 // ---------------------------------------------------------------------------
