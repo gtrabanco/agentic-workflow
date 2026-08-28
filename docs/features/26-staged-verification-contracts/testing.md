@@ -28,9 +28,23 @@
 - `cd packages/agentic-workflow-schema && npm run check:verification-package`
 - `cd packages/agentic-workflow-schema && npm run bench:verification -- --commands 128`
 - `node scripts/check-skill-context.mjs`
+- `node --test scripts/*.test.mjs` (repository harness: skill budgets, receipts, the fold-ledger recount)
+- `node scripts/ledger-provenance.mjs docs/features/26-staged-verification-contracts/review-findings.md --check` —
+  the mechanical fold-provenance recount (F106): every `folded: yes` row must name a commit that resolves on the branch
 - `npx skills add . --list`
 
 ## Fixtures
+
+- Fold-provenance fixtures: `scripts/ledger-provenance.test.mjs` (8 cases) builds a
+  throwaway git repository whose rows cover every provenance shape the ledger has —
+  an atomic fold that owns the cited surface, a claim that names the id beside an
+  unrelated change (recovered, with the tick commit kept visible), a `F4-F6`-style
+  subject range, a forge-only fold whose only record is the tick commit that claims
+  it, a tick no commit stands behind (`UNPROVEN`, re-opened, never annotated) and a
+  row citing a sha that has never existed (never trusted) — then asserts the recount
+  `--check` flips red→green across `--annotate`, that annotation is idempotent, and
+  that no annotated row leaves the fixed 7-column schema. Unit 26's own ledger is
+  asserted green in the same suite, so F106 cannot silently return.
 
 - Canonical vectors + expected digests: `VERIFICATION_CANONICAL_VECTORS` and
   deterministic test fixtures validated through the authoritative entries. The
