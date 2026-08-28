@@ -559,3 +559,30 @@ test("F90: the changelog's docs-suite case count equals this suite's real case c
     assert.equal(Number(stated[1]), shipped, `${relative} claims ${stated[1]} cases; the suite ships ${shipped}`);
   }
 });
+
+// F100 — 3.4.0 hardened the shared canonical core with a named `unsupported leaf`
+// refusal, which was an observable change on the pre-feature-26 `canonicalize*` /
+// `digest*` exports until the guard was scoped to the verification canonicalizers.
+// The ship record must say so in both languages: a reader deciding whether an
+// unsupported leaf throws needs the SCOPE, not the word "additive".
+test("F100: the ship record scopes the leaf guard to the verification canonicalizers in both languages", () => {
+  const claims = {
+    "../../../CHANGELOG.md": {
+      legacy: /pre-feature-26 `canonicalize\*`\/`digest\*` exports are behaviour-identical/,
+      scope: /scoped to the feature-26 verification canonicalizers/,
+    },
+    "../../../CHANGELOG.es.md": {
+      legacy: /exportaciones `canonicalize\*`\/`digest\*` anteriores a feature 26 mantienen un comportamiento idéntico/,
+      scope: /acotada a los canonizadores de verificación de feature 26/,
+    },
+  };
+  for (const [relative, claim] of Object.entries(claims)) {
+    const text = read(relative);
+    const start = text.indexOf(PACKAGE_HEADING);
+    const after = text.slice(start + PACKAGE_HEADING.length);
+    const end = after.search(/^#{2,4} /m);
+    const section = end === -1 ? after : after.slice(0, end);
+    assert.match(section, claim.legacy, `${relative} no longer states that the legacy canonical exports keep their 3.3.0 behaviour (F100)`);
+    assert.match(section, claim.scope, `${relative} no longer names where the unsupported-leaf refusal applies (F100)`);
+  }
+});

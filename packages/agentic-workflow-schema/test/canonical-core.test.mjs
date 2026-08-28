@@ -244,22 +244,29 @@ test("vectors pass digest computation", async () => {
   assert.equal(digest1, digest2);
   assert.ok(digest1.length === 64);
 });
-// F80 — the shared canonical serializer is the digest authority for these legacy
-// contracts too. Both canonicalizers project a fixed key set, so an
-// unrepresentable leaf can only reach the serializer from INSIDE a projected
-// field; there it must fail loudly instead of silently dropping bytes.
-test("canonicalizeCandidateSnapshot refuses an unrepresentable leaf nested in a projected field", () => {
+// F80 found a real collision class in the shared canonical serializer — an
+// unrepresentable leaf silently dropped bytes, and `digest([]) === digest([fn])`
+// proved it. F100 then bounded where the fix may reach: the named refusal is
+// feature 26's contract, so it lives on the verification canonicalizers
+// (`verification-core.test.mjs` pins it there) while the pre-feature-26 exports
+// keep the bytes 3.3.0 published, per AC8. These two are the scoped statement on
+// the legacy side; `canonical-legacy-compat.test.mjs` holds the whole corpus
+// against vectors captured from the merge-base build.
+test("canonicalizeCandidateSnapshot keeps the 3.3.0 bytes for a leaf in a projected field (F100)", () => {
   const snap = makeSnapshot(["a.txt"]);
   assert.doesNotThrow(() => JSON.parse(canonicalizeCandidateSnapshot(snap)));
   snap.baseCommit = { algorithm: "sha1", hex: () => {} };
-  assert.throws(() => canonicalizeCandidateSnapshot(snap), (err) =>
-    err instanceof TypeError && /unsupported leaf/.test(err.message));
+  const canonical = canonicalizeCandidateSnapshot(snap);
+  // 3.3.0 interpolated the serializer's `undefined` into the fragment instead of
+  // refusing; that is the published behaviour a consumer's digest already holds.
+  // The digest itself is pinned case-by-case in canonical-legacy-compat.test.mjs.
+  assert.match(canonical, /"hex":undefined/);
 });
 
-test("canonicalizeReviewReceipt refuses a bigint leaf in a projected field", () => {
+test("canonicalizeReviewReceipt keeps the 3.3.0 engine error for a bigint leaf (F100)", () => {
   const receipt = makeReceipt();
   assert.doesNotThrow(() => JSON.parse(canonicalizeReviewReceipt(receipt)));
   receipt.id = 1n;
   assert.throws(() => canonicalizeReviewReceipt(receipt), (err) =>
-    err instanceof TypeError && /unsupported leaf.*bigint/i.test(err.message));
+    err instanceof TypeError && !/unsupported leaf/.test(err.message));
 });
