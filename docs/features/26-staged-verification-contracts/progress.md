@@ -302,5 +302,17 @@ receipt does not claim either — it hands the exact pushed HEAD and the blob ab
 - Next: P21 — Requalify the corrected candidate
 
 ## Unit-loop receipt — P20
-- Commit: pending (bound by the F106 tick commit) · Gate: `cd packages/agentic-workflow-schema && npm run gate:verification` (exit 0: 554/554 tests, projections drift-free, package content PASS, docs 24/24, p95 29.45 ms ≤ 100 ms) + `node scripts/check-skill-context.mjs` (PASS 35 skills) + `node --test scripts/*.test.mjs` (57/57) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
+- Commit: ca2e972 (the P20 recovery batch; the F106 row is ticked by the commit that binds this receipt) · Gate: `cd packages/agentic-workflow-schema && npm run gate:verification` (exit 0: 554/554 tests, projections drift-free, package content PASS, docs 24/24, p95 29.45 ms ≤ 100 ms) + `node scripts/check-skill-context.mjs` (PASS 35 skills) + `node --test scripts/*.test.mjs` (57/57) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249
 - Next: P21 · Attempts: 1 · Review-checkpoint trigger recorded: **docs-only, no layer change** — P20 changed no shipped source: the package surface, its digests and its gates are untouched, and the only behaviour added is a repository-side recount. The mandatory end review must check the recount's ACCEPT rules rather than the code: a check that trusts a citation it cannot tie is the same defect F106 was filed for.
+
+## P21 — candidate re-qualification: blocked input (F108)
+- Done: the fold round that P21 opens with is closed — P20 landed in ca2e972, the ledger recount is green, and the
+  PR #145 body is refreshed at the post-P20 head so it no longer describes b2efb1f.
+- Missing input, so F108 stays `folded: no`: **P21's terminal head.** The phase still owes the post-P20 gate +
+  AC1–AC10 receipt, the `--adversarial 3` review at that head, whatever fix-now rows that review produces, the
+  `loop-review-fold` PASS and the ROADMAP row-26 re-flip to `done`. Each of those lands commits, and F108's defect
+  is precisely that a body refreshed before them re-stales by construction — closing the row now would recreate it.
+  The body refreshed today is therefore marked provisional and names the head it describes.
+- Binding rule, once more: the refresh is a forge mutation, so no commit can carry its proof. The row will cite the
+  fold batch and P21's close-out commit will bind the tick, which is the F100/F107 convention — the failure mode P20
+  removed was leaving those bindings un-discharged, not the deferral itself.
