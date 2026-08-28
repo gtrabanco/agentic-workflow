@@ -239,12 +239,12 @@ Layer: domain · Done-when: the hostile-getter suite proves both public entries 
 
 ## P18 — Bound verification preflight refusal work
 Layer: domain · Done-when: a 200,000-command plan is refused `limit-exceeded` in ≤ 50 ms wall-clock, `npm run gate:verification` exits 0, and ledger F99 reads `folded: yes` naming the P18 commit.
-- [ ] Write the red-first preflight budget probe: a cardinality-illegal payload must be refused without canonical serialization (the observed 2189 ms at 200k commands must drop under the 50 ms bound)
-- [ ] Refuse illegal raw cardinalities at entry from the raw shape (command/result array lengths against `VERIFICATION_LIMITS`) before snapshot capture
-- [ ] Measure the canonical byte budget with an early-exit serializer that aborts as soon as the running size passes the budget
-- [ ] Sequence both public entries: raw cardinality → capture → bounded byte measure → full validation walk
-- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0; re-run the 10k and 200k probes and record the new timings in the commit body
-- [ ] Flip F99 `folded: yes` naming the P18 commit; commit atomically and push
+- [x] Write the red-first preflight budget probe: a cardinality-illegal payload must be refused without canonical serialization (the observed 2189 ms at 200k commands must drop under the 50 ms bound)
+- [x] Bound refusal work at entry against the declared limits — F99's **byte-accounting** alternative was taken (`limit + 1` abort inside the capture) instead of a raw root-cardinality refusal, because answering a >128-command plan at the root would move the pinned `/commands` row (`verification-payload.test.mjs`, `verification-plan.test.mjs`) to the root path and break the D16 precedence the same row requires keeping
+- [x] Measure the canonical byte budget with an early-exit serializer that aborts as soon as the running size passes the budget
+- [x] Sequence both public entries: bounded capture → exact UTF-8 measure (fallback when the running size is not the byte size) → full validation walk
+- [x] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0; re-run the 10k and 200k probes and record the new timings in the commit body
+- [x] Flip F99 `folded: yes` naming the P18 commit; commit atomically and push
 
 ## P19 — Restore legacy canonicalizer compatibility
 Layer: domain · Done-when: the golden-vector suite proves every legacy `canonicalize*`/`digest*` export returns byte-identical 3.3.0 output on the captured unsupported-leaf corpus, the verification surface's refusals stay green, `npm run gate:verification` exits 0, and ledger F100 reads `folded: yes` naming the P19 commit.

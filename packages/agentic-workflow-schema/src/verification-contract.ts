@@ -696,16 +696,58 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
 /**
  * F97 — the submitted accessor that cannot be observed as plain data.
  *
- * Carries the RFC 6901 pointer of the frame that owns the failing read so the
- * public entry can answer with the same redacted `invalid-type` row an
- * out-of-contract walk failure already produces (F92). The message never names
+ * Carries the RFC 6901 pointer of the frame that owns the failing read plus the
+ * D16 code that frame earns: `invalid-type` for a walk failure (F92 parity) or
+ * `limit-exceeded` for the canonical byte budget (F99). The message never names
  * the submitted key or value.
  */
 class VerificationInputCaptureError extends Error {
-  constructor(readonly pointer: string) {
-    super("verification input: unreadable accessor");
+  constructor(
+    readonly pointer: string,
+    readonly code: VerificationDiagnosticCodeV1 = "invalid-type",
+  ) {
+    super(code === "limit-exceeded" ? "verification input: over canonical byte budget" : "verification input: unreadable accessor");
     this.name = "VerificationInputCaptureError";
   }
+}
+
+/**
+ * F99 — running canonical-size accumulator of one capture.
+ *
+ * `size` is the exact UTF-16 length of the document's canonical form (the same
+ * fragments `canonicalJSONValue` emits: sorted keys, compact separators), so
+ * `size > budget` is a *sound* over-budget verdict — a UTF-8 encoding is never
+ * shorter than its UTF-16 length. Once an unsupported leaf or a non-plain object
+ * makes the canonical form undefined, `applicable` drops and the size is no
+ * longer charged: the structural walk refuses those documents itself.
+ */
+interface CaptureContext {
+  readonly budget: number | null;
+  size: number;
+  applicable: boolean;
+  /** Seen a non-ASCII character: bytes can exceed units, so the exact UTF-8 measure must run. */
+  nonAscii: boolean;
+}
+
+/** True when the fragment survives canonical serialization as pure ASCII. */
+function isAscii(text: string): boolean {
+  for (let index = 0; index < text.length; index += 1) {
+    if (text.charCodeAt(index) > 0x7f) return false;
+  }
+  return true;
+}
+
+function charge(context: CaptureContext, units: number): void {
+  if (!context.applicable) return;
+  context.size += units;
+  if (context.budget !== null && context.size > context.budget) {
+    throw new VerificationInputCaptureError("", "limit-exceeded");
+  }
+}
+
+/** UTF-16 length of a leaf's canonical fragment — the unit `canonicalJSONValue` emits. */
+function canonicalLeafUnits(value: string | number | boolean): number {
+  return JSON.stringify(value).length;
 }
 
 /**
@@ -721,17 +763,42 @@ class VerificationInputCaptureError extends Error {
  *     is copied as submitted, so the field check still refuses it.
  * An accessor that throws is reported at the frame that owns the read.
  */
-function captureContractValue(value: unknown, pointer: string): unknown {
-  if (value === null) return null;
-  const kind = typeof value;
-  if (kind !== "object") return value;
+function captureContractValue(value: unknown, pointer: string, context: CaptureContext): unknown {
+  if (value === null) {
+    charge(context, 4);
+    return null;
+  }
+  if (typeof value === "string") {
+    if (!context.nonAscii) context.nonAscii = !isAscii(value);
+    charge(context, canonicalLeafUnits(value));
+    return value;
+  }
+  if (typeof value === "boolean") {
+    charge(context, canonicalLeafUnits(value));
+    return value;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      // The canonical serializer has no form for it: the budget can no longer be
+      // measured exactly, and the walk owns the refusal (F91-era behaviour).
+      context.applicable = false;
+      return value;
+    }
+    charge(context, canonicalLeafUnits(value));
+    return value;
+  }
+  if (typeof value !== "object") {
+    // function / symbol / bigint / undefined — outside the canonical form.
+    context.applicable = false;
+    return value;
+  }
 
   if (Array.isArray(value)) {
     const items: unknown[] = [];
     for (let index = 0; index < value.length; index += 1) {
       let item: unknown;
       try {
-        item = Object.freeze(captureContractValue(value[index], `${pointer}/${index}`));
+        item = Object.freeze(captureContractValue(value[index], `${pointer}/${index}`, context));
       } catch (failure) {
         throw failure instanceof VerificationInputCaptureError
           ? failure
@@ -739,18 +806,26 @@ function captureContractValue(value: unknown, pointer: string): unknown {
       }
       items.push(item);
     }
+    charge(context, 2 + Math.max(items.length - 1, 0));
     return Object.freeze(items);
   }
 
   const proto = Object.getPrototypeOf(value);
-  if (proto !== Object.prototype && proto !== null) return value;
+  if (proto !== Object.prototype && proto !== null) {
+    // Copied by reference; its canonical size is unknowable and its frame is
+    // refused by the walk, so the measure is no longer exact from here on.
+    context.applicable = false;
+    return value;
+  }
 
   const source = value as Record<string, unknown>;
+  const keys = Object.keys(source);
   const captured: Record<string, unknown> = {};
-  for (const key of Object.keys(source)) {
+  let keyUnits = 0;
+  for (const key of keys) {
     let item: unknown;
     try {
-      item = Object.freeze(captureContractValue(source[key], `${pointer}/${key}`));
+      item = Object.freeze(captureContractValue(source[key], `${pointer}/${key}`, context));
     } catch (failure) {
       // The frame that owns the read answers for it — the same pointer rule F92
       // established for a walk failure, and it also bounds a self-referential
@@ -759,6 +834,8 @@ function captureContractValue(value: unknown, pointer: string): unknown {
         ? failure
         : new VerificationInputCaptureError(pointer);
     }
+    if (!context.nonAscii) context.nonAscii = !isAscii(key);
+    keyUnits += JSON.stringify(key).length + 1;
     // `defineProperty`, never assignment: a submitted own `__proto__` key (what
     // `JSON.parse` produces) is an ordinary data property, but plain assignment
     // would hit the inherited `Object.prototype.__proto__` setter and drop the key
@@ -770,29 +847,50 @@ function captureContractValue(value: unknown, pointer: string): unknown {
       configurable: false,
     });
   }
+  charge(context, 2 + keyUnits + Math.max(keys.length - 1, 0));
   return Object.freeze(captured);
 }
 
 /**
- * F97 — the one observation of a submitted document that both public entries and
- * the canonical helpers decide on.
+ * Capture the submitted document once, optionally bounded by `budgetBytes` of
+ * canonical form (F99): the capture aborts as soon as the running UTF-16 size
+ * passes the budget, so an illegal payload costs about the budget's worth of
+ * work instead of its own size. The abort reports the ROOT pointer — the byte
+ * budget outranks every shape ceiling and answers one root-path row (D16/F77).
  *
- * `ok: false` names the frame whose accessor threw; the caller turns it into the
- * redacted `invalid-type` row the D16 contract already requires (F92 parity). No
- * attacker-chosen exception ever escapes the capture.
+ * `measureExact` says whether the running size IS the canonical byte size: the
+ * document is pure ASCII (escapes are ASCII) and every leaf was measurable. A
+ * caller may then skip its own byte measure; anything else falls back to it.
  */
 export type VerificationInputCapture =
-  | { readonly ok: true; readonly value: unknown }
-  | { readonly ok: false; readonly pointer: string };
+  | {
+      readonly ok: true;
+      readonly value: unknown;
+      readonly measureExact: boolean;
+    }
+  | { readonly ok: false; readonly code: VerificationDiagnosticCodeV1; readonly pointer: string };
 
-export function captureVerificationInput(value: unknown): VerificationInputCapture {
+export function captureVerificationInput(
+  value: unknown,
+  budgetBytes?: number,
+): VerificationInputCapture {
+  const context: CaptureContext = {
+    budget: budgetBytes ?? null,
+    size: 0,
+    applicable: true,
+    nonAscii: false,
+  };
   try {
-    return { ok: true, value: Object.freeze(captureContractValue(value, "")) };
-  } catch (failure) {
     return {
-      ok: false,
-      pointer: failure instanceof VerificationInputCaptureError ? failure.pointer : "",
+      ok: true,
+      value: Object.freeze(captureContractValue(value, "", context)),
+      measureExact: context.applicable && !context.nonAscii,
     };
+  } catch (failure) {
+    if (failure instanceof VerificationInputCaptureError) {
+      return { ok: false, code: failure.code, pointer: failure.pointer };
+    }
+    return { ok: false, code: "invalid-type", pointer: "" };
   }
 }
 

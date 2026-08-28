@@ -3153,22 +3153,30 @@ function canonicalBudgetRefusal(value: unknown, limit: number): VerificationDiag
 }
 
 /**
- * F97 — one captured observation of a submitted document.
+ * F97/F99 — one captured observation of a submitted document, bounded by the
+ * canonical byte budget.
  *
  * Every authority below runs on the snapshot, never on the submission: the byte
  * budget, the structural walk, the cross-rules and the DTO would otherwise read the
  * same accessor again and could decide on a document other than the one it blesses.
- * An accessor that throws answers with the redacted `invalid-type` row F92 fixed.
+ * The capture aborts on the budget before the payload is fully copied (F99), and an
+ * accessor that throws answers with the redacted `invalid-type` row F92 fixed.
  */
-function captureSubmittedVerificationInput(value: unknown): VerificationInputCapture {
-  return captureVerificationInput(value);
+function captureSubmittedVerificationInput(
+  value: unknown,
+  budgetBytes: number,
+): VerificationInputCapture {
+  return captureVerificationInput(value, budgetBytes);
 }
 
-/** The single refusal row an unreadable submission earns (D16 shape). */
-function unreadableInputResult(pointer: string): { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean } {
+/** The single refusal row a bounded capture rejection earns (D16 shape). */
+function captureRejectionResult(rejected: {
+  code: VerificationDiagnosticCodeV1;
+  pointer: string;
+}): { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean } {
   return {
     ok: false,
-    diagnostics: [Object.freeze({ code: "invalid-type", path: pointer })],
+    diagnostics: [Object.freeze({ code: rejected.code, path: rejected.pointer })],
     truncated: false,
   };
 }
@@ -3194,11 +3202,16 @@ function unreadableInputResult(pointer: string): { ok: false; diagnostics: reado
  * `VERIFICATION_LIMITS.diagnostics` redacted code+path rows (D16).
  */
 export function validateVerificationPlanV1(value: unknown): VerificationPlanValidationResult {
-  const submitted = captureSubmittedVerificationInput(value);
-  if (!submitted.ok) return unreadableInputResult(submitted.pointer);
+  const submitted = captureSubmittedVerificationInput(value, VERIFICATION_LIMITS.planBytes);
+  if (!submitted.ok) return captureRejectionResult(submitted);
   const document = submitted.value;
-  const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.planBytes);
-  if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  // Exact UTF-8 measure on the snapshot unless the capture's running size WAS the
+  // byte size (pure ASCII, every leaf measurable): a multibyte document can cross
+  // the budget only here (F99 keeps both paths exact).
+  if (!submitted.measureExact) {
+    const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.planBytes);
+    if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  }
   const sink = createVerificationDiagnosticSink();
   const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, document, "", sink);
   if (sink.count() > 0) return { ok: false, ...sink.finish() };
@@ -3323,11 +3336,13 @@ export type VerificationReceiptValidationResult =
  * alternate runtime validity claim.
  */
 function validateVerificationReceiptShape(value: unknown): VerificationReceiptValidationResult {
-  const submitted = captureSubmittedVerificationInput(value);
-  if (!submitted.ok) return unreadableInputResult(submitted.pointer);
+  const submitted = captureSubmittedVerificationInput(value, VERIFICATION_LIMITS.receiptBytes);
+  if (!submitted.ok) return captureRejectionResult(submitted);
   const document = submitted.value;
-  const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.receiptBytes);
-  if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  if (!submitted.measureExact) {
+    const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.receiptBytes);
+    if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  }
   const sink = createVerificationDiagnosticSink();
   const receipt = validateStructure(
     VERIFICATION_CONTRACT.receipt,
@@ -3566,14 +3581,18 @@ function canonicalizeWithinContract(
   budgetBytes: number,
   label: "plan" | "receipt",
 ): string {
-  // F97 — one observation, then every guard and the serialization itself consume
-  // that snapshot. Without the capture the cardinality guard above and
+  // F97/F99 — one bounded observation, then every guard and the serialization itself
+  // consume that snapshot. Without the capture the cardinality guard above and
   // `projectStructure` below would read the same submission twice, so a flipping
   // accessor could make the digest cover a document the guard never saw.
-  const submitted = captureSubmittedVerificationInput(value);
+  const submitted = captureSubmittedVerificationInput(value, budgetBytes);
   if (!submitted.ok) {
     throw new TypeError(
-      `verification ${label} input is not a readable JSON document — validate before canonicalizing`,
+      submitted.code === "limit-exceeded"
+        ? // The capture measured the canonical form past the budget — the same
+          // refusal F91 names, reached before the serializer could finish it.
+          `verification ${label} canonical form exceeds the D14 ${budgetBytes}-byte budget — validate before canonicalizing`
+        : `verification ${label} input is not a readable JSON document — validate before canonicalizing`,
     );
   }
   const document = submitted.value;
