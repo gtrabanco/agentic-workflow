@@ -257,9 +257,9 @@ Layer: domain · Done-when: the golden-vector suite proves every legacy `canonic
 
 ## P20 — Recover ledger fold provenance
 Layer: docs · Done-when: a mechanical recount proves zero `folded: yes` rows lack a commit token, and ledger F106 reads `folded: yes` naming the P20 commit.
-- [ ] Run the scripted per-row `git log -S` recovery over the 62 token-less rows
-- [ ] Annotate every row whose fold commit is proven
-- [ ] Re-open every row whose fold cannot be proven (`folded: no` plus a BLOCKED note naming the missing evidence)
+- [x] Run the scripted per-row `git log -S` recovery over the 62 token-less rows — `scripts/ledger-provenance.mjs`; the real count is **72**, because a bare 7-hex scan also matches review-round markers (`@3112e34`) and persistence commits that name findings without folding them, so the recount ties a citation to the flip commit or to the commit whose own message claims the id
+- [x] Annotate every row whose fold commit is proven — 72 rows now carry `· fold <sha>` (plus `(ticked <sha>)` where the repair and the bookkeeping are different commits); none was re-opened
+- [x] Re-open every row whose fold cannot be proven (`folded: no` plus a BLOCKED note naming the missing evidence) — zero rows landed there; the rule and its fixture stay in `scripts/ledger-provenance.test.mjs`
 - [ ] Flip F106 `folded: yes` naming the P20 commit; commit atomically and push
 
 ## P21 — Requalify the corrected candidate
