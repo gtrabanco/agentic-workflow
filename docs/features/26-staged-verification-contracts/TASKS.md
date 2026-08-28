@@ -260,7 +260,7 @@ Layer: docs · Done-when: a mechanical recount proves zero `folded: yes` rows la
 - [x] Run the scripted per-row `git log -S` recovery over the 62 token-less rows — `scripts/ledger-provenance.mjs`; the real count is **72**, because a bare 7-hex scan also matches review-round markers (`@3112e34`) and persistence commits that name findings without folding them, so the recount ties a citation to the flip commit or to the commit whose own message claims the id
 - [x] Annotate every row whose fold commit is proven — 72 rows now carry `· fold <sha>` (plus `(ticked <sha>)` where the repair and the bookkeeping are different commits); none was re-opened
 - [x] Re-open every row whose fold cannot be proven (`folded: no` plus a BLOCKED note naming the missing evidence) — zero rows landed there; the rule and its fixture stay in `scripts/ledger-provenance.test.mjs`
-- [ ] Flip F106 `folded: yes` naming the P20 commit; commit atomically and push
+- [x] Flip F106 `folded: yes` naming the P20 commit; commit atomically and push — the row reads `· P20 = ca2e972`, and the recount that proves it is part of `node --test scripts/*.test.mjs` so a future `folded: yes` flip without a tieable commit fails the gate instead of the close-out review
 
 ## P21 — Requalify the corrected candidate
 Layer: close-out · Done-when: AC1–AC10 are re-verified against the frozen blob, an `--adversarial 3` review at the terminal head returns PASS with zero open findings, the PR #145 body describes the terminal head, and the roadmap row reads `done`.
