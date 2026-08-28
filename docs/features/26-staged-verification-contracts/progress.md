@@ -339,6 +339,20 @@ receipt does not claim either — it hands the exact pushed HEAD and the blob ab
 Repository-side qualification additionally re-run at this head: `npm run gate:verification` exit 0 and
 `node --test scripts/*.test.mjs` 57/57 exit 0 (the P20 ledger recount that keeps F106's rule enforced).
 
-Passing the declared checks is necessary, not sufficient: the quality floor keeps the final
-**independent review** outstanding. P21 discharges it with `/review-change --adversarial 3` at this head;
-this receipt does not claim that review — the SHA-bound `review-change:pass` PR comment does..
+Passing the declared checks is necessary, not sufficient: the quality floor also keeps the final
+**independent review** outstanding, which this receipt deliberately does not claim. That review ran at
+head `2b002601` as `/review-change --adversarial 3` (three isolated finder passes on three model families,
+then the isolated classifier and debt transform) and is recorded in the P21 phase entry below; its durable
+form is the SHA-bound `review-change:pass` PR comment on #145, not this table.
+
+## P21 — 2026-08-28
+- Done: the post-P20 gate ran at the terminal head (`gate:verification` exit 0 — 554/554, projections drift-free, package content PASS, docs 24/24, p95 45.42 ms ≤ 100 ms — plus `check-skill-context` 35 skills and the P20 ledger recount 57/57); the frozen blob was recomputed and matched (`2e805886…`), AC1–AC10 were re-verified validator-by-validator and written as the `AC1–AC10 execution receipt — candidate e1001cf (2026-08-28, P21)` block superseding the stale `5934702` receipt; and `--adversarial 3` ran here with three isolated finder passes on three model families (R1 correctness/logic, R2 security/inputs, R3 SPEC-coverage) plus the isolated classifier and debt transform.
+- Remains: `loop-review-fold 26-staged-verification-contracts` to PASS and the `--adversarial 3` re-qualification **at the terminal head of the fold round**, then `/audit-pr`; row 26 is flipped to `done · [#145]` per the legend's PR-open step (merge state lives in the forge, and #145 is still OPEN).
+- Gotchas: (1) The adversarial pass is bound to the head it reviewed (`2b002601`) and the review must not be claimed for a later head — the round's only two `fix-now` rows are the roadmap re-flip and F113's own queue, so the review is re-qualification, not a repair round. (2) A fold commit cannot certify its own review, so `loop-review-fold` stays a separate turn. (3) Every reviewer ran under "no build commands" because three of them shared one checkout — a concurrent `npm test`/`tsc` would have rewritten `dist/` mid-review and produced a finding about a tree nobody committed. (4) The R2 `ignore` rows are a real boundary, not a non-issue: the package validates data and never executes it, so the AWL runner that eventually executes plans owns quoting/escaping — carry the note there. (5) `bump-skill` is excluded from `npx skills add --list` by `metadata.internal: true`, so 34 listed against 35 skill directories and `PASS context budgets: 35 skills` are both correct, not a drift signal.
+- Files: `docs/features/26-staged-verification-contracts/{TASKS,progress,review-findings,decisions}.md`, `docs/features/ROADMAP.md`
+- Next: unit finished — `loop-review-fold` then `audit-pr`
+
+## Unit-loop receipt — P21
+- Commit: the close-out batch carrying this receipt (planned-docs only; no shipped source moved since `ca2e972`) · Gate: `cd packages/agentic-workflow-schema && npm run gate:verification` exit 0 (554/554 tests, projections drift-free, package content PASS, docs 24/24, p95 45.42 ms ≤ 100 ms) + `node scripts/check-skill-context.mjs` exit 0 (35 skills) + `node --test scripts/*.test.mjs` exit 0 (57/57) + `node scripts/ledger-provenance.mjs <ledger> --check` exit 0 (106 proven-cited) · Acceptance blob: 2e8058860b2c805cc30507053f15f91e2f273249 · Review: `--adversarial 3` PASS at `2b002601` (3 reviewers, 3 model families; 2 `ignore`, 2 `fix-now` folded by this phase, 0 debt items)
+- PR: #145 open · Roadmap row 26: `done · [#145]` · Next: `/loop-review-fold 26-staged-verification-contracts` at the post-fold head, then `/audit-pr`
+
