@@ -521,3 +521,17 @@ Non-blocking and independent; no issue created — only the user routes these:
   pointers, plus the evidence sub-fields) — and a coverage case now fails the suite if the
   contract grows an accessor with no hostile-getter case. `TASKS.md` is corrected in place; the
   intent (exhaustive single-observation coverage) is unchanged and strictly better served.
+
+- **2026-08-27 P20: fold provenance is a citation the recount can re-verify, not prose.**
+  `scripts/ledger-provenance.mjs` defines the accepted shape: a `folded: yes` row is green only
+  when it names a commit that (a) resolves on the branch and (b) is either the commit that flipped
+  the row or a commit whose own message names the id. A file intersection alone is NOT proof — the
+  ledger is full of `@3112e34` review-point markers and `persist rows F88-F96` commits that touch
+  the same surfaces without folding anything. Recovery therefore ranks a commit that changes a
+  surface the row cites above one that merely claims the id beside an unrelated change, and nothing
+  landed after the tick can be the fold the tick attested. Where the repair and the bookkeeping are
+  different commits the row names both (`· fold <fix> (ticked <tick>)`); where only the tick claims
+  it, the token says `ticked`, because saying `fold` would assert more than was verified. Re-trigger:
+  any proposal to let a row cite a commit it cannot tie to (a range in another row's text, a review
+  SHA, a phase label) reopens this decision — the whole point of F106 is that unverified provenance
+  reads exactly like verified provenance until someone walks the history.
