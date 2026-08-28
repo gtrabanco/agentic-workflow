@@ -248,12 +248,12 @@ Layer: domain · Done-when: a 200,000-command plan is refused `limit-exceeded` i
 
 ## P19 — Restore legacy canonicalizer compatibility
 Layer: domain · Done-when: the golden-vector suite proves every legacy `canonicalize*`/`digest*` export returns byte-identical 3.3.0 output on the captured unsupported-leaf corpus, the verification surface's refusals stay green, `npm run gate:verification` exits 0, and ledger F100 reads `folded: yes` naming the P19 commit.
-- [ ] Capture golden vectors from the merge-base code (`git show e84db167:...` executed under Node): legacy `canonicalize*`/`digest*` outputs for documents containing undefined, function, symbol, bigint and non-finite leaves
-- [ ] Write the red-first compatibility suite from the golden vectors for every legacy export
-- [ ] Scope the named-TypeError total-leaf guard to the feature-26 verification canonicalizers; restore the captured 3.3.0 fallback serialization for the legacy exports only
-- [ ] Re-point the branch-local tests that pinned the interim throw on legacy exports to the golden vectors; never touch verification-surface refusal tests (F92 parity)
-- [ ] Precise the 3.4.0 ship record in both CHANGELOGs (byte-identical schemas AND unchanged legacy export behavior) and scope the F80 guard note in decisions.md to the verification canonicalizers
-- [ ] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0; flip F100 `folded: yes` naming the P19 commit; commit atomically and push
+- [x] Capture golden vectors from the merge-base code (`git show e84db167:...` executed under Node): legacy `canonicalize*`/`digest*` outputs for documents containing undefined, function, symbol, bigint and non-finite leaves — committed as `scripts/capture-legacy-vectors.mjs` plus `test/fixtures/canonical-legacy-{corpus,vectors}.mjs`: 56 cases over 8 injection points, a digest for every one, the canonical string wherever 3.3.0 emitted unparseable JSON
+- [x] Write the red-first compatibility suite from the golden vectors for every legacy export — `test/canonical-legacy-compat.test.mjs`; 50 of its 60 cases failed at the P18 fold
+- [x] Scope the named-TypeError total-leaf guard to the feature-26 verification canonicalizers; restore the captured 3.3.0 fallback serialization for the legacy exports only — `canonicalJSONValue(v, domain)` over `CanonicalLeafDomain = "legacy" | "verification"`, defaulting to `verification` so no new call site can silently pick the lax domain
+- [x] Re-point the branch-local tests that pinned the interim throw on legacy exports to the golden vectors; never touch verification-surface refusal tests (F92 parity) — the two `canonical-core.test.mjs` F80 cases now assert the 3.3.0 bytes and the engine's own bigint error; the four `verification-core.test.mjs` refusal cases are untouched and still green
+- [x] Precise the 3.4.0 ship record in both CHANGELOGs (byte-identical schemas AND unchanged legacy export behavior) and scope the F80 guard note in decisions.md to the verification canonicalizers — pinned by a 24th docs case asserting both languages
+- [x] Run `cd packages/agentic-workflow-schema && npm run gate:verification` — exit 0; flip F100 `folded: yes` naming the P19 commit; commit atomically and push
 
 ## P20 — Recover ledger fold provenance
 Layer: docs · Done-when: a mechanical recount proves zero `folded: yes` rows lack a commit token, and ledger F106 reads `folded: yes` naming the P20 commit.
