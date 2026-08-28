@@ -11,8 +11,12 @@
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-const PACKAGE_ROOT = new URL("..", import.meta.url).pathname;
+// `fileURLToPath`, never `URL.pathname`: a checkout under a path with a space or a
+// non-ASCII character keeps `%20` in the pathname and hands the packer a cwd that
+// does not exist (F112).
+const PACKAGE_ROOT = fileURLToPath(new URL("..", import.meta.url));
 /** The generated structural projections feature 26 must ship (AC7, AC9). */
 const REQUIRED_PROJECTIONS = ["verification-plan.schema.json", "verification-receipt.schema.json"];
 

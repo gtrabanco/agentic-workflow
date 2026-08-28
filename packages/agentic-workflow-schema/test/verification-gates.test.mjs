@@ -153,3 +153,39 @@ test("F94: a non-numeric flag exits 2 with an echoed argument error", () => {
   assert.match(run.stderr, /--commands expects a finite positive integer/);
   assert.equal(run.stdout, "", "a usage failure must print no report");
 });
+
+// ---------------------------------------------------------------------------
+// F112 — the package gate is path-portable (behavioral, spawned)
+// ---------------------------------------------------------------------------
+
+import { cpSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+const packageDir = fileURLToPath(new URL("..", import.meta.url));
+
+test("F112: the package gate passes from a checkout path with a space and a non-ASCII character", () => {
+  // PACKAGE_ROOT used to be `new URL("..", import.meta.url).pathname`, which
+  // keeps `%20` where the filesystem has a space, so `npm pack` was handed a
+  // cwd that does not exist and the gate failed on a healthy package. The root
+  // must come from `fileURLToPath`, like every other path in this package.
+  const tempRoot = mkdtempSync(join(tmpdir(), "awlspace gate ñ-"));
+  const checkout = join(tempRoot, "package");
+  try {
+    cpSync(packageDir, checkout, {
+      recursive: true,
+      filter: (source) => !source.split("/").includes("node_modules"),
+    });
+    const run = spawnSync(process.execPath, [join(checkout, "scripts", "check-verification-package.mjs")], {
+      encoding: "utf8",
+    });
+    assert.equal(
+      run.status,
+      0,
+      `the package gate must pass from an encoded-path checkout (exit ${run.status}):\n${run.stderr}`,
+    );
+    assert.match(run.stdout, /^PASS · @gtrabanco\/agentic-workflow-schema@/m, "the gate must reach its PASS verdict");
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
