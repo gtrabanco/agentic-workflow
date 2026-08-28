@@ -307,7 +307,8 @@ receipt does not claim either — it hands the exact pushed HEAD and the blob ab
 
 ## P21 — candidate re-qualification: blocked input (F108)
 - Done: the fold round that P21 opens with is closed — P20 landed in ca2e972, the ledger recount is green, and the
-  PR #145 body is refreshed at the post-P20 head so it no longer describes b2efb1f.
+  PR #145 body is refreshed at the head this fold round ends on — named in the body's own candidate line,
+  because a commit cannot record the head it is in — so it no longer describes b2efb1f.
 - Missing input, so F108 stays `folded: no`: **P21's terminal head.** The phase still owes the post-P20 gate +
   AC1–AC10 receipt, the `--adversarial 3` review at that head, whatever fix-now rows that review produces, the
   `loop-review-fold` PASS and the ROADMAP row-26 re-flip to `done`. Each of those lands commits, and F108's defect

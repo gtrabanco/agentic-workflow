@@ -268,6 +268,6 @@ Layer: close-out · Done-when: AC1–AC10 are re-verified against the frozen blo
 - [ ] Verify AC1–AC10 against the frozen ACCEPTANCE.md blob `2e8058860b2c805cc30507053f15f91e2f273249` and record the execution receipt in progress.md
 - [ ] Run review-change `--adversarial 3` over the whole corrected candidate at the terminal head (isolated finder passes)
 - [ ] Fold every fix-now row the review produces within this phase (bounded correction pass); escalate only architectural or acceptance-level findings to the user
-- [ ] Refresh the PR #145 body to the terminal head and flip F108 `folded: yes`
+- [ ] Refresh the PR #145 body to the terminal head and flip F108 `folded: yes` — the refresh runs now (provisional: the body measures the head this fold round ends on and says so) and the row stays `folded: no`, because every remaining P21 task lands commits and would re-stale it — which is F108's own defect
 - [ ] Run loop-review-fold 26-staged-verification-contracts to PASS
 - [ ] Flip roadmap row 26 back to `done · [#145]` after PASS
