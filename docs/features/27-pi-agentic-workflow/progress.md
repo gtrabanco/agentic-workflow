@@ -30,7 +30,7 @@ Last reviewed: 2026-08-29 (P2)
 - Next: P2 — Routing config engine
 
 ## Unit-loop receipt — P2
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && node --test test/config-merge.test.mjs test/default-inherit.test.mjs test/untrusted-project-config.test.mjs` (exit 0, 23/23) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f (re-verified after the rebase)
+- Commit: `5fec5d8` feat(27-pi-agentic-workflow): strict routing config engine with trust-gated merge (P2) · Gate: `cd packages/pi-agentic-workflow && node --test test/config-merge.test.mjs test/default-inherit.test.mjs test/untrusted-project-config.test.mjs` (exit 0, 23/23) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f (re-verified after the rebase)
 - Full unit gate at the same revision: `npm test` → exit 0, 30 pass / 0 fail (P1 parity 7 + P2 23).
 - Next: P3 · Attempts: 1
 - Review-checkpoint trigger recorded (not interrupting, whole-unit mode): layer boundary P2 `domain` → P3 `api`; sensitivity: yes — P3 touches project-trust enforcement and model mutation (`setModel`), so the end review must read AC13 + AC7 evidence.
