@@ -8,13 +8,13 @@ command; judgment-only checks are labelled `read-verified`.
 Layer: config/infra · Done-when: `cd packages/pi-agentic-workflow && node --test test/skill-parity.test.mjs` →
 exit 0, and `git status` shows only this feature's paths.
 
-- [ ] Create branch `feat/27-pi-agentic-workflow` from `main`
-- [ ] `package.json`: name `@gtrabanco/pi-agentic-workflow`, keyword `pi-package`, `publishConfig.access: public`, peerDependency `@earendil-works/pi-coding-agent`, `pi` manifest listing `./dist/extension/index.js` + `./skills` (AC1)
-- [ ] Bundle script copies `skills/<name>/` minus `metadata.internal: true` skills into `packages/pi-agentic-workflow/skills/` (AC2)
-- [ ] `test/skill-parity.test.mjs` written FIRST (red before bundling completes): byte-identical files, all `user-invocable: true` included, internal composed skills included, `metadata.internal: true` excluded (AC2)
-- [ ] Extension entry `src/extension/index.ts` present and referenced by the manifest (no behavior yet)
-- [ ] `npm pack --dry-run` lists extension, skills, manifests (AC1)
-- [ ] Commit this feature's planning artifacts (SPEC + artifact set) and confirm roadmap row 27 reads `planned` (the `defined → planned` flip written during scaffold)
+- [x] Create branch `feat/27-pi-agentic-workflow` from `main`
+- [x] `package.json`: name `@gtrabanco/pi-agentic-workflow`, keyword `pi-package`, `publishConfig.access: public`, peerDependency `@earendil-works/pi-coding-agent`, `pi` manifest listing `./dist/extension/index.js` + `./skills` (AC1)
+- [x] Bundle script copies `skills/<name>/` minus `metadata.internal: true` skills into `packages/pi-agentic-workflow/skills/` (AC2)
+- [x] `test/skill-parity.test.mjs` written FIRST (red before bundling completes): byte-identical files, all `user-invocable: true` included, internal composed skills included, `metadata.internal: true` excluded (AC2)
+- [x] Extension entry `src/extension/index.ts` present and referenced by the manifest (no behavior yet)
+- [x] `npm pack --dry-run` lists extension, skills, manifests (AC1)
+- [x] Commit this feature's planning artifacts (SPEC + artifact set) and confirm roadmap row 27 reads `planned` (the `defined → planned` flip written during scaffold)
 
 ## P2 — Routing config engine
 

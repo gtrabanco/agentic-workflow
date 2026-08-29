@@ -1,0 +1,53 @@
+{
+  "name": "@gtrabanco/pi-agentic-workflow",
+  "version": "0.1.0",
+  "description": "Pi package: canonical agentic-workflow skills, friendly slash commands, and per-command model routing.",
+  "keywords": [
+    "pi-package",
+    "agentic-workflow",
+    "pi",
+    "skills",
+    "workflow",
+    "model-routing"
+  ],
+  "license": "MIT",
+  "author": "Gabriel Trabanco <gtrabanco@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtrabanco/agentic-workflow.git",
+    "directory": "packages/pi-agentic-workflow"
+  },
+  "homepage": "https://github.com/gtrabanco/agentic-workflow/tree/main/packages/pi-agentic-workflow#readme",
+  "type": "module",
+  "pi": {
+    "extensions": ["./dist/extension/index.js"],
+    "skills": ["./skills"]
+  },
+  "files": [
+    "dist",
+    "skills",
+    "package.json",
+    "README.md",
+    "README.es.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc",
+    "bundle:skills": "node scripts/bundle-skills.mjs",
+    "test": "tsc && node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build && npm test"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "typescript": "6"
+  }
+}
