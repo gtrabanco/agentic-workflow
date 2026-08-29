@@ -1,0 +1,115 @@
+---
+name: plan-fix
+user-invocable: true
+version: 2.7.0
+argument-hint: <issue-number> [<issue-number> …]
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
+description: >
+  Draft and locally commit a tightly scoped, phased fix SPEC from one or more
+  issues, then stop before push/PR and hand off to execute-phase --fix. Triggers:
+  "plan-fix", "plan a fix for issue N", "draft the fix spec".
+---
+
+# Plan Fix
+
+Fix-flow counterpart of `plan-feature`: draft the SPEC plus frozen acceptance,
+stop for review, then `execute-phase --fix` implements every remaining phase.
+
+## Turn contract — verify before ending the turn
+
+```
+✓ The fix SPEC is committed on its `fix/<n>-<topic>` branch (commit sha pasted) — NOT pushed, NO PR
+✓ The Hand-off block was printed exactly as specified
+✓ A multi-issue unit? The hand-off names every issue once as `#primary + #n2 + …`; a single-issue unit names only its issue
+✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English artifacts unless one of the first two says otherwise
+✓ The closing `→ Next:` block is printed as the ABSOLUTE last output
+```
+
+About to end the turn with any box unchecked? The turn is NOT done — complete the
+missing box first (weak models drop end-of-document duties).
+
+## Persona
+
+Senior software architect: skeptical, scope-disciplined and evidence-based.
+Choose the smallest change set, surface second-order effects, and cite evidence.
+
+## Input
+
+One or more GitHub issue numbers from this repo, space-separated.
+
+- **One number:** unchanged single-issue behavior (`plan-fix 17`).
+- **Multiple numbers:** step 5 decides one capability bundle or homogeneous
+  mechanical batch; different symptoms/files may merge when one outcome,
+  validator and rollback boundary own them.
+- **Invalid input:** name the bad token and stop; never proceed partially.
+
+## Output
+
+- `docs/fix/<primary>-<topic>/SPEC.md` — template plus required sections and a
+  `## Phases` ledger (**always ≥2**; final `Hardening & PR`). Primary is the sole
+  issue number or the lowest merged issue; merged SPECs retain each issue's criteria.
+- `docs/fix/<primary-issue-number>-<topic>/ACCEPTANCE.md` — the compact frozen
+  finish line from `verification-contract`, retaining one criterion per issue.
+- Branch `fix/<primary>-<topic>` from `main`.
+- One local commit with SPEC and `docs/fix/README.md` (`pending`, all merged issues).
+- **Stop: do not push/open PR.** Hand off to `execute-phase --fix`.
+
+## Hard rules
+
+- Honor Workflow conventions: create `fix/<n>-<topic>` first, never `main`; gate,
+  docs language and evidence apply. Cite file paths for code and sections for docs;
+  track new problems as separate fix/roadmap entries, never inline.
+- **Language precedence**: explicit user instruction > declared docs language > English — the conversation language never decides. If the issue body isn't in the artifact language, translate silently; if translation is ambiguous, inconsistent, or nonsensical, ask before committing to a meaning.
+- Never push, never open the PR — that's `execute-phase --fix`.
+
+## Progressive loading — validate before drafting
+
+The allowlist is exactly these five paths:
+
+1. Every invocation: read [planning process](references/PLANNING_PROCESS.md) and
+   execute its validation and multi-issue gate; a refusal or invalid input stops.
+2. Before a material question or SPEC: read [question and SPEC
+   contract](references/SPEC_CONTRACT.md).
+3. Any route that can write a fix SPEC: consume the [planning preflight](<../planning-preflight/SKILL.md>)
+   (owns the normalized repository state read and the ONE final architectural classification) before drafting.
+4. Before emitting phases: load the [phase contract](<../phase-contract/SKILL.md>) for the 8-box phase-lint and phase fingerprint.
+5. Before commit: consume the [verification contract](<../verification-contract/SKILL.md>)
+   and write the frozen `ACCEPTANCE.md`.
+
+Resources are normative and one hop from this file. Missing required resource →
+stop; never approximate fixed blocks or phase rules.
+
+## Hand-off
+
+After commit, print exactly:
+
+```
+SPEC drafted: docs/fix/<primary>-<topic>/SPEC.md
+Branch: fix/<primary>-<topic> (local, not pushed)
+Commit: <short hash>
+Issue set: #<primary> + #<n2> + #<n3> (print every issue in this unit; single issue → #<primary>)
+
+→ Next: review the SPEC, then /execute-phase --fix <primary> — execute every remaining phase in issue set #<primary> + #<n2> + #<n3> and open the PR
+  · explicit atomic mode → /execute-phase --fix <primary> P<n> (same issue set: #<primary> + #<n2> + #<n3>)
+  · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<primary>`
+    plus one `Closes #<n>` line for every other issue listed in the Issue set
+  · scope looks wrong → adjust the SPEC and re-run /plan-fix
+```
+
+Replace every placeholder with the complete actual issue set before printing;
+never print `<n2>`, `<n3>`, or `…` in a live hand-off.
+
+Then end in the user's language with a 2-3 sentence summary: what the SPEC ships, the biggest risk, and any open decisions left for the implementer.
+
+## Portability (agents other than Claude Code)
+
+Use explicit fallbacks when a primitive is absent: open named `SKILL.md` files in
+a fresh context; run architect-level scoping on the strongest model, then hand
+implementation to a cheaper worker.
+
+## Done when
+
+- The SPEC and frozen `ACCEPTANCE.md` follow canonical contracts, surface
+  risks/blockers, register in `docs/fix/README.md`, and are committed locally on
+  `fix/<n>-<topic>` (not pushed/no PR). The closing `→ Next:` Hand-off is printed.
