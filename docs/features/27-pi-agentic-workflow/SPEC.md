@@ -394,10 +394,15 @@ Product boxes:
 
 Engineering boxes (scaffold time):
 
-- [ ] `### Dev scenarios` has ≥ 1 failure-mode row, or an explicit
+- [x] `### Dev scenarios` has ≥ 1 failure-mode row, or an explicit
       `n/a: <reason>`.
-- [ ] Every phase passes the 8-box Phase-lint.
-- [ ] No template placeholders left anywhere in the file.
+- [x] Every phase passes the 8-box Phase-lint.
+- [x] No template placeholders left anywhere in the file (same grep, whole
+      file). Mechanical residuals reviewed and classified non-placeholder: the
+      frozen product half's domain path notation (`/skill:<name>`,
+      `skills/<name>/` — meaning "every skill"/Pi's command path, not slots)
+      and this spec-lint section's own `n/a: <reason>` wording. No unfilled
+      template slots remain.
 
 ## Design status
 
@@ -412,22 +417,218 @@ half above is marked `designed`.
 
 ### Technical goals
 
+- **One install, zero setup:** `pi install npm:@gtrabanco/pi-agentic-workflow` yields friendly
+  `/design-feature`-style commands with `inherit` default routing — no config file is required for
+  the first dispatch.
+- **Honest routing:** a configured non-inherit route applies to exactly one invocation and is
+  restored after `agent_settled`; an unavailable configured route stops with a named explanation
+  instead of silently downgrading.
+- **Single workflow implementation:** bundled skills are byte-identical build copies of `skills/`
+  with a parity test as the drift guard; no skill prose is forked.
+- **Clean packaging:** self-contained npm package with a `pi` manifest; nothing outside
+  `packages/pi-agentic-workflow/` changes (no Pi core, no schema package, no `settings.json` keys).
+
 ### Architecture impact
+
+New self-contained package under `packages/pi-agentic-workflow/` — the repo's second package
+(precedent: `packages/agentic-workflow-schema/`, NRS F003/F004). Invariants the implementation
+must hold:
+
+- **Bundled skills are build artifacts, not sources.** `skills/` remains the single source of
+  truth; the bundle script copies each skill directory from `skills/` minus
+  `metadata.internal: true` skills, and the
+  parity test fails the build on any byte drift. No skill file is ever edited inside the package.
+- **Extension-only integration.** The package consumes Pi extension APIs (`registerCommand`,
+  `sendUserMessage`, `setModel`, `setThinkingLevel`, `agent_settled`, `ctx.isProjectTrusted()`)
+  via a peerDependency on `@earendil-works/pi-coding-agent`; no Pi core changes.
+- **Dedicated config files only.** Global `~/.pi/agent/pi-agentic-workflow.json`, project
+  `.pi/pi-agentic-workflow.json`; the extension never writes plugin keys into Pi `settings.json`
+  (Pi has no supported plugin settings namespace — product decision D-P4).
+- **Layer mapping used by the phase-lint** (a plugin's whole surface is extension code, so layers
+  classify the *kind* of work): `config/infra` = manifest/build/bundling; `domain` = pure config
+  load/merge/validate logic; `api` = command registration, dispatch guards, routing lifecycle;
+  `ui` = the interactive `/agentic-workflow-settings` console; `docs` = package READMEs;
+  `hardening`/`close-out` per the enum.
+- NRS accepted decisions preserved: AD-002 (README pair synchronized in the same change), AD-004
+  (one PR against `main`), AD-007 (schema package untouched).
 
 ### Design
 
+**Package layout** (`packages/pi-agentic-workflow/`):
+
+```
+package.json              name @gtrabanco/pi-agentic-workflow · keyword pi-package ·
+                          publishConfig.access public · peerDependencies: @earendil-works/pi-coding-agent
+                          pi: { extensions: ["./dist/extension/index.js"], skills: "./skills" }
+dist/extension/index.js   compiled extension (source: src/extension/index.ts)
+skills/<skill>/…          bundled byte-identical copies (committed build output)
+test/*.test.mjs           node:test suites (tsc + tsconfig.test.json, schema-package precedent)
+README.md / README.es.md  synchronized package docs (AC15)
+```
+
+**Config schema** (both files, identical shape):
+
+```json
+{
+  "default": { "model": "inherit", "thinking": "inherit" },
+  "commands": {
+    "plan-feature": { "model": "provider/modelId", "thinking": "high" }
+  },
+  "onUnavailableRoute": "stop"
+}
+```
+
+`model` is `"inherit"` or an exact `provider/modelId`; `thinking` is a Pi thinking level or
+`"inherit"`; `onUnavailableRoute` is `"stop" | "inherit"`. Ship-shipped default: `inherit`.
+
+**Config engine (domain):**
+
+1. Global file loaded from `~/.pi/agent/pi-agentic-workflow.json`; missing file → in-package
+   default (`inherit`). Project file loaded from `.pi/pi-agentic-workflow.json` **only when
+   `ctx.isProjectTrusted()`** — an untrusted project's file is ignored even if present (S11).
+2. Merge is per-key, project over global; unspecified keys keep the global/default value (S5).
+3. Validation is strict: a present file that fails JSON parse or schema validation is an error —
+   dispatch is refused, never silently treated as inherit (S10). An empty/absent override list is
+   `inherit`, not an error (S6).
+
+**Command surface (api):** at load, one friendly command per bundled `user-invocable: true` skill,
+named exactly after the skill's frontmatter `name:` (S3/D-P9). A handler run:
+
+1. **Guards (S10):** refuse (no skill expansion, explanatory message) when the agent is busy, when
+   a routed invocation is already in flight, or when a present config file failed validation.
+2. **Route resolution:** effective route = per-command override, else default. `inherit` →
+   dispatch immediately without calling `setModel` (S6). Non-inherit → snapshot the current model
+   + thinking level, call `setModel`/`setThinkingLevel` (S7).
+3. **Unavailable route (S8):** if the configured model is unknown or unauthenticated → default
+   `stop`: no dispatch; message names the command, the route, and `/agentic-workflow-settings`.
+   `onUnavailableRoute: "inherit"` → dispatch on the session model. Explicit `inherit` routes
+   never fail closed for model availability.
+4. **Dispatch:** the invocation is forwarded to the canonical skill with arguments verbatim and
+   in order (S3; AC4 pins `/plan-feature 27-pi-agentic-workflow` → `plan-feature` +
+   `27-pi-agentic-workflow`), using the extension messaging mechanism cited in the product
+   design (`examples/extensions/send-user-message.ts`).
+5. **Restore (S7):** after `agent_settled`, restore the snapshotted model + thinking level —
+   **unless** the user changed the model during the routed turn (S14/AC7: never restore over an
+   explicit user change).
+6. **First-run hint (S9):** on the first workflow-command dispatch, show a one-time hint that
+   per-command models are optional (`/agentic-workflow-settings` or the JSON files); persist the
+   acknowledgement in a dedicated global state file (`~/.pi/agent/pi-agentic-workflow-state.json`,
+   separate from the config file so user config is never rewritten by state bookkeeping).
+
+**Settings console (ui):** `/agentic-workflow-settings` displays the merged effective config
+(empty override list rendered as `inherit`), then supports: set default route · set or clear a
+per-command override · set `onUnavailableRoute` · save to **global** or **project** scope with an
+explicit scope choice; project save is refused when the project is untrusted (S11/AC10).
+
+**State machine (from the SPEC's entity closure):** `idle → routing → dispatched → settled →
+restored`; busy or invalid-config input never leaves `idle`.
+
 ### Decisions to confirm
+
+- **D-E1 — One unit, six phases.** The plan cuts to six single-layer phases. The hard split rule
+  (">~5 phases") was evaluated: splitting would move the settings console + docs (S4/S12) into a
+  new chained unit — a product re-scope the scaffold cannot perform (product half is frozen;
+  D-P12 pins one unit), and every phase here still passes all eight lint boxes with local-only
+  verification, satisfying the rule's intent. Recorded instead of silently exceeding.
+- **D-E2 — Test stack mirrors the schema package:** TypeScript + `tsc` + `tsconfig.test.json` +
+  `node --test` (NRS F005 precedent); `npm test` = compile then run.
+- **D-E3 — Bundled skills are committed build copies** with the parity test as the drift guard
+  (byte-for-byte from `skills/`; a merged skill fix flows into the next bundle, and the test
+  fails if a copy is stale at build time).
+- **D-E4 — Settings console declares layer `ui`** (interactive console surface the operator
+  reads/edits); dispatch-only command handlers declare `api`.
+- **D-E5 — Strict config validation:** present-but-invalid = refuse (S10); only *missing* files
+  resolve to the default. Locked by tests, not judgment.
+- **D-E6 — READMEs are written in P5**, after all behavior exists, so install/config/routing
+  sections document built features — no docs written ahead of the code they describe.
+- **D-E7 — Hint acknowledgement state lives in a dedicated state file**
+  (`~/.pi/agent/pi-agentic-workflow-state.json`), never inside the user's config file.
 
 ### Testing requirements
 
+- **Layer:** package unit/integration tests (`node --test`) over the public extension surface
+  (registered commands, config engine, routing lifecycle) with test doubles standing in for the
+  Pi `ctx` — the same contract style as the schema package; no heavy mocking beyond the boundary.
+- Red-first where the task is validator-shaped (config validation, parity): the suite file lands
+  before the behavior completes and fails red until then.
+- Every command-checkable AC is a named suite file (see `ACCEPTANCE.md` validators):
+  `skill-parity`, `alias-coverage`, `argument-forwarding`, `config-merge`, `default-inherit`,
+  `restore-after-settle`, `unavailable-stop`, `first-run-hint`, `dispatch-refusals`,
+  `untrusted-project-config`.
+- Regression: the schema package's own suite (`cd packages/agentic-workflow-schema && npm test`)
+  stays green — AD-007 requires the untouched surface to stay untouched.
+
 ### Dev scenarios
+
+Failure modes seeded from the fixed category list; each is reachable through an existing
+mechanism (missing/malformed files, Pi trust flag, provider availability, extension in-flight
+flag, persisted state file) — scenarios are orchestration, never new domain:
+
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `config:missing-files` | empty/zero state — no config anywhere | both JSON files absent → default `inherit` dispatch, hint shown (P2/P3 tests) |
+| `config:malformed-json` | invalid or oversized input | present file with bad JSON/schema → refusal, never silent inherit (P2 test) |
+| `config:untrusted-project` | permission denied / wrong role | `ctx.isProjectTrusted() === false` → project file ignored; project save refused (P2/P4 tests) |
+| `routing:unavailable-model` | dependency outage or timeout | `setModel` fails / unknown `provider/modelId` → stop + message naming command, route, settings (P3 test) |
+| `dispatch:in-flight-duplicate` | concurrent/duplicate action | second alias while a routed invocation is in flight → refused, first turn untouched (P3 test) |
+| `hint:exactly-once` | limit or threshold hit | acknowledgement persisted in global state → hint never repeats in later sessions (P3 test) |
 
 ### Phases
 
+Phases `P1…P6`; `P6` is the hardening phase and ends with the literal close-out chain (the PR is
+its final step, not a phase of its own). Detailed task checklists live in `TASKS.md`; the
+high-level cut:
+
+- **P1 — Package skeleton with byte-identical skill bundling** — `config/infra`. Manifest,
+  bundling, parity test.
+- **P2 — Routing config engine** — `domain`. Files, trust gate, merge, default, strict validation.
+- **P3 — Routed command execution** — `api`. Aliases, forwarding, refusals, snapshot/apply/restore,
+  unavailable routes, first-run hint.
+- **P4 — Agentic-workflow settings console** — `ui`. Merged view, route editing, scoped saves.
+- **P5 — Bilingual package READMEs** — `docs`. EN+ES synchronized (AC15).
+- **P6 — Hardening & PR** — `hardening`. Dev-scenario sweep, full gate, AC16 read-verify, close-out.
+
+Phase-lint results (canonical eight-box contract, `skills/phase-contract/SKILL.md`):
+
+- `Phase-lint: PASS (8/8) · fingerprint P1:config/infra:5:package-skeleton-with-byte-identical-skill-bundling`
+- `Phase-lint: PASS (8/8) · fingerprint P2:domain:7:routing-config-engine`
+- `Phase-lint: PASS (8/8) · fingerprint P3:api:8:routed-command-execution`
+- `Phase-lint: PASS (8/8) · fingerprint P4:ui:7:agentic-workflow-settings-console`
+- `Phase-lint: PASS (8/8) · fingerprint P5:docs:3:bilingual-package-readmes`
+- `Phase-lint: PASS (8/8) · fingerprint P6:hardening:8:hardening-and-pr`
+
 ### Deploy & rollback
+
+Merge is not the whole ship: after the PR merges, publish with `npm publish` from
+`packages/pi-agentic-workflow/` (public access; version `0.1.0`; OTP per account config). The
+roadmap row flips to `done · [#<pr>]` at close-out regardless — merge state lives in the forge.
+Rollback: `npm deprecate @gtrabanco/pi-agentic-workflow "superseded"` + revert PR; users remove
+with `pi remove npm:@gtrabanco/pi-agentic-workflow` (Pi-owned). No data cleanup — the only
+user-side artifacts are the two JSON config files and the state file.
 
 ### Open questions / risks
 
+- **Pi API surface drift** (`setThinkingLevel`, `agent_settled`, manifest fields): pinned by the
+  peerDependency range; P1's manifest assertions and P3's lifecycle tests fail loudly on drift.
+  RESOLVED for planning: dispatch goes through the extension messaging mechanism cited in the
+  product design (`send-user-message.ts` example) — no open decision.
+- **Skill drift between `skills/` and the bundle** — RESOLVED by D-E3 (parity test fails the
+  build). Not an open question; listed as the risk the parity test exists to catch.
+- **Roadmap row 26 is missing** (staged-verification-contracts shipped as PR #145 without a
+  roadmap row) — documentation drift, not a dependency of this unit (SPEC: feature 26 "is not
+  required here"). Recorded in `known-issues.md`, destined for `/audit-docs`.
+
 ### Deliverables
 
+- `packages/pi-agentic-workflow/` — `package.json` with `pi` manifest, extension (`src/` +
+  `dist/`), bundled `skills/` copies, `test/` suites, `README.md` + `README.es.md`.
+- Planning artifacts (this SPEC's engineering half, `ACCEPTANCE.md`, `PLAN.md`, `TASKS.md`,
+  `progress.md`, `testing.md`, `known-issues.md`, `decisions.md`, `architecture-notes.md`).
+- Roadmap row 27 registered `planned` (this turn), `done · [#<pr>]` at close-out.
+
 ### Post-merge next feature
+
+None queued: after 27, every roadmap row reads `done` and no `defined`/`idea` row remains. Next
+actions are maintenance-shaped: `/audit-docs` (also picks up the missing row 26), then
+`/product-audit` for a tooling sweep of the new Pi package — a new unit starts only from
+`/design-feature`.

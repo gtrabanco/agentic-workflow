@@ -17,3 +17,33 @@ Dated product decisions. Upsert only; never rewrite or delete a prior row.
 - **Success targets:** one-install aliases; argument forwarding; JSON + settings command; invocation-scoped routing with restore; fail-closed unavailable routes; inherit plus one-time hint; byte-identical bundled skills.
 - **Size:** M.
 - **Traceability:** roadmap only; no GitHub issue.
+
+## 2026-08-29 — engineering half (scaffold)
+
+- **D-E1 — One unit, six phases.** Plan cut to six single-layer phases (P1
+  bundling, P2 config engine, P3 routed execution, P4 settings console, P5
+  READMEs, P6 hardening & PR). Hard split rule evaluated: a split would move
+  S4/S12 (console + docs) to a new chained unit — a product re-scope the
+  scaffold cannot perform (product half frozen; D-P12 pins one unit). Every
+  phase passes the eight-box lint with local-only verification, satisfying the
+  rule's intent; recorded here rather than silently exceeding.
+- **D-E2 — Test stack mirrors the schema package:** TypeScript + `tsc` +
+  `tsconfig.test.json` + `node --test`; `npm test` = compile then run (NRS F005
+  precedent).
+- **D-E3 — Bundled skills are committed build copies** with the parity test as
+  the drift guard; no skill prose is ever edited inside the package.
+- **D-E4 — Settings console declares layer `ui`** (interactive console surface);
+  dispatch-only command handlers declare `api`.
+- **D-E5 — Strict config validation:** present-but-invalid = refuse (S10);
+  only *missing* files resolve to the default. Locked by tests.
+- **D-E6 — READMEs written in P5**, after all behavior exists, so documented
+  sections describe built features.
+- **D-E7 — Hint acknowledgement state in a dedicated file**
+  (`~/.pi/agent/pi-agentic-workflow-state.json`), never inside the user's
+  config file.
+
+## Open questions
+
+none — dispatch mechanism (sendUserMessage, per the product design's cited
+example) and all engineering decisions above are resolved before P1; residual
+risks (Pi API drift, skill drift) are pinned by peerDependency + parity test.
