@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validateVerificationReceiptAgainstPlan | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): unique-result-command-ids, timestamp-order, timestamp-calendar-valid | payload budget: runtime-only (canonical receipt <= 512 KiB) | diagnostics: runtime-only (at most 50 redacted code+path rows) | values: never returned (D16 — diagnostics carry a frozen code and an RFC 6901 pointer only) | regenerate with: node scripts/generate-verification-schemas.mjs",
+  "title": "VerificationReceipt v1",
+  "description": "A verification receipt bound to a plan, candidate snapshot, and acceptance fingerprint. This document is a NON-AUTHORITATIVE Draft-07 structural projection generated from the package's canonical verification-contract definition. It is not a semantic authority: a Draft-07 match is not contract validity — use the authoritative runtime entry point named in $comment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "planDigest",
+    "candidateSnapshotDigest",
+    "acceptanceFingerprint",
+    "stageRequested",
+    "results",
+    "verdict"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/verification-receipt@1",
+      "description": "Contract identifier."
+    },
+    "planDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase 64-hex SHA-256 digest of the bound plan."
+    },
+    "candidateSnapshotDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase 64-hex SHA-256 from #138's candidate-snapshot digest."
+    },
+    "acceptanceFingerprint": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Lowercase 64-hex acceptance fingerprint from #138."
+    },
+    "stageRequested": {
+      "type": "string",
+      "enum": [
+        "fast",
+        "full"
+      ],
+      "description": "Which stage was requested."
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/VerificationResultV1"
+      },
+      "maxItems": 128,
+      "description": "Ordered per-command results; at most 128 rows in declared order."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail",
+        "incomplete"
+      ],
+      "description": "Must equal deriveVerificationVerdict."
+    }
+  },
+  "$defs": {
+    "EvidenceReferenceV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^[^\\0]*$",
+          "description": "Non-empty opaque pointer to stored evidence; NUL-free."
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the captured evidence in bytes."
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Lowercase 64-hex SHA-256 digest of the captured evidence."
+        }
+      }
+    },
+    "VerificationResultV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commandId",
+        "status",
+        "exitCode",
+        "signal",
+        "startedAt",
+        "endedAt",
+        "stdout",
+        "stderr",
+        "skipReason"
+      ],
+      "properties": {
+        "commandId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[^\\0]*$",
+          "description": "Must exist in the bound plan's commands; NUL-free, at most 128 chars."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "failed",
+            "timed-out",
+            "skipped",
+            "infrastructure-error"
+          ],
+          "description": "The terminal status of this command execution."
+        },
+        "exitCode": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Per the D4 exit-code/signal matrix."
+        },
+        "signal": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "pattern": "^[^\\0]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Per the D4 exit-code/signal matrix; NUL-free, at most 1024 chars."
+        },
+        "startedAt": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+          "description": "ISO-8601 UTC start timestamp."
+        },
+        "endedAt": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+          "description": "ISO-8601 UTC end timestamp, >= startedAt."
+        },
+        "stdout": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/EvidenceReferenceV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Bounded stdout evidence reference or null."
+        },
+        "stderr": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/EvidenceReferenceV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Bounded stderr evidence reference or null."
+        },
+        "skipReason": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024,
+              "pattern": "^[^\\0]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Null on non-skipped rows; non-empty NUL-free string ≤ 1024 chars on skipped."
+        }
+      },
+      "allOf": [
+        {
+          "description": "[d4-exactly-one-terminal-result] D4 exit-code/signal matrix: passed/failed carry exactly one of exitCode (integer) or signal (non-empty string).",
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "passed",
+                  "failed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "anyOf": [
+              {
+                "required": [
+                  "exitCode",
+                  "signal"
+                ],
+                "properties": {
+                  "exitCode": {
+                    "type": "integer"
+                  },
+                  "signal": {
+                    "type": "null"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "exitCode",
+                  "signal"
+                ],
+                "properties": {
+                  "exitCode": {
+                    "type": "null"
+                  },
+                  "signal": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "description": "[d4-timed-out-has-no-exit-code] D4: timed-out carries exitCode null and an optional captured kill signal.",
+          "if": {
+            "properties": {
+              "status": {
+                "const": "timed-out"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "exitCode": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "description": "[d4-no-terminal-result] D4: infrastructure-error and skipped carry neither exitCode nor signal.",
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "infrastructure-error",
+                  "skipped"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "exitCode": {
+                "type": "null"
+              },
+              "signal": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "description": "[skip-reason-only-when-skipped] Non-skipped rows carry skipReason null.",
+          "if": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "passed",
+                  "failed",
+                  "timed-out",
+                  "infrastructure-error"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "skipReason": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

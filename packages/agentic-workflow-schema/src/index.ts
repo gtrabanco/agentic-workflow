@@ -9,6 +9,28 @@
  *   exactly one envelope per turn; all top-level keys always present.
  */
 
+import {
+  VERIFICATION_COMMAND_STATUSES,
+  VERIFICATION_CONTRACT,
+  VERIFICATION_COST_CLASSES,
+  VERIFICATION_DIAGNOSTIC_CODES,
+  VERIFICATION_LIMITS,
+  VERIFICATION_PLAN_CONTRACT_ID,
+  VERIFICATION_RECEIPT_CONTRACT_ID,
+  VERIFICATION_STAGES,
+  VERIFICATION_VERDICTS,
+  WORKING_DIRECTORY_POLICIES,
+  createVerificationDiagnosticSink,
+  captureVerificationInput,
+  projectStructure,
+  validateStructure,
+  type VerificationContractSpec,
+  type VerificationDiagnosticCodeV1,
+  type VerificationDiagnosticSink,
+  type VerificationDiagnosticV1,
+  type VerificationInputCapture,
+} from "./verification-contract.js";
+
 // ---------------------------------------------------------------------------
 // Types (source of truth: this package; the internal skill carries policy only)
 // ---------------------------------------------------------------------------
@@ -488,6 +510,24 @@ export function isRunHalt(envelope: Envelope): boolean {
 /** The strict, driver-facing interpretation of the legacy envelope. */
 const STRICT_V2_KEYS = [...REQUIRED_KEYS, "detail"] as const;
 
+/**
+ * Memo for the key vocabularies below: they are static contract data repeated
+ * per parsed envelope, so the `Set` is built once per distinct vocabulary
+ * instead of once per call. The key joins on NUL, which no JSON member name can
+ * contain here, so two vocabularies can never alias each other.
+ */
+const _vocabularyKeys = new Map<string, ReadonlySet<string>>();
+
+function vocabularyKeys(keys: readonly string[]): ReadonlySet<string> {
+  const memo = keys.join("\0");
+  let allowed = _vocabularyKeys.get(memo);
+  if (allowed === undefined) {
+    allowed = new Set(keys);
+    _vocabularyKeys.set(memo, allowed);
+  }
+  return allowed;
+}
+
 function rejectUnexpectedKeys(
   value: unknown,
   path: string,
@@ -495,7 +535,7 @@ function rejectUnexpectedKeys(
   errors: string[],
 ): void {
   if (!isObj(value)) return;
-  const allowed = new Set(keys);
+  const allowed = vocabularyKeys(keys);
   for (const key of Object.keys(value)) {
     if (!allowed.has(key)) errors.push(`unexpected key: ${path}.${key}`);
   }
@@ -2770,17 +2810,65 @@ export type FreshnessResult = FreshResult | StaleResult;
 // D4 — Canonical serialization helpers
 // ---------------------------------------------------------------------------
 
-function canonicalJSONValue(v: unknown): string {
+/**
+ * F100 / AC8 — the two serialization domains one canonical core serves.
+ *
+ * `verification` is feature 26's: a leaf outside the JSON data model is refused by
+ * name, because a digest that silently drops bytes lets two different candidates
+ * bind one value (the collision class F80 measured: `digest([]) === digest([fn])`).
+ * `legacy` is the released 3.3.0 one: the leaf goes to `JSON.stringify`, which
+ * answers the JS value `undefined` for a function, symbol or `undefined` leaf —
+ * the enclosing fragment then interpolates the text `undefined` (an object field)
+ * or an EMPTY element (an array, because `Array.prototype.join` renders `undefined`
+ * as nothing) — and throws its own opaque TypeError for a bigint. Non-finite
+ * numbers serialize as `null`.
+ *
+ * Both domains agree byte-for-byte on every document inside the JSON data model,
+ * which is why the split moves no shipped digest: AC8 pins "pre-feature-26 export
+ * meanings remain unchanged", so the strict refusal belongs to the verification
+ * canonicalizers only, and the three legacy exports keep the bytes consumers
+ * already hold. The cost is stated in `decisions.md`, not hidden: the legacy
+ * collision class stays on the legacy path.
+ */
+type CanonicalLeafDomain = "legacy" | "verification";
+
+/**
+ * D4/D6 — Canonical serialization of one value.
+ *
+ * The domain is the JSON data model: `null`, string, finite number, boolean, array
+ * and plain object. What happens *outside* it is the `domain` argument above — a
+ * named refusal for the verification contracts, the 3.3.0 fallback for the legacy
+ * ones. This function is the byte-level authority behind every digest in the
+ * package, so the two domains are pinned by golden vectors
+ * (`test/fixtures/canonical-legacy-vectors.mjs`) and by the AC5 verification
+ * vectors, never by prose.
+ */
+function canonicalJSONValue(v: unknown, domain: CanonicalLeafDomain = "verification"): string {
   if (v === null) return "null";
-  if (typeof v === "string") return JSON.stringify(v);
-  if (typeof v === "number") return JSON.stringify(v);
-  if (typeof v === "boolean") return JSON.stringify(v);
-  if (Array.isArray(v)) {
-    return "[" + v.map(canonicalJSONValue).join(",") + "]";
+  const kind = typeof v;
+  if (kind === "string") return JSON.stringify(v);
+  if (kind === "number") {
+    if (!Number.isFinite(v as number)) {
+      if (domain === "verification") {
+        throw new TypeError(`canonical JSON: unsupported leaf (non-finite ${kind})`);
+      }
+      return JSON.stringify(v); // 3.3.0: NaN / ±Infinity serialize as `null`
+    }
+    return JSON.stringify(v);
   }
-  if (typeof v === "object") {
+  if (kind === "boolean") return JSON.stringify(v);
+  if (Array.isArray(v)) {
+    // An explicit arrow, never `.map(canonicalJSONValue)`: `map` would pass the
+    // element INDEX as the domain, silently selecting the legacy fallback for
+    // every array leaf.
+    return "[" + v.map((item) => canonicalJSONValue(item, domain)).join(",") + "]";
+  }
+  if (kind === "object") {
     const keys = Object.keys(v as Record<string, unknown>).sort();
-    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k])).join(",") + "}";
+    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k], domain)).join(",") + "}";
+  }
+  if (domain === "verification") {
+    throw new TypeError(`canonical JSON: unsupported leaf (${kind})`);
   }
   return JSON.stringify(v);
 }
@@ -2803,7 +2891,7 @@ export function canonicalizeCandidateSnapshot(snapshot: CandidateSnapshotV1): st
     acceptanceFingerprint: snapshot.acceptanceFingerprint,
     changedPaths: sortedPaths,
   };
-  return canonicalJSONValue(obj);
+  return canonicalJSONValue(obj, "legacy");
 }
 
 /**
@@ -2828,7 +2916,7 @@ export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
     diagnostics: receipt.diagnostics,
     policyVersion: receipt.policyVersion,
   };
-  return canonicalJSONValue(obj);
+  return canonicalJSONValue(obj, "legacy");
 }
 
 // ---------------------------------------------------------------------------
@@ -2837,8 +2925,7 @@ export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
 
 /** D4 — SHA-256 hex digest (async via Web Crypto). */
 async function sha256Hex(data: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const buf = encoder.encode(data);
+  const buf = _utf8Encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
   const hashArray = new Uint8Array(hashBuffer);
   return Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
@@ -2868,7 +2955,7 @@ export async function computeAcceptanceFingerprint(inputs: ReadonlyArray<{ id: s
   const obj: Record<string, unknown> = {
     inputs: sorted,
   };
-  return sha256Hex(canonicalJSONValue(obj));
+  return sha256Hex(canonicalJSONValue(obj, "legacy"));
 }
 
 // ---------------------------------------------------------------------------
@@ -2979,3 +3066,724 @@ export const CANONICAL_VECTORS: ReadonlyArray<CanonicalVectorV1> = Object.freeze
     description: "minimal valid receipt (single finding)",
   },
 ]);
+
+// ---------------------------------------------------------------------------
+// VerificationPlan v1 — staged verification contracts
+// ---------------------------------------------------------------------------
+
+/** Contract identifier for VerificationPlan v1 (re-exported from the canonical definition). */
+export { VERIFICATION_PLAN_CONTRACT_ID };
+
+/** Verification stages: fast and full (re-exported from the canonical definition). */
+export { VERIFICATION_STAGES };
+export type VerificationStage = (typeof VERIFICATION_STAGES)[number];
+
+/** Cost classes declared by the project, not measured by the package. */
+export { VERIFICATION_COST_CLASSES };
+export type VerificationCostClass = (typeof VERIFICATION_COST_CLASSES)[number];
+
+/**
+ * D14 bounded usability — the published ceilings of the v1 contracts
+ * (re-exported from the canonical definition, which is where they are enforced).
+ */
+export { VERIFICATION_LIMITS };
+
+/** Working directory policy derived from the canonical runtime vocabulary. */
+export type WorkingDirectoryPolicy = (typeof WORKING_DIRECTORY_POLICIES)[number];
+
+/**
+ * A single verification command within a plan.
+ *
+ * `executable` + `args` are represented separately (never a shell string);
+ * shell composition is reserved for a future versioned contract.
+ */
+export interface VerificationCommandV1 {
+  /** Stable, non-empty, unique within the plan. */
+  readonly id: string;
+  /** `fast` or `full` — which stage this command belongs to. */
+  readonly stage: VerificationStage;
+  /** Non-empty executable path; no NUL characters. Never a shell string. */
+  readonly executable: string;
+  /** Ordered arguments; each without NUL; may be empty. */
+  readonly args: readonly string[];
+  /** Whether the command runs at the candidate root or a relative subdirectory. */
+  readonly workingDirectoryPolicy: WorkingDirectoryPolicy;
+  /** `null` iff `candidate-root`; a validated relative path iff `relative-path`. */
+  readonly workingDirectory: string | null;
+  /** Positive integer timeout in milliseconds. */
+  readonly timeoutMs: number;
+  /** Whether to stop executing subsequent commands on failure. */
+  readonly stopOnFailure: boolean;
+  /** Project-declared cost class (not measured billing truth). */
+  readonly costClass: VerificationCostClass;
+}
+
+/**
+ * An ordered, non-empty command list for staged verification.
+ *
+ * The package validates, canonicalizes, and digests the plan; it does NOT
+ * execute commands. The caller owns execution.
+ */
+export interface VerificationPlanV1 {
+  /** Must equal `VERIFICATION_PLAN_CONTRACT_ID`. */
+  readonly contract: typeof VERIFICATION_PLAN_CONTRACT_ID;
+  /** Non-empty command list in declared order. */
+  readonly commands: readonly VerificationCommandV1[];
+}
+
+// ---------------------------------------------------------------------------
+// VerificationPlan v1 — validators
+// ---------------------------------------------------------------------------
+
+export type VerificationPlanValidationResult =
+  | { ok: true; plan: VerificationPlanV1 }
+  | { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean };
+
+/**
+ * D16 closed diagnostic result (re-exported from the canonical definition).
+ *
+ * A failure never carries a message or a submitted value — only the frozen code
+ * and the RFC 6901 pointer to the offending location, capped at
+ * `VERIFICATION_LIMITS.diagnostics` rows with `truncated` telling the consumer
+ * the list is not the whole story.
+ */
+export { VERIFICATION_DIAGNOSTIC_CODES };
+export type VerificationDiagnosticCode = VerificationDiagnosticCodeV1;
+export type { VerificationDiagnosticV1 };
+
+/** UTF-8 byte length of a canonical form — the unit D14 payload budgets use. */
+function utf8Bytes(text: string): number {
+  return _utf8Encoder.encode(text).length;
+}
+
+/**
+ * D14 canonical payload budget (F77), measured BEFORE any diagnostic is
+ * allocated, so a wide document is refused by the budget alone instead of
+ * spending the diagnostic ceiling on its individual disliked fields.
+ *
+ * The measurement uses the same canonical serializer the canonicalizers use
+ * (`canonicalJSONValue`: sorted keys, compact separators), so it is byte-identical
+ * to the canonical payload size for every document the structural pass would
+ * accept: undeclared keys are the only thing a submitted object can carry that a
+ * normalized DTO drops, and the structural pass rejects those (F71 `unknown-field`).
+ * Returns the refusal rows, or `null` when the payload fits (or cannot be
+ * serialized at all, which the structural pass then rejects on type grounds).
+ */
+function canonicalBudgetRefusal(value: unknown, limit: number): VerificationDiagnosticV1[] | null {
+  let canonical: string;
+  try {
+    canonical = canonicalJSONValue(value);
+  } catch {
+    return null;
+  }
+  return utf8Bytes(canonical) > limit
+    ? [Object.freeze({ code: "limit-exceeded", path: "" })]
+    : null;
+}
+
+/**
+ * F97/F99 — one captured observation of a submitted document, bounded by the
+ * canonical byte budget.
+ *
+ * Every authority below runs on the snapshot, never on the submission: the byte
+ * budget, the structural walk, the cross-rules and the DTO would otherwise read the
+ * same accessor again and could decide on a document other than the one it blesses.
+ * The capture aborts on the budget before the payload is fully copied (F99), and an
+ * accessor that throws answers with the redacted `invalid-type` row F92 fixed.
+ */
+function captureSubmittedVerificationInput(
+  value: unknown,
+  budgetBytes: number,
+): VerificationInputCapture {
+  return captureVerificationInput(value, budgetBytes);
+}
+
+/** The single refusal row a bounded capture rejection earns (D16 shape). */
+function captureRejectionResult(rejected: {
+  code: VerificationDiagnosticCodeV1;
+  pointer: string;
+}): { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean } {
+  return {
+    ok: false,
+    diagnostics: [Object.freeze({ code: rejected.code, path: rejected.pointer })],
+    truncated: false,
+  };
+}
+
+/**
+ * The sole plan-validation authority (D12).
+ *
+ * Every structural rule comes from the canonical verification-contract
+ * definition: contract id, non-empty command list, unique non-empty ids,
+ * closed vocabularies, executable/args shapes, working-directory policy
+ * nullness and relative-path validation, positive-integer timeouts, and
+ * undeclared or inherited fields at every level.
+ *
+ * The input domain is JSON documents — values `JSON.parse` produces or
+ * equivalent literals. An input outside that domain (e.g. an object with a
+ * throwing live getter) cannot smuggle its exception past this entry: the
+ * walk failure is refused as a redacted `invalid-type` row, so callers
+ * always observe the D16 diagnostic contract (F92).
+ *
+ * On success it returns a normalized own-property DTO — never the submitted
+ * reference — so digests and downstream semantics see exactly the declared
+ * contract fields. On failure it returns at most
+ * `VERIFICATION_LIMITS.diagnostics` redacted code+path rows (D16).
+ */
+export function validateVerificationPlanV1(value: unknown): VerificationPlanValidationResult {
+  const submitted = captureSubmittedVerificationInput(value, VERIFICATION_LIMITS.planBytes);
+  if (!submitted.ok) return captureRejectionResult(submitted);
+  const document = submitted.value;
+  // Exact UTF-8 measure on the snapshot unless the capture's running size WAS the
+  // byte size (pure ASCII, every leaf measurable): a multibyte document can cross
+  // the budget only here (F99 keeps both paths exact).
+  if (!submitted.measureExact) {
+    const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.planBytes);
+    if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  }
+  const sink = createVerificationDiagnosticSink();
+  const plan = validateStructure(VERIFICATION_CONTRACT.plan, VERIFICATION_CONTRACT.plan.root, document, "", sink);
+  if (sink.count() > 0) return { ok: false, ...sink.finish() };
+  return { ok: true, plan: plan as unknown as VerificationPlanV1 };
+}
+
+// ---------------------------------------------------------------------------
+// VerificationReceipt v1 — staged verification contracts
+// ---------------------------------------------------------------------------
+
+/** Contract identifier for VerificationReceipt v1 (re-exported from the canonical definition). */
+export { VERIFICATION_RECEIPT_CONTRACT_ID };
+
+/** Possible per-command result statuses (re-exported from the canonical definition). */
+export { VERIFICATION_COMMAND_STATUSES };
+export type VerificationCommandStatus = (typeof VERIFICATION_COMMAND_STATUSES)[number];
+
+/**
+ * The non-pass family, derived once from the frozen vocabulary so the D4
+ * fail-fast sequencing scan and the D8 verdict derivation can never drift
+ * apart (order follows the vocabulary: failed, timed-out, infrastructure-error).
+ */
+const NON_PASSED_STATUSES: readonly VerificationCommandStatus[] =
+  VERIFICATION_COMMAND_STATUSES.filter((s) => s !== "passed" && s !== "skipped");
+
+/** Verdict values derived from receipt content. */
+export { VERIFICATION_VERDICTS };
+export type VerificationVerdict = (typeof VERIFICATION_VERDICTS)[number];
+
+/** Stage requested: fast or full — the same closed vocabulary as `stage`. */
+export type VerificationStageRequest = VerificationStage;
+
+/**
+ * Bounded reference to captured evidence (stdout/stderr output).
+ *
+ * Output contents stay outside the portable receipt; only the reference,
+ * size, and digest are carried.
+ */
+export interface EvidenceReferenceV1 {
+  /** Non-empty opaque pointer to stored evidence, ≤ 1024 chars, no NUL. */
+  readonly ref: string;
+  /** Size of the captured evidence in bytes (≥ 0). */
+  readonly bytes: number;
+  /** Lowercase 64-hex SHA-256 digest of the captured evidence. */
+  readonly sha256: string;
+}
+
+/**
+ * Per-command verification result.
+ *
+ * The D4 exit-code/signal matrix:
+ *   - passed/failed: exactly one of exitCode (integer) / signal (non-empty string)
+ *   - timed-out: exitCode null, signal nullable
+ *   - infrastructure-error: both null
+ *   - skipped: both null
+ */
+export interface VerificationResultV1 {
+  /** Must exist in the bound plan's commands. */
+  readonly commandId: string;
+  /** The terminal status of this command execution. */
+  readonly status: VerificationCommandStatus;
+  /** Integer exit code; per the D4 matrix (null for timed-out/infrastructure-error/skipped). */
+  readonly exitCode: number | null;
+  /** Kill signal; per the D4 matrix (nullable for timed-out, null otherwise). */
+  readonly signal: string | null;
+  /** ISO-8601 UTC start timestamp. */
+  readonly startedAt: string;
+  /** ISO-8601 UTC end timestamp, ≥ startedAt. */
+  readonly endedAt: string;
+  /** Bounded stdout evidence reference or null. */
+  readonly stdout: EvidenceReferenceV1 | null;
+  /** Bounded stderr evidence reference or null. */
+  readonly stderr: EvidenceReferenceV1 | null;
+  /** Skip reason: null on non-skipped rows; when skipped, a stable id ≤ 1024 chars.
+   * For fail-fast: MUST equal the stable id of an earlier-declared command
+   * whose result is non-passed and whose plan entry declares stopOnFailure: true.
+   * Any other non-null value makes the receipt invalid.
+   */
+  readonly skipReason: string | null;
+}
+
+/**
+ * A verification receipt bound to a plan, candidate snapshot, and acceptance
+ * fingerprint.
+ *
+ * The verdict field must equal deriveVerificationVerdict(receipt, plan)
+ * — a stored verdict that disagrees with the derived verdict makes the
+ * receipt invalid.
+ */
+export interface VerificationReceiptV1 {
+  /** Must equal `VERIFICATION_RECEIPT_CONTRACT_ID`. */
+  readonly contract: typeof VERIFICATION_RECEIPT_CONTRACT_ID;
+  /** Lowercase 64-hex SHA-256 of `digestVerificationPlan(plan)`. */
+  readonly planDigest: string;
+  /** Lowercase 64-hex SHA-256 from #138's candidate-snapshot digest. */
+  readonly candidateSnapshotDigest: string;
+  /** Lowercase 64-hex acceptance fingerprint from #138. */
+  readonly acceptanceFingerprint: string;
+  /** Which stage was requested: fast or full. */
+  readonly stageRequested: VerificationStageRequest;
+  /** Ordered per-command results. */
+  readonly results: readonly VerificationResultV1[];
+  /** Must equal `deriveVerificationVerdict(receipt, plan)`. */
+  readonly verdict: VerificationVerdict;
+}
+
+// ---------------------------------------------------------------------------
+// VerificationReceipt v1 — internal structural shape
+// ---------------------------------------------------------------------------
+
+/** Result of the sole public receipt entry point (D12/D16). */
+export type VerificationReceiptValidationResult =
+  | { ok: true; receipt: VerificationReceiptV1 }
+  | { ok: false; diagnostics: readonly VerificationDiagnosticV1[]; truncated: boolean };
+
+/**
+ * Package-internal structural shape check for VerificationReceipt v1, driven by
+ * the canonical definition (`src/verification-contract.ts`).
+ *
+ * It is NOT a public entry point (D12): `validateVerificationReceiptAgainstPlan`
+ * is the only receipt authority, so a structural PASS here is never an
+ * alternate runtime validity claim.
+ */
+function validateVerificationReceiptShape(value: unknown): VerificationReceiptValidationResult {
+  const submitted = captureSubmittedVerificationInput(value, VERIFICATION_LIMITS.receiptBytes);
+  if (!submitted.ok) return captureRejectionResult(submitted);
+  const document = submitted.value;
+  if (!submitted.measureExact) {
+    const oversized = canonicalBudgetRefusal(document, VERIFICATION_LIMITS.receiptBytes);
+    if (oversized) return { ok: false, diagnostics: oversized, truncated: false };
+  }
+  const sink = createVerificationDiagnosticSink();
+  const receipt = validateStructure(
+    VERIFICATION_CONTRACT.receipt,
+    VERIFICATION_CONTRACT.receipt.root,
+    document,
+    "",
+    sink,
+  );
+  if (sink.count() > 0) return { ok: false, ...sink.finish() };
+  return { ok: true, receipt: receipt as unknown as VerificationReceiptV1 };
+}
+
+// ---------------------------------------------------------------------------
+// Verification semantic core
+// ---------------------------------------------------------------------------
+
+/**
+ * The sole receipt-validation authority (D12): one call performs the
+ * VerificationReceipt v1 structural shape check, the VerificationPlan v1
+ * structural check, and every plan-bound rule — commandId existence, declared
+ * order, fast-stage subset, complete `stopOnFailure` sequencing and attribution
+ * (D3/S4), planDigest match and verdict consistency (D2).
+ *
+ * It accepts unknown input and returns a normalized own-property receipt DTO;
+ * no standalone structural receipt validator is exported, so a structural
+ * match alone can never claim runtime validity (D13). Async because the
+ * planDigest check composes the async digest. The input domain is JSON
+ * documents — like the plan entry, an out-of-domain object (a throwing live
+ * getter) is refused as a redacted `invalid-type` row rather than escaping an
+ * attacker-chosen exception (F92).
+ */
+export async function validateVerificationReceiptAgainstPlan(
+  receipt: unknown,
+  plan: unknown,
+): Promise<VerificationReceiptValidationResult> {
+  const sink = createVerificationDiagnosticSink();
+
+  // Validate the plan first: nothing about a receipt is meaningful against a
+  // plan the authority itself rejects. Its diagnostics are already capped and
+  // redacted, so they are propagated as-is rather than re-derived here.
+  const pv = validateVerificationPlanV1(plan);
+  if (!pv.ok) return pv;
+  const rv = validateVerificationReceiptShape(receipt);
+  if (!rv.ok) return rv;
+  // Every semantic check below runs on the normalized DTOs, never on the
+  // submitted references.
+  const normalizedPlan = pv.plan;
+  const normalizedReceipt = rv.receipt;
+
+  // Build lookups
+  const cmdIdx = new Map<string, number>();
+  const cmdMap = new Map<string, VerificationCommandV1>();
+  for (let i = 0; i < normalizedPlan.commands.length; i++) {
+    cmdIdx.set(normalizedPlan.commands[i].id, i);
+    cmdMap.set(normalizedPlan.commands[i].id, normalizedPlan.commands[i]);
+  }
+  /** `/results/<i>/<field>` — the only pointer shape the semantic block needs. */
+  const atResult = (index: number, field: string) => `/results/${index}/${field}`;
+
+  // 1. commandId existence + uniqueness
+  const seen = new Set<string>();
+  for (let i = 0; i < normalizedReceipt.results.length; i++) {
+    const r = normalizedReceipt.results[i];
+    if (!cmdIdx.has(r.commandId)) {
+      sink.push("unknown-command", atResult(i, "commandId"));
+    } else if (seen.has(r.commandId)) {
+      sink.push("duplicate-id", atResult(i, "commandId"));
+    } else {
+      seen.add(r.commandId);
+    }
+  }
+
+  // 2. Declared order
+  if (sink.count() === 0) {
+    let prev = -1;
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const idx = cmdIdx.get(normalizedReceipt.results[i].commandId)!;
+      if (idx < prev) {
+        sink.push("invalid-order", atResult(i, "commandId"));
+        break;
+      }
+      prev = idx;
+    }
+  }
+
+  // 3. Fast-stage subset: fast receipt only has fast results
+  if (sink.count() === 0 && normalizedReceipt.stageRequested === "fast") {
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const c = cmdMap.get(normalizedReceipt.results[i].commandId);
+      if (c && c.stage === "full") sink.push("invalid-stage", atResult(i, "commandId"));
+    }
+  }
+
+  // 4. D3/S4 — complete `stopOnFailure` SEQUENCING (F65). The trigger is the
+  //    earliest declared command whose own result is non-passed
+  //    (`failed | timed-out | infrastructure-error`) AND whose plan entry declares
+  //    `stopOnFailure: true`. Nothing runs after it, so every later row must be
+  //    `skipped`, and a skipped row that carries a reason must name THAT trigger:
+  //    an earlier command that was itself skipped by the stop never ran, so it
+  //    cannot be a reason. A `skipped` row with a null reason stays representable
+  //    (D3 -> verdict `incomplete`), and a later command with no row stays
+  //    representable (D7) — neither is a schema error.
+  let trigger: string | null = null;
+  if (sink.count() === 0) {
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const r = normalizedReceipt.results[i];
+      const c = cmdMap.get(r.commandId);
+      if (!c) continue; // unknown ids were reported by check 1
+      if (trigger === null) {
+        if (NON_PASSED_STATUSES.includes(r.status) && c.stopOnFailure) trigger = r.commandId;
+        continue;
+      }
+      if (r.status !== "skipped") sink.push("invalid-fail-fast", atResult(i, "status"));
+      else if (r.skipReason !== null && r.skipReason !== trigger) sink.push("invalid-fail-fast", atResult(i, "skipReason"));
+    }
+  }
+
+  // 5. D3 fail-fast attribution (per-row): a non-null reason must name an
+  //    earlier-declared, non-passed command that declares stopOnFailure.
+  if (sink.count() === 0) {
+    // F95 — the commandId → result index serves ONLY this check, so it is
+    // built only when this check runs: an already-failing receipt never pays
+    // for an O(n) map it cannot use (and the neighboring checks all gate the
+    // same way).
+    const resultByCmd = new Map<string, VerificationResultV1>(
+      normalizedReceipt.results.map(r => [r.commandId, r]),
+    );
+    for (let i = 0; i < normalizedReceipt.results.length; i++) {
+      const r = normalizedReceipt.results[i];
+      if (r.status !== "skipped" || r.skipReason === null) continue;
+      const st = r.skipReason;
+      if (!cmdIdx.has(st)) {
+        sink.push("unknown-command", atResult(i, "skipReason"));
+        continue;
+      }
+      const ri = cmdIdx.get(r.commandId)!;
+      const ti = cmdIdx.get(st)!;
+      if (ti >= ri) {
+        sink.push("invalid-order", atResult(i, "skipReason"));
+        continue;
+      }
+      const tr = resultByCmd.get(st);
+      if (!tr || !NON_PASSED_STATUSES.includes(tr.status)) {
+        sink.push("invalid-skip", atResult(i, "skipReason"));
+        continue;
+      }
+      if (!cmdMap.get(st)!.stopOnFailure) sink.push("invalid-fail-fast", atResult(i, "skipReason"));
+    }
+  }
+
+  // 6. planDigest match
+  if (sink.count() === 0) {
+    const d = await digestVerificationPlan(normalizedPlan);
+    if (d !== normalizedReceipt.planDigest) sink.push("digest-mismatch", "/planDigest");
+  }
+
+  // 7. Verdict consistency
+  if (sink.count() === 0) {
+    // Inputs already validated above — use the unchecked derivation (no re-validation).
+    const derived = deriveVerdictUnchecked(normalizedReceipt, normalizedPlan);
+    if (derived !== normalizedReceipt.verdict) sink.push("verdict-mismatch", "/verdict");
+  }
+
+  return sink.count() > 0 ? { ok: false, ...sink.finish() } : { ok: true, receipt: normalizedReceipt };
+}
+
+/**
+ * D2 — Verdict derivation: incomplete > fail > pass, assuming already-validated
+ * inputs (no validation here — callers that pre-validate avoid a full re-scan).
+ * A required row that is `skipped`-with-reason yields `fail`: D2's pass rule
+ * requires every required result row to be `passed`, and a justified skip only
+ * exists attributing to a failure (D3).
+ */
+function deriveVerdictUnchecked(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+): VerificationVerdict {
+  const reqStage = receipt.stageRequested;
+  // Stage required set: fast → fast commands; full → every declared command.
+  // One set is built here and reused by both scans below — the membership test
+  // is the only thing either pass needs from it.
+  const requiredSet = new Set<string>(
+    reqStage === "full"
+      ? plan.commands.map((c: VerificationCommandV1) => c.id)
+      : plan.commands.filter((c: VerificationCommandV1) => c.stage === "fast").map((c: VerificationCommandV1) => c.id),
+  );
+  const received = new Set(receipt.results.map((r2: VerificationResultV1) => r2.commandId));
+
+  // Missing → incomplete
+  for (const id of requiredSet) { if (!received.has(id)) return "incomplete"; }
+
+  // Unjustified skip → incomplete
+  for (const r2 of receipt.results) { if (r2.status === "skipped" && !r2.skipReason) return "incomplete"; }
+
+  // Failed/timed-out/infra, or a required row skipped-with-reason → fail
+  for (const r2 of receipt.results) {
+    if (NON_PASSED_STATUSES.includes(r2.status)) return "fail";
+    if (requiredSet.has(r2.commandId) && r2.status === "skipped") return "fail";
+  }
+
+  return "pass";
+}
+
+/**
+ * D2 — Verdict derivation: incomplete > fail > pass. Validating wrapper around
+ * {@link deriveVerdictUnchecked} — safe to call standalone on unvalidated inputs.
+ */
+export function deriveVerificationVerdict(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+): VerificationVerdict {
+  const pv = validateVerificationPlanV1(plan);
+  const rv = validateVerificationReceiptShape(receipt);
+  if (!pv.ok || !rv.ok) return "incomplete";
+  return deriveVerdictUnchecked(rv.receipt, pv.plan);
+}
+
+/**
+ * D6 — Canonical serialization, shared by both contract sides.
+ *
+ * Inputs are projected through the canonical definition first, so the bytes —
+ * and therefore every digest — describe the normalized own-property contract
+ * fields, never an inherited prototype value or an undeclared extra.
+ *
+ * The SPEC precondition ("inputs must first pass their validators") is
+ * enforced defensively here (F91): a declared-array cardinality beyond D14 is
+ * refused BEFORE any serialization work runs, and the canonical form itself
+ * must fit the contract's byte budget. A refusal is a named TypeError that
+ * quotes only the violated limit — never the submitted content.
+ */
+function canonicalizeWithinContract(
+  value: unknown,
+  contract: VerificationContractSpec,
+  collectionField: "commands" | "results",
+  maxItems: number,
+  budgetBytes: number,
+  label: "plan" | "receipt",
+): string {
+  // F97/F99 — one bounded observation, then every guard and the serialization itself
+  // consume that snapshot. Without the capture the cardinality guard above and
+  // `projectStructure` below would read the same submission twice, so a flipping
+  // accessor could make the digest cover a document the guard never saw.
+  const submitted = captureSubmittedVerificationInput(value, budgetBytes);
+  if (!submitted.ok) {
+    throw new TypeError(
+      submitted.code === "limit-exceeded"
+        ? // The capture measured the canonical form past the budget — the same
+          // refusal F91 names, reached before the serializer could finish it.
+          `verification ${label} canonical form exceeds the D14 ${budgetBytes}-byte budget — validate before canonicalizing`
+        : `verification ${label} input is not a readable JSON document — validate before canonicalizing`,
+    );
+  }
+  const document = submitted.value;
+  if (document !== null && typeof document === "object") {
+    const items = (document as Record<string, unknown>)[collectionField];
+    if (Array.isArray(items) && items.length > maxItems) {
+      throw new TypeError(
+        `verification ${label} exceeds the D14 limit of at most ${maxItems} ${collectionField} — validate before canonicalizing`,
+      );
+    }
+  }
+  const canonical = canonicalJSONValue(
+    projectStructure(contract, contract.root, document),
+  );
+  if (utf8Bytes(canonical) > budgetBytes) {
+    throw new TypeError(
+      `verification ${label} canonical form exceeds the D14 ${budgetBytes}-byte budget — validate before canonicalizing`,
+    );
+  }
+  return canonical;
+}
+
+/**
+ * D6 — Canonical serialization of a validated `VerificationPlan v1`. The
+ * input must first pass `validateVerificationPlanV1`; out-of-contract
+ * cardinality or byte budgets throw a named TypeError (F91).
+ */
+export function canonicalizeVerificationPlan(plan: VerificationPlanV1): string {
+  return canonicalizeWithinContract(
+    plan,
+    VERIFICATION_CONTRACT.plan,
+    "commands",
+    VERIFICATION_LIMITS.commands,
+    VERIFICATION_LIMITS.planBytes,
+    "plan",
+  );
+}
+
+/**
+ * D6 — Canonical serialization of a validated `VerificationReceipt v1`. The
+ * input must first pass `validateVerificationReceiptAgainstPlan`;
+ * out-of-contract cardinality or byte budgets throw a named TypeError (F91).
+ */
+export function canonicalizeVerificationReceipt(receipt: VerificationReceiptV1): string {
+  return canonicalizeWithinContract(
+    receipt,
+    VERIFICATION_CONTRACT.receipt,
+    "results",
+    VERIFICATION_LIMITS.results,
+    VERIFICATION_LIMITS.receiptBytes,
+    "receipt",
+  );
+}
+
+/** D6 — Digest of a validated plan (inherits the F91 canonical-input guards). */
+export async function digestVerificationPlan(plan: VerificationPlanV1): Promise<string> {
+  return sha256Hex(canonicalizeVerificationPlan(plan));
+}
+
+/** D6 — Digest of a validated receipt (inherits the F91 canonical-input guards). */
+export async function digestVerificationReceipt(receipt: VerificationReceiptV1): Promise<string> {
+  return sha256Hex(canonicalizeVerificationReceipt(receipt));
+}
+
+/**
+ * D1 — Freshness predicate.
+ *
+ * Pure, async, deterministic and it throws nothing. Fixed check order (SPEC §
+ * Stage, verdict, and freshness semantics): plan digest → candidate-snapshot
+ * digest → acceptance fingerprint → a missing fast-stage result → an
+ * unjustified skip → a missing full-stage result → `{ fresh: true }`.
+ *
+ * The two coverage codes are partitioned by the STAGE OF THE MISSING COMMAND,
+ * which is what keeps them disjoint while `incomplete-missing-results` still
+ * answers a full receipt that skipped a fast command:
+ * `incomplete-stage-coverage` only fires on a `full` receipt whose declared
+ * full-stage commands are not covered.
+ */
+/** Verification-specific freshness reason codes (D1). */
+export const VERIFICATION_FRESHNESS_CODES = Object.freeze([
+  "stale-plan", "stale-candidate-snapshot", "stale-acceptance-fingerprint",
+  "incomplete-missing-results", "incomplete-unjustified-skip", "incomplete-stage-coverage",
+] as const);
+export type VerificationFreshnessReasonCode = (typeof VERIFICATION_FRESHNESS_CODES)[number];
+export type VerificationFreshnessResult = { fresh: true; } | { fresh: false; reasonCode: VerificationFreshnessReasonCode };
+
+
+
+export async function compareVerificationReceiptToCurrent(
+  receipt: VerificationReceiptV1,
+  plan: VerificationPlanV1,
+  candidateSnapshotDigest: string,
+  acceptanceFingerprint: string,
+): Promise<VerificationFreshnessResult> {
+  // Validate plan/receipt FIRST so invalid (non-JSON-serializable) inputs return a
+  // stable freshness result rather than throwing from canonicalJSONValue or
+  // JSON.stringify — the SPEC promises this predicate is pure and throws nothing.
+  // Validation rejects BigInt fields, circular references, and unknown fields
+  // before any hashing runs. A payload that fails its own contract cannot
+  // establish the plan binding, and the plan binding is the FIRST precedence
+  // point, so the honest stable code is `stale-plan` — never an incomplete code,
+  // which would claim a binding this predicate never verified (F63).
+  const pv = validateVerificationPlanV1(plan);
+  const rv = validateVerificationReceiptShape(receipt);
+  if (!pv.ok || !rv.ok) return { fresh: false, reasonCode: "stale-plan" };
+  const p = pv.plan;
+  const r = rv.receipt;
+
+  // Then check stale conditions (plain string comparisons — safe after validation).
+  const pd = await digestVerificationPlan(p);
+  if (pd !== r.planDigest) return { fresh: false, reasonCode: "stale-plan" };
+  if (candidateSnapshotDigest !== r.candidateSnapshotDigest) return { fresh: false, reasonCode: "stale-candidate-snapshot" };
+  if (acceptanceFingerprint !== r.acceptanceFingerprint) return { fresh: false, reasonCode: "stale-acceptance-fingerprint" };
+
+  // All three bindings are current: from here on the predicate answers only
+  // incompleteness, so the stale and incomplete blocks are mutually disjoint.
+  const present = new Set(r.results.map((rr: VerificationResultV1) => rr.commandId));
+  const fastIds: string[] = [];
+  const fullIds: string[] = [];
+  for (const c of p.commands) (c.stage === "fast" ? fastIds : fullIds).push(c.id);
+
+  // 1. a missing fast-stage result — every fast command is owed a row by a fast
+  //    AND a full receipt (D2 required set), in either case `missing-results`.
+  for (const id of fastIds) {
+    if (!present.has(id)) return { fresh: false, reasonCode: "incomplete-missing-results" };
+  }
+  // 2. a skipped row without a reason.
+  for (const rr of r.results) {
+    if (rr.status === "skipped" && !rr.skipReason) return { fresh: false, reasonCode: "incomplete-unjustified-skip" };
+  }
+  // 3. a requested-full receipt that does not cover every declared full-stage
+  //    command. A fast receipt legitimately carries no full-stage rows (D7), so
+  //    the coverage gap is scoped to `stageRequested: "full"`.
+  if (r.stageRequested === "full") {
+    for (const id of fullIds) {
+      if (!present.has(id)) return { fresh: false, reasonCode: "incomplete-stage-coverage" };
+    }
+  }
+
+  return { fresh: true };
+}
+
+// ---------------------------------------------------------------------------
+// Published canonical vectors (verification — D6)
+// ---------------------------------------------------------------------------
+
+/**
+ * Published frozen canonical vectors for the verification contracts.
+ *
+ * Each vector is a minimal valid value whose canonical digest is deterministic
+ * and reproducible. These vectors lock the canonicalization rules (D6) in place.
+ * Changing any vector's expected digest would be a reviewed contract change.
+ */
+export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<Readonly<CanonicalVectorV1>> = Object.freeze([
+  Object.freeze({
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    digest: "43ba52cb34490733f0f37dd6407f7c5ab088f20d928837213a75a25b7bc3eb80",
+    description: "minimal valid VerificationPlan v1 (single fast command)",
+  }),
+  Object.freeze({
+    contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+    digest: "c3d244efadf9d6ae8aa8626f8e252246ed63205eef3f4604b7ba5be2f8bc210d",
+    description: "minimal valid VerificationReceipt v1 (single passed result)",
+  }),
+] as const);

@@ -169,9 +169,13 @@ vez de sobrescribirlo.
 
 ## Validar o usar otro lenguaje
 
-Los validadores públicos son `validateEnvelopeV2Strict`,
-`validateSkillOutcomeV1` y `validateWorkflowSnapshotV1`. Importa un JSON Schema
-cuando un consumidor no TypeScript necesite el mismo límite:
+Los validadores públicos de contratos son `validateEnvelopeV2Strict`,
+`validateSkillOutcomeV1`, `validateWorkflowSnapshotV1`,
+`validateCandidateSnapshotV1` y `validateReviewReceiptV1`; los contratos de
+verificación por etapas añaden exactamente las dos entradas autoritativas nombradas
+arriba, `validateVerificationPlanV1` y `validateVerificationReceiptAgainstPlan`.
+Importa un JSON Schema cuando un consumidor no TypeScript necesite el mismo límite
+estructural:
 
 ```ts
 import schema from "@gtrabanco/agentic-workflow-schema/skill-outcome.schema.json" with { type: "json" };
@@ -227,3 +231,251 @@ intento no reconocido, y cualquier transición no en la tabla cerrada.
 
 Consulta el [SPEC](../features/24-workflow-transition-decider/SPEC.md) para el
 diseño completo, tablas de transición y vocabulario de códigos de razón.
+
+## Contratos de Verificación por Etapas (feature 26)
+
+Dos contratos wire versionados para verificación por etapas:
+
+- `VerificationPlan v1` (`agentic-workflow/verification-plan@1`) — una lista
+  de comandos ordenada y no vacía donde cada comando lleva un `id` estable,
+  `stage: fast | full` (vocabulario cerrado `VERIFICATION_STAGES`), un
+  `executable` y `args` ordenados (nunca una cadena
+  de shell), una política de directorio de trabajo (`candidate-root` o
+  `relative-path` con ruta relativa validada), un `timeoutMs` positivo,
+  `stopOnFailure` y una clase de coste (`VERIFICATION_COST_CLASSES`). La ruta relativa validada es una cadena
+  **opaca**: resuélvela bajo la raíz candidata exactamente como se envió y nunca
+  la decodifique por porcentaje (percent-decode) antes de resolverla — la
+  decodificación puede convertir una ruta que el validador rechazó en una que
+  escapa de la raíz.
+
+- `VerificationReceipt v1` (`agentic-workflow/verification-receipt@1`) — un
+  recibo vinculado al digest del plan, al digest del snapshot candidato y a la
+  huella de aceptación, con resultados por comando cuyo `status` (`passed |
+  failed | timed-out | skipped | infrastructure-error`), código de salida y
+  señal siguen la matriz D4, referencias de evidencia acotadas y un motivo de
+  omisión explícito. El veredicto global (`pass | fail | incomplete`) se deriva
+  del contenido del recibo.
+
+**Autoridad de validación.** Sólo dos entradas públicas autoritativas deciden la
+validez en tiempo de ejecución: `validateVerificationPlanV1(value)` para el plan y
+`await validateVerificationReceiptAgainstPlan(receipt, plan)` para el recibo, que
+aplica la comprobación estructural y todas las reglas vinculadas al plan en una
+sola llamada. No se exporta ningún validador independiente de recibos: un recibo
+solo tiene sentido frente al plan al que se vincula. Ambas aceptan entrada
+desconocida y devuelven un DTO **normalizado** de propiedades propias, nunca el
+objeto recibido; así ningún digest ni ninguna semántica posterior depende de
+propiedades heredadas, duplicadas o no declaradas.
+
+**Diagnósticos de fallo.** Un rechazo es `{ ok: false, diagnostics, truncated }`.
+`diagnostics` contiene como máximo 50 filas congeladas `{ code, path }` en orden del
+documento y `truncated` indica si ese tope descartó alguna. Una fila nunca es un
+mensaje: no se devuelve ni prosa ni valores recibidos. `code` pertenece al vocabulario
+cerrado `VERIFICATION_DIAGNOSTIC_CODES` y `path` es un puntero RFC 6901 construido
+solo con nombres de propiedad declarados e índices de array — `/commands/3/id`,
+`/results/1/commandId` o `""` para el documento completo. Una clave no declarada se
+informa como `unknown-field` en su **contenedor**, porque el nombre de la clave es
+dato enviado por el cliente. Recupérate de los diagnósticos usando solo cada `code`
+y `path` estables, sin copiar los valores enviados a logs, errores ni telemetría.
+
+| Código de diagnóstico | Qué responde | Recuperación del llamador |
+| --- | --- | --- |
+| `invalid-type` | un campo tiene un valor del tipo JSON equivocado | Proporciona el tipo JSON declarado en `path`. |
+| `missing-field` | falta un campo declarado | Añade el campo requerido en `path`. |
+| `unknown-field` | el objeto lleva una propiedad no declarada | Elimina claves no declaradas del contenedor en `path`. |
+| `invalid-value` | un valor rompe su propia regla (vocabulario, patrón, NUL) | Sustitúyelo por un miembro permitido o un valor con formato válido y sin NUL. |
+| `limit-exceeded` | se supera un tope de cardinalidad o de longitud | Reduce la colección o cadena indicada hasta `VERIFICATION_LIMITS`. |
+| `duplicate-id` | el mismo id de comando aparece dos veces | Asigna ids de comando únicos y actualiza sus referencias de resultado. |
+| `unknown-command` | un resultado o un motivo de omisión no nombra un comando declarado | Referencia un id declarado por el plan vinculado. |
+| `invalid-order` | los resultados no siguen el orden declarado del plan | Reordena las filas de resultado según el orden del plan. |
+| `invalid-stage` | el recibo lleva una fila fuera de la etapa solicitada | Elimina filas fuera de etapa o solicita la etapa que las incluye. |
+| `invalid-exit-state` | código de salida y señal rompen la matriz D4 | Alinea `exitCode` y `signal` con la matriz del status de la fila. |
+| `invalid-evidence` | una referencia de evidencia está mal formada (reglas D5) | Proporciona `ref` acotada, bytes no negativos y SHA-256 en minúsculas. |
+| `invalid-skip` | el motivo de omisión no se justifica en un fallo previo | Usa `null` sin atribución o nombra un trigger non-pass anterior real. |
+| `invalid-fail-fast` | la secuencia de `stopOnFailure` está rota | Marca como omitidas las filas posteriores y atribúyelas al trigger. |
+| `digest-mismatch` | el `planDigest` del recibo no es el del plan vinculado | Recalcúlalo desde el plan vinculado validado y normalizado. |
+| `verdict-mismatch` | el veredicto guardado difiere del derivado | Guarda el resultado de `deriveVerificationVerdict`. |
+| `budget-exceeded` | los timeouts declarados de una etapa exceden su presupuesto agregado | Reduce timeouts hasta que la suma quede dentro de `VERIFICATION_LIMITS`. |
+
+**Estado de JSON Schema.** `verification-plan.schema.json` y
+`verification-receipt.schema.json` son **proyecciones estructurales generadas y no
+autoritativas** de la definición canónica del paquete. Existen para editores y
+comprobaciones de transporte; que coincidan con Draft-07 no es validez de contrato,
+y las reglas semánticas (`unique-command-ids`, los dos presupuestos agregados de
+etapa, los dos presupuestos de bytes canónicos) solo las aplican las dos entradas de
+tiempo de ejecución anteriores — cada proyección las declara en su `$comment`. Las
+proyecciones se generan en vez de editarse a mano. En un checkout del código fuente,
+los mantenedores cambian la definición canónica; el único escritor es
+`node scripts/generate-verification-schemas.mjs` y la comprobación de deriva exclusiva
+del código fuente reconstruye antes de comparar bytes.
+
+**Solo en un checkout del código fuente.** El tarball publicado omite
+intencionadamente `scripts/`, `test/`, el código fuente y la configuración de
+TypeScript del repositorio. Estos comandos del manifiesto son comprobaciones para
+mantenedores en un checkout fuente, no comandos ejecutables por consumidores del
+paquete instalado:
+
+| Comando solo para checkout fuente | Propósito |
+| --- | --- |
+| `npm run check:verification-schemas` | reconstruir y comparar por bytes las proyecciones generadas |
+| `npm run check:verification-package` | inspeccionar el contrato del tarball del paquete |
+| `npm run bench:verification -- --commands 128` | ejecutar el benchmark AC10 en proceso caliente |
+| `npm run test:verification-docs` | ejecutar la suite bilingüe de documentación |
+| `npm run gate:verification` | componer todas las comprobaciones de release de verificación |
+
+**Modelo de dos etapas:** solicitar `fast` ejecuta solo comandos fast; solicitar
+`full` ejecuta todos los comandos fast y full. El predicado de frescura devuelve
+uno de los códigos estables de `VERIFICATION_FRESHNESS_CODES` (`stale-plan | stale-candidate-snapshot |
+stale-acceptance-fingerprint | incomplete-missing-results |
+incomplete-unjustified-skip | incomplete-stage-coverage`) o `{ fresh: true }`.
+
+**Regla del gate de entrega:** un gate de verificación de entrega se satisface SOLO
+con un recibo fresco, que solicite `full` y tenga veredicto `pass`.
+
+**Límite de no-ejecución:** el paquete valida, canonicaliza, digiere, deriva y
+compara — no ejecuta comandos. La ejecución es responsabilidad del llamador.
+
+### Inventario de la API pública de verificación
+
+La superficie completa en runtime de estos contratos es:
+
+| Grupo de runtime | Exports |
+| --- | --- |
+| Contratos y vocabularios | `VERIFICATION_PLAN_CONTRACT_ID`, `VERIFICATION_RECEIPT_CONTRACT_ID`, `VERIFICATION_STAGES`, `VERIFICATION_COST_CLASSES`, `VERIFICATION_COMMAND_STATUSES`, `VERIFICATION_VERDICTS`, `VERIFICATION_DIAGNOSTIC_CODES`, `VERIFICATION_FRESHNESS_CODES`, `VERIFICATION_LIMITS`, `VERIFICATION_CANONICAL_VECTORS` |
+| Validación y semántica | `validateVerificationPlanV1`, `validateVerificationReceiptAgainstPlan`, `deriveVerificationVerdict`, `compareVerificationReceiptToCurrent` |
+| Canonicalización y digests | `canonicalizeVerificationPlan`, `canonicalizeVerificationReceipt`, `digestVerificationPlan`, `digestVerificationReceipt` |
+
+TypeScript también publica estos nombres de solo tipo:
+
+| Grupo de tipos | Exports |
+| --- | --- |
+| Plan | `VerificationStage`, `VerificationCostClass`, `WorkingDirectoryPolicy`, `VerificationCommandV1`, `VerificationPlanV1`, `VerificationPlanValidationResult` |
+| Recibo | `VerificationCommandStatus`, `VerificationVerdict`, `VerificationStageRequest`, `EvidenceReferenceV1`, `VerificationResultV1`, `VerificationReceiptV1`, `VerificationReceiptValidationResult` |
+| Diagnósticos y frescura | `VerificationDiagnosticCode`, `VerificationDiagnosticV1`, `VerificationFreshnessReasonCode`, `VerificationFreshnessResult` |
+
+### Límites de usabilidad
+
+Todos los topes de v1 se publican una sola vez, en el objeto congelado
+`VERIFICATION_LIMITS`, y los aplican las dos entradas autoritativas: un plan o un
+recibo que los excede se rechaza, nunca se trunca en silencio.
+
+| Límite | Valor | Se aplica a |
+| --- | --- | --- |
+| `commands` | 128 | comandos declarados en un plan |
+| `results` | 128 | filas de resultado en un recibo |
+| `argsPerCommand` | 64 | argumentos de un comando |
+| `idChars` | 128 | un `id` de comando o `commandId` de resultado |
+| `pathChars` | 1024 | `executable` y `workingDirectory` |
+| `argChars` | 4096 | una cadena de argumento |
+| `skipReasonChars` | 1024 | un `skipReason` |
+| `evidenceRefChars` | 1024 | una `ref` de evidencia |
+| `planBytes` | 262144 | tamaño canónico del plan (256 KiB) |
+| `receiptBytes` | 524288 | tamaño canónico del recibo (512 KiB) |
+| `fastCommandTimeoutMs` | 600000 | timeout de un comando fast (10 minutos) |
+| `fastStageTimeoutMs` | 900000 | suma de los timeouts de todos los comandos fast (15 minutos) |
+| `fullCommandTimeoutMs` | 3600000 | timeout de un comando full (60 minutos) |
+| `fullStageTimeoutMs` | 7200000 | suma de los timeouts de todos los comandos full (2 horas, 120 min) |
+| `diagnostics` | 50 | filas de un resultado de rechazo |
+
+El presupuesto de bytes canónicos se mide antes de examinar el documento, así que un
+payload desmedido se rechaza solo por el presupuesto. Los topes de tiempo son
+deliberadamente asimétricos: un comando fast de duración máxima deja 5 minutos para
+el resto de la etapa fast. `npm run bench:verification -- --commands 128` es un
+comando de mantenedor solo para checkout fuente: ejecútalo desde un checkout del
+código fuente, nunca desde el tarball instalado, y prueba el límite de rendimiento
+declarado — un ciclo en caliente de validar → canonicalizar → digerir plan+recibo
+de 128 comandos con p95 ≤ 100 ms — y sale con código distinto de cero cuando no se
+cumple. La interoperabilidad entre implementaciones la fija
+`VERIFICATION_CANONICAL_VECTORS`: los fixtures congelados
+`{ contract, digest, description }` cuyos digests debe reproducir cualquier
+canonicalizador correcto — los tests de digests del propio paquete consumen
+exactamente estos payloads.
+
+### Ejemplo de consumo
+
+```ts
+import {
+  compareVerificationReceiptToCurrent,
+  deriveVerificationVerdict,
+  digestVerificationPlan,
+  validateVerificationPlanV1,
+  validateVerificationReceiptAgainstPlan,
+  VERIFICATION_PLAN_CONTRACT_ID,
+  VERIFICATION_RECEIPT_CONTRACT_ID,
+} from "@gtrabanco/agentic-workflow-schema";
+
+const candidateDigest = "3f2a9c1e5b7d4f8a0c2e5b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a";
+const acceptanceDigest = "9c4e7b1d3f5a8c2e4b6d0f2a4c6e8b0d2f4a6c8e0b2d4f6a8c0e2b4d6f8a0c24";
+
+// 1. Declare the plan: a fast lint that stops the stage, then a full test run.
+const plan = {
+  contract: VERIFICATION_PLAN_CONTRACT_ID,
+  commands: [
+    { id: "lint", stage: "fast" as const, executable: "npm", args: ["run", "lint"],
+      workingDirectoryPolicy: "candidate-root" as const, workingDirectory: null,
+      timeoutMs: 30_000, stopOnFailure: true, costClass: "cheap" as const },
+    { id: "test", stage: "full" as const, executable: "npm", args: ["test"],
+      workingDirectoryPolicy: "candidate-root" as const, workingDirectory: null,
+      timeoutMs: 120_000, stopOnFailure: false, costClass: "moderate" as const },
+  ],
+} as const;
+
+const pv = validateVerificationPlanV1(plan);
+if (!pv.ok) throw new Error(`plan rejected: ${JSON.stringify(pv.diagnostics)}`);
+
+// 2. Bind the receipt to one candidate and one acceptance manifest. In a real
+//    gate `candidateDigest` comes from `digestCandidateSnapshot(snapshot)` and
+//    `acceptanceDigest` comes from `computeAcceptanceFingerprint(rows)`, which
+//    hashes the ordered `{ id, blobSha256 }` acceptance rows — not the raw
+//    `ACCEPTANCE.md` blob itself.
+const planDigest = await digestVerificationPlan(pv.plan);
+const receipt = {
+  contract: VERIFICATION_RECEIPT_CONTRACT_ID,
+  planDigest,
+  candidateSnapshotDigest: candidateDigest,
+  acceptanceFingerprint: acceptanceDigest,
+  stageRequested: "full" as const,
+  results: [
+    { commandId: "lint", status: "passed" as const, exitCode: 0, signal: null,
+      startedAt: "2026-08-27T09:00:00Z", endedAt: "2026-08-27T09:00:12Z",
+      stdout: null, stderr: null, skipReason: null },
+    { commandId: "test", status: "passed" as const, exitCode: 0, signal: null,
+      startedAt: "2026-08-27T09:00:12Z", endedAt: "2026-08-27T09:02:00Z",
+      stdout: { ref: "evidence/test/stdout.log", bytes: 18213,
+        sha256: "6b1f4d8a2c5e7b0d3f6a9c2e5b8d1f4a7c0e3b6d9f2a5c8e1b4d7f0a3c6e9b2d" },
+      stderr: null, skipReason: null },
+  ],
+  verdict: "pass" as const,
+} as const;
+
+// 3. One call proves receipt structure and plan binding.
+const rv = await validateVerificationReceiptAgainstPlan(receipt, plan);
+if (!rv.ok) throw new Error(`receipt rejected: ${JSON.stringify(rv.diagnostics)}`);
+
+// 4. A row that ran longer than its command's declared timeout is incoherent.
+for (const result of rv.receipt.results) {
+  const declared = pv.plan.commands.find((command) => command.id === result.commandId);
+  if (declared === undefined || Date.parse(result.endedAt) - Date.parse(result.startedAt) > declared.timeoutMs) {
+    throw new Error(`${result.commandId} outran the timeout its command declared`);
+  }
+}
+
+// 5. The verdict is derived from content; the payload's copy is never trusted.
+const derived = deriveVerificationVerdict(rv.receipt, pv.plan); // => "pass"
+
+// 6. Freshness compares the digests the receipt was bound to with the current ones.
+const freshness = await compareVerificationReceiptToCurrent(
+  rv.receipt, pv.plan, candidateDigest, acceptanceDigest,
+);
+
+// 7. The delivery gate needs all three conditions at once.
+if (freshness.fresh === true && rv.receipt.stageRequested === "full" && derived === "pass") {
+  console.log("Delivery verified");
+}
+```
+
+### Límite del consumidor
+
+Un dialecto, runner o adaptador de AWL que emita planes y los ejecute **no forma
+parte de este paquete**, y ningún issue lo sigue: este schema posee solo los
+contratos, las formas canónicas y los digests. Pasa a ser trabajo futuro
+independiente cuando AWL consuma el paquete publicado.

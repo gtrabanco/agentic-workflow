@@ -20,9 +20,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is the minor release 3.3.0", () => {
+test("AC8 read-verified: package version is the minor release 3.4.0", () => {
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "3.3.0");
+  assert.equal(pkg.version, "3.4.0");
 });
 
 // AC7 — language-aware capability semantics. Each language is asserted with
@@ -59,7 +59,7 @@ test("AC8: npm pack manifest independently contains all four required public art
   assert.ok(record && Array.isArray(record.files), "pack manifest exposes a files list");
   const paths = new Set(record.files.map((entry) => entry.path));
 
-  const required = ["dist/index.js", "dist/index.d.ts", "README.md", "README.es.md"];
+  const required = ["dist/index.js", "dist/index.d.ts", "README.md", "README.es.md", "verification-plan.schema.json", "verification-receipt.schema.json"];
   for (const artifact of required) {
     assert.ok(paths.has(artifact), `required packed artifact missing: ${artifact}`);
   }
