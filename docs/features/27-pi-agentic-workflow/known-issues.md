@@ -5,19 +5,16 @@ implemented inline by this feature's phases.
 
 ## Deferred
 
-- **Roadmap number 27 is taken on `main`.** This branch was cut before
-  `829ad18`, which registered `27 · pre-execution-plan-review` (issue #146) and
-  `28 · bounded-implementation-discovery` (issue #149) as `idea · scheduled`
-  rows. Our unit's row 27 (`pi-agentic-workflow`) therefore collides with `main`
-  and the branch is 51 files / ~14k lines behind it (feature 26, PR #145).
-  Consequences if left alone: the merge duplicates NN 27, the roadmap's
-  numbering invariant breaks, and `git diff main --stat` (AC16) can never be
-  clean. Resolution is an explicit user decision — renumber this unit to the next
-  free NN (`29-pi-agentic-workflow`, branch + folder + SPEC + roadmap row) or
-  renumber the two unstarted `idea · scheduled` rows — because the frozen
-  `ACCEPTANCE.md` names the `27-` paths in AC4/AC16 and only a user-approved
-  amendment may change it. Not fixable silently inside a phase.
-- **Missing roadmap row 26 — RESOLVED after this branch's base.** Recorded at
+- **Roadmap number 27 was taken on `main` — RESOLVED before P2.** Recorded when
+  this branch sat behind `829ad18`, which had registered `27 ·
+  pre-execution-plan-review` (issue #146) and `28 · bounded-implementation-
+  discovery` (issue #149) as `idea · scheduled` rows, colliding with this unit's
+  row 27 and making AC16 (`git diff main`) unpassable. The user chose to keep
+  NN 27 for this unit and renumber the two unstarted rows to 28/29, and to rebase
+  (`decisions.md`, 2026-08-29). Done: branch rebased onto `main` with the renumber
+  applied in the roadmap-conflicted commits; the frozen `ACCEPTANCE.md` blob is
+  unchanged (`22d3f33…`) because no path it names moved. Nothing left open.
+- **Roadmap row 26 — RESOLVED after this branch's base.** Recorded at
   scaffold time when `main` had rows 25 → 27; `main` now carries
   `26 · staged-verification-contracts · done · [#145]` plus its folder. Kept here
   as history; the real residue is the numbering collision above.

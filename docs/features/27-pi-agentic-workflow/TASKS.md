@@ -20,18 +20,19 @@ exit 0, and `git status` shows only this feature's paths.
 
 Layer: domain · Done-when: `cd packages/pi-agentic-workflow && node --test test/config-merge.test.mjs test/default-inherit.test.mjs test/untrusted-project-config.test.mjs` → exit 0.
 
-- [ ] Config types + strict schema: `default` route, `commands` map, `onUnavailableRoute: "stop"|"inherit"`; route = `model: "inherit"|"provider/modelId"`, `thinking: level|"inherit"`
-- [ ] `test/config-merge.test.mjs` written FIRST (red before merge logic): project `commands.design-feature` overrides global, unspecified keys keep global/default (AC5)
-- [ ] Global loader `~/.pi/agent/pi-agentic-workflow.json`; missing file → in-package default `inherit`
-- [ ] Project loader `.pi/pi-agentic-workflow.json` gated on `ctx.isProjectTrusted()`; `test/untrusted-project-config.test.mjs`: file ignored when trust is false (AC13)
-- [ ] `test/default-inherit.test.mjs`: no config files → `{ "model": "inherit" }`, dispatch without `setModel`; empty override list resolves to `inherit`, not an error (AC6)
-- [ ] Strict validation: present-but-invalid JSON/schema → error object, never silently `inherit` (AC12 loader leg, D-E5)
+- [x] Config types + strict schema: `default` route, `commands` map, `onUnavailableRoute: "stop"|"inherit"`; route = `model: "inherit"|"provider/modelId"`, `thinking: level|"inherit"` — `src/config/types.ts`, `src/config/schema.ts`, `src/config/defaults.ts`. `ModelRef` is a `${string}/${string}` template type so a slashless reference fails at compile time as well as at validation.
+- [x] `test/config-merge.test.mjs` written FIRST (red before merge logic — verified by running the suite with `dist/config/` absent: exit 1): project `commands.design-feature` overrides global, unspecified keys keep global/default (AC5). 9 tests.
+- [x] Global loader `~/.pi/agent/pi-agentic-workflow.json`; missing file → in-package default `inherit` — `src/config/load.ts` (`configFilePaths(agentDir, cwd)`; the caller supplies Pi's `getAgentDir()`, so a relocated profile keeps working). Asserted both through an injected reader and against a real temp directory.
+- [x] Project loader `.pi/pi-agentic-workflow.json` gated on `ctx.isProjectTrusted()`; `test/untrusted-project-config.test.mjs`: file ignored when trust is false (AC13). 6 tests, one of which asserts the project path is **never read** while trust is off. P3 feeds the gate from `ctx.isProjectTrusted()` on every dispatch.
+- [x] `test/default-inherit.test.mjs`: no config files → `{ "model": "inherit" }`; empty override list resolves to `inherit`, not an error (AC6). 8 tests. *Reconciled:* the task's "dispatch without `setModel`" leg needs the dispatcher, which is a P3 deliverable — P3 adds it to **this same AC6 validator** (`test/dispatch-refusals.test.mjs` covers the refusal side). No assertion was dropped, only sequenced; `ACCEPTANCE.md` is unchanged.
+- [x] Strict validation: present-but-invalid JSON/schema → error object, never silently `inherit` (AC12 loader leg, D-E5) — `parseConfigFile` returns `{ok:false, issues:[{path,message}]}` with a field path, and `loadConfig` fails closed (`ok:false`, config = shipped default) so P3 can refuse dispatch.
 
 ## P3 — Routed command execution
 
 Layer: api · Done-when: `cd packages/pi-agentic-workflow && node --test test/alias-coverage.test.mjs test/argument-forwarding.test.mjs test/dispatch-refusals.test.mjs test/restore-after-settle.test.mjs test/unavailable-stop.test.mjs test/first-run-hint.test.mjs` → exit 0.
 
 - [ ] Register one command per bundled `user-invocable: true` skill named after its frontmatter `name:`; `test/alias-coverage.test.mjs` (AC3)
+      *(P2 carry-in: the same suite asserts every `commands` key in a config file exists in the catalogue — a typo'd command name must not silently route nothing.)*
 - [ ] Forward post-command arguments verbatim and in order; `test/argument-forwarding.test.mjs`: `/plan-feature 27-pi-agentic-workflow` → `plan-feature` + `27-pi-agentic-workflow` (AC4)
 - [ ] Dispatch guard: refuse (no skill expansion) when agent busy, routed invocation in flight, or present config invalid; `test/dispatch-refusals.test.mjs` (AC12)
 - [ ] Snapshot session model + thinking level before any non-inherit dispatch (AC7)
