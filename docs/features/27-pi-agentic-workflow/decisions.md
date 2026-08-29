@@ -42,6 +42,26 @@ Dated product decisions. Upsert only; never rewrite or delete a prior row.
   (`~/.pi/agent/pi-agentic-workflow-state.json`), never inside the user's
   config file.
 
+## 2026-08-29 — roadmap collision resolution (user-approved)
+
+- **Unit 27 keeps its number; the two unstarted `idea · scheduled` rows move.**
+  The user chose "keep 27, renumber the two unstarted idea rows" over
+  renumbering this unit, so the frozen `ACCEPTANCE.md` (AC4/AC16 name the `27-`
+  paths) stayed byte-identical and no SPEC amendment was needed. Applied during
+  the rebase of `feat/27-pi-agentic-workflow` onto `main`:
+  `27 · pre-execution-plan-review` → **28** (still depends on 26) and
+  `28 · bounded-implementation-discovery` → **29** (its dependency was the row
+  numbered 27 on `main`, i.e. the row now numbered 28). Traceability is intact:
+  both rows carry their issue links (#146, #149), and `git grep` over the whole
+  repository found no reference to either row by its old number — only by issue
+  number, which did not change.
+- **Branch rebased onto `main` (`829ad18`)** instead of merging, so the unit's
+  history stays linear and AC16's `git diff main --stat` measures only this
+  unit's paths. Verified after the rebase: acceptance blob still
+  `22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f`, P1's gate re-run green (7/7), and
+  `git diff main --name-only -- packages/agentic-workflow-schema` → 0 files
+  (AD-007 holds against the new base, which brought feature 26's schema work).
+
 ## Open questions
 
 none — dispatch mechanism (sendUserMessage, per the product design's cited
@@ -98,3 +118,45 @@ risks (Pi API drift, skill drift) are pinned by peerDependency + parity test.
   `27 · pre-execution-plan-review`; feature 26 (#145) merged. See
   `known-issues.md` — the renumber/rebase choice is the user's, not the
   executor's, because the frozen `ACCEPTANCE.md` names the `27-` paths.
+
+## 2026-08-29 — execution (P2)
+
+- **The loader receives directories, never environment knowledge.** `loadConfig`
+  takes `agentDir` + `cwd` and derives both file paths from them; P3 supplies
+  them from Pi (`getAgentDir()`, `ctx.cwd`). Mirroring Pi's
+  `PI_CODING_AGENT_DIR` handling inside the domain layer would have duplicated a
+  rule Pi owns and gone stale silently the first time Pi relocated its profile.
+  Same reason the domain modules contain no Pi value imports: only types.
+- **Two shapes, one resolution order.** `ConfigFile` is what an operator writes
+  (everything optional); `EffectiveConfig` is what the code reads (every route
+  total). Resolution cascades per key — project command → global command →
+  resolved default route → shipped default — because the SPEC's own precedence
+  sentence ("per-command override, else `default`, otherwise inherit") is about
+  one *field* at a time, not about whole route objects. With the total shape, P3
+  never has to ask "was this omitted or explicitly inherited?".
+- **Blank file ≡ absent file.** A whitespace-only file parses as JSON nothing and
+  would otherwise be a hard error; declaring nothing is what an empty file means.
+  A *missing* file and a *blank* file both yield the shipped default, and only
+  the missing-vs-present distinction matters for D-E5.
+- **Unknown keys are rejected, not skipped.** Forward-compat leniency is the
+  exact failure D-E5 exists to prevent: a typo'd `defualt` block would otherwise
+  keep the operator convinced a route was live. Strictness is symmetrical —
+  `{"commands":{}}` is valid, because an empty override list is a real answer.
+- **Fail closed on any problem.** When a present file is invalid the loader
+  returns the shipped default with `ok: false` instead of merging the halves that
+  did validate, so a hostile project file cannot take effect through a broken
+  sibling, and `parseConfigFile` returns no `config` property at all on failure —
+  a rejected file cannot be merged by accident one call later.
+- **Drift guard is compile-time, not runtime.** `src/extension/index.ts` asserts
+  the mirrored thinking-level union equals Pi's `setThinkingLevel` parameter
+  type. Probed by deliberately shrinking the mirror: `tsc` fails with TS2322
+  rather than the package rejecting a valid level at runtime (SPEC "Risks").
+- **Reconciled, not skipped:** P2's AC6 bullet also names "dispatch without
+  `setModel`". Dispatch is P3's deliverable, so P2's suite asserts the resolution
+  legs only and P3 adds the dispatch leg to the same AC6 validator. No assertion
+  was dropped, and `ACCEPTANCE.md` is untouched.
+- **Carried into P3:** the schema validates a configured command *name* as a
+  slug but cannot check it against the bundled catalogue (the catalogue is P3's
+  `test/alias-coverage.test.mjs`, AC1/AC2 validator). P3 must assert
+  `commands` keys ⊆ catalogue, so a typo'd command name cannot silently route
+  nothing. Recorded here so the obligation is not lost between phases.
