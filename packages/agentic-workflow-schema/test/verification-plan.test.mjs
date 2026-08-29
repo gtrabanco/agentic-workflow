@@ -1,0 +1,545 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  assertDiagnosticAt,
+  assertDiagnosticOn,
+  assertOnlyDiagnostic,
+  codesOf,
+  describeDiagnostics,
+} from "./fixtures/verification-diagnostics.mjs";
+import {
+  VERIFICATION_PLAN_CONTRACT_ID,
+  VERIFICATION_STAGES,
+  VERIFICATION_COST_CLASSES,
+  validateVerificationPlanV1,
+} from "../dist/index.js";
+import { readFileSync } from "node:fs";
+import Ajv from "ajv";
+import { VERIFICATION_CONTRACT } from "../dist/verification-contract.js";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// ---------------------------------------------------------------------------
+// Contract ID and vocabulary tests
+// ---------------------------------------------------------------------------
+
+test("exports the plan contract ID", () => {
+  assert.equal(VERIFICATION_PLAN_CONTRACT_ID, "agentic-workflow/verification-plan@1");
+});
+
+test("exports VERIFICATION_STAGES with fast and full", () => {
+  assert.deepStrictEqual(VERIFICATION_STAGES, ["fast", "full"]);
+});
+
+test("exports VERIFICATION_COST_CLASSES with cheap, moderate, expensive", () => {
+  assert.deepStrictEqual(VERIFICATION_COST_CLASSES, ["cheap", "moderate", "expensive"]);
+});
+
+test("the canonical definition names the published projection file", () => {
+  assert.equal(VERIFICATION_CONTRACT.plan.fileName, "verification-plan.schema.json");
+});
+
+// ---------------------------------------------------------------------------
+// Schema structure (parity with validator — schema checks all the same rules)
+// ---------------------------------------------------------------------------
+
+test("schema is valid JSON with expected structure", () => {
+  const schemaPath = join(__dirname, "../verification-plan.schema.json");
+  const s = JSON.parse(readFileSync(schemaPath, "utf-8"));
+  assert.equal(s["$schema"], "http://json-schema.org/draft-07/schema#");
+  assert.equal(s.type, "object");
+  assert.equal(s.additionalProperties, false);
+  assert.ok(s.required.includes("contract"));
+  assert.ok(s.required.includes("commands"));
+  assert.equal(s.properties.contract.const, "agentic-workflow/verification-plan@1");
+  assert.equal(s.properties.commands.minItems, 1);
+  assert.ok(s["$defs"]);
+  assert.ok(s["$defs"].VerificationCommandV1);
+  assert.equal(s["$defs"].VerificationCommandV1.additionalProperties, false);
+});
+
+test("workingDirectory schema pattern matches the TS validator (F41 parity)", () => {
+  const schemaPath = join(__dirname, "../verification-plan.schema.json");
+  const ajv = new Ajv({ strict: true });
+  const validate = ajv.compile(JSON.parse(readFileSync(schemaPath, "utf-8")));
+  const baseCmd = {
+    id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"],
+    workingDirectoryPolicy: "relative-path", workingDirectory: "src/test",
+    timeoutMs: 30000, stopOnFailure: false, costClass: "cheap",
+  };
+  const plan = { contract: VERIFICATION_PLAN_CONTRACT_ID, commands: [baseCmd] };
+
+  // A valid multi-segment relative path must be accepted by BOTH paths.
+  assert.equal(validate(structuredClone(plan)), true, "schema accepts multi-segment relative path");
+  assert.equal(validateVerificationPlanV1(structuredClone(plan)).ok, true, "TS validator accepts multi-segment relative path");
+
+  // Traversal/absolute/Windows forms must be rejected by BOTH paths.
+  const badDirs = ["..", "a/..", "a/../b", "../b", "src\\test", "C:\\x", "\\server\\share", "/abs", "a\u0000b"];
+  for (const wd of badDirs) {
+    const badPlan = { contract: VERIFICATION_PLAN_CONTRACT_ID, commands: [{ ...baseCmd, workingDirectory: wd }] };
+    assert.equal(validate(structuredClone(badPlan)), false, `schema rejects workingDirectory ${JSON.stringify(wd)}`);
+    assert.equal(validateVerificationPlanV1(structuredClone(badPlan)).ok, false, `TS validator rejects workingDirectory ${JSON.stringify(wd)}`);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Structural validation: undeclared fields
+// ---------------------------------------------------------------------------
+
+test("rejects undeclared top-level fields", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [],
+    extraField: "should not be here",
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticAt(result, "unknown-field", ""); // the undeclared key itself is never echoed (D16)
+});
+
+test("rejects wrong contract id", () => {
+  const plan = {
+    contract: "wrong/contract@0",
+    commands: [],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "contract");
+});
+
+// ---------------------------------------------------------------------------
+// Command list: non-empty, unique ids
+// ---------------------------------------------------------------------------
+
+test("rejects empty command list", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "commands");
+});
+
+test("rejects duplicate command ids", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+      { id: "cmd1", stage: "full", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "duplicate-id", "id");
+});
+
+test("rejects empty command id", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "", stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "id");
+});
+
+test("rejects command id with NUL (F50)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "li\u0000nt", stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "id");
+});
+
+test("rejects a command id longer than the D14 idChars ceiling", () => {
+  // AC10 / D14: ids are bounded by `VERIFICATION_LIMITS.idChars` (128). The F50
+  // hardening used the 1024 char class; the ceiling tightened when the user
+  // approved the bounded-usability manifest, and `test/verification-bounds.test.mjs`
+  // now pins the 128/129 pair.
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "x".repeat(129), stage: "fast", executable: "echo", args: ["hello"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "id");
+});
+
+test("accepts unique non-empty ids", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "lint", stage: "fast", executable: "npm", args: ["run", "lint"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" },
+      { id: "test", stage: "full", executable: "npm", args: ["run", "test"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 60000, stopOnFailure: false, costClass: "moderate" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, true);
+});
+
+// ---------------------------------------------------------------------------
+// Stage vocabulary
+// ---------------------------------------------------------------------------
+
+test("rejects invalid stage value", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "slow", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "stage");
+});
+
+test("rejects unknown stage in command", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "ultra-fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "stage");
+});
+
+// ---------------------------------------------------------------------------
+// Cost class vocabulary
+// ---------------------------------------------------------------------------
+
+test("rejects invalid costClass value", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "rapid" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "costClass");
+});
+
+// ---------------------------------------------------------------------------
+// Boolean stopOnFailure
+// ---------------------------------------------------------------------------
+
+test("rejects non-boolean stopOnFailure", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: "true", costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-type", "stopOnFailure");
+});
+
+test("accepts boolean stopOnFailure values", () => {
+  const planTrue = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: true, costClass: "cheap" },
+    ],
+  };
+  const result1 = validateVerificationPlanV1(planTrue);
+  assert.equal(result1.ok, true);
+
+  const planFalse = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result2 = validateVerificationPlanV1(planFalse);
+  assert.equal(result2.ok, true);
+});
+
+// ---------------------------------------------------------------------------
+// Executable/args rules
+// ---------------------------------------------------------------------------
+
+test("rejects empty executable", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "executable");
+});
+
+test("rejects NUL in executable", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo\0hello", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "executable");
+});
+
+test("rejects NUL in args", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: ["hello\0world"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "args");
+});
+
+test("accepts valid executable and args", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "npm", args: ["run", "test"], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 30000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, true);
+});
+
+test("accepts empty args array", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "pwd", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 5000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, true);
+});
+
+// ---------------------------------------------------------------------------
+// Working directory rules
+// ---------------------------------------------------------------------------
+
+test("workingDirectory must be null for candidate-root", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: "src", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("workingDirectory must be present for relative-path", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: null, timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("rejects absolute workingDirectory path", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "/absolute/path", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("rejects traversing relative path (..)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "../parent", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("rejects backslash-separated working directory (F51)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "src\\test", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("rejects drive-letter working directory (F51)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "C:\\x", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("rejects UNC working directory (F51)", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "\\\\server\\share", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("rejects empty workingDirectory for relative-path", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "workingDirectory");
+});
+
+test("rejects NUL in workingDirectory", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "relative-path", workingDirectory: "src\0test", timeoutMs: 1000, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-value", "workingDirectory");
+});
+
+test("accepts valid relative-path workingDirectory", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "npm", args: ["run", "test"], workingDirectoryPolicy: "relative-path", workingDirectory: "packages/server", timeoutMs: 30000, stopOnFailure: false, costClass: "moderate" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, true);
+});
+
+// ---------------------------------------------------------------------------
+// TimeoutMs rules
+// ---------------------------------------------------------------------------
+
+test("rejects zero timeoutMs", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 0, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "timeoutMs");
+});
+
+test("rejects negative timeoutMs", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: -100, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "limit-exceeded", "timeoutMs");
+});
+
+test("rejects non-integer timeoutMs", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1.5, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-type", "timeoutMs");
+});
+
+test("rejects string timeoutMs", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: "1000", stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticOn(result, "invalid-type", "timeoutMs");
+});
+
+test("accepts positive integer timeoutMs", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      { id: "cmd1", stage: "fast", executable: "echo", args: [], workingDirectoryPolicy: "candidate-root", workingDirectory: null, timeoutMs: 1, stopOnFailure: false, costClass: "cheap" },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, true);
+});
+
+// ---------------------------------------------------------------------------
+// Undeclared fields inside commands
+// ---------------------------------------------------------------------------
+
+test("rejects undeclared fields inside a command object", () => {
+  const plan = {
+    contract: VERIFICATION_PLAN_CONTRACT_ID,
+    commands: [
+      {
+        id: "cmd1",
+        stage: "fast",
+        executable: "echo",
+        args: [],
+        workingDirectoryPolicy: "candidate-root",
+        workingDirectory: null,
+        timeoutMs: 1000,
+        stopOnFailure: false,
+        costClass: "cheap",
+        extraCommandField: "should fail",
+      },
+    ],
+  };
+  const result = validateVerificationPlanV1(plan);
+  assert.equal(result.ok, false);
+  assertDiagnosticAt(result, "unknown-field", "/commands/0");
+});

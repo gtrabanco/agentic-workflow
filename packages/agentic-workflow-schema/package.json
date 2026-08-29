@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "Versioned machine contracts, JSON Schemas, parsers, and deterministic document snapshots for agentic-workflow orchestration.",
   "keywords": [
     "agentic-workflow",
@@ -30,7 +30,9 @@
     "./skill-outcome.schema.json": "./skill-outcome.schema.json",
     "./workflow-snapshot.schema.json": "./workflow-snapshot.schema.json",
     "./candidate-snapshot.schema.json": "./candidate-snapshot.schema.json",
-    "./review-receipt.schema.json": "./review-receipt.schema.json"
+    "./review-receipt.schema.json": "./review-receipt.schema.json",
+    "./verification-receipt.schema.json": "./verification-receipt.schema.json",
+    "./verification-plan.schema.json": "./verification-plan.schema.json"
   },
   "files": [
     "dist",
@@ -39,6 +41,8 @@
     "workflow-snapshot.schema.json",
     "candidate-snapshot.schema.json",
     "review-receipt.schema.json",
+    "verification-receipt.schema.json",
+    "verification-plan.schema.json",
     "README.md",
     "README.es.md",
     "LICENSE"
@@ -52,7 +56,12 @@
   "scripts": {
     "build": "tsc",
     "test": "tsc && tsc -p tsconfig.test.json && node --test test/*.test.mjs",
-    "prepublishOnly": "npm test"
+    "prepublishOnly": "npm test",
+    "check:verification-schemas": "tsc && node scripts/generate-verification-schemas.mjs --check",
+    "check:verification-package": "node scripts/check-verification-package.mjs",
+    "bench:verification": "node scripts/bench-verification.mjs",
+    "test:verification-docs": "node --test test/verification-docs.test.mjs",
+    "gate:verification": "npm test && npm run check:verification-schemas && npm run check:verification-package && npm run test:verification-docs && npm run bench:verification -- --commands 128"
   },
   "devDependencies": {
     "ajv": "^8.20.0",
