@@ -26,9 +26,21 @@ function displayKey(key: string): string {
 
 /** An exact `provider/modelId`. The id may contain slashes: Pi splits at the first one. */
 function isModelReference(value: unknown): value is ModelRef {
-  if (typeof value !== "string" || value !== value.trim() || /\s/u.test(value)) return false;
+  return parseModelReference(value) !== undefined;
+}
+
+/** The split Pi performs when resolving a reference: provider before the first slash. */
+export interface ModelParts {
+  provider: string;
+  id: string;
+}
+
+/** Same rule as `isModelReference`, plus the split Pi performs when resolving. */
+export function parseModelReference(value: unknown): ModelParts | undefined {
+  if (typeof value !== "string" || value !== value.trim() || /\s/u.test(value)) return undefined;
   const slash = value.indexOf("/");
-  return slash > 0 && slash < value.length - 1;
+  if (slash <= 0 || slash >= value.length - 1) return undefined;
+  return { provider: value.slice(0, slash), id: value.slice(slash + 1) };
 }
 
 function isThinkingSetting(value: unknown): value is ThinkingSetting {
@@ -82,7 +94,7 @@ function checkRoute(value: unknown, path: string, issues: ConfigIssue[]): RouteF
 export type ParseResult = { ok: true; config: ConfigFile } | { ok: false; issues: ConfigIssue[] };
 
 /** Validate an already-parsed JSON value. */
-export function validateConfig(value: unknown): ParseResult {
+function validateConfig(value: unknown): ParseResult {
   if (!isRecord(value)) {
     return { ok: false, issues: [{ path: "$", message: "config root must be a JSON object" }] };
   }

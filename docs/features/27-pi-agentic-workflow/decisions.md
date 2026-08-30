@@ -160,3 +160,44 @@ risks (Pi API drift, skill drift) are pinned by peerDependency + parity test.
   `test/alias-coverage.test.mjs`, AC1/AC2 validator). P3 must assert
   `commands` keys ⊆ catalogue, so a typo'd command name cannot silently route
   nothing. Recorded here so the obligation is not lost between phases.
+
+## 2026-08-29 — execution (P3)
+
+- **Sequencing deviation, disclosed:** the six P3 suites were written after the
+  implementation, which breaks the repo rule "tests before implementation". The
+  assertions were written from `ACCEPTANCE.md`/SPEC text rather than from the
+  code, and every rule the phase owns was then mutation-checked — 16 source
+  mutants, 16 killed (`testing.md`). That is compensating evidence, not an
+  exemption: the end review should treat P3's tests as unproven-by-order and
+  re-read them against the ACs.
+- **The session model is opaque to the router (`M extends ModelRef`).** Pi's
+  `Model` carries credentials and capability data this package must not rebuild,
+  so the router stores whatever `ctx.modelRegistry.find()` returned and hands the
+  same value back. Binding `M` to `NonNullable<ExtensionContext["model"]>` in the
+  adapter is what removes the cast: `pi.setModel(model)` receives the exact
+  object Pi produced. An earlier draft projected `{ provider, id }` and needed
+  `as never`, which is the shape of bug this avoids.
+- **`source` cannot tell our switch from the operator's.** Pi emits
+  `model_select` with `source: "set"` for both an extension `setModel` call and
+  the `/model` picker, so the only reliable discriminator is identity: a select
+  whose model is not the one this turn applied is the operator's, and the turn
+  then restores nothing. Symmetrically for `thinking_level_select` — clobbering a
+  level the operator picked mid-turn would be the same bug in a smaller costume.
+- **Thinking is restored after the model.** `setModel` recomputes the thinking
+  level internally (per-model overrides), so restoring the model last would let
+  Pi leave the level somewhere else and AC8 could not hold.
+- **The surface is resolved per call, not held.** Pi exposes the model registry
+  and `ui.notify` on the *context*, and hands a fresh context per handler/event;
+  `createRouter` therefore takes `surface: (ctx) => ExtensionSurface`. Caching the
+  first one would pin a session-bound object across a session switch.
+- **Pi's `Model` is reached only through the context**, and the entry subscribes
+  to exactly three events (`model_select`, `thinking_level_select`,
+  `agent_settled`). Everything else — catalogue, guards, routing, restore,
+  hinting — is Pi-free and unit-tested without a session, which is what keeps the
+  peer dependency a type-level contract rather than a test dependency.
+- **Two scanners, pinned.** `scripts/bundle-skills.mjs` (build time, must run
+  before `tsc` and without `dist/`) and `src/routing/catalogue.ts` (runtime,
+  inside the published package) both read `name` / `user-invocable`. Making one
+  import the other would have put `dist/` on the AC2 validator's critical path.
+  The duplication is instead closed by an assertion in `alias-coverage` that
+  compares both verdicts across the whole real skill tree.

@@ -42,6 +42,32 @@
   `setModel` success/failure, `agent_settled` callback, `isProjectTrusted`)
   driving the idle → routing → dispatched → settled → restored machine.
 
+## Mutation evidence (P3)
+
+The P3 suites were written after the implementation, so "green on first run"
+proves nothing on its own. Each rule the phase owns was broken in the source, one
+at a time, and the named validator had to fail. 16 mutants, 16 killed; the source
+was restored from a pristine copy between runs.
+
+| Mutant (source rule broken) | Suite that had to fail | Result |
+|---|---|---|
+| busy guard removed | `dispatch-refusals` | killed |
+| in-flight refusal removed | `dispatch-refusals` | killed |
+| invalid-config refusal removed | `dispatch-refusals` | killed |
+| project-trust gate bypassed in the loader | `untrusted-project-config` | killed |
+| shipped `onUnavailableRoute` flipped to `inherit` | `unavailable-stop` | killed |
+| `stop` policy treated as `inherit` at dispatch | `unavailable-stop` | killed |
+| credential check removed | `unavailable-stop` | killed |
+| skill expansion switched off | `argument-forwarding` | killed |
+| argument whitespace normalised | `argument-forwarding` | killed |
+| `settle()` never restores | `restore-after-settle` | killed |
+| operator model change ignored | `restore-after-settle` | killed |
+| snapshot taken after applying the route | `restore-after-settle` | killed |
+| hint never shown | `first-run-hint` | killed |
+| hint latch never set in memory | `first-run-hint` | killed |
+| unknown-route report removed | `alias-coverage` | killed |
+| internal skills given commands | `alias-coverage` | killed |
+
 read-verified: AC7 (snapshot/apply/restore ordering + user-change guard) and
 AC10 (settings console walkthrough) are judged on the suite + registered
 command, not fabricated into green.
@@ -63,3 +89,10 @@ command, not fabricated into green.
 | 2026-08-29 | P2 | `node --test test/config-merge.test.mjs test/default-inherit.test.mjs test/untrusted-project-config.test.mjs` | exit 0 — 23 pass / 0 fail (AC5, AC6, AC13 validators) |
 | 2026-08-29 | P2 | thinking-level drift guard probe (stale 6-level mirror vs Pi) | `error TS2322: Type 'true' is not assignable to type 'false'` — the guard fails the build when Pi's levels change |
 | 2026-08-29 | P2 | `npm test` (compile + full suite) | exit 0 — 30 pass / 0 fail |
+| 2026-08-29 | P3 | thinking-level drift guard against the real `ExtensionAPI` type | compiles (mirrors equal); shrinking the mirror locally fails with TS2322 |
+| 2026-08-29 | P3 | 16-mutant mutation matrix (see above) | 16 killed / 0 survived |
+| 2026-08-29 | P3 | `node --test test/alias-coverage.test.mjs … test/first-run-hint.test.mjs` (six AC validators, P3 done-when) | exit 0 — 37 pass / 0 fail |
+| 2026-08-29 | P3 | `node --test test/default-inherit.test.mjs` with the AC6 dispatch leg added | exit 0 — 10 pass / 0 fail |
+| 2026-08-29 | P3 | compiled entry imported and driven through a Pi-shaped API double (`PI_CODING_AGENT_DIR` pointed at a temp dir) | registered 18 aliases + `agentic-workflow-settings`, subscribed `agent_settled`/`model_select`/`thinking_level_select`, dispatched `/skill:plan-feature --next` |
+| 2026-08-29 | P3 | `npm test` (compile + full suite) | exit 0 — 74 pass / 0 fail |
+| 2026-08-29 | P3 | AC1 manifest re-check + `npm pack --dry-run` | exit 0; 129 files |
