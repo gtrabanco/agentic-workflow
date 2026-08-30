@@ -2,6 +2,35 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-30 — diseñado ya no es lo mismo que revisado
+
+**Entrega que rompe; `design-feature` 3.0.0, `plan-feature` 4.0.0,
+`plan-feature-from-issue` 2.0.0, y las nuevas `review-spec` 1.0.0 y la interna
+`evidence-grounding` 1.0.0.** La autoría de producto y los veredictos de producto
+tienen dueños distintos. `design-feature` cierra su mitad de producto en una
+preverificación determinista `READY-FOR-REVIEW` y entrega a `/review-spec <slug>`;
+ya no envía el trabajo directamente a `plan-feature`. `plan-feature` añade una
+puerta de revisión de producto tras la de redirección y falla cerrado con
+`PRODUCT-REVIEW GATE … BLOCKED` cuando el recibo es `missing`, `stale`,
+`wrong-stage`, un `substitute` (recibo de candidato o de verificación),
+`self-approved`, o solo existe como `author-readiness`. `plan-feature-from-issue`
+—nombre mantenido por compatibilidad— se detiene tras la mitad de producto en vez
+de exportar un issue directamente al esqueleto de planificación.
+
+**Migración.** Nada en disco queda invalidado: un SPEC `designed` existente
+simplemente no tiene revisión, que es el estado honesto. Ejecuta `/review-spec
+<slug>` sobre cualquier unidad que vayas a planificar; un SPEC escrito antes de
+este cambio suele fallar `C2`/`C9` (afirmaciones sin fila de evidencia, decisiones
+sin dueño nombrado) y vuelve como `SPEC-REVIEW-FAIL` para una reparación por lote
+en `design-feature`. Las filas de evidencia son la nueva expectativa: una por cada
+afirmación material, con `authority-kind`, fuente y ubicación, la revisión
+observada y un veredicto de frescura — una capacidad de modelo sin muestrear es
+`ASSUMPTION-UNVERIFIED`, nunca una cita del repositorio. Si conduces
+`plan-feature-from-issue` de forma programática, espera que se detenga antes de la
+mitad de ingeniería; llama a `plan-feature <slug>` cuando la revisión apruebe. Los
+consumidores directos que asertaban la entrega terminal anterior ahora deben
+asertar `/review-spec`.
+
 ## 2026-08-21 — resultados máquina híbridos y snapshots deterministas
 
 **Contrato de driver incompatible; `@gtrabanco/agentic-workflow-schema` 3.0.0,

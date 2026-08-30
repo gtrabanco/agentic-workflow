@@ -2,6 +2,34 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-30 — designed is no longer the same as reviewed
+
+**Breaking hand-off; `design-feature` 3.0.0, `plan-feature` 4.0.0,
+`plan-feature-from-issue` 2.0.0, new `review-spec` 1.0.0 and internal
+`evidence-grounding` 1.0.0.** Product authoring and product verdicts now have
+different owners. `design-feature` closes its Product half at a deterministic
+`READY-FOR-REVIEW` preflight and hands off to `/review-spec <slug>`; it no
+longer sends work straight to `plan-feature`. `plan-feature` adds a
+Product-review gate after the redirect gate and fails closed with
+`PRODUCT-REVIEW GATE … BLOCKED` when the receipt is `missing`, `stale`,
+`wrong-stage`, a `substitute` (candidate or verification receipt), `self-approved`,
+or present only as `author-readiness`. `plan-feature-from-issue` — name kept for
+compatibility — now stops after the Product half instead of exporting an issue
+straight into scaffolding.
+
+**Migration.** Nothing on disk is invalidated: an existing `designed` SPEC simply
+has no review yet, which is the honest state. Run `/review-spec <slug>` on any
+unit you intend to plan; a SPEC written before this change will usually fail
+`C2`/`C9` (claims without evidence rows, decisions without a named owner) and
+come back as `SPEC-REVIEW-FAIL` for one batched repair in `design-feature`.
+Evidence rows are the new expectation: one per material Product claim, with
+`authority-kind`, source and location, the revision observed, and a freshness
+verdict — an unsampled model capability is `ASSUMPTION-UNVERIFIED`, never a
+repository citation. If you drive `plan-feature-from-issue` programmatically,
+expect it to stop before the Engineering half; call `plan-feature <slug>` after
+the review passes. Direct consumers that asserted the old terminal hand-off must
+now assert `/review-spec`.
+
 ## 2026-08-21 — hybrid machine results and deterministic snapshots
 
 **Breaking driver contract; `@gtrabanco/agentic-workflow-schema` 3.0.0,

@@ -23,14 +23,14 @@ Layer: docs · Done-when: `node --test
 scripts/pre-execution-quality.test.mjs` -> exit 0 for grounding and SPEC-review
 fixtures.
 
-- [ ] Add the internal `evidence-grounding` skill/reference with the fixed claim-authority-evidence-freshness-unknown map, progressive inventory/evidence/draft/readiness order, bounded questions, contracted readiness outcomes, and no-progress rule. Mark it `user-invocable: false` WITHOUT `metadata.internal: true` and register it in `.claude-plugin/plugin.json` and `skills.sh.json` so the skills CLI discovers and installs it — `metadata.internal: true` is the exclusion flag (#96), and a distributed skill wrongly carrying it is silently omitted from installs (the #141 `orchestration-envelope` regression); lint rule 7 and the `bounded-delivery-loops` guard then keep the marking valid.
-- [ ] Integrate grounding, Product evidence compaction, deterministic readiness, and per-write `artifactRevisionId` handoff into `design-feature` without granting it review/approval authority or engineering scope.
-- [ ] Add public `review-spec` with the exact Product checks, clean-context falsification prompt, read-only artifact boundary, three verdicts, and stage-specific receipt/finding output.
-- [ ] Define SPEC repair/upsert semantics: one unioned findings set is root-caused and repaired as one batch; mechanical intent-preserving changes remain with `design-feature`; scope/authority/outcome gaps require the human and a new revision/review.
-- [ ] Narrow `plan-feature-from-issue` so issue-derived feature work stops after Product design and current `review-spec`; remove same-turn Engineering planning bypass while retaining the internal name for compatibility.
-- [ ] Gate `plan-feature` on a valid current Product receipt and exact parent snapshot; fail closed on missing/stale/wrong-stage/candidate receipts.
-- [ ] Add SPEC-review fixtures for readiness rejection, complete review, unsupported/self-approved/stale authority, causal revert, same-model clean context, batched repair, second-cycle diagnosis, and issue export.
-- [ ] Bump/changelog every P2 skill through repository tooling and keep each entrypoint within progressive-context limits.
+- [x] Add the internal `evidence-grounding` skill/reference with the fixed claim-authority-evidence-freshness-unknown map, progressive inventory/evidence/draft/readiness order, bounded questions, contracted readiness outcomes, and no-progress rule. Mark it `user-invocable: false` WITHOUT `metadata.internal: true` and register it in `.claude-plugin/plugin.json` and `skills.sh.json` so the skills CLI discovers and installs it — `metadata.internal: true` is the exclusion flag (#96), and a distributed skill wrongly carrying it is silently omitted from installs (the #141 `orchestration-envelope` regression); lint rule 7 and the `bounded-delivery-loops` guard then keep the marking valid.
+- [x] Integrate grounding, Product evidence compaction, deterministic readiness, and per-write `artifactRevisionId` handoff into `design-feature` without granting it review/approval authority or engineering scope.
+- [x] Add public `review-spec` with the exact Product checks, clean-context falsification prompt, read-only artifact boundary, three verdicts, and stage-specific receipt/finding output.
+- [x] Define SPEC repair/upsert semantics: one unioned findings set is root-caused and repaired as one batch; mechanical intent-preserving changes remain with `design-feature`; scope/authority/outcome gaps require the human and a new revision/review.
+- [x] Narrow `plan-feature-from-issue` so issue-derived feature work stops after Product design and current `review-spec`; remove same-turn Engineering planning bypass while retaining the internal name for compatibility.
+- [x] Gate `plan-feature` on a valid current Product receipt and exact parent snapshot; fail closed on missing/stale/wrong-stage/candidate receipts.
+- [x] Add SPEC-review fixtures for readiness rejection, complete review, unsupported/self-approved/stale authority, causal revert, same-model clean context, batched repair, second-cycle diagnosis, and issue export.
+- [x] Bump/changelog every P2 skill through repository tooling and keep each entrypoint within progressive-context limits.
 
 ## P3 — Establish Plan review readiness
 
