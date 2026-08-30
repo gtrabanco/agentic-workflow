@@ -391,3 +391,50 @@ test("AC7: select events with no turn in flight are ignored, not remembered", as
   assert.equal(session.state.thinking, "low", "the pre-dispatch level was restored");
   assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
 });
+
+// --- Pass-3 fold: rules my own mutants survived.
+
+test("AC8: a restore that fails mid-settle must not leave the latch held", async () => {
+  // "Cleared first" is the rule: a turn that is over must release the latch even
+  // if the restore itself throws, or every later command refuses forever behind a
+  // turn that no longer exists.
+  const session = createSession({
+    config: configFor({ commands: ROUTED }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    restoreThrows: true,
+  });
+  await session.dispatch(COMMAND, "x");
+
+  await assert.rejects(() => session.settle(), /restore failed/u);
+  assert.equal(session.router.inFlight(), false, "the turn is released even though the restore failed");
+});
+
+test("AC8: the same rule for the console release — undo failure still clears the latch", async () => {
+  const session = createSession({
+    config: configFor({ commands: ROUTED }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    restoreThrows: true,
+  });
+  await session.dispatch(COMMAND, "x");
+
+  await assert.rejects(() => session.router.undoInFlight(session.context()), /restore failed/u);
+  assert.equal(session.router.inFlight(), false, "an undo that fails mid-restore does not wedge the latch");
+});
+
+test("AC12: a dispatch-failed refusal on an inherit route does not claim a rollback", async () => {
+  const session = createSession({
+    config: configFor({ commands: { "design-feature": { model: "inherit" } } }),
+    models: {},
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    sendThrows: true,
+  });
+
+  const outcome = await session.dispatch(COMMAND, "x");
+  assert.equal(outcome.reason, "dispatch-failed");
+  assert.doesNotMatch(outcome.message, /put back/u, "nothing was moved, so nothing was put back");
+});

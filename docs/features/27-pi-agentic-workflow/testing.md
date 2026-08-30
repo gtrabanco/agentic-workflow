@@ -56,9 +56,10 @@ added the missing case and re-ran both mutants (see `review-findings.md`).
 ## Mutation evidence — reproducible (run `npm run mutation`)
 
 The numbers are produced by `packages/pi-agentic-workflow/scripts/mutation-check.mjs`, which
-patches each mutant in a copy of the package under a temp dir, builds it, runs the named suite
-there, and exits non-zero if any mutant survives. Earlier tallies were prose and two were
-wrong; the list is a script now, not a paragraph.
+mirrors the whole repository under a temp dir, runs a **pristine control** first (a suite that
+already fails pristine makes every kill in it noise, and the script aborts instead of reporting
+fiction), then patches each mutant in the mirror and runs the named suite there. Earlier tallies
+were prose and two were wrong; the list is a script now, not a paragraph.
 
 | Rule broken | Killed by |
 |---|---|
@@ -87,6 +88,9 @@ wrong; the list is a script now, not a paragraph.
 | `F13 the scanner stops at the closing ---` | test |
 | `F14 the summary follows the effective policy` | test |
 | `F15 only a cleaned draft reaches the disk` | test |
+| `F11 a restore with no prior model is announced` | test |
+| `F16 a thinking-only settle never touches the model` | test |
+| `the console reports a failed undo honestly` | test |
 
-`25 mutants · 19 killed · 0 survived · 6 compile-enforced · 0 stale` — 19 rules are pinned by a failing test; the 6 compiler entries do not build at all
-(the unused-symbol rules reject them), so the build is the enforcement. 127 tests pass.
+`28 mutants · 22 killed · 0 survived · 6 compile-enforced · 0 stale` — 22 rules are pinned by a failing test; the 6 compiler entries do not build at all
+(the unused-symbol rules reject them), so the build is the enforcement. 132 tests pass.

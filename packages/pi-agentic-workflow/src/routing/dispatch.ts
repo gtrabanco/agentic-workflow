@@ -307,7 +307,8 @@ export function createRouter<M extends ModelRef = ModelRef>({
         session.sendUserMessage(invocation, { expandPromptTemplates: true });
       } catch (error) {
         pending = undefined;
-        if (applied.model || applied.thinking) {
+        const rolledBack = Boolean(applied.model || applied.thinking);
+        if (rolledBack) {
           await restore(
             { command: command.name, snapshot, applied, userChangedModel: false, userChangedThinking: false },
             session,
@@ -318,7 +319,7 @@ export function createRouter<M extends ModelRef = ModelRef>({
         return refuse(
           ctx,
           "dispatch-failed",
-          `/${command.name} was not dispatched: ${(error as Error).message}. Nothing was sent, and the session model was put back.`,
+          `/${command.name} was not dispatched: ${(error as Error).message}. Nothing was sent${rolledBack ? ", and the session model was put back" : ""}.`,
         );
       }
 
