@@ -57,9 +57,9 @@ Layer: ui · Done-when: `cd packages/pi-agentic-workflow && node --test test/set
 
 Layer: docs · Done-when: `grep -c "pi install" packages/pi-agentic-workflow/README.md` → ≥1 and same for `README.es.md`, switcher links present both ways (AC15).
 
-- [ ] `README.md`: install, alias list source (every public skill), config paths (global + project JSON), default `inherit`, fail-closed unavailable routes (AC15)
-- [ ] `README.es.md`: faithful sibling, same sections (AD-002 same-change rule)
-- [ ] Reciprocal language-switcher links (`> 🇪🇸 [Versión en español](README.es.md)` / `> 🇬🇧 [English version](README.md)`), read-verified sync
+- [x] `README.md`: install, alias list source (every public skill), config paths (global + project JSON), default `inherit`, fail-closed unavailable routes (AC15) — plus the precedence chain, the restore behaviour, the settings console, and a troubleshooting table keyed to the exact refusal messages the code emits
+- [x] `README.es.md`: faithful sibling, same sections (AD-002 same-change rule) — same section count, same command table, same JSON example, enforced by the AC15 assertion below rather than by promise
+- [x] Reciprocal language-switcher links (`> 🇪🇸 [Versión en español](README.es.md)` / `> 🇬🇧 [English version](README.md)`), read-verified sync — all four AC15 greps run below
 
 ## P6 — Hardening & PR
 
