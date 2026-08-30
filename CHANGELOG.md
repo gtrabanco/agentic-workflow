@@ -84,6 +84,11 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.0.1 | 2026-07-05 | patch | `validateEnvelope()` now checks every enum/type the JSON Schema declares (`unit.type`, `pr.state`/`.ci`, `gates.verification`, `blockers[].kind`/`.scope`, array-item types) — previously looser than `envelope.schema.json`, so a malformed value like `blockers[].scope: "planet"` passed silently. Tests added for the structural-validation-failure path through `parseEnvelope()` and CRLF fences. CI (`publish-schema.yml`) migrated to Bun for install/test (`bun install --frozen-lockfile`; `package-lock.json` dropped, `bun.lock` is the sole lockfile) — npm is kept only for the final `npm publish --provenance` step. `LICENSE` added inside the package directory (npm's auto-include only picks up a LICENSE from the published package's own folder). README's JSON-Schema import example fixed to work on the declared `engines.node: ">=18"` (was Node 20.10+/22-only). |
 | 1.0.0 | 2026-07-05 | — | First published release. Types, JSON Schema, and `parseEnvelope()`/`validateEnvelope()`/`isTerminal()`/`isRunHalt()` for the agentic-workflow machine envelope. |
 
+#### [`@gtrabanco/pi-agentic-workflow`](packages/pi-agentic-workflow/)
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 0.1.0 | 2026-08-30 | — | First release (feature 27, PR #150): one `pi install npm:@gtrabanco/pi-agentic-workflow` bundles the canonical skills byte-for-byte, registers a friendly slash command for every public skill (the list is read from the bundled skills at startup), adds `/agentic-workflow-settings`, and optional per-command model/thinking routing — global + project JSON config, fail-closed unavailable routes, one-command session restore, and a first-run configuration hint. Ships with `publish-pi-package.yml` (npm Trusted Publishing, same pattern as the schema package). The package is bun-managed like the schema package: `bun.lock` is the sole lockfile and `test/lockfile-policy.test.mjs` rejects a resurrected `package-lock.json`. |
+
 ### Session
 
 #### `log-session`

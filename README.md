@@ -55,6 +55,8 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ```
 skills/                  35 source skills (18 user-facing + 15 workflow internals + 2 metadata-internal; 33 discoverable)
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
+packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
+                         and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
 docs/workflow/           the full tutorial (feature flow, issue flow, reference, replication)
 docs/features/_TEMPLATE  feature SPEC template + ROADMAP (the planning artifacts skills produce)
@@ -593,6 +595,25 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   …then `npx skills experimental_install` restores the exact set from skills-lock.json.
 #   See CHANGELOG.md → "Installing & pinning a version" for how pinning works.
 ```
+
+### One-command install on Pi
+
+On [Pi](https://github.com/badlogic/pi-mono) you don't need the skills CLI at
+all — the method ships as a single npm package that bundles the same skills
+together with everything the copy-per-agent route leaves out: a friendly slash
+command for every public skill (`/plan-feature --next`, not
+`/skill:plan-feature --next`), and optional per-command model routing that
+sends each workflow command to the model you choose and gives your session
+back afterwards.
+
+```sh
+pi install npm:@gtrabanco/pi-agentic-workflow
+```
+
+Restart Pi and run `/agentic-workflow-settings` once. Update and removal are
+`pi update` / `pi remove` with the same package name. Details, model-routing
+configuration, and troubleshooting live in
+**[`packages/pi-agentic-workflow/README.md`](packages/pi-agentic-workflow/README.md)**.
 
 ## Uninstall
 
