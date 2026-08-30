@@ -136,8 +136,8 @@ authority.
 - No public `implementation-map` command, committed map file, planning artifact,
   or public schema by default.
 - No named model/provider, subagent requirement, retry/concurrency policy,
-  durable store, context broker, or dependency on Serena, Engram, Gentle AI, or
-  AWL.
+  durable store, context broker, or dependency on Serena, Engram, an external
+  product, or AWL.
 - No external product research or autonomous product/architectural decisions.
 - No replacement or weakening of TDD, frozen acceptance, staged verification,
   `review-change`, `fold-findings`, or `audit-pr`.
@@ -363,6 +363,8 @@ Engineering boxes:
 ---
 
 ## Amendments
+
+- 2026-08-30 — external-product citation removed per the repo norm of absorbing knowledge without citing projects; wording only, no requirement, scope, or acceptance change.
 
 | Date | Authority | Change |
 |---|---|---|
