@@ -112,18 +112,23 @@ test("AC3 / D-P9: composed internal skills are bundled but never callable", () =
   }
 });
 
-test("AC3: a command dispatches the skill directory it came from, not its own name", () => {
+test("AC3: a command dispatches the skill NAME Pi expands on, not its directory", () => {
   const root = mkdtempSync(join(tmpdir(), "paw-alias-skillname-"));
   try {
     const skillsDir = join(root, "skills");
-    // Directory name differs from the frontmatter name: the alias is the name,
-    // the expanded invocation must be the skill Pi loaded.
+    // Directory name deliberately differs from the frontmatter name.
     mkdirSync(join(skillsDir, "review-pack"), { recursive: true });
     writeFileSync(join(skillsDir, "review-pack", "SKILL.md"), skillFile("review-code"));
 
     const { registered, calls, noopContext } = extensionOver(skillsDir);
     registered.get("review-code").handler("", noopContext);
-    assert.deepEqual(calls.send, ["/skill:review-pack"]);
+    // Pi resolves `/skill:<x>` against the loaded skill's `name:`
+    // (`core/agent-session.js` `_expandSkillCommand`:
+    //  `skills.find((s) => s.name === skillName)`) and returns the text
+    // UNEXPANDED when nothing matches — so `/skill:review-pack` would reach the
+    // model as literal text the moment a skill's directory and name diverge.
+    // The catalogue keeps the directory separately; it is never the wire value.
+    assert.deepEqual(calls.send, ["/skill:review-code"]);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

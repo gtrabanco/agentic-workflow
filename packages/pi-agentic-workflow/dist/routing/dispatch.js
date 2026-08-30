@@ -25,11 +25,15 @@ export function createRouter({ surface, loadConfig, hint, settingsCommand, known
             pending.userChangedModel = true;
         },
         noteThinkingLevelSelect(level) {
-            if (!pending?.applied.thinking)
+            if (!pending)
                 return;
-            if (pending.applied.thinking === level)
+            // A level we just applied ourselves is not an operator change. A model
+            // switch counts as "ours" too: Pi re-derives thinking inside `setModel`,
+            // and this router performs that switch.
+            if (pending.applied.thinking === level || pending.applied.modelThinking === level)
                 return;
             pending.userChangedThinking = true;
+            pending.operatorThinking = level;
         },
         async settle(ctx) {
             const turn = pending;
@@ -45,16 +49,22 @@ export function createRouter({ surface, loadConfig, hint, settingsCommand, known
                 }
                 return;
             }
+            const touched = Boolean(turn.applied.model || turn.applied.thinking);
             if (turn.applied.model) {
                 if (turn.snapshot.model)
                     await session.setModel(turn.snapshot.model);
                 else
                     ctx.notify(`/${turn.command} switched a session that had no model; nothing to restore.`, "warning");
             }
-            // Thinking after the model: selecting a model can move the thinking level,
-            // so applying the snapshot last is what makes the session equal its start.
-            if (turn.applied.thinking && !turn.userChangedThinking) {
-                session.setThinkingLevel(turn.snapshot.thinking);
+            // Thinking last, and always: selecting a model re-derives the level inside
+            // Pi, so restoring the model alone leaves a model-only route with the
+            // operator's level moved (AC8 asks for the session to equal its start).
+            // An operator who moved the level themselves keeps it — including over the
+            // model restore's side effect.
+            if (touched) {
+                const wanted = turn.userChangedThinking && turn.operatorThinking ? turn.operatorThinking : turn.snapshot.thinking;
+                if (session.getThinkingLevel() !== wanted)
+                    session.setThinkingLevel(wanted);
             }
         },
         async dispatch(command, args, ctx) {
@@ -111,6 +121,9 @@ export function createRouter({ surface, loadConfig, hint, settingsCommand, known
                 }
                 else {
                     applied.model = target;
+                    // Pi re-derives thinking inside `setModel`; whatever level the session
+                    // holds now came from us, not from the operator.
+                    applied.modelThinking = session.getThinkingLevel();
                 }
             }
             if (route.thinking !== "inherit") {
@@ -126,9 +139,12 @@ export function createRouter({ surface, loadConfig, hint, settingsCommand, known
             if (applied.model || applied.thinking) {
                 pending = { command: command.name, snapshot, applied, userChangedModel: false, userChangedThinking: false };
             }
-            session.sendUserMessage(args === "" ? `/skill:${command.skill}` : `/skill:${command.skill} ${args}`, {
-                expandPromptTemplates: true,
-            });
+            // Pi expands `/skill:<x>` by the skill's frontmatter `name:`, and passes an
+            // unknown key through as literal text — so the name is the only correct
+            // wire value. The bundled directory (`command.skill`) is not it: it happens
+            // to match today and would silently stop expanding if a skill ever renamed.
+            const invocation = args === "" ? `/skill:${command.name}` : `/skill:${command.name} ${args}`;
+            session.sendUserMessage(invocation, { expandPromptTemplates: true });
             return { status: "dispatched", routed: Boolean(applied.model || applied.thinking), hintShown };
         },
     };

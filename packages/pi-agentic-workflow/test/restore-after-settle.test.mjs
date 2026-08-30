@@ -137,3 +137,102 @@ test("AC7: two settled turns do not stack restores", async () => {
   await session.settle();
   assert.deepEqual(session.log.setModel, [], "the second settle has nothing left to restore");
 });
+
+// --- F1/F2 fold: Pi re-derives the thinking level inside `setModel`, so a route
+// that names only a model still moves it. These were written against Pi's source
+// (`agent-session.js`: `_getThinkingLevelForModelSwitch` → `setThinkingLevel`) and
+// the session double now mirrors that side effect.
+
+test("AC8: a route that only names a model still puts the thinking level back", async () => {
+  const session = createSession({
+    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2" } } }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "high",
+    // Switching to gpt-5.2 moves the level, exactly like Pi's per-model default.
+    modelThinking: { "openai/gpt-5.2": "medium" },
+  });
+
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "medium", "the double reproduces Pi's side effect");
+
+  await session.settle();
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
+  assert.equal(session.state.thinking, "high", "restoring the model is not restoring the session");
+});
+
+test("AC7/AC8: settle applies the model first and the thinking level last", async () => {
+  const session = createSession({
+    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } } }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    defaultThinking: "minimal",
+  });
+
+  await session.dispatch(COMMAND, "x");
+  session.log.sequence.length = 0;
+  await session.settle();
+
+  const restore = session.log.sequence.filter((entry) => entry.startsWith("setModel:") || entry.startsWith("setThinkingLevel:"));
+  // The middle entry is Pi's side effect, not ours: restoring the model
+  // re-derived thinking to the global default. The snapshot level going LAST is
+  // what makes the session equal its start, and it is the only thing that can.
+  assert.deepEqual(
+    restore,
+    ["setModel:anthropic/claude-opus-4-5", "setThinkingLevel:minimal", "setThinkingLevel:low"],
+    "model first, then the level the switch moved, then the snapshot level last",
+  );
+  assert.equal(session.state.thinking, "low");
+});
+
+test("AC7: a late `model_select` carrying the model we applied is still our own switch", async () => {
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+
+  // Pi emits the event inside `setModel`, but a queued duplicate can land after
+  // the turn is registered; treating it as the operator's would skip the restore.
+  session.router.noteModelSelect({ provider: "openai", id: "gpt-5.2" });
+  await session.settle();
+
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
+  assert.deepEqual(session.notifications().filter((m) => /leaving the model you chose/iu.test(m)), []);
+});
+
+test("AC7: a late `thinking_level_select` for the level our own switch derived is not an operator change", async () => {
+  const session = createSession({
+    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2" } } }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "high",
+    modelThinking: { "openai/gpt-5.2": "medium" },
+  });
+
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "medium");
+
+  // Pi applies the derived level inside `setModel`, before this turn is even
+  // registered; a duplicate landing afterwards must not be read as the operator
+  // having chosen it, or AC8's restore would be skipped.
+  session.router.noteThinkingLevelSelect("medium");
+  await session.settle();
+
+  assert.equal(session.state.thinking, "high", "our own derived level is not the operator's choice");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
+});
+
+test("AC7: when the operator moves only the thinking level, the model comes back and their level stays", async () => {
+  const session = createSession({
+    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } } }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+  });
+
+  await session.dispatch(COMMAND, "x");
+  session.operatorSelectsThinkingLevel("xhigh");
+  await session.settle();
+
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5", "the model is restored");
+  assert.equal(session.state.thinking, "xhigh", "the level they picked is not overwritten by the model restore");
+});

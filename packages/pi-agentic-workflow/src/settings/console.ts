@@ -265,16 +265,22 @@ function describeRouting(file: ConfigFile): string {
   return routes.join(" · ");
 }
 
-/** Say only what the operator chose: inherit-only routes are the shipped default. */
+/**
+ * Keep everything the file held or the operator set; drop only what says nothing
+ * (an empty route). Eliding by VALUE — treating an explicit `inherit` or `stop` as
+ * absent because a shipped default happens to agree — silently discards the only
+ * two moves that matter at project scope: switching a command off under a global
+ * route, and re-arming fail-closed over a global `inherit` (F4).
+ */
 function clean(draft: ConfigFile): ConfigFile {
   const file: ConfigFile = {};
-  if (draft.default && !isInheritOnly(draft.default)) file.default = { ...draft.default };
+  if (draft.default && Object.keys(draft.default).length > 0) file.default = { ...draft.default };
   const commands: Record<string, RouteFile> = {};
   for (const [name, route] of Object.entries(draft.commands ?? {})) {
-    if (!isInheritOnly(route)) commands[name] = { ...route };
+    if (Object.keys(route).length > 0) commands[name] = { ...route };
   }
   if (Object.keys(commands).length > 0) file.commands = commands;
-  if (draft.onUnavailableRoute && draft.onUnavailableRoute !== "stop") file.onUnavailableRoute = draft.onUnavailableRoute;
+  if (draft.onUnavailableRoute) file.onUnavailableRoute = draft.onUnavailableRoute;
   return file;
 }
 
@@ -287,10 +293,6 @@ function parseFile(text: string, scope: "global" | "project"): { file: ConfigFil
 
 function describe(problems: readonly ConfigProblem[]): string[] {
   return problems.map((problem) => `  ${problem.path}: ${problem.message}`);
-}
-
-function isInheritOnly(route: RouteFile): boolean {
-  return (route.model ?? INHERIT) === INHERIT && (route.thinking ?? INHERIT) === INHERIT;
 }
 
 function dirty(a: ConfigFile, b: ConfigFile): boolean {
