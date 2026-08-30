@@ -70,7 +70,7 @@ Last reviewed: 2026-08-29 (P5)
 - Next: P5 — Bilingual user documentation
 
 ## Unit-loop receipt — P5
-- Commit: pending · Gate: `grep -c "pi install" packages/pi-agentic-workflow/README.md` → 2, same for `README.es.md` → 2; `grep -c "Versión en español" README.md` → 1; `grep -c "English version" README.es.md` → 1 (AC15, all four satisfied) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Commit: `515de88` feat(27-pi-agentic-workflow): bilingual package READMEs with a catalogue-bound command table (P5) → 2, same for `README.es.md` → 2; `grep -c "Versión en español" README.md` → 1; `grep -c "English version" README.es.md` → 1 (AC15, all four satisfied) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
 - Full unit gate at the same revision: `npm test` → exit 0, 94 pass / 0 fail (AC15 README↔catalogue guard added to `test/alias-coverage.test.mjs`).
 - Next: P6 · Attempts: 1
 
