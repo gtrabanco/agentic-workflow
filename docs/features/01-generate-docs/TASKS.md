@@ -49,8 +49,10 @@
       phase-label tokens in planning artifacts — audit-docs check 10 clean)
 - [x] Verification gate green (`npx skills add . --list` exit 0)
 - [x] progress.md entry for P3
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] open PR [#8](https://github.com/gtrabanco/agentic-workflow/pull/8)
+      (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc that leaves
       `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] update the roadmap row to
+      `done · [#8](https://github.com/gtrabanco/agentic-workflow/pull/8)`
+- [x] commit the PR-linked roadmap row and push; PR #8 merged to `main`
