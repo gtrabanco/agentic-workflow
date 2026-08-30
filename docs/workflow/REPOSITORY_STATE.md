@@ -1,90 +1,81 @@
 # Normalized Repository State
 
 > Evidence-backed snapshot of the repository. The repository remains the source
-> of truth; this ledger is a frozen, reviewable representation of observed truth.
+> of truth; this ledger is a frozen, reviewable representation of observed
+> truth. Historical snapshots remain recoverable from Git.
 
 ## Snapshot
 
 | Field | Value |
 |---|---|
-| Snapshot ID | `2025-08-22-nrs-regen` |
-| Source revision | `118112217ed7ec7c8d5f14d6102e279d420c1706` |
+| Snapshot ID | `2026-08-30-pre-execution-planning` |
+| Source revision | `5bb235bc140e19e80cf671afa4c59db2708cf94f` (`origin/main`) |
 | Status | `frozen` |
-| Created by | `discover-repository-state` |
+| Created by | `resolve-repository-state` after direct repository and forge verification |
 
 ## Repository Facts
 
 | ID | Statement | Evidence | Observed at | Status |
 |---|---|---|---|---|
-| F001 | **Repo name:** `agentic-workflow` (GitHub: `gtrabanco/agentic-workflow`) | `CLAUDE.md` line 1 | 2025-08-22 | frozen |
-| F002 | **Primary branch:** `main` | `git branch` — `* feat/23-…`, `main` present; `origin/HEAD → origin/main` | 2025-08-22 | frozen |
-| F003 | **No root `package.json`** | `ls package.json` → absent (package lives in `packages/`) | 2025-08-22 | frozen |
-| F004 | **Schema package:** `@gtrabanco/agentic-workflow-schema` v3.1.0, npm public, Node ≥18 | `packages/agentic-workflow-schema/package.json` — `"version": "3.1.0"`, `"access": "public"`, `"node": ">=18"` | 2025-08-22 | frozen |
-| F005 | **Schema package language:** TypeScript 6; build = `tsc`; test = `tsc && tsc -p tsconfig.test.json && node --test test/*.test.mjs` | `packages/agentic-workflow-schema/package.json` — `devDependencies.typescript: "6"`, `scripts.test` | 2025-08-22 | frozen |
-| F006 | **Schema package exports:** `dist/index.js`, `dist/index.d.ts`, `envelope.schema.json`, `skill-outcome.schema.json`, `workflow-snapshot.schema.json` | `packages/agentic-workflow-schema/package.json` — `exports` and `files` fields; `npm pack --dry-run` lists all 4 public artifacts | 2025-08-22 | frozen |
-| F007 | **Schema package test suite:** 51 tests, exit 0 | `cd packages/agentic-workflow-schema && npm test` → 51 pass, 0 fail, 0 skip, 0 todo | 2025-08-22 | frozen |
-| F008 | **Skills:** 35 total SKILL.md files; 18 user-invocable (frontmatter `user-invocable: true`); 17 internal (`user-invocable: false`); 2 marked `metadata.internal: true` | `ls skills/*/SKILL.md | wc -l` → 35; `grep -l "user-invocable: true" skills/*/SKILL.md | wc -l` → 18; `grep -l "user-invocable: false" skills/*/SKILL.md | wc -l` → 17 | 2025-08-22 | frozen |
-| F009 | **All skills carry version frontmatter** | `grep -l "^version:" skills/*/SKILL.md | wc -l` → 35 | 2025-08-22 | frozen |
-| F010 | **Context budgets pass:** all 35 skill entrypoints within 2,800 estimated-token / 240-line cap | `node scripts/check-skill-context.mjs` → PASS (35 skills) | 2025-08-22 | frozen |
-| F011 | **Skills CLI discovers all:** `npx skills add . --list` → exit 0, lists 33 skills (19 user-facing + 14 counted; `metadata.internal: true` excluded from discovery) | `npx skills add . --list` → exit 0 | 2025-08-22 | frozen |
-| F012 | **Template scaffold:** `template/docs/workflow/` contains bilingual docs template including `REPOSITORY_STATE.md`, all workflow reference docs, and `SKILL_CONTEXT_BUDGETS.json` | `ls template/docs/workflow/` | 2025-08-22 | frozen |
-| F013 | **Architectural invariants file exists but is empty** (no project-specific rules declared) | `wc -l docs/architecture/ARCHITECTURAL_INVARIANTS.md` → 0 (empty) | 2025-08-22 | frozen |
-| F014 | **All skills have ES siblings in `template/`** (`docs/workflow/*.md` ↔ `*.es.md`) | `ls docs/workflow/*.md docs/workflow/*.es.md | wc -l` → paired | 2025-08-22 | frozen |
-| F015 | **Docs language:** English; bilingual EN+ES pairs for human-readable docs | `CLAUDE.md` — "Docs language is English"; README.md ↔ README.es.md reciprocal links; docs/workflow/*.md ↔ *.es.md | 2025-08-22 | frozen |
-| F016 | **Commit convention:** conventional commits (`feat(scope):`, `fix(scope):`, `docs(scope):`, `test(scope):`) | `git log --oneline -10` — all match pattern | 2025-08-22 | frozen |
-| F017 | **Remote branches:** `origin/main`, `origin/claude`, `origin/codex/fix-orchestration-envelope-distribution`, `origin/feat/23-workflow-skill-capability-profiles`, `origin/inheritance` | `git branch -r` | 2025-08-22 | frozen |
-| F018 | **Open PR:** #140 `feat/23-workflow-skill-capability-profiles` (feature 23, all phases done, REVIEW-PASS receipt at `1181122`) | `gh pr list --state open --json number,title,headRefName` → #140 | 2025-08-22 | frozen |
-| F019 | **Open issues:** #136 (feature 23, closed by PR #140), #137, #138, #139 (all NEW FEATURE proposals) | `gh issue list --state open --json number,title` | 2025-08-22 | frozen |
-| F020 | **Roadmap:** 23 features, all status `done` | `docs/features/ROADMAP.md` — every row shows `done · [#NN]` | 2025-08-22 | frozen |
-| F021 | **Fix index:** 28 open fix entries in `docs/fix/` (various stale/ongoing items, none active in-progress) | `ls docs/fix/[0-9]*` excluding _TEMPLATE and README | 2025-08-22 | frozen |
-| F022 | **No `package.json` at root** (monorepo-like structure with `packages/` subdirectory only) | `ls package.json` → absent | 2025-08-22 | frozen |
-| F023 | **SKILLS.md user-facing count is stale** (claims 17; frontmatter truth is 18) | `docs/workflow/SKILLS.md` line 4 — "17 user-facing skills"; frontmatter grep → 18 | 2025-08-22 | frozen |
-| F024 | **`docs/workflow/REPOSITORY_STATE.md` was deleted** on feature branch `feat/23-…` (commit `7dc28e8`, fold F7 — stale NRS dropped). `template/docs/workflow/REPOSITORY_STATE.md` (60 lines, canonical template) is preserved. | `git show 7dc28e8 --stat`; `wc -l template/docs/workflow/REPOSITORY_STATE.md` → 60 | 2025-08-22 | frozen |
+| F001 | **Repository:** `gtrabanco/agentic-workflow`; primary branch and `origin/HEAD` are `main`. | `git remote get-url origin`; `git symbolic-ref refs/remotes/origin/HEAD` | 2026-08-30 | frozen |
+| F002 | **Planning baseline:** `origin/main` resolves to `5bb235bc140e19e80cf671afa4c59db2708cf94f`. | `git rev-parse origin/main` | 2026-08-30 | frozen |
+| F003 | **No root package manifest:** the published package lives under `packages/agentic-workflow-schema/`. | `test ! -f package.json`; `test -f packages/agentic-workflow-schema/package.json` | 2026-08-30 | frozen |
+| F004 | **Schema package:** `@gtrabanco/agentic-workflow-schema` version `3.4.0`, Node `>=18`; its test command compiles source and test TypeScript before running Node tests. | `packages/agentic-workflow-schema/package.json` fields `version`, `engines.node`, and `scripts.test` | 2026-08-30 | frozen |
+| F005 | **Skills:** 35 `SKILL.md` entrypoints: 18 with `user-invocable: true`, 17 with `user-invocable: false`, and 2 carrying a `metadata` block. | `find skills -mindepth 2 -maxdepth 2 -name SKILL.md`; anchored frontmatter `grep` counts | 2026-08-30 | frozen |
+| F006 | **Context budgets pass:** every current skill entrypoint passes the repository budget checker. | `node scripts/check-skill-context.mjs` -> `PASS context budgets: 35 skills` | 2026-08-30 | frozen |
+| F007 | **Distribution discovery succeeds:** the Skills CLI discovers 34 installable entries from the repository. | `npx skills add . --list` -> exit 0, `Found 34 skills` | 2026-08-30 | frozen |
+| F008 | **No project capability inventory exists.** Feature design must derive the applicable inventory from current repository architecture and code until a project-owned inventory is created. | `test ! -f docs/CAPABILITIES.md` | 2026-08-30 | frozen |
+| F009 | **No project architectural-invariants document exists.** Planning classification is therefore `n/a: no project invariants declared`, without treating the scaffold template as project policy. | `test ! -f docs/architecture/ARCHITECTURAL_INVARIANTS.md`; `docs/workflow/WORKFLOW_INVARIANTS.md` | 2026-08-30 | frozen |
+| F010 | **Human workflow documentation is bilingual; code, prompts, SPECs, planning artifacts, commits, and PRs are English-only.** | `CLAUDE.md`; paired `docs/workflow/*.md` / `*.es.md` files | 2026-08-30 | frozen |
+| F011 | **Open implementation issues:** #146, evidence-grounded specification and plan review gates; #149, bounded pre-edit implementation discovery and execution maps. | `gh issue list --state open --limit 100 --json number,title,url` | 2026-08-30 | frozen |
+| F012 | **Open pull request:** #150, feature 27 Pi package and model routing, from `feat/27-pi-agentic-workflow`; forge reports it mergeable and no status checks are registered. | `gh pr list --state open --json number,title,headRefName,mergeStateStatus,statusCheckRollup` | 2026-08-30 | frozen |
+| F013 | **Roadmap:** rows 01-26 are done; rows 28 and 29 are scheduled; row 27 is not on `main` because it belongs to open PR #150. | `docs/features/ROADMAP.md`; `gh pr view 150` | 2026-08-30 | frozen |
+| F014 | **Fix planning corpus:** 31 numbered fix directories exist under `docs/fix/`; directory presence does not prove an open forge issue or executable status. | `find docs/fix -mindepth 1 -maxdepth 1 -type d -name '[0-9]*'` | 2026-08-30 | frozen |
+| F015 | **Remote branch inventory:** `origin/main`, `origin/claude`, and `origin/inheritance`; PR #150's head is visible through the forge even though no matching tracking ref is currently fetched. | `git branch -r`; `gh pr view 150 --json headRefName` | 2026-08-30 | frozen |
 
 ## Accepted decisions
 
 | ID | Decision | Rationale | Evidence | Accepted at |
 |---|---|---|---|---|
-| AD-002 | **Bilingual docs rule:** every human-readable doc with an ES sibling is updated in the same change, never deferred. Scope exception: SKILL.md, SPECs, commits, PRs, machine config (English-only). | Cross-language consistency for agent and human consumers; prevents the ES side from going stale. | `CLAUDE.md` "Human-readable docs carry EN + ES siblings" rule; `docs/workflow/REPOSITORY_STATE.md` (deleted F7) originally documented this as a fact. | Feature 18 (PR #114), confirmed by F17 (PR #57) bilingual audit |
-| AD-004 | **One PR per unit of work, always against `main`.** Never work on `main` directly; never stack PRs. | Keeps the workflow linear, reviewable, and mergeable; prevents hidden dependencies between stacked PRs. | `CLAUDE.md` "One PR per unit of work, always against main"; every roadmap feature merged via one PR against `main`. | Feature 18 (PR #114) |
-| AD-007 | **Schema package strict contracts:** `npm test` must exit 0 (tsc + tests); JSON schemas must match TypeScript types; version bump required for any public API change. | Prevents silent contract drift between the schema package and the skills that consume it. | `packages/agentic-workflow-schema/package.json` — `scripts.test`, `scripts.prepublishOnly: "npm test"`; `CLAUDE.md` "If packages/agentic-workflow-schema/ was touched: npm test passes there" | Feature 18 (PR #114) |
+| AD-002 | **Bilingual docs rule:** every human-readable doc with an ES sibling is updated in the same change, never deferred. Scope exception: SKILL.md, SPECs, planning artifacts, commits, PRs, and machine config are English-only. | Prevents one human-facing language from silently drifting. | `CLAUDE.md`; paired workflow docs | Feature 18 (PR #114), retained |
+| AD-004 | **One PR per unit of work, always against `main`.** Never implement directly on `main`; never stack PRs. | Keeps every unit independently reviewable and mergeable. | `CLAUDE.md` | Feature 18 (PR #114), retained |
+| AD-007 | **Schema package strict contracts:** `npm test` must pass; generated structural projections cannot become a second semantic authority; a public API change requires an appropriate package version bump. | Prevents drift between runtime validation, published types, projections, and consumers. | `CLAUDE.md`; package scripts; feature 26 decisions | Feature 18 (PR #114), refined by feature 26 |
 
 ## Planned work
 
 | ID | Work | Status | Evidence |
 |---|---|---|---|
-| W001 | PR #140 — `feat/23-workflow-skill-capability-profiles` (Closes #136) | done (awaiting human merge) | `gh pr list --state open`; `review-change:pass` receipt at exact HEAD `1181122` |
-| W002 | Issue #137 — NEW FEATURE: Decide safe workflow transitions from trusted machine state | open (proposal) | `gh issue list --state open` |
-| W003 | Issue #138 — NEW FEATURE: Bind review receipts to exact candidate content | open (proposal) | `gh issue list --state open` |
-| W004 | Issue #139 — NEW FEATURE: Add staged, candidate-bound verification contracts | open (proposal) | `gh issue list --state open` |
+| W001 | PR #150 — feature 27 Pi package with routed skill aliases and model routing | open; independently owned implementation | `gh pr view 150`; feature number reserved by the user |
+| W002 | Issue #146 — feature 28 evidence-grounded specification and plan review gates | open; design accepted, planning requested | Issue #146 current body; `docs/features/ROADMAP.md` row 28 |
+| W003 | Issue #149 — feature 29 bounded implementation discovery | open; design accepted, planning requested after feature 28 | Issue #149 current body; `docs/features/ROADMAP.md` row 29 |
 
 ## Documentation
 
 | ID | Statement | Document evidence | Implementation evidence |
 |---|---|---|---|
-| D001 | `docs/workflow/WORKFLOW_INVARIANTS.md` defines the architectural invariants evaluation protocol; references NRS `when present` | `docs/workflow/WORKFLOW_INVARIANTS.md:56` | NRS deleted (F024); skills treat as optional (`when present` / `n/a if absent`) |
-| D002 | `docs/features/ROADMAP.md` is the single source of truth for feature numbering, ordering, and dependencies | `docs/features/ROADMAP.md` header | All23 features have folders and rows; all merged |
-| D003 | `docs/workflow/SKILLS.md` claims "17 user-facing + 14 internal"; frontmatter truth is 18 user-facing + 17 internal = 35 | `docs/workflow/SKILLS.md` line 4 | F008 (frontmatter grep) — count is stale |
-| D004 | `docs/workflow/MIGRATION.md` consolidates upgrade notes for the backlog's major skill changes | `docs/workflow/MIGRATION.md` | Single document covering U1–U10 majors |
+| D001 | `docs/features/ROADMAP.md` is the numbering, ordering, dependency, and status authority for features. | Roadmap header and status legend | 28 current rows; feature 27 is pending in PR #150 |
+| D002 | `docs/workflow/WORKFLOW_INVARIANTS.md` defines how to classify project-declared invariants but does not itself declare project-specific invariants. | `docs/workflow/WORKFLOW_INVARIANTS.md` | F009 |
+| D003 | `docs/workflow/REPOSITORY_STATE.md` is a frozen evidence ledger; only discovery/resolution flows may rewrite facts or accepted decisions. | This document; repository-state skills | This refresh records the superseded snapshot under C001-C003 |
+| D004 | Feature SPECs and plans are English-only even when they change bilingual workflow documentation during implementation. | `CLAUDE.md` | AD-002 |
 
 ## Open Questions
 
 | ID | Question | Evidence | Owner |
 |---|---|---|---|
-| Q001 | SKILLS.md user-facing count is stale (17 vs 18); when should this be corrected? | F008 (frontmatter) vs D003 (SKILLS.md) | User / `/audit-docs` |
-| Q002 | Should this repo's own `docs/workflow/REPOSITORY_STATE.md` be regenerated from this snapshot? | F024 (NRS deleted); skills treat as optional | User — non-blocking (skills degrade gracefully) |
+| Q001 | What exact roadmap summary and dependencies will feature 27 add when PR #150 merges? | The row is not present at the frozen `main` revision; the open PR owns it. | PR #150; non-blocking for planning features 28 and 29 |
 
 ## Inference
 
 | ID | Reasoning | Based on |
 |---|---|---|
-| I001 | All 23 roadmap features are done; the repo has no active `planned` or `in-progress` units. The next work unit would be one of the 4 open issues (#137–#139) or one of the 28 open fix index entries, routed by the user via `/design-feature` or `/plan-fix`. | F020, F019, F021 |
-| I002 | The deleted `docs/workflow/REPOSITORY_STATE.md` is referenced conditionally ("when present") by `workflow-status`, `review-change`, and `review-change`'s own SKILL.md. Skills report `n/a` when absent. No skill requires it unconditionally. The template copy is preserved for target projects. | F024, `skills/workflow-status/references/SENSOR_CORE.md:5`, `skills/review-change/SKILL.md:124` |
-| I003 | The `metadata.internal: true` exclusion from the skills CLI explains why `npx skills add . --list` shows 33 while `ls skills/*/SKILL.md` shows 35 — two skills (bump-skill + one more) are excluded from discovery. | F008, F011 |
-| I004 | Feature 23's NRS is now this snapshot (replacing the deleted stale one). Future planning/review on this repo should consume this NRS rather than reconstructing facts independently. | F024, this document |
+| I001 | The only currently open AW implementation proposals are #146 and #149; feature 27 is already being implemented in PR #150 and must not be renumbered or replanned here. | F011-F013, W001-W003 |
+| I002 | Feature planning may classify project invariants as `n/a`, but capability closure still has to derive and walk the repository's actual package, skill, documentation, distribution, and orchestration surfaces. | F008-F010, D002 |
+| I003 | The CLI count (34) and filesystem count (35) describe different observed surfaces; neither count should be rewritten to match the other without identifying the exact distribution rule. | F005-F007 |
 
 ## Contradictions
 
 | ID | Frozen fact | New evidence | Reported by | Resolution |
 |---|---|---|---|---|
-| — | (none) | — | — | — |
+| C001 | Snapshot `2025-08-22-nrs-regen` bound facts to revision `1181122`, schema package 3.1.0, PR #140, issues #137-#139, and a 23-feature roadmap. | F002, F004, F011-F014 show revision `5bb235b`, schema package 3.4.0, PR #150, issues #146/#149, and the later roadmap state. | `resolve-repository-state`, 2026-08-30 | Accept current direct repository/forge evidence for this snapshot; preserve the older snapshot in Git history. |
+| C002 | The prior snapshot said `docs/architecture/ARCHITECTURAL_INVARIANTS.md` existed but was empty. | F009 proves the file is absent at the current source revision. | `resolve-repository-state`, 2026-08-30 | Current planning records `n/a: no project invariants declared`; absence is not silently converted into an invariant. |
+| C003 | The prior snapshot reported 33 Skills CLI entries and inferred two metadata-internal exclusions. | F007 reports 34 entries; F005 still reports 35 filesystem entrypoints and two metadata blocks. | `resolve-repository-state`, 2026-08-30 | Freeze only the two observed counts. The old exclusion inference is retired; exact distribution ownership remains outside this snapshot. |
