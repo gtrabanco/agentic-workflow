@@ -107,9 +107,11 @@ nothing runs on a model you did not pick. To run anyway on the current model, se
 
 ## Your session comes back
 
-Routing lasts one command. The model and thinking level you had before it are
-restored when the turn settles, and if you change the model yourself mid-turn —
-with `/model`, say — the package leaves your choice alone instead of undoing it.
+Routing lasts one command. When the turn settles, the session is put back the way
+you had it — the model *and* the thinking level, because selecting a model can
+move the level. If you change the model yourself mid-turn, with `/model`, say,
+nothing is restored: your choice wins, and the command says so. Change only the
+thinking level and you keep it while the model still comes back.
 
 ## Settings console
 
@@ -125,12 +127,14 @@ touch the project file while the project is untrusted.
 
 | You see | Means |
 | --- | --- |
-| `agentic-workflow config is invalid — nothing was dispatched` | A config file was rejected. The message names the field, e.g. `$.commands.plan-feature.model`. Run `/agentic-workflow-settings` to see the file, or fix the JSON. |
-| `… is not available (not in the model registry)` | The reference is wrong or the provider is not configured. Use `/model` to find the exact `provider/modelId`. |
-| `… has no configured credentials` | The model exists but you cannot use it yet. Authenticate, or set `onUnavailableRoute` to `inherit`. |
-| `Pi is busy — nothing was dispatched` | A turn is running. Wait for it to settle. |
-| `A routed command is already running in this session` | The previous routed turn has not settled yet. |
-| Nothing happens when you type a command | The skill is not bundled under that name, or Pi was not restarted after install. |
+| `refused: invalid configuration` | A config file was rejected. The same message names the field, e.g. `$.commands.plan-feature.model`. Run `/agentic-workflow-settings` to see the file, or fix the JSON. |
+| `stopped: the configured model` … `is not in the model registry` | The reference is wrong or the provider is not configured. Use `/model` to see the exact `provider/modelId`. |
+| `has no configured credentials` | The model exists but you cannot use it yet. Authenticate, or set `onUnavailableRoute` to `inherit`. |
+| `could not be selected` | Pi refused the switch. The command stops with the reason; nothing was dispatched. |
+| `refused: the agent is busy` | A turn is running. Wait for it to settle. |
+| `is still routed` | The previous routed command has not settled yet. |
+| `leaving the model you chose in place` | You changed the model during a routed turn, so nothing was restored — your choice won. |
+| `these configured routes match no command` | A `commands` key names nothing. Fix the spelling or delete the entry. |
 
 ## Notes
 

@@ -11,6 +11,9 @@ import { parseConfigFile } from "./schema.js";
  *  - a MISSING file resolves to the shipped default (`inherit`);
  *  - a PRESENT-but-invalid file is a problem — never a silent `inherit`, so an
  *    operator can't believe a strong model ran when it did not;
+ *  - a file that EXISTS but cannot be read is the same kind of problem: it is
+ *    present, so its routing intentions are unknown, and unknown is refused
+ *    rather than defaulted (F7);
  *  - the project file is not even read while the project is untrusted, because
  *    a cloned repository must not be able to steer routing (S11).
  *
@@ -26,16 +29,28 @@ export function configFilePaths(agentDir, cwd) {
         project: join(cwd, PROJECT_CONFIG_DIR_NAME, CONFIG_FILE_NAME),
     };
 }
+const NOT_THERE = new Set(["ENOENT", "ENOTDIR"]);
+/** Absent is `null`; present-but-unreadable throws so the caller records it. */
 const readIfExists = (path) => {
     try {
         return readFileSync(path, "utf8");
     }
-    catch {
-        return null;
+    catch (error) {
+        if (NOT_THERE.has(error.code ?? ""))
+            return null;
+        throw error;
     }
 };
 function loadScope(scope, path, readFile, problems) {
-    const text = readFile(path);
+    let text;
+    try {
+        text = readFile(path);
+    }
+    catch (error) {
+        const code = error.code ?? "read error";
+        problems.push({ scope, path: "$", message: `the file could not be read (${code})` });
+        return {};
+    }
     if (text === null)
         return {};
     const result = parseConfigFile(text);

@@ -11,11 +11,9 @@ import { loadConfig, configFilePaths } from "../config/load.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
 import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
-/**
- * The console's questions. `test/settings-console.test.mjs` drives the flow
+/** The console's questions. `test/settings-console.test.mjs` drives the flow
  * through these strings, so renaming one fails the tests that use it rather than
- * silently re-sequencing them.
- */
+ * silently re-sequencing them. */
 export const prompts = {
     scope: "Which file should the console edit?",
     menu: "What do you want to change?",

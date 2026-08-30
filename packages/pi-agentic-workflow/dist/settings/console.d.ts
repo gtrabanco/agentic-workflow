@@ -1,11 +1,5 @@
+import type { SettingsUi } from "../routing/types.js";
 import type { ConfigFile } from "../config/types.js";
-/** The slice of `ctx.ui` the console uses. */
-export interface SettingsUi {
-    select(title: string, options: readonly string[]): Promise<string | undefined> | string | undefined;
-    input(title: string, placeholder?: string): Promise<string | undefined> | string | undefined;
-    confirm(title: string, message: string): Promise<boolean> | boolean;
-    notify(message: string, kind?: "info" | "warning" | "error"): void;
-}
 export interface SettingsDeps {
     ui: SettingsUi;
     agentDir: string;
@@ -27,11 +21,9 @@ export type ConsoleOutcome = {
     status: "cancelled";
     edited: boolean;
 };
-/**
- * The console's questions. `test/settings-console.test.mjs` drives the flow
+/** The console's questions. `test/settings-console.test.mjs` drives the flow
  * through these strings, so renaming one fails the tests that use it rather than
- * silently re-sequencing them.
- */
+ * silently re-sequencing them. */
 export declare const prompts: {
     readonly scope: "Which file should the console edit?";
     readonly menu: "What do you want to change?";

@@ -8,6 +8,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import { createSession, configFor } from "./helpers/session.mjs";
+import { loadConfig } from "../dist/config/load.js";
+import { DEFAULT_CONFIG } from "../dist/config/defaults.js";
 
 const COMMAND = { name: "plan-feature", skill: "plan-feature" };
 
@@ -91,4 +93,58 @@ test("AC12: refusal is decided per dispatch, so editing a broken file needs no r
   const accepted = await session.dispatch(COMMAND, "two");
   assert.equal(accepted.status, "dispatched");
   assert.equal(session.state.model.provider, "openai", "the repaired route applies immediately");
+});
+
+// --- F7 fold: "cannot read" is not "absent". A config file that exists but
+// cannot be read (EACCES on a shared runner, EISDIR from a bad symlink) used to
+// resolve to the shipped default, i.e. routing continued as if the operator had
+// configured nothing. The loader's own rule is that a present file which cannot
+// be honoured is a problem.
+
+test("AC12: a present-but-unreadable config file refuses the dispatch instead of routing on defaults", async () => {
+  const session = createSession({
+    config: configFor({ default: { model: "openai/gpt-5.2" } }),
+    models: { "openai/gpt-5.2": { auth: true } },
+    loadConfig: () =>
+      loadConfig({
+        agentDir: "/fixture/agent",
+        cwd: "/fixture/repo",
+        projectTrusted: true,
+        readFile: (path) => {
+          if (path.endsWith("pi-agentic-workflow.json")) {
+            throw Object.assign(new Error("EACCES: permission denied"), { code: "EACCES" });
+          }
+          return null;
+        },
+      }),
+  });
+
+  const outcome = await session.dispatch({ name: "plan-feature", skill: "plan-feature" }, "x");
+
+  assert.equal(outcome.status, "refused");
+  assert.equal(outcome.reason, "invalid-config");
+  assert.match(outcome.message, /EACCES/u, "the refusal names the read failure");
+  assert.deepEqual(session.log.setModel, [], "an unreadable config must not route anything");
+  assert.deepEqual(session.log.sendUserMessage, []);
+});
+
+test("AC6/AC12: real absence stays zero-config while an unreadable file is a problem", () => {
+  const absent = loadConfig({ agentDir: "/fixture/agent", cwd: "/fixture/repo", projectTrusted: true, readFile: () => null });
+  assert.equal(absent.ok, true);
+  assert.deepEqual(absent.problems, []);
+
+  const unreadable = loadConfig({
+    agentDir: "/fixture/agent",
+    cwd: "/fixture/repo",
+    projectTrusted: true,
+    readFile: (path) => {
+      if (path.includes("/.pi/")) return null;
+      throw Object.assign(new Error("EISDIR: illegal operation on a directory"), { code: "EISDIR" });
+    },
+  });
+  assert.equal(unreadable.ok, false);
+  assert.equal(unreadable.problems.length, 1, "one problem per unreadable file, not one per scope");
+  assert.equal(unreadable.problems[0].scope, "global");
+  assert.match(unreadable.problems[0].message, /EISDIR/u);
+  assert.deepEqual(unreadable.config, DEFAULT_CONFIG, "the shipped default is what an invalid state falls back to");
 });

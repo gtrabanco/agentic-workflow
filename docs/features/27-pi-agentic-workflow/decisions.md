@@ -256,3 +256,36 @@ risks (Pi API drift, skill drift) are pinned by peerDependency + parity test.
   renumbering would churn a frozen acceptance manifest's path to protect an empty
   reservation.
 - Rows 28/29 were taken from `main` verbatim; this branch does not touch them.
+
+## 2026-08-29 — end review and fold
+
+- **Restoring a session means restoring the level too.** Pi's `setModel` derives
+  and applies a thinking level internally, so "the route only named a model" is
+  not "the route only changed a model". The restore now fires whenever the turn
+  touched the session, keeps the operator's mid-turn level if they moved one, and
+  is asserted as an ordered sequence rather than a set of calls.
+- **The wire value is the skill name, never the directory.** Pi expands
+  `/skill:<x>` by matching the frontmatter `name:` and returns unmatched text to
+  the model *unexpanded* — a silent, plausible-looking failure. The catalogue
+  still keeps the directory (duplicate reporting needs it); dispatch does not
+  read that field. The `alias-coverage` fixture that had pinned the opposite
+  assumption was flipped against Pi's source, not relaxed.
+- **A settings console may not edit by omission.** Eliding a value because it
+  equals a shipped default is defensible for a *file nobody touched* and wrong
+  for one the operator just chose: at project scope, `inherit` and `stop` are
+  precisely the moves that shadow a global route and re-arm fail-closed. Elision
+  is now structural (empty route) only.
+- **Unreadable is not absent.** The loader refused a file it could not *parse*;
+  it now also refuses one it could not *read*, because a present file whose
+  contents are unknown is exactly the state AC12 exists for. Absence keeps
+  meaning zero-config.
+- **One defaulting rule for the callable boundary.** A skill that omits
+  `user-invocable` is internal, per this repository's own frontmatter contract;
+  the runtime scanner had drifted to "unless it says false". Latent, since all 34
+  bundled skills declare the key — pinned by a fixture anyway, because that
+  boundary decides what an operator can type.
+- **Test doubles carry the burden of the behaviour they claim to mirror.** The
+  session double was faithful on `model_select` and silent on the side effect next
+  to it, and the unit's compensating evidence (a mutation matrix) inherited the
+  blind spot. Recorded so the next phase writes doubles from Pi's source, not from
+  the assertions it needs.

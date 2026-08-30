@@ -23,7 +23,6 @@ export interface CommandRegistrar<M extends ModelRef = ModelRef> {
 /** What the settings command presents (SPEC S4): the console, over the same files. */
 export type SettingsHandler<M extends ModelRef = ModelRef> = (input: {
     catalogue: Catalogue;
-    loaded: LoadedConfig;
     ctx: InvocationContext<M>;
 }) => unknown;
 export interface ExtensionDeps<M extends ModelRef = ModelRef> {

@@ -25,10 +25,18 @@ export interface SkillMeta {
   userInvocable: boolean;
 }
 
-/** Minimal frontmatter reader: `name`, `description`, `user-invocable` only. */
+/**
+ * Minimal frontmatter reader: `name`, `description`, `user-invocable` only.
+ *
+ * `user-invocable` must say `true` to count: this repository's own rule
+ * (CLAUDE.md — the key "REQUIRED for it to appear in the agent's /command menu")
+ * makes absence mean internal, and `scripts/bundle-skills.mjs` reads it the same
+ * way. The two scanners agree because the rule is stated once per scanner and
+ * pinned by `test/alias-coverage.test.mjs`, not because either default is safe.
+ */
 export function readSkillMeta(text: string, dir: string): SkillMeta {
   const lines = text.split(/\r?\n/u);
-  const meta: SkillMeta = { dir, name: dir, userInvocable: true };
+  const meta: SkillMeta = { dir, name: dir, userInvocable: false };
   if (lines[0]?.trim() !== "---") return meta;
 
   for (let index = 1; index < lines.length; index += 1) {
@@ -41,7 +49,7 @@ export function readSkillMeta(text: string, dir: string): SkillMeta {
     const value = line.slice(colon + 1).trim().replace(/^["']|["']$/gu, "");
     if (key === "name" && value !== "") meta.name = value;
     else if (key === "description" && value !== "") meta.description = value;
-    else if (key === "user-invocable") meta.userInvocable = value !== "false";
+    else if (key === "user-invocable") meta.userInvocable = value === "true";
   }
   return meta;
 }

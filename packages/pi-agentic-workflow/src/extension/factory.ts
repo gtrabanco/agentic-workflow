@@ -33,7 +33,6 @@ export interface CommandRegistrar<M extends ModelRef = ModelRef> {
 /** What the settings command presents (SPEC S4): the console, over the same files. */
 export type SettingsHandler<M extends ModelRef = ModelRef> = (input: {
   catalogue: Catalogue;
-  loaded: LoadedConfig;
   ctx: InvocationContext<M>;
 }) => unknown;
 
@@ -93,7 +92,7 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     handler: async (_args, ctx) => {
       reportCatalogueIssues(ctx);
       try {
-        await settings({ catalogue, loaded: read(ctx), ctx });
+        await settings({ catalogue, ctx });
       } catch (error) {
         // A console that dies mid-question must say so, not take the session down.
         ctx.notify(`Settings could not be opened: ${(error as Error).message}`, "error");

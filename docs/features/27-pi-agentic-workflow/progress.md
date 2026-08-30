@@ -99,3 +99,10 @@ Last reviewed: 2026-08-29 (P6)
 - Gotchas: `pi install ./` writes into the **global** `~/.pi/agent/settings.json`, so an integration check of the package manifest mutates the developer's own Pi install — run it, capture `pi list`, then `pi uninstall ./`; the smoke test that needs a model call is the one thing a usage-capped environment cannot evidence, and it belongs in `known-issues.md` rather than in a claim.
 - Files: `docs/features/{ROADMAP.md,27-pi-agentic-workflow/*}`
 - Next: end review (`/loop-review-fold 27`)
+
+## End review + fold — 2026-08-29
+- Review: `review-change` on `bfd465c9` in a context that did not write the diff (tracked subsession; `subagent` launches are broken in this build, so the axis fallback ran in-turn) → **REVIEW-FAIL**, 10 fix-now rows in `review-findings.md`, two of them high.
+- Fold: all 10 repaired in-unit, 12 tests written red first, suite 94 → 106, 9 mutants re-run and killed (including the two the review proved surviving). Commit `d1436c8a` + this fold commit.
+- What the review caught that the phase gates did not: AC7/AC8 were unmet for a `{model}`-only route (Pi moves the thinking level inside `setModel`; the restore was gated on the route naming one), AC10 silently discarded an explicit `inherit`/`stop` (the only two values that shadow a lower scope), AC3 dispatched the bundled directory where Pi expands on the frontmatter `name:`, and the README quoted refusal strings no code emits.
+- Still open: the live model-backed routed turn (usage limit at the smoke step) — `known-issues.md`, manual checklist items 1–6.
+- Next: re-run `review-change` on the folded HEAD.
