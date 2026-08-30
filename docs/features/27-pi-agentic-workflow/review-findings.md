@@ -76,8 +76,8 @@ outcome, not an opinion.
 | id | file:line | axis | severity | class | route | folded |
 | --- | --- | --- | --- | --- | --- | --- |
 | F11 | packages/pi-agentic-workflow/src/routing/dispatch.ts:103 | tests | low | fix-now | CLOSED in `e2f84e5d` (the concurrent fold landed, pushed) — announce pinned by `AC8: restoring a session that had no model is said out loud`; harness entry kills the mutant (pass-3 re-verified) | yes |
-| F12 | packages/pi-agentic-workflow/src/routing/catalogue.ts:94 | tests | med | fix-now | DISPUTED — already pinned: the "reported, never registered" mutant is killed on clean `67cdda16` (`alias-coverage`, fail=3) by the duplicate-name fixture pass 2 added; the row is now also a permanent harness entry, so the dispute is re-runnable rather than argued | no |
-| F13 | packages/pi-agentic-workflow/src/routing/catalogue.ts:44 | tests | med | fix-now | DISPUTED — already pinned: removing the closing-`---` break is killed on clean `67cdda16` (`alias-coverage`, fail=3); added to the harness table for the same reason | no |
+| F12 | packages/pi-agentic-workflow/src/routing/catalogue.ts:94 | tests | med | fix-now | CLOSED — already pinned: the "reported, never registered" mutant is killed on clean `67cdda16` (`alias-coverage`, fail=3) by the duplicate-name fixture pass 2 added; the row is now also a permanent harness entry, so the dispute is re-runnable rather than argued | yes |
+| F13 | packages/pi-agentic-workflow/src/routing/catalogue.ts:44 | tests | med | fix-now | CLOSED — already pinned: removing the closing-`---` break is killed on clean `67cdda16` (`alias-coverage`, fail=3); added to the harness table for the same reason | yes |
 | F14 | packages/pi-agentic-workflow/src/settings/view.ts:39 | tests | med | fix-now | fold into current phase — the only rendered line with no non-default fixture: a hard-coded `stop` passed every test because the existing view assertion used the shipped default | yes |
 | F15 | packages/pi-agentic-workflow/src/settings/console.ts:235 | tests | low | fix-now | fold into current phase — `saveScope` must persist `clean(draft)`, not the draft: clearing the last override wrote `"commands": {}` under the mutant | yes |
 | F16 | packages/pi-agentic-workflow/src/routing/dispatch.ts:101 | tests | low | fix-now | CLOSED in `e2f84e5d` — pinned by `AC7: a thinking-only route never touches the model — including at settle` (log-only witness); harness entry kills the mutant (pass-3 re-verified) | yes |
@@ -88,8 +88,11 @@ outcome, not an opinion.
   harness entries, and the four proven-killed entries in
   `scripts/mutation-check.mjs`. Gate: `npm test` → exit 0, 120 pass / 0 fail
   (`67cdda16` was 118); `npm run mutation` → 25 mutants, 0 survived.
-- **Disputed (no code change is correct):** F12 + F13. Pass 2's own note claimed
-  the suite could not see them; it had already added the tests that do.
+- **Disputed, now CLOSED (no code change was correct):** F12 + F13. Pass 2's own
+  note claimed the suite could not see them; it had already added the tests that
+  do. Both mutants are killed on clean `67cdda16` by `alias-coverage` harness
+  entries added by pass 2 — documented as DISPUTED in the ledger but folded in
+  reality; corrected to CLOSED `yes`.
 - **Blocked (missing input):** F11 + F16 — a second writer owns
   `dispatch.ts`/`restore-after-settle.test.mjs` in this working tree right now. A
   fold that edits either file this turn would commit someone else's red tests,
