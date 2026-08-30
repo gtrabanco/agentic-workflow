@@ -298,7 +298,29 @@ export function createRouter<M extends ModelRef = ModelRef>({
       // wire value. The bundled directory (`command.skill`) is not it: it happens
       // to match today and would silently stop expanding if a skill ever renamed.
       const invocation = args === "" ? `/skill:${command.name}` : `/skill:${command.name} ${args}`;
-      session.sendUserMessage(invocation, { expandPromptTemplates: true });
+      // The send is where Pi's own path can throw first (`prompt()` refuses while
+      // compaction is in progress, with no model, or without credentials — before
+      // the agent loop ever runs). That throw is proof the turn never started, so
+      // the routing applied a moment ago is undone here and now: leaving it would
+      // wedge the latch behind a refusal that names no cause (N-4).
+      try {
+        session.sendUserMessage(invocation, { expandPromptTemplates: true });
+      } catch (error) {
+        pending = undefined;
+        if (applied.model || applied.thinking) {
+          await restore(
+            { command: command.name, snapshot, applied, userChangedModel: false, userChangedThinking: false },
+            session,
+            ctx,
+            `dispatch failed (${(error as Error).message}); the session was put back`,
+          );
+        }
+        return refuse(
+          ctx,
+          "dispatch-failed",
+          `/${command.name} was not dispatched: ${(error as Error).message}. Nothing was sent, and the session model was put back.`,
+        );
+      }
 
       return { status: "dispatched", routed: Boolean(applied.model || applied.thinking), hintShown };
     },
