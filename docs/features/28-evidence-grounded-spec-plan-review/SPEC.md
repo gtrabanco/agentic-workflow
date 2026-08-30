@@ -64,10 +64,10 @@ supported by repository evidence. This feature introduces that missing
 pre-execution authority without replacing candidate review, verification, or
 final audit.
 
-The design adopts the applicable evidence-first and last-causal-event lessons
-from Gentle AI v2.5.0 release candidates, but it does not depend on Gentle AI,
-copy its lifecycle, or claim equivalent token savings. The measurable target is
-less wrong work and less rework, not fewer exploratory reads.
+The design adopts evidence-first and last-causal-event lessons; it depends on
+no external product, copies no external lifecycle, and claims no equivalent
+token savings. The measurable target is less wrong work and less rework, not
+fewer exploratory reads.
 
 ### Business goals
 
@@ -155,7 +155,7 @@ less wrong work and less rework, not fewer exploratory reads.
 - No named model/provider routing, retries, concurrency, durable event store,
   atomic acknowledgement protocol, or context broker; AWL or another runtime
   owns those operations.
-- No second SDD lifecycle, Gentle AI dependency, automatic issue creation, or
+- No second SDD lifecycle, external-product dependency, automatic issue creation, or
   unmeasured token-saving claim.
 - No replacement or weakening of TDD, `review-change`, candidate
   `ReviewReceipt`, `VerificationPlan`/`VerificationReceipt`, or `audit-pr`.
@@ -409,6 +409,8 @@ Engineering boxes:
 ---
 
 ## Amendments
+
+- 2026-08-30 — external-product citations removed per the repo norm of absorbing knowledge without citing projects; wording only, no requirement, scope, or acceptance change.
 
 | Date | Authority | Change |
 |---|---|---|
