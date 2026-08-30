@@ -51,3 +51,27 @@ objects, so the shapes the router stores and restores are Pi's, not invented one
 folder, set a global `pi-agentic-workflow.json` route to a model you can actually
 use, run `/workflow-status`, and confirm the session model returns when the turn
 settles.
+
+## 2026-08-29 — roadmap numbering race after the branch was pushed (P6, open)
+
+**Issue**: after P6, `origin/main` gained `51464a9 docs(roadmap): shift scheduled
+plan features` and `5bb235b docs(roadmap): reserve feature 27`, which moved the
+two unstarted rows to 28/29 and **vacated number 27** for a future feature. This
+unit is 27 everywhere — folder, SPEC/PLAN/TASKS/ACCEPTANCE, six phase receipts,
+the package READMEs and PR #150 — so `docs/features/ROADMAP.md` now conflicts and
+GitHub reports the PR as unmergeable.
+
+**Status**: open, awaiting the owner's call. Two resolutions exist:
+
+- **Keep 27** (recommended): rebase and resolve the row in favour of the delivered
+  unit; the reserved-but-empty slot becomes the next free number for whoever was
+  reserving it. Textual conflict only — rows 28/29 are already byte-identical on
+  both sides.
+- **Move this unit to 30**: rename `docs/features/27-pi-agentic-workflow/`,
+  renumber every artifact and receipt, re-point the package README links, amend the
+  PR title/body and the roadmap row. Doable, but it churns a frozen acceptance
+  manifest's path for an unstarted reservation.
+
+**Why it is not being resolved silently**: a reservation with no artifact is
+someone else's in-flight plan, and the roadmap is the pipeline's single
+ground-truth column.
