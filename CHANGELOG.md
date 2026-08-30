@@ -233,6 +233,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.0 | 2026-08-30 | major | **Breaking hand-off:** a designed Product half now closes at `READY-FOR-REVIEW` and hands off to `/review-spec <slug>`, not to `/plan-feature`. Consumes the internal `evidence-grounding` passes (inventory → evidence → draft → readiness), freezes one evidence row per material Product claim, rotates `artifactRevisionId` on every write including a revert, and gains `references/REPAIR.md`: one root-caused batch over the whole `SPEC-REVIEW-FAIL` findings set, three named repair classes, and a second cycle reported as `CONVERGENCE-ANOMALY`. Design carries no review authority.
 | 2.6.0 | 2026-07-31 | minor | Progressive loading separates status-only, new-idea interview/closure, write/upsert, worked-upsert, and portability paths while retaining universal safety gates in the entrypoint. |
 | 2.5.0 | 2026-07-31 | minor | Classifies optional project architectural invariants with repository evidence and stops design for an explicit architectural decision when a rule is violated, introduced, or changed. |
 | 2.4.1 | 2026-07-31 | patch | Moves the NRS guidance below the Guardrails bullets so the guardrails keep their intended section scope. |
@@ -246,6 +247,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 4.0.0 | 2026-08-30 | major | **Breaking gate:** planning now runs a Product-review gate after the redirect gate. A route may not scaffold unless a current `spec-review-pass` receipt binds the recomputed SPEC-stage snapshot; `missing`, `stale`, `wrong-stage`, `substitute` (candidate/verification receipts), `self-approved` and `author-readiness` all fail closed with the fixed `PRODUCT-REVIEW GATE … BLOCKED` block and a `/review-spec` hand-off. No bypass flag exists.
 | 3.5.1 | 2026-08-10 | patch | Makes blocked dependency hand-offs enumerate the complete deepest-first dependency chain instead of leaving it as an unexpanded placeholder. |
 | 3.5.0 | 2026-08-09 | minor | Clean and already-planned hand-offs now recommend target-only `execute-phase` for whole-unit delivery and list explicit `P1` only as the atomic alternative. |
 | 3.4.0 | 2026-08-04 | minor | Adds the planning preflight and phase contract as one-hop internal contracts (progressive-loading paths 2-3) and pins a single immutable planning context — one roadmap snapshot plus optional issue payload — reused across composed internals, never re-fetched mid-plan. |
@@ -295,6 +297,11 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.0.2 | 2026-06-19 | patch | Added `## Done when` — every skill ends by printing the next step |
 | 1.0.1 | 2026-06-09 | patch | Forge-agnostic phrasing ("forge CLI per Workflow conventions") |
 | 1.0.0 | 2026-06-05 | — | First versioned release — architect-draft a scoped fix SPEC, stop for review |
+
+#### `review-spec`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-08-30 | — | New Product-stage gate: reviews a frozen Product half in a context-clean turn, builds `PreExecutionArtifactSnapshot v1` with the `spec-product-v1` selector, runs the fixed fourteen Product checks after a falsification pass, and returns only `SPEC-REVIEW-PASS | SPEC-REVIEW-FAIL | NEEDS-DESIGN` with the receipt persisted in `progress.md`. Read-only on every reviewed artifact; product choices return to the human.
 
 #### `review-change`
 | Version | Date | Type | What changed |
@@ -492,7 +499,10 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
-| `orchestration-envelope` | 2.0.2 | 2026-08-22 | patch | Restores default `skills add` distribution by removing erroneous discovery-exclusion metadata, so consumers install the canonical turn contract required by `design-feature`, `execute-phase`, and `review-change`. |
+| `evidence-grounding` | 1.0.0 | 2026-08-30 | — | New internal owner of evidence-grounded authoring: the fixed claim/authority/evidence/freshness/unknown row, the closed `authority-kind`/`freshness` vocabularies, the ordered inventory → evidence → draft → cut → readiness passes, the deterministic `READY-FOR-REVIEW | NEEDS-EVIDENCE | NEEDS-DESIGN | NEEDS-REPLAN` preflight, `artifactRevisionId` rotation (a revert is a write), and the new-named-question-or-new-evidence no-progress rule. It can never emit a review verdict.
+| `orchestration-envelope` | 2.0.2 | 2026-08-22 | patch |
+| `plan-feature-from-issue` | 2.0.0 | 2026-08-30 | major | **Breaking hand-off:** narrowed to the Product half. It designs and readiness-checks an issue-derived SPEC, then stops at the Product-review gate and hands off to `/review-spec` — no Engineering half, no phases, no `defined → planned` write, and no in-turn `plan-feature-scaffold` composition. Name kept for compatibility.
+ Restores default `skills add` distribution by removing erroneous discovery-exclusion metadata, so consumers install the canonical turn contract required by `design-feature`, `execute-phase`, and `review-change`. |
 | `orchestration-envelope` | 2.0.1 | 2026-08-21 | patch | Clarifies that `ship-roadmap` is a native-banner conductor outside the worker/sensor machine-result profiles, and aligns the profile and driver guidance. |
 | `orchestration-envelope` | 2.0.0 | 2026-08-21 | major | **Breaking driver contract:** replaces the duplicated full-envelope prompt with package-owned output profiles, compact SkillOutcome v1, deterministic snapshots, named compatibility, and one bounded generic machine-result repair. See `docs/workflow/MIGRATION.md`. |
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | patch | No behavior change: compresses emission, field-rule, repair-loop, package-sync, relationship, and NRS prose while preserving the schema and driver protocol. |
@@ -586,6 +596,14 @@ How pinning actually works, verified against the `skills` CLI:
 | `review-seo` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.0 | 2026-07-02 | — | Internal review pack: SEO checklist (metadata, canonical, indexability, structured data) |
 ---
+
+- **2026-08-30 — designed is not reviewed.** Feature 28 P2 adds `review-spec`
+  1.0.0 and the internal `evidence-grounding` 1.0.0: a Product half now freezes one
+  evidence row per material claim, passes a deterministic readiness preflight, and
+  is reviewed in a clean context before planning. `design-feature` 3.0.0 and
+  `plan-feature-from-issue` 2.0.0 stop at that review instead of proceeding to
+  engineering planning, and `plan-feature` 4.0.0 fails closed without a current
+  `spec-review-pass` receipt bound to the exact snapshot.
 
 ## Release log (chronological, newest first)
 

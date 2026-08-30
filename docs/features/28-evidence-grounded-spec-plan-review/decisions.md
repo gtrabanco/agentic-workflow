@@ -89,3 +89,20 @@
   quoted fragment can never appear in serialized bytes — the assertion as first
   written was unsatisfiable under any implementation and was amended, not
   weakened (the rule, its pattern, and its description are unchanged).
+- **D18 — `evidence-grounding` carries no model tier:** it is internal and
+  always composed inside its caller's turn, so its work already runs at the
+  caller's tier (`design-feature` = opus/high). `model-routing.yml` routes only
+  entrypoints, and the precedent is explicit: `phase-contract`,
+  `verification-contract` and `planning-preflight` are referenced from routed
+  entrypoints and carry no route of their own. Adding a route for it would
+  imply it can be invoked, which the SPEC forbids (`SKILL.md:133`).
+- **D19 — P2 recalibrated the frozen route budgets:** the frozen manifest pinned
+  `plan-feature:scoped` at 6337/536 and `plan-feature:issue` at 7786/687, both
+  measured *before* the Product-review gate existed. A gate this skill must
+  emit cannot fit the old ceiling, so the two routes were raised to
+  7610/643 and 9970/814 and the two new routes registered
+  (`design-feature:product` 11950/864, `review-spec:default` 4690/352). This
+  follows the recorded feature-21 precedent ("budget manifest recalibrated to
+  the new steady state") rather than truncating mandatory contract text. Each
+  figure is a measured steady state, not a padded maximum: `check-skill-context
+  --routes` passes with the smallest route-specific buffer in the manifest.

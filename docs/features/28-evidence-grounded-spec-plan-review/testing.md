@@ -67,3 +67,44 @@ threshold is a release-quality target, never permission to suppress findings.
 
 Use `not yet measured` for unavailable observations. Do not infer improvement
 from the mechanism alone.
+
+## Execution records
+
+### P2 (2026-08-30) — Product authoring and the independent spec review
+
+Gate commands, all on the final candidate state:
+
+| Command | Result |
+|---|---|
+| `node --test scripts/pre-execution-quality.test.mjs` | 25/25 pass (13 pre-P2 + 12 P2 cases) |
+| `node --test scripts/*.test.mjs` (root) | 82/82 pass, no regression from the 57-pass baseline |
+| `node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` | 17/17 pass |
+| `node scripts/check-skill-context.mjs` | PASS — 37 skills, largest entrypoint `plan-feature-scaffold` 14661 ≤ 15200 |
+| `node scripts/check-skill-context.mjs --routes` | PASS — 20 routes |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | bundled 36 skills; 134/134 pass |
+| `npx skills add . --list` | 38 skills, `evidence-grounding` and `review-spec` internal, the rest user-facing |
+
+Route-specific coverage against the mandatory "Skills and routes" matrix:
+
+- *complete feature Product review* → `review-spec` C1–C14 + verdict/receipt
+  tests; *reparable Product finding* → `design-feature/references/REPAIR.md`
+  batch test; *missing product choice* → C13 `NEEDS-DESIGN` rule + check table;
+  *unsupported external claim* → `authority-kind`/`freshness` row test;
+  *issue-export attempt* → `plan-feature-from-issue` terminal-handoff test.
+- *Product readiness rejects missing evidence / unknown ownership / scenario
+  gaps without claiming PASS* → readiness-vocabulary-preservation test plus the
+  `READINESS.md` rule set and the `design-feature` "carries no review authority"
+  guardrail.
+- *first findings repaired as one owner-bounded batch; one re-review; second
+  cycle → `CONVERGENCE-ANOMALY`* → batched-repair test; the cycle-count fields
+  themselves are the schema package's P1 vectors (already green).
+- Not yet exercised by text contracts (lands with P3/P4): Plan-review route
+  coverage, `execute-phase`/`fold-findings`/`triage-issue` ledger behaviour, and
+  the routing table for `review-spec`/`review-plan`.
+
+Residual risks: (1) the P2 tests assert contract text, not an LLM performing a
+review — the qualification corpus and the weak-model route in
+`docs/workflow/GOLDEN_FIXTURE.md` remain P5 work; (2) `spec-review-pass`
+authority is contractual (see `known-issues.md` item 9); (3) the Pi bundle was
+rebuilt from canonical at P2 because skill changes must stay distributable
+inside the unit — P5 still owns the terminal rebuild and version bump (D15).

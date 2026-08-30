@@ -114,10 +114,12 @@ plan → execute → review → audit → merge.**
 | `plan-fix`     | Drafts one fix SPEC + frozen `ACCEPTANCE.md` from one or more issues. Multi-issue units group by an atomic delivery boundary: one capability outcome or homogeneous mechanical rule, one verification plan, and one release/rollback boundary; shared files/root cause/equal severity are not required. Incompatible inputs return the fewest maximal groups instead of one issue per PR. |
 
 > `design-feature` (product definition, folds in the raw-idea interview) must
-> mark a feature `designed` before `plan-feature` will plan it — `plan-feature`
-> refuses and redirects otherwise, no bypass flag. Once designed, you only ever
-> call `plan-feature`; it composes the internal steps `plan-feature-from-issue`
-> and `plan-feature-scaffold` (hidden from the menu).
+> mark a feature `designed` **and** `review-spec` must return a current
+> `SPEC-REVIEW-PASS` before `plan-feature` will plan it — each gate refuses and
+> redirects otherwise, no bypass flag. Designed is not reviewed: the author's own
+> readiness check licenses a review request, never a verdict. Once reviewed, you
+> only ever call `plan-feature`; it composes the internal steps
+> `plan-feature-from-issue` and `plan-feature-scaffold` (hidden from the menu).
 
 ### Execute
 
@@ -129,6 +131,7 @@ plan → execute → review → audit → merge.**
 
 | Skill           | Scope           | What it does                                                                                                                                                                                   |
 | --------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review-spec` | the **design** | Independent, read-only Product gate: builds the `spec-product-v1` snapshot of a designed SPEC's product half, runs a falsification pass plus the fixed fourteen Product checks in a context that did not write it, and returns only `SPEC-REVIEW-PASS`, `SPEC-REVIEW-FAIL` or `NEEDS-DESIGN` with a content-bound receipt. It never edits the reviewed SPEC and never chooses product intent — `plan-feature` refuses to scaffold without its current receipt. |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) — adversarially by default, assuming the diff is wrong until proven otherwise — and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits on the PR branch are fix-now `workflow` findings. The mandatory end review **must run in a conversation that did not implement the change** — if it did, stop and hand off to a fresh one. Opt-in `--adversarial N`: N independent context-clean reviewers, each an index-assigned role (correctness/security/SPEC-coverage), run in parallel (subagents / headless / sequential-fallback), findings merged by `file:line` at an inclusion threshold of ≥1 — default off, auto-recommended (never forced) when the change is `L`/sensitive, the reviewer isn't the fleet's strongest or is weaker than the diff's author, or only one model family is available on a `≥M` change. `--synthesize` is the standalone fusion entry point for manually-run reviewers. Fix-now findings on an unmerged unit persist to that unit's fix-now fold ledger (`review-findings.md`), deduped by `file:line`+axis. Classification honors the engine's **fix-now override checks**: a cheap fix or an in-scope defect is always fix-now (never a postpone/known-issue/tradeoff escape), and a too-large in-scope fix-now routes to `replan-in-unit` — user-confirmed SPEC phase(s) on the same branch, never a downgrade |
 | `fold-findings` | the **findings ledger** | Repairs the full queue in the fewest compatible atomic batches, grouping by root cause/mechanical rule + validator + rollback boundary. One batch gets one commit, while every finding retains its ledger tick and output receipt. Classification stays frozen; disputes stop for a user decision and no fold creates backlog. |
 | `loop-review-fold` | the **candidate loop** | Simple state router between `review-change` and `fold-findings`: checks persisted evidence first, folds an existing open queue before reviewing again, and reviews only a changed HEAD. Unresolved findings go to `triage-issue --prioritize-now`; oversized work is replanned into new `P<n>` phases and the user continues execution manually. Never merges or silently drops findings. |
@@ -242,6 +245,7 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `init-workspace` | Opus       | high   | interview-driven project bootstrap + adaptation                                                                                                                                          |
 | `discover-repository-state` | Sonnet     | medium | evidence collection and frozen repository-state snapshot                                                                                                                                 |
 | `resolve-repository-state` | Opus       | high   | contradiction resolution and repository-state judgment                                                                                                                                  |
+| `review-spec` | Opus | high | independent Product-half review in a clean context; never weaker than the model that wrote the half |
 | `design-feature` | Opus       | high   | product-definition judgement: raw-idea interview + capability closure, composed by callers only at ≥ this tier                                                                          |
 | `plan-feature`   | Opus       | high   | router + engineering planning: its internal scoping steps run **in its turn**, so the router must carry the effort (composed skills inherit the turn's effort)                           |
 | `plan-fix`       | Opus       | high   | architect-level scoping + risk analysis                                                                                                                                                  |
@@ -490,8 +494,10 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 ### Build a feature
 
 ```
-/plan-feature "<your idea>"     # or  /plan-feature <N> (issue)  ·  /plan-feature --next (next roadmap item)
-        → router detects idea / issue / scoped slug → interview · issue analysis · scaffold
+/design-feature "<idea>"        # product half: capability closure + acceptance criteria
+        → /review-spec <NN>   → independent read-only Product gate (SPEC-REVIEW-PASS | FAIL | NEEDS-DESIGN)
+/plan-feature <NN>              # or  /plan-feature <N> (issue)  ·  /plan-feature --next
+        → router detects idea / issue / scoped slug → Product-review gate → scaffold
         → fills the SPEC + PLAN + TASKS + … and registers the roadmap entry
 /execute-phase <NN>             # all remaining phases; fresh worker + bounded repairs per phase
         → a finished unit always opens its PR + flips to `done` (built, not merged)
@@ -623,13 +629,14 @@ without selecting skills interactively, pass all published skill names to one
 
 ```sh
 npx skills remove --yes \
-  audit-docs audit-pr design-feature discover-repository-state execute-phase \
+  audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
+  execute-phase \
   fold-findings generate-docs init-workspace log-session loop-review-fold \
   orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \
   review-debt review-design review-implementation review-perf review-security \
-  review-seo review-verify ship-roadmap triage-issue verification-contract \
+  review-seo review-spec review-verify ship-roadmap triage-issue verification-contract \
   workflow-status plan-feature-interview bump-skill
 ```
 

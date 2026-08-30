@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 3.5.1
+version: 4.0.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -25,6 +25,9 @@ one — the routed redirect gate enforces that split.
 ```
 ✓ The redirect gate ran FIRST, before any SPEC edit: undesigned input → STOP,
   print the fixed `/design-feature <slug>` block, do nothing else this turn
+✓ Then the Product-review gate ran: no current `spec-review-pass` receipt bound to
+  the recomputed snapshot → STOP with its fixed block and the `/review-spec`
+  hand-off; a candidate/verification receipt, a Plan receipt, or readiness never counts
 ✓ Designed input only: engineering half filled, artifacts written, and the
   roadmap entry registered (number, order, deps verified)
 ✓ If `plan-feature-scaffold` ran this turn: the roadmap row was re-read
@@ -51,7 +54,8 @@ and roadmap registration match the project's real layout.
 The reference allowlist is exactly the two paths below:
 
 1. Every invocation: read [redirect gate and routing](references/ROUTING.md),
-   apply the status gate first, and stop on its exact block when instructed.
+   apply the status gate first, then the Product-review gate, and stop on its
+   exact block when instructed.
 2. Any route that can write planning artifacts: after the redirect gate permits
    routing, consume the [planning preflight](<../planning-preflight/SKILL.md>) —
    it owns the normalized repository state read and the ONE final architectural
@@ -67,21 +71,24 @@ one hop from this file, and fail closed when missing.
 ## Process
 
 1. **Redirect gate** from `ROUTING.md` — always first.
-2. **Route** from the same resource. For issue input, resolve and validate the issue
+2. **Product-review gate** from the same resource — current `spec-review-pass`
+   receipt bound to the recomputed snapshot, or STOP. No bypass flag.
+3. **Route** from the same resource. For issue input, resolve and validate the issue
    identity only; after the [planning preflight](<../planning-preflight/SKILL.md>)
    confirms that planning may write, compose the from-issue internal to produce
-   a **filled, sized SPEC product half**; then invoke `plan-feature-scaffold`,
-   which fills the engineering half and scales the artifacts to the SPEC's size
-   (XS/S → SPEC-only; M/L → full set) and registers the roadmap. The
+   a **filled, sized SPEC product half**; that internal stops at the Product-review
+   gate, so `plan-feature-scaffold` runs only once `review-spec` has passed the half:
+   it fills the engineering half, scales the artifacts to the SPEC's size (XS/S →
+   SPEC-only; M/L → full set) and registers the roadmap. The
    already-designed scoped path runs `plan-feature-scaffold` directly. Every
    path holds **one immutable planning context** — the roadmap snapshot taken
    before writing (and one issue payload when `--from-issue`) — reused across
    the internal steps; never re-fetched mid-plan.
-3. **Confirm roadmap.** Verify the feature is registered in
+4. **Confirm roadmap.** Verify the feature is registered in
    `docs/features/ROADMAP.md` with the right number, ordering, and dependencies;
    if any of the three is missing or wrong, fix the entry now — never leave
    registration for later.
-4. **Dependency & blocker check (always, before recommending execution).**
+5. **Dependency & blocker check (always, before recommending execution).**
    - Walk the feature's `Depends on:` closure (transitively): every dependency
      must be `done` **and merged**. Any unmet → the closing block recommends
      building the deepest unmet dependency first, NOT this feature.
@@ -97,6 +104,9 @@ one hop from this file, and fail closed when missing.
 - Docs only — no code, no branch (that is `execute-phase`).
 - **Never plan an undesigned feature** — the redirect gate has no bypass flag,
   ever. Do not add one, even if asked; point at `/design-feature` instead.
+- **Never plan an unreviewed Product half** — this gate has no bypass flag either.
+  Planning binds the reviewer's receipt; it may never write, widen, or "refresh"
+  one, and a receipt bound to older bytes is stale, not close enough.
 - Don't re-ask what a flag, the issue, or the docs already settle.
 - Surface conflicts (numbering clashes, dependency cycles, scope overlap) before
   writing, not after.
@@ -133,6 +143,9 @@ enables:
 
 - **Redirects to** `design-feature` when the redirect gate stops on an
   undesigned feature — never composed in-turn (planning-class, ≥-tier hand-off).
+- **Redirects to** `review-spec` when the Product-review gate stops: designed is not
+  reviewed. Its receipt is this skill's input, and `plan-feature-scaffold` binds it
+  as the Plan snapshot's Product parent.
 - `triage-issue` routes here to promote an issue to a feature (still subject to
   the redirect gate if the promoted issue is undesigned).
 - `execute-phase` executes the phases afterward (`audit-docs` audits anytime).
@@ -167,6 +180,10 @@ enables:
   → Next: /design-feature <slug> — this feature has no completed product design yet
     (capability closure not done). Design it first; then re-run /plan-feature <slug>.
   ```
+
+  designed but unreviewed/stale (Product-review gate stopped): the fixed
+  `PRODUCT-REVIEW GATE … BLOCKED` block from `ROUTING.md`, closing with
+  `/review-spec <NN>-<slug>`.
 
   unmet dependency and/or blocking fix-now issue:
 

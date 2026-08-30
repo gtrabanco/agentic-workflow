@@ -234,6 +234,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `design-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** la mitad de producto diseñada cierra en `READY-FOR-REVIEW` y entrega a `/review-spec <slug>`, no a `/plan-feature`. Consume los pases de `evidence-grounding` (inventario → evidencia → borrador → preparación), congela una fila de evidencia por afirmación material y rota `artifactRevisionId` en cada escritura, incluida una reversión; incorpora `references/REPAIR.md`: un lote con causa raíz común sobre todo el conjunto de hallazgos de `SPEC-REVIEW-FAIL`, tres clases de reparación nombradas y un segundo ciclo reportado como `CONVERGENCE-ANOMALY`. El diseño no tiene autoridad de revisión.
 | 2.6.0 | 2026-07-31 | menor | La carga progresiva separa las rutas de solo-estado, entrevista/cierre de idea nueva, escritura/upsert, ejemplo de upsert y portabilidad, manteniendo los gates universales de seguridad en el entrypoint. |
 | 2.5.0 | 2026-07-31 | menor | Clasifica invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio y detiene el diseño para una decisión arquitectónica explícita cuando una regla se viola, introduce o cambia. |
 | 2.4.1 | 2026-07-31 | parche | Mueve la guía NRS debajo de los bullets de Guardrails para que los guardrails mantengan su alcance de sección previsto. |
@@ -247,6 +248,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.0.0 | 2026-08-30 | mayor | **Puerta que rompe:** el planeado ejecuta ahora una puerta de revisión de producto tras la puerta de redirección. Ninguna ruta genera artefactos salvo que un recibo `spec-review-pass` vigente enlace el snapshot de etapa SPEC recalculado; `missing`, `stale`, `wrong-stage`, `substitute` (recibos de candidato/verificación), `self-approved` y `author-readiness` fallan cerrados con el bloque fijo `PRODUCT-REVIEW GATE … BLOCKED` y la entrega a `/review-spec`. No existe bandera de evasión.
 | 3.5.1 | 2026-08-10 | parche | Hace que los hand-offs por dependencias bloqueantes enumeren la cadena completa, de la más profunda a la final, en lugar de dejar un placeholder sin expandir. |
 | 3.5.0 | 2026-08-09 | menor | Los hand-offs limpios y ya-planificados recomiendan ahora `execute-phase` solo-con-objetivo para entregar la unidad completa y dejan `P1` explícita únicamente como alternativa atómica. |
 | 3.4.0 | 2026-08-04 | menor | Añade los contratos internos de un salto planning preflight y phase contract (rutas 2-3 de carga progresiva) y fija un único contexto de planificación inmutable — un snapshot del roadmap más payload opcional de issue — reutilizado entre internals compuestas, nunca re-consultado a mitad de plan. |
@@ -296,6 +298,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | 1.0.2 | 2026-06-19 | parche | Añadido `## Done when` — toda skill termina imprimiendo el siguiente paso |
 | 1.0.1 | 2026-06-09 | parche | Redacción forge-agnóstica ("forge CLI per Workflow conventions") |
 | 1.0.0 | 2026-06-05 | — | Primer release — redacta un SPEC de fix acotado como arquitecto, para para revisión |
+
+#### `review-spec`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-08-30 | — | Nueva puerta de etapa de producto: revisa una mitad de producto congelada en un turno de contexto limpio, construye `PreExecutionArtifactSnapshot v1` con el selector `spec-product-v1`, aplica las catorce comprobaciones fijas de producto tras un pase de falsación y devuelve solo `SPEC-REVIEW-PASS | SPEC-REVIEW-FAIL | NEEDS-DESIGN` con el recibo persistido en `progress.md`. Solo lectura sobre cada artefacto revisado; las decisiones de producto vuelven al humano.
 
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
@@ -493,7 +500,10 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
-| `orchestration-envelope` | 2.0.2 | 2026-08-22 | parche | Restaura la distribución mediante el `skills add` predeterminado al retirar los metadatos erróneos de exclusión del descubrimiento, para que los consumidores instalen el contrato de turno canónico requerido por `design-feature`, `execute-phase` y `review-change`. |
+| `evidence-grounding` | 1.0.0 | 2026-08-30 | — | Nueva dueña interna de la autoría basada en evidencia: la fila fija afirmación/autoridad/evidencia/frescura/desconocido, los vocabularios cerrados de `authority-kind` y `freshness`, los pases ordenados inventario → evidencia → borrador → corte → preparación, la preverificación determinista `READY-FOR-REVIEW | NEEDS-EVIDENCE | NEEDS-DESIGN | NEEDS-REPLAN`, la rotación de `artifactRevisionId` (revertir es escribir) y la regla de no-progreso de «nueva pregunta nombrada o nueva evidencia». Nunca emite un veredicto de revisión.
+| `orchestration-envelope` | 2.0.2 | 2026-08-22 | parche |
+| `plan-feature-from-issue` | 2.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** reducida a la mitad de producto. Diseña y prepara un SPEC derivado de issue y se detiene en la puerta de revisión de producto, entregando a `/review-spec`: sin mitad de ingeniería, sin fases, sin escribir `defined → planned` y sin componer `plan-feature-scaffold` en el mismo turno. El nombre se mantiene por compatibilidad.
+ Restaura la distribución mediante el `skills add` predeterminado al retirar los metadatos erróneos de exclusión del descubrimiento, para que los consumidores instalen el contrato de turno canónico requerido por `design-feature`, `execute-phase` y `review-change`. |
 | `orchestration-envelope` | 2.0.1 | 2026-08-21 | parche | Aclara que `ship-roadmap` es un conductor con banner nativo fuera de los perfiles de resultado máquina de workers/sensors, y alinea la guía de perfiles y drivers. |
 | `orchestration-envelope` | 2.0.0 | 2026-08-21 | mayor | **Contrato de driver incompatible:** sustituye el prompt duplicado del envelope completo por perfiles de salida del paquete, SkillOutcome v1 compacto, snapshots deterministas, compatibilidad nombrada y una reparación genérica acotada de resultado máquina. Ver `docs/workflow/MIGRATION.es.md`. |
 | `orchestration-envelope` | 1.5.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime emisión, reglas de campos, repair loop, sincronización de paquete, relaciones y NRS preservando esquema y protocolo del driver. |
@@ -589,6 +599,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-30 — diseñado no es revisado.** La fase P2 de la funcionalidad 28 añade
+  `review-spec` 1.0.0 y la interna `evidence-grounding` 1.0.0: una mitad de producto
+  congela ahora una fila de evidencia por afirmación material, pasa una preverificación
+  determinista y se revisa en contexto limpio antes de planificar. `design-feature`
+  3.0.0 y `plan-feature-from-issue` 2.0.0 se detienen en esa revisión en lugar de seguir
+  a la planificación de ingeniería, y `plan-feature` 4.0.0 falla cerrado sin un recibo
+  `spec-review-pass` vigente enlazado al snapshot exacto.
 
 - **2026-08-27 — las auditorías deben probar su evidencia.** `product-audit`
   3.1.0 añade la puerta fija de procedencia de evidencia (autoridad del forge para el estado
