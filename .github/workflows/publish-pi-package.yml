@@ -1,0 +1,119 @@
+name: Publish Pi package
+
+# Publishes @gtrabanco/pi-agentic-workflow to npm whenever a push to main
+# touches the package AND its package.json version is newer than the one on
+# the registry (same-version pushes are a safe no-op). Also runnable by hand
+# (workflow_dispatch) — e.g. right after a merge, or to retry a failed run.
+#
+# This is a sibling of publish-schema.yml, not a shared matrix workflow, for
+# one hard reason: npm Trusted Publisher records are bound to (repository,
+# workflow filename), and the schema package's record on npmjs.com names
+# publish-schema.yml. Renaming that file to DRY these two up would break the
+# schema package's npm-side publishing until the record is re-registered by
+# hand. Two thin, self-documenting files per package is the cheaper trade.
+#
+# Bun installs deps and runs the test gate (bun.lock is the sole lockfile —
+# the package's .gitignore rejects package-lock.json and
+# test/lockfile-policy.test.mjs fails the suite if one appears); npm still
+# does the actual `publish` step, since Trusted Publishing + --provenance are
+# npm-CLI-specific tooling Bun doesn't replicate. `bun install` also runs the
+# package's `prepare` script (tsc build).
+#
+# Auth: npm Trusted Publishing (OIDC) — no NPM_TOKEN secret at all. npm
+# exchanges this job's GitHub OIDC token (the id-token: write permission
+# below) for a short-lived publish token at publish time, scoped to exactly
+# this repo + workflow file.
+#
+# One-time setup (manual, by the repo owner — CI cannot do this for you):
+#   1. First publish is manual (npm requires it for a brand-new package):
+#        cd packages/pi-agentic-workflow && npm publish --access public
+#   2. npmjs.com → the package's page → Settings → Trusted Publisher →
+#      GitHub Actions → Organization or user: gtrabanco → Repository:
+#      agentic-workflow → Workflow filename: publish-pi-package.yml →
+#      (leave Environment name blank unless this job later runs under one) →
+#      Add.
+#   That's it — no secret to create or rotate. Requires npm CLI >= 11.5.1,
+#   which the "Install npm" step below ensures regardless of what Node 22
+#   bundles.
+#   Until step 1 is done, a merge that touches the package fails at the
+#   publish step with the 403/OIDC error below — the "Skip when the version
+#   is already published" step says so in its log line first.
+#
+# Troubleshooting — "npm error 403 … OIDC permission denied for this action":
+#   Cause: the npm-side Trusted Publisher record for this package is missing
+#   or one field doesn't match what this workflow presents (the OIDC exchange
+#   itself succeeded — npm rejects the publish PUT, not the token).
+#   Verify on npmjs.com → the package's page → Settings → Trusted Publisher:
+#     - Provider: GitHub Actions
+#     - Organization or user: gtrabanco
+#     - Repository: agentic-workflow
+#     - Workflow filename: publish-pi-package.yml
+#     - Environment name: blank
+#   Diagnose: gh run view --log-failed <run-id>
+#   Re-run once the config is fixed: gh workflow run publish-pi-package.yml
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/pi-agentic-workflow/**"
+      - ".github/workflows/publish-pi-package.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  id-token: write # required for npm Trusted Publishing + --provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/pi-agentic-workflow
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.3.14
+
+      - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
+        run: npm install -g npm@latest
+
+      - name: Install + build (bun, frozen lockfile; prepare runs tsc)
+        run: bun install --frozen-lockfile
+
+      - name: Test (the gate — never publish red)
+        run: bun run test
+
+      - name: Skip when the version is already published
+        id: version
+        run: |
+          LOCAL=$(node -p "require('./package.json').version")
+          PUBLISHED=$(npm view "$(node -p "require('./package.json').name")" version 2>/dev/null || echo "none")
+          echo "local=$LOCAL published=$PUBLISHED"
+          if [ "$PUBLISHED" = "none" ]; then
+            echo "package is not on the registry yet — the first publish is manual; see this file's header"
+          fi
+          if [ "$LOCAL" = "$PUBLISHED" ]; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm (Trusted Publishing — no token)
+        id: publish
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public --provenance
+
+      - name: Troubleshooting pointer on failure
+        if: failure() && steps.publish.outcome == 'failure'
+        run: echo "publish failed — if E403 OIDC, verify the npm Trusted Publisher config; see this file's header"
