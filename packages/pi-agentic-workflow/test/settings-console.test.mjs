@@ -89,6 +89,24 @@ test("AC10: the view renders the merged config, with an empty override list as i
   assert.match(text, /stop/iu, "the effective fallback policy is shown");
 });
 
+// Pass-2 fold (F14): the summary's fallback line was the one rendered value no
+// test varied, so a hard-coded `stop` passed. The line is only honest if it
+// follows the merged config — that is the whole point of opening on "what is in
+// effect right now".
+test("AC10: the view's fallback line follows the effective policy, not a constant", () => {
+  const inherit = loadConfig({
+    agentDir,
+    cwd,
+    projectTrusted: true,
+    readFile: readFrom({ [paths.global]: '{"onUnavailableRoute":"inherit"}' }),
+  });
+  const text = renderMergedConfig(inherit, commands).join("\n");
+
+  assert.equal(inherit.config.onUnavailableRoute, "inherit", "the merged policy really is the non-default one");
+  assert.match(text, /when a configured model is unavailable: inherit/u, "the view reports what the config says");
+  assert.doesNotMatch(text, /unavailable: stop/u, "and never a remembered default");
+});
+
 test("AC10: the view shows project values winning over global ones per command", () => {
   const loaded = loadConfig({
     agentDir,
@@ -191,6 +209,33 @@ test("AC10: clearing a per-command override removes only that command", async ()
   assert.equal(outcome.status, "saved");
   assert.equal(outcome.scope, "project");
   assert.deepEqual(JSON.parse(written.get(paths.project)), { commands: { "design-feature": { thinking: "low" } } });
+});
+
+// Pass-2 fold (F15): the console builds a cleaned file for validation and for the
+// result, and `saveScope` must write THAT, not the draft. Clearing the last
+// override is the case that shows the difference — an empty map is what the
+// draft holds, and a config file must not start carrying keys that mean nothing.
+test("AC10: clearing the last override persists no empty map", async () => {
+  const { written } = await run(
+    { [paths.project]: '{"commands":{"plan-feature":{"model":"openai/gpt-5.2"}}}' },
+    {
+      trusted: true,
+      answers: {
+        [prompts.scope]: "Project",
+        [prompts.menu]: [prompts.clearOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.saveTo(paths.project)]: true,
+      },
+    },
+  );
+
+  const saved = JSON.parse(written.get(paths.project));
+  assert.deepEqual(saved, {}, "the cleaned draft reaches the disk — no `\"commands\": {}` residue");
+
+  // What the console wrote is what the dispatcher reads back: inherit, not an error.
+  const loaded = loadConfig({ agentDir, cwd, projectTrusted: true, readFile: readFrom({ [paths.project]: written.get(paths.project) }) });
+  assert.equal(loaded.ok, true);
+  assert.deepEqual(loaded.config.commands, {}, "an emptied override map is absent, not present-and-empty");
 });
 
 test("AC10: set the unavailable-route policy", async () => {

@@ -93,20 +93,22 @@ node_modules` → 0 and `git diff origin/main --name-only` → 177 files, 0 outs
 the AC16 allow-list. **Rule for future rebases in this repository: never
 `git add -A` mid-rebase — stage the conflicted paths by name.**
 
-## Pass-2 mutants left unfolded (2026-08-29)
+## Pass-2 mutants left unfolded (2026-08-29) — SUPERSEDED, see the fold ledger
 
-Six rules pass 2 proved the suite cannot see (mutant ids M-I, M-AB/AC, M-Z, M-Y,
-M-AE). They are assertion gaps, not observed defects: each one-liner belongs with
-the next change to the file it guards.
+This table parked six rules as "assertion gaps for the next change to the file",
+which `fold-findings`/`FOLD_POLICY.md` forbid as a fold substitute. It is kept as
+history; the queue of record is now
+[`review-findings.md`](review-findings.md) (rows F11-F16), measured per rule on a
+clean copy of `67cdda16`:
 
-| Rule | File | Why it stayed |
-|---|---|---|
-| "switched a session that had no model; nothing to restore" | `src/routing/dispatch.ts` | unreachable in every fixture; needs a null-model session double |
-| a duplicate command name is reported *and* registered | `src/routing/catalogue.ts` | needs a two-skill fixture with colliding `name:`s |
-| the scanner stops at the closing `---` | `src/routing/catalogue.ts` | a body line shaped like a key must be added to a fixture |
-| the summary's `unavailable:` line is built from the config | `src/settings/view.ts` | read-only view; pin it with the next console change |
-| `saveConfig` writes `clean(draft)` | `src/settings/store.ts` | the console already cleans before saving; belt-and-braces |
-| a thinking-only route does not touch the model | `src/routing/dispatch.ts` | same file as the F1/N-3 arms; fold with them next time |
+| Rule | Measured verdict |
+|---|---|
+| "switched a session that had no model; nothing to restore" | real gap — **blocked**, a concurrent fold owns `dispatch.ts` and its suite in this worktree |
+| a duplicate command name is reported *and* registered | **already pinned** by pass 2 (mutant killed on clean `67cdda16`); now a harness entry |
+| the scanner stops at the closing `---` | **already pinned** by pass 2 (mutant killed); now a harness entry |
+| the summary's `unavailable:` line is built from the config | real gap — **folded** (F14) |
+| `saveScope` writes `clean(draft)` | real gap — **folded** (F15) |
+| a thinking-only route does not touch the model | real gap — **blocked**, same contended file as F11 |
 
 Also unchanged: the live model-backed routed turn (provider usage limit), and
 `os.homedir()` → `pi.getAgentDir()` in the entry, accepted for v1.
