@@ -121,3 +121,25 @@ committed before the number was confirmed, and here a receipt written in the sam
 breath as the intent to run the gate. Pass 2 is launched as its own clean-context
 review of `bb8e3c02`; its result goes in `review-findings.md` only after it
 returns.
+
+## Fold pass 3 — the parked six, measured — 2026-08-29
+
+`/fold-findings 27` on `67cdda16`. Step 0 found the ledger incomplete in a specific way: pass 2's
+verdict had parked six assertion rules in `known-issues.md` with no rows, which
+`FOLD_POLICY.md` treats as an illegal fold substitute. Rows `F11`-`F16` reconstructed from the
+verdict, then each rule was **mutated on a clean copy of the commit** before any verdict was
+written — the honest denominator turned out to be neither "six gaps" nor "nothing to do":
+
+- **Folded (2):** `F14` the summary's `unavailable:` line was the only rendered value no test
+  varied, so a hard-coded `stop` passed; `F15` `saveScope` wrote the raw draft, so clearing the
+  last override persisted `"commands": {}`. Two tests, both killing their mutant alone (`fail=1`).
+- **Disputed (2):** `F12`, `F13` were already pinned by the tests pass 2 itself added; the "the
+  suite cannot see them" note was stale. Both kept as harness entries so the dispute is re-runnable.
+- **Blocked (2):** `F11`, `F16` are genuine gaps at `67cdda16`, but a second writer is folding the
+  same rules in this working tree right now — its uncommitted `restore-after-settle` suite is red
+  pending a `dispatch.ts` change. Committing either file would have committed red tests and a
+  third-party `src` edit, so they stay open for that fold. The first probe run reported them as
+  killed because it measured the *dirty* tree; the clean-copy re-run is what the ledger records.
+
+Gate on the commit state: `rm -rf dist && npm test` → exit 0, 120 pass / 0 fail;
+`npm run mutation` → `25 mutants · 19 killed · 0 survived · 6 compile-enforced · 0 stale`.
