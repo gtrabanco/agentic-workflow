@@ -2,80 +2,89 @@
 
 > Evidence-backed snapshot of the repository. The repository remains the source
 > of truth; this ledger is a frozen, reviewable representation of observed
-> truth. Historical snapshots remain recoverable from Git.
+> truth. Historical snapshots remain recoverable from Git. Only
+> `resolve-repository-state` may replace frozen facts or accepted decisions.
 
 ## Snapshot
 
 | Field | Value |
 |---|---|
-| Snapshot ID | `2026-08-30-pre-execution-planning` |
-| Source revision | `5bb235bc140e19e80cf671afa4c59db2708cf94f` (`origin/main`) |
+| Snapshot ID | `2026-08-30-first-pass-convergence` |
+| Source revision | `ea646795aedfcbd9ecc7a89b30dc5e5efe6e3d14` (`main`) |
 | Status | `frozen` |
-| Created by | `resolve-repository-state` after direct repository and forge verification |
+| Created by | `resolve-repository-state` after repository, test, and forge verification |
+| Created at | 2026-08-30 |
 
-## Repository Facts
+## Repository facts
 
-| ID | Statement | Evidence | Observed at | Status |
-|---|---|---|---|---|
-| F001 | **Repository:** `gtrabanco/agentic-workflow`; primary branch and `origin/HEAD` are `main`. | `git remote get-url origin`; `git symbolic-ref refs/remotes/origin/HEAD` | 2026-08-30 | frozen |
-| F002 | **Planning baseline:** `origin/main` resolves to `5bb235bc140e19e80cf671afa4c59db2708cf94f`. | `git rev-parse origin/main` | 2026-08-30 | frozen |
-| F003 | **No root package manifest:** the published package lives under `packages/agentic-workflow-schema/`. | `test ! -f package.json`; `test -f packages/agentic-workflow-schema/package.json` | 2026-08-30 | frozen |
-| F004 | **Schema package:** `@gtrabanco/agentic-workflow-schema` version `3.4.0`, Node `>=18`; its test command compiles source and test TypeScript before running Node tests. | `packages/agentic-workflow-schema/package.json` fields `version`, `engines.node`, and `scripts.test` | 2026-08-30 | frozen |
-| F005 | **Skills:** 35 `SKILL.md` entrypoints: 18 with `user-invocable: true`, 17 with `user-invocable: false`, and 2 carrying a `metadata` block. | `find skills -mindepth 2 -maxdepth 2 -name SKILL.md`; anchored frontmatter `grep` counts | 2026-08-30 | frozen |
-| F006 | **Context budgets pass:** every current skill entrypoint passes the repository budget checker. | `node scripts/check-skill-context.mjs` -> `PASS context budgets: 35 skills` | 2026-08-30 | frozen |
-| F007 | **Distribution discovery succeeds:** the Skills CLI discovers 34 installable entries from the repository. | `npx skills add . --list` -> exit 0, `Found 34 skills` | 2026-08-30 | frozen |
-| F008 | **No project capability inventory exists.** Feature design must derive the applicable inventory from current repository architecture and code until a project-owned inventory is created. | `test ! -f docs/CAPABILITIES.md` | 2026-08-30 | frozen |
-| F009 | **No project architectural-invariants document exists.** Planning classification is therefore `n/a: no project invariants declared`, without treating the scaffold template as project policy. | `test ! -f docs/architecture/ARCHITECTURAL_INVARIANTS.md`; `docs/workflow/WORKFLOW_INVARIANTS.md` | 2026-08-30 | frozen |
-| F010 | **Human workflow documentation is bilingual; code, prompts, SPECs, planning artifacts, commits, and PRs are English-only.** | `CLAUDE.md`; paired `docs/workflow/*.md` / `*.es.md` files | 2026-08-30 | frozen |
-| F011 | **Open implementation issues:** #146, evidence-grounded specification and plan review gates; #149, bounded pre-edit implementation discovery and execution maps. | `gh issue list --state open --limit 100 --json number,title,url` | 2026-08-30 | frozen |
-| F012 | **Open pull request:** #150, feature 27 Pi package and model routing, from `feat/27-pi-agentic-workflow`; forge reports it mergeable and no status checks are registered. | `gh pr list --state open --json number,title,headRefName,mergeStateStatus,statusCheckRollup` | 2026-08-30 | frozen |
-| F013 | **Roadmap:** rows 01-26 are done; rows 28 and 29 are scheduled; row 27 is not on `main` because it belongs to open PR #150. | `docs/features/ROADMAP.md`; `gh pr view 150` | 2026-08-30 | frozen |
-| F014 | **Fix planning corpus:** 31 numbered fix directories exist under `docs/fix/`; directory presence does not prove an open forge issue or executable status. | `find docs/fix -mindepth 1 -maxdepth 1 -type d -name '[0-9]*'` | 2026-08-30 | frozen |
-| F015 | **Remote branch inventory:** `origin/main`, `origin/claude`, and `origin/inheritance`; PR #150's head is visible through the forge even though no matching tracking ref is currently fetched. | `git branch -r`; `gh pr view 150 --json headRefName` | 2026-08-30 | frozen |
+| ID | Statement | Evidence | Status |
+|---|---|---|---|
+| F001 | Repository `gtrabanco/agentic-workflow` uses `main`; the source revision was clean before this snapshot refresh. | `git branch --show-current`; `git status --porcelain`; `git rev-parse HEAD` | frozen |
+| F002 | The schema package is `@gtrabanco/agentic-workflow-schema@3.4.0`; its complete current suite passes 554/554. | `packages/agentic-workflow-schema/package.json`; `npm test` on 2026-08-30 | frozen |
+| F003 | Feature 27 is merged through PR #150 and provides `@gtrabanco/pi-agentic-workflow@0.1.0`; its current suite passes 132/132 after `npm ci`. | `packages/pi-agentic-workflow/package.json`; `gh pr view 150`; `npm test` on 2026-08-30 | frozen |
+| F004 | The canonical skill tree has 35 `SKILL.md` entrypoints; context budgets and Skills CLI discovery pass. The CLI lists 34 installable entries because repository-internal distribution policy excludes one entry. | `find skills ...`; `node scripts/check-skill-context.mjs`; `npx skills add . --list` | frozen |
+| F005 | Root bounded-delivery and audit-receipt regressions pass. | `node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` | frozen |
+| F006 | The only open implementation issues are #146 and #149; there are no open pull requests. | `gh issue list --state open`; `gh pr list --state open` | frozen |
+| F007 | Roadmap rows 01-27 are done. Feature 28 is planned from #146; feature 29 is planned from #149 and depends on 28. | `docs/features/ROADMAP.md` | frozen |
+| F008 | Features 28 and 29 each have a frozen SPEC, acceptance manifest, phase topology, task ledger, decisions, risks, test strategy, progress record, and compact planning evidence. | `docs/features/28-evidence-grounded-spec-plan-review/`; `docs/features/29-bounded-implementation-discovery/` | frozen |
+| F009 | Feature 28 has five phase-identical SPEC/PLAN/TASKS/progress entries and exactly eight tasks per phase; feature 29 has four and exactly eight tasks per phase. Their SPEC and acceptance AC sets match. | structural audit run on 2026-08-30 | frozen |
+| F010 | No project-specific architectural-invariants document exists. Planning classification remains `n/a: no project invariants declared`; repository architecture and current source evidence still require explicit coverage. | absence of `docs/architecture/ARCHITECTURAL_INVARIANTS.md`; `docs/workflow/WORKFLOW_INVARIANTS.md` | frozen |
+| F011 | Human workflow documentation is bilingual when paired; skills, prompts, SPECs, plans, code, commits, and PRs are English-only. | `CLAUDE.md` | frozen |
 
 ## Accepted decisions
 
-| ID | Decision | Rationale | Evidence | Accepted at |
-|---|---|---|---|---|
-| AD-002 | **Bilingual docs rule:** every human-readable doc with an ES sibling is updated in the same change, never deferred. Scope exception: SKILL.md, SPECs, planning artifacts, commits, PRs, and machine config are English-only. | Prevents one human-facing language from silently drifting. | `CLAUDE.md`; paired workflow docs | Feature 18 (PR #114), retained |
-| AD-004 | **One PR per unit of work, always against `main`.** Never implement directly on `main`; never stack PRs. | Keeps every unit independently reviewable and mergeable. | `CLAUDE.md` | Feature 18 (PR #114), retained |
-| AD-007 | **Schema package strict contracts:** `npm test` must pass; generated structural projections cannot become a second semantic authority; a public API change requires an appropriate package version bump. | Prevents drift between runtime validation, published types, projections, and consumers. | `CLAUDE.md`; package scripts; feature 26 decisions | Feature 18 (PR #114), refined by feature 26 |
+| ID | Decision | Rationale | Evidence |
+|---|---|---|---|
+| AD-002 | Update paired English/Spanish human workflow documents together; keep programming artifacts English-only. | Prevents user-facing language drift without duplicating machine contracts. | `CLAUDE.md` |
+| AD-004 | One implementation PR per delivery unit against `main`; direct-main work is exceptional and requires explicit user authority. | Keeps implementation units independently reviewable. This snapshot records an explicitly authorized documentation-only exception. | `CLAUDE.md`; 2026-08-30 user instruction |
+| AD-007 | The schema runtime validator is semantic authority; generated projections cannot become a competing authority. | Prevents public contract drift. | package policy; feature 26 decisions |
+| AD-008 | Correctness is evidence- and obligation-bound, never cycle-count-bound. One batched repair plus one re-review is the normal qualified path; entry into a second cycle emits `CONVERGENCE-ANOMALY` and fails qualification without discarding findings. | Makes repeated review/fold a diagnosable upstream failure instead of an approval shortcut. | feature 28 SPEC/AC14; feature 29 SPEC/AC13; user-approved amendment |
+| AD-009 | Authoring is progressive: inventory, evidence acquisition, compact conclusions, draft, deterministic readiness, then independent review. Readiness cannot emit review PASS. | Moves context discovery before edits while keeping approval independent. | feature 28 SPEC and planning evidence |
+| AD-010 | Implementation discovery validates and specializes a sound reviewed Plan. File/read counts have no authority; missing Plan topology, obligations, or validators return to planning. | Prevents execution from becoming deferred planning. | feature 29 SPEC and planning evidence |
 
 ## Planned work
 
 | ID | Work | Status | Evidence |
 |---|---|---|---|
-| W001 | PR #150 — feature 27 Pi package with routed skill aliases and model routing | open; independently owned implementation | `gh pr view 150`; feature number reserved by the user |
-| W002 | Issue #146 — feature 28 evidence-grounded specification and plan review gates | open; design accepted, planning requested | Issue #146 current body; `docs/features/ROADMAP.md` row 28 |
-| W003 | Issue #149 — feature 29 bounded implementation discovery | open; design accepted, planning requested after feature 28 | Issue #149 current body; `docs/features/ROADMAP.md` row 29 |
+| W001 | Feature 27 — Pi package and routed skill aliases | complete; merged through PR #150 | F003; roadmap row 27 |
+| W002 | Feature 28 / issue #146 — evidence-grounded SPEC and Plan review | fully planned and next to implement | frozen feature 28 artifact set; issue #146 amendment |
+| W003 | Feature 29 / issue #149 — bounded implementation discovery | fully planned; implementation blocked until feature 28 merges and its contracts are revalidated | frozen feature 29 artifact set; roadmap dependency 28 |
 
-## Documentation
+## Planning readiness
 
-| ID | Statement | Document evidence | Implementation evidence |
+| Unit | Can be planned now? | Can be implemented now? | Reason |
 |---|---|---|---|
-| D001 | `docs/features/ROADMAP.md` is the numbering, ordering, dependency, and status authority for features. | Roadmap header and status legend | 28 current rows; feature 27 is pending in PR #150 |
-| D002 | `docs/workflow/WORKFLOW_INVARIANTS.md` defines how to classify project-declared invariants but does not itself declare project-specific invariants. | `docs/workflow/WORKFLOW_INVARIANTS.md` | F009 |
-| D003 | `docs/workflow/REPOSITORY_STATE.md` is a frozen evidence ledger; only discovery/resolution flows may rewrite facts or accepted decisions. | This document; repository-state skills | This refresh records the superseded snapshot under C001-C003 |
-| D004 | Feature SPECs and plans are English-only even when they change bilingual workflow documentation during implementation. | `CLAUDE.md` | AD-002 |
+| AW feature 28 / #146 | already planned | yes | feature 27 prerequisite is merged; revalidate current evidence at execution preflight |
+| AW feature 29 / #149 | already planned | no | must consume merged feature 28 receipts, routes, and planning-evidence contract |
+| New AWL work | outside this repository | no sequencing authority here | AW remains portable and runtime-agnostic; AWL consumes published contracts later |
 
-## Open Questions
+## Open questions
 
-| ID | Question | Evidence | Owner |
-|---|---|---|---|
-| Q001 | What exact roadmap summary and dependencies will feature 27 add when PR #150 merges? | The row is not present at the frozen `main` revision; the open PR owns it. | PR #150; non-blocking for planning features 28 and 29 |
+None block feature 28 implementation. Feature 29's upstream contract values are
+known by design but must be rebound to the exact merged feature 28 revision
+before its first implementation phase.
 
 ## Inference
 
 | ID | Reasoning | Based on |
 |---|---|---|
-| I001 | The only currently open AW implementation proposals are #146 and #149; feature 27 is already being implemented in PR #150 and must not be renumbered or replanned here. | F011-F013, W001-W003 |
-| I002 | Feature planning may classify project invariants as `n/a`, but capability closure still has to derive and walk the repository's actual package, skill, documentation, distribution, and orchestration surfaces. | F008-F010, D002 |
-| I003 | The CLI count (34) and filesystem count (35) describe different observed surfaces; neither count should be rewritten to match the other without identifying the exact distribution rule. | F005-F007 |
+| I001 | The correct AW execution order is feature 28, then feature 29. | F003, F007-F009, W002-W003 |
+| I002 | The new plans target fewer late loops by increasing evidence quality before design, planning, and first write; they do not promise that every correct implementation needs zero repairs. | AD-008-AD-010 |
+| I003 | A second review/fold cycle is now release-qualification evidence of a process defect, but never authority to merge incomplete code. | AD-008 |
 
-## Contradictions
+## Superseded-state resolutions
 
-| ID | Frozen fact | New evidence | Reported by | Resolution |
-|---|---|---|---|---|
-| C001 | Snapshot `2025-08-22-nrs-regen` bound facts to revision `1181122`, schema package 3.1.0, PR #140, issues #137-#139, and a 23-feature roadmap. | F002, F004, F011-F014 show revision `5bb235b`, schema package 3.4.0, PR #150, issues #146/#149, and the later roadmap state. | `resolve-repository-state`, 2026-08-30 | Accept current direct repository/forge evidence for this snapshot; preserve the older snapshot in Git history. |
-| C002 | The prior snapshot said `docs/architecture/ARCHITECTURAL_INVARIANTS.md` existed but was empty. | F009 proves the file is absent at the current source revision. | `resolve-repository-state`, 2026-08-30 | Current planning records `n/a: no project invariants declared`; absence is not silently converted into an invariant. |
-| C003 | The prior snapshot reported 33 Skills CLI entries and inferred two metadata-internal exclusions. | F007 reports 34 entries; F005 still reports 35 filesystem entrypoints and two metadata blocks. | `resolve-repository-state`, 2026-08-30 | Freeze only the two observed counts. The old exclusion inference is retired; exact distribution ownership remains outside this snapshot. |
+| ID | Prior frozen statement | Current evidence | Resolution |
+|---|---|---|---|
+| C001 | Source revision was `5bb235bc...`; PR #150 was open and feature 27 absent from `main`. | F001, F003, F007 | Accept current source and forge evidence; preserve the old snapshot in Git history. |
+| C002 | Feature 28 and 29 planning was only requested. | F008-F009, W002-W003 | Both units now have complete frozen planning artifact sets. |
+| C003 | The roadmap omitted or treated feature 27 as in progress. | F003, F007 | Row 27 is done through merged PR #150; feature numbering remains 28 and 29. |
+
+---
+
+**Status: `frozen`**
+
+Source revision: `ea646795aedfcbd9ecc7a89b30dc5e5efe6e3d14`
+
+Next: implement feature 28 from its frozen artifacts; only after it merges,
+revalidate and implement feature 29.
