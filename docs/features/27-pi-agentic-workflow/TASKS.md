@@ -45,13 +45,13 @@ Layer: api · Done-when: `cd packages/pi-agentic-workflow && node --test test/al
 
 Layer: ui · Done-when: `cd packages/pi-agentic-workflow && node --test test/settings-console.test.mjs` → exit 0 (view/save state transitions); AC10 itself is read-verified on the registered command.
 
-- [ ] Register `/agentic-workflow-settings` (also asserted by `test/alias-coverage.test.mjs`)
-- [ ] Display merged effective config; empty override list rendered as `inherit`, not an error (AC10, AC6)
-- [ ] Set default route
-- [ ] Set or clear a per-command override
-- [ ] Set `onUnavailableRoute` to `stop` or `inherit`
-- [ ] Save to global scope (`~/.pi/agent/pi-agentic-workflow.json`)
-- [ ] Save to project scope (`.pi/pi-agentic-workflow.json`); refused when the project is untrusted (AC10)
+- [x] Register `/agentic-workflow-settings` (also asserted by `test/alias-coverage.test.mjs`) — P3 registered it, P4 replaced the read-only view with the console; `alias-coverage` still asserts registration, `settings-console` asserts the shipped entry opens this console and that a console which throws is reported instead of rejecting the handler
+- [x] Display merged effective config; empty override list rendered as `inherit`, not an error (AC10, AC6) — `src/settings/view.ts`, shown before any edit is offered
+- [x] Set default route — model then thinking, written as `default`; `inherit` is an accepted answer
+- [x] Set or clear a per-command override — picking offers catalogue names plus anything already in the file, so an override for a renamed skill stays reachable
+- [x] Set `onUnavailableRoute` to `stop` or `inherit` — the only two choices offered are the two the schema accepts
+- [x] Save to global scope (`~/.pi/agent/pi-agentic-workflow.json`) — `src/settings/store.ts` writes 0600 and creates the parent; the confirmation repeats the routes being saved
+- [x] Save to project scope (`.pi/pi-agentic-workflow.json`); refused when the project is untrusted (AC10) — refusal re-offers the scope instead of dying, and nothing is read or written under an untrusted project. A scope whose file does not parse is also refused, so the console never overwrites evidence the operator must fix
 
 ## P5 — Bilingual package READMEs
 

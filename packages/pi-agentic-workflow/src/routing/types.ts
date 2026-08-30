@@ -44,6 +44,14 @@ export interface ExtensionSurface<M extends ModelRef = ModelRef> {
   setThinkingLevel(level: ThinkingLevel): void;
 }
 
+/** The interactive slice of `ctx.ui` the settings console uses (AC10). */
+export interface SettingsUi {
+  select(title: string, options: readonly string[]): Promise<string | undefined> | string | undefined;
+  input(title: string, placeholder?: string): Promise<string | undefined> | string | undefined;
+  confirm(title: string, message: string): Promise<boolean> | boolean;
+  notify(message: string, kind?: "info" | "warning" | "error"): void;
+}
+
 /**
  * Everything a command handler needs from the invocation, reduced to what we
  * read. `ModelLookup` is part of it because Pi exposes the registry through the
@@ -57,6 +65,10 @@ export interface InvocationContext<M extends ModelRef = ModelRef> extends ModelL
   isProjectTrusted(): boolean;
   /** Pi's `ctx.ui.notify` — the only channel an extension has to the operator. */
   notify(message: string, kind?: "info" | "warning" | "error"): void;
+  /** Pi's `ctx.ui`. Routing only notifies through it; the console also asks. */
+  readonly ui: SettingsUi;
+  /** Pi's `ctx.modelRegistry.getAll()` — what the console can offer to pick from. */
+  availableModels(): readonly M[];
 }
 
 export type RefusalReason = "invalid-config" | "busy" | "routed-turn-in-flight" | "unavailable-route";
