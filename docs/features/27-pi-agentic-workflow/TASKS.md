@@ -70,6 +70,6 @@ Layer: hardening · Done-when: `cd packages/pi-agentic-workflow && npm test` →
 - [x] Full gate: `npm test` → exit 0, 94 pass / 0 fail (AC14); regression `cd packages/agentic-workflow-schema && npm test` → exit 0, 554 pass / 0 fail (AD-007)
 - [x] `npm pack` → 137 entries: `dist/extension/index.js` (+ the rest of `dist/`), 105 bundled skill files across 34 `SKILL.md` directories, `package.json`, `README.md`, `README.es.md`, `LICENSE`; no skill file on disk is missing from the tarball
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat (roadmap-only traceability — no `Closes #` line; body references feature 27)
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] open the PR (`gh pr create --body-file …`) → **https://github.com/gtrabanco/agentic-workflow/pull/150**, printed in chat; roadmap-only traceability, so the body references feature 27 and carries no `Closes #` line
+- [x] roadmap row 27 → `done · [#150](https://github.com/gtrabanco/agentic-workflow/pull/150)`
+- [x] commit `docs: link PR #150` and push `feat/27-pi-agentic-workflow`

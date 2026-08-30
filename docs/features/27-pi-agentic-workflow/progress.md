@@ -82,8 +82,15 @@ Last reviewed: 2026-08-29 (P6)
 - Next: P6 — Hardening & PR
 
 ## Unit-loop receipt — P6
-- Commit: pending (hardening) · Gate: `cd packages/pi-agentic-workflow && npm test` (exit 0, 94 tests) + the PR URL printed in chat · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Commit: `2666792` docs(27-pi-agentic-workflow): hardening sweep, AC16 read-verify and the P6 receipt · PR: https://github.com/gtrabanco/agentic-workflow/pull/150 · Gate: `cd packages/pi-agentic-workflow && npm test` (exit 0, 94 tests) + the PR URL printed in chat · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
 - Dependency closure re-checked: still empty (fp `ca01f5b0d7506a6c4b3ed7eb26485b3bc9b74130`); roadmap row 27 `planned` → `done` on the PR-link commit.
 - Evidence: AC1 verbatim exit 0 · AC14 94/94 · AD-007 schema regression 554/554 · AC16 diff confined to the three allowed paths, schema package 0 files · `npm pack` 137 entries with all 105 skill files · six dev scenarios mapped to named tests in `testing.md` · 20 mutation matrices (P3 16, P4 4) all killed.
 - Residual risk recorded, not hidden: no live model-backed routed turn was observable (provider usage limit at the smoke-test step); see `known-issues.md`.
-- Next: PR open · Attempts: 1
+- Next: end review (`/loop-review-fold` 27) · Attempts: 1
+
+## P6 — 2026-08-29
+- Done: hardening and delivery. Dev-scenario sweep mapped to named tests, AC16 read-verified (diff confined to the package, its feature folder and the roadmap row; schema package 0 files), full gates (94/94 package, 554/554 schema regression), tarball audited against the working tree (105/105 skill files), the real-Pi install/load check, and the unit shipped as PR #150 with the roadmap row flipped to `done`.
+- Remains: the end review — `/loop-review-fold 27` in a context clean of this diff (unit-loop recorded the triggers; P3's test-after-implementation deviation and the untested live-model path are what it must read).
+- Gotchas: `pi install ./` writes into the **global** `~/.pi/agent/settings.json`, so an integration check of the package manifest mutates the developer's own Pi install — run it, capture `pi list`, then `pi uninstall ./`; the smoke test that needs a model call is the one thing a usage-capped environment cannot evidence, and it belongs in `known-issues.md` rather than in a claim.
+- Files: `docs/features/{ROADMAP.md,27-pi-agentic-workflow/*}`
+- Next: end review (`/loop-review-fold 27`)
