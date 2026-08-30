@@ -12,14 +12,8 @@ table — history lives in git log + closed issues.
 
 ## Active
 
-| Folder | Topic | Status | Depends on | Issue |
-| ------ | ----- | ------ | ---------- | ----- |
-| `147-audit-evidence-provenance` | Fixed evidence-provenance gate + cross-audit delta checks for `product-audit` (forge authority, command-scope binding, inventory recompute, fixture traps T1–T4) | done · [#148](https://github.com/gtrabanco/agentic-workflow/pull/148) | — | [#147](https://github.com/gtrabanco/agentic-workflow/issues/147) |
-| `134-machine-contract` | Hybrid machine result contract and deterministic workflow snapshot | in-progress | — | [#134](https://github.com/gtrabanco/agentic-workflow/issues/134) |
-| `100-stale-fix-index-rows` | Drop 21 stale rows from this table pointing to already-merged PRs | done · [#102](https://github.com/gtrabanco/agentic-workflow/pull/102) | — | [#100](https://github.com/gtrabanco/agentic-workflow/issues/100) |
-| `101-stale-roadmap-merge-order-note` | Remove the dead 2026-07-05 merge-order note for PRs #8/#9/#10 (all merged) from `docs/features/ROADMAP.md` | done · [#103](https://github.com/gtrabanco/agentic-workflow/pull/103) | — | [#101](https://github.com/gtrabanco/agentic-workflow/issues/101) |
-| `117-amendment-linkage` | Close issue #117 — user-approved descope of P8 adversarial review (amendment linkage reference) | done · [#118](https://github.com/gtrabanco/agentic-workflow/pull/118) | — | [#117](https://github.com/gtrabanco/agentic-workflow/issues/117) |
-| `119-progressive-planning-docs-adapters` | Restore NRS gating for issue-derived planning and the Docusaurus adapter contract | done · [#120](https://github.com/gtrabanco/agentic-workflow/pull/120) | — | [#119](https://github.com/gtrabanco/agentic-workflow/issues/119) |
+No active fix units. Historical artifacts remain under `docs/fix/`; merged and
+closed work is intentionally absent from this index.
 
 ---
 
