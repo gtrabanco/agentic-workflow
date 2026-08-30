@@ -247,3 +247,12 @@ risks (Pi API drift, skill drift) are pinned by peerDependency + parity test.
 - **The root README is deliberately untouched.** AC16 confines the branch to the
   package, its feature folder and the roadmap row; advertising the Pi package in
   the repository's own README is a separate unit of work, not a leftover here.
+
+## 2026-08-29 — roadmap number race, owner-approved resolution
+
+- **Keep 27 for the delivered unit** (user chose this over renumbering to 30).
+  Rationale accepted by the owner: a number with no artifact yields to a unit that
+  is planned, executed, documented in two languages and already carries PR #150 —
+  renumbering would churn a frozen acceptance manifest's path to protect an empty
+  reservation.
+- Rows 28/29 were taken from `main` verbatim; this branch does not touch them.

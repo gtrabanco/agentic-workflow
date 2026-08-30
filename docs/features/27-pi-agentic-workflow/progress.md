@@ -88,6 +88,11 @@ Last reviewed: 2026-08-29 (P6)
 - Residual risk recorded, not hidden: no live model-backed routed turn was observable (provider usage limit at the smoke-test step); see `known-issues.md`.
 - Next: end review (`/loop-review-fold` 27) · Attempts: 1
 
+## Post-P6 — 2026-08-29 (roadmap rebase, owner decision)
+- Done: rebased onto `5bb235b` after the number race and force-pushed; PR #150 is `MERGEABLE` with 14 commits. Kept row 27 as `done · [#150]`, took main's 28/29 unchanged, and removed 13,189 `node_modules` files that a mid-rebase `git add -A` had swept into the design commit (see `known-issues.md` for the rule this produced).
+- Re-verified at the new head: `ACCEPTANCE.md` blob `22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f` unchanged · `npm test` exit 0 (94/94) after `rm -rf dist` · AC2 parity suite 7/7 · `git diff origin/main --name-only` = 177 files, 0 outside the AC16 allow-list, 0 `node_modules` paths tracked.
+- Next: end review (`/loop-review-fold 27`) in a clean context.
+
 ## P6 — 2026-08-29
 - Done: hardening and delivery. Dev-scenario sweep mapped to named tests, AC16 read-verified (diff confined to the package, its feature folder and the roadmap row; schema package 0 files), full gates (94/94 package, 554/554 schema regression), tarball audited against the working tree (105/105 skill files), the real-Pi install/load check, and the unit shipped as PR #150 with the roadmap row flipped to `done`.
 - Remains: the end review — `/loop-review-fold 27` in a context clean of this diff (unit-loop recorded the triggers; P3's test-after-implementation deviation and the untested live-model path are what it must read).
