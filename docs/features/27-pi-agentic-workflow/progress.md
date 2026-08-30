@@ -105,7 +105,4 @@ Last reviewed: 2026-08-29 (P6)
 - Fold: all 10 repaired in-unit, 12 tests written red first, suite 94 → 106, 9 mutants re-run and killed (including the two the review proved surviving). Commit `d1436c8a` + this fold commit.
 - What the review caught that the phase gates did not: AC7/AC8 were unmet for a `{model}`-only route (Pi moves the thinking level inside `setModel`; the restore was gated on the route naming one), AC10 silently discarded an explicit `inherit`/`stop` (the only two values that shadow a lower scope), AC3 dispatched the bundled directory where Pi expands on the frontmatter `name:`, and the README quoted refusal strings no code emits.
 - Still open: the live model-backed routed turn (usage limit at the smoke step) — `known-issues.md`, manual checklist items 1–6.
-- Re-review pass 2 on `bb8e3c02`: **REVIEW-PASS** — 0 new findings, 0 fix-now
-  remaining, 1 proposal (`noUnusedLocals`/`noUnusedParameters`, user-routed).
-  Manual checklist stays open (live items 1–6). Receipt in `review-findings.md`.
-- Merge/publish stays a human action.
+- Next: re-run `review-change` on the folded HEAD.
