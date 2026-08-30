@@ -5,8 +5,10 @@
 ```text
 human product authority
   -> design-feature + evidence grounding
+  -> deterministic SPEC readiness (cannot approve)
   -> review-spec (read-only)
   -> plan-feature | plan-fix + evidence grounding
+  -> deterministic Plan readiness (cannot approve)
   -> review-plan (read-only)
   -> feature 29 implementation discovery
   -> execute/verify
@@ -16,6 +18,11 @@ human product authority
 
 Product or Plan root-cause findings travel backward to their owner. They never
 become permission for an executor or reviewer to amend authority.
+
+The first review produces one complete unioned findings set, repaired as one
+root-caused owner batch before one re-review. A second correction cycle emits a
+convergence diagnosis and routes to Product, Plan, source, environment, or
+runtime ownership; no retry/cycle budget owns correctness.
 
 ## Contract layers
 
@@ -52,6 +59,9 @@ Any authoring event rotates `artifactRevisionId`, including mutate/revert.
 ## Ledger ownership
 
 - `planning-findings.md` is stage-aware review/repair evidence.
+- `planning-evidence.md` (M/L) or the Engineering SPEC section (XS/S) is the
+  compact source-backed argument for plan decisions and phase cuts. It is Plan
+  authority; raw exploration history is not.
 - The obligation ledger is the completeness map and is frozen with the Plan.
 - `review-findings.md` remains candidate-code review evidence.
 - `ACCEPTANCE.md` remains the anti-weakening validation authority.
@@ -63,5 +73,5 @@ Any authoring event rotates `artifactRevisionId`, including mutate/revert.
 - Architectural invariants: `n/a: no project invariants declared`.
 - Preserves AD-002 bilingual human docs, AD-004 one implementation PR against
   `main`, and AD-007 strict package contract authority.
-- Hard implementation gate: feature 27 / PR #150 merged and its Pi
-  bundle/parity commands available.
+- Satisfied implementation prerequisite: feature 27 / PR #150 is merged and
+  its Pi bundle/parity commands are available; revalidate them before P1.

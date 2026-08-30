@@ -11,7 +11,10 @@ Add a portable, read-only implementation-discovery gate between a current
 gate must prove the reviewed phase against current entry points, callers,
 constraints, tests, expected writes, assumptions, contradictions, and unknowns
 before an executor edits anything, so relevant exploration becomes preventive
-evidence rather than late review/rework.
+evidence rather than late review/rework. It begins from feature 28's compact
+planning evidence and revalidates/delta-maps it against current source; it is
+not the first time the implementation topology is investigated and cannot
+compensate for an evidence-poor Plan.
 
 ## Branch
 
@@ -28,8 +31,9 @@ single-concern phases; no split trigger applies.
 
 - Hard: feature 28 / issue #146 must be implemented and merged, including
   current SPEC/Plan receipt semantics and upstream return routes.
-- Transitive: feature 27 / PR #150 must be merged because feature 28 and this
-  feature ship changed canonical skills through the Pi bundle/parity surface.
+- Satisfied transitive prerequisite: feature 27 / PR #150 is merged; feature 28
+  and this feature must ship changed canonical skills through its Pi
+  bundle/parity surface.
 - No new package/schema dependency: reuse feature 28 receipts, current
   `SkillOutcome v1`, Git/repository evidence, and runtime-opaque persistence.
 
@@ -54,7 +58,12 @@ that work cheaper; direct repository reads remain the portable authority.
 Feature 28 establishes that the Product and Plan are complete and current. This
 feature asks a narrower question immediately before one phase writes: does that
 reviewed phase still map to the actual current repository, and is the executor's
-first edit justified? It cannot amend or approve Product/Plan authority.
+first edit justified? Planning must already have investigated the architecture,
+affected surfaces, reusable patterns, validators, and phase cut far enough to
+justify the Plan. The mapper consumes the phase-relevant planning-evidence rows,
+tests them against current source, fills implementation-local detail, and routes
+any material gap back to Plan review. It cannot amend or approve Product/Plan
+authority.
 
 ### Business goals
 
@@ -90,7 +99,7 @@ first edit justified? It cannot amend or approve Product/Plan authority.
   assumption-heavy work; manual fresh conversations remain first-class.
 - **S4:** Emit one fixed compact implementation map bound to current Plan
   review, phase fingerprint/obligations, source HEAD, cited content evidence,
-  and one consumable mapping revision.
+  phase-relevant planning evidence, and one consumable mapping revision.
 - **S5:** Return exactly `READY | REPLAN | NEEDS-DESIGN | BLOCKED`, with no edit
   until `READY` covers all seven questions and every phase obligation.
 - **S6:** Run the cheapest relevant read-only falsification probe before READY
@@ -99,8 +108,16 @@ first edit justified? It cannot amend or approve Product/Plan authority.
   consume it at the first implementation write, and prevent old-map reuse after
   revert or interrupted partial execution.
 - **S8:** Pass only the compact map plus frozen phase authority to a fresh
-  writer where supported; semantic navigation and episodic memory remain
-  optional advisory accelerators.
+  writer where supported, including the carried planning claims it needs and
+  excluding raw planning/exploration history; semantic navigation and episodic
+  memory remain optional advisory accelerators.
+- **S11:** Treat a mapper that must invent the Plan's affected topology,
+  architecture choice, obligation coverage, or validator as `REPLAN`, not
+  `READY`; implementation discovery revalidates and specializes a sound Plan.
+- **S12:** Extend the feature-28 convergence canary through first write and
+  candidate review. One source-local repair/re-review may occur; entering a
+  second cycle emits the inherited `CONVERGENCE-ANOMALY` outcome and fails
+  qualification through feature-28 ownership, never waiving a finding.
 - **S9:** Route engineering contradictions to replan/review-plan, product or
   authority gaps to design/review-spec/planning, and unavailable required
   evidence to an exact blocker.
@@ -129,6 +146,8 @@ first edit justified? It cannot amend or approve Product/Plan authority.
   delivery.
 - No savings claim before canary evidence and no requirement that exploration
   be shorter than implementation.
+- No use of implementation mapping as a late substitute for missing planning
+  evidence, affected-surface analysis, phase design, or validator selection.
 
 ### Capability closure
 
@@ -227,6 +246,9 @@ routing, runtime/Pi distribution, bilingual docs, and qualification. Roles are
 | 16 | The map is committed as a new planning artifact | out-of-scope | No committed-map non-goal |
 | 17 | The mapper chooses providers, retries, or storage | out-of-scope | Runtime-policy non-goal |
 | 18 | Faster or cheaper delivery is claimed from the mechanism alone | out-of-scope | Unmeasured-savings non-goal |
+| 19 | The mapper receives and revalidates phase-relevant planning evidence | in-scope | S4, S8; AC1, AC6 |
+| 20 | Missing plan-level topology or validators return to planning instead of being invented during mapping | in-scope | S11; AC4, AC13 |
+| 21 | A second candidate repair/re-review cycle is a qualification anomaly, never an approval shortcut | in-scope | S12; AC10, AC13 |
 
 ### Acceptance criteria
 
@@ -272,6 +294,12 @@ routing, runtime/Pi distribution, bilingual docs, and qualification. Roles are
 - [ ] **AC12 — read-verified:** exact candidate independently reviews with no
   unresolved fix-now finding and preserves feature 28, TDD, staged
   verification, candidate review, and audit authority.
+- [ ] **AC13 — command/read-verified:** fixtures reject READY when
+  phase-relevant planning evidence is missing, contradicted, or requires the
+  mapper to invent Plan topology/validators; the end-to-end feature/fix/
+  cross-boundary canary records source-local repair cycles and emits
+  `CONVERGENCE-ANOMALY` on entry into a second cycle without suppressing
+  findings.
 
 ### Tooling
 
@@ -299,6 +327,10 @@ routing, runtime/Pi distribution, bilingual docs, and qualification. Roles are
   may persist it opaquely, but no committed artifact/schema is justified yet.
 - **PD6 — evidence before claim:** canary first; savings language only after
   observed comparison.
+- **PD7 — mapping is delta validation:** implementation discovery specializes
+  and revalidates a reviewed evidence-backed Plan. A missing Plan-level
+  argument returns to planning; it is never created opportunistically by the
+  mapper.
 
 ### Deferred decisions
 
@@ -330,6 +362,14 @@ Engineering boxes:
 
 ---
 
+## Amendments
+
+| Date | Authority | Change |
+|---|---|---|
+| 2026-08-30 | User-approved | Bind mapping to phase-relevant planning evidence, prohibit using mapping as deferred planning, and extend second-cycle convergence qualification through candidate review. |
+
+---
+
 ## Engineering half
 
 ### Technical goals
@@ -340,6 +380,8 @@ Engineering boxes:
   feature-26 verification contracts.
 - Bind READY to exact current authority/source evidence and one consumable
   mapping revision while remaining portable without a runtime.
+- Revalidate a compact phase-specific planning-evidence slice and route missing
+  Plan-level understanding upstream before mapping can say READY.
 - Keep the writer context compact and the exploration path evidence-driven.
 
 ### Architecture impact
@@ -364,6 +406,8 @@ The internal step receives only:
 
 - governing SPEC/fix obligations for the current phase;
 - current feature-28 SPEC and Plan receipt digests;
+- the phase-relevant rows from frozen planning evidence, including their source
+  revision, affected decision/obligation, freshness, and declared unknowns;
 - phase fingerprint, ordered tasks, acceptance/obligation ids, and last progress
   receipt;
 - source HEAD plus clean-source/allowed-planning-path evidence;
@@ -380,7 +424,8 @@ It must answer:
    current behavior?
 5. Which exact writes are expected, and which reviewed obligation does each
    serve?
-6. Which Plan assumptions are directly confirmed or contradicted by source?
+6. Which carried planning-evidence claims and Plan assumptions are directly
+   confirmed, refined, stale, missing, or contradicted by source?
 7. Which relevant unknowns remain, who owns them, and what evidence resolves
    them?
 
@@ -411,6 +456,7 @@ IMPLEMENTATION MAP — unit-id phase-id
 Map revision: opaque single-consumption id
 Source identity: HEAD + clean-source proof + cited-evidence manifest digest
 Authority: SPEC receipt + Plan receipt + phase fingerprint
+Planning evidence: carried row ids + current confirmation/refinement/conflict
 Obligations: ordered acceptance/fix/obligation ids
 Entry points: path:line or symbol + role + exact evidence
 Affected surfaces: callers/adapters/roles/compatibility/failure paths + evidence
@@ -426,10 +472,13 @@ Decision: READY | REPLAN | NEEDS-DESIGN | BLOCKED
 
 `READY` requires every field, question, and owned obligation covered, no
 material contradiction/unknown, an observed falsification probe, and expected
-writes inside phase authority. `REPLAN` means source disproves Engineering
-assumptions while Product remains stable. `NEEDS-DESIGN` means Product,
-acceptance, authority, or architecture intent is missing/conflicting. `BLOCKED`
-names evidence that cannot currently be obtained. No other verdict exists.
+writes inside phase authority. It also requires every carried planning-evidence
+row to be confirmed or narrowly refined; absent Plan-level topology,
+architecture, obligation, or validator evidence is `REPLAN`. `REPLAN` also
+means source disproves Engineering assumptions while Product remains stable.
+`NEEDS-DESIGN` means Product, acceptance, authority, or architecture intent is
+missing/conflicting. `BLOCKED` names evidence that cannot currently be
+obtained. No other verdict exists.
 
 #### 4. Source identity and first-write ordering
 
@@ -472,10 +521,12 @@ failed probe informs REPLAN/NEEDS-DESIGN; unavailable high-risk evidence is
 BLOCKED. This does not replace TDD or later verification.
 
 The writer receives frozen phase authority plus the fixed compact map. It does
-not receive raw files, repeated summaries, or the authoring conversation unless
-a cited claim cannot be interpreted without a focused excerpt. The writer may
-only touch expected paths/obligations; a newly discovered path or contradiction
-stops and remaps/routes rather than expanding silently.
+not receive raw files, repeated summaries, raw planning discovery, or the
+authoring conversation unless a cited claim cannot be interpreted without a
+focused excerpt. The map preserves the phase-relevant planning-evidence ids and
+their current confirmation. The writer may only touch expected paths/
+obligations; a newly discovered path or contradiction stops and remaps/routes
+rather than expanding silently.
 
 #### 6. Persistence, recovery, and issue policy
 
@@ -508,6 +559,12 @@ use existing opportunistic reporting, but discovery never calls the forge.
 - **D7 — Persistence:** runtime may retain opaque evidence; v1 public skill
   surface creates no schema or committed map.
 - **D8 — Measurement:** canary records observations before any efficiency claim.
+- **D9 — Planning-evidence input:** READY must confirm or narrowly refine every
+  phase-relevant planning-evidence row. Material absence or contradiction is a
+  Plan defect and routes to replan/review-plan.
+- **D10 — Convergence inheritance:** use feature 28's first-findings batch and
+  exact `CONVERGENCE-ANOMALY` second-cycle semantics through candidate review;
+  mapping creates no competing cycle authority.
 
 ### Testing requirements
 
@@ -519,10 +576,14 @@ use existing opportunistic reporting, but discovery never calls the forge.
 - Test exact map completeness, obligations, paths, evidence, probe results,
   unknowns, single consumption, crash before/after first write, preparation
   allowlist, tracked/untracked dirt, drift, and causal revert.
+- Test carried planning-evidence confirmation/refinement and fail READY when the
+  mapper would need to invent Plan-level topology, architecture, obligation, or
+  validator claims.
 - Preserve all feature-28 package/route, execution, review/fold, verification,
   audit, context, installability, Pi bundle/parity, and golden tests.
-- Record an observational manual canary and independent review of exact terminal
-  candidate.
+- Record an observational feature/fix/cross-boundary canary and independent
+  review of exact terminal candidates; entry into a second repair/re-review
+  cycle fails qualification and routes to the owning root cause.
 
 ### Dev scenarios
 
@@ -558,23 +619,23 @@ source identity, planning-setup continuity, drift, consumption, and recovery.
 Phase-lint: PASS (8/8) · fingerprint
 `P2:docs:8:gate-the-first-phase-write`
 
-#### P3 — Integrate upstream routing and compact handoff
+#### P3 — Integrate evidence-aware execution routing
 
 Layer: docs. Done-when: implementation-discovery plus existing execution/
 review/audit route suites exit 0 for backward routing, compact writer context,
 legacy/manual behavior, no issue creation, and authority preservation.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P3:docs:8:integrate-upstream-routing-and-compact-handoff`
+`P3:docs:8:integrate-evidence-aware-execution-routing`
 
-#### P4 — Harden and qualify implementation discovery
+#### P4 — Qualify implementation discovery
 
 Layer: hardening. Done-when: repository, feature-28, Pi distribution, context,
 installability, golden-fixture, canary, and independent-review gates pass on the
 exact candidate.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P4:hardening:8:harden-and-qualify-implementation-discovery`
+`P4:hardening:8:qualify-implementation-discovery`
 
 ### Deploy & rollback
 
@@ -618,6 +679,6 @@ no longer recognizes the map route.
 
 ### Post-merge next feature
 
-No automatic AW feature. Run at least one real manual feature and one real fix
-through features 28+29, record the canary, and only then automate the complete
-flow in AWL issue #30 and its prerequisite AWL issues.
+No automatic AW feature. Run the qualified manual feature/fix/cross-boundary
+corpus through features 28+29, record the canary, and only then automate the
+complete flow in AWL issue #26 and its prerequisite AWL issues.

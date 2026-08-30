@@ -8,7 +8,7 @@
 | Projection | both generated Draft-07 projections match the canonical definition and disclose runtime authority | `cd packages/agentic-workflow-schema && npm run check:pre-execution-schemas` |
 | Package content | version 3.5.0 and both new schema files are publishable | `cd packages/agentic-workflow-schema && npm pack --dry-run` |
 | Pi distribution | canonical root skills are rebuilt into the Pi package with byte parity and routed/package tests green | `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` |
-| Workflow text contracts | SPEC/Plan/fix review, grounding, ledgers, independence, no-progress, legacy, routing | `node --test scripts/pre-execution-quality.test.mjs` |
+| Workflow text contracts | progressive readiness, SPEC/Plan/fix review, planning-evidence/obligation ledgers, independence, batched repair, convergence anomaly, no-progress, legacy, routing | `node --test scripts/pre-execution-quality.test.mjs` |
 | Existing loop/audit regression | local fold remains source-local; upstream defects route backward; audit authority unchanged | `node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` |
 | Context/distribution | every entrypoint remains within budget and intended skills are installable | `node scripts/check-skill-context.mjs`; `npx skills add . --list` |
 | Manual weak-executor route | no invented stage, bypass, automatic issue, or post-PASS artifact edit | dated PASS record in `docs/workflow/GOLDEN_FIXTURE.md` |
@@ -38,6 +38,12 @@
   validator weakening, and missing failure scenario.
 - Same-model clean reviewers labelled honestly; union of disagreements;
   material dismissal only with counter-evidence; identical repeat no-progress.
+- Product/Plan readiness rejects missing evidence, unknown ownership, scenario
+  gaps, uncovered obligations, bad phase cuts, or unresolved decisions without
+  claiming review PASS.
+- First findings are classified and repaired as one owner-bounded batch; one
+  re-review may close; a second cycle emits `CONVERGENCE-ANOMALY` with finding,
+  snapshot, evidence-deficit, and owner fields before any further edit.
 - `workflow-status` and transition decisions for every missing/current/stale
   receipt; legacy adoption; crash/re-entry; Plan/Product root cause discovered
   during candidate review.
@@ -52,6 +58,12 @@ Record comparable baseline and post-change observations for:
 - lines/files written then reverted or substantially rewritten;
 - total latency and model tokens where the runtime exposes them;
 - current-unit obligations exported to follow-up issues.
+
+The mandatory qualification corpus contains at least one feature, one fix, and
+one cross-boundary unit. Record correction cycles per stage. Any sample entering
+a second repair/re-review cycle fails qualification until its Product/Plan/
+source/environment/runtime cause is corrected and the sample is rerun. This
+threshold is a release-quality target, never permission to suppress findings.
 
 Use `not yet measured` for unavailable observations. Do not infer improvement
 from the mechanism alone.
