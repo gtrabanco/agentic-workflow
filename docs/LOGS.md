@@ -6,12 +6,10 @@ out to do, what was decided and *why*, and where to resume.
 
 **How it gets written**
 
-- **Automatically (free)** — the SessionEnd hook in `.claude/` appends a
-  *mechanical* entry (timestamp, branch, commits, files) on every `/clear` and
-  exit. No model, no tokens. See [`.claude/README.md`](../.claude/README.md).
-- **Manually (rich)** — run `/log-session` to add a thoughtful entry with a
-  summary, the decisions made, and the concrete next step. Do it before
-  `/clear`, before closing for the day, or at any natural stopping point.
+This checkout does not ship an automatic SessionEnd hook. Run `/log-session`
+to append a thoughtful entry with the summary, decisions, and concrete next
+step before clearing context, closing for the day, or at any natural stopping
+point.
 
 Newest entries go at the **bottom** (chronological, append-only). Don't edit or
 tidy past entries — they're a record.

@@ -78,8 +78,9 @@ Run `execute-phase 06 P1`, then `P2`, `P3`, `P4`.
 - [x] Confirm closure gate rejects a blank row (NEEDS_INPUT/BLOCKED, not silent
       pass); confirm `design-feature <existing-slug>` upsert destroys nothing.
 - [x] Confirm no stack/product references leaked into new skill or shared docs.
-- [ ] **Close-out — open the PR** (`gh pr create --body-file <path>` — body as a
-      Markdown file, real backticks, never inline `--body`/heredoc) with
-      `Closes #13` and **PRINT THE PR URL in the chat**.
-- [ ] Update the roadmap row 06 to `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #<n>` and push.
+- [x] **Close-out — open PR
+      [#24](https://github.com/gtrabanco/agentic-workflow/pull/24)** with
+      `Closes #13` and print the PR URL.
+- [x] Update roadmap row 06 to
+      `done · [#24](https://github.com/gtrabanco/agentic-workflow/pull/24)`.
+- [x] Commit the PR-linked roadmap row and push; PR #24 merged to `main`.
