@@ -1,2 +1,6 @@
 node_modules/
 dist/
+
+# bun is the sole package manager (CLAUDE.md → Packages) — an npm
+# package-lock.json here is drift and the lockfile-policy test fails on it
+package-lock.json
