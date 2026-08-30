@@ -38,7 +38,12 @@ function scriptedUi(answers) {
     asked,
     notify,
     ui: {
-      select: async (title) => take(title, "select"),
+      select: async (title, options) => {
+        asked.push({ title, kind: "select", options });
+        if (!Object.hasOwn(answers, title)) throw new Error(`no scripted select answer for: ${title}`);
+        const value = answers[title];
+        return Array.isArray(value) ? value.shift() : value;
+      },
       input: async (title) => take(title, "input"),
       confirm: async (title) => take(title, "confirm"),
       notify: (message, kind) => notify.push({ message, kind }),
@@ -517,3 +522,65 @@ test("AC10: saving a draft nobody edited reproduces the file instead of emptying
 function globalOnly() {
   return { [paths.global]: '{"default":{"model":"openai/gpt-5.2","thinking":"high"}}' };
 }
+
+// --- Pass-2 fold: N-2/N-4. The console is the only surface with room to explain a
+// routed turn that never settled, so `inFlight()` lives here rather than being dead
+// code, and the escape has to appear only when there is something to escape.
+
+test("AC10: the undo appears while a routed turn holds the latch and puts the session back", async () => {
+  let inFlight = true;
+  let undid = 0;
+  const scripted = scriptedUi({
+    [prompts.scope]: "the global file (~)",
+    [prompts.menu]: [prompts.undoInFlight, prompts.cancel],
+    [prompts.discard]: false,
+  });
+  const result = await runSettingsConsole({
+    ui: scripted.ui,
+    agentDir: "/fixture/agent",
+    cwd: "/fixture/repo",
+    projectTrusted: true,
+    commands: ["plan-feature"],
+    routing: {
+      inFlight: () => inFlight,
+      undoInFlight: async () => {
+        undid += 1;
+        inFlight = false;
+        return true;
+      },
+    },
+    readFile: () => null,
+    writeFile: () => {},
+  });
+
+  const menu = scripted.asked.find(({ title }) => title === prompts.menu);
+  assert.ok(menu.options.includes(prompts.undoInFlight), "the release is offered while the latch is held");
+  assert.equal(undid, 1, "and choosing it releases the latch");
+  assert.ok(
+    scripted.notify.some(({ message }) => /put back/i.test(message)),
+    `with a word about what happened: ${JSON.stringify(scripted.notify)}`,
+  );
+  assert.equal(result.status, "cancelled", "undoing a routing is not an edit to the file");
+});
+
+test("AC10: with nothing in flight the console does not offer an undo", async () => {
+  const scripted = scriptedUi({ [prompts.scope]: "the global file (~)", [prompts.menu]: prompts.cancel });
+  await runSettingsConsole({
+    ui: scripted.ui,
+    agentDir: "/fixture/agent",
+    cwd: "/fixture/repo",
+    projectTrusted: true,
+    commands: ["plan-feature"],
+    routing: {
+      inFlight: () => false,
+      undoInFlight: async () => {
+        throw new Error("the undo was offered when nothing was in flight");
+      },
+    },
+    readFile: () => null,
+    writeFile: () => {},
+  });
+  const menu = scripted.asked.find(({ title }) => title === prompts.menu);
+  assert.ok(menu, "the menu was reached");
+  assert.ok(!menu.options.includes(prompts.undoInFlight), "an option that can do nothing is noise");
+});

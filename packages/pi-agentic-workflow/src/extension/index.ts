@@ -90,8 +90,9 @@ export default function extension(pi: ExtensionAPI): void {
     hint,
     loadConfig: (ctx) => loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() }),
     // The console edits the same files the dispatcher reads (SPEC S4, AC10).
-    settings: ({ ctx, catalogue: routed }) =>
+    settings: ({ ctx, catalogue: routed, routing }) =>
       runSettingsConsole({
+        routing,
         ui: ctx.ui,
         agentDir,
         cwd: ctx.cwd,

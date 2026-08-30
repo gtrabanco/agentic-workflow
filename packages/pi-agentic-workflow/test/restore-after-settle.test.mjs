@@ -236,3 +236,79 @@ test("AC7: when the operator moves only the thinking level, the model comes back
   assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5", "the model is restored");
   assert.equal(session.state.thinking, "xhigh", "the level they picked is not overwritten by the model restore");
 });
+
+// --- Pass-2 fold: N-3, Pi clamps a level the model cannot run, and announces the
+// *effective* one a microtask later. Recording what we *asked for* made that
+// announcement look like an operator move, so the restore preserved the clamp
+// instead of putting the operator's level back.
+
+test("AC8: a clamped thinking level is still the router's own write, not an operator move", async () => {
+  const session = createSession({
+    config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" } }),
+    models: { "openai/gpt-5.2": true },
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    // The routed model cannot run `max`: Pi writes the clamped level and announces
+    // *that* one. The session's own model can run `low`, so a correct restore has
+    // somewhere to land.
+    supportedThinking: { "openai/gpt-5.2": ["off", "low", "medium"] },
+  });
+
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.state.thinking, "medium", "Pi clamped what we asked for");
+
+  await session.settle();
+  assert.equal(session.state.thinking, "low", "the operator's level comes back; the clamp was our own write");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
+});
+
+test("AC8: an operator who really did move the level still wins over a clamped route", async () => {
+  const session = createSession({
+    config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" } }),
+    models: { "openai/gpt-5.2": true },
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "off",
+    supportedThinking: { "openai/gpt-5.2": ["off", "low", "medium"] },
+  });
+
+  await session.dispatch(COMMAND, "x");
+  // Deliberately not `medium`: the level the clamp left behind is indistinguishable
+  // from our own write, so an operator who re-selected it is not a change we can see.
+  session.operatorSelectsThinkingLevel("low");
+  await session.settle();
+
+  assert.equal(session.state.thinking, "low", "their choice, not our clamped write and not the pre-turn level");
+});
+
+test("AC8: a routed turn that never settles has an operator release, and it restores like a settle", async () => {
+  // Pi starts a routed turn inside an action that swallows failures, and `prompt()`
+  // can throw before the loop runs (compaction in progress, no model, no
+  // credentials) — so `agent_settled` is not guaranteed to arrive. `isIdle()` cannot
+  // stand in for that proof (the test above "in-flight wins over an idle-looking
+  // session" is why), so the latch is released by the operator, through the console.
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+  assert.equal(session.router.inFlight(), true, "the router owns the latch the console offers to release");
+
+  session.state.idle = true; // the turn never started: the session is quiet again
+  const blocked = await session.dispatch(COMMAND, "");
+  assert.equal(blocked.status, "refused", "idleness alone does not release it — the operator does");
+
+  assert.equal(await session.router.undoInFlight(session.ctx), true);
+  assert.equal(session.router.inFlight(), false);
+  assert.equal(session.state.thinking, "low", "the abandoned turn's level was put back");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5", "and its model");
+
+  const second = await session.dispatch(COMMAND, "");
+  assert.equal(second.status, "dispatched", "the next command runs instead of refusing forever");
+
+  assert.equal(await session.settle().then(() => session.router.undoInFlight(session.ctx)), false, "nothing to undo once it settled");
+});
+
+test("AC12: the in-flight refusal names the way out", async () => {
+  const session = routedSession();
+  await session.dispatch(COMMAND, "x");
+  const second = await session.dispatch(COMMAND, "");
+  assert.equal(second.status, "refused");
+  assert.match(second.message, /undo it with \/agentic-workflow-settings/u);
+});
