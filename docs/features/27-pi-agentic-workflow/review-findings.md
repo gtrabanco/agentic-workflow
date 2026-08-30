@@ -41,3 +41,23 @@ unit, 21 killed.
 Still open, unchanged: the live model-backed routed turn (manual checklist items
 1–6 in the review table) — the provider usage limit that blocked it is not
 resolved by this fold.
+
+## Pass 2 — receipt, and what the fold left open
+
+Pass 2 ran on `8d97689d` in a context that did not write the fold: **REVIEW-FAIL**,
+10 pass-1 rows verified repaired, 8 new rows. Folded in `9bdb2cd5`: N-1 (adapter
+coverage), N-2 (`inFlight()` given a consumer, unused-symbol flags enabled), N-3
+(clamped level), N-4 (operator release of the latch), N-5 (tally is now
+`npm run mutation`, 21/21 accounted, 0 survived), N-6 (stale doc counts), N-7
+(`dist/` untracked, `prepare` builds it).
+
+**Not folded, with the reason** (pass 2's N-8 batch — six rules its own mutants
+showed the suite cannot see): the no-prior-model restore branch, a duplicate name
+reported *and* registered, the frontmatter scanner's closing `---`, the read-only
+summary's `unavailable:` line, `saveConfig` writing the draft before `clean()`, and
+a thinking-only route touching the model. Each is a one-line assertion away; none
+changes shipped behaviour, and the unit's phase budget is spent — they go to
+`known-issues.md` with the pass-2 mutant ids so the next change to those files
+picks them up rather than re-deriving them.
+
+Pass 3 is the owner's call: the branch HEAD now differs from what pass 2 saw.
