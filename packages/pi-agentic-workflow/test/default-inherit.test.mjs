@@ -15,6 +15,8 @@ import { join } from "node:path";
 import { loadConfig, configFilePaths } from "../dist/config/load.js";
 import { effectiveRoute } from "../dist/config/merge.js";
 import { DEFAULT_CONFIG, DEFAULT_ROUTE } from "../dist/config/defaults.js";
+import { SETTINGS_COMMAND } from "../dist/routing/types.js";
+import { createSession } from "./helpers/session.mjs";
 
 const agentDir = "/fixture/agent";
 const cwd = "/fixture/repo";
@@ -124,4 +126,43 @@ test("AC6: a real global file on disk is picked up without an injected reader", 
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
+});
+
+// The dispatch leg of AC6: with nothing configured, running a command must not
+// touch the session at all. The resolution half lives above; this is the part
+// that needed the dispatcher, which is why it was sequenced into P3.
+
+function zeroConfigRouter(root) {
+  const session = createSession({
+    loadConfig: () => loadConfig({ agentDir: join(root, "agent"), cwd: join(root, "repo"), projectTrusted: true }),
+    knownCommands: ["plan-feature", SETTINGS_COMMAND],
+  });
+  return session;
+}
+
+test("AC6: a zero-config dispatch never calls setModel or setThinkingLevel", async () => {
+  const root = mkdtempSync(join(tmpdir(), "paw-zero-dispatch-"));
+  try {
+    const session = zeroConfigRouter(root);
+    const outcome = await session.dispatch({ name: "plan-feature", skill: "plan-feature" }, "27-pi-agentic-workflow");
+
+    assert.equal(outcome.status, "dispatched");
+    assert.equal(outcome.routed, false, "nothing was routed, so nothing can be restored");
+    assert.deepEqual(session.log.setModel, []);
+    assert.deepEqual(session.log.setThinkingLevel, []);
+    assert.deepEqual(session.log.sendUserMessage.map((entry) => entry.content), [
+      "/skill:plan-feature 27-pi-agentic-workflow",
+    ]);
+
+    // Settling an unrouted turn changes nothing either.
+    await session.settle();
+    assert.deepEqual(session.log.setModel, []);
+    assert.deepEqual(session.log.setThinkingLevel, []);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC6: the shipped default really does come from the loader, not from a test fixture", () => {
+  assert.deepEqual(effectiveRoute(DEFAULT_CONFIG, "plan-feature"), DEFAULT_ROUTE);
 });

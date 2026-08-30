@@ -31,15 +31,15 @@ Layer: domain · Done-when: `cd packages/pi-agentic-workflow && node --test test
 
 Layer: api · Done-when: `cd packages/pi-agentic-workflow && node --test test/alias-coverage.test.mjs test/argument-forwarding.test.mjs test/dispatch-refusals.test.mjs test/restore-after-settle.test.mjs test/unavailable-stop.test.mjs test/first-run-hint.test.mjs` → exit 0.
 
-- [ ] Register one command per bundled `user-invocable: true` skill named after its frontmatter `name:`; `test/alias-coverage.test.mjs` (AC3)
+- [x] Register one command per bundled `user-invocable: true` skill named after its frontmatter `name:` — `src/routing/catalogue.ts` + `src/extension/factory.ts`; `test/alias-coverage.test.mjs` asserts the set against the live bundle *and* drives the compiled `dist/extension/index.js` through a Pi-shaped API double (8 tests); `test/alias-coverage.test.mjs` (AC3)
       *(P2 carry-in: the same suite asserts every `commands` key in a config file exists in the catalogue — a typo'd command name must not silently route nothing.)*
-- [ ] Forward post-command arguments verbatim and in order; `test/argument-forwarding.test.mjs`: `/plan-feature 27-pi-agentic-workflow` → `plan-feature` + `27-pi-agentic-workflow` (AC4)
-- [ ] Dispatch guard: refuse (no skill expansion) when agent busy, routed invocation in flight, or present config invalid; `test/dispatch-refusals.test.mjs` (AC12)
-- [ ] Snapshot session model + thinking level before any non-inherit dispatch (AC7)
-- [ ] Apply the resolved route via `setModel` / `setThinkingLevel` before dispatch (AC7)
-- [ ] Restore snapshot after `agent_settled` unless the user changed the model during the routed turn; `test/restore-after-settle.test.mjs` (AC7, AC8)
-- [ ] `onUnavailableRoute`: default `stop` — no dispatch, message names command, route, `/agentic-workflow-settings`; `inherit` mode dispatches on the session model; explicit `inherit` never fails; `test/unavailable-stop.test.mjs` (AC9)
-- [ ] First-run hint shown exactly once, acknowledgement persisted in `~/.pi/agent/pi-agentic-workflow-state.json`; `test/first-run-hint.test.mjs` (AC11, D-E7)
+- [x] Forward post-command arguments verbatim and in order — `/skill:<dir> <args>` via `sendUserMessage(…, { expandPromptTemplates: true })`; `test/argument-forwarding.test.mjs` pins AC4 plus ordering, quoting, and internal spacing (6 tests); `test/argument-forwarding.test.mjs`: `/plan-feature 27-pi-agentic-workflow` → `plan-feature` + `27-pi-agentic-workflow` (AC4)
+- [x] Dispatch guard: refuse (no skill expansion) when agent busy, routed invocation in flight, or present config invalid — all three run before any session mutation; `test/dispatch-refusals.test.mjs` asserts `sendUserMessage`/`setModel`/`setThinkingLevel` stayed empty on every refusal (5 tests); `test/dispatch-refusals.test.mjs` (AC12)
+- [x] Snapshot session model + thinking level before any non-inherit dispatch (AC7) — the snapshot is taken before `setModel`, and is what `settle()` restores
+- [x] Apply the resolved route via `setModel` / `setThinkingLevel` before dispatch (AC7) — asserted as an ordered sequence: `setModel` → `setThinkingLevel` → `sendUserMessage`
+- [x] Restore snapshot after `agent_settled` unless the user changed the model during the routed turn — Pi fires `model_select` for our own switch too, so a select that is not ours marks the turn untouchable (D-P14); `test/restore-after-settle.test.mjs` (10 tests, AC7 walkthrough + AC8 validator); `test/restore-after-settle.test.mjs` (AC7, AC8)
+- [x] `onUnavailableRoute`: default `stop` — no dispatch, message names command, route, `/agentic-workflow-settings` — unknown-model, no-credentials, and failed-select all stop; `inherit` dispatches on the session model and says so; an explicit `inherit` route is never an availability failure; `test/unavailable-stop.test.mjs` (7 tests); `inherit` mode dispatches on the session model; explicit `inherit` never fails; `test/unavailable-stop.test.mjs` (AC9)
+- [x] First-run hint shown exactly once, acknowledgement persisted in `~/.pi/agent/pi-agentic-workflow-state.json` — `src/routing/state.ts`, separate from config; refusals do not consume it, a corrupt file re-shows, a failed write latches in memory; `test/first-run-hint.test.mjs` (7 tests); `test/first-run-hint.test.mjs` (AC11, D-E7)
 
 ## P4 — Agentic-workflow settings console
 
