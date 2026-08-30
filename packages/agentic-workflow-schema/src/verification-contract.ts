@@ -15,6 +15,11 @@
  * structural projections of this definition, never a second semantic authority.
  */
 
+// Function-level import (used only inside `applyCrossRule`, never at module
+// init): the canonical serializer is the shared authority in
+// `canonical-json.ts`, which itself imports this module's capture primitives.
+import { canonicalJSONValue } from "./canonical-json.js";
+
 /** Field-level pattern rule shared by runtime validation and the projection. */
 export interface VerificationPatternRule {
   /** ECMA-262 source a valid value must match (negative lookaheads express prohibitions). */
@@ -79,19 +84,42 @@ export type VerificationRuleKind =
   | "unique"
   | "timestamp-order"
   | "calendar-roundtrip"
-  /** `fields` must stay ≤ `maximum` while `when` holds (stage-scoped ceiling). */
+  /** `fields` must stay ≤ `maximum` while `when` holds (a numeric field's value or an array field's length). */
   | "maximum-when"
   /** Sum of `fields` over `collection` items matching `when` stays ≤ `maximum`. */
-  | "stage-aggregate-budget";
+  | "stage-aggregate-budget"
+  /** `collection` must be `uniqueItems` as a Draft-07 floor (a family may enforce a stronger key offline). */
+  | "unique-items"
+  /**
+   * While `when` holds, each field in `fields` must be one of `values`. This is the
+   * one form of "a sibling field narrows my vocabulary" Draft 07 can state, so a
+   * consumer's editor refuses e.g. a SPEC-stage receipt carrying a Plan verdict
+   * instead of letting it pass a structural validation it cannot survive.
+   */
+  | "enum-when";
 
 /** Cross-field rule declared once; projected whenever Draft-07 can express it. */
 export interface VerificationCrossRule {
   readonly id: string;
   readonly description: string;
-  /** D16 code to report instead of this kind's default (see `CROSS_RULE_DEFAULT_CODE`). */
-  readonly code?: VerificationDiagnosticCodeV1;
+  /**
+   * D16 code to report instead of this kind's default (see `CROSS_RULE_DEFAULT_CODE`).
+   * A contract family may pin one of its OWN codes here (the pre-execution family
+   * pins `invalid-topology`), so the declared type accepts any string while the
+   * shared engine keeps its closed vocabulary for the codes it emits itself.
+   */
+  readonly code?: VerificationDiagnosticCodeV1 | (string & {});
   /** false → enforced by the authoritative validator only, disclosed in the projection. */
   readonly projectable: boolean;
+  /**
+   * Where the runtime enforces the rule. Default `"walk"`: every structural pass
+   * (so a well-formedness validator refuses it too). `"binding"` marks a rule a
+   * well-formed document may violate — the projection still renders it, but only
+   * the family's binding authority (which blesses a verdict) applies it, so a
+   * recorded topology a plain review carried is refused exactly where it would
+   * be acted on.
+   */
+  readonly enforcement?: "walk" | "binding";
   readonly kind: VerificationRuleKind;
   /** Predicate over a sibling field's value. */
   readonly when?: {
@@ -99,6 +127,8 @@ export interface VerificationCrossRule {
     readonly equals?: string;
     readonly in?: readonly string[];
     readonly notIn?: readonly string[];
+    /** Predicate holds while the sibling array carries at least this many rows. */
+    readonly minItems?: number;
   };
   /** Constrained fields (`exactly-one-non-null`, `null-when`, `non-null-when`, timestamp/ calendar rules). */
   readonly fields?: readonly string[];
@@ -106,6 +136,8 @@ export interface VerificationCrossRule {
   readonly collection?: string;
   /** `maximum-when` / `stage-aggregate-budget` — the declared ceiling. */
   readonly maximum?: number;
+  /** `enum-when` — the only values each `fields` entry may take while `when` holds. */
+  readonly values?: readonly string[];
 }
 
 /** One contract object: its fields and its cross-field rules. */
@@ -916,6 +948,11 @@ function ruleApplies(
   if (!when) return true;
   if (!Object.prototype.hasOwnProperty.call(obj, when.field)) return false;
   const value = obj[when.field];
+  // A `minItems` predicate reads an ARRAY sibling, not a string one; the two
+  // predicate families never mix on one rule.
+  if (when.minItems !== undefined) {
+    return Array.isArray(value) && value.length >= when.minItems;
+  }
   if (typeof value !== "string") return false;
   if (when.equals !== undefined) return value === when.equals;
   if (when.in !== undefined) return when.in.includes(value);
@@ -1198,6 +1235,10 @@ function validateStructureFields(
   }
 
   for (const rule of spec.rules) {
+    // Binding-only rules describe how a verdict may be ACTED ON, not what
+    // well-formed data is: the plain walk skips them, the binding authority
+    // applies them explicitly over the same captured document.
+    if (rule.enforcement === "binding") continue;
     applyCrossRule(spec, rule, value, path, sink);
   }
 
@@ -1214,16 +1255,23 @@ const CROSS_RULE_DEFAULT_CODE: Readonly<Record<VerificationRuleKind, Verificatio
   "calendar-roundtrip": "invalid-value",
   "maximum-when": "limit-exceeded",
   "stage-aggregate-budget": "budget-exceeded",
+  "unique-items": "duplicate-id",
+  "enum-when": "invalid-value",
 });
 
-function applyCrossRule(
+/**
+ * Apply one cross-field rule to a captured, normalized document. Exported for a
+ * family's binding authority, which re-applies the `binding`-enforcement rules
+ * the shared walk deliberately skipped.
+ */
+export function applyCrossRule(
   spec: VerificationObjectSpec,
   rule: VerificationCrossRule,
   value: Record<string, unknown>,
   path: string,
   sink: VerificationDiagnosticSink,
 ): void {
-  const code = rule.code ?? CROSS_RULE_DEFAULT_CODE[rule.kind];
+  const code = (rule.code ?? CROSS_RULE_DEFAULT_CODE[rule.kind]) as VerificationDiagnosticCodeV1;
   const at = (key: string) => `${path}/${key}`;
 
   switch (rule.kind) {
@@ -1270,13 +1318,52 @@ function applyCrossRule(
       }
       break;
     }
+    case "enum-when": {
+      if (!ruleApplies(spec, rule, value)) break;
+      const allowed = rule.values ?? [];
+      for (const key of rule.fields ?? []) {
+        const raw = value[key];
+        // A non-string is refused by the field's own type/vocabulary check; this
+        // rule only narrows the set of well-formed values.
+        if (typeof raw === "string" && !allowed.includes(raw)) sink.push(code, at(key));
+      }
+      break;
+    }
     case "maximum-when": {
       if (!ruleApplies(spec, rule, value)) break;
       for (const key of rule.fields ?? []) {
         const raw = value[key];
-        if (typeof raw === "number" && rule.maximum !== undefined && raw > rule.maximum) {
+        // A numeric field is compared by value; an array field by row count, so
+        // one kind states both "at most N" shapes (e.g. an empty-array ceiling).
+        const count = typeof raw === "number" ? raw : Array.isArray(raw) ? raw.length : undefined;
+        if (count !== undefined && rule.maximum !== undefined && count > rule.maximum) {
           sink.push(code, at(key));
         }
+      }
+      break;
+    }
+    case "unique-items": {
+      // The Draft-07 floor: no two rows of `collection` are the same VALUE. A
+      // family that needs key-level uniqueness declares its own stronger rule
+      // (the pre-execution receipt pins digest uniqueness beside this floor).
+      const collectionName = rule.collection ?? "";
+      const collection = Array.isArray(value[collectionName]) ? (value[collectionName] as unknown[]) : [];
+      const seen = new Set<string>();
+      for (let i = 0; i < collection.length; i++) {
+        const item = collection[i];
+        if (!isPlainRecord(item)) continue;
+        // Canonical form, not JSON.stringify: two own-property copies of one
+        // row may carry different key orders but must mean one identity. A row
+        // outside the canonical domain is refused by the field walk anyway, so
+        // it is skipped here instead of masking those rows with a throw.
+        let key: string;
+        try {
+          key = canonicalJSONValue(item);
+        } catch {
+          continue;
+        }
+        if (seen.has(key)) sink.push(code, `${at(collectionName)}/${i}`);
+        else seen.add(key);
       }
       break;
     }

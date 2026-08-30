@@ -232,6 +232,280 @@ intento no reconocido, y cualquier transición no en la tabla cerrada.
 Consulta el [SPEC](../features/24-workflow-transition-decider/SPEC.md) para el
 diseño completo, tablas de transición y vocabulario de códigos de razón.
 
+## Revisión pre-ejecución con base en evidencia (feature 28)
+
+Dos contratos versionados que permiten que un revisor demuestre *qué bytes* juzgó,
+antes de que exista código:
+
+- `PreExecutionArtifactSnapshot v1`
+  (`agentic-workflow/pre-execution-artifact-snapshot@1`) — el conjunto exacto de
+  artefactos y los contextos autoritativos en los que la revisión pudo apoyarse,
+  en una revisión de fuente y una revisión causal de artefactos.
+- `PreExecutionReviewReceipt v1` (`agentic-workflow/pre-execution-review-receipt@1`)
+  — el veredicto de un revisor sobre un snapshot, con hallazgos estructurados,
+  identidad de autor opaca y una topología de padres opcional.
+
+Son contratos **pre-ejecución**. Son distintos de
+`CandidateSnapshotV1`/`ReviewReceiptV1` (que atan un candidato construido) y de
+`VerificationPlanV1`/`VerificationReceiptV1` (que atan la ejecución de comandos).
+Ningún contrato de esta familia sustituye a otro: un recibo de candidato o de
+verificación nunca valida como recibo pre-ejecución, y ninguna aprobación sobrevive
+a un cambio en lo que fue aprobado.
+
+### Entradas públicas
+
+| Entrada | Contrato |
+| --- | --- |
+| `validatePreExecutionArtifactSnapshotV1(value)` | `{ ok, snapshot?, diagnostics, truncated }` |
+| `validatePreExecutionReviewReceiptV1(value)` | `{ ok, receipt?, diagnostics, truncated }` |
+| `validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, policyVersion)` | la única autoridad de PASS |
+| `buildPreExecutionArtifactSnapshot(input)` | constructor del conjunto por etapa sobre bytes del llamante |
+| `selectSpecProduct(text)` | proyección determinista `spec-product-v1` |
+| `canonicalizePreExecutionArtifactSnapshot(snapshot)` | JSON canónico |
+| `digestPreExecutionArtifactSnapshot(snapshot)` | SHA-256 hexadecimal en minúsculas |
+| `canonicalizePreExecutionReviewReceipt(receipt)` / `digestPreExecutionReviewReceipt(receipt)` | el mismo par para recibos |
+| `comparePreExecutionReceiptToSnapshot(receipt, reviewed, current, policyVersion)` | decisión de frescura |
+
+Toda entrada acepta `unknown`, nunca lanza con entrada hostil y responde con el
+vocabulario cerrado y redactado `PRE_EXECUTION_DIAGNOSTIC_CODES`: solo códigos y
+punteros de campo, jamás un valor enviado.
+
+### Identificadores de contrato
+
+Los dos discriminantes `contract` se exportan como
+`PRE_EXECUTION_SNAPSHOT_CONTRACT_ID` y
+`PRE_EXECUTION_RECEIPT_CONTRACT_ID`; el nombre de la proyección de Producto en la
+etapa SPEC es `PRE_EXECUTION_SNAPSHOT_SELECTOR` (`spec-product-v1`). Compáralos por
+igualdad de cadenas — un snapshot o recibo cuyo `contract` sea cualquier otro valor
+se rechaza con `invalid-value`, y así un documento de candidato, de verificación o
+de una versión futura no se confunde con esta familia.
+
+### Vocabularios cerrados
+
+Cada valor siguiente se exporta como array congelado; nada fuera de ellos valida.
+`PRE_EXECUTION_RUNTIME_RULES` publica la misma división que describe la prosa —
+`{ snapshot: [...], receipt: [...] }`, cada fila `{ id, claim }` — para que un
+conductor pueda mostrar las garantías que el schema no puede expresar.
+
+| Export | Values and meaning |
+| --- | --- |
+| `PRE_EXECUTION_STAGES` | `spec` · `plan` — Las dos etapas de revisión. Define el conjunto de artefactos requerido y la matriz de veredictos. |
+| `PRE_EXECUTION_UNIT_KINDS` | `feature` · `fix` — Una unidad `fix` no tiene mitad de Producto, así que no tiene snapshot de etapa SPEC. |
+| `PRE_EXECUTION_ARTIFACT_KINDS` | `spec` · `acceptance` · `plan` · `tasks` · `testing` · `decisions` · `architecture-notes` · `planning-evidence` · `obligations` — Los roles que un documento atado puede desempeñar. |
+| `PRE_EXECUTION_SELECTORS` | `whole-file` · `spec-product-v1` — Cómo se eligieron los bytes atados dentro del archivo. |
+| `PRE_EXECUTION_CONTEXT_KINDS` | `roadmap-row` · `governing-issue` · `normalized-repository-state` · `architectural-invariants` · `dependency-unit` · `project-guide` — Autoridades en las que el revisor pudo apoyarse. |
+| `PRE_EXECUTION_CONTEXT_PRESENCE` | `present` · `absent` — `absent` es un hecho registrado, no un campo omitido. |
+| `PRE_EXECUTION_VERDICTS` | `spec-review-pass` · `spec-review-fail` · `plan-review-pass` · `plan-review-fail` · `needs-design` — Cada veredicto nombra la etapa donde es legal. |
+| `PRE_EXECUTION_FINDING_SEVERITIES` | `info` · `low` · `medium` · `high` · `critical` — `info` nunca bloquea un PASS por sí solo. |
+| `PRE_EXECUTION_FINDING_CLASSES` | `product` · `plan` · `source` · `environment` · `runtime` — A qué capa del contrato pertenece el hallazgo. |
+| `PRE_EXECUTION_FINDING_VERIFICATION` | `verified` · `unverified` — Solo los hallazgos materiales `verified` pueden sostener un PASS. |
+| `PRE_EXECUTION_FINDING_RESOLUTIONS` | `open` · `resolved` · `dismissed` — `dismissed` exige contrarevidencia registrada. |
+| `PRE_EXECUTION_REVIEW_ROLES` | `reviewer` · `critic` · `synthesizer` · `arbiter` — Qué es este recibo dentro de la topología. |
+| `PRE_EXECUTION_PARENT_ROLES` | `critic` · `synthesis` · `arbitration` — Qué fue el recibo padre — no hay quórum sobre ellos. |
+| `PRE_EXECUTION_AUTHOR_EXCLUSIONS` | `enforced` · `not-enforceable` — Si el runtime puede probar que el revisor no creó el conjunto de artefactos. |
+| `PRE_EXECUTION_MODEL_DIVERSITY` | `same-model` · `cross-model` · `not-applicable` — Una etiqueta veraz, nunca un umbral. |
+| `PRE_EXECUTION_FRESHNESS_CODES` | `invalid-stage` · `invalid-unit` · `stale-policy` · `stale-context` · `stale-source-revision` · `stale-parent` · `stale-artifact-revision` · `stale-artifact-content` · `missing-receipt-snapshot` — Precedencia ordenada: ver Frescura. |
+| `PRE_EXECUTION_DIAGNOSTIC_CODES` | `invalid-type` · `missing-field` · `unknown-field` · `invalid-value` · `limit-exceeded` · `duplicate-id` · `unknown-command` · `invalid-order` · `invalid-stage` · `invalid-exit-state` · `invalid-evidence` · `invalid-skip` · `invalid-fail-fast` · `digest-mismatch` · `verdict-mismatch` · `budget-exceeded` · `missing-artifact-kind` · `invalid-artifact-set` · `invalid-selector` · `invalid-author` · `invalid-context` · `invalid-topology` · `stale-snapshot` · `stale-policy` — Redactado: solo códigos y punteros, jamás un valor enviado. |
+
+### Qué ata el snapshot
+
+`contract`, `stage` (`spec | plan`), `unitKind` (`feature | fix`), `unitId`,
+`sourceRevision` (object id git de 40 o 64 hex), `artifactRevisionId` (la revisión
+causal — una rotación deliberada aunque el contenido revierta), `artifacts[]`,
+`contexts[]` y `parentSpecSnapshotDigest` (null si y solo si `stage === "spec"`).
+
+Cada fila de artefacto es `{ kind, path, selector, byteLength, digest }`:
+
+- `kind` ∈ `PRE_EXECUTION_ARTIFACT_KINDS` (`spec`, `acceptance`, `plan`, `tasks`,
+  `testing`, `decisions`, `architecture-notes`, `planning-evidence`,
+  `obligations`).
+- `path` es relativo al repositorio y normalizado — se rechazan las rutas
+  absolutas, las de letra de unidad, las barras invertidas, los segmentos `.`/`..`,
+  los separadores finales y los segmentos vacíos.
+- `selector` ∈ `whole-file | spec-product-v1`. La etapa SPEC ata su fila `spec`
+  con `spec-product-v1` y con nada más; la etapa Plan ata archivos completos.
+- `byteLength`/`digest` describen la **selección**, no el archivo.
+
+Los conjuntos requeridos dependen de la etapa: SPEC = exactamente la fila `spec`
+proyectada; Plan = `spec` + `acceptance`, más lo que exista para el tamaño de la
+unidad (`plan`, `tasks`, `testing`, `decisions`, `architecture-notes`,
+`planning-evidence`, `obligations`). Una unidad `fix` no tiene mitad de Producto, así
+que no tiene snapshot de etapa SPEC — la revisión de Plan es su gate pre-ejecución.
+
+Cada fila de contexto es `{ kind, identifier, presence, digest }` con `kind` ∈
+`roadmap-row | governing-issue | normalized-repository-state |
+architectural-invariants | dependency-unit | project-guide`. `presence` es
+`present | absent`; una autoridad presente lleva su digest de 64 hex y una ausente
+ata exactamente `null`. La ausencia es un hecho registrado, no un campo omitido.
+
+Las filas tienen un orden canónico — artefactos por bytes UTF-8 de la ruta,
+contextos por `kind` y luego `identifier` — y las identidades son únicas en cada lista.
+
+### Las reglas de colección viven en el runtime, no en el schema
+
+Las proyecciones publicadas
+([`pre-execution-artifact-snapshot.schema.json`](./pre-execution-artifact-snapshot.schema.json),
+[`pre-execution-review-receipt.schema.json`](./pre-execution-review-receipt.schema.json))
+se generan de la misma definición interna que aplica el runtime, así que nunca
+pueden contradecirla. Draft 07 no tiene forma de expresar propiedades **de una
+colección** (orden por bytes de ruta, unicidad por ruta/`kind`, la matriz
+etapa↔selector, unicidad de identidades de contexto), por lo que esas reglas —
+`artifact-rows-ordered`, `artifact-kinds-unique`, `artifact-paths-unique`,
+`context-rows-ordered`, `context-identities-unique`,
+`spec-artifact-uses-product-selector`, `stage-selector-matrix` — las aplica solo este
+paquete. Valídalas aquí; no confíes en un validador draft-07 de terceros para
+rechazar un snapshot desordenado.
+
+### Veredictos, hallazgos y la autoridad del PASS
+
+`verdict` ∈ `spec-review-pass | spec-review-fail | plan-review-pass |
+plan-review-fail | needs-design`, y el veredicto debe coincidir con la etapa del
+snapshot. Un hallazgo es `{ id, severity, class, claim, evidenceRefs, verification,
+resolution, resolutionEvidence }` con `severity` ∈ `info | low | medium | high |
+critical`, `class` ∈ `product | plan | source | environment | runtime`,
+`verification` ∈ `verified | unverified` y `resolution` ∈ `open | resolved |
+dismissed`. Todo hallazgo lleva al menos una referencia de evidencia, y un
+descarte exige contrarevidencia registrada.
+
+`validatePreExecutionReceiptAgainstSnapshot` es la única entrada que puede bendecir
+un PASS. Lo rechaza mientras algún hallazgo material esté abierto o sin verificar
+(los de severidad `info` nunca bloquean por sí solos), mientras el recibo ate otro
+snapshot, mientras la versión de política difiera, cuando la exclusión de autor
+declarada se viole bajo `enforced`, o cuando la identidad del revisor haya creado
+el conjunto de artefactos (`invalid-author`). Los recibos padres modelan una topología
+critic/synthesis/arbitration acotada (`role` ∈ `critic | synthesis | arbitration`,
+`receiptDigest` único) — **no hay quórum**: los votos nunca borran un hallazgo
+material sin resolver, y `modelDiversity` es una etiqueta veraz
+(`same-model | cross-model | not-applicable`), nunca un umbral.
+
+### Frescura
+
+`comparePreExecutionReceiptToSnapshot` responde `{ fresh: true }` o
+`{ fresh: false, reasonCode }` desde el vocabulario cerrado
+`PRE_EXECUTION_FRESHNESS_CODES`, con esta precedencia fija: `stale-policy` →
+`stale-context` → `stale-source-revision` → `stale-parent` →
+`stale-artifact-content` → `stale-artifact-revision` → `missing-receipt-snapshot`,
+y `invalid-stage` / `invalid-unit` se rechazan antes de comparar. Como una reversión
+que rota `artifactRevisionId` sigue cambiando el digest del snapshot, un PASS antigo
+no puede resucitar editando un documento de vuelta a sus bytes anteriores.
+
+### Límites publicados
+
+`PRE_EXECUTION_LIMITS` (todos los topes exactos; un único sumidero de diagnósticos
+compartido con las otras familias):
+
+```
+artifacts 32 · contexts 16 · findings 64 · evidencePerFinding 8
+parentReceipts 8 · receiptDiagnostics 8 · diagnostics 50
+unitIdChars 128 · revisionIdChars 128 · idChars 128 · identifierChars 160
+pathChars 1024 · claimChars 2048 · evidenceChars 1024
+resolutionEvidenceChars 2048 · policyChars 64 · diagnosticChars 512
+artifactBytes 4194304 · snapshotBytes 32768 · receiptBytes 65536
+```
+
+### Forma canónica y vectores
+
+La canonicalización ordena las claves de los objetos, preserva el orden declarado de
+los arrays, emite UTF-8 sin espacios y rechaza hojas fuera del modelo de datos JSON.
+Los digests son SHA-256 en minúsculas sobre esos bytes canónicos. Cuatro payloads se
+publican en `PRE_EXECUTION_CANONICAL_VECTORS` (ambas etapas × ambos contratos); la
+suite reproduce cada digest desde su fixture de forma independiente con `node:crypto`,
+así que un cambio en el serializador rompe un test en lugar de mover en silencio la
+linaje de un consumidor.
+
+```bash
+npm run gate:pre-execution   # tests + drift de schemas + checks de paquete + pack
+```
+
+### Ejemplo de uso
+
+```ts
+import {
+  buildPreExecutionArtifactSnapshot,
+  comparePreExecutionReceiptToSnapshot,
+  digestPreExecutionArtifactSnapshot,
+  selectSpecProduct,
+  validatePreExecutionReceiptAgainstSnapshot,
+} from "@gtrabanco/agentic-workflow-schema";
+
+const POLICY_VERSION = "2026-08-30";
+
+// The caller reads the documents: this package never touches Git or the filesystem.
+const spec = [
+  "# Toy feature", "", "## Goal", "", "Ship one usable slice.", "",
+  "## Branch", "", "`feat/toy`", "", "## Size", "", "`S`", "",
+  "## Dependencies", "", "- none", "", "## Product half", "", "### Scope", "",
+  "- **S1:** the slice.", "", "## Design status", "", "`designed`", "",
+].join("\n");
+
+/** 1. Freeze the exact bytes a reviewer may rely on, at one causal revision. */
+async function freeze(artifactRevisionId: string) {
+  const built = await buildPreExecutionArtifactSnapshot({
+    stage: "spec",
+    unitKind: "feature",
+    unitId: "toy",
+    sourceRevision: "8ab22ea6c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+    artifactRevisionId,
+    files: [{ kind: "spec", path: "docs/features/toy/SPEC.md", content: spec }],
+    contexts: [{ kind: "governing-issue", identifier: "#146", content: "the issue body" }],
+  });
+  const snapshot = built.ok ? built.snapshot : undefined;
+  if (!snapshot) throw new Error(JSON.stringify(built.diagnostics));
+  return snapshot;
+}
+
+const snapshot = await freeze("rev-0001");
+
+// 2. A reviewer records a verdict bound to that digest, never to the mutable file.
+const receipt = {
+  contract: "agentic-workflow/pre-execution-review-receipt@1",
+  id: "review-0001",
+  stage: snapshot.stage,
+  snapshotDigest: await digestPreExecutionArtifactSnapshot(snapshot),
+  verdict: "spec-review-pass",
+  findings: [],
+  reviewer: "reviewer-7",
+  sessionId: "session-7",
+  reviewerRole: "reviewer",
+  authorId: "author-3",
+  authorExclusion: "enforced",
+  contextClean: true,
+  modelDiversity: "cross-model",
+  policyVersion: POLICY_VERSION,
+  startedAt: "2026-08-30T00:00:00Z",
+  finishedAt: "2026-08-30T00:04:00Z",
+  parentReceipts: [],
+  diagnostics: [],
+};
+
+// 3. Only this entry can bless a PASS; it answers with codes, never submitted values.
+const blessed = await validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, POLICY_VERSION);
+if (!blessed.ok) throw new Error(JSON.stringify(blessed.diagnostics));
+
+// 4. Before executing, freeze again: unchanged authority stays fresh.
+const fresh = await comparePreExecutionReceiptToSnapshot(
+  receipt, snapshot, await freeze("rev-0001"), POLICY_VERSION,
+);
+if (fresh.fresh !== true) throw new Error(JSON.stringify(fresh));
+
+// 5. Edit, revert, and rotate the revision anyway and the PASS is void: a stale
+//    approval can never be resurrected by restoring the previous bytes.
+const stale = await comparePreExecutionReceiptToSnapshot(
+  receipt, snapshot, await freeze("rev-0002"), POLICY_VERSION,
+);
+if (stale.fresh === true || stale.reasonCode !== "stale-artifact-revision") {
+  throw new Error(JSON.stringify(stale));
+}
+
+// 6. The projection is why a plan-side write cannot erase Product lineage: the
+//    selector never saw anything outside the named Product headings.
+const projection = selectSpecProduct(`${spec}\n## Engineering half\n\n### Phases\n\n- P1\n`);
+if (projection.ok !== true) throw new Error(JSON.stringify(projection.errors));
+if (projection.content.includes("Engineering half")) throw new Error("the projection leaked");
+
+console.log("review bound", projection.byteLength, receipt.snapshotDigest.slice(0, 12), fresh, stale);
+```
+
 ## Contratos de Verificación por Etapas (feature 26)
 
 Dos contratos wire versionados para verificación por etapas:

@@ -8,14 +8,14 @@ must satisfy its Done-when command before the phase commit.
 Layer: schema/db · Done-when: `cd packages/agentic-workflow-schema && npm test`
 -> exit 0 with all new and existing suites green.
 
-- [ ] Write red-first public-entry tests for strict snapshot/receipt shapes, closed vocabularies, undeclared fields, stage matrices, bounds, normalized paths, identities, timestamps, and bounded redacted diagnostics.
-- [ ] Add one internal canonical definition for both contracts and normalized DTO constructors; expose only the SPEC-approved validation entries and types.
-- [ ] Implement `spec-product-v1` exact Markdown selection with missing, duplicate, and out-of-order heading rejection plus stage-aware artifact-set construction from caller-supplied bytes.
-- [ ] Implement canonical UTF-8 serialization, lowercase SHA-256 digests, readonly independently checked vectors, and deterministic repeatability tests.
-- [ ] Implement Product-parent lineage, policy/context/source freshness precedence, `artifactRevisionId` causal invalidation, author-exclusion semantics, and mutate/revert non-resurrection tests.
-- [ ] Generate the two Draft-07 structural projections from the canonical definition, mark them non-authoritative, and add projection drift/parity checks.
-- [ ] Extend package-root intents, evidence vocabulary, capability profiles, and deterministic transition fixtures for `review-spec` and `review-plan` without changing existing intent meaning.
-- [ ] Export/package/document the additive surface, bump `3.4.0 -> 3.5.0`, and prove existing candidate-review and staged-verification contracts remain compatible.
+- [x] Write red-first public-entry tests for strict snapshot/receipt shapes, closed vocabularies, undeclared fields, stage matrices, bounds, normalized paths, identities, timestamps, and bounded redacted diagnostics.
+- [x] Add one internal canonical definition for both contracts and normalized DTO constructors; expose only the SPEC-approved validation entries and types.
+- [x] Implement `spec-product-v1` exact Markdown selection with missing, duplicate, and out-of-order heading rejection plus stage-aware artifact-set construction from caller-supplied bytes.
+- [x] Implement canonical UTF-8 serialization, lowercase SHA-256 digests, readonly independently checked vectors, and deterministic repeatability tests.
+- [x] Implement Product-parent lineage, policy/context/source freshness precedence, `artifactRevisionId` causal invalidation, author-exclusion semantics, and mutate/revert non-resurrection tests.
+- [x] Generate the two Draft-07 structural projections from the canonical definition, mark them non-authoritative, and add projection drift/parity checks.
+- [x] Extend package-root intents, evidence vocabulary, capability profiles, and deterministic transition fixtures for `review-spec` and `review-plan` without changing existing intent meaning.
+- [x] Export/package/document the additive surface, bump `3.4.0 -> 3.5.0`, and prove existing candidate-review and staged-verification contracts remain compatible.
 
 ## P2 — Establish Product review readiness
 
@@ -23,7 +23,7 @@ Layer: docs · Done-when: `node --test
 scripts/pre-execution-quality.test.mjs` -> exit 0 for grounding and SPEC-review
 fixtures.
 
-- [ ] Add the internal `evidence-grounding` skill/reference with the fixed claim-authority-evidence-freshness-unknown map, progressive inventory/evidence/draft/readiness order, bounded questions, contracted readiness outcomes, and no-progress rule.
+- [ ] Add the internal `evidence-grounding` skill/reference with the fixed claim-authority-evidence-freshness-unknown map, progressive inventory/evidence/draft/readiness order, bounded questions, contracted readiness outcomes, and no-progress rule. Mark it `user-invocable: false` WITHOUT `metadata.internal: true` and register it in `.claude-plugin/plugin.json` and `skills.sh.json` so the skills CLI discovers and installs it — `metadata.internal: true` is the exclusion flag (#96), and a distributed skill wrongly carrying it is silently omitted from installs (the #141 `orchestration-envelope` regression); lint rule 7 and the `bounded-delivery-loops` guard then keep the marking valid.
 - [ ] Integrate grounding, Product evidence compaction, deterministic readiness, and per-write `artifactRevisionId` handoff into `design-feature` without granting it review/approval authority or engineering scope.
 - [ ] Add public `review-spec` with the exact Product checks, clean-context falsification prompt, read-only artifact boundary, three verdicts, and stage-specific receipt/finding output.
 - [ ] Define SPEC repair/upsert semantics: one unioned findings set is root-caused and repaired as one batch; mechanical intent-preserving changes remain with `design-feature`; scope/authority/outcome gaps require the human and a new revision/review.
@@ -75,4 +75,4 @@ finding.
 - [ ] Run and record a comparable feature, fix, and cross-boundary canary corpus; use observed values or `not yet measured`, fail qualification on any second repair/re-review cycle, and never infer a savings claim.
 - [ ] Run independent context-clean `review-change` on the exact candidate, fold every fix-now finding through its root-cause route, and repeat only on a changed snapshot/new falsifiable question until PASS.
 - [ ] Mark progress/testing/known-issues/obligation ledgers truthfully, flip roadmap row 28 to `done`, and verify the complete frozen acceptance manifest at terminal HEAD.
-- [ ] Commit/push the terminal candidate and open one PR against `main` with `Closes #146`, exact verification evidence, package release note, compatibility boundary, and no self-authorship line.
+- [ ] Ship the release-ready terminal candidate: as the final pre-merge step, bump `@gtrabanco/pi-agentic-workflow` `0.1.0 -> 0.2.0` after the last skill edit and bundle rebuild (`npm run bundle:skills && npm test` green), add the `0.2.0` companion-package rows to both CHANGELOGs, commit/push, and open one PR against `main` with `Closes #146`, exact verification evidence, package release notes, compatibility boundary, and no self-authorship line. `publish-pi-package.yml` then releases the Pi package on merge because its version is newer than the registry.
