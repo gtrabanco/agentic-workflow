@@ -49,6 +49,8 @@ export function createSession(options = {}) {
     idle = true,
     cwd = "/fixture/repo",
     selectFails = false,
+    /** The routed turn cannot be started: `sendUserMessage` throws, like Pi's `prompt()` does. */
+    sendThrows = false,
     /** Pi's per-model thinking overrides, keyed by `provider/modelId`. */
     modelThinking = {},
     /** Pi's global default thinking level, consulted on every model switch. */
@@ -95,6 +97,7 @@ export function createSession(options = {}) {
 
   const api = {
     sendUserMessage: (content, opts) => {
+      if (sendThrows) throw new Error("send failed: compaction in progress");
       log.sendUserMessage.push({ content, opts });
       log.sequence.push(`sendUserMessage:${content}`);
       // The turn the skill starts is what later settles.

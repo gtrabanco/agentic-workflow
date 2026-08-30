@@ -312,3 +312,82 @@ test("AC12: the in-flight refusal names the way out", async () => {
   assert.equal(second.status, "refused");
   assert.match(second.message, /undo it with \/agentic-workflow-settings/u);
 });
+
+// --- Audit (pass-2 §3 N-8 batch): the failure branches pass 2 proved the suite
+// could not see. Each of these pins a rule a mutant was able to break silently.
+
+test("AC8: restoring a session that had no model is said out loud, not a crash", async () => {
+  // A session with no model yet is real (Pi starts headless turns without one): the
+  // route still applies, and the restore has nothing to switch back to.
+  const session = createSession({
+    config: configFor({ commands: ROUTED }),
+    models: AVAILABLE,
+    initialModel: null,
+    initialThinking: "low",
+  });
+  assert.equal(session.state.model, undefined, "the fixture really starts with no model");
+
+  const outcome = await session.dispatch(COMMAND, "x");
+  assert.equal(outcome.status, "dispatched");
+
+  await session.settle();
+  assert.ok(
+    session.notifications().some((message) => /nothing to restore/u.test(message)),
+    `the missing snapshot is announced: ${JSON.stringify(session.notifications())}`,
+  );
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "openai/gpt-5.2", "no restore is attempted with undefined");
+  assert.equal(session.state.thinking, "low", "the level is still put back");
+});
+
+test("AC7: a thinking-only route never touches the model — including at settle", async () => {
+  // M-AE: settle() calling setModel for a thinking-only route is invisible to any
+  // assertion taken before the settle, because restoring to the session's own model
+  // changes no state. The log is the only witness.
+  const session = createSession({
+    config: configFor({ commands: { "design-feature": { thinking: "xhigh" } } }),
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+  });
+
+  await session.dispatch(COMMAND, "x");
+  assert.deepEqual(session.log.setModel, []);
+  await session.settle();
+  assert.deepEqual(session.log.setModel, [], "settle added no model switch either");
+});
+
+test("AC8: a dispatch whose send throws puts the session back instead of wedging the latch", async () => {
+  // Pi starts a routed turn inside an action that swallows failures, and `prompt()`
+  // can throw before the loop runs — a synchronous throw from `sendUserMessage` is
+  // proof the turn never started, so the routing must roll back right there rather
+  // than leave the latch held (which would refuse every later command).
+  const session = createSession({
+    config: configFor({ commands: ROUTED }),
+    models: AVAILABLE,
+    initialModel: "anthropic/claude-opus-4-5",
+    initialThinking: "low",
+    sendThrows: true,
+  });
+
+  const outcome = await session.dispatch(COMMAND, "x");
+  assert.equal(outcome.status, "refused", "nothing was dispatched, so the command did not run");
+  assert.equal(outcome.reason, "dispatch-failed");
+  assert.match(outcome.message, /compaction in progress/u, "the refusal names the real cause");
+  assert.match(outcome.message, /put back/u);
+  assert.equal(session.router.inFlight(), false, "no turn ever started, so nothing is held");
+  assert.equal(session.state.thinking, "low", "the applied level was rolled back");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
+  assert.deepEqual(session.log.sendUserMessage, []);
+});
+
+test("AC7: select events with no turn in flight are ignored, not remembered", async () => {
+  const session = routedSession();
+  // An event Pi emits when no routed turn is ours to watch must not poison the next
+  // one's operator bookkeeping.
+  session.router.noteModelSelect({ provider: "zai", id: "glm-5" });
+  session.router.noteThinkingLevelSelect("xhigh");
+  await session.dispatch(COMMAND, "x");
+  await session.settle();
+
+  assert.equal(session.state.thinking, "low", "the pre-dispatch level was restored");
+  assert.equal(`${session.state.model.provider}/${session.state.model.id}`, "anthropic/claude-opus-4-5");
+});

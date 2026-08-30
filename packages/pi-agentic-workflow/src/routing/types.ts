@@ -71,7 +71,13 @@ export interface InvocationContext<M extends ModelRef = ModelRef> extends ModelL
   availableModels(): readonly M[];
 }
 
-export type RefusalReason = "invalid-config" | "busy" | "routed-turn-in-flight" | "unavailable-route";
+export type RefusalReason =
+  | "invalid-config"
+  | "busy"
+  | "routed-turn-in-flight"
+  | "unavailable-route"
+  /** `sendUserMessage` itself threw: the turn never started, so the routing is undone. */
+  | "dispatch-failed";
 
 export type DispatchOutcome =
   | { status: "dispatched"; routed: boolean; hintShown: boolean }
