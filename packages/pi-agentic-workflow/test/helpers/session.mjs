@@ -14,6 +14,7 @@
 // Model availability is scripted per reference.
 
 import { createRouter } from "../../dist/routing/dispatch.js";
+import { THINKING_LEVELS } from "../../dist/config/types.js";
 import { SETTINGS_COMMAND } from "../../dist/routing/types.js";
 import { mergeConfigs } from "../../dist/config/merge.js";
 
@@ -52,6 +53,13 @@ export function createSession(options = {}) {
     modelThinking = {},
     /** Pi's global default thinking level, consulted on every model switch. */
     defaultThinking,
+    /**
+     * Pi clamps a level the model cannot run (`_modelSupportsThinking` +
+     * `clampThinkingLevel`, `core/agent-session.js`), keyed by `provider/modelId`.
+     * Without this the double reports back what was *asked* for, and the router
+     * can never see the case where the session ended somewhere else.
+     */
+    supportedThinking = {},
   } = options;
 
   const state = {
@@ -71,6 +79,19 @@ export function createSession(options = {}) {
   const entryFor = (reference) => catalog.get(reference);
 
   const derivedThinkingFor = (reference) => modelThinking[reference] ?? defaultThinking ?? state.thinking;
+
+  // `void emit(...)` in Pi means a *programmatic* set announces itself a microtask
+  // later — i.e. after `dispatch()` has registered the turn, which is exactly when
+  // the router must tell its own write from an operator's (the clamped-level bug).
+  // The operator's own choice is announced on the spot: their click happened
+  // during a turn that is long over by the time the router reads the flag.
+  const announceThinking = (level) => queueMicrotask(() => router.noteThinkingLevelSelect(level));
+  const clampThinking = (level, reference) => {
+    const supported = supportedThinking[reference];
+    if (!supported || supported.includes(level)) return level;
+    const rank = (candidate) => THINKING_LEVELS.indexOf(candidate);
+    return supported.reduce((best, candidate) => (rank(candidate) > rank(best) ? candidate : best), supported[0]);
+  };
 
   const api = {
     sendUserMessage: (content, opts) => {
@@ -99,12 +120,14 @@ export function createSession(options = {}) {
     getThinkingLevel: () => state.thinking,
 
     setThinkingLevel(level) {
-      const previous = state.thinking;
-      if (previous === level) return;
-      log.setThinkingLevel.push(level);
-      log.sequence.push(`setThinkingLevel:${level}`);
-      state.thinking = level;
-      router.noteThinkingLevelSelect(level);
+      // Pi writes the *clamped* level and announces that one, so a request for a
+      // level the model cannot run leaves the session elsewhere — silently.
+      const effective = clampThinking(level, refKey(state.model));
+      if (state.thinking === effective) return;
+      log.setThinkingLevel.push(effective);
+      log.sequence.push(`setThinkingLevel:${effective}`);
+      state.thinking = effective;
+      announceThinking(effective);
     },
   };
 
@@ -146,7 +169,13 @@ export function createSession(options = {}) {
       return state.model;
     },
     operatorSelectsThinkingLevel(level) {
-      api.setThinkingLevel(level);
+      const effective = clampThinking(level, refKey(state.model));
+      if (state.thinking !== effective) {
+        log.setThinkingLevel.push(effective);
+        log.sequence.push(`setThinkingLevel:${effective}`);
+        state.thinking = effective;
+      }
+      router.noteThinkingLevelSelect(effective);
       return state.thinking;
     },
     /** Pi `agent_settled`: the routed turn is over; the session is idle again. */

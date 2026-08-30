@@ -5,7 +5,7 @@ import type { Catalogue } from "../routing/catalogue.js";
 import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
 import { SETTINGS_COMMAND } from "../routing/types.js";
-import type { ExtensionSurface, InvocationContext, ModelRef } from "../routing/types.js";
+import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 
 /**
@@ -34,6 +34,8 @@ export interface CommandRegistrar<M extends ModelRef = ModelRef> {
 export type SettingsHandler<M extends ModelRef = ModelRef> = (input: {
   catalogue: Catalogue;
   ctx: InvocationContext<M>;
+  /** Lets the console show and release a latch the operator can otherwise wait on. */
+  routing: RoutingControls;
 }) => unknown;
 
 export interface ExtensionDeps<M extends ModelRef = ModelRef> {
@@ -91,8 +93,11 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     description: "Show and configure per-command model routing",
     handler: async (_args, ctx) => {
       reportCatalogueIssues(ctx);
+      // Bound for the console: two verbs and the session they act on, so it cannot
+      // reach for `settle` or `dispatch` by accident.
+      const routing = { inFlight: () => router.inFlight(), undoInFlight: () => router.undoInFlight(ctx) };
       try {
-        await settings({ catalogue, ctx });
+        await settings({ catalogue, ctx, routing });
       } catch (error) {
         // A console that dies mid-question must say so, not take the session down.
         ctx.notify(`Settings could not be opened: ${(error as Error).message}`, "error");

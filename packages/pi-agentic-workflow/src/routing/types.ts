@@ -79,3 +79,14 @@ export type DispatchOutcome =
 
 /** Slash name of the settings console (SPEC S4, AC3, AC10). */
 export const SETTINGS_COMMAND = "agentic-workflow-settings";
+
+/**
+ * The router, as the settings console needs it: two verbs, already bound to the
+ * session they act on. Declared once because both the console's deps and the
+ * factory's handler type speak it, and a console that could call `settle` or
+ * `dispatch` would be a second owner of the latch.
+ */
+export interface RoutingControls {
+  inFlight(): boolean;
+  undoInFlight(): Promise<boolean>;
+}

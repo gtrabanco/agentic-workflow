@@ -12,7 +12,7 @@ import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
 import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
-import type { SettingsUi } from "../routing/types.js";
+import type { RoutingControls, SettingsUi } from "../routing/types.js";
 import type { ConfigFile, ModelSetting, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 
@@ -27,6 +27,14 @@ export interface SettingsDeps {
   models?: readonly string[];
   readFile(path: string): string | null;
   writeFile(path: string, text: string): void;
+  /**
+   * The router's live state, when the console was opened from a session that owns
+   * one. A routed turn that never settled — Pi starts it inside an action that
+   * swallows failures — leaves the latch held with no `agent_settled` coming, and
+   * every later command refuses. The operator needs a way out that is not
+   * "restart Pi", and the console is the only surface with room to explain it.
+   */
+  routing?: RoutingControls;
 }
 
 export type ConsoleOutcome =
@@ -39,6 +47,9 @@ export type ConsoleOutcome =
 export const prompts = {
   scope: "Which file should the console edit?",
   menu: "What do you want to change?",
+  inFlight: (command: string): string => `a routed /${command} is still held`,
+  undoInFlight: "Undo a routing that never started",
+  undone: "The routing was undone and the session put back.",
   command: "Which command?",
   policyChoice: "What should happen when a configured model is unavailable?",
   saveTo: (path: string): string => `Save the draft to ${path}?`,
@@ -70,14 +81,22 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
   let draft: ConfigFile = original;
 
   for (;;) {
+    // Only offered while a turn actually holds the latch: an option that does
+    // nothing is how a console becomes noise.
     const choice = await deps.ui.select(prompts.menu, [
       prompts.setDefaultRoute,
       prompts.setOverride,
       prompts.clearOverride,
       prompts.policy,
+      ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
       prompts.cancel,
     ]);
+    if (choice === prompts.undoInFlight) {
+      const undone = (await deps.routing?.undoInFlight()) ?? false;
+      deps.ui.notify(undone ? prompts.undone : "Nothing was in flight.", undone ? "info" : "warning");
+      continue;
+    }
     if (choice === undefined || choice === prompts.cancel) {
       return { status: "cancelled", edited: dirty(draft, original) ? await discard(deps.ui) : false };
     }

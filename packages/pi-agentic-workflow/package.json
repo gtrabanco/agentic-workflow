@@ -20,8 +20,12 @@
   "homepage": "https://github.com/gtrabanco/agentic-workflow/tree/main/packages/pi-agentic-workflow#readme",
   "type": "module",
   "pi": {
-    "extensions": ["./dist/extension/index.js"],
-    "skills": ["./skills"]
+    "extensions": [
+      "./dist/extension/index.js"
+    ],
+    "skills": [
+      "./skills"
+    ]
   },
   "files": [
     "dist",
@@ -41,7 +45,9 @@
     "build": "tsc",
     "bundle:skills": "node scripts/bundle-skills.mjs",
     "test": "tsc && node --test test/*.test.mjs",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "mutation": "node scripts/mutation-check.mjs",
+    "prepare": "npm run build"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
