@@ -44,7 +44,7 @@ Last reviewed: 2026-08-29 (P3)
 - Next: P3 — Routed command execution
 
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && node --test test/alias-coverage.test.mjs test/argument-forwarding.test.mjs test/dispatch-refusals.test.mjs test/restore-after-settle.test.mjs test/unavailable-stop.test.mjs test/first-run-hint.test.mjs` (exit 0, 37 tests) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Commit: `821da5a` feat(27-pi-agentic-workflow): routed command execution with snapshot/restore lifecycle (P3) · Gate: `cd packages/pi-agentic-workflow && node --test test/alias-coverage.test.mjs test/argument-forwarding.test.mjs test/dispatch-refusals.test.mjs test/restore-after-settle.test.mjs test/unavailable-stop.test.mjs test/first-run-hint.test.mjs` (exit 0, 37 tests) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
 - Full unit gate at the same revision: `npm test` → exit 0, 74 pass / 0 fail. AC1 manifest check re-run → exit 0. `npm pack --dry-run` → 129 files.
 - Next: P4 · Attempts: 1
 - Review-checkpoint trigger recorded (not interrupting, whole-unit mode): sensitivity — this phase is the project-trust + session-mutation surface (`setModel`, dispatch guards, restore), i.e. exactly the AC13/AC7 evidence the end review must read. Deviation to review: the P3 suites were authored after the implementation (see `decisions.md`), with mutation-killing as the compensating evidence.
