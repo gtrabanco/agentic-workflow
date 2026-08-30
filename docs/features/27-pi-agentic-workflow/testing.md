@@ -104,3 +104,11 @@ command, not fabricated into green.
 | 2026-08-29 | P5 | AC15 gate: `grep -c "pi install"` in each README, `grep -c "Versión en español"` in `README.md`, `grep -c "English version"` in `README.es.md` | 2 / 2 / 1 / 1 — all ≥1 |
 | 2026-08-29 | P5 | README command table ↔ live catalogue, section count and JSON example across both languages (`test/alias-coverage.test.mjs`) | exit 0 — 9 pass / 0 fail |
 | 2026-08-29 | P5 | `npm test` (compile + full suite) | exit 0 — 94 pass / 0 fail |
+| 2026-08-29 | P6 | `cd packages/pi-agentic-workflow && npm test` (AC14) | exit 0 — 94 pass / 0 fail |
+| 2026-08-29 | P6 | `cd packages/agentic-workflow-schema && npm test` (AD-007 regression) | exit 0 — 554 pass / 0 fail |
+| 2026-08-29 | P6 | AC1 manifest validator run verbatim from `ACCEPTANCE.md` | exit 0 |
+| 2026-08-29 | P6 | `git diff main --name-only` outside the AC16 allow-list | empty |
+| 2026-08-29 | P6 | `git diff main --name-only -- packages/agentic-workflow-schema \| wc -l` | 0 |
+| 2026-08-29 | P6 | `npm pack` + `tar -tzf` vs `find skills -type f` | 137 entries; 105/105 skill files present; extension entry, both READMEs, `package.json`, `LICENSE` included |
+| 2026-08-29 | P6 | **real Pi integration**: `pi install ./` then `pi list` with the compiled entry and `pi` manifest | installed and resolved to the package path; `pi -e ./dist/extension/index.js --offline --list-models` started with no extension-load error; global settings restored with `pi uninstall ./` afterwards |
+| 2026-08-29 | P6 | live command-execution smoke (`pi -p "/help"`) | **not run** — the provider session hit its usage limit; recorded in `known-issues.md` as the one uncovered integration surface |

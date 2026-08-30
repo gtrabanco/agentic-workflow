@@ -1,6 +1,6 @@
 # progress — 27-pi-agentic-workflow
 
-Last reviewed: 2026-08-29 (P5)
+Last reviewed: 2026-08-29 (P6)
 
 ## Acceptance receipt v1
 - Manifest: docs/features/27-pi-agentic-workflow/ACCEPTANCE.md · Blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f · Status: frozen · Verified: 2026-08-29
@@ -80,3 +80,10 @@ Last reviewed: 2026-08-29 (P5)
 - Gotchas: the docs claim "the list is read from the skills at startup", so an AC15 assertion now parses both READMEs' command tables and compares them with the live catalogue — a renamed skill fails a test instead of leaving a stale table in two languages; AC16 confines this branch to the package and the feature folder, so the **root** README deliberately does not advertise the Pi package (that would be a separate unit).
 - Files: `packages/pi-agentic-workflow/{README.md,README.es.md,test/alias-coverage.test.mjs}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,decisions.md}`
 - Next: P6 — Hardening & PR
+
+## Unit-loop receipt — P6
+- Commit: pending (hardening) · Gate: `cd packages/pi-agentic-workflow && npm test` (exit 0, 94 tests) + the PR URL printed in chat · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Dependency closure re-checked: still empty (fp `ca01f5b0d7506a6c4b3ed7eb26485b3bc9b74130`); roadmap row 27 `planned` → `done` on the PR-link commit.
+- Evidence: AC1 verbatim exit 0 · AC14 94/94 · AD-007 schema regression 554/554 · AC16 diff confined to the three allowed paths, schema package 0 files · `npm pack` 137 entries with all 105 skill files · six dev scenarios mapped to named tests in `testing.md` · 20 mutation matrices (P3 16, P4 4) all killed.
+- Residual risk recorded, not hidden: no live model-backed routed turn was observable (provider usage limit at the smoke-test step); see `known-issues.md`.
+- Next: PR open · Attempts: 1
