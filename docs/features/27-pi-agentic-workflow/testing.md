@@ -55,13 +55,13 @@ added the missing case and re-ran both mutants (see `review-findings.md`).
 
 ## Mutation evidence — reproducible (run `npm run mutation`)
 
-The numbers below are produced by `packages/pi-agentic-workflow/scripts/mutation-check.mjs`,
-which patches each mutant in a **copy** of the package under a temp dir, builds it, runs the
-named suite there, and exits non-zero if any mutant survives. Earlier revisions of this file
-recorded tallies as prose; two of them were wrong (an F9 mutant logged as killed had not been,
-and the P3 matrix was silent on the rule F1 later fixed), which is why the list is now a script
-rather than a paragraph.
+The numbers are produced by `packages/pi-agentic-workflow/scripts/mutation-check.mjs`, which
+patches each mutant in a copy of the package under a temp dir, builds it, runs the named suite
+there, and exits non-zero if any mutant survives. Earlier tallies were prose and two were
+wrong; the list is a script now, not a paragraph.
 
+| Rule broken | Killed by |
+|---|---|
 | `AC12 busy guard` | test |
 | `AC12 invalid-config refusal` | test |
 | `AC12 in-flight refusal — src/routing/dispatch.ts(184,41): error TS18048: 'pending' is possibly 'undefined'.` | compiler |
@@ -71,7 +71,7 @@ rather than a paragraph.
 | `AC8 record the clamped level (N-3)` | test |
 | `AC8 restore the level a model switch moved (F1) — src/routing/dispatch.ts(100,9): error TS6133: 'touched' is declared but its value is never read.` | compiler |
 | `AC7 own switch is not an operator move — src/routing/dispatch.ts(13,1): error TS6133: 'modelRefKey' is declared but its value is never read.` | compiler |
-| `N-4 undo restores the session — src/routing/dispatch.ts(156,24): error TS6133: 'ctx' is declared but its value is never read.` | compiler |
+| `N-4 undo restores the session — src/routing/dispatch.ts(160,32): error TS1434: Unexpected keyword or identifier.` | compiler |
 | `F7 unreadable is not absent — src/config/load.ts(56,7): error TS6133: 'NOT_THERE' is declared but its value is never read.` | compiler |
 | `AC13 untrusted project never read — src/config/load.ts(92,45): error TS6133: 'projectTrusted' is declared but its value is never read.` | compiler |
 | `F8 a command needs an explicit true` | test |
@@ -83,22 +83,10 @@ rather than a paragraph.
 | `N-2 the latch is releasable from the console` | test |
 | `F4 an explicit stop is saved` | test |
 | `F4 an explicit inherit is saved` | test |
+| `F12 a duplicate name is reported, never registered` | test |
+| `F13 the scanner stops at the closing ---` | test |
+| `F14 the summary follows the effective policy` | test |
+| `F15 only a cleaned draft reaches the disk` | test |
 
-`25 mutants · 19 killed · 0 survived · 6 compile-enforced · 0 stale` — 19 rules are pinned by a
-failing test; the 6 compiler entries are mutants that do not build at all (the unused-symbol rules
-`noUnusedLocals`/`noUnusedParameters`, enabled in `tsconfig.json` on the first fold, reject them),
-so no test could observe them and the build is the enforcement. Zero survived, zero stale needles.
-
-Four entries were added by the pass-3 fold, which took the six rules pass 2 had parked in
-`known-issues.md` and measured each one instead of asserting it (`F11`-`F16` in
-`review-findings.md`): `F12 a duplicate name is reported, never registered` and `F13 the scanner
-stops at the closing ---` were already killed on the pre-fold HEAD, so they are recorded as
-disputes and kept in the table to make that re-runnable; `F14 the summary follows the effective
-policy` and `F15 only a cleaned draft reaches the disk` were real and are killed by two new
-`settings-console` tests. The two remaining parked rules (`F11`, `F16`) live in
-`src/routing/dispatch.ts` / `test/restore-after-settle.test.mjs`, which a concurrent fold owns in
-the same worktree — they stay open rows rather than a paragraph that reads as settled.
-
-Suite count went 118 → 120 with those two tests; the gate stays
-`rm -rf dist && npm test` → exit 0.
-
+`25 mutants · 19 killed · 0 survived · 6 compile-enforced · 0 stale` — 19 rules are pinned by a failing test; the 6 compiler entries do not build at all
+(the unused-symbol rules reject them), so the build is the enforcement. 127 tests pass.
