@@ -93,7 +93,10 @@ node_modules` → 0 and `git diff origin/main --name-only` → 177 files, 0 outs
 the AC16 allow-list. **Rule for future rebases in this repository: never
 `git add -A` mid-rebase — stage the conflicted paths by name.**
 
-## Pass-2 mutants left unfolded (2026-08-29) — SUPERSEDED, see the fold ledger
+## Pass-2 mutants left unfolded (2026-08-29) — folded same day
+
+*Update, same day: the P3 failure-path audit closed all six (see `progress.md`); the table below is the record of what was open when written.*
+ — SUPERSEDED, see the fold ledger
 
 This table parked six rules as "assertion gaps for the next change to the file",
 which `fold-findings`/`FOLD_POLICY.md` forbid as a fold substitute. It is kept as
