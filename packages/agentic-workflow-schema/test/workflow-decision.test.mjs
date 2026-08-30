@@ -67,8 +67,9 @@ test("P1 row keys cover profiled skills and none", () => {
 
   // Verify the explicit row keys match the spec design:
   // none, init-workspace, status, discover-repository-state,
-  // resolve-repository-state, design-feature, plan-feature, plan-fix,
-  // triage-issue, execute-phase, review-change, loop-review-fold, audit-pr, merge
+  // resolve-repository-state, design-feature, review-spec, plan-feature,
+  // review-plan, plan-fix, triage-issue, execute-phase, review-change,
+  // loop-review-fold, audit-pr, merge
   const expectedKeys = [
     "none",
     "init-workspace",
@@ -76,7 +77,9 @@ test("P1 row keys cover profiled skills and none", () => {
     "discover-repository-state",
     "resolve-repository-state",
     "design-feature",
+    "review-spec",
     "plan-feature",
+    "review-plan",
     "plan-fix",
     "triage-issue",
     "execute-phase",
