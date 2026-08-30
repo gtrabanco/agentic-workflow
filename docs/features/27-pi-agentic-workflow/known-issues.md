@@ -75,3 +75,20 @@ GitHub reports the PR as unmergeable.
 **Why it is not being resolved silently**: a reservation with no artifact is
 someone else's in-flight plan, and the roadmap is the pipeline's single
 ground-truth column.
+
+### Resolved 2026-08-29 (owner decision: keep 27)
+
+Rebased onto `5bb235b` and resolved `docs/features/ROADMAP.md` in favour of the
+delivered unit: row 27 stays `pi-agentic-workflow` (`done · [#150]`), and main's
+rows 28/29 — already byte-identical to this branch's — were kept unchanged. The
+vacated reservation takes the next free number; nothing in this branch claims it.
+PR #150 reports `MERGEABLE` after the push.
+
+**Gotcha found and fixed during the same rebase**: resolving the conflict with
+`git add -A` swept 13,189 untracked `node_modules` files into the *design*
+commit — the package's `.gitignore` is only introduced in P1, so at that commit
+nothing ignored them. Removed by rewriting that commit (`git rm -r --cached` +
+`--amend`) before the force-push; verified with `git ls-files | grep -c
+node_modules` → 0 and `git diff origin/main --name-only` → 177 files, 0 outside
+the AC16 allow-list. **Rule for future rebases in this repository: never
+`git add -A` mid-rebase — stage the conflicted paths by name.**
