@@ -1,6 +1,6 @@
 # progress — 27-pi-agentic-workflow
 
-Last reviewed: 2026-08-29 (P2)
+Last reviewed: 2026-08-29 (P3)
 
 ## Acceptance receipt v1
 - Manifest: docs/features/27-pi-agentic-workflow/ACCEPTANCE.md · Blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f · Status: frozen · Verified: 2026-08-29
@@ -42,3 +42,16 @@ Last reviewed: 2026-08-29 (P2)
 - Gotchas: an invalid file returns `{ok:false, issues}` with **no** `config` property, so a caller cannot merge a rejected file by accident; `loadConfig` answers `ok:false` by handing back the shipped default, not a partial merge, so a broken or hostile project file can never produce a partial route; the loader takes the *directories* as inputs (Pi's `getAgentDir()`, `ctx.cwd`) so a relocated Pi profile works and tests never touch the real `~/.pi/`.
 - Files: `packages/pi-agentic-workflow/{src/config/*.ts,test/config-merge.test.mjs,test/default-inherit.test.mjs,test/untrusted-project-config.test.mjs,src/extension/index.ts}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}`, `docs/features/ROADMAP.md`
 - Next: P3 — Routed command execution
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && node --test test/alias-coverage.test.mjs test/argument-forwarding.test.mjs test/dispatch-refusals.test.mjs test/restore-after-settle.test.mjs test/unavailable-stop.test.mjs test/first-run-hint.test.mjs` (exit 0, 37 tests) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Full unit gate at the same revision: `npm test` → exit 0, 74 pass / 0 fail. AC1 manifest check re-run → exit 0. `npm pack --dry-run` → 129 files.
+- Next: P4 · Attempts: 1
+- Review-checkpoint trigger recorded (not interrupting, whole-unit mode): sensitivity — this phase is the project-trust + session-mutation surface (`setModel`, dispatch guards, restore), i.e. exactly the AC13/AC7 evidence the end review must read. Deviation to review: the P3 suites were authored after the implementation (see `decisions.md`), with mutation-killing as the compensating evidence.
+
+## P3 — 2026-08-29
+- Done: routed command execution — `src/routing/types.ts` (narrow Pi views; `M` bound to Pi's own `Model` so no cast reintroduces a fake one), `src/routing/catalogue.ts` (bundled `user-invocable: true` skills → commands, duplicate/missing reports), `src/routing/dispatch.ts` (guards → route resolution → availability → snapshot → apply → hint → dispatch; settle restores), `src/routing/state.ts` (first-run acknowledgement in its own global file), `src/extension/factory.ts` (Pi-free registration), `src/extension/index.ts` (the only Pi-value importer: `getAgentDir`, context/surface translation, the three lifecycle subscriptions). 37 new tests across the six AC validators, plus the AC6 dispatch leg added to `test/default-inherit.test.mjs` and the P2 carry-in (configured route matching no command is reported once) in `test/alias-coverage.test.mjs`.
+- Remains: P4 settings console · P5 bilingual READMEs · P6 hardening & PR.
+- Gotchas: Pi's `model_select` fires for our own `setModel` as well as the operator's — `source` is `"set"` either way, so the only reliable discriminator is comparing the event's model with the one the turn applied; selecting a model can move the thinking level inside Pi, so the snapshot thinking level must be restored *after* the model or AC8 cannot hold; `ctx.modelRegistry` and `ctx.ui.notify` live on the invocation context, not on `pi`, which is why the router resolves its surface per call instead of holding one.
+- Files: `packages/pi-agentic-workflow/{src/routing/*.ts,src/extension/factory.ts,src/extension/index.ts,src/config/schema.ts,test/alias-coverage.test.mjs,test/argument-forwarding.test.mjs,test/dispatch-refusals.test.mjs,test/restore-after-settle.test.mjs,test/unavailable-stop.test.mjs,test/first-run-hint.test.mjs,test/helpers/session.mjs,test/default-inherit.test.mjs}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,decisions.md}`
+- Next: P4 — Agentic-workflow settings console
