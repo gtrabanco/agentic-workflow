@@ -96,3 +96,8 @@ command, not fabricated into green.
 | 2026-08-29 | P3 | compiled entry imported and driven through a Pi-shaped API double (`PI_CODING_AGENT_DIR` pointed at a temp dir) | registered 18 aliases + `agentic-workflow-settings`, subscribed `agent_settled`/`model_select`/`thinking_level_select`, dispatched `/skill:plan-feature --next` |
 | 2026-08-29 | P3 | `npm test` (compile + full suite) | exit 0 — 74 pass / 0 fail |
 | 2026-08-29 | P3 | AC1 manifest re-check + `npm pack --dry-run` | exit 0; 129 files |
+| 2026-08-29 | P4 | `node --test test/settings-console.test.mjs` (P4 done-when) | exit 0 — 18 pass / 0 fail |
+| 2026-08-29 | P4 | console run through the **real** entry (`dist/extension/index.js`) with a Pi-shaped `ctx.ui`, temp `PI_CODING_AGENT_DIR` | wrote `<agentDir>/pi-agentic-workflow.json`; `loadConfig` read the saved route back |
+| 2026-08-29 | P4 | 4-mutant mutation matrix (see above) | 4 killed / 0 survived |
+| 2026-08-29 | P4 | `npm test` (compile + full suite) | exit 0 — 93 pass / 0 fail |
+| 2026-08-29 | P4 | `node --test test/skill-parity.test.mjs` (AC1 manifest) + `npm pack --dry-run` | exit 0; `dist/settings/*.js` included |

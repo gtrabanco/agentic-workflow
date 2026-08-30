@@ -10,6 +10,8 @@ import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
 import type { InvocationContext } from "../routing/types.js";
 import { createHintStore, stateFilePath } from "../routing/state.js";
+import { runSettingsConsole } from "../settings/console.js";
+import { readConfigFile, writeConfigFile } from "../settings/store.js";
 import { SETTINGS_COMMAND } from "../routing/types.js";
 
 /**
@@ -50,6 +52,8 @@ function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> 
     isIdle: () => ctx.isIdle(),
     isProjectTrusted: () => ctx.isProjectTrusted(),
     notify: (message, kind) => ctx.ui.notify(message, kind),
+    ui: ctx.ui,
+    availableModels: () => ctx.modelRegistry.getAll(),
     find: (provider, modelId) => ctx.modelRegistry.find(provider, modelId),
     hasConfiguredAuth: (model) => ctx.modelRegistry.hasConfiguredAuth(model),
   };
@@ -85,18 +89,18 @@ export default function extension(pi: ExtensionAPI): void {
     agentDir,
     hint,
     loadConfig: (ctx) => loadConfig({ agentDir, cwd: ctx.cwd, projectTrusted: ctx.isProjectTrusted() }),
-    settings: ({ loaded, ctx }) => {
-      const overrides = Object.entries(loaded.config.commands);
-      ctx.notify(
-        [
-          `Routing — ${catalogue.commands.length} command(s), ${overrides.length} override(s), unavailable route: ${loaded.config.onUnavailableRoute}.`,
-          `default: ${loaded.config.default.model} / ${loaded.config.default.thinking}`,
-          ...overrides.map(([name, route]) => `${name}: ${route.model} / ${route.thinking}`),
-          ...loaded.problems.map((problem) => `invalid ${problem.scope} config at ${problem.path}: ${problem.message}`),
-        ].join("\n"),
-        loaded.ok ? "info" : "error",
-      );
-    },
+    // The console edits the same files the dispatcher reads (SPEC S4, AC10).
+    settings: ({ ctx, catalogue: routed }) =>
+      runSettingsConsole({
+        ui: ctx.ui,
+        agentDir,
+        cwd: ctx.cwd,
+        projectTrusted: ctx.isProjectTrusted(),
+        commands: routed.commands.map((command) => command.name),
+        models: ctx.availableModels().map((model) => `${model.provider}/${model.id}`),
+        readFile: readConfigFile,
+        writeFile: writeConfigFile,
+      }),
   });
 
   pi.on("model_select", (event) => router.noteModelSelect(event.model));
