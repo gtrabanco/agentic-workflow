@@ -1,5 +1,16 @@
 ## Closure, write, and upsert
 
+0. **Inventory before drafting** (the `evidence-grounding` passes, Product stage).
+   List every normative obligation, affected role/use case, failure state,
+   compatibility boundary, recorded decision, and material unknown, then acquire
+   one evidence row per material claim
+   (`claim-or-obligation | authority-kind | source-and-location |
+   observed-revision | freshness | status | owner-or-next-evidence`). Product
+   conclusions freeze in the SPEC's Product half and `decisions.md`. A claim you
+   cannot evidence stays `status: unknown` with an owner — it never becomes a
+   plausible rationale. A repeated read that answers no new question is
+   no-progress: stop and report the missing evidence.
+
 5. **Capability closure (the core).** Walk the SPEC template's **three fixed
    checklists** (`docs/features/_TEMPLATE/SPEC.md` → `### Capability closure`
    is the authoritative block — instantiate it, never paraphrase it) and write
@@ -76,6 +87,16 @@
     slug, dependencies, and status (`defined`). Beyond `defined`, status
     transitions (`planned`, `in-progress`, `done`) are `plan-feature-scaffold`'s
     and `execute-phase`'s job — this skill never writes past `defined`.
+12b. **Readiness preflight, then rotate the revision.** Before handing off, run
+    the `stage: spec` readiness boxes owned by the internal
+    [`evidence-grounding`](<../../evidence-grounding/SKILL.md>) skill (its ordered
+    passes route to its own readiness reference) and paste the fixed
+    `READINESS — <NN-slug> spec <outcome>` block. Only
+    `READY-FOR-REVIEW` may hand off; `NEEDS-EVIDENCE` / `NEEDS-DESIGN` /
+    `NEEDS-REPLAN` keep the artifact at home with the named missing row. Readiness
+    is an authoring gate: it licenses a review request, never a review verdict.
+    Then mint the new `artifactRevisionId` for the bytes just written (every write
+    rotates it — a revert included) and carry it in the handoff.
 13. **Upsert semantics (never destroy).** Re-running on an existing slug
     re-reads the SPEC and `decisions.md` first; a revision **appends** to
     `decisions.md` (dated, with what changed and why) — it never rewrites or
@@ -88,5 +109,7 @@
     next PR touching the feature; re-running `design-feature <slug>` there
     fills only the missing closure rows via this same upsert — it never
     rewrites what's already recorded.
-14. **Hand off.** Once `designed`, print the closing block (see *Done when*)
-    recommending `/plan-feature <slug>`.
+14. **Hand off.** Once `designed` and readiness-clean, print the closing block
+    (see *Done when*) recommending `/review-spec <slug>` with the current
+    `artifactRevisionId`. Do **not** recommend `/plan-feature`: engineering
+    planning is gated on an independent Product review this skill cannot supply.

@@ -92,6 +92,9 @@ review-security:
 review-seo:
   model: sonnet
   effort: medium
+review-spec:
+  model: opus
+  effort: high
 review-verify:
   model: sonnet
   effort: medium

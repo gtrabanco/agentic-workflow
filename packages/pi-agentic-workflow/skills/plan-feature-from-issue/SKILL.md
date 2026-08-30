@@ -1,7 +1,7 @@
 ---
 name: plan-feature-from-issue
 user-invocable: false
-version: 1.7.0
+version: 2.0.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -16,6 +16,12 @@ Convert a feature-request issue into the project's planning artifacts, keeping a
 clean issue → SPEC → PR(Closes #n) trace. Writes the SPEC's **product half**
 (same two-halves convention `design-feature` uses) and must satisfy capability
 closure before handing off — a thin issue does not get a shortcut around it.
+
+**This skill stops at the Product half.** It designs, then the unit goes to
+`review-spec` for an independent Product review; engineering planning is a
+different authority's turn. Composing `plan-feature-scaffold` in the same breath
+as the design it just wrote is the bypass this separation exists to close — the
+author of a Product half cannot be the one who decides it is ready to build on.
 
 ## When to use
 
@@ -77,9 +83,14 @@ gh issue view <N> --json number,title,body,labels,state,comments
    designed` once closure is complete; set the roadmap row (added at `idea`
    first if it didn't exist) to `defined` in the same edit — the same
    `idea → defined` transition `design-feature` owns, performed here when this
-   skill is the one that satisfies closure. The `plan-feature` router then runs
-   `plan-feature-scaffold` for the engineering half + `defined → planned`
-   roadmap promotion.
+   skill is the one that satisfies closure. Then run the `stage: spec` readiness
+   preflight from the internal
+   [`evidence-grounding`](<../evidence-grounding/SKILL.md>) capability, mint the
+   current `artifactRevisionId`, and **stop**: this skill never continues into the
+   engineering half, never promotes the row past `defined`, and never composes
+   `plan-feature-scaffold` in this turn. The `plan-feature` router may scaffold only
+   after `review-spec` returns a current `spec-review-pass` receipt bound to these
+   exact bytes.
 8. **Wire traceability.** Record `#N` in the SPEC; the PR body must include
    `Closes #N` so the issue closes on merge.
 9. **Hand off — return exactly** (fixed completion report, back to the router):
@@ -88,14 +99,19 @@ gh issue view <N> --json number,title,body,labels,state,comments
    ISSUE #<N> → SPEC <slug> — size: <XS|S|M|L>
    Verdict: feature (not bug/debt — else this would have routed to triage-issue)
    Gaps closed: <n> asked / <n> defaulted (logged)   Closure: designed | handed to design-feature
+   Readiness: READY-FOR-REVIEW | NEEDS-EVIDENCE | NEEDS-DESIGN   Artifact revision: <id>
    Traceability: Closes #<N> wired
-   → scaffold next (plan-feature-scaffold)
+   → review-spec next (engineering planning is gated on its receipt; do not scaffold here)
    ```
 
 ## Guardrails
 
 - Don't silently expand scope beyond the issue — surface additions as proposals.
 - Don't open the feature branch or write code here.
+- **Don't plan engineering work here.** No Engineering half, no phases, no
+  `defined → planned` promotion, no in-turn `plan-feature-scaffold` composition:
+  the Product half this skill writes must be reviewed by `review-spec` first, and
+  readiness `READY-FOR-REVIEW` is not that review.
 - Keep the `Closes #N` link; an issue-born feature must close it.
 - **Never stamp `## Design status: designed` with a blank Capability closure
   row** — the same rule `design-feature` follows; a thin issue hands off
@@ -124,17 +140,23 @@ passing test.
 - `plan-fix` — the fix-side sibling for bug/debt issues.
 - `design-feature` — receives thin issues this skill cannot safely close
   capability closure for; both write the SPEC's product half in the same format.
-- `plan-feature-scaffold` — fills the engineering half once the product half
-  is designed.
+- `review-spec` — the mandatory next hop for every issue-derived feature: it
+  reviews and receipts the Product half this skill produced.
+- `plan-feature-scaffold` — fills the engineering half later, only once
+  `review-spec` passed. This skill never invokes it.
 - `execute-phase` — executes the phases; its PR carries `Closes #N`.
 
 ## Done when
 
-- A filled SPEC product half + planning artifacts exist, roadmap-registered.
+- A filled SPEC product half exists, roadmap-registered at `defined`, with the
+  `stage: spec` readiness block printed and the current `artifactRevisionId`
+  recorded.
 - Capability closure is satisfied (or the issue was handed off to
   `design-feature` instead of faking it) and `## Design status` is accurate.
 - The roadmap row status is `defined` (added at `idea` first if new) whenever
   `## Design status: designed` was stamped — never `defined` on a hollow
   closure, never left at `idea` once `designed` is stamped.
+- Nothing was scaffolded: no Engineering half, no phases, no `planned` write, and
+  the fixed report hands off to `/review-spec`.
 - `#N` is recorded and the PR plan includes `Closes #N`.
 - Scope gaps were resolved with the user, not assumed.

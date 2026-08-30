@@ -29,3 +29,10 @@ No unresolved product or engineering decision blocks implementation.
    reviewer is weak or findings are discarded. Union/counter-evidence rules and
    complete obligation closure remain authoritative; the second-cycle threshold
    is qualification evidence, never a PASS shortcut.
+9. **Receipt authority is contractual at the skill layer:** a `spec-review-pass`
+   receipt is validated for shape, stage and snapshot binding by the rules in
+   `skills/review-spec/references/OUTPUT.md`; nothing in this repository can
+   cryptographically attest that the turn which produced it was clean, only
+   that it declared and evidenced the required context. Independence claims in
+   an OUTPUT must therefore name the actual model and context used
+   (`AC-REVIEW-002`).
