@@ -75,12 +75,12 @@ outcome, not an opinion.
 
 | id | file:line | axis | severity | class | route | folded |
 | --- | --- | --- | --- | --- | --- | --- |
-| F11 | packages/pi-agentic-workflow/src/routing/dispatch.ts:103 | tests | low | fix-now | BLOCKED — gap is real at `67cdda16` (mutant `else void 0` survived); a concurrent fold in this same cwd has an uncommitted red suite for it (`AC8: restoring a session that had no model is said out loud`) pending a `src/routing/dispatch.ts` change, so the fix and the assertion land together there; committing this file would have committed their red tests | no |
+| F11 | packages/pi-agentic-workflow/src/routing/dispatch.ts:103 | tests | low | fix-now | CLOSED in `e2f84e5d` (the concurrent fold landed, pushed) — announce pinned by `AC8: restoring a session that had no model is said out loud`; harness entry kills the mutant (pass-3 re-verified) | yes |
 | F12 | packages/pi-agentic-workflow/src/routing/catalogue.ts:94 | tests | med | fix-now | DISPUTED — already pinned: the "reported, never registered" mutant is killed on clean `67cdda16` (`alias-coverage`, fail=3) by the duplicate-name fixture pass 2 added; the row is now also a permanent harness entry, so the dispute is re-runnable rather than argued | no |
 | F13 | packages/pi-agentic-workflow/src/routing/catalogue.ts:44 | tests | med | fix-now | DISPUTED — already pinned: removing the closing-`---` break is killed on clean `67cdda16` (`alias-coverage`, fail=3); added to the harness table for the same reason | no |
 | F14 | packages/pi-agentic-workflow/src/settings/view.ts:39 | tests | med | fix-now | fold into current phase — the only rendered line with no non-default fixture: a hard-coded `stop` passed every test because the existing view assertion used the shipped default | yes |
 | F15 | packages/pi-agentic-workflow/src/settings/console.ts:235 | tests | low | fix-now | fold into current phase — `saveScope` must persist `clean(draft)`, not the draft: clearing the last override wrote `"commands": {}` under the mutant | yes |
-| F16 | packages/pi-agentic-workflow/src/routing/dispatch.ts:101 | tests | low | fix-now | BLOCKED — gap is real at `67cdda16` (mutant `if (touched)` survived: a thinking-only route may call `setModel` at settle and nothing notices); the fold is one assertion in `test/restore-after-settle.test.mjs`, the file the concurrent fold in this cwd is editing under the same rule name | no |
+| F16 | packages/pi-agentic-workflow/src/routing/dispatch.ts:101 | tests | low | fix-now | CLOSED in `e2f84e5d` — pinned by `AC7: a thinking-only route never touches the model — including at settle` (log-only witness); harness entry kills the mutant (pass-3 re-verified) | yes |
 
 ### Outcomes of this pass
 
@@ -96,3 +96,42 @@ outcome, not an opinion.
   which `FOLD_PROCESS.md` step 4 forbids.
 - **Not reclassified:** no severity, class or route above was relaxed, and no row
   was ticked without a diff. The two rows that could not be folded stay `no`.
+
+## Pass 3 — 2026-08-29, on `2b1c27e7` (independent read-only context)
+
+**Decision: REVIEW-FAIL** — zero shipped-code blockers; the fail was evidence
+hygiene, the unit's own recurring failure mode. 7 fix-now rows + 1 proposal,
+folded as follows:
+
+1. **high — `progress.md` was a byte-identical copy of `known-issues.md`.** The
+   `2b1c27e7` docs generator had a one-letter bug (`g.write_text(x)`) that
+   replaced the ledger and silently deleted every receipt above it; the commit
+   message also claimed a mutation-script growth that hadn't happened. Restored
+   from `2b1c27e7~1`, audit receipt re-appended, retraction recorded in the file
+   itself (the pushed commit message stands; it is corrected by note, not
+   rewritten).
+2. F11/F16 ledger rows said BLOCKED though closure shipped — updated with
+   evidence; the mutation script's comment matched them.
+3. **The harness mirror was invalid for skills-tree suites** (4 alias-coverage
+   tests failed pristine in the copy, so kills there were noise) and **F8's
+   mutant survived in a faithful environment**. The mirror now copies the whole
+   repo with a pristine control run that aborts the script on any baseline
+   failure; the missing fixture (`user-invocable: yes` grants no command, both
+   scanners) is added, and F8's kill is real.
+4. Console reported success even when `undoInFlight` said no — one mutant, now
+   pinned ("Nothing was in flight." warning on a `false` verdict).
+5. "Cleared first" latch ordering was unpinned — two mutants survived; both
+   settle and undo are now pinned to release the latch even when the restore
+   itself throws.
+6. The READMEs' `could not be selected` row stated stop-policy behaviour as
+   unconditional — corrected in both languages (AC15 pins still pass).
+7. The `dispatch-failed` refusal claimed a rollback even on `inherit` routes
+   where nothing was moved — the claim is now conditional, with a test.
+8. (proposal, not folded) The scanners diverge on indented continuation lines;
+   latent only (no bundled skill has indented `name:`/`user-invocable:`).
+
+F11–F16 closure verdicts: all six CLOSED — F12–F15 by `d50fe92c`, F11/F16 by
+`e2f84e5d`, each with a harness entry; the reviewer's own mutants re-run.
+
+Gates at the fold: 132 tests pass; `npm run mutation` → 28 mutants · 22 killed ·
+6 compile-enforced · 0 survived · 0 stale.

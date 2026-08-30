@@ -11,6 +11,7 @@
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
+import { sep as pathSep } from "node:path";
 
 const PKG = join(import.meta.dirname, "..");
 
@@ -45,25 +46,46 @@ export const MUTANTS = [
   // (known-issues.md). Two were already pinned by tests pass 2 itself added (F12,
   // F13 — mutant killed on the pre-fold HEAD); two were real gaps and are pinned by
   // this fold (F14, F15). All four stay in this table so the claim is re-runnable
-  // instead of prose. The remaining two parked rules live in
-  // `src/routing/dispatch.ts` / `test/restore-after-settle.test.mjs` and are
-  // recorded in `review-findings.md` as blocked, not silently dropped.
+  // instead of prose. The remaining two (F11 no-model announce, F16 thinking-only
+  // settle) were blocked by a concurrent writer at fold time and are closed below —
+  // their entries were added when their tests landed, not by this fold.
   { file: "src/routing/catalogue.ts", from: 'issues.push({ dir: dir.name, message: `command name "${meta.name}" already claimed by ${owner}/` });\n      continue;', to: 'issues.push({ dir: dir.name, message: `command name "${meta.name}" already claimed by ${owner}/` });', suite: "alias-coverage", rule: "F12 a duplicate name is reported, never registered" },
   { file: "src/routing/catalogue.ts", from: '    if (line.trim() === "---") break;', to: "    // no frontmatter boundary", suite: "alias-coverage", rule: "F13 the scanner stops at the closing ---" },
   { file: "src/settings/view.ts", from: "`  when a configured model is unavailable: ${config.onUnavailableRoute}`", to: '"  when a configured model is unavailable: stop"', suite: "settings-console", rule: "F14 the summary follows the effective policy" },
   { file: "src/settings/console.ts", from: "  const file = clean(draft);", to: "  const file = draft;", suite: "settings-console", rule: "F15 only a cleaned draft reaches the disk" },
+  { file: "src/routing/dispatch.ts", from: 'else ctx.notify(`/${turn.command} switched a session that had no model; nothing to restore.`, "warning");', to: "else void turn;", suite: "restore-after-settle", rule: "F11 a restore with no prior model is announced" },
+  { file: "src/routing/dispatch.ts", from: "if (turn.applied.model) {", to: "if (turn.applied.model || turn.applied.thinking) {", suite: "restore-after-settle", rule: "F16 a thinking-only settle never touches the model" },
+  { file: "src/settings/console.ts", from: "const undone = (await deps.routing?.undoInFlight()) ?? false;", to: "await deps.routing?.undoInFlight();\n      const undone = true;", suite: "settings-console", rule: "the console reports a failed undo honestly" },
 ];
 
 const root = mkdtempSync(join("/tmp", "paw-mutation-"));
-const work = join(root, "package");
-mkdirSync(work, { recursive: true });
-for (const entry of readdirSync(PKG)) {
-  if (entry === "node_modules") continue;
-  cpSync(join(PKG, entry), join(work, entry), { recursive: true });
+// Mirror the whole repository, not just the package: several suites read the
+// canonical `skills/` tree and both READMEs through `../..`, and a mirror without
+// them fails pristine — which makes every kill in those suites meaningless.
+const REPO = join(PKG, "..", "..");
+const mirror = join(root, "repo");
+mkdirSync(mirror, { recursive: true });
+for (const entry of readdirSync(REPO)) {
+  if (entry === ".git" || entry === "node_modules") continue;
+  cpSync(join(REPO, entry), join(mirror, entry), {
+    recursive: true,
+    filter: (source) => !source.includes(`${pathSep}node_modules`),
+  });
 }
+const work = join(mirror, "packages", "pi-agentic-workflow");
 if (existsSync(join(PKG, "node_modules"))) cpSync(join(PKG, "node_modules"), join(work, "node_modules"), { recursive: true });
 
 const run = (command, args) => spawnSync(command, args, { cwd: work, encoding: "utf8" });
+
+// Pristine control: if a suite already fails without any mutant, every "kill"
+// recorded against it is environmental noise, not evidence.
+const control = run("node", ["--test", ...new Set(MUTANTS.map((mutant) => `test/${mutant.suite}.test.mjs`))]);
+if (control.status !== 0) {
+  console.error("PRISTINE CONTROL FAILED — the mirror is not a faithful copy; results would be fiction.");
+  console.error((control.stdout + control.stderr).split("\n").filter((line) => line.startsWith("✖")).slice(0, 8).join("\n"));
+  rmSync(root, { recursive: true, force: true });
+  process.exit(2);
+}
 const pristine = new Map(MUTANTS.map((mutant) => [mutant.file, readFileSync(join(work, mutant.file), "utf8")]));
 
 const results = [];

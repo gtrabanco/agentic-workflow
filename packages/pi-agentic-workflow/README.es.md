@@ -136,7 +136,7 @@ archivo de proyecto mientras el proyecto no sea de confianza.
 | `refused: invalid configuration` | Un archivo de configuración fue rechazado. El mismo mensaje nombra el campo, p. ej. `$.commands.plan-feature.model`. Ejecuta `/agentic-workflow-settings` para ver el archivo o arregla el JSON. |
 | `stopped: the configured model` … `is not in the model registry` | La referencia es incorrecta o el proveedor no está configurado. Usa `/model` para ver el `provider/modelId` exacto. |
 | `has no configured credentials` | El modelo existe pero aún no puedes usarlo. Autentica, o pon `onUnavailableRoute` en `inherit`. |
-| `could not be selected` | Pi rechazó el cambio. El comando se detiene con el motivo; no se envió nada. |
+| `could not be selected` | Pi rechazó el cambio. El comando se detiene con el motivo — salvo que `onUnavailableRoute` sea `inherit`, en cuyo caso avisa y se ejecuta con tu modelo actual. |
 | `refused: the agent is busy` | Hay un turno en ejecución. Espera a que termine. |
 | `is still routed` | El comando enrutado anterior no ha terminado. |
 | `leaving the model you chose in place` | Cambiaste el modelo durante el turno enrutado, así que no se restauró nada: tu elección ganó. |
