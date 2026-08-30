@@ -12,17 +12,9 @@ import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
 import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
-import type { ModelRef } from "../routing/types.js";
+import type { SettingsUi } from "../routing/types.js";
 import type { ConfigFile, ModelSetting, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
-
-/** The slice of `ctx.ui` the console uses. */
-export interface SettingsUi {
-  select(title: string, options: readonly string[]): Promise<string | undefined> | string | undefined;
-  input(title: string, placeholder?: string): Promise<string | undefined> | string | undefined;
-  confirm(title: string, message: string): Promise<boolean> | boolean;
-  notify(message: string, kind?: "info" | "warning" | "error"): void;
-}
 
 export interface SettingsDeps {
   ui: SettingsUi;
@@ -41,11 +33,9 @@ export type ConsoleOutcome =
   | { status: "saved"; scope: "global" | "project"; path: string; file: ConfigFile }
   | { status: "cancelled"; edited: boolean };
 
-/**
- * The console's questions. `test/settings-console.test.mjs` drives the flow
+/** The console's questions. `test/settings-console.test.mjs` drives the flow
  * through these strings, so renaming one fails the tests that use it rather than
- * silently re-sequencing them.
- */
+ * silently re-sequencing them. */
 export const prompts = {
   scope: "Which file should the console edit?",
   menu: "What do you want to change?",

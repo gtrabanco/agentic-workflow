@@ -111,10 +111,12 @@ aun así:
 
 ## Tu sesión vuelve
 
-El enrutamiento dura un comando. El modelo y el nivel de thinking anteriores se
-restauran cuando el turno termina, y si cambias el modelo tú mismo a mitad de
-turno — con `/model`, por ejemplo — el paquete respeta tu elección en lugar de
-deshacerla.
+El enrutamiento dura un comando. Cuando el turno termina, la sesión vuelve a
+como estaba — el modelo *y* el nivel de thinking, porque seleccionar un modelo
+puede mover el nivel. Si cambias el modelo tú mismo a mitad de turno, con
+`/model` por ejemplo, no se restaura nada: tu elección gana, y el comando lo
+dice. Si mueves solo el nivel de thinking, lo conservas mientras el modelo
+vuelve.
 
 ## Consola de configuración
 
@@ -131,12 +133,14 @@ archivo de proyecto mientras el proyecto no sea de confianza.
 
 | Ves | Significa |
 | --- | --- |
-| `agentic-workflow config is invalid — nothing was dispatched` | Un archivo de configuración fue rechazado. El mensaje nombra el campo, p. ej. `$.commands.plan-feature.model`. Ejecuta `/agentic-workflow-settings` para ver el archivo o arregla el JSON. |
-| `… is not available (not in the model registry)` | La referencia es incorrecta o el proveedor no está configurado. Usa `/model` para ver el `provider/modelId` exacto. |
-| `… has no configured credentials` | El modelo existe pero aún no puedes usarlo. Autentica, o pon `onUnavailableRoute` en `inherit`. |
-| `Pi is busy — nothing was dispatched` | Hay un turno en ejecución. Espera a que termine. |
-| `A routed command is already running in this session` | El turno enrutado anterior no ha terminado. |
-| No pasa nada al escribir un comando | La skill no está incluida con ese nombre, o no reiniciaste Pi tras la instalación. |
+| `refused: invalid configuration` | Un archivo de configuración fue rechazado. El mismo mensaje nombra el campo, p. ej. `$.commands.plan-feature.model`. Ejecuta `/agentic-workflow-settings` para ver el archivo o arregla el JSON. |
+| `stopped: the configured model` … `is not in the model registry` | La referencia es incorrecta o el proveedor no está configurado. Usa `/model` para ver el `provider/modelId` exacto. |
+| `has no configured credentials` | El modelo existe pero aún no puedes usarlo. Autentica, o pon `onUnavailableRoute` en `inherit`. |
+| `could not be selected` | Pi rechazó el cambio. El comando se detiene con el motivo; no se envió nada. |
+| `refused: the agent is busy` | Hay un turno en ejecución. Espera a que termine. |
+| `is still routed` | El comando enrutado anterior no ha terminado. |
+| `leaving the model you chose in place` | Cambiaste el modelo durante el turno enrutado, así que no se restauró nada: tu elección ganó. |
+| `these configured routes match no command` | Una clave de `commands` no nombra nada. Corrige la escritura o elimina la entrada. |
 
 ## Notas
 

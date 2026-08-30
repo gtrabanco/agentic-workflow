@@ -34,7 +34,7 @@ export function createExtension(deps) {
         handler: async (_args, ctx) => {
             reportCatalogueIssues(ctx);
             try {
-                await settings({ catalogue, loaded: read(ctx), ctx });
+                await settings({ catalogue, ctx });
             }
             catch (error) {
                 // A console that dies mid-question must say so, not take the session down.
