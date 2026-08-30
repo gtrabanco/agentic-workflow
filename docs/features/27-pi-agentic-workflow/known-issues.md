@@ -29,3 +29,25 @@ implemented inline by this feature's phases.
   `### Deferred decisions` row D1 — re-open only if Pi documents a stable
   namespaced plugin-settings field. Tracked here so the trigger outlives this
   feature folder.
+
+## 2026-08-29 — live model-backed smoke of a routed command (P6)
+
+**Issue**: every routing assertion in this unit runs against a Pi-shaped double
+(`test/helpers/session.mjs`) plus the compiled entry, and `pi install ./` proves
+the package manifest resolves inside a real Pi process. What was **not** observed
+is a real routed turn end to end: `pi -p "/help"` during P6 returned
+`Codex error: The usage limit has been reached`, so no live session was driven
+through `/plan-feature` with a configured model.
+
+**Status**: open — recorded as residual risk, not as a blocked acceptance criterion
+(no acceptance criterion in `ACCEPTANCE.md` requires a live model turn; AC3/AC4/AC7
+are defined against the extension contract).
+
+**Mitigation**: `pi install ./` + `pi -e ./dist/extension/index.js` start clean;
+the double replays Pi's `model_select` synchronously and returns Pi's own model
+objects, so the shapes the router stores and restores are Pi's, not invented ones.
+
+**First manual check for the reviewer**: after `pi install ./` in this package
+folder, set a global `pi-agentic-workflow.json` route to a model you can actually
+use, run `/workflow-status`, and confirm the session model returns when the turn
+settles.

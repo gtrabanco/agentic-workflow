@@ -65,11 +65,11 @@ Layer: docs · Done-when: `grep -c "pi install" packages/pi-agentic-workflow/REA
 
 Layer: hardening · Done-when: `cd packages/pi-agentic-workflow && npm test` → exit 0 AND the PR URL is printed in the chat.
 
-- [ ] Dev-scenario sweep — each failure mode asserted by a named suite: `config:missing-files` (default-inherit), `config:malformed-json` (dispatch-refusals), `config:untrusted-project` (untrusted-project-config), `routing:unavailable-model` (unavailable-stop), `dispatch:in-flight-duplicate` (dispatch-refusals), `hint:exactly-once` (first-run-hint) — read-verified list
-- [ ] AC16 read-verify: `git diff main --stat` shows only `packages/pi-agentic-workflow/`, `docs/features/27-pi-agentic-workflow/`, `docs/features/ROADMAP.md`; schema-package diff empty
-- [ ] Full gate: `cd packages/pi-agentic-workflow && npm test` → exit 0 (AC14); regression `cd packages/agentic-workflow-schema && npm test` → exit 0 (AD-007)
-- [ ] `npm pack --dry-run` lists extension, all bundled skills, manifests
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Dev-scenario sweep — every named failure mode is asserted by a test whose title carries the AC: `config:missing-files` → `AC6: no config files anywhere resolve to the shipped inherit default` + `AC6: the loader reads the two documented files, and real absence is zero-config`; `config:malformed-json` → `AC12: a present-but-invalid config file refuses every dispatch with the offending path`; `config:untrusted-project` → `AC13: an untrusted project file is ignored even though it exists` + `AC13: trust is checked on every dispatch…`; `routing:unavailable-model` → `AC9: an unknown model stops by default, naming command, route, and the settings command`; `dispatch:in-flight-duplicate` → `AC12: a second routed command is refused while the first turn is in flight`; `hint:exactly-once` → `AC11: within one session the hint shows once even across several commands` + `AC11: a later session does not repeat the hint`
+- [x] AC16 read-verify: `git diff main --name-only | grep -vE "^(packages/pi-agentic-workflow/|docs/features/27-pi-agentic-workflow/|docs/features/ROADMAP.md$)"` → no output; `git diff main --name-only -- packages/agentic-workflow-schema | wc -l` → 0
+- [x] Full gate: `npm test` → exit 0, 94 pass / 0 fail (AC14); regression `cd packages/agentic-workflow-schema && npm test` → exit 0, 554 pass / 0 fail (AD-007)
+- [x] `npm pack` → 137 entries: `dist/extension/index.js` (+ the rest of `dist/`), 105 bundled skill files across 34 `SKILL.md` directories, `package.json`, `README.md`, `README.es.md`, `LICENSE`; no skill file on disk is missing from the tarball
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat (roadmap-only traceability — no `Closes #` line; body references feature 27)
 - [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
 - [ ] commit `docs: link PR #<n>` and push
