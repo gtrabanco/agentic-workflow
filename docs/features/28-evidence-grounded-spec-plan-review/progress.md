@@ -88,3 +88,8 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
   README.md,README.es.md,pre-execution-*.schema.json}`, `CHANGELOG.md`,
   `CHANGELOG.es.md`, `docs/features/28-evidence-grounded-spec-plan-review/*`
 - Next: P2 — Establish Product review readiness
+
+## Unit-loop receipt — P1
+- Commit: `fdc9ea91` feat(28-evidence-grounded-spec-plan-review): pre-execution evidence contracts (P1) · Gate: `cd packages/agentic-workflow-schema && npm test` -> exit 0, 671/671 (8 new pre-execution suites + all pre-existing suites); `npm run check:pre-execution-schemas` -> drift-free; `npm pack --dry-run` -> 3.5.0, 27 files, 2/2 projections; `node scripts/check-pre-execution-package.mjs` -> PASS.
+- Phase-lint P1: PASS (8/8) · fingerprint `P1:schema/db:8:publish-pre-execution-evidence-contracts`. Preflight receipts (branch/own-status/NRS/invariants/baseline) recorded above, unchanged.
+- Next: P2 · Attempts: 1
