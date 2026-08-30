@@ -25,19 +25,20 @@ name: Publish Pi package
 # this repo + workflow file.
 #
 # One-time setup (manual, by the repo owner — CI cannot do this for you):
-#   1. First publish is manual (npm requires it for a brand-new package):
-#        cd packages/pi-agentic-workflow && npm publish --access public
+#   1. First publish is manual (npm requires it for a brand-new package) —
+#      DONE 2026-08-30: 0.1.0 published manually and live on the registry.
 #   2. npmjs.com → the package's page → Settings → Trusted Publisher →
 #      GitHub Actions → Organization or user: gtrabanco → Repository:
 #      agentic-workflow → Workflow filename: publish-pi-package.yml →
 #      (leave Environment name blank unless this job later runs under one) →
 #      Add.
+#      STILL PENDING: until this record exists, the NEXT version bump
+#      (0.1.1+) fails at the publish step with the E403/OIDC error below —
+#      the OIDC exchange succeeds but npm rejects the publish PUT. 0.1.0
+#      pushes stay green (the version gate skips: registry version == local).
 #   That's it — no secret to create or rotate. Requires npm CLI >= 11.5.1,
 #   which the "Install npm" step below ensures regardless of what Node 22
 #   bundles.
-#   Until step 1 is done, a merge that touches the package fails at the
-#   publish step with the 403/OIDC error below — the "Skip when the version
-#   is already published" step says so in its log line first.
 #
 # Troubleshooting — "npm error 403 … OIDC permission denied for this action":
 #   Cause: the npm-side Trusted Publisher record for this package is missing
@@ -83,7 +84,12 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2.2.0
         with:
-          bun-version: 1.3.14
+          # Keep in lockstep with publish-schema.yml and with the bun that
+          # generates the committed bun.lock files (1.4.0 writes lockfile
+          # version 2, which 1.3.14 cannot parse — a pin/dev-toolchain skew
+          # fails `bun install --frozen-lockfile` with "Unknown lockfile
+          # version" before the test gate even runs).
+          bun-version: 1.4.0
 
       - name: Ensure npm supports Trusted Publishing (>= 11.5.1)
         run: npm install -g npm@latest
