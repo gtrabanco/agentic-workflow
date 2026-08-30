@@ -41,39 +41,3 @@ unit, 21 killed.
 Still open, unchanged: the live model-backed routed turn (manual checklist items
 1–6 in the review table) — the provider usage limit that blocked it is not
 resolved by this fold.
-
-## Pass 2 — 2026-08-29, on `bb8e3c02` (folded HEAD)
-
-**Decision: REVIEW-PASS** — 0 new findings, 0 fix-now remaining. Independent of
-the fold's author: fresh context, current HEAD, code as it ships, and Pi's own
-`_expandSkillCommand` / `_modelSupportsThinking` / `setModel` re-read rather than
-taken from this ledger's word.
-
-| Id | Axis | Finding | Severity | Classification | folded |
-|---|---|---|---|---|---|
-| N/A | — | no findings on the folded HEAD | — | — | — |
-
-Rows F1–F10 verified repaired as shipped code: thinking restored whenever the
-turn touched the session (incl. the thinking-only route), `/skill:<name>` sent on
-the wire with the directory kept for duplicate reporting, explicit `inherit` and
-`stop` written to disk and round-tripped, every quoted README fragment built by
-the code, unreadable-but-present config refused rather than defaulted, `true`
-required for a command on both scanners, no dead exports or locals, no drift.
-Mutation spot-checks: 4 of 4 killed. Gates: 106/106 plus the schema package's
-554/554, `npm run build`, and `AC1` verbatim.
-
-**Manual checklist** (cannot be executed here): the six live items — first-run
-hint, a model-backed `/plan-feature` turn with operator restore, busy and
-untrusted refusals, console CRUD, install/load/uninstall on a clean profile.
-Blocked by the same usage limit already recorded in `known-issues.md`.
-
-**Proposals for the user to route** (not folded):
-1. Enable `noUnusedLocals` / `noUnusedParameters` in
-   `packages/pi-agentic-workflow/tsconfig.json` — F9's class of drift becomes
-   compile-time. Trigger: next release of the package.
-2. `os.homedir()` → `pi.getAgentDir()` in `src/extension/index.ts` — already
-   recorded in `known-issues.md` (accepted for v1).
-3. `parseConfigFile` accepts non-boolean JSON values for `user-invocable`
-   (and `metadata.internal`) where they become `false` (so a `1`/`"true"`/`null`
-   silently means "no command"); a future loader hardening pass should reject or
-   coerce them explicitly. Trigger: the next change to either scanner.
