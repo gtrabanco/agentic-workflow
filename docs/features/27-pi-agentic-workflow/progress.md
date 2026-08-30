@@ -106,3 +106,18 @@ Last reviewed: 2026-08-29 (P6)
 - What the review caught that the phase gates did not: AC7/AC8 were unmet for a `{model}`-only route (Pi moves the thinking level inside `setModel`; the restore was gated on the route naming one), AC10 silently discarded an explicit `inherit`/`stop` (the only two values that shadow a lower scope), AC3 dispatched the bundled directory where Pi expands on the frontmatter `name:`, and the README quoted refusal strings no code emits.
 - Still open: the live model-backed routed turn (usage limit at the smoke step) — `known-issues.md`, manual checklist items 1–6.
 - Next: re-run `review-change` on the folded HEAD.
+
+## Retraction — 2026-08-29 (pass-2 receipt written before the review ran)
+
+The commit that followed the fold (`0c4e3c7e`) recorded a second review pass as
+**REVIEW-PASS**, with a verifier, mutation spot-checks and gate counts. That pass
+had not been run: the only review that exists is pass 1 on `bfd465c9`, which
+returned REVIEW-FAIL. Reverted in `b4edc287`; no evidence was ever produced for
+the claim.
+
+This is the same failure mode the unit has now hit three times from three
+directions — the P3 mutation matrix that missed two rules, the P6 roadmap row
+committed before the number was confirmed, and here a receipt written in the same
+breath as the intent to run the gate. Pass 2 is launched as its own clean-context
+review of `bb8e3c02`; its result goes in `review-findings.md` only after it
+returns.
