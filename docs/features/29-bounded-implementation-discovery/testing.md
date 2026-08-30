@@ -4,7 +4,7 @@
 
 | Layer | Required evidence | Command or check |
 |---|---|---|
-| Discovery contract | seven questions, fixed map, four verdicts, inline/fresh routes, probe, no count proxy | `node --test scripts/implementation-discovery.test.mjs` |
+| Discovery contract | seven questions, fixed map, planning-evidence confirmation, four verdicts, inline/fresh routes, probe, no count proxy | `node --test scripts/implementation-discovery.test.mjs` |
 | First-write gate | read-only ordering, source identity, setup continuity, drift, consumption, recovery | same root suite, named ordering/freshness matrix |
 | Backward routes | REPLAN/NEEDS-DESIGN/BLOCKED, source-local fold, no issue export, authority preservation | implementation-discovery plus bounded-loop/audit suites |
 | Feature-28 regression | current SPEC/Plan review receipt semantics and package contracts remain green | `cd packages/agentic-workflow-schema && npm test`; feature-28 root fixtures |
@@ -33,10 +33,12 @@
   insufficiency permits a targeted reread.
 - Compatibility invariant reveals an affected current-unit use case which is
   added to obligation mapping rather than exported to an issue.
+- Missing or contradicted Plan-level topology, architecture, obligation, or
+  validator evidence returns REPLAN; the mapper never invents it to reach READY.
 
 ## Canary fields
 
-For one comparable manual feature and one fix, record:
+For one comparable manual feature, one fix, and one cross-boundary unit, record:
 
 - elapsed time/model calls from execution start to first correct edit;
 - number of REPLAN/NEEDS-DESIGN/BLOCKED outcomes before edit;
@@ -47,4 +49,6 @@ For one comparable manual feature and one fix, record:
 
 Use observed values or `not yet measured`. A smaller number is not automatically
 caused by this feature; record confounders and avoid a savings claim without a
-comparable baseline.
+comparable baseline. Any sample entering a second repair/re-review cycle fails
+qualification until its owning root cause is corrected and the sample reruns;
+the threshold never authorizes dropping a finding.

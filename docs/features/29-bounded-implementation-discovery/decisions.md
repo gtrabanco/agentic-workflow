@@ -14,6 +14,9 @@
   never calls the forge.
 - **PD6 — Measure before claim:** canary observations precede efficiency/token
   assertions.
+- **PD7 — Delta validation, not deferred planning:** the mapper confirms and
+  specializes phase-relevant planning evidence. Missing Plan-level topology,
+  architecture, obligation, or validator arguments return to planning.
 
 ## Engineering decisions
 
@@ -38,3 +41,8 @@
   find evidence, but only current repository authority satisfies fields.
 - **D9 — Distribution:** change canonical skills, rebuild Pi bundle through the
   feature-27 script, test byte parity, and version affected surfaces.
+- **D10 — Planning-evidence binding:** map authority includes the relevant
+  planning-evidence row ids and their current confirmation/refinement/conflict.
+- **D11 — Inherit convergence:** feature 28 owns first-findings batch repair and
+  the exact `CONVERGENCE-ANOMALY` second-cycle semantics through candidate
+  review; this mapper adds no alternate loop policy.

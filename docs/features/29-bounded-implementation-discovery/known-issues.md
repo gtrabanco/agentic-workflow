@@ -24,3 +24,7 @@ No unresolved product or engineering decision blocks implementation.
    writer of packaged copies; never edit the copies by hand.
 7. **Effect size is unknown** — record canary results before describing this as
    faster or cheaper.
+8. **Deferred-planning risk** — a powerful mapper could hide a weak Plan by
+   discovering architecture and validators during execution. READY therefore
+   requires current confirmation of phase-relevant planning evidence; material
+   missing Plan arguments return REPLAN.

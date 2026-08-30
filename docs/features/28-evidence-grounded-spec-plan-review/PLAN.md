@@ -11,27 +11,30 @@ Layer: schema/db · add the authoritative bounded snapshot/receipt family,
 Product selector, canonical digests, lineage/freshness semantics, generated
 projections, public exports, and additive package release surface.
 
-## P2 — Ground and review product specifications
+## P2 — Establish Product review readiness
 
 Layer: docs · introduce one internal grounding owner, the public `review-spec`
-skill, authoring revision handoff, and the issue-derived design stop before
-Engineering planning.
+skill, progressive Product inventory/evidence/draft/readiness passes, authoring
+revision handoff, first-findings batch repair, and the issue-derived design stop
+before Engineering planning.
 
-## P3 — Review engineering plans and freeze obligation closure
+## P3 — Establish Plan review readiness
 
 Layer: docs · introduce the public `review-plan` skill for features/fixes, the
-complete obligation ledger, stage-aware findings/repair, independent-review
-semantics, and deterministic no-progress rules.
+compact planning-evidence and complete obligation ledgers, deterministic
+readiness, stage-aware findings/batched repair, independent-review semantics,
+and second-cycle convergence/no-progress rules.
 
-## P4 — Enforce upstream gates and backward routing
+## P4 — Enforce pre-execution authority routing
 
 Layer: docs · integrate both receipts into existing sensing, transition,
 planning, execution, roadmap, candidate-review/fold, and audit authorities with
-fail-closed legacy adoption.
+fail-closed legacy adoption and owner-specific convergence diagnosis before a
+second local repair/re-review cycle.
 
-## P5 — Harden and qualify the workflow
+## P5 — Qualify the pre-execution workflow
 
 Layer: hardening · synchronize docs/distribution/migration, version changed
 skills, run package and repository regressions, exercise the golden/manual
-route, record the canary protocol, independently review, and open the one
-implementation PR.
+route, qualify feature/fix/cross-boundary samples without a second correction
+cycle, independently review, and open the one implementation PR.

@@ -16,6 +16,10 @@
   in for a reviewed current-unit obligation without a user-approved amendment.
 - **PD6 — Manual first-class:** sequential fresh conversations can run the
   complete workflow; AWL automates rather than defines it.
+- **PD7 — One repair is normal, two is anomalous:** correctness remains
+  fail-closed, but release qualification treats entry into a second
+  repair/re-review cycle as evidence that readiness, evidence, design, planning,
+  or routing is defective and requires root-cause correction.
 
 ## Engineering decisions
 
@@ -46,3 +50,12 @@
 - **D10 — Evidence before claims:** ship a canary protocol and record observed
   or explicitly unavailable data; do not claim token/rework reduction from the
   design alone.
+- **D11 — Progressive readiness:** authors inventory, evidence, draft, and run a
+  deterministic readiness preflight before independent review. The preflight
+  cannot approve its author's artifact.
+- **D12 — Compact planning evidence:** bind `planning-evidence.md` (M/L) or the
+  equivalent SPEC section (XS/S) into Plan authority; pass only phase-relevant
+  rows to execution, never the raw exploration transcript.
+- **D13 — Convergence diagnosis:** the first unioned findings set is repaired as
+  one owner-bounded batch. A second cycle emits `CONVERGENCE-ANOMALY`; operational
+  budgets never convert the anomaly or an open finding into PASS.
