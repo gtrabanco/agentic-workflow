@@ -48,7 +48,7 @@ function toRegistrar(pi) {
 export default function extension(pi) {
     const agentDir = getAgentDir();
     const hint = createHintStore({ path: stateFilePath(agentDir) });
-    const { router, catalogue } = createExtension({
+    const { router } = createExtension({
         registrar: toRegistrar(pi),
         // Resolved per call: the router must never hold a session-bound object
         // between turns, because Pi can hand a new session to the same extension.

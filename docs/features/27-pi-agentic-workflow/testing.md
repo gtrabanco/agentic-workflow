@@ -42,6 +42,17 @@
   `setModel` success/failure, `agent_settled` callback, `isProjectTrusted`)
   driving the idle → routing → dispatched → settled → restored machine.
 
+## Correction to the P3 matrix (end review, 2026-08-29)
+
+The matrix below claimed to pin AC8's ordering. It did not: two mutants the end
+review ran against the shipped build survived it — deleting the own-switch
+discriminator, and restoring thinking *before* the model. Both were invisible for
+the same reason: `test/helpers/session.mjs` replayed Pi's `model_select` faithfully
+but omitted that `setModel` **re-derives and applies the thinking level**
+(`core/agent-session.js`), so the suite could not see the level move at all. The
+matrix is accurate for the 16 rules it exercised and silent on that one; the fold
+added the missing case and re-ran both mutants (see `review-findings.md`).
+
 ## Mutation evidence (P3)
 
 The P3 suites were written after the implementation, so "green on first run"
@@ -112,3 +123,7 @@ command, not fabricated into green.
 | 2026-08-29 | P6 | `npm pack` + `tar -tzf` vs `find skills -type f` | 137 entries; 105/105 skill files present; extension entry, both READMEs, `package.json`, `LICENSE` included |
 | 2026-08-29 | P6 | **real Pi integration**: `pi install ./` then `pi list` with the compiled entry and `pi` manifest | installed and resolved to the package path; `pi -e ./dist/extension/index.js --offline --list-models` started with no extension-load error; global settings restored with `pi uninstall ./` afterwards |
 | 2026-08-29 | P6 | live command-execution smoke (`pi -p "/help"`) | **not run** — the provider session hit its usage limit; recorded in `known-issues.md` as the one uncovered integration surface |
+| 2026-08-29 | end review | `review-change` on `bfd465c9` (inline axis fallback; `subagent` launches broken in this build) | REVIEW-FAIL — 10 fix-now rows persisted in `review-findings.md` |
+| 2026-08-29 | fold | 12 new tests written red before the repairs (F1/F2 lifecycle sequence, F3 wire key, F4 explicit-value saves, F7 unreadable file, F8 undeclared `user-invocable`) | each failed against the pre-fix build, then passed |
+| 2026-08-29 | fold | 7 mutants re-run: own-switch discriminator, thinking-before-model, F1 value-gated restore, F3 directory key, F4 policy elision, F4 inherit-only elision, F7 unreadable-as-absent, F8 missing-key default, F9 ignored computed count | 9 killed / 0 survived |
+| 2026-08-29 | fold | `cd packages/pi-agentic-workflow && npm test` | exit 0 — 106 pass / 0 fail |

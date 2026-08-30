@@ -34,7 +34,7 @@ function configLines(config: EffectiveConfig, commands: readonly string[]): stri
       ? ["  no per-command overrides — every command uses the default route"]
       : [
           ...overrides.map(([name, value]) => `  ${name}: ${route(value)}`),
-          `  ${overrides.length} of ${commands.length} commands override the default route`,
+          `  ${overrides.length} of ${total} commands override the default route`,
         ]),
     `  when a configured model is unavailable: ${config.onUnavailableRoute}`,
   ];

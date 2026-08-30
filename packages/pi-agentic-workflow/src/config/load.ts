@@ -14,6 +14,9 @@ import type { ConfigFile, ConfigPaths, ConfigProblem, EffectiveConfig } from "./
  *  - a MISSING file resolves to the shipped default (`inherit`);
  *  - a PRESENT-but-invalid file is a problem — never a silent `inherit`, so an
  *    operator can't believe a strong model ran when it did not;
+ *  - a file that EXISTS but cannot be read is the same kind of problem: it is
+ *    present, so its routing intentions are unknown, and unknown is refused
+ *    rather than defaulted (F7);
  *  - the project file is not even read while the project is untrusted, because
  *    a cloned repository must not be able to steer routing (S11).
  *
@@ -36,7 +39,9 @@ export interface LoadConfigInput {
   agentDir: string;
   cwd: string;
   projectTrusted: boolean;
-  /** Returns the file text, or null when the path does not exist / cannot be read. */
+  /** Returns the file text, or null when the path does not exist. A reader that
+   *  cannot honour an existing path throws, and the throw becomes a problem:
+   *  "unreadable" must not quietly mean "unconfigured" (F7). */
   readFile?: (path: string) => string | null;
 }
 
@@ -48,11 +53,15 @@ export interface LoadedConfig {
   problems: ConfigProblem[];
 }
 
+const NOT_THERE = new Set(["ENOENT", "ENOTDIR"]);
+
+/** Absent is `null`; present-but-unreadable throws so the caller records it. */
 const readIfExists = (path: string): string | null => {
   try {
     return readFileSync(path, "utf8");
-  } catch {
-    return null;
+  } catch (error) {
+    if (NOT_THERE.has((error as NodeJS.ErrnoException).code ?? "")) return null;
+    throw error;
   }
 };
 
@@ -62,7 +71,14 @@ function loadScope(
   readFile: (path: string) => string | null,
   problems: ConfigProblem[],
 ): ConfigFile {
-  const text = readFile(path);
+  let text: string | null;
+  try {
+    text = readFile(path);
+  } catch (error) {
+    const code = (error as NodeJS.ErrnoException).code ?? "read error";
+    problems.push({ scope, path: "$", message: `the file could not be read (${code})` });
+    return {};
+  }
   if (text === null) return {};
 
   const result = parseConfigFile(text);

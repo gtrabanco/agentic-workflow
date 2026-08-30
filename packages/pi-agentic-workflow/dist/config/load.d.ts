@@ -4,7 +4,9 @@ export interface LoadConfigInput {
     agentDir: string;
     cwd: string;
     projectTrusted: boolean;
-    /** Returns the file text, or null when the path does not exist / cannot be read. */
+    /** Returns the file text, or null when the path does not exist. A reader that
+     *  cannot honour an existing path throws, and the throw becomes a problem:
+     *  "unreadable" must not quietly mean "unconfigured" (F7). */
     readFile?: (path: string) => string | null;
 }
 export interface LoadedConfig {

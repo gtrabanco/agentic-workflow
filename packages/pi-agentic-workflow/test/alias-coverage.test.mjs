@@ -25,7 +25,7 @@ const repoSkills = resolve(PKG_DIR, "..", "..", "skills");
 const bundleSkills = join(PKG_DIR, "skills");
 
 const skillFile = (name, { invocable = true, description } = {}) =>
-  `---\nname: ${name}\n${description ? `description: ${description}\n` : ""}${invocable ? "" : "user-invocable: false\n"}---\n\nRun ${name}.\n`;
+  `---\nname: ${name}\n${description ? `description: ${description}\n` : ""}user-invocable: ${invocable ? "true" : "false"}\n---\n\nRun ${name}.\n`;
 
 /** Collect what a registrar was asked to register. */
 function recorder() {
@@ -287,4 +287,55 @@ test("AC15: the README command table is the catalogue, in both languages", () =>
   assert.deepEqual(es.names, expected, "README.es.md lists the same commands");
   assert.equal(en.sections, es.sections, "the sibling has the same number of sections (AD-002)");
   assert.equal(es.example, en.example, "the config example is the same JSON in both languages");
+});
+
+test("AC15: the troubleshooting table quotes messages the code actually emits", () => {
+  // A docs table that paraphrases an error is worse than none: the operator
+  // searches for a string that never appears. Each row's quoted message is
+  // therefore checked against the source that builds it, in both languages.
+  const emitters = ["../src/routing/dispatch.ts", "../src/settings/console.ts"]
+    .map((file) => readFileSync(new URL(file, import.meta.url), "utf8"))
+    .join("\n");
+
+  for (const file of ["../README.md", "../README.es.md"]) {
+    const text = readFileSync(new URL(file, import.meta.url), "utf8");
+    // Only the troubleshooting section: the command table is pinned elsewhere.
+    const heading = /^(?:## Troubleshooting|## Diagnóstico)$/mu.exec(text);
+    assert.ok(heading, `${file} has a troubleshooting section`);
+    const rest = text.slice(heading.index + heading[0].length);
+    const section = rest.slice(0, /^## /m.test(rest.slice(2)) ? rest.search(/^## /m) + 2 : rest.length);
+    const rows = [...section.matchAll(/^\| `([^`]+)`(?: … `([^`]+)`)? \|/gmu)];
+    assert.ok(rows.length >= 6, `${file} documents more than a handful of failure messages`);
+    for (const [, first, second] of rows) {
+      for (const fragment of [first, second].filter(Boolean)) {
+        assert.ok(emitters.includes(fragment), `${file} quotes "${fragment}", which no code emits`);
+      }
+    }
+  }
+});
+
+// --- F8 fold: the two scanners disagreed about a skill that never declares
+// `user-invocable`. CLAUDE.md is explicit — the key is REQUIRED to appear in the
+// menu — so absence means internal, which is what the bundler already did and
+// what the runtime scanner did not.
+
+test("AC2/AC3: a skill that omits `user-invocable` is internal to both scanners", () => {
+  const text = "---\nname: quiet-helper\ndescription: Says nothing about invocability.\n---\n\nBody.\n";
+  const runtime = readSkillMeta(text, "quiet-helper");
+  const bundler = parseSkillFrontmatter(text);
+
+  assert.equal(runtime.userInvocable, false, "absence is not consent to a public command");
+  assert.equal(bundler.userInvocable, false);
+  assert.equal(runtime.userInvocable, bundler.userInvocable, "one rule, stated twice identically");
+
+  const root = mkdtempSync(join(tmpdir(), "paw-alias-undeclared-"));
+  try {
+    const skillsDir = join(root, "skills");
+    mkdirSync(join(skillsDir, "quiet-helper"), { recursive: true });
+    writeFileSync(join(skillsDir, "quiet-helper", "SKILL.md"), text);
+    const { registered } = extensionOver(skillsDir);
+    assert.equal(registered.has("quiet-helper"), false, "an undeclared skill gets no command");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
 });
