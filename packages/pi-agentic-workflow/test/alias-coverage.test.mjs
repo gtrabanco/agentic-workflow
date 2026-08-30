@@ -265,3 +265,21 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("AC15: the README command table is the catalogue, in both languages", () => {
+  const expected = readCatalogue(bundleSkills).commands.map((command) => command.name).sort();
+  const readme = (file) => {
+    const text = readFileSync(new URL(file, import.meta.url), "utf8");
+    const names = [...text.matchAll(/^\| `(\/[^`]+)` /gmu)].map(([, name]) => name.slice(1));
+    const sections = [...text.matchAll(/^## /gmu)].length;
+    const example = text.match(/```json\n([\s\S]*?)\n```/u)?.[1] ?? "";
+    return { names: names.sort(), sections, example };
+  };
+
+  const en = readme("../README.md");
+  const es = readme("../README.es.md");
+  assert.deepEqual(en.names, expected, "README.md lists exactly the commands that exist");
+  assert.deepEqual(es.names, expected, "README.es.md lists the same commands");
+  assert.equal(en.sections, es.sections, "the sibling has the same number of sections (AD-002)");
+  assert.equal(es.example, en.example, "the config example is the same JSON in both languages");
+});
