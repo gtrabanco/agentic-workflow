@@ -41,6 +41,17 @@ export const MUTANTS = [
   { file: "src/settings/console.ts", from: "...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),", to: "...(false ? [prompts.undoInFlight] : []),", suite: "settings-console", rule: "N-2 the latch is releasable from the console" },
   { file: "src/settings/console.ts", from: "if (draft.onUnavailableRoute) file.onUnavailableRoute = draft.onUnavailableRoute;", to: 'if (draft.onUnavailableRoute && draft.onUnavailableRoute !== "stop") file.onUnavailableRoute = draft.onUnavailableRoute;', suite: "settings-console", rule: "F4 an explicit stop is saved" },
   { file: "src/settings/console.ts", from: "if (Object.keys(route).length > 0) commands[name] = { ...route };", to: 'if (route.model !== "inherit") commands[name] = { ...route };', suite: "settings-console", rule: "F4 an explicit inherit is saved" },
+  // Four of the six rules pass 2 parked as "the suite cannot see them"
+  // (known-issues.md). Two were already pinned by tests pass 2 itself added (F12,
+  // F13 — mutant killed on the pre-fold HEAD); two were real gaps and are pinned by
+  // this fold (F14, F15). All four stay in this table so the claim is re-runnable
+  // instead of prose. The remaining two parked rules live in
+  // `src/routing/dispatch.ts` / `test/restore-after-settle.test.mjs` and are
+  // recorded in `review-findings.md` as blocked, not silently dropped.
+  { file: "src/routing/catalogue.ts", from: 'issues.push({ dir: dir.name, message: `command name "${meta.name}" already claimed by ${owner}/` });\n      continue;', to: 'issues.push({ dir: dir.name, message: `command name "${meta.name}" already claimed by ${owner}/` });', suite: "alias-coverage", rule: "F12 a duplicate name is reported, never registered" },
+  { file: "src/routing/catalogue.ts", from: '    if (line.trim() === "---") break;', to: "    // no frontmatter boundary", suite: "alias-coverage", rule: "F13 the scanner stops at the closing ---" },
+  { file: "src/settings/view.ts", from: "`  when a configured model is unavailable: ${config.onUnavailableRoute}`", to: '"  when a configured model is unavailable: stop"', suite: "settings-console", rule: "F14 the summary follows the effective policy" },
+  { file: "src/settings/console.ts", from: "  const file = clean(draft);", to: "  const file = draft;", suite: "settings-console", rule: "F15 only a cleaned draft reaches the disk" },
 ];
 
 const root = mkdtempSync(join("/tmp", "paw-mutation-"));

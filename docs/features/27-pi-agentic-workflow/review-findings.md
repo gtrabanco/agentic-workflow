@@ -61,3 +61,38 @@ changes shipped behaviour, and the unit's phase budget is spent — they go to
 picks them up rather than re-deriving them.
 
 Pass 3 is the owner's call: the branch HEAD now differs from what pass 2 saw.
+
+## Pass-3 reconstruction — the six rules pass 2 parked (2026-08-29)
+
+Pass 2's verdict left six rules recorded only in `known-issues.md`, with no rows
+here. `fold-findings` Step 0 forbids that shape ("If the ledger is absent or
+incomplete, reconstruct rows from the verdict"), and `FOLD_POLICY.md` forbids the
+parking itself ("Adding a known-issues.md / backlog entry instead of fixing the
+code"). Reconstructed as fix-now rows, then folded/disputed/blocked on **measured**
+evidence: each rule was mutated on a clean copy of `67cdda16` (the runner logic of
+`scripts/mutation-check.mjs`, one suite per rule) so the verdict is the mutant's
+outcome, not an opinion.
+
+| id | file:line | axis | severity | class | route | folded |
+| --- | --- | --- | --- | --- | --- | --- |
+| F11 | packages/pi-agentic-workflow/src/routing/dispatch.ts:103 | tests | low | fix-now | BLOCKED — gap is real at `67cdda16` (mutant `else void 0` survived); a concurrent fold in this same cwd has an uncommitted red suite for it (`AC8: restoring a session that had no model is said out loud`) pending a `src/routing/dispatch.ts` change, so the fix and the assertion land together there; committing this file would have committed their red tests | no |
+| F12 | packages/pi-agentic-workflow/src/routing/catalogue.ts:94 | tests | med | fix-now | DISPUTED — already pinned: the "reported, never registered" mutant is killed on clean `67cdda16` (`alias-coverage`, fail=3) by the duplicate-name fixture pass 2 added; the row is now also a permanent harness entry, so the dispute is re-runnable rather than argued | no |
+| F13 | packages/pi-agentic-workflow/src/routing/catalogue.ts:44 | tests | med | fix-now | DISPUTED — already pinned: removing the closing-`---` break is killed on clean `67cdda16` (`alias-coverage`, fail=3); added to the harness table for the same reason | no |
+| F14 | packages/pi-agentic-workflow/src/settings/view.ts:39 | tests | med | fix-now | fold into current phase — the only rendered line with no non-default fixture: a hard-coded `stop` passed every test because the existing view assertion used the shipped default | yes |
+| F15 | packages/pi-agentic-workflow/src/settings/console.ts:235 | tests | low | fix-now | fold into current phase — `saveScope` must persist `clean(draft)`, not the draft: clearing the last override wrote `"commands": {}` under the mutant | yes |
+| F16 | packages/pi-agentic-workflow/src/routing/dispatch.ts:101 | tests | low | fix-now | BLOCKED — gap is real at `67cdda16` (mutant `if (touched)` survived: a thinking-only route may call `setModel` at settle and nothing notices); the fold is one assertion in `test/restore-after-settle.test.mjs`, the file the concurrent fold in this cwd is editing under the same rule name | no |
+
+### Outcomes of this pass
+
+- **Folded:** F14 + F15 — two tests in `test/settings-console.test.mjs`, both
+  harness entries, and the four proven-killed entries in
+  `scripts/mutation-check.mjs`. Gate: `npm test` → exit 0, 120 pass / 0 fail
+  (`67cdda16` was 118); `npm run mutation` → 25 mutants, 0 survived.
+- **Disputed (no code change is correct):** F12 + F13. Pass 2's own note claimed
+  the suite could not see them; it had already added the tests that do.
+- **Blocked (missing input):** F11 + F16 — a second writer owns
+  `dispatch.ts`/`restore-after-settle.test.mjs` in this working tree right now. A
+  fold that edits either file this turn would commit someone else's red tests,
+  which `FOLD_PROCESS.md` step 4 forbids.
+- **Not reclassified:** no severity, class or route above was relaxed, and no row
+  was ticked without a diff. The two rows that could not be folded stay `no`.

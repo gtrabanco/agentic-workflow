@@ -84,8 +84,21 @@ rather than a paragraph.
 | `F4 an explicit stop is saved` | test |
 | `F4 an explicit inherit is saved` | test |
 
-`21 mutants · 15 killed · 0 survived · 6 compile-enforced · 0 stale` — 15 rules are pinned by a failing test; the 6 compiler entries are mutants
-that do not build at all (the unused-symbol rules `noUnusedLocals`/`noUnusedParameters`, enabled
-in `tsconfig.json` on this fold, reject them), so no test could observe them and the build is the
-enforcement. Zero survived, zero stale needles.
+`25 mutants · 19 killed · 0 survived · 6 compile-enforced · 0 stale` — 19 rules are pinned by a
+failing test; the 6 compiler entries are mutants that do not build at all (the unused-symbol rules
+`noUnusedLocals`/`noUnusedParameters`, enabled in `tsconfig.json` on the first fold, reject them),
+so no test could observe them and the build is the enforcement. Zero survived, zero stale needles.
+
+Four entries were added by the pass-3 fold, which took the six rules pass 2 had parked in
+`known-issues.md` and measured each one instead of asserting it (`F11`-`F16` in
+`review-findings.md`): `F12 a duplicate name is reported, never registered` and `F13 the scanner
+stops at the closing ---` were already killed on the pre-fold HEAD, so they are recorded as
+disputes and kept in the table to make that re-runnable; `F14 the summary follows the effective
+policy` and `F15 only a cleaned draft reaches the disk` were real and are killed by two new
+`settings-console` tests. The two remaining parked rules (`F11`, `F16`) live in
+`src/routing/dispatch.ts` / `test/restore-after-settle.test.mjs`, which a concurrent fold owns in
+the same worktree — they stay open rows rather than a paragraph that reads as settled.
+
+Suite count went 118 → 120 with those two tests; the gate stays
+`rm -rf dist && npm test` → exit 0.
 
