@@ -1,0 +1,355 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validatePreExecutionArtifactSnapshotV1 | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): unique-artifact-paths; stage-required-artifacts (stage drives the required artifact set); selector-requires-product-stage (spec-product-v1 requires stage spec on the spec row); artifact-order-is-canonical (artifact rows are ordered by UTF-8 path bytes); one-row-per-kind (each artifact kind appears at most once); context-order-is-canonical (context rows are ordered by kind then identifier); one-context-per-identity (each (kind, identifier) context appears once); fix-has-no-product-stage (unitKind fix cannot carry a SPEC-stage snapshot) | payload budget: runtime-only (canonical snapshot <= 32768 bytes = 32 KiB) | diagnostics: runtime-only (at most 50 redacted code+path rows) | values: never returned (D16 — diagnostics carry a frozen code and an RFC 6901 pointer only) | regenerate with: node scripts/generate-pre-execution-schemas.mjs",
+  "title": "PreExecutionArtifactSnapshot v1",
+  "description": "The exact artifact set, authoritative contexts, source revision and authoring revision one independent pre-execution reviewer read. This document is a NON-AUTHORITATIVE Draft-07 structural projection generated from the package's canonical pre-execution-contract definition. It is not a semantic authority: a Draft-07 match is not contract validity — use the authoritative runtime entry point named in $comment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "stage",
+    "unitKind",
+    "unitId",
+    "sourceRevision",
+    "artifactRevisionId",
+    "artifacts",
+    "contexts",
+    "parentSpecSnapshotDigest"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/pre-execution-artifact-snapshot@1",
+      "description": "Contract identifier."
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "spec",
+        "plan"
+      ],
+      "description": "Reviewed stage."
+    },
+    "unitKind": {
+      "type": "string",
+      "enum": [
+        "feature",
+        "fix"
+      ],
+      "description": "Unit family."
+    },
+    "unitId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+      "allOf": [
+        {
+          "description": "[unitId] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Roadmap or fix-unit identity; at most 128 characters. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+    },
+    "sourceRevision": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{40}$|^[a-f0-9]{64}$",
+      "allOf": [
+        {
+          "description": "[sourceRevision] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Exact repository revision the artifacts were read at (SHA-1 or SHA-256 object id)."
+    },
+    "artifactRevisionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+      "allOf": [
+        {
+          "description": "[artifactRevisionId] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Authoring-owned revision identity; at most 128 characters. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PreExecutionArtifactRowV1"
+      },
+      "minItems": 1,
+      "maxItems": 32,
+      "description": "Ordered artifact rows; 1..32, ordered by UTF-8 path bytes."
+    },
+    "contexts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PreExecutionContextBindingV1"
+      },
+      "maxItems": 16,
+      "description": "Authoritative context bindings; 0..16, ordered by kind then identifier."
+    },
+    "parentSpecSnapshotDigest": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "allOf": [
+            {
+              "description": "[parentSpecSnapshotDigest] must not contain NUL characters",
+              "pattern": "^[^\\0]*$"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Digest of the reviewed Product snapshot: required for a Plan snapshot, exactly null for a SPEC snapshot."
+    }
+  },
+  "allOf": [
+    {
+      "description": "[spec-stage-has-no-parent] A SPEC snapshot is the root of its own lineage.",
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "spec"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parentSpecSnapshotDigest": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "description": "[plan-stage-requires-parent] A Plan snapshot binds the exact reviewed Product snapshot.",
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "plan"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parentSpecSnapshotDigest": {
+            "not": {
+              "type": "null"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "PreExecutionArtifactRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "selector",
+        "byteLength",
+        "digest"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "spec",
+            "acceptance",
+            "plan",
+            "tasks",
+            "testing",
+            "decisions",
+            "architecture-notes",
+            "planning-evidence",
+            "obligations"
+          ],
+          "description": "Artifact role inside the stage's authoritative set."
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 1024,
+          "allOf": [
+            {
+              "description": "[path] must not contain NUL characters",
+              "pattern": "^[^\\0]*$"
+            },
+            {
+              "description": "[path] must not be empty",
+              "pattern": "^(?!$)"
+            },
+            {
+              "description": "[path] must not be an absolute path (leading \"/\")",
+              "pattern": "^(?!/)"
+            },
+            {
+              "description": "[path] must not be a Windows drive-letter path",
+              "pattern": "^(?![A-Za-z]:)"
+            },
+            {
+              "description": "[path] must not contain backslashes",
+              "pattern": "^(?!.*\\\\)"
+            },
+            {
+              "description": "[path] must not contain \".\" or \"..\" segments",
+              "pattern": "^(?!.*(\\/|^)\\.\\.?($|\\/))"
+            },
+            {
+              "description": "[path] must not end with a separator",
+              "pattern": "^(?!.*\\/$)"
+            },
+            {
+              "description": "[path] must not contain an empty segment",
+              "pattern": "^(?!.*//)"
+            }
+          ],
+          "description": "Normalized repository-relative path; at most 1024 characters."
+        },
+        "selector": {
+          "type": "string",
+          "enum": [
+            "whole-file",
+            "spec-product-v1"
+          ],
+          "description": "How the bound bytes were selected out of the file."
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4194304,
+          "description": "UTF-8 length of the SELECTION (a Product projection is smaller than its file), at most 4194304 bytes."
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "allOf": [
+            {
+              "description": "[digest] must not contain NUL characters",
+              "pattern": "^[^\\0]*$"
+            }
+          ],
+          "description": "Lowercase SHA-256 of the selected bytes."
+        }
+      }
+    },
+    "PreExecutionContextBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "identifier",
+        "presence",
+        "digest"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "roadmap-row",
+            "governing-issue",
+            "normalized-repository-state",
+            "architectural-invariants",
+            "dependency-unit",
+            "project-guide"
+          ],
+          "description": "Context authority."
+        },
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160,
+          "pattern": "^[#A-Za-z0-9][A-Za-z0-9._:/#-]*$",
+          "allOf": [
+            {
+              "description": "[identifier] must not contain NUL characters",
+              "pattern": "^[^\\0]*$"
+            }
+          ],
+          "description": "Stable identifier (a roadmap row, an issue number such as #146, a snapshot id); at most 160 characters."
+        },
+        "presence": {
+          "type": "string",
+          "enum": [
+            "present",
+            "absent"
+          ],
+          "description": "Whether the authority exists."
+        },
+        "digest": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$",
+              "allOf": [
+                {
+                  "description": "[digest] must not contain NUL characters",
+                  "pattern": "^[^\\0]*$"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Lowercase SHA-256 of the context bytes when present; exactly null when absent."
+        }
+      },
+      "allOf": [
+        {
+          "description": "[present-context-has-digest] A present context binds a digest.",
+          "if": {
+            "properties": {
+              "presence": {
+                "const": "present"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "digest": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        },
+        {
+          "description": "[absent-context-has-null-digest] An absent context binds exactly `null`.",
+          "if": {
+            "properties": {
+              "presence": {
+                "const": "absent"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "digest": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

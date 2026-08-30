@@ -222,6 +222,278 @@ fixes are patch releases. See
 [programmatic orchestration](../../docs/workflow/ORCHESTRATION.md) for the
 driver protocol.
 
+## Evidence-Grounded Pre-Execution Review (feature 28)
+
+Two versioned wire contracts that let a reviewer prove *which bytes* it judged,
+before any code exists:
+
+- `PreExecutionArtifactSnapshot v1`
+  (`agentic-workflow/pre-execution-artifact-snapshot@1`) — the exact artifact set
+  and authoritative contexts a review was allowed to rely on, at one source
+  revision and one causal artifact revision.
+- `PreExecutionReviewReceipt v1` (`agentic-workflow/pre-execution-review-receipt@1`)
+  — one reviewer's verdict over one snapshot, with structured findings, opaque
+  author identity, and an optional parent topology.
+
+These are **pre-execution** contracts. They are distinct from
+`CandidateSnapshotV1`/`ReviewReceiptV1` (which bind a built candidate) and from
+`VerificationPlanV1`/`VerificationReceiptV1` (which bind command execution). No
+contract in this family substitutes for another: a candidate or verification
+receipt never validates as a pre-execution receipt, and no approval survives a
+change in what was approved.
+
+### Public entries
+
+| Entry | Contract |
+| --- | --- |
+| `validatePreExecutionArtifactSnapshotV1(value)` | `{ ok, snapshot?, diagnostics, truncated }` |
+| `validatePreExecutionReviewReceiptV1(value)` | `{ ok, receipt?, diagnostics, truncated }` |
+| `validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, policyVersion)` | the only PASS authority |
+| `buildPreExecutionArtifactSnapshot(input)` | stage-aware set builder over caller-supplied bytes |
+| `selectSpecProduct(text)` | deterministic `spec-product-v1` projection |
+| `canonicalizePreExecutionArtifactSnapshot(snapshot)` | canonical JSON string |
+| `digestPreExecutionArtifactSnapshot(snapshot)` | lowercase SHA-256 hex |
+| `canonicalizePreExecutionReviewReceipt(receipt)` / `digestPreExecutionReviewReceipt(receipt)` | same pair for receipts |
+| `comparePreExecutionReceiptToSnapshot(receipt, reviewed, current, policyVersion)` | freshness decision |
+
+Every entry accepts `unknown`, never throws on hostile input, and answers the
+closed, redacted diagnostic vocabulary `PRE_EXECUTION_DIAGNOSTIC_CODES` — codes
+and field pointers only, never a submitted value.
+
+### Contract identifiers
+
+The two `contract` discriminators are exported as
+`PRE_EXECUTION_SNAPSHOT_CONTRACT_ID` and
+`PRE_EXECUTION_RECEIPT_CONTRACT_ID`; the SPEC-stage Product projection name is
+`PRE_EXECUTION_SNAPSHOT_SELECTOR` (`spec-product-v1`). Compare them by string
+equality — a snapshot or receipt whose `contract` is anything else is refused with
+`invalid-value`, which is what keeps a candidate, verification, or future-version
+document from being mistaken for one of these.
+
+### Closed vocabularies
+
+Every value below is exported as a frozen array; nothing outside them validates.
+`PRE_EXECUTION_RUNTIME_RULES` publishes the same split the prose describes —
+`{ snapshot: [...], receipt: [...] }`, each row `{ id, claim }` — so a driver can
+display the guarantees the schema cannot state.
+
+| Export | Values and meaning |
+| --- | --- |
+| `PRE_EXECUTION_STAGES` | `spec` · `plan` — The two review stages. Drives the required artifact set and the verdict matrix. |
+| `PRE_EXECUTION_UNIT_KINDS` | `feature` · `fix` — `fix` has no Product half, so it has no SPEC-stage snapshot. |
+| `PRE_EXECUTION_ARTIFACT_KINDS` | `spec` · `acceptance` · `plan` · `tasks` · `testing` · `decisions` · `architecture-notes` · `planning-evidence` · `obligations` — Roles a bound document may play. |
+| `PRE_EXECUTION_SELECTORS` | `whole-file` · `spec-product-v1` — How bound bytes were chosen out of a file. |
+| `PRE_EXECUTION_CONTEXT_KINDS` | `roadmap-row` · `governing-issue` · `normalized-repository-state` · `architectural-invariants` · `dependency-unit` · `project-guide` — Authorities a reviewer was allowed to rely on. |
+| `PRE_EXECUTION_CONTEXT_PRESENCE` | `present` · `absent` — `absent` is a recorded fact, never a skipped field. |
+| `PRE_EXECUTION_VERDICTS` | `spec-review-pass` · `spec-review-fail` · `plan-review-pass` · `plan-review-fail` · `needs-design` — Each verdict names the stage it is legal on. |
+| `PRE_EXECUTION_FINDING_SEVERITIES` | `info` · `low` · `medium` · `high` · `critical` — `info` never blocks a PASS on its own merits. |
+| `PRE_EXECUTION_FINDING_CLASSES` | `product` · `plan` · `source` · `environment` · `runtime` — Which contract layer the finding is about. |
+| `PRE_EXECUTION_FINDING_VERIFICATION` | `verified` · `unverified` — Only `verified` material findings can support a PASS. |
+| `PRE_EXECUTION_FINDING_RESOLUTIONS` | `open` · `resolved` · `dismissed` — `dismissed` requires recorded counter-evidence. |
+| `PRE_EXECUTION_REVIEW_ROLES` | `reviewer` · `critic` · `synthesizer` · `arbiter` — What this receipt is in the topology. |
+| `PRE_EXECUTION_PARENT_ROLES` | `critic` · `synthesis` · `arbitration` — What a parent receipt was — there is no quorum over them. |
+| `PRE_EXECUTION_AUTHOR_EXCLUSIONS` | `enforced` · `not-enforceable` — Whether the runtime can prove the reviewer did not author the artifact set. |
+| `PRE_EXECUTION_MODEL_DIVERSITY` | `same-model` · `cross-model` · `not-applicable` — A truthful label, never a threshold. |
+| `PRE_EXECUTION_FRESHNESS_CODES` | `invalid-stage` · `invalid-unit` · `stale-policy` · `stale-context` · `stale-source-revision` · `stale-parent` · `stale-artifact-revision` · `stale-artifact-content` · `missing-receipt-snapshot` — Ordered precedence: see Freshness. |
+| `PRE_EXECUTION_DIAGNOSTIC_CODES` | `invalid-type` · `missing-field` · `unknown-field` · `invalid-value` · `limit-exceeded` · `duplicate-id` · `unknown-command` · `invalid-order` · `invalid-stage` · `invalid-exit-state` · `invalid-evidence` · `invalid-skip` · `invalid-fail-fast` · `digest-mismatch` · `verdict-mismatch` · `budget-exceeded` · `missing-artifact-kind` · `invalid-artifact-set` · `invalid-selector` · `invalid-author` · `invalid-context` · `invalid-topology` · `stale-snapshot` · `stale-policy` — Redacted: codes and pointers only, never a submitted value. |
+
+### What the snapshot binds
+
+`contract`, `stage` (`spec | plan`), `unitKind` (`feature | fix`), `unitId`,
+`sourceRevision` (40- or 64-hex git object id), `artifactRevisionId` (the causal
+revision — a deliberate rotation even when content reverts), `artifacts[]`,
+`contexts[]`, and `parentSpecSnapshotDigest` (null iff `stage === "spec"`).
+
+Each artifact row is `{ kind, path, selector, byteLength, digest }`:
+
+- `kind` ∈ `PRE_EXECUTION_ARTIFACT_KINDS` (`spec`, `acceptance`, `plan`, `tasks`,
+  `testing`, `decisions`, `architecture-notes`, `planning-evidence`,
+  `obligations`).
+- `path` is normalized repository-relative — absolute, drive-letter, backslash,
+  `.`/`..` segments, trailing separators, and empty segments are refused.
+- `selector` ∈ `whole-file | spec-product-v1`. The SPEC stage binds its SPEC row
+  with `spec-product-v1` and nothing else; the Plan stage binds whole files.
+- `byteLength`/`digest` describe the **selection**, not the file.
+
+Required sets are stage-driven: SPEC = exactly the projected `spec` row;
+Plan = `spec` + `acceptance`, plus whichever of `plan`, `tasks`, `testing`,
+`decisions`, `architecture-notes`, `planning-evidence`, `obligations` exist for
+that unit size. A `fix` unit has no Product half, so it has no SPEC-stage
+snapshot — Plan review is its pre-execution gate.
+
+Each context row is `{ kind, identifier, presence, digest }` with `kind` ∈
+`roadmap-row | governing-issue | normalized-repository-state |
+architectural-invariants | dependency-unit | project-guide`. `presence` is
+`present | absent`; a present authority carries its 64-hex digest, an absent one
+binds exactly `null`. Absence is a recorded fact, never a skipped field.
+
+Rows are canonically ordered — artifacts by UTF-8 path bytes, contexts by kind
+then identifier — and identities are unique within each list.
+
+### Collection rules live in the runtime, not the schema
+
+The published projections
+([`pre-execution-artifact-snapshot.schema.json`](./pre-execution-artifact-snapshot.schema.json),
+[`pre-execution-review-receipt.schema.json`](./pre-execution-review-receipt.schema.json))
+are rendered from the same internal definition the runtime enforces, so they can
+never contradict it. Draft 07 has no form for properties **of a collection**
+(path-byte ordering, per-kind/per-path uniqueness, the stage↔selector matrix,
+context identity uniqueness), so those five-plus rules —
+`artifact-rows-ordered`, `artifact-kinds-unique`, `artifact-paths-unique`,
+`context-rows-ordered`, `context-identities-unique`,
+`spec-artifact-uses-product-selector`, `stage-selector-matrix` — are enforced by
+this package only. Validate them here; do not trust a third-party draft-07
+validator to refuse an unordered snapshot.
+
+### Verdicts, findings, and the PASS authority
+
+`verdict` ∈ `spec-review-pass | spec-review-fail | plan-review-pass |
+plan-review-fail | needs-design`, and the verdict must match the snapshot stage.
+A finding is `{ id, severity, class, claim, evidenceRefs, verification,
+resolution, resolutionEvidence }` with `severity` ∈ `info | low | medium | high
+| critical`, `class` ∈ `product | plan | source | environment | runtime`,
+`verification` ∈ `verified | unverified`, and `resolution` ∈ `open | resolved |
+dismissed`. Every finding carries at least one evidence reference, and a
+dismissal requires recorded counter-evidence.
+
+`validatePreExecutionReceiptAgainstSnapshot` is the only entry that can bless a
+PASS. It refuses a PASS while any material finding is open or unverified
+(`info`-severity findings never block on their own merits), while the receipt
+binds a different snapshot, while the policy version differs, when the claimed
+author exclusion is violated under `enforced`, or when the reviewer's own
+identity authored the artifact set (`invalid-author`). Parent receipts model a
+bounded critic/synthesis/arbitration topology (`role` ∈ `critic | synthesis |
+arbitration`, unique `receiptDigest`) — there is **no quorum**: votes never erase
+an unresolved material finding, and `modelDiversity` is a truthful label
+(`same-model | cross-model | not-applicable`), never a threshold.
+
+### Freshness
+
+`comparePreExecutionReceiptToSnapshot` answers `{ fresh: true }` or
+`{ fresh: false, reasonCode }` from the closed `PRE_EXECUTION_FRESHNESS_CODES`,
+in this fixed precedence: `stale-policy` → `stale-context` →
+`stale-source-revision` → `stale-parent` → `stale-artifact-content` →
+`stale-artifact-revision` → `missing-receipt-snapshot`, with `invalid-stage` and
+`invalid-unit` refused before any comparison. Because a revert that rotates
+`artifactRevisionId` still changes the snapshot digest, an old PASS cannot be
+resurrected by editing a document back to its previous bytes.
+
+### Published limits
+
+`PRE_EXECUTION_LIMITS` (all exact ceilings, one diagnostic sink shared with the
+other families):
+
+```
+artifacts 32 · contexts 16 · findings 64 · evidencePerFinding 8
+parentReceipts 8 · receiptDiagnostics 8 · diagnostics 50
+unitIdChars 128 · revisionIdChars 128 · idChars 128 · identifierChars 160
+pathChars 1024 · claimChars 2048 · evidenceChars 1024
+resolutionEvidenceChars 2048 · policyChars 64 · diagnosticChars 512
+artifactBytes 4194304 · snapshotBytes 32768 · receiptBytes 65536
+```
+
+### Canonical form and vectors
+
+Canonicalization sorts object keys, preserves declared array order, emits UTF-8
+with no whitespace, and refuses leaves outside the JSON data model. Digests are
+lowercase SHA-256 over those canonical bytes. Four payloads are published in
+`PRE_EXECUTION_CANONICAL_VECTORS` (both stages × both contracts); the suite
+reproduces every digest from its fixture independently through `node:crypto`, so
+a serializer change breaks a test instead of silently moving a consumer's lineage.
+
+```bash
+npm run gate:pre-execution   # tests + schema drift + package checks + pack
+```
+
+### Consumer example
+
+```ts
+import {
+  buildPreExecutionArtifactSnapshot,
+  comparePreExecutionReceiptToSnapshot,
+  digestPreExecutionArtifactSnapshot,
+  selectSpecProduct,
+  validatePreExecutionReceiptAgainstSnapshot,
+} from "@gtrabanco/agentic-workflow-schema";
+
+const POLICY_VERSION = "2026-08-30";
+
+// The caller reads the documents: this package never touches Git or the filesystem.
+const spec = [
+  "# Toy feature", "", "## Goal", "", "Ship one usable slice.", "",
+  "## Branch", "", "`feat/toy`", "", "## Size", "", "`S`", "",
+  "## Dependencies", "", "- none", "", "## Product half", "", "### Scope", "",
+  "- **S1:** the slice.", "", "## Design status", "", "`designed`", "",
+].join("\n");
+
+/** 1. Freeze the exact bytes a reviewer may rely on, at one causal revision. */
+async function freeze(artifactRevisionId: string) {
+  const built = await buildPreExecutionArtifactSnapshot({
+    stage: "spec",
+    unitKind: "feature",
+    unitId: "toy",
+    sourceRevision: "8ab22ea6c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
+    artifactRevisionId,
+    files: [{ kind: "spec", path: "docs/features/toy/SPEC.md", content: spec }],
+    contexts: [{ kind: "governing-issue", identifier: "#146", content: "the issue body" }],
+  });
+  const snapshot = built.ok ? built.snapshot : undefined;
+  if (!snapshot) throw new Error(JSON.stringify(built.diagnostics));
+  return snapshot;
+}
+
+const snapshot = await freeze("rev-0001");
+
+// 2. A reviewer records a verdict bound to that digest, never to the mutable file.
+const receipt = {
+  contract: "agentic-workflow/pre-execution-review-receipt@1",
+  id: "review-0001",
+  stage: snapshot.stage,
+  snapshotDigest: await digestPreExecutionArtifactSnapshot(snapshot),
+  verdict: "spec-review-pass",
+  findings: [],
+  reviewer: "reviewer-7",
+  sessionId: "session-7",
+  reviewerRole: "reviewer",
+  authorId: "author-3",
+  authorExclusion: "enforced",
+  contextClean: true,
+  modelDiversity: "cross-model",
+  policyVersion: POLICY_VERSION,
+  startedAt: "2026-08-30T00:00:00Z",
+  finishedAt: "2026-08-30T00:04:00Z",
+  parentReceipts: [],
+  diagnostics: [],
+};
+
+// 3. Only this entry can bless a PASS; it answers with codes, never submitted values.
+const blessed = await validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, POLICY_VERSION);
+if (!blessed.ok) throw new Error(JSON.stringify(blessed.diagnostics));
+
+// 4. Before executing, freeze again: unchanged authority stays fresh.
+const fresh = await comparePreExecutionReceiptToSnapshot(
+  receipt, snapshot, await freeze("rev-0001"), POLICY_VERSION,
+);
+if (fresh.fresh !== true) throw new Error(JSON.stringify(fresh));
+
+// 5. Edit, revert, and rotate the revision anyway and the PASS is void: a stale
+//    approval can never be resurrected by restoring the previous bytes.
+const stale = await comparePreExecutionReceiptToSnapshot(
+  receipt, snapshot, await freeze("rev-0002"), POLICY_VERSION,
+);
+if (stale.fresh === true || stale.reasonCode !== "stale-artifact-revision") {
+  throw new Error(JSON.stringify(stale));
+}
+
+// 6. The projection is why a plan-side write cannot erase Product lineage: the
+//    selector never saw anything outside the named Product headings.
+const projection = selectSpecProduct(`${spec}\n## Engineering half\n\n### Phases\n\n- P1\n`);
+if (projection.ok !== true) throw new Error(JSON.stringify(projection.errors));
+if (projection.content.includes("Engineering half")) throw new Error("the projection leaked");
+
+console.log("review bound", projection.byteLength, receipt.snapshotDigest.slice(0, 12), fresh, stale);
+```
+
 ## Staged Verification Contracts (feature 26)
 
 Two versioned wire contracts for staged verification:

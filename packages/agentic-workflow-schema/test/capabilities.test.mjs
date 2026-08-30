@@ -72,6 +72,20 @@ const EXPECTED = [
     },
   },
   {
+    skill: "review-spec",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "reviewer",
+      reasoning: "critical",
+      // A pre-execution review reads and records; it never edits the artifact it
+      // judges, and it never touches the forge.
+      effects: ["repository-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "pre-execution-review"],
+    },
+  },
+  {
     skill: "plan-feature",
     output: "skill-outcome-v1",
     nativeFallback: "none",
@@ -81,6 +95,18 @@ const EXPECTED = [
       effects: ["repository-read", "repository-write", "forge-read"],
       contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
       requiredEvidence: ["workflow-snapshot"],
+    },
+  },
+  {
+    skill: "review-plan",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "reviewer",
+      reasoning: "critical",
+      effects: ["repository-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "pre-execution-review"],
     },
   },
   {
@@ -202,7 +228,7 @@ test("every built-in profile matches the exact frozen AC2 table", () => {
 
 test("inventory is complete and duplicate-free", () => {
   const skills = WORKFLOW_SKILL_PROFILES.map((profile) => profile.skill);
-  assert.equal(new Set(skills).size, 12, "no duplicate skills");
+  assert.equal(new Set(skills).size, 14, "no duplicate skills");
   assert.equal(WORKFLOW_SKILL_PROFILES.every((profile) => profile.capabilities !== undefined), true, "all built-ins populated");
   for (const expected of EXPECTED) assert.ok(skills.includes(expected.skill), `missing ${expected.skill}`);
 });

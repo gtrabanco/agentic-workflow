@@ -59,3 +59,33 @@
 - **D13 — Convergence diagnosis:** the first unioned findings set is repaired as
   one owner-bounded batch. A second cycle emits `CONVERGENCE-ANOMALY`; operational
   budgets never convert the anomaly or an open finding into PASS.
+- **D14 — Distributed internal marking:** `evidence-grounding` ships as
+  `user-invocable: false` without `metadata.internal: true`, registered in
+  `.claude-plugin/plugin.json` and `skills.sh.json`, because that flag is the
+  skills-CLI exclusion lever (#96) and a distributed skill wrongly carrying it
+  is silently omitted from installs (#141). Lint rule 7 and the
+  `bounded-delivery-loops` guard keep the marking valid.
+- **D15 — One PR releases both packages:** the schema package releases as
+  additive `3.5.0` from P1 and the Pi package bumps `0.1.0 -> 0.2.0` in P5's
+  terminal pre-merge step after the last bundle rebuild;
+  `publish-pi-package.yml` publishes on merge only when its version is newer
+  than the registry, so the final hardening step makes the terminal candidate
+  release-ready.
+- **D16 — Parent topology is binding-time, not well-formedness:** the red-first
+  receipt suite pins that a plain-reviewer receipt carrying parents passes
+  `validatePreExecutionReviewReceiptV1` and is refused with `invalid-topology`
+  only by `validatePreExecutionReceiptAgainstSnapshot`. The shared rule engine
+  therefore gained an `enforcement: "walk" | "binding"` flag: the Draft-07
+  projection renders `parent-topology-shaped`/`parent-topology-restrained`, the
+  plain walk skips binding rules, and the binding authority re-applies them over
+  the same captured document via the exported `applyCrossRule`. One definition,
+  no second inline copy of the constraint.
+- **D17 — Published-surface fidelity on the shared canonicalizer:** (a) the
+  verification family's over-budget `TypeError` keeps its pinned `D14` marker
+  (`F91`) through a `budgetTag` option on the shared canonicalizer — the
+  pre-execution family leaves it unset; (b) the projection test's path-rule
+  fragment `or ".." segments` is matched in its SERIALIZED form, because
+  `JSON.stringify` always escapes the description's double quotes and a raw
+  quoted fragment can never appear in serialized bytes — the assertion as first
+  written was unsatisfiable under any implementation and was amended, not
+  weakened (the rule, its pattern, and its description are unchanged).

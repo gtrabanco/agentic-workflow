@@ -1,0 +1,457 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "agentic-workflow generated file - DO NOT HAND-EDIT. | projection: structural-only | authoritative: false | authority: validatePreExecutionReceiptAgainstSnapshot | semantic validation: required (a Draft-07 PASS is not contract validity) | runtime-only rules (not expressible in Draft-07): timestamp-order, calendar-roundtrip, unique-finding-ids, unique-parent-receipts; finding-requires-evidence (every finding carries at least one evidence reference); pass-requires-resolved-material-findings (PASS cannot coexist with an open or unverified material finding); dismissal-requires-counter-evidence (only recorded counter-evidence dismisses a finding); author-exclusion-where-enforced (an enforcing runtime rejects a reused author identity); pass-requires-clean-context (PASS requires context-clean evidence); unique-parent-digests (parent receipt digests are unique); receipt-bound-to-snapshot (the verdict must bind the exact snapshot digest) | payload budget: runtime-only (canonical receipt <= 65536 bytes = 64 KiB) | diagnostics: runtime-only (at most 50 redacted code+path rows) | values: never returned (D16 — diagnostics carry a frozen code and an RFC 6901 pointer only) | regenerate with: node scripts/generate-pre-execution-schemas.mjs",
+  "title": "PreExecutionReviewReceipt v1",
+  "description": "A content-bound verdict on one pre-execution snapshot, with structured findings, reviewer identities, and an optional critique/synthesis topology. This document is a NON-AUTHORITATIVE Draft-07 structural projection generated from the package's canonical pre-execution-contract definition. It is not a semantic authority: a Draft-07 match is not contract validity — use the authoritative runtime entry point named in $comment.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "id",
+    "stage",
+    "snapshotDigest",
+    "verdict",
+    "findings",
+    "reviewer",
+    "sessionId",
+    "reviewerRole",
+    "authorId",
+    "authorExclusion",
+    "contextClean",
+    "modelDiversity",
+    "policyVersion",
+    "startedAt",
+    "finishedAt",
+    "parentReceipts",
+    "diagnostics"
+  ],
+  "properties": {
+    "contract": {
+      "type": "string",
+      "const": "agentic-workflow/pre-execution-review-receipt@1",
+      "description": "Contract identifier. Candidate and verification receipts carry other ids and are refused here."
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+      "allOf": [
+        {
+          "description": "[id] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Stable receipt identity. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "spec",
+        "plan"
+      ],
+      "description": "Stage the verdict belongs to."
+    },
+    "snapshotDigest": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$",
+      "allOf": [
+        {
+          "description": "[snapshotDigest] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Digest of the exact snapshot that was reviewed."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": [
+        "spec-review-pass",
+        "spec-review-fail",
+        "plan-review-pass",
+        "plan-review-fail",
+        "needs-design"
+      ],
+      "description": "One of the five public verdicts."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PreExecutionReviewFindingV1"
+      },
+      "maxItems": 64,
+      "description": "Structured findings; at most 64. A PASS never carries an open or unverified material row."
+    },
+    "reviewer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+      "allOf": [
+        {
+          "description": "[reviewer] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Reviewer identity as the runtime knows it. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+    },
+    "sessionId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+      "allOf": [
+        {
+          "description": "[sessionId] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Session identity of the context-clean review. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+    },
+    "reviewerRole": {
+      "type": "string",
+      "enum": [
+        "reviewer",
+        "critic",
+        "synthesizer",
+        "arbiter"
+      ],
+      "description": "Role this receipt played in the review topology."
+    },
+    "authorId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+      "allOf": [
+        {
+          "description": "[authorId] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "Identity of the artifact author the exclusion rule compares against. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+    },
+    "authorExclusion": {
+      "type": "string",
+      "enum": [
+        "enforced",
+        "not-enforceable"
+      ],
+      "description": "Whether the runtime can actually observe author identity."
+    },
+    "contextClean": {
+      "type": "boolean",
+      "description": "The review ran in a context that did not author the artifact."
+    },
+    "modelDiversity": {
+      "type": "string",
+      "enum": [
+        "same-model",
+        "cross-model",
+        "not-applicable"
+      ],
+      "description": "Truthful diversity label; never inferred from plurality."
+    },
+    "policyVersion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[^\\0]*$",
+      "description": "Review policy version the verdict was produced under; at most 64 characters."
+    },
+    "startedAt": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 40,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+      "allOf": [
+        {
+          "description": "[startedAt] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "UTC start of the review."
+    },
+    "finishedAt": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 40,
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$",
+      "allOf": [
+        {
+          "description": "[finishedAt] must not contain NUL characters",
+          "pattern": "^[^\\0]*$"
+        }
+      ],
+      "description": "UTC end of the review."
+    },
+    "parentReceipts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PreExecutionParentReceiptV1"
+      },
+      "maxItems": 8,
+      "description": "Optional bounded critique/synthesis/arbitration parents; at most 8. Presence is topology, not a vote."
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[^\\0]*$",
+        "maxLength": 512
+      },
+      "maxItems": 8,
+      "description": "Reviewer-side notes; at most 8 rows of 512 characters."
+    }
+  },
+  "allOf": [
+    {
+      "description": "[verdict-stage-matrix] A SPEC-stage receipt carries only spec verdicts.",
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "spec"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "verdict": {
+            "enum": [
+              "spec-review-pass",
+              "spec-review-fail",
+              "needs-design"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "[verdict-stage-matrix] A PLAN-stage receipt carries only plan verdicts.",
+      "if": {
+        "properties": {
+          "stage": {
+            "const": "plan"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "verdict": {
+            "enum": [
+              "plan-review-pass",
+              "plan-review-fail",
+              "needs-design"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "[parent-topology-shaped] Parent receipts require a critic, synthesizer, or arbiter reviewer role.",
+      "if": {
+        "properties": {
+          "parentReceipts": {
+            "type": "array",
+            "minItems": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reviewerRole": {
+            "enum": [
+              "critic",
+              "synthesizer",
+              "arbiter"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "[parent-topology-restrained] A plain reviewer receipt carries no parent receipts.",
+      "if": {
+        "properties": {
+          "reviewerRole": {
+            "const": "reviewer"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parentReceipts": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "description": "[parent-identities-unique] Parent receipts are unique rows; digests are unique too (runtime rule).",
+      "properties": {
+        "parentReceipts": {
+          "uniqueItems": true
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "PreExecutionReviewFindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "severity",
+        "class",
+        "claim",
+        "evidenceRefs",
+        "verification",
+        "resolution",
+        "resolutionEvidence"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/-]*$",
+          "allOf": [
+            {
+              "description": "[id] must not contain NUL characters",
+              "pattern": "^[^\\0]*$"
+            }
+          ],
+          "description": "Stable finding identity, unique inside the receipt. Opaque: compared, never parsed, and never echoed back by a diagnostic."
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "description": "Severity ladder shared with candidate review; `info` is the only immaterial row."
+        },
+        "class": {
+          "type": "string",
+          "enum": [
+            "product",
+            "plan",
+            "source",
+            "environment",
+            "runtime"
+          ],
+          "description": "Root-cause owner the finding routes to."
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^[^\\0]*$",
+          "description": "What the reviewer asserts is missing or wrong; at most 2048 characters."
+        },
+        "evidenceRefs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[^\\0]*$",
+            "maxLength": 1024
+          },
+          "maxItems": 8,
+          "description": "Non-empty file:line references; at most 8. A claim without evidence is not a finding."
+        },
+        "verification": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "unverified"
+          ],
+          "description": "Whether the claim was checked against the artifact."
+        },
+        "resolution": {
+          "type": "string",
+          "enum": [
+            "open",
+            "resolved",
+            "dismissed"
+          ],
+          "description": "Resolution state inside the owning author's repair."
+        },
+        "resolutionEvidence": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048,
+              "pattern": "^[^\\0]*$"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Counter-evidence or repair pointer. Required to dismiss or resolve a finding."
+        }
+      },
+      "allOf": [
+        {
+          "description": "[dismissal-needs-counter-evidence] A dismissed finding records the evidence that falsifies it.",
+          "if": {
+            "properties": {
+              "resolution": {
+                "enum": [
+                  "dismissed",
+                  "resolved"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "resolutionEvidence": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "PreExecutionParentReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "receiptDigest"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "critic",
+            "synthesis",
+            "arbitration"
+          ],
+          "description": "Parent role. No quorum or majority meaning is attached to this list."
+        },
+        "receiptDigest": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "allOf": [
+            {
+              "description": "[receiptDigest] must not contain NUL characters",
+              "pattern": "^[^\\0]*$"
+            }
+          ],
+          "description": "Lowercase SHA-256 digest of the parent receipt."
+        }
+      }
+    }
+  }
+}

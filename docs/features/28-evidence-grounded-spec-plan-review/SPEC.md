@@ -789,10 +789,11 @@ Phase-lint: PASS (8/8) · fingerprint
 #### P5 — Qualify the pre-execution workflow
 
 Layer: hardening. Done-when: package/repository/installation/context/golden-
-fixture gates pass, synchronized docs and migration are verified, and the exact
-candidate has an independent PASS with no unresolved fix-now finding; the
+fixture gates pass, synchronized docs and migration are verified, the exact
+candidate has an independent PASS with no unresolved fix-now finding, the
 feature/fix/cross-boundary qualification corpus contains no second-cycle
-sample.
+sample, and the terminal candidate is release-ready (Pi package bumped to
+`0.2.0` and changeloged after the last bundle rebuild).
 
 Phase-lint: PASS (8/8) · fingerprint
 `P5:hardening:8:qualify-the-pre-execution-workflow`
@@ -800,7 +801,10 @@ Phase-lint: PASS (8/8) · fingerprint
 ### Deploy & rollback
 
 No data migration or environment configuration. Merge publishes skill/docs
-changes; publish the schema package only after package/repository qualification.
+changes; publish the schema package (`3.5.0`) and the Pi package (`0.2.0`) only
+after package/repository qualification — the Pi publish workflow releases on
+merge only when its `package.json` version is newer than the registry, so the
+final hardening step bumps it after the last bundle rebuild.
 Rollback is a PR revert plus package deprecation/new corrective version if the
 new package version was already published. Never overwrite an npm version or
 coerce stored receipts into another contract.
