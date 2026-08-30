@@ -1,6 +1,6 @@
 # progress — 27-pi-agentic-workflow
 
-Last reviewed: 2026-08-29 (P3)
+Last reviewed: 2026-08-29 (P4)
 
 ## Acceptance receipt v1
 - Manifest: docs/features/27-pi-agentic-workflow/ACCEPTANCE.md · Blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f · Status: frozen · Verified: 2026-08-29
@@ -55,3 +55,16 @@ Last reviewed: 2026-08-29 (P3)
 - Gotchas: Pi's `model_select` fires for our own `setModel` as well as the operator's — `source` is `"set"` either way, so the only reliable discriminator is comparing the event's model with the one the turn applied; selecting a model can move the thinking level inside Pi, so the snapshot thinking level must be restored *after* the model or AC8 cannot hold; `ctx.modelRegistry` and `ctx.ui.notify` live on the invocation context, not on `pi`, which is why the router resolves its surface per call instead of holding one.
 - Files: `packages/pi-agentic-workflow/{src/routing/*.ts,src/extension/factory.ts,src/extension/index.ts,src/config/schema.ts,test/alias-coverage.test.mjs,test/argument-forwarding.test.mjs,test/dispatch-refusals.test.mjs,test/restore-after-settle.test.mjs,test/unavailable-stop.test.mjs,test/first-run-hint.test.mjs,test/helpers/session.mjs,test/default-inherit.test.mjs}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,decisions.md}`
 - Next: P4 — Agentic-workflow settings console
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && node --test test/settings-console.test.mjs` (exit 0, 18 tests) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Full unit gate at the same revision: `npm test` → exit 0, 93 pass / 0 fail. AC1 parity suite re-run → exit 0 (7). `npm pack --dry-run` ships `dist/settings/{console,store,view}.js`.
+- Mutation check on the console's safety rules: 4 mutants (untrusted-scope refusal removed, unparseable-file refusal removed, inherit-only routes written to disk, edits treated as clean on cancel) → 4 killed.
+- Next: P5 · Attempts: 1
+
+## P4 — 2026-08-29
+- Done: the settings console — `src/settings/view.ts` (the merged view: default route, each override, the effective fallback policy, and any config problem that is not in effect), `src/settings/console.ts` (scope → edit → save state machine, with `prompts` as the single source of the question text), `src/settings/store.ts` (the 0600 writer that creates `.pi/`). The P3 read-only view is gone; the entry now wires `ctx.ui` and the live registry into the console, and a console that throws is reported instead of rejecting the command handler. `InvocationContext` gained `ui` and `availableModels()` because the console — and only the console — asks questions.
+- Remains: P5 bilingual READMEs · P6 hardening & PR.
+- Gotchas: the console edits ONE file but must SHOW the merge, or an operator "clears an override" that a lower scope still supplies; a scope whose file does not parse is refused rather than reformatted, because overwriting it would destroy the evidence of the typo; Pi's `select` resolves `undefined` on cancel, so every question treats `undefined` as "leave this alone".
+- Files: `packages/pi-agentic-workflow/{src/settings/*.ts,src/extension/factory.ts,src/extension/index.ts,src/routing/types.ts,src/config/load.ts,test/settings-console.test.mjs}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,decisions.md}`
+- Next: P5 — Bilingual user documentation

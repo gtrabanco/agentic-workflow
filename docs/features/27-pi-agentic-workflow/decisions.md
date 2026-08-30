@@ -201,3 +201,32 @@ risks (Pi API drift, skill drift) are pinned by peerDependency + parity test.
   import the other would have put `dist/` on the AC2 validator's critical path.
   The duplication is instead closed by an assertion in `alias-coverage` that
   compares both verdicts across the whole real skill tree.
+
+## 2026-08-29 — execution (P4)
+
+- **The console edits one scope at a time and always shows the merge.** Offering
+  "clear the override" against the merged view would let a project value survive
+  a global edit, and the operator would conclude the tool lied. So the first
+  question is *which file*, the draft is that file's parsed content, and the
+  merged view is context, not the thing being edited.
+- **A scope whose file does not parse cannot be opened for editing.** The
+  tempting behaviour is to start from `{}` and save a clean file over it; that
+  deletes the operator's typo, which is the only evidence of what went wrong
+  (D-P6 keeps invalid config visible for exactly this reason). The console names
+  the field path and refuses until it is fixed.
+- **Nothing is written that the loader would not accept.** The draft is
+  serialised and pushed through `parseConfigFile` before the save confirmation,
+  so the console and the dispatcher cannot disagree about validity — one
+  validator, no second opinion (P2).
+- **`inherit`-only routes and the shipped policy are not written at all.** A file
+  that says what the defaults already say is noise that outlives its reason, and
+  it makes the project file shadow the global one in ways the operator did not
+  choose.
+- **The interactive surface joined `InvocationContext` as `ui` +
+  `availableModels()`.** Routing never asks a question, so P3's view had no need
+  for them; the console does, and Pi's own `ctx.ui` / `ctx.modelRegistry.getAll()`
+  satisfy the structural types unchanged. This is the package's only question-
+  asking code path.
+- **A failing console is reported, not thrown.** The handler catches and notifies
+  (e.g. `EACCES` on a read-only home directory); a rejected command handler would
+  take the session down for a convenience feature.
