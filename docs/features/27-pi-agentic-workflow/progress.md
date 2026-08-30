@@ -57,7 +57,7 @@ Last reviewed: 2026-08-29 (P4)
 - Next: P4 — Agentic-workflow settings console
 
 ## Unit-loop receipt — P4
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && node --test test/settings-console.test.mjs` (exit 0, 18 tests) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Commit: `288995c` feat(27-pi-agentic-workflow): settings console that edits one scope and shows the merge (P4) · Gate: `cd packages/pi-agentic-workflow && node --test test/settings-console.test.mjs` (exit 0, 18 tests) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
 - Full unit gate at the same revision: `npm test` → exit 0, 93 pass / 0 fail. AC1 parity suite re-run → exit 0 (7). `npm pack --dry-run` ships `dist/settings/{console,store,view}.js`.
 - Mutation check on the console's safety rules: 4 mutants (untrusted-scope refusal removed, unparseable-file refusal removed, inherit-only routes written to disk, edits treated as clean on cancel) → 4 killed.
 - Next: P5 · Attempts: 1
