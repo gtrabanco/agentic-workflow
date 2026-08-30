@@ -445,3 +445,75 @@ function take(answer, title) {
   if (value === undefined) throw new Error(`no scripted answer for: ${title}`);
   return Array.isArray(value) ? value.shift() : value;
 }
+
+// --- F4 fold: an explicit choice must survive the save. `clean()` used to elide
+// by VALUE (inherit-only routes, the "stop" policy), which silently discarded
+// exactly the overrides an operator picks to shadow a lower scope — including
+// re-arming the fail-closed policy from a project file. Proven by probe before
+// the fix: saving `stop` at project scope over a global `inherit` wrote "{}" and
+// the effective policy stayed `inherit`.
+
+test("AC10: an explicit inherit override is written, because it shadows a lower scope", async () => {
+  const { outcome, written } = await run(
+    {
+      [paths.global]: '{"default":{"model":"openai/gpt-5.2","thinking":"high"}}',
+      [paths.project]: "{}",
+    },
+    {
+      answers: {
+        [prompts.scope]: "Project",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "design-feature",
+        [prompts.model("design-feature")]: "inherit",
+        [prompts.thinking("design-feature")]: "inherit",
+        [prompts.saveTo(paths.project)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.project)), {
+    commands: { "design-feature": { model: "inherit", thinking: "inherit" } },
+  });
+  const loaded = loadConfig({ agentDir, cwd, projectTrusted: true, readFile: readFrom({ ...globalOnly(), [paths.project]: written.get(paths.project) }) });
+  assert.deepEqual(loaded.config.commands["design-feature"], { model: "inherit", thinking: "inherit" }, "the override is what takes effect");
+});
+
+test("AC10: re-arming the fail-closed policy from the project file is written", async () => {
+  const { outcome, written } = await run(
+    { [paths.global]: '{"onUnavailableRoute":"inherit"}', [paths.project]: "{}" },
+    {
+      answers: {
+        [prompts.scope]: "Project",
+        [prompts.menu]: [prompts.policy, prompts.save, prompts.cancel],
+        [prompts.policyChoice]: "stop",
+        [prompts.saveTo(paths.project)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.project)), { onUnavailableRoute: "stop" });
+  const loaded = loadConfig({ agentDir, cwd, projectTrusted: true, readFile: readFrom({ ...globalOnly(), [paths.project]: written.get(paths.project) }) });
+  assert.equal(loaded.config.onUnavailableRoute, "stop", "fail-closed is back in force");
+});
+
+test("AC10: saving a draft nobody edited reproduces the file instead of emptying it", async () => {
+  const existing = '{"default":{"model":"openai/gpt-5.2","thinking":"inherit"},"commands":{"plan-feature":{"model":"inherit","thinking":"low"}}}';
+  const { written } = await run(
+    { [paths.global]: existing },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.save, prompts.cancel],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.deepEqual(JSON.parse(written.get(paths.global)), JSON.parse(existing), "a save never loses what it did not change");
+});
+
+function globalOnly() {
+  return { [paths.global]: '{"default":{"model":"openai/gpt-5.2","thinking":"high"}}' };
+}

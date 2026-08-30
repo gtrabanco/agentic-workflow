@@ -1,8 +1,16 @@
 // Shared session double for the routing suites.
 //
-// It mirrors the Pi behaviour the router depends on — most importantly that
-// `setModel` fires a `model_select` for OUR OWN switch too, which is what makes
-// the "never restore over the operator's choice" guard (D-P14) non-trivial.
+// It mirrors the Pi behaviour the router depends on, and only this package's
+// tests use it:
+//  - `setModel` fires `model_select` for OUR OWN switch too, and
+//  - `setModel` RE-DERIVES the thinking level and applies it before returning
+//    (`agent-session.js`: `const thinkingLevel = this._getThinkingLevelForModelSwitch(model)`
+//    … `this.setThinkingLevel(thinkingLevel)`), per-model override first, then
+//    the global default, then the level the session already had;
+//  - setting the level the session already has is a no-op that fires nothing.
+// The second rule is why "restore the model" is not enough for AC8: switching a
+// model moves thinking, so a route that only names a model still has to put the
+// operator's level back. A double without it hid exactly that bug.
 // Model availability is scripted per reference.
 
 import { createRouter } from "../../dist/routing/dispatch.js";
@@ -13,6 +21,8 @@ export const modelRef = (reference) => {
   const slash = reference.indexOf("/");
   return { provider: reference.slice(0, slash), id: reference.slice(slash + 1) };
 };
+
+export const refKey = (model) => `${model.provider}/${model.id}`;
 
 export function routePair({ model = "inherit", thinking = "inherit" } = {}) {
   return { model, thinking };
@@ -38,6 +48,10 @@ export function createSession(options = {}) {
     idle = true,
     cwd = "/fixture/repo",
     selectFails = false,
+    /** Pi's per-model thinking overrides, keyed by `provider/modelId`. */
+    modelThinking = {},
+    /** Pi's global default thinking level, consulted on every model switch. */
+    defaultThinking,
   } = options;
 
   const state = {
@@ -54,41 +68,45 @@ export function createSession(options = {}) {
   // the catalogue too, otherwise a restore could never succeed.
   const catalog = new Map(Object.entries(models).map(([ref, entry]) => [ref, entry === true ? { auth: true } : entry]));
   if (initialModel && !catalog.has(initialModel)) catalog.set(initialModel, { auth: true });
-  const modelAt = (reference) => modelRef(reference);
   const entryFor = (reference) => catalog.get(reference);
 
-  function emitModelSelect(ref) {
-    // Pi fires the event for every actual change, ours included.
-    router.noteModelSelect(ref);
-  }
+  const derivedThinkingFor = (reference) => modelThinking[reference] ?? defaultThinking ?? state.thinking;
 
-  const surface = () => ({
+  const api = {
     sendUserMessage: (content, opts) => {
       log.sendUserMessage.push({ content, opts });
       log.sequence.push(`sendUserMessage:${content}`);
       // The turn the skill starts is what later settles.
       state.idle = false;
     },
-    setModel: async (model) => {
-      const reference = `${model.provider}/${model.id}`;
+
+    async setModel(model) {
+      const reference = refKey(model);
       log.setModel.push(reference);
       log.sequence.push(`setModel:${reference}`);
       const entry = entryFor(reference);
       if (!entry || entry.auth === false || selectFails) return false;
+
       const previous = state.model;
-      state.model = modelAt(reference);
-      if (!previous || previous.provider !== model.provider || previous.id !== model.id) emitModelSelect(state.model);
+      state.model = modelRef(reference);
+      if (!previous || refKey(previous) !== reference) {
+        router.noteModelSelect(state.model);
+        api.setThinkingLevel(derivedThinkingFor(reference));
+      }
       return true;
     },
+
     getThinkingLevel: () => state.thinking,
-    setThinkingLevel: (level) => {
+
+    setThinkingLevel(level) {
+      const previous = state.thinking;
+      if (previous === level) return;
       log.setThinkingLevel.push(level);
       log.sequence.push(`setThinkingLevel:${level}`);
-      const previous = state.thinking;
       state.thinking = level;
-      if (previous !== level) router.noteThinkingLevelSelect(level);
+      router.noteThinkingLevelSelect(level);
     },
-  });
+  };
 
   const toContext = () => ({
     cwd,
@@ -99,11 +117,13 @@ export function createSession(options = {}) {
     isProjectTrusted: () => state.trusted,
     notify: (message, kind) => log.notify.push({ message, kind }),
     find: (provider, modelId) => (catalog.has(`${provider}/${modelId}`) ? { provider, id: modelId } : undefined),
-    hasConfiguredAuth: (model) => entryFor(`${model.provider}/${model.id}`)?.auth !== false,
+    hasConfiguredAuth: (model) => entryFor(refKey(model))?.auth !== false,
+    ui: { notify: (message, kind) => log.notify.push({ message, kind }) },
+    availableModels: () => [...catalog.keys()].map(modelRef),
   });
 
   const router = createRouter({
-    surface,
+    surface: () => api,
     loadConfig: options.loadConfig ?? (() => ({ ok, config, problems })),
     hint: options.hint ?? { pending: () => false, acknowledge: () => true },
     settingsCommand: SETTINGS_COMMAND,
@@ -118,17 +138,16 @@ export function createSession(options = {}) {
     /** Simulate the operator changing the model mid-turn (`/model`, Ctrl+P). */
     operatorSelectsModel(reference) {
       const ref = typeof reference === "string" ? modelRef(reference) : reference;
-      const key = `${ref.provider}/${ref.id}`;
+      const key = refKey(ref);
       if (!catalog.has(key)) catalog.set(key, { auth: true });
       const previous = state.model;
-      state.model = modelAt(key);
-      if (!previous || previous.provider !== ref.provider || previous.id !== ref.id) router.noteModelSelect(state.model);
+      state.model = modelRef(key);
+      if (!previous || refKey(previous) !== key) router.noteModelSelect(state.model);
       return state.model;
     },
     operatorSelectsThinkingLevel(level) {
-      const previous = state.thinking;
-      state.thinking = level;
-      if (previous !== level) router.noteThinkingLevelSelect(level);
+      api.setThinkingLevel(level);
+      return state.thinking;
     },
     /** Pi `agent_settled`: the routed turn is over; the session is idle again. */
     async settle() {
@@ -143,4 +162,10 @@ export function createSession(options = {}) {
   };
 }
 
+/**
+ * A routed command. Pi expands `/skill:<x>` by matching the skill's frontmatter
+ * `name:` (`agent-session.js` `_expandSkillCommand` → `skills.find((s) => s.name === skillName)`)
+ * and passes an unknown key through as literal text, so the dispatch key is the
+ * NAME. `skill` is the bundled directory and must never be what goes on the wire.
+ */
 export const command = (name = "plan-feature", skill = name) => ({ name, skill });
