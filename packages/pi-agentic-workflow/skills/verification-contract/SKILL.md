@@ -1,0 +1,77 @@
+---
+name: verification-contract
+user-invocable: false
+version: 1.0.1
+author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+license: MIT
+description: >
+  Internal contract: one compact frozen ACCEPTANCE.md per delivery unit, its
+  validation ladder, anti-weakening rules, and blob-bound execution receipt.
+  Consumed by planners, execute-phase, review-change, and loop-review-fold.
+---
+
+# Verification Contract (internal)
+
+Single owner of the delivery finish line. Planning freezes it; executors may
+strengthen coverage but cannot move it; review checks the same bytes.
+
+## Artifact
+
+Every new feature/fix carries `ACCEPTANCE.md` beside its SPEC. Copy the matching
+repository template. Required parts: `Status: frozen`; one stable ID per SPEC
+criterion; `Required outcome`; named `Validator`; literal quality floor; project
+commands. Prefer commands, otherwise use `read-verified: <evidence>` or
+`manual: <exact observation>`. Unlabelled prose is invalid. A planned test may
+name its future project runner; it cannot substitute a narrower runner later.
+
+## Freeze and receipt
+
+At first execution run `git hash-object <unit>/ACCEPTANCE.md` and append to the
+unit progress file:
+
+```text
+## Acceptance receipt v1
+- Manifest: <path> · Blob: <sha> · Status: frozen · Verified: <date>
+```
+
+Before every phase and final review, recompute it. Exact match continues;
+missing/mismatched evidence stops before edits:
+
+```text
+ACCEPTANCE GATE — <unit> BLOCKED
+Expected blob: <sha|missing> · Actual: <sha|missing>
+Reason: the frozen finish line is missing or changed.
+
+→ Next: restore the frozen manifest, or obtain explicit user approval for a
+  SPEC amendment and replacement manifest; then write a fresh receipt
+  · never edit tests, commands, or acceptance to make the current candidate pass
+```
+
+A legitimate change requires, in order: explicit user approval; dated SPEC
+`## Amendments` row; replacement manifest; committed fresh receipt. The
+executor never self-authorizes it.
+
+Legacy unit with no manifest mention: fingerprint committed `SPEC.md` and record
+`Manifest: legacy SPEC.md`. A new plan or any plan naming the manifest fails
+closed when it is missing.
+
+## Validation ladder
+
+Evaluate every row plus the normal project gate:
+
+- `PASS`: commands green; read evidence present; manual checks named.
+- `FAIL`: validator disproves the candidate; include compact failure evidence.
+- `NEEDS-DECISION`: missing product/architecture choice.
+- `BLOCKED`: command/input/environment unavailable; name it.
+
+## Anti-gaming rules
+
+Forbidden: deleting, skipping, narrowing, or loosening a validator; suppression,
+stub, hard-coded answer, or no-op fix used to manufacture green. A command cannot
+prove an untested read/manual row. Stronger regression tests are allowed. Repair
+test setup only when assertions stay at least as strong and the reason is logged.
+
+## Done when
+
+Frozen manifest + current blob receipt + named validators + literal quality
+floor; executor and reviewer evaluate identical bytes.
