@@ -1,11 +1,16 @@
 // P13 / AC7 · AC9 · AC10 — qualification tooling registration and F70 lock sync.
+//
+// F70 originally asserted that the npm package-lock.json and bun.lock agreed
+// with the manifest (dual-lock sync). On 2026-08-30 the repo went bun-only:
+// bun.lock is the sole lockfile (CLAUDE.md → Packages; pinned by
+// lockfile-policy.test.mjs), so the sync assertions now compare the one lock
+// against the manifest instead of the two locks against each other.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const manifest = JSON.parse(read("../package.json"));
-const npmLock = JSON.parse(read("../package-lock.json"));
 const bunLockText = read("../bun.lock");
 const benchSource = read("../scripts/bench-verification.mjs");
 
@@ -63,21 +68,14 @@ test("the package declares no unused Node typings (F70)", () => {
   assert.equal(manifest.devDependencies["@types/node"], undefined, "@types/node must not be a dependency");
   const tsconfig = JSON.parse(read("../tsconfig.json").replace(/\/\/.*$/gm, ""));
   assert.equal(tsconfig.compilerOptions.types, undefined, 'tsconfig must not pin "types": ["node"]');
-  assert.equal("node_modules/@types/node" in npmLock.packages, false, "the npm lock must not resolve @types/node");
   assert.ok(!bunLockText.includes("@types/node"), "the Bun lock must not resolve @types/node");
 });
 
-test("npm and Bun locks agree with the manifest dependency ranges", () => {
+test("the Bun lock agrees with the manifest dependency ranges", () => {
   const declared = manifest.devDependencies;
-  assert.deepEqual(npmLock.packages[""].devDependencies, declared, "npm lock root drifts from package.json");
   // bun.lock is JSONC (trailing commas): compare the workspace block it declares.
   const bun = JSON.parse(bunLockText.replace(/,(\s*[}\]])/g, "$1"));
   assert.deepEqual(bun.workspaces[""].devDependencies, declared, "Bun lock drifts from package.json");
-  assert.deepEqual(
-    Object.keys(npmLock.packages[""].devDependencies).sort(),
-    Object.keys(bun.workspaces[""].devDependencies).sort(),
-    "the two locks resolved different dependency sets",
-  );
 });
 
 // ---------------------------------------------------------------------------
@@ -116,8 +114,6 @@ test("files and exports agree on the shipped schema documents", () => {
 
 test("the package version matches the AC7 release contract", () => {
   assert.equal(manifest.version, "3.4.0");
-  assert.equal(npmLock.version, "3.4.0");
-  assert.equal(npmLock.packages[""].version, "3.4.0");
 });
 
 // ---------------------------------------------------------------------------
