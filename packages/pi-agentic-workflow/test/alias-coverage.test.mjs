@@ -378,3 +378,22 @@ test("AC2/AC3: both scanners stop reading at the closing frontmatter fence", () 
   assert.equal(bundler.name, "alpha");
   assert.equal(bundler.userInvocable, true);
 });
+
+test("AC2/AC3: a non-`true` `user-invocable` value is not consent either", () => {
+  // The F8 mutant's other arm: the key present with `yes`/`TRUE` must not count.
+  // Absence is pinned elsewhere; this pins the value comparison.
+  const text = "---\nname: eager-helper\nuser-invocable: yes\n---\n\nBody.\n";
+  assert.equal(readSkillMeta(text, "eager-helper").userInvocable, false, "only `true` grants a command");
+  assert.equal(parseSkillFrontmatter(text).userInvocable, false, "the bundler agrees");
+
+  const root = mkdtempSync(join(tmpdir(), "paw-alias-nontrue-"));
+  try {
+    const skillsDir = join(root, "skills");
+    mkdirSync(join(skillsDir, "eager-helper"), { recursive: true });
+    writeFileSync(join(skillsDir, "eager-helper", "SKILL.md"), text);
+    const { registered } = extensionOver(skillsDir);
+    assert.equal(registered.has("eager-helper"), false, "`yes` gets no command");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

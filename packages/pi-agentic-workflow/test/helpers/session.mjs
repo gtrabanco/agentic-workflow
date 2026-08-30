@@ -51,6 +51,9 @@ export function createSession(options = {}) {
     selectFails = false,
     /** The routed turn cannot be started: `sendUserMessage` throws, like Pi's `prompt()` does. */
     sendThrows = false,
+    /** After the turn has been sent, `setModel` throws — the restore leg. Settles and
+     *  undos must not leave a stale latch behind a failed restore. */
+    restoreThrows = false,
     /** Pi's per-model thinking overrides, keyed by `provider/modelId`. */
     modelThinking = {},
     /** Pi's global default thinking level, consulted on every model switch. */
@@ -64,6 +67,7 @@ export function createSession(options = {}) {
     supportedThinking = {},
   } = options;
 
+  let sent = false;
   const state = {
     model: initialModel ? modelRef(initialModel) : undefined,
     thinking: initialThinking,
@@ -98,6 +102,7 @@ export function createSession(options = {}) {
   const api = {
     sendUserMessage: (content, opts) => {
       if (sendThrows) throw new Error("send failed: compaction in progress");
+      sent = true;
       log.sendUserMessage.push({ content, opts });
       log.sequence.push(`sendUserMessage:${content}`);
       // The turn the skill starts is what later settles.
@@ -105,6 +110,7 @@ export function createSession(options = {}) {
     },
 
     async setModel(model) {
+      if (restoreThrows && sent) throw new Error("restore failed: session gone");
       const reference = refKey(model);
       log.setModel.push(reference);
       log.sequence.push(`setModel:${reference}`);

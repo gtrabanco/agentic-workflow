@@ -130,7 +130,7 @@ touch the project file while the project is untrusted.
 | `refused: invalid configuration` | A config file was rejected. The same message names the field, e.g. `$.commands.plan-feature.model`. Run `/agentic-workflow-settings` to see the file, or fix the JSON. |
 | `stopped: the configured model` … `is not in the model registry` | The reference is wrong or the provider is not configured. Use `/model` to see the exact `provider/modelId`. |
 | `has no configured credentials` | The model exists but you cannot use it yet. Authenticate, or set `onUnavailableRoute` to `inherit`. |
-| `could not be selected` | Pi refused the switch. The command stops with the reason; nothing was dispatched. |
+| `could not be selected` | Pi refused the switch. The command stops with the reason — unless `onUnavailableRoute` is `inherit`, in which case it warns and runs on your current model. |
 | `refused: the agent is busy` | A turn is running. Wait for it to settle. |
 | `is still routed` | The previous routed command has not settled yet. |
 | `leaving the model you chose in place` | You changed the model during a routed turn, so nothing was restored — your choice won. |

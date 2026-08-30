@@ -629,3 +629,27 @@ test("AC10: with nothing in flight the console does not offer an undo", async ()
   assert.ok(menu, "the menu was reached");
   assert.ok(!menu.options.includes(prompts.undoInFlight), "an option that can do nothing is noise");
 });
+
+test("AC10: a failed undo is told to the operator, not papered over", async () => {
+  // The console calls the router; the router can say no (race: the turn settled
+  // between the menu and the click). Printing "put back" anyway would lie.
+  const scripted = scriptedUi({
+    [prompts.scope]: "the global file (~)",
+    [prompts.menu]: [prompts.undoInFlight, prompts.cancel],
+    [prompts.discard]: false,
+  });
+  await runSettingsConsole({
+    ui: scripted.ui,
+    agentDir: "/fixture/agent",
+    cwd: "/fixture/repo",
+    projectTrusted: true,
+    commands: ["plan-feature"],
+    routing: { inFlight: () => true, undoInFlight: async () => false },
+    readFile: () => null,
+    writeFile: () => {},
+  });
+  assert.ok(
+    scripted.notify.some(({ message, kind }) => /Nothing was in flight/i.test(message) && kind === "warning"),
+    `the refusal is shown: ${JSON.stringify(scripted.notify)}`,
+  );
+});
