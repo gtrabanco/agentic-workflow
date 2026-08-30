@@ -1,6 +1,6 @@
 # progress — 27-pi-agentic-workflow
 
-Last reviewed: 2026-08-29 (P4)
+Last reviewed: 2026-08-29 (P5)
 
 ## Acceptance receipt v1
 - Manifest: docs/features/27-pi-agentic-workflow/ACCEPTANCE.md · Blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f · Status: frozen · Verified: 2026-08-29
@@ -68,3 +68,15 @@ Last reviewed: 2026-08-29 (P4)
 - Gotchas: the console edits ONE file but must SHOW the merge, or an operator "clears an override" that a lower scope still supplies; a scope whose file does not parse is refused rather than reformatted, because overwriting it would destroy the evidence of the typo; Pi's `select` resolves `undefined` on cancel, so every question treats `undefined` as "leave this alone".
 - Files: `packages/pi-agentic-workflow/{src/settings/*.ts,src/extension/factory.ts,src/extension/index.ts,src/routing/types.ts,src/config/load.ts,test/settings-console.test.mjs}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,decisions.md}`
 - Next: P5 — Bilingual user documentation
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: `grep -c "pi install" packages/pi-agentic-workflow/README.md` → 2, same for `README.es.md` → 2; `grep -c "Versión en español" README.md` → 1; `grep -c "English version" README.es.md` → 1 (AC15, all four satisfied) · Acceptance blob: 22d3f3394a9ab0e0c0bd3596767ebeb3e502a44f
+- Full unit gate at the same revision: `npm test` → exit 0, 94 pass / 0 fail (AC15 README↔catalogue guard added to `test/alias-coverage.test.mjs`).
+- Next: P6 · Attempts: 1
+
+## P5 — 2026-08-29
+- Done: `packages/pi-agentic-workflow/README.md` + `README.es.md` — install and its one gotcha (delete the hand-copied skills), the 18-command table with the rule that generates it, both config paths with when each is read, the precedence chain, `inherit` as the shipped default, fail-closed `stop` with the `inherit` opt-out, the temporary nature of routing, the console's two refusals, and a troubleshooting table keyed to the exact strings the code emits.
+- Remains: P6 hardening & PR.
+- Gotchas: the docs claim "the list is read from the skills at startup", so an AC15 assertion now parses both READMEs' command tables and compares them with the live catalogue — a renamed skill fails a test instead of leaving a stale table in two languages; AC16 confines this branch to the package and the feature folder, so the **root** README deliberately does not advertise the Pi package (that would be a separate unit).
+- Files: `packages/pi-agentic-workflow/{README.md,README.es.md,test/alias-coverage.test.mjs}`, `docs/features/27-pi-agentic-workflow/{TASKS.md,progress.md,testing.md,decisions.md}`
+- Next: P6 — Hardening & PR

@@ -101,3 +101,6 @@ command, not fabricated into green.
 | 2026-08-29 | P4 | 4-mutant mutation matrix (see above) | 4 killed / 0 survived |
 | 2026-08-29 | P4 | `npm test` (compile + full suite) | exit 0 — 93 pass / 0 fail |
 | 2026-08-29 | P4 | `node --test test/skill-parity.test.mjs` (AC1 manifest) + `npm pack --dry-run` | exit 0; `dist/settings/*.js` included |
+| 2026-08-29 | P5 | AC15 gate: `grep -c "pi install"` in each README, `grep -c "Versión en español"` in `README.md`, `grep -c "English version"` in `README.es.md` | 2 / 2 / 1 / 1 — all ≥1 |
+| 2026-08-29 | P5 | README command table ↔ live catalogue, section count and JSON example across both languages (`test/alias-coverage.test.mjs`) | exit 0 — 9 pass / 0 fail |
+| 2026-08-29 | P5 | `npm test` (compile + full suite) | exit 0 — 94 pass / 0 fail |
