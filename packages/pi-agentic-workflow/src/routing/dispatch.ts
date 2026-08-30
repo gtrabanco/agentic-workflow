@@ -71,7 +71,44 @@ export interface Router<M extends ModelRef = ModelRef> {
   noteThinkingLevelSelect(level: ThinkingLevel): void;
   /** Pi `agent_settled` — restores whatever this turn still owns. */
   settle(ctx: InvocationContext<M>): Promise<void>;
+  /** True while a routed turn owns the session. The console shows and clears it. */
   inFlight(): boolean;
+  /**
+   * Undo a routed turn the operator can see will never settle, putting the session
+   * back exactly as `settle()` would. Returns false when nothing was in flight.
+   */
+  undoInFlight(ctx: InvocationContext<M>): Promise<boolean>;
+}
+
+/**
+ * Put a routed turn's session back (AC8). Shared by `settle()` and the console's
+ * release so the two can never disagree about what "restore" means; `why` is only
+ * the operator's word for what happened to the turn.
+ */
+async function restore<M extends ModelRef>(
+  turn: PendingTurn<M>,
+  session: ExtensionSurface<M>,
+  ctx: InvocationContext<M>,
+  why: string,
+): Promise<void> {
+  if (turn.userChangedModel) {
+    if (turn.applied.model || turn.applied.thinking) {
+      ctx.notify(`/${turn.command}: ${why}; leaving the model you chose in place.`, "info");
+    }
+    return;
+  }
+  const touched = Boolean(turn.applied.model || turn.applied.thinking);
+  if (turn.applied.model) {
+    if (turn.snapshot.model) await session.setModel(turn.snapshot.model);
+    else ctx.notify(`/${turn.command} switched a session that had no model; nothing to restore.`, "warning");
+  }
+  if (!touched) return;
+  // Thinking last, and always: selecting a model re-derives the level inside Pi, so
+  // restoring the model alone leaves a model-only route with the operator's level
+  // moved (AC8 asks for the session to equal its start). An operator who moved the
+  // level themselves keeps it — including over the model restore's side effect.
+  const wanted = turn.userChangedThinking && turn.operatorThinking ? turn.operatorThinking : turn.snapshot.thinking;
+  if (session.getThinkingLevel() !== wanted) session.setThinkingLevel(wanted);
 }
 
 export function createRouter<M extends ModelRef = ModelRef>({
@@ -94,8 +131,6 @@ export function createRouter<M extends ModelRef = ModelRef>({
   const configureHint = `Configure routes with /${settingsCommand} or the pi-agentic-workflow.json files.`;
 
   return {
-    inFlight: () => pending !== undefined,
-
     noteModelSelect(model: M): void {
       if (!pending) return;
       const applied = pending.applied.model;
@@ -116,42 +151,37 @@ export function createRouter<M extends ModelRef = ModelRef>({
       pending.operatorThinking = level;
     },
 
+    inFlight: () => pending !== undefined,
+
+    async undoInFlight(ctx): Promise<boolean> {
+      const turn = pending;
+      if (!turn) return false;
+      pending = undefined;
+      await restore(turn, surface(ctx), ctx, `undo: nothing was dispatched by /${turn.command}`);
+      return true;
+    },
+
     async settle(ctx): Promise<void> {
       const turn = pending;
       if (!turn) return;
-      // Cleared first: the restore below fires its own select events, and a turn
-      // that is already over must not read them as operator changes.
+      // Cleared first: the restore fires its own select events, and a turn that is
+      // already over must not read them as operator changes.
       pending = undefined;
-      const session = surface(ctx);
-
-      if (turn.userChangedModel) {
-        if (turn.applied.model || turn.applied.thinking) {
-          ctx.notify(`/${turn.command} finished; leaving the model you chose in place.`, "info");
-        }
-        return;
-      }
-      const touched = Boolean(turn.applied.model || turn.applied.thinking);
-      if (turn.applied.model) {
-        if (turn.snapshot.model) await session.setModel(turn.snapshot.model);
-        else ctx.notify(`/${turn.command} switched a session that had no model; nothing to restore.`, "warning");
-      }
-      // Thinking last, and always: selecting a model re-derives the level inside
-      // Pi, so restoring the model alone leaves a model-only route with the
-      // operator's level moved (AC8 asks for the session to equal its start).
-      // An operator who moved the level themselves keeps it — including over the
-      // model restore's side effect.
-      if (touched) {
-        const wanted = turn.userChangedThinking && turn.operatorThinking ? turn.operatorThinking : turn.snapshot.thinking;
-        if (session.getThinkingLevel() !== wanted) session.setThinkingLevel(wanted);
-      }
+      await restore(turn, surface(ctx), ctx, "finished");
     },
 
     async dispatch(command: WorkflowCommand, args: string, ctx): Promise<DispatchOutcome> {
       if (pending) {
+        // Refuse even when `ctx.isIdle()` reads true: idleness says the agent loop
+        // is quiet, not that the routed turn is over, and guessing here is how a
+        // session gets restored mid-turn. Pi starts a routed turn inside an action
+        // that swallows failures and `prompt()` can throw before the loop runs, so a
+        // latch with no turn behind it is real — and the operator releases it through
+        // the console (`undoInFlight`), which is why the refusal points there (N-4).
         return refuse(
           ctx,
           "routed-turn-in-flight",
-          `/${command.name} refused: /${pending.command} is still routed. Wait for it to settle before running /${command.name}.`,
+          `/${command.name} refused: /${pending.command} is still routed. Wait for it to settle, or undo it with /${settingsCommand}.`,
         );
       }
       if (!ctx.isIdle()) {
@@ -241,7 +271,12 @@ export function createRouter<M extends ModelRef = ModelRef>({
       }
       if (route.thinking !== "inherit") {
         session.setThinkingLevel(route.thinking);
-        applied.thinking = route.thinking;
+        // The *effective* level, never the requested one: Pi clamps a level the model
+        // cannot run (`_modelSupportsThinking` → `clampThinkingLevel`) and announces
+        // that one a microtask later. Bookkeeping the request made our own clamped
+        // write read as an operator move, so the restore preserved the clamp instead
+        // of the operator's level (N-3).
+        applied.thinking = session.getThinkingLevel() ?? route.thinking;
       }
 
       let hintShown = false;
