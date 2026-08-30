@@ -339,3 +339,42 @@ test("AC2/AC3: a skill that omits `user-invocable` is internal to both scanners"
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("AC3: a duplicated name is reported, and the second skill is not a callable shadow", () => {
+  // M-AB: the report alone is not the fix — if the duplicate still reached the
+  // registrar it would silently take over the command for whoever registered last.
+  // `commands` is what the factory registers from, so that is where the exclusion
+  // must be pinned.
+  const root = mkdtempSync(join(tmpdir(), "paw-alias-duplicate-"));
+  try {
+    const skillsDir = join(root, "skills");
+    for (const dir of ["alpha", "beta"]) {
+      mkdirSync(join(skillsDir, dir), { recursive: true });
+      writeFileSync(join(skillsDir, dir, "SKILL.md"), skillFile("alpha"));
+    }
+    const { commands, issues } = readCatalogue(skillsDir);
+    assert.deepEqual(commands.map((command) => command.skill), ["alpha"], "only the first owner is callable");
+    assert.ok(issues.some((issue) => issue.dir === "beta" && /already claimed by alpha/u.test(issue.message)),
+      `the clash is on the record: ${JSON.stringify(issues)}`);
+
+    const { registered } = extensionOver(skillsDir);
+    registered.get("alpha").handler("", { cwd: "/", isIdle: () => true, isProjectTrusted: () => true, notify: () => {} });
+    // Two skills cannot share a command: `beta` must not appear anywhere callable.
+    assert.equal([...registered.keys()].filter((name) => name === "alpha").length, 1);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC2/AC3: both scanners stop reading at the closing frontmatter fence", () => {
+  // M-AC: a body line that looks like frontmatter must not override the metadata —
+  // a skill whose prose contains `user-invocable: false` must not lose its command.
+  const tricky =
+    "---\nname: alpha\nuser-invocable: true\n---\n\nname: beta\nuser-invocable: false\ndescription: prose, not metadata.\n";
+  const runtime = readSkillMeta(tricky, "alpha");
+  const bundler = parseSkillFrontmatter(tricky);
+  assert.equal(runtime.name, "alpha", "the body's `name:` line was not metadata");
+  assert.equal(runtime.userInvocable, true, "the body's `user-invocable: false` was not metadata");
+  assert.equal(bundler.name, "alpha");
+  assert.equal(bundler.userInvocable, true);
+});

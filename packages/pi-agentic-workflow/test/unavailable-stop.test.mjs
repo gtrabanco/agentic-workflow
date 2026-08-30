@@ -112,3 +112,27 @@ test("AC9: a thinking-only route is not an availability problem", async () => {
   assert.deepEqual(session.log.setModel, []);
   assert.deepEqual(session.log.setThinkingLevel, ["high"]);
 });
+
+test("AC9: a failed selection under the inherit policy dispatches on the session model", async () => {
+  // The blocker paths (`not in registry`, `no credentials`) and the select path
+  // meet different branches; only the select path has its own inherit notify.
+  const session = createSession({
+    config: configFor({
+      commands: { "review-change": { model: "anthropic/claude-opus-4-5" } },
+      onUnavailableRoute: "inherit",
+    }),
+    models: { "anthropic/claude-opus-4-5": { auth: true } },
+    initialModel: "openai/gpt-5.2",
+    selectFails: true,
+  });
+
+  const outcome = await session.dispatch(COMMAND, "x");
+  assert.equal(outcome.status, "dispatched", "inherit means the command still runs");
+  assert.equal(outcome.routed, false, "nothing was applied, so nothing needs restoring");
+  assert.deepEqual(session.log.sendUserMessage.map((entry) => entry.content), ["/skill:review-change x"]);
+  assert.ok(
+    session.notifications().some((message) => /could not be selected, so it runs on the current session model/u.test(message)),
+    `the failed select is announced: ${JSON.stringify(session.notifications())}`,
+  );
+  assert.ok(session.notifications().some((message) => /\/agentic-workflow-settings/u.test(message)));
+});
