@@ -9,10 +9,14 @@
 Make product specifications and engineering plans evidence-grounded,
 independently reviewable, and content-bound before implementation. Add public
 `review-spec` and `review-plan` gates, deterministic pre-execution snapshot and
-receipt contracts, explicit repair ownership, and a complete obligation ledger
-so incomplete design or planning returns upstream before code exists instead of
-becoming a long `review-change` / `fold-findings` loop or a collection of
-follow-up issues.
+receipt contracts, progressive authoring/readiness passes, explicit repair
+ownership, and complete evidence/obligation ledgers so incomplete design or
+planning returns upstream before code exists. The normal qualified path is one
+independent review, at most one evidence-bounded author repair, and one
+re-review; a second repair/re-review cycle is a convergence anomaly that must
+be diagnosed and routed to its Product, Plan, source, environment, or runtime
+owner instead of becoming a long `review-change` / `fold-findings` loop or a
+collection of follow-up issues.
 
 ## Branch
 
@@ -30,11 +34,11 @@ unresolved implementation decision, so no split trigger applies.
 
 - Hard: feature 26 / PR #145 is merged and
   `@gtrabanco/agentic-workflow-schema@3.4.0` is published.
-- Hard execution gate: feature 27 / PR #150 must merge first. It creates the
-  `@gtrabanco/pi-agentic-workflow` distribution surface and byte-parity bundle;
-  feature 28 must ship its new/changed skills through that surface as well as
-  the canonical root. Feature 27 remains independently owned and is not
-  replanned here.
+- Satisfied execution prerequisite: feature 27 / PR #150 is merged and creates
+  the `@gtrabanco/pi-agentic-workflow` distribution surface and byte-parity
+  bundle. Feature 28 must ship its new/changed skills through that surface as
+  well as the canonical root. Feature 27 remains independently owned and is
+  not replanned here.
 - Downstream: feature 29 depends on this feature's final review vocabulary and
   current `PLAN-REVIEW-PASS` handoff.
 
@@ -76,6 +80,8 @@ less wrong work and less rework, not fewer exploratory reads.
   planning and repair to proceed autonomously inside reviewed scope.
 - Reduce review/fold/replan churn through earlier evidence and explicit backward
   routes, then measure the effect rather than asserting savings.
+- Make more than one review/repair/re-review cycle exceptional in qualification
+  evidence without ever using a cycle budget to approve incomplete work.
 
 ### Product-surface considerations
 
@@ -123,6 +129,20 @@ less wrong work and less rework, not fewer exploratory reads.
   bumps, synchronized root/Pi distribution metadata and bundle parity,
   context-budget qualification, golden-fixture coverage, and an evidence-based
   canary protocol.
+- **S11:** Make design and planning progressive before independent review:
+  inventory obligations/questions, acquire and compact evidence, draft, run a
+  deterministic readiness preflight, then hand exact frozen artifacts to a
+  context-clean reviewer. Readiness may return only `READY-FOR-REVIEW |
+  NEEDS-EVIDENCE | NEEDS-DESIGN | NEEDS-REPLAN`; it can never emit review PASS.
+- **S12:** Persist compact planning evidence for every material Engineering
+  claim and plan cut, bind it into the Plan snapshot, and provide only the
+  phase-relevant slice to execution so neither reviewer nor writer reconstructs
+  the planning argument from conversation history.
+- **S13:** Define convergence qualification and telemetry: the first findings
+  set is root-caused and repaired as one evidence-bounded batch; one re-review
+  is normal; entering a second repair/re-review cycle produces a mandatory
+  diagnosis and is a canary/release anomaly, never an automatic PASS or forced
+  stop with defects open.
 
 #### Out of scope / non-goals
 
@@ -141,6 +161,9 @@ less wrong work and less rework, not fewer exploratory reads.
   `ReviewReceipt`, `VerificationPlan`/`VerificationReceipt`, or `audit-pr`.
 - No automatic mutation of an artifact by its reviewer and no bookkeeping
   commit after a terminal PASS.
+- No same-context readiness preflight may be presented as independent review or
+  approval, and no maximum cycle count may discard, downgrade, or waive a
+  material finding.
 - No guarantee that a direct out-of-band edit/revert which bypasses every
   authoring event can be detected; runtimes enforce event rotation and manual
   workflows must preserve the authoring handoff.
@@ -211,9 +234,10 @@ and obligation ledger**
 - [x] Workflow transition/sensing — closed intents, capability profiles,
   evidence vocabulary, routing, and status recommendations include both review
   stages and fail closed on missing/stale receipts · tests: transition matrix.
-- [x] Planning artifacts — stage-aware `planning-findings.md` and a frozen
-  obligation ledger are produced without a competing lifecycle · tests:
-  parser/coverage fixtures.
+- [x] Planning artifacts — compact `planning-evidence.md` (or XS/S embedded
+  section), stage-aware `planning-findings.md`, and a frozen obligation ledger
+  are produced without a competing lifecycle · tests: parser/readiness/coverage
+  fixtures.
 - [x] Execution/review/audit — `execute-phase`, `loop-review-fold`,
   `review-change`, and `audit-pr` consume current upstream evidence and route
   root causes backward · tests: route and no-issue-export fixtures.
@@ -250,6 +274,10 @@ and obligation ledger**
 | 16 | A current-unit omission may be moved into a follow-up issue automatically | out-of-scope | Automatic-issue non-goal |
 | 17 | The skills choose providers, retry limits, storage, or concurrency | out-of-scope | Runtime-operations non-goal |
 | 18 | Token savings are claimed from design alone | out-of-scope | Unmeasured-savings non-goal |
+| 19 | Authoring reaches review only after a deterministic readiness preflight | in-scope | S11; AC13 |
+| 20 | Planning evidence survives context changes without raw exploration history | in-scope | S12; AC13 |
+| 21 | One repair/re-review is normal and a second cycle is an explicit anomaly | in-scope | S13; AC7, AC12, AC14 |
+| 22 | A cycle budget may approve or hide an unresolved finding | out-of-scope | Cycle-budget non-goal |
 
 ### Acceptance criteria
 
@@ -303,6 +331,18 @@ and obligation ledger**
   reports no unresolved fix-now finding; the canary protocol records baseline
   and post-change measurements without claiming improvement before results
   exist.
+- [ ] **AC13 — command-verified:** root fixtures prove Product and Engineering
+  authoring follow inventory -> evidence -> draft -> readiness -> independent
+  review; the readiness gate checks complete evidence/obligation/unknown
+  structure, binds compact planning evidence into the Plan snapshot, and cannot
+  emit any review PASS verdict.
+- [ ] **AC14 — command/read-verified:** route fixtures and the qualification
+  corpus prove the first review findings are repaired as one root-caused batch,
+  one re-review is the normal correction path, and entry into a second
+  repair/re-review cycle emits a convergence anomaly with an exact owner and
+  evidence deficit. The release canary includes a feature, a fix, and a
+  cross-boundary unit; any sample needing the second cycle fails qualification
+  until its design/plan/root cause is corrected.
 
 ### Tooling
 
@@ -332,6 +372,10 @@ and obligation ledger**
   closure mechanism.
 - **PD6 — manual portability:** every public stage works in sequential fresh
   conversations. AWL automation is a consumer, not a prerequisite.
+- **PD7 — convergence is a quality property:** no loop count grants PASS. The
+  workflow qualifies for release only when its mandatory corpus normally
+  converges after zero or one author-repair batch; a second batch triggers
+  diagnosis and upstream correction.
 
 ### Deferred decisions
 
@@ -364,6 +408,14 @@ Engineering boxes:
 
 ---
 
+## Amendments
+
+| Date | Authority | Change |
+|---|---|---|
+| 2026-08-30 | User-approved | Strengthen progressive evidence preparation, review readiness, compact planning-evidence persistence, and second-cycle convergence diagnosis/qualification without weakening fail-closed review. |
+
+---
+
 ## Engineering half
 
 ### Technical goals
@@ -375,6 +427,11 @@ Engineering boxes:
   transitions.
 - Make evidence and obligation completeness mechanically inspectable while
   keeping skills text-first and runtime behavior outside the skills package.
+- Make review readiness structurally decidable before spending an independent
+  review context, while keeping correctness approval exclusively with that
+  independent review.
+- Make the second repair/re-review cycle observable as a root-cause anomaly and
+  a failed qualification sample rather than normal workflow throughput.
 - Preserve manual execution and existing candidate/delivery contracts.
 
 ### Architecture impact
@@ -418,6 +475,38 @@ must answer a new named question or expose new evidence; otherwise it is
 no-progress. Stable user decisions are written to the SPEC/decisions artifact,
 not reconstructed from memory.
 
+Authoring is progressive and ordered; it does not jump from discovery directly
+to a polished artifact:
+
+1. inventory every normative obligation, affected role/use case, failure state,
+   compatibility boundary, decision, and material unknown;
+2. acquire evidence for each material claim, following references/topology as
+   far as the claim requires rather than stopping at a file-count threshold;
+3. compact conclusions into the Product half/decisions or, for Engineering,
+   `planning-evidence.md` (M/L) / `### Planning evidence` in SPEC (XS/S);
+4. draft the SPEC or plan from those frozen conclusions and cut phases only
+   after affected surfaces, validators, and unknown ownership are evidenced;
+5. run a deterministic readiness preflight before invoking an independent
+   reviewer.
+
+The readiness preflight checks required headings, capability/expectation
+closure, evidence-row completeness/freshness, unknown ownership, obligation
+coverage, scenario matrix, phase-lint, validator mapping, and unresolved
+decisions. It emits only `READY-FOR-REVIEW | NEEDS-EVIDENCE | NEEDS-DESIGN |
+NEEDS-REPLAN`. It is an authoring quality gate, not a reviewer, and cannot emit
+or imply `SPEC-REVIEW-PASS` or `PLAN-REVIEW-PASS`.
+
+`planning-evidence.md` is a compact table, not an exploration transcript:
+
+```text
+question-or-claim | authority | repository-evidence-and-revision |
+affected-decision-or-obligation | freshness | status | owner-or-next-evidence
+```
+
+The Plan snapshot binds this artifact. `review-plan` receives the whole table;
+execution receives only the rows relevant to its frozen phase. Raw searches,
+discarded hypotheses, and conversational history are excluded.
+
 Every authoring write creates a new opaque, bounded `artifactRevisionId` and
 includes it in the handoff. A runtime persists and rotates the id. A manual
 workflow carries it to the fresh reviewer. The same id may be reused for
@@ -446,9 +535,9 @@ Add internal canonical contract definition plus package-root types/functions:
 Dependencies, Product half, and Design status from the one SPEC without hashing
 the empty/future Engineering half. Duplicate, missing, or out-of-order required
 headings fail. A Plan snapshot hashes the complete governing SPEC plus the
-frozen `ACCEPTANCE.md` and every size-applicable Plan/Tasks/testing/decision/
-architecture artifact. Mutable execution progress and findings resolution are
-not Plan authority.
+frozen `ACCEPTANCE.md`, compact planning evidence, and every size-applicable
+Plan/Tasks/testing/decision/architecture artifact. Mutable execution progress,
+raw exploration history, and findings resolution are not Plan authority.
 
 The package exposes one authoritative snapshot validator/normalizer, one
 canonical digest entry, one deterministic Product selector, and a stage-aware
@@ -509,6 +598,20 @@ product/authority choice returns `NEEDS-DESIGN`, invalidates downstream Plan
 evidence, and returns to the human through `design-feature` followed by a new
 SPEC review.
 
+The first review emits one complete unioned findings set. Its owner first
+classifies every finding by Product, Plan, source, environment, or runtime root
+cause, then applies one evidence-bounded repair batch to the owning artifact(s)
+before a single re-review of the new snapshot. Wording-only repairs may avoid a
+full replan only when intent, obligation identity, phase topology, validators,
+and authority remain unchanged; evidence records that determination.
+
+Entering a second repair/re-review cycle is not forbidden and never grants
+PASS, but it is a `CONVERGENCE-ANOMALY`. Before any further edit the workflow
+must report the repeated/new finding ids, changed snapshots, missed evidence or
+obligation, owning stage, and why the prior readiness/review/repair failed. It
+then routes to the exact owner. Repeating `review-change -> fold-findings` on a
+Plan/Product defect is invalid even when the candidate changed.
+
 `plan-feature-from-issue` remains internal for compatibility but stops after
 issue-derived Product design and hands off to `review-spec`; it no longer
 composes Engineering planning in the same authority turn. No public repair
@@ -563,7 +666,10 @@ material claims to PASS.
 
 A review may repeat only after a changed snapshot or with a named falsifiable
 question and new evidence route. Identical inputs plus identical question stop
-as no-progress. Runtime retry/budget mechanics remain outside the skill.
+as no-progress. One repair/re-review is the normal correction path. A second
+repair/re-review cycle emits `CONVERGENCE-ANOMALY` and must diagnose its owning
+root cause before proceeding. Runtime retry/budget mechanics remain outside the
+skill and cannot translate exhaustion into PASS.
 
 ### Decisions to confirm
 
@@ -585,6 +691,15 @@ as no-progress. Runtime retry/budget mechanics remain outside the skill.
   require a minor version bump from the version current at implementation.
 - **D9 — Measurement:** ship a canary protocol and baseline fields; publish no
   improvement claim until observed results exist.
+- **D10 — Readiness without self-approval:** authoring owns deterministic
+  structural/evidence readiness, while only a clean-context reviewer owns
+  correctness PASS.
+- **D11 — Planning evidence artifact:** M/L units freeze
+  `planning-evidence.md`; XS/S units embed the same compact table in the SPEC.
+  Plan snapshots bind it and execution consumes a phase-specific slice.
+- **D12 — Second-cycle diagnosis:** more than one repair/re-review cycle remains
+  allowed when correctness requires it, but it is a named qualification anomaly
+  and cannot continue until the owner/evidence deficit is reported.
 
 ### Testing requirements
 
@@ -596,6 +711,12 @@ as no-progress. Runtime retry/budget mechanics remain outside the skill.
   review read-only behavior, obligation coverage, upstream root-cause routing,
   legacy adoption, no-progress, author exclusion, and automatic-issue
   prohibition.
+- Readiness fixtures prove incomplete evidence, unknown ownership, missing
+  scenarios, uncovered obligations, invalid phase cuts, and unresolved
+  decisions never reach independent review; author readiness never emits PASS.
+- Convergence fixtures prove the first findings union is repaired as one batch,
+  one re-review may close it, and a second cycle emits a diagnosis with an exact
+  owner instead of silently looping or manufacturing success.
 - Existing package and root regressions remain green; no frozen test or
   ACCEPTANCE validator is weakened to obtain PASS.
 - Run context budgets, installability, schema and Pi package tests, Pi skill
@@ -603,7 +724,9 @@ as no-progress. Runtime retry/budget mechanics remain outside the skill.
   bilingual doc checks, and independent candidate review.
 - Canary captures time/model calls to first correct edit, pre-edit replans,
   post-review repairs, review/fold cycles, diff/rework, latency, and tokens for
-  comparable manual units; interpretation is explicitly observational.
+  comparable manual units; the mandatory feature/fix/cross-boundary corpus
+  treats a second repair/re-review cycle as a qualification failure while
+  interpretation remains explicitly observational.
 
 ### Dev scenarios
 
@@ -618,6 +741,9 @@ as no-progress. Runtime retry/budget mechanics remain outside the skill.
 | `review:limit-hit` | maximum findings/context/artifact rows | exact-boundary accepted and boundary-plus-one rejected |
 | `review:causal-revert` | bytes change and return after a new authoring event | new revision id keeps the old PASS stale |
 | `review:legacy-plan` | existing frozen acceptance lacks pre-execution receipts | migration fixture reviews current artifacts without rewriting acceptance |
+| `review:not-ready` | draft omits evidence, scenario, obligation, or unknown owner | readiness returns the exact upstream state and never invokes/claims review PASS |
+| `review:first-repair` | one unioned findings set has Product/Plan/source roots | one batched owner repair plus one re-review reaches PASS or an exact remaining blocker |
+| `review:second-cycle` | a second findings/repair round would begin | `CONVERGENCE-ANOMALY` reports ids, snapshots, owner, and missed evidence before further work |
 
 ### Phases
 
@@ -630,25 +756,27 @@ freshness, bounds, projection, and public-export suites.
 Phase-lint: PASS (8/8) · fingerprint
 `P1:schema/db:8:publish-pre-execution-evidence-contracts`
 
-#### P2 — Ground and review product specifications
+#### P2 — Establish Product review readiness
 
 Layer: docs. Done-when: `node --test
 scripts/pre-execution-quality.test.mjs` -> exit 0 for grounding,
-issue-derived design separation, and `review-spec` fixtures.
+progressive Product readiness, issue-derived design separation, and
+`review-spec` fixtures.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P2:docs:8:ground-and-review-product-specifications`
+`P2:docs:8:establish-product-review-readiness`
 
-#### P3 — Review engineering plans and freeze obligation closure
+#### P3 — Establish Plan review readiness
 
 Layer: docs. Done-when: `node --test
 scripts/pre-execution-quality.test.mjs` -> exit 0 for feature/fix
-`review-plan`, obligation-ledger, findings, repair, and no-progress fixtures.
+`review-plan`, planning-evidence/obligation ledgers, findings, batched repair,
+second-cycle diagnosis, and no-progress fixtures.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P3:docs:8:review-engineering-plans-and-freeze-obligation-closure`
+`P3:docs:8:establish-plan-review-readiness`
 
-#### P4 — Enforce upstream gates and backward routing
+#### P4 — Enforce pre-execution authority routing
 
 Layer: docs. Done-when: `node --test
 scripts/pre-execution-quality.test.mjs scripts/bounded-delivery-loops.test.mjs`
@@ -656,16 +784,18 @@ scripts/pre-execution-quality.test.mjs scripts/bounded-delivery-loops.test.mjs`
 root-cause routing, legacy adoption, and audit lineage.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P4:docs:8:enforce-upstream-gates-and-backward-routing`
+`P4:docs:8:enforce-pre-execution-authority-routing`
 
-#### P5 — Harden and qualify the workflow
+#### P5 — Qualify the pre-execution workflow
 
 Layer: hardening. Done-when: package/repository/installation/context/golden-
 fixture gates pass, synchronized docs and migration are verified, and the exact
-candidate has an independent PASS with no unresolved fix-now finding.
+candidate has an independent PASS with no unresolved fix-now finding; the
+feature/fix/cross-boundary qualification corpus contains no second-cycle
+sample.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P5:hardening:8:harden-and-qualify-the-workflow`
+`P5:hardening:8:qualify-the-pre-execution-workflow`
 
 ### Deploy & rollback
 
@@ -690,6 +820,10 @@ coerce stored receipts into another contract.
   progressive references/internal ownership; P5 budget checks are a hard gate.
 - **Risk — broad workflow wording changes:** executor-path golden fixture and
   root route fixtures are mandatory before completion.
+- **Risk — false convergence:** a low cycle count can hide a weak reviewer or
+  discarded findings. Qualification therefore preserves unioned findings,
+  requires counter-evidence for dismissal, and fails any second-cycle sample
+  without converting the count into approval authority.
 - **Risk — package/skill rollout skew:** migration and compatibility behavior
   fail closed; no skill may claim current evidence from an older schema package
   that cannot validate the contracts, and Pi bundle parity must prevent its
@@ -702,6 +836,10 @@ coerce stored receipts into another contract.
 - Additive pre-execution package contracts, generated projections, fixtures,
   public exports, and EN/ES package reference.
 - Stage-aware planning findings and obligation-ledger conventions.
+- Progressive readiness contracts plus compact Product/Engineering evidence
+  persistence, including `planning-evidence.md` for M/L plans.
+- Convergence-anomaly diagnosis, first-findings batch repair, and mandatory
+  feature/fix/cross-boundary qualification evidence.
 - Updated authoring, status, execution, review/fold, audit, roadmap, transition,
   canonical/Pi distribution, migration, and bilingual workflow surfaces.
 - Root regression suite, package qualification, golden fixture record, canary
