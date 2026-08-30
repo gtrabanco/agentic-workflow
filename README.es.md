@@ -56,6 +56,8 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ```
 skills/                  35 skills fuente (18 de cara al usuario + 15 internas del workflow + 2 metadata-internal; 33 descubribles)
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
+packages/                paquetes npm complementarios: @gtrabanco/agentic-workflow-schema (contratos de máquina)
+                         y @gtrabanco/pi-agentic-workflow (instalación de un comando para Pi — ver Instalación)
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
 docs/workflow/           el tutorial completo (flujo de feature, de issue, referencia, replicación)
 docs/features/_TEMPLATE  plantilla de SPEC de feature + ROADMAP (los artefactos que generan las skills)
@@ -623,6 +625,25 @@ npx skills add gtrabanco/agentic-workflow#release-2026-07-02
 #   …luego `npx skills experimental_install` restaura el conjunto exacto desde skills-lock.json.
 #   Ver CHANGELOG.es.md → "Instalar y pinear una versión" para cómo funciona el pinning.
 ```
+
+### Instalación de un comando en Pi
+
+En [Pi](https://github.com/badlogic/pi-mono) no necesitas la CLI de skills:
+el método se publica como un único paquete npm que incluye las mismas skills
+junto con todo lo que la ruta de copiar-por-agente deja fuera: un slash
+command amigable por cada skill pública (`/plan-feature --next`, no
+`/skill:plan-feature --next`) y un enrutado opcional de modelo por comando,
+que envía cada comando del workflow al modelo que elijas y te devuelve la
+sesión como estaba al terminar.
+
+```sh
+pi install npm:@gtrabanco/pi-agentic-workflow
+```
+
+Reinicia Pi y ejecuta `/agentic-workflow-settings` una vez. Actualizar y
+eliminar es `pi update` / `pi remove` con el mismo nombre de paquete.
+Detalles, configuración del enrutado de modelo y resolución de problemas en
+**[`packages/pi-agentic-workflow/README.es.md`](packages/pi-agentic-workflow/README.es.md)**.
 
 ## Desinstalación
 

@@ -22,6 +22,7 @@ Nothing here is tied to a specific stack, framework, or architecture pattern.
 skills/                  the workflow skills (one SKILL.md each) — the installable source
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                the exportable documentation scaffold (generic, copyable)
+packages/                two companion npm packages (bun-managed islands — see Packages below)
 docs/workflow/           the tutorial: feature flow, issue flow, skill reference, replication
 docs/features/_TEMPLATE  feature SPEC template + ROADMAP
 docs/fix/                fix SPEC template + index
@@ -236,10 +237,47 @@ This repo has no application build. "Green" means:
 - Context budgets pass: `node scripts/check-skill-context.mjs` (every skill's
   `SKILL.md` is within its enforced line/token budget and reference reachability).
 - No stack/real-project references leaked into the skills or shared docs.
-- If `packages/agentic-workflow-schema/` was touched: `npm test` passes there,
-  and any change to the envelope schema in
+- If `packages/agentic-workflow-schema/` was touched: `bun run test` passes
+  there, and any change to the envelope schema in
   `skills/orchestration-envelope/SKILL.md` is mirrored in the package (types +
   `envelope.schema.json` + version bump) — same PR, always.
+- If `packages/pi-agentic-workflow/` was touched: `bun run test` passes there,
+  and any change to a `skills/<name>/SKILL.md` is re-bundled into the package
+  with `npm run bundle:skills` (the committed `packages/pi-agentic-workflow/skills/`
+  mirror stays byte-identical to `skills/`; `test/alias-coverage.test.mjs`
+  reads both trees) — same PR, always.
+
+---
+
+## Packages
+
+The two npm packages under `packages/` are independent bun-managed islands,
+not a workspaces monorepo — there is no root `package.json` and nothing
+hoists.
+
+- **bun is the package manager, everywhere.** `bun.lock` (committed) is the
+  sole lockfile: install with `bun install --frozen-lockfile`, run scripts
+  with `bun run <script>`. A `package-lock.json` inside any package is drift
+  — each package's `.gitignore` rejects it and
+  `test/lockfile-policy.test.mjs` fails the suite if one appears (both npm
+  lockfiles resurrected once, on main, and had to be removed again). The npm
+  CLI is still used for the publish step only (Trusted Publishing +
+  `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
+- **Version bumps are manual and same-PR.** Bump `version:` in the touched
+  package's `package.json` and add a row to the "Companion npm packages" /
+  "Paquetes npm complementarios" table in `CHANGELOG.md` + `CHANGELOG.es.md`
+  in the same PR. CI publishes on merge to `main` when the version differs
+  from the registry (`publish-schema.yml`, `publish-pi-package.yml` — one
+  file per package, because npm Trusted Publisher records pin the workflow
+  filename; a rename would break the npm-side record until re-registered by
+  hand).
+- **Changesets: deliberately not adopted** (decided 2026-08-30). The curated
+  bilingual changelog tables above are the release-notes surface; changesets
+  would fork them into per-package English-only `CHANGELOG.md` files,
+  require re-binding both packages' npm Trusted Publisher records to a new
+  release workflow, and add a version-PR loop for exactly two independent
+  packages with no cross-dependencies. Revisit when a third package lands or
+  per-package beta/snapshot channels are needed.
 
 ---
 

@@ -85,6 +85,11 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | 1.0.1 | 2026-07-05 | parche | `validateEnvelope()` ahora comprueba todos los enums/tipos que declara el JSON Schema (`unit.type`, `pr.state`/`.ci`, `gates.verification`, `blockers[].kind`/`.scope`, tipos de los elementos de arrays) — antes era más laxo que `envelope.schema.json`, así que un valor malformado como `blockers[].scope: "planet"` pasaba en silencio. Tests añadidos para la ruta de fallo de validación estructural a través de `parseEnvelope()` y para fences con CRLF. La CI (`publish-schema.yml`) migró a Bun para instalar/testear (`bun install --frozen-lockfile`; se elimina `package-lock.json`, `bun.lock` es el único lockfile) — npm se mantiene solo para el paso final `npm publish --provenance`. Se añadió `LICENSE` dentro del directorio del paquete (el auto-include de npm solo recoge una LICENSE de la propia carpeta del paquete publicado). El ejemplo de importación del JSON Schema en el README se corrigió para funcionar en el `engines.node: ">=18"` declarado (antes solo funcionaba en Node 20.10+/22). |
 | 1.0.0 | 2026-07-05 | — | Primer release publicado. Tipos, JSON Schema y `parseEnvelope()`/`validateEnvelope()`/`isTerminal()`/`isRunHalt()` para el envelope máquina de agentic-workflow. |
 
+#### [`@gtrabanco/pi-agentic-workflow`](packages/pi-agentic-workflow/)
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 0.1.0 | 2026-08-30 | — | Primer release (feature 27, PR #150): un `pi install npm:@gtrabanco/pi-agentic-workflow` incluye las skills canónicas byte a byte, registra un slash command amigable por cada skill pública (la lista se lee de las skills incluidas al arrancar), añade `/agentic-workflow-settings` y un enrutado opcional de modelo/thinking por comando — config JSON global + de proyecto, rutas no disponibles fallan cerradas, restauración de la sesión en un comando y un aviso de configuración solo la primera vez. Se publica con `publish-pi-package.yml` (npm Trusted Publishing, el mismo patrón que el paquete de esquemas). El paquete se gestiona con bun como el paquete de esquemas: `bun.lock` es el único lockfile y `test/lockfile-policy.test.mjs` rechaza un `package-lock.json` resucitado. |
+
 ### Sesión
 
 #### `log-session`
