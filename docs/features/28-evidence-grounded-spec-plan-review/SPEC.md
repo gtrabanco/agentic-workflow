@@ -27,8 +27,11 @@ collection of follow-up issues.
 `L` — this changes the public workflow, adds two public skills and one internal
 grounding capability, extends the schema package and workflow transition
 vocabulary, and rewires planning, execution, review, audit, distribution, and
-bilingual documentation. The plan has exactly five single-concern phases and no
-unresolved implementation decision, so no split trigger applies.
+bilingual documentation. The plan has eight single-concern phases: the five
+originally planned (P1–P5) plus the three appended by the 2026-08-31
+user-approved amendment (P6 qualification corpus, P7 ledger/status
+reconciliation, P8 terminal re-review and close-out). No further split trigger
+applies.
 
 ## Dependencies
 
@@ -79,7 +82,9 @@ less wrong work and less rework, not fewer exploratory reads.
 - Preserve human authority over product intent while allowing engineering
   planning and repair to proceed autonomously inside reviewed scope.
 - Reduce review/fold/replan churn through earlier evidence and explicit backward
-  routes, then measure the effect rather than asserting savings.
+  routes. The effect is unknown until the canary runs and is measured only
+  observationally (D9, known-issues #7); no acceptance row of this unit claims
+  the reduction.
 - Make more than one review/repair/re-review cycle exceptional in qualification
   evidence without ever using a cycle budget to approve incomplete work.
 
@@ -210,8 +215,10 @@ and obligation ledger**
   denied · `executor`: denied.
 - [x] Review a frozen Product or Plan snapshot — visible entry point:
   `review-spec` / `review-plan` · `product authority`: allowed when context
-  clean · `artifact author`: denied from silently self-approving where identity
-  is enforceable · `independent reviewer`: allowed · `runtime operator`:
+  clean · `artifact author`: denied from silently self-approving; the shipped
+  manual mode cannot enforce identity, so exclusion stays a runtime
+  responsibility (known-issues #9) · `independent reviewer`: allowed ·
+  `runtime operator`:
   invokes/persists only · `executor`: denied.
 - [x] Repair a failed artifact — visible entry point: owning author skill with
   findings input · `product authority`: allowed · `artifact author`: allowed
@@ -278,6 +285,8 @@ and obligation ledger**
 | 20 | Planning evidence survives context changes without raw exploration history | in-scope | S12; AC13 |
 | 21 | One repair/re-review is normal and a second cycle is an explicit anomaly | in-scope | S13; AC7, AC12, AC14 |
 | 22 | A cycle budget may approve or hide an unresolved finding | out-of-scope | Cycle-budget non-goal |
+| 23 | Machine contracts are validated through the package's public entries with canonical vectors and bounded diagnostics | in-scope | S4; AC1 |
+| 24 | The executor path is qualified by a dated manual golden-fixture run, not a provider-dependent automated run | in-scope | S10; AC11 |
 
 ### Acceptance criteria
 
@@ -323,7 +332,7 @@ and obligation ledger**
   canonical-to-Pi skill bundling/parity and Pi package tests, `node
   scripts/check-skill-context.mjs`, `npx skills add . --list`, skill
   changelogs, synchronized EN/ES docs, and migration fixtures all pass.
-- [ ] **AC11 — command-verified:** the required executor-path golden fixture
+- [ ] **AC11 — read-verified:** the required executor-path golden fixture
   demonstrates the complete manual path through `review-spec`, planning,
   `review-plan`, execution gating, candidate review, and audit without a
   provider/runtime dependency or automatic issue creation.
@@ -414,6 +423,7 @@ Engineering boxes:
 |---|---|---|
 | 2026-08-30 | User-approved | Strengthen progressive evidence preparation, review readiness, compact planning-evidence persistence, and second-cycle convergence diagnosis/qualification without weakening fail-closed review. |
 | 2026-08-31 | User-approved | Re-plan routed from review findings F2+F3+F6 (`replan-in-unit`): append P6 (qualification corpus), P7 (ledger/status reconciliation), P8 (terminal re-review and PR close-out). No acceptance row changed — the frozen manifest blob is unchanged. The roadmap row is corrected from the premature `done` (F3) to `in-progress` in the same replan commit. |
+| 2026-08-31 | User-approved | Product repair batch from review rs-28-20260831-002 (RS1+RS2+RS15–RS17, one batch): Size block corrected to the eight-phase reality (RS1), AC11 verification label aligned with the frozen ACCEPTANCE.md `read-verified` (RS2), author-exclusion cell and churn business goal made truthful to the shipped-mode limits (RS15, RS16), expectation-sweep pointers added for AC1/AC11 (RS17). Scope, obligations, and acceptance rows unchanged; the frozen ACCEPTANCE.md blob is unchanged. |
 
 ---
 
