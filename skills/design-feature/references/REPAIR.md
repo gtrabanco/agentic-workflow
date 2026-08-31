@@ -24,8 +24,10 @@ request one re-review of the new snapshot. Rules:
   open, name their owner (`review-plan`/`plan-feature` for plan defects, the
   executor for source defects), and say so in the repair note. Repairing a plan
   defect by editing the Product half is scope creep with extra steps.
-- Never dismiss a finding by re-arguing with it. Dismissal requires recorded
-  counter-evidence that falsifies the claim, written where the finding lives.
+- Never dismiss a finding by re-arguing with it: dismissal requires recorded
+  counter-evidence that falsifies the claim (`pre-execution-review/references/POLICY.md`
+  §2), written into the
+  `planning-findings.md` row's resolution evidence, never into chat.
 
 ### 2. Three repair classes — pick one per finding and record which
 
@@ -54,13 +56,18 @@ exists; it never chose how to fill it, and neither does this skill.
 
 ### 4. Second cycle = anomaly, not routine
 
-One repair/re-review cycle is the normal path. Entering a second one is a
-`CONVERGENCE-ANOMALY`: before any further edit, report the repeated or new finding
-ids, the snapshots that changed, the evidence or obligation that was missed,
-which stage owns the miss, and why the previous readiness/review/repair failed to
-catch it. Route to that owner. More cycles remain allowed when correctness needs
-them — they are never a way to earn a PASS, and a cycle budget that runs out does
-not downgrade an open finding.
+Cycle rules have one owner: `pre-execution-review/references/POLICY.md` §4 — a repeat needs a changed
+snapshot or a named falsifiable question plus a new evidence route, and entering
+a second repair/re-review cycle prints the `CONVERGENCE-ANOMALY` block (repeated
+and new finding ids, the snapshots that moved, the evidence or obligation missed,
+the owning stage, and why the prior readiness/review/repair failed) **before** any
+further edit, then routes to that owner. More cycles stay allowed when
+correctness needs them; they never earn a PASS, and an exhausted cycle budget
+does not downgrade an open finding.
+
+The spec-stage detail this skill adds: the owning stage of a Product-half miss is
+`product` unless the evidence proves the plan asked for something the SPEC never
+said — then it is `plan`, and it leaves this skill for `plan-feature`.
 
 ### 5. Guardrails
 

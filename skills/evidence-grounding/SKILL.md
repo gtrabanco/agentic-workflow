@@ -1,7 +1,7 @@
 ---
 name: evidence-grounding
 user-invocable: false
-version: 1.0.0
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -26,7 +26,9 @@ reviews and can never emit a review PASS**.
   and cutting phases.
 - `plan-fix` — while drafting a fix SPEC and its phases.
 - Nothing else. A reviewer does not load this skill: its readiness verdicts are
-  authoring-quality gates, not review verdicts.
+  authoring-quality gates, not review verdicts. The shared review cycle and the
+  planning-ledger shapes belong to `pre-execution-review`; the plan-stage row of
+  the evidence table is restated here only as a pointer.
 
 ## Hard rule — authority boundary
 
@@ -103,7 +105,8 @@ overclaim it.
 ## No-progress rule
 
 A repeated read must answer a **new named question** or expose **new evidence**.
-Otherwise it is no-progress: stop, record the missing evidence and its owner as
+Otherwise it is no-progress (the review-cycle form of this rule is owned by
+`pre-execution-review/references/POLICY.md` §4): stop, record the missing evidence and its owner as
 an `unknown` row, and return `NEEDS-EVIDENCE`. Re-running the same search, the
 same file, or the same argument with the same result is prohibited — it is not
 diligence, it is a stalled pass, and the readiness preflight will refuse the

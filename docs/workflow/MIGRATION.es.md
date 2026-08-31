@@ -4,9 +4,10 @@
 
 ## 2026-08-30 — diseñado ya no es lo mismo que revisado
 
-**Entrega que rompe; `design-feature` 3.0.0, `plan-feature` 4.0.0,
-`plan-feature-from-issue` 2.0.0, y las nuevas `review-spec` 1.0.0 y la interna
-`evidence-grounding` 1.0.0.** La autoría de producto y los veredictos de producto
+**Entregas que rompen; `design-feature` 3.1.0, `plan-feature` 5.0.0,
+`plan-feature-scaffold` 2.0.0, `plan-fix` 3.0.0, `plan-feature-from-issue` 2.0.0,
+`review-spec` 1.1.0, y las nuevas `review-plan` 1.0.0 con las internas
+`evidence-grounding` 1.1.0 y `pre-execution-review` 1.0.0.** La autoría de producto y los veredictos de producto
 tienen dueños distintos. `design-feature` cierra su mitad de producto en una
 preverificación determinista `READY-FOR-REVIEW` y entrega a `/review-spec <slug>`;
 ya no envía el trabajo directamente a `plan-feature`. `plan-feature` añade una
@@ -30,6 +31,23 @@ observada y un veredicto de frescura — una capacidad de modelo sin muestrear e
 mitad de ingeniería; llama a `plan-feature <slug>` cuando la revisión apruebe. Los
 consumidores directos que asertaban la entrega terminal anterior ahora deben
 asertar `/review-spec`.
+
+**Planificación gana el mismo salto en el lado de ingeniería.** El esqueleto y
+`plan-fix` congelan ahora dos libros con el plan — `planning-evidence.md` +
+`planning-obligations.md` en unidades M/L, `### Planning evidence` +
+`### Obligations` incrustados en el SPEC para XS/S y fixes — y entregan a
+`/review-plan <NN>` (fix: `/review-plan fix-<N>`) en lugar de `/execute-phase`.
+`review-plan` barre esos libros (L1–L6) y las comprobaciones fijas de ingeniería
+(P1–P12, más F1–F4 en fixes) en un contexto que no cortó las fases, y solo su
+`PLAN-REVIEW-PASS` vigente permite que `execute-phase` edite algo. Una unidad
+planificada sin revisión es un estado normal y honesto: ejecuta `/review-plan <NN>`.
+Una unidad con obligaciones en blanco, `deferred` o exportadas a un issue posterior
+falla la revisión, no el release; aplazar una exige enmendar primero el SPEC rector.
+Quienes asertaban la antigua entrega a `/execute-phase` de `plan-feature` ahora
+asertan `/review-plan`, y las reglas compartidas del ciclo de revisión
+(independencia, hallazgos unidos, rechazo solo contra evidencia, no-progreso y el
+informe `CONVERGENCE-ANOMALY`) se trasladaron a la dueña interna
+`pre-execution-review`: léelas allí y no por habilidad.
 
 ## 2026-08-21 — resultados máquina híbridos y snapshots deterministas
 

@@ -234,6 +234,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `design-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.1.0 | 2026-08-30 | menor | `references/REPAIR.md` delega ahora las reglas de repetición y segundo ciclo al dueño común `pre-execution-review` y conserva solo el detalle de etapa de producto (qué causa raíz lleva un fallo del medio de producto), así que la política de convergencia tiene un único hogar.
 | 3.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** la mitad de producto diseñada cierra en `READY-FOR-REVIEW` y entrega a `/review-spec <slug>`, no a `/plan-feature`. Consume los pases de `evidence-grounding` (inventario → evidencia → borrador → preparación), congela una fila de evidencia por afirmación material y rota `artifactRevisionId` en cada escritura, incluida una reversión; incorpora `references/REPAIR.md`: un lote con causa raíz común sobre todo el conjunto de hallazgos de `SPEC-REVIEW-FAIL`, tres clases de reparación nombradas y un segundo ciclo reportado como `CONVERGENCE-ANOMALY`. El diseño no tiene autoridad de revisión.
 | 2.6.0 | 2026-07-31 | menor | La carga progresiva separa las rutas de solo-estado, entrevista/cierre de idea nueva, escritura/upsert, ejemplo de upsert y portabilidad, manteniendo los gates universales de seguridad en el entrypoint. |
 | 2.5.0 | 2026-07-31 | menor | Clasifica invariantes arquitectónicas opcionales del proyecto con evidencia del repositorio y detiene el diseño para una decisión arquitectónica explícita cuando una regla se viola, introduce o cambia. |
@@ -248,6 +249,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-feature`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 5.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** una unidad recién planificada cierra en `→ Next: /review-plan <NN>` en lugar de `/execute-phase <NN>`. El planeado lleva además los libros congelados y el resultado de preparación `stage: plan` a su entrega y dice sin rodeos que una unidad planificada no es ejecutable: esta habilidad nunca revisa el plan que acaba de escribir.
 | 4.0.0 | 2026-08-30 | mayor | **Puerta que rompe:** el planeado ejecuta ahora una puerta de revisión de producto tras la puerta de redirección. Ninguna ruta genera artefactos salvo que un recibo `spec-review-pass` vigente enlace el snapshot de etapa SPEC recalculado; `missing`, `stale`, `wrong-stage`, `substitute` (recibos de candidato/verificación), `self-approved` y `author-readiness` fallan cerrados con el bloque fijo `PRODUCT-REVIEW GATE … BLOCKED` y la entrega a `/review-spec`. No existe bandera de evasión.
 | 3.5.1 | 2026-08-10 | parche | Hace que los hand-offs por dependencias bloqueantes enumeren la cadena completa, de la más profunda a la final, en lugar de dejar un placeholder sin expandir. |
 | 3.5.0 | 2026-08-09 | menor | Los hand-offs limpios y ya-planificados recomiendan ahora `execute-phase` solo-con-objetivo para entregar la unidad completa y dejan `P1` explícita únicamente como alternativa atómica. |
@@ -277,6 +279,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** el SPEC de fix congela con él `## Planning evidence` y `## Obligations` (reproducción, causa raíz, alcance de regresión, rollback, invariante afectada — una fila cada uno) y entrega a `/review-plan fix-<n>`; `/execute-phase --fix` sigue al PLAN-REVIEW-PASS. La unidad de fix mantiene su propia autoridad y nunca fabrica un medio de producto para satisfacer una comprobación de producto.
 | 2.7.0 | 2026-08-10 | menor | Hace que el hand-off conserve explícitamente el alcance completo de una unidad multi-issue (`#primary + #n2 + …`) manteniendo el comando ejecutable ligado al issue primario. |
 | 2.6.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime input/output, hard rules, carga progresiva, portabilidad y criterios de cierre, preservando agrupación multi-issue y contratos. |
 | 2.6.0 | 2026-08-09 | menor | Acepta bloques de capacidad compatibles y lotes mecánicos homogéneos usando comprobaciones de resultado, verificación, aislamiento, release/rollback y tamaño agregado; compartir ficheros/causa raíz/severidad deja de ser una puerta, y los conjuntos fallidos devuelven el mínimo número de grupos compatibles máximos. Emite `ACCEPTANCE.md` congelado. |
@@ -302,7 +305,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-spec`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.1.0 | 2026-08-30 | menor | Los hallazgos se añaden ahora al `planning-findings.md` con etapa de la unidad (`stage: spec`) además de informarse, y las reglas de repetición/convergencia delegan en el dueño común `pre-execution-review`. Los veredictos, las catorce comprobaciones y el límite de solo lectura no cambian.
 | 1.0.0 | 2026-08-30 | — | Nueva puerta de etapa de producto: revisa una mitad de producto congelada en un turno de contexto limpio, construye `PreExecutionArtifactSnapshot v1` con el selector `spec-product-v1`, aplica las catorce comprobaciones fijas de producto tras un pase de falsación y devuelve solo `SPEC-REVIEW-PASS | SPEC-REVIEW-FAIL | NEEDS-DESIGN` con el recibo persistido en `progress.md`. Solo lectura sobre cada artefacto revisado; las decisiones de producto vuelven al humano.
+
+#### `review-plan`
+| Versión | Fecha | Tipo | Qué cambió |
+|---|---|---|---|
+| 1.0.0 | 2026-08-30 | — | Nueva puerta de etapa de ingeniería: revisa un plan congelado en un contexto que no lo cortó, construye el snapshot `stage: plan` (filas `whole-file`, snapshot de producto padre obligatorio), barre los libros de planificación (L1–L6) y las comprobaciones fijas de ingeniería (P1–P12, más F1–F4 en fixes), y devuelve solo `PLAN-REVIEW-PASS | PLAN-REVIEW-FAIL | NEEDS-DESIGN` con un recibo ligado al snapshot en `progress.md` y los hallazgos añadidos a `planning-findings.md`. Solo lectura sobre cada artefacto de plan; `execute-phase` es el consumidor.
 
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
@@ -496,6 +505,9 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 | 1.1.0 | 2026-06-09 | menor | Detecta el **forge** desde la URL del remoto y lo registra; sugiere las skills de revisión complementarias de la plataforma |
 | 1.0.0 | 2026-06-05 | — | Primer release — adapta el scaffold de docs a un proyecto |
 
+| `pre-execution-review` | 1.0.0 | 2026-08-30 | — | Nueva dueña interna del ciclo de revisión pre-ejecución y de los libros de planificación: independencia de contexto limpio, exclusión del autor y etiquetas de diversidad veraces, hallazgos unidos con rechazo solo contra evidencia y sin cuórum, crítica/síntesis/arbitraje acotados, la regla de no-progreso, el informe `CONVERGENCE-ANOMALY` campo por campo y la definición única de las tablas de evidencia, obligaciones y hallazgos (hogares, estados, escritores). No emite veredicto ni escribe artefacto.
+| `plan-feature-scaffold` | 2.0.0 | 2026-08-30 | mayor | **Juego de artefactos y entrega que rompen:** el esqueleto congela los dos libros de planificación mientras corta fases — `planning-evidence.md` + `planning-obligations.md` en M/L, `### Planning evidence` / `### Obligations` incrustados en XS/S —, ejecuta la preverificación `stage: plan` antes de informar, rota `artifactRevisionId` y devuelve una unidad cuyo siguiente paso es `/review-plan`, nunca `/execute-phase`. No se cortan fases hasta que cada obligación tenga fase y validador que pueda fallar.
+| `evidence-grounding` | 1.1.0 | 2026-08-30 | menor | Las casillas `stage: plan` citan al dueño común de libros para las formas de tabla y apuntan la regla de no-progreso del ciclo de revisión a `pre-execution-review`; los vocabularios emitidos no cambian y sigue sin poder emitir un PASS de revisión.
 ### Internas (`user-invocable: false`)
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
@@ -599,6 +611,15 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-30 — planificado no es ejecutable.** La fase P3 de la funcionalidad 28
+  añade `review-plan` 1.0.0 y la interna `pre-execution-review` 1.0.0. El esqueleto
+  y el planeado de fixes congelan ahora los libros de evidencia de planificación y de
+  obligaciones junto al plan, ejecutan la preverificación `stage: plan` y entregan a
+  una revisión de ingeniería independiente; `plan-feature` 5.0.0,
+  `plan-feature-scaffold` 2.0.0 y `plan-fix` 3.0.0 se detienen en esa revisión en lugar
+  de señalar `execute-phase`, y la dueña común da un solo hogar a independencia, unión,
+  no-progreso y `CONVERGENCE-ANOMALY`.
 
 - **2026-08-30 — diseñado no es revisado.** La fase P2 de la funcionalidad 28 añade
   `review-spec` 1.0.0 y la interna `evidence-grounding` 1.0.0: una mitad de producto

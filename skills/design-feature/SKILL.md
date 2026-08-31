@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 3.0.0
+version: 3.1.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT

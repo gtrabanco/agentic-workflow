@@ -1,7 +1,7 @@
 ---
 name: review-spec
 user-invocable: true
-version: 1.0.0
+version: 1.1.0
 argument-hint: <NN-slug | path/to/SPEC.md>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -63,8 +63,10 @@ must stay small enough to be genuinely context-clean.
 
 ## Progressive loading
 
-The reference allowlist is exactly the two paths below; both are one hop from
-this file. Never invent or read another `references/` path.
+The reference allowlist is exactly the two paths below plus, for the shared cycle
+and the findings-ledger shape, `pre-execution-review`'s `POLICY.md` /
+`LEDGERS.md` (one hop up and over, loaded only at the step that names it). Never
+invent or read another `references/` path.
 
 | Condition now | LOAD now | DEFER / SKIP now |
 |---|---|---|
@@ -117,6 +119,10 @@ this file. Never invent or read another `references/` path.
 - `evidence-grounding` owns the author-side readiness preflight that must have
   returned `READY-FOR-REVIEW` before this review — readiness is not approval and
   this skill does not accept it as one.
+- `pre-execution-review` owns the shared review cycle (independence, unioned
+  findings, counter-evidence dismissal, diversity labels, no-progress,
+  `CONVERGENCE-ANOMALY`) and the `planning-findings.md` shape this skill appends
+  to. This file restates none of them.
 - `plan-feature` is the consumer: it fails closed without a current PASS from
   this skill bound to the exact parent snapshot.
 - `review-plan` reviews the Engineering half later, binding this stage's receipt

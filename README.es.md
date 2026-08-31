@@ -124,7 +124,10 @@ con ningún modelo. Un único camino disciplinado:
 > Diseñado no es revisado: la preparación del autor autoriza a pedir una
 > revisión, nunca un veredicto. Una vez revisada, solo llamas a `plan-feature`;
 > este compone los pasos internos `plan-feature-from-issue` y
-> `plan-feature-scaffold` (ocultos del menú).
+> `plan-feature-scaffold` (ocultos del menú). Planificado tampoco es ejecutable:
+> el planeado congela los libros de evidencia de planificación y de obligaciones,
+> y `review-plan` debe devolver un `PLAN-REVIEW-PASS` vigente antes de que
+> `execute-phase` toque una fase.
 
 ### Ejecución
 
@@ -137,6 +140,7 @@ con ningún modelo. Un único camino disciplinado:
 | Skill           | Alcance         | Qué hace                                                                                                                                                                                                            |
 | --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review-spec` | el **diseño** | Puerta de producto independiente y de solo lectura: construye el snapshot `spec-product-v1` de la mitad de producto de un SPEC diseñado, ejecuta un pase de falsación más las catorce comprobaciones fijas de producto en un contexto que no la escribió, y devuelve solo `SPEC-REVIEW-PASS`, `SPEC-REVIEW-FAIL` o `NEEDS-DESIGN` con un recibo ligado al contenido. Nunca edita el SPEC revisado ni elige la intención de producto: `plan-feature` se niega a planificar sin su recibo vigente. |
+| `review-plan` | el **plan** | Puerta de ingeniería independiente y de solo lectura: snapshotiza el plan congelado (SPEC, aceptación, evidencia de planificación, obligaciones, fases, pruebas), barre los libros y las comprobaciones fijas de ingeniería —más la autoridad de reproducción/causa raíz/regresión/rollback en los fixes— en un contexto que no los cortó, y devuelve solo `PLAN-REVIEW-PASS`, `PLAN-REVIEW-FAIL` o `NEEDS-DESIGN` con un recibo ligado al snapshot. No edita ningún artefacto de plan: `execute-phase` se niega a correr sin su recibo vigente. |
 | `review-change` | el **cambio**   | Ejecuta solo las revisiones que **aplican a tu plataforma** (código, seguridad, verify, diseño, a11y, marca, rendimiento, SEO) — adversariales por defecto, asumiendo que el diff está mal hasta probar lo contrario — y clasifica → una tabla de decisión + una checklist explícita de verificación manual; un árbol sucio o commits sin push en la rama del PR son hallazgos `workflow` fix-now. La revisión final obligatoria **debe correr en una conversación que no implementó el cambio** — si lo hizo, parar y hacer hand-off a una nueva. Opt-in `--adversarial N`: N revisores independientes y context-clean, cada uno con un rol asignado por índice (corrección/seguridad/cobertura-de-SPEC), corren en paralelo (subagentes / headless / fallback secuencial), hallazgos fusionados por `file:line` con umbral de inclusión ≥1 — desactivado por defecto, auto-recomendado (nunca forzado) cuando el cambio es `L`/sensible, el revisor no es el más fuerte de la flota o es más débil que el autor del diff, o solo hay una familia de modelo disponible en un cambio `≥M`. `--synthesize` es el punto de entrada de fusión independiente para revisores ejecutados a mano. Los hallazgos fix-now en una unidad no mergeada se persisten en el ledger de fold fix-now de esa unidad (`review-findings.md`), deduplicado por `file:line`+axis. La clasificación respeta las **comprobaciones de anulación hacia fix-now** del motor: un arreglo barato o un defecto dentro de alcance es siempre fix-now (nunca un escape a postpone/known-issue/tradeoff), y un fix-now dentro de alcance demasiado grande se enruta a `replan-in-unit` — fase(s) del SPEC confirmadas por el usuario en la misma rama, nunca una degradación |
 | `fold-findings` | el **ledger de hallazgos** | Repara toda la cola en los mínimos lotes atómicos compatibles, agrupados por causa/regla mecánica + validator + rollback. Un lote usa un commit, pero cada hallazgo conserva su tick y recibo. La clasificación sigue congelada; las disputas paran para decisión del usuario y nunca crean backlog. |
 | `loop-review-fold` | el **loop de candidata** | Router simple entre `review-change` y `fold-findings`: comprueba primero la evidencia persistida, incorpora una cola abierta antes de volver a revisar y solo revisa un HEAD cambiado. Los hallazgos no resueltos pasan a `triage-issue --prioritize-now`; el trabajo demasiado grande se replantea en nuevas fases `P<n>` y el usuario continúa la ejecución manualmente. Nunca fusiona ni descarta hallazgos. |
@@ -255,6 +259,7 @@ una conveniencia de la rama `#claude`.
 | `discover-repository-state` | Sonnet         | medio    | recopilación de evidencia y snapshot congelado del estado del repositorio                                                                                                                                                   |
 | `resolve-repository-state` | Opus           | alto     | resolución de contradicciones y juicio sobre el estado del repositorio                                                                                                                                                     |
 | `review-spec` | Opus | alto | revisión independiente de la mitad de producto en contexto limpio; nunca más débil que el modelo que la escribió |
+| `review-plan` | Opus | alto | revisión independiente del plan de ingeniería en contexto limpio; nunca más débil que el modelo que cortó las fases |
 | `design-feature` | Opus           | alto     | juicio de definición de producto: entrevista de idea en crudo + cierre de capacidades, compuesta por quien la llame solo a tier ≥                                                                                          |
 | `plan-feature`   | Opus           | alto     | router + planificación de ingeniería: sus pasos internos de scoping corren **en su turno**, así que el router debe llevar el effort (las skills compuestas heredan el effort del turno)                                     |
 | `plan-fix`       | Opus           | alto     | scoping de arquitecto + análisis de riesgo                                                                                                                                                                                  |
@@ -524,8 +529,9 @@ Tutorial completo en **[`docs/workflow/`](docs/workflow/README.md)**. En resumen
 /design-feature "<idea>"      # mitad de producto: cierre de capacidades + criterios de aceptación
         → /review-spec <NN>   → puerta de producto independiente y de solo lectura
 /plan-feature <NN>              # o  /plan-feature <N> (issue)  ·  /plan-feature --next (siguiente elemento del roadmap)
-        → el router detecta idea / issue / slug acotado → entrevista · análisis del issue · scaffold
-        → rellena el SPEC + PLAN + TASKS + … y registra la entrada en el roadmap
+        → el router detecta idea / issue / slug acotado → puerta de revisión de producto → scaffold
+        → rellena SPEC + PLAN + TASKS + los dos libros de planificación y registra la fila
+/review-plan <NN>               → puerta de ingeniería independiente y de solo lectura
 /execute-phase <NN>             # todas las fases restantes; worker limpio + reparaciones acotadas por fase
         → una unidad terminada siempre abre su PR + pasa a `done` (construida, no mergeada)
 /loop-review-fold <NN>          # review → fold → review; los hallazgos no resueltos pasan a triage/replan
@@ -660,13 +666,14 @@ skills publicadas a un único comando `remove`:
 ```sh
 npx skills remove --yes \
   audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
-  execute-phase \
+  execute-phase pre-execution-review \
   fold-findings generate-docs init-workspace log-session loop-review-fold \
   orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \
   review-debt review-design review-implementation review-perf review-security \
-  review-seo review-spec review-verify ship-roadmap triage-issue verification-contract \
+  review-plan review-seo review-spec review-verify ship-roadmap triage-issue \
+  verification-contract \
   workflow-status plan-feature-interview bump-skill
 ```
 
