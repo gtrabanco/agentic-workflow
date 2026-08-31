@@ -413,6 +413,7 @@ Engineering boxes:
 | Date | Authority | Change |
 |---|---|---|
 | 2026-08-30 | User-approved | Strengthen progressive evidence preparation, review readiness, compact planning-evidence persistence, and second-cycle convergence diagnosis/qualification without weakening fail-closed review. |
+| 2026-08-31 | User-approved | Re-plan routed from review findings F2+F3+F6 (`replan-in-unit`): append P6 (qualification corpus), P7 (ledger/status reconciliation), P8 (terminal re-review and PR close-out). No acceptance row changed — the frozen manifest blob is unchanged. The roadmap row is corrected from the premature `done` (F3) to `in-progress` in the same replan commit. |
 
 ---
 
@@ -797,6 +798,42 @@ sample, and the terminal candidate is release-ready (Pi package bumped to
 
 Phase-lint: PASS (8/8) · fingerprint
 `P5:hardening:8:qualify-the-pre-execution-workflow`
+
+#### P6 — Run the pre-execution qualification corpus
+
+Layer: hardening. Done-when: `testing.md`'s completed canary corpus carries one
+row-set per sample (unit 28 feature, fix unit 78, feature 17 cross-boundary)
+with every canary field observed or explicitly `not yet measured`, per-stage
+correction-cycle counts, and no second-cycle sample; `GOLDEN_FIXTURE.md` (+ its
+ES sibling) carries a dated row for every changed executor-path skill/version
+listed in this unit's 3.5.0 changelog rows; root `node --test
+scripts/*.test.mjs` -> exit 0.
+
+Phase-lint: PASS (8/8) · fingerprint
+`P6:hardening:4:run-the-pre-execution-qualification-corpus`
+
+#### P7 — Reconcile the unit ledgers with qualification evidence
+
+Layer: docs. Done-when: `grep -qE '\| 28 \| .?evidence-grounded-spec-plan-review.? \| in-progress' docs/features/ROADMAP.md`
+-> exit 0 (the row stays `in-progress` until P8's PR step); every O9–O14 row
+in `planning-obligations.md` carries a status matching its cited evidence
+(`verified` only where the evidence row exists); and `progress.md`'s phase
+table lists P6–P8 with receipts.
+
+Phase-lint: PASS (8/8) · fingerprint
+`P7:docs:4:reconcile-unit-ledgers-with-qualification-evidence`
+
+#### P8 — Re-review and close the corrected candidate
+
+Layer: close-out. Done-when: the terminal HEAD holds a current context-clean
+`review-change` PASS receipt with zero open findings; every package gate
+passes (schema suite, root suites, context/route budgets, Pi bundle + tests,
+`npx skills add . --list`); the frozen ACCEPTANCE manifest is verified at
+terminal HEAD; PR #155 carries the amendment summary; and roadmap row 28
+reads `done · [#155]`.
+
+Phase-lint: PASS (8/8) · fingerprint
+`P8:close-out:6:re-review-and-close-the-corrected-candidate`
 
 ### Deploy & rollback
 

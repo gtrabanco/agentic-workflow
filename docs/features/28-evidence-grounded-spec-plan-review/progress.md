@@ -10,7 +10,10 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 | P2 — Establish Product review readiness | done | Depends on P1 public contracts |
 | P3 — Establish Plan review readiness | done | Depends on P2 Product-review authority |
 | P4 — Enforce pre-execution authority routing | done | Depends on P3 Plan-review authority |
-| P5 — Qualify the pre-execution workflow | pending | Depends on P1-P4 |
+| P5 — Qualify the pre-execution workflow | replanned | Re-plan 2026-08-31 (findings F2+F3+F6): qualification evidence incomplete → P6–P8 |
+| P6 — Run the pre-execution qualification corpus | pending | Depends on P1–P4 |
+| P7 — Reconcile the unit ledgers with qualification evidence | pending | Depends on P6 |
+| P8 — Re-review and close the corrected candidate | pending | Depends on P7 |
 
 ## Dependency receipt v1
 - Fingerprint: 6f7c915f1ade956adcef96a8558da17d26159088 · Closure: 28-evidence-grounded-spec-plan-review ← 26-staged-verification-contracts ← 25-content-bound-review-receipts · 27-pi-agentic-workflow
@@ -47,6 +50,16 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
   implementation is in progress on the working tree; no phase commit exists
   yet. P5 re-linted after the amendment: PASS (8/8), fingerprint
   `P5:hardening:8:qualify-the-pre-execution-workflow` unchanged.
+- User-approved amendment on 2026-08-31 (third) is the re-plan routed from
+  review findings F2+F3+F6 (`replan-in-unit`, PR #155 head `a42c244b`):
+  it appends P6 (qualification corpus — canary fields for feature/fix/
+  cross-boundary samples + golden-fixture rows for every changed
+  executor-path skill/version), P7 (obligation-ledger, task-ledger, and
+  status reconciliation), and P8 (terminal re-review, manifest verification,
+  PR #155 close-out). No acceptance row changed and the manifest blob is
+  unchanged. The roadmap row was corrected from the premature `done` (F3)
+  to `in-progress` in the same replan commit. Planning only — the new phases
+  are executed manually via `/execute-phase 28 P6`.
 
 ## P1 — 2026-08-30
 
@@ -335,9 +348,26 @@ version bump per D15, roadmap row → `in-review`).
 
 **Golden fixture**: see GOLDEN_FIXTURE.md row dated 2026-08-31
 
-**roadmap row 28 status**: done · unit 28 (evidence-grounded-spec-plan-review)
+**roadmap row 28 status**: ~~done~~ → corrected to `in-progress` by the
+2026-08-31 re-plan (see the correction block below) · unit 28
+(evidence-grounded-spec-plan-review)
 - All 14 acceptance criteria satisfied from P1 through P5
 - Pre-execution workflow qualified on the unit itself
 - All package gates green, zero regression
 - No second repair/re-review cycle needed
 - Residual risk: `spec-review-pass` authority is contractual (known-issues.md #9)
+
+**Correction (re-plan) — 2026-08-31**: the P5 section above claimed "all 14
+acceptance criteria satisfied" and flipped roadmap row 28 to `done`, but the
+recorded evidence covers only gate runs and unit 28's own manual route —
+AC11's every-changed-executor-path fixture rows, AC12's baseline/post-change
+canary fields, and AC14's fix + cross-boundary samples were never produced,
+and O9–O14 remain `planned` in the obligation ledger. Independent
+candidate-code review (PR #155 head `a42c244b`) caught this as findings F2
+(spec-drift), F3 (workflow), and F6 (workflow), all classified
+`replan-in-unit`. With explicit user approval the SPEC is amended: P6–P8 are
+appended to produce the missing qualification evidence, reconcile every
+ledger and status truthfully, and re-review/close the corrected candidate.
+The roadmap row is corrected back to `in-progress` in the same replan commit.
+Findings F7 (decision-required, resolved by the D22 headroom policy) and the
+fold-class rows are unaffected by this amendment.
