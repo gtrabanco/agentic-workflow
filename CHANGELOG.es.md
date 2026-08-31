@@ -138,6 +138,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.1 | 2026-08-31 | parche | Reparación del pliegue (F1): la cláusula de receta del paso 6a re-deriva el digest ligado con el modo verify del dueño de la receta (`node scripts/pre-execution-snapshot.mjs verify --stage <spec\|plan> --unit <id>`) en lugar de `git hash-object`, que las autoridades de la misma rama definen como nunca sustituto de un digest de snapshot. Sin cambio de etiquetas, de la anulación del paso 6 ni del envelope. |
 | 3.0.0 | 2026-08-30 | mayor | **Recomendación que rompe:** el enrutado por solo-estado pasa a enrutado por evidencia. El nuevo paso 6a lee el bloque de recibo de pre-ejecución de la unidad, recalcula el digest ligado con `git hash-object` y etiqueta el escalón `current | missing | stale | wrong-stage | substitute | self-approved | author-readiness | legacy`; la etiqueta anula la orden del paso 6, así que una unidad sin un PASS vigente para el escalón que va a atacar sale de `startable_now` y pasa a un bloqueador `gate` que nombra la revisión que falta, con una fila `detail.pre_execution[]` por unidad. Sigue de solo lectura: no archiva ni edita nada. |
 | 2.0.0 | 2026-08-21 | mayor | **Contrato de sensor incompatible:** mueve las candidatas a diseño de la extensión raíz antes documentada a `detail.design_candidates`, la única ubicación Envelope v2 estricta. Los drivers deben usar la ruta de parser/migración del paquete v3. Ver `docs/workflow/MIGRATION.es.md`. |
 | 1.10.0 | 2026-08-09 | menor | Las recomendaciones de unidades planificadas ahora emiten `execute-phase` solo-con-objetivo, conservando la ruta por defecto de todas las fases restantes para humanos y drivers externos. |
@@ -188,6 +189,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.0.1 | 2026-08-31 | parche | Reparación del pliegue (F1): la cláusula de detección de la puerta pre-ejecución re-deriva el digest con el modo verify del dueño de la receta en lugar de `git hash-object` (nunca sustituto de un digest de snapshot). Orden de la puerta, estados de fallo cerrado y semántica de `--force` sin cambios. |
 | 4.0.0 | 2026-08-30 | mayor | **Preflight que rompe:** una nueva puerta de revisión pre-ejecución se sitúa entre la puerta de estado propio y el manifiesto de aceptación, y falla cerrado antes de cualquier edición ante un `PLAN-REVIEW-PASS` ausente, caducado o de escalón equivocado (unidades de fix: sobre su propio recibo). `--force` nunca cubrió esta puerta y tampoco ahora: anula paradas de orden que el humano puede reordenar, no un veredicto que solo un revisor independiente puede producir; refrescar, re-hashear o sustituir un recibo es falsificación, no recuperación. Las unidades `planned`/`in-progress` heredadas se adoptan con la regla común de adopción. El hueco inmediatamente después de la puerta y antes de la primera escritura queda reservado para el descubrimiento acotado de implementación de la funcionalidad 29. La guarda de descope trata ahora una fila del libro de obligaciones igual que un criterio de aceptación. |
 | 3.0.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime dispatch, presupuesto de contexto, carga progresiva, portabilidad, relaciones y cierre. |
 | 3.0.0 | 2026-08-09 | mayor | **Cambio incompatible por defecto:** una invocación solo-con-objetivo de feature/fix ejecuta todas las fases restantes con un recibo de worker limpio por fase, reparaciones acotadas, aceptación congelada y sin reviews intermedias; `P<n>` explícito conserva la forma de una fase. Los hallazgos independientes son propuestas, nunca issues creados automáticamente. Ver `docs/workflow/MIGRATION.es.md`. |
@@ -387,6 +389,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 5.0.1 | 2026-08-31 | parche | Reparación del pliegue (F1): la puerta de linaje aguas arriba nombra la receta `scripts/pre-execution-snapshot.mjs verify --stage plan` en lugar de `git hash-object` (nunca sustituto de un digest de snapshot). Bloqueos, cierre de obligaciones y autoridad MERGE-READY sin cambios. |
 | 5.0.0 | 2026-08-30 | mayor | **Puerta de fusión que rompe:** MERGE-READY exige además que la autoridad aguas arriba sobrevivió a la construcción — el digest del snapshot del recibo de plan sigue recomputándose (y el recibo de spec que nombra como padre está vigente), cada fila de obligación es `verified` o un `n/a` explícito, y ningún hallazgo de planificación queda abierto para el snapshot ligado. Una fila `deferred` sin enmienda del usuario bloquea; exportar una obligación a un issue posterior nunca despeja la puerta. `audit-pr` sigue siendo el único emisor de `MERGE-READY` y nunca fusiona. |
 | 4.3.1 | 2026-08-11 | parche | Obtiene `headRefOid` junto con los comentarios de la PR y acepta un recibo REVIEW-PASS solo en ese snapshot exacto; cualquier diferencia de SHA es obsoleta y se enruta a una revisión nueva. |
 | 4.3.0 | 2026-08-05 | menor | **Consume el recibo de revisión de `review-change`** en lugar de re-revisar el diff (feature 21): el Paso 1 obtiene los comentarios del PR y toma el marcador `<!-- review-change:pass sha=<40-hex> contract=v1 -->` más nuevo; un recibo vigente se reconoce como la evidencia de revisión, uno ausente/obsoleto es un bloqueante enrutado a `/review-change` (nunca se re-revisa aquí). Las puertas de merge se estrechan al conjunto solo-auditoría del SPEC — se retira la puerta `Tests` (calidad de pruebas) y el re-mapeo de criterios de aceptación por diff (sustituido por el campo de cobertura de aceptación del recibo); la puerta de Invariantes arquitectónicas ahora refleja el resultado del recibo en lugar de reclasificar. Pasos de proceso renumerados; el comentario MERGE-READY cita el recibo consumido. Requiere un `review-change` que publique el recibo ligado al SHA; las versiones antiguas de `review-change` dejan a audit-pr bloqueado sin recibo en el head. |
@@ -627,6 +630,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-31 — las puertas calculan el digest que la receta define.** El plegado de la
+  revisión de la funcionalidad 28 (PR #155) corrige la receta del digest en los tres
+  consumidores pre-ejecución: `workflow-status` 3.0.1, `execute-phase` 4.0.1 y
+  `audit-pr` 5.0.1 re-derivan el digest del snapshot con la receta de verificación que
+  `pre-execution-review` posee en lugar de `git hash-object`, y la suite P4 fija la
+  receta corregida en las tres puertas.
 
 - **2026-08-30 — el enrutado impone la autoridad.** La fase P4 de la funcionalidad 28
   conecta las dos puertas pre-ejecución a todas las rutas que pueden empezar trabajo:
