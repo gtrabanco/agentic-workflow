@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 3.0.0
+version: 3.0.1
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -59,7 +59,7 @@ One or more GitHub issue numbers from this repo, space-separated.
   issue number or the lowest merged issue; merged SPECs retain each issue's criteria.
 - `docs/fix/<primary-issue-number>-<topic>/ACCEPTANCE.md` — the compact frozen
   finish line from `verification-contract`, retaining one criterion per issue.
-- `## Planning evidence` and `## Obligations` inside that SPEC — the two frozen
+- `### Planning evidence` and `### Obligations` inside that SPEC — the two frozen
   ledgers ([planning ledgers](<../pre-execution-review/SKILL.md>)), with the fix
   rows `evidence-grounding` names: reproduction, root cause with code evidence,
   regression scope, rollback path, and the affected invariant or use case. A

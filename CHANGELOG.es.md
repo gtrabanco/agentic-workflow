@@ -138,6 +138,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.2 | 2026-08-31 | parche | Reparación del pliegue (F16): el paso de lectura de recibos del sensor nombra los campos de autor reales (`reviewer` + `authorId` en las líneas `Reviewer:`/`Author:` del recibo, y `authorExclusion`) en lugar de los fantasma `reviewedBy`/`authorExcluded`. Sin cambio de etiquetas ni del envelope. |
 | 3.0.1 | 2026-08-31 | parche | Reparación del pliegue (F1): la cláusula de receta del paso 6a re-deriva el digest ligado con el modo verify del dueño de la receta (`node scripts/pre-execution-snapshot.mjs verify --stage <spec\|plan> --unit <id>`) en lugar de `git hash-object`, que las autoridades de la misma rama definen como nunca sustituto de un digest de snapshot. Sin cambio de etiquetas, de la anulación del paso 6 ni del envelope. |
 | 3.0.0 | 2026-08-30 | mayor | **Recomendación que rompe:** el enrutado por solo-estado pasa a enrutado por evidencia. El nuevo paso 6a lee el bloque de recibo de pre-ejecución de la unidad, recalcula el digest ligado con `git hash-object` y etiqueta el escalón `current | missing | stale | wrong-stage | substitute | self-approved | author-readiness | legacy`; la etiqueta anula la orden del paso 6, así que una unidad sin un PASS vigente para el escalón que va a atacar sale de `startable_now` y pasa a un bloqueador `gate` que nombra la revisión que falta, con una fila `detail.pre_execution[]` por unidad. Sigue de solo lectura: no archiva ni edita nada. |
 | 2.0.0 | 2026-08-21 | mayor | **Contrato de sensor incompatible:** mueve las candidatas a diseño de la extensión raíz antes documentada a `detail.design_candidates`, la única ubicación Envelope v2 estricta. Los drivers deben usar la ruta de parser/migración del paquete v3. Ver `docs/workflow/MIGRATION.es.md`. |
@@ -287,6 +288,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `plan-fix`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.1 | 2026-08-31 | parche | Reparación del pliegue (F12+F13): los libros incrustados del SPEC de fix usan los rótulos canónicos `### Planning evidence` / `### Obligations` y la tabla de evidencia adopta el orden único de columnas de ROWS.md. La generación, las filas de fix y la entrega no cambian. |
 | 3.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** el SPEC de fix congela con él `## Planning evidence` y `## Obligations` (reproducción, causa raíz, alcance de regresión, rollback, invariante afectada — una fila cada uno) y entrega a `/review-plan fix-<n>`; `/execute-phase --fix` sigue al PLAN-REVIEW-PASS. La unidad de fix mantiene su propia autoridad y nunca fabrica un medio de producto para satisfacer una comprobación de producto.
 | 2.7.0 | 2026-08-10 | menor | Hace que el hand-off conserve explícitamente el alcance completo de una unidad multi-issue (`#primary + #n2 + …`) manteniendo el comando ejecutable ligado al issue primario. |
 | 2.6.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime input/output, hard rules, carga progresiva, portabilidad y criterios de cierre, preservando agrupación multi-issue y contratos. |
@@ -524,6 +526,8 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `evidence-grounding` | 1.1.2 | 2026-08-31 | parche | Reparación del pliegue (F12): ROWS.md declara ahora la extensión de la tabla de etapa plan — `id` estable prefijado más `affected-decision-or-obligation` — de modo que la forma de la fila de evidencia tiene una única definición; vocabularios y resultados de preparación sin cambios. |
+| `pre-execution-review` | 1.1.1 | 2026-08-31 | parche | Reparación del pliegue (F12): LEDGERS.md §1 ya no redeclara las columnas de la fila de evidencia — apunta a la extensión declarada de ROWS.md (una definición, ninguna segunda copia); hogares, escritores y estados sin cambios. |
 | `pre-execution-review` | 1.1.0 | 2026-08-30 | menor | El §5 nombra ahora todas las rutas del conjunto pre-ejecución que nunca pueden crear un issue de forja ni aplazar una obligación sin una enmienda del usuario, añade que el PASS de un escalón vecino nunca otorga autoridad de ejecución, y el §6 pasa a ser el único dueño de la adopción heredada (construir, nunca forzar; artefactos congelados byte a byte; reanudar solo con un `PLAN-REVIEW-PASS` vigente; informar `legacy` distinto de `missing`). |
 | `plan-feature-scaffold` | 2.1.0 | 2026-08-30 | menor | El paso de congelación declara que ninguna obligación se descarga al cortar fases: ninguna fase puede planificarse contra un issue futuro, el esqueleto no crea ninguno, y `deferred` solo existe después de que el usuario enmiende el SPEC rector. |
 | `evidence-grounding` | 1.1.1 | 2026-08-30 | parche | Aclarado que una fila de expectativa puede leer `deferred` solo tras una enmienda del usuario al SPEC rector, nunca un issue que esta habilidad archivó. |
@@ -637,6 +641,14 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
   `audit-pr` 5.0.1 re-derivan el digest del snapshot con la receta de verificación que
   `pre-execution-review` posee en lugar de `git hash-object`, y la suite P4 fija la
   receta corregida en las tres puertas.
+
+- **2026-08-31 — los libros de planificación tienen una definición.** El plegado de la
+  revisión de la funcionalidad 28 (PR #155) hace que el dueño exigido coincida con el
+  declarado: `evidence-grounding` 1.1.2 declara la extensión de la tabla de etapa plan
+  (`id` estable prefijado + `affected-decision-or-obligation`), `pre-execution-review`
+  1.1.1 deja de redeclarar las columnas, `plan-fix` 3.0.1 y ambas plantillas de SPEC
+  incrustan los libros bajo los rótulos canónicos `###`, y `workflow-status` 3.0.2
+  nombra los campos de autor reales del recibo.
 
 - **2026-08-30 — el enrutado impone la autoridad.** La fase P4 de la funcionalidad 28
   conecta las dos puertas pre-ejecución a todas las rutas que pueden empezar trabajo:

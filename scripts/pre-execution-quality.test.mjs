@@ -513,7 +513,7 @@ const featureTemplate = read("docs/features/_TEMPLATE/SPEC.md");
 const fixTemplate = read("docs/fix/_TEMPLATE/SPEC.md");
 
 const LEDGER_COLUMNS = {
-  evidence: "id | question-or-claim | authority | repository-evidence-and-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence",
+  evidence: "id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence",
   obligations: "obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status",
   findings: "finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision",
 };
@@ -574,10 +574,19 @@ test("the planning ledger set is defined once, in the shared owner", () => {
         : [];
       return [...own, ...refs];
     });
+  // The evidence ROW shape (base row + declared Plan-stage extension) is owned by
+  // evidence-grounding's ROWS.md; the ledger shapes are owned by the shared ledger
+  // reference (F12 fold: the enforced owner now matches the declared owner — the
+  // assertion strength is unchanged: still exactly-one-file plus a named owner).
+  const columnOwners = {
+    evidence: path.join("evidence-grounding", "references", "ROWS.md"),
+    obligations: path.join("pre-execution-review", "references", "LEDGERS.md"),
+    findings: path.join("pre-execution-review", "references", "LEDGERS.md"),
+  };
   for (const [k, cols] of Object.entries(LEDGER_COLUMNS)) {
     const owners = allSkillMd.filter((f) => squash(read(path.relative(repoRoot, f))).includes(squash(cols)));
     assert.equal(owners.length, 1, `${k} ledger columns must be defined in exactly one file, found ${owners.length}`);
-    assert.ok(owners[0].endsWith(path.join("pre-execution-review", "references", "LEDGERS.md")), `${k} columns must be owned by the shared ledger reference, got ${owners[0]}`);
+    assert.ok(owners[0].endsWith(columnOwners[k]), `${k} columns must be owned by ${columnOwners[k]}, got ${owners[0]}`);
   }
   // consumers point at the shared owner rather than restating the schema
   for (const [who, text] of [["plan-feature-scaffold", scaffoldProcess], ["plan-fix", planFix], ["plan-feature", planFeature], ["review-plan", reviewPlan + planChecks + planOutput]]) {
