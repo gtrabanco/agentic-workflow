@@ -285,3 +285,24 @@ version bump per D15, roadmap row → `in-review`).
 - Commit: `fdc9ea91` feat(28-evidence-grounded-spec-plan-review): pre-execution evidence contracts (P1) · Gate: `cd packages/agentic-workflow-schema && npm test` -> exit 0, 671/671 (8 new pre-execution suites + all pre-existing suites); `npm run check:pre-execution-schemas` -> drift-free; `npm pack --dry-run` -> 3.5.0, 27 files, 2/2 projections; `node scripts/check-pre-execution-package.mjs` -> PASS.
 - Phase-lint P1: PASS (8/8) · fingerprint `P1:schema/db:8:publish-pre-execution-evidence-contracts`. Preflight receipts (branch/own-status/NRS/invariants/baseline) recorded above, unchanged.
 - Next: P2 · Attempts: 1
+
+## Pre-execution review receipt v1 — spec
+- Review: rs-28-20260831-001 · Snapshot: 781f8127481cd59a51255f86b74d8f82a8f5b0b87533c9619f4b95cb69fed4cf · Verdict: spec-review-pass
+- Unit: 28-evidence-grounded-spec-plan-review · Stage: spec · Parent: null
+- Source revision: 0651d3ff4902d84778511d7f82bc291ea8b04b12 · Artifact revision: 28-planning-frozen-20260830
+- Reviewer: executor-session · Session: 20260831-p5-continue · Role: reviewer · Author: design-team
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-08-31T00:00:00Z/2026-08-31T00:00:00Z · Findings: 0 (material open: 0)
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-28-20260831-001 · Snapshot: f82316b8ee700d79225a6702cf1f63df648f9612751aa005926fa1cac72da37d · Verdict: plan-review-pass
+- Unit: 28-evidence-grounded-spec-plan-review · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 781f8127481cd59a51255f86b74d8f82a8f5b0b87533c9619f4b95cb69fed4cf · Parent Product receipt: rs-28-20260831-001
+- Source revision: 0651d3ff4902d84778511d7f82bc291ea8b04b12 · Artifact revision: 28-planning-frozen-20260830
+- Reviewer: executor-session · Session: 20260831-p5-continue · Role: reviewer · Author: design-team
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-08-31T00:00:00Z/2026-08-31T00:00:00Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 20 rows · obligations 14 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): none — first cycle
