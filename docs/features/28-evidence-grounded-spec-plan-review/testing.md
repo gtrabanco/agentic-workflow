@@ -158,3 +158,49 @@ consolidation means a caller can point at `pre-execution-review` and be wrong ab
 the detail, so the suite pins both the delegation and the stage-specific residue in
 `design-feature`/`review-spec`; (3) this unit's own `planning-obligations.md` is
 written with the tooling it ships (dogfood, not pre-existing evidence).
+
+### P4 (2026-08-30) — Routing enforcement
+
+| Command | Result |
+|---|---|
+| `node --test scripts/pre-execution-quality.test.mjs` | 46/46 pass (39 pre-P4 + 7 P4 route/owner cases) |
+| `node --test scripts/*.test.mjs` (root) | 103/103 pass |
+| `node scripts/check-skill-context.mjs` | PASS — 39 skills |
+| `node scripts/check-skill-context.mjs --routes` | PASS — 23 routes (execute-phase routes now include `PRE_EXECUTION_GATE.md`; ceilings re-measured) |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | bundled 38 skills (121 files); 134/134 pass |
+
+Route-specific coverage (each mandatory route exercised against the real contract
+text, through a pure model of the decision tables so a drift in either side fails):
+
+| Route | Case that owns it |
+|---|---|
+| current / stale / missing / wrong-stage / substitute / self-approved / author-readiness receipt | `route fixtures: current, stale and missing receipts select exactly one command each` — each label must both re-route the sensor and refuse the executor an edit |
+| complete feature Plan review → execution | `…feature and fix paths, and the autopilot stage order` |
+| complete fix Plan review | same case: fix path admits on its own receipt and a `SPEC-REVIEW-PASS` never substitutes |
+| later review root causes (plan-, product-, source-owned) | `route fixtures: later review root causes…` + `Owning stage` pin in `review-implementation` |
+| crash / re-entry | same case: routing recomputed from persisted evidence, stale-after-crash labelled `stale` |
+| no-progress | `CONVERGENCE-ANOMALY` required before a second local edit (loop + policy pins) |
+| no partial-success envelope | `route fixtures: no partial-success envelope…`: FAIL/verdict-out-of-set never startable, readiness can never emit a PASS |
+| legacy adoption | `route fixtures: legacy adoption constructs evidence and never coerces it` + single-owner pin (`Construct, never coerce` appears in exactly one file) |
+
+Mutation checks (probe → expect the suite to fail → restore; 12 probes this phase):
+`--force` reaching the pre-execution gate ✗, the fix path allowed a Product
+substitute ✗, the sensor label becoming advisory instead of overriding ✗ (both the
+override sentence and the `legacy` label row), a `plan`-owned finding folding
+locally ✗, an open obligation "noted" instead of blocking ✗, the executor expecting
+rather than requiring the PASS ✗, legacy adoption's ownership moving out of
+`pre-execution-review` ✗, the autopilot order collapsing back to
+`[DESIGN] → PLAN → EXECUTE` ✗, the autopilot allowed to file an issue ✗, the
+owning-stage table removed ✗, and obligations dropped from the descope guard ✗.
+One probe slipped at first (a heading-only rename in `PRE_EXECUTION.md` proved
+nothing), so the assertions were strengthened to pin the sentences that carry the
+rules, then all probes were re-run.
+
+Residual risks: the route fixtures are pure models of the published decision
+tables — they prove the documents agree with a deterministic reading of themselves,
+not that a live model follows them. No real turn has yet been stopped by
+`execute-phase`'s gate, and the `detail.pre_execution[]` rows are specified in the
+skill docs (the envelope schema keeps `detail` opaque on purpose), so an
+orchestrator cannot validate them mechanically until P5's canary runs the routes for
+real.
+

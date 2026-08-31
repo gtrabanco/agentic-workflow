@@ -127,7 +127,9 @@ con ningún modelo. Un único camino disciplinado:
 > `plan-feature-scaffold` (ocultos del menú). Planificado tampoco es ejecutable:
 > el planeado congela los libros de evidencia de planificación y de obligaciones,
 > y `review-plan` debe devolver un `PLAN-REVIEW-PASS` vigente antes de que
-> `execute-phase` toque una fase.
+> `execute-phase` toque una fase — y `execute-phase` falla cerrado ante un recibo
+> ausente, caducado o de escalón equivocado, la única puerta de preflight que
+> `--force` no alcanza.
 
 ### Ejecución
 
@@ -592,8 +594,10 @@ modelo, sin coste de tokens en la captura.
 
 1. **Las docs dirigen el trabajo** — cada skill lee primero la guía del proyecto,
    el mapa de docs, la arquitectura, el roadmap y las guías de estilo, y los respeta.
-2. **Planificar antes de programar** — las features obtienen un SPEC + artefactos
-   antes de escribir una sola línea.
+2. **Revisar antes de planificar, planificar antes de programar** — las features
+   obtienen un SPEC + artefactos antes de escribir una sola línea, y tanto la mitad
+   de producto como el plan necesitan un PASS independiente vigente antes de que la
+   siguiente etapa corra.
 3. **Una fase cada vez** — cada una verificada y commiteada por separado.
 4. **Un PR por unidad, contra la rama por defecto** — nunca sobre `main`, nunca apilados.
 5. **Evidencia sobre reflejo** — el triage verifica disparadores; el trabajo

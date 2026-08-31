@@ -9,7 +9,7 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 | P1 — Publish pre-execution evidence contracts | done | `npm test` 671/671 exit 0 · `check:pre-execution-schemas` drift-free · `npm pack --dry-run` 3.5.0, 2/2 projections · `check-pre-execution-package.mjs` PASS |
 | P2 — Establish Product review readiness | done | Depends on P1 public contracts |
 | P3 — Establish Plan review readiness | done | Depends on P2 Product-review authority |
-| P4 — Enforce pre-execution authority routing | pending | Depends on P3 Plan-review authority |
+| P4 — Enforce pre-execution authority routing | done | Depends on P3 Plan-review authority |
 | P5 — Qualify the pre-execution workflow | pending | Depends on P1-P4 |
 
 ## Dependency receipt v1
@@ -186,6 +186,83 @@ Phase shape did not change; only the recorded label was wrong.
 `execute-phase`'s fail-closed Plan gate, `ship-roadmap` sequencing,
 `review-change`/`loop-review-fold` root-cause routes, `audit-pr` lineage and
 obligation closure, legacy adoption, no auto-issue).
+
+## P4 — 2026-08-30 — Routing enforcement
+
+**Done**
+- `workflow-status` 3.0.0: new step 6a + `references/PRE_EXECUTION.md` sense each
+  unit's receipt block, recompute the bound digest with `git hash-object`, and label
+  the stage (`current | missing | stale | wrong-stage | substitute | self-approved |
+  author-readiness | legacy`). The label overrides step 6's status-only command: no
+  current PASS → `gate` blocker + `detail.pre_execution[]` row (documented in
+  `ENVELOPE_FIELDS.md`), so `next.recommended` cannot point at `execute-phase` on an
+  unreviewed plan.
+- `execute-phase` 4.0.0: `references/PRE_EXECUTION_GATE.md` inserts the pre-execution
+  review gate between the own-status gate and the acceptance manifest, failing closed
+  on missing/stale/wrong-stage `PLAN-REVIEW-PASS` (fix units on their own receipt)
+  with the fixed `PRE-EXECUTION GATE` block, an explicit no-`--force` rule, a
+  no-forgery rule, the legacy adoption route, and the post-PASS pre-write slot
+  reserved for feature 29. `DESCOPE.md` now treats an obligation-ledger row like an
+  acceptance criterion.
+- `ship-roadmap` 5.0.0: ADVANCE gains REVIEW-SPEC and REVIEW-PLAN stages (clean
+  context, routed tier, park-not-guess on `NEEDS-DESIGN`, no issue creation between
+  PLAN and EXECUTE), the order reads
+  DESIGN → REVIEW-SPEC → PLAN → REVIEW-PLAN → EXECUTE → PR → REVIEW → AUDIT, fix
+  units take plan-fix → REVIEW-PLAN → EXECUTE `--fix`, and merge policy is untouched.
+  `MODEL_ROUTING.md` and `RECOVERY_AND_SELECTION.md` follow.
+- Findings now carry an owning stage: `review-implementation` 1.5.0 classifies each
+  finding `product | plan | source | environment | runtime` with a cited artifact;
+  `review-change` 2.12.0's `REVIEW-FAIL` block routes plan- and product-owned rows to
+  their author + re-review; `loop-review-fold` 3.0.0 refuses to fold them, requires
+  the `CONVERGENCE-ANOMALY` diagnosis before a second local edit, and gained an
+  `Owned elsewhere:` output line.
+- `audit-pr` 5.0.0: MERGE-READY additionally requires that the lineage survived the
+  build (plan receipt recomputes + parent spec receipt current), every obligation row
+  `verified`/`n/a`, and no open planning finding; a `deferred` row without a user
+  amendment blocks. It stays the only emitter of `MERGE-READY`.
+- Single ownership consolidated: `pre-execution-review` 1.1.0 §5 names every route
+  that may never file an issue or defer an obligation, and §6 is now the only owner of
+  legacy adoption (the sensor and the executor cite it in one line each).
+  `plan-feature-scaffold` 2.1.0, `evidence-grounding` 1.1.1,
+  `discover-repository-state`/`resolve-repository-state` 1.2.1 carry the matching
+  one-liners.
+- Docs: EN+ES changelog rows for all twelve bumped skills + release-log entries,
+  both MIGRATION files gained the routing section, both root READMEs state that
+  planned is not executable and that `--force` cannot reach the gate. Pi bundle
+  rebuilt (38 skills, 121 files), package READMEs and 134/134 tests unchanged.
+- Tests: `pre-execution-quality.test.mjs` 39 → 46 (route fixtures for
+  current/stale/missing/wrong-stage/substitute/self-approved/author-readiness/legacy,
+  feature+fix paths, autopilot order, root causes, crash/re-entry, no-progress,
+  no-partial-success, one-owner pins). `bounded-delivery-loops.test.mjs` retargeted
+  two pins whose rule moved (status-only → evidence-staged routing; roadmap `planned`
+  next action).
+
+**Gate** — quality 46/46 · root `node --test scripts/*.test.mjs` 103/103 ·
+context budgets PASS (39 skills) · route budgets PASS (23 routes; execute-phase
+routes now load `PRE_EXECUTION_GATE.md`, ceilings re-measured per D19) ·
+Pi 134/134 · ACCEPTANCE blob unchanged. Twelve mutation probes, each caught by the
+assertion that owns it (`testing.md` → P4).
+
+**Decisions** — D23 (`--force` never reaches the pre-execution gate), D24 (owning
+stage routes the hand-off; class never does).
+
+**Next**: P5 — qualify the workflow end to end (EN/ES doc sweep, weak-model
+qualification corpus + `GOLDEN_FIXTURE.md`, canary protocol, terminal Pi rebuild +
+version bump per D15, roadmap row → `in-review`).
+
+## Unit-loop receipt — P4
+- Candidate: this commit · Gate: see the **Gate** line above (all commands re-run on the final state) · Phase-lint P4: PASS (8/8) · fingerprint `P4:docs:8:enforce-pre-execution-authority-routing`
+- Preflight revalidation: branch unchanged · roadmap row 28 = `in-progress` · NRS snapshot consumed, `frozen` · ACCEPTANCE blob `238b8a1ae96018ecb6aae082dc135d44d5389c24` recomputed at this turn, unchanged · invariants `n/a: no project invariants declared` · dependency receipts (25/#144, 26/#145, 27/#150) still MERGED · prior receipts: P1 `fdc9ea91`, P2 `04b01e53`, P3 `5d399e46`, unchanged.
+- Acceptance coverage after P4: AC-CONTRACT-004 **covered** (every affected route
+  refuses to start on missing/stale/wrong-stage evidence, no bypass, legacy adoption
+  defined once), AC-CONTRACT-005 **covered** (obligation closure and no-auto-issue
+  enforced from scaffold through `audit-pr`), AC-FUNC-001/REVIEW-001/REVIEW-002
+  remain **covered** (P2/P3 layers untouched), AC-QUALITY-001 **partially covered**
+  (budgets + bilingual sync green; the qualification corpus is P5).
+- Residual risk: the route fixtures are models of the published tables — no live
+  turn has been stopped by the executor's gate yet, and `detail.pre_execution[]` is
+  contract text rather than a schema-validated field (`detail` is opaque by design).
+- Next: P5 · Attempts: 1
 
 ## Unit-loop receipt — P3
 - Candidate: this commit · Gate: see the **Gate** line above (all commands run on the final state) · Phase-lint P3: PASS (8/8) · fingerprint `P3:docs:8:establish-plan-review-readiness`

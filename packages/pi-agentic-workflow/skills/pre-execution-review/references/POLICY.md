@@ -83,5 +83,29 @@ outside this policy and can never be translated into a PASS.
 - A PASS earned by dropping a finding to `info`, by narrowing a check, or by
   editing a validator/test to accept the artifact.
 - A silent second cycle, a silent dismissal, or a silent substitute receipt.
-- An automatic forge issue: an obligation that does not fit the unit stays in
-  the unit's ledger until the user amends the governing SPEC.
+- An automatic forge issue. No route in the pre-execution set — `evidence-grounding`
+  readiness, `review-spec`, `review-plan`, `plan-feature-scaffold`, `plan-fix`,
+  `execute-phase`, `workflow-status`, `ship-roadmap`, `review-change`,
+  `loop-review-fold`, `audit-pr` — creates one for a planning gap, and none defers
+  an obligation to a future issue: the row stays in the unit's ledger, open, until
+  the **user** amends the governing SPEC. A blocker that says "file an issue" is a
+  contract violation, not a workaround, and a `deferred` row without an amendment is
+  an open row with a new name.
+- Execution authority from a neighbouring stage: a `SPEC-REVIEW-PASS` never unlocks
+  `execute-phase`, and a `PLAN-REVIEW-PASS` never certifies the Product half.
+
+### 6. Legacy adoption (units planned before this gate existed)
+
+One rule, same shape for every consumer:
+
+- **Construct, never coerce.** Add what the unit is missing — the planning-evidence
+  and obligation ledgers, built from the artifacts as they stand today — and leave
+  `ACCEPTANCE.md`, `PLAN.md`, `TASKS.md`, the phase commits and any older receipt
+  byte-identical. Rewriting an old verdict, its digest, or its date is forgery.
+- **Re-review, then resume.** The adopted unit runs `/review-plan` like any other and
+  `execute-phase` resumes **only** on that current `PLAN-REVIEW-PASS`. A pre-28 unit
+  is never grandfathered in on the strength of its roadmap status.
+- **No retroactive defect.** A missing ledger means the unit predates the gate, not
+  that its author was wrong; report it as `legacy`, never as a finding against them.
+- **Old failures stay old.** A unit whose review returned `FAIL` shows the FAIL with
+  the repair route the verdict names; adopting a unit never launders its verdicts.

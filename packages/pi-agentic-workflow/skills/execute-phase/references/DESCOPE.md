@@ -5,8 +5,12 @@ follow-up issue — the unit reads as done, the scope silently moved to the
 backlog. Before creating **any** issue while executing this unit, classify it
 with the fixed **descope test**:
 
-- **Descope** — the issue's content overlaps a SPEC acceptance criterion or a
-  phase task that is **not fully delivered** in this unit.
+- **Descope** — the issue's content overlaps a SPEC acceptance criterion, a
+  phase task, or an **obligation-ledger row** that is **not fully delivered** in
+  this unit. A `planning-obligations.md` row (or the SPEC's embedded `### Obligations`
+  table) is scope of the unit exactly like a criterion: moving one to "later" is a
+  descope, needs the same dated user amendment, and flips the row to `deferred` only
+  as part of that amendment (`pre-execution-review` owns the lifecycle).
 - **Discovered work** — everything else (genuinely new, outside the SPEC's
   promises) — record it as a proposal; only explicit user triage may file it.
 
@@ -30,6 +34,8 @@ first record of a descope. The descope must first be recorded as an explicit,
    row still reading the literal `#<n>` placeholder is unlinked and fails
    `audit-pr`'s symmetric check.
 
-`audit-pr`'s scope-bleed gate and `product-audit`'s recurrence signal both key
-off this same `## Amendments` log — it is the single authoritative record of
-every descope, defined once here.
+`audit-pr`'s scope-bleed gate, `product-audit`'s recurrence signal and
+`audit-pr`'s obligation-closure check all key off this same `## Amendments` log —
+it is the single authoritative record of every descope, defined once here. Nothing
+else in the pre-execution route creates an issue: a missing or failed
+`PLAN-REVIEW-PASS` is closed by `/review-plan`, never by a tracker item.

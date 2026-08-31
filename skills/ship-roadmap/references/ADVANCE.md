@@ -21,14 +21,34 @@
      undesignable unit is picked back up only by a human answering the
      recorded question and re-running `/design-feature <slug> "<answer>"`
      directly — the autopilot never re-asks it.
+   - **REVIEW-SPEC** (only between DESIGN and PLAN) — compose `review-spec` in a
+     clean context at the routed tier (opus/high), never in the turn that wrote the
+     product half. `SPEC-REVIEW-PASS` releases the unit into PLAN. A FAIL whose
+     findings are common-root-cause or wording-only returns to the same unit's
+     author for one root-caused repair batch, then a fresh review. `NEEDS-DESIGN`
+     means a product choice is open that this run's locked record cannot answer:
+     **park the unit** with the exact question (`NEEDS_INPUT`, same shape as the
+     undesignable park above) — the autopilot never answers a product question
+     itself, and `SELECT` continues with the next startable unit.
    - **PLAN** — compose `plan-feature` in-turn via its scoped path (equal
-     tier). Every unit reaching PLAN is already `planned`-bound (DESIGN ran
-     first for any `idea`/`defined` unit), so `plan-feature`'s own redirect
-     gate always passes here. The interview path is **forbidden** mid-run:
+     tier). Every unit reaching PLAN holds a current `SPEC-REVIEW-PASS` (REVIEW-SPEC
+     ran first, or the unit was already planned before this gate existed and its
+     own Product receipt is current), so `plan-feature`'s PRODUCT-REVIEW gate passes
+     here. The interview path is **forbidden** mid-run:
      SPEC gaps are resolved silently from the decision record and logged. JIT
      planning that reveals the feature's premise is wrong (obsolete, absorbed,
      impossible on this stack) → mark it blocked with the contradiction
      recorded; never re-ask.
+   - **REVIEW-PLAN** (only between PLAN and EXECUTE) — compose `review-plan` in a
+     clean context at the routed tier over the plan the previous stage just froze.
+     `PLAN-REVIEW-PASS` releases EXECUTE. A FAIL routes by root cause: plan-local
+     (bad phase cut, blank validator, ledger drift) → one root-caused re-cut by the
+     planning author and a fresh review; product-rooted or an assumption this record
+     cannot settle → `NEEDS-DESIGN` → park as in REVIEW-SPEC. A second local cycle
+     that changes nothing stops editing and reports `CONVERGENCE-ANOMALY` instead of
+     burning a third budget. **No stage between PLAN and EXECUTE may create a forge
+     issue or defer an obligation to one** — an unmet obligation fails this stage, it
+     is never exported.
    - **EXECUTE** — run each unfinished **implementation phase** in a **fresh cheap-tier context**: on Claude
      Code, spawn one subagent per phase with `model: sonnet` (the override is
      the only mechanism that runs *below* the conductor's turn tier); on an
@@ -81,10 +101,18 @@
      parked and the loop moves on); the fixer's cycle ends committed AND
      pushed (step 5), so the re-audit judges the real branch.
 
-   The stage sequence is per-feature and size-dependent — always **one stage
+   Fix units take the same pair in miniature: **plan-fix → REVIEW-PLAN → EXECUTE
+   (`--fix`)** — a fix has no Product hop to wait on (D6), so its plan review is the
+   only pre-execution gate it can have. The stage sequence is per-feature and size-dependent — always **one stage
    per iteration**: a feature starting at `idea`/`defined` gets a DESIGN stage
    first; one already `planned` (including the founding-scaffolded feature 01)
-   skips straight to PLAN. Every size follows [DESIGN] → PLAN → EXECUTE
+   goes to its missing review stage, and skips to EXECUTE only when a current
+   `PLAN-REVIEW-PASS` is bound to its bytes. Every size follows
+   **[DESIGN → REVIEW-SPEC] → PLAN → REVIEW-PLAN → EXECUTE**
    (implementation phases, fresh cheap worker per phase) → PR (explicit
    `Hardening & PR`) → REVIEW (bounded final loop) → AUDIT. Risk changes final
-   review strength, not phase cadence.
+   review strength, not phase cadence. The two review stages are the pre-execution
+   pair: they judge documents in a clean context and are **not** the post-code
+   REVIEW loop, which stays exactly as described below. Merge policy is unchanged —
+   the human (or the `--fullauto` wrapper behind its recorded floors) still owns the
+   merge, and neither review stage may merge, close, or file anything.
