@@ -540,11 +540,10 @@ function snapshotSemantics(document: Record<string, unknown>, collector: PreExec
     const identity = `${context.kind}\u0000${context.identifier}`;
     if (identities.has(identity)) collector.add("duplicate-id", `/contexts/${i}/identifier`);
     identities.add(identity);
-    const ordered = `${context.kind}\u0000${context.identifier}`;
-    if (previousContext !== null && utf8ByteCompare(previousContext, ordered) >= 0) {
+    if (previousContext !== null && utf8ByteCompare(previousContext, identity) >= 0) {
       collector.add("invalid-order", `/contexts/${i}`);
     }
-    previousContext = ordered;
+    previousContext = identity;
   }
 }
 
