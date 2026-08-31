@@ -21,10 +21,16 @@ execution.
 | PE-010 | Skills must remain text-first, portable, progressively loaded, and within checked context budgets | project guide and budget checker | `CLAUDE.md`; `scripts/check-skill-context.mjs`; current checker PASS recorded in NRS | S2, S10-S12; P2-P5 | current at baseline | proven | P5 reruns budget/installability gates |
 | PE-011 | Provider/model routing, persistence, retries, and acknowledgement belong to consumers such as AWL, not these portable skills | accepted product boundary | issue #146 and this SPEC Product decisions; `docs/research/agentic-workflow-machine-contract-options.md` | non-goals; PD6; architecture boundary | current design authority | decision | P1-P4 expose portable contracts only |
 | PE-012 | More than one correction cycle must remain correctness-safe but become a qualification anomaly | explicit user authority | 2026-08-30 user-approved amendment in this SPEC | S13; PD7; AC14 | current design authority | decision | P2-P5 implement and qualify without suppressing findings |
+| PE-013 | P5's recorded evidence does not satisfy AC11/AC12/AC14: no every-changed-executor-path fixture rows, no baseline/post-change canary fields, no fix or cross-boundary sample; O9–O14 remain planned; roadmap row was flipped done prematurely | independent candidate-code review | `docs/features/28-evidence-grounded-spec-plan-review/review-findings.md` F2+F3+F6 (`replan-in-unit`) at PR #155 head `a42c244b` | O11, O12, O14; P6-P8 | live 2026-08-31 | proven | P6 produces the corpus/fixture evidence; P7 reconciles statuses; P8 re-reviews |
+| PE-014 | Replayable qualification samples exist: fix unit 78 (`plan-fix` path, one fold cycle + re-review history) and cross-boundary feature 17 (skills + schema package + template) | repository fix and feature artifacts | `docs/fix/78-audit-pr-closure-integrity/SPEC.md`; `docs/features/17-finding-severity-routing/` | P6 sample selection | current at replan | proven | P6 replays both in clean contexts and records canary fields |
+| PE-015 | The terminal release steps partially ran: Pi package bumped 0.1.0 -> 0.2.0 (commit `a42c244b`) and PR #155 is open | git log and forge | `git log --oneline`; `gh pr list --state open` (PR #155, head `feat/28-evidence-grounded-spec-plan-review`) | P8 close-out | live 2026-08-31 | proven | P8 re-verifies the terminal candidate and updates the PR; no new PR |
 
 ## Closure
 
 - Material planning claims without evidence: none.
 - Unresolved product or architecture decisions: none.
 - Revalidation required before execution: Pi bundle/parity behavior, current
-  package version/API, current skill contents, and current NRS.
+  package version/API, current skill contents, and current NRS; after the
+  2026-08-31 re-plan also the P6 sample units' artifacts (fix 78, feature 17)
+  and the open review findings ledger (F2+F3+F6 stay `folded: no` until their
+  phase fixes land).
