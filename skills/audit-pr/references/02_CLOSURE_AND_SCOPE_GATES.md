@@ -89,9 +89,10 @@ authority **survived the build** — it never re-reviews a plan and never re-jud
 verdict:
 
 1. **Upstream lineage is current.** The unit's `progress.md` carries
-   `## Pre-execution review receipt v1 — plan` whose snapshot digest still recomputes
-   to the same value (`git hash-object` on each bound artifact; implementation-phase
-   additions of *new* files are allowed, edits to a bound artifact are not), and — for
+   `## Pre-execution review receipt v1 — plan` whose digest re-derives
+   to the same value (`scripts/pre-execution-snapshot.mjs verify --stage plan`;
+   implementation-phase new-file additions are allowed, edits to a bound
+   artifact are not), and — for
    a feature unit — the `— spec` receipt it names as its parent. Stale, missing, or
    wrong-stage lineage → **BLOCKED**, `→ Next: /review-plan <unit>` (or
    `/review-spec <unit>` when the parent is the broken link). A
