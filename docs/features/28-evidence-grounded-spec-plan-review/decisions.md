@@ -138,3 +138,16 @@
   suite asserts that the three ledger column lists appear in exactly one file in
   the tree, which is what keeps the P2 spec-side text and the P3 plan-side text
   from drifting apart later.
+
+- **D22 — Route-ceiling headroom policy (F7, user decision 2026-08-31):** budget
+  ceilings are re-baselined to `ceil(measured × 1.10)` at declared re-basis
+  points, every ceiling raise must name its real growth source in the commit and
+  changelog row, and ceilings are re-based down when trim work lands. Declared
+  after F7 showed the audit-pr route ceilings pinned at exactly the measured
+  value (0 % headroom — the guard could not trip) with a misattributed bump
+  rationale (`857aa54b`); the live demonstration was the F1 fold tripping the
+  guard with a 3-line doc correction. Applied now to `audit-pr:feature/fix`
+  (9501/614 from measured 8637/558) and `plan-fix:issue` (18551/1429 from
+  measured 16864/1299, F8's re-basis); the remaining 21 routes re-baseline at
+  their next declared point. Unblocks F8's fold; the plan-fix:issue
+  duplication trim stays with debt item D2 and its recorded trigger.
