@@ -53,7 +53,7 @@ The fix's own authority, without a Product half: reproduction, root cause with
 code evidence, regression scope, rollback path, and the affected invariant or use
 case — one compact row each. Never an exploration transcript.
 
-| ID | Question or claim | Authority | Repository evidence and revision | Affected decision or obligation | Freshness | Status | Owner or next evidence |
+| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|
 
 ### Obligations
