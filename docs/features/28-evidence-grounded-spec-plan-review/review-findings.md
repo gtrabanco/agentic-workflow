@@ -2,6 +2,10 @@
 
 Candidate-code review ran 2026-08-31 (review-change, single-reviewer, PR #155 head `a42c244b`). F7 (decision-required) and F21 (proposal) are intentionally not ledgered — non-fix-now findings keep their destinations from outcome routing (D3).
 
+2026-08-31 re-plan: F2+F3+F6 (`replan-in-unit`) are covered by the
+user-approved SPEC amendment appending P6–P8. Their rows stay `folded: no`
+until the phase fixes land and `fold-findings` flips them.
+
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | F1 | skills/workflow-status/references/SENSOR_CORE.md:69 + skills/execute-phase/references/PRE_EXECUTION_GATE.md:6 + skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:93 | code | high | fix-now | fold | yes |

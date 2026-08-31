@@ -68,11 +68,55 @@ Layer: hardening · Done-when: every frozen validator passes and the exact
 candidate has current independent review evidence with no unresolved fix-now
 finding.
 
-- [ ] Synchronize package README EN/ES, workflow/orchestration/feature/fix/migration/skill-catalog docs EN/ES, portable manual prompts, templates, and distribution metadata without duplicating machine semantics; rebuild feature 27's Pi skill bundle only through its canonical bundle script.
-- [ ] Run all package gates, generated-projection drift/parity, package-content checks, full existing root tests, and regression/read verification of unchanged candidate/verification contracts.
-- [ ] Run Pi bundle/parity/package tests, `node scripts/check-skill-context.mjs`, and `npx skills add . --list`; repair only the canonical owner/progressive references/metadata and re-run to PASS.
+- [x] Synchronize package README EN/ES, workflow/orchestration/feature/fix/migration/skill-catalog docs EN/ES, portable manual prompts, templates, and distribution metadata without duplicating machine semantics; rebuild feature 27's Pi skill bundle only through its canonical bundle script.
+- [x] Run all package gates, generated-projection drift/parity, package-content checks, full existing root tests, and regression/read verification of unchanged candidate/verification contracts.
+- [x] Run Pi bundle/parity/package tests, `node scripts/check-skill-context.mjs`, and `npx skills add . --list`; repair only the canonical owner/progressive references/metadata and re-run to PASS.
 - [ ] Execute and log the golden fixture with the weakest supported executor path across the new review gates and every changed executor-path skill/version.
 - [ ] Run and record a comparable feature, fix, and cross-boundary canary corpus; use observed values or `not yet measured`, fail qualification on any second repair/re-review cycle, and never infer a savings claim.
 - [ ] Run independent context-clean `review-change` on the exact candidate, fold every fix-now finding through its root-cause route, and repeat only on a changed snapshot/new falsifiable question until PASS.
 - [ ] Mark progress/testing/known-issues/obligation ledgers truthfully, flip roadmap row 28 to `done`, and verify the complete frozen acceptance manifest at terminal HEAD.
 - [ ] Ship the release-ready terminal candidate: as the final pre-merge step, bump `@gtrabanco/pi-agentic-workflow` `0.1.0 -> 0.2.0` after the last skill edit and bundle rebuild (`npm run bundle:skills && npm test` green), add the `0.2.0` companion-package rows to both CHANGELOGs, commit/push, and open one PR against `main` with `Closes #146`, exact verification evidence, package release notes, compatibility boundary, and no self-authorship line. `publish-pi-package.yml` then releases the Pi package on merge because its version is newer than the registry.
+
+> **Re-plan 2026-08-31** (user-approved amendment, findings F2+F3+F6, all
+> `replan-in-unit`): rows 1–3 above are complete with evidence in
+> `testing.md`'s P5 record. Rows 4–7 are superseded: the golden-fixture and
+> canary-corpus work moves to **P6**, ledger/status reconciliation to **P7**,
+> and the re-review + PR close-out to **P8** (the 0.2.0 bump commit `a42c244b`
+> and PR #155 already exist; P8 verifies them on the terminal candidate).
+
+## P6 — Run the pre-execution qualification corpus
+
+Layer: hardening · Done-when: `testing.md`'s completed canary corpus carries
+one row-set per sample (28 feature / 78 fix / 17 cross-boundary) with every
+canary field observed or explicitly `not yet measured` and no second-cycle
+sample; `GOLDEN_FIXTURE.md` (+ ES sibling) carries a dated row for every
+changed executor-path skill/version in this unit's 3.5.0 changelog rows; root
+`node --test scripts/*.test.mjs` -> exit 0.
+
+- [ ] Record unit 28's feature-sample canary fields (elapsed time, model calls, pre-edit replans, post-review repairs, review/fold cycles, reverted lines/files, tokens or explicit `not yet measured`, exported obligations) in `testing.md`'s corpus table.
+- [ ] Replay fix unit 78 (`docs/fix/78-audit-pr-closure-integrity`) through `plan-fix` -> `review-plan` in a clean context as the fix sample; record its baseline (original run) vs post-change (probe) fields and correction-cycle count; a sample entering a second repair/re-review cycle is root-caused and rerun per the protocol.
+- [ ] Replay feature 17 (`17-finding-severity-routing`, skills + schema package + template) through `review-plan` in a clean context as the cross-boundary sample; record the same fields and cycle count.
+- [ ] Append dated golden-fixture rows (EN + ES sibling) for every changed executor-path skill/version in this unit's 3.5.0 changelog rows not yet covered, following `docs/workflow/GOLDEN_FIXTURE.md`'s procedure with the weakest supported executor path.
+
+## P7 — Reconcile the unit ledgers with qualification evidence
+
+Layer: docs · Done-when: `grep -qE '\| 28 \| .?evidence-grounded-spec-plan-review.? \| in-progress' docs/features/ROADMAP.md` -> exit 0; every O9–O14 row in `planning-obligations.md` carries a status matching its cited evidence; `progress.md`'s phase table lists P6–P8 with receipts.
+
+- [ ] Set each O9–O14 row in `planning-obligations.md` to the status its cited evidence supports (`verified` only where the evidence row exists; rows without evidence stay `planned` and are named in `progress.md`'s residuals).
+- [ ] Tick the completed P6/P7 boxes in this file and keep the P5 supersede note accurate.
+- [ ] Reconcile `progress.md`: phase-table rows for P6–P8 with receipts, the P5-section correction note, and the P7 receipt.
+- [ ] Verify roadmap row 28 reads `in-progress` and matches `progress.md` before P8 flips it at the PR step.
+
+## P8 — Re-review and close the corrected candidate
+
+Layer: close-out · Done-when: terminal HEAD holds a current context-clean
+`review-change` PASS receipt with zero open findings; every package gate
+passes at terminal HEAD; the frozen ACCEPTANCE manifest is verified; roadmap
+row 28 reads `done · [#155]`.
+
+- [ ] Run context-clean `review-change` on the terminal HEAD and record the exact-HEAD receipt in `progress.md`.
+- [ ] Fold every new fix-now finding via `fold-findings`; route unresolved rows to `triage-issue --prioritize-now` per `loop-review-fold` step 5.
+- [ ] Re-run the package gates at terminal HEAD: schema `npm test`, root `node --test scripts/*.test.mjs`, `check-skill-context` (skills + routes), Pi `bundle:skills && npm test`, `npx skills add . --list`.
+- [ ] Verify the complete frozen ACCEPTANCE manifest at terminal HEAD and record the verification receipt in `progress.md`.
+- [ ] Update PR #155 with the amendment summary (P6–P8) and verification evidence.
+- [ ] Flip roadmap row 28 to `done · [#155]` after the PR update (the PR-open step's write).
