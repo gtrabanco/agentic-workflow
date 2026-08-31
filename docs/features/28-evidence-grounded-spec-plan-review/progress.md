@@ -371,3 +371,13 @@ ledger and status truthfully, and re-review/close the corrected candidate.
 The roadmap row is corrected back to `in-progress` in the same replan commit.
 Findings F7 (decision-required, resolved by the D22 headroom policy) and the
 fold-class rows are unaffected by this amendment.
+
+## Pre-execution review receipt v1 — spec
+- Review: rs-28-20260831-002 · Snapshot: c19386bf06df275849ce71d7982b81fdf8f60a47166a4061c37001e6defda924 · Verdict: spec-review-fail
+- Unit: 28-evidence-grounded-spec-plan-review · Stage: spec · Parent: null
+- Source revision: 6157e1824a808fe21c4a51e04bd64bbdc62d718a · Artifact revision: 6157e1824a808fe21c4a51e04bd64bbdc62d718a
+- Reviewer: reviewer-session · Session: 01a059cc-c813-753b-a897-729706971174 · Role: reviewer · Author: design-team
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: cross-model · Policy: v1
+- Started/finished: 2026-08-31T22:35:00Z/2026-08-31T23:30:00Z · Findings: 18 (material open: 14)
+- Notes: first review of the amended snapshot (cycle 1; prior receipts rs-28-20260831-001/rp-28-20260831-001 bound 781f8127…/f82316b8…, invalidated by replan 6157e182). Verdict authority one clean-context reviewer turn (user-requested); falsification and claim verification ran in four supporting worker contexts on a different provider model, so diversity is labelled cross-model. Read-only on reviewed artifacts: SPEC.md, decisions.md, ACCEPTANCE.md, roadmap untouched; findings rows appended to planning-findings.md (this review created it). Failed checks: C8, C10. Product-class material rows RS1+RS2 route to design-feature as one batch; plan-class rows RS3–RS12+RS14+RS18 route to review-plan/plan-feature; source-class RS13 routes to the executor. Snapshot built with the sanctioned recipe (`pre-execution-snapshot.mjs build --stage spec`); contexts bound: roadmap-row, project-guide (CLAUDE.md), normalized-repository-state present, architectural-invariants absent.
