@@ -2,6 +2,50 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-30 — ninguna ruta ya arranca trabajo sobre un plan sin revisar
+
+**Enrutado que rompe; `workflow-status` 3.0.0, `execute-phase` 4.0.0,
+`ship-roadmap` 5.0.0, `loop-review-fold` 3.0.0, `audit-pr` 5.0.0,
+`review-change` 2.12.0, `review-implementation` 1.5.0, interna
+`pre-execution-review` 1.1.0.**
+
+La puerta ya no está solo en el salto de autoría: está en el salto de *arranque*:
+
+- **Las recomendaciones van por evidencia.** `workflow-status` lee el bloque de recibo
+  de cada unidad, recalcula su digest y etiqueta el escalón
+  `current | missing | stale | wrong-stage | substitute | self-approved |
+  author-readiness | legacy`. Una unidad sin un PASS vigente para el escalón que va a
+  atacar sale de `startable_now` y pasa a un bloqueador `gate` que nombra la revisión
+  que falta (`detail.pre_execution[]` lleva las filas). Si consumías
+  `next.recommended` como «estado → orden», consúmelo como «estado + recibo → orden».
+- **`execute-phase` falla cerrado.** Entre la puerta de estado propio y el manifiesto
+  de aceptación se sitúa la puerta de revisión pre-ejecución: ninguna edición ante un
+  `PLAN-REVIEW-PASS` ausente, caducado o de escalón equivocado (unidades de fix: su
+  propio recibo). `--force` no alcanza esta puerta: anula paradas de orden, no el
+  veredicto de un revisor. Quienes pasaban `--force` para saltar una parada de
+  planificación ahora deben ejecutar `/review-plan <NN>`.
+- **El autopiloto tiene dos etapas más:** DISEÑO → REVIEW-SPEC → PLAN → REVIEW-PLAN →
+  EJECUCIÓN → PR → REVISIÓN → AUDITORÍA, con ambas revisiones en contexto limpio.
+  `NEEDS-DESIGN` aparca la unidad para el humano en lugar de adivinar una respuesta de
+  producto; la política de fusión no cambia.
+- **Los hallazgos llevan escalón dueño.** `review-change` informa los de dueño `plan` y
+  `product` con su dueño, y `loop-review-fold` se niega a plegarlos: vuelven a la
+  habilidad autora más una re-revisión. Un segundo ciclo local emite
+  `CONVERGENCE-ANOMALY` antes de volver a editar.
+- **`audit-pr` comprueba que el linaje sobrevivió a la construcción:** recibo de plan
+  vigente (más el recibo de spec padre), todas las obligaciones `verified`/`n/a` y
+  ningún hallazgo de planificación abierto. Una fila `deferred` sin SPEC rector
+  enmendado por el usuario bloquea. Sigue siendo el único emisor de `MERGE-READY`.
+- **Las unidades heredadas se adoptan, no quedan exentas.** Las unidades
+  `planned`/`in-progress` anteriores a la funcionalidad 28 reciben los dos libros
+  construidos desde sus artefactos actuales y luego un `/review-plan` real; no se
+  reescribe nada antiguo, no se toca la aceptación congelada, y la ejecución reanuda
+  solo con el PASS nuevo. `legacy` («anterior a la puerta») y `missing` («nunca
+  revisado») se informan distinto a propósito.
+- **Ninguna ruta archiva un issue para cerrar un hueco de planificación**, y una
+  obligación no puede aplazarse a un issue posterior salvo que el usuario enmiende
+  primero el SPEC rector.
+
 ## 2026-08-30 — diseñado ya no es lo mismo que revisado
 
 **Entregas que rompen; `design-feature` 3.1.0, `plan-feature` 5.0.0,

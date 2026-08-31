@@ -81,6 +81,14 @@
 5. **Register and verify.** Set the roadmap row to `planned` (`defined → planned`;
    a missing row may be added directly as `planned`). Re-read it after the write.
    If it does not literally say `planned`, reapply and re-read before continuing.
+   Obligation rows are never discharged by this step: no phase may be cut with an
+   obligation pointing at a future issue, and this skill creates no forge issue —
+   `deferred` exists only after the user amends the governing SPEC
+   (`pre-execution-review` owns the rule).
+   No obligation is discharged by this step: a phase may not be cut while an
+   obligation points at a future issue, this skill creates no forge issue, and
+   `deferred` exists only after the user amends the governing SPEC
+   (`pre-execution-review` owns the rule).
 6. **Run the `stage: plan` readiness preflight** from
    [`evidence-grounding`](<../../evidence-grounding/SKILL.md>) (it routes to
    `READINESS.md`) and paste its block. Only `READY-FOR-REVIEW` licenses the hand-off below;

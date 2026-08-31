@@ -26,7 +26,7 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 8164,
+      "routeEstimateMax": 8637,
       "routeLinesMax": 617
     },
     "audit-pr:fix": {
@@ -34,7 +34,7 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 8164,
+      "routeEstimateMax": 8637,
       "routeLinesMax": 617
     },
     "design-feature:product": {
@@ -53,8 +53,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 15800,
-      "routeLinesMax": 1130
+      "routeEstimateMax": 15959,
+      "routeLinesMax": 1132
     },
     "execute-phase:descope": {
       "skills": [
@@ -64,7 +64,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "HANDOFF.md",
           "CLOSEOUT.md",
@@ -84,7 +84,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "WORKFLOWS_FEATURE.md",
           "HANDOFF.md",
@@ -104,7 +104,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "HANDOFF.md",
           "CLOSEOUT.md",
@@ -124,7 +124,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "HANDOFF.md",
           "CLOSEOUT.md",
@@ -144,7 +144,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "WORKFLOWS_FIX.md",
           "HANDOFF.md",
@@ -164,7 +164,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "WORKFLOWS_LEGACY.md",
           "HANDOFF.md",
@@ -184,7 +184,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "EXECUTION_CONTRACT.md",
           "WORKFLOWS_SMALL_PHASED.md",
           "HANDOFF.md",
@@ -204,7 +204,7 @@
       ],
       "references": {
         "execute-phase": [
-          "PREFLIGHT.md",
+          "PRE_EXECUTION_GATE.md",
           "UNIT_LOOP.md",
           "EXECUTION_CONTRACT.md",
           "WORKFLOWS_FEATURE.md",
@@ -266,8 +266,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 12700,
-      "routeLinesMax": 993
+      "routeEstimateMax": 13009,
+      "routeLinesMax": 1006
     },
     "plan-feature:scoped": {
       "skills": [
@@ -290,7 +290,7 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 15390,
+      "routeEstimateMax": 15539,
       "routeLinesMax": 1213
     },
     "review-change:adversarial": {
@@ -376,8 +376,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 10080,
-      "routeLinesMax": 685
+      "routeEstimateMax": 10391,
+      "routeLinesMax": 699
     },
     "review-spec:default": {
       "skills": [
@@ -385,8 +385,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 8720,
-      "routeLinesMax": 638
+      "routeEstimateMax": 8978,
+      "routeLinesMax": 648
     }
   }
 }

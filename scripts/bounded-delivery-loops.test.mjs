@@ -34,10 +34,14 @@ assert.match(unitLoop, /NO-PROGRESS\|ATTEMPT-BUDGET/);
 // executor. Execution stays the post-PASS step, named in the same block.
 assert.match(planFeature, /Next: \/review-plan <NN> — the plan is written/);
 assert.match(planFeature, /PLAN-REVIEW-PASS|follows its PLAN-REVIEW-PASS|\/execute-phase <NN> P1/);
-assert.match(workflowStatus, /`planned` → `\/execute-phase <NN>`/);
+// Feature 28 P4: the status-only routing rule moved to evidence-staged routing
+// (workflow-status step 6a owns it), so these pins follow the rule to its owner.
+assert.match(workflowStatus, /`planned`\/`in-progress` → `\/execute-phase <NN>` only on a\n  current `PLAN-REVIEW-PASS`, else `\/review-plan <NN>`/);
+assert.match(read("skills/workflow-status/references/SENSOR_CORE.md"), /6a\. \*\*Sense the pre-execution receipts\*\*/);
 assert.match(discovery, /implementation-ready feature → \/execute-phase <NN>\n/);
 assert.match(resolution, /implementation was interrupted → \/execute-phase <NN>\n/);
-assert.match(roadmap, /Next action: `\/execute-phase <NN>`/);
+assert.match(roadmap, /it becomes `\/execute-phase <NN>` only/);
+assert.match(roadmap, /\*\*planned is not\n  executable\*\*/);
 assert.match(shipAdvance, /Stop before the literal final `Hardening & PR` phase/);
 assert.match(shipAdvance, /\*\*PR\*\* — run the unit's explicit final `Hardening & PR` phase/);
 

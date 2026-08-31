@@ -111,6 +111,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `discover-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.1 | 2026-08-30 | parche | La pista de próxima acción para `planned` dice ya que planificado no es ejecutable: `/execute-phase` solo mientras el `PLAN-REVIEW-PASS` de la unidad esté vigente, si no `/review-plan`. |
 | 1.2.0 | 2026-08-09 | menor | Enruta el trabajo listo para implementar a `execute-phase` solo-con-objetivo, evitando que el nuevo default de unidad completa vuelva accidentalmente a `P1` explícita. |
 | 1.1.2 | 2026-07-31 | parche | Enruta un snapshot contradicho a `resolve-repository-state` antes de recomendar la planificación. |
 | 1.1.1 | 2026-07-31 | parche | Elimina el argumento `--refresh` no declarado y aclara que discovery conserva separada cada categoría del ledger. |
@@ -120,6 +121,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `resolve-repository-state`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 1.2.1 | 2026-08-30 | parche | La pista de implementación interrumpida queda condicionada al mismo `PLAN-REVIEW-PASS` vigente. |
 | 1.2.0 | 2026-08-09 | menor | Reanuda la implementación interrumpida mediante `execute-phase` solo-con-objetivo; la selección de fase explícita sigue disponible para el usuario. |
 | 1.1.1 | 2026-07-31 | parche | Enruta los resultados `needs-input` hacia la evidencia o decisión pendiente en vez de recomendar la planificación. |
 | 1.1.0 | 2026-07-31 | minor | Se detiene sin congelar cuando una contradicción necesita input humano, manteniendo el snapshot contradicho hasta recibir evidencia o una decisión. |
@@ -135,6 +137,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `workflow-status`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-08-30 | mayor | **Recomendación que rompe:** el enrutado por solo-estado pasa a enrutado por evidencia. El nuevo paso 6a lee el bloque de recibo de pre-ejecución de la unidad, recalcula el digest ligado con `git hash-object` y etiqueta el escalón `current | missing | stale | wrong-stage | substitute | self-approved | author-readiness | legacy`; la etiqueta anula la orden del paso 6, así que una unidad sin un PASS vigente para el escalón que va a atacar sale de `startable_now` y pasa a un bloqueador `gate` que nombra la revisión que falta, con una fila `detail.pre_execution[]` por unidad. Sigue de solo lectura: no archiva ni edita nada. |
 | 2.0.0 | 2026-08-21 | mayor | **Contrato de sensor incompatible:** mueve las candidatas a diseño de la extensión raíz antes documentada a `detail.design_candidates`, la única ubicación Envelope v2 estricta. Los drivers deben usar la ruta de parser/migración del paquete v3. Ver `docs/workflow/MIGRATION.es.md`. |
 | 1.10.0 | 2026-08-09 | menor | Las recomendaciones de unidades planificadas ahora emiten `execute-phase` solo-con-objetivo, conservando la ruta por defecto de todas las fases restantes para humanos y drivers externos. |
 | 1.9.0 | 2026-07-31 | menor | Carga progresiva: el cuerpo de activación es ahora una ruta compacta del sensor de solo lectura; secuencia de comandos, recuperación de caídas, campos del envelope, guardrails y portabilidad viven en recursos de un salto con orden obligatorio. |
@@ -153,6 +156,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `ship-roadmap`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 5.0.0 | 2026-08-30 | mayor | **Orden de etapas que rompe:** el autopiloto avanza DISEÑO → REVIEW-SPEC → PLAN → REVIEW-PLAN → EJECUCIÓN → PR → REVISIÓN → AUDITORÍA, y una unidad `planned` solo llega a EJECUCIÓN cuando un `PLAN-REVIEW-PASS` vigente está ligado a sus bytes (unidades de fix: plan-fix → REVIEW-PLAN → EJECUCIÓN `--fix`). Ambas etapas de revisión corren en contexto limpio al nivel enrutado; `NEEDS-DESIGN` o una elección de producto no respondible aparca la unidad para el humano en lugar de adivinar, y ninguna etapa entre PLAN y EJECUCIÓN crea un issue de forja ni aplaza una obligación. La política de fusión no cambia — el humano, o el envoltorio `--fullauto` tras sus suelos registrados, sigue siendo dueño de la fusión. |
 | 4.0.2 | 2026-08-21 | parche | Aclara que el conductor conserva su contrato de turno nativo `SHIP:`/`→ Next:`; los perfiles de resultado máquina del paquete se aplican a las skills worker y sensor que invoca. |
 | 4.0.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime activación, gates de descubrimiento, selección de rutas, relaciones y cierre para reducir contexto repetido. |
 | 4.0.0 | 2026-08-09 | mayor | **Cambio incompatible:** EXECUTE recorre las fases restantes de cada unidad con contextos de worker baratos y limpios; REVIEW es una única etapa acotada `loop-review-fold`; el residuo del barrido queda como propuestas en vez de crear backlog. Ver `docs/workflow/MIGRATION.es.md`. |
@@ -183,6 +187,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `execute-phase`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 4.0.0 | 2026-08-30 | mayor | **Preflight que rompe:** una nueva puerta de revisión pre-ejecución se sitúa entre la puerta de estado propio y el manifiesto de aceptación, y falla cerrado antes de cualquier edición ante un `PLAN-REVIEW-PASS` ausente, caducado o de escalón equivocado (unidades de fix: sobre su propio recibo). `--force` nunca cubrió esta puerta y tampoco ahora: anula paradas de orden que el humano puede reordenar, no un veredicto que solo un revisor independiente puede producir; refrescar, re-hashear o sustituir un recibo es falsificación, no recuperación. Las unidades `planned`/`in-progress` heredadas se adoptan con la regla común de adopción. El hueco inmediatamente después de la puerta y antes de la primera escritura queda reservado para el descubrimiento acotado de implementación de la funcionalidad 29. La guarda de descope trata ahora una fila del libro de obligaciones igual que un criterio de aceptación. |
 | 3.0.1 | 2026-08-09 | parche | Sin cambio de comportamiento: comprime dispatch, presupuesto de contexto, carga progresiva, portabilidad, relaciones y cierre. |
 | 3.0.0 | 2026-08-09 | mayor | **Cambio incompatible por defecto:** una invocación solo-con-objetivo de feature/fix ejecuta todas las fases restantes con un recibo de worker limpio por fase, reparaciones acotadas, aceptación congelada y sin reviews intermedias; `P<n>` explícito conserva la forma de una fase. Los hallazgos independientes son propuestas, nunca issues creados automáticamente. Ver `docs/workflow/MIGRATION.es.md`. |
 | 2.13.2 | 2026-08-05 | parche | Divide el monolito `WORKFLOWS.md` en recursos de workflow por modo (feature, small/phased, fix, legacy) cargados exactamente uno a la vez, divide `ISSUE_POLICY.md` en tres recursos de política cargados de forma independiente (`FORGE_BODY.md`, `DESCOPE.md`, `OPPORTUNISTIC_FINDING.md`) elegidos según la situación, y añade un recibo de dependencia versionado con una ruta rápida de huella local fail-closed. Conserva el comportamiento: cada casilla universal de seguridad de ejecución permanece residente en el contrato de turno compacto, cada una mapeada read-verified a su recurso dueño único, y cada ruta de ejecución sigue pasando con resultados observables sin cambios. |
@@ -316,6 +321,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `review-change`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 2.12.0 | 2026-08-30 | menor | El bloque de entrega `REVIEW-FAIL` ganó dos líneas de dueño: los hallazgos de dueño `plan` van a `/plan-feature <unidad>` + `/review-plan <unidad>`, los de dueño `product` van a `/design-feature <unidad>` + `/review-spec <unidad>`. Una cola local de código sigue plegándose aquí; el esquema del libro de plegado, los veredictos y el límite de solo lectura no cambian. |
 | 2.11.5 | 2026-08-11 | parche | Congela el commit revisado y exige que el `headRefOid` de la PR coincida antes de publicar un recibo REVIEW-PASS; si el head de la PR cambia, se re-revisa en vez de publicar un recibo irresoluble. |
 | 2.11.3 | 2026-08-10 | parche | Hace que el recibo PR verificado sea una precondición del informe de revisión, evitando que el bloque fijo termine el turno antes de publicar y releer el recibo. |
 | 2.11.4 | 2026-08-10 | parche | Exige que los hand-offs REVIEW-FAIL y NEEDS-DECISION enumeren todos los IDs de findings afectados, en lugar de nombrar solo uno genérico o el primero. |
@@ -368,6 +374,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `loop-review-fold`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 3.0.0 | 2026-08-30 | mayor | **Enrutado que rompe:** el bucle divide la cola abierta por escalón dueño antes de plegar. Las filas `source`/`environment`/`runtime` se pliegan como antes; una fila de dueño `plan` detiene el bucle con `BLOCKED` y entrega a `/plan-feature` + `/review-plan`, una de dueño `product` a `/design-feature` + `/review-spec`: plegar repara el candidato, nunca la autoridad que lo describe, y esa fila no puede enviarse a `triage-issue` para que desaparezca. Entrar en un segundo ciclo local exige ahora el diagnóstico `CONVERGENCE-ANOMALY` antes de cualquier edición adicional, y la salida fija ganó la línea `Owned elsewhere:`. El bucle no archiva nada. |
 | 2.0.0 | 2026-08-14 | mayor | **Cambio incompatible:** sustituye el conductor acotado y sus flags eliminados por un router simple basado en estado persistido entre `review-change` y `fold-findings`; los hallazgos no resueltos pasan a `triage-issue --prioritize-now` y el trabajo grande se convierte en fases `plan-feature`/`plan-fix` confirmadas por el usuario. |
 | 1.1.0 | 2026-08-11 | menor | Añade la selección de la primera acción: reanuda una cola fix-now abierta con `fold-findings` antes de una review nueva; si no, reutiliza PASS o empieza por review. |
 | 1.0.4 | 2026-08-11 | parche | Añade metadatos de activación y una protección explícita para ejecutar sobre el target, evitando confundir la invocación con autoría o inspección de la skill. |
@@ -379,6 +386,7 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 #### `audit-pr`
 | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|
+| 5.0.0 | 2026-08-30 | mayor | **Puerta de fusión que rompe:** MERGE-READY exige además que la autoridad aguas arriba sobrevivió a la construcción — el digest del snapshot del recibo de plan sigue recomputándose (y el recibo de spec que nombra como padre está vigente), cada fila de obligación es `verified` o un `n/a` explícito, y ningún hallazgo de planificación queda abierto para el snapshot ligado. Una fila `deferred` sin enmienda del usuario bloquea; exportar una obligación a un issue posterior nunca despeja la puerta. `audit-pr` sigue siendo el único emisor de `MERGE-READY` y nunca fusiona. |
 | 4.3.1 | 2026-08-11 | parche | Obtiene `headRefOid` junto con los comentarios de la PR y acepta un recibo REVIEW-PASS solo en ese snapshot exacto; cualquier diferencia de SHA es obsoleta y se enruta a una revisión nueva. |
 | 4.3.0 | 2026-08-05 | menor | **Consume el recibo de revisión de `review-change`** en lugar de re-revisar el diff (feature 21): el Paso 1 obtiene los comentarios del PR y toma el marcador `<!-- review-change:pass sha=<40-hex> contract=v1 -->` más nuevo; un recibo vigente se reconoce como la evidencia de revisión, uno ausente/obsoleto es un bloqueante enrutado a `/review-change` (nunca se re-revisa aquí). Las puertas de merge se estrechan al conjunto solo-auditoría del SPEC — se retira la puerta `Tests` (calidad de pruebas) y el re-mapeo de criterios de aceptación por diff (sustituido por el campo de cobertura de aceptación del recibo); la puerta de Invariantes arquitectónicas ahora refleja el resultado del recibo en lugar de reclasificar. Pasos de proceso renumerados; el comentario MERGE-READY cita el recibo consumido. Requiere un `review-change` que publique el recibo ligado al SHA; las versiones antiguas de `review-change` dejan a audit-pr bloqueado sin recibo en el head. |
 | 4.2.0 | 2026-07-31 | menor | Sincroniza el contrato consumidor de merge con la frontera de autoridad fullauto verificable desde el forge; las auditorías standalone siguen limitadas a veredicto/comentario. |
@@ -512,6 +520,13 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 
 | Skill | Versión | Fecha | Tipo | Qué cambió |
 |---|---|---|---|---|
+| `pre-execution-review` | 1.1.0 | 2026-08-30 | menor | El §5 nombra ahora todas las rutas del conjunto pre-ejecución que nunca pueden crear un issue de forja ni aplazar una obligación sin una enmienda del usuario, añade que el PASS de un escalón vecino nunca otorga autoridad de ejecución, y el §6 pasa a ser el único dueño de la adopción heredada (construir, nunca forzar; artefactos congelados byte a byte; reanudar solo con un `PLAN-REVIEW-PASS` vigente; informar `legacy` distinto de `missing`). |
+| `plan-feature-scaffold` | 2.1.0 | 2026-08-30 | menor | El paso de congelación declara que ninguna obligación se descarga al cortar fases: ninguna fase puede planificarse contra un issue futuro, el esqueleto no crea ninguno, y `deferred` solo existe después de que el usuario enmiende el SPEC rector. |
+| `evidence-grounding` | 1.1.1 | 2026-08-30 | parche | Aclarado que una fila de expectativa puede leer `deferred` solo tras una enmienda del usuario al SPEC rector, nunca un issue que esta habilidad archivó. |
+| review-implementation | 1.5.0 | 2026-08-30 | menor | Cada hallazgo lleva ahora un escalón dueño (`product | plan | source | environment | runtime`, definido por `pre-execution-review`) en su celda `Route` — la clase dice qué hacer, el dueño dice qué artefacto cambiar — y las filas `fix-now` de dueño `plan`/`product` no son plegables y deben citar el artefacto al que apuntan. |
+| `evidence-grounding` | 1.1.1 | 2026-08-30 | parche | Aclarado que una fila de expectativa puede leer `deferred` solo tras una enmienda del usuario al SPEC rector, nunca un issue que esta habilidad archivó. |
+| `plan-feature-scaffold` | 2.1.0 | 2026-08-30 | menor | El paso de congelación declara sin rodeos que ninguna obligación se descarga al cortar fases: ninguna fase puede planificarse contra un issue futuro, el esqueleto no crea ninguno, y `deferred` solo existe después de que el usuario enmiende el SPEC rector. |
+| `pre-execution-review` | 1.1.0 | 2026-08-30 | menor | El §5 nombra ahora todas las rutas del conjunto pre-ejecución que nunca pueden crear un issue de forja ni aplazar una obligación sin una enmienda del usuario, añade que el PASS de un escalón vecino nunca otorga autoridad de ejecución, y el §6 pasa a ser el único dueño de la adopción heredada (construir, nunca forzar; artefactos congelados byte a byte; reanudar solo con un `PLAN-REVIEW-PASS` vigente; informar `legacy` distinto de `missing`). |
 | `evidence-grounding` | 1.0.0 | 2026-08-30 | — | Nueva dueña interna de la autoría basada en evidencia: la fila fija afirmación/autoridad/evidencia/frescura/desconocido, los vocabularios cerrados de `authority-kind` y `freshness`, los pases ordenados inventario → evidencia → borrador → corte → preparación, la preverificación determinista `READY-FOR-REVIEW | NEEDS-EVIDENCE | NEEDS-DESIGN | NEEDS-REPLAN`, la rotación de `artifactRevisionId` (revertir es escribir) y la regla de no-progreso de «nueva pregunta nombrada o nueva evidencia». Nunca emite un veredicto de revisión.
 | `orchestration-envelope` | 2.0.2 | 2026-08-22 | parche |
 | `plan-feature-from-issue` | 2.0.0 | 2026-08-30 | mayor | **Entrega que rompe:** reducida a la mitad de producto. Diseña y prepara un SPEC derivado de issue y se detiene en la puerta de revisión de producto, entregando a `/review-spec`: sin mitad de ingeniería, sin fases, sin escribir `defined → planned` y sin componer `plan-feature-scaffold` en el mismo turno. El nombre se mantiene por compatibilidad.
@@ -611,6 +626,19 @@ Cómo funciona el pinning realmente, **verificado** contra el CLI `skills`:
 ---
 
 ## Registro cronológico (más reciente primero)
+
+- **2026-08-30 — el enrutado impone la autoridad.** La fase P4 de la funcionalidad 28
+  conecta las dos puertas pre-ejecución a todas las rutas que pueden empezar trabajo:
+  `workflow-status` 3.0.0 siente los recibos y anula las recomendaciones por solo-estado,
+  `execute-phase` 4.0.0 falla cerrado ante un `PLAN-REVIEW-PASS` ausente, caducado o de
+  escalón equivocado (la única puerta de preflight que `--force` no alcanza),
+  `ship-roadmap` 5.0.0 avanza DISEÑO → REVIEW-SPEC → PLAN → REVIEW-PLAN → EJECUCIÓN,
+  `review-change` 2.12.0 y `review-implementation` 1.5.0 clasifican los hallazgos por
+  escalón dueño, `loop-review-fold` 3.0.0 se niega a plegar trabajo de dueño `plan` o
+  `product` y diagnostica convergencia antes de una segunda edición local, y `audit-pr`
+  5.0.0 bloquea la fusión cuya linaje aguas arriba o libro de obligaciones ya no está
+  vigente. La adopción heredada tiene un único dueño (`pre-execution-review` 1.1.0) y
+  ninguna ruta archiva un issue para despejar un hueco de planificación.
 
 - **2026-08-30 — planificado no es ejecutable.** La fase P3 de la funcionalidad 28
   añade `review-plan` 1.0.0 y la interna `pre-execution-review` 1.0.0. El esqueleto

@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 3.0.1
+version: 4.0.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -49,6 +49,11 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
   branch, or commit for an unmerged dependency closure unless the user passed `--force`.
 - **Phase-lint before any edit** — the preflight resource runs it after
   dependency/own-status gates. Any FAIL stops unless the user passed `--force`.
+- **Pre-execution review before any edit** — a current, independently recorded
+  `PLAN-REVIEW-PASS` bound to the plan's exact bytes must exist (`--fix`: on the fix
+  unit). Missing, stale, or wrong-stage stops the turn with the gate block; this is
+  the one preflight gate `--force` does not reach — the block, no-forgery and legacy
+  rules live in [pre-execution gate](references/PRE_EXECUTION_GATE.md).
 
 ## Context budget (hard rule — context is repaid every turn)
 

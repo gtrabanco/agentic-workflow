@@ -61,7 +61,8 @@ turns:
       **Verify the closure transitively:** a dep row marked merged whose own
       dependencies aren't merged means the roadmap's statuses are inconsistent
       → `SHIP: STOPPED` (substrate invariant broken), never build on top of it.
-      → `idea`/`defined`: DESIGN first (see ADVANCE). `planned`: → PLAN
+      → `idea`/`defined`: DESIGN first (see ADVANCE). `planned`: → REVIEW-SPEC/
+         REVIEW-PLAN if its receipt for that stage is missing or stale, else PLAN/EXECUTE
       directly.
    5. **Issue sweep — features exhausted, run NOT over.** Every roadmap feature
       is `done` **and merged** but the sweep hasn't completed → the run
@@ -81,7 +82,7 @@ turns:
          report (promotions and untracked residue become report proposals,
          never in-run scope or automatically-created issues).
       3. **SHIP the fix-now issues** one unit at a time through the normal
-         stages (`plan-fix` → EXECUTE (`--fix`) → PR → REVIEW → AUDIT), same
+         stages (`plan-fix` → REVIEW-PLAN → EXECUTE (`--fix`) → PR → REVIEW → AUDIT), same
          budget caps, floors, and merge policy as features.
    6. Nothing startable → `SHIP: BLOCKED` with the **unblock map** ("merging
       #12 unblocks 05 and 07") and the resume command.

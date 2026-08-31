@@ -64,10 +64,13 @@ idea ──design-feature / plan-feature-from-issue──▶ defined
   **No new file** — a thin row *is* the idea. Next action: `/design-feature
   <slug>`. Set by whoever adds the row (human or `ship-roadmap` founding).
 - `defined` — `SPEC.md` exists with the **product half complete** (`## Design
-  status: designed`, capability closure filled). Next action: `/plan-feature
-  <slug>`. Set by `design-feature` or `plan-feature-from-issue`.
+  status: designed`, capability closure filled). Next action: `/review-spec <slug>`;
+  only a current `SPEC-REVIEW-PASS` makes the next action `/plan-feature <slug>`.
+  Set by `design-feature` or `plan-feature-from-issue`.
 - `planned` — full SPEC (**engineering half filled**) + planning artifacts
-  exist. Next action: `/execute-phase <NN>`. Set by `plan-feature-scaffold`
+  exist. Next action: `/review-plan <NN>`; it becomes `/execute-phase <NN>` only
+  while a current `PLAN-REVIEW-PASS` is bound to those exact bytes — **planned is not
+  executable**. Set by `plan-feature-scaffold`
   (XS/S SPEC-only sizes included — scaffold still runs and lands here).
 - `in-progress` — branch open, phases executing. Set by `execute-phase` P1.
 - `done` — built and its PR open (the last step opened the PR); **merge state
@@ -82,9 +85,13 @@ inferred, and no second skill writes the same edge.
 - Numbers are assigned in order and never reused.
 - A feature that depends on another cannot start until its dependency is **merged**
   (not merely `done` — a `done` dep with an open PR isn't on `main` yet).
-- A unit is **executable only when `planned`** (or above). `execute-phase`'s
-  dependency gate STOPs and redirects a sub-`planned` unit: `idea` →
-  `/design-feature <slug>`, `defined` → `/plan-feature <slug>`.
+- A unit is **executable only when `planned` (or above) _and_ reviewed**: a current
+  `PLAN-REVIEW-PASS` bound to its bytes is the second condition, never the status
+  itself. `execute-phase`'s dependency gate STOPs and redirects a sub-`planned` unit:
+  `idea` → `/design-feature <slug>`, `defined` → `/plan-feature <slug>` (after
+  `/review-spec <slug>` if the Product half has no current PASS); its pre-execution
+  gate STOPs a `planned`/`in-progress` unit whose Plan review is missing, stale, or
+  from the wrong stage → `/review-plan <NN>`.
 - **Legacy compat:** a pre-U4 roadmap row still reading a plain `planned` with
   no five-state history, whose SPEC's product half is complete, is treated as
   `defined`+`planned` (no redirect) — see `docs/workflow/MIGRATION.md`.

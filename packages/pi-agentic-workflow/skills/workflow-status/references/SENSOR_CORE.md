@@ -64,6 +64,15 @@ live evidence against a frozen ledger remains a contradiction candidate.
      command matched to the exact status: `defined` → `/plan-feature <slug>`,
      `planned` → `/execute-phase <NN>`.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
+6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned` or
+   `in-progress` ([pre-execution evidence](PRE_EXECUTION.md)): read the stage's
+   newest receipt block, recompute the bound digest with `git hash-object`, and
+   label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/
+   `self-approved`/`author-readiness`/`legacy`. The label **overrides step 6's
+   status-only command**: a unit without a current PASS for the stage it is about to
+   enter is demoted out of `startable_now` into a `gate` blocker naming the missing
+   review, and `detail.pre_execution[]` records the row. A roadmap row is never
+   edited here — sensing only reads.
 7. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
    phase, total phases, per-phase checkbox completion.
 8. **Pending quality gates.** For each unit with commits: has the mandatory

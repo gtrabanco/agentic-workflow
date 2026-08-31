@@ -119,6 +119,19 @@
   `pre-execution-review`'s cycle policy). Inflating one ceiling to the worst-case
   union of every step would have hidden the real per-turn cost; each declared
   ceiling is the measured steady state of the step that actually loads those files.
+- **D23 — `--force` never reaches the pre-execution gate:** the flag exists to let a
+  human re-order *ordering* stops (dependency, own-status), which are statements about
+  sequence the user may legitimately overrule. A review PASS is a verdict about
+  quality that only an independent reviewer can produce, so the executor has nothing
+  to assert over it; making it forceable would have turned the phase's headline
+  guarantee into a warning. The gate therefore stops the turn and names `/review-plan`.
+- **D24 — the owning stage routes a finding, the class only sizes the work:**
+  `fix-now` kept meaning "belongs to this unit" while routing began keying on
+  `product | plan | source | environment | runtime`, because the P3 ledgers proved one
+  root cause can surface as several code-level findings. Folding a `plan`- or
+  `product`-owned row would silently rewrite authority with candidate code, so
+  `loop-review-fold` blocks instead and hands the row to its author plus a re-review;
+  the fold-ledger schema is unchanged (the owner rides the existing `route` cell).
 - **D22 — `pre-execution-review` is the single owner of the shared cycle and the
   ledger shapes, not of verdicts:** `review-spec`/`review-plan` emit verdicts, the
   authoring skills emit readiness, and this internal owner emits nothing — the

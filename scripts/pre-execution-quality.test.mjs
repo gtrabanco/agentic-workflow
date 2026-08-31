@@ -757,5 +757,201 @@ test("plan-stage receipt records parent lineage and the three verdicts verbatim"
   assert.match(reviewPlan, /Three verdicts only/);
 });
 
+// --- P4: routing enforcement (mirrors workflow-status step 6a, execute-phase's
+// pre-execution gate, ship-roadmap's stage order, and loop-review-fold's split) ---
 
-console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, distribution");
+const sensorDoc = read("skills/workflow-status/references/PRE_EXECUTION.md");
+const execGate = read("skills/execute-phase/references/PRE_EXECUTION_GATE.md");
+const advance = read("skills/ship-roadmap/references/ADVANCE.md");
+const loopFold = read("skills/loop-review-fold/SKILL.md");
+const classify = read("skills/review-implementation/references/CLASSIFY.md");
+const auditGates = read("skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md");
+const descope = read("skills/execute-phase/references/DESCOPE.md");
+const legacyAdoption = read("skills/pre-execution-review/references/POLICY.md");
+
+// The sensor's label table, as code: one label per stage, from bytes only.
+const receiptLabel = (receipt, stage, legacy = false) => {
+  if (legacy && !receipt) return "legacy";
+  if (!receipt) return "missing";
+  if (receipt.stage !== stage) return "wrong-stage";
+  if (receipt.kind === "readiness") return "author-readiness";
+  if (receipt.kind === "substitute") return "substitute";
+  if (receipt.recordedBy === receipt.authoredBy) return "self-approved";
+  if (receipt.boundDigest !== receipt.observedDigest) return "stale";
+  if (!PASS_VERDICTS.includes(receipt.verdict)) return "missing";
+  return "current";
+};
+const PASS_VERDICTS = ["SPEC-REVIEW-PASS", "PLAN-REVIEW-PASS"];
+
+// workflow-status step 6/6a: the label overrides the status-only command.
+const sensorRoute = ({ status, depsMet = true, spec, plan, legacy = false }) => {
+  if (!depsMet) return { bucket: "blocked_units", next: null };
+  if (status === "idea") return { bucket: "design_candidates", next: "/design-feature <slug>" };
+  const specLabel = receiptLabel(spec, "spec", legacy && status === "defined");
+  if (status === "defined") {
+    return specLabel === "current"
+      ? { bucket: "startable_now", next: "/plan-feature <slug>" }
+      : { bucket: "gate", next: "/review-spec <slug>", label: specLabel };
+  }
+  const planLabel = receiptLabel(plan, "plan", legacy);
+  return planLabel === "current"
+    ? { bucket: "startable_now", next: "/execute-phase <NN>" }
+    : { bucket: "gate", next: "/review-plan <NN>", label: planLabel };
+};
+
+// execute-phase's gate: only a current plan PASS admits an edit; --force never reaches it.
+const executeAdmits = ({ plan, legacy = false }) =>
+  receiptLabel(plan, "plan", legacy) === "current" ? "EDIT" : "PRE-EXECUTION GATE BLOCKED";
+
+// ship-roadmap's stage order.
+const NEXT_STAGE = {
+  idea: "DESIGN", defined: "REVIEW-SPEC", planned: "REVIEW-PLAN", "in-progress": "EXECUTE",
+};
+const autopilotStage = ({ status, spec, plan, legacy = false }) => {
+  if (status === "idea") return "DESIGN";
+  if (status === "defined") {
+    return receiptLabel(spec, "spec") === "current" ? "PLAN" : "REVIEW-SPEC";
+  }
+  if (status === "planned") {
+    return receiptLabel(plan, "plan", legacy) === "current" ? "EXECUTE" : "REVIEW-PLAN";
+  }
+  return NEXT_STAGE[status] ?? "EXECUTE";
+};
+
+// loop-review-fold: split the open queue by owning stage before folding.
+const foldRoute = (findings, cycle = 1) => {
+  const owners = new Set(findings.map((f) => f.owner));
+  if (owners.has("plan")) return "BLOCKED → /plan-feature <unit> + /review-plan <unit>";
+  if (owners.has("product")) return "BLOCKED → /design-feature <unit> + /review-spec <unit>";
+  if (cycle > 1) return "CONVERGENCE-ANOMALY before any further edit";
+  return "fold-findings → review-change on the new HEAD";
+};
+
+const ok = (v) => ({ stage: "plan", verdict: "PLAN-REVIEW-PASS", boundDigest: v ?? "d1", observedDigest: v ?? "d1", recordedBy: "reviewer", authoredBy: "author" });
+const okSpec = (v) => ({ ...ok(v), stage: "spec", verdict: "SPEC-REVIEW-PASS" });
+
+test("route fixtures: current, stale and missing receipts select exactly one command each", () => {
+  assert.deepEqual(
+    { ...sensorRoute({ status: "planned", plan: ok() }), admitted: executeAdmits({ plan: ok() }) },
+    { bucket: "startable_now", next: "/execute-phase <NN>", admitted: "EDIT" });
+  for (const [label, plan] of [
+    ["missing", null],
+    ["stale", ok("d1") && { ...ok(), observedDigest: "d2" }],
+    ["wrong-stage", okSpec()],
+    ["self-approved", { ...ok(), recordedBy: "author" }],
+    ["author-readiness", { ...ok(), kind: "readiness" }],
+    ["substitute", { ...ok(), kind: "substitute" }],
+  ]) {
+    const routed = sensorRoute({ status: "planned", plan });
+    assert.equal(routed.label, label, `${label} must be the label`);
+    assert.equal(routed.bucket, "gate", `${label} is not startable`);
+    assert.equal(routed.next, "/review-plan <NN>", `${label} re-runs the review, never the author`);
+    assert.equal(executeAdmits({ plan }), "PRE-EXECUTION GATE BLOCKED", `${label} never admits an edit`);
+  }
+  // a defined unit without a current spec PASS plans nothing
+  assert.equal(sensorRoute({ status: "defined", spec: null }).next, "/review-spec <slug>");
+  assert.equal(sensorRoute({ status: "defined", spec: okSpec() }).next, "/plan-feature <slug>");
+  // deps unmet outrank every receipt
+  assert.equal(sensorRoute({ status: "planned", depsMet: false, plan: ok() }).bucket, "blocked_units");
+});
+
+test("route fixtures: feature and fix paths, and the autopilot stage order", () => {
+  assert.equal(autopilotStage({ status: "idea" }), "DESIGN");
+  assert.equal(autopilotStage({ status: "defined", spec: null }), "REVIEW-SPEC");
+  assert.equal(autopilotStage({ status: "defined", spec: okSpec() }), "PLAN");
+  assert.equal(autopilotStage({ status: "planned", plan: null }), "REVIEW-PLAN");
+  assert.equal(autopilotStage({ status: "planned", plan: ok() }), "EXECUTE");
+  assert.match(advance, /\[DESIGN → REVIEW-SPEC\] → PLAN → REVIEW-PLAN → EXECUTE/);
+  assert.match(advance, /plan-fix → REVIEW-PLAN → EXECUTE[\s\S]{0,4}\(`--fix`\)/);
+  assert.match(read("skills/ship-roadmap/references/RECOVERY_AND_SELECTION.md"), /`plan-fix` → REVIEW-PLAN → EXECUTE/);
+  // fix units: reviewed on their own receipt, with no Product hop to substitute
+  const fixPlan = { ...ok(), unit: "fix-12" };
+  assert.equal(executeAdmits({ plan: fixPlan }), "EDIT");
+  assert.equal(executeAdmits({ plan: okSpec() }), "PRE-EXECUTION GATE BLOCKED");
+  assert.match(execGate, /there is no Product hop to substitute/);
+  assert.match(execGate, /no bypass flag exists for this gate/);
+  assert.match(execGate, /--force/);
+});
+
+test("route fixtures: later review root causes, crash re-entry, and no-progress", () => {
+  assert.equal(foldRoute([{ owner: "source" }]), "fold-findings → review-change on the new HEAD");
+  assert.match(foldRoute([{ owner: "plan" }]), /\/plan-feature <unit> \+ \/review-plan <unit>/);
+  assert.match(foldRoute([{ owner: "product" }]), /\/design-feature <unit> \+ \/review-spec <unit>/);
+  assert.equal(foldRoute([{ owner: "source" }], 2), "CONVERGENCE-ANOMALY before any further edit");
+  // a mixed queue is still owned by the highest stage: source never folds authority away
+  assert.match(foldRoute([{ owner: "source" }, { owner: "plan" }]), /BLOCKED/);
+  // crash/re-entry: routing is recomputed from persisted evidence, never from memory
+  const afterCrash = sensorRoute({ status: "in-progress", plan: ok() });
+  assert.equal(afterCrash.next, "/execute-phase <NN>");
+  assert.equal(sensorRoute({ status: "in-progress", plan: { ...ok(), observedDigest: "moved" } }).label, "stale");
+  assert.match(loopFold, /CONVERGENCE-ANOMALY/);
+  assert.match(loopFold, /never send one to `triage-issue` to make it disappear/);
+  assert.match(classify, /Owning stage: which artifact is actually wrong/);
+  assert.match(legacyAdoption, /### 4\. Repeats: no-progress and convergence/);
+});
+
+test("route fixtures: no partial-success envelope and no auto-issued deferral", () => {
+  // a FAIL and a PASS cannot both be current for one stage: the sensor labels the
+  // newest block, so a stale PASS under a fresh FAIL is never "startable"
+  const mixed = sensorRoute({ status: "planned", plan: { ...ok(), verdict: "PLAN-REVIEW-FAIL" } });
+  assert.equal(mixed.label, "missing");
+  assert.equal(executeAdmits({ plan: { ...ok(), verdict: "PLAN-REVIEW-FAIL" } }), "PRE-EXECUTION GATE BLOCKED");
+  // and neither verdict ever arrives from a readiness preflight
+  assert.ok(!canEmitReviewPass("readiness"));
+  assert.match(sensorDoc, /`next\.recommended` never points a human at `execute-phase` on an unreviewed plan|so `next\.recommended` never points/);
+  // obligations cannot be exported to clear a gate
+  assert.match(auditGates, /Any `planned`, `in-progress`, blank, or `deferred` row is/);
+  assert.match(auditGates, /wearing a new name/);
+  assert.match(descope, /obligation-ledger row/);
+  assert.match(legacyAdoption, /An automatic forge issue/);
+  assert.match(advance, /No stage between PLAN and EXECUTE may create a forge/);
+});
+
+test("route fixtures: legacy adoption constructs evidence and never coerces it", () => {
+  const legacy = sensorRoute({ status: "planned", plan: null, legacy: true });
+  assert.equal(legacy.label, "legacy");
+  assert.equal(legacy.next, "/review-plan <NN>");
+  assert.equal(executeAdmits({ plan: null, legacy: true }), "PRE-EXECUTION GATE BLOCKED");
+  assert.match(legacyAdoption, /### 6\. Legacy adoption/);
+  assert.match(legacyAdoption, /Construct, never coerce/);
+  assert.match(legacyAdoption, /byte-identical/);
+  assert.match(execGate, /adopt through `pre-execution-review`'s legacy rule/);
+  assert.match(sensorDoc, /it never edits a unit to make the\nlabel disappear/);
+});
+
+test("P4 route contracts are pinned to the text that grants them", () => {
+  // the sensor's label vocabulary is exhaustive and overrides status-only routing
+  for (const label of ["`current`", "`missing`", "`stale`", "`wrong-stage`", "`substitute`",
+    "`self-approved`", "`author-readiness`", "`legacy`"]) {
+    assert.ok(sensorDoc.includes(label), `sensor must define the ${label} label`);
+  }
+  // the sensor doc states the routing table; the core declares the override
+  assert.match(sensorDoc, /A stale receipt re-runs the \*\*review\*\*, not the authoring skill/);
+  assert.match(read("skills/workflow-status/references/SENSOR_CORE.md"), /label \*\*overrides step 6's/);
+  // the loop blocks on ownership instead of folding it away
+  assert.match(loopFold, /A `plan`-owned row stops the loop with `BLOCKED`/);
+  assert.match(loopFold, /a `product`-owned row goes to `\/design-feature <unit>`/);
+  assert.match(loopFold, /The loop files nothing/);
+  // the audit turns an open obligation into a blocker, not a note
+  assert.match(auditGates, /row is\n   \*\*BLOCKED\*\*, naming the ids/);
+  assert.match(auditGates, /may not be exported to a follow-up issue to clear the/);
+  assert.match(auditGates, /remains the only emitter of `MERGE-READY`/);
+  // execution admits an edit only on the PASS, in fix mode on its own receipt
+  assert.match(execGate, /require\n`PLAN-REVIEW-PASS`|require[\s\S]{0,40}`PLAN-REVIEW-PASS`/);
+});
+
+test("P4 routing text keeps one owner per rule", () => {
+  // the adoption rule lives once; the sensor and the executor cite it
+  const owners = ["skills/pre-execution-review/references/POLICY.md", "skills/workflow-status/references/PRE_EXECUTION.md", "skills/execute-phase/references/PRE_EXECUTION_GATE.md"]
+    .filter((f) => /Construct, never coerce/.test(read(f)));
+  assert.deepEqual(owners, ["skills/pre-execution-review/references/POLICY.md"]);
+  // the sensor must not re-implement the executor's gate and vice versa
+  assert.ok(!/no bypass flag exists for this gate/.test(sensorDoc));
+  assert.ok(!/startable_now/.test(execGate));
+  // the loop names owners, it does not redefine repair classes
+  assert.match(loopFold, /`pre-execution-review` owns|defined by\s*\n?`pre-execution-review`|report the convergence diagnosis|report the\n`CONVERGENCE-ANOMALY` report defined by\n`pre-execution-review`/);
+  assert.ok(!/Common root cause/.test(loopFold), "repair-class table stays in the policy owner");
+});
+
+
+console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution");

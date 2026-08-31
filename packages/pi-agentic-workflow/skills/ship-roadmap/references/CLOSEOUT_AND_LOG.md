@@ -10,7 +10,8 @@
    A subagent that "finished" but left the tree dirty or the branch unpushed
    did NOT finish: the conductor commits/pushes the remainder itself (same
    stage, same iteration) or marks the stage partial. This check is
-   unconditional for EXECUTE, REVIEW fix cycles, PR, and AUDIT fix cycles.
+   unconditional for REVIEW-SPEC/REVIEW-PLAN repairs, EXECUTE, REVIEW fix cycles,
+   PR, and AUDIT fix cycles.
 6. **LOG** one line to `.ship-run.log`; print `→ Next: <unit> (CONTINUE)` (the
    canonical next-step shape; `CONTINUE` stays the loop's keep-going signal).
    **Say WHY the turn is ending** — one explicit
