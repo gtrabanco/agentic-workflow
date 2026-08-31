@@ -44,11 +44,12 @@ definition, not an issuance. A policy summary that reads like an approval is a
 contract violation — the verdict belongs to the reviewer turn that binds the
 snapshot.
 
-## The two references
+## The three references
 
 | Condition now | LOAD |
 |---|---|
 | Running or repairing a pre-execution review | [references/POLICY.md](references/POLICY.md) — independence, union, dismissal, diversity labels, author exclusion, critique/synthesis/arbitration bounds, no quorum, no-progress, batch repair, `CONVERGENCE-ANOMALY` |
+| Building or re-checking a snapshot digest | [references/SNAPSHOT.md](references/SNAPSHOT.md) — the one executable recipe (`scripts/pre-execution-snapshot.mjs`), what each stage binds, how a consumer re-verifies a receipt, and why a snapshot digest is not a git blob id |
 | Writing or validating a Plan-stage artifact | [references/LEDGERS.md](references/LEDGERS.md) — the planning-evidence table, the obligation ledger, the stage-aware `planning-findings.md`, and who may write each |
 
 ## Guardrails

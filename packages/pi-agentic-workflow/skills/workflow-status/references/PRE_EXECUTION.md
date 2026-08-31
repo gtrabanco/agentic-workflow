@@ -11,8 +11,11 @@ For every unit whose resolved status is `defined`, `planned` or `in-progress`:
 1. The newest `## Pre-execution review receipt v1 — spec` and `… — plan` block in the
    unit's `progress.md` (no `progress.md`, or no block for that stage → `missing`).
 2. The `snapshot` line — the `sha256:` digest the receipt binds — and each bound
-   artifact's current bytes: recompute with `git hash-object <path>`, never from the
-   file's size or mtime.
+   artifact's current bytes: re-derive the digest with the recipe owner's verify
+   mode — `node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit
+   <id>` (`pre-execution-review` owns the recipe). A snapshot digest is a canonical
+   SHA-256 over the snapshot object, so `git hash-object` is never a substitute: it
+   stays correct only for the frozen `ACCEPTANCE.md` manifest blob.
 3. The verdict, the reviewed `unit`, the stage, and the author fields
    (`reviewedBy`, `authorExcluded`).
 
