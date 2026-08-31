@@ -7,8 +7,8 @@ Candidate-code review ran 2026-08-31 (review-change, single-reviewer, PR #155 he
 | F1 | skills/workflow-status/references/SENSOR_CORE.md:69 + skills/execute-phase/references/PRE_EXECUTION_GATE.md:6 + skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:93 | code | high | fix-now | fold | yes |
 | F2 | docs/features/28-evidence-grounded-spec-plan-review/testing.md (Canary fields) + planning-obligations.md O9–O14 | spec-drift | high | fix-now | replan-in-unit | no |
 | F3 | docs/features/ROADMAP.md:38 + docs/features/28-evidence-grounded-spec-plan-review/progress.md (P5 section) | workflow | high | fix-now | replan-in-unit | no |
-| F4 | docs/workflow/GOLDEN_FIXTURE.md:304 | spec-drift | med | fix-now | fold | no |
-| F5 | docs/workflow/SKILLS.es.md + docs/workflow/GOLDEN_FIXTURE.es.md | workflow | med | fix-now | fold | no |
+| F4 | docs/workflow/GOLDEN_FIXTURE.md:304 | spec-drift | med | fix-now | fold | yes |
+| F5 | docs/workflow/SKILLS.es.md + docs/workflow/GOLDEN_FIXTURE.es.md | workflow | med | fix-now | fold | yes |
 | F6 | docs/features/28-evidence-grounded-spec-plan-review/TASKS.md (P5 section) | workflow | med | fix-now | replan-in-unit | no |
 | F8 | docs/workflow/SKILL_CONTEXT_BUDGETS.json (plan-fix:issue route) + plan-fix path skill docs | perf | med | fix-now | fold (ceiling re-basis after F7 decision) | no |
 | F9 | packages/agentic-workflow-schema/src/pre-execution-contract.ts:183-195 | code | med | fix-now | fold | yes |
