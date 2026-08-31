@@ -137,6 +137,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.2 | 2026-08-31 | patch | Ledger-contract fold (F16): the sensor's receipt-reading step names the real author fields (`reviewer` + `authorId` on the receipt's `Reviewer:`/`Author:` lines, and `authorExclusion`) instead of the phantom `reviewedBy`/`authorExcluded`. No label or envelope change. |
 | 3.0.1 | 2026-08-31 | patch | Digest-repair fold (F1): step 6a's recipe clause re-derives the bound digest with the recipe owner's verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage <spec\|plan> --unit <id>`) instead of `git hash-object`, which the same branch's authorities define as never a substitute for a snapshot digest. No label, override, or envelope change. |
 | 3.0.0 | 2026-08-30 | major | **Breaking recommendation:** status-only routing becomes evidence-staged routing. New step 6a reads the unit's pre-execution receipt block, recomputes the bound digest with `git hash-object`, and labels the stage `current | missing | stale | wrong-stage | substitute | self-approved | author-readiness | legacy`; the label overrides step 6's command, so a unit without a current PASS for the stage it is about to enter leaves `startable_now` for a `gate` blocker naming the missing review, with one `detail.pre_execution[]` row per unit. Still read-only: it files and edits nothing. |
 | 2.0.0 | 2026-08-21 | major | **Breaking sensor contract:** moves design candidates from the formerly documented root extension to `detail.design_candidates`, the only strict Envelope v2 location. Drivers must use the v3 package parser/migration path. See `docs/workflow/MIGRATION.md`. |
@@ -287,6 +288,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|
+| 3.0.1 | 2026-08-31 | patch | Ledger-contract fold (F12+F13): the fix SPEC's embedded ledgers are the canonical `### Planning evidence` / `### Obligations` headings and the evidence table adopts the single ROWS.md Plan-stage column order. Generation output, fix rows, and hand-off unchanged. |
 | 2.7.0 | 2026-08-10 | minor | Makes the hand-off preserve the complete multi-issue unit scope (`#primary + #n2 + …`) while keeping the executable command keyed to the primary issue. |
 | 2.6.1 | 2026-08-09 | patch | No behavior change: compresses input/output, hard-rule, progressive-loading, portability, and done-criteria prose while retaining multi-issue grouping semantics and contracts. |
 | 2.6.0 | 2026-08-09 | minor | Accepts compatible capability bundles and homogeneous mechanical issue batches using set-level outcome, verification, isolation, release/rollback, and aggregate-size checks; shared files/root cause/severity are no longer gates, and failed sets return the fewest maximal compatible groups. Emits frozen `ACCEPTANCE.md`. |
@@ -523,6 +525,8 @@ How pinning actually works, verified against the `skills` CLI:
 
 | Skill | Version | Date | Type | What changed |
 |---|---|---|---|---|
+| `evidence-grounding` | 1.1.2 | 2026-08-31 | patch | Ledger-contract fold (F12): ROWS.md now declares the Plan-stage table extension — prefixed stable `id` plus `affected-decision-or-obligation` — so the evidence-row shape has exactly one definition; vocabularies and readiness outcomes unchanged. |
+| `pre-execution-review` | 1.1.1 | 2026-08-31 | patch | Ledger-contract fold (F12): LEDGERS.md §1 no longer restates the evidence-row columns — it points at ROWS.md's declared Plan-stage extension (one definition, no second copy); ledger homes, writers, and statuses unchanged. |
 | `pre-execution-review` | 1.1.0 | 2026-08-30 | minor | §5 now names every route in the pre-execution set that may never create a forge issue or defer an obligation without a user amendment, adds that no neighbouring stage's PASS grants execution authority, and §6 becomes the single owner of legacy adoption (construct, never coerce; byte-identical frozen artifacts; resume only on a current `PLAN-REVIEW-PASS`; report `legacy` differently from `missing`). |
 | `plan-feature-scaffold` | 2.1.0 | 2026-08-30 | minor | The freeze step states plainly that no obligation is discharged while cutting phases: no phase may be planned against a future issue, the scaffold creates none, and `deferred` exists only after the user amends the governing SPEC. |
 | `evidence-grounding` | 1.1.1 | 2026-08-30 | patch | Clarified that an expectation row may read `deferred` only behind a user-made governing-SPEC amendment, never an issue this skill filed. |
@@ -633,6 +637,14 @@ How pinning actually works, verified against the `skills` CLI:
   re-derive the snapshot digest with the verify recipe `pre-execution-review` owns
   instead of `git hash-object`, and the P4 suite pins the corrected recipe in all
   three gates.
+
+- **2026-08-31 — the planning ledgers have one definition.** The review fold of
+  feature 28 (PR #155) makes the enforced owner match the declared one:
+  `evidence-grounding` 1.1.2 declares the Plan-stage table extension (prefixed
+  stable `id` + `affected-decision-or-obligation`), `pre-execution-review` 1.1.1
+  stops restating the columns, `plan-fix` 3.0.1 and both SPEC templates embed the
+  ledgers under the canonical `###` headings, and `workflow-status` 3.0.2 names
+  the real receipt author fields.
 
 - **2026-08-30 — the routing enforces the authority.** Phase P4 of feature 28 wires
   the two pre-execution gates into every route that can start work: `workflow-status`

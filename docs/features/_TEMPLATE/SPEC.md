@@ -252,8 +252,8 @@ exploration transcript. M/L units freeze this table in
 `planning-evidence.md` and leave the heading here reading
 `see planning-evidence.md`; XS/S units fill it in place.
 
-| ID | Question or claim | Authority | Repository evidence and revision | Affected decision or obligation | Freshness | Status | Owner or next evidence |
-|---|---|---|---|---|---|---|---|
+| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|---|---|
 
 ### Obligations
 
@@ -264,7 +264,7 @@ it in place. Status is `planned | in-progress | verified | n/a | deferred`;
 `n/a` requires evidence, and no current-unit obligation may be `deferred` to a
 follow-up issue.
 
-| Obligation | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
+| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
 
 ### Decisions to confirm

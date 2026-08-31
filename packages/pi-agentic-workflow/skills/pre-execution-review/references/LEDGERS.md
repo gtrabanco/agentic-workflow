@@ -17,18 +17,14 @@ M/L freeze the separate files and bind them with their own rows. Never both.
 
 ### 1. Planning evidence
 
-Row shape and the closed `authority-kind` / `freshness` vocabularies are owned by
-the `evidence-grounding` reference `ROWS.md` —
-one definition, no second copy. The Plan-stage table prefixes one stable `id`
-column to that row and uses markdown headings, nothing else:
-
-```text
-id | question-or-claim | authority | repository-evidence-and-revision |
-affected-decision-or-obligation | freshness | status | owner-or-next-evidence
-```
-
-Ids are stable (`PE-001`, `PE-002`, …): an obligation or finding cites a row by
-id, so renumbering the table is a replan, not a formatting edit.
+Row shape — the base row, the closed `authority-kind` / `freshness` vocabularies,
+the prefixed stable `id`, and the `affected-decision-or-obligation` Plan-stage
+extension with its full column order — is owned by the `evidence-grounding`
+reference `ROWS.md` (§ "Plan-stage table — one declared extension"): one
+definition, no second copy. This ledger owns only the lifecycle rules and uses
+markdown headings, nothing else. Ids are stable (`PE-001`, `PE-002`, …): an
+obligation or finding cites a row by id, so renumbering the table is a replan,
+not a formatting edit.
 
 Rules specific to this ledger:
 

@@ -8,6 +8,19 @@ claim-or-obligation | authority-kind | source-and-location | observed-revision |
 freshness | status: proven|decision|unknown | owner-or-next-evidence
 ```
 
+### Plan-stage table — one declared extension
+
+The Plan-stage evidence table (`planning-evidence.md`, or the XS/S embed) is the
+row above with exactly two changes, declared here and nowhere else: a prefixed
+stable `id` column (`PE-001`, … — renumbering is a replan, not an edit) and one
+extension column, `affected-decision-or-obligation` (the frozen decision,
+obligation, or acceptance row the claim resolves), inserted after
+`observed-revision`. Full Plan-stage header order:
+
+```text
+id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence
+```
+
 ### Closed vocabularies
 
 `authority-kind` — exactly one:
