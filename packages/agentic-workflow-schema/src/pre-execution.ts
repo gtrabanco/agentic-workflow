@@ -1032,12 +1032,12 @@ export async function comparePreExecutionReceiptToSnapshot(
   policyVersion: string,
 ): Promise<PreExecutionFreshnessResult> {
   if (!isValidSnapshot(reviewedSnapshot) || !isValidSnapshot(currentSnapshot)) {
-    // The reviewed side cannot be the thing a receipt bound, and an unreadable
-    // current document cannot be the thing that was approved; in both cases there
-    // is no content comparison to make, so the binding answer comes first.
-    return typeof reviewedSnapshot === "object" && reviewedSnapshot !== null
-      ? stale("stale-artifact-content")
-      : stale("missing-receipt-snapshot");
+    // An input the comparator cannot read at all is precedence 1: the receipt
+    // does not bind a snapshot (reviewed side) or the document is not the thing
+    // that was approved (current side). There is no content comparison to make,
+    // so a failed validation can never read as content drift — even for an
+    // invalid object or an array (arrays are objects).
+    return stale("missing-receipt-snapshot");
   }
   const reviewed = reviewedSnapshot as PreExecutionArtifactSnapshotV1;
   const current = currentSnapshot as PreExecutionArtifactSnapshotV1;

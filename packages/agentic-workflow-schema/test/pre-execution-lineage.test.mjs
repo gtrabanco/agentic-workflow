@@ -211,10 +211,20 @@ test("candidate and verification receipts are never accepted as pre-execution re
 
 test("a malformed freshness input answers a stable code instead of throwing", async () => {
   const snapshot = mustBuild(builtSpec());
+  // Precedence 1 pins the exact code: any input the comparator cannot read at
+  // all — including an invalid object or an array — is `missing-receipt-snapshot`,
+  // never a content-staleness code (F11: arrays are objects and must not read as
+  // content drift; an unreadable current document is likewise a binding answer).
   for (const bad of [null, undefined, 0, "x", [], { contract: PRE_EXECUTION_RECEIPT_CONTRACT_ID }]) {
     const result = await comparePreExecutionReceiptToSnapshot(bad, snapshot, snapshot, POLICY_VERSION);
     assert.equal(result.fresh, false);
+    assert.equal(result.reasonCode, "missing-receipt-snapshot", `reviewed ${JSON.stringify(bad)}`);
     assert.ok(PRE_EXECUTION_FRESHNESS_CODES.includes(result.reasonCode), String(result.reasonCode));
+  }
+  const receipt = await receiptBound(snapshot);
+  for (const bad of [null, undefined, 0, "x", [], { contract: PRE_EXECUTION_RECEIPT_CONTRACT_ID }]) {
+    const result = await comparePreExecutionReceiptToSnapshot(receipt, snapshot, bad, POLICY_VERSION);
+    assert.equal(result.reasonCode, "missing-receipt-snapshot", `current ${JSON.stringify(bad)}`);
   }
 });
 

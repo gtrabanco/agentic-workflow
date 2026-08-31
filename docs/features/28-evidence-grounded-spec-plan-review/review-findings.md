@@ -13,7 +13,7 @@ Candidate-code review ran 2026-08-31 (review-change, single-reviewer, PR #155 he
 | F8 | docs/workflow/SKILL_CONTEXT_BUDGETS.json (plan-fix:issue route) + plan-fix path skill docs | perf | med | fix-now | fold (ceiling re-basis after F7 decision) | no |
 | F9 | packages/agentic-workflow-schema/src/pre-execution-contract.ts:183-195 | code | med | fix-now | fold | yes |
 | F10 | packages/agentic-workflow-schema/src/pre-execution.ts:150 + src/pre-execution-contract.ts:166 | code | med | fix-now | fold | yes |
-| F11 | packages/agentic-workflow-schema/src/pre-execution.ts:1038-1041 | code | med | fix-now | fold | no |
+| F11 | packages/agentic-workflow-schema/src/pre-execution.ts:1038-1041 | code | med | fix-now | fold | yes |
 | F12 | skills/pre-execution-review/references/LEDGERS.md:19-27 + docs/features/_TEMPLATE/SPEC.md:255 | code | med | fix-now | fold | no |
 | F13 | skills/plan-fix/SKILL.md:62 + docs/fix/_TEMPLATE/SPEC.md:50 | code | med | fix-now | fold | no |
 | F14 | scripts/pre-execution-snapshot.mjs:88-96,184-186 | security | low | fix-now | fold | no |
