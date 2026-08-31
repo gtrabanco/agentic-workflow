@@ -26,16 +26,16 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 8637,
-      "routeLinesMax": 617
+      "routeEstimateMax": 9501,
+      "routeLinesMax": 614
     },
     "audit-pr:fix": {
       "skills": [
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 8637,
-      "routeLinesMax": 617
+      "routeEstimateMax": 9501,
+      "routeLinesMax": 614
     },
     "design-feature:product": {
       "skills": [
@@ -290,8 +290,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 17500,
-      "routeLinesMax": 1400
+      "routeEstimateMax": 18551,
+      "routeLinesMax": 1429
     },
     "review-change:adversarial": {
       "skills": [
@@ -388,5 +388,15 @@
       "routeEstimateMax": 11000,
       "routeLinesMax": 800
     }
+  },
+  "policy": {
+    "name": "relative-headroom",
+    "headroom": 0.1,
+    "declared": "2026-08-31, user decision on review finding F7 (PR #155)",
+    "rules": [
+      "ceiling = ceil(measured x 1.10) at each declared re-basis",
+      "every ceiling raise names its real growth source in the commit and changelog row",
+      "ceilings are re-based down when trim work lands (debt item D2 owns the plan-fix:issue trim)"
+    ]
   }
 }
