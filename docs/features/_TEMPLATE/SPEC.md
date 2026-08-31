@@ -203,6 +203,12 @@ Engineering boxes (additionally, at scaffold time):
       `n/a: <reason>`.
 - [ ] Every phase passes the 8-box Phase-lint below (already mandatory,
       owned by `skills/phase-contract/SKILL.md`).
+- [ ] `### Planning evidence` and `### Obligations` are present (or point at the
+      M/L `planning-evidence.md` / `planning-obligations.md`, which exist), with
+      zero blank cells and no `n/a` lacking evidence.
+- [ ] Every normative SPEC behaviour, applicable invariant, affected use case, and
+      required failure state has exactly one obligation row with a phase and a
+      validator; no obligation is `deferred` or exported to a follow-up issue.
 - [ ] No template placeholders left anywhere in the file (same grep, whole
       file).
 
@@ -238,6 +244,28 @@ data shapes, algorithms, state machines. Pre-resolve every decision the
 implementer would otherwise have to guess. Close inherited open
 questions explicitly. This is the section that most reduces
 implementation risk — if it is vague, the implementation improvises.
+
+### Planning evidence
+
+One compact row per Engineering claim that a phase relies on — never an
+exploration transcript. M/L units freeze this table in
+`planning-evidence.md` and leave the heading here reading
+`see planning-evidence.md`; XS/S units fill it in place.
+
+| ID | Question or claim | Authority | Repository evidence and revision | Affected decision or obligation | Freshness | Status | Owner or next evidence |
+|---|---|---|---|---|---|---|---|
+
+### Obligations
+
+One row per normative behaviour, applicable compatibility invariant, affected use
+case, and required failure state — the completeness map `execute-phase` and
+`audit-pr` read. M/L units freeze it in `planning-obligations.md`; XS/S units fill
+it in place. Status is `planned | in-progress | verified | n/a | deferred`;
+`n/a` requires evidence, and no current-unit obligation may be `deferred` to a
+follow-up issue.
+
+| Obligation | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
+|---|---|---|---|---|---|---|---|---|
 
 ### Decisions to confirm
 

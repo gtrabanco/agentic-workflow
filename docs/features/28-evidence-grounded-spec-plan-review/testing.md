@@ -108,3 +108,53 @@ review — the qualification corpus and the weak-model route in
 authority is contractual (see `known-issues.md` item 9); (3) the Pi bundle was
 rebuilt from canonical at P2 because skill changes must stay distributable
 inside the unit — P5 still owns the terminal rebuild and version bump (D15).
+
+### P3 (2026-08-30) — Plan review, planning ledgers, shared review policy
+
+| Command | Result |
+|---|---|
+| `node --test scripts/pre-execution-quality.test.mjs` | 39/39 pass (25 pre-P3 + 14 P3 cases) |
+| `node --test scripts/*.test.mjs` (root) | 96/96 pass |
+| `node scripts/check-skill-context.mjs` | PASS — 39 skills, every entrypoint inside budget |
+| `node scripts/check-skill-context.mjs --routes` | PASS — 23 routes |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | bundled 38 skills (119 files); 134/134 pass |
+| `npx skills add . --list` | `review-plan` + `pre-execution-review` discoverable, the latter internal |
+
+Mutation checks (each mutation had to break exactly the assertion that owns it, and
+the suite was restored to green after every probe): `plan-fix` handing straight to
+`/execute-phase` ✗, scaffold allowed to self-certify a review ✗, `review-plan`
+declared read-write ✗, dropping the obligation ledger's `validator` column ✗,
+scaffold handing off to `/execute-phase` ✗, removing the template's
+`### Planning evidence` heading ✗, "majority wins" replacing union ✗, weakening the
+`CONVERGENCE-ANOMALY` report from mandatory to optional ✗, and downgrading
+`review-plan`'s model tier ✗.
+
+Route-specific coverage against the mandatory matrices:
+
+- *complete feature Plan review / complete fix Plan review* → snapshot + verdict +
+  parent-lineage tests; the fix path additionally asserts F1–F4 rows and that no
+  fake Product half is manufactured (D6).
+- *unsupported architecture assumption* → L2 requires `current` rows and keeps an
+  unsampled model/service claim `unknown`; `review-plan` refuses PASS otherwise.
+- *incomplete obligation / bad phase cut / bad scenario* → L3–L5 + P9–P11 with the
+  "validator that can fail" rule; the readiness model maps each gap to
+  `NEEDS-EVIDENCE` or `NEEDS-REPLAN` deterministically.
+- *wrong parent / Product conflict* → L1 + the freshness-code pin (every
+  `PRE_EXECUTION_FRESHNESS_CODES` member stays published) + the `stale-parent`
+  route in `OUTPUT.md`.
+- *wording-only batch repair, causal revert, second-cycle diagnosis* → shared
+  `POLICY.md` §3–§4 with the mandatory field list, plus the scaffold/planner
+  revision-rotation assertions.
+- *issue-export attempts* → `from-issue` still terminates at `/review-spec`, and a
+  `deferred` obligation requires a user amendment before it may exist.
+- Not yet exercised (P4 owns them): `execute-phase`'s fail-closed Plan gate,
+  `workflow-status` receipt sensing, `ship-roadmap` sequencing, `audit-pr`
+  lineage/obligation requirement, legacy adoption, and the end-to-end
+  current/stale/missing route fixtures.
+
+Residual risks: (1) the P3 tests are text-contract assertions — no live model has
+run `/review-plan` yet, which is P5's golden-fixture and canary work; (2) the
+consolidation means a caller can point at `pre-execution-review` and be wrong about
+the detail, so the suite pins both the delegation and the stage-specific residue in
+`design-feature`/`review-spec`; (3) this unit's own `planning-obligations.md` is
+written with the tooling it ships (dogfood, not pre-existing evidence).

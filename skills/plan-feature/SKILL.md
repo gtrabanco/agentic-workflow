@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 4.0.0
+version: 5.0.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -33,6 +33,10 @@ one — the routed redirect gate enforces that split.
 ✓ If `plan-feature-scaffold` ran this turn: the roadmap row was re-read
   AFTER the write and literally reads `planned` — a dropped `defined→planned`
   write fails this box; do not end the turn until it's fixed
+✓ Planned, not reviewed: the ledgers are frozen, `stage: plan` readiness printed
+  `READY-FOR-REVIEW`, and the turn hands off to `/review-plan` — this skill never
+  reviews the plan it just wrote and never hands off to `/execute-phase` for a
+  plan with no current Plan review receipt
 ✓ The dependency & blocker check was RUN and its result decides which closing block is printed
 ✓ An unmet dependency? The closing block lists the complete dependency chain, deepest first, joined with ` + `
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English PRs/issues/commits/SPECs unless one of the first two says otherwise
@@ -157,12 +161,18 @@ enables:
 - Designed input only: a planned feature with its full artifact set exists and
   is roadmap-registered — **and the roadmap row was re-read after the write and
   literally reads `planned`** (never assumed from having run the write step).
+- The two planning ledgers were frozen with the Engineering half
+  ([planning ledgers](<../../pre-execution-review/SKILL.md>)), the
+  `stage: plan` readiness preflight printed `READY-FOR-REVIEW`, and the new
+  `artifactRevisionId` is named in the hand-off. A planned unit is **not** an
+  executable unit: this skill never reviews its own plan.
 - The dependency & blocker check ran, and **the closing `→ Next:` block matches
   its result** — clean:
 
   ```
-  → Next: /execute-phase <NN> — execute every remaining phase and open the PR
-    · explicit atomic mode → /execute-phase <NN> P1
+  → Next: /review-plan <NN> — the plan is written; an independent context must
+    review it before any phase is executed
+    · the review returned PLAN-REVIEW-FAIL → this skill replans the batch, then re-reviews
     · adjust scope first → re-run /design-feature <slug>   · audit the planning docs → /audit-docs
   ```
 
