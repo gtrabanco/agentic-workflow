@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  35 source skills (18 user-facing + 15 workflow internals + 2 metadata-internal; 33 discoverable)
+skills/                  39 source skills (20 user-facing + 17 workflow internals + 2 metadata-internal; 38 discoverable)
 .claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
@@ -79,14 +79,17 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**18 user-facing skills** (one menu entry each) + internal contracts composed
-for you: the `plan-feature` router's two planning steps, the `review-change`
-engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
+**20 user-facing skills** (one menu entry each) + internal contracts composed
+for you: the `plan-feature` router's two planning steps, the two pre-execution
+evidence owners (`evidence-grounding` for authoring readiness,
+`pre-execution-review` for the shared review cycle and the planning ledgers), the
+`review-change` engine, the `orchestration-envelope` contract, the workflow's **own 9-skill internal review pack** (`review-code`,
 `review-security`, `review-verify`, `review-debt`, `review-design`,
 `review-a11y`, `review-brand`, `review-perf`, `review-seo`), and the repo-only
 `bump-skill` maintenance helper (excluded from installation) — so **no external review skill is ever
 required**, on any agent, with any model. One disciplined path: **design →
-plan → execute → review → audit → merge.**
+review the product → plan → review the plan → execute → review the change → audit →
+merge.**
 
 > Every skill's invocation forms and flags (`--fix`, `--force`,
 > `--adversarial N`, `--next`, `--fullauto`, …) are catalogued in the
