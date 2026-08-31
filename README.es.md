@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-skills/                  35 skills fuente (18 de cara al usuario + 15 internas del workflow + 2 metadata-internal; 33 descubribles)
+39 skills fuente (20 de cara al usuario + 17 internas del workflow + 2 metadata-internal; 38 descubribles)
 .claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 packages/                paquetes npm complementarios: @gtrabanco/agentic-workflow-schema (contratos de máquina)
                          y @gtrabanco/pi-agentic-workflow (instalación de un comando para Pi — ver Instalación)
@@ -81,15 +81,18 @@ nunca una dependencia de corrección. Ver
 
 ## Las skills
 
-**18 skills de cara al usuario** (una entrada de menú cada una) + contratos internos
+**20 skills de cara al usuario** (una entrada de menú cada una) + contratos internos
 que se componen por ti: los dos pasos de planificación del router `plan-feature`,
-el motor de `review-change`, el contrato `orchestration-envelope`, el **pack de revisión interno propio de 9 skills**
+los dos dueños de evidencia pre-ejecución (`evidence-grounding` para la preparación
+de autoría y `pre-execution-review` para el ciclo de revisión compartido y los libros
+de planificación), el motor de `review-change`, el contrato `orchestration-envelope`, el **pack de revisión interno propio de 9 skills**
 (`review-code`, `review-security`, `review-verify`, `review-debt`,
 `review-design`, `review-a11y`, `review-brand`, `review-perf`, `review-seo`), y
 el ayudante de mantenimiento interno `bump-skill` (excluido de la instalación) —
 así que **nunca se requiere una skill de revisión externa**, en ningún agente y
 con ningún modelo. Un único camino disciplinado:
-**design → plan → execute → review → audit → merge.**
+**design → revisar el producto → plan → revisar el plan → execute →
+revisar el cambio → audit → merge.**
 
 > Las formas de invocación y flags de cada skill (`--fix`, `--force`,
 > `--adversarial N`, `--next`, `--fullauto`, …) están catalogadas en la

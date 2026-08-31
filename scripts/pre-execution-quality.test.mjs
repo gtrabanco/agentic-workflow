@@ -730,7 +730,7 @@ test("P3 skills are registered, distributed, and routed", () => {
 test("each P3 entrypoint routes to its references and stays one-hop", () => {
   const routes = [
     ["review-plan", reviewPlan, ["CHECKS.md", "ENG-CHECKS.md", "OUTPUT.md"]],
-    ["pre-execution-review", policyOwner, ["POLICY.md", "LEDGERS.md"]],
+    ["pre-execution-review", policyOwner, ["POLICY.md", "LEDGERS.md", "SNAPSHOT.md"]],
   ];
   for (const [skill, body, allowed] of routes) {
     const linked = [...new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((m) => m[1]))].sort();
@@ -740,7 +740,7 @@ test("each P3 entrypoint routes to its references and stays one-hop", () => {
     }
   }
   // a skill routes to another skill only through its SKILL.md, never its references
-  for (const file of ["skills/review-plan/references/CHECKS.md", "skills/review-plan/references/OUTPUT.md", "skills/review-plan/references/ENG-CHECKS.md", "skills/pre-execution-review/references/POLICY.md", "skills/pre-execution-review/references/LEDGERS.md", "skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md", "skills/design-feature/references/REPAIR.md", "skills/review-spec/references/OUTPUT.md"]) {
+  for (const file of ["skills/review-plan/references/CHECKS.md", "skills/review-plan/references/OUTPUT.md", "skills/review-plan/references/ENG-CHECKS.md", "skills/pre-execution-review/references/POLICY.md", "skills/pre-execution-review/references/LEDGERS.md", "skills/pre-execution-review/references/SNAPSHOT.md", "skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md", "skills/design-feature/references/REPAIR.md", "skills/review-spec/references/OUTPUT.md"]) {
     const body = read(file);
     assert.ok(!/\]\(\.\.\/\.\.\/[a-z-]+\/references\//.test(body), `${file} must not deep-link another skill's reference`);
     assert.ok(!/\]\((?:\.\.\/)?references\//.test(body), `${file} must not nest a reference link`);

@@ -4,8 +4,10 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**18 user-facing skills** (one menu entry each) + **15 internal steps**
-composed for you (the `plan-feature` router's two planning steps, the
+**20 user-facing skills** (one menu entry each) + **17 internal steps**
+composed for you (the `plan-feature` router's two planning steps, the two
+pre-execution evidence owners `evidence-grounding` (authoring readiness) and
+`pre-execution-review` (the shared review cycle + the planning ledgers), the
 `review-change` findings engine `review-implementation`, the
 `planning-preflight` planning gate, the `phase-contract` lint contract,
 the `verification-contract` acceptance guard, the workflow's own 9-skill
@@ -13,10 +15,11 @@ internal review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
 `review-seo`). Additionally, **one metadata-internal** contract not discoverable
 by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
-which the CLI respects to exclude from `npx skills add` discovery). The 18
+which the CLI respects to exclude from `npx skills add` discovery). The 20
 user-facing skills cover setup, repository-state discovery/resolution, design,
-planning, execution, review, audit, finding folds, docs generation, issue triage,
-roadmap shipping, session logging, and workflow status. **bump-skill** is a
+pre-execution review (product and plan), planning, execution, review, audit,
+finding folds, docs generation, issue triage, roadmap shipping, session logging,
+and workflow status. **bump-skill** is a
 repo-only maintenance tool (not a workflow skill) and is excluded from the
 workflow skill index entirely.
 
@@ -61,6 +64,20 @@ limits.
 |---|---|---|
 | `design-feature` | **Product definition.** Folds in the raw-idea interview (one question per turn, fixed six-slot vagueness rubric, ≥ 3 empty slots → `NEEDS_INPUT`), runs proportional research, and walks the **capability-closure** checklists — **entity closure** (per entity → CRUD + state transitions + UI + API + test or explicit `n/a`), **integration closure** (one resolved row per subsystem in the project's capability inventory, `docs/CAPABILITIES.md` — auth, ACL, navigation, notifications, …), and the **role matrix** (every inventory role explicitly allowed/denied per capability) — into exhaustive acceptance criteria, plus the **expectation sweep** (≥ 10 implicit domain expectations, each forced to in-scope/out-of-scope/deferred). Writes the SPEC's **product half** and stamps `## Design status: designed` only after the template's **Spec-lint product boxes** (mechanical presence checks) all tick. Upserts on re-run; never destroys recorded decisions | `plan-feature <slug>` |
 
+## Pre-execution review (the two gates between an idea and a line of code)
+
+| Skill | Role | Hands off to |
+|---|---|---|
+| `review-spec` | **Independent Product gate.** Read-only review of the designed Product half in a context that did not write it: builds the frozen `stage: spec` snapshot, runs the fixed checks, and returns one of `SPEC-REVIEW-PASS` / `SPEC-REVIEW-FAIL` / `NEEDS-DESIGN` with a snapshot-bound receipt in `progress.md`. A FAIL's findings go to the unit's stage-aware `planning-findings.md`; the author's own readiness result can never stand in for the verdict. | `plan-feature` on a current PASS; `design-feature` to repair; the human when a product choice is genuinely open |
+| `review-plan` | **Independent Engineering gate.** Same contract over the frozen plan (`stage: plan` snapshot: SPEC, `ACCEPTANCE.md`, planning evidence, obligations, phases, tests; the parent Product snapshot digest is required): ledger sweep L1–L6, checks P1–P12 (F1–F4 on fix units), then `PLAN-REVIEW-PASS` / `PLAN-REVIEW-FAIL` / `NEEDS-DESIGN` + receipt. | `execute-phase` on a current PASS; the planning author to re-cut; `design-feature` on `NEEDS-DESIGN` |
+
+Both are read-only over every artifact they judge, share one policy
+(`pre-execution-review`: independence, unioned findings, counter-evidence-only
+dismissal, bounded repair cycles, `CONVERGENCE-ANOMALY`), and neither can be
+bypassed by a flag. `evidence-grounding` is what makes the *author's* turn
+ready to request those reviews — one evidence row per material claim, a
+deterministic readiness result, never a verdict.
+
 ## Plan
 
 | Skill | Role | Hands off to |
@@ -74,6 +91,8 @@ limits.
 |---|---|
 | `plan-feature-from-issue` | Feature-request issue → scoped SPEC product half (satisfies capability closure), with `Closes #N` (invoked by `plan-feature`) |
 | `plan-feature-scaffold` | Fills the SPEC's **engineering half** + planning artifacts **scaled to the feature's size** (XS/S → SPEC-only; M/L → full set ending in a mandatory hardening phase); registers in roadmap (docs only) (invoked by `plan-feature`) |
+| `evidence-grounding` | Authoring-side evidence contract + readiness preflight (`stage: spec` and `stage: plan`): claim→authority→artifact rows, the fixed readiness vocabulary, and the revision rotation that lets a reviewer detect its own write. `user-invocable: false` — composed by `design-feature`, `plan-feature-scaffold` and `plan-fix`; it can never emit a review PASS |
+| `pre-execution-review` | Single owner of the shared review cycle (clean-context independence, truthful author-exclusion and diversity labels, unioned findings, counter-evidence-only dismissal, repair classes, no-progress, `CONVERGENCE-ANOMALY`, legacy adoption) and of the planning ledger table shapes, homes and writers. `user-invocable: false` — composed by `review-spec`, `review-plan` and the authoring skills; it emits no verdict |
 | `review-implementation` | Classification engine over synthesized table (fix-now / replan-in-unit / decision-required / proposal); findings only, no refactor. `user-invocable: false` — the engine `review-change` composes (and `audit-pr` / `product-audit` reuse) |
 | `orchestration-envelope` | Package-owned machine-result contracts (strict Envelope v2, compact SkillOutcome v1, compatibility parsing, and deterministic snapshots) for driven worker/sensor skills. `user-invocable: false` — `ship-roadmap` remains a native-banner conductor |
 | `verification-contract` | Freezes acceptance before implementation, defines validation levels, and binds evidence to the current acceptance blob and code receipt. `user-invocable: false` — planners, executors, and reviewers compose it |
@@ -160,6 +179,8 @@ with no arguments uses the default stated here.
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |
 | `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n>` | Runs the simple review/fold router. It selects review or fold from persisted evidence, then routes unresolved findings to `/triage-issue --prioritize-now`; oversized work becomes new `P<n>` phases that the user executes manually. |
+| `review-spec` | `/review-spec <NN-slug \| slug> [--repair]` | Reviews the Product half of one unit in a clean context. No args: reports what it can bind and stops — it never guesses a unit. `--repair` continues a recorded cycle instead of starting a new one. |
+| `review-plan` | `/review-plan <NN-slug \| fix-<n>> [--repair]` | Reviews the frozen plan (feature or fix unit) in a clean context; requires the parent Product receipt for feature units. Same no-guessing and `--repair` rules as `/review-spec`. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | One issue → one fix unit. Multiple issues → one compatible capability bundle or homogeneous mechanical batch when the whole set shares an outcome, verification plan, and atomic release/rollback. If the set fails, returns the fewest maximal compatible groups instead of splitting reflexively into one PR per issue. |
 | `product-audit` | `/product-audit [path-or-area]` | Explicit invocation only. Defaults to the whole product; a path/area narrows the sweep. Proposes only — never fixes. |
 | `resolve-repository-state` | `/resolve-repository-state <contradiction-id>` | Verifies both evidence sources and publishes the next frozen snapshot, or stops with explicit missing input. |
@@ -185,14 +206,15 @@ an architecture-pattern skill, a domain-rules skill, and stack skills
 
 ```
 IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
-                          → `## Design status: designed` ─┐
+                          → `## Design status: designed`
+                          → review-spec (clean context, read-only) ─▶ SPEC-REVIEW-PASS ─┐
                    ┌──────────────── plan-feature (router, engineering-planning only) ─┐
 DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
 ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (all phases) ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible batch) ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible batch) ─▶ review-plan ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
@@ -209,7 +231,7 @@ product-audit ── periodic product-wide sweep → proposes issues + roadmap c
 audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anytime
 
 ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
-                 roadmap → /loop { plan-feature → execute-phase (fresh cheap workers)
+                 roadmap → /loop { review-spec → plan-feature → review-plan → execute-phase (fresh cheap workers)
                  → PR → loop-review-fold → audit-pr → merge } → final report;
                  human at the merges (default) and at product-audit (always)
 ```
