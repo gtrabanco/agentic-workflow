@@ -160,41 +160,6 @@ export const PRE_EXECUTION_LIMITS = Object.freeze({
 } as const);
 
 /**
- * The stable freshness/authority codes. `comparePreExecutionReceiptToSnapshot`
- * returns exactly one of these (plus `{fresh: true}`) in the documented order.
- */
-export const PRE_EXECUTION_FRESHNESS_CODES = Object.freeze([
-  "invalid-stage",
-  "invalid-unit",
-  "stale-policy",
-  "stale-context",
-  "stale-source-revision",
-  "stale-parent",
-  "stale-artifact-revision",
-  "stale-artifact-content",
-  "missing-receipt-snapshot",
-] as const);
-
-/**
- * The refusal codes the semantic layer earns. They share the package's single
- * diagnostic vocabulary: `invalid-value`, `missing-field`, `unknown-field`,
- * `limit-exceeded`, `duplicate-id`, `invalid-order`, `invalid-stage`,
- * `invalid-evidence`, `digest-mismatch` and `verdict-mismatch` are already
- * declared by `VERIFICATION_DIAGNOSTIC_CODES`; the four below are the
- * pre-execution additions, so a driver can branch on one closed set.
- */
-export const PRE_EXECUTION_SEMANTIC_CODES = Object.freeze([
-  "missing-artifact-kind",
-  "invalid-artifact-set",
-  "invalid-selector",
-  "invalid-author",
-  "invalid-context",
-  "invalid-topology",
-  "stale-snapshot",
-  "unsupported-leaf",
-] as const);
-
-/**
  * The rules a Draft-07 projection cannot express. The generator lists these ids,
  * with their human-readable claim, in the projection `$comment`, so an editor
  * that validates against the projection knows exactly what it did NOT check.
