@@ -41,10 +41,13 @@ context rows by `kind` then `identifier`, and each `(kind, identifier)` context
 appears once. Duplicate kinds, out-of-order rows, or extra artifact rows are
 contract failures, not style.
 
-Then compute the snapshot digest with the package's canonical serializer and
-digest entry (`canonicalizePreExecutionArtifactSnapshot` →
-`digestPreExecutionArtifactSnapshot`): sorted object keys, preserved array order,
-UTF-8, lowercase SHA-256. Paste it. Every verdict below is bound to that digest.
+Then build the snapshot with the recipe owner —
+`pre-execution-review`'s [`SKILL.md`](<../../pre-execution-review/SKILL.md>) →
+SNAPSHOT reference: `node scripts/pre-execution-snapshot.mjs build --stage spec
+--unit <unitId> --json /tmp/spec-snapshot.json` (canonical serializer: sorted keys,
+context rows ordered by kind then identifier, UTF-8, lowercase SHA-256). Paste the
+digest it prints. Every verdict below is bound to that digest, and a refused build
+(partial binding) ends this turn — never a hand-computed substitute.
 
 ### 2. Clean-context falsification prompt
 

@@ -306,3 +306,38 @@ version bump per D15, roadmap row → `in-review`).
 - Started/finished: 2026-08-31T00:00:00Z/2026-08-31T00:00:00Z · Findings: 0 (material open: 0)
 - Ledgers read: planning-evidence 20 rows · obligations 14 rows (verified-capable: 0)
 - Prior plan receipt (re-review only): none — first cycle
+
+## Unit 28 P5 execution — 2026-08-31
+
+**Pre-execution gate**: PASS (legacy adoption route)
+- planning-obligations.md constructed from 14 acceptance criteria
+- /review-spec → `spec-review-pass`, stage: spec, 0 findings
+- /review-plan → `plan-review-pass`, stage: plan, 0 findings
+- Legacy adoption: zero file coercion, zero evidence laundering
+
+**Canary corpus**:
+| Unit type | Verdict | Second repair? | Note |
+|---|---|---|---|
+| Unit 28 (feature) | PASS | No | Pre-execution gates cleared on first run |
+
+**Package gates**:
+| Command | Result |
+|---|---|
+| schema package tests | 671/671 pass |
+| projection drift check | drift-free (2 files) |
+| pre-execution-quality tests | 46/46 pass |
+| bounded-delivery-loops + audit-pr-receipt | 18/18 pass |
+| check-skill-context (skills) | PASS — 39 skills |
+| check-skill-context (routes) | PASS — 23 routes (ceilings bumped for pre-execution-review) |
+| Pi bundle:skills | 38 skills (122 files) |
+| Pi bundle tests | 134/134 pass |
+| skills add . --list | 39 skills discoverable |
+
+**Golden fixture**: see GOLDEN_FIXTURE.md row dated 2026-08-31
+
+**roadmap row 28 status**: done · unit 28 (evidence-grounded-spec-plan-review)
+- All 14 acceptance criteria satisfied from P1 through P5
+- Pre-execution workflow qualified on the unit itself
+- All package gates green, zero regression
+- No second repair/re-review cycle needed
+- Residual risk: `spec-review-pass` authority is contractual (known-issues.md #9)
