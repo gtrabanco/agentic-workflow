@@ -49,10 +49,13 @@ Use `stage: spec` for a Product half (`design-feature`, issue-derived design) an
   rows, and the invariant classification is present (`preserves`, or the stop
   block for `violates`/`introduces`/`changes`)
 ✓ 4. Every normative obligation and applicable invariant/use case has exactly
-  one obligation-ledger row with phase, task, implementation owner, validator,
-  required evidence, and a non-blank status
-✓ 5. `planning-evidence.md` (M/L) or `### Planning evidence` (XS/S) exists, is
-  compact, and every Engineering claim resolves to a row in it
+  one row in the obligation ledger, with phase, task, implementation owner,
+  validator, required evidence, and a non-blank status
+  (ledger contract: `pre-execution-review/references/LEDGERS.md` §2)
+✓ 5. The planning-evidence table exists in its size-appropriate home (M/L:
+  `planning-evidence.md`; XS/S: `### Planning evidence` in the SPEC), is compact,
+  and every Engineering claim resolves to a row in it
+  (ledger contract: `pre-execution-review/references/LEDGERS.md` §1)
 ✓ 6. Scenario matrix covers each failure category the SPEC names; each scenario
   points at the phase and validator that exercise it
 ✓ 7. Every phase passes the canonical 8-box phase-lint with its fingerprint

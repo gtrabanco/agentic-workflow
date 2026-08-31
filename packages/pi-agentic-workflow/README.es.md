@@ -53,6 +53,7 @@ no reciben comando propio — los componen los de arriba:
 | `/product-audit` | Auditar la superficie del producto, no solo el diff. |
 | `/resolve-repository-state` | Resolver una contradicción en hechos congelados. |
 | `/review-change` | Revisar un cambio con los ejes que apliquen. |
+| `/review-plan` | Revisar un plan congelado en un contexto limpio. |
 | `/review-spec` | Revisar un SPEC diseñado en un contexto limpio. |
 | `/ship-roadmap` | Encontrar o continuar un roadmap, una etapa por ejecución. |
 | `/triage-issue` | Verificar un issue o hallazgo contra el código actual. |

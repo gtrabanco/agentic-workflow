@@ -86,6 +86,9 @@ review-implementation:
 review-perf:
   model: sonnet
   effort: medium
+review-plan:
+  model: opus
+  effort: high
 review-security:
   model: opus
   effort: high

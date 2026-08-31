@@ -38,14 +38,14 @@ Layer: docs · Done-when: `node --test
 scripts/pre-execution-quality.test.mjs` -> exit 0 for Plan/fix, ledger,
 independence, and no-progress fixtures.
 
-- [ ] Add public `review-plan` with feature/fix input contracts, engineering checks, three verdicts, read-only boundary, and exact parent Product/Plan receipt output.
-- [ ] Integrate progressive grounding, deterministic Plan readiness, and revision rotation into `plan-feature`, `plan-feature-scaffold`, and `plan-fix`; fixes retain reproduction/root-cause/regression/rollback authority without a fake Product half.
-- [ ] Add the frozen planning-ledger set: compact `planning-evidence.md` for M/L (embedded for XS/S) plus obligation closure, bound into Plan snapshots with current authority/unknown ownership and complete behavior-to-phase/task/validator/evidence/status mapping.
-- [ ] Add stage-aware `planning-findings.md` ownership and resolution evidence; reviewers append findings, author skills repair/replan, and no reviewer mutates its approved artifact.
-- [ ] Implement unioned findings, counter-evidence-only dismissal, truthful model-diversity labels, author exclusion where enforceable, bounded critique/synthesis/arbitration, and no quorum.
-- [ ] Implement first-findings batch repair plus no-progress/convergence rules: a repeat needs a new snapshot or falsifiable evidence route, and entering a second repair/re-review cycle emits an owner-specific `CONVERGENCE-ANOMALY`.
-- [ ] Add Plan fixtures for feature/fix readiness, unsupported assumptions, evidence/obligation gaps, bad phase cuts/scenarios, wrong parent/Product conflict, wording-only batch repair, causal revert, second-cycle diagnosis, and issue-export attempts.
-- [ ] Bump/changelog every P3 skill and keep evidence/readiness/convergence policy in one progressive reference/internal owner rather than duplicating it.
+- [x] Add public `review-plan` with feature/fix input contracts, engineering checks, three verdicts, read-only boundary, and exact parent Product/Plan receipt output.
+- [x] Integrate progressive grounding, deterministic Plan readiness, and revision rotation into `plan-feature`, `plan-feature-scaffold`, and `plan-fix`; fixes retain reproduction/root-cause/regression/rollback authority without a fake Product half.
+- [x] Add the frozen planning-ledger set: compact `planning-evidence.md` for M/L (embedded for XS/S) plus obligation closure, bound into Plan snapshots with current authority/unknown ownership and complete behavior-to-phase/task/validator/evidence/status mapping.
+- [x] Add stage-aware `planning-findings.md` ownership and resolution evidence; reviewers append findings, author skills repair/replan, and no reviewer mutates its approved artifact.
+- [x] Implement unioned findings, counter-evidence-only dismissal, truthful model-diversity labels, author exclusion where enforceable, bounded critique/synthesis/arbitration, and no quorum.
+- [x] Implement first-findings batch repair plus no-progress/convergence rules: a repeat needs a new snapshot or falsifiable evidence route, and entering a second repair/re-review cycle emits an owner-specific `CONVERGENCE-ANOMALY`.
+- [x] Add Plan fixtures for feature/fix readiness, unsupported assumptions, evidence/obligation gaps, bad phase cuts/scenarios, wrong parent/Product conflict, wording-only batch repair, causal revert, second-cycle diagnosis, and issue-export attempts.
+- [x] Bump/changelog every P3 skill and keep evidence/readiness/convergence policy in one progressive reference/internal owner rather than duplicating it.
 
 ## P4 — Enforce pre-execution authority routing
 

@@ -8,7 +8,7 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 |---|---|---|
 | P1 — Publish pre-execution evidence contracts | done | `npm test` 671/671 exit 0 · `check:pre-execution-schemas` drift-free · `npm pack --dry-run` 3.5.0, 2/2 projections · `check-pre-execution-package.mjs` PASS |
 | P2 — Establish Product review readiness | done | Depends on P1 public contracts |
-| P3 — Establish Plan review readiness | pending | Depends on P2 Product-review authority |
+| P3 — Establish Plan review readiness | done | Depends on P2 Product-review authority |
 | P4 — Enforce pre-execution authority routing | pending | Depends on P3 Plan-review authority |
 | P5 — Qualify the pre-execution workflow | pending | Depends on P1-P4 |
 
@@ -134,6 +134,68 @@ is contractual, so OUTPUT must name the actual model and context).
 
 **Next**: P3 — `review-plan`, the shared reviewer policy, and the
 planning-evidence/obligation ledgers.
+
+## P3 — 2026-08-30 — Plan review, planning ledgers, shared review policy
+
+**Done**
+- New user-facing `skills/review-plan/` (`SKILL.md`, `references/CHECKS.md`,
+  `references/ENG-CHECKS.md`, `references/OUTPUT.md`): `stage: plan` snapshot with
+  the required parent Product snapshot, falsification pass, ledger sweep L1–L6,
+  Engineering checks P1–P12 plus fix checks F1–F4, read-only boundary, three
+  verdicts, receipt in `progress.md`, findings appended to `planning-findings.md`.
+- New internal `skills/pre-execution-review/` (`SKILL.md`, `references/POLICY.md`,
+  `references/LEDGERS.md`): one owner for independence/author exclusion/diversity
+  labels/union/counter-evidence/bounded roles/no quorum/no-progress/
+  `CONVERGENCE-ANOMALY`, and one owner for the planning-evidence, obligation and
+  findings table shapes, homes, statuses and writers.
+- Ledgers frozen by the authors: `plan-feature-scaffold` 2.0.0 writes
+  `planning-evidence.md` + `planning-obligations.md` (M/L) or the embedded SPEC
+  tables (XS/S), runs `stage: plan` readiness, rotates the revision, and hands off
+  to `/review-plan`; `plan-fix` 3.0.0 embeds both tables in the fix SPEC with
+  reproduction/root-cause/regression/rollback authority and never fabricates a
+  Product half (D6); `plan-feature` 5.0.0 closes at `/review-plan`.
+- Single-owner consolidation: `review-spec` 1.1.0, `evidence-grounding` 1.1.0 and
+  `design-feature` 3.1.0 now cite `pre-execution-review` for the shared cycle and
+  ledger shapes instead of restating them (the suite pins the column lists to
+  exactly one file).
+- Templates carry both ledgers plus their presence boxes (feature and fix).
+- Registration and docs: both plugin manifests, `model-routing.yml`
+  (`review-plan`: opus/high; the internal owner carries no route), route budgets
+  recalibrated and split by step (D21), EN+ES skill/release changelogs, both root
+  READMEs, both Pi README command tables, and the EN+ES migration note extended to
+  the Plan hop.
+- Pi bundle rebuilt from canonical (38 skills, 119 files); 134/134 package tests.
+
+**Gate** — `node --test scripts/pre-execution-quality.test.mjs` 39/39 ·
+root `node --test scripts/*.test.mjs` 96/96 · context budgets PASS (39 skills) ·
+route budgets PASS (23 routes) · Pi 134/134 · installability confirmed. Nine
+mutations probed, each caught by the assertion that owns it (`testing.md` → P3).
+
+**Decisions** — D20 (XS/S embeds both ledgers in the SPEC; the `planning-evidence`
+and `obligations` snapshot rows are then `absent`, never forged), D21 (route
+budgets: the router turn and the authoring turn are different loads, so
+`plan-feature` gained a `:scaffold` route and `design-feature` a `:repair` route
+rather than inflating one ceiling; ceilings are measured steady states).
+
+**Correction** — P2's unit-loop receipt recorded the phase fingerprint as
+`P2:readiness:8:…`; the layer field is `docs` (TASKS.md declares `Layer: docs`),
+so the canonical fingerprint is `P2:docs:8:establish-product-review-readiness`.
+Phase shape did not change; only the recorded label was wrong.
+
+**Next**: P4 — make routing enforce the authority (`workflow-status`,
+`execute-phase`'s fail-closed Plan gate, `ship-roadmap` sequencing,
+`review-change`/`loop-review-fold` root-cause routes, `audit-pr` lineage and
+obligation closure, legacy adoption, no auto-issue).
+
+## Unit-loop receipt — P3
+- Candidate: this commit · Gate: see the **Gate** line above (all commands run on the final state) · Phase-lint P3: PASS (8/8) · fingerprint `P3:docs:8:establish-plan-review-readiness`
+- Preflight revalidation: branch unchanged · roadmap row 28 = `in-progress` (flipped at P2, this phase's ledger) · NRS snapshot consumed, `frozen` · ACCEPTANCE blob `238b8a1ae96018ecb6aae082dc135d44d5389c24` recomputed at this turn, unchanged · invariants `n/a: no project invariants declared` · dependency receipts still MERGED · prior receipts: P1 `fdc9ea91`, P2 `04b01e53`, unchanged.
+- Acceptance coverage after P3: AC-FUNC-001 **covered** (both stages), AC-REVIEW-001 **covered** (spec + plan gates, read-only, no bypass, human authority), AC-REVIEW-002 **covered** (shared independence/union/diversity/author-exclusion policy with the `CONVERGENCE-ANOMALY` report), AC-CONTRACT-002 **covered for the plan stage** (ledgers frozen and bound), AC-QUALITY-001 **partially covered** (budgets + EN/ES sync green; weak-model route record and canaries are P5). Still open: AC-CONTRACT-004/005 and the routing/legacy surface — P4.
+- Residual risk: no live executor has run `/review-plan` yet (P5's fixture and
+  canary corpus); the ledger tooling is being used on the very unit that ships it,
+  so this unit's own ledgers are evidence of the mechanism, not independent
+  validation of it.
+- Next: P4 · Attempts: 1
 
 ## Unit-loop receipt — P2
 - Candidate: this commit · Gate: see the **Gate** line above (all commands run on the final state) · Phase-lint P2: PASS (8/8) · fingerprint `P2:readiness:8:establish-product-review-readiness`

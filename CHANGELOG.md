@@ -233,6 +233,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `design-feature`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.1.0 | 2026-08-30 | minor | `references/REPAIR.md` now delegates the repeat/second-cycle rules to the shared `pre-execution-review` owner and keeps only the spec-stage detail (which root cause a Product-half miss carries), so the convergence policy has one home instead of two.
 | 3.0.0 | 2026-08-30 | major | **Breaking hand-off:** a designed Product half now closes at `READY-FOR-REVIEW` and hands off to `/review-spec <slug>`, not to `/plan-feature`. Consumes the internal `evidence-grounding` passes (inventory → evidence → draft → readiness), freezes one evidence row per material Product claim, rotates `artifactRevisionId` on every write including a revert, and gains `references/REPAIR.md`: one root-caused batch over the whole `SPEC-REVIEW-FAIL` findings set, three named repair classes, and a second cycle reported as `CONVERGENCE-ANOMALY`. Design carries no review authority.
 | 2.6.0 | 2026-07-31 | minor | Progressive loading separates status-only, new-idea interview/closure, write/upsert, worked-upsert, and portability paths while retaining universal safety gates in the entrypoint. |
 | 2.5.0 | 2026-07-31 | minor | Classifies optional project architectural invariants with repository evidence and stops design for an explicit architectural decision when a rule is violated, introduced, or changed. |
@@ -244,6 +245,7 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.1.0 | 2026-07-09 | minor | Now **sets** the roadmap row status, not just reads it: stamping `## Design status: designed` sets the feature's roadmap row to `defined` (the `idea → defined` transition this skill owns) — added at `idea` first if the row didn't exist. `NEEDS_INPUT` leaves both the marker and the row unchanged. Turn contract and Done when gained the matching boxes. |
 | 1.0.0 | 2026-07-09 | — | New skill: product definition, split out of `plan-feature`. Folds in the raw-idea interview and walks a fixed **capability-closure** checklist (per entity: CRUD + state transitions, each with UI + API + test, or explicit `n/a: <reason>`; per capability: entry point + ACL; per role: assigned/revoked/viewed) into the SPEC's Product half + Acceptance criteria, stamping `## Design status: designed`. Upserts on re-run (never destroys `decisions.md`); bare `<slug>` reviews and asks, `<slug> "<instruction>"` applies directly. |
 
+| 5.0.0 | 2026-08-30 | major | **Breaking hand-off:** a freshly planned unit closes at `→ Next: /review-plan <NN>` instead of `/execute-phase <NN>`. Planning also carries the frozen ledgers and the `stage: plan` readiness result into its hand-off and states plainly that a planned unit is not an executable one — this skill never reviews the plan it just wrote.
 #### `plan-feature`
 | Version | Date | Type | What changed |
 |---|---|---|
@@ -273,6 +275,7 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.0.1 | 2026-06-05 | patch | `effort medium → high` (its in-turn planning steps need it) |
 | 1.0.0 | 2026-06-05 | — | First versioned release — the planning router (idea / issue / scoped slug / `--next`) |
 
+| 3.0.0 | 2026-08-30 | major | **Breaking hand-off:** the fix SPEC now freezes `## Planning evidence` and `## Obligations` with it (reproduction, root cause, regression scope, rollback, affected invariant — each a row) and hands off to `/review-plan fix-<n>`; `/execute-phase --fix` follows the Plan PASS. A fix unit keeps its own authority and never grows a fabricated Product half to satisfy a Product check.
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|
@@ -301,7 +304,13 @@ How pinning actually works, verified against the `skills` CLI:
 #### `review-spec`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 1.1.0 | 2026-08-30 | minor | Findings are appended to the unit's stage-aware `planning-findings.md` (stage `spec`) as well as reported, and the repeat/convergence rules delegate to the shared `pre-execution-review` owner. Verdicts, the fourteen checks and the read-only boundary are unchanged.
 | 1.0.0 | 2026-08-30 | — | New Product-stage gate: reviews a frozen Product half in a context-clean turn, builds `PreExecutionArtifactSnapshot v1` with the `spec-product-v1` selector, runs the fixed fourteen Product checks after a falsification pass, and returns only `SPEC-REVIEW-PASS | SPEC-REVIEW-FAIL | NEEDS-DESIGN` with the receipt persisted in `progress.md`. Read-only on every reviewed artifact; product choices return to the human.
+
+#### `review-plan`
+| Version | Date | Type | What changed |
+|---|---|---|---|
+| 1.0.0 | 2026-08-30 | — | New Engineering-stage gate: reviews a frozen plan in a context that did not cut it, builds the `stage: plan` snapshot (whole-file rows, required parent Product snapshot), sweeps the planning ledgers (L1–L6) and the fixed Engineering checks (P1–P12, plus F1–F4 for fixes), and returns only `PLAN-REVIEW-PASS | PLAN-REVIEW-FAIL | NEEDS-DESIGN` with a snapshot-bound receipt in `progress.md` and findings appended to `planning-findings.md`. Read-only on every plan artifact; `execute-phase` is the consumer.
 
 #### `review-change`
 | Version | Date | Type | What changed |
@@ -495,6 +504,9 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.1.0 | 2026-06-09 | minor | Detects the **forge** from the remote URL and records it; suggests the platform's companion review skills |
 | 1.0.0 | 2026-06-05 | — | First versioned release — adapt the doc scaffold to a project |
 
+| `pre-execution-review` | 1.0.0 | 2026-08-30 | — | New internal owner of the pre-execution review cycle and the planning ledgers: clean-context independence, author exclusion and truthful diversity labels, unioned findings with counter-evidence-only dismissal and no quorum, bounded critique/synthesis/arbitration, the no-progress gate, the field-for-field `CONVERGENCE-ANOMALY` report, and the single definition of the planning-evidence, obligation and findings tables (homes, statuses, writers). It issues no verdict and writes no artifact.
+| `plan-feature-scaffold` | 2.0.0 | 2026-08-30 | major | **Breaking artifact set and hand-off:** scaffolding freezes the two planning ledgers while it cuts phases — `planning-evidence.md` + `planning-obligations.md` for M/L, embedded `### Planning evidence` / `### Obligations` for XS/S — runs the `stage: plan` readiness preflight before reporting, rotates `artifactRevisionId`, and returns a unit whose next step is `/review-plan`, never `/execute-phase`. Phases may not be cut until every obligation row has a phase and a validator that can fail.
+| `evidence-grounding` | 1.1.0 | 2026-08-30 | minor | The `stage: plan` readiness boxes cite the shared ledger owner for the table shapes and point the review-cycle no-progress rule at `pre-execution-review`; emitted vocabularies unchanged, and it still cannot emit a review PASS.
 ### Internal (`user-invocable: false`)
 
 | Skill | Version | Date | Type | What changed |
@@ -596,6 +608,15 @@ How pinning actually works, verified against the `skills` CLI:
 | `review-seo` | 1.0.1 | 2026-07-04 | patch | No behavior change: this skill's `model:`/`effort:` frontmatter moved to `docs/workflow/model-routing.yml` (used only to build the `#claude` branch). |
 | | 1.0.0 | 2026-07-02 | — | Internal review pack: SEO checklist (metadata, canonical, indexability, structured data) |
 ---
+
+- **2026-08-30 — planned is not executable.** Feature 28 P3 adds `review-plan`
+  1.0.0 and the internal `pre-execution-review` 1.0.0. Scaffolding and fix
+  planning now freeze the planning-evidence and obligation ledgers with the plan,
+  run the `stage: plan` readiness preflight, and hand off to an independent
+  Engineering review; `plan-feature` 5.0.0, `plan-feature-scaffold` 2.0.0 and
+  `plan-fix` 3.0.0 stop at that review instead of pointing at `execute-phase`, and
+  the shared owner gives independence, union, no-progress and
+  `CONVERGENCE-ANOMALY` one home.
 
 - **2026-08-30 — designed is not reviewed.** Feature 28 P2 adds `review-spec`
   1.0.0 and the internal `evidence-grounding` 1.0.0: a Product half now freezes one

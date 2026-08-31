@@ -4,9 +4,10 @@
 
 ## 2026-08-30 — designed is no longer the same as reviewed
 
-**Breaking hand-off; `design-feature` 3.0.0, `plan-feature` 4.0.0,
-`plan-feature-from-issue` 2.0.0, new `review-spec` 1.0.0 and internal
-`evidence-grounding` 1.0.0.** Product authoring and product verdicts now have
+**Breaking hand-offs; `design-feature` 3.1.0, `plan-feature` 5.0.0,
+`plan-feature-scaffold` 2.0.0, `plan-fix` 3.0.0, `plan-feature-from-issue` 2.0.0,
+`review-spec` 1.1.0, and the new `review-plan` 1.0.0 with the internal
+`evidence-grounding` 1.1.0 and `pre-execution-review` 1.0.0.** Product authoring and product verdicts now have
 different owners. `design-feature` closes its Product half at a deterministic
 `READY-FOR-REVIEW` preflight and hands off to `/review-spec <slug>`; it no
 longer sends work straight to `plan-feature`. `plan-feature` adds a
@@ -29,6 +30,22 @@ repository citation. If you drive `plan-feature-from-issue` programmatically,
 expect it to stop before the Engineering half; call `plan-feature <slug>` after
 the review passes. Direct consumers that asserted the old terminal hand-off must
 now assert `/review-spec`.
+
+**Planning gains the same hop on the Engineering side.** Scaffolding and `plan-fix`
+now freeze two ledgers with the plan — `planning-evidence.md` +
+`planning-obligations.md` for M/L units, `### Planning evidence` + `### Obligations`
+embedded in the SPEC for XS/S and fix units — and hand off to `/review-plan <NN>`
+(fix: `/review-plan fix-<N>`) instead of `/execute-phase`. `review-plan` sweeps those
+ledgers (L1–L6) and the fixed Engineering checks (P1–P12, plus F1–F4 for fixes) in a
+context that did not cut the phases, and only its current `PLAN-REVIEW-PASS` lets
+`execute-phase` edit anything. A planned unit with no review is a normal, honest
+state: run `/review-plan <NN>`. A unit whose obligation rows are blank, `deferred`,
+or exported to a follow-up issue fails the review rather than the release; deferring
+one requires amending the governing SPEC first. Consumers that asserted
+`plan-feature`'s old `/execute-phase` hand-off now assert `/review-plan`, and the
+shared review-cycle rules (independence, unioned findings, counter-evidence-only
+dismissal, no-progress, the `CONVERGENCE-ANOMALY` report) moved to the internal
+`pre-execution-review` owner, so read them there instead of per-skill.
 
 ## 2026-08-21 — hybrid machine results and deterministic snapshots
 

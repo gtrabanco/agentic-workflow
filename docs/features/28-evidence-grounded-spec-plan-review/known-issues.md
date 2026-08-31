@@ -36,3 +36,9 @@ No unresolved product or engineering decision blocks implementation.
    that it declared and evidenced the required context. Independence claims in
    an OUTPUT must therefore name the actual model and context used
    (`AC-REVIEW-002`).
+10. **Ledger naming is a convention, not a schema constraint:** the snapshot
+    binds `planning-evidence` and `obligations` by path and digest, so a unit that
+    mis-names those files still validates. The skill contracts own the names
+    (`planning-evidence.md`, `planning-obligations.md`, `planning-findings.md`, and
+    the XS/S embedded headings per D20); `review-plan`'s L3–L6 checks are what
+    catch a unit that invented a fourth home.

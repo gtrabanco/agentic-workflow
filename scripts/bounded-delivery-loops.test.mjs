@@ -30,7 +30,10 @@ assert.match(execute, /explicit phase.*exactly that phase/s);
 assert.match(unitLoop, /Default `--max-attempts 3`/);
 assert.match(unitLoop, /Do \*\*not\*\* stop for intermediate review/);
 assert.match(unitLoop, /NO-PROGRESS\|ATTEMPT-BUDGET/);
-assert.match(planFeature, /Next: \/execute-phase <NN> — execute every remaining phase/);
+// Feature 28 P3: planning closes at the independent Plan review, not at the
+// executor. Execution stays the post-PASS step, named in the same block.
+assert.match(planFeature, /Next: \/review-plan <NN> — the plan is written/);
+assert.match(planFeature, /PLAN-REVIEW-PASS|follows its PLAN-REVIEW-PASS|\/execute-phase <NN> P1/);
 assert.match(workflowStatus, /`planned` → `\/execute-phase <NN>`/);
 assert.match(discovery, /implementation-ready feature → \/execute-phase <NN>\n/);
 assert.match(resolution, /implementation was interrupted → \/execute-phase <NN>\n/);

@@ -51,6 +51,7 @@ their own — they are composed by the ones above:
 | `/product-audit` | Audit the product surface, not just the diff. |
 | `/resolve-repository-state` | Resolve a contradiction in frozen facts. |
 | `/review-change` | Review a change with the applicable axes. |
+| `/review-plan` | Review a frozen plan in a clean context. |
 | `/review-spec` | Review a designed SPEC in a clean context. |
 | `/ship-roadmap` | Find or continue a roadmap, one stage per run. |
 | `/triage-issue` | Verify an issue or finding against current code. |

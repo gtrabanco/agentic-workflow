@@ -2,9 +2,13 @@
 
 ### Persist the receipt first, then report
 
-After the checks, append the receipt to the unit's `docs/features/<NN>-<slug>/
-progress.md`. Any later write to a reviewed artifact rotates `artifactRevisionId`
-and makes this receipt stale — that is the contract working, not a mistake.
+Append the receipt to the unit's `docs/features/<NN>-<slug>/progress.md` **and
+each finding row to the unit's `planning-findings.md`** with
+`stage: spec` (ledger contract: `pre-execution-review/references/LEDGERS.md`);
+create the file from that contract when the unit has none. A findings ledger the
+reviewer cannot write is not a ledger. Any later write to a reviewed artifact
+rotates `artifactRevisionId` and makes this receipt stale — that is the contract
+working, not a mistake.
 
 One `PreExecutionReviewReceipt v1`
 (`agentic-workflow/pre-execution-review-receipt@1`) per review, in a fenced block:
@@ -69,6 +73,14 @@ A finding whose `class` is `plan`, `source`, `environment`, or `runtime` does no
 become work here: record it, keep it open, and route it to its owner (`review-plan`
 for plan defects, the executor for source defects). This skill repairs nothing and
 schedules nothing.
+
+Repeating this review follows the no-progress and convergence rules in
+`pre-execution-review/references/POLICY.md` §4: a repeat needs a
+changed snapshot or a named falsifiable question plus a new evidence route, and
+entering a second repair/re-review cycle prints `CONVERGENCE-ANOMALY` before any
+further edit. A `design-feature` repair turn re-reads the union of open findings
+from `planning-findings.md`, not just the newest receipt, so nothing recorded here
+is ever lost between cycles.
 
 ### Skill-specific turn-contract boxes
 

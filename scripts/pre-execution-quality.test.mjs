@@ -47,6 +47,8 @@ const SEVERITIES = ["info", "low", "medium", "high", "critical"];
 const MATERIAL = SEVERITIES.filter((s) => s !== "info");
 const PRODUCT_CHECKS = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14"];
 
+const squash1 = (t) => t.replace(/\s+/g, " ").trim();
+
 // --- pure models of the contracted decision tables ----------------------------
 
 // evidence-grounding never emits a review verdict, and readiness is capped at
@@ -352,8 +354,12 @@ test("entering a second repair/re-review cycle emits a convergence anomaly", () 
   const stalled = repairCycle({ cycle: 2, findingIds: ["F1"], changedSnapshot: false, newQuestion: false });
   assert.equal(stalled.action, "no-progress");
   assert.match(designRepair, /`CONVERGENCE-ANOMALY`/);
-  assert.match(designRepair, /before any further edit, report/);
-  assert.match(designRepair, /never a way to earn a PASS/);
+  // P3 gave the cycle rules one owner; the caller must delegate to it and keep the
+  // spec-stage detail. Same guarantees, checked across owner + delegator.
+  assert.match(designRepair, /Cycle rules have one owner: `pre-execution-review\/references\/POLICY\.md` §4/);
+  assert.match(designRepair, /\*\*before\*\* any\nfurther edit/);
+  assert.match(designRepair, /they never earn a PASS/);
+  assert.match(designRepair, /an exhausted cycle budget/);
 });
 
 test("a mechanical repair stays autonomous only while intent is unchanged", () => {
@@ -490,4 +496,266 @@ test("review-spec routes every finding class to its owner and edits nothing", ()
   assert.deepEqual(FINDING_CLASSES.join("|").split("|").length, 5);
 });
 
-console.log("PASS pre-execution quality: grounding, Product readiness, review-spec, gates, repair, distribution");
+
+// --- P3: Plan review, ledgers, shared review policy -------------------------
+
+const reviewPlan = read("skills/review-plan/SKILL.md");
+const planChecks = read("skills/review-plan/references/CHECKS.md");
+const planEngChecks = read("skills/review-plan/references/ENG-CHECKS.md");
+const planOutput = read("skills/review-plan/references/OUTPUT.md");
+const policyOwner = read("skills/pre-execution-review/SKILL.md");
+const policyCycle = read("skills/pre-execution-review/references/POLICY.md");
+const policyLedgers = read("skills/pre-execution-review/references/LEDGERS.md");
+const scaffold = read("skills/plan-feature-scaffold/SKILL.md");
+const scaffoldProcess = read("skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md");
+const planFix = read("skills/plan-fix/SKILL.md");
+const featureTemplate = read("docs/features/_TEMPLATE/SPEC.md");
+const fixTemplate = read("docs/fix/_TEMPLATE/SPEC.md");
+
+const LEDGER_COLUMNS = {
+  evidence: "id | question-or-claim | authority | repository-evidence-and-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence",
+  obligations: "obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status",
+  findings: "finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision",
+};
+
+// Pure model of PLAN readiness + review (mirrors the skill decision tables).
+const planReadiness = (rows) => {
+  if (!rows.parentReceipt || rows.parentReceipt.verdict !== "SPEC-REVIEW-PASS") return "NEEDS-EVIDENCE";
+  if (rows.obligations.some((o) => !o.phase || !o.validator)) return "NEEDS-REPLAN";
+  if (rows.evidence.some((e) => e.freshness !== "current")) return "NEEDS-EVIDENCE";
+  if (rows.assumptions.some((a) => a.unsampled && a.status !== "unknown")) return "NEEDS-EVIDENCE";
+  if (rows.gaps.some((g) => g.type === "scenario-missing-validator")) return "NEEDS-REPLAN";
+  if (rows.gaps.some((g) => g.type === "unknown-ownership")) return "NEEDS-EVIDENCE";
+  return "READY-FOR-REVIEW";
+};
+const planReview = (snapshot, findings) => {
+  if (snapshot.stage !== "plan") return "invalid-stage";
+  if (snapshot.unitKind === "fix" && snapshot.hasProductHalf) return "finding"; // D6
+  // order mirrors review-plan/references/OUTPUT.md §Routes: an undecided product
+  // choice leaves this stage before incompleteness is judged
+  if (findings.some((f) => f.class === "product" && !f.decidable)) return "NEEDS-DESIGN";
+  if (findings.some((f) => MATERIAL.includes(f.severity) && (f.status !== "resolved" || !f.verified))) return "PLAN-REVIEW-FAIL";
+  return "PLAN-REVIEW-PASS";
+};
+
+test("plan readiness covers evidence, obligation, and scenario gaps without claiming PASS", () => {
+  const base = { parentReceipt: { verdict: "SPEC-REVIEW-PASS" }, obligations: [{ phase: "P1", validator: "node --test" }], evidence: [{ freshness: "current" }], assumptions: [], gaps: [] };
+  assert.equal(planReadiness(base), "READY-FOR-REVIEW");
+  assert.equal(planReadiness({ ...base, parentReceipt: null }), "NEEDS-EVIDENCE");
+  assert.equal(planReadiness({ ...base, obligations: [{ phase: "", validator: "x" }] }), "NEEDS-REPLAN");
+  assert.equal(planReadiness({ ...base, evidence: [{ freshness: "stale" }] }), "NEEDS-EVIDENCE");
+  assert.equal(planReadiness({ ...base, assumptions: [{ unsampled: true, status: "proven" }] }), "NEEDS-EVIDENCE");
+  assert.equal(planReadiness({ ...base, gaps: [{ type: "scenario-missing-validator" }] }), "NEEDS-REPLAN");
+  assert.equal(planReadiness({ ...base, gaps: [{ type: "unknown-ownership" }] }), "NEEDS-EVIDENCE");
+  // none of the outcomes is a review PASS
+  assert.ok(!canEmitReviewPass("readiness"));
+  assert.match(groundingReadiness, /Never emit `SPEC-REVIEW-PASS`, `PLAN-REVIEW-PASS`/);
+  // readiness stage: plan boxes cover parent receipt, obligations, evidence, scenarios, phase-lint
+  const planBoxes = groundingReadiness.match(/### `stage: plan` boxes\n+```([\s\S]+?)```/);
+  assert.ok(planBoxes, "the stage:plan readiness box list must be present");
+  for (const [what, pat] of [["parent receipt", /SPEC-REVIEW-PASS/], ["obligations", /obligation-ledger|obligation ledger/], ["planning evidence", /planning-evidence\.md/], ["scenario/validator", /validator/], ["phase-lint", /phase-lint|phase lint|Phase-lint/], ["rollback", /rollback/], ["unresolved decisions", /unresolved decision|Open questions/]]) {
+    assert.ok(pat.test(planBoxes[1]), `stage:plan readiness must check ${what}`);
+  }
+});
+
+test("the planning ledger set is defined once, in the shared owner", () => {
+  // shared owner declares the three ledgers and their single writers
+  for (const name of ["Planning evidence", "Obligations", "Findings"]) {
+    assert.ok(policyLedgers.includes(name), `LEDGERS must own the ${name} ledger`);
+  }
+  const squash = (t) => t.replace(/\s+/g, " ").trim();
+  const allSkillMd = fs.readdirSync(path.join(repoRoot, "skills"), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .flatMap((d) => {
+      const root = path.join(repoRoot, "skills", d.name);
+      const own = fs.readdirSync(root).filter((n) => n.endsWith(".md")).map((n) => path.join(root, n));
+      const refs = fs.existsSync(path.join(root, "references"))
+        ? fs.readdirSync(path.join(root, "references")).filter((n) => n.endsWith(".md")).map((n) => path.join(root, "references", n))
+        : [];
+      return [...own, ...refs];
+    });
+  for (const [k, cols] of Object.entries(LEDGER_COLUMNS)) {
+    const owners = allSkillMd.filter((f) => squash(read(path.relative(repoRoot, f))).includes(squash(cols)));
+    assert.equal(owners.length, 1, `${k} ledger columns must be defined in exactly one file, found ${owners.length}`);
+    assert.ok(owners[0].endsWith(path.join("pre-execution-review", "references", "LEDGERS.md")), `${k} columns must be owned by the shared ledger reference, got ${owners[0]}`);
+  }
+  // consumers point at the shared owner rather than restating the schema
+  for (const [who, text] of [["plan-feature-scaffold", scaffoldProcess], ["plan-fix", planFix], ["plan-feature", planFeature], ["review-plan", reviewPlan + planChecks + planOutput]]) {
+    assert.ok(/pre-execution-review/.test(text), `${who} must reference the shared ledger/policy owner`);
+  }
+});
+
+test("evidence and obligation ledgers are frozen with XS/S embedding rules", () => {
+  assert.match(policyLedgers, /XS\/S embeds both tables in the SPEC to stay within the size's artifact budget/);
+  // templates must expose both ledgers for feature and fix units
+  for (const [name, t] of [["feature", featureTemplate], ["fix", fixTemplate]]) {
+    assert.ok(/^(#{2,3}) Planning evidence$/m.test(t), `${name} template needs a Planning evidence section`);
+    assert.ok(/^(#{2,3}) Obligations$/m.test(t), `${name} template needs an Obligations section`);
+    assert.ok(/validator/i.test(t), `${name} template's obligation table must carry a validator column`);
+  }
+  // the templates' own presence gate must demand both ledgers
+  for (const [name, t] of [["feature", featureTemplate], ["fix", fixTemplate]]) {
+    assert.ok(/Planning evidence`? and `?###? Obligations|Planning evidence.*obligations|obligations?.*validator/i.test(t), `${name} template must lint its ledgers`);
+    assert.ok(/no obligation is `deferred`|no `deferred` row/i.test(t), `${name} template must forbid deferred/exported obligations`);
+  }
+  // scaffold writes planning-evidence.md for M/L, embedded for XS/S, rotates revision
+  assert.match(scaffoldProcess, /planning-evidence\.md/);
+  assert.match(scaffoldProcess, /Run the `stage: plan` readiness preflight/);
+  assert.match(scaffoldProcess, /artifactRevisionId/);
+  assert.match(scaffoldProcess, /stage: plan.*READY-FOR-REVIEW|READY-FOR-REVIEW/);
+  assert.match(scaffoldProcess, /never written as, quoted as, or summarized as a review/);
+  assert.match(scaffoldProcess, /routes\n?\s*to `\/review-plan`, never to `\/execute-phase`/);
+});
+
+test("obligation status lifecycle blocks completion until every row is verified", () => {
+  const lifecycle = ["planned", "in-progress", "verified", "n/a", "deferred"];
+  for (const st of lifecycle) assert.ok(policyLedgers.includes(`\`${st}\``) || policyLedgers.includes(st), `obligation status ${st} must be defined`);
+  assert.match(policyLedgers, /Before the unit ships, every row is `verified`/);
+  assert.match(policyLedgers, /`deferred` exists only in a ledger the user has amended/);
+  assert.match(policyLedgers, /One behaviour appearing twice is a defect/);
+  // AC6: validator that cannot fail / unvalidated row never closes
+  assert.match(planChecks + planEngChecks, /each validator can actually fail \(a validator that passes on no-op is a finding\)/);
+});
+
+test("plan-fix hands its ledgers to review-plan and never straight to the executor", () => {
+  assert.match(planFix, /→ Next: \/review-plan fix-<primary>/);
+  assert.doesNotMatch(planFix, /→ Next: .*\/execute-phase --fix/);
+  assert.match(planFix, /## Planning evidence`? and `?## Obligations|Planning evidence/);
+  assert.match(planFix, /no fabricated Product half|never grows a fake one/i);
+  assert.match(planFix, /stage: plan` readiness printed/);
+});
+
+test("review-plan is read-only on plan authority and names every artifact it may not touch", () => {
+  assert.match(reviewPlan, /\*\*Read-only on plan authority\.\*\*/);
+  for (const artifact of ["SPEC.md", "PLAN.md", "TASKS.md", "ACCEPTANCE.md"]) {
+    assert.ok(reviewPlan.includes(artifact), `read-only boundary must name ${artifact}`);
+  }
+  assert.match(reviewPlan, /Appending findings and\n  the receipt block is writing \*evidence\*, not editing authority/);
+  assert.match(reviewPlan, /Obligations are not suggestions\./);
+  assert.match(reviewPlan, /This\n  skill may not narrow a check to make the plan pass|may not narrow a check/);
+});
+
+test("plan review binds exact snapshots, enforces stage, and supports feature/fix/legacy lineages", () => {
+  assert.equal(planReview({ stage: "plan", unitKind: "feature", hasProductHalf: false }, []), "PLAN-REVIEW-PASS");
+  assert.equal(planReview({ stage: "plan", unitKind: "fix", hasProductHalf: true }, []), "finding");
+  assert.equal(planReview({ stage: "spec", unitKind: "feature" }, []), "invalid-stage");
+  const openMat = [{ severity: "high", status: "open", verified: false, class: "plan", decidable: true }];
+  assert.equal(planReview({ stage: "plan", unitKind: "feature" }, openMat), "PLAN-REVIEW-FAIL");
+  assert.equal(planReview({ stage: "plan", unitKind: "feature" }, [{ severity: "medium", status: "open", verified: false, class: "product", decidable: false }]), "NEEDS-DESIGN");
+  // snapshot rows differ per unit kind/size
+  for (const [what, pat] of [["stage: plan snapshot", /stage: plan/], ["spec-product-v1", /spec-product-v1/], ["whole-file", /whole-file/], ["parent required", /parentSpecSnapshotDigest.*required|required.*parent/i], ["XS/S embed absent rows", /absent/]
+  ]) {
+    assert.ok(pat.test(planChecks), `plan snapshot construction must cover ${what}`);
+  }
+  for (const kind of ["spec", "acceptance", "plan", "tasks", "testing", "decisions", "architecture-notes", "planning-evidence", "obligations"]) {
+    assert.ok(planChecks.includes(kind), `Plan snapshot must bind artifact kind ${kind}`);
+  }
+});
+
+test("engineering checks cover phase cuts, validators, scenarios, and fix reproduction/root cause/rollback", () => {
+  const checks = planEngChecks;
+  for (const [what, pat] of [["architecture", /Architecture/], ["dependencies", /Dependency/], ["compatibility", /Compatibility/], ["security", /Security/], ["migration", /Migration/], ["recovery", /Recovery/], ["rollback", /Rollback/], ["operability", /Operability/], ["phase atomicity and order", /Phase atomicity and order/], ["validators", /Validators/], ["scenario coverage", /Scenario coverage/], ["source evidence", /Source evidence/], ["fix reproduction", /Reproduction/], ["fix root cause", /Root cause/], ["fix regression scope", /Regression scope/], ["fix rollback", /F4 \| Rollback/], ["wrong parent / stale lineage", /descendant lineage|invalidates/]
+  ]) {
+    assert.ok(pat.test(checks) || pat.test(planChecks), `Engineering checks must cover ${what}`);
+  }
+  for (const row of ["| F1 | Reproduction |", "| F2 | Root cause |", "| F3 | Regression scope |"]) {
+    assert.ok(checks.includes(row), `fix check list must carry the row ${row}`);
+  }
+  for (const id of ["P1","P2","P3","P4","P5","P6","P7","P8","P9","P10","P11","P12"]) {
+    assert.ok(new RegExp(`^\\| ${id} \\|`,`m`).test(checks), `engineering check ${id} must exist as a row id`);
+  }
+  // fix units never fabricate a Product half
+  assert.match(checks + planChecks, /no fake one \(D6\)/);
+  assert.match(reviewPlan, /[Ff]ix units? (retain|have) .*no .*fake|never grows a fake one|no fake Product half/i);
+});
+
+test("findings union, dismissal, no-progress, and second-cycle diagnosis live in the shared owner", () => {
+  assert.equal(/^user-invocable: false$/m.test(policyOwner), true, "pre-execution-review is internal");
+  assert.match(policyOwner, /never prints|never (emit|issue)/i);
+  for (const [what, pat] of [["union, never majority", /Union, never majority/], ["counter-evidence dismissal", /Dismissal needs counter-evidence|dismissed`? only with/], ["same-model labelling", /same-model/], ["author exclusion", /authorExclusion|Author exclusion/], ["bounded critique/synthesis/arbitration", /critic|synthesizer|arbiter/], ["no quorum", /no quorum|never a vote|no majority/i], ["no-progress", /no-progress/], ["CONVERGENCE-ANOMALY", /CONVERGENCE-ANOMALY/]]) {
+    assert.ok(pat.test(policyCycle), `POLICY must state ${what}`);
+  }
+  assert.match(policyCycle, /CONVERGENCE-ANOMALY — <unit> <spec\|plan>/);
+  // the report is mandatory and ordered: before any further edit, never optional
+  assert.match(policyCycle, /it is a\n`CONVERGENCE-ANOMALY`: before any further edit, report/);
+  assert.doesNotMatch(policyCycle, /CONVERGENCE-ANOMALY[\s\S]{0,40}?optionally/);
+  assert.match(policyCycle, /must diagnose its owning root cause|then continue from the owner it names/);
+  for (const f of ["Finding ids", "Snapshots", "Missed", "Owning stage", "Route to owner"]) {
+    assert.ok(policyCycle.includes(f), `CONVERGENCE-ANOMALY block must report ${f}`);
+  }
+  // the per-skill files route to the owner instead of duplicating the cycle
+  assert.match(designRepair, /Cycle rules have one owner/);
+  assert.match(specOutput, /`pre-execution-review\/references\/POLICY\.md` §4/);
+  assert.match(planOutput, /`pre-execution-review\/references\/POLICY\.md` §4/);
+});
+
+test("batch repair, wording-only rule, and causal revert apply to the plan stage too", () => {
+  assert.match(planOutput, /one batch over this whole set|one root-caused repair batch/);
+  assert.match(policyCycle, /Wording-only/);
+  assert.match(policyCycle, /intent, obligation identity, phase topology, validators, and authority/);
+  assert.match(policyCycle, /evidence records that determination|the evidence/);
+  // revert is a new authoring event: new revision id keeps old PASS stale
+  assert.match(grounding + groundingRows + groundingReadiness + designRepair + scaffoldProcess, /revert is (a write|an authoring event)|a revert is a write/i);
+  assert.match(scaffoldProcess, /A later revert to these same bytes is a new/);
+  assert.match(planChecks, /invalidates this receipt and its whole descendant lineage/);
+});
+
+test("issue-derived and cross-stage exports are refused at the plan boundary", () => {
+  // from-issue stops after the Product half; it never plans or executes
+  assert.match(fromIssue, /\/review-spec/);
+  assert.ok(!/\/plan-feature-scaffold|plan-feature-scaffold in the same turn/.test(fromIssue) || /never composes Engineering planning|stop after/.test(fromIssue));
+  // an obligation cannot be exported to an issue to look closed
+  assert.ok(squash1(policyLedgers).includes("deferring work out of the unit requires a governing-SPEC amendment first"), "deferred needs a user amendment");
+  assert.match(planChecks, /no `deferred` without a user-amended governing SPEC/);
+  assert.match(planOutput, /`class: product`/);
+  // review-plan never substitutes a candidate review or self-approves its own plan
+  assert.match(reviewPlan, /candidate `ReviewReceipt`|never substitutes a candidate review/i);
+  assert.match(planFeature, /never reviews (its own plan|the plan it just wrote)/);
+});
+
+test("P3 skills are registered, distributed, and routed", () => {
+  const pluginSkills = plugin.skills.map((entry) => entry.replace("./skills/", ""));
+  for (const skill of ["review-plan", "pre-execution-review"]) {
+    assert.ok(pluginSkills.includes(skill), `${skill} must be in plugin.json`);
+    assert.ok(skillsSh.groupings.flatMap((g) => g.skills).includes(skill), `${skill} must be grouped in skills.sh.json`);
+    assert.ok(fs.existsSync(path.join(repoRoot, `skills/${skill}/SKILL.md`)));
+    assert.doesNotMatch(read(`skills/${skill}/SKILL.md`), /^metadata:\n  internal: true$/m, `${skill} must stay discoverable`);
+  }
+  assert.equal(/^user-invocable: true$/m.test(reviewPlan), true, "review-plan is a menu entry");
+  assert.match(routing, /^review-plan:\n  model: opus\n  effort: high$/m);
+  assert.doesNotMatch(routing, /^pre-execution-review:$/m, "the shared policy owner carries no route of its own");
+  assert.deepEqual(pluginSkills, [...pluginSkills].sort(), "plugin skills stay alphabetical");
+});
+
+test("each P3 entrypoint routes to its references and stays one-hop", () => {
+  const routes = [
+    ["review-plan", reviewPlan, ["CHECKS.md", "ENG-CHECKS.md", "OUTPUT.md"]],
+    ["pre-execution-review", policyOwner, ["POLICY.md", "LEDGERS.md"]],
+  ];
+  for (const [skill, body, allowed] of routes) {
+    const linked = [...new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((m) => m[1]))].sort();
+    assert.deepEqual(linked, [...allowed].sort(), `${skill} must route exactly to its allowed references`);
+    for (const link of allowed) {
+      assert.ok(fs.existsSync(path.join(repoRoot, "skills", skill, "references", link)), `${skill}/${link} must exist`);
+    }
+  }
+  // a skill routes to another skill only through its SKILL.md, never its references
+  for (const file of ["skills/review-plan/references/CHECKS.md", "skills/review-plan/references/OUTPUT.md", "skills/review-plan/references/ENG-CHECKS.md", "skills/pre-execution-review/references/POLICY.md", "skills/pre-execution-review/references/LEDGERS.md", "skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md", "skills/design-feature/references/REPAIR.md", "skills/review-spec/references/OUTPUT.md"]) {
+    const body = read(file);
+    assert.ok(!/\]\(\.\.\/\.\.\/[a-z-]+\/references\//.test(body), `${file} must not deep-link another skill's reference`);
+    assert.ok(!/\]\((?:\.\.\/)?references\//.test(body), `${file} must not nest a reference link`);
+  }
+});
+
+test("plan-stage receipt records parent lineage and the three verdicts verbatim", () => {
+  assert.match(planOutput, /## Pre-execution review receipt v1 — plan/);
+  assert.match(planOutput, /Parent SPEC snapshot: <64-hex> · Parent Product receipt: <receipt-id/);
+  assert.match(planOutput, /Parent note: fix unit — no Product half exists \(D6\)/);
+  for (const v of PLAN_VERDICTS) assert.ok(planOutput.includes(v) || planOutput.toLowerCase().includes(v.toLowerCase()), `OUTPUT must render ${v}`);
+  assert.match(planOutput, /execute-phase|review-plan/);
+  assert.match(reviewPlan, /PLAN-REVIEW-PASS \|\nPLAN-REVIEW-FAIL|PLAN-REVIEW-FAIL \|/);
+  assert.match(reviewPlan, /Three verdicts only/);
+});
+
+
+console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, distribution");

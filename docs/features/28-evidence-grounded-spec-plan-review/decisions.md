@@ -106,3 +106,22 @@
   the new steady state") rather than truncating mandatory contract text. Each
   figure is a measured steady state, not a padded maximum: `check-skill-context
   --routes` passes with the smallest route-specific buffer in the manifest.
+- **D20 — XS/S embeds both planning ledgers in the SPEC:** the snapshot then marks
+  the `planning-evidence` and `obligations` context rows `absent` because their
+  bytes are already bound by the whole-`spec` row, rather than splitting the SPEC
+  to manufacture two files. Symmetrically an M/L unit that embedded its tables is
+  a `review-plan` finding: one artifact, one complete table, and the reviewer
+  always reads the whole table while execution reads a phase slice.
+- **D21 — Route budgets model steps, not skills:** after P3 a planning invocation
+  loads the shared owners, so `plan-feature` split into `:scoped` (router + gates,
+  7610) and `:scaffold` (authoring + ledgers, 12700) and `design-feature` into
+  `:product` (11950) and `:repair` (15800, the only step that loads
+  `pre-execution-review`'s cycle policy). Inflating one ceiling to the worst-case
+  union of every step would have hidden the real per-turn cost; each declared
+  ceiling is the measured steady state of the step that actually loads those files.
+- **D22 — `pre-execution-review` is the single owner of the shared cycle and the
+  ledger shapes, not of verdicts:** `review-spec`/`review-plan` emit verdicts, the
+  authoring skills emit readiness, and this internal owner emits nothing — the
+  suite asserts that the three ledger column lists appear in exactly one file in
+  the tree, which is what keeps the P2 spec-side text and the P3 plan-side text
+  from drifting apart later.
