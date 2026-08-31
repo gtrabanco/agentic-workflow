@@ -47,10 +47,12 @@ split the SPEC to manufacture them; symmetrically, an M/L unit that embedded its
 tables is a finding. Either way `review-plan` reads the **whole** table
 (`execute-phase` later receives a phase slice).
 
-Then digest with the package's canonical entry
-(`canonicalizePreExecutionArtifactSnapshot` →
-`digestPreExecutionArtifactSnapshot`) and paste it. Every verdict is bound to
-that digest; a Plan-only byte change invalidates only Plan PASS, while a Product
+Then digest it with the recipe owner —
+`pre-execution-review`'s [`SKILL.md`](<../../pre-execution-review/SKILL.md>) →
+SNAPSHOT reference: `node scripts/pre-execution-snapshot.mjs build --stage plan
+--unit <unitId> --parent <Product snapshot digest> --json /tmp/plan-snapshot.json`
+(`verify` mode is what consumers run afterwards). Paste the digest it prints.
+Every verdict is bound to that digest; a Plan-only byte change invalidates only Plan PASS, while a Product
 byte/context/revision/source change invalidates this receipt **and** its parent
 lineage.
 

@@ -204,3 +204,37 @@ skill docs (the envelope schema keeps `detail` opaque on purpose), so an
 orchestrator cannot validate them mechanically until P5's canary runs the routes for
 real.
 
+
+### P5 (2026-08-31) — Pre-execution workflow qualification
+
+**Canary corpus (live unit execution):**
+| Command | Result |
+|---|---|
+| Dependency gate (git ancestry check for 25, 26, 27) | PASS — all present in origin/main |
+| Legacy adoption: create planning-obligations.md from artifacts | PASS — 14 rows from 14 acceptance criteria, zero file coercion |
+| /review-spec 28-evidence-grounded-spec-plan-review | PASS — spec-review-pass, stage spec, 0 findings |
+| /review-plan 28-evidence-grounded-spec-plan-review | PASS — plan-review-pass, stage plan, 0 findings, obligations read 14 rows |
+| Pre-execution gate verification | PASS — all receipts current, stage-correct, author-excluded |
+| node --test scripts/pre-execution-quality.test.mjs | 46/46 pass (39 pre-P4 + 7 P4 route/owner + legacy adoption) |
+| node --test scripts/*.test.mjs (root) | 103/103 pass, zero regression |
+| node scripts/check-skill-context.mjs | PASS — 39 skills, all within budget (routes bumped for pre-execution-review growth) |
+| node scripts/check-skill-context.mjs --routes | PASS — 23 routes, ceilings bumped for SNAPSHOT.md and planning-obligations.md |
+| cd packages/pi-agentic-workflow && npm run bundle:skills | bundled 38 skills (122 files) — excluded: bump-skill |
+| cd packages/pi-agentic-workflow && npm test | 134/134 pass |
+| npx skills add . --list | 39 skills, evidence-grounding and review-spec internal, review-plan discoverable |
+
+**Golden fixture:**
+| Command | Result |
+|---|---|
+| Live end-to-end execution of unit 28 through pre-execution gates | PASS — see GOLDEN_FIXTURE.md row dated 2026-08-31 |
+
+**Package gates:**
+| Command | Result |
+|---|---|
+| cd packages/agentic-workflow-schema && npm test | 671/671 pass |
+| cd packages/agentic-workflow-schema && npm run check:pre-execution-schemas | PASS — drift-free (2 files) |
+| cd packages/agentic-workflow-schema && npm pack --dry-run | PASS — version 3.5.0, both new schema files publishable |
+| node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs | 15+3/15+3 pass |
+
+Residual risks: (1) spec-review-pass authority is contractual (known-issues.md item 9); (2) the Pi bundle was rebuilt from canonical at P5 because skill changes must stay distributable — version bump from 0.1.0 to 0.2.0 required as final step; (3) no second repair/re-review cycle was needed during qualification — all review gates cleared on first run.
+
