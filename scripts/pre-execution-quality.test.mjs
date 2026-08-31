@@ -13,6 +13,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { spawnSync } from "node:child_process";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
@@ -976,6 +977,41 @@ test("consumer gates re-derive snapshot digests with the recipe owner's verify m
   // the canonical owners keep stating the never-a-substitute rule
   assert.match(sensorDoc, /`git hash-object` is never a substitute/);
   assert.match(read("skills/pre-execution-review/references/SNAPSHOT.md"), /A snapshot digest is not a git blob id/);
+});
+
+test("the snapshot sensor refuses escapes, never follows symlinks, and compares the recorded policy", () => {
+  // F14+F15+F17 fold regression: the sensor CLI must contain agent-supplied paths,
+  // read artifacts through lstat only, and make the structural check meaningful by
+  // comparing the receipt's recorded Policy against the current one.
+  const run = (args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], { encoding: "utf8", cwd: repoRoot, timeout: 120000 });
+  const unit = "28-evidence-grounded-spec-plan-review";
+  for (const escape of ["../outside", "/etc", "docs/../../"]) {
+    const r = run(["build", "--stage", "spec", "--unit", unit, "--dir", escape]);
+    assert.notEqual(r.status, 0, `--dir ${escape} must be refused`);
+    assert.match(r.stderr, /escapes the repository/, `--dir ${escape} must name the refusal`);
+  }
+  const jsonEscape = run(["build", "--stage", "spec", "--unit", unit, "--json", "/tmp/pre-execution-escape-probe.json"]);
+  assert.notEqual(jsonEscape.status, 0);
+  assert.match(jsonEscape.stderr, /escapes the repository/);
+  // A symlinked required artifact reads as absent, never followed.
+  const probeDir = path.join(repoRoot, "docs", "features", "zz-symlink-probe");
+  fs.mkdirSync(probeDir, { recursive: true });
+  try {
+    fs.symlinkSync("/etc/hostname", path.join(probeDir, "SPEC.md"));
+    const r = run(["build", "--stage", "spec", "--unit", "zz-symlink-probe"]);
+    assert.notEqual(r.status, 0);
+    assert.match(r.stderr, /absent/, "symlinked artifact must read as absent, never followed");
+  } finally {
+    fs.rmSync(probeDir, { recursive: true, force: true });
+  }
+  // The recorded Policy line is parsed and carried (durable assertions only: the
+  // recorded-policy comparison is meaningful now (stub = receipt's policy vs
+  // --policy), but whether a given receipt currently binds the bytes is transient
+  // state that changes with every fold — never pinned here.
+  const v = run(["verify", "--stage", "spec", "--unit", unit]);
+  const report = JSON.parse(v.stdout);
+  assert.equal(report.receipt.policy, "v1");
+  assert.ok(report.structural && typeof report.structural.fresh === "boolean");
 });
 
 console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution");
