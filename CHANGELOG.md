@@ -137,6 +137,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `workflow-status`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 3.0.1 | 2026-08-31 | patch | Digest-repair fold (F1): step 6a's recipe clause re-derives the bound digest with the recipe owner's verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage <spec\|plan> --unit <id>`) instead of `git hash-object`, which the same branch's authorities define as never a substitute for a snapshot digest. No label, override, or envelope change. |
 | 3.0.0 | 2026-08-30 | major | **Breaking recommendation:** status-only routing becomes evidence-staged routing. New step 6a reads the unit's pre-execution receipt block, recomputes the bound digest with `git hash-object`, and labels the stage `current | missing | stale | wrong-stage | substitute | self-approved | author-readiness | legacy`; the label overrides step 6's command, so a unit without a current PASS for the stage it is about to enter leaves `startable_now` for a `gate` blocker naming the missing review, with one `detail.pre_execution[]` row per unit. Still read-only: it files and edits nothing. |
 | 2.0.0 | 2026-08-21 | major | **Breaking sensor contract:** moves design candidates from the formerly documented root extension to `detail.design_candidates`, the only strict Envelope v2 location. Drivers must use the v3 package parser/migration path. See `docs/workflow/MIGRATION.md`. |
 | 1.10.0 | 2026-08-09 | minor | Planned-unit recommendations now emit target-only `execute-phase`, preserving the default all-remaining-phases route for humans and external drivers. |
@@ -187,6 +188,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `execute-phase`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 4.0.1 | 2026-08-31 | patch | Digest-repair fold (F1): the pre-execution gate's sensing clause re-derives the digest with the recipe owner's verify mode instead of `git hash-object` (never a substitute for a snapshot digest). Gate order, fail-closed states, and `--force` semantics unchanged. |
 | 4.0.0 | 2026-08-30 | major | **Breaking preflight:** a new pre-execution review gate sits between the own-status gate and the acceptance manifest and fails closed before any edit on a missing, stale, or wrong-stage `PLAN-REVIEW-PASS` (fix units: on their own receipt). `--force` has never covered this gate and does not now — it overrides ordering stops the user may re-order, not a verdict only an independent reviewer can produce; refreshing, re-hashing or substituting a receipt is forgery, not recovery. Legacy `planned`/`in-progress` units adopt through the shared legacy rule. The slot immediately after the gate and before the first write is reserved for feature 29's bounded implementation discovery. The descope guard now treats an obligation-ledger row exactly like an acceptance criterion. |
 | 3.0.1 | 2026-08-09 | patch | No behavior change: compresses mode dispatch, context-budget, progressive-loading, portability, relationship, and completion prose. |
 | 3.0.0 | 2026-08-09 | major | **Breaking default:** a target-only feature/fix invocation executes all remaining phases with a fresh worker receipt per phase, bounded repairs, frozen acceptance, and no intermediate reviews; explicit `P<n>` remains the one-phase form. Independent findings become proposals, never auto-created issues. See `docs/workflow/MIGRATION.md`. |
@@ -386,6 +388,7 @@ How pinning actually works, verified against the `skills` CLI:
 #### `audit-pr`
 | Version | Date | Type | What changed |
 |---|---|---|---|
+| 5.0.1 | 2026-08-31 | patch | Digest-repair fold (F1): the upstream-lineage gate names the verify recipe `scripts/pre-execution-snapshot.mjs verify --stage plan` instead of `git hash-object` (never a substitute for a snapshot digest). Blockers, obligation closure, and MERGE-READY authority unchanged. |
 | 5.0.0 | 2026-08-30 | major | **Breaking merge gate:** MERGE-READY now additionally requires that the upstream authority survived the build — the plan receipt's snapshot digest still recomputes (and the spec receipt it names as parent is current), every obligation row is `verified` or an explicit `n/a`, and no planning finding is open for the bound snapshot. A `deferred` row without a user amendment blocks; exporting an obligation to a follow-up issue never clears the gate. `audit-pr` stays the only emitter of `MERGE-READY` and still never merges. |
 | 4.3.1 | 2026-08-11 | patch | Fetches `headRefOid` with PR comments and accepts a REVIEW-PASS receipt only on that exact snapshot; any SHA mismatch is stale and routes to a fresh review. |
 | 4.3.0 | 2026-08-05 | minor | **Consumes the `review-change` review receipt** instead of re-reviewing the diff (feature 21): Step 1 fetches the PR's comments and takes the newest `<!-- review-change:pass sha=<40-hex> contract=v1 -->` marker; a current receipt is acknowledged as the review evidence, an absent/stale one is a blocker routed to `/review-change` (never re-reviewed here). The merge gates narrow to the SPEC's audit-only set — dropped the `Tests` (test-quality) gate and the acceptance-criteria diff-remapping (replaced by the receipt's acceptance-coverage field); the Architectural-invariants gate now mirrors the receipt's result instead of reclassifying. Process steps renumbered; the MERGE-READY comment cites the consumed receipt. Requires a `review-change` that posts the SHA-bound receipt; older `review-change` versions leave audit-pr blocked with no receipt at the head. |
@@ -623,6 +626,13 @@ How pinning actually works, verified against the `skills` CLI:
 ---
 
 ## Release log (chronological, newest first)
+
+- **2026-08-31 — the gates compute the digest the recipe defines.** The review fold of
+  feature 28 (PR #155) corrects the digest recipe in the three pre-execution
+  consumers: `workflow-status` 3.0.1, `execute-phase` 4.0.1 and `audit-pr` 5.0.1
+  re-derive the snapshot digest with the verify recipe `pre-execution-review` owns
+  instead of `git hash-object`, and the P4 suite pins the corrected recipe in all
+  three gates.
 
 - **2026-08-30 — the routing enforces the authority.** Phase P4 of feature 28 wires
   the two pre-execution gates into every route that can start work: `workflow-status`

@@ -3,7 +3,9 @@
 A `planned` unit is a *proposed* unit: the roadmap status says the artifacts exist,
 never that an independent reviewer accepted them. Before any edit, sense this unit's
 `stage: plan` evidence the way the sensor defines it (newest `## Pre-execution review receipt v1 — plan` block in `progress.md`,
-digest recomputed with `git hash-object` over each bound artifact, `stage: plan`,
+digest re-derived with the recipe owner's verify mode (`node
+scripts/pre-execution-snapshot.mjs verify --stage plan --unit <id>` — a snapshot
+digest is a canonical SHA-256, never a git blob id), `stage: plan`,
 verdict in the fixed set, reviewer is not the phase's author), and require
 `PLAN-REVIEW-PASS`. In fix mode the same check runs against the fix unit's own
 receipt (`/review-plan fix-<N>` produced it; there is no Product hop to substitute).

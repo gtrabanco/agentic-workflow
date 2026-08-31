@@ -66,7 +66,10 @@ live evidence against a frozen ledger remains a contradiction candidate.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
 6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned` or
    `in-progress` ([pre-execution evidence](PRE_EXECUTION.md)): read the stage's
-   newest receipt block, recompute the bound digest with `git hash-object`, and
+   newest receipt block, re-derive the bound digest with the recipe owner's
+   verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage
+   <spec|plan> --unit <id>` — a snapshot digest is a canonical SHA-256, never a
+   git blob id), and
    label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/
    `self-approved`/`author-readiness`/`legacy`. The label **overrides step 6's
    status-only command**: a unit without a current PASS for the stage it is about to

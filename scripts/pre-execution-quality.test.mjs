@@ -954,4 +954,19 @@ test("P4 routing text keeps one owner per rule", () => {
 });
 
 
+test("consumer gates re-derive snapshot digests with the recipe owner's verify mode", () => {
+  // F1 fold regression: the sensor, the executor gate, and the audit lineage gate
+  // must name the canonical verify recipe and never instruct `git hash-object` for
+  // a snapshot digest (a snapshot digest is a canonical SHA-256, not a git blob id).
+  const sensorCore = read("skills/workflow-status/references/SENSOR_CORE.md");
+  for (const [name, doc] of [["SENSOR_CORE.md", sensorCore], ["PRE_EXECUTION_GATE.md", execGate],
+    ["02_CLOSURE_AND_SCOPE_GATES.md", auditGates]]) {
+    assert.match(doc, /pre-execution-snapshot\.mjs verify --stage/, `${name} must name the verify-mode recipe`);
+    assert.ok(!/git hash-object/.test(doc), `${name} must not instruct git hash-object for snapshot digests`);
+  }
+  // the canonical owners keep stating the never-a-substitute rule
+  assert.match(sensorDoc, /`git hash-object` is never a substitute/);
+  assert.match(read("skills/pre-execution-review/references/SNAPSHOT.md"), /A snapshot digest is not a git blob id/);
+});
+
 console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution");
