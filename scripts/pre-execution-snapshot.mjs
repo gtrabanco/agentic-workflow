@@ -106,15 +106,25 @@ const git = (...args) => {
   catch { return ""; }
 };
 const normalize = (p) => path.relative(repoRoot, path.resolve(repoRoot, p)).split(path.sep).join("/");
+const contained = (rel) => {
+  // Agent-supplied ids/paths (unit, dir, json) must never reach outside the
+  // repository: normalize preserves `../` escapes, so refuse them explicitly.
+  if (rel.startsWith("../") || rel === ".." || path.isAbsolute(rel)) {
+    throw new Error(`path escapes the repository: ${rel}`);
+  }
+  return rel;
+};
 const readRepo = (rel) => {
   const abs = path.join(repoRoot, rel);
-  return fs.existsSync(abs) && fs.statSync(abs).isFile() ? fs.readFileSync(abs, "utf8") : null;
+  // lstat, not stat: a symlinked artifact must read as absent, never followed —
+  // out-of-repo bytes must not enter the snapshot digest invisibly.
+  return fs.existsSync(abs) && fs.lstatSync(abs).isFile() ? fs.readFileSync(abs, "utf8") : null;
 };
 
 function unitDir(opts) {
-  if (opts.dir) return normalize(opts.dir);
-  if (opts.unit.startsWith("fix-")) return normalize(path.join("docs/fix", opts.unit.slice(4)));
-  return normalize(path.join("docs/features", opts.unit));
+  if (opts.dir) return contained(normalize(opts.dir));
+  if (opts.unit.startsWith("fix-")) return contained(normalize(path.join("docs/fix", opts.unit.slice(4))));
+  return contained(normalize(path.join("docs/features", opts.unit)));
 }
 
 async function buildSnapshot(opts) {
@@ -150,12 +160,13 @@ async function buildSnapshot(opts) {
       ? { kind: source.kind, identifier: source.identifier ?? source.file, presence: "absent" }
       : { kind: source.kind, identifier: source.identifier ?? source.file, content };
   });
+  const head = git("rev-parse", "HEAD");
   const input = {
     stage,
     unitKind,
     unitId: unit,
-    sourceRevision: opts["source-revision"] || git("rev-parse", "HEAD"),
-    artifactRevisionId: opts["artifact-revision"] || git("rev-parse", "HEAD"),
+    sourceRevision: opts["source-revision"] || head,
+    artifactRevisionId: opts["artifact-revision"] || head,
     files,
     contexts,
   };
@@ -168,25 +179,29 @@ async function buildSnapshot(opts) {
   return { snapshot: built.snapshot, digest: await digestPreExecutionArtifactSnapshot(built.snapshot) };
 }
 
+const FIELD_RES = new Map();
+const fieldFrom = (chunk, label) => {
+  let re = FIELD_RES.get(label);
+  if (!re) FIELD_RES.set(label, (re = new RegExp(`${label}:\\s*([^\\n·]+)`)));
+  const m = chunk.match(re);
+  return m ? m[1].replace(/[`]/g, "").trim() : null;
+};
 function receipts(dir) {
   const text = readRepo(normalize(path.join(dir, "progress.md")));
   if (text === null) return [];
   return text.split(/^## Pre-execution review receipt v1 — /m).slice(1).map((chunk) => {
     const stage = chunk.startsWith("spec") ? "spec" : chunk.startsWith("plan") ? "plan" : "unknown";
-    const field = (label) => {
-      const m = chunk.match(new RegExp(`${label}:\\s*([^\\n·]+)`));
-      return m ? m[1].replace(/[`]/g, "").trim() : null;
-    };
     return {
       stage,
-      id: field("Review"),
-      snapshot: field("Snapshot"),
-      verdict: field("Verdict"),
-      unit: field("Unit"),
-      artifactRevision: field("Artifact revision"),
-      parent: field("Parent SPEC snapshot"),
-      authorExclusion: field("Author exclusion"),
-      contextClean: field("Context clean"),
+      id: fieldFrom(chunk, "Review"),
+      snapshot: fieldFrom(chunk, "Snapshot"),
+      verdict: fieldFrom(chunk, "Verdict"),
+      unit: fieldFrom(chunk, "Unit"),
+      artifactRevision: fieldFrom(chunk, "Artifact revision"),
+      parent: fieldFrom(chunk, "Parent SPEC snapshot"),
+      authorExclusion: fieldFrom(chunk, "Author exclusion"),
+      contextClean: fieldFrom(chunk, "Context clean"),
+      policy: fieldFrom(chunk, "Policy"),
     };
   });
 }
@@ -212,7 +227,7 @@ async function main() {
   const dir = unitDir(opts);
 
   if (action === "build") {
-    if (opts.json) fs.writeFileSync(path.resolve(repoRoot, opts.json), `${JSON.stringify({ snapshot, digest }, null, 2)}\n`);
+    if (opts.json) fs.writeFileSync(path.resolve(repoRoot, contained(normalize(opts.json))), `${JSON.stringify({ snapshot, digest }, null, 2)}\n`);
     process.stdout.write(`${digest}\n`);
     if (!opts.json) process.stdout.write(`${JSON.stringify(snapshot, null, 2)}\n`);
     return;
@@ -234,15 +249,18 @@ async function main() {
   const bound = receipt.snapshot && /^sha256:[0-9a-f]{64}$/.test(receipt.snapshot)
     ? receipt.snapshot.slice(7) : receipt.snapshot;
   const digestMatches = Boolean(bound) && (bound === digest || `sha256:${bound}` === `sha256:${digest}`);
+  // The recorded Policy line is the receipt's own policy version; verify compares
+  // it against the CURRENT policy (--policy, default "v1" per POLICY.md), so a
+  // receipt recorded under a moved policy can no longer read as fresh.
   const structural = await comparePreExecutionReceiptToSnapshot(
-    { contract: PRE_EXECUTION_RECEIPT_CONTRACT_ID, snapshotDigest: bound ?? "", policyVersion: opts.policy ?? "pre-execution-review@1" },
-    snapshot, snapshot, opts.policy ?? "pre-execution-review@1",
+    { contract: PRE_EXECUTION_RECEIPT_CONTRACT_ID, snapshotDigest: bound ?? "", policyVersion: receipt.policy ?? "" },
+    snapshot, snapshot, opts.policy ?? "v1",
   );
   const report = {
     current: digestMatches && receipt.verdict === (opts.stage === "spec" ? "spec-review-pass" : "plan-review-pass"),
     stage: opts.stage,
     unit: opts.unit,
-    receipt: { id: receipt.id, verdict: receipt.verdict, snapshot: receipt.snapshot, authorExclusion: receipt.authorExclusion, contextClean: receipt.contextClean },
+    receipt: { id: receipt.id, verdict: receipt.verdict, snapshot: receipt.snapshot, authorExclusion: receipt.authorExclusion, contextClean: receipt.contextClean, policy: receipt.policy },
     observedDigest: digest,
     digestMatches: Boolean(digestMatches),
     verdictIsPass: receipt.verdict === (opts.stage === "spec" ? "spec-review-pass" : "plan-review-pass"),

@@ -16,10 +16,10 @@ Candidate-code review ran 2026-08-31 (review-change, single-reviewer, PR #155 he
 | F11 | packages/agentic-workflow-schema/src/pre-execution.ts:1038-1041 | code | med | fix-now | fold | yes |
 | F12 | skills/pre-execution-review/references/LEDGERS.md:19-27 + docs/features/_TEMPLATE/SPEC.md:255 | code | med | fix-now | fold | yes |
 | F13 | skills/plan-fix/SKILL.md:62 + docs/fix/_TEMPLATE/SPEC.md:50 | code | med | fix-now | fold | yes |
-| F14 | scripts/pre-execution-snapshot.mjs:88-96,184-186 | security | low | fix-now | fold | no |
-| F15 | scripts/pre-execution-snapshot.mjs:97-99 | security | low | fix-now | fold | no |
+| F14 | scripts/pre-execution-snapshot.mjs:88-96,184-186 | security | low | fix-now | fold | yes |
+| F15 | scripts/pre-execution-snapshot.mjs:97-99 | security | low | fix-now | fold | yes |
 | F16 | skills/workflow-status/references/PRE_EXECUTION.md:20 | code | low | fix-now | fold | yes |
-| F17 | scripts/pre-execution-snapshot.mjs:171-215,237-252 | code | low | fix-now | fold | no |
+| F17 | scripts/pre-execution-snapshot.mjs:171-215,237-252 | code | low | fix-now | fold | yes |
 | F18 | packages/agentic-workflow-schema/src/pre-execution.ts:541-546 | code | low | fix-now | fold | yes |
-| F19 | scripts/pre-execution-snapshot.mjs:176-177 | perf | low | fix-now | fold | no |
-| F20 | scripts/pre-execution-snapshot.mjs:193-195 | perf | low | fix-now | fold | no |
+| F19 | scripts/pre-execution-snapshot.mjs:176-177 | perf | low | fix-now | fold | yes |
+| F20 | scripts/pre-execution-snapshot.mjs:193-195 | perf | low | fix-now | fold | yes |
