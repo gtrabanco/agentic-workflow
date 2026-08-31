@@ -53,14 +53,14 @@ Layer: docs · Done-when: `node --test
 scripts/pre-execution-quality.test.mjs scripts/bounded-delivery-loops.test.mjs
 scripts/audit-pr-receipt.test.mjs` -> exit 0.
 
-- [ ] Extend `workflow-status` sensing and the existing transition/profile authority to recommend review, author repair, replan, design, or execute only from current exact evidence.
-- [ ] Make `execute-phase` fail closed before implementation on missing/stale/wrong-stage Plan PASS while reserving the post-PASS pre-write slot for feature 29 discovery.
-- [ ] Update `ship-roadmap` stage sequencing to design -> review-spec -> plan -> review-plan -> execute, preserving human product authority and its existing merge policy.
-- [ ] Update `review-change` classification and `loop-review-fold` routing so source-local findings fold locally, Plan-rooted findings replan/re-review, Product-rooted findings return to design/review-spec, and a second local cycle diagnoses convergence before another edit.
-- [ ] Update `audit-pr` to require current upstream lineage and fully verified obligation rows while retaining exclusive `MERGE-READY` authority and current candidate receipts.
-- [ ] Define legacy planned/in-progress adoption: construct/review current artifacts, never coerce old evidence, never mutate frozen acceptance, and resume only from current PASS.
-- [ ] Prohibit automatic forge issue creation and follow-up deferral across all affected routes unless the user first amends the governing SPEC.
-- [ ] Add end-to-end route fixtures covering current/stale/missing receipts, fix/feature paths, later review root causes, crash/re-entry, no-progress, and no partial-success envelopes.
+- [x] Extend `workflow-status` sensing and the existing transition/profile authority to recommend review, author repair, replan, design, or execute only from current exact evidence.
+- [x] Make `execute-phase` fail closed before implementation on missing/stale/wrong-stage Plan PASS while reserving the post-PASS pre-write slot for feature 29 discovery.
+- [x] Update `ship-roadmap` stage sequencing to design -> review-spec -> plan -> review-plan -> execute, preserving human product authority and its existing merge policy.
+- [x] Update `review-change` classification and `loop-review-fold` routing so source-local findings fold locally, Plan-rooted findings replan/re-review, Product-rooted findings return to design/review-spec, and a second local cycle diagnoses convergence before another edit.
+- [x] Update `audit-pr` to require current upstream lineage and fully verified obligation rows while retaining exclusive `MERGE-READY` authority and current candidate receipts.
+- [x] Define legacy planned/in-progress adoption: construct/review current artifacts, never coerce old evidence, never mutate frozen acceptance, and resume only from current PASS.
+- [x] Prohibit automatic forge issue creation and follow-up deferral across all affected routes unless the user first amends the governing SPEC.
+- [x] Add end-to-end route fixtures covering current/stale/missing receipts, fix/feature paths, later review root causes, crash/re-entry, no-progress, and no partial-success envelopes.
 
 ## P5 — Qualify the pre-execution workflow
 

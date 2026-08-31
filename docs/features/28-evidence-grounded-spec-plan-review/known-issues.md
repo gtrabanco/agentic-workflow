@@ -42,3 +42,10 @@ No unresolved product or engineering decision blocks implementation.
     (`planning-evidence.md`, `planning-obligations.md`, `planning-findings.md`, and
     the XS/S embedded headings per D20); `review-plan`'s L3–L6 checks are what
     catch a unit that invented a fourth home.
+11. **Routing is enforced by contract text, not by a runtime validator:** the P4
+    fixtures model the published decision tables (sensor labels, executor admission,
+    autopilot order, fold routing) and pin them to the exact sentences that carry
+    them, but nothing at runtime recomputes a `detail.pre_execution[]` row — the
+    envelope keeps `detail` opaque by design, so a driver cannot schema-validate those
+    rows. P5's canary runs the routes for real; a mismatch there is a defect in the
+    tables, not in the fixtures.

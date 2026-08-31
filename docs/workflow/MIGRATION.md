@@ -2,9 +2,52 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-30 — every route now refuses to start work on an unreviewed plan
+
+**Breaking routing; `workflow-status` 3.0.0, `execute-phase` 4.0.0,
+`ship-roadmap` 5.0.0, `loop-review-fold` 3.0.0, `audit-pr` 5.0.0,
+`review-change` 2.12.0, `review-implementation` 1.5.0, internal
+`pre-execution-review` 1.1.0.**
+
+The gate is no longer only at the authoring hop — it is at the *starting* hop:
+
+- **Recommendations are evidence-staged.** `workflow-status` reads each unit's
+  receipt block, recomputes its digest, and labels the stage
+  `current | missing | stale | wrong-stage | substitute | self-approved |
+  author-readiness | legacy`. A unit without a current PASS for the stage it is about
+  to enter leaves `startable_now` and becomes a `gate` blocker naming the review it
+  still needs (`detail.pre_execution[]` carries the rows). If you consumed
+  `next.recommended` as "status → command", consume it as "status + receipt →
+  command".
+- **`execute-phase` fails closed.** Between the own-status gate and the acceptance
+  manifest sits the pre-execution review gate: no edit on a missing, stale, or
+  wrong-stage `PLAN-REVIEW-PASS` (fix units: their own receipt). `--force` does not
+  reach this gate — it overrides ordering stops, not a reviewer's verdict. Drivers
+  that passed `--force` to get past a planning stop must now run `/review-plan <NN>`.
+- **The autopilot has two more stages:** DESIGN → REVIEW-SPEC → PLAN → REVIEW-PLAN →
+  EXECUTE → PR → REVIEW → AUDIT, with both reviews in a clean context. `NEEDS-DESIGN`
+  parks the unit for the human rather than guessing a product answer; merge policy is
+  unchanged.
+- **Findings carry an owning stage.** `review-change` reports `plan`- and
+  `product`-owned findings with their owner, and `loop-review-fold` refuses to fold
+  them: they return to the authoring skill plus a re-review. A second local cycle
+  emits `CONVERGENCE-ANOMALY` before editing again.
+- **`audit-pr` checks the lineage survived the build**: current plan receipt (+ parent
+  spec receipt), all obligation rows `verified`/`n/a`, no open planning finding. A
+  `deferred` row without a user-amended governing SPEC blocks. It remains the only
+  emitter of `MERGE-READY`.
+- **Legacy units adopt, they are not exempt.** `planned`/`in-progress` units from
+  before feature 28 get the two ledgers built from their current artifacts and then a
+  real `/review-plan`; nothing old is rewritten, no frozen acceptance is touched, and
+  execution resumes only on the new PASS. `legacy` ("predates the gate") and `missing`
+  ("never reviewed") are reported differently on purpose.
+- **Nothing files an issue to close a planning gap** on any of these routes, and an
+  obligation cannot be deferred to a follow-up issue unless the user amends the
+  governing SPEC first.
+
 ## 2026-08-30 — designed is no longer the same as reviewed
 
-**Breaking hand-offs; `design-feature` 3.1.0, `plan-feature` 5.0.0,
+**Breaking hand-offs and routing; `design-feature` 3.1.0, `plan-feature` 5.0.0,
 `plan-feature-scaffold` 2.0.0, `plan-fix` 3.0.0, `plan-feature-from-issue` 2.0.0,
 `review-spec` 1.1.0, and the new `review-plan` 1.0.0 with the internal
 `evidence-grounding` 1.1.0 and `pre-execution-review` 1.0.0.** Product authoring and product verdicts now have

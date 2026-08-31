@@ -122,7 +122,9 @@ plan → execute → review → audit → merge.**
 > `plan-feature-from-issue` and `plan-feature-scaffold` (hidden from the menu).
 > Planned is not executable either: planning freezes the planning-evidence and
 > obligation ledgers, then `review-plan` must return a current `PLAN-REVIEW-PASS`
-> before `execute-phase` touches a phase.
+> before `execute-phase` touches a phase — and `execute-phase` fails closed on a
+> missing, stale, or wrong-stage receipt, which is the one preflight gate no
+> `--force` reaches.
 
 ### Execute
 
@@ -564,7 +566,9 @@ last entry on start so you resume cold — no model, no token cost for the captu
 
 1. **Docs drive the work** — every skill reads the project's guide, doc map,
    architecture, roadmap and style docs first, and respects them.
-2. **Plan before code** — features get a SPEC + artifacts before a line is written.
+2. **Plan before code, review before plan** — features get a SPEC + artifacts
+   before a line is written, and the Product half and the Plan each need a current
+   independent PASS before the next hop runs.
 3. **One phase at a time** — each verified and committed separately.
 4. **One PR per unit, against the default branch** — never on `main`, never stacked.
 5. **Evidence over reflex** — triage verifies triggers; deferred work is tracked, not inlined.

@@ -25,7 +25,10 @@ Use `stage: spec` for a Product half (`design-feature`, issue-derived design) an
 ✓ 5. Role matrix: every inventory role is explicitly `allowed`/`denied` for every
   capability — no role unlisted
 ✓ 6. Expectation sweep: ≥ 10 rows (M/L) or ≥ 5 (XS/S), each forced to
-  `in-scope`/`out-of-scope`/`deferred` with a pointer
+  `in-scope`/`out-of-scope`/`deferred` with a pointer — and a `deferred` row
+  exists only behind a user-made governing-SPEC amendment, never an issue this
+  skill filed — a `deferred` row needs a
+  governing-SPEC amendment the user made, never an issue this skill filed
 ✓ 7. Every in-scope bullet maps to ≥ 1 acceptance criterion; every criterion is
   labelled command-verified or read-verified
 ✓ 8. `Deferred decisions` present and reads `none` or lists each owner
