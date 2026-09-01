@@ -463,3 +463,56 @@
   repository root from `LEDGER_OWNERSHIP_REPO`, so running it against
   `git archive 0feaaf64` — the tree before the map existed — fails 16 of 18 with
   exit 1. A scan that can only be shown green is a scan nobody can audit.
+- **D39 — P10: marks go where the map already puts them, the rejection vocabulary
+  is named after the gate that prints it, and the ceilings that growth moved are
+  re-based once, with the source named (2026-09-01).** Placement first. AC17 asks
+  that a terminal turn "write its durable mark in the same act" — it never asks for
+  a new artifact, and P9's map already says who may write each ledger. So §8 places
+  every terminal mark on a home the map declares: a review or plan verdict keeps
+  writing its receipt block (`review-spec:product-receipt`,
+  `review-plan:plan-receipt`), a fold completion keeps flipping
+  `fold-findings:folded-flag`, and only the gate-rejection trace was genuinely
+  homeless — it gains one column set on `progress.md`
+  (`execute-phase:gate-rejection-traces`) rather than a new file, so the map, the
+  two template projections and §8 all moved in this one commit and the drift scan
+  pins them in both directions. The rejected alternative was a `gate-rejections.md`
+  ledger: a file per rule is exactly the fragmentation AC16 exists to prevent, and
+  `progress.md` already carries this unit's preflight and receipt blocks. The cost
+  is that three durable surfaces must now agree every time a column set appears —
+  paid for by `scripts/ledger-ownership.test.mjs` failing the mismatch rather than
+  the reviewer noticing.
+  Vocabulary second, chosen for the smallest closed set that names the real gates:
+  `dependency`, `status`, `phase-lint`, `stale-or-missing-receipt`. `status` covers
+  both own-status STOPs (`idea`, `defined`) instead of forking into
+  `status-idea`/`status-defined`, because the gate is one check with two outcomes
+  and a per-outcome type would turn a closed set of four into an open list. The
+  consequence is mechanical and pinned: the fixture counts four *types* but five
+  printed *traces*, so a future own-status state either reuses `status` or replans
+  the vocabulary — it cannot silently add a sixth word. The replay codes are
+  `stale|wrong|duplicate`, deliberately AC17's own words and deliberately **not**
+  the snapshot freshness reason codes (`stale-context`, `stale-source-revision`):
+  those belong to the schema package and describe digests, while these describe
+  marks. Two similar-sounding vocabularies is the price of not redefining a
+  package-owned code in prose; §8's sentence names its subject to keep the two apart.
+  Budget, as the policy requires (D26/D31/D38). Growth source: §8 inside
+  `POLICY.md` (2045 → 2482 estimate units, written to land under
+  `pre-execution-review`'s existing `referenceEstimateMax: 2915` — that skill's
+  ceiling did **not** move, its max file is still `LEDGERS.md`, at 2659) and the
+  five typed traces plus the citation section inside `PREFLIGHT.md` (2123 → 2352),
+  which is AC17's own requirement and crossed the default 2200. So `execute-phase`
+  gains `referenceEstimateMax: 2588` = ceil(2352 × 1.10), and the five routes that
+  load `pre-execution-review` move from their D38 floors to their P10 floors
+  (estimate / lines): `design-feature:repair` 21296/1452 → 21793/1488,
+  `plan-feature:scaffold` 18051/1314 → 18548/1349, `plan-fix:issue` 20834/1540 →
+  21331/1576, `review-plan:default` 15278/970 → 15818/1007, `review-spec:default`
+  13496/910 → 14011/946. Nothing was lowered to hide growth and nothing was raised
+  twice — `pre-execution-review`'s own 2915 stayed put; the two reviewer skills and
+  `pre-execution-review` are `minor` bumps under `bump-skill`, so the changelog
+  rows, both README-language skill cells' owners and `SKILLS.md`/`SKILLS.es.md`
+  moved with them, and the Pi mirror was rebuilt to byte parity.
+  Not built here, because later phases own it: the sensor keying its review-ran
+  proof on the durable mark (P11), the artifact that carries delegated evidence
+  (P12), the normalizer ordering (P13) and the drift gate that pins §7/§8's
+  sentences against the consumers that cite them (P14). The citation form the P14
+  gate will read is the literal ``POLICY.md` §7` / ``POLICY.md` §8`, already in both
+  reviewers' turn-contract boxes.

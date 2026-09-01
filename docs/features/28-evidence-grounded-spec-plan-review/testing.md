@@ -347,3 +347,59 @@ emitted at `scripts/ledger-provenance.mjs:288`, the re-open note `· REOPENED P2
 provenance unproven` at `:293`. The test matches the source lines, so a token that
 drifts away from the map — in either direction — fails the suite rather than
 silently widening what the annotator may write.
+
+### P10 (2026-09-01) — Terminal verdicts marked durably (AC17 / O17)
+
+**Red first, and still reproducible.** The four P10 cases were written before
+`POLICY.md` §8 existed; the proof is a command, not a claim. The suite now re-points
+its repository reads through `PRE_EXECUTION_QUALITY_REPO` (P9's gotcha 3, applied to
+this file), so anyone can reproduce it:
+
+```sh
+git archive 3e92f4a0 | tar -x -C /tmp/p10red            # the tree before P10
+cp scripts/pre-execution-quality.test.mjs /tmp/p10red/scripts/
+cp -r packages/agentic-workflow-schema/dist /tmp/p10red/packages/agentic-workflow-schema/dist
+cd /tmp/p10red && git init -q . && git add -A && git commit -qm pre-P10   # the sensor case needs a tree
+PRE_EXECUTION_QUALITY_REPO=/tmp/p10red node --test scripts/pre-execution-quality.test.mjs
+# → tests 53 · pass 50 · fail 3 · exit 1
+```
+
+Three cases answer red: `terminal marks…` (no §8, no `progress.md` column set to
+find in the map), `gate rejections…` (no printed `GATE REJECTION` block in either
+gate file) and `write-then-report has one owner…` (no §8, no `write-then-report`
+literal in the three files the done-when greps, `review-plan` still ordering a
+copied parent digest). The fourth case, `replay…`, is a pure model over fixture
+state and is therefore green in both trees — what makes it a proof rather than a
+description is that its refusals are *computed* by the same `applyTerminalAct` the
+owner-cited pins check §8 against, so a rule that drifts from the model fails.
+
+| Gate | Result |
+|---|---|
+| `node --test scripts/pre-execution-quality.test.mjs` | exit 0 — 53/53 (49 before P10 + 4 new) |
+| `grep -qE 'write-then-report' skills/review-spec/SKILL.md skills/review-plan/SKILL.md skills/pre-execution-review/references/POLICY.md` | exit 0 — and each file carries the literal itself (`grep -cE` 1/1/1), because `-q` across three files answers 0 on any single hit |
+| `node --test scripts/*.test.mjs` (root) | exit 0 — 150/150 (146 before P10 + 4 new) |
+| `node --test scripts/ledger-ownership.test.mjs` | exit 0 — 18/18, with `execute-phase:gate-rejection-traces` added to the map and both template projections |
+| `node scripts/check-skill-context.mjs` | exit 0 — 39 skills, after `execute-phase` gains `referenceEstimateMax: 2588` = ceil(2352 × 1.10) (D39) |
+| `node scripts/check-skill-context.mjs --routes` | exit 0 — 23 routes, after the five-route declared re-basis (D39) |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | exit 0 — 38 skills / 122 files bundled, 134/134 tests |
+
+**Fixture modes proven (computed, not asserted):** a terminal act writes exactly
+one durable mark, at the home the ownership map declares (`review-spec:product-receipt`,
+`review-plan:plan-receipt`, `fold-findings:folded-flag`,
+`execute-phase:gate-rejection-traces` — each string is matched against
+`LEDGERS.md` in the test, so §8 cannot invent a home); each of the four rejection
+types prints a trace naming reason and return route, and an untyped rejection
+writes nothing; the shipped gate blocks carry exactly the four types — five traces
+across `PREFLIGHT.md` and `PRE_EXECUTION_GATE.md`, no fifth type anywhere; and a
+replay of a **stale**, **wrong** or **duplicate** mark returns
+`MARK REPLAY — <code>` with `writes: []` and the ledger it was handed, unchanged —
+the absence of writes is what the case asserts, not the presence of a message.
+
+**One owner per rule (the F37 fold):** §8 states the act-binding sentence once;
+`review-spec`, `review-plan`, `PREFLIGHT.md`, `PRE_EXECUTION_GATE.md` and
+`LEDGERS.md` are each asserted free of `same act`, `are one act` and `MARK REPLAY`,
+and both reviewers carry the rule as a one-line name-plus-§8 pointer. `review-plan`
+no longer says the parent SPEC digest is "copied from the receipt": the box now
+cites §7, which states the identity-value rule as recompute-and-record-the-claim-
+beside-it. P14's drift gate compares the two sentences through that literal
+`POLICY.md` §7 / §8 citation form.
