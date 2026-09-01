@@ -148,12 +148,12 @@ phase is re-cut — never re-tallied after the fact.
 
 Layer: docs · Done-when: `node --test scripts/ledger-ownership.test.mjs` -> exit 0 and -> non-zero on the undeclared-writer fixture.
 
-- [ ] Write the ledger ownership map with one row per truth class: review findings, planning findings, progress, known-issues, decisions, roadmap, acceptance manifest.
-- [ ] Add the declared-mechanical-annotator column and enter `scripts/ledger-provenance.mjs` as `review-findings.md`'s annotator, naming the fold token it may append and its validator.
-- [ ] Declare owner and annotator in `docs/features/_TEMPLATE/` and `docs/fix/_TEMPLATE/` ledger templates.
-- [ ] Write `scripts/ledger-ownership.test.mjs` red first: the declared-owner scan must fail a template row with no owner.
-- [ ] Add the script write-path scan so a script writing a durable ledger absent from the map fails the suite.
-- [ ] State the one-owner rule in `skills/pre-execution-review/references/LEDGERS.md` as the single cited source.
+- [x] Write the ledger ownership map with one row per truth class: review findings, planning findings, progress, known-issues, decisions, roadmap, acceptance manifest. *(All seven, `ledger-ownership@1` block in `skills/pre-execution-review/references/LEDGERS.md` § "Durable ledger write ownership (the map)".)*
+- [x] Add the declared-mechanical-annotator column and enter `scripts/ledger-provenance.mjs` as `review-findings.md`'s annotator, naming the fold token it may append and its validator. *(`annotator | annotator-token | validator`; the tokens `· fold <sha>`, `· ticked <sha>`, `· REOPENED P<n>` are pinned to the lines that emit them — `scripts/ledger-provenance.mjs:288,293` — by the `ledger-ownership` case "the fold provenance token is pinned to the annotator line that emits it", validator cell `node --test scripts/ledger-provenance.test.mjs`.)*
+- [x] Declare owner and annotator in `docs/features/_TEMPLATE/` and `docs/fix/_TEMPLATE/` ledger templates. *(New `docs/features/_TEMPLATE/LEDGERS.md` + `docs/fix/_TEMPLATE/LEDGERS.md`: per-tree projections of the map, checked against it in both directions so a template row cannot be added, dropped, reworded or left owner-less.)*
+- [x] Write `scripts/ledger-ownership.test.mjs` red first: the declared-owner scan must fail a template row with no owner. *(`scan 1 fails a template ledger row with no owner (AC16's named fixture)`; red-first proven mechanically — the suite run against the pre-P9 tree (`git archive 0feaaf64`, map and templates absent) reports 16 of 18 failing and exits 1, see `testing.md` § P9.)*
+- [x] Add the script write-path scan so a script writing a durable ledger absent from the map fails the suite. *(`writePathScan` over `scripts/*.mjs` + `packages/*/scripts/*.mjs` excluding `*.test.mjs`, with the `# no-script-writer` directive for the durable records that no script may touch; five fixture cases prove the refusal, one proves a generated-artifact writer stays out of scope.)*
+- [x] State the one-owner rule in `skills/pre-execution-review/references/LEDGERS.md` as the single cited source. *("a durable ledger has exactly one writer per column set, plus at most one declared mechanical annotator, which may append only the token its own row names" — cited by both templates, restated nowhere else.)*
 
 Phase-lint: PASS (8/8) · fingerprint `P9:docs:6:declare-durable-ledger-write-ownership`
 
