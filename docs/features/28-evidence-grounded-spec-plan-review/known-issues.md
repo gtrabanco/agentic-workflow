@@ -95,3 +95,17 @@ No unresolved product or engineering decision blocks implementation.
     unit's, any fixture or probe run must be launched against a tree that can
     tolerate being written, or with the write boundary expressed as the skill's own
     contract text rather than as an instruction beside it.
+17. **An external memory-sync process commits into the delivery branch (not this
+    unit's write).** Before P9 started, `336e0cfb chore: engram sync` landed on
+    `feat/28-evidence-grounded-spec-plan-review` and put `.engram/manifest.json`
+    plus a 213 KB `gzip`'d chunk under version control. Nothing in the unit asked
+    for it, no skill owns it, and no gate of this repository wrote it — it is the
+    same shape as finding F2 (an undeclared writer reaching a durable surface), only
+    outside the ledger set the P9 map covers. Two consequences the owner decides,
+    not the executor: **PR #155 must not merge with a binary memory blob in its
+    diff** (`git rm -r --cached .engram` + a `.gitignore` rule, which is the
+    repo-wide hygiene call already tabled as a proposal in `decisions.md`), and any
+    later sync commit landing mid-loop must be identified before a phase commit so
+    the phase sha stays single-concern. Recorded here rather than fixed silently:
+    `.gitignore` is outside every phase of this unit, and an un-merge of someone
+    else's tooling state is a repository decision.
