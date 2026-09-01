@@ -677,3 +677,71 @@
   the price of the `relative-headroom` policy working as designed, and it is the
   second time in three phases that a small prose addition has cost a re-basis —
   recorded here, not as a complaint, so a later trim decision has the number.
+
+- **D43 — P13: the ordering rule ships with the gate, the normalizer inventory stays in
+  the bound project guide, and "check-only" is decided by writes rather than by a flag
+  name (2026-09-01).** Three placements, each with a rejected alternative that looks
+  obvious until the repo's own rules are read.
+  **The rule's home is `PRE_EXECUTION_GATE.md`, undisputed.** Task 1 named it, and it is
+  the file that already fixes the pre-flight order (dependency → own-status →
+  pre-execution review → acceptance manifest → phase-lint) and prints the gate block, so
+  the freeze row it names as the ordering boundary is the same row that decides which
+  bytes a receipt vouches for. The invalidation sentence went into the same section on
+  purpose: an executor reading one heading gets both halves of AC19, and the fixture
+  slices the file at that heading to prove it. `SNAPSHOT.md` (what a snapshot binds) and
+  `POLICY.md` §7 (the digest recompute) are cited and not restated — this repo's suites
+  already pin one owner per rule, and the new case refuses the digest recipe and §7's
+  pairing wording inside the section.
+  **The inventory's home is the project guide, not the shipped skill.** The obvious move
+  was the gate reference; it is the wrong home because `CLAUDE.md`'s working rules forbid
+  stack and real-project references in the skills and the shared docs, and every concrete
+  normalizer here is exactly that — `packages/agentic-workflow-schema`, the
+  `pi-agentic-workflow` mirror, `docs/site/guides/`. A target project installing these
+  skills has none of those paths, so the list in a portable reference would be a false
+  instruction, and the rule would be unreadable without it. So the gate states the rule
+  generically, tells each project to keep **one** normalizer inventory naming each step's
+  side of the freeze, and this repository keeps its own at `CLAUDE.md` §"Normalizer
+  inventory". Two properties decided that: the guide is already a frozen input (the
+  builder binds `CLAUDE.md` as the `project-guide` context row), so the list sits inside
+  the freeze rather than above it — editing it is a bound change that rotates receipts,
+  which is the phase's own rule applying to the phase's own write — and `CLAUDE.md` is
+  what an executor in this repo reads first. Rejected: `docs/workflow/FEATURE_WORKFLOW.md`
+  (a bilingual pair, so every later line costs an ES twin, and it is a tutorial, not an
+  order of operations); `docs/workflow/REPOSITORY_STATE.md` (frozen facts with
+  `resolve-repository-state` as sole writer — a normalizer list is not a discovered
+  repository fact and does not earn that route); a unit-local file (it would make a
+  repository-wide fact an artifact of one unit, unreachable from the guide). The fixture
+  enforces the one-home claim in both directions: the `normalizer-inventory@1` header
+  appears in `CLAUDE.md` and in no other guide or `docs/workflow/` file, and no copy of
+  it may appear inside the gate reference.
+  **Check-only is a property of what a step writes.** The definition is "reports on bytes
+  and writes none", decided from the row's `kind`, and the schedule's legality is decided
+  from its `side` — deliberately different sources, because the same script appears twice
+  (`generate-pre-execution-schemas.mjs` mutates, `… --check` reports) and a step marked
+  `after` whose kind is not check-only is a contradiction the fixture refuses. Had
+  `mutates` been derived from `side`, moving the bundler behind the freeze would have made
+  the schedule legal by editing one cell: the validator would have been weakened to pass,
+  the pattern this unit keeps filing findings about. `pre-execution-snapshot.mjs verify`
+  and `check-skill-context.mjs --routes` are check-only by construction (both re-derive
+  and print, neither writes), which is why they belong on the tail side even though they
+  are the commands that *detect* a breach.
+  **Honesty of the list, and of the claim.** AC19 names "formatter" as a category; this
+  repository declares none — no Prettier, Biome or EditorConfig configuration exists, so
+  the row reads `none declared` and the fixture asserts the three config paths stay absent,
+  which fails the moment someone adds a formatter without updating the inventory. And the
+  rule does not claim bytes were never re-written before this phase: `review-spec` and
+  `review-plan` receipts already bind digests, `scripts/pre-execution-attribution.test.mjs`
+  already proves a moved input is reported, and this unit's own record says the cost — P9
+  through P12 each re-ran `bundle:skills` after editing `skills/`, and `progress.md`'s
+  `Acceptance receipt v2` note states that re-freezing the manifest invalidates every
+  content-bound receipt. What the ordering rule adds is a **step-order guarantee**: the
+  late write is out of plan before it is a stale digest after.
+  **Budget, named even though nothing moved.** Growth source: this section's rule text in
+  one file — `PRE_EXECUTION_GATE.md` 927 → 1358 estimate units / 55 → 79 lines. No ceiling
+  moved: the file stays inside `execute-phase`'s existing `referenceEstimateMax: 2588`, and
+  all eight `execute-phase` routes stayed under their declared ceilings with their
+  `relative-headroom` floors intact (tightest: `execute-phase:descope` 9393 → 9824 against
+  a ceiling of 11125, floor 10807). That slack is D41's over-shoot, not a policy change,
+  and it is thin — the same route's floor reaches its ceiling at about 10,113 measured, so
+  P14's gate-side prose is expected to need a declared re-basis. Recorded here so the next
+  phase measures before it writes instead of after.
