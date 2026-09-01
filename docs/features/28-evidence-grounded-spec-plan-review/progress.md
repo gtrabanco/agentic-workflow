@@ -339,12 +339,12 @@ version bump per D15, roadmap row → `in-review`).
 | schema package tests | 671/671 pass |
 | projection drift check | drift-free (2 files) |
 | pre-execution-quality tests | 46/46 pass |
-| bounded-delivery-loops + audit-pr-receipt | 18/18 pass |
+| bounded-delivery-loops + audit-pr-receipt | 15/15 pass — corrected 2026-08-31 (finding RS6): this row claimed `18/18`; the command reports `tests 15 · pass 15` (audit-pr-receipt 14 + bounded-delivery-loops 1) |
 | check-skill-context (skills) | PASS — 39 skills |
 | check-skill-context (routes) | PASS — 23 routes (ceilings bumped for pre-execution-review) |
 | Pi bundle:skills | 38 skills (122 files) |
 | Pi bundle tests | 134/134 pass |
-| skills add . --list | 39 skills discoverable |
+| skills add . --list | ~~39 skills discoverable~~ → **Found 38 skills** — corrected 2026-08-31 (author repair batch): the CLI does not discover `bump-skill`; 39 is the `check-skill-context` skill count. The P1 row above already recorded 38 |
 
 **Golden fixture**: see GOLDEN_FIXTURE.md row dated 2026-08-31
 
@@ -369,7 +369,7 @@ candidate-code review (PR #155 head `a42c244b`) caught this as findings F2
 appended to produce the missing qualification evidence, reconcile every
 ledger and status truthfully, and re-review/close the corrected candidate.
 The roadmap row is corrected back to `in-progress` in the same replan commit.
-Findings F7 (decision-required, resolved by the D22 headroom policy) and the
+Findings F7 (decision-required, resolved by the D26 headroom policy) and the
 fold-class rows are unaffected by this amendment.
 
 ## Pre-execution review receipt v1 — spec
@@ -381,3 +381,74 @@ fold-class rows are unaffected by this amendment.
 - Model diversity: cross-model · Policy: v1
 - Started/finished: 2026-08-31T22:35:00Z/2026-08-31T23:30:00Z · Findings: 18 (material open: 14)
 - Notes: first review of the amended snapshot (cycle 1; prior receipts rs-28-20260831-001/rp-28-20260831-001 bound 781f8127…/f82316b8…, invalidated by replan 6157e182). Verdict authority one clean-context reviewer turn (user-requested); falsification and claim verification ran in four supporting worker contexts on a different provider model, so diversity is labelled cross-model. Read-only on reviewed artifacts: SPEC.md, decisions.md, ACCEPTANCE.md, roadmap untouched; findings rows appended to planning-findings.md (this review created it). Failed checks: C8, C10. Product-class material rows RS1+RS2 route to design-feature as one batch; plan-class rows RS3–RS12+RS14+RS18 route to review-plan/plan-feature; source-class RS13 routes to the executor. Snapshot built with the sanctioned recipe (`pre-execution-snapshot.mjs build --stage spec`); contexts bound: roadmap-row, project-guide (CLAUDE.md), normalized-repository-state present, architectural-invariants absent.
+
+## Record corrections — author repair batch (2026-08-31, findings RS3+RS5+RS6+RS7)
+
+Dated correction of recorded claims. The two `Pre-execution review receipt v1`
+blocks above are left **byte-identical**: refreshing, re-hashing or editing a
+receipt is forgery, not recovery
+(`skills/execute-phase/references/PRE_EXECUTION_GATE.md`), and only a new review
+of a new snapshot produces a current receipt.
+
+- **RS3(a) — the `…-001` receipts do not reproduce from their own pinned fields.**
+  Rebuilding the spec snapshot from the values `rs-28-20260831-001` records yields
+  `2e45243c…`, not the recorded `781f8127…`, so no consumer can re-derive that
+  digest from what the receipt states — independently of the staleness the
+  2026-08-31 replan (`6157e182`) and product repair (`caa4984b`) already caused.
+  Both `…-001` receipts are therefore **void twice over**: unverifiable and stale.
+  Current digests at this repair: spec `511c8076…`, plan `b4018ee1…`
+  (`node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit
+  28-evidence-grounded-spec-plan-review [--parent <spec digest>]`).
+- **RS3(b) — HEAD-defaulted identity stale-ified receipts with zero bound-byte
+  movement.** `scripts/pre-execution-snapshot.mjs` defaulted `sourceRevision` and
+  `artifactRevisionId` to live `HEAD`, so any commit rotated every digest —
+  including the commit that wrote a receipt, and commits touching nothing bound.
+  Two causes were live this cycle: that default, and the bound `roadmap-row`
+  context, whose rows 28–29 were re-worded on `main` by PR #153. Repaired in this
+  batch (D29): identity defaults to the newest commit touching the bound paths, so
+  an unrelated commit no longer kills a receipt while bound-byte movement still
+  does, exactly once per real edit.
+- **RS5 — false ledger count inside a recorded receipt.** `rp-28-20260831-001`
+  states "Ledgers read: planning-evidence 20 rows". `planning-evidence.md` held
+  **12** rows at the receipt's own cited source revision `0651d3ff` and holds
+  **15** at this commit; 20 is false under either reading. The line stands
+  unedited as a record of a bad claim, corrected here.
+- **RS6 — standing test-count contradiction.** `progress.md`'s P5 gate table said
+  `18/18` and `testing.md` said `15+3/15+3` for
+  `node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs`;
+  measured ground truth is `tests 15 · pass 15 · fail 0` (14 + 1). Both ledgers
+  corrected in place with the command attached.
+- **RS7 — duplicated decision ids.** Two different decisions were both numbered
+  `D22` (shared cycle/ledger ownership; the route-ceiling headroom policy) while
+  `D23`/`D24` already existed, so "the D22 headroom policy" cited in the P5
+  correction above named nothing unique. Renumbered in place to `D25` and `D26` in
+  `decisions.md`, each carrying a note of its former id; no decision text changed.
+
+## Reconciliation of this repair batch — 2026-09-01
+
+> Dating note: the batch below is dated **2026-08-31** in its own records, but the
+> session that wrote it began 2026-09-01T00:06Z. Its sections are left as authored
+> (a ledger records when it was written, and rewriting dates is not recovery);
+> everything on this line and below is dated at the actual reconciliation.
+
+The batch above was left **uncommitted and red** by its own session. Reconciled on
+resume, before any phase work; every item measured, not assumed:
+
+| Defect found in the in-flight batch | Cause | Disposition |
+|---|---|---|
+| `check-skill-context --routes` exit 1 — 14 rows / 7 routes breached the floor D28 made machine-enforced | D27's ceilings were measured **before** this batch grew `SNAPSHOT.md` (+51), `review-plan/{CHECKS,OUTPUT}.md` and `audit-pr/02_CLOSURE_AND_SCOPE_GATES.md` — the batch invalidated its own declaration | Declared re-basis recorded as **D31** (per-route measured / D27 value / new ceiling / growth source), plus the sequencing rule that a re-basis is the batch's last content act |
+| Pi package suite 133/134 — `AC2: every bundled file is byte-identical to its skills/ source` failed | 7 `skills/*/references/*.md` edits were never re-bundled (same-PR hard rule) | `npm run bundle:skills` re-run → 134/134. Version stays `0.2.0`: unpublished (registry `0.1.0`), and precedent `fe0aa37c`/`6445eaef` re-bundled under the same version |
+| No per-skill `version:` bump and no CHANGELOG row for skills whose references changed | Batch stopped at the reference text | `workflow-status` 3.0.3, `execute-phase` 4.0.2, `audit-pr` 5.0.2 (patch), `review-plan` 1.1.0, `pre-execution-review` 1.2.0 (minor — their prescribed procedure changed), rows in `CHANGELOG.md` **and** `CHANGELOG.es.md` in the same commit |
+| RS13 still `open` in `planning-findings.md` although D29 shipped its repair and two suites pin it | Ledger trailled the evidence it was correcting | Row flipped to `resolved` with the resolving revision; claim and evidence cells untouched |
+| `npx skills add . --list` recorded as `39 skills` in the P5 tables | 39 is the `check-skill-context` count; the CLI reports `Found 38 skills` (no `bump-skill`) | Both rows corrected in place with the command attached (`testing.md`, and here) — 2026-09-01 |
+| The two new root suites needed an **unstated build precondition** | Both imported `packages/agentic-workflow-schema/dist/index.js`, which is a gitignored build output; on a fresh clone `node --test scripts/*.test.mjs` died with `ERR_MODULE_NOT_FOUND` naming a path (and the committed fixture imports `dist/` too, which fails even earlier, at module *resolution*) | Added `scripts/schema-runtime.mjs` (guard + loader; no fallback to an installed older release, which would be a false green) and made the fixture import dynamic so the message names the build command. Verified both ways: 22/22 with `dist/`, `schema runtime is not built: … npm run build` without it |
+
+Gate after reconciliation: schema 674/674 + drift-free · root 127/127 · new sensor
+suites 22/22 · pre-execution-quality 46/46 · budgets PASS (39 skills, 23 routes) ·
+Pi bundle 38 skills/122 files, 134/134 · `skills add . --list` → 38.
+
+**Unchanged by this reconciliation:** both `…-001` receipt blocks and the
+`rs-28-20260831-002` block stay byte-identical; `ACCEPTANCE.md` is untouched; no
+phase was executed and no roadmap status moved. The unit's pre-execution gate is
+still BLOCKED for want of a current `PLAN-REVIEW-PASS` on the amended snapshot —
+this batch is what that review must now be run against.

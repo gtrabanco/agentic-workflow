@@ -799,15 +799,20 @@ Phase-lint: PASS (8/8) · fingerprint
 
 #### P5 — Qualify the pre-execution workflow
 
-Layer: hardening. Done-when: package/repository/installation/context/golden-
-fixture gates pass, synchronized docs and migration are verified, the exact
-candidate has an independent PASS with no unresolved fix-now finding, the
-feature/fix/cross-boundary qualification corpus contains no second-cycle
-sample, and the terminal candidate is release-ready (Pi package bumped to
-`0.2.0` and changeloged after the last bundle rebuild).
+Layer: hardening. Done-when (re-cut 2026-08-31 by the user-approved amendment for
+findings F2+F3+F6, recorded against finding RS9): P5 owns only what its first
+three `TASKS.md` rows still hold — package/repository/installation/context gates
+pass and synchronized docs/migration verified — and is `replanned`, not `done`.
+The golden-fixture rows and the feature/fix/cross-boundary qualification corpus
+with its no-second-cycle condition moved to **P6**, ledger and status
+reconciliation to **P7**, and the independent PASS on the exact candidate, the
+re-review pair and the release-ready terminal candidate (Pi package `0.2.0` bumped
+and changeloged after the last bundle rebuild) moved to **P8**. Claiming the
+corpus or the release from P5 is the drift F2 and F6 were filed for.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P5:hardening:8:qualify-the-pre-execution-workflow`
+`P5:hardening:8:qualify-the-pre-execution-workflow` (unchanged — the
+fingerprint binds layer, task count and title deliverable, not the done-when text)
 
 #### P6 — Run the pre-execution qualification corpus
 
@@ -836,7 +841,10 @@ Phase-lint: PASS (8/8) · fingerprint
 #### P8 — Re-review and close the corrected candidate
 
 Layer: close-out. Done-when: the terminal HEAD holds a current context-clean
-`review-change` PASS receipt with zero open findings; every package gate
+`review-change` PASS receipt with zero open findings **and** current
+`SPEC-REVIEW-PASS` and `PLAN-REVIEW-PASS` receipts re-derived at that same HEAD
+(finding RS3(c): the repair commits rotate both digests, so a close-out that never
+re-runs the two reviews closes on evidence that died mid-unit); every package gate
 passes (schema suite, root suites, context/route budgets, Pi bundle + tests,
 `npx skills add . --list`); the frozen ACCEPTANCE manifest is verified at
 terminal HEAD; PR #155 carries the amendment summary; and roadmap row 28
@@ -849,9 +857,25 @@ Phase-lint: PASS (8/8) · fingerprint
 
 No data migration or environment configuration. Merge publishes skill/docs
 changes; publish the schema package (`3.5.0`) and the Pi package (`0.2.0`) only
-after package/repository qualification — the Pi publish workflow releases on
-merge only when its `package.json` version is newer than the registry, so the
-final hardening step bumps it after the last bundle rebuild.
+after package/repository qualification.
+
+The Pi publish workflow does **not** enforce "newer than the registry" (finding
+RS11): its gate is an equality test — `Skip when the version is already published`
+sets `publish=false` only when `LOCAL == PUBLISHED`, so any difference (including
+a lower local version) attempts `npm publish`. Measured today: registry
+`@gtrabanco/pi-agentic-workflow` is `0.1.0`, local is `0.2.0`; registry
+`@gtrabanco/agentic-workflow-schema` is `3.4.0`, local is `3.5.0`. The bump step
+therefore still has to be correct on its own, and the workflow does not quietly
+protect it.
+
+**Environment precondition that blocks the merge-time release** (recorded as
+known-issue 12): `publish-pi-package.yml`'s own header states the npm Trusted
+Publisher record for this package is still pending, and that any version past
+`0.1.0` fails at the publish step with `npm error 403 … OIDC permission denied`
+(the token exchange succeeds; npm rejects the PUT). So "merge ships 0.2.0" is
+true only once that record exists; otherwise the release is a manual step after
+the corrective record, and no route may claim the package shipped from a red
+publish job.
 Rollback is a PR revert plus package deprecation/new corrective version if the
 new package version was already published. Never overwrite an npm version or
 coerce stored receipts into another contract.
@@ -899,5 +923,13 @@ coerce stored receipts into another contract.
 ### Post-merge next feature
 
 Feature 29 — `bounded-implementation-discovery`; first re-run `review-spec` and
-`review-plan` over its already-created planning artifacts so feature 28 is
-dogfooded before feature 29 implementation begins.
+`review-plan` over its planning artifacts so feature 28 is dogfooded before
+feature 29 implementation begins. That re-run has a prerequisite (finding RS10):
+unit 29 is size `M` and its folder holds `planning-evidence.md` but **no
+`planning-obligations.md`**, and the `M/L` ledger rule makes a missing obligation
+ledger a first-cycle `review-plan` finding, not a warning. So the order is:
+construct unit 29's `planning-obligations.md` from its acceptance rows as they
+stand under the legacy-adoption rule (add exactly the missing ledger, change
+nothing else, coerce no older evidence), then `review-spec`, then `review-plan`,
+then execute. Do not describe this as "re-run the reviews over already-created
+artifacts" — as written it could not complete.

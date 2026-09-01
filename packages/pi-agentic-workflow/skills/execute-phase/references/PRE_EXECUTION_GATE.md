@@ -4,8 +4,10 @@ A `planned` unit is a *proposed* unit: the roadmap status says the artifacts exi
 never that an independent reviewer accepted them. Before any edit, sense this unit's
 `stage: plan` evidence the way the sensor defines it (newest `## Pre-execution review receipt v1 — plan` block in `progress.md`,
 digest re-derived with the recipe owner's verify mode (`node
-scripts/pre-execution-snapshot.mjs verify --stage plan --unit <id>` — a snapshot
-digest is a canonical SHA-256, never a git blob id), `stage: plan`,
+scripts/pre-execution-snapshot.mjs verify --stage plan --unit <id> --parent <the Product digest this plan descended from>` — a snapshot
+digest is a canonical SHA-256, never a git blob id; a fix unit omits `--parent`
+because it binds none, and `structural.reasonCode` + `structural.changedPaths` name
+what stopped being true), `stage: plan`,
 verdict in the fixed set, reviewer is not the phase's author), and require
 `PLAN-REVIEW-PASS`. In fix mode the same check runs against the fix unit's own
 receipt (`/review-plan fix-<N>` produced it; there is no Product hop to substitute).
@@ -15,7 +17,8 @@ receipt (`/review-plan fix-<N>` produced it; there is no Product hop to substitu
 ```
 PRE-EXECUTION GATE — <NN|fix-n>-<slug> BLOCKED (<missing|stale|wrong-stage|substitute|self-approved|author-readiness>)
 Expected: current plan-review-pass receipt bound to snapshot <digest>
-Actual:   <receipt state — what was read, and which bound file moved>
+Actual:   <receipt state — what was read, and `structural.changedPaths` +
+          `structural.reasonCode` from the verify run naming which bound file moved>
 
 → Next: /review-plan <NN>-<slug> — the plan needs a current independent review
   · the review returned NEEDS-DESIGN / a Product-rooted finding → /design-feature <NN>-<slug>
