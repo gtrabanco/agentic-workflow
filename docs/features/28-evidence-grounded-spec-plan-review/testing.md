@@ -272,3 +272,38 @@ and the D31 re-basis:
 | `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | bundled 38 skills (122 files); 134/134 pass — byte parity was **red** before this reconciliation (AC2 bundle test failed on 7 drifted reference files) |
 | `npx skills add . --list` | Found 38 skills |
 
+
+### P6 (2026-09-01) — Pre-execution qualification corpus
+
+Executed under owner decision D32 (the pre-execution review gate is bypassed for
+this unit — known-issue 14): the samples were probed **read-only** by clean-context
+subagent sessions against HEAD `19629257`, following the in-repo skill texts
+mechanically; `review-spec`/`review-plan` exist only as repo text, so fields only
+an installed command could observe carry the corpus's sanctioned
+`not yet measured`. No sample entered a second repair/re-review cycle.
+
+**Canary corpus — one row-set per sample (fields as rows; the corpus table):**
+
+| Canary field | 28 (feature sample, this unit) | 78 (fix sample) | 17 (cross-boundary sample) |
+|---|---|---|---|
+| Elapsed to first correct edit / probe duration | branch span 2026-08-30 → 2026-09-01, multi-session | ~8 min probe (09:17–09:25 UTC) | ~12 min probe |
+| Model calls | not yet measured | not yet measured | not yet measured |
+| Pre-edit replans | 1 (2026-08-31 user-approved replan P6–P8, findings F2+F3+F6) | 0 | 0 |
+| Post-review repairs | 3 recorded batches (F-fold set across 7 commits; RS product batch RS1+RS2+RS15–17; RS plan batch RS3–RS12+RS14+RS18) | 1 (single plan-fix batch over the 8 findings a strict read files) | 0 plan repairs; 1 upstream action (run `review-spec` on 17 first — L1 route-and-stop) |
+| Review/fold cycles | 2 (`review-change` 1 cycle on PR #155 → 19 fix-now folded; `review-spec` 1 cycle → the two RS batches; plan-stage receipt voided by the replan rule, not by findings) | 0 (first cycle; `review-plan` never folds) | 0 |
+| Lines/files written then reverted | 0 revert commits on `8ab22ea6..HEAD` | 0 / 0 (read-only probe) | 0 / 0 (read-only probe) |
+| Tokens | not yet measured | not yet measured | not yet measured |
+| Obligations exported to follow-up issues | 0 (O1–O14 all in-unit; no forge issue created by execution, review or fold) | 0 rows carried — unit 78 predates the ledgers (control `fix-147` carries them) | none (no obligations ledger exists) |
+| Second repair/re-review cycle? | **No** — every cycle was first-cycle for its snapshot; receipts voided by the replan rule, not by convergence failure | **No** — FAIL ends the first cycle; re-review needs a changed snapshot (no-progress rule); unit is `done · #85` | **No** — L1 route-and-stop blocks binding a plan snapshot; no PASS to fold |
+
+**Sensor observations (real CLI runs by the probes):**
+
+| Sample | Observation |
+|---|---|
+| 78 (fix) | spec build refused `invalid-selector@/files/0/content` (by design: no fix-unit spec-stage selector — D30 keeps the Product hop out of fix mode); plan build refused `required artifact(s) absent: …/ACCEPTANCE.md` (unit predates frozen acceptance). **Control `fix-147` (complete artifact set): plan build SUCCEEDS, digest `acfe7087cc84d43b3…`, `unitKind: fix`, `parentSpecSnapshotDigest: null` → D30's fix-plan path proven live.** Would-be verdict `PLAN-REVIEW-FAIL`, 8 findings (3 high / 2 med / 3 low): L2/L3/L4 high (no ledgers in a pre-ledger unit), L5 + F1 medium, F2/F3/P12 low. |
+| 17 (feature, cross-boundary) | spec build SUCCEEDS, digest `fdddc8583ac4544a993ecb7ae4aabd5e7c63d28bbd6f2092239848def41454ec` (binds SPEC.md 17611 B); plan build refused `required artifact(s) absent: …/ACCEPTANCE.md` — the artifact check precedes the `--parent` rule, so a legacy feature unit cannot bind a plan snapshot at all. Would-be outcome: **L1 route-and-stop** (report the `review-spec`-first route and stop; 0 plan findings — per CHECKS.md:93 a route report is not a finding). Cross-boundary datum: the sensor binds only `docs/features/<unit>/` artifacts, so cross-package claims (schema mirror, template sync) get no mechanical binding and stay text-contract checks — observed identical across the unit's skills/schema/template surfaces. |
+
+Corpus verdict: **no second-cycle sample**; D30's fix-plan binding proven on a real
+complete fix unit; the L1 route-and-stop proven on a real cross-boundary unit; the
+refusals for pre-ledger units are the containment behaving as designed, not
+failures.

@@ -49,6 +49,16 @@ No unresolved product or engineering decision blocks implementation.
     envelope keeps `detail` opaque by design, so a driver cannot schema-validate those
     rows. P5's canary runs the routes for real; a mismatch there is a defect in the
     tables, not in the fixtures.
+14. **The pre-execution review gate cannot gate the unit that develops the
+    reviewed skills (self-hosting):** `review-spec`, `review-plan` and
+    `pre-execution-review` are repo text, not installed commands — no global
+    skill, no pi command — so the receipts the gate demands are producible only
+    by this unit's own in-development process. Unit 28 proceeds P6–P8 under
+    owner decision D32 (2026-09-01); the gate text is unchanged, and its first
+    non-circular exercise is feature 29's post-merge dogfood (per SPEC
+    Post-merge, which also requires unit 29's missing `planning-obligations.md`
+    to be built first — RS10). Closure: the skills shipped (item 12's publish
+    precondition) **and** one consuming unit reviewed through them.
 12. **The merge-time Pi release depends on an npm account record, not on this
     repository:** `publish-pi-package.yml` publishes whenever
     `LOCAL != PUBLISHED` (an equality-based skip, so it does **not** verify
