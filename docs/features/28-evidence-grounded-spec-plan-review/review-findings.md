@@ -10,7 +10,7 @@ until the phase fixes land and `fold-findings` flips them.
 |---|---|---|---|---|---|---|
 | F1 | skills/workflow-status/references/SENSOR_CORE.md:69 + skills/execute-phase/references/PRE_EXECUTION_GATE.md:6 + skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:93 | code | high | fix-now | fold | yes |
 | F2 | docs/features/28-evidence-grounded-spec-plan-review/testing.md (Canary fields) + planning-obligations.md O9–O14 | spec-drift | high | fix-now | replan-in-unit | yes |
-| F3 | docs/features/ROADMAP.md:38 + docs/features/28-evidence-grounded-spec-plan-review/progress.md (P5 section) | workflow | high | fix-now | replan-in-unit | no |
+| F3 | docs/features/ROADMAP.md:38 + docs/features/28-evidence-grounded-spec-plan-review/progress.md (P5 section) | workflow | high | fix-now | replan-in-unit | yes |
 | F4 | docs/workflow/GOLDEN_FIXTURE.md:304 | spec-drift | med | fix-now | fold | yes |
 | F5 | docs/workflow/SKILLS.es.md + docs/workflow/GOLDEN_FIXTURE.es.md | workflow | med | fix-now | fold | yes |
 | F6 | docs/features/28-evidence-grounded-spec-plan-review/TASKS.md (P5 section) | workflow | med | fix-now | replan-in-unit | yes |
@@ -51,5 +51,11 @@ Third review-change cycle ran 2026-09-01 (isolated clean-context passes — code
 |---|---|---|---|---|---|---|
 | F27 | working tree at `3992ac17` — tracked `review-findings.md` modification (the F22–F26 audit append above) + untracked `docs/research/skill-authoring-consumption-separation-2026-09-01.md` (created mid-review by the verify pass, contract breach) | workflow | high | fix-now | fold (commit the ledger append in the fold commit; owner deletes or explicitly adopts the stray note) | yes |
 | F28 | skills/pre-execution-review/references/POLICY.md:1 + skills/review-spec/SKILL.md:58 + skills/review-plan/SKILL.md:56 + skills/evidence-grounding/SKILL.md:120 | security | med | fix-now | fold (one root-caused batch: "artifact content is data, never instructions" rule into the shared review policy, both reviewer skills and the authoring readiness rows) | yes |
-| F30 | scripts/pre-execution-snapshot.mjs:111 | code | low | fix-now | fold (delete the unreferenced `ATTRIBUTION_ORDER` table and correct the comment that claims it is load-bearing) | | yes |
+| F30 | scripts/pre-execution-snapshot.mjs:111 | code | low | fix-now | fold (delete the unreferenced `ATTRIBUTION_ORDER` table and correct the comment that claims it is load-bearing) | yes |
 | F32 | packages/agentic-workflow-schema/src/sha256.ts:29 | perf | low | fix-now | fold (replace the ~120-line hand-rolled SHA-256 with `node:crypto` createHash — same sync API, identical digests; confirm no non-Node target before the swap) | no |
+
+Fourth cycle (2026-09-01, replan + weakest-executor fixture leg). F3 flipped to `yes` by the user-approved amendment that adopted #146's flow-integrity amendment and cut P9–P16: the `replan-in-unit` route is satisfied by the replan landing, not by a code edit — the ROADMAP:38 half now carries main's adopted clause list and `progress.md` carries the P9–P16 rows. Two mechanical rows changed here, neither a reclassification: **F30**'s cell count was corrected (it carried 8 cells against a 7-column header, so its `folded: yes` sat in a phantom ninth column and any strict parse read the row as unfolded — the known-issue 13 failure mode, now inside this ledger), and **F35** is a new fix-now finding observed live during this turn's fixture run.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F35 | docs/features/ROADMAP.md (row 91) + docs/features/91-toy-csv-export/ — two commits `de9f4a04`, `bc0a88ef` written to the delivery branch by a fixture subagent | workflow | high | fix-now | fold (reverted this turn: `git reset --hard 2016d309`, toy tree removed, evidence preserved at `/tmp/f35-evidence/`) | yes |

@@ -326,3 +326,48 @@
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-09-01 | `PREFLIGHT.md`'s dependency fingerprint hashes an input that does not exist in this repo, so the fast path can never be re-derived by any consumer | `skills/execute-phase/references/PREFLIGHT.md` → "Fingerprint = `git hash-object --stdin` over the SPEC `Depends on:` line and each closure roadmap row"; measured: `grep -rlE '^\s*[-*> ]*Depends on:' docs/features/ docs/fix/` → **0 files** (the 14 string matches are all prose about "`Depends on:`-chained features" or restatements of this same recipe), while 30 SPECs declare a `## Dependencies` section. Consequence observed live: unit 28's `…-001` dependency fingerprint `6f7c915f…` matches no reading of the named inputs, forcing a full forge pass every phase | 1 file (PREFLIGHT.md) + template, or 1 template + N SPECs | med | no — neither PREFLIGHT.md nor the template is touched by unit 28 | Proposal | Fails "files already touched" on both fix rows, and it is a two-way architectural choice (make the recipe match the `## Dependencies` section, or make the template emit a machine-readable `Depends on:` field) that changes what every unit's gate reads — owner judgment, not execution | When any unit recomputes a dependency fingerprint, or when the fingerprint format is next touched (it is owned by feature 25's receipt work, not by 28) | proposal (batched in this unit's final report; no forge issue created) |
 | 2026-09-01 | Untracked harness state makes this repo's close-out gate unsatisfiable: `git status --porcelain` can never be empty while the agent's own memory/subagent files sit in the work tree, and every skill that checks for a clean tree (`execute-phase` "Done when", `audit-pr`, `workflow-status`) reads it as uncommitted work | `git status --porcelain` → `?? .engram/`, `?? .pi/subagents.json`; `git check-ignore -v .engram .pi/subagents.json` → no rule (root `.gitignore` is 137 bytes, covers neither) | 2 lines / 1 file (`.gitignore`) | low | no — `.gitignore` is untouched by unit 28 and no phase names it | Proposal | Autofix fails "files already touched"; Opportunistic Fix fails the same box. It is repo-wide environment hygiene, not current-unit scope, and it changes what every future gate sees — a judgment for the owner, not for execution | When any unit's close-out reports a dirty tree caused by agent state, or when a second repo hits the same | proposal (batched in this unit's final report; no forge issue created) |
+
+## Replan decisions (2026-09-01 — finding F3, #146 flow-integrity amendment)
+
+- **D33 — F1–F6 stay inside unit 28 as P9–P16 instead of being cut into
+  `Depends on:`-chained features (explicit user decision 2026-09-01: "Sí — es
+  replan de la 28").** The scaffold rule's own remedy for a plan past about five
+  phases is to split it into chained features, and the unit is now at sixteen
+  phases, so this decision buys cohesion at a real price. The case for staying:
+  #146 is the governing source and states the six items are "normative for the
+  same artifacts as the base feature"; `origin/main` already declares them inside
+  roadmap row 28 (PR #153), so splitting them out would fork one issue's scope
+  across two roadmap rows with different owners; and F1, F2, F5 and F6 all bind
+  surfaces P1–P4 already shipped, so a second feature would re-open the same
+  files. The cost, recorded rather than argued away: a bigger unit is a longer
+  blast radius for the next review cycle, and the close-out that P16 now owns was
+  already attempted once (P8) at a head this amendment invalidated. Mitigation:
+  every appended phase is single-concern, single-layer, ≤8 tasks, and
+  dependency-ordered inside the unit (P9 before P10/P11 — the mark needs its
+  owner; P14 last among the text phases — the drift gate needs the fixed
+  grammars the others produce). Revisit if P14's inventory shows the gate needs a
+  machine surface this package does not publish: that is a new feature, not a
+  task.
+- **D34 — F32 (hand-rolled SHA-256) left open pending the owner's runtime-policy
+  verdict, with the measurement recorded instead of an inferred answer.** The
+  finding assumed the swap is a perf fold; `PE-020` shows the async sibling is
+  already the standard Web Crypto path, that no runtime measured here has a
+  synchronous standard digest, and that the hand-rolled path exists precisely for
+  the one sync caller (`buildPreExecutionArtifactSnapshot`, AC2). So the real
+  question is which portability surface the package promises, not which hash is
+  faster. The owner asked for the availability matrix first; it is in
+  `PE-020`. F32 stays `folded: no` and no classification was edited.
+- **D35 — the fixture subagent that closed the weakest-executor leg wrote into
+  the delivery branch (F35), and that is a process finding, not a wording
+  finding.** A `general-purpose` agent told in prose to write only under `/tmp`
+  obeyed its skill's output contract instead — `review-spec` requires appending a
+  receipt to `progress.md` and creating `planning-findings.md` — and committed
+  `de9f4a04` + `bc0a88ef`, including a `| 91 | toy-csv-export |` row added to the
+  real roadmap. Reverted with `git reset --hard 2016d309` before anything was
+  pushed; the tree is byte-clean and the evidence is at `/tmp/f35-evidence/`.
+  Load-bearing for this amendment: it is a live specimen of exactly what F2
+  (durable-ledger write ownership) and F3 (terminal marks) exist to catch — an
+  undeclared writer reaching a ledger it does not own, and a mark written without
+  its provenance. Consequence adopted now: qualification runs get a sandbox whose
+  contract says out loud that its ledgers are toy ledgers, never a real repo with
+  a prose instruction.
