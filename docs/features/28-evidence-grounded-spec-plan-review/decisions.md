@@ -132,14 +132,16 @@
   `product`-owned row would silently rewrite authority with candidate code, so
   `loop-review-fold` blocks instead and hands the row to its author plus a re-review;
   the fold-ledger schema is unchanged (the owner rides the existing `route` cell).
-- **D22 — `pre-execution-review` is the single owner of the shared cycle and the
+- **D25 — (numbered `D22` until finding RS7; `D23`/`D24` were already taken) —
+  `pre-execution-review` is the single owner of the shared cycle and the
   ledger shapes, not of verdicts:** `review-spec`/`review-plan` emit verdicts, the
   authoring skills emit readiness, and this internal owner emits nothing — the
   suite asserts that the three ledger column lists appear in exactly one file in
   the tree, which is what keeps the P2 spec-side text and the P3 plan-side text
   from drifting apart later.
 
-- **D22 — Route-ceiling headroom policy (F7, user decision 2026-08-31):** budget
+- **D26 — (numbered `D22` until finding RS7) — Route-ceiling headroom policy (F7,
+  user decision 2026-08-31):** budget
   ceilings are re-baselined to `ceil(measured × 1.10)` at declared re-basis
   points, every ceiling raise must name its real growth source in the commit and
   changelog row, and ceilings are re-based down when trim work lands. Declared
@@ -151,3 +153,144 @@
   measured 16864/1299, F8's re-basis); the remaining 21 routes re-baseline at
   their next declared point. Unblocks F8's fold; the plan-fix:issue
   duplication trim stays with debt item D2 and its recorded trigger.
+
+## Author repair batch — 2026-08-31 (findings RS3, RS8, RS12, RS13, RS14)
+
+- **D27 — the machine manifest is the record of a ceiling, and every declared
+  figure now trails it (RS8 + RS12).** The decision records fell behind the
+  budgets JSON: D19 declared `review-spec:default` at 4690/352 while the manifest
+  carried 11000/800, and D21 declared `plan-feature:scaffold` 12700 /
+  `design-feature:repair` 15800 while the manifest carried 15500/1200 and
+  18000/1300. The bridging commit (`857aa54b`) is the one D26 itself discredits
+  ("misattributed bump rationale"), so no figure is inherited from it and nothing
+  was reconstructed from it here. Re-declared from measurement instead —
+  `node scripts/check-skill-context.mjs --routes --json` at this commit:
+
+  | Route | Measured (est/lines) | Before (est/lines) | Declared now |
+  |---|---|---|---|
+  | `review-spec:default` | 10196 / 725 | 11000 / 800 | **11216** / 800 |
+  | `review-plan:default` | 11605 / 775 | 12500 / 850 | **12766 / 853** |
+  | `design-feature:product` | 11940 / 849 | 11950 / 864 | **13135 / 934** |
+  | `design-feature:repair` | 17284 / 1219 | 18000 / 1300 | **19013 / 1341** |
+  | `plan-feature:scoped` | 7496 / 620 | 7610 / 643 | **8246 / 682** |
+  | `plan-feature:scaffold` | 14334 / 1093 | 15500 / 1200 | **15768 / 1203** |
+  | `plan-feature:issue` | 9765 / 782 | 9970 / 814 | **10742 / 861** |
+  | `review-change:default-backend` / `:default-web` | 12540 / 926 | 12750 / 949 | **13795 / 1019** |
+  | `review-change:synthesize` | 13007 / 948 | 13240 / 972 | **14308 / 1043** |
+  | `review-change:adversarial` | 14192 / 1034 | 14485 / 1062 | **15612 / 1138** |
+
+  Growth source for each raise is the same event: D26's declared floor became
+  machine-enforced (below), so every route under it had to be re-baselined at one
+  declared point instead of tripping mid-correction. `audit-pr:feature/fix`
+  (9501/614) and `plan-fix:issue` (18551/1429) already sat exactly on the floor
+  from D26's own re-basis and were not touched, and the twelve routes at or above
+  10 % (`execute-phase:*` 20–22 %, `loop-review-fold:default` 36 %) were not
+  lowered: re-basing **down** stays a declared act tied to trim work (debt item
+  D2), never a side effect of this check.
+  Rule adopted with it: a decision record that names a ceiling states the
+  measured value beside it, and the manifest is authoritative when the two differ.
+  **Superseded for seven route entries by D31**, which re-based the same manifest
+  inside the same batch: this table was measured before the batch finished editing
+  the reference files its routes load.
+
+- **D28 — the headroom policy binds mechanically (RS12).** D26 was recorded in
+  `SKILL_CONTEXT_BUDGETS.json` as a `policy` block that **nothing read**:
+  `scripts/check-skill-context.mjs` compared measured against
+  `routeEstimateMax`/`routeLinesMax` and stopped there. The check now reads
+  `policy.relative-headroom` and fails any route whose ceiling sits below
+  `ceil(measured × (1 + headroom))`, naming both numbers, while a ceiling the
+  measured value has already passed stays reported as the tighter fault (the
+  breach, not the floor). The floor is deliberately one-way — trim widens
+  headroom and must not be punished by a check that demands a re-basis. Covered by
+  `scripts/check-skill-context.test.mjs`: an inflated declared headroom fails the
+  estimate and the lines dimension separately, and the **shipped** manifest must
+  satisfy its own policy. Counter-evidence against the finding's magnitude, kept
+  visible rather than silently dropped: RS12 claimed "21 of 23 routes still sit at
+  0.08–2.1 % headroom"; measured before this repair it was **11 of 23** routes
+  below the 10 % floor (0.08 %–10.34 %, 11 on estimate and 10 on lines), with the
+  other twelve at or above it. The defect was real; the count was not.
+
+- **D29 — snapshot identity is content-derived, and `verify` names what drifted
+  (RS3(b), RS13).** Two halves, both in the mechanical sensor:
+  1. `build` defaulted `sourceRevision`/`artifactRevisionId` to live `HEAD`, so the
+     canonical digest rotated on every commit — including the one that records a
+     receipt, and any commit touching no bound path. That makes a content-bound
+     verdict expire for reasons unrelated to content, which is the failure mode
+     RS3(b) names. The default is now the newest commit touching the snapshot's own
+     bound paths (artifacts plus context sources), with `--source-revision` /
+     `--artifact-revision` still overriding for an explicit authoring-event id.
+  2. `verify` passed the *current* snapshot object as both the reviewed and the
+     current input of the schema comparator, so its precedence-1
+     `missing-receipt-snapshot` branch always won and no consumer could ever learn
+     *which* bound file moved — the gate block asks for exactly that. `verify` now
+     attributes the drift from what the receipt actually records, in the
+     comparator's own precedence order and only with codes from
+     `PRE_EXECUTION_FRESHNESS_CODES`.
+     Chosen deliberately over reconstructing a synthetic "reviewed" snapshot to
+     feed the comparator: that would have manufactured the object the comparator
+     exists to check, laundering a guess into a verdict. Rejected instead: letting
+     the script keep a private precedence list, which would drift from the contract
+     the header of the same file promises it cannot.
+
+- **D30 — a fix unit's Plan snapshot binds no parent (RS14).** The contract said
+  every `stage: plan` snapshot requires a non-null `parentSpecSnapshotDigest`
+  (`plan-stage-requires-parent`), while the only sanctioned `stage: spec` binding
+  was `spec-product-v1`, which requires the Product-half headings
+  `Goal, Branch, Size, Dependencies, Product half, Design status`. A fix unit has
+  no Product half by design — P3's own task text keeps fix authority in
+  reproduction/root-cause/regression/rollback "without a fake Product half", and
+  `PRE_EXECUTION_GATE.md` states fix mode has no Product hop to substitute — so the
+  documented recipe (`SNAPSHOT.md`: "a fix unit passes its own SPEC snapshot
+  digest") was unreachable for **every** fix unit, proven before this change by
+  `node scripts/pre-execution-snapshot.mjs build --stage spec --dir
+  docs/fix/78-audit-pr-closure-integrity --unit fix-78 --unit-kind fix` →
+  `snapshot refused: invalid-selector@/files/0/content`. The rule is narrowed to
+  `stage == plan && unitKind == feature`; a fix plan snapshot carries
+  `parentSpecSnapshotDigest: null` and its receipt says so. This is a semantic
+  change to a contract, so its boundaries are explicit: the pre-execution surface
+  is new and unreleased in `3.5.0`, no published consumer can observe it, AC2's
+  feature-side Product→Plan parent binding is unchanged and still tested, and AC9's
+  frozen candidate `CandidateSnapshot`/`ReviewReceipt` and staged
+  `VerificationPlan`/`VerificationReceipt` meanings are untouched. Rejected:
+  inventing a Product half in the fix template (contradicts D6 and the fix
+  workflow's authority model), and adding a second selector vocabulary entry
+  (more surface for the same answer — a fix unit has nothing to parent, not
+  something to bind differently).
+
+- **D31 — second declared re-basis inside the RS batch (2026-09-01): a plan that
+  measures its own ceilings must measure them last (RS-batch regression found by
+  the check D28 added).** After the reference-file edits landed, `check-skill-context.mjs
+  --routes` failed 14 rows across seven route entries: D27's declared ceilings were
+  computed **before** this batch grew `skills/pre-execution-review/references/
+  SNAPSHOT.md` (+51 lines, the RS14/RS3/RS13 remedy text), `skills/review-plan/
+  references/{CHECKS,OUTPUT}.md` and `skills/audit-pr/references/
+  02_CLOSURE_AND_SCOPE_GATES.md` — so the batch invalidated its own declaration
+  while still uncommitted. Re-based at `ceil(measured × 1.10)` measured at this
+  commit, growth source = this RS-repair batch's own reference edits:
+
+  | Route | Measured (est/lines) | D27 declared | Declared now | Grew via |
+  |---|---|---|---|---|
+  | `audit-pr:feature` / `:fix` | 8675 / 560 | 9501 / 614 | **9543 / 616** | audit-pr `02_CLOSURE_AND_SCOPE_GATES.md` |
+  | `review-spec:default` | 10791 / 758 | 11216 / 800 | **11871 / 834** | SNAPSHOT.md |
+  | `review-plan:default` | 12420 / 814 | 12766 / 853 | **13663 / 896** | CHECKS.md + OUTPUT.md + SNAPSHOT.md |
+  | `plan-feature:scaffold` | 14929 / 1126 | 15768 / 1203 | **16422 / 1239** | SNAPSHOT.md |
+  | `plan-fix:issue` | 17459 / 1332 | 18551 / 1429 | **19205 / 1466** | SNAPSHOT.md |
+  | `design-feature:repair` | 17879 / 1252 | 19013 / 1341 | **19667 / 1378** | SNAPSHOT.md |
+
+  `design-feature:product`, `plan-feature:{scoped,issue}`, `plan-feature:*` and the
+  `execute-phase:*` / `loop-review-fold:default` routes kept D27's or looser
+  ceilings — nothing under the floor there. `plan-fix:issue` is raised although
+  debt item D2 still owns its trim: the raise and the trim are separate declared
+  acts, and the trim re-bases **down** when it lands.
+
+  Rule adopted with it: **a declared re-basis is the last content act of a batch
+  that grows route files**, measured with `--routes --json` after every
+  skill/reference edit — never mid-batch. That the failure was caught by the gate
+  rather than by the next unrelated unit is D28 working as intended: the floor was
+  only declarable before, now it is checkable.
+
+## Out-of-scope finding ladder — 2026-09-01
+
+| Date | Finding | Evidence | Estimate | Risk | Local files | Decision | Why | Trigger | Record |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-09-01 | Untracked harness state makes this repo's close-out gate unsatisfiable: `git status --porcelain` can never be empty while the agent's own memory/subagent files sit in the work tree, and every skill that checks for a clean tree (`execute-phase` "Done when", `audit-pr`, `workflow-status`) reads it as uncommitted work | `git status --porcelain` → `?? .engram/`, `?? .pi/subagents.json`; `git check-ignore -v .engram .pi/subagents.json` → no rule (root `.gitignore` is 137 bytes, covers neither) | 2 lines / 1 file (`.gitignore`) | low | no — `.gitignore` is untouched by unit 28 and no phase names it | Proposal | Autofix fails "files already touched"; Opportunistic Fix fails the same box. It is repo-wide environment hygiene, not current-unit scope, and it changes what every future gate sees — a judgment for the owner, not for execution | When any unit's close-out reports a dirty tree caused by agent state, or when a second repo hits the same | proposal (batched in this unit's final report; no forge issue created) |

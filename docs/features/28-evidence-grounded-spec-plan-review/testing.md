@@ -9,6 +9,7 @@
 | Package content | version 3.5.0 and both new schema files are publishable | `cd packages/agentic-workflow-schema && npm pack --dry-run` |
 | Pi distribution | canonical root skills are rebuilt into the Pi package with byte parity and routed/package tests green | `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` |
 | Workflow text contracts | progressive readiness, SPEC/Plan/fix review, planning-evidence/obligation ledgers, independence, batched repair, convergence anomaly, no-progress, legacy, routing | `node --test scripts/pre-execution-quality.test.mjs` |
+| Snapshot sensor and drift attribution | content-derived snapshot identity survives an unbound commit and a receipt-recording commit; `verify` names the drifted dimension with a contract code and the bound paths that moved; a feature plan without `--parent` fails with the remedy; a fix plan binds `null` (findings RS3(b), RS13, RS14 — D29, D30) | `node --test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` |
 | Existing loop/audit regression | local fold remains source-local; upstream defects route backward; audit authority unchanged | `node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` |
 | Context/distribution | every entrypoint remains within budget and intended skills are installable | `node scripts/check-skill-context.mjs`; `npx skills add . --list` |
 | Manual weak-executor route | no invented stage, bypass, automatic issue, or post-PASS artifact edit | dated PASS record in `docs/workflow/GOLDEN_FIXTURE.md` |
@@ -221,7 +222,7 @@ real.
 | node scripts/check-skill-context.mjs --routes | PASS — 23 routes, ceilings bumped for SNAPSHOT.md and planning-obligations.md |
 | cd packages/pi-agentic-workflow && npm run bundle:skills | bundled 38 skills (122 files) — excluded: bump-skill |
 | cd packages/pi-agentic-workflow && npm test | 134/134 pass |
-| npx skills add . --list | 39 skills, evidence-grounding and review-spec internal, review-plan discoverable |
+| npx skills add . --list | ~~39 skills~~ → **38 skills** — corrected 2026-09-01 during reconciliation of the author repair batch: `evidence-grounding` and `review-spec` are internal but still listed, `bump-skill` is the one the CLI does not discover (39 SKILL.md files on disk, CLI reports `Found 38 skills`); 39 is the `check-skill-context` count, a different metric |
 
 **Golden fixture:**
 | Command | Result |
@@ -234,7 +235,40 @@ real.
 | cd packages/agentic-workflow-schema && npm test | 671/671 pass |
 | cd packages/agentic-workflow-schema && npm run check:pre-execution-schemas | PASS — drift-free (2 files) |
 | cd packages/agentic-workflow-schema && npm pack --dry-run | PASS — version 3.5.0, both new schema files publishable |
-| node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs | 15+3/15+3 pass |
+| node --test scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs | 15/15 pass (audit-pr-receipt 14 + bounded-delivery-loops 1) |
 
 Residual risks: (1) spec-review-pass authority is contractual (known-issues.md item 9); (2) the Pi bundle was rebuilt from canonical at P5 because skill changes must stay distributable — version bump from 0.1.0 to 0.2.0 required as final step; (3) no second repair/re-review cycle was needed during qualification — all review gates cleared on first run.
+
+**Corrected 2026-08-31 (review finding RS6).** The row above read
+`15+3/15+3 pass` and `progress.md`'s P5 table read `18/18 pass`; neither is
+what the command produces. Ground truth, re-run at this repair:
+`node --test scripts/bounded-delivery-loops.test.mjs
+scripts/audit-pr-receipt.test.mjs` → exit 0, `tests 15 · pass 15 · fail 0`
+(14 from `audit-pr-receipt.test.mjs`, 1 from `bounded-delivery-loops.test.mjs`).
+The `+3` and the `18` counted nothing that exists; the F4 fold had corrected
+only the `GOLDEN_FIXTURE.md` copy of this figure, which is why the
+contradiction stood in two ledgers. Item (3) above is superseded by the
+2026-08-31 re-plan: the qualification evidence it asserted was incomplete
+(findings F2+F3+F6) and is produced by P6–P8.
+
+**Corrected 2026-09-01, during reconciliation of the author repair batch (same
+defect class as RS6).** The P5
+row above recorded `npx skills add . --list` → `39 skills`; measured at this commit
+the CLI prints `Found 38 skills` (it does not discover `bump-skill`, while the
+internal `evidence-grounding`/`review-spec` *are* listed — the P1 row already said
+38). The `39` belongs to `node scripts/check-skill-context.mjs`, a different
+metric. Re-run of the whole ladder at this commit, after the D29/D30 contract work
+and the D31 re-basis:
+
+| Command | Result |
+|---|---|
+| `cd packages/agentic-workflow-schema && npm test` | 674/674 pass (671 at P5 + 3 cases from D29/D30) |
+| `cd packages/agentic-workflow-schema && npm run check:pre-execution-schemas` | PASS — drift-free (2 files) |
+| `node --test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` | 22/22 pass (new suites: RS3(b), RS13, RS14) |
+| `node --test scripts/pre-execution-quality.test.mjs` | 46/46 pass |
+| `node --test scripts/*.test.mjs` (root) | 127/127 pass |
+| `node scripts/check-skill-context.mjs` | PASS — 39 skills |
+| `node scripts/check-skill-context.mjs --routes` | PASS — 23 routes (ceilings re-based per D31) |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | bundled 38 skills (122 files); 134/134 pass — byte parity was **red** before this reconciliation (AC2 bundle test failed on 7 drifted reference files) |
+| `npx skills add . --list` | Found 38 skills |
 

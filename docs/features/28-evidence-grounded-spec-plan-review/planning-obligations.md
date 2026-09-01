@@ -8,11 +8,19 @@ qualification obligations O9–O14 are re-mapped to the appended phases
 (P6 corpus/fixture evidence, P7 reconciliation, P8 terminal re-review).
 Statuses remain as recorded until each row's evidence lands.
 
+Repaired 2026-08-31 (review finding RS4): rows O3 and O4 carried the closed
+verdict vocabulary with unescaped `|` separators inside the
+`affected-use-case-or-invariant` cell, so a strict nine-column parse shifted
+every later column of those two rows (the verdicts read as `phase`, `task`,
+… and the `status` column landed past the end). The same words are now joined
+with commas, which keeps the nine-column contract parseable and the vocabulary
+visible; no verdict, validator, evidence or status changed.
+
 obligation-id | authority-source | affected-use-case-or-invariant | phase | task | implementation-owner | validator | required-evidence | status
 O1 | AC1 | strict PreExecutionArtifactSnapshot v1 and PreExecutionReviewReceipt v1 public-entry suites, canonical vectors, bounded diagnostics | P1 | Publish pre-execution evidence contracts | execute-phase | `cd packages/agentic-workflow-schema && npm test` | exit 0 with all new and existing suites green | verified
 O2 | AC2 | package tests prove exact-content and artifactRevisionId binding, Product-to-Plan parent binding, drift precedence, authoring-event revert non-resurrection, rejection of candidate review/verification receipts | P1-P2 | Publish contracts / Establish Product review readiness | execute-phase | package test assertions | exit 0, assertions pass | verified
-O3 | AC3 | node --test scripts/pre-execution-quality.test.mjs exits 0 with fixtures showing review-spec is read-only, checks product/role/capability/expectation/acceptance closure, returns exactly SPEC-REVIEW-PASS | SPEC-REVIEW-FAIL | NEEDS-DESIGN | P2 | Establish Product review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, 25/25 | verified
-O4 | AC4 | review-plan covers both feature and fix units, reconciles every obligation to a phase/task/validator/closure condition, returns exactly PLAN-REVIEW-PASS | PLAN-REVIEW-FAIL | NEEDS-DESIGN | P3 | Establish Plan review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, 39/39 | verified
+O3 | AC3 | node --test scripts/pre-execution-quality.test.mjs exits 0 with fixtures showing review-spec is read-only, checks product/role/capability/expectation/acceptance closure, returns exactly one of SPEC-REVIEW-PASS, SPEC-REVIEW-FAIL, NEEDS-DESIGN | P2 | Establish Product review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, 25/25 | verified
+O4 | AC4 | review-plan covers both feature and fix units, reconciles every obligation to a phase/task/validator/closure condition, returns exactly one of PLAN-REVIEW-PASS, PLAN-REVIEW-FAIL, NEEDS-DESIGN | P3 | Establish Plan review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, 39/39 | verified
 O5 | AC5 | evidence grounding never emits approval, feature issues stop for review-spec before Engineering-half planning, fix issues route plan-fix -> review-plan, unsupported claims remain explicit unknowns | P2 | Establish Product review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, fixtures pass | verified
 O6 | AC6 | root fixtures reject blank/partial/deferred/issue-exported current-unit obligations, accept n/a only with non-contradictory evidence, every accepted row has phase/owner/validator/evidence/verified closure | P2 | Establish Product review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, fixtures pass | verified
 O7 | AC7 | root fixtures prove clean-context review, author-exclusion where identities available, unioned findings, counter-evidence-only dismissal, truthful diversity labels, bounded critique/synthesis, changed-snapshot-or-named-question no-progress enforcement | P3 | Establish Plan review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, fixtures pass | verified

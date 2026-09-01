@@ -79,10 +79,14 @@ finding.
 
 > **Re-plan 2026-08-31** (user-approved amendment, findings F2+F3+F6, all
 > `replan-in-unit`): rows 1–3 above are complete with evidence in
-> `testing.md`'s P5 record. Rows 4–7 are superseded: the golden-fixture and
+> `testing.md`'s P5 record. Rows 4–8 are superseded: the golden-fixture and
 > canary-corpus work moves to **P6**, ledger/status reconciliation to **P7**,
-> and the re-review + PR close-out to **P8** (the 0.2.0 bump commit `a42c244b`
-> and PR #155 already exist; P8 verifies them on the terminal candidate).
+> and the re-review + PR close-out to **P8**. Row 8 is listed as superseded for
+> the same reason although its substance already executed — the 0.2.0 bump commit
+> `a42c244b` and PR #155 exist — so P8 *verifies* the bump, the release notes and
+> the PR on the terminal candidate instead of re-doing them, and it inherits the
+> publish precondition recorded in `SPEC.md` → Deploy (known-issue 12). (Row 8 was
+> missing from this list until finding RS9.)
 
 ## P6 — Run the pre-execution qualification corpus
 
@@ -114,7 +118,11 @@ Layer: close-out · Done-when: terminal HEAD holds a current context-clean
 passes at terminal HEAD; the frozen ACCEPTANCE manifest is verified; roadmap
 row 28 reads `done · [#155]`.
 
-- [ ] Run context-clean `review-change` on the terminal HEAD and record the exact-HEAD receipt in `progress.md`.
+- [ ] Record **all** current review evidence at terminal HEAD: a context-clean
+      `review-change` PASS receipt for the exact HEAD **and** re-derived
+      `SPEC-REVIEW-PASS` + `PLAN-REVIEW-PASS` receipts for the same HEAD (finding
+      RS3(c) — the repair commits rotate both pre-execution digests, so closing
+      without re-running them would close on stale evidence).
 - [ ] Fold every new fix-now finding via `fold-findings`; route unresolved rows to `triage-issue --prioritize-now` per `loop-review-fold` step 5.
 - [ ] Re-run the package gates at terminal HEAD: schema `npm test`, root `node --test scripts/*.test.mjs`, `check-skill-context` (skills + routes), Pi `bundle:skills && npm test`, `npx skills add . --list`.
 - [ ] Verify the complete frozen ACCEPTANCE manifest at terminal HEAD and record the verification receipt in `progress.md`.

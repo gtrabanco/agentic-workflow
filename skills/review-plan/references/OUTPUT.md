@@ -25,11 +25,12 @@ One `PreExecutionReviewReceipt v1`
 - Prior plan receipt (re-review only): <receipt-id> @ <snapshot digest> or `none — first cycle`
 ```
 
-The two parent lines are not optional decoration. A Plan receipt that cannot name
-the exact Product snapshot it descends from binds no lineage, so it cannot be
+The two parent lines are not optional decoration. A feature Plan receipt that cannot
+name the exact Product snapshot it descends from binds no lineage, so it cannot be
 quoted by `execute-phase`: report `PLAN-REVIEW-FAIL` with `class: plan` and the
-`L1` check id instead of emitting a parentless PASS. A fix unit states its parent
-as the fix SPEC's own snapshot digest and adds
+`L1` check id instead of emitting a parentless PASS. A fix unit writes
+`- Parent SPEC snapshot: null` — the contract forbids a parent on a fix plan
+snapshot (D30) — and adds
 `- Parent note: fix unit — no Product half exists (D6)`; it never borrows another
 unit's Product receipt and never fabricates a Product half to satisfy the field.
 
@@ -94,7 +95,7 @@ into `review-change → fold-findings`, which repairs source, not plan authority
 
 ```text
 ✓ Snapshot digest computed from one revision and pasted; no mixed-revision bytes
-✓ Parent SPEC snapshot + parent Product receipt named (fix units: parent note)
+✓ Parent lineage named: feature → exact Product snapshot + Product receipt; fix → `null` + parent note (never a borrowed or fabricated Product)
 ✓ L1–L6 resolved, and every applicable P/F check resolved to pass / finding / n/a
 ✓ Obligation ledger swept row by row: none blank, deferred, duplicated, unvalidated
 ✓ One verdict block returned verbatim from the closed set

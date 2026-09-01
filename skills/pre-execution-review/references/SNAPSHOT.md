@@ -33,9 +33,13 @@ Rules the builder enforces and no caller may improvise around:
   embeds `### Planning evidence` / `### Obligations`, so those rows are absent and
   their bytes are already bound by the `spec` row. Never point a row at a file that
   does not exist to make the set look complete.
-- **Feature `plan` snapshots require `--parent`**: the Product snapshot digest from
-  the newest current `SPEC-REVIEW-PASS`. A fix unit passes its own SPEC snapshot
-  digest and says so in the receipt (D6).
+- **A feature `plan` snapshot requires `--parent`**: the Product snapshot digest from
+  the newest current `SPEC-REVIEW-PASS`. A **fix** unit binds **no parent at all**
+  (`parentSpecSnapshotDigest: null`) and says so in the receipt: it has no Product
+  half, and the only `stage: spec` binding this repository sanctions is
+  `spec-product-v1`, which cannot select a half that does not exist (D6, D30).
+  Passing a fix unit's own SPEC bytes off as a parent is refused by the contract,
+  because the field means "the Product review I descend from".
 - **Context rows are the authorities actually consulted**, each `present` with its
   digest or `absent` with `null`: `roadmap-row`, `project-guide`,
   `normalized-repository-state`, `architectural-invariants` (the *project's* declared
@@ -49,16 +53,41 @@ Rules the builder enforces and no caller may improvise around:
 
 ```bash
 node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit <NN-slug|fix-N> \
-  [--receipt <receipt-id-or-digest>]
+  [--dir <artifact-dir>] [--unit-kind <feature|fix>] [--receipt <receipt-id-or-digest>] \
+  [--parent <64-hex>] [--policy <version>] [--source-revision <sha>] [--artifact-revision <id>]
 ```
+
+`verify` shares the builder with `build`, so a feature plan check needs `--parent`
+like the build did, and a fix check must omit it — the snapshot it re-derives has to
+be the same shape the reviewer bound, or the comparison is meaningless.
 
 It reads the unit's `progress.md`, takes the newest block for that stage (or the one
 you name), re-derives the digest from the bytes on disk, and prints
 `{current, receipt, observedDigest, digestMatches, verdictIsPass, structural}`.
 
+`structural` is the **attribution** (finding RS13): `{fresh, reasonCode, detail,
+changedPaths}`. A consumer holds only the digest a receipt recorded, never the
+reviewed snapshot object, so the sensor answers from the identity lines the receipt
+itself pins (Stage, Unit, Unit kind, Policy, Source revision, Parent SPEC snapshot,
+Artifact revision) plus git evidence over exactly the paths the snapshot binds — in
+`comparePreExecutionReceiptToSnapshot`'s documented precedence, and only with codes
+from `PRE_EXECUTION_FRESHNESS_CODES`. It never fabricates a reviewed object to feed
+the comparator: that would be evidence forgery wearing a real reason code. The parity
+between the two is asserted case by case in
+`scripts/pre-execution-attribution.test.mjs`; `scripts/pre-execution-sensor.test.mjs`
+drives the CLI end to end in a throwaway repository.
+
+`changedPaths` names files only for the dimensions git can actually explain
+(`stale-context`, `stale-source-revision`, `stale-artifact-content`). A lineage
+report names none: when `stale-parent` fires, the moved bytes belong to the *Product*
+snapshot, and pointing at this snapshot's own files would claim a cause the report
+cannot see.
+
 - exit `0` — current **and** the verdict is that stage's PASS: the consumer may act;
 - exit `3` — no receipt for the stage (`missing-receipt-snapshot`), which includes a
-  block whose `Snapshot:` field is prose instead of a digest;
+  block whose `Snapshot:` field is prose instead of a digest. That code means *"this
+  receipt binds nothing I can read"* and nothing else: drift always gets its own
+  dimension, which is the half of RS13 a consumer can act on;
 - exit `4` — a receipt exists but is no longer current, or is not a PASS: route to
   the stage's review, never to the authoring skill.
 
@@ -71,7 +100,11 @@ grants a verdict — only a reviewer turn writes the block.
 
 The author's `artifactRevisionId` is the field that lets a reviewer prove its own
 write landed. Rotate it on **every** write, including a revert, and rebuild the
-snapshot after: `--artifact-revision <new-id>` (the builder defaults it to the current
-`HEAD` sha, which is already a fresh value once the write is committed). A reviewer
-that sees the same revision as the previous receipt re-uses the previous verdict's
-context and must refuse to start.
+snapshot after: `--artifact-revision <new-id>` (left unset, the builder derives both
+`sourceRevision` and `artifactRevisionId` from the newest commit that touched a path
+this snapshot binds — not from live `HEAD`, which rotated every receipt on every
+unrelated commit, including the commit that recorded it: RS3(b)). A named authoring
+event is still the stronger record: prefer an explicit id such as
+`28-spec-repair-rs-20260831` over the derived sha. A reviewer that sees the same
+revision as the previous receipt re-uses the previous verdict's context and must
+refuse to start.
