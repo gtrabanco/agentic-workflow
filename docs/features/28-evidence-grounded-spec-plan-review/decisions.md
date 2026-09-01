@@ -516,3 +516,65 @@
   sentences against the consumers that cite them (P14). The citation form the P14
   gate will read is the literal ``POLICY.md` §7` / ``POLICY.md` §8`, already in both
   reviewers' turn-contract boxes.
+
+- **D40 — P11: the durable review mark is a row of the ledger it proves, and its
+  freshness is the SHA equality the repo already runs.** AC20 needs one artifact
+  that says "`review-change` ran against *this* state" for a review whose finding
+  set is empty, and it forbids the sensor's old inference (the presence of any row
+  in `review-findings.md`). The mark is therefore declared as `review-mark@1` in
+  `pre-execution-review`'s `LEDGERS.md` — one row of the unit's existing
+  `review-findings.md` fold ledger, in that ledger's existing seven columns, with
+  `file:line` bound to the reviewed head sha and every other cell `n/a` because the
+  row reports no finding. Two consequences were chosen deliberately. (1) It is a
+  row, so the map declares its writer: `review-change:review-mark` was added to the
+  `review-findings` owner cell **and** to both `_TEMPLATE/LEDGERS.md` projections in
+  the same commit, because P9's and P10's shared gotcha is that a mark whose home the
+  map does not declare is unownable, and `scripts/ledger-ownership.test.mjs` fails
+  drift in either direction. (2) The `n/a` cells are not padding: they are what keeps the mark out of
+  the fix-now projection, out of `fold-findings`, and out of the provenance annotator
+  (whose row pattern matches `F<n>` ids only), so one row shape carries both findings
+  and the mark without either reader mis-reading the other.
+  Alternatives rejected, with reasons: a **new ledger file** for review marks (a new
+  map row, a new template projection, a new lifecycle and a new snapshot concern for
+  one line, and it splits "what `review-change` wrote about this unit" across two
+  homes); a **`progress.md` marker line** (that ledger's owners are
+  `plan-feature-scaffold`, `execute-phase` and the two pre-execution reviewers —
+  `review-change` writes nothing there, so the line would have no column set to
+  own); a **fenced marker block** inside the ledger (a shape outside the table is not
+  a row, so the ownership map cannot declare it — exactly the failure mode AC16/O16
+  exists to prevent); and **reusing `review-change`'s PR `REVIEW-PASS` receipt** as
+  the mark (it is PR-scoped, it is `audit-pr`'s merge-gate evidence, and a unit with
+  commits but no PR — every unit between `execute-phase` and its first push,
+  including this phase's own candidate — would have nowhere to carry it; AC20 binds
+  the proof to the *unit's current state*, not to the existence of a pull request).
+  No second freshness mechanism was added: the mark names the head sha and the sensor
+  tests equality, which is the rule `audit-pr` already applies to a SHA-bound receipt
+  and `progress.md`'s `Last reviewed: <sha>` marker already uses, so "a mark an older
+  commit left behind" is stale by a rule with one owner. The new suite proves that
+  refusal as a computed decision (its third case), because a mark that survived later
+  commits would make the whole change a rubber stamp.
+  Units whose fold ledger predates the mark now read review-pending until a review
+  runs at the current head, and nothing was backfilled: a backfilled mark would
+  attest an act that left no trace, which §8's replay refusal already forbids.
+  Budget: `LEDGERS.md` grew 2659 → 2877 estimate units and `pre-execution-review`'s
+  own `referenceEstimateMax: 2915` did **not** move (its max file is still under the
+  D39 ceiling, so that ceiling is still its measured floor), while the five routes
+  that load the skill moved from their D39 floors to their P11 floors (estimate /
+  lines): `design-feature:repair` 21793/1488 → 22039/1509, `plan-feature:scaffold`
+  18548/1349 → 18794/1370, `plan-fix:issue` 21331/1576 → 21577/1597,
+  `review-plan:default` 15818/1007 → 16065/1028, `review-spec:default` 14011/946 →
+  14258/967. `workflow-status` is in no declared route and both files it grew
+  (`SENSOR_CORE.md` 1811 → 1873, `PRE_EXECUTION.md` 1097 → 1266) stay under the
+  default 2200 reference ceiling, so no ceiling of its own moved; nothing was
+  lowered to hide growth and nothing was raised twice. `pre-execution-review` 1.4.0 →
+  1.5.0 and `workflow-status` 3.0.3 → 3.1.0 are `minor` under `bump-skill`, so both
+  changelog tables, both README-language cells, `SKILLS.md`/`SKILLS.es.md`, the
+  human-facing `FEATURE_WORKFLOW.md`/`.es.md` ledger paragraph and the Pi mirror
+  (rebuilt to byte parity, 38 skills / 122 files) moved with them.
+  Proposal for the phase that owns it — **P14**: `review-change`'s own persist
+  reference (`PERSIST_AND_DECIDE.md` step 11) still describes only finding rows, so
+  the skill the map now names as the mark's writer does not yet cite the column set
+  it owns. Its obligation derives from §8 plus the map, which is why P11 left the
+  text alone rather than widen two more route budgets in a `docs` phase; the drift
+  gate should pin `review-change`'s persist step against
+  `review-change:review-mark` the way it pins the two reviewers against §7/§8.

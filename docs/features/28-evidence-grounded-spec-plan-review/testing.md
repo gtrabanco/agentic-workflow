@@ -403,3 +403,57 @@ no longer says the parent SPEC digest is "copied from the receipt": the box now
 cites §7, which states the identity-value rule as recompute-and-record-the-claim-
 beside-it. P14's drift gate compares the two sentences through that literal
 `POLICY.md` §7 / §8 citation form.
+
+### P11 (2026-09-01) — Clean reviews proved by a durable mark (AC20 / O20)
+
+**Red first, twice over, and reproducible.** The suite was written against the
+shape before the shape existed, and it re-points its repository reads through
+`WORKFLOW_STATUS_PRE_EXECUTION_REPO` (P9/P10's convention, applied to this file):
+
+```sh
+git archive 35a5a0b0 | tar -x -C /tmp/p11-red        # the tree before P11
+cp scripts/workflow-status-pre-execution.test.mjs /tmp/p11-red/scripts/
+WORKFLOW_STATUS_PRE_EXECUTION_REPO=/tmp/p11-red node --test /tmp/p11-red/scripts/workflow-status-pre-execution.test.mjs
+# → tests 6 · pass 0 · fail 6 · exit 1
+#   every case: "LEDGERS.md declares no review-mark@1 row shape"
+
+# then: only P11's ledger surface on the pre-P11 tree, sensor docs still old
+git archive 35a5a0b0 | tar -x -C /tmp/p11-red2
+cp scripts/workflow-status-pre-execution.test.mjs /tmp/p11-red2/scripts/
+for f in skills/pre-execution-review/references/LEDGERS.md skills/pre-execution-review/SKILL.md \
+         docs/features/_TEMPLATE/LEDGERS.md docs/fix/_TEMPLATE/LEDGERS.md; do cp "$f" "/tmp/p11-red2/$f"; done
+WORKFLOW_STATUS_PRE_EXECUTION_REPO=/tmp/p11-red2 node --test /tmp/p11-red2/scripts/workflow-status-pre-execution.test.mjs
+# → tests 6 · pass 4 · fail 2 · exit 1   (the SENSOR_CORE and PRE_EXECUTION pins)
+```
+
+The first run is red because a clean review had nothing to write; the second is the
+isolation proof that matters — adding the row shape alone leaves the two sensor
+surfaces failing, so the fixtures bind the **keying**, not just the vocabulary.
+Fixture state is assembled from the parsed `review-mark@1` cells, so no case can
+pass on a tree that never declared the mark.
+
+| Gate | Result |
+|---|---|
+| `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 — 6/6 (AC20's two fixtures, the stale-mark control, the single-owner/shape pin, and the two sensor-text cases) |
+| same suite on `git archive 35a5a0b0` | exit 1 — 0 pass / 6 fail (red first) |
+| same suite on that tree + P11's ledger surface only | exit 1 — 4 pass / 2 fail (sensor keying still unpinned) |
+| `node --test scripts/*.test.mjs` (root) | exit 0 — 156/156 (150 before P11 + 6 new) |
+| `node --test scripts/ledger-ownership.test.mjs` | exit 0 — 18/18, with `review-change:review-mark` in the map and both projections |
+| `node --test scripts/pre-execution-quality.test.mjs` / `scripts/review-receipt.test.mjs` | exit 0 — 53/53 and 16/16 (AC17's own validator and the receipt contract still green; neither was edited) |
+| `node scripts/check-skill-context.mjs` | exit 0 — 39 skills (`pre-execution-review`'s `referenceEstimateMax: 2915` unmoved; its `LEDGERS.md` measured 2877) |
+| `node scripts/check-skill-context.mjs --routes` | exit 0 — 23 routes after the five declared re-bases (D40) |
+| `cd packages/pi-agentic-workflow && bun run bundle:skills && bun run test` | exit 0 — 38 skills / 122 files bundled, 134/134 tests |
+| `npx skills add . --list` | exit 0 — `workflow-status` listed (3.1.0), discoverability intact |
+
+**Fixtures proven as computed decisions (not file-existence assertions).** A
+zero-finding review carrying the mark reports `review-ran` (`review_pending: false`)
+and projects **no** fix-now item; a ledger of finding rows with no mark reports
+`no-mark` and stays review-pending while its open finding still folds normally, so
+everything the old rule proved is still proven and the thing it got wrong is no
+longer guessed; and the negative control shows a mark bound to an older head
+answers `stale-mark` — the same ledger read at that older revision answers
+`review-ran`, which is what makes the mark state-bound rather than unit-bound. A
+re-run appends a second mark and the newest one is read, so marks stay history.
+`review-mark@1` is asserted to appear in exactly one shipped file, and both sensor
+references are asserted free of the deleted wording (`rows at all`, `IS that
+artifact`, `presence, with`) and free of the row shape they cite rather than copy.
