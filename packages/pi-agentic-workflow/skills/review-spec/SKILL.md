@@ -1,7 +1,7 @@
 ---
 name: review-spec
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <NN-slug | path/to/SPEC.md>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -31,7 +31,8 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
 ```text
 ✓ Snapshot built from the exact bytes read at one revision (digest pasted)
 ✓ Every Product check of the selected stage row ticked or turned into a finding
-✓ One verdict printed from the closed set, with the receipt block persisted
+✓ One verdict printed from the closed set, with the receipt block persisted —
+  write-then-report (`pre-execution-review`'s `POLICY.md` §8)
 ✓ Zero writes to any reviewed artifact (`SPEC.md`, `decisions.md`, roadmap,
   `ACCEPTANCE.md`) — this skill edits nothing
 ```

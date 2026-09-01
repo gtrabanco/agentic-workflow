@@ -18,7 +18,9 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const read = (relative) => fs.readFileSync(path.join(repoRoot, relative), "utf8");
+/** Re-pointable so the suite runs red against a pre-phase tree (P9's gotcha 3). */
+const root = process.env.PRE_EXECUTION_QUALITY_REPO ? path.resolve(process.env.PRE_EXECUTION_QUALITY_REPO) : repoRoot;
+const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
 
 const grounding = read("skills/evidence-grounding/SKILL.md");
 const groundingRows = read("skills/evidence-grounding/references/ROWS.md");
@@ -983,7 +985,7 @@ test("the snapshot sensor refuses escapes, never follows symlinks, and compares 
   // F14+F15+F17 fold regression: the sensor CLI must contain agent-supplied paths,
   // read artifacts through lstat only, and make the structural check meaningful by
   // comparing the receipt's recorded Policy against the current one.
-  const run = (args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], { encoding: "utf8", cwd: repoRoot, timeout: 120000 });
+  const run = (args) => spawnSync(process.execPath, ["scripts/pre-execution-snapshot.mjs", ...args], { encoding: "utf8", cwd: root, timeout: 120000 });
   const unit = "28-evidence-grounded-spec-plan-review";
   for (const escape of ["../outside", "/etc", "docs/../../"]) {
     const r = run(["build", "--stage", "spec", "--unit", unit, "--dir", escape]);
@@ -994,7 +996,7 @@ test("the snapshot sensor refuses escapes, never follows symlinks, and compares 
   assert.notEqual(jsonEscape.status, 0);
   assert.match(jsonEscape.stderr, /escapes the repository/);
   // A symlinked required artifact reads as absent, never followed.
-  const probeDir = path.join(repoRoot, "docs", "features", "zz-symlink-probe");
+  const probeDir = path.join(root, "docs", "features", "zz-symlink-probe");
   fs.mkdirSync(probeDir, { recursive: true });
   try {
     fs.symlinkSync("/etc/hostname", path.join(probeDir, "SPEC.md"));
@@ -1034,6 +1036,186 @@ test("untrusted content: the cycle owns the rule and every reader of foreign byt
       `${name} states the rule where it reads foreign bytes`);
     assert.match(text, /POLICY\.md`? §7/,
       `${name} points at the single owner instead of restating the policy`);
+  }
+});
+
+// --- P10: write-then-report — terminal marks, typed rejections, replay (AC17) --
+
+const preflight = read("skills/execute-phase/references/PREFLIGHT.md");
+const ledgerMap = read("skills/pre-execution-review/references/LEDGERS.md");
+
+// The closed gate-rejection vocabulary, declared once in `POLICY.md` §8. A fifth
+// type in a printed block is a defect, so the fixture compares the set rather than
+// spot-checking one of them.
+const GATE_REJECTION_TYPES = ["dependency", "status", "phase-lint", "stale-or-missing-receipt"];
+
+// §8's fixed trace as code: type, reason and return route — or no trace at all.
+const rejectionTrace = (act) =>
+  GATE_REJECTION_TYPES.includes(act.type) && act.reason && act.route
+    ? [`GATE REJECTION — ${act.type}`, `Reason: ${act.reason}`, `Return route: ${act.route}`].join("\n")
+    : null;
+
+// One durable home per terminal kind, written as the ownership map writes it:
+// `<ledger>#<skill>:<column-set>`. §8 names no home of its own — the map does — so
+// every value here is checked against `LEDGERS.md` in the fixture below.
+const MARK_HOME = {
+  "review-verdict": "progress.md#review-spec:product-receipt",
+  "plan-approval": "progress.md#review-plan:plan-receipt",
+  "fold-completion": "review-findings.md#fold-findings:folded-flag",
+  "gate-rejection": "progress.md#execute-phase:gate-rejection-traces",
+};
+
+/**
+ * POLICY.md §8 as a pure decision over fixture state (the shape the P4 route
+ * fixtures use). `subjects` is what the unit looks like now — each subject's kind
+ * and current revision; `marks` is the durable ledger. A terminal act appends
+ * exactly one row at the map's home for its kind; a replay of a stale, wrong or
+ * duplicate mark answers with the typed refusal, `writes: []` and the very ledger
+ * it was handed, so "zero side effects" is arithmetic over the same array rather
+ * than an assertion about a message.
+ */
+const applyTerminalAct = (marks, act, subjects) => {
+  const refusal = (code, reason) => ({ refusal: `MARK REPLAY — ${code}`, reason, writes: [], marks: [...marks] });
+  if (act.kind === "gate-rejection" && rejectionTrace(act) === null) {
+    return { refusal: "TRACE DEFECT — untyped rejection", reason: "a rejection names type, reason and route or not at all", writes: [], marks: [...marks] };
+  }
+  const key = `${act.unit}/${act.subject}`;
+  const subject = subjects[key];
+  if (!subject) return refusal("wrong", `${key} is no subject this unit owns`);
+  if (subject.kind !== act.kind) return refusal("wrong", `a ${act.kind} act cannot mark a ${subject.kind} subject`);
+  const prior = marks.find((m) => m.unit === act.unit && m.subject === act.subject);
+  if (prior && prior.revision === act.revision) return refusal("duplicate", `${key} is already marked at ${act.revision}`);
+  if (subject.revision !== act.revision) return refusal("stale", `${key} moved to ${subject.revision}, the mark names ${act.revision}`);
+  return { refusal: null, writes: [MARK_HOME[act.kind]], marks: [...marks, { ...act, home: MARK_HOME[act.kind] }] };
+};
+
+const terminalSubjects = (revision) => Object.fromEntries([
+  ["u28/spec-review", "review-verdict"], ["u28/plan-approval", "plan-approval"],
+  ["u28/fold-completion", "fold-completion"],
+  ...GATE_REJECTION_TYPES.map((type) => [`u28/gate-${type}`, "gate-rejection"]),
+].map(([key, kind]) => [key, { kind, revision }]));
+
+const terminalAct = (kind, subject, revision = "r7") => ({
+  unit: "u28", subject, kind, revision,
+  type: kind === "gate-rejection" ? subject.replace("gate-", "") : undefined,
+  reason: "what the check read", route: "/execute-phase 28 P10",
+});
+
+test("terminal marks: each terminal act writes its durable mark in the same act", () => {
+  const subjects = terminalSubjects("r7");
+  for (const [kind, subject] of [
+    ["review-verdict", "spec-review"], ["plan-approval", "plan-approval"],
+    ["fold-completion", "fold-completion"], ["gate-rejection", "gate-dependency"],
+  ]) {
+    const r = applyTerminalAct([], terminalAct(kind, subject), subjects);
+    assert.equal(r.refusal, null, `${kind} on a fresh subject is not a replay`);
+    assert.deepEqual(r.writes, [MARK_HOME[kind]], `${kind} writes exactly one durable mark, at its declared home`);
+    assert.equal(r.marks.length, 1);
+    assert.equal(r.marks[0].home, MARK_HOME[kind]);
+  }
+  // every home is the ownership map's own `<ledger>#<skill>:<column-set>` — §8
+  // places marks only where the map declares a writer.
+  for (const home of Object.values(MARK_HOME)) {
+    const [ledger, owner] = home.split("#");
+    assert.ok(ledgerMap.includes(ledger), `the map must declare a "${ledger}" ledger`);
+    assert.ok(ledgerMap.includes(owner), `the map must declare owner "${owner}"`);
+  }
+  // and the trace a gate rejection prints names reason and return route
+  const trace = rejectionTrace(terminalAct("gate-rejection", "gate-phase-lint")).split("\n");
+  assert.deepEqual(trace.map((line) => line.split(":")[0]), ["GATE REJECTION — phase-lint", "Reason", "Return route"]);
+});
+
+test("gate rejections: the four typed blocks print reason and return route, never a fifth type", () => {
+  const subjects = terminalSubjects("r7");
+  for (const type of GATE_REJECTION_TYPES) {
+    const act = terminalAct("gate-rejection", `gate-${type}`);
+    const r = applyTerminalAct([], act, subjects);
+    assert.equal(r.refusal, null, `${type} is in the closed vocabulary`);
+    assert.deepEqual(r.writes, ["progress.md#execute-phase:gate-rejection-traces"], `${type} traces to progress.md, the map's column set`);
+  }
+  // a rejection that cannot name its type, reason or route is a defect in the gate,
+  // and a defect performs nothing
+  const untyped = applyTerminalAct([], { ...terminalAct("gate-rejection", "gate-status"), type: "ordering" }, subjects);
+  assert.equal(untyped.refusal, "TRACE DEFECT — untyped rejection");
+  assert.deepEqual(untyped.writes, [], "an untyped rejection writes nothing");
+  // the shipped printed contracts: exactly the four types, each with reason + route
+  const gates = `${preflight}\n${execGate}`;
+  const blocks = [...gates.matchAll(/GATE REJECTION — ([a-z-]+)\s*\n\s*Reason: (\S[^\n]*)\n\s*Return route: (\S[^\n]*)/g)];
+  assert.deepEqual([...new Set(blocks.map((b) => b[1]))].sort(), [...GATE_REJECTION_TYPES].sort());
+  assert.equal(blocks.length, 5, "dependency, status ×2 (idea, defined), phase-lint and the receipt gate each carry a trace");
+  for (const [, type, reason, route] of blocks) {
+    assert.ok(reason.replace(/[<>]/g, "").trim(), `${type} names a reason`);
+    assert.match(route, /\/(execute-phase|design-feature|plan-feature|review-plan)/, `${type} routes to the command that clears it`);
+  }
+  assert.ok(!/GATE REJECTION — (?!dependency|status|phase-lint|stale-or-missing-receipt)/.test(gates), "no gate block invents a fifth type");
+  // the executor points at the owner instead of re-deriving the rule
+  assert.match(preflight, /write-then-report/);
+  assert.match(preflight, /`POLICY\.md` §8/);
+});
+
+test("replay: a stale, wrong or duplicate mark refuses with zero side effects", () => {
+  const subjects = terminalSubjects("r7");
+  const verdict = applyTerminalAct([], terminalAct("review-verdict", "spec-review"), subjects);
+  assert.equal(verdict.marks.length, 1);
+  const cases = [
+    ["duplicate", terminalAct("review-verdict", "spec-review"), subjects],
+    ["stale", terminalAct("review-verdict", "spec-review", "r6"), terminalSubjects("r7")],
+    ["wrong", terminalAct("fold-completion", "spec-review"), subjects],
+  ];
+  for (const [code, act, state] of cases) {
+    const replay = applyTerminalAct(verdict.marks, act, state);
+    assert.equal(replay.refusal, `MARK REPLAY — ${code}`, `${code} is typed, not prose`);
+    assert.ok(replay.reason, `${code} names its reason`);
+    assert.deepEqual(replay.writes, [], `${code} performs no write`);
+    assert.deepEqual(replay.marks, verdict.marks, `${code} leaves the ledger byte-for-byte as it was`);
+  }
+  // a current mark is read, never rewritten: reporting from it is not a second act
+  const again = applyTerminalAct(verdict.marks, terminalAct("review-verdict", "spec-review"), subjects);
+  assert.equal(again.refusal, "MARK REPLAY — duplicate");
+  // and a stale gate trace cannot append a second row to the ledger either
+  const marked = applyTerminalAct([], terminalAct("gate-rejection", "gate-stale-or-missing-receipt"), subjects);
+  const replayed = applyTerminalAct(marked.marks, terminalAct("gate-rejection", "gate-stale-or-missing-receipt"), subjects);
+  assert.equal(replayed.refusal, "MARK REPLAY — duplicate");
+  assert.deepEqual(replayed.writes, []);
+});
+
+test("write-then-report has one owner; reviewers cite it in one line", () => {
+  assert.match(policyCycle, /^### 8\. Write-then-report$/m, "POLICY.md declares a numbered write-then-report section");
+  assert.match(policyCycle, /\*\*The verdict and its mark are one act\*\*[^\n]*write-then-report rule/, "the rule is stated once, at the owner, and named in its own section");
+  for (const type of GATE_REJECTION_TYPES) {
+    assert.ok(policyCycle.includes(`\`${type}\``), `§8 declares the closed type \`${type}\``);
+  }
+  assert.match(policyCycle, /MARK REPLAY — <stale\|wrong\|duplicate>/, "the replay refusal is a closed vocabulary");
+  assert.match(policyCycle, /performs \*\*zero side effects\*\*/, "a refusal is defined by what it does not do");
+  // the identity-value rule F37 files against (§7) now names the pairing
+  assert.ok(squash1(policyCycle).includes("**beside the recomputed one**, and that pairing \u2014 never a substitution \u2014 is the reported defect"),
+    "\u00a77 states the identity-value rule as recompute-and-record-the-claim-beside-it (F37)");
+  // one owner per rule: nobody downstream restates the act-binding sentence
+  for (const [name, text] of [["review-spec", reviewSpec], ["review-plan", reviewPlan],
+    ["PREFLIGHT.md", preflight], ["PRE_EXECUTION_GATE.md", execGate], ["LEDGERS.md", ledgerMap]]) {
+    assert.ok(!/\bsame act\b/.test(text), `${name} must not restate §8's rule`);
+    assert.ok(!/are one act/.test(text), `${name} must not copy §8's sentence`);
+    assert.ok(!/MARK REPLAY/.test(text), `${name} must not redefine the refusal vocabulary`);
+  }
+  // the consumers' one-line citation: rule name plus the owner, no paraphrase
+  for (const [name, text] of [["review-spec", reviewSpec], ["review-plan", reviewPlan]]) {
+    assert.match(text, /write-then-report/, `${name} cites write-then-report in its turn contract`);
+    assert.match(text, /`POLICY\.md` §8/, `${name} points at §8 as the owner`);
+  }
+  // F37: the plan box stops ordering a copied identity value and points at §7
+  assert.ok(!/copied from the receipt/.test(reviewPlan), "F37: no turn-contract line orders a copied parent digest");
+  assert.match(reviewPlan, /`POLICY\.md` §7 owns the identity-value rule/, "F37: the box cites the §7 owner");
+  // AC17's done-when grep passes as the SPEC writes it. `grep -q` answers 0 when any
+  // file matches, so each of the three is also pinned by name above.
+  const g = spawnSync("grep", ["-qE", "write-then-report", "skills/review-spec/SKILL.md",
+    "skills/review-plan/SKILL.md", "skills/pre-execution-review/references/POLICY.md"], { encoding: "utf8", cwd: root });
+  assert.equal(g.status, 0, "the SPEC's P10 done-when grep must exit 0");
+  // `grep -q` across three files answers 0 on any single hit, so the done-when is
+  // only honest if each named file carries the literal itself — checked per file.
+  for (const file of ["skills/review-spec/SKILL.md", "skills/review-plan/SKILL.md",
+    "skills/pre-execution-review/references/POLICY.md"]) {
+    const each = spawnSync("grep", ["-cE", "write-then-report", file], { encoding: "utf8", cwd: root });
+    assert.equal(each.status, 0, `${file} must carry the literal write-then-report`);
   }
 });
 

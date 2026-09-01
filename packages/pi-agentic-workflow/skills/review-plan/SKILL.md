@@ -1,7 +1,7 @@
 ---
 name: review-plan
 user-invocable: true
-version: 1.2.0
+version: 1.3.0
 argument-hint: <NN-slug | fix-N | path/to/SPEC.md> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -32,11 +32,13 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
 ```text
 ✓ Unit kind and stage row chosen from the roadmap row, never from a guess
 ✓ Plan snapshot bound to the exact bytes: every applicable artifact row present,
-  digest computed at one revision, parent SPEC digest copied from the receipt
+  digest computed at one revision, parent SPEC digest recomputed and never copied
+  as identity (`pre-execution-review`'s `POLICY.md` §7 owns the identity-value rule)
 ✓ Every Engineering check ticked with evidence or turned into a finding; the
   obligation ledger was read row by row
 ✓ One verdict printed from the closed set, with the receipt block persisted and
-  findings appended to `planning-findings.md`
+  findings appended to `planning-findings.md` — write-then-report
+  (`pre-execution-review`'s `POLICY.md` §8)
 ✓ Zero writes to any reviewed artifact (`SPEC.md`, `PLAN.md`, `TASKS.md`,
   `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, roadmap)
 ```
