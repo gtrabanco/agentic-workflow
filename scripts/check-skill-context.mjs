@@ -284,6 +284,32 @@ if (routeMode) {
       routeFailures.push(`${routeName}: route lines ${metrics.totalLines} > ${routeDef.routeLinesMax}`);
     }
 
+    // The manifest's declared `relative-headroom` policy binds here (feature 28,
+    // finding RS12: it was recorded in D22/D26 and read by nothing). A ceiling has
+    // to sit at or above ceil(measured x (1 + headroom)), otherwise a three-line
+    // correction trips the guard before anyone can declare a re-basis — the exact
+    // failure the policy was adopted to prevent. The floor is one-way on purpose:
+    // trim work lowers `measured` and widens headroom, so re-basing a ceiling
+    // *down* stays the declared act it is and is never demanded by this check.
+    const policy = manifest.policy;
+    if (policy && policy.name === "relative-headroom") {
+      const headroom = Number(policy.headroom);
+      if (Number.isFinite(headroom) && headroom > 0) {
+        const ratio = `ceil(measured \u00d7 ${(1 + headroom).toFixed(2)})`;
+        for (const [key, measured, ceiling] of [
+          ["estimate", metrics.totalEstimate, routeDef.routeEstimateMax],
+          ["lines", metrics.totalLines, routeDef.routeLinesMax],
+        ]) {
+          if (ceiling === null) continue;
+          if (measured > ceiling) continue; // the ceiling breach above is the tighter fault
+          const floor = Math.ceil(measured * (1 + headroom));
+          if (ceiling < floor) {
+            routeFailures.push(`${routeName}: route ${key} ceiling ${ceiling} < ${floor} = ${ratio} ${measured} — raise it at a declared re-basis and name the growth source, or trim the route`);
+          }
+        }
+      }
+    }
+
     routeRows.push({
       route: routeName,
       skills: routeDef.skills.join(", "),
