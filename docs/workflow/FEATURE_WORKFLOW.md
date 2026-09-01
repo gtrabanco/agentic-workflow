@@ -156,7 +156,9 @@ finding needs to fold — fixed schema
 starting `no`, deduped by `file:line`+axis, both writers sharing the same
 ledger. `execute-phase`'s fold cycle ticks each folded row `folded: yes`;
 `workflow-status` surfaces unfolded rows in the machine envelope's
-`findings.fix_now[]`. Fixes use the equivalent path,
+`findings.fix_now[]`, and proves the mandatory review ran from the ledger's
+durable `REVIEW-RAN` mark row — whose shape `pre-execution-review`'s `LEDGERS.md`
+owns — never from the ledger merely existing. Fixes use the equivalent path,
 `docs/fix/<n>-<topic>/review-findings.md`.
 
 > Unknowns become open questions in `decisions.md` — never blank placeholders.

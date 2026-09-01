@@ -135,7 +135,7 @@ and is out of scope; a copy or shell rewrite stays the reviewer's job.
 ```text
 ledger-ownership@1
 truth-class | ledger | owner | annotator | annotator-token | validator
-review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED P<n> | node --test scripts/ledger-provenance.test.mjs
+review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED P<n> | node --test scripts/ledger-provenance.test.mjs
 planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | review-spec:spec-stage-rows + review-plan:plan-stage-rows + design-feature:product-class-resolutions + plan-feature:plan-class-resolutions + plan-fix:fix-plan-class-resolutions + fold-findings:source-class-resolutions | none | none | node --test scripts/pre-execution-quality.test.mjs
 progress | docs/features/<NN>-<slug>/progress.md · docs/fix/<issue>-<topic>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none | none | node --test scripts/pre-execution-sensor.test.mjs
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none | none | node --test scripts/ledger-ownership.test.mjs
@@ -151,3 +151,22 @@ writers are the phases that already order them (`plan-feature-scaffold` creates
 them, `execute-phase` ticks and appends), so the directive line keeps any script
 away from them instead of forking the table above. Same for the two frozen
 planning ledgers at the top of this file.
+
+### The durable review mark
+
+A review that ends with no fix-now finding writes no finding row, so the map gives
+it a row of its own in the unit's `review-findings.md` ledger, under
+`review-change:review-mark`. [POLICY.md](POLICY.md) §8 owns *when* an act marks;
+this owns the shape:
+
+```text
+review-mark@1
+id | file:line | axis | severity | class | route | folded
+REVIEW-RAN | HEAD <40-hex sha> | n/a | n/a | review-mark | n/a | n/a
+```
+
+`file:line` names the revision the verdict was reached against, so this ledger's
+`file:line`+axis dedupe admits one mark per reviewed state, and marks append. The
+other cells carry `n/a` because the row reports no finding — which keeps it out of
+the fix-now projection, `fold-findings`, and the annotator (its pattern matches
+`F<n>` ids only). A mark says a review ran, never that the candidate passed.
