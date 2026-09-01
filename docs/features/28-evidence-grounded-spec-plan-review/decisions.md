@@ -578,3 +578,81 @@
   text alone rather than widen two more route budgets in a `docs` phase; the drift
   gate should pin `review-change`'s persist step against
   `review-change:review-mark` the way it pins the two reviewers against §7/§8.
+
+- **D41 — P12: delegated evidence is a versioned artifact with one home and a
+  sandbox named in its own contract, not a ledger, a snapshot kind, or a second
+  revision mechanism.** AC18 demands a lot of one sentence: the reading happens
+  outside the authoring context, the conservation is *versioned*, the outcome is
+  closed, the source rows carry seven named fields, `partial`/`blocked` validate
+  nothing, the pending state precedes the prompt, and the artifact is advisory
+  until the author spot-checks. Each of those has one owner now, and the choices
+  that got there are the ones worth recording.
+  **Home: `docs/features/<NN>-<slug>/delegated-evidence.md`, with the `docs/fix/`
+  analogue — one file per unit, at every size.** `planning-evidence.md` embeds in
+  the SPEC for XS/S, and the obvious move was to copy that. Rejected: the embed
+  exists to save an XS/S unit an artifact the Plan snapshot must then bind, and this
+  artifact is advisory — nothing binds it — while its writer is a context that must
+  not touch the author's file. A delegate's bytes inside `SPEC.md` is precisely the
+  ownership blur P9's map exists to prevent, so the size exception would have
+  bought one fewer path at the cost of the boundary AC18 is about. Cost paid: one
+  more path per unit, and a unit that never delegates simply has no such file (the
+  contract says so, so its absence is not a readiness gap).
+  **Not a truth class.** An eighth map row was the other obvious move and is a
+  contract violation: AC16 closes the classes at seven, and
+  `scripts/ledger-ownership.test.mjs` fails a row outside them — the fixture asserts
+  seven again so a later phase cannot "tidy" this. The artifact is declared on the
+  map's `no-script-writer` directive instead, the same treatment `planning-evidence.md`
+  gets, which is what keeps a script off it; its writer and its two zones are stated
+  in the role contract, which is the only prose that may say them.
+  **Revision: positive, read from disk, rotated by the mechanism that exists.**
+  `revision + 1` is admitted only against the `revision` the current bytes carry, so
+  a replay repeats a number instead of silently appending; and because conserving the
+  artifact is an authoring write, `artifactRevisionId` rotates with it (Design §1) —
+  no second counter, digest, or clock was introduced, and known-issue 1's out-of-band
+  limit is inherited rather than restated as a guarantee.
+  **Sandbox (known-issue 16's named fix): the boundary is the contract's text.** F35's
+  run obeyed `review-spec`'s own instruction to create real ledgers over a prose aside
+  next to the invocation, so `DELEGATION.md` states in the role that a qualifying or
+  probing run writes only the sandbox copy's **toy ledgers**, that a run for a real
+  unit writes exactly one real file and commits nothing, and that a launch satisfying
+  neither rule does not launch. Honest residual, recorded in known-issue 16: that is
+  normative text a model obeys plus a scan that reaches scripts — no runtime physically
+  prevents a disobedient delegate, and nothing here un-writes what earlier probes
+  committed.
+  **Rule placement, twice over, by citation.** The zero-validated-claims definition
+  lives with the shape (only `DELEGATION.md` may say it — the fixture scans `skills/`
+  to prove it); the *gate* lives in `READINESS.md`, whose existing vocabulary already
+  emits `NEEDS-EVIDENCE`, added as one shared box D1 rather than a duplicated box in
+  each stage list or a new gate in a consumer. The pending write follows the same
+  discipline: §8 did not cover it, so §8 gained the bullet
+  ("**A pending write is a mark**") and `DELEGATION.md` says only what is local — the
+  home, the content, and that the turn ends. Rejected alternatives there: restating
+  write-then-report in the delegation contract (P10's own fixture fails any consumer
+  that copies §8's sentences) and inventing a "pending" mark class in the map (the map
+  designates marks for truth classes; this artifact is not one).
+  **Capability gating stated once as out of scope** (`DELEGATION.md` §Capability gating
+  is out of scope): self-attested, recorded nowhere, and the fixture asserts no
+  `grant`/`entitlement`/`capability flag`/`allow-list` vocabulary entered the two files
+  it touched — the phrase "no grant, no flag" was itself removed for that reason, which
+  is the cheapest honest form of the boundary.
+  **Budget: growth from this text, re-based in the same commit.** The new
+  `DELEGATION.md` measures 1919 estimate units / 128 lines (default ceilings 2200 / 280,
+  so it has 281 units of room), `evidence-grounding/SKILL.md` 1938 → 1988, `READINESS.md`
+  1539 → 1780, `POLICY.md` 2482 → 2567, `LEDGERS.md` 2877 → 2931 — which breached
+  `pre-execution-review`'s D39 `referenceEstimateMax: 2915`, moved to **3225**
+  (= ceil(2931 × 1.10), LEDGERS being the skill's largest reference). Six routes grew
+  (estimate / lines): `design-feature:product` 13211/939 → 15642/1095,
+  `design-feature:repair` 22039/1509 → 24623/1672, `plan-feature:scaffold`
+  18794/1370 → 21378/1534, `plan-fix:issue` 21577/1597 → 24161/1760,
+  `review-plan:default` 16065/1028 → 16218/1036, `review-spec:default` 14258/967 →
+  14410/975 — each exactly ceil(measured × 1.10) at this commit, with this text as the
+  named growth source. Nothing was lowered to hide growth.
+  **Distribution:** `evidence-grounding` 1.2.0 → 1.3.0 (`minor`: a new reference and a
+  new shared readiness box, no vocabulary or emitted-outcome change, still no review
+  PASS), with both changelog tables, one release-log line in each language, and both
+  `SKILLS.md`/`SKILLS.es.md` cells; `pre-execution-review`'s SKILL.md stayed untouched —
+  §8's coverage line already names write-then-report, so a reference-only edit needed no
+  second bump. Pi mirror re-bundled to byte parity (38 skills / 123 files, +1).
+  **For P13, one sentence of context:** the artifact is deliberately *not* in the
+  snapshot's closed `kind` list, so any normalizer-ordering rule P13 writes for it must
+  not assume a binding row exists — it is conserved, not bound.

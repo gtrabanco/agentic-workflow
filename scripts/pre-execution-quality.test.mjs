@@ -467,7 +467,7 @@ test("each P2 entrypoint stays within its progressive route", () => {
   const routes = [
     ["design-feature", designFeature, ["INTERVIEW.md", "WRITE_AND_UPSERT.md", "UPSERT_EXAMPLE.md", "REPAIR.md", "PORTABILITY.md"]],
     ["review-spec", reviewSpec, ["CHECKS.md", "OUTPUT.md"]],
-    ["evidence-grounding", grounding, ["ROWS.md", "READINESS.md"]],
+    ["evidence-grounding", grounding, ["ROWS.md", "READINESS.md", "DELEGATION.md"]],
   ];
   for (const [skill, body, allowed] of routes) {
     const linked = [...new Set([...body.matchAll(/\(references\/([^)]+\.md)\)/g)].map((m) => m[1]))].sort();
@@ -1219,4 +1219,140 @@ test("write-then-report has one owner; reviewers cite it in one line", () => {
   }
 });
 
-console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution");
+// --- P12: delegated evidence conserved as a versioned artifact (AC18 / O18) ---
+
+// Read lazily: on a tree that has no delegation contract yet every case below
+// must fail on its own merits, not as one load-time throw.
+const DELEGATION_REL = "skills/evidence-grounding/references/DELEGATION.md";
+const delegation = fs.existsSync(path.join(root, DELEGATION_REL)) ? read(DELEGATION_REL) : "";
+const skillDocs = fs.readdirSync(path.join(root, "skills"), { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .flatMap((d) => {
+    const dir = path.join(root, "skills", d.name);
+    const refs = path.join(dir, "references");
+    return [path.join(dir, "SKILL.md"), ...(fs.existsSync(refs)
+      ? fs.readdirSync(refs).filter((n) => n.endsWith(".md")).map((n) => path.join(refs, n))
+      : [])];
+  });
+
+// The seven source fields AC18 names, as code: a source row missing one is a
+// memory of a source, not a source.
+const SOURCE_FIELDS = ["id", "class", "title", "publisher", "URL", "accessed_at", "excerpt"];
+
+/**
+ * AC18's zero-validated-claims rule as a pure decision over one delegated run —
+ * the shape the P4 route fixtures use. A claim is validated only when the run is
+ * `done`, its source id resolves, and the authoring skill's spot-check names it;
+ * so `partial` and `blocked` are arithmetic here rather than adjectives in prose.
+ */
+const validatedClaims = (artifact) => {
+  if (artifact.outcome !== "done") return [];
+  const ids = new Set(artifact.sources.map((s) => s.id));
+  const checked = new Set(artifact.spotChecks.filter((c) => c.result === "PASS").map((c) => c.claimId));
+  return artifact.claims.filter((c) => ids.has(c.sourceId) && checked.has(c.id)).map((c) => c.id);
+};
+const delegatedEvidenceGate = (artifact) => (validatedClaims(artifact).length === 0 ? "NEEDS-EVIDENCE" : null);
+
+const delegatedRun = (over = {}) => ({
+  revision: 3,
+  outcome: "done",
+  sources: [{ id: "SRC-1", class: "forge", title: "issue #146", publisher: "the forge", URL: "https://example.test/146", accessed_at: "2026-09-01", excerpt: "flow-integrity amendment" }],
+  claims: [{ id: "CLM-1", text: "the amendment is governing", sourceId: "SRC-1" }],
+  spotChecks: [{ claimId: "CLM-1", result: "PASS", skill: "plan-feature" }],
+  ...over,
+});
+
+test("delegated-evidence artifact: a done run resolves its claims through the seven source fields", () => {
+  const ok = delegatedRun();
+  assert.deepEqual(validatedClaims(ok), ["CLM-1"], "done + resolvable source + spot-check validates the claim");
+  assert.equal(delegatedEvidenceGate(ok), null, "a run with validated claims blocks nothing");
+  // a claim naming a source that is not in the table is not evidence, even in `done`
+  assert.deepEqual(validatedClaims(delegatedRun({ claims: [{ id: "CLM-9", text: "x", sourceId: "SRC-404" }] })), []);
+  // every field AC18 lists is in the fixed grammar, and the grammar has one home
+  for (const field of SOURCE_FIELDS) {
+    assert.ok(delegation.includes(field), `the artifact grammar must name the source field ${field}`);
+  }
+  assert.match(delegation, /^revision: <positive integer>$/m, "the grammar carries its revision");
+  assert.match(delegation, /^outcome: done \| partial \| blocked$/m, "the outcome vocabulary is fixed and closed");
+  const owners = skillDocs.filter((f) => /delegated-evidence@1/.test(read(path.relative(root, f))) && /^revision: /m.test(read(path.relative(root, f))));
+  assert.deepEqual(owners.map((f) => path.relative(root, f)), [DELEGATION_REL], "the artifact shape is defined in exactly one file");
+});
+
+test("delegated-evidence readiness: partial and blocked yield zero validated claims and NEEDS-EVIDENCE", () => {
+  for (const outcome of ["partial", "blocked"]) {
+    const run = delegatedRun({ outcome });
+    assert.deepEqual(validatedClaims(run), [], `${outcome} validates nothing`);
+    assert.equal(delegatedEvidenceGate(run), "NEEDS-EVIDENCE", `${outcome} blocks readiness`);
+  }
+  // the shape owner states the consequence once; readiness routes it and opens no
+  // parallel gate in any consumer
+  assert.match(delegation, /`partial` or `blocked` yields \*\*zero validated claims\*\*/);
+  assert.match(groundingReadiness, /delegated-evidence\.md/, "readiness names the artifact it checks");
+  assert.match(groundingReadiness, /^### Shared box D1 \u2014 delegated evidence \(both stages\)$/m, "readiness declares one shared box for both stages");
+  assert.match(squash1(groundingReadiness), /fails D1 and the preflight returns `NEEDS-EVIDENCE`/, "readiness owns the blocking outcome");
+  const owners = skillDocs.filter((f) => /zero validated claims/.test(read(path.relative(root, f))));
+  assert.deepEqual(owners.map((f) => path.relative(root, f)), [DELEGATION_REL], "only the shape owner defines the zero-claims rule");
+});
+
+test("delegated-evidence turn: the pending state is written before any prompt, then the turn ends", () => {
+  // persist-then-STOP as an ordering decision over the events a turn emits
+  const turn = (events) => {
+    const write = events.indexOf("persist-pending");
+    const prompt = events.indexOf("prompt-user");
+    if (prompt === -1) return "CLEAN-FLOW";
+    if (write === -1) return "STOP DEFECT — prompted with nothing persisted";
+    if (write > prompt) return "STOP DEFECT — the pending write followed the prompt";
+    return events[events.length - 1] === "end-turn" && events.lastIndexOf("end-turn") > prompt
+      ? "STOPPED-WITH-PENDING"
+      : "STOP DEFECT — the turn did not end after it prompted";
+  };
+  assert.equal(turn(["persist-pending", "prompt-user", "end-turn"]), "STOPPED-WITH-PENDING");
+  assert.equal(turn(["prompt-user", "persist-pending", "end-turn"]), "STOP DEFECT — the pending write followed the prompt");
+  assert.equal(turn(["prompt-user", "end-turn"]), "STOP DEFECT — prompted with nothing persisted");
+  assert.equal(turn(["persist-pending", "prompt-user"]), "STOP DEFECT — the turn did not end after it prompted");
+  assert.equal(turn(["read-source", "write-artifact"]), "CLEAN-FLOW", "a run that never prompts owes no pending write");
+  // the contract orders it in prose and cites §8 for the discipline instead of
+  // copying it: §8 owns write-then-report, including the pending write
+  assert.match(delegation, /persisted before\s+anyone\s+is prompted/, "the contract puts the write before the prompt");
+  assert.match(delegation, /POLICY\.md` §8/, "the contract cites §8 as the marking owner");
+  assert.match(policyCycle, /^- \*\*A pending write is a mark\.\*\*/m, "§8 declares the pending write at its owner");
+  assert.ok(!/\bsame act\b/.test(delegation), "DELEGATION.md cites §8, never restates it");
+  assert.ok(!/MARK REPLAY/.test(delegation), "DELEGATION.md does not redefine the refusal vocabulary");
+});
+
+test("delegated-evidence authority: advisory until the authoring skill spot-checks the citations", () => {
+  assert.deepEqual(validatedClaims(delegatedRun({ spotChecks: [] })), [], "an unchecked run is advisory prose");
+  assert.equal(delegatedEvidenceGate(delegatedRun({ spotChecks: [] })), "NEEDS-EVIDENCE");
+  assert.deepEqual(validatedClaims(delegatedRun({ spotChecks: [{ claimId: "CLM-1", result: "FAIL", skill: "plan-feature" }] })), [], "a failed spot-check validates nothing");
+  // the spot-check is named as the validation act, and it belongs to the author
+  assert.match(delegation, /spot-check[^.]*is what validates|what validates[^.]*spot-check/, "the validation act is named");
+  assert.match(delegation, /advisory/, "the artifact is advisory before that act");
+  assert.match(groundingReadiness, /spot-check/, "readiness consumes the spot-check, never issues it");
+});
+
+test("delegated-evidence role: read-only, outside the authoring context, in a named toy-ledger sandbox", () => {
+  assert.match(delegation, /never invoked in the authoring context/, "the role contract forbids the authoring context");
+  assert.match(delegation, /fresh read-only context/, "the host-supported shape is named");
+  assert.match(delegation, /fresh conversation/, "the portable fallback is stated inline");
+  assert.match(delegation, /toy ledger/, "known-issue 16's fix: its ledgers are declared toy ledgers out loud");
+  assert.match(delegation, /sandbox/, "the write boundary is a named sandbox");
+  assert.match(delegation, /self-attested/, "capability gating is self-attested and out of scope");
+  // task 6's boundary: no grant vocabulary anywhere in the new surface
+  for (const [name, text] of [["DELEGATION.md", delegation], ["READINESS.md", groundingReadiness]]) {
+    assert.ok(!/\bgrant(s|ed|ing)?\b|entitlement|capability flag|allow-?list/i.test(text), `${name} adds no grant vocabulary`);
+  }
+  // a versioned artifact, not an eighth truth class: the map blocks scripts for it
+  const directive = ledgerMap.match(/^# no-script-writer: (.+)$/m);
+  assert.ok(directive, "the map keeps its no-script-writer directive");
+  assert.ok(directive[1].includes("delegated-evidence.md"), "the artifact is declared on the directive line");
+  const rows = ledgerMap.match(/ledger-ownership@1\n([\s\S]+?)```/)[1].split("\n").filter((l) => l.includes("|") && !l.startsWith("truth-class"));
+  assert.equal(rows.length, 7, "AC16's seven truth classes stay seven");
+  // the revision counter only increases, and the rotation mechanism is the existing one
+  const admit = (onDisk, proposed) => (proposed > onDisk ? proposed : null);
+  assert.equal(admit(3, 4), 4);
+  assert.equal(admit(3, 3), null, "replaying the recorded revision is refused");
+  assert.equal(admit(3, 2), null, "a lower revision is refused");
+  assert.match(delegation, /artifactRevisionId/, "conservation rides the revision handoff, no second mechanism");
+});
+
+console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution, delegated evidence");
