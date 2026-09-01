@@ -27,3 +27,10 @@ until the phase fixes land and `fold-findings` flips them.
 | F18 | packages/agentic-workflow-schema/src/pre-execution.ts:541-546 | code | low | fix-now | fold | yes |
 | F19 | scripts/pre-execution-snapshot.mjs:176-177 | perf | low | fix-now | fold | yes |
 | F20 | scripts/pre-execution-snapshot.mjs:193-195 | perf | low | fix-now | fold | yes |
+
+Second review-change cycle ran 2026-09-01 (isolated clean-context reviewer, terminal candidate HEAD `c44173ef`): verdict REVIEW-FAIL with two low fix-now findings (RC1, RC2), zero code defects; the reviewer's counter-evidence pass reproduced every P6 corpus claim live (fix-78 refusals, fix-147 D30 digest `acfe7087…`, unit-17 `fdddc858…`), matched D31 to the manifest 7/7 and the coverage-note versions to every SKILL.md, and confirmed D32 recorded consistently in all four ledgers. One re-review after the folds is the normal correction path (AC14).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| RC1 | docs/features/28-evidence-grounded-spec-plan-review/testing.md:268 + progress.md:459 | verify | low | fix-now | fold | yes |
+| RC2 | scripts/check-skill-context.mjs:305 (floor) + decisions.md D31 table | code | low | fix-now | fold | no |
