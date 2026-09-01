@@ -97,19 +97,19 @@ sample; `GOLDEN_FIXTURE.md` (+ ES sibling) carries a dated row for every
 changed executor-path skill/version in this unit's 3.5.0 changelog rows; root
 `node --test scripts/*.test.mjs` -> exit 0.
 
-- [ ] Record unit 28's feature-sample canary fields (elapsed time, model calls, pre-edit replans, post-review repairs, review/fold cycles, reverted lines/files, tokens or explicit `not yet measured`, exported obligations) in `testing.md`'s corpus table.
-- [ ] Replay fix unit 78 (`docs/fix/78-audit-pr-closure-integrity`) through `plan-fix` -> `review-plan` in a clean context as the fix sample; record its baseline (original run) vs post-change (probe) fields and correction-cycle count; a sample entering a second repair/re-review cycle is root-caused and rerun per the protocol.
-- [ ] Replay feature 17 (`17-finding-severity-routing`, skills + schema package + template) through `review-plan` in a clean context as the cross-boundary sample; record the same fields and cycle count.
-- [ ] Append dated golden-fixture rows (EN + ES sibling) for every changed executor-path skill/version in this unit's 3.5.0 changelog rows not yet covered, following `docs/workflow/GOLDEN_FIXTURE.md`'s procedure with the weakest supported executor path.
+- [x] Record unit 28's feature-sample canary fields (elapsed time, model calls, pre-edit replans, post-review repairs, review/fold cycles, reverted lines/files, tokens or explicit `not yet measured`, exported obligations) in `testing.md`'s corpus table.
+- [x] Replay fix unit 78 (`docs/fix/78-audit-pr-closure-integrity`) through `plan-fix` -> `review-plan` in a clean context as the fix sample; record its baseline (original run) vs post-change (probe) fields and correction-cycle count; a sample entering a second repair/re-review cycle is root-caused and rerun per the protocol.
+- [x] Replay feature 17 (`17-finding-severity-routing`, skills + schema package + template) through `review-plan` in a clean context as the cross-boundary sample; record the same fields and cycle count.
+- [x] Append dated golden-fixture rows (EN + ES sibling) for every changed executor-path skill/version in this unit's 3.5.0 changelog rows not yet covered, following `docs/workflow/GOLDEN_FIXTURE.md`'s procedure with the weakest supported executor path.
 
 ## P7 — Reconcile the unit ledgers with qualification evidence
 
 Layer: docs · Done-when: `grep -qE '\| 28 \| .?evidence-grounded-spec-plan-review.? \| in-progress' docs/features/ROADMAP.md` -> exit 0; every O9–O14 row in `planning-obligations.md` carries a status matching its cited evidence; `progress.md`'s phase table lists P6–P8 with receipts.
 
-- [ ] Set each O9–O14 row in `planning-obligations.md` to the status its cited evidence supports (`verified` only where the evidence row exists; rows without evidence stay `planned` and are named in `progress.md`'s residuals).
-- [ ] Tick the completed P6/P7 boxes in this file and keep the P5 supersede note accurate.
-- [ ] Reconcile `progress.md`: phase-table rows for P6–P8 with receipts, the P5-section correction note, and the P7 receipt.
-- [ ] Verify roadmap row 28 reads `in-progress` and matches `progress.md` before P8 flips it at the PR step.
+- [x] Set each O9–O14 row in `planning-obligations.md` to the status its cited evidence supports (`verified` only where the evidence row exists; rows without evidence stay `planned` and are named in `progress.md`'s residuals).
+- [x] Tick the completed P6/P7 boxes in this file and keep the P5 supersede note accurate.
+- [x] Reconcile `progress.md`: phase-table rows for P6–P8 with receipts, the P5-section correction note, and the P7 receipt.
+- [x] Verify roadmap row 28 reads `in-progress` and matches `progress.md` before P8 flips it at the PR step.
 
 ## P8 — Re-review and close the corrected candidate
 
