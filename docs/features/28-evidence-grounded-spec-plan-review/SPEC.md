@@ -27,11 +27,15 @@ collection of follow-up issues.
 `L` — this changes the public workflow, adds two public skills and one internal
 grounding capability, extends the schema package and workflow transition
 vocabulary, and rewires planning, execution, review, audit, distribution, and
-bilingual documentation. The plan has sixteen single-concern phases: the five
+bilingual documentation. The plan has seventeen single-concern phases: the five
 originally planned (P1–P5), the three appended by the 2026-08-31 user-approved
 amendment (P6 qualification corpus, P7 ledger/status reconciliation, P8 terminal
-re-review and close-out), and the eight appended by the 2026-09-01 user-approved
-amendment adopting issue #146's flow-integrity amendment (P9–P16).
+re-review and close-out), the eight appended by the 2026-09-01 user-approved
+amendment adopting issue #146's flow-integrity amendment (P9–P16), and **P17**,
+appended by the same day's owner verdict on finding F32. P17 runs **before** the
+P16 close-out: the numbering is not the execution order, because P16's
+fingerprint and the ledger rows citing it were cut earlier in this same replan,
+and re-numbering the close-out would silently invalidate those references (D36).
 
 **Split trigger recorded, not hidden:** the soft five-phase bar in the project's
 scaffold rule is exceeded, and the contract's alternative is to cut the overflow
@@ -183,6 +187,17 @@ less wrong work and less rework, not fewer exploratory reads.
 - **S19 (F6):** The sensor's review-run proof keys on the durable review mark, not
   on the presence of a findings ledger, so a cleanly reviewed unit is
   distinguishable from a never-reviewed one.
+- **S20 (F32 disposition):** The sync digest path prefers the host's own native
+  SHA-256 when the host exposes one, and falls back to this package's own
+  pure-JS implementation where it does not. No static Node builtin is imported,
+  no runtime dependency is added, and no third-party code is vendored: measured,
+  the `@noble/hashes@2.4.0` `sha256` closure is 1,419 lines across four modules
+  (17 named symbols, including the SHA-512/384/224 machinery this package does
+  not use) against the 124 lines already owned and test-pinned here — and after
+  native-first the fallback only runs where no native hash exists to beat. Any
+  code later copied from a third party carries source, author, version and
+  license in a header comment: credit is a standing condition, not a courtesy
+  (D36).
 
 #### Out of scope / non-goals
 
@@ -329,6 +344,7 @@ and obligation ledger**
 | 29 | Delegated reading may enter authoring as un-validated claims, or as prose with no revision, outcome, or source identity | in-scope | S17; AC18 |
 | 30 | A normalizer may run after the freeze and silently void the receipts it just bound | in-scope | S18; AC19 |
 | 31 | A clean review may be indistinguishable from a never-reviewed unit | in-scope | S19; AC20 |
+| 32 | The sync digest path may pay a portable implementation's cost in runtimes that already ship a native hash, or buy portability by importing a Node binding | in-scope | S20; AC21 |
 
 ### Acceptance criteria
 
@@ -423,6 +439,15 @@ and obligation ledger**
 - [ ] **AC20 — command-verified (F6):** the sensor proves "review ran for this
   unit's current state" from the durable review mark; a zero-finding review
   produces that mark and is proven, a ledger with no mark is not.
+- [ ] **AC21 — command-verified (F32 disposition):** `sha256HexSync` uses the
+  host's native SHA-256 when the host exposes one through
+  `globalThis.process?.getBuiltinModule?.("crypto")`, and this package's pure-JS
+  implementation otherwise; every path returns one identical lowercase 64-hex
+  digest for the same bytes; `src/` still holds no static `node:` specifier and no
+  `@types/node` appears, `package.json` still declares no dependencies; and the
+  rejected alternatives (static `node:crypto`, an `@noble/hashes` dependency,
+  vendoring its code) are recorded with their measured cost where a reader will
+  re-litigate them.
 
 ### Tooling
 
@@ -495,6 +520,7 @@ Engineering boxes:
 | 2026-08-30 | User-approved | Strengthen progressive evidence preparation, review readiness, compact planning-evidence persistence, and second-cycle convergence diagnosis/qualification without weakening fail-closed review. |
 | 2026-08-31 | User-approved | Re-plan routed from review findings F2+F3+F6 (`replan-in-unit`): append P6 (qualification corpus), P7 (ledger/status reconciliation), P8 (terminal re-review and PR close-out). No acceptance row changed — the frozen manifest blob is unchanged. The roadmap row is corrected from the premature `done` (F3) to `in-progress` in the same replan commit. |
 | 2026-08-31 | User-approved | Product repair batch from review rs-28-20260831-002 (RS1+RS2+RS15–RS17, one batch): Size block corrected to the eight-phase reality (RS1), AC11 verification label aligned with the frozen ACCEPTANCE.md `read-verified` (RS2), author-exclusion cell and churn business goal made truthful to the shipped-mode limits (RS15, RS16), expectation-sweep pointers added for AC1/AC11 (RS17). Scope, obligations, and acceptance rows unchanged; the frozen ACCEPTANCE.md blob is unchanged. |
+| 2026-09-01 | User-approved | **F32 disposition and P17.** The owner rejected the finding's own remedy ("replace the hand-rolled SHA-256 with `node:crypto`") and directed: prefer the runtime's native path, fall back where it is absent, avoid the dependency if the needed code can be carried in-house, and — if third-party code is ever copied — carry reference, authorship and license with it. Measurement changed one of those three: the in-house route was tested as vendoring `@noble/hashes@2.4.0`'s `sha256` closure and costs 1,419 lines across four modules (17 named symbols, plus SHA-512/384/224 machinery this package never calls) to replace 124 owned, differential-tested lines — and once the native path is preferred, that fallback only executes where no native hash exists at all. So P17 keeps this package's own implementation as the fallback, adds no dependency, vendors nothing, and promotes the attribution requirement to a standing rule (S20, AC21, D36). Availability of the native route is documented, not assumed: `process.getBuiltinModule` exists from Node v22.3.0 / v20.16.0 (Node API docs), measured present in node v24.19.0 and bun 1.4.0, and absent in browsers — which is why the fallback is load-bearing, not decorative. Severity, class and `folded: no` of F32 were left untouched: it closes when P17 lands. |
 | 2026-09-01 | User-approved | **Adopt issue #146's flow-integrity amendment (F1–F6) and re-plan.** Evidence: `origin/main` roadmap row 28 (PR #153 `d2b31676`, merged 2026-08-30) declares all six clauses inside this feature's own scope, while this branch's row never carried them (`git log -S'normative-prose' -- docs/features/ROADMAP.md` is empty on this branch) and none of the six appears anywhere in `skills/`; the SPEC's earlier amendment rows never adopted them. Finding **F3** (`replan-in-unit`) is folded by this row, and **F22**'s substance — the conflict is scope, not text — is resolved by adoption rather than by deleting `main`'s clause. Product half gains S14–S19 and expectations 25–31; acceptance gains **AC15–AC20 additively** (no existing row touched, narrowed, or re-worded) so the manifest is re-frozen as a replacement per the verification contract, with a fresh receipt in `progress.md`. Engineering half appends the single-concern phases **P9–P16**; roadmap row 28 returns from the premature `done` to `in-progress` with PR #155 named, roadmap rows 29 and 30 are re-based byte-identical to `main` so the merge conflict collapses onto the row-28 status cell alone. P8's close-out is superseded for terminality by P16: no head reached before this amendment can satisfy it. Rejected: moving F1–F6 to a new chained feature (owner chose in-unit; cost recorded as D33). |
 | 2026-09-01 | User-approved | The pre-execution review gate is bypassed for this unit's remaining phases (P6–P8), both stages, by explicit owner instruction ("forcely ignore the review-plan … we can not consume a receipt from a skill in development — bypass our in development skills"): `review-spec`, `review-plan` and `pre-execution-review` are this unit's own undelivered artifacts, installed nowhere (no global skill, no pi command), so the gate demands receipts only this unit's own in-development process could produce — circular for this unit alone. Decision D32 records scope, boundaries and expiry: gate text, schema and every other consumer unchanged; P8's RS3(c) re-derived `SPEC-REVIEW-PASS`/`PLAN-REVIEW-PASS` receipt rows are satisfied per D32 (installed `review-change` + the feature-29 dogfood obligation the SPEC already mandates), and canary fields unobservable without those commands are recorded as the corpus's sanctioned `not yet measured`. |
 
@@ -1018,6 +1044,30 @@ $(git merge-base HEAD origin/main) HEAD origin/main` reports no conflict in
 `docs/features/ROADMAP.md`.
 
 Phase-lint: PASS (8/8) · fingerprint `P16:close-out:9:close-the-amended-candidate`
+
+Depends on P15 **and P17** — P17 is numbered after this phase and executes before
+it, deliberately: P16's fingerprint, its `TASKS.md` rows, and obligations O12/O17
+were cut earlier in the same replan, and re-numbering the close-out to keep the
+sequence visually monotonic would rotate those references for no gain (D36).
+
+#### P17 — Prefer the host native SHA-256 digest
+
+Layer: schema/db. One concern: which implementation answers the sync digest call.
+Done-when: `cd packages/agentic-workflow-schema && npm test` -> exit 0 with the
+three-path agreement case green; `grep -rn "from \"node:\|require(\"node:" src/` ->
+no matches; `node -e` probe asserts `sha256HexSync` routed through the native
+binding in this runtime and produced the same 64-hex digest as the pure-JS path.
+
+- Runs **before P16**; P16's close-out depends on it.
+- No static `node:` specifier and no `@types/node`: reach the binding through
+  `globalThis.process?.getBuiltinModule?.("crypto")` so an untyped optional call
+  keeps browsers, bundlers, and `engines: node >= 18` untouched.
+- Keep this package's pure-JS implementation as the fallback (D36: vendoring
+  `@noble/hashes` costs 1,419 lines across four modules for the no-native case).
+- Name the file that actually pins the digests, in the comment that cites a test
+  which does not exist (finding F36).
+
+Phase-lint: PASS (8/8) · fingerprint `P17:schema/db:7:prefer-the-host-native-sha-256-digest`
 
 ### Deploy & rollback
 

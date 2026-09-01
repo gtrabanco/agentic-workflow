@@ -21,7 +21,8 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 | P13 — Run normalizers before the artifact freeze | planned | Depends on P12 · AC19 / O19 |
 | P14 — Bind normative prose to machine surfaces | planned | Depends on P9–P13 (the gate needs the grammars those phases fix) · AC15 / O15 |
 | P15 — Qualify the amended skills on the weakest executor | planned | Depends on P14 · AC11, AC14 (existing rows, unmodified) |
-| P16 — Close the amended candidate | planned | Depends on P15 · AC12 / O12 plus F22, F23, F24, F25 · terminal phase of the unit |
+| P16 — Close the amended candidate | planned | Depends on P15 **and P17** · AC12 / O12 plus F22, F23, F24, F25 · terminal phase of the unit |
+| P17 — Prefer the host native SHA-256 digest | planned | Depends on P1 (the digest surface it routes) · **executes before P16** · AC21 / O21 · closes F32 and F36 |
 
 ## Dependency receipt v1
 - Fingerprint: 10822fdec53b8f814ef5715fb420539f4fc8bad3 · Closure: 28-evidence-grounded-spec-plan-review ← 26-staged-verification-contracts ← 25-content-bound-review-receipts · 27-pi-agentic-workflow
@@ -47,6 +48,11 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 - Authority chain, in the contract's order: explicit user approval (2026-09-01, replan of unit 28 routed from finding F3) → dated `SPEC.md ## Amendments` row → this replacement manifest → this receipt.
 - Delta: AC15–AC20 added for #146 F1–F6. **AC1–AC14 are byte-unchanged** — verified, not asserted: the only edits inside the table are the appended rows and the amendment preamble, and no validator, command, or outcome wording was removed, skipped, narrowed, or loosened. The finish line moved outward only.
 - Consequence stated rather than discovered later: the acceptance fingerprint is an input to content-bound candidate receipts (features 25 and 26), so re-freezing the manifest invalidates every pre-execution and candidate receipt bound to blob `238b8a1a…`. F23, F24 and F25 therefore cannot be closed by any review minted before this commit; P16 produces the receipt set at its own terminal HEAD.
+
+## Acceptance receipt v3
+- Manifest: docs/features/28-evidence-grounded-spec-plan-review/ACCEPTANCE.md · Blob: cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54 · Status: frozen (replacement) · Verified: 2026-09-01 · Supersedes v2 (`2a772efa8678fe809f51c39f3e07d1e303c30ef1`) and v1 (`238b8a1ae96018ecb6aae082dc135d44d5389c24`) · Recompute with `git hash-object docs/features/28-evidence-grounded-spec-plan-review/ACCEPTANCE.md`
+- Authority chain: owner verdict on F32 (2026-09-01) → dated `SPEC.md ## Amendments` row → AC21 added → this receipt. AC1–AC20 untouched; the manifest grew by one row and the amendment preamble, so the finish line again moved outward only.
+- Same consequence as v2, restated because it now applies twice: content-bound receipts bind the acceptance fingerprint, so nothing minted before this commit closes F23, F24 or F25. P16 mints them at its own terminal HEAD.
 
 ## Replan record — 2026-09-01 (finding F3, #146 flow-integrity amendment)
 
@@ -77,6 +83,16 @@ a fixture subagent followed its skill's write contract over its prose instructio
 committed `de9f4a04` + `bc0a88ef` to this branch, and added a `| 91 |` row to the
 real roadmap; reverted with `git reset --hard 2016d309`, tree byte-clean, evidence
 kept at `/tmp/f35-evidence/`. D33/D34/D35 and known-issues 15/16 record the rest.
+
+**Second amendment the same day (owner verdict on F32 → P17/O21/AC21).** The
+owner rejected the finding's own remedy and asked for native-first, in-house if
+possible, credit if copied. Two of three survived measurement: the native route is
+now planned (documented Node v22.3.0 / v20.16.0 availability, verified in node and
+bun), the attribution rule became standing policy, and vendoring did not survive —
+1,419 lines across four modules to replace 124 owned ones, on the one path where no
+faster alternative exists. AC21 was added, the manifest re-froze to blob
+`cf6ced0c…` (receipt v3 above), and P17 was cut to run **before** the P16 close-out;
+the non-monotonic numbering is recorded in D36 rather than tidied away.
 
 **Still open after this replan, on purpose.** F22's mechanical half (sync with
 main) belongs to P16, not to planning. F23/F24/F25 need a clean review cycle at the

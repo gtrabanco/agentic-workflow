@@ -246,3 +246,19 @@ Layer: close-out · Done-when: the terminal-HEAD receipt set, gate set, `merge-t
 - [ ] Commit `docs(28): link PR #155` and push, and PRINT THE PR URL in the chat.
 
 Phase-lint: PASS (8/8) · fingerprint `P16:close-out:9:close-the-amended-candidate`
+
+## P17 — Prefer the host native SHA-256 digest
+
+Layer: schema/db · Runs **before P16** · Done-when: `cd packages/agentic-workflow-schema && npm test` -> exit 0 with the three-path agreement case; `grep -rn "from \"node:" src/` -> no matches; the probe script prints identical digests and names which path answered.
+
+No version bump is added here: schema `3.5.0` is still unpublished (registry `3.4.0`), so this change ships inside the same release AC10 already names.
+
+- [ ] Route `sha256HexSync` to `globalThis.process?.getBuiltinModule?.("crypto")` when that object exposes `createHash`, and to the existing pure-JS implementation when it does not.
+- [ ] Keep the public sync signature and the lowercase 64-hex result identical on both paths.
+- [ ] Add the three-path agreement case — native binding, pure JS, WebCrypto async — over the ASCII, multibyte, and oversized corpus to `test/pre-execution-canonical.test.mjs`.
+- [ ] Correct the header comment in `src/sha256.ts:13` to name `test/pre-execution-canonical.test.mjs`, the file that actually pins the digests (finding F36).
+- [ ] Record the measured cost of the three rejected alternatives — static `node:crypto`, an `@noble/hashes` dependency, and vendoring its 1,419-line `sha256` closure — in `architecture-notes.md`.
+- [ ] Add the standing vendoring rule to `CLAUDE.md`: any code copied from a third party carries source URL, author, version, and license name in a header comment.
+- [ ] Rewrite the package README's zero-runtime-dependency line to state the contract precisely: no dependencies and no static builtins, with the host's native hash used opportunistically when exposed.
+
+Phase-lint: PASS (8/8) · fingerprint `P17:schema/db:7:prefer-the-host-native-sha-256-digest`

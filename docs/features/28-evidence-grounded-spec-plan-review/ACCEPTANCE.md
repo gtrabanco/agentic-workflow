@@ -15,6 +15,12 @@ or re-worded** — the twelve rows above keep their exact bytes, so the finish l
 only moved outward. This replacement manifest supersedes the earlier frozen
 version and requires a fresh blob receipt in `progress.md` before any phase runs.
 
+Amended: 2026-09-01 (fourth amendment) with explicit user approval, from the
+owner's verdict on finding F32: AC21 is added for the native-first sync digest
+and its pure-JS fallback. AC1–AC20 keep their exact bytes; the finish line moved
+outward again and nothing was narrowed. This replacement manifest supersedes the
+2026-09-01 (third) version and needs a fresh blob receipt before any phase runs.
+
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | Strict `PreExecutionArtifactSnapshot v1` and `PreExecutionReviewReceipt v1` types, one authoritative semantic validator path, canonical digests/vectors, bounded diagnostics, generated structural projections, and package-root exports | `cd packages/agentic-workflow-schema && npm test` -> exit 0; `npm run check:pre-execution-schemas` -> exit 0 |
@@ -37,6 +43,7 @@ version and requires a fresh blob receipt in `progress.md` before any phase runs
 | AC18 (F4) | Extensive evidence acquisition runs in a delegate-only read-only role outside the authoring context and is conserved as a versioned artifact carrying revision, `done / partial / blocked` outcome, the questions, sources with id, class, title, publisher, URL, accessed_at, excerpt, claims mapped to source ids, contradictions, freshness, separately-held non-authoritative product choices, and an unverified-claims section; `partial` or `blocked` emits zero validated claims and returns `NEEDS-EVIDENCE`; pending state persists before any user prompt; the artifact is advisory until the authoring skill spot-checks citations | `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 (delegated-evidence and readiness-blocking fixtures) |
 | AC19 (F5) | Every source-mutating normalizer (formatter, generator, version bumper, bundler, docs generator) runs strictly before the artifact snapshot or review freeze; only check-only actions follow; a byte change to a frozen input after the freeze invalidates current receipts and forces fresh review | `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 (normalizer-ordering fixture, non-zero when a mutating step follows the freeze row) |
 | AC20 (F6) | The sensor proves review-ran for the unit's current state from the durable review mark, never from findings-ledger presence, so a zero-finding review and a never-reviewed unit are distinguishable | `node --test scripts/workflow-status-pre-execution.test.mjs` -> exit 0 (mark-present and ledger-only fixtures) |
+| AC21 (F32) | `sha256HexSync` answers from the host's native SHA-256 where the host exposes one via `globalThis.process?.getBuiltinModule?.("crypto")` (Node v22.3.0 / v20.16.0 and later, bun measured; absent in browsers) and from this package's pure-JS implementation otherwise; both paths return one identical lowercase 64-hex digest for identical bytes; `src/` gains no static `node:` specifier, no `@types/node` is added, `package.json` declares no dependencies; the rejected alternatives and their measured cost are recorded in the unit's architecture notes | `cd packages/agentic-workflow-schema && npm test` -> exit 0 (three-path agreement case) · `grep -rn "from \"node:" src/` -> no matches · `node -e` probe prints identical digests from both paths and names which answered |
 
 ## Quality floor
 
