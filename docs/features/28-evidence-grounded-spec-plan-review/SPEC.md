@@ -983,7 +983,7 @@ gate rejection. Done-when: `node --test scripts/pre-execution-quality.test.mjs`
 skills/review-plan/SKILL.md skills/pre-execution-review/references/POLICY.md` ->
 exit 0.
 
-Phase-lint: PASS (8/8) · fingerprint `P10:docs:6:mark-terminal-verdicts-durably`
+Phase-lint: PASS (8/8) · fingerprint `P10:docs:7:mark-terminal-verdicts-durably`
 
 #### P11 — Prove clean reviews with a durable mark
 
@@ -1021,7 +1021,7 @@ scripts/normative-drift.test.mjs` -> exit 0, and it exits non-zero against each 
 the three injected disagreements (undefined transition, unaccepted argument, absent
 field).
 
-Phase-lint: PASS (8/8) · fingerprint `P14:hardening:7:bind-normative-prose-to-machine-surfaces`
+Phase-lint: PASS (8/8) · fingerprint `P14:hardening:8:bind-normative-prose-to-machine-surfaces`
 
 #### P15 — Qualify the amended skills on the weakest executor
 
