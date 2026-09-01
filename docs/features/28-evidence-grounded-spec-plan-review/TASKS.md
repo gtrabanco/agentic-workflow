@@ -167,8 +167,9 @@ Layer: docs · Done-when: `node --test scripts/pre-execution-quality.test.mjs` -
 - [ ] Fix the typed gate-rejection vocabulary (dependency, status, phase-lint, stale-or-missing-receipt), each trace naming reason and return route.
 - [ ] Add the replay rule: a stale, wrong, or duplicate mark refuses with a typed reason and performs no side effect.
 - [ ] Add the terminal-mark, rejection-trace, and replay-refusal fixtures to `scripts/pre-execution-quality.test.mjs`.
+- [ ] State the identity-value rule once, in `skills/pre-execution-review/references/POLICY.md` §7 — a reviewer recomputes the parent digest and records the claimed value beside it as the reported defect — and make `skills/review-plan/SKILL.md:35` cite that owner instead of saying "copied from the receipt" (finding F37).
 
-Phase-lint: PASS (8/8) · fingerprint `P10:docs:6:mark-terminal-verdicts-durably`
+Phase-lint: PASS (8/8) · fingerprint `P10:docs:7:mark-terminal-verdicts-durably`
 
 ## P11 — Prove clean reviews with a durable mark
 
@@ -217,8 +218,9 @@ Layer: hardening · Done-when: `node --test scripts/normative-drift.test.mjs` ->
 - [ ] Cover the gate transitions in `execute-phase`, `plan-feature`, and `plan-fix`.
 - [ ] Cover the `workflow-status` sensor labels and the envelope field references.
 - [ ] Add the render-only check: prose restating a version, SHA, count, or next command must equal the machine value or the test fails.
+- [ ] Pin the two sentences F37 split two models: the `review-plan` parent-digest line and `POLICY.md` §7 must agree through one cited owner, and the gate fails when either is reworded away from it.
 
-Phase-lint: PASS (8/8) · fingerprint `P14:hardening:7:bind-normative-prose-to-machine-surfaces`
+Phase-lint: PASS (8/8) · fingerprint `P14:hardening:8:bind-normative-prose-to-machine-surfaces`
 
 ## P15 — Qualify the amended skills on the weakest executor
 
