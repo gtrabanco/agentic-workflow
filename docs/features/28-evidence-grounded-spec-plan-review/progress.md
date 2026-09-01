@@ -16,8 +16,20 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 | P8 — Re-review and close the corrected candidate | pending | Depends on P7 |
 
 ## Dependency receipt v1
-- Fingerprint: 6f7c915f1ade956adcef96a8558da17d26159088 · Closure: 28-evidence-grounded-spec-plan-review ← 26-staged-verification-contracts ← 25-content-bound-review-receipts · 27-pi-agentic-workflow
-- Merged PRs: 25 #144 @ 11a8061639e0ea2bdfdbaabc270380543eb37002 merged · 26 #145 @ a69282dbc5164c3be09302783d57bd74c9bc5ffa merged · 27 #150 @ 32e69287b391946963bf6331506c9c1837298932 merged · Fully merged: yes · Verified: 2026-08-30
+- Fingerprint: 10822fdec53b8f814ef5715fb420539f4fc8bad3 · Closure: 28-evidence-grounded-spec-plan-review ← 26-staged-verification-contracts ← 25-content-bound-review-receipts · 27-pi-agentic-workflow
+- Merged PRs: 25 #144 @ 11a8061639e0ea2bdfdbaabc270380543eb37002 merged · 26 #145 @ a69282dbc5164c3be09302783d57bd74c9bc5ffa merged · 27 #150 @ 32e69287b391946963bf6331506c9c1837298932 merged · Fully merged: yes · Verified: 2026-09-01
+- Recipe (so any consumer re-derives it, per RS3(a)): `git hash-object --stdin` over
+  `{ awk '/^## Dependencies/{f=1;next} f&&/^## /{exit} f' <unit SPEC>; grep -E '^\| *(25|26|27) \|' docs/features/ROADMAP.md; }`
+  — the unit's dependency declaration plus each closure roadmap row, files only, no git objects.
+- Replaces fingerprint `6f7c915f1ade956adcef96a8558da17d26159088` (verified 2026-08-30), which **cannot be
+  re-derived from what the preflight names**: `PREFLIGHT.md` hashes "the SPEC `Depends on:` line", but this
+  SPEC — like every SPEC from this repo's template — declares dependencies as a `## Dependencies` section
+  (`grep -c` over `docs/features/`: 30 section-style, 0 real `Depends on:` fields). The old value is kept
+  here as history, not refreshed in place. Rewriting a *dependency* receipt is what
+  `PREFLIGHT.md` orders after every full pass ("rewrite the receipt after every full pass"); it is not a
+  review verdict and carries none of the no-refresh authority.
+- Full pass, not fast path: recomputed fingerprint mismatched, so forge traversal ran (`gh pr view` on
+  #144/#145/#150 → all `MERGED`, base `main`, merge shas identical to those recorded above).
 
 ## Acceptance receipt v1
 - Manifest: docs/features/28-evidence-grounded-spec-plan-review/ACCEPTANCE.md · Blob: 238b8a1ae96018ecb6aae082dc135d44d5389c24 · Status: frozen · Verified: 2026-08-30 · Re-bound 2026-08-30 after user-approved amendment 2 (Pi package release in AC10); amendment 1 blob was `1f03d8cca37a5e14b32cc60db20bffb074ae94ba`
