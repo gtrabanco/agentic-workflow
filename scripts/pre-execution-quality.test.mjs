@@ -1274,6 +1274,10 @@ test("delegated-evidence artifact: a done run resolves its claims through the se
   }
   assert.match(delegation, /^revision: <positive integer>$/m, "the grammar carries its revision");
   assert.match(delegation, /^outcome: done \| partial \| blocked$/m, "the outcome vocabulary is fixed and closed");
+  // P12's task 2 names `uncertainty` beside `contradictions` and `freshness`; AC18
+  // does not require it, so the shape is a superset of the frozen row — a slot the
+  // delegate fills when it could not establish something, never a weaker claim.
+  assert.match(delegation, /^uncertainty: none \|/m, "the grammar carries its uncertainty slot");
   const owners = skillDocs.filter((f) => /delegated-evidence@1/.test(read(path.relative(root, f))) && /^revision: /m.test(read(path.relative(root, f))));
   assert.deepEqual(owners.map((f) => path.relative(root, f)), [DELEGATION_REL], "the artifact shape is defined in exactly one file");
 });

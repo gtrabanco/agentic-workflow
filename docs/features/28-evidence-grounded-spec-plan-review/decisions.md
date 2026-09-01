@@ -656,3 +656,24 @@
   **For P13, one sentence of context:** the artifact is deliberately *not* in the
   snapshot's closed `kind` list, so any normalizer-ordering rule P13 writes for it must
   not assume a binding row exists — it is conserved, not bound.
+
+- **D42 — P12's artifact shape carries `uncertainty`, which AC18 never asked for,
+  because the phase's own task text did (2026-09-01, conductor review of
+  `b5e59dfb`).** `TASKS.md` P12 task 2 lists "contradictions, **uncertainty**,
+  freshness"; AC18 and S17 list contradictions and freshness with no uncertainty
+  slot. The commit shipped the two the acceptance row names and ticked the box
+  anyway, which leaves the ledger claiming more than the artifact holds — the exact
+  class of drift this unit keeps filing findings about. Chosen: add the slot, and
+  keep it distinct from the two neighbours that could absorb it (`unverified-claims`
+  = a claim this run made and cannot stand behind; `contradictions` = two sources
+  disagreeing; `uncertainty` = what the run could not establish, plus the evidence
+  that would). Rejected: amending the task text to match the shipped shape — the
+  task is the finer-grained promise, the acceptance row is the floor, and quietly
+  lowering a task to what was already written is how a plan launders its own gaps.
+  Direction matters: the shape is now a **superset** of AC18 — more reported state,
+  no narrowed validator, no acceptance edit. Cost, stated: five lines in one
+  reference pushed four routes past their own headroom floors, so eight ceilings moved
+  to `ceil(measured × 1.10)` in the same commit (growth source: this slot). That is
+  the price of the `relative-headroom` policy working as designed, and it is the
+  second time in three phases that a small prose addition has cost a re-basis —
+  recorded here, not as a complaint, so a later trim decision has the number.

@@ -68,6 +68,7 @@ sources:
 claims:
   <CLM-id> | <the claim> | <SRC-id, …> | <Q-id>
 contradictions: none | <CLM-id vs CLM-id | SRC-id — one line each>
+uncertainty: none | <what this run could not establish, and the evidence that would>
 freshness: <earliest accessed_at> → <latest accessed_at> · stale: none | <SRC-id>
 product-choices: none | <the choice> — held separately, non-authoritative
 unverified-claims: none | <CLM-id — why it is not verified>
@@ -83,6 +84,9 @@ spot-check: <CLM-id> | PASS | FAIL | <authoring skill> | <date>
 - **Separately-held product choices** stay in this artifact and never become
   claims: the delegate reports what it found, the human decides what it means, and
   `design-feature` remains the only route to a Product half.
+- `uncertainty` names what this run could not establish — not a shaky claim
+  (`unverified-claims`) and not two sources disagreeing (`contradictions`), so the
+  authoring turn asks a question instead of reading a silence as a result.
 - **Positive revision.** Before writing, read the current `revision` from the bytes
   on disk — never from memory — and write `revision + 1`. A number that repeats or
   decreases is refused, and the run is re-read. Conserving this artifact is an
