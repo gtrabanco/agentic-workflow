@@ -1,7 +1,7 @@
 ---
 name: pre-execution-review
 user-invocable: false
-version: 1.2.0
+version: 1.3.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -48,7 +48,7 @@ snapshot.
 
 | Condition now | LOAD |
 |---|---|
-| Running or repairing a pre-execution review | [references/POLICY.md](references/POLICY.md) — independence, union, dismissal, diversity labels, author exclusion, critique/synthesis/arbitration bounds, no quorum, no-progress, batch repair, `CONVERGENCE-ANOMALY` |
+| Running or repairing a pre-execution review | [references/POLICY.md](references/POLICY.md) — independence, union, dismissal, diversity labels, author exclusion, untrusted content, critique/synthesis/arbitration bounds, no quorum, no-progress, batch repair, `CONVERGENCE-ANOMALY` |
 | Building or re-checking a snapshot digest | [references/SNAPSHOT.md](references/SNAPSHOT.md) — the one executable recipe (`scripts/pre-execution-snapshot.mjs`), what each stage binds, how a consumer re-verifies a receipt, and why a snapshot digest is not a git blob id |
 | Writing or validating a Plan-stage artifact | [references/LEDGERS.md](references/LEDGERS.md) — the planning-evidence table, the obligation ledger, the stage-aware `planning-findings.md`, and who may write each |
 
