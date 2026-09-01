@@ -193,6 +193,33 @@ runFixtureRoute(
   /route lines .* >/,
 );
 
+// The declared `relative-headroom` policy must bind, not just be recorded
+// (feature 28 finding RS12): a ceiling below ceil(measured x (1 + headroom)) is a
+// route the guard cannot protect, so the check refuses it by name. The headroom
+// is inflated instead of the ceiling lowered so the ceiling check stays green and
+// only the floor can trip, at any future measured value.
+runFixtureRoute(
+  "route estimate ceiling below the declared headroom floor",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 10 }; },
+  /route estimate ceiling \d+ < \d+ = ceil\(measured/,
+);
+
+runFixtureRoute(
+  "route lines ceiling below the declared headroom floor",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 10 }; },
+  /route lines ceiling \d+ < \d+ = ceil\(measured/,
+);
+
+{
+  // The shipped manifest must satisfy its own declared policy: this is the exact
+  // state RS12 reported (a 10 % policy with routes sitting at 0.08 % headroom).
+  const shippedHeadroom = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes"], { encoding: "utf8" });
+  assert.equal(shippedHeadroom.status, 0, `shipped routes must honour their own headroom policy:\n${shippedHeadroom.stdout}\n${shippedHeadroom.stderr}`);
+  const policy = JSON.parse(fs.readFileSync(manifestPath, "utf8")).policy;
+  assert.equal(policy.name, "relative-headroom", "the budgets manifest must keep declaring its headroom policy");
+  assert.ok(Number.isFinite(Number(policy.headroom)) && Number(policy.headroom) > 0, "declared headroom must be a positive ratio");
+}
+
 runFixtureRoute(
   "route references for undeclared skill",
   (manifest) => { manifest.routes["test:badref"] = { skills: ["execute-phase"], references: { "review-change": ["HANDOFF.md"] }, templates: [], routeEstimateMax: null, routeLinesMax: null }; },
