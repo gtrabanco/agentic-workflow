@@ -8,6 +8,13 @@ convergence; this replacement manifest supersedes the earlier planned version.
 Amended: 2026-08-30 (second amendment) with explicit user approval to add the
 Pi package release to AC10; no other row changed.
 
+Amended: 2026-09-01 (third amendment) with explicit user approval, routed from
+finding F3 (`replan-in-unit`), to adopt issue #146's flow-integrity amendment:
+AC15–AC20 are added for F1–F6. **No existing row was deleted, skipped, narrowed,
+or re-worded** — the twelve rows above keep their exact bytes, so the finish line
+only moved outward. This replacement manifest supersedes the earlier frozen
+version and requires a fresh blob receipt in `progress.md` before any phase runs.
+
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | Strict `PreExecutionArtifactSnapshot v1` and `PreExecutionReviewReceipt v1` types, one authoritative semantic validator path, canonical digests/vectors, bounded diagnostics, generated structural projections, and package-root exports | `cd packages/agentic-workflow-schema && npm test` -> exit 0; `npm run check:pre-execution-schemas` -> exit 0 |
@@ -24,6 +31,12 @@ Pi package release to AC10; no other row changed.
 | AC12 | Exact candidate independently reviews with no unresolved fix-now finding; the canary protocol records baseline/post-change fields and makes no unmeasured savings claim | read-verified: current `review-change` PASS receipt plus completed canary template containing observations or explicit `not yet measured` values |
 | AC13 | Product and Engineering authoring use ordered inventory/evidence/draft/readiness passes; readiness checks evidence, unknowns, obligations, scenarios, phases, and validators, binds compact planning evidence, and can never emit review PASS | `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 (readiness and planning-evidence fixtures) |
 | AC14 | The first complete findings union is repaired as one root-caused batch; one re-review is normal; entering a second repair/re-review cycle emits owner-specific `CONVERGENCE-ANOMALY`. Feature, fix, and cross-boundary qualification samples require no second cycle, without using count as approval authority | command-verified route/convergence fixtures plus read-verified completed qualification corpus |
+| AC15 (F1) | A repository test fails when a normative surface orders a transition, argument, field, artifact, or ledger-row shape the machine surface does not define or accept, and when the machine surface requires something no normative text states; only fixed versioned grammars are read, never free prose; every normative surface lacking a fixed grammar has been given one; where prose restates a machine fact (version, SHA, count, next command) the machine wins and the prose is the defect | `node --test scripts/normative-drift.test.mjs` -> exit 0, and -> non-zero against each injected disagreement (undefined transition, unaccepted argument, absent field) |
+| AC16 (F2) | One declared owner per ledger truth class (review findings, planning findings, progress, known-issues, decisions, roadmap, acceptance manifest) plus its declared mechanical annotator exist in the ownership map and in every ledger template; an undeclared script or agent writer of a durable ledger fails the scan; a declared annotator may only append the token its entry names | `node --test scripts/ledger-ownership.test.mjs` -> exit 0, and -> non-zero on the undeclared-writer fixture |
+| AC17 (F3) | A turn producing a terminal verdict (review PASS/FAIL, plan approval, fold completion) or a gate rejection (dependency, status, phase-lint, stale/missing receipt) writes its durable mark in the same act; every rejection trace names reason and return route; replaying a stale, wrong, or duplicate mark returns a typed refusal with zero side effects | `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 (terminal-mark and rejection-trace fixtures) |
+| AC18 (F4) | Extensive evidence acquisition runs in a delegate-only read-only role outside the authoring context and is conserved as a versioned artifact carrying revision, `done / partial / blocked` outcome, the questions, sources with id, class, title, publisher, URL, accessed_at, excerpt, claims mapped to source ids, contradictions, freshness, separately-held non-authoritative product choices, and an unverified-claims section; `partial` or `blocked` emits zero validated claims and returns `NEEDS-EVIDENCE`; pending state persists before any user prompt; the artifact is advisory until the authoring skill spot-checks citations | `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 (delegated-evidence and readiness-blocking fixtures) |
+| AC19 (F5) | Every source-mutating normalizer (formatter, generator, version bumper, bundler, docs generator) runs strictly before the artifact snapshot or review freeze; only check-only actions follow; a byte change to a frozen input after the freeze invalidates current receipts and forces fresh review | `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 (normalizer-ordering fixture, non-zero when a mutating step follows the freeze row) |
+| AC20 (F6) | The sensor proves review-ran for the unit's current state from the durable review mark, never from findings-ledger presence, so a zero-finding review and a never-reviewed unit are distinguishable | `node --test scripts/workflow-status-pre-execution.test.mjs` -> exit 0 (mark-present and ledger-only fixtures) |
 
 ## Quality floor
 
@@ -38,5 +51,7 @@ Pi package release to AC10; no other row changed.
 - `cd packages/agentic-workflow-schema && npm pack --dry-run`
 - `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test`
 - `node --test scripts/pre-execution-quality.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs`
+- `node --test scripts/ledger-ownership.test.mjs scripts/normative-drift.test.mjs`
+- `node --test scripts/workflow-status-pre-execution.test.mjs`
 - `node scripts/check-skill-context.mjs`
 - `npx skills add . --list`
