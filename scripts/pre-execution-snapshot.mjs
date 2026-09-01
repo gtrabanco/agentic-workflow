@@ -99,26 +99,6 @@ const CONTEXT_SOURCES = [
   { kind: "architectural-invariants", file: "docs/architecture/ARCHITECTURAL_INVARIANTS.md" },
 ];
 
-/**
- * The freshness dimensions in the order `comparePreExecutionReceiptToSnapshot`
- * documents (policy → context → source revision → parent → artifact content →
- * artifact revision). `missing-receipt-snapshot` is precedence 1 and is decided
- * before this list is consulted: it means "nothing is bound", never "drift".
- * One entry per dimension: the recorded line to read, the snapshot field to read,
- * and the code to answer — so the order is data, not a chain of ifs that a later
- * edit can reorder.
- */
-const ATTRIBUTION_ORDER = Object.freeze([
-  { code: "invalid-stage", label: "Stage", field: "stage" },
-  { code: "invalid-unit", label: "Unit", field: "unitId" },
-  { code: "stale-policy", label: "Policy", field: null },
-  { code: "stale-context", label: "authority", field: null },
-  { code: "stale-source-revision", label: "Source revision", field: "sourceRevision" },
-  { code: "stale-parent", label: "Parent SPEC snapshot", field: "parentSpecSnapshotDigest" },
-  { code: "stale-artifact-content", label: "bound bytes", field: null },
-  { code: "stale-artifact-revision", label: "Artifact revision", field: "artifactRevisionId" },
-]);
-
 function parseArgs(argv) {
   const action = argv[0];
   const opts = {};
