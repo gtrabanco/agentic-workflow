@@ -247,6 +247,37 @@ This repo has no application build. "Green" means:
   mirror stays byte-identical to `skills/`; `test/alias-coverage.test.mjs`
   reads both trees) — same PR, always.
 
+### Normalizer inventory (this repository)
+
+The rule that orders these steps — and the fact that a post-freeze byte change voids
+the receipts that bound those bytes — is owned by
+`skills/execute-phase/references/PRE_EXECUTION_GATE.md` §"Normalizer order"; this list
+only says which of **our** steps rewrite bytes and where they sit relative to a
+snapshot or acceptance freeze. `scripts/pre-execution-quality.test.mjs` parses this
+block and refuses the schedule if a mutating step is ever re-marked as a tail step.
+
+```text
+normalizer-inventory@1
+step | kind | side
+bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, both CHANGELOG tables, README/SKILLS cells) | before
+npm run bundle:skills | bundler (copies `skills/` into the Pi package mirror `packages/pi-agentic-workflow/skills/`) | before
+npm run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
+generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
+generate-verification-schemas.mjs | generator (writes the verification schema projections) | before
+generate-docs | docs generator (writes `docs/site/guides/`) | before
+generate-pre-execution-schemas.mjs --check | check-only (drift report, `npm run check:pre-execution-schemas`) | after
+generate-verification-schemas.mjs --check | check-only (drift report, `npm run check:verification-schemas`) | after
+pre-execution-snapshot.mjs verify | check-only (re-derives a bound digest, writes nothing) | after
+node scripts/check-skill-context.mjs (--routes) | check-only (budget report, writes nothing) | after
+formatter | none declared — this repository has no Prettier, Biome or EditorConfig configuration, so the formatter category is empty here | n/a
+```
+
+The two schema generators are the clean example of the split the rule turns on: the
+same script rewrites a projection or reports on it, and only the reporting mode may
+run after a freeze. `bundle:skills` must run after the last edit under `skills/` and
+before any freeze, because `test/skill-parity.test.mjs` fails a drifted mirror. No
+script or skill may keep a second copy of this list.
+
 ---
 
 ## Packages

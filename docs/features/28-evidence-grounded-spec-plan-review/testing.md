@@ -531,3 +531,81 @@ the real unit, and `P12`'s own readiness run refused to count a `partial` artifa
 (`^uncertainty: none \|` on the grammar). `node --test
 scripts/pre-execution-quality.test.mjs` -> exit 0, 58/58; eight route ceilings
 re-based to their exact `ceil(measured × 1.10)` floors in the same commit.
+
+### P13 (2026-09-01) — Normalizers before the freeze (AC19 / O19)
+
+**Red first, then red in the right place.** The three `normalizer` cases were written
+before the gate section or the inventory existed, and the suite still re-points its
+reads through `PRE_EXECUTION_QUALITY_REPO` (P10's recipe with P12's `dist` note — the
+archive needs `git init` *and* the built schema `dist`, or the snapshot case fails for a
+reason that is not this phase's):
+
+```sh
+git archive 3f2ff3a0 | tar -x -C /tmp/p13red          # the tree before P13
+cp scripts/pre-execution-quality.test.mjs /tmp/p13red/scripts/
+cp -r packages/agentic-workflow-schema/dist /tmp/p13red/packages/agentic-workflow-schema/dist
+cd /tmp/p13red && git init -q . && git add -A && git commit -qm pre-P13
+PRE_EXECUTION_QUALITY_REPO=/tmp/p13red node --test scripts/pre-execution-quality.test.mjs
+# → tests 61 · pass 58 · fail 3 · exit 1
+#   order-refusal, invalidation, inventory (all three surfaces are absent there)
+
+# then: only the gate section copied onto the pre-P13 tree, no inventory
+# → tests 61 · pass 60 · fail 1 · exit 1
+#   only "normalizer inventory: one home…" — the rule and its invalidation
+#   sentence stand on their own, and the list is a separate obligation
+```
+
+**The done-when's non-zero half is proven on the live tree, not asserted.** With only
+`CLAUDE.md` edited — `npm run bundle:skills` re-marked from `before` to `after` in the
+inventory block — the suite answers:
+
+```sh
+node --test scripts/pre-execution-quality.test.mjs
+# → tests 61 · pass 60 · fail 1 · exit 1
+#   ✖ normalizer inventory: one home, and every entry names its side of the freeze
+#     "re-marking a bundler as a tail step is refused"
+```
+
+That is the schedule decision, not a text match: `scheduleVerdict`
+(`scripts/pre-execution-quality.test.mjs:1367`) reads order from the `side` column and
+writes from the `kind` column, so a mutating step behind the freeze row fails **by name**
+(`{ok: false, offenders: ["npm run bundle:skills"]}`). Two late steps are reported
+together and in schedule order (`["bump-skill", "generate-docs"]`), and a legal schedule
+(edit → `bump-skill` → `bundle:skills` → generator → freeze → `--check` → `verify`)
+answers `{ok: true, offenders: []}`. The `kind`-not-`side` split is deliberate: had
+`mutates` come from `side`, the probe above would have been legal by editing one cell,
+which is a validator weakened to pass.
+
+| Gate | Result |
+|---|---|
+| `node --test scripts/pre-execution-quality.test.mjs` | exit 0 — 61/61 (58 before P13 + 3 `normalizer` cases) |
+| same suite on `git archive 3f2ff3a0` | exit 1 — 58 pass / 3 fail (red first) |
+| same suite on that tree + the gate section only | exit 1 — 60 pass / 1 fail (inventory still missing) |
+| same suite with the bundler re-marked `after` | exit 1 — 60 pass / 1 fail (the refusal, on the live tree) |
+| `node --test scripts/*.test.mjs` (root) | exit 0 — 164/164 (161 before P13 + 3 new) |
+| `node --test scripts/ledger-ownership.test.mjs` | exit 0 — 18/18, seven truth classes unchanged, no new ledger home |
+| `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 — 6/6 (P11's surface untouched) |
+| `node scripts/check-skill-context.mjs` | exit 0 — 39 skills, **no ceiling moved** (`PRE_EXECUTION_GATE.md` 927 → 1358 estimate / 55 → 79 lines, inside `execute-phase`'s existing `referenceEstimateMax: 2588`) |
+| `node scripts/check-skill-context.mjs --routes` | exit 0 — 23 routes, **no re-basis needed**; tightest route `execute-phase:descope` 9393 → 9824 / 11125 (floor 10807) |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | exit 0 — 38 skills / 123 files bundled, 134/134 (mirror byte-identical; a reference-only edit, so no `bump-skill` run and no version moved) |
+
+**What each refusal is proof of.** Case 1 refuses a mutating step behind the freeze and
+pins the rule's one home — `strictly before the freeze row` is defined in exactly one
+file under `skills/`, and the dual-mode clause ("only the check-only mode may run after
+the freeze") is in that same section. Case 2 slices the file at that heading and requires
+the invalidation sentence, the phrase `step-order guarantee`, and citations of
+`SNAPSHOT.md` and `POLICY.md` §7 to live inside it, while refusing the digest recipe and
+§7's pairing wording there — cite, never restate. Case 3 parses the inventory, refuses a
+duplicate step, refuses an `after` step whose kind is not check-only, refuses a second
+home (the header appears in `CLAUDE.md` and nowhere else in the guide or
+`docs/workflow/`), refuses any copy of the block inside the gate reference, and refuses a
+formatter claim: the row's kind must read `none declared`, and `.prettierrc`, `biome.json`
+and `.editorconfig` must in fact be absent, so the honest entry stays honest when someone
+adds a formatter without updating the list.
+
+**Manual check (not automated, AC19's ordering half).** Next time a phase edits
+`skills/`, run the gate last and confirm the order in the record: edits → `bump-skill`
+(only if a `SKILL.md` moved) → `npm run bundle:skills` → snapshot → review, with every
+`--check`/`verify`/`--routes` step after it. `GOLDEN_FIXTURE.md`'s weakest-executor leg
+for `execute-phase` after this reference change is P15's, and P14's drift gate owes the
+gate → guide citation its mechanical pin.

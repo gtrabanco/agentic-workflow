@@ -1359,4 +1359,142 @@ test("delegated-evidence role: read-only, outside the authoring context, in a na
   assert.match(delegation, /artifactRevisionId/, "conservation rides the revision handoff, no second mechanism");
 });
 
-console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution, delegated evidence");
+// --- P13: normalizers run before the artifact freeze (AC19 / O19) -----------
+
+// AC19's ordering as arithmetic over a schedule: steps in order, each carrying its
+// `mutates` flag, plus the index of the freeze row. A mutating step at or after that
+// row is refused **by name**, so the refusal is a decision, not a wish.
+const scheduleVerdict = ({ steps, freezeAt }) => {
+  const offenders = steps
+    .filter((step, index) => step.mutates && index >= freezeAt)
+    .map((step) => step.name);
+  return { ok: offenders.length === 0, offenders };
+};
+
+// The repository's normalizer inventory, parsed from its own grammar block rather
+// than remembered: `side` is where the step sits relative to the freeze row.
+const INVENTORY_HEADER = "normalizer-inventory@1";
+const guide = read("CLAUDE.md");
+const inventoryRows = () => {
+  const start = guide.indexOf(INVENTORY_HEADER);
+  if (start === -1) return null;
+  return guide.slice(start + INVENTORY_HEADER.length, guide.indexOf("```", start))
+    .split("\n").map((line) => line.trim()).filter((line) => line !== "")
+    .slice(1).map((line) => {
+      const [step, kind, side] = line.split("|").map((cell) => cell.trim());
+      return { step, kind, side };
+    });
+};
+// Schedule order comes from the `side` column; whether a step rewrites bytes comes
+// from its `kind`. That split is the whole point: re-marking a bundler as a tail step
+// does not make it non-mutating, it makes the schedule illegal.
+const inventorySchedule = (rows) => {
+  const live = rows.filter((r) => r.side !== "n/a");
+  const step = (r) => ({ name: r.step, mutates: !/check-only/i.test(r.kind) });
+  const head = live.filter((r) => r.side === "before").map(step);
+  const tail = live.filter((r) => r.side === "after").map(step);
+  return { steps: [...head, { name: "freeze", mutates: false }, ...tail], freezeAt: head.length };
+};
+
+test("normalizer order: a mutating step scheduled after the freeze row is refused by name", () => {
+  const legal = [
+    { name: "edit the skill reference", mutates: true },
+    { name: "bump-skill", mutates: true },
+    { name: "npm run bundle:skills", mutates: true },
+    { name: "generate-pre-execution-schemas.mjs", mutates: true },
+    { name: "freeze (artifact snapshot / acceptance manifest)", mutates: false },
+    { name: "generate-pre-execution-schemas.mjs --check", mutates: false },
+    { name: "pre-execution-snapshot.mjs verify", mutates: false },
+  ];
+  assert.deepEqual(scheduleVerdict({ steps: legal, freezeAt: 4 }), { ok: true, offenders: [] });
+  // the done-when's non-zero half: the bundler, moved behind the freeze, is refused
+  const bundlerLast = [...legal.slice(0, 3), legal[4], legal[5], legal[2], legal[6]];
+  assert.deepEqual(scheduleVerdict({ steps: bundlerLast, freezeAt: 4 }),
+    { ok: false, offenders: ["npm run bundle:skills"] },
+    "a mutating step after the freeze row fails, and the refusal names it");
+  // a version bumper and a docs generator behind the freeze fail the same way, and
+  // two offenders are reported together and in schedule order
+  const twoLate = [
+    { name: "edit", mutates: true },
+    { name: "freeze", mutates: false },
+    { name: "bump-skill", mutates: true },
+    { name: "generate-docs", mutates: true },
+  ];
+  assert.deepEqual(scheduleVerdict({ steps: twoLate, freezeAt: 1 }),
+    { ok: false, offenders: ["bump-skill", "generate-docs"] });
+  // the freeze row itself is not a write, and a check-only tail is always legal
+  assert.equal(scheduleVerdict({ steps: legal, freezeAt: 4 }).ok, true);
+  // rule placement: stated once, in the gate that owns the fixed pre-flight order
+  assert.match(execGate, /^### Normalizer order/m, "the gate carries the ordering section");
+  assert.match(execGate, /strictly before the freeze row/, "mutating steps are ordered before the freeze");
+  assert.match(execGate, /only check-only steps follow/, "check-only steps are the only permitted tail");
+  assert.match(execGate, /check-only mode.*may[^\n]*follow|only the check-only mode/, "a dual-mode step contributes only its check-only mode afterwards");
+  const owners = skillDocs.filter((f) => /strictly before the freeze row/.test(read(path.relative(root, f))));
+  assert.deepEqual(owners.map((f) => path.relative(root, f)), ["skills/execute-phase/references/PRE_EXECUTION_GATE.md"],
+    "the ordering rule has exactly one home in the skills");
+});
+
+test("normalizer order: a post-freeze byte change voids the receipts that bound it", () => {
+  // The invalidation sentence lives in the same section as the ordering rule, so one
+  // read of one file gives an executor both halves of AC19.
+  const section = execGate.slice(execGate.indexOf("### Normalizer order"));
+  assert.ok(section.length > 0 && section.length < execGate.length, "the section is a real, bounded slice");
+  assert.match(section, /A byte change to a frozen input after the freeze/, "the invalidation sentence is in the ordering section");
+  assert.match(section, /voids[^\n]*receipt|forces a fresh review/, "its consequence is named: fresh review");
+  assert.match(section, /step-order guarantee/, "what the rule adds over the digests is named, not overstated");
+  // cite, never restate: SNAPSHOT.md and POLICY.md §7 keep their ownership
+  assert.match(section, /SNAPSHOT\.md/, "the gate cites the snapshot owner");
+  assert.match(section, /POLICY\.md` §7|POLICY\.md §7/, "the gate cites the digest-recompute owner");
+  assert.ok(!/canonical SHA-256|sorted object keys/.test(section), "the gate does not restate the digest recipe");
+  assert.ok(!/beside the recomputed one/.test(section), "the gate does not restate §7's pairing rule");
+  // and P10's per-file restatement pins still hold for the new sentences
+  assert.ok(!/\bsame act\b|are one act|MARK REPLAY/.test(execGate), "§8's rule is not copied into the gate");
+});
+
+test("normalizer inventory: one home, and every entry names its side of the freeze", () => {
+  const rows = inventoryRows();
+  assert.ok(rows, "CLAUDE.md carries the repository's normalizer inventory");
+  const byStep = new Map(rows.map((r) => [r.step, r]));
+  assert.equal(byStep.size, rows.length, "no step is listed twice");
+  // the categories AC19 names, closed against this repository's real surfaces
+  for (const [step, side] of [
+    ["bump-skill", "before"], ["npm run bundle:skills", "before"],
+    ["npm run build (packages/agentic-workflow-schema)", "before"],
+    ["generate-pre-execution-schemas.mjs", "before"],
+    ["generate-verification-schemas.mjs", "before"],
+    ["generate-docs", "before"],
+    ["generate-pre-execution-schemas.mjs --check", "after"],
+    ["generate-verification-schemas.mjs --check", "after"],
+    ["pre-execution-snapshot.mjs verify", "after"],
+  ]) {
+    assert.equal(byStep.get(step)?.side, side, `${step} must be inventoried on the \`${side}\` side`);
+  }
+  // the formatter category answered honestly instead of naming a tool that is absent
+  const formatter = rows.find((r) => /formatter/i.test(r.kind));
+  assert.ok(formatter, "the formatter category is not silently dropped");
+  assert.match(formatter.kind, /none declared/i, "the honest entry: no formatter is declared here");
+  for (const absent of [".prettierrc", "biome.json", ".editorconfig"]) {
+    assert.equal(fs.existsSync(path.join(root, absent)), false, `${absent} would contradict the inventory`);
+  }
+  // the inventory is mechanically consistent with the ordering rule, not just near it
+  for (const row of rows) {
+    assert.match(row.side, /^(before|after|n\/a)$/, `${row.step} must name a side`);
+    if (row.side === "after") assert.match(row.kind, /check-only/i, `${row.step} is a tail step and must be check-only`);
+  }
+  assert.deepEqual(scheduleVerdict(inventorySchedule(rows)), { ok: true, offenders: [] },
+    "the scheduled order the inventory declares is legal");
+  const moved = rows.map((r) => (r.step === "npm run bundle:skills" ? { ...r, side: "after" } : r));
+  assert.deepEqual(scheduleVerdict(inventorySchedule(moved)),
+    { ok: false, offenders: ["npm run bundle:skills"] }, "re-marking a bundler as a tail step is refused");
+  // one home: the grammar block exists once, and the gate points at it generically
+  const homes = ["CLAUDE.md", ...fs.readdirSync(path.join(root, "docs", "workflow")).filter((n) => n.endsWith(".md")).map((n) => `docs/workflow/${n}`)]
+    .filter((f) => read(f).includes(INVENTORY_HEADER));
+  assert.deepEqual(homes, ["CLAUDE.md"], "the inventory is declared in exactly one file");
+  assert.match(execGate, /normalizer inventory/i, "the gate sends an executor to the project's inventory");
+  assert.ok(!execGate.includes(INVENTORY_HEADER), "no copy of the inventory leaks into the gate");
+  // the guide cites the rule instead of restating it
+  assert.match(guide, /PRE_EXECUTION_GATE\.md/, "the guide cites the gate as the rule's owner");
+  assert.ok(!/strictly before the freeze row/.test(guide), "the guide cites the rule, never restates it");
+});
+
+console.log("PASS pre-execution quality: grounding, Product/Plan readiness, review-spec, review-plan, ledgers, shared policy, gates, repair, routing, distribution, delegated evidence, normalizer order");

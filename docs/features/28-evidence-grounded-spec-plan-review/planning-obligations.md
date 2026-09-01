@@ -73,7 +73,7 @@ O15 | AC15 | F1 drift gate: a repository test fails when normative skill text or
 O16 | AC16 | F2 durable-ledger write ownership: one declared owner per truth class plus declared mechanical annotator, present in the ownership map and every template; scan fails undeclared script or agent writers; gate rejections keep typed durable traces | P9 | Declare durable ledger write ownership | execute-phase | `node --test scripts/ledger-ownership.test.mjs` | exit 0 green and non-zero on the undeclared-writer fixture | verified
 O17 | AC17 | F3 terminal marking: verdict and rejection turns write the durable mark in the same act, traces name reason and return route, replay of a stale, wrong, or duplicate mark refuses with a typed reason and zero side effects | P10, P11 | Mark terminal verdicts durably, prove clean reviews with a durable mark | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with terminal-mark, rejection-trace and no-side-effect fixtures | verified
 O18 | AC18 | F4 delegated evidence standard: versioned artifact with outcome, questions, seven source fields, claims mapped to source ids, contradictions, freshness, separated product choices, unverified section; partial or blocked blocks readiness; persist-then-STOP; advisory until spot-checked | P12 | Conserve delegated evidence as a versioned artifact | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with delegated-evidence and NEEDS-EVIDENCE fixtures | verified
-O19 | AC19 | F5 normalization before freeze: every source-mutating normalizer scheduled strictly before the snapshot or freeze row, only check-only actions after, post-freeze byte change voids current receipts | P13 | Run normalizers before the artifact freeze | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 green and non-zero when a mutating step follows the freeze | planned
+O19 | AC19 | F5 normalization before freeze: every source-mutating normalizer scheduled strictly before the snapshot or freeze row, only check-only actions after, post-freeze byte change voids current receipts | P13 | Run normalizers before the artifact freeze | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 green and non-zero when a mutating step follows the freeze | in-progress
 O20 | AC20 | F6 clean-review sensing: sensor review-run proof keys on the durable review mark instead of findings-ledger presence so a zero-finding review is distinguishable from a never-reviewed unit | P11 | Prove clean reviews with a durable mark | execute-phase | `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 with mark-present and ledger-only fixtures | verified
 O21 | AC21 | F32 disposition: the sync digest prefers the host native SHA-256 through globalThis.process?.getBuiltinModule?.("crypto") where present and this package's pure-JS path otherwise, one identical lowercase 64-hex result, no static node: specifier, no @types/node, no dependency added, nothing vendored, rejected alternatives recorded with measured cost, and any future copied code carrying source, author, version and license | P17 (runs before P16) | Prefer the host native SHA-256 digest | execute-phase | `cd packages/agentic-workflow-schema && npm test` plus the no-static-node-import grep and the two-path digest probe | exit 0, identical digests from both paths, zero static builtin imports | planned
 
@@ -106,3 +106,25 @@ permission vocabulary. What the row does **not** claim: mechanical enforcement o
 delegate's obedience (known-issue 16's stated residual — the scan reaches scripts, the
 contract reaches models), and no snapshot kind was invented to bind this artifact.
 Status cell only; no verdict, validator or evidence cell changed.
+
+Reconciled 2026-09-01 (phase P13): **O19** moves to `in-progress`, not `verified`. Its
+named validator now answers both ways it was asked to — `node --test
+scripts/pre-execution-quality.test.mjs` 61/61 exit 0, and exit 1 with the single
+`normalizer inventory: one home…` failure when `npm run bundle:skills` is re-marked from
+`before` to `after` in the inventory (58 pass / 3 fail / exit 1 against the pre-P13 tree,
+60 pass / 1 fail against that tree with only the gate section added) — and it closes the
+row's first two clauses with computed proof: the ordering rule is stated in exactly one
+skill file (`PRE_EXECUTION_GATE.md` §"Normalizer order"), each project's mutating steps are
+inventoried in exactly one place (`CLAUDE.md`, `normalizer-inventory@1`, every entry naming
+its side of the freeze and every dual-mode step contributing only its check-only mode
+afterwards), and `scheduleVerdict` refuses a mutating step behind the freeze row by naming
+it. What the row does **not** claim: AC19's third clause — a byte change to a frozen input
+after the freeze voiding current receipts and forcing fresh review — is enforced by the
+existing digest machinery (`SNAPSHOT.md`'s verify recipe, `POLICY.md` §7,
+`scripts/pre-execution-attribution.test.mjs`), which this phase cites at its owner and did
+not re-prove; P13 added a step-order guarantee, not a second invalidation mechanism. The
+sentence that says so is pinned to the ordering section, but no fixture of this phase's
+mints a receipt, lets a byte move behind it, and watches it go stale — that proof belongs
+to the machinery above and to P16's receipt set, minted at a terminal HEAD where a
+post-freeze write is actually observable. Status cell only; no verdict, validator or
+evidence cell changed.
