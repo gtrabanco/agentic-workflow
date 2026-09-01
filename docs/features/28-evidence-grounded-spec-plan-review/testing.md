@@ -524,3 +524,10 @@ hand on a toy unit in a throwaway tree and confirm: the artifact arrives with al
 source fields filled, no `planning-findings.md` or `progress.md` row appeared anywhere in
 the real unit, and `P12`'s own readiness run refused to count a `partial` artifact.
 `GOLDEN_FIXTURE.md`'s weakest-executor legs for `evidence-grounding` 1.3.0 are P15's.
+
+**P12 follow-up (same day, conductor review).** `uncertainty` added to
+`delegated-evidence@1` (D42) and pinned by a new assertion in the existing
+`delegated-evidence artifact: … seven source fields` case
+(`^uncertainty: none \|` on the grammar). `node --test
+scripts/pre-execution-quality.test.mjs` -> exit 0, 58/58; eight route ceilings
+re-based to their exact `ceil(measured × 1.10)` floors in the same commit.

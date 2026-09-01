@@ -874,6 +874,18 @@ weakest-executor fixture leg named in `GOLDEN_FIXTURE.md` above.
 - Files: `skills/evidence-grounding/references/DELEGATION.md` (new), `skills/evidence-grounding/SKILL.md`, `skills/evidence-grounding/references/READINESS.md`, `skills/pre-execution-review/references/POLICY.md`, `skills/pre-execution-review/references/LEDGERS.md`, `scripts/pre-execution-quality.test.mjs`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `CHANGELOG.es.md`, `docs/workflow/SKILLS.md`, `docs/workflow/SKILLS.es.md`, `packages/pi-agentic-workflow/skills/**` (rebuilt mirror), unit `TASKS.md` / `progress.md` / `testing.md` / `decisions.md` / `planning-obligations.md` / `known-issues.md`.
 - Next: P13 — Run normalizers before the artifact freeze
 
+**Dated completion note — 2026-09-01, after reviewing `b5e59dfb` (the conductor, not
+the author).** P12's task 2 names `uncertainty` in the artifact shape; AC18 does not.
+The commit landed the grammar without it and `Remains:` said none, so the box was
+ticked a field short of its own text. Corrected in the follow-up commit
+(`fix(28): carry the uncertainty slot P12's artifact shape owes`): the
+`delegated-evidence@1` block gains `uncertainty:` between `contradictions` and
+`freshness`, one bullet keeps it distinct from `unverified-claims` and
+`contradictions`, and a fixture asserts the slot, so the shape is now a **superset**
+of the frozen row — stronger coverage, no narrowed validator (D42). Cost stated
+rather than hidden: five lines in one reference moved four routes past their own
+headroom floors, so eight ceilings were re-based in that same commit.
+
 ## Unit-loop receipt — P12
 - Commit: pending · Gate: `node --test scripts/pre-execution-quality.test.mjs` (exit 0, 58/58 with the five `delegated-evidence` cases) + root `node --test scripts/*.test.mjs` (exit 0, 161/161) + `node --test scripts/ledger-ownership.test.mjs` (exit 0, 18/18) + `node --test scripts/workflow-status-pre-execution.test.mjs` (exit 0, 6/6) + `node scripts/check-skill-context.mjs` (exit 0, 39 skills) + `node scripts/check-skill-context.mjs --routes` (exit 0, 23 routes after the D41 six-route re-basis) + `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` (exit 0, 38 skills / 123 files, 134/134) + `npx skills add . --list` (exit 0, 38 listed) · Acceptance blob: `cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54`
 - Next: P13 · Attempts: 1
