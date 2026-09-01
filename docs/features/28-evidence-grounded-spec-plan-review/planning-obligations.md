@@ -24,6 +24,8 @@ the terminal candidate, which P8 produces; it is named in `progress.md`'s
 residuals. O13 has been `verified` since P4. Status cells only — no verdict,
 validator or evidence cell changed.
 
+Amended again 2026-09-01 (owner verdict on F32): obligation **O21** is added for AC21 and mapped to **P17**, which executes before the P16 close-out.
+
 Amended 2026-09-01 (user-approved re-plan, finding F3 `replan-in-unit`, issue
 #146 flow-integrity amendment F1-F6): obligations **O15-O20** are added for
 AC15-AC20 and mapped to the appended phases P9-P16. Existing rows O1-O14 keep
@@ -54,3 +56,4 @@ O17 | AC17 | F3 terminal marking: verdict and rejection turns write the durable 
 O18 | AC18 | F4 delegated evidence standard: versioned artifact with outcome, questions, seven source fields, claims mapped to source ids, contradictions, freshness, separated product choices, unverified section; partial or blocked blocks readiness; persist-then-STOP; advisory until spot-checked | P12 | Conserve delegated evidence as a versioned artifact | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with delegated-evidence and NEEDS-EVIDENCE fixtures | planned
 O19 | AC19 | F5 normalization before freeze: every source-mutating normalizer scheduled strictly before the snapshot or freeze row, only check-only actions after, post-freeze byte change voids current receipts | P13 | Run normalizers before the artifact freeze | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 green and non-zero when a mutating step follows the freeze | planned
 O20 | AC20 | F6 clean-review sensing: sensor review-run proof keys on the durable review mark instead of findings-ledger presence so a zero-finding review is distinguishable from a never-reviewed unit | P11 | Prove clean reviews with a durable mark | execute-phase | `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 with mark-present and ledger-only fixtures | planned
+O21 | AC21 | F32 disposition: the sync digest prefers the host native SHA-256 through globalThis.process?.getBuiltinModule?.("crypto") where present and this package's pure-JS path otherwise, one identical lowercase 64-hex result, no static node: specifier, no @types/node, no dependency added, nothing vendored, rejected alternatives recorded with measured cost, and any future copied code carrying source, author, version and license | P17 (runs before P16) | Prefer the host native SHA-256 digest | execute-phase | `cd packages/agentic-workflow-schema && npm test` plus the no-static-node-import grep and the two-path digest probe | exit 0, identical digests from both paths, zero static builtin imports | planned

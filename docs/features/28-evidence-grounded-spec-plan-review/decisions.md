@@ -371,3 +371,33 @@
   its provenance. Consequence adopted now: qualification runs get a sandbox whose
   contract says out loud that its ledgers are toy ledgers, never a real repo with
   a prose instruction.
+- **D36 — F32 disposition: native-first with this package's own fallback; no
+  dependency, nothing vendored; attribution promoted to a standing rule
+  (2026-09-01, owner verdict on the measured matrix).** The owner's direction had
+  three parts and the measurements kept two of them. Kept: (1) **prefer the host's
+  native hash** — `process.getBuiltinModule("crypto")` is documented as added in
+  Node v22.3.0 and v20.16.0 and measured working in node v24.19.0 and bun 1.4.0, so
+  the native path becomes the answer wherever a native path exists; (2) **credit is
+  mandatory** — because vendoring was seriously considered, the rule is written
+  down rather than left to taste: any copied third-party code carries source URL,
+  author, version, and license name in a header comment (`CLAUDE.md`, P17 task 6).
+  Not kept: (3) **carry the code in-house** — measured, the `@noble/hashes@2.4.0`
+  `sha256` closure is 1,419 lines across `sha2.js`/`_md.js`/`_u64.js`/`utils.js`
+  with 17 named imports that include SHA-384/512 and `u64` machinery this package
+  never calls, against the 124 lines already owned here and already pinned against
+  `node:crypto`. Vendoring would triple the surface we maintain, freeze a copy that
+  stops receiving upstream security fixes, and only ever run on the no-native path —
+  browsers, where there is no native alternative to beat and where 2.4 ms on a 52 KiB
+  document is not a decision. So the fallback stays ours.
+  Rejected alongside it: a static `import "node:crypto"` (deletes the browser target
+  the package's own README promises and needs `@types/node`), and adding
+  `@noble/hashes` as a dependency (breaks the published zero-dependency identity for
+  a 2–3× gain on the path that stops mattering).
+  Numbering: **P17 executes before P16** and the sequence is deliberately not
+  monotonic — re-numbering the close-out would rotate a fingerprint plus the
+  `TASKS.md` rows and obligation cells that already cite it, for cosmetics.
+  What remains true and uncomfortable: after P17, older Node (below v20.16) and
+  browsers still pay the pure-JS cost at the 4 MiB edge (175 ms node / 443 ms bun
+  measured), and F31's debt — the builder hashes the full input before the budget
+  refuses it — is the reason that edge is reachable at all. Neither is claimed as
+  fixed by P17.
