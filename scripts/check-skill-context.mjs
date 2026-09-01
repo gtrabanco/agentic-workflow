@@ -296,13 +296,28 @@ if (routeMode) {
       const headroom = Number(policy.headroom);
       if (Number.isFinite(headroom) && headroom > 0) {
         const ratio = `ceil(measured \u00d7 ${(1 + headroom).toFixed(2)})`;
+        // RC2 (review-change cycle 2, 2026-09-01): `measured * (1 + headroom)` in
+        // binary floats can exceed the exact product enough that Math.ceil adds a
+        // whole unit — 12420 * 1.1 = 13662.000000000002 → 13663, exact value
+        // 13662 — so a ceiling set precisely at the declared formula's value was
+        // rejected by its own guard. Exact rational arithmetic instead: headroom
+        // h = n/d from its shortest decimal form, floor = ceil(measured × (d+n)/d)
+        // computed over BigInt so the numerator is an exact integer product and
+        // the ceiling is the true mathematical one for every declared ratio.
+        const s = String(headroom);
+        const decimalPlaces = s.includes(".") ? s.split(".")[1].length : 0;
+        const exactRatio = decimalPlaces <= 6
+          ? (() => { const d = 10n ** BigInt(decimalPlaces); const n = BigInt(Math.round(headroom * Number(d))); return [n, d]; })()
+          : null;
         for (const [key, measured, ceiling] of [
           ["estimate", metrics.totalEstimate, routeDef.routeEstimateMax],
           ["lines", metrics.totalLines, routeDef.routeLinesMax],
         ]) {
           if (ceiling === null) continue;
           if (measured > ceiling) continue; // the ceiling breach above is the tighter fault
-          const floor = Math.ceil(measured * (1 + headroom));
+          const floor = exactRatio
+            ? (() => { const num = BigInt(measured) * (exactRatio[1] + exactRatio[0]); const den = exactRatio[1]; return Number(num / den) + (num % den === 0n ? 0 : 1); })()
+            : Math.ceil(measured * (1 + headroom));
           if (ceiling < floor) {
             routeFailures.push(`${routeName}: route ${key} ceiling ${ceiling} < ${floor} = ${ratio} ${measured} — raise it at a declared re-basis and name the growth source, or trim the route`);
           }

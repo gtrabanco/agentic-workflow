@@ -220,6 +220,43 @@ runFixtureRoute(
   assert.ok(Number.isFinite(Number(policy.headroom)) && Number(policy.headroom) > 0, "declared headroom must be a positive ratio");
 }
 
+{
+  // RC2 regression pin (review-change cycle 2, 2026-09-01): the floor must be the
+  // EXACT mathematical ceiling. In binary floats, `measured * (1 + headroom)` can
+  // exceed the exact product enough that Math.ceil adds a whole unit —
+  // 12420 * 1.1 = 13662.000000000002 → 13663, exact value 13662 — so a ceiling
+  // set precisely at the declared formula's value was rejected by its own guard.
+  // A ceiling at the exact floor must pass; the float artifact would demand one more.
+  const fixture = mktemp("agentic-headroom-exact-");
+  try {
+    fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
+    fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
+    fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.policy = { name: "relative-headroom", headroom: 0.1 };
+    const route = manifest.routes["review-plan:default"];
+    route.routeEstimateMax = Number.MAX_SAFE_INTEGER;
+    route.routeLinesMax = Number.MAX_SAFE_INTEGER;
+    const write = () => fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
+    write();
+    const cli = (args) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), ...args], { encoding: "utf8" });
+    const probe = cli(["--routes", "--json"]);
+    assert.equal(probe.status, 0, `unbounded fixture must pass: ${probe.stdout}\n${probe.stderr}`);
+    const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "review-plan:default").totalEstimate;
+    // The oracle is the declared formula computed exactly: ceil(measured × 1.1)
+    // via integer arithmetic (measured × 11 / 10) — no float product anywhere.
+    const exactFloor = Math.ceil((measured * 11) / 10);
+    route.routeEstimateMax = exactFloor;
+    write();
+    const result = cli(["--routes"]);
+    assert.equal(result.status, 0, `a ceiling at the exact declared floor must pass (float artifact would demand ${Math.ceil(measured * 1.1)}):\n${result.stdout}\n${result.stderr}`);
+    assert.doesNotMatch(result.stdout, /ceiling \d+ < \d+/, "no floor failure may be reported for the exact ceiling");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
 runFixtureRoute(
   "route references for undeclared skill",
   (manifest) => { manifest.routes["test:badref"] = { skills: ["execute-phase"], references: { "review-change": ["HANDOFF.md"] }, templates: [], routeEstimateMax: null, routeLinesMax: null }; },

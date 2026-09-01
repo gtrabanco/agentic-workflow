@@ -33,4 +33,4 @@ Second review-change cycle ran 2026-09-01 (isolated clean-context reviewer, term
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | RC1 | docs/features/28-evidence-grounded-spec-plan-review/testing.md:268 + progress.md:459 | verify | low | fix-now | fold | yes |
-| RC2 | scripts/check-skill-context.mjs:305 (floor) + decisions.md D31 table | code | low | fix-now | fold | no |
+| RC2 | scripts/check-skill-context.mjs:305 (floor) + decisions.md D31 table | code | low | fix-now | fold | yes |
