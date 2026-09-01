@@ -383,7 +383,7 @@ const SNAPSHOT_ROOT_SPEC: VerificationObjectSpec = {
       nulFree: true,
       pattern: LOWERCASE_64HEX_PATTERN,
       violationCode: "invalid-value",
-      description: "Digest of the reviewed Product snapshot: required for a Plan snapshot, exactly null for a SPEC snapshot.",
+      description: "Digest of the reviewed Product snapshot: required for a feature Plan snapshot, exactly null at the SPEC stage and for a fix unit (it has no Product half to bind, D6).",
     },
   ],
   rules: [
@@ -397,10 +397,31 @@ const SNAPSHOT_ROOT_SPEC: VerificationObjectSpec = {
     },
     {
       id: "plan-stage-requires-parent",
-      description: "A Plan snapshot binds the exact reviewed Product snapshot.",
+      description: "A Plan snapshot of a FEATURE unit binds the exact reviewed Product snapshot.",
       projectable: true,
       kind: "non-null-when",
-      when: { field: "stage", equals: "plan" },
+      // RS14: the only sanctioned `stage: spec` binding is `spec-product-v1`, and a
+      // fix SPEC has no `Size`/`Product half`/`Design status` to project — so a fix
+      // unit can never produce the parent this rule used to demand, and its
+      // `review-plan` was blocked by construction. The parent is lineage over a
+      // Product review that exists, which means `stage == plan AND unitKind == feature`.
+      when: {
+        allOf: [
+          { field: "stage", equals: "plan" },
+          { field: "unitKind", equals: "feature" },
+        ],
+      },
+      fields: ["parentSpecSnapshotDigest"],
+    },
+    {
+      id: "fix-unit-has-no-product-parent",
+      description: "A fix unit has no Product snapshot, so its Plan snapshot binds no parent.",
+      projectable: true,
+      kind: "null-when",
+      // The other half of the narrowed rule, stated as a prohibition rather than a
+      // permission: a fix receipt that named a parent would claim a Product review
+      // that no clean-context reviewer ever ran (D6).
+      when: { field: "unitKind", equals: "fix" },
       fields: ["parentSpecSnapshotDigest"],
     },
     {

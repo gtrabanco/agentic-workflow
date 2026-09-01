@@ -26,6 +26,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { PRE_EXECUTION_CONTRACT, PRE_EXECUTION_LIMITS } from "../dist/pre-execution-contract.js";
+import { whenConditions } from "../dist/verification-contract.js";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -148,8 +149,22 @@ function propertySchema(field) {
   return { ...memberSchema(field), description: field.description };
 }
 
+/**
+ * Draft-07 `if` fragment for one rule predicate. A conjunction (the `allOf` form
+ * the shared engine evaluates, RS14) renders as a Draft-07 `allOf` of the same
+ * member conditions, so the projection states exactly the conjunction the runtime
+ * enforces instead of silently narrowing it to its first sibling.
+ */
 function whenSchema(contract, spec, rule) {
-  const when = rule.when;
+  const conditions = whenConditions(rule.when);
+  if (conditions.length === 0) {
+    throw new Error(`${contract.contractId}: rule ${rule.id} has no predicate`);
+  }
+  const parts = conditions.map((when) => conditionSchema(contract, spec, rule, when));
+  return parts.length === 1 ? parts[0] : { allOf: parts };
+}
+
+function conditionSchema(contract, spec, rule, when) {
   const field = spec.fields.find((candidate) => candidate.key === when.field);
   const vocabulary = field?.enum ?? [];
   // A `minItems` predicate reads an ARRAY sibling and renders the array shape,

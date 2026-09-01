@@ -112,7 +112,7 @@
           "type": "null"
         }
       ],
-      "description": "Digest of the reviewed Product snapshot: required for a Plan snapshot, exactly null for a SPEC snapshot."
+      "description": "Digest of the reviewed Product snapshot: required for a feature Plan snapshot, exactly null at the SPEC stage and for a fix unit (it has no Product half to bind, D6)."
     }
   },
   "allOf": [
@@ -134,13 +134,24 @@
       }
     },
     {
-      "description": "[plan-stage-requires-parent] A Plan snapshot binds the exact reviewed Product snapshot.",
+      "description": "[plan-stage-requires-parent] A Plan snapshot of a FEATURE unit binds the exact reviewed Product snapshot.",
       "if": {
-        "properties": {
-          "stage": {
-            "const": "plan"
+        "allOf": [
+          {
+            "properties": {
+              "stage": {
+                "const": "plan"
+              }
+            }
+          },
+          {
+            "properties": {
+              "unitKind": {
+                "const": "feature"
+              }
+            }
           }
-        }
+        ]
       },
       "then": {
         "properties": {
@@ -148,6 +159,23 @@
             "not": {
               "type": "null"
             }
+          }
+        }
+      }
+    },
+    {
+      "description": "[fix-unit-has-no-product-parent] A fix unit has no Product snapshot, so its Plan snapshot binds no parent.",
+      "if": {
+        "properties": {
+          "unitKind": {
+            "const": "fix"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "parentSpecSnapshotDigest": {
+            "type": "null"
           }
         }
       }
