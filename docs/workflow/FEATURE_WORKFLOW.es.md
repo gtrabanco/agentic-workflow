@@ -178,7 +178,10 @@ empieza en `no`, deduplicado por `file:line`+axis, ambos escritores comparten
 el mismo ledger. El ciclo de fold de `execute-phase` marca cada fila foldeada
 `folded: yes`; `workflow-status` expone las filas sin foldear en
 `findings.fix_now[]` del envelope máquina. Los fixes usan la ruta
-equivalente, `docs/fix/<n>-<topic>/review-findings.md`.
+equivalente, `docs/fix/<n>-<topic>/review-findings.md`. El sensor prueba que la
+revisión obligatoria corrió por la fila `REVIEW-RAN` durable del ledger —cuya
+forma define `LEDGERS.md` de `pre-execution-review`— y nunca por el simple
+hecho de que el ledger exista.
 
 > Las incógnitas se convierten en preguntas abiertas en `decisions.md` —
 > nunca en placeholders en blanco.
