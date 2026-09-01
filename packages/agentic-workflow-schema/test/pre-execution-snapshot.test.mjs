@@ -17,8 +17,11 @@ import {
   PRE_EXECUTION_STAGES,
   PRE_EXECUTION_UNIT_KINDS,
   validatePreExecutionArtifactSnapshotV1,
+  buildPreExecutionArtifactSnapshot,
 } from "../dist/index.js";
-import { DIGEST_A, DIGEST_B, SHA1, SHA256, specSnapshot, planSnapshot } from "./fixtures/pre-execution-documents.mjs";
+import {
+  DIGEST_A, DIGEST_B, SHA1, SHA256, UNIT_ID, planSnapshot, specSnapshot, toySpec,
+} from "./fixtures/pre-execution-documents.mjs";
 
 const codes = (result) => result.diagnostics.map((row) => row.code);
 const ok = (value) => validatePreExecutionArtifactSnapshotV1(value);
@@ -197,7 +200,7 @@ test("AC1: stage drives parent and selector requirements", () => {
   assert.ok(codes(ok(specSnapshot({ parentSpecSnapshotDigest: DIGEST_A }))).includes("invalid-value"),
     "a SPEC snapshot is the root of its own lineage");
   assert.ok(codes(ok(planSnapshot({ parentSpecSnapshotDigest: null }))).includes("invalid-value"),
-    "a Plan snapshot requires its parent");
+    "a FEATURE Plan snapshot requires its parent (RS14 narrowed the rule to the unit family, it did not relax it here)");
   assert.ok(codes(ok(planSnapshot({ parentSpecSnapshotDigest: "z".repeat(64) }))).includes("invalid-value"),
     "a 64-character non-hex string is the shape a truncation bug produces");
 
@@ -218,11 +221,74 @@ test("AC1: stage drives parent and selector requirements", () => {
     "a SPEC-stage snapshot binds the Product projection, never the whole mutable file");
 });
 
-test("AC1: a fix unit has no Product half, so the spec stage refuses it and the plan stage is the fix path", () => {
+test("AC1: a fix unit has no Product half, so the spec stage refuses it and the parentless plan stage is the fix path", () => {
   const result = ok(specSnapshot({ unitKind: "fix" }));
   assert.equal(result.ok, false);
   assert.ok(codes(result).includes("invalid-value"));
-  assert.equal(ok(planSnapshot({ unitKind: "fix" })).ok, true, "the same bytes at plan stage are the fix unit");
+  // RS14: the same bytes at plan stage are the fix unit, and a fix unit has no
+  // Product snapshot to bind — `SNAPSHOT.md` never promised one it could build,
+  // because `spec-product-v1` refuses a fix SPEC (no `Size`/`Product half`).
+  assert.equal(ok(planSnapshot({ unitKind: "fix", parentSpecSnapshotDigest: null })).ok, true,
+    rows(ok(planSnapshot({ unitKind: "fix", parentSpecSnapshotDigest: null }))));
+  assert.ok(codes(ok(planSnapshot({ unitKind: "fix", parentSpecSnapshotDigest: DIGEST_A }))).includes("invalid-value"),
+    "a fix unit that names a parent pretends a Product review happened");
+});
+
+test("RS14: the parent rule is a compound predicate over stage AND unitKind", () => {
+  // The one sanctioned `stage: spec` binding (`spec-product-v1`) is unreachable for
+  // a fix unit, so `parentSpecSnapshotDigest` is required exactly when
+  // `stage == plan && unitKind == feature` and null otherwise.
+  const matrix = [
+    ["spec", "feature", null, true],
+    ["spec", "feature", DIGEST_A, false],
+    ["plan", "feature", DIGEST_A, true],
+    ["plan", "feature", null, false],
+    ["plan", "fix", null, true],
+    ["plan", "fix", DIGEST_A, false],
+  ];
+  for (const [stage, unitKind, parent, expected] of matrix) {
+    const document = stage === "spec"
+      ? specSnapshot({ unitKind, parentSpecSnapshotDigest: parent })
+      : planSnapshot({ unitKind, parentSpecSnapshotDigest: parent });
+    assert.equal(ok(document).ok, expected, `${stage}/${unitKind}/parent=${String(parent)} → ${rows(ok(document))}`);
+  }
+});
+
+test("RS14: the builder produces a parentless fix plan snapshot from caller bytes", () => {
+  const fixSpec = "# Fix 78 — closure integrity\n\n## Goal\n\nClose the gate.\n\n## Scope\n\n- the audit\n";
+  const built = buildPreExecutionArtifactSnapshot({
+    stage: "plan",
+    unitKind: "fix",
+    unitId: "fix-78",
+    sourceRevision: SHA1,
+    artifactRevisionId: "rev-1",
+    files: [
+      { kind: "spec", path: "docs/fix/78-audit-pr-closure-integrity/SPEC.md", content: fixSpec },
+      { kind: "acceptance", path: "docs/fix/78-audit-pr-closure-integrity/ACCEPTANCE.md", content: "# Acceptance\n" },
+    ],
+    contexts: [],
+  });
+  assert.equal(built.ok, true, JSON.stringify(built.diagnostics));
+  assert.equal(built.snapshot.parentSpecSnapshotDigest, null, "a fix plan roots its own lineage");
+  // The feature twin still refuses the same shape: the rule narrowed, it did not
+  // become a suggestion.
+  const feature = buildPreExecutionArtifactSnapshot({
+    stage: "plan",
+    unitKind: "feature",
+    unitId: UNIT_ID,
+    sourceRevision: SHA1,
+    artifactRevisionId: "rev-1",
+    files: [
+      { kind: "spec", path: `docs/features/${UNIT_ID}/SPEC.md`, content: toySpec() },
+      { kind: "acceptance", path: `docs/features/${UNIT_ID}/ACCEPTANCE.md`, content: "# Acceptance\n" },
+    ],
+    contexts: [],
+  });
+  assert.equal(feature.ok, false);
+  assert.deepEqual(
+    feature.diagnostics.filter((row) => row.path === "/parentSpecSnapshotDigest"),
+    [{ code: "invalid-value", path: "/parentSpecSnapshotDigest" }],
+  );
 });
 
 test("AC1: the plan required set is SPEC + ACCEPTANCE, extras are additive", () => {

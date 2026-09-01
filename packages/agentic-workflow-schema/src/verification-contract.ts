@@ -98,6 +98,16 @@ export type VerificationRuleKind =
    */
   | "enum-when";
 
+/** One predicate over a sibling field's value. */
+export interface VerificationWhenCondition {
+  readonly field: string;
+  readonly equals?: string;
+  readonly in?: readonly string[];
+  readonly notIn?: readonly string[];
+  /** Predicate holds while the sibling array carries at least this many rows. */
+  readonly minItems?: number;
+}
+
 /** Cross-field rule declared once; projected whenever Draft-07 can express it. */
 export interface VerificationCrossRule {
   readonly id: string;
@@ -121,15 +131,16 @@ export interface VerificationCrossRule {
    */
   readonly enforcement?: "walk" | "binding";
   readonly kind: VerificationRuleKind;
-  /** Predicate over a sibling field's value. */
-  readonly when?: {
-    readonly field: string;
-    readonly equals?: string;
-    readonly in?: readonly string[];
-    readonly notIn?: readonly string[];
-    /** Predicate holds while the sibling array carries at least this many rows. */
-    readonly minItems?: number;
-  };
+  /**
+   * Predicate over a sibling field's value, or the conjunction of several under
+   * `allOf`. The conjunction exists because one real rule is discriminated by TWO
+   * siblings at once (`parentSpecSnapshotDigest` is required when `stage == plan`
+   * AND `unitKind == feature` — finding RS14); a family that needs to name the
+   * discriminator it fired on — `exactly-one-non-null` and `stage-aggregate-budget`
+   * report a row at `<when.field>` — stays on the single-condition form, because no
+   * single field names a conjunction.
+   */
+  readonly when?: VerificationWhenCondition | { readonly allOf: readonly VerificationWhenCondition[] };
   /** Constrained fields (`exactly-one-non-null`, `null-when`, `non-null-when`, timestamp/ calendar rules). */
   readonly fields?: readonly string[];
   /** `unique` — the array field the rule scans. */
@@ -934,18 +945,44 @@ function verificationFieldSpec(
 }
 
 /**
- * True when a cross rule's `when` predicate matches the submitted sibling value.
+ * The `when` predicates of one rule as a list: the single-condition form is the
+ * one-element case, so every reader handles exactly one shape.
+ *
+ * A rule with no `when` applies unconditionally; `stage-aggregate-budget` and
+ * `exactly-one-non-null` report the discriminator they fired on, which only the
+ * single-condition form can name (see `VerificationCrossRule.when`).
+ */
+export function whenConditions(
+  when?: VerificationCrossRule["when"],
+): readonly VerificationWhenCondition[] {
+  if (!when) return [];
+  return "allOf" in when ? when.allOf : [when];
+}
+
+/**
+ * True when a cross rule's `when` predicate(s) match the submitted siblings.
  *
  * `notIn` only fires for values inside the sibling's declared vocabulary, so a
- * garbage enum value yields one vocabulary error instead of a cascade.
+ * garbage enum value yields one vocabulary error instead of a cascade. A
+ * conjunction (`allOf`) holds when EVERY condition holds, and a condition whose
+ * sibling is absent does not hold — an incomplete document is refused by the
+ * field walk, never by a rule that silently treated the missing sibling as equal.
  */
 function ruleApplies(
   spec: VerificationObjectSpec,
   rule: VerificationCrossRule,
   obj: Record<string, unknown>,
 ): boolean {
-  const when = rule.when;
-  if (!when) return true;
+  const conditions = whenConditions(rule.when);
+  if (conditions.length === 0) return true;
+  return conditions.every((when) => conditionApplies(spec, when, obj));
+}
+
+function conditionApplies(
+  spec: VerificationObjectSpec,
+  when: VerificationWhenCondition,
+  obj: Record<string, unknown>,
+): boolean {
   if (!Object.prototype.hasOwnProperty.call(obj, when.field)) return false;
   const value = obj[when.field];
   // A `minItems` predicate reads an ARRAY sibling, not a string one; the two
@@ -1293,7 +1330,7 @@ export function applyCrossRule(
     case "exactly-one-non-null": {
       if (!ruleApplies(spec, rule, value)) break;
       const fields = rule.fields ?? [];
-      const whenField = rule.when?.field ?? "";
+      const whenField = whenConditions(rule.when)[0]?.field ?? "";
       const present = fields.filter(
         (key) => Object.prototype.hasOwnProperty.call(value, key) && value[key] !== null,
       );
@@ -1372,8 +1409,9 @@ export function applyCrossRule(
       // command that crossed — the earliest pointer that explains the overflow.
       const collectionName = rule.collection ?? "";
       const collection = Array.isArray(value[collectionName]) ? (value[collectionName] as unknown[]) : [];
-      const discriminator = rule.when?.field ?? "";
-      const stage = rule.when?.equals ?? "";
+      const discriminatorCondition = whenConditions(rule.when)[0];
+      const discriminator = discriminatorCondition?.field ?? "";
+      const stage = discriminatorCondition?.equals ?? "";
       const field = rule.fields?.[0] ?? "";
       const ceiling = rule.maximum;
       if (ceiling === undefined || !discriminator || !stage || !field) break;

@@ -11,6 +11,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import Ajv from "ajv";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const GEN = join(ROOT, "scripts", "generate-pre-execution-schemas.mjs");
@@ -21,8 +22,8 @@ const PROJECTIONS = [
     contract: "agentic-workflow/pre-execution-artifact-snapshot@1",
     title: "PreExecutionArtifactSnapshot v1",
     // The renderer has a JSON Schema form for these (if/then on declared properties).
-    rules: ["spec-stage-has-no-parent", "plan-stage-requires-parent", "present-context-has-digest",
-      "absent-context-has-null-digest"],
+    rules: ["spec-stage-has-no-parent", "plan-stage-requires-parent", "fix-unit-has-no-product-parent",
+      "present-context-has-digest", "absent-context-has-null-digest"],
     // These are properties of a COLLECTION (order, uniqueness, stage/selector matrix). Draft 07
     // cannot state them over an array of $refs, so the runtime owns them and the suite below
     // pins the split: a new collection rule must be named here, never silently dropped.
@@ -161,5 +162,42 @@ test("both projections are listed in package files and exports", () => {
     assert.ok(pkg.files.includes(entry.file), `${entry.file} is not shipped`);
     const exported = JSON.stringify(pkg.exports[`./${entry.file}`]);
     assert.ok(exported.includes(entry.file), `${entry.file} has no export entry`);
+  }
+});
+
+test("RS14: the compound parent rule projects to Draft-07 and agrees with the runtime", () => {
+  const projection = load(PROJECTIONS[0]);
+  const fragments = projection.allOf.filter((fragment) => /\[plan-stage-requires-parent\]|\[fix-unit-has-no-product-parent\]/
+    .test(fragment.description ?? ""));
+  assert.equal(fragments.length, 2, "both halves of the narrowed rule must be projected");
+  const parentRule = fragments.find((fragment) => fragment.description.startsWith("[plan-stage-requires-parent]"));
+  assert.ok(parentRule.if.allOf, "a conjunction of two siblings is projected as an `allOf` condition");
+  assert.deepEqual(parentRule.if.allOf, [
+    { properties: { stage: { const: "plan" } } },
+    { properties: { unitKind: { const: "feature" } } },
+  ], "the projection states exactly the conjunction the runtime enforces");
+
+  // Ajv, so the claim is checked by a real Draft-07 validator and not by reading.
+  const ajv = new Ajv({ strict: true });
+  const validate = ajv.compile(structuredClone(projection));
+  const document = (stage, unitKind, parent) => ({
+    contract: "agentic-workflow/pre-execution-artifact-snapshot@1",
+    stage, unitKind, unitId: "78-unit",
+    sourceRevision: "0".repeat(40), artifactRevisionId: "rev-1",
+    artifacts: [{ kind: "acceptance", path: "docs/x/ACCEPTANCE.md", selector: "whole-file", byteLength: 1, digest: "a".repeat(64) },
+      { kind: "spec", path: "docs/x/SPEC.md", selector: "whole-file", byteLength: 1, digest: "b".repeat(64) }],
+    contexts: [],
+    parentSpecSnapshotDigest: parent,
+  });
+  const DIGEST = "c".repeat(64);
+  const cases = [
+    [document("plan", "feature", DIGEST), true],
+    [document("plan", "feature", null), false],
+    [document("plan", "fix", null), true],
+    [document("plan", "fix", DIGEST), false],
+  ];
+  for (const [value, expected] of cases) {
+    assert.equal(validate(value), expected,
+      `the projection disagrees with the contract on ${value.unitKind}/${String(value.parentSpecSnapshotDigest)}`);
   }
 });
