@@ -307,3 +307,43 @@ Corpus verdict: **no second-cycle sample**; D30's fix-plan binding proven on a r
 complete fix unit; the L1 route-and-stop proven on a real cross-boundary unit; the
 refusals for pre-ledger units are the containment behaving as designed, not
 failures.
+
+### P9 (2026-09-01) — Durable ledger write ownership (AC16 / O16)
+
+**Red first, and still reproducible.** `scripts/ledger-ownership.test.mjs` was
+written before the map existed; the proof is a command, not a claim:
+
+```sh
+git archive 0feaaf64 | tar -x -C /tmp/p9red          # the tree before P9
+cp scripts/ledger-ownership.test.mjs /tmp/p9red/scripts/
+cd /tmp/p9red && LEDGER_OWNERSHIP_REPO=/tmp/p9red node --test scripts/ledger-ownership.test.mjs
+# → tests 18 · pass 0 · fail 16 · exit 1   (first fault: ENOENT docs/features/_TEMPLATE/LEDGERS.md)
+```
+
+The suite re-points its repository reads through `LEDGER_OWNERSHIP_REPO`, so every
+refusal below is produced against a throwaway tree and re-runnable by anyone.
+
+| Gate | Result |
+|---|---|
+| `node --test scripts/ledger-ownership.test.mjs` | exit 0 — 18/18 (2 scans × 8 failure modes, plus the map/template/token pins and two real `node --test` non-zero proofs) |
+| `node --test scripts/*.test.mjs` (root) | exit 0 — 146/146 (128 baseline + 18 new) |
+| `node scripts/check-skill-context.mjs` | exit 0 — 39 skills, after `pre-execution-review` `referenceEstimateMax: 2915` = ceil(2650 × 1.10) |
+| `node scripts/check-skill-context.mjs --routes` | exit 0 — 23 routes, after the five-route declared re-basis (D38) |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | exit 0 — 38 skills / 122 files bundled, 134/134 tests, `tsc` clean |
+
+**Failure modes proven against fixtures (not asserted):** map row with no owner;
+template ledger row with no owner (**AC16's named fixture**); template owner
+reworded away from the map; a dropped and an invented template row; an owner that
+is not a shipped skill; two owners on one column set; an annotator token the
+annotator cannot produce, in both directions; a missing or malformed
+`ledger-ownership@1` block (fail closed, both scans); a script writing a declared
+ledger it is not declared for; a CLI rewrite tool the map never names; the map
+losing the row for a ledger a script writes; a durable record the `#
+no-script-writer` directive protects; and the exclusion case — a generated-artifact
+writer stays out of scope.
+
+**Annotator token, pinned to its source:** `· fold <sha>` / `· ticked <sha>` are
+emitted at `scripts/ledger-provenance.mjs:288`, the re-open note `· REOPENED P20 —
+provenance unproven` at `:293`. The test matches the source lines, so a token that
+drifts away from the map — in either direction — fails the suite rather than
+silently widening what the annotator may write.

@@ -401,3 +401,65 @@
   measured), and F31's debt — the builder hashes the full input before the budget
   refuses it — is the reason that edge is reachable at all. Neither is claimed as
   fixed by P17.
+- **D37 — D32's bypass covers P9–P17 as well, and the scope cell that says
+  "(P6–P8)" is stale text, not a narrower grant (recorded at the P9 preflight,
+  2026-09-01).** The SPEC amendment row names P6–P8 because it was cut earlier
+  the same day than the replan that appended P9–P16; D32's own scope clause is
+  "unit 28's own remaining phases", and the reason it was granted has not weakened
+  — it has multiplied. Measured at this preflight rather than remembered:
+  `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit
+  28-evidence-grounded-spec-plan-review --parent 781f8127…` answers `current:
+  false`, receipt `rp-28-20260831-001`, observed digest `a2794a42…`,
+  `structural.reasonCode: stale-context`, `changedPaths: [docs/features/ROADMAP.md]`
+  — the roadmap row this unit's own phases keep editing. And the three skills that
+  could mint a current receipt (`review-spec`, `review-plan`, `pre-execution-review`)
+  are still repo text installed nowhere (the invoking session's skill list carries
+  none of them) while **P9–P15 are the phases that build them**: the gate would
+  demand a verdict from artifacts that do not exist until the work the gate
+  authorizes is finished. D32's four boundaries apply verbatim and none is
+  loosened here: the gate text, the schema and every other consumer stay unchanged
+  (feature 29 still faces it); no `--force` is used or recorded, because
+  `PRE_EXECUTION_GATE.md` excludes that flag by construction and this is an owner
+  decision, not an executor override; P16 mints the receipt set at its own
+  terminal HEAD rather than inheriting anything; and canary fields no installed
+  command can observe are recorded as `not yet measured`, never invented.
+  Known-issue 14's closure condition (skills shipped **and** one consuming unit
+  reviewed through them) is unchanged by this note.
+- **D38 — P9: the map is one block, the templates are pinned projections; the
+  ceiling raise that followed is a declared re-basis, not a quiet widening
+  (2026-09-01).** Placement: AC16 wants the owners "in the ownership map AND in
+  every ledger template", and task 6 names `LEDGERS.md` as the single cited source
+  for the one-owner rule. So the map lives in
+  `skills/pre-execution-review/references/LEDGERS.md` as a fenced
+  `ledger-ownership@1` block — a grammar the scan parses, not prose it has to
+  guess at — and `docs/features/_TEMPLATE/LEDGERS.md` + `docs/fix/_TEMPLATE/LEDGERS.md`
+  carry per-tree projections of it. That is a deliberate second copy, acceptable
+  only because it is pinned in **both** directions: a template row that is added,
+  dropped, reworded or left owner-less fails the suite, so the copies cannot drift
+  the way an uncited table duplicate would. The alternative — a single template for
+  both trees — was rejected because the two trees have different homes
+  (`docs/features/ROADMAP.md` vs the fix index `docs/fix/README.md`) and a unit that
+  copies a template must see its own paths in it.
+  Column-set owners, not file owners: `review-findings.md` legitimately has four
+  (row append, audit append, triage append, fold flip), so `owner` is a
+  `+`-joined set of `<skill>:<column-set>` and the one-owner rule is stated per
+  column set. A bare filename-level owner would have been the fiction the finding
+  was filed against.
+  Budget consequence, named as the policy requires. The block is +44 lines /
+  +1117 estimate units inside a one-hop reference, so every route that loads
+  `pre-execution-review` measured higher than its ceiling:
+  `design-feature:repair` 19360/1320 → 21296/1452, `plan-feature:scaffold`
+  16410/1194 → 18051/1314, `plan-fix:issue` 18940/1400 → 20834/1540,
+  `review-plan:default` 13889/881 → 15278/970, `review-spec:default` 12269/827 →
+  13496/910, each exactly ceil(measured × 1.10) under the declared
+  `relative-headroom` policy (D26/D31, command-bound by RS12). Per-skill:
+  `pre-execution-review` gains `referenceEstimateMax: 2915` = ceil(2650 × 1.10).
+  Growth source: this phase's ownership map, nothing else — no existing ceiling was
+  lowered and no route was trimmed to hide it. What that costs going forward is
+  stated here rather than discovered later: the override is skill-wide, so P10's
+  `POLICY.md` growth shares `pre-execution-review`'s single ceiling with `LEDGERS.md`,
+  and P10–P13 will each re-basis the routes they grow.
+  Red-first is reproducible by anyone (see `testing.md` § P9): the suite takes its
+  repository root from `LEDGER_OWNERSHIP_REPO`, so running it against
+  `git archive 0feaaf64` — the tree before the map existed — fails 16 of 18 with
+  exit 1. A scan that can only be shown green is a scan nobody can audit.
