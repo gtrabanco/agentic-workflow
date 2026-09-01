@@ -265,7 +265,7 @@ and the D31 re-basis:
 | `cd packages/agentic-workflow-schema && npm test` | 674/674 pass (671 at P5 + 3 cases from D29/D30) |
 | `cd packages/agentic-workflow-schema && npm run check:pre-execution-schemas` | PASS — drift-free (2 files) |
 | `node --test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` | 22/22 pass (new suites: RS3(b), RS13, RS14) |
-| `node --test scripts/pre-execution-quality.test.mjs` | 46/46 pass |
+| `node --test scripts/pre-execution-quality.test.mjs` | ~~46/46 pass~~ → **48/48 pass** — corrected 2026-09-01 (review finding RC1, same defect class as RS6): this ladder row copied the P5-era count without re-running the suite; the F19/F20 fold (`74c40bc3`) had added two containment cases after that count was written. Ground truth re-run at this commit: `tests 48 · pass 48 · fail 0`. The dated P4/P5 rows above were true at their own dates and stand. |
 | `node --test scripts/*.test.mjs` (root) | 127/127 pass |
 | `node scripts/check-skill-context.mjs` | PASS — 39 skills |
 | `node scripts/check-skill-context.mjs --routes` | PASS — 23 routes (ceilings re-based per D31) |
