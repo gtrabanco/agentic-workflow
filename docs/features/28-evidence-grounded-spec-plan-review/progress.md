@@ -456,7 +456,9 @@ resume, before any phase work; every item measured, not assumed:
 | The two new root suites needed an **unstated build precondition** | Both imported `packages/agentic-workflow-schema/dist/index.js`, which is a gitignored build output; on a fresh clone `node --test scripts/*.test.mjs` died with `ERR_MODULE_NOT_FOUND` naming a path (and the committed fixture imports `dist/` too, which fails even earlier, at module *resolution*) | Added `scripts/schema-runtime.mjs` (guard + loader; no fallback to an installed older release, which would be a false green) and made the fixture import dynamic so the message names the build command. Verified both ways: 22/22 with `dist/`, `schema runtime is not built: … npm run build` without it |
 
 Gate after reconciliation: schema 674/674 + drift-free · root 127/127 · new sensor
-suites 22/22 · pre-execution-quality 46/46 · budgets PASS (39 skills, 23 routes) ·
+suites 22/22 · pre-execution-quality 48/48 (corrected 2026-09-01, finding RC1 —
+this line had copied the P5-era 46/46; the F19/F20 fold added two cases after it) ·
+budgets PASS (39 skills, 23 routes) ·
 Pi bundle 38 skills/122 files, 134/134 · `skills add . --list` → 38.
 
 **Unchanged by this reconciliation:** both `…-001` receipt blocks and the
