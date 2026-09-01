@@ -464,3 +464,35 @@ Pi bundle 38 skills/122 files, 134/134 · `skills add . --list` → 38.
 phase was executed and no roadmap status moved. The unit's pre-execution gate is
 still BLOCKED for want of a current `PLAN-REVIEW-PASS` on the amended snapshot —
 this batch is what that review must now be run against.
+
+## Preflight — P6 (2026-09-01, after the reconciliation)
+
+Gate order fixed: dependency → own-status → pre-execution review → acceptance
+manifest → phase-lint. Results at HEAD `19629257`:
+
+- **Dependency gate: PASS** — fast path failed closed (recorded fingerprint
+  matched no reading of the recipe's own named input), so the full pass ran:
+  `gh pr view` #144/#145/#150 → all `MERGED` against `main` at the exact shas the
+  rewritten receipt records. Receipt v1 rewritten with the digest beside its
+  recipe (`10822fdec53b…`) — see the receipt above for why the old value could not
+  reproduce (the SPEC has no `Depends on:` field for the recipe to hash).
+- **Own-status gate: PASS** — roadmap row 28 = `in-progress` (`planned`+ → proceed).
+- **Pre-execution review gate: BLOCKED (stale), then bypassed by owner decision
+  D32.** `verify --stage spec` → receipt `rs-28-20260831-002` (`spec-review-fail`),
+  binds `c19386bf…`, current `8b80448c…`, `reasonCode: stale-source-revision`,
+  changedPaths = SPEC.md. `verify --stage plan --parent 781f8127…` → receipt
+  `rp-28-20260831-001` (`plan-review-pass`), binds `f82316b8…`, current
+  `096fe47a…`, `reasonCode: stale-source-revision`, changedPaths = SPEC.md,
+  TASKS.md, decisions.md, planning-evidence.md, planning-obligations.md,
+  testing.md. The repair landed by this unit's own repair batch is what makes the
+  tool name the drifted dimension instead of the old blanket
+  `missing-receipt-snapshot` — the RS13 fix working live on the unit that shipped
+  it. The gate has no bypass flag and the executor did not invent one: the turn
+  stopped, and the owner then authorized proceeding without these receipts (D32 —
+  the only reviewers available are the unit's own undelivered skills; recorded in
+  the SPEC amendment table, gate text unchanged).
+- **Acceptance manifest: PASS** — `git hash-object ACCEPTANCE.md` =
+  `238b8a1ae96018ecb6aae082dc135d44d5389c24`, matching the frozen receipt.
+- **Phase-lint: PASS (8/8)** · fingerprint
+  `P6:hardening:4:run-the-pre-execution-qualification-corpus` (unchanged from the
+  plan; the bypass changes no phase shape).
