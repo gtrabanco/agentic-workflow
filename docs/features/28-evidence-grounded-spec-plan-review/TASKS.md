@@ -118,13 +118,19 @@ Layer: close-out · Done-when: terminal HEAD holds a current context-clean
 passes at terminal HEAD; the frozen ACCEPTANCE manifest is verified; roadmap
 row 28 reads `done · [#155]`.
 
-- [ ] Record **all** current review evidence at terminal HEAD: a context-clean
+- [x] Record **all** current review evidence at terminal HEAD: a context-clean
       `review-change` PASS receipt for the exact HEAD **and** re-derived
       `SPEC-REVIEW-PASS` + `PLAN-REVIEW-PASS` receipts for the same HEAD (finding
       RS3(c) — the repair commits rotate both pre-execution digests, so closing
       without re-running them would close on stale evidence).
-- [ ] Fold every new fix-now finding via `fold-findings`; route unresolved rows to `triage-issue --prioritize-now` per `loop-review-fold` step 5.
-- [ ] Re-run the package gates at terminal HEAD: schema `npm test`, root `node --test scripts/*.test.mjs`, `check-skill-context` (skills + routes), Pi `bundle:skills && npm test`, `npx skills add . --list`.
-- [ ] Verify the complete frozen ACCEPTANCE manifest at terminal HEAD and record the verification receipt in `progress.md`.
-- [ ] Update PR #155 with the amendment summary (P6–P8) and verification evidence.
-- [ ] Flip roadmap row 28 to `done · [#155]` after the PR update (the PR-open step's write).
+      *(Dispositioned 2026-09-01 by owner decision D32 / SPEC amendment: the
+      `review-plan`/`review-spec` receipts are not producible for this unit — the
+      skills are its own undelivered artifacts, installed nowhere — so this row is
+      satisfied by the installed `review-change` receipt at terminal HEAD plus the
+      recorded decision; the gate's first real exercise is feature 29's dogfood.
+      Known-issue 14 carries the closure condition.)*
+- [x] Fold every new fix-now finding via `fold-findings`; route unresolved rows to `triage-issue --prioritize-now` per `loop-review-fold` step 5.
+- [x] Re-run the package gates at terminal HEAD: schema `npm test`, root `node --test scripts/*.test.mjs`, `check-skill-context` (skills + routes), Pi `bundle:skills && npm test`, `npx skills add . --list`.
+- [x] Verify the complete frozen ACCEPTANCE manifest at terminal HEAD and record the verification receipt in `progress.md`.
+- [x] Update PR #155 with the amendment summary (P6–P8) and verification evidence.
+- [x] Flip roadmap row 28 to `done · [#155]` after the PR update (the PR-open step's write).

@@ -532,8 +532,62 @@ manifest → phase-lint. Results at HEAD `19629257`:
 |---|---|---|
 | P6 | `05c6ba6c` — corpus + fixture rows + D32 route | complete |
 | P7 | this section | complete |
-| P8 | terminal re-review + close-out | pending — the only remaining phase |
+| P8 | this section — cycles 2/3, RC folds, terminal gates, manifest verify | complete |
 
 - Residuals: O12 (`planned`) is the one obligation whose validator does not
   exist yet — it is P8's own first task. Phase-lint: PASS (8/8) ·
   `P7:docs:4:reconcile-unit-ledgers-with-qualification-evidence`
+
+## P8 — 2026-09-01 — Re-review and close-out of the corrected candidate
+
+Terminal candidate: HEAD `30117883` (P7 `c44173ef` + RC folds `9f38ba85`,
+`30117883`).
+
+**Review evidence at this exact HEAD (task 1, with D32 disposition):**
+- `review-change` cycle 2 (isolated clean-context reviewer, 2026-09-01) at
+  `c44173ef`: **REVIEW-FAIL — 2 low fix-now findings, zero code defects**. The
+  reviewer's counter-evidence pass reproduced every P6 corpus claim live
+  (fix-78 refusals; fix-147 D30 digest `acfe7087…`, parent null; unit-17
+  `fdddc858…`), matched D31 to the budgets manifest 7/7 and the coverage-note
+  versions to every SKILL.md `version:`, and confirmed D32 consistent across
+  SPEC/decisions/known-issues/progress. Findings RC1 (stale copied test count,
+  the RS6 class) and RC2 (float `Math.ceil` artifact letting a guard reject its
+  own declared formula) — both folded: `9f38ba85` (RC1, docs corrected with the
+  command attached; dated historical rows left standing) and `30117883` (RC2,
+  test-first pin red at "float artifact would demand 13663", then an exact
+  BigInt-ratio ceiling; shipped manifest unchanged and still self-consistent).
+- `review-change` cycle 3 (focused re-review, the normal one-re-review
+  correction path per AC14) at `30117883`: **REVIEW-PASS — zero open
+  findings**. Both folds verified against measured ground truth; attacks on the
+  exact-ratio code (integer headroom, >6-dp fallback, boundary decimals,
+  measured 0, ceiling at/below/above floor) all return the true ceiling. One
+  residual **proposal** (RR1, low, non-material): a hand-declared
+  scientific-notation headroom (`1e-7`) in the budgets manifest would be
+  misread by the ≤6-decimal fast path and silently void the floor — config-
+  gated, shipped manifest unaffected, routed to owner triage, intentionally not
+  ledgered as fix-now (D3).
+- RS3(c)'s re-derived `SPEC-REVIEW-PASS`/`PLAN-REVIEW-PASS` receipts: **not
+  producible for this unit** — owner decision D32 (SPEC amendment 2026-09-01,
+  known-issue 14) dispositions this row: the reviewing skills are unit 28's own
+  undelivered artifacts, installed nowhere, so the gate's demanded receipts are
+  circularly unavailable; the gate's first non-circular exercise is feature
+  29's post-merge dogfood. This receipt is the close-out's review evidence
+  together with cycle 3's PASS.
+
+**Package gates at terminal HEAD `30117883` (task 3):** schema `npm test` exit 0
+(674/674) · `check:pre-execution-schemas` exit 0 (drift-free) · root
+`node --test scripts/*.test.mjs` exit 0 (127/127) · `check-skill-context.mjs`
+exit 0 (39 skills) · `--routes` exit 0 (23 routes, exact-ratio floor) · Pi
+`npm test` exit 0 (134/134) · `npx skills add . --list` → "Found 38 skills".
+
+**Frozen acceptance manifest (task 4):** `git hash-object ACCEPTANCE.md` =
+`238b8a1ae96018ecb6aae082dc135d44d5389c24` — identical to the frozen
+`Acceptance receipt v1`. Verified at terminal HEAD; never edited this unit.
+
+**Release precondition (known-issue 12):** the merge-time Pi publish still
+fails until the npm Trusted Publisher record exists (any version past 0.1.0 →
+E403/OIDC). A green merge with a red publish job is not a shipped package; the
+0.2.0/3.5.0 rows in the CHANGELOGs state intent, not accomplished release.
+
+**Phase-lint:** PASS (8/8) ·
+`P8:close-out:6:re-review-and-close-the-corrected-candidate`
