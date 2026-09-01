@@ -496,3 +496,42 @@ manifest → phase-lint. Results at HEAD `19629257`:
 - **Phase-lint: PASS (8/8)** · fingerprint
   `P6:hardening:4:run-the-pre-execution-qualification-corpus` (unchanged from the
   plan; the bypass changes no phase shape).
+
+## P6 — 2026-09-01 — Pre-execution qualification corpus (D32 route)
+
+- Commit: `05c6ba6c` · branch `feat/28-evidence-grounded-spec-plan-review`
+- Gate: root `node --test scripts/*.test.mjs` → exit 0 (127/127)
+- Corpus: three row-sets in `testing.md` (28 feature / 78 fix / 17
+  cross-boundary), every canary field observed or the sanctioned
+  `not yet measured`; **no second-cycle sample**
+- Probe evidence (clean-context, read-only subagents at HEAD `19629257`):
+  fix-78 → would-be `PLAN-REVIEW-FAIL`, 8 findings, one first cycle; control
+  fix-147 → D30's fix-plan build live (`acfe7087…`, `parentSpecSnapshotDigest:
+  null`); unit 17 → L1 route-and-stop per CHECKS.md:93, spec snapshot
+  `fdddc858…`, plan build honestly refused (legacy unit without
+  ACCEPTANCE.md); cross-package claims stay text-contract-only
+- Golden fixture: two dated PASS rows (EN + ES) on `nan/qwen3.6` covering
+  plan-fix 3.0.1, pre-execution-review 1.2.0, review-plan 1.1.0,
+  execute-phase 4.0.2, workflow-status 3.0.3, audit-pr 5.0.2 + coverage note
+- Phase-lint: PASS (8/8) · `P6:hardening:4:run-the-pre-execution-qualification-corpus`
+
+## P7 — 2026-09-01 — Ledger reconciliation
+
+- Obligations: O9, O10, O11, O14 → `verified` (evidence recorded in
+  `testing.md`); O12 stays `planned` until P8's terminal `review-change`; O13
+  `verified` since P4. Status cells only.
+- TASKS.md: P6 and P7 boxes ticked; P5 supersede note re-checked (still
+  accurate: rows 4–8 superseded, P8 verifies the already-executed bump/PR).
+- Roadmap gate: `grep -qE '\| 28 \| … \| in-progress'` → exit 0 (row 28 is
+  `in-progress`, matching this ledger, until P8's flip step).
+- Phase table (P6–P8, per this file's per-phase receipt sections):
+
+| Phase | Receipt | Status |
+|---|---|---|
+| P6 | `05c6ba6c` — corpus + fixture rows + D32 route | complete |
+| P7 | this section | complete |
+| P8 | terminal re-review + close-out | pending — the only remaining phase |
+
+- Residuals: O12 (`planned`) is the one obligation whose validator does not
+  exist yet — it is P8's own first task. Phase-lint: PASS (8/8) ·
+  `P7:docs:4:reconcile-unit-ledgers-with-qualification-evidence`
