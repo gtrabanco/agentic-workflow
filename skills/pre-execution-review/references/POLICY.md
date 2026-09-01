@@ -161,3 +161,8 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   (`duplicate`) returns `MARK REPLAY — <stale|wrong|duplicate>` naming its reason
   and performs **zero side effects**: no ledger write, no receipt, no re-review, no
   re-fold.
+- **A pending write is a mark.** Where a contract requires state to persist before
+  anyone is prompted, that write is this act's mark: it carries the state the next
+  turn will resume from, at the home the owning contract names, and the turn ends
+  there — a prompt issued first is the defect. This section opens no home for it
+  either.

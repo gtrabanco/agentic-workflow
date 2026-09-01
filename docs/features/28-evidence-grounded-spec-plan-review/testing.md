@@ -457,3 +457,70 @@ re-run appends a second mark and the newest one is read, so marks stay history.
 `review-mark@1` is asserted to appear in exactly one shipped file, and both sensor
 references are asserted free of the deleted wording (`rows at all`, `IS that
 artifact`, `presence, with`) and free of the row shape they cite rather than copy.
+
+### P12 (2026-09-01) — Delegated evidence, conserved (AC18 / O18)
+
+**Red first, then red in the right places.** The five `delegated-evidence` cases were
+written before `DELEGATION.md` existed, and the suite re-points its repository reads
+through `PRE_EXECUTION_QUALITY_REPO` (P10's recipe, sensor case included — the copy
+needs `git init` *and* the built schema `dist`, or the snapshot case fails for a reason
+that is not this phase's):
+
+```sh
+git archive e6a310f0 | tar -x -C /tmp/p12red          # the tree before P12
+cp scripts/pre-execution-quality.test.mjs /tmp/p12red/scripts/
+cp -r packages/agentic-workflow-schema/dist /tmp/p12red/packages/agentic-workflow-schema/dist
+cd /tmp/p12red && git init -q . && git add -A && git commit -qm pre-P12
+PRE_EXECUTION_QUALITY_REPO=/tmp/p12red node --test scripts/pre-execution-quality.test.mjs
+# → tests 58 · pass 52 · fail 6 · exit 1
+#   the 5 delegated-evidence cases + "each P2 entrypoint stays within its progressive
+#   route" (evidence-grounding may not route to a reference the pre-P12 tree lacks)
+
+# then: only the new reference and its SKILL.md route on the pre-P12 tree
+#       (READINESS.md, POLICY.md §8 and the LEDGERS directive still pre-P12)
+# → tests 58 · pass 54 · fail 4 · exit 1
+#   readiness gate, §8 pending write, advisory-until-spot-check, map declaration
+```
+
+The second run is the isolation proof: a shape that exists but is not *consumed* leaves
+four cases red, so the fixtures bind the gate, the pending write and the map placement —
+not merely the presence of a file that describes them.
+
+| Gate | Result |
+|---|---|
+| `node --test scripts/pre-execution-quality.test.mjs` | exit 0 — 58/58 (53 before P12 + 5 delegated-evidence cases) |
+| same suite on `git archive e6a310f0` | exit 1 — 52 pass / 6 fail (red first) |
+| same suite on that tree + `DELEGATION.md` + its SKILL.md route only | exit 1 — 54 pass / 4 fail (gate, §8, advisory, map) |
+| `node --test scripts/*.test.mjs` (root) | exit 0 — 161/161 (156 before P12 + 5 new) |
+| `node --test scripts/ledger-ownership.test.mjs` | exit 0 — 18/18, with `delegated-evidence.md` on the `no-script-writer` directive and seven truth classes unchanged |
+| `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 — 6/6 (P11's surface untouched) |
+| `node scripts/check-skill-context.mjs` | exit 0 — 39 skills after `pre-execution-review`'s `referenceEstimateMax` 2915 → 3225 (its `LEDGERS.md` measures 2931) |
+| `node scripts/check-skill-context.mjs --routes` | exit 0 — 23 routes after the six declared re-bases (D41) |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | exit 0 — 38 skills / 123 files bundled, 134/134 tests (mirror byte-identical) |
+| `npx skills add . --list` | exit 0 — 38 skills listed, `evidence-grounding` among them (no discovery-exclusion flag); `user-invocable: false` is what keeps it out of the menu, and P12 changed neither |
+
+**Every mode AC18 names is computed, not quoted.** `validatedClaims` and
+`delegatedEvidenceGate` (`scripts/pre-execution-quality.test.mjs:1248`, `:1254`) are pure
+decisions over fixture state, so: a `done` run with a resolvable `SRC-id` and a `PASS`
+spot-check validates its claim; the same run with `spotChecks: []` validates nothing
+(advisory until the author checks); a `FAIL` row validates nothing; `partial` and
+`blocked` each return the empty set **and** `NEEDS-EVIDENCE`; a `done` claim citing an
+unknown `SRC-id` is dropped. `turn()` in the same block orders the persist-then-STOP
+events — prompted-without-a-write, wrote-after-the-prompt, and a turn that never ended
+each return a named `STOP DEFECT`, and a run that never prompts owes no pending write.
+The revision rule is arithmetic too: `admit(3, 4) = 4` while `admit(3, 3)` and
+`admit(3, 2)` are refused.
+
+**Text pins, kept single-definition.** The seven source fields, the closed
+`revision` / `outcome` lines and the `# no-script-writer` declaration are asserted
+against the shipped files; two scans keep ownership honest — `delegated-evidence@1`
+together with its `revision:` line appears in exactly one file under `skills/`, and the
+phrase `zero validated claims` appears in exactly one file (P11's gotcha 6 lesson:
+match a definition, never a citation). The grant-vocabulary scan covers only the two
+files P12 touched, because `never grants PASS` is legitimate existing prose elsewhere.
+
+**Manual check (not automated, AC18's read-verified half).** Run one delegated pass by
+hand on a toy unit in a throwaway tree and confirm: the artifact arrives with all seven
+source fields filled, no `planning-findings.md` or `progress.md` row appeared anywhere in
+the real unit, and `P12`'s own readiness run refused to count a `partial` artifact.
+`GOLDEN_FIXTURE.md`'s weakest-executor legs for `evidence-grounding` 1.3.0 are P15's.

@@ -142,7 +142,7 @@ known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<to
 decisions | docs/features/<NN>-<slug>/decisions.md · docs/fix/<issue>-<topic>/decisions.md | plan-feature-scaffold:create + design-feature:product-decisions + plan-feature:engineering-decisions + execute-phase:phase-decisions + human-owner:ratified-verdicts | none | none | node --test scripts/ledger-ownership.test.mjs
 roadmap | docs/features/ROADMAP.md · docs/fix/README.md | design-feature:idea-or-defined-row + plan-feature-scaffold:planned-row + plan-fix:fix-index-row + execute-phase:status-and-pr-link + ship-roadmap:founding-and-flip + audit-docs:low-risk-row-repair | none | none | node --test scripts/bounded-delivery-loops.test.mjs
 acceptance-manifest | docs/features/<NN>-<slug>/ACCEPTANCE.md · docs/fix/<issue>-<topic>/ACCEPTANCE.md | plan-feature-scaffold:feature-freeze + plan-fix:fix-freeze + human-owner:approved-amendment | none | none | git hash-object docs/features/<NN>-<slug>/ACCEPTANCE.md
-# no-script-writer: SPEC.md · PLAN.md · TASKS.md · CHECKLIST.md · testing.md · architecture-notes.md · planning-evidence.md · planning-obligations.md
+# no-script-writer: SPEC.md · PLAN.md · TASKS.md · CHECKLIST.md · testing.md · architecture-notes.md · planning-evidence.md · planning-obligations.md · delegated-evidence.md
 ```
 
 `SPEC.md`, `PLAN.md`, `TASKS.md`, `testing.md` and `architecture-notes.md` are
@@ -150,7 +150,9 @@ durable unit records, but not ledgers with a row lifecycle of their own: their
 writers are the phases that already order them (`plan-feature-scaffold` creates
 them, `execute-phase` ticks and appends), so the directive line keeps any script
 away from them instead of forking the table above. Same for the two frozen
-planning ledgers at the top of this file.
+planning ledgers at the top of this file, and for `delegated-evidence.md`: a
+versioned artifact of a delegated reading pass, whose writer and zones are stated
+by `evidence-grounding`'s `references/DELEGATION.md`, not by this map.
 
 ### The durable review mark
 

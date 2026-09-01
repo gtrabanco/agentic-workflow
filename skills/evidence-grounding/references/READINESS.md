@@ -11,6 +11,16 @@ Use `stage: spec` for a Product half (`design-feature`, issue-derived design) an
 `stage: plan` for an Engineering half or fix SPEC (`plan-feature`,
 `plan-feature-scaffold`, `plan-fix`). Run every box of the selected stage.
 
+### Shared box D1 — delegated evidence (both stages)
+
+A claim that arrived from a `delegated-evidence.md` run counts here only when that
+run's `outcome` is `done` and the authoring skill's `spot-check` row marks the claim
+`PASS`; a `partial` or `blocked` run, or a `done` run nobody checked, fails D1 and
+the preflight returns `NEEDS-EVIDENCE` with the delegated pass as its next step. The
+artifact's shape and the validation act have one owner — `evidence-grounding`'s
+`references/DELEGATION.md` — which this preflight consumes and never issues: D1 adds
+no gate of its own, it refuses to count what that contract says is not validated.
+
 ### `stage: spec` boxes
 
 ```
@@ -98,6 +108,7 @@ Choice of outcome is mechanical, not a judgment call:
 | Condition | Outcome | Then |
 |---|---|---|
 | A row is missing, `drifted`, `stale`, or an unowned unknown | `NEEDS-EVIDENCE` | re-run grounding step 2 for that claim |
+| Shared box D1: a `delegated-evidence.md` run is `partial` or `blocked`, or its claims are unchecked | `NEEDS-EVIDENCE` | re-run the delegated pass to `done`, then spot-check its citations |
 | Product intent, scope, role, authority, or user outcome is genuinely open | `NEEDS-DESIGN` | the human decides through `design-feature` |
 | Obligations/scenarios/phases/validators exist but do not correspond | `NEEDS-REPLAN` | re-cut the plan (`plan-feature`/`plan-fix`), never patch wording |
 | `stage: plan` and the parent SPEC review receipt is missing or stale | `NEEDS-EVIDENCE` | `review-spec` first |
@@ -113,3 +124,5 @@ Choice of outcome is mechanical, not a judgment call:
   withheld.
 - Never convert exhaustion into readiness: if the evidence is unreachable, the
   outcome is `NEEDS-EVIDENCE` with the named blocker, not `READY-FOR-REVIEW`.
+- Never count an unchecked delegated claim as a sourced row: D1 fails until the
+  authoring skill's `spot-check` says otherwise.

@@ -90,11 +90,22 @@ No unresolved product or engineering decision blocks implementation.
     points at real ledgers (F35).** A read-only-in-intent subagent given a toy
     target still follows `review-spec`'s instruction to create `planning-findings.md`
     and append a receipt to `progress.md`; told in prose alone to stay out of the
-    repository, it wrote inside it and committed to the delivery branch. Until P12
-    gives delegated work a named sandbox whose ledgers are explicitly the toy
-    unit's, any fixture or probe run must be launched against a tree that can
-    tolerate being written, or with the write boundary expressed as the skill's own
-    contract text rather than as an instruction beside it.
+    repository, it wrote inside it and committed to the delivery branch. **P12 closed
+    the part this unit owns (2026-09-01):** delegated work now has a named sandbox and
+    the boundary is the contract's own text rather than an instruction beside it —
+    `skills/evidence-grounding/references/DELEGATION.md` §"The sandbox" states in the
+    role itself that a run which qualifies, probes or rehearses a skill writes only that
+    copy's **toy ledgers**, that a run gathering evidence for a real unit writes exactly
+    one real file (`delegated-evidence.md`) and commits nothing, and that a launch
+    satisfying neither rule does not launch. That artifact is declared on the ownership
+    map's `no-script-writer` directive (`LEDGERS.md:145`), so no script may write it
+    either, and the map still carries exactly seven truth classes: it is a versioned
+    artifact, not a ledger row. **Residual, stated rather than claimed away:** the fix
+    is normative text a model obeys, plus a scan that only reaches scripts — nothing at
+    runtime physically stops a delegate that ignores its contract from writing a real
+    ledger, and no phase un-writes what earlier probes already committed. A probe still
+    launches against a tree that can tolerate being written; the sandbox rule says which
+    tree, not that enforcement is mechanical.
 17. **An external memory-sync process commits into the delivery branch (not this
     unit's write).** Before P9 started, `336e0cfb chore: engram sync` landed on
     `feat/28-evidence-grounded-spec-plan-review` and put `.engram/manifest.json`
