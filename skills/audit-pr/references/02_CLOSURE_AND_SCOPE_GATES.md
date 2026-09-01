@@ -90,7 +90,9 @@ verdict:
 
 1. **Upstream lineage is current.** The unit's `progress.md` carries
    `## Pre-execution review receipt v1 — plan` whose digest re-derives
-   to the same value (`scripts/pre-execution-snapshot.mjs verify --stage plan`;
+   to the same value (`scripts/pre-execution-snapshot.mjs verify --stage plan
+   --parent <the Product digest the receipt names>`; a fix unit binds no parent —
+   `structural.reasonCode`/`changedPaths` say which dimension moved);
    implementation-phase new-file additions are allowed, edits to a bound
    artifact are not), and — for
    a feature unit — the `— spec` receipt it names as its parent. Stale, missing, or

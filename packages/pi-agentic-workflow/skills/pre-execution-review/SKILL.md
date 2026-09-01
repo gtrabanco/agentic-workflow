@@ -1,7 +1,7 @@
 ---
 name: pre-execution-review
 user-invocable: false
-version: 1.1.1
+version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >

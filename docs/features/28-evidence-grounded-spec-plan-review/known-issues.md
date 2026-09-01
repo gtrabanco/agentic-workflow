@@ -49,3 +49,20 @@ No unresolved product or engineering decision blocks implementation.
     envelope keeps `detail` opaque by design, so a driver cannot schema-validate those
     rows. P5's canary runs the routes for real; a mismatch there is a defect in the
     tables, not in the fixtures.
+12. **The merge-time Pi release depends on an npm account record, not on this
+    repository:** `publish-pi-package.yml` publishes whenever
+    `LOCAL != PUBLISHED` (an equality-based skip, so it does **not** verify
+    "newer than the registry"), and its own header records that the npm Trusted
+    Publisher record for `@gtrabanco/pi-agentic-workflow` is still pending — so any
+    version past `0.1.0` fails the publish step with `npm error 403 … OIDC
+    permission denied`. AC10's release row and P8's PR step are therefore only
+    satisfiable once that record exists on npm; a green merge with a red publish job
+    is not a shipped package, and no ledger may claim otherwise.
+13. **Obligation-cell pipes are unchecked:** the `M/L` ledgers are nine-column
+    text tables with no parser between the writer and `review-plan`, so a cell that
+    quotes a closed `|`-separated vocabulary (the `SPEC-REVIEW-PASS |
+    SPEC-REVIEW-FAIL | NEEDS-DESIGN` set) silently shifts every later column of
+    that row and still validates as bytes. Found as RS4 on rows O3/O4 of this unit.
+    The contract's vocabularies are quoted with commas inside ledger cells; a strict
+    column-count check over `planning-obligations.md` is the mechanical guard this
+    boundary is still missing.

@@ -13,7 +13,11 @@ For every unit whose resolved status is `defined`, `planned` or `in-progress`:
 2. The `snapshot` line — the `sha256:` digest the receipt binds — and each bound
    artifact's current bytes: re-derive the digest with the recipe owner's verify
    mode — `node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit
-   <id>` (`pre-execution-review` owns the recipe). A snapshot digest is a canonical
+   <id> [--parent <64-hex>]` (`pre-execution-review` owns the recipe; a feature plan
+   check needs the Product digest it descended from, a fix check binds no parent).
+   Read `structural.reasonCode` and `structural.changedPaths` out of the JSON — they
+   name the dimension that stopped being true, which is what the sensor labels
+   `stale`. A snapshot digest is a canonical
    SHA-256 over the snapshot object, so `git hash-object` is never a substitute: it
    stays correct only for the frozen `ACCEPTANCE.md` manifest blob.
 3. The verdict, the reviewed `unit`, the stage, and the author fields
