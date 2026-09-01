@@ -24,6 +24,10 @@ Actual:   <receipt state — what was read, and `structural.changedPaths` +
   · the review returned NEEDS-DESIGN / a Product-rooted finding → /design-feature <NN>-<slug>
   · a bound artifact is genuinely wrong → /plan-feature <NN>-<slug> (re-cut), then re-review
   · no bypass flag exists for this gate: --force has never covered it and does not now
+
+GATE REJECTION — stale-or-missing-receipt
+Reason: <the label and `structural.reasonCode` above>
+Return route: /review-plan <NN>-<slug>
 ```
 
 - **`--force` is out of scope here by construction.** It overrides the dependency and
