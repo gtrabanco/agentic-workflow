@@ -76,3 +76,22 @@ No unresolved product or engineering decision blocks implementation.
     The contract's vocabularies are quoted with commas inside ledger cells; a strict
     column-count check over `planning-obligations.md` is the mechanical guard this
     boundary is still missing.
+
+15. **The canary baseline is irrecoverable, so no savings or regression claim
+    exists in either direction (measured note of #146's flow-integrity
+    amendment).** The amendment requires the pre-amendment workflow baseline to be
+    recorded before P1 lands; P1 landed on 2026-08-31, and the workflow it would
+    have measured has not existed since. The canary rows therefore carry observed
+    post-change fields or the sanctioned `not yet measured`, and every document
+    that mentions effect must keep known-issue 7's wording ("effect size unknown
+    until canaries run"). Adopting F1–F6 does not revive the baseline; the honest
+    ceiling is that this unit can show its gates fire, never that they pay.
+16. **Delegated qualification runs inherit the skill's own write contract, which
+    points at real ledgers (F35).** A read-only-in-intent subagent given a toy
+    target still follows `review-spec`'s instruction to create `planning-findings.md`
+    and append a receipt to `progress.md`; told in prose alone to stay out of the
+    repository, it wrote inside it and committed to the delivery branch. Until P12
+    gives delegated work a named sandbox whose ledgers are explicitly the toy
+    unit's, any fixture or probe run must be launched against a tree that can
+    tolerate being written, or with the write boundary expressed as the skill's own
+    contract text rather than as an instruction beside it.

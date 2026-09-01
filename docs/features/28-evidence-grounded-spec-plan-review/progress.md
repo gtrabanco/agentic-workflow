@@ -11,9 +11,17 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 | P3 — Establish Plan review readiness | done | Depends on P2 Product-review authority |
 | P4 — Enforce pre-execution authority routing | done | Depends on P3 Plan-review authority |
 | P5 — Qualify the pre-execution workflow | replanned | Re-plan 2026-08-31 (findings F2+F3+F6): qualification evidence incomplete → P6–P8 |
-| P6 — Run the pre-execution qualification corpus | pending | Depends on P1–P4 |
-| P7 — Reconcile the unit ledgers with qualification evidence | pending | Depends on P6 |
-| P8 — Re-review and close the corrected candidate | pending | Depends on P7 |
+| P6 — Run the pre-execution qualification corpus | done | Ran 2026-09-01 under D32 (entry below) — status cell corrected from `pending` on 2026-09-01; the phase entry, not this table, was the evidence · Depends on P1–P4 |
+| P7 — Reconcile the unit ledgers with qualification evidence | done | Ran 2026-09-01 (commit `c44173ef`) — status cell corrected from `pending` · Depends on P6 |
+| P8 — Re-review and close the corrected candidate | done · superseded for terminality | Ran 2026-09-01 (commit `3992ac17`) and its close-out held at that head; the 2026-09-01 amendment re-freezes acceptance and appends P9–P16, so no head before P16 can satisfy "terminal" (F24's receipt requirement moves to P16) · Depends on P7 |
+| P9 — Declare durable ledger write ownership | planned | Depends on P1–P4 ledgers · AC16 / O16 · fingerprint `P9:docs:6:declare-durable-ledger-write-ownership` |
+| P10 — Mark terminal verdicts durably | planned | Depends on P9 (a mark needs a declared owner before a writer) · AC17 / O17 |
+| P11 — Prove clean reviews with a durable mark | planned | Depends on P10 · AC17, AC20 / O17, O20 |
+| P12 — Conserve delegated evidence as a versioned artifact | planned | Depends on P2, P3 readiness passes · AC18 / O18 · closes known-issue 16 |
+| P13 — Run normalizers before the artifact freeze | planned | Depends on P12 · AC19 / O19 |
+| P14 — Bind normative prose to machine surfaces | planned | Depends on P9–P13 (the gate needs the grammars those phases fix) · AC15 / O15 |
+| P15 — Qualify the amended skills on the weakest executor | planned | Depends on P14 · AC11, AC14 (existing rows, unmodified) |
+| P16 — Close the amended candidate | planned | Depends on P15 · AC12 / O12 plus F22, F23, F24, F25 · terminal phase of the unit |
 
 ## Dependency receipt v1
 - Fingerprint: 10822fdec53b8f814ef5715fb420539f4fc8bad3 · Closure: 28-evidence-grounded-spec-plan-review ← 26-staged-verification-contracts ← 25-content-bound-review-receipts · 27-pi-agentic-workflow
@@ -33,6 +41,50 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 
 ## Acceptance receipt v1
 - Manifest: docs/features/28-evidence-grounded-spec-plan-review/ACCEPTANCE.md · Blob: 238b8a1ae96018ecb6aae082dc135d44d5389c24 · Status: frozen · Verified: 2026-08-30 · Re-bound 2026-08-30 after user-approved amendment 2 (Pi package release in AC10); amendment 1 blob was `1f03d8cca37a5e14b32cc60db20bffb074ae94ba`
+
+## Acceptance receipt v2
+- Manifest: docs/features/28-evidence-grounded-spec-plan-review/ACCEPTANCE.md · Blob: 2a772efa8678fe809f51c39f3e07d1e303c30ef1 · Status: frozen (replacement) · Verified: 2026-09-01 · Recompute with `git hash-object docs/features/28-evidence-grounded-spec-plan-review/ACCEPTANCE.md`
+- Authority chain, in the contract's order: explicit user approval (2026-09-01, replan of unit 28 routed from finding F3) → dated `SPEC.md ## Amendments` row → this replacement manifest → this receipt.
+- Delta: AC15–AC20 added for #146 F1–F6. **AC1–AC14 are byte-unchanged** — verified, not asserted: the only edits inside the table are the appended rows and the amendment preamble, and no validator, command, or outcome wording was removed, skipped, narrowed, or loosened. The finish line moved outward only.
+- Consequence stated rather than discovered later: the acceptance fingerprint is an input to content-bound candidate receipts (features 25 and 26), so re-freezing the manifest invalidates every pre-execution and candidate receipt bound to blob `238b8a1a…`. F23, F24 and F25 therefore cannot be closed by any review minted before this commit; P16 produces the receipt set at its own terminal HEAD.
+
+## Replan record — 2026-09-01 (finding F3, #146 flow-integrity amendment)
+
+**What was verified before planning, not assumed.** `origin/main`'s roadmap row 28
+carries all six flow-integrity clauses (PR #153, merged 2026-08-30); this branch
+never did (`git log -S"normative-prose" -- docs/features/ROADMAP.md` is empty
+here), the SPEC's four earlier amendment rows never adopted them, and none of the
+six appears anywhere in `skills/`. The conflict F22 reported as a merge hunk is
+therefore a scope divergence, which is what its own fold note suspected.
+
+**What this replan wrote.** SPEC: S14–S19, expectation rows 25–31, AC15–AC20, the
+amendment row, phases P9–P16, and the Stage 2 re-validation line in
+`### Architecture impact` (`n/a: no project invariants declared` —
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md` does not exist in this repo, so no
+rule id is citable; the package/skill/runtime boundary check stands in). ACCEPTANCE:
+AC15–AC20 + two new command lines. Obligations: O15–O20, nine-column parse kept.
+TASKS: P9–P16 with task counts matching every fingerprint (6/6/5/6/4/7/4/9).
+ROADMAP: row 28 adopts main's clause list with status `in-progress` and PR #155
+named; rows 29 and 30 re-based byte-identical to main so the remaining conflict is
+row 28's status cell alone.
+
+**Ledger changes this turn, none a reclassification.** F3 → `folded: yes` (the
+replan landed; its ROADMAP half is the adopted row). F30's row normalized from
+eight cells to seven — its `folded: yes` had been sitting in a phantom ninth
+column, so a strict parse read the folded row as unfolded; that is known-issue 13's
+failure mode arriving inside `review-findings.md` itself. F35 filed and folded:
+a fixture subagent followed its skill's write contract over its prose instruction,
+committed `de9f4a04` + `bc0a88ef` to this branch, and added a `| 91 |` row to the
+real roadmap; reverted with `git reset --hard 2016d309`, tree byte-clean, evidence
+kept at `/tmp/f35-evidence/`. D33/D34/D35 and known-issues 15/16 record the rest.
+
+**Still open after this replan, on purpose.** F22's mechanical half (sync with
+main) belongs to P16, not to planning. F23/F24/F25 need a clean review cycle at the
+post-fold head — a fold cannot mint review evidence. F32 waits on the owner's
+runtime-policy verdict, with the measured matrix now in `PE-020` instead of an
+inferred answer. And the unit can now show its gates fire; it still cannot show they
+pay, because the pre-amendment canary baseline is gone (known-issue 15).
+
 
 ## Preflight — P1
 - Branch: `feat/28-evidence-grounded-spec-plan-review` (created from `main` @ 8ab22ea6).

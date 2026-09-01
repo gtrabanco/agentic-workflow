@@ -134,3 +134,115 @@ row 28 reads `done · [#155]`.
 - [x] Verify the complete frozen ACCEPTANCE manifest at terminal HEAD and record the verification receipt in `progress.md`.
 - [x] Update PR #155 with the amendment summary (P6–P8) and verification evidence.
 - [x] Flip roadmap row 28 to `done · [#155]` after the PR update (the PR-open step's write).
+
+---
+
+# Phases appended by the 2026-09-01 user-approved amendment (#146 flow-integrity F1–F6, finding F3)
+
+P8 stays as it ran; it is no longer the terminal phase. **P16** owns close-out at
+the amended head. Each phase below carries the phase-lint fingerprint recorded in
+`SPEC.md ### Phases`; task counts must match, or the fingerprint is stale and the
+phase is re-cut — never re-tallied after the fact.
+
+## P9 — Declare durable ledger write ownership
+
+Layer: docs · Done-when: `node --test scripts/ledger-ownership.test.mjs` -> exit 0 and -> non-zero on the undeclared-writer fixture.
+
+- [ ] Write the ledger ownership map with one row per truth class: review findings, planning findings, progress, known-issues, decisions, roadmap, acceptance manifest.
+- [ ] Add the declared-mechanical-annotator column and enter `scripts/ledger-provenance.mjs` as `review-findings.md`'s annotator, naming the fold token it may append and its validator.
+- [ ] Declare owner and annotator in `docs/features/_TEMPLATE/` and `docs/fix/_TEMPLATE/` ledger templates.
+- [ ] Write `scripts/ledger-ownership.test.mjs` red first: the declared-owner scan must fail a template row with no owner.
+- [ ] Add the script write-path scan so a script writing a durable ledger absent from the map fails the suite.
+- [ ] State the one-owner rule in `skills/pre-execution-review/references/LEDGERS.md` as the single cited source.
+
+Phase-lint: PASS (8/8) · fingerprint `P9:docs:6:declare-durable-ledger-write-ownership`
+
+## P10 — Mark terminal verdicts durably
+
+Layer: docs · Done-when: `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 and the write-then-report `grep` in `SPEC.md` P10 -> exit 0.
+
+- [ ] Add the write-then-report rule to `skills/pre-execution-review/references/POLICY.md` as its one owner.
+- [ ] Cite that rule from `skills/review-spec/SKILL.md`'s turn contract without restating it.
+- [ ] Cite that rule from `skills/review-plan/SKILL.md`'s turn contract without restating it.
+- [ ] Fix the typed gate-rejection vocabulary (dependency, status, phase-lint, stale-or-missing-receipt), each trace naming reason and return route.
+- [ ] Add the replay rule: a stale, wrong, or duplicate mark refuses with a typed reason and performs no side effect.
+- [ ] Add the terminal-mark, rejection-trace, and replay-refusal fixtures to `scripts/pre-execution-quality.test.mjs`.
+
+Phase-lint: PASS (8/8) · fingerprint `P10:docs:6:mark-terminal-verdicts-durably`
+
+## P11 — Prove clean reviews with a durable mark
+
+Layer: docs · Done-when: `node --test scripts/workflow-status-pre-execution.test.mjs` -> exit 0 with the mark-present and ledger-only cases.
+
+- [ ] Define the zero-finding durable review mark row shape in `LEDGERS.md`.
+- [ ] Replace `workflow-status`'s ledger-presence review-run proof in `references/SENSOR_CORE.md` with the durable mark.
+- [ ] State the same keying in `skills/workflow-status/references/PRE_EXECUTION.md` and delete the ledger-presence sentence.
+- [ ] Add both sensor fixtures — mark present with zero findings proves review-ran, ledger without mark does not.
+- [ ] Bump every touched skill with `bump-skill` and regenerate the Pi bundle to byte parity.
+
+Phase-lint: PASS (8/8) · fingerprint `P11:docs:5:prove-clean-reviews-with-a-durable-mark`
+
+## P12 — Conserve delegated evidence as a versioned artifact
+
+Layer: docs · Done-when: `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 with the delegated-evidence and NEEDS-EVIDENCE fixtures.
+
+- [ ] Write the delegate-only read-only role contract: never invoked in the authoring context, fresh read-only context where supported, manual fresh conversation as the portable fallback.
+- [ ] Fix the artifact shape: positive revision, `done / partial / blocked`, the questions, sources with id, class, title, publisher, URL, accessed_at, excerpt, claims mapped to source ids, contradictions, uncertainty, freshness, separately-held non-authoritative product choices, explicit unverified-claims section.
+- [ ] Add the readiness rule: a `partial` or `blocked` artifact yields zero validated claims and returns `NEEDS-EVIDENCE`.
+- [ ] Add persist-then-STOP: the pending state is written before any user prompt, then the turn ends.
+- [ ] Add the advisory-until-validated rule with spot-checking citations named as the validation act.
+- [ ] State that capability gating is self-attested and out of scope, with no grant vocabulary added.
+
+Phase-lint: PASS (8/8) · fingerprint `P12:docs:6:conserve-delegated-evidence-as-a-versioned-artifact`
+
+## P13 — Run normalizers before the artifact freeze
+
+Layer: docs · Done-when: `node --test scripts/pre-execution-quality.test.mjs` -> exit 0 and -> non-zero when a mutating step follows the freeze row.
+
+- [ ] Add the ordering rule to `skills/execute-phase/references/PRE_EXECUTION_GATE.md`: mutating steps precede the freeze, check-only steps follow it.
+- [ ] Add the invalidation sentence: a byte change to a frozen input after the freeze voids current receipts and forces fresh review.
+- [ ] List this repository's normalizers in one place: `bump-skill`, `npm run bundle:skills`, generators, formatters, docs generators.
+- [ ] Add the normalizer-ordering fixture that fails when a mutating step is scheduled after the freeze row.
+
+Phase-lint: PASS (8/8) · fingerprint `P13:docs:4:run-normalizers-before-the-artifact-freeze`
+
+## P14 — Bind normative prose to machine surfaces
+
+Layer: hardening · Done-when: `node --test scripts/normative-drift.test.mjs` -> exit 0 and -> non-zero against each of the three injected disagreements.
+
+- [ ] Inventory the normative surfaces that order an agent action: skill process text, `SENSOR_CORE.md`, `TURN_CONTRACT.md`, `PREFLIGHT.md`, closing hand-off blocks.
+- [ ] Give every inventoried surface that lacks one a fixed grammar: fenced command block, fixed-output contract block, or versioned reference table.
+- [ ] Write `scripts/normative-drift.test.mjs` red first against the schema package's published vocabularies.
+- [ ] Cover the transition and argument references made by `review-spec` and `review-plan`.
+- [ ] Cover the gate transitions in `execute-phase`, `plan-feature`, and `plan-fix`.
+- [ ] Cover the `workflow-status` sensor labels and the envelope field references.
+- [ ] Add the render-only check: prose restating a version, SHA, count, or next command must equal the machine value or the test fails.
+
+Phase-lint: PASS (8/8) · fingerprint `P14:hardening:7:bind-normative-prose-to-machine-surfaces`
+
+## P15 — Qualify the amended skills on the weakest executor
+
+Layer: hardening · Done-when: the `GOLDEN_FIXTURE.md` gate row in `SPEC.md` P15 -> exit 0 with matching `GOLDEN_FIXTURE.es.md` rows.
+
+- [ ] Run every skill P9–P14 changed through the fixture with the fleet's sanctioned weakest executor, following each `SKILL.md` literally.
+- [ ] Append a dated row per skill/version to the `GOLDEN_FIXTURE.md` run log naming model, versions, verdict, and observed blocks.
+- [ ] Mirror each new row in `docs/workflow/GOLDEN_FIXTURE.es.md` in the same commit.
+- [ ] Record any wording regression a run surfaces as a separate targeted change, never as an edit inside the run.
+
+Phase-lint: PASS (8/8) · fingerprint `P15:hardening:4:qualify-the-amended-skills-on-the-weakest-executor`
+
+## P16 — Close the amended candidate
+
+Layer: close-out · Done-when: the terminal-HEAD receipt set, gate set, `merge-tree` conflict check, and roadmap row stated in `SPEC.md` P16.
+
+- [ ] Fold every fix-now row still open at this head with `fold-findings`, including the F32 owner verdict and F35.
+- [ ] Sync the branch with `origin/main` and resolve roadmap row 28's status cell alone; rows 29 and 30 are already byte-identical to `main`.
+- [ ] Run the full gate set at terminal HEAD: schema `npm test`, schema drift check, root `node --test scripts/*.test.mjs`, `pre-execution-quality`, `ledger-ownership`, `normative-drift`, `check-skill-context`, `--routes`, Pi bundle and tests, `npx skills add . --list`.
+- [ ] Recompute the replacement `ACCEPTANCE.md` blob at terminal HEAD and record a fresh acceptance receipt in `progress.md`.
+- [ ] Obtain the context-clean `review-change` PASS receipt at terminal HEAD and post the SHA-bound receipt (this closes F23 and F25 — a fold cannot mint review evidence).
+- [ ] Confirm O15–O20 statuses match their cited evidence, then flip the F2/F3/F22/F24/F25/F32 rows in the same commit.
+- [ ] Update PR #155 through `gh api` with the amendment summary covering P9–P16 and the measured gate figures, then re-read the body live to confirm it landed.
+- [ ] Update the roadmap row to `done · [#155](https://github.com/gtrabanco/agentic-workflow/pull/155)`.
+- [ ] Commit `docs(28): link PR #155` and push, and PRINT THE PR URL in the chat.
+
+Phase-lint: PASS (8/8) · fingerprint `P16:close-out:9:close-the-amended-candidate`
