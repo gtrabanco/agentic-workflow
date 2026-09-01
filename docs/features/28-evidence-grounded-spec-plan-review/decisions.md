@@ -289,6 +289,37 @@
   rather than by the next unrelated unit is D28 working as intended: the floor was
   only declarable before, now it is checkable.
 
+- **D32 — owner-authorized bypass of the pre-execution review gate for unit 28's
+  own remaining phases (2026-09-01, explicit user instruction: "forcely ignore
+  the review-plan … we can not consume a receipt from a skill in development —
+  bypass our in development skills").** The gate demands a verdict only an
+  independent reviewer can produce; for unit 28 the only process that could
+  produce one is the unit's own undelivered artifact: `review-spec`,
+  `review-plan` and `pre-execution-review` exist as repo text and are installed
+  nowhere — not as a global skill, not as a pi command (the session's
+  invocable-skill list carries none of them) — so the gate consumes receipts the
+  unit itself has not shipped. The unit already qualified once through the
+  legacy-adoption route (P5) under the same circularity; the 2026-08-31 replan
+  voided those receipts (RS3(a)) and the re-run demand (RS3(c)) recreated the
+  deadlock. Boundaries, all four load-bearing:
+  1. The gate text, the schema and every other consumer are **unchanged** —
+     feature 29 and every later unit still face the gate. This is a recorded
+     owner override of the skill's own no-bypass clause for the one unit that
+     develops the gated skills, not a policy change.
+  2. It is recorded here and in the SPEC amendment table — never via the
+     `--force` flag, which `PRE_EXECUTION_GATE.md` excludes by construction, and
+     never silently.
+  3. P8's RS3(c) receipt rows are satisfied by the installed `review-change`
+     PASS on the terminal candidate plus this decision; the first real exercise
+     of the gate stays where the SPEC already put it — feature 29's post-merge
+     dogfood (review-spec + review-plan over unit 29's artifacts), where the
+     gate is not circular.
+  4. Canary fields that only a `review-plan` run could observe are recorded with
+     the corpus's own sanctioned `not yet measured` value, never invented.
+  Expires when the skills ship (known-issue 12's publish precondition) or when
+  feature 29 exercises the reviews — whichever comes first; the close-out
+  receipt names this decision either way.
+
 ## Out-of-scope finding ladder — 2026-09-01
 
 | Date | Finding | Evidence | Estimate | Risk | Local files | Decision | Why | Trigger | Record |
