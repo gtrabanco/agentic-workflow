@@ -343,8 +343,10 @@ no-script-writer` directive protects; and the exclusion case — a generated-art
 writer stays out of scope.
 
 **Annotator token, pinned to its source:** `· fold <sha>` / `· ticked <sha>` are
-emitted at `scripts/ledger-provenance.mjs:288`, the re-open note `· REOPENED P20 —
-provenance unproven` at `:293`. The test matches the source lines, so a token that
+emitted at `scripts/ledger-provenance.mjs:339`, the re-open note `· REOPENED —
+provenance unproven` at `:347` (the F58 fold of 2026-09-02 removed the hardcoded
+`P20` and moved these citations with it; the note now names no phase, because the
+git walk cannot observe one). The test matches the source lines, so a token that
 drifts away from the map — in either direction — fails the suite rather than
 silently widening what the annotator may write.
 

@@ -1032,3 +1032,17 @@
   was needed anywhere in the repository — the "every ceiling sits exactly at the floor"
   phrasing lived in loop notes, not in committed text, and is corrected here rather than
   by editing a file to match a mistake of mine.
+- **D50 — the reopen note loses the phase number rather than gaining a flag (2026-09-02,
+  P16 F58 fold).** F58's contract payload hardcoded `· REOPENED P20`, a phase this unit's
+  plan never contained, so a mechanical annotator invented a fact while doing everything
+  else right. Options: take the reopening phase from a `--phase` flag, or name no phase.
+  Chosen: **no phase** — the tool walks git state, and "which phase is reopening this row"
+  is observable by no git state; a flag would let the caller hand-type exactly the
+  fabrication the finding exists to remove, and no consumer parses the number. The reopen
+  behaviour (flip to `no`, name the missing evidence) is correct and stays. The declared
+  grammar in `LEDGERS.md` is the single owner, so the block's `annotator-token` cell, its
+  prose, the `ledger-ownership` pin assertion and this unit's token paragraph in
+  `testing.md` move in the same commit as the emission — a grammar that lags its tool is
+  the F1 class this unit was cut to kill. Binding order matters: annotate before marking,
+  never after, when the discovery commit already names the id and touches the cited
+  surface (else the tool binds the wrong sha — recorded in `testing.md` above).

@@ -719,7 +719,7 @@ test("the fold provenance token is pinned to the annotator line that emits it", 
   const source = read(PROVENANCE_REL);
   assert.match(source, /entry\.token = chosen\.score === 1 \? "ticked" : "fold";/, "line 248 names the two marker words");
   assert.match(source, /cells\[6\] = ` \$\{route\} · \$\{entry\.token\} \$\{entry\.fold\}\$\{tail\} `;/, "line 288 appends it into the route cell");
-  assert.match(source, /· REOPENED P20 — provenance unproven/, "line 293 re-opens an unproven row");
+  assert.match(source, /· REOPENED — provenance unproven/, "the reopen note re-opens an unproven row without naming a phase (F58)");
   assert.match(review.validator, /ledger-provenance/, "the row names the annotator's own validator");
   for (const row of declared.rows.filter((r) => r.annotator === NONE)) {
     assert.equal(row["annotator-token"], NONE, `${row["truth-class"]}: no annotator, so no token`);

@@ -169,10 +169,26 @@ test("--check fails while folded rows lack a commit token; --annotate fixes prov
       assert.match(line, /· (fold|ticked) [0-9a-f]{7}/, `folded row without a token: ${line}`);
     } else {
       assert.match(line.slice(0, 12), /\| F3 /, "only the unprovable row may re-open");
-      assert.match(line, /REOPENED P20/, `re-opened row without evidence: ${line}`);
+      assert.match(line, /REOPENED — provenance unproven/, `re-opened row without evidence: ${line}`);
     }
   }
   assert.match(run(root, "--annotate").stdout, /nothing to annotate/, "annotation is idempotent");
+});
+
+test("a re-opened row names no phase the annotator cannot see (F58)", (t) => {
+  // F58: the reopen note hardcoded `· REOPENED P20 — provenance unproven`, and no plan
+  // of the annotated unit contains a P20 — a mechanical token inventing a fact while
+  // reopening rows the contract correctly reopened. The walk observes git state only:
+  // the note may name the row, its missing evidence, and nothing it cannot see.
+  const { root } = makeFixture(t);
+  assert.equal(run(root, "--annotate").status, 0);
+  const line = fs
+    .readFileSync(path.join(root, LEDGER), "utf8")
+    .split("\n")
+    .find((l) => /^\| F3 \|/.test(l));
+  assert.match(line, /\| no \|$/, "an unproven tick must re-open");
+  assert.match(line, /· REOPENED — provenance unproven:/, "the reopen note keeps naming the missing evidence");
+  assert.doesNotMatch(line, /REOPENED[^|]*\bP\d/, `the reopen token names a phase it cannot observe: ${line}`);
 });
 
 test("the annotation says what it knows: `fold` for a surface change, `ticked` for a claim", (t) => {
