@@ -2,13 +2,17 @@
  * SHA-256 for the package's digest surface.
  *
  * Two entry points over one implementation contract:
- *   - `sha256Hex` (async, Web Crypto) — the historical path every published
- *     digest in this package already uses;
+ *   - `sha256Hex` (async, Web Crypto) — the historical path the published candidate
+ *     and verification digests use;
  *   - `sha256HexSync` — the same function over the same bytes, needed because
  *     `buildPreExecutionArtifactSnapshot` derives digests from caller-supplied
  *     document text in ONE synchronous pass (feature 28 AC2): a builder that had
  *     to await per artifact row would either force the whole pre-execution API
  *     async or hash the wrong bytes when a caller mutated content mid-flight.
+ *   Since the fold of F67 the pre-execution family uses the SYNC path end to end —
+ *   builder, canonicalizers, digests, blessing and freshness comparator answer in
+ *   one calling style, because a half-async family forces `await` ceremony on every
+ *   caller of a contract whose bytes are already in hand.
  *
  * Both return one identical lowercase 64-hex digest for identical bytes:
  * `test/pre-execution-canonical.test.mjs` pins that agreement over an

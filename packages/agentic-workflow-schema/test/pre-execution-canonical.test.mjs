@@ -353,6 +353,20 @@ test("digests are repeatable and equal an independent SHA-256 of the canonical b
   assert.equal(first, createHash("sha256").update(canonical, "utf8").digest("hex"));
 });
 
+test("the pre-execution snapshot digest answers in place (F67)", () => {
+  // AC2's builder hashes caller-supplied text in ONE synchronous pass; leaving the
+  // published digest entry point on the async path put an `await` back into every
+  // build -> digest -> compare chain of the same family, and 3.5.0 publishes once.
+  const snapshot = planLikeDocument();
+  const digest = digestPreExecutionArtifactSnapshot(snapshot);
+  assert.equal(typeof digest, "string", "the digest must not arrive as a promise");
+  assert.equal(
+    digest,
+    createHash("sha256").update(canonicalizePreExecutionArtifactSnapshot(snapshot), "utf8").digest("hex"),
+    "the sync core answers the same digest the async path answered",
+  );
+});
+
 // ---------------------------------------------------------------------------
 // SHA-256 path agreement (AC21 / F32 / D36)
 // ---------------------------------------------------------------------------
