@@ -377,7 +377,24 @@ export type SpecProductSelection =
 
 const LEVEL_TWO_HEADING = /^## (.*)$/;
 const LEVEL_ONE_HEADING = /^# (.*)$/;
-const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})/;
+const FENCE_LINE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/** The fence a selector pass is inside: which character opened it, and how long it was. */
+type FenceRun = { readonly marker: string; readonly length: number };
+
+/**
+ * Advance the fence state over one fence-looking line (finding F64). A block closes
+ * only on a run of the character that OPENED it, at least as long, with nothing but
+ * spaces after it — CommonMark's rule, and the reason a `~~~` line inside a ``` block
+ * is content rather than a terminator. Both selector passes decide through this one
+ * function, so the heading scan and the boundary scan can never track differently.
+ */
+function advanceFence(run: RegExpExecArray, open: FenceRun | null): FenceRun | null {
+  const marker = run[1][0];
+  const length = run[1].length;
+  if (open === null) return { marker, length };
+  return marker === open.marker && length >= open.length && run[2].trim() === "" ? null : open;
+}
 
 function selectionError(code: SpecProductSelectorError["code"], heading: string): SpecProductSelection {
   return { ok: false, errors: Object.freeze([Object.freeze({ code, heading })]) };
@@ -399,7 +416,9 @@ function selectionError(code: SpecProductSelectorError["code"], heading: string)
  *     select identical bytes;
  *   - fenced blocks are inert: a `## Goal` inside a template is neither a duplicate
  *     heading nor a section boundary, and fenced content still belongs to the
- *     section containing it (under-binding would leave edits unchecked);
+ *     section containing it (under-binding would leave edits unchecked); a block ends
+ *     only on a run of its own fence character, at least as long and with no info
+ *     string, so a mixed-character fence cannot end it early;
  *   - heading text is compared EXACTLY — no trimming, no case folding, no
  *     substring — so `## Goals`, `### Goal` and `## Goal ` all fail closed;
  *   - the FIRST defect in the fixed order title → missing → duplicate → order is
@@ -413,14 +432,15 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
 
   const headings: { name: string; line: number }[] = [];
   let titleLine = -1;
-  let insideFence = false;
+  let openFence: FenceRun | null = null;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (FENCE_LINE.test(line)) {
-      insideFence = !insideFence;
+    const fence = FENCE_LINE.exec(line);
+    if (fence !== null) {
+      openFence = advanceFence(fence, openFence);
       continue;
     }
-    if (insideFence) continue;
+    if (openFence !== null) continue;
     const two = LEVEL_TWO_HEADING.exec(line);
     if (two !== null) {
       headings.push({ name: two[1], line: i });
@@ -460,13 +480,14 @@ export function selectSpecProduct(text: unknown): SpecProductSelection {
   let designLine = -1;
   for (const heading of headings) if (heading.name === "Design status") designLine = heading.line;
   let end = lines.length;
-  insideFence = false;
+  openFence = null;
   for (let i = 0; i < lines.length; i++) {
-    if (FENCE_LINE.test(lines[i])) {
-      insideFence = !insideFence;
+    const fence = FENCE_LINE.exec(lines[i]);
+    if (fence !== null) {
+      openFence = advanceFence(fence, openFence);
       continue;
     }
-    if (insideFence || i <= designLine) continue;
+    if (openFence !== null || i <= designLine) continue;
     if (LEVEL_TWO_HEADING.test(lines[i]) || LEVEL_ONE_HEADING.test(lines[i])) {
       end = i;
       break;
