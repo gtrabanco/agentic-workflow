@@ -997,3 +997,38 @@
   byte-identical — and no Pi or schema package version moved, because `0.2.0`/`3.5.0` are
   the versions AC10 already names and `3.5.0` stays unpublished until merge (known-issue
   12's Trusted-Publisher precondition is unchanged by this phase).
+
+- **D49 — a check that cannot see a row must say it refused it; and a review receipt
+  binds to the head that follows the fold (2026-09-02, P16 review fold).** Three choices
+  this fold had to make. **(a) Row arity.** The escaped-pipe fix made cell splitting
+  correct and left the *count* unwatched: a row the seven-column schema refused still
+  vanished silently from the recount, `--check` and `--annotate`. Options were to repair
+  on the fly (rejected: the tool would be inventing the shape it exists to verify), to
+  warn and continue (rejected: a warning inside a passing exit code is the same silence
+  with more words), or to **compare counted `^\| F<n> \|` lines against parsed rows and
+  fail when they differ** — chosen, because it makes the tool's own coverage a claim it
+  must discharge. It paid for itself immediately: the first malformed row it refused was
+  this session's F47. **(b) The changelog gate's reading.** `newestVersionCell` takes a
+  max, which is why three duplicated ES amendment rows survived an entire unit whose
+  subject is rendered-fact drift; the fix is not the deduplication but a pin that counts
+  rows per (skill, version) in both languages and asserts EN/ES version-set parity —
+  which then found a second, older omission (an ES `1.0.2` row) and one legacy duplicate
+  pair (`log-session` 1.4.0) that is exempted explicitly as history rather than deleted,
+  recorded as known-issue 23 so the exemption has an owner and a re-check. **(c) A
+  reviewer's stale-version claim is not automatically a defect.** `MIGRATION.md` was
+  flagged for naming `workflow-status 3.0.0` where the skill is now 3.1.0; those blocks
+  are dated release notes recording the version a break landed in, and the repository's
+  rule for that file is about rename notes, not current versions. Rejected: re-basing
+  them, which would have rewritten history to satisfy a check that should not have
+  applied. Accepted residue: nothing pins a dated note, so an audit pass will keep
+  mistaking it for a live claim — known-issue 25 records the adjudication.
+  The fold also settles where evidence may live: **box 5's PASS receipt cannot describe
+  `949ef3e5` once this commit exists**, because a fold is exactly the change that invalidates
+  a review. The receipt is obtained at the post-fold head, and F58 records the tool's own
+  lie — its reopen token hardcodes a phase number (`· REOPENED P20`) that no plan contains,
+  so a mechanical annotator invented a fact while reopening these rows correctly.
+  Ceiling movement: one value, `review-change:default-*` 13795 → 13794 (measured 12540);
+  the manifest's own rule already reads "at each declared re-basis", so no wording change
+  was needed anywhere in the repository — the "every ceiling sits exactly at the floor"
+  phrasing lived in loop notes, not in committed text, and is corrected here rather than
+  by editing a file to match a mistake of mine.

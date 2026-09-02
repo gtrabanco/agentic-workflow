@@ -212,3 +212,11 @@ note assigned exactly this proof to "P16's receipt set, minted at a terminal HEA
 a post-freeze write is actually observable"; the condition is met, so the row moves.
 Status cell only: O19's authority, phase, validator and required-evidence cells are
 untouched, and no other row's text moved here.
+
+
+Reconciled 2026-09-02 (P16 review fold): no obligation advanced. The fold changed what the
+gates can see (row arity, duplicate rendered rows, tautological and vacuous assertions), not
+which acceptance clauses are machine-covered — **O15 stays `in-progress`** for the same
+reason it did before: AC15's artifact-kind and ledger-row-shape clauses remain grammar-checked
+only (known-issues 18-19). F58 and known-issue 24 are new open work with owners and re-checks;
+neither closes an O-row.

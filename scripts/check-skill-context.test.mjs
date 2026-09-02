@@ -210,6 +210,35 @@ runFixtureRoute(
   /route lines ceiling \d+ < \d+ = ceil\(measured/,
 );
 
+runFixtureRoute(
+  "headroom whose numerator rounds to zero",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 1e-7 }; },
+  /rounds to a zero numerator/,
+);
+
+// C3 (P16 fold): the guard bound only on an exactly-matching policy name and only on
+// a positive headroom, so `relative-headrooms` or `headroom: 0` disabled it silently
+// and every ceiling passed un-checked. An unrecognised declaration is a manifest
+// error, never an opt-out — and the same refusal covers the >6-decimal ratio that the
+// float fallback used to swallow (C4: that branch is gone, so nothing pins it).
+runFixtureRoute(
+  "unknown headroom policy name",
+  (manifest) => { manifest.policy = { name: "relative-headrooms", headroom: 0.1 }; },
+  /Unknown context-budget policy/,
+);
+
+runFixtureRoute(
+  "non-positive headroom",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 0 }; },
+  /headroom must be a positive number/,
+);
+
+runFixtureRoute(
+  "headroom wider than the exact-ratio reader",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 0.12345678 }; },
+  /decimal places/,
+);
+
 {
   // The shipped manifest must satisfy its own declared policy: this is the exact
   // state RS12 reported (a 10 % policy with routes sitting at 0.08 % headroom).

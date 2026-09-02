@@ -244,6 +244,40 @@ if (routeMode) {
     throw new Error("No routes declared in manifest");
   }
 
+  // C3 (P16 fold): the guard below binds only on a recognised policy, so a typo'd
+  // `policy.name` or a non-positive `headroom` used to disable it silently — the same
+  // silent-skip class `scripts/ledger-provenance.mjs` reports for its rows. An
+  // unrecognised declaration is a manifest error, never an opt-out, and the
+  // decimal width is part of that contract: the exact-ratio reader below takes the
+  // declared headroom from its shortest decimal form, so a ratio that needs more
+  // than 6 places is refused here instead of falling back to a float product (C4)
+  // the RC2 case exists to rule out.
+  const policy = manifest.policy ?? null;
+  let headroom = null;
+  if (policy) {
+    if (policy.name !== "relative-headroom") {
+      throw new Error(`Unknown context-budget policy: ${JSON.stringify(policy.name)} — this script implements "relative-headroom" only, and an unrecognised name must not disable the floor guard silently.`);
+    }
+    const declared = Number(policy.headroom);
+    if (!Number.isFinite(declared) || declared <= 0) {
+      throw new Error(`relative-headroom: headroom must be a positive number, got ${JSON.stringify(policy.headroom)}.`);
+    }
+    const places = String(declared).includes(".") ? String(declared).split(".")[1].length : 0;
+    if (places > 6) {
+      throw new Error(`relative-headroom: headroom ${declared} declares ${places} decimal places; the exact-ratio floor is computed from at most 6.`);
+    }
+    // One home for the ratio arithmetic (the guard below reads these, it does not
+    // recompute them). A declared ratio so small that its numerator rounds to zero
+    // would make the floor equal the measurement — the guard would then bind nothing,
+    // which is C3's silent-disable class wearing a valid name.
+    const d = 10n ** BigInt(places);
+    const n = BigInt(Math.round(declared * Number(d)));
+    if (n === 0n) {
+      throw new Error(`relative-headroom: headroom ${declared} rounds to a zero numerator, which would set the floor at the measurement itself.`);
+    }
+    headroom = { declared, n, d };
+  }
+
   const routeNames = requestedRoutes.length > 0 ? requestedRoutes : Object.keys(manifest.routes);
   const routeFailures = [];
   const routeRows = [];
@@ -291,36 +325,29 @@ if (routeMode) {
     // failure the policy was adopted to prevent. The floor is one-way on purpose:
     // trim work lowers `measured` and widens headroom, so re-basing a ceiling
     // *down* stays the declared act it is and is never demanded by this check.
-    const policy = manifest.policy;
-    if (policy && policy.name === "relative-headroom") {
-      const headroom = Number(policy.headroom);
-      if (Number.isFinite(headroom) && headroom > 0) {
-        const ratio = `ceil(measured \u00d7 ${(1 + headroom).toFixed(2)})`;
-        // RC2 (review-change cycle 2, 2026-09-01): `measured * (1 + headroom)` in
-        // binary floats can exceed the exact product enough that Math.ceil adds a
-        // whole unit — 12420 * 1.1 = 13662.000000000002 → 13663, exact value
-        // 13662 — so a ceiling set precisely at the declared formula's value was
-        // rejected by its own guard. Exact rational arithmetic instead: headroom
-        // h = n/d from its shortest decimal form, floor = ceil(measured × (d+n)/d)
-        // computed over BigInt so the numerator is an exact integer product and
-        // the ceiling is the true mathematical one for every declared ratio.
-        const s = String(headroom);
-        const decimalPlaces = s.includes(".") ? s.split(".")[1].length : 0;
-        const exactRatio = decimalPlaces <= 6
-          ? (() => { const d = 10n ** BigInt(decimalPlaces); const n = BigInt(Math.round(headroom * Number(d))); return [n, d]; })()
-          : null;
-        for (const [key, measured, ceiling] of [
-          ["estimate", metrics.totalEstimate, routeDef.routeEstimateMax],
-          ["lines", metrics.totalLines, routeDef.routeLinesMax],
-        ]) {
-          if (ceiling === null) continue;
-          if (measured > ceiling) continue; // the ceiling breach above is the tighter fault
-          const floor = exactRatio
-            ? (() => { const num = BigInt(measured) * (exactRatio[1] + exactRatio[0]); const den = exactRatio[1]; return Number(num / den) + (num % den === 0n ? 0 : 1); })()
-            : Math.ceil(measured * (1 + headroom));
-          if (ceiling < floor) {
-            routeFailures.push(`${routeName}: route ${key} ceiling ${ceiling} < ${floor} = ${ratio} ${measured} — raise it at a declared re-basis and name the growth source, or trim the route`);
-          }
+    if (headroom !== null) {
+      const { declared: ratioHeadroom, n, d } = headroom;
+      const ratio = `ceil(measured \u00d7 ${(1 + ratioHeadroom).toFixed(2)})`;
+      // RC2 (review-change cycle 2, 2026-09-01): `measured * (1 + headroom)` in
+      // binary floats can exceed the exact product enough that Math.ceil adds a
+      // whole unit — 12420 * 1.1 = 13662.000000000002 → 13663, exact value
+      // 13662 — so a ceiling set precisely at the declared formula's value was
+      // rejected by its own guard. Exact rational arithmetic instead: headroom
+      // h = n/d from its shortest decimal form, floor = ceil(measured × (d+n)/d)
+      // computed over BigInt so the numerator is an exact integer product and
+      // the ceiling is the true mathematical one for every declared ratio. The
+      // decimal width is refused above (C3/C4) rather than fallen back to, so this
+      // branch is the only arithmetic this guard ever runs.
+      for (const [key, measured, ceiling] of [
+        ["estimate", metrics.totalEstimate, routeDef.routeEstimateMax],
+        ["lines", metrics.totalLines, routeDef.routeLinesMax],
+      ]) {
+        if (ceiling === null) continue;
+        if (measured > ceiling) continue; // the ceiling breach above is the tighter fault
+        const num = BigInt(measured) * (d + n);
+        const floor = Number(num / d) + (num % d === 0n ? 0 : 1);
+        if (ceiling < floor) {
+          routeFailures.push(`${routeName}: route ${key} ceiling ${ceiling} < ${floor} = ${ratio} ${measured} — raise it at a declared re-basis and name the growth source, or trim the route`);
         }
       }
     }

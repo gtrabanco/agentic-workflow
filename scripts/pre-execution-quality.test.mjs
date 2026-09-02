@@ -50,6 +50,23 @@ const SEVERITIES = ["info", "low", "medium", "high", "critical"];
 const MATERIAL = SEVERITIES.filter((s) => s !== "info");
 const PRODUCT_CHECKS = ["C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "C10", "C11", "C12", "C13", "C14"];
 
+/**
+ * The published finding-class vocabulary, read from the committed source that owns
+ * it (C6, P16 fold). This file's header is explicit: the machine semantics live in
+ * `packages/agentic-workflow-schema` and what this file pins is the behaviour the
+ * skills must exhibit — so a count that round-trips a local literal against itself
+ * binds nothing. The reader parses `src/`, not `dist/`, because `dist/` is a gitignored
+ * build output and a contract test must not grow a build dependency (the same reason
+ * `normative-drift.test.mjs` reads committed source); the fixed-shape extractor is
+ * owned by that file's convention, not restated here.
+ */
+const publishedFindingClasses = (() => {
+  const source = read("packages/agentic-workflow-schema/src/pre-execution-contract.ts");
+  const declaration = /export const PRE_EXECUTION_FINDING_CLASSES = Object\.freeze\(\[([\s\S]*?)\] as const\)/.exec(source);
+  assert.ok(declaration, "the schema package must still publish PRE_EXECUTION_FINDING_CLASSES");
+  return [...declaration[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+})();
+
 const squash1 = (t) => t.replace(/\s+/g, " ").trim();
 
 // --- pure models of the contracted decision tables ----------------------------
@@ -496,7 +513,8 @@ test("review-spec routes every finding class to its owner and edits nothing", ()
   }
   assert.match(specOutput, /does not\nbecome work here: record it, keep it open, and route it to its owner/);
   assert.match(designRepair, /Findings classified outside `product` are \*\*not\*\* repaired here/);
-  assert.deepEqual(FINDING_CLASSES.join("|").split("|").length, 5);
+  assert.deepEqual(FINDING_CLASSES, publishedFindingClasses,
+    "the classes this suite routes on are the machine's published set, not a local literal counted against itself (C6)");
 });
 
 
