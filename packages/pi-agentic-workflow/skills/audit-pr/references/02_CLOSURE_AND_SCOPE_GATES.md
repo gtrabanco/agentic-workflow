@@ -89,16 +89,15 @@ authority **survived the build** — it never re-reviews a plan and never re-jud
 verdict:
 
 1. **Upstream lineage is current.** The unit's `progress.md` carries
-   `## Pre-execution review receipt v1 — plan` whose digest re-derives
-   to the same value (`scripts/pre-execution-snapshot.mjs verify --stage plan
-   --parent <the Product digest the receipt names>`; a fix unit binds no parent —
-   `structural.reasonCode`/`changedPaths` say which dimension moved);
-   implementation-phase new-file additions are allowed, edits to a bound
-   artifact are not), and — for
-   a feature unit — the `— spec` receipt it names as its parent. Stale, missing, or
-   wrong-stage lineage → **BLOCKED**, `→ Next: /review-plan <unit>` (or
-   `/review-spec <unit>` when the parent is the broken link). A
-   `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
+   `## Pre-execution review receipt v1 — plan` whose digest re-derives identically
+   (`scripts/pre-execution-snapshot.mjs verify --stage plan --parent <the receipt's
+   Product digest>`; a fix unit binds no parent —
+   `structural.reasonCode`/`changedPaths` name the drifted dimension), and — for a
+   feature unit — its named `— spec` parent re-derives the same way. Bound artifacts
+   are frozen: new implementation-phase files are allowed, edits to a bound artifact
+   are not. Stale, missing or wrong-stage lineage → **BLOCKED**,
+   `→ Next: /review-plan <unit>` (or `/review-spec <unit>` when the parent is the
+   broken link). A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
 2. **Obligations are closed.** Every row of the unit's obligation ledger is
    `verified` — with the validator that ran on this candidate — or an explicit
    `n/a: <reason>`. Any `planned`, `in-progress`, blank, or `deferred` row is
