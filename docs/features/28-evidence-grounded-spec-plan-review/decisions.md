@@ -805,3 +805,22 @@
   `CLAUDE.md` is not a routed file, so the two new tables cost nothing there; they do
   rotate the frozen `project-guide` digest (gotcha 2 of P13, again measured).
 
+
+- **D44 — P15 keeps its FAIL row and withholds its own gate sentence, because a
+  fixture that grades itself up is worth nothing (2026-09-02).** The
+  evidence-grounding leg met the run's *objective* (correct evidence rows, sandbox
+  held) and failed the procedure's box 3 (it invented an artifact home the skill does
+  not name). `GOLDEN_FIXTURE.md`'s rule is unambiguous: any unchecked box is a FAIL.
+  The tempting alternative was to call it "PASS with observations" — every earlier
+  row in that file is a PASS, so a FAIL row is visibly new friction, and the phase's
+  grep gate would then have been satisfiable in the same commit. Rejected: the
+  sentence is the *claim*, the row is the *evidence*, and writing the claim without
+  the evidence is precisely the drift class this unit exists to kill. Consequence
+  accepted: P15 ships as this rows commit plus a separate targeted change (F40's
+  routing trigger, F41's machine-owned heading list) and a re-run whose dated PASS row
+  carries the sentence — three commits where one would have "worked". Scope held
+  inside that: F38 and F39 are filed `folded: no` for P16's fold rather than fixed
+  here, because F38 needs a different currency test *and* a redesign of its own
+  fixture (`workflow-status-pre-execution.test.mjs` injecting `headSha`), which is
+  execution work, not a fixture run; this procedure surfaces regressions and never
+  edits the skill under test.

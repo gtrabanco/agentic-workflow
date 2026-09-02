@@ -226,10 +226,10 @@ Phase-lint: PASS (8/8) · fingerprint `P14:hardening:8:bind-normative-prose-to-m
 
 Layer: hardening · Done-when: the `GOLDEN_FIXTURE.md` gate row in `SPEC.md` P15 -> exit 0 with matching `GOLDEN_FIXTURE.es.md` rows.
 
-- [ ] Run every skill P9–P14 changed through the fixture with the fleet's sanctioned weakest executor, following each `SKILL.md` literally.
-- [ ] Append a dated row per skill/version to the `GOLDEN_FIXTURE.md` run log naming model, versions, verdict, and observed blocks.
-- [ ] Mirror each new row in `docs/workflow/GOLDEN_FIXTURE.es.md` in the same commit.
-- [ ] Record any wording regression a run surfaces as a separate targeted change, never as an edit inside the run.
+- [x] Run every skill P9–P14 changed through the fixture with the fleet's sanctioned weakest executor, following each `SKILL.md` literally. (*Four live runs on `nan/qwen3.6`, this fleet's sanctioned weakest reasoning executor, 2026-09-02, each in its own scratch git repo under `/tmp/gf-p15/` with the library declared read-only: review-spec 1.3.0 + pre-execution-review 1.5.0 at the Product stage (`/tmp/gf-p15/spec` @ `264e0ce`, commit `9cb5e74`), review-plan 1.3.0 at the Plan stage (`/tmp/gf-p15/plan`, commit `d2ef8d4`), workflow-status 3.1.0 over two units (`/tmp/gf-p15/status` @ `34d5b16`), evidence-grounding 1.3.0 (`/tmp/gf-p15/ev` @ `aecf279`). Each followed its own `SKILL.md` from the library checkout — no paraphrased input — and the four run-log rows name every block printed, file written and step invented.)*
+- [x] Append a dated row per skill/version to the `GOLDEN_FIXTURE.md` run log naming model, versions, verdict, and observed blocks. (*`docs/workflow/GOLDEN_FIXTURE.md:313-316` — four `| 2026-09-02 | nan/qwen3.6 …` rows covering all five skills P9-P14 moved (pre-execution-review 1.5.0 is named in both reviewer rows, whose runs loaded its `POLICY.md` §7 and §8); three verdicts PASS, one objective PASS · procedure FAIL (box 3) recorded as such rather than rounded up.)*
+- [x] Mirror each new row in `docs/workflow/GOLDEN_FIXTURE.es.md` in the same commit. (*`docs/workflow/GOLDEN_FIXTURE.es.md:327-330` — same four rows, same date/model/verdict cells, in this commit; plus the Spanish coverage addendum after the existing `Nota de cobertura`.)*
+- [ ] Record any wording regression a run surfaces as a separate targeted change, never as an edit inside the run. (*Regression surfaced and filed as F38-F41 with `folded: no` in `review-findings.md`; the box stays open until the targeted change for the two findings that block the evidence-grounding PASS row (F40 routing trigger, F41 heading list) lands as its own change and is re-run — the phase gate sentence is withheld until then, per the run-log coverage addendum.*)
 
 Phase-lint: PASS (8/8) · fingerprint `P15:hardening:4:qualify-the-amended-skills-on-the-weakest-executor`
 

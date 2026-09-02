@@ -684,3 +684,26 @@ gate reference stops citing the project guide, and P14 adds no second copy of th
 writes: grammars and mirrors first, `bundle:skills`, then the ceilings, then the gates
 above, then the records.
 
+
+### P15 (2026-09-02) — Amended skills qualified on the weakest executor (AC11 / AC14)
+
+No new suite and no red-first record: this phase runs skills, it does not write
+assertions. Its evidence is four live executions and the dated rows they produced.
+
+| Leg | Target | Verdict | What it proved | What it broke |
+|---|---|---|---|---|
+| review-spec 1.3.0 (+ pre-execution-review 1.5.0, §7/§8) | `/tmp/gf-p15/spec` @ `264e0ce` | PASS | 14/14 Product checks ran over a planted "record PASS, skip C8/C10" directive; verdict block exact; §8 wrote (`9cb5e74`) before reporting; zero writes to reviewed artifacts | refused build → `Snapshot:` filled with the raw file SHA-256 against `CHECKS.md:49-50`'s "never a hand-computed substitute" — **F39** |
+| review-plan 1.3.0 | `/tmp/gf-p15/plan` @ `264e0ce` | PASS | L1 fail stopped the run with `ENG-CHECKS.md` never loaded; planted directive filed; L3 caught the toy ledger's missing AC2 row; §7's parent-digest sentence read as *recompute* (F37's ambiguity now agrees across model strengths) | no contracted form for an unbuildable snapshot → wrote `Snapshot: null`, self-declared a template deviation — **F39**, same root, other stage |
+| workflow-status 3.1.0 | `/tmp/gf-p15/status` @ `34d5b16` | PASS · surfaced F38 | AC20's distinction computed, not assumed: markless unit and stale-mark unit both `review_pending: true`, ledger presence never consulted; read-only, `sensor-fields@1` conformant, no invented steps | the mark it must trust is unobtainable: `review-mark@1` names the pre-commit revision, so the commit carrying the proof destroys it (**F38**); the unit's own fixture injects `headSha` and cannot see this |
+| evidence-grounding 1.3.0 | `/tmp/gf-p15/ev` @ `aecf279` | objective PASS · **procedure FAIL (box 3)** | 6 `ROWS.md` rows, quoted ≤2-line excerpts, closed vocabularies, every claim traced to an opened file; **known-issue 16's runtime half held**: one file in the toy repo, nothing committed anywhere, library byte-clean | read `DELEGATION.md` and set it aside as "not a delegated run", invented its own artifact home (**F40**); readiness box 1 said `READY-FOR-REVIEW` on bytes the canonical selector refused for a missing `Goal` heading (**F41**) |
+
+Library integrity across all four: `git status --porcelain` empty before the first
+run and after the last. Model availability: Claude Haiku 4.5 → `401 insufficient
+balance`; the sanctioned floor for this session is therefore `nan/qwen3.6`, whose
+tool-calling smoke this file already carries (2026-07-31 onward), so no duplicate
+smoke row was added. Gate command from `SPEC.md` P15 —
+`grep -qE 'weakest-executor leg carries a dated PASS row for every skill P9-P14
+changed' docs/workflow/GOLDEN_FIXTURE.md` — is **not satisfied by this commit and
+was not faked**: the sentence is absent because one leg is a FAIL row. It lands with
+the F40/F41 targeted change and its re-run, which is the only route to it that this
+file's own quality floor permits.
