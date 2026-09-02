@@ -730,7 +730,7 @@ test("every receipt line the consumer parses is emitted by both stage templates 
   // One lineage line written two ways on purpose: a SPEC receipt has no parent and
   // states `Parent: null`, a plan receipt states `Parent SPEC snapshot: <64-hex>`.
   const emitted = (text, label) => {
-    if (new RegExp(`${label}:\s*[^\s\n]`).test(text)) return true;
+    if (new RegExp(`${label}:\\s*[^\\s\\n]`).test(text)) return true;
     if (label === "Parent SPEC snapshot") return /\bParent:\s*[^\s\n]/.test(text);
     if (label === "Parent") return /Parent SPEC snapshot:\s*[^\s\n]/.test(text);
     return false;

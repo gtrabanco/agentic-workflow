@@ -17,8 +17,8 @@ const spec = [
 ].join("\n");
 
 /** 1. Freeze the exact bytes a reviewer may rely on, at one causal revision. */
-async function freeze(artifactRevisionId: string) {
-  const built = await buildPreExecutionArtifactSnapshot({
+function freeze(artifactRevisionId: string) {
+  const built = buildPreExecutionArtifactSnapshot({
     stage: "spec",
     unitKind: "feature",
     unitId: "toy",
@@ -32,14 +32,14 @@ async function freeze(artifactRevisionId: string) {
   return snapshot;
 }
 
-const snapshot = await freeze("rev-0001");
+const snapshot = freeze("rev-0001");
 
 // 2. A reviewer records a verdict bound to that digest, never to the mutable file.
 const receipt = {
   contract: "agentic-workflow/pre-execution-review-receipt@1",
   id: "review-0001",
   stage: snapshot.stage,
-  snapshotDigest: await digestPreExecutionArtifactSnapshot(snapshot),
+  snapshotDigest: digestPreExecutionArtifactSnapshot(snapshot),
   verdict: "spec-review-pass",
   findings: [],
   reviewer: "reviewer-7",
@@ -57,19 +57,19 @@ const receipt = {
 };
 
 // 3. Only this entry can bless a PASS; it answers with codes, never submitted values.
-const blessed = await validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, POLICY_VERSION);
+const blessed = validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, POLICY_VERSION);
 if (!blessed.ok) throw new Error(JSON.stringify(blessed.diagnostics));
 
 // 4. Before executing, freeze again: unchanged authority stays fresh.
-const fresh = await comparePreExecutionReceiptToSnapshot(
-  receipt, snapshot, await freeze("rev-0001"), POLICY_VERSION,
+const fresh = comparePreExecutionReceiptToSnapshot(
+  receipt, snapshot, freeze("rev-0001"), POLICY_VERSION,
 );
 if (fresh.fresh !== true) throw new Error(JSON.stringify(fresh));
 
 // 5. Edit, revert, and rotate the revision anyway and the PASS is void: a stale
 //    approval can never be resurrected by restoring the previous bytes.
-const stale = await comparePreExecutionReceiptToSnapshot(
-  receipt, snapshot, await freeze("rev-0002"), POLICY_VERSION,
+const stale = comparePreExecutionReceiptToSnapshot(
+  receipt, snapshot, freeze("rev-0002"), POLICY_VERSION,
 );
 if (stale.fresh === true || stale.reasonCode !== "stale-artifact-revision") {
   throw new Error(JSON.stringify(stale));

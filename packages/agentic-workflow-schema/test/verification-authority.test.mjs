@@ -7,7 +7,7 @@ import {
   codesOf,
   describeDiagnostics,
 } from "./fixtures/verification-diagnostics.mjs";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -416,10 +416,11 @@ test("P7: committed projections equal the generated output (no hand-edits)", () 
   }
 });
 
-test("P7: the drift check passes on the package and fails on a mutated projection", () => {
+test("P7: the drift check passes on the package and fails on a mutated projection", (t) => {
   assert.equal(checkProjections({ packageRoot: PACKAGE_ROOT }).ok, true);
 
   const scratch = mkdtempSync(join(tmpdir(), "projection-drift-"));
+  t.after(() => rmSync(scratch, { recursive: true, force: true }));
   for (const file of PROJECTION_FILES) {
     writeFileSync(join(scratch, file), renderProjection(file));
   }
