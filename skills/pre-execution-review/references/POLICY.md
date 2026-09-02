@@ -152,6 +152,20 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   Return route: <the exact command that clears it>
   ```
 
+  The set and the file that prints each trace are the versioned grammar
+  `scripts/normative-drift.test.mjs` reads (one row per type; `printed-by` names
+  the gate file, not a second copy of the sentence above):
+
+  ```text
+  gate-rejection-vocabulary@1
+  # dir: skills/execute-phase/references
+  type | printed-by
+  dependency | PREFLIGHT.md
+  status | PREFLIGHT.md
+  phase-lint | PREFLIGHT.md
+  stale-or-missing-receipt | PRE_EXECUTION_GATE.md
+  ```
+
   `execute-phase` appends that trace to the unit's `progress.md`, under
   `execute-phase:gate-rejection-traces`, in the same act as the STOP. An untyped or
   reason-less rejection is a defect in the gate that printed it.

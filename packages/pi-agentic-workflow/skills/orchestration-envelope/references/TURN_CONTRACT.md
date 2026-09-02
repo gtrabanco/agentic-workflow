@@ -19,3 +19,37 @@
 **Single owner:** orchestration-envelope/references/TURN_CONTRACT.md. All skills load this + skill-specific additions only. Duplication forbidden. Missing reference = STOP.
 
 **Push policy supplement:** Box 4 covers the end-of-unit push. Some consumers (e.g. `execute-phase/references/PREFLIGHT.md`) define additional push rules for mid-phase commits when a PR is already open — those per-consumer supplements extend this contract and must be loaded alongside it by the consumer skill.
+
+## Hand-off grammar (versioned — read by `scripts/normative-drift.test.mjs`)
+
+Box 9's closing hand-off and box 10's machine result are ordered here, so the
+tokens they may use are declared as grammar rather than prose. Every `from`/`to`
+pair below must exist in the schema package's `WORKFLOW_TRANSITION_TABLE`, and
+every field row must be a key that package's envelope validator declares: a pair
+or a key no machine surface defines is a defect in this file, never in the table.
+
+```text
+hand-off-transitions@1
+from | to
+workflow-intent:review-spec | workflow-intent:plan-feature
+workflow-intent:plan-feature | workflow-intent:review-plan
+workflow-intent:review-plan | workflow-intent:execute-phase
+workflow-intent:plan-fix | workflow-intent:review-plan
+workflow-intent:review-plan | workflow-intent:design-feature
+workflow-intent:execute-phase | workflow-intent:review-change
+workflow-intent:review-change | workflow-intent:audit-pr
+workflow-intent:audit-pr | workflow-intent:merge
+workflow-intent:triage-issue | workflow-intent:execute-phase
+workflow-intent:status | workflow-intent:design-feature
+```
+
+```text
+hand-off-fields@1
+# machine: envelope
+object | field
+next | recommended
+next | alternatives
+next | tier
+next | suggested
+```
+

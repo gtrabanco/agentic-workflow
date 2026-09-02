@@ -609,3 +609,78 @@ adds a formatter without updating the list.
 `--check`/`verify`/`--routes` step after it. `GOLDEN_FIXTURE.md`'s weakest-executor leg
 for `execute-phase` after this reference change is P15's, and P14's drift gate owes the
 gate → guide citation its mechanical pin.
+
+### P14 (2026-09-01) — Normative prose bound to machine surfaces (AC15 / O15)
+
+| Command | Result |
+|---|---|
+| `node --test scripts/normative-drift.test.mjs` | exit 0 — 14 tests / 14 pass / 0 fail (the whole new gate: scope, both AC15 directions, the four injected disagreements, render-only, version cells, the F37 owner pin, the fail-closed child run, source-not-dist) |
+| `node --test scripts/*.test.mjs` | exit 0 — 178/178 (164 baseline + 14 new), no existing test weakened |
+| `node --test scripts/pre-execution-quality.test.mjs` | exit 0 — 61/61, including P13's three `normalizer` cases and P10's gate-vocabulary case, which the new `POLICY.md` block had to keep satisfied |
+| `node --test scripts/ledger-ownership.test.mjs` | exit 0 — 18/18 (the two `LEDGERS.md` grammar rows this gate now reads are the same rows AC16 owns) |
+| `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 — 6/6 |
+| `node scripts/check-skill-context.mjs` / `--routes` | exit 0 — 39 skills; 23 routes after seven route ceilings were re-based to their measured floors |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | exit 0 — 38 skills / 123 files, 134/134 (five references changed, so the mirror is re-bundled in the same commit; no `SKILL.md` moved, so no `bump-skill` run and no version moved) |
+
+**Red-first (TDD, against `5a3d094eea7156d60a9b9b7895fda24d62f36f8f`).**
+`rm -rf /tmp/p14red && mkdir -p /tmp/p14red && git archive 5a3d094e | tar -x -C /tmp/p14red && cp scripts/normative-drift.test.mjs /tmp/p14red/scripts/ && cd /tmp/p14red && node --test scripts/normative-drift.test.mjs`
+-> **exit 1, 7 pass / 7 fail / 0 skipped**. The seven refusals are exactly the seven
+promises the phase makes: the guide declares no `normative-surfaces@1`, so the scope
+case, both direction cases, the render-only case, the version-cell case and the
+fail-closed case all refuse; the drop-a-published-value case refuses because the
+vocabularies it reads are unpublished. Re-running the same tree with
+`NORMATIVE_DRIFT_REPO` set (the re-point the fail-closed child uses) answers 7 pass /
+6 fail / 1 skipped — the skipped case is the parent's own child run, which is the
+injected tree. The three required injections pass in the red tree by design: they are
+fixtures on the live model, so they prove the *refusal*, not the absence of one.
+
+**The three disagreements AC15 names, each refused by its own test.**
+*undefined transition* — a `from`/`to` pair (`review-spec -> execute-phase`) that no
+`WORKFLOW_TRANSITION_TABLE` row allows is refused with
+`the transition table does not allow execute-phase after review-spec`, naming the
+surface (`turn-contract-transitions`) and the token. *unaccepted argument* — `--force`
+offered to `plan-feature-scaffold` by `plan-mode-routes@1` is refused with
+`no argument-hint accepts`, and the same test walks every real flag row to show the
+check accepts what the surface does declare. *absent field* — `gates.review_gate_pending`
+is refused against the envelope validator's own list (`the gates field list does not
+declare`), and a second case refuses an object (`ledger.row`) that no validator declares
+at all. Two refusals beyond the required three: an `<a|b|c>` alternation that
+partially overlaps a published vocabulary (`pre-execution-stage:retro`), and a
+`vocab:token` cell naming a value the machine does not publish.
+
+**Both directions, with the vacuity asserted away.** text -> machine runs over 18
+surfaces, 10 transition pairs, 20 `vocab:token` references, 13 field projections, 6
+flag rows, 7 route rows, 29 closing `-> Next:` commands and 21 alternations, and reports
+0 findings on this tree. machine -> text is bounded by the inventory's `must-name`
+column — `gate-rejection-type`, `pre-execution-verdict` and the envelope's `next`
+object — because those are the sets an agent chooses between at the end of a turn; the
+test asserts that closed set literally, so widening or narrowing it is a deliberate
+edit, and it asserts `fieldsOf("next", "envelope")` is the envelope's list rather than
+the outcome's, which is the collision that would otherwise make the check quiet.
+Dropping a published value is proven to be a finding for all three vocabularies.
+
+**Render-only prose.** `rendered-facts@1` pins five restatements and the gate
+recomputes each: the user-facing skill count in `docs/workflow/SKILLS.md` and
+`SKILLS.es.md` from frontmatter, the skill and package version rows in both changelogs
+against frontmatter and `package.json`, and the pre-execution receipt contract id
+against `PRE_EXECUTION_RECEIPT_CONTRACT_ID`. The count check is proven by patching the
+guide surface in memory to `21` and requiring exactly one refusal reading `recomputes to
+20`. Running it found a live defect: `CHANGELOG.md` carried no `plan-feature` 5.0.0 row
+although its frontmatter says 5.0.0 and `CHANGELOG.es.md` had the row, with a stray
+5.0.0 line appended to the `design-feature` section — prose was the defect, the machine
+won, and both changelogs were repaired in this commit.
+
+**Surfaces inventoried and not formalised.** `ledger-ownership-map`,
+`ledger-review-mark-shape` and the sensor label table are read as grammars (they must
+parse, their files must exist, no second block may re-declare the gate's `type`
+column) but their cells are not resolved against a published vocabulary, and the
+`17 internal steps` restatement in `SKILLS.md` is left unpinned for want of a machine
+predicate — known-issues 18 and 19, with O15 therefore `in-progress`, not `verified`.
+
+**Manual check (not automated, P13's owed pin).** The gate -> guide citation P13 asked
+P14 to pin is enforced where it already lives: `check-skill-context.mjs` fails if the
+gate reference stops citing the project guide, and P14 adds no second copy of that rule
+(AC15's own defect class). What remains manual is the *ordering* of this phase's own
+writes: grammars and mirrors first, `bundle:skills`, then the ceilings, then the gates
+above, then the records.
+
