@@ -682,8 +682,10 @@ function defaultSelector(
  *
  * A `spec-product-v1` row binds the PROJECTION, so Engineering-half and Amendments
  * writes do not move its digest; a `whole-file` row binds the exact bytes. A
- * rejected selection fails the build with the selector's own reason under
- * `invalid-selector` rather than producing a partial binding.
+ * rejected selection fails the build under `invalid-selector` at the row's content
+ * pointer rather than producing a partial binding. Diagnostics in this family are
+ * bounded (code, path) pairs, so WHICH heading failed and how is not carried here —
+ * `selectSpecProduct` is the only entry that reports the selector's own reason.
  */
 export function buildPreExecutionArtifactSnapshot(
   input: PreExecutionSnapshotBuildInput,
