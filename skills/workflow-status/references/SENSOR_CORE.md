@@ -108,3 +108,23 @@ live evidence against a frozen ledger remains a contradiction candidate.
    error); no unit in the run has one → `findings.fix_now: []`, same as
    today. **Read-only**: this step only projects the ledger's current
    unfolded rows — never writes, ticks `folded`, or judges.
+
+### Envelope fields the sensor projects (versioned grammar)
+
+Steps 1-9 print these keys and no others; each row must be a field the schema
+package's envelope validator declares for that object.
+
+```text
+sensor-fields@1
+# machine: envelope
+object | field
+unit | type
+pr | merge_ready
+gates | review_pending
+gates | audit_pending
+findings | fix_now
+findings.fix_now | suggested_tier
+dependencies | unmet
+blockers | kind
+recommendations | product_audit
+```

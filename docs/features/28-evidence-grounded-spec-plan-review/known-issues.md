@@ -120,3 +120,33 @@ No unresolved product or engineering decision blocks implementation.
     the phase sha stays single-concern. Recorded here rather than fixed silently:
     `.gitignore` is outside every phase of this unit, and an un-merge of someone
     else's tooling state is a repository decision.
+
+18. **Two restatements P14's inventory found stay unpinned (the internal-step count).**
+    `docs/workflow/SKILLS.md:7` prints `**20 user-facing skills**` and
+    `**17 internal steps**`. Only the first is a rendered fact the gate may pin:
+    `rendered-facts@1` binds it to `count:user-facing`, which recomputes from
+    `user-invocable: true` in each skill's frontmatter (20 of 39). The second has no
+    machine predicate — 19 skills are not user-invocable, `bump-skill` is excluded from
+    the distribution the same sentence describes, and "internal step" is an editorial
+    category, not a frontmatter field — so pinning `17` would have meant inventing a
+    rule and then calling the number evidence. Per the `rendered-facts@1` preamble the
+    gap is recorded here rather than closed silently. **Re-trigger:** the first phase
+    that declares an internal-step predicate in the machine surface (a frontmatter field
+    or an inventoried table) pins `pattern:\*\*(\d+) internal steps\*\*` in
+    `rendered-facts@1` and deletes this item; until then a change to that count is a
+    docs-review finding, not a gate failure.
+
+19. **AC15's `artifact` and `ledger-row shape` clauses are grammar-checked, not token
+    checked (O15's residual).** P14's inventory lists
+    `ledger-ownership-map` and `ledger-review-mark-shape` with `machine: n/a`: the gate
+    proves both versioned blocks parse, that their cells exist, and that no other block
+    re-declares a `type` column the gate vocabulary owns, but it cannot resolve their
+    cells against a published vocabulary, because none publishes them — the ledger
+    column sets are owned by `skills/pre-execution-review/references/LEDGERS.md` and
+    validated by `scripts/ledger-ownership.test.mjs` (AC16), and
+    `PRE_EXECUTION_ARTIFACT_KINDS` is named by no fixed-output block anywhere. Same for
+    the row shape an executor writes into `delegated-evidence.md`. **Re-trigger:** when
+    a schema surface publishes the ledger column sets or the artifact-kind prose grammar
+    exists (P17's schema-side work is the likely host), add the `machine` cell to those
+    inventory rows, and O15 flips to `verified` only when
+    `node --test scripts/normative-drift.test.mjs` refuses a doctored column set.

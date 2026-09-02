@@ -16,6 +16,21 @@ every later column of those two rows (the verdicts read as `phase`, `task`,
 with commas, which keeps the nine-column contract parseable and the vocabulary
 visible; no verdict, validator, evidence or status changed.
 
+Reconciled 2026-09-01 (phase P14): O15 moves `planned` -> `in-progress`. Proven by
+`scripts/normative-drift.test.mjs` (14 tests, exit 0; 7 pass / 7 fail / exit 1 against
+the pre-P14 tree): the text -> machine direction for transitions, arguments, envelope
+fields, verdicts, routes and gate-rejection types over 18 inventoried surfaces
+(`normative-surfaces@1`), the machine -> text direction for the three vocabularies that
+vocabularies an agent chooses between (`gate-rejection-type`, `pre-execution-verdict`,
+`envelope-field:next`), and the render-only direction for the five restatements
+`rendered-facts@1` pins, which corrected a real `CHANGELOG.md` version drift. Left open
+deliberately, and recorded as known-issue 19: AC15's `artifact` and `ledger-row shape`
+clauses are inventoried and grammar-checked but their cells are not yet resolved against
+a published vocabulary (`PRE_EXECUTION_ARTIFACT_KINDS`, and the `review-mark@1` column
+set, whose validator is AC16's `ledger-ownership.test.mjs`), and the machine -> text
+direction is bounded by the inventory's `must-name` column rather than by every
+vocabulary the schema exports.
+
 Reconciled 2026-09-01 (phase P7): O9, O10, O11 and O14 are `verified` on the
 evidence recorded in `testing.md` (the P5 gate tables, the 2026-09-01 re-runs
 and the qualification corpus — no second-cycle sample across the three samples).
@@ -69,7 +84,7 @@ O11 | AC11 | required executor-path golden fixture demonstrates complete manual 
 O12 | AC12 | independent review of the exact candidate reports no unresolved fix-now finding; canary protocol records baseline and post-change measurements without claiming improvement before results exist | P6, P8 | Qualify the pre-execution workflow | execute-phase | review-change + canary corpus | PASS with no fix-now findings | planned
 O13 | AC13 | Product and Engineering authoring follow inventory -> evidence -> draft -> readiness -> independent review; readiness gate checks complete evidence/obligation/unknown structure, binds compact planning evidence, cannot emit review PASS verdict | P2-P3 | Establish Product/Plan review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, fixtures pass | verified
 O14 | AC14 | route fixtures and qualification corpus prove first review findings are repaired as one root-caused batch, one re-review is the normal correction path, entry into second repair/re-review cycle emits convergence anomaly with exact owner and evidence deficit; release canary includes feature/fix/cross-boundary unit, any sample needing second cycle fails qualification | P6-P7 | Qualify the pre-execution workflow | execute-phase | review-change + canary + second-cycle checks | PASS with no second-cycle sample | verified
-O15 | AC15 | F1 drift gate: a repository test fails when normative skill text orders a transition, argument, field, artifact, or ledger-row shape the machine surface does not accept, and when the machine requires something no text states; surfaces lacking fixed grammar get one; prose restating versions, SHAs, counts, next commands is render-only and the machine is authoritative | P14 | Bind normative prose to machine surfaces | execute-phase | `node --test scripts/normative-drift.test.mjs` | exit 0 green and non-zero against each of the three injected disagreements | planned
+O15 | AC15 | F1 drift gate: a repository test fails when normative skill text orders a transition, argument, field, artifact, or ledger-row shape the machine surface does not accept, and when the machine requires something no text states; surfaces lacking fixed grammar get one; prose restating versions, SHAs, counts, next commands is render-only and the machine is authoritative | P14 | Bind normative prose to machine surfaces | execute-phase | `node --test scripts/normative-drift.test.mjs` | exit 0 green and non-zero against each of the three injected disagreements | in-progress
 O16 | AC16 | F2 durable-ledger write ownership: one declared owner per truth class plus declared mechanical annotator, present in the ownership map and every template; scan fails undeclared script or agent writers; gate rejections keep typed durable traces | P9 | Declare durable ledger write ownership | execute-phase | `node --test scripts/ledger-ownership.test.mjs` | exit 0 green and non-zero on the undeclared-writer fixture | verified
 O17 | AC17 | F3 terminal marking: verdict and rejection turns write the durable mark in the same act, traces name reason and return route, replay of a stale, wrong, or duplicate mark refuses with a typed reason and zero side effects | P10, P11 | Mark terminal verdicts durably, prove clean reviews with a durable mark | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with terminal-mark, rejection-trace and no-side-effect fixtures | verified
 O18 | AC18 | F4 delegated evidence standard: versioned artifact with outcome, questions, seven source fields, claims mapped to source ids, contradictions, freshness, separated product choices, unverified section; partial or blocked blocks readiness; persist-then-STOP; advisory until spot-checked | P12 | Conserve delegated evidence as a versioned artifact | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with delegated-evidence and NEEDS-EVIDENCE fixtures | verified

@@ -123,3 +123,20 @@ Once the gate passes, pick the mode — first match wins:
 | `plan-feature 14-csv-export` (designed + reviewed) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
 | `plan-feature 14-csv-export` (already `planned`) | already-planned slug | — | STOP → `/execute-phase 14 P1` (no re-scaffold) |
 | `plan-feature --next` | next `defined` roadmap entry | gate, then scaffold | `execute-phase NN P1` |
+
+## Mode grammar (versioned — read by `scripts/normative-drift.test.mjs`)
+
+The detection order above is prose for the human; this table is the machine form
+of the same routing: `flag` must be a flag this skill's `argument-hint:` accepts
+and `route` must be a skill that exists. A flag or a route no surface declares is
+a defect in this table, never in the hint.
+
+```text
+plan-mode-routes@1
+# owner: plan-feature
+mode | flag | route
+issue-derived | --from-issue | plan-feature-from-issue
+forced-scaffold | --scaffold | plan-feature-scaffold
+next-defined | --next | plan-feature-scaffold
+designed-slug | n/a | plan-feature-scaffold
+```
