@@ -36,9 +36,13 @@ function rotr(x: number, n: number): number {
 }
 
 /**
- * FIPS 180-4 SHA-256 over raw bytes. One reusable message-schedule buffer keeps
- * repeated hashing allocation-free; the padded tail is written into a scratch
- * block instead of copying the whole message.
+ * FIPS 180-4 SHA-256 over raw bytes. The message-schedule buffer is reused across
+ * every 64-byte block of ONE call, and the padded tail is written into a scratch
+ * block instead of copying the whole message. The buffers themselves are allocated
+ * per call (`h`, `w`, the padding block, the digest): what this function keeps
+ * allocation-free is the per-block work, not the repeated hashing across calls
+ * (C9, P16 fold — the sentence used to claim the latter, which is the kind of
+ * comment↔code drift this unit's own AC15 exists to refuse).
  */
 export function sha256Bytes(message: Uint8Array): Uint8Array {
   const h = new Uint32Array([

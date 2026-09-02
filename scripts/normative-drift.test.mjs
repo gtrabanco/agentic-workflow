@@ -278,7 +278,6 @@ function argumentHints() {
       flags: hint ? [...hint[1].matchAll(/--\[[a-z0-9-]+\]|(--[a-z0-9-]+)/g)].map((m) => (m[1] || m[0]).replace(/[[\]]/g, "")) : [],
       userInvocable: fm ? /^user-invocable:\s*true\s*$/m.test(fm[1]) : false,
       version: fm ? (/^version:\s*(\S+)/m.exec(fm[1]) || [])[1] || null : null,
-      metadataInternal: fm ? /^\s+internal:\s*true\s*$/m.test(fm[1]) : false,
     });
   }
   return out;
@@ -312,7 +311,6 @@ function buildSurfaceModel() {
     fields: [],
     handOffCommands: [],
     hostCommands: [],
-    labelRows: [],
     ownerFiles: [],
     alternations: [],
     allFlags: [],
@@ -383,7 +381,15 @@ function buildSurfaceModel() {
       } else if (kind === "table") {
         const table = markdownTable(text, arg);
         if (!table) { entry.ok = false; entry.faults.push(`surface ${entry.surface} has no table under ${arg}`); continue; }
-        for (const r of table.slice(2)) model.labelRows.push({ surface: entry.surface, label: (r[0] || "").replace(/`/g, "") });
+        // C5 (P16 fold): this kind used to push the first column into
+        // `model.labelRows`, a collection nothing ever read, so a `table:` surface
+        // pretended to bind labels while checking only that some table exists. The
+        // claim now matches the check: the grammar reads the section's table, and a
+        // heading whose block has no data row is `markdownTable`'s null, i.e. a fault.
+        // The count is recorded so the AC15 case can assert it instead of trusting it. Labels stay unbound because no published
+        // vocabulary owns them (known-issue 19 names the same residual for the
+        // `machine: n/a` blocks) — the day one does, this cell gains a `machine`.
+        entry.tableDataRows = table.length - 2;
       } else {
         entry.ok = false;
         entry.faults.push(`unknown grammar kind in the inventory: ${row.grammar}`);
@@ -761,6 +767,61 @@ function newestVersionCell(text, name) {
 }
 
 // ---------------------------------------------------------------------------
+// 4b. The changelog's version ROWS — the set reading `newestVersionCell` cannot do
+// ---------------------------------------------------------------------------
+
+const NAMED_VERSION_ROW = /^\|\s*`?([^`|]+?)`?\s*\|\s*(\d+\.\d+\.\d+)\s*\|/;
+const BARE_VERSION_ROW = /^\|\s*(\d+\.\d+\.\d+)\s*\|/;
+const SECTION_HEADING = /^#### \[?`@gtrabanco\/([^`]+)`\]?\(|^#### `([^`]+)`$/;
+
+/**
+ * Every version row of a changelog, keyed by the surface that owns it: a
+ * `#### <name>` section carries rows whose version sits in the first cell, and the
+ * internal/package tables name their skill in that cell instead. Names outside the
+ * published set are not rows of this surface.
+ *
+ * No continuation is inferred: a row whose name cell is empty belongs to whichever
+ * block merged that cell, which is not a fact this gate may guess — the same lesson
+ * C5 records for the table grammar. A1 (P16 fold) is why this reader exists: the
+ * gate asked `newestVersionCell` for a maximum, and a maximum cannot see a repeated
+ * row. The three duplicated ES rows this branch added sat in exactly that blind spot.
+ */
+function changelogVersionRows(text, names) {
+  const rows = new Map();
+  const push = (name, version) => {
+    if (!rows.has(name)) rows.set(name, []);
+    rows.get(name).push(version);
+  };
+  let section = null;
+  for (const line of text.split("\n")) {
+    if (/^#{2,4} /.test(line)) {
+      section = null;
+      const head = SECTION_HEADING.exec(line);
+      const named = head && (head[1] || head[2]);
+      if (named && names.has(named)) section = named;
+      continue;
+    }
+    const named = NAMED_VERSION_ROW.exec(line);
+    if (named && names.has(named[1].trim())) {
+      push(named[1].trim(), named[2]);
+      continue;
+    }
+    if (!section) continue;
+    const cell = BARE_VERSION_ROW.exec(line);
+    if (cell) push(section, cell[1]);
+  }
+  return rows;
+}
+
+/**
+ * Rows the pin exempts because they predate the pin and say something the release
+ * history cannot be rewritten to unsay. Each entry must still match a real duplicate
+ * in BOTH languages, so fixing one deletes the entry here — an exemption that stops
+ * matching is itself a failure. known-issue 23 owns it.
+ */
+const LEGACY_DUPLICATE_VERSION_ROWS = [["log-session", "1.4.0"]];
+
+// ---------------------------------------------------------------------------
 // 5. The suite
 // ---------------------------------------------------------------------------
 
@@ -776,6 +837,17 @@ test("AC15 scope: every normative surface that orders an agent action has a fixe
   // The inventory is the whole scope: a row may not name a grammar kind it cannot read.
   assert.ok(live.surfaces.some((s) => s.surface === "sensor-envelope-fields" && s.files.includes("skills/workflow-status/references/SENSOR_CORE.md")));
   assert.ok(live.surfaces.some((s) => s.surface === "turn-contract-transitions"));
+  // C5: a grammar kind checks exactly what it claims. `table:` reads shape, so a
+  // table surface without a data row is a fault, and no read-only collection is
+  // left in the model to pretend otherwise.
+  const tableSurfaces = live.surfaces.filter((s) => s.grammar.startsWith("table:"));
+  assert.ok(tableSurfaces.length >= 1, "the inventory declares at least one table grammar");
+  for (const surface of tableSurfaces) {
+    assert.ok(surface.tableDataRows >= 1, `${surface.surface}'s table grammar reads ${surface.tableDataRows} data rows`);
+  }
+  assert.ok(!("labelRows" in live), "no write-only label collection survives in the surface model (C5)");
+  assert.ok(![...live.hints.values()].some((h) => "metadataInternal" in h),
+    "no write-only frontmatter flag survives in the hint map (C5)");
 });
 
 test("text → machine: the live repository orders nothing the machine surface does not define", () => {
@@ -921,6 +993,45 @@ test("version cells and package versions are recomputed, not trusted", () => {
   }
   assert.equal(newestVersionCell(en, "pi-agentic-workflow"), JSON.parse(read("packages/pi-agentic-workflow/package.json")).version);
   assert.equal(newestVersionCell(en, "agentic-workflow-schema"), JSON.parse(read("packages/agentic-workflow-schema/package.json")).version);
+});
+
+// A1 + A2 (P16 fold). The check above reads a MAXIMUM per skill, which is the gate
+// gap: `CHANGELOG.es.md` stated `pre-execution-review` 1.1.0, `plan-feature-scaffold`
+// 2.1.0 and `evidence-grounding` 1.1.1 twice in the same table and stayed green, and
+// `CHANGELOG.md` lost `plan-fix` 3.0.0 out of its table entirely while the file
+// self-describes as the source of truth for what changed between versions. Both are
+// set properties of the same rows, so both are computed here, once, in the file that
+// owns the changelog grammar.
+test("a changelog version row appears once per table, and both languages publish the same set", () => {
+  const model = buildSurfaceModel();
+  const names = new Set([...model.hints.keys(), "agentic-workflow-schema", "pi-agentic-workflow"]);
+  const byFile = new Map();
+  for (const file of ["CHANGELOG.md", "CHANGELOG.es.md"]) {
+    const rows = changelogVersionRows(read(file), names);
+    const total = [...rows.values()].reduce((sum, list) => sum + list.length, 0);
+    assert.ok(total >= 400, `${file} yields ${total} version rows — the reader stopped matching the tables`);
+    byFile.set(file, rows);
+    for (const [name, versions] of rows) {
+      const seen = new Map();
+      for (const version of versions) seen.set(version, (seen.get(version) ?? 0) + 1);
+      const doubled = [...seen]
+        .filter(([version, count]) => count > 1 && !LEGACY_DUPLICATE_VERSION_ROWS.some(([n, v]) => n === name && v === version))
+        .map(([version, count]) => `${version} ×${count}`);
+      assert.deepEqual(doubled, [], `${file} states ${name} more than once in one table: ${doubled.join(", ")} — a max-reading gate cannot see this, this pin can`);
+    }
+  }
+  // The exemptions are still true, or they come out of the list.
+  for (const [name, version] of LEGACY_DUPLICATE_VERSION_ROWS) {
+    for (const [file, rows] of byFile) {
+      const hits = (rows.get(name) ?? []).filter((v) => v === version).length;
+      assert.equal(hits, 2, `${file}: the exempted ${name} ${version} duplicate is no longer a duplicate (seen ${hits}) — delete the exemption (known-issue 23)`);
+    }
+  }
+  for (const name of new Set([...byFile.get("CHANGELOG.md").keys(), ...byFile.get("CHANGELOG.es.md").keys()])) {
+    const en = uniq(byFile.get("CHANGELOG.md").get(name) ?? []).sort();
+    const es = uniq(byFile.get("CHANGELOG.es.md").get(name) ?? []).sort();
+    assert.deepEqual(es, en, `${name}: CHANGELOG.es.md must publish the same version set as CHANGELOG.md (${en.join(", ")})`);
+  }
 });
 
 test("F37 has one cited owner: both boxes name POLICY.md §7 and no third copy exists", () => {

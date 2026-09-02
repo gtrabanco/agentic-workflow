@@ -287,11 +287,11 @@ How pinning actually works, verified against the `skills` CLI:
 | 1.0.1 | 2026-06-05 | patch | `effort medium → high` (its in-turn planning steps need it) |
 | 1.0.0 | 2026-06-05 | — | First versioned release — the planning router (idea / issue / scoped slug / `--next`) |
 
-| 3.0.0 | 2026-08-30 | major | **Breaking hand-off:** the fix SPEC now freezes `## Planning evidence` and `## Obligations` with it (reproduction, root cause, regression scope, rollback, affected invariant — each a row) and hands off to `/review-plan fix-<n>`; `/execute-phase --fix` follows the Plan PASS. A fix unit keeps its own authority and never grows a fabricated Product half to satisfy a Product check.
 #### `plan-fix`
 | Version | Date | Type | What changed |
 |---|---|---|
 | 3.0.1 | 2026-08-31 | patch | Ledger-contract fold (F12+F13): the fix SPEC's embedded ledgers are the canonical `### Planning evidence` / `### Obligations` headings and the evidence table adopts the single ROWS.md Plan-stage column order. Generation output, fix rows, and hand-off unchanged. |
+| 3.0.0 | 2026-08-30 | major | **Breaking hand-off:** the fix SPEC now freezes `## Planning evidence` and `## Obligations` with it (reproduction, root cause, regression scope, rollback, affected invariant — each a row) and hands off to `/review-plan fix-<n>`; `/execute-phase --fix` follows the Plan PASS. A fix unit keeps its own authority and never grows a fabricated Product half to satisfy a Product check.
 | 2.7.0 | 2026-08-10 | minor | Makes the hand-off preserve the complete multi-issue unit scope (`#primary + #n2 + …`) while keeping the executable command keyed to the primary issue. |
 | 2.6.1 | 2026-08-09 | patch | No behavior change: compresses input/output, hard-rule, progressive-loading, portability, and done-criteria prose while retaining multi-issue grouping semantics and contracts. |
 | 2.6.0 | 2026-08-09 | minor | Accepts compatible capability bundles and homogeneous mechanical issue batches using set-level outcome, verification, isolation, release/rollback, and aggregate-size checks; shared files/root cause/severity are no longer gates, and failed sets return the fewest maximal compatible groups. Emits frozen `ACCEPTANCE.md`. |
