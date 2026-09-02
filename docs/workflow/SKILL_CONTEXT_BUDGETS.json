@@ -49,8 +49,8 @@
         "evidence-grounding"
       ],
       "templates": [],
-      "routeEstimateMax": 15730,
-      "routeLinesMax": 1099
+      "routeEstimateMax": 15913,
+      "routeLinesMax": 1106
     },
     "design-feature:repair": {
       "skills": [
@@ -59,8 +59,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24835,
-      "routeLinesMax": 1692
+      "routeEstimateMax": 25018,
+      "routeLinesMax": 1699
     },
     "execute-phase:descope": {
       "skills": [
@@ -272,8 +272,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 21590,
-      "routeLinesMax": 1554
+      "routeEstimateMax": 21773,
+      "routeLinesMax": 1560
     },
     "plan-feature:scoped": {
       "skills": [
@@ -296,8 +296,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24507,
-      "routeLinesMax": 1797
+      "routeEstimateMax": 24690,
+      "routeLinesMax": 1803
     },
     "review-change:adversarial": {
       "skills": [

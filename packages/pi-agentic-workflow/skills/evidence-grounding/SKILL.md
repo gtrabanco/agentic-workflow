@@ -1,7 +1,7 @@
 ---
 name: evidence-grounding
 user-invocable: false
-version: 1.3.0
+version: 1.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -75,7 +75,10 @@ Authoring is progressive. Never jump from discovery to a polished artifact.
    NEEDS-DESIGN`. Follow references and topology as far as the claim requires —
    the cap is the claim, not a file count. Wide reading that is not this turn's
    own goes out to the delegate-only role: [references/DELEGATION.md](references/DELEGATION.md)
-   is its contract and the only shape its findings may arrive in.
+   is its contract and the only shape its findings may arrive in. **If you are
+   that reader** — you did not write the artifact and are not writing it — the
+   contract governs you: skip steps 1, 3 and 4, and produce the artifact under
+   whatever name the invitation used; the position decides, not the label.
 3. **Draft** — write the artifact from the frozen rows only. Product conclusions
    go to the SPEC Product half / `decisions.md`; engineering conclusions go to
    `planning-evidence.md` (M/L) or the SPEC's `### Planning evidence` (XS/S).
