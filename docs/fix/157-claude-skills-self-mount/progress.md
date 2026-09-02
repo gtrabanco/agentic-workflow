@@ -12,3 +12,9 @@
 - Ledgers read: planning-evidence 8 rows · obligations 9 rows (verified-capable: 0)
 - Prior plan receipt (re-review only): none — first cycle
 - Note: artifact revision is the content-derived identity (the plan-draft commit that last touched the bound paths); no separate id rotates it — mutate-and-revert detection depends on this handoff (no runtime enforcement in this review)
+
+## Execution receipt v1
+- Phases: P1 (untrack mount) + P2 (dogfooding docs) + P3 (hardening & PR) completed
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/158
+- All acceptance criteria verified: AC1-AC9 pass
+- Tree clean, branch pushed, PR open against main
