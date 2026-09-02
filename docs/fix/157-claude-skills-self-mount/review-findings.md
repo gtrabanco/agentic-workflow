@@ -11,3 +11,5 @@
 | F9 | .gitignore:21 | security/honesty | low | fix-now | fold | yes |
 | F10 | docs/fix/157-claude-skills-self-mount/progress.md:45 | code | med | fix-now | fold | yes |
 | F11 | docs/fix/157-claude-skills-self-mount/SPEC.md:18 | code | low | fix-now | fold | yes |
+| F12 | .gitignore:18-19 | brand | low | fix-now | fold | yes |
+| F13 | docs/fix/README.md:17 | brand | low | fix-now | fold | yes |
