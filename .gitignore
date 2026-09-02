@@ -11,5 +11,6 @@ tmp/
 .mcp.json
 
 # Agents & MCPs
+.engram/
 .serena
 .opencode

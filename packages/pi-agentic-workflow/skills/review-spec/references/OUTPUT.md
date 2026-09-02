@@ -15,7 +15,7 @@ One `PreExecutionReviewReceipt v1`
 
 ```text
 ## Pre-execution review receipt v1 — spec
-- Review: <receipt-id> · Snapshot: <64-hex> · Verdict: <spec-review-pass|spec-review-fail|needs-design>
+- Review: <receipt-id> · Snapshot: <64-hex|refused> · Verdict: <spec-review-pass|spec-review-fail|needs-design>
 - Unit: <unitId> · Stage: spec · Parent: null
 - Source revision: <40-hex> · Artifact revision: <artifactRevisionId>
 - Reviewer: <id> · Session: <id> · Role: reviewer · Author: <id>
@@ -28,6 +28,19 @@ Fields the runtime can enforce but a manual review must still state:
 `contextClean`, `authorExclusion`, `modelDiversity`. If context cleanliness is
 false or the reviewer identity equals the author's under an enforced exclusion,
 a PASS is not emit-able — return `SPEC-REVIEW-FAIL` and name the reason.
+
+A `Snapshot:` line carries the digest the builder printed, or the one form a refused
+build may take — `refused`, with the builder's own code beside it, never a value
+computed here instead:
+
+```text
+- Snapshot: refused · Build: refused (<the reason code the builder printed>)
+```
+
+Write that pair in place of the `Snapshot:` line, end the turn with this stage's FAIL
+verdict, and file one finding row per refused artifact carrying its code verbatim: the
+checks bind to a snapshot, so with no snapshot none of them ran. `SNAPSHOT.md` owns why
+a refusal prints no digest and what a consumer then reads this receipt as.
 
 ### Verdict blocks — return exactly one
 

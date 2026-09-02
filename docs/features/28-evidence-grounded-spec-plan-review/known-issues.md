@@ -120,6 +120,16 @@ No unresolved product or engineering decision blocks implementation.
     the phase sha stays single-concern. Recorded here rather than fixed silently:
     `.gitignore` is outside every phase of this unit, and an un-merge of someone
     else's tooling state is a repository decision.
+    **Disposition applied 2026-09-02 (P16 fold, D47):** the fix this item itself
+    names was applied — `.engram/manifest.json` and the chunk are untracked
+    (`git rm -r --cached`) and `.gitignore` now excludes `.engram/`, so **PR #155
+    carries no binary memory blob** (`git diff --name-only origin/main...HEAD`
+    lists no `.engram` path). What remains, deliberately: the commit `336e0cfb`
+    stays in branch history — rewriting a published branch to hide a third
+    party's write is a larger repository decision than this unit owns — and the
+    second consequence (identify a mid-loop sync commit before a phase commit so
+    the phase sha stays single-concern) is now a standing loop duty, not a closed
+    one, because any later sync lands the same way.
 
 18. **Two restatements P14's inventory found stay unpinned (the internal-step count).**
     `docs/workflow/SKILLS.md:7` prints `**20 user-facing skills**` and

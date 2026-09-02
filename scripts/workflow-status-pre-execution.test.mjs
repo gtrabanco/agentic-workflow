@@ -1,31 +1,45 @@
 #!/usr/bin/env node
 
 /**
- * Feature 28 / P11 — AC20 (obligation O20): a clean unit and a never-reviewed
- * unit must be two different facts.
+ * Feature 28 / P11 + P16 (finding F38) — AC20 (obligation O20): a clean unit and a
+ * never-reviewed unit must be two different facts.
  *
  *   1. a zero-finding review that carries its durable mark reports `review-ran`;
- *   2. a findings ledger with no mark does NOT — its presence proves nothing.
+ *   2. a findings ledger with no mark does NOT — its presence proves nothing;
+ *   3. a bound input moved after the mark → stale, never proof.
  *
- * Both are proven here as computed decisions over fixture state, exactly as
- * AC20 words them ("the two fixtures required by AC20 are computed decisions,
- * not assertions that a file exists"). The fixture state is not hand-written:
- * the mark row is built from the shape `pre-execution-review`'s `LEDGERS.md`
- * declares, so this suite binds that normative surface to the decision and goes
- * red the moment the shape, its owner, or the sensor's keying drifts. Case 3 is
- * the negative control that stops the mark from being a rubber stamp: a mark
- * bound to a revision that is not the unit's head is a stale mark, never proof.
+ * All three are computed decisions over fixture state, exactly as AC20 words them
+ * ("the two fixtures required by AC20 are computed decisions, not assertions that a
+ * file exists"). The fixture state is not hand-written either: the mark row is built
+ * from the shape `pre-execution-review`'s `LEDGERS.md` declares, and the state it is
+ * decided over is a **real git repository under `os.tmpdir()`** whose revisions come
+ * from commits this file makes — the same discipline `scripts/pre-execution-sensor.test.mjs`
+ * states for the digest sensor ("no test may commit into the repository it is
+ * checking"). P16's fold (finding F38) is what moved the head here out of a constant:
+ * a fixture that *injected* `headSha` could only ever exercise the branch where the
+ * mark names the head, so it proved an unreachable state and stayed green while no
+ * real review turn could ever produce that answer.
+ *
+ * The rule applied to that git state is not this file's either: `declareCurrencyRule`
+ * reads the mechanical test out of `SENSOR_CORE.md` step 8 and applies what the
+ * sensor actually orders. Run against the tree before the F38 fold
+ * (`git archive <sha> | tar -x`, `WORKFLOW_STATUS_PRE_EXECUTION_REPO=<dir>`) the
+ * document still keys currency on equality with the current head, so case 1 goes red
+ * on the reachability of `mark-current` itself — which is the defect, not a paraphrase
+ * of it. A regression of step 8 back to head-equality re-breaks this suite.
  *
  * Validators named: AC17 → scripts/pre-execution-quality.test.mjs,
  * AC18 → scripts/ledger-ownership.test.mjs, AC20 → this file.
  *
  * The repo root is re-pointable so the same suite can be run against a tree
- * extracted before this phase landed (`git archive <sha> | tar -x`) to prove it
- * fails there. Point it with WORKFLOW_STATUS_PRE_EXECUTION_REPO.
+ * extracted before this phase landed to prove it fails there. Point it with
+ * WORKFLOW_STATUS_PRE_EXECUTION_REPO.
  */
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -44,8 +58,7 @@ const TEMPLATE_RELS = ["docs/features/_TEMPLATE/LEDGERS.md", "docs/fix/_TEMPLATE
 const FOLD_COLUMNS = ["id", "file:line", "axis", "severity", "class", "route", "folded"];
 const COL = Object.fromEntries(FOLD_COLUMNS.map((c, i) => [c, i]));
 
-const HEAD_SHA = "3f2a9c8d7e6b5a4c3d2e1f0a9b8c7d6e5f4a3b2c";
-const OLD_SHA = "b4c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1";
+const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 
 // --- the declared shape, read from the file that owns it ----------------------
 
@@ -82,6 +95,33 @@ const requireShape = () => {
   return mark;
 };
 
+// --- the sensor's currency rule, read out of the document that orders it ------
+
+const STEP8 = /(8\. \*\*Pending quality gates\.\*\*[\s\S]*?)9\. \*\*Fix-now fold ledger/;
+
+/**
+ * Which mechanical test does step 8 order for "is this mark still current?"
+ * Exactly two forms are legal, and each is applied to real git state below:
+ * `head-equality` (the sha the mark names *is* HEAD) and `bound-input-ancestry`
+ * (the sha is an ancestor of HEAD and no later commit touched a bound input).
+ * A step 8 that names neither leaves the sensor with no test to run, which is a
+ * failure of this suite, not a licence to invent one here.
+ */
+function declareCurrencyRule(sensorText) {
+  const step8 = STEP8.exec(sensorText)?.[1];
+  if (!step8) throw new Error(`${SENSOR_CORE_REL}: step 8 is gone — nothing keys the review-run proof`);
+  const flat = step8.replace(/\s+/g, " ");
+  if (/ancestor/.test(flat) && /no commit after it touched a bound input/.test(flat)) {
+    return { kind: "bound-input-ancestry", text: flat };
+  }
+  if (/is the unit's current\s+head|is the unit's current head/.test(flat)) {
+    return { kind: "head-equality", text: flat };
+  }
+  throw new Error(`${SENSOR_CORE_REL} step 8 states no mechanical currency test the sensor can apply`);
+}
+
+const currencyRule = declareCurrencyRule(read(SENSOR_CORE_REL));
+
 // --- fixture state: rows built from the declared shape ------------------------
 
 /** The mark row for one reviewed revision, assembled from the declared cells. */
@@ -108,16 +148,100 @@ const ledgerRows = (text) =>
     .filter((line) => /^\|/.test(line) && !/^\|[\s|:-]*\|?$/.test(line) && !/^\|\s*id\s*\|/.test(line))
     .map((line) => cellsOf(line.replace(/^\||\|\s*$/g, "")));
 
+// --- a real repository: the revisions are commits, and this file makes them ---
+
+const unitDir = (unit) => `docs/features/${unit}`;
+const LEDGER_REL = (unit) => `${unitDir(unit)}/review-findings.md`;
+const SPEC_REL = (unit) => `${unitDir(unit)}/SPEC.md`;
+
+/**
+ * The paths a plan-stage review binds. Not written here: `SNAPSHOT.md` names this set
+ * in prose and `scripts/pre-execution-snapshot.mjs` implements it as `STAGE_ARTIFACTS`,
+ * so the file names are read out of that table — a stage gaining an artifact moves this
+ * fixture with it instead of letting the fixture quietly test a smaller set. The table
+ * is read as text, not imported: `dist/` is a gitignored build output, and a red-first
+ * run against `git archive <sha>` has no built schema to load.
+ */
+function boundInputsFor(unit, snapshotSource) {
+  const plan = /plan:\s*\[([\s\S]*?)\n\s*\],/.exec(snapshotSource)?.[1];
+  if (!plan) throw new Error("pre-execution-snapshot.mjs declares no plan-stage artifact table");
+  const files = [...plan.matchAll(/file:\s*"([^"]+)"/g)].map((m) => m[1]);
+  if (!files.length) throw new Error("the plan-stage artifact table names no file");
+  return files.map((file) => `${unitDir(unit)}/${file}`);
+}
+
+const SNAPSHOT_BUILDER_REL = "scripts/pre-execution-snapshot.mjs";
+const boundTable = () => read(SNAPSHOT_BUILDER_REL);
+
+/**
+ * A toy repository holding one review unit: the artifacts a review binds, plus the
+ * fold ledger the durable mark lives in. Every revision below is a commit this file
+ * makes — the states under test are reachable ones.
+ */
+function makeReviewRepo(t, unit = "99-toy") {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-mark-"));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  git(dir, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "init", "-q", "-b", "main");
+  const write = (rel, text) => {
+    const abs = path.join(dir, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, text);
+  };
+  const commit = (message) => {
+    git(dir, "add", "-A");
+    git(dir, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", message);
+    return git(dir, "rev-parse", "HEAD");
+  };
+
+  write(SPEC_REL(unit), `# ${unit}\n\n## Goal\n\nShip the thing.\n`);
+  write(`${unitDir(unit)}/ACCEPTANCE.md`, "# Acceptance\n\n- A1 the thing ships.\n");
+  write(`${unitDir(unit)}/TASKS.md`, `## P1 \u2014 Implementation\n\n- [x] Ship it.\n`);
+  const first = commit(`docs(${unit}): the planning artifacts a review binds`);
+
+  return {
+    dir,
+    unit,
+    ledger: () => fs.readFileSync(path.join(dir, LEDGER_REL(unit)), "utf8"),
+    head: () => git(dir, "rev-parse", "HEAD"),
+    /** The review turn's terminal act: write the rows, commit them, return the new head. */
+    commitLedger: (rows, message = "docs(review): record the review") => {
+      write(LEDGER_REL(unit), foldLedger(rows));
+      return commit(message);
+    },
+    /** A commit that moves a bound input — the only kind of commit that ages a mark. */
+    commitBoundChange: (message = "docs(spec): a bound input moved") => {
+      write(SPEC_REL(unit), `# ${unit}\n\n## Goal\n\nShip the thing, and its export.\n`);
+      return commit(message);
+    },
+    /** What a mark's currency is tested against: the artifact set the review bound. */
+    boundInputs: boundInputsFor(unit, boundTable()),
+    first,
+  };
+}
+
 // --- the sensor's own decisions, computed over that state ---------------------
 
+/** step 8's currency test, applied as the sensor's document orders it. */
+function markIsCurrent(repo, markSha) {
+  const head = repo.head();
+  if (currencyRule.kind === "head-equality") return markSha === head;
+  let named;
+  try {
+    named = git(repo.dir, "rev-parse", "--verify", "--quiet", `${markSha}^{commit}`);
+  } catch {
+    return false; // a mark naming a revision outside this history binds nothing
+  }
+  return git(repo.dir, "log", "--format=%H", `${named}..${head}`, "--", ...repo.boundInputs).trim() === "";
+}
+
 /** step 8: does this unit carry a review mark for the state it is in now? */
-function reviewState(ledgerText, headSha) {
+function reviewState(ledgerText, repo) {
   const shape = requireShape();
   const marks = ledgerRows(ledgerText).filter((row) => row[COL.id] === shape.id);
   if (marks.length === 0) return { ran: false, reason: "no-mark" };
   const bound = /HEAD ([0-9a-f]{40})\b/.exec(marks[marks.length - 1][COL[shape.shaColumn]]);
   if (!bound) return { ran: false, reason: "malformed-mark" };
-  return bound[1] === headSha
+  return markIsCurrent(repo, bound[1])
     ? { ran: true, reason: "mark-current", marks: marks.length }
     : { ran: false, reason: "stale-mark", marks: marks.length };
 }
@@ -129,8 +253,8 @@ const fixNowItems = (ledgerText) =>
     .map((row) => row[COL.id]);
 
 /** the three per-unit flags step 8 derives, with the PR audit marker it also reads */
-function qualityGates({ ledgerText, headSha, auditSha = null, prHeadSha = null }) {
-  const review = reviewState(ledgerText, headSha);
+function qualityGates({ ledgerText, repo, auditSha = null, prHeadSha = null }) {
+  const review = reviewState(ledgerText, repo);
   const auditBound = Boolean(auditSha && auditSha === prHeadSha);
   return {
     review_pending: !review.ran,
@@ -140,63 +264,108 @@ function qualityGates({ ledgerText, headSha, auditSha = null, prHeadSha = null }
   };
 }
 
-// --- the two AC20 cases, plus the control that keeps the mark honest ---------
+// --- the three AC20 states, plus the control that keeps the mark honest ------
 
-test("AC20 fixture 1 — a zero-finding review carrying the durable mark reports review-ran", () => {
+const REVIEWED = [
+  findingRow("F1", "skills/foo/SKILL.md:10", { folded: "yes" }),
+  findingRow("F2", "skills/foo/SKILL.md:22"),
+];
+
+test("AC20 fixture 1 — the mark a real review turn leaves is current at the head that carries it", (t) => {
   const shape = requireShape();
-  // The whole artifact a clean review leaves: the mark, and nothing else.
-  const ledgerText = foldLedger([markRow(HEAD_SHA)]);
+  const repo = makeReviewRepo(t);
+  // The review runs at `repo.first`; its terminal act writes the mark and commits
+  // it, which is how POLICY.md §8 orders the act. So the sha the mark names is
+  // HEAD's parent by construction, and only step 8's rule decides the answer.
+  const markCommit = repo.commitLedger([markRow(repo.first)]);
+  assert.notEqual(markCommit, repo.first, "marking is a commit, so the head moved: this is what a real review leaves");
 
-  assert.equal(reviewState(ledgerText, HEAD_SHA).ran, true, "the mark is the review-ran proof");
-  assert.equal(reviewState(ledgerText, HEAD_SHA).reason, "mark-current");
-  assert.deepEqual(fixNowItems(ledgerText), [], "a mark is not a finding — nothing enters fix_now[]");
-  assert.equal(qualityGates({ ledgerText, headSha: HEAD_SHA }).review_pending, false);
+  const state = reviewState(repo.ledger(), repo);
+  assert.equal(
+    state.reason,
+    "mark-current",
+    `step 8 keys currency on "${currencyRule.kind}", which no real review turn can satisfy: the commit that carries ` +
+      `the mark moves the head the mark is compared against, so ${SENSOR_CORE_REL} can never report review-ran for a ` +
+      `unit reviewed at the revision it names, and AC20's mark-present fixture is unreachable.`,
+  );
+  assert.equal(state.ran, true, "the mark is the review-ran proof");
+  assert.equal(qualityGates({ ledgerText: repo.ledger(), repo }).review_pending, false);
+  assert.deepEqual(fixNowItems(repo.ledger()), [], "a mark is not a finding — nothing enters fix_now[]");
   assert.match(shape.id, /^[A-Z][A-Z0-9-]+$/, "the mark id is a fixed sentinel, never a finding id");
 });
 
-test("AC20 fixture 2 — a findings ledger with no durable mark is not review-ran", () => {
-  const ledgerText = foldLedger([
-    findingRow("F1", "skills/foo/SKILL.md:10", { folded: "yes" }),
-    findingRow("F2", "skills/foo/SKILL.md:22", { folded: "no" }),
-  ]);
-
-  const state = reviewState(ledgerText, HEAD_SHA);
-  assert.equal(state.ran, false, "ledger presence proves nothing about any review");
-  assert.equal(state.reason, "no-mark");
-  const gates = qualityGates({ ledgerText, headSha: HEAD_SHA });
-  assert.equal(gates.review_pending, true);
-  assert.equal(gates.merge_ready, false);
+test("AC20's three states are three computed answers, each created by a commit this fixture makes", (t) => {
+  const repo = makeReviewRepo(t);
+  // (a) markless — a findings ledger with rows, committed, no mark anywhere.
+  repo.commitLedger(REVIEWED, "docs(review): the findings this review filed");
+  const reviewedAt = repo.head();
+  const markless = reviewState(repo.ledger(), repo);
+  assert.equal(markless.reason, "no-mark");
+  assert.equal(markless.ran, false, "ledger presence proves nothing about any review");
   // Everything the ledger does prove stays proven: the open finding still folds.
-  assert.deepEqual(fixNowItems(ledgerText), ["F2"]);
-  // And the never-reviewed unit reads identically — the sensor reports the
-  // missing mark, not a verdict about history.
-  assert.deepEqual(reviewState(foldLedger([]), HEAD_SHA), reviewState(ledgerText, HEAD_SHA));
+  assert.deepEqual(fixNowItems(repo.ledger()), ["F2"]);
+  // and a never-reviewed unit reads identically — the sensor reports the missing
+  // mark, never a verdict about history.
+  assert.deepEqual(reviewState(foldLedger([]), repo), markless);
+
+  // (b) current-mark — the same ledger marked at the revision it now holds.
+  repo.commitLedger([...REVIEWED, markRow(reviewedAt)], "docs(review): mark the review that ran");
+  const current = reviewState(repo.ledger(), repo);
+  assert.equal(current.reason, "mark-current", `the rule step 8 states (${currencyRule.kind}) does not survive the commit that carries its own mark`);
+  assert.equal(current.ran, true);
+
+  // (c) stale-mark — a bound input moves afterwards: the reviewed bytes changed.
+  repo.commitBoundChange();
+  const stale = reviewState(repo.ledger(), repo);
+  assert.equal(stale.reason, "stale-mark");
+  assert.equal(stale.ran, false);
+  assert.equal(qualityGates({ ledgerText: repo.ledger(), repo }).review_pending, true);
+  assert.equal(qualityGates({ ledgerText: repo.ledger(), repo }).merge_ready, false);
+
+  assert.deepEqual(
+    [markless.reason, current.reason, stale.reason],
+    ["no-mark", "mark-current", "stale-mark"],
+    "AC20 needs three distinguishable states, and the sensor's own rule must reach all three",
+  );
 });
 
-test("negative control — a mark bound to an older head is stale, never review-ran", () => {
-  // Findings folded at an earlier state, a mark from the review that produced
-  // them, then commits landed: newest mark ≠ current head.
-  const ledgerText = foldLedger([
-    findingRow("F1", "skills/foo/SKILL.md:10", { folded: "yes" }),
-    markRow(OLD_SHA),
-  ]);
+test("a mark survives its own commit because the fold ledger is not a bound input", (t) => {
+  const repo = makeReviewRepo(t);
+  assert.ok(
+    !repo.boundInputs.includes(LEDGER_REL(repo.unit)),
+    "the fold ledger must not be a bound input: the mark's own commit would age the mark on arrival",
+  );
+  assert.ok(
+    repo.boundInputs.includes(SPEC_REL(repo.unit)) && repo.boundInputs.includes(`${unitDir(repo.unit)}/TASKS.md`),
+    "the bound set is not the snapshot's artifact set, so this case no longer tests the sensor's rule",
+  );
+  assert.equal(new Set(repo.boundInputs).size, repo.boundInputs.length, "the bound set carries a duplicate");
+  const markCommit = repo.commitLedger([markRow(repo.first)]);
+  assert.equal(
+    git(repo.dir, "log", "--format=%H", `${repo.first}..${markCommit}`, "--", ...repo.boundInputs).trim(),
+    "",
+    "the mark's commit touched a bound input, so this fixture no longer isolates the rule",
+  );
+  assert.equal(markIsCurrent(repo, repo.first), true, `under step 8's "${currencyRule.kind}" rule a freshly committed mark must be current`);
+});
 
-  const state = reviewState(ledgerText, HEAD_SHA);
+test("negative control — a mark naming a revision outside this history is stale, never review-ran", (t) => {
+  const repo = makeReviewRepo(t);
+  const foreign = "b4c9d8e7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1";
+  const ledgerText = foldLedger([...REVIEWED, markRow(foreign)]);
+  repo.commitLedger([...REVIEWED, markRow(foreign)]);
+  const state = reviewState(ledgerText, repo);
   assert.equal(state.ran, false);
   assert.equal(state.reason, "stale-mark");
-  assert.equal(qualityGates({ ledgerText, headSha: HEAD_SHA, auditSha: OLD_SHA, prHeadSha: HEAD_SHA }).review_pending, true);
-  // The same ledger read at the revision the mark names does report review-ran:
+  assert.equal(qualityGates({ ledgerText, repo, auditSha: foreign, prHeadSha: repo.head() }).review_pending, true);
+  // The same ledger read at the revision its mark names does report review-ran:
   // the mark is state-bound, not unit-bound.
-  assert.equal(reviewState(ledgerText, OLD_SHA).ran, true);
-  // A fresh act at the current head is what clears the gate — marks append, so
-  // the older one remains as history and the newest one is the one read.
-  const rerun = foldLedger([
-    findingRow("F1", "skills/foo/SKILL.md:10", { folded: "yes" }),
-    markRow(OLD_SHA),
-    markRow(HEAD_SHA),
-  ]);
-  assert.equal(reviewState(rerun, HEAD_SHA).ran, true);
-  assert.equal(reviewState(rerun, HEAD_SHA).marks, 2);
+  repo.commitLedger([...REVIEWED, markRow(repo.first)], "docs(review): mark the reviewed revision");
+  assert.equal(reviewState(repo.ledger(), repo).ran, true);
+  // Marks append: the older one stays as history, the newest one is what is read.
+  const rerun = foldLedger([markRow(foreign), markRow(repo.head())]);
+  assert.equal(reviewState(rerun, repo).ran, true);
+  assert.equal(reviewState(rerun, repo).marks, 2);
 });
 
 test("the mark's shape has one owner, and the map plus both projections name its writer", () => {
@@ -233,15 +402,20 @@ test("the mark's shape has one owner, and the map plus both projections name its
   assert.deepEqual([...new Set(ownerCells)].length, 1, `map and projections disagree: ${ownerCells.join(" / ")}`);
 });
 
-test("SENSOR_CORE keys step 8 on the mark and no longer reads ledger presence", () => {
+test("SENSOR_CORE keys step 8 on the mark and states a currency a real review survives", () => {
   requireShape();
   const sensor = read(SENSOR_CORE_REL);
-  const step8 = /(8\. \*\*Pending quality gates\.\*\*[\s\S]*?)9\. \*\*Fix-now fold ledger/.exec(sensor)?.[1];
+  const step8 = STEP8.exec(sensor)?.[1];
   assert.ok(step8, "step 8 is gone from the sensor core");
   assert.match(step8, /durable review mark/);
   assert.match(step8, new RegExp(mark.id), "step 8 does not name the mark row it reads");
   assert.match(step8, /LEDGERS\.md/, "step 8 does not cite the file that owns the mark's shape");
-  assert.match(step8, /current\s*\n?\s*head/, "step 8 lost the freshness keying");
+  // F38: the keying must be the ordering rule, its mechanical form named, and the
+  // bound set cited to its owner rather than restated here.
+  assert.equal(currencyRule.kind, "bound-input-ancestry", "step 8 keys the mark on equality with the head that carries it");
+  assert.match(step8, /git log\s*`?<mark-sha>\.\.HEAD\s*--\s*<bound paths>`?/, "step 8 names no mechanical currency test");
+  assert.match(step8, /SNAPSHOT\.md/, "step 8 does not cite the owner of the bound paths");
+  assert.doesNotMatch(step8, /is the unit's\s+current\s+head/, "step 8 restored head-equality, which no review turn satisfies");
   assert.doesNotMatch(step8, /rows at all|IS that artifact|presence, with/, "step 8 still reads ledger presence as proof");
   assert.match(step8, /presence is never that proof/);
   // Everything else step 8 owned is still owned: the audit marker and the flags.
@@ -249,17 +423,20 @@ test("SENSOR_CORE keys step 8 on the mark and no longer reads ledger presence", 
   assert.match(step8, /`review_pending`[\s\S]*`audit_pending`[\s\S]*`merge_ready`/);
   assert.doesNotMatch(sensor, /review-mark@1/, "the sensor restates the mark's row shape instead of citing its owner");
   // step 9's projection is untouched by the new row kind.
-  assert.match(sensor, /read only its\s*\n?\s*`folded: no` rows/);
+  assert.match(sensor, /read only its\s+`folded: no` rows/);
 });
 
-test("PRE_EXECUTION states the same keying, and reports a missing mark as a gate", () => {
+test("PRE_EXECUTION cites step 8's currency and reports a missing mark as a gate", () => {
   requireShape();
   const doc = read(PRE_EXECUTION_REL);
   assert.match(doc, /durable review mark/);
   assert.match(doc, new RegExp(mark.id));
   assert.match(doc, /LEDGERS\.md/, "no citation of the file that owns the shape");
-  assert.match(doc, /current head/, "no freshness keying");
-  assert.match(doc, /no\s*\n?\s*mark leaves the unit review-pending/);
+  // One owner per rule: the projection cites step 8's currency rule instead of
+  // restating a keying, so the head-equality wording must be gone from here too.
+  assert.match(doc, /step 8's currency rule/, "PRE_EXECUTION states no pointer to the rule it applies");
+  assert.doesNotMatch(doc, /is the unit's current head/, "PRE_EXECUTION restates a second currency rule");
+  assert.match(doc, /no\s+mark leaves the unit\s+review-pending/);
   assert.doesNotMatch(doc, /review-mark@1/, "PRE_EXECUTION restates the mark's row shape");
   assert.doesNotMatch(doc, /presence of .*ledger.*proves/, "PRE_EXECUTION reads ledger presence as proof");
   // The step-6a sensing this file owns is unchanged: labels and legacy route.
