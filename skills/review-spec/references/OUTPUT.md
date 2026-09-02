@@ -16,7 +16,7 @@ One `PreExecutionReviewReceipt v1`
 ```text
 ## Pre-execution review receipt v1 — spec
 - Review: <receipt-id> · Snapshot: <64-hex|refused> · Verdict: <spec-review-pass|spec-review-fail|needs-design>
-- Unit: <unitId> · Stage: spec · Parent: null
+- Unit: <unitId> · Stage: spec · Unit kind: <feature|fix> · Parent: null
 - Source revision: <40-hex> · Artifact revision: <artifactRevisionId>
 - Reviewer: <id> · Session: <id> · Role: reviewer · Author: <id>
 - Author exclusion: <enforced|not-enforceable> · Context clean: <true|false>
