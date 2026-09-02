@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 2.0.0
+version: 3.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -27,9 +27,11 @@ and what the recommended next command is.** Built for external orchestrators
   fix index, feature folders) — nothing inferred from memory
 ✓ Nothing was edited, committed, pushed, or created — read-only, always
 ✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare
-  `/plan-feature`) AND staged by the target unit's resolved status:
-  `idea`/undesigned → `/design-feature <slug>`; `defined` → `/plan-feature
-  <slug>`; `planned` → `/execute-phase <NN>`
+  `/plan-feature`) AND staged by the target unit's resolved status **and** its
+  current pre-execution evidence: `idea`/undesigned → `/design-feature <slug>`;
+  `defined` → `/plan-feature <slug>` only on a current `SPEC-REVIEW-PASS`, else
+  `/review-spec <slug>`; `planned`/`in-progress` → `/execute-phase <NN>` only on a
+  current `PLAN-REVIEW-PASS`, else `/review-plan <NN>` (step 6a)
 ✓ A missing or non-frozen repository-state ledger emits a machine-readable
   substrate blocker and routes to discovery or resolution before any unit is
   listed as startable
@@ -86,8 +88,12 @@ invocation loads this baseline in order:
 2. [crash recovery](references/CRASH_RECOVERY.md)
 3. [envelope core](references/ENVELOPE_CORE.md)
 4. [envelope fields](references/ENVELOPE_FIELDS.md)
-5. [guardrails](references/GUARDRAILS.md)
+5. [pre-execution evidence](references/PRE_EXECUTION.md)
+6. [guardrails](references/GUARDRAILS.md)
 
+Add [pre-execution evidence](references/PRE_EXECUTION.md) whenever a unit is
+`defined`, `planned` or `in-progress` — it defines step 6a (receipt sensing, the
+one-label-per-stage table, and the legacy-adoption route).
 Add [sensor signals](references/SENSOR_SIGNALS.md) only when a unit, issue,
 finding, or recommendation exists; an empty project skips that file but still
 emits the empty shapes defined by envelope fields. Add

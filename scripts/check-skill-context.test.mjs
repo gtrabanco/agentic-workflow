@@ -193,6 +193,99 @@ runFixtureRoute(
   /route lines .* >/,
 );
 
+// The declared `relative-headroom` policy must bind, not just be recorded
+// (feature 28 finding RS12): a ceiling below ceil(measured x (1 + headroom)) is a
+// route the guard cannot protect, so the check refuses it by name. The headroom
+// is inflated instead of the ceiling lowered so the ceiling check stays green and
+// only the floor can trip, at any future measured value.
+runFixtureRoute(
+  "route estimate ceiling below the declared headroom floor",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 10 }; },
+  /route estimate ceiling \d+ < \d+ = ceil\(measured/,
+);
+
+runFixtureRoute(
+  "route lines ceiling below the declared headroom floor",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 10 }; },
+  /route lines ceiling \d+ < \d+ = ceil\(measured/,
+);
+
+runFixtureRoute(
+  "headroom whose numerator rounds to zero",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 1e-7 }; },
+  /rounds to a zero numerator/,
+);
+
+// C3 (P16 fold): the guard bound only on an exactly-matching policy name and only on
+// a positive headroom, so `relative-headrooms` or `headroom: 0` disabled it silently
+// and every ceiling passed un-checked. An unrecognised declaration is a manifest
+// error, never an opt-out — and the same refusal covers the >6-decimal ratio that the
+// float fallback used to swallow (C4: that branch is gone, so nothing pins it).
+runFixtureRoute(
+  "unknown headroom policy name",
+  (manifest) => { manifest.policy = { name: "relative-headrooms", headroom: 0.1 }; },
+  /Unknown context-budget policy/,
+);
+
+runFixtureRoute(
+  "non-positive headroom",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 0 }; },
+  /headroom must be a positive number/,
+);
+
+runFixtureRoute(
+  "headroom wider than the exact-ratio reader",
+  (manifest) => { manifest.policy = { name: "relative-headroom", headroom: 0.12345678 }; },
+  /decimal places/,
+);
+
+{
+  // The shipped manifest must satisfy its own declared policy: this is the exact
+  // state RS12 reported (a 10 % policy with routes sitting at 0.08 % headroom).
+  const shippedHeadroom = spawnSync(process.execPath, [path.join(repoRoot, "scripts/check-skill-context.mjs"), "--routes"], { encoding: "utf8" });
+  assert.equal(shippedHeadroom.status, 0, `shipped routes must honour their own headroom policy:\n${shippedHeadroom.stdout}\n${shippedHeadroom.stderr}`);
+  const policy = JSON.parse(fs.readFileSync(manifestPath, "utf8")).policy;
+  assert.equal(policy.name, "relative-headroom", "the budgets manifest must keep declaring its headroom policy");
+  assert.ok(Number.isFinite(Number(policy.headroom)) && Number(policy.headroom) > 0, "declared headroom must be a positive ratio");
+}
+
+{
+  // RC2 regression pin (review-change cycle 2, 2026-09-01): the floor must be the
+  // EXACT mathematical ceiling. In binary floats, `measured * (1 + headroom)` can
+  // exceed the exact product enough that Math.ceil adds a whole unit —
+  // 12420 * 1.1 = 13662.000000000002 → 13663, exact value 13662 — so a ceiling
+  // set precisely at the declared formula's value was rejected by its own guard.
+  // A ceiling at the exact floor must pass; the float artifact would demand one more.
+  const fixture = mktemp("agentic-headroom-exact-");
+  try {
+    fs.cpSync(path.join(repoRoot, "skills"), path.join(fixture, "skills"), { recursive: true });
+    fs.mkdirSync(path.join(fixture, "docs/workflow"), { recursive: true });
+    fs.mkdirSync(path.join(fixture, "scripts"), { recursive: true });
+    fs.copyFileSync(path.join(repoRoot, "scripts/check-skill-context.mjs"), path.join(fixture, "scripts/check-skill-context.mjs"));
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    manifest.policy = { name: "relative-headroom", headroom: 0.1 };
+    const route = manifest.routes["review-plan:default"];
+    route.routeEstimateMax = Number.MAX_SAFE_INTEGER;
+    route.routeLinesMax = Number.MAX_SAFE_INTEGER;
+    const write = () => fs.writeFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), JSON.stringify(manifest, null, 2));
+    write();
+    const cli = (args) => spawnSync(process.execPath, [path.join(fixture, "scripts/check-skill-context.mjs"), ...args], { encoding: "utf8" });
+    const probe = cli(["--routes", "--json"]);
+    assert.equal(probe.status, 0, `unbounded fixture must pass: ${probe.stdout}\n${probe.stderr}`);
+    const measured = JSON.parse(probe.stdout).routes.find((r) => r.route === "review-plan:default").totalEstimate;
+    // The oracle is the declared formula computed exactly: ceil(measured × 1.1)
+    // via integer arithmetic (measured × 11 / 10) — no float product anywhere.
+    const exactFloor = Math.ceil((measured * 11) / 10);
+    route.routeEstimateMax = exactFloor;
+    write();
+    const result = cli(["--routes"]);
+    assert.equal(result.status, 0, `a ceiling at the exact declared floor must pass (float artifact would demand ${Math.ceil(measured * 1.1)}):\n${result.stdout}\n${result.stderr}`);
+    assert.doesNotMatch(result.stdout, /ceiling \d+ < \d+/, "no floor failure may be reported for the exact ceiling");
+  } finally {
+    fs.rmSync(fixture, { recursive: true, force: true });
+  }
+}
+
 runFixtureRoute(
   "route references for undeclared skill",
   (manifest) => { manifest.routes["test:badref"] = { skills: ["execute-phase"], references: { "review-change": ["HANDOFF.md"] }, templates: [], routeEstimateMax: null, routeLinesMax: null }; },

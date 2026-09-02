@@ -27,8 +27,24 @@ collection of follow-up issues.
 `L` — this changes the public workflow, adds two public skills and one internal
 grounding capability, extends the schema package and workflow transition
 vocabulary, and rewires planning, execution, review, audit, distribution, and
-bilingual documentation. The plan has exactly five single-concern phases and no
-unresolved implementation decision, so no split trigger applies.
+bilingual documentation. The plan has seventeen single-concern phases: the five
+originally planned (P1–P5), the three appended by the 2026-08-31 user-approved
+amendment (P6 qualification corpus, P7 ledger/status reconciliation, P8 terminal
+re-review and close-out), the eight appended by the 2026-09-01 user-approved
+amendment adopting issue #146's flow-integrity amendment (P9–P16), and **P17**,
+appended by the same day's owner verdict on finding F32. P17 runs **before** the
+P16 close-out: the numbering is not the execution order, because P16's
+fingerprint and the ledger rows citing it were cut earlier in this same replan,
+and re-numbering the close-out would silently invalidate those references (D36).
+
+**Split trigger recorded, not hidden:** the soft five-phase bar in the project's
+scaffold rule is exceeded, and the contract's alternative is to cut the overflow
+into `Depends on:`-chained features. The owner decided on 2026-09-01 that the six
+flow-integrity items stay in unit 28 because #146 is their governing source, they
+are normative for the same artifacts this unit already owns, and `main` already
+declares them inside roadmap row 28 (PR #153). `decisions.md` D33 records that
+choice and its cost; the phases are cut single-concern and dependency-chained
+inside the unit as the mitigation.
 
 ## Dependencies
 
@@ -79,7 +95,9 @@ fewer exploratory reads.
 - Preserve human authority over product intent while allowing engineering
   planning and repair to proceed autonomously inside reviewed scope.
 - Reduce review/fold/replan churn through earlier evidence and explicit backward
-  routes, then measure the effect rather than asserting savings.
+  routes. The effect is unknown until the canary runs and is measured only
+  observationally (D9, known-issues #7); no acceptance row of this unit claims
+  the reduction.
 - Make more than one review/repair/re-review cycle exceptional in qualification
   evidence without ever using a cycle budget to approve incomplete work.
 
@@ -143,6 +161,43 @@ fewer exploratory reads.
   is normal; entering a second repair/re-review cycle produces a mandatory
   diagnosis and is a canary/release anomaly, never an automatic PASS or forced
   stop with defects open.
+- **S14 (F1):** Bind every normative surface that orders an agent action to the
+  machine surface that accepts or routes it, through a repository test that fails
+  in both directions. A surface with no fixed, versioned grammar gets one; prose
+  is never parsed. Where prose restates a machine fact, the machine is
+  authoritative and the prose is the defect.
+- **S15 (F2):** Name one durable owner per ledger truth class and its declared
+  mechanical annotator; undeclared script or agent writers of a ledger are the
+  defect. Gate rejections leave a typed durable trace with reason and return
+  route, and a clean review leaves the same durable proof as a review with
+  findings.
+- **S16 (F3):** A turn that produces a terminal verdict — review PASS/FAIL, plan
+  approval, fold completion, gate rejection — does not end until that verdict's
+  durable mark is written in the same act. Terminal states replay from the mark
+  without re-running the review; a stale, wrong, or replayed mark refuses with a
+  typed reason and no side effects.
+- **S17 (F4):** Extensive evidence acquisition runs in a delegate-only, read-only
+  role outside the authoring context and is conserved as a versioned evidence
+  artifact with an explicit `done | partial | blocked` outcome; `partial` or
+  `blocked` emits no validated claims and blocks authoring readiness. Pending
+  state persists before any user prompt, then the turn stops.
+- **S18 (F5):** Every source-mutating normalizer runs before the artifact
+  snapshot or review freeze; after the freeze only check-only actions are
+  permitted, and any byte change to a frozen input invalidates current receipts.
+- **S19 (F6):** The sensor's review-run proof keys on the durable review mark, not
+  on the presence of a findings ledger, so a cleanly reviewed unit is
+  distinguishable from a never-reviewed one.
+- **S20 (F32 disposition):** The sync digest path prefers the host's own native
+  SHA-256 when the host exposes one, and falls back to this package's own
+  pure-JS implementation where it does not. No static Node builtin is imported,
+  no runtime dependency is added, and no third-party code is vendored: measured,
+  the `@noble/hashes@2.4.0` `sha256` closure is 1,419 lines across four modules
+  (17 named symbols, including the SHA-512/384/224 machinery this package does
+  not use) against the 124 lines already owned and test-pinned here — and after
+  native-first the fallback only runs where no native hash exists to beat. Any
+  code later copied from a third party carries source, author, version and
+  license in a header comment: credit is a standing condition, not a courtesy
+  (D36).
 
 #### Out of scope / non-goals
 
@@ -210,8 +265,10 @@ and obligation ledger**
   denied · `executor`: denied.
 - [x] Review a frozen Product or Plan snapshot — visible entry point:
   `review-spec` / `review-plan` · `product authority`: allowed when context
-  clean · `artifact author`: denied from silently self-approving where identity
-  is enforceable · `independent reviewer`: allowed · `runtime operator`:
+  clean · `artifact author`: denied from silently self-approving; the shipped
+  manual mode cannot enforce identity, so exclusion stays a runtime
+  responsibility (known-issues #9) · `independent reviewer`: allowed ·
+  `runtime operator`:
   invokes/persists only · `executor`: denied.
 - [x] Repair a failed artifact — visible entry point: owning author skill with
   findings input · `product authority`: allowed · `artifact author`: allowed
@@ -278,6 +335,16 @@ and obligation ledger**
 | 20 | Planning evidence survives context changes without raw exploration history | in-scope | S12; AC13 |
 | 21 | One repair/re-review is normal and a second cycle is an explicit anomaly | in-scope | S13; AC7, AC12, AC14 |
 | 22 | A cycle budget may approve or hide an unresolved finding | out-of-scope | Cycle-budget non-goal |
+| 23 | Machine contracts are validated through the package's public entries with canonical vectors and bounded diagnostics | in-scope | S4; AC1 |
+| 24 | The executor path is qualified by a dated manual golden-fixture run, not a provider-dependent automated run | in-scope | S10; AC11 |
+| 25 | Skill text may order a transition, argument, field, or ledger shape the machine surface does not accept | in-scope | S14; AC15 |
+| 26 | A ledger may be written by any script or agent that reaches it | in-scope | S15; AC16 |
+| 27 | A gate rejection may leave no durable trace, forcing the next session to re-derive it | in-scope | S15, S16; AC16, AC17 |
+| 28 | A terminal verdict may be reported before its durable mark is written | in-scope | S16; AC17 |
+| 29 | Delegated reading may enter authoring as un-validated claims, or as prose with no revision, outcome, or source identity | in-scope | S17; AC18 |
+| 30 | A normalizer may run after the freeze and silently void the receipts it just bound | in-scope | S18; AC19 |
+| 31 | A clean review may be indistinguishable from a never-reviewed unit | in-scope | S19; AC20 |
+| 32 | The sync digest path may pay a portable implementation's cost in runtimes that already ship a native hash, or buy portability by importing a Node binding | in-scope | S20; AC21 |
 
 ### Acceptance criteria
 
@@ -323,7 +390,7 @@ and obligation ledger**
   canonical-to-Pi skill bundling/parity and Pi package tests, `node
   scripts/check-skill-context.mjs`, `npx skills add . --list`, skill
   changelogs, synchronized EN/ES docs, and migration fixtures all pass.
-- [ ] **AC11 — command-verified:** the required executor-path golden fixture
+- [ ] **AC11 — read-verified:** the required executor-path golden fixture
   demonstrates the complete manual path through `review-spec`, planning,
   `review-plan`, execution gating, candidate review, and audit without a
   provider/runtime dependency or automatic issue creation.
@@ -343,6 +410,44 @@ and obligation ledger**
   evidence deficit. The release canary includes a feature, a fix, and a
   cross-boundary unit; any sample needing the second cycle fails qualification
   until its design/plan/root cause is corrected.
+- [ ] **AC15 — command-verified (F1):** a repository test fails when any normative
+  surface orders a transition, argument, field, artifact, or ledger-row shape the
+  machine surface does not define or accept, and when a machine surface requires
+  something no normative text states; it reads only fixed, versioned grammars
+  (fenced command blocks, fixed-output contract blocks, reference tables) and
+  never free prose; every normative surface that lacked one has been given one.
+- [ ] **AC16 — command-verified (F2):** one declared owner per ledger truth class
+  plus its declared mechanical annotator exist in the ownership map and in each
+  template, and a scan (script write-path + declared-owner) fails an undeclared
+  writer of any durable ledger.
+- [ ] **AC17 — command/read-verified (F3):** each verdict-producing and
+  rejection-producing turn writes its durable mark in the same act; replaying a
+  stale, wrong, or duplicate mark returns a typed reason with zero side effects,
+  and gate rejections (dependency, status, phase-lint, stale/missing receipt)
+  leave a typed trace naming reason and return route.
+- [ ] **AC18 — command-verified (F4):** the delegated-evidence artifact is
+  versioned and records revision, `done | partial | blocked`, the questions,
+  sources with `id, class, title, publisher, URL, accessed_at, excerpt`, claims
+  mapped to source ids, contradictions, freshness, separately-held product
+  choices, and unverified claims; a `partial` or `blocked` artifact yields no
+  validated claims and readiness returns `NEEDS-EVIDENCE`; pending state persists
+  before the prompt.
+- [ ] **AC19 — command-verified (F5):** the phase order binds every source-mutating
+  normalizer strictly before the snapshot/freeze step, only check-only actions
+  follow the freeze, and a byte change to a frozen input after the freeze fails
+  the receipt currency check.
+- [ ] **AC20 — command-verified (F6):** the sensor proves "review ran for this
+  unit's current state" from the durable review mark; a zero-finding review
+  produces that mark and is proven, a ledger with no mark is not.
+- [ ] **AC21 — command-verified (F32 disposition):** `sha256HexSync` uses the
+  host's native SHA-256 when the host exposes one through
+  `globalThis.process?.getBuiltinModule?.("crypto")`, and this package's pure-JS
+  implementation otherwise; every path returns one identical lowercase 64-hex
+  digest for the same bytes; `src/` still holds no static `node:` specifier and no
+  `@types/node` appears, `package.json` still declares no dependencies; and the
+  rejected alternatives (static `node:crypto`, an `@noble/hashes` dependency,
+  vendoring its code) are recorded with their measured cost where a reader will
+  re-litigate them.
 
 ### Tooling
 
@@ -415,6 +520,11 @@ Engineering boxes:
 | Date | Authority | Change |
 |---|---|---|
 | 2026-08-30 | User-approved | Strengthen progressive evidence preparation, review readiness, compact planning-evidence persistence, and second-cycle convergence diagnosis/qualification without weakening fail-closed review. |
+| 2026-08-31 | User-approved | Re-plan routed from review findings F2+F3+F6 (`replan-in-unit`): append P6 (qualification corpus), P7 (ledger/status reconciliation), P8 (terminal re-review and PR close-out). No acceptance row changed — the frozen manifest blob is unchanged. The roadmap row is corrected from the premature `done` (F3) to `in-progress` in the same replan commit. |
+| 2026-08-31 | User-approved | Product repair batch from review rs-28-20260831-002 (RS1+RS2+RS15–RS17, one batch): Size block corrected to the eight-phase reality (RS1), AC11 verification label aligned with the frozen ACCEPTANCE.md `read-verified` (RS2), author-exclusion cell and churn business goal made truthful to the shipped-mode limits (RS15, RS16), expectation-sweep pointers added for AC1/AC11 (RS17). Scope, obligations, and acceptance rows unchanged; the frozen ACCEPTANCE.md blob is unchanged. |
+| 2026-09-01 | User-approved | **F32 disposition and P17.** The owner rejected the finding's own remedy ("replace the hand-rolled SHA-256 with `node:crypto`") and directed: prefer the runtime's native path, fall back where it is absent, avoid the dependency if the needed code can be carried in-house, and — if third-party code is ever copied — carry reference, authorship and license with it. Measurement changed one of those three: the in-house route was tested as vendoring `@noble/hashes@2.4.0`'s `sha256` closure and costs 1,419 lines across four modules (17 named symbols, plus SHA-512/384/224 machinery this package never calls) to replace 124 owned, differential-tested lines — and once the native path is preferred, that fallback only executes where no native hash exists at all. So P17 keeps this package's own implementation as the fallback, adds no dependency, vendors nothing, and promotes the attribution requirement to a standing rule (S20, AC21, D36). Availability of the native route is documented, not assumed: `process.getBuiltinModule` exists from Node v22.3.0 / v20.16.0 (Node API docs), measured present in node v24.19.0 and bun 1.4.0, and absent in browsers — which is why the fallback is load-bearing, not decorative. Severity, class and `folded: no` of F32 were left untouched: it closes when P17 lands. |
+| 2026-09-01 | User-approved | **Adopt issue #146's flow-integrity amendment (F1–F6) and re-plan.** Evidence: `origin/main` roadmap row 28 (PR #153 `d2b31676`, merged 2026-08-30) declares all six clauses inside this feature's own scope, while this branch's row never carried them (`git log -S'normative-prose' -- docs/features/ROADMAP.md` is empty on this branch) and none of the six appears anywhere in `skills/`; the SPEC's earlier amendment rows never adopted them. Finding **F3** (`replan-in-unit`) is folded by this row, and **F22**'s substance — the conflict is scope, not text — is resolved by adoption rather than by deleting `main`'s clause. Product half gains S14–S19 and expectations 25–31; acceptance gains **AC15–AC20 additively** (no existing row touched, narrowed, or re-worded) so the manifest is re-frozen as a replacement per the verification contract, with a fresh receipt in `progress.md`. Engineering half appends the single-concern phases **P9–P16**; roadmap row 28 returns from the premature `done` to `in-progress` with PR #155 named, roadmap rows 29 and 30 are re-based byte-identical to `main` so the merge conflict collapses onto the row-28 status cell alone. P8's close-out is superseded for terminality by P16: no head reached before this amendment can satisfy it. Rejected: moving F1–F6 to a new chained feature (owner chose in-unit; cost recorded as D33). |
+| 2026-09-01 | User-approved | The pre-execution review gate is bypassed for this unit's remaining phases (P6–P8), both stages, by explicit owner instruction ("forcely ignore the review-plan … we can not consume a receipt from a skill in development — bypass our in development skills"): `review-spec`, `review-plan` and `pre-execution-review` are this unit's own undelivered artifacts, installed nowhere (no global skill, no pi command), so the gate demands receipts only this unit's own in-development process could produce — circular for this unit alone. Decision D32 records scope, boundaries and expiry: gate text, schema and every other consumer unchanged; P8's RS3(c) re-derived `SPEC-REVIEW-PASS`/`PLAN-REVIEW-PASS` receipt rows are satisfied per D32 (installed `review-change` + the feature-29 dogfood obligation the SPEC already mandates), and canary fields unobservable without those commands are recorded as the corpus's sanctioned `not yet measured`. |
 
 ---
 
@@ -457,6 +567,19 @@ Engineering boxes:
 - Architectural-invariant classification: `n/a: no project invariants declared`
   at NRS snapshot `2026-08-30-pre-execution-planning`. The package/skill/runtime
   boundaries above preserve the repository's observed architecture.
+- **Re-validated 2026-09-01 after the flow-integrity plan cut (Stage 2, one
+  classification for the amended plan):** `Preflight: NRS consumed · invariant
+  classification: n/a: no project invariants declared` —
+  `docs/architecture/ARCHITECTURAL_INVARIANTS.md` is absent from this repository,
+  so no project rule ID can be cited; the boundary check below is the substitute.
+  The amendment adds no new runtime dependency, no new package, and no second
+  state machine: P9–P14 extend the existing ledgers, turn contracts, sensor
+  reference text, and repository test suites, and P15–P16 add only dated records.
+  The NRS facts it consumed are stale against this branch by design (schema
+  `3.4.0`/554 tests and 35 entrypoints are `origin/main` truth, confirmed by
+  inspection); repository inspection stayed authoritative and no frozen fact was
+  rewritten here — refreshing them is `resolve-repository-state`'s write, not this
+  plan's.
 
 ### Design
 
@@ -790,19 +913,187 @@ Phase-lint: PASS (8/8) · fingerprint
 
 #### P5 — Qualify the pre-execution workflow
 
-Layer: hardening. Done-when: package/repository/installation/context/golden-
-fixture gates pass, synchronized docs and migration are verified, and the exact
-candidate has an independent PASS with no unresolved fix-now finding; the
-feature/fix/cross-boundary qualification corpus contains no second-cycle
-sample.
+Layer: hardening. Done-when (re-cut 2026-08-31 by the user-approved amendment for
+findings F2+F3+F6, recorded against finding RS9): P5 owns only what its first
+three `TASKS.md` rows still hold — package/repository/installation/context gates
+pass and synchronized docs/migration verified — and is `replanned`, not `done`.
+The golden-fixture rows and the feature/fix/cross-boundary qualification corpus
+with its no-second-cycle condition moved to **P6**, ledger and status
+reconciliation to **P7**, and the independent PASS on the exact candidate, the
+re-review pair and the release-ready terminal candidate (Pi package `0.2.0` bumped
+and changeloged after the last bundle rebuild) moved to **P8**. Claiming the
+corpus or the release from P5 is the drift F2 and F6 were filed for.
 
 Phase-lint: PASS (8/8) · fingerprint
-`P5:hardening:8:qualify-the-pre-execution-workflow`
+`P5:hardening:8:qualify-the-pre-execution-workflow` (unchanged — the
+fingerprint binds layer, task count and title deliverable, not the done-when text)
+
+#### P6 — Run the pre-execution qualification corpus
+
+Layer: hardening. Done-when: `testing.md`'s completed canary corpus carries one
+row-set per sample (unit 28 feature, fix unit 78, feature 17 cross-boundary)
+with every canary field observed or explicitly `not yet measured`, per-stage
+correction-cycle counts, and no second-cycle sample; `GOLDEN_FIXTURE.md` (+ its
+ES sibling) carries a dated row for every changed executor-path skill/version
+listed in this unit's 3.5.0 changelog rows; root `node --test
+scripts/*.test.mjs` -> exit 0.
+
+Phase-lint: PASS (8/8) · fingerprint
+`P6:hardening:4:run-the-pre-execution-qualification-corpus`
+
+#### P7 — Reconcile the unit ledgers with qualification evidence
+
+Layer: docs. Done-when: `grep -qE '\| 28 \| .?evidence-grounded-spec-plan-review.? \| in-progress' docs/features/ROADMAP.md`
+-> exit 0 (the row stays `in-progress` until P8's PR step); every O9–O14 row
+in `planning-obligations.md` carries a status matching its cited evidence
+(`verified` only where the evidence row exists); and `progress.md`'s phase
+table lists P6–P8 with receipts.
+
+Phase-lint: PASS (8/8) · fingerprint
+`P7:docs:4:reconcile-unit-ledgers-with-qualification-evidence`
+
+#### P8 — Re-review and close the corrected candidate
+
+Layer: close-out. Done-when: the terminal HEAD holds a current context-clean
+`review-change` PASS receipt with zero open findings **and** current
+`SPEC-REVIEW-PASS` and `PLAN-REVIEW-PASS` receipts re-derived at that same HEAD
+(finding RS3(c): the repair commits rotate both digests, so a close-out that never
+re-runs the two reviews closes on evidence that died mid-unit); every package gate
+passes (schema suite, root suites, context/route budgets, Pi bundle + tests,
+`npx skills add . --list`); the frozen ACCEPTANCE manifest is verified at
+terminal HEAD; PR #155 carries the amendment summary; and roadmap row 28
+reads `done · [#155]`.
+
+Phase-lint: PASS (8/8) · fingerprint
+`P8:close-out:6:re-review-and-close-the-corrected-candidate`
+
+#### P9 — Declare durable ledger write ownership
+
+Layer: docs. One concern: the ownership map that says who may write each durable
+ledger. Done-when: `node --test scripts/ledger-ownership.test.mjs` -> exit 0, and
+the same run exits non-zero when a fixture ledger row is written by a script absent
+from the map.
+
+Phase-lint: PASS (8/8) · fingerprint `P9:docs:6:declare-durable-ledger-write-ownership`
+
+#### P10 — Mark terminal verdicts durably
+
+Layer: docs. One concern: write-then-report for turns that end in a verdict or a
+gate rejection. Done-when: `node --test scripts/pre-execution-quality.test.mjs`
+-> exit 0 with the new rejection-trace and no-side-effect replay cases, and
+`grep -qE 'write-then-report' skills/review-spec/SKILL.md
+skills/review-plan/SKILL.md skills/pre-execution-review/references/POLICY.md` ->
+exit 0.
+
+Phase-lint: PASS (8/8) · fingerprint `P10:docs:7:mark-terminal-verdicts-durably`
+
+#### P11 — Prove clean reviews with a durable mark
+
+Layer: docs. One concern: the durable review mark and the sensor that reads it
+(replaces ledger-presence sensing). Done-when: `node --test
+scripts/workflow-status-pre-execution.test.mjs` -> exit 0 with the two cases proven
+— zero-finding review carrying a mark reports review-ran, ledger-without-mark does
+not.
+
+Phase-lint: PASS (8/8) · fingerprint `P11:docs:5:prove-clean-reviews-with-a-durable-mark`
+
+#### P12 — Conserve delegated evidence as a versioned artifact
+
+Layer: docs. One concern: the delegate-only evidence artifact standard and the
+readiness rule that consumes it. Done-when: `node --test
+scripts/pre-execution-quality.test.mjs` -> exit 0 with the delegated-evidence cases
+— `partial` yields zero validated claims and returns `NEEDS-EVIDENCE`.
+
+Phase-lint: PASS (8/8) · fingerprint `P12:docs:6:conserve-delegated-evidence-as-a-versioned-artifact`
+
+#### P13 — Run normalizers before the artifact freeze
+
+Layer: docs. One concern: freeze ordering — mutating steps strictly before the
+freeze, check-only after. Done-when: `node --test
+scripts/pre-execution-quality.test.mjs` -> exit 0 with the normalizer-ordering case
+failing when a mutating step is scheduled after the freeze row.
+
+Phase-lint: PASS (8/8) · fingerprint `P13:docs:4:run-normalizers-before-the-artifact-freeze`
+
+#### P14 — Bind normative prose to machine surfaces
+
+Layer: hardening. One concern: the drift gate between normative text and the machine
+surface, given fixed grammars where any was missing. Done-when: `node --test
+scripts/normative-drift.test.mjs` -> exit 0, and it exits non-zero against each of
+the three injected disagreements (undefined transition, unaccepted argument, absent
+field).
+
+Phase-lint: PASS (8/8) · fingerprint `P14:hardening:8:bind-normative-prose-to-machine-surfaces`
+
+#### P15 — Qualify the amended skills on the weakest executor
+
+Layer: hardening. One concern: dated fixture rows for the skills P9–P14 change, on
+the fleet's sanctioned weakest executor. Done-when: `grep -qE 'weakest-executor leg
+carries a dated PASS row for every skill P9-P14 changed' docs/workflow/GOLDEN_FIXTURE.md`
+-> exit 0, with the matching dated rows present in `GOLDEN_FIXTURE.es.md`.
+
+Phase-lint: PASS (8/8) · fingerprint `P15:hardening:4:qualify-the-amended-skills-on-the-weakest-executor`
+
+#### P16 — Close the amended candidate
+
+Layer: close-out. One concern: the terminal close-out at the head that carries this
+amendment. Done-when: the terminal HEAD holds a current context-clean
+`review-change` PASS receipt with zero open findings plus re-derived
+`SPEC-REVIEW-PASS` and `PLAN-REVIEW-PASS` receipts at that same HEAD; every package
+gate passes; the replacement ACCEPTANCE manifest blob matches a receipt computed at
+terminal HEAD; roadmap row 28 reads `done · [#155]`; and `git merge-tree
+$(git merge-base HEAD origin/main) HEAD origin/main` reports no conflict in
+`docs/features/ROADMAP.md`.
+
+Phase-lint: PASS (8/8) · fingerprint `P16:close-out:9:close-the-amended-candidate`
+
+Depends on P15 **and P17** — P17 is numbered after this phase and executes before
+it, deliberately: P16's fingerprint, its `TASKS.md` rows, and obligations O12/O17
+were cut earlier in the same replan, and re-numbering the close-out to keep the
+sequence visually monotonic would rotate those references for no gain (D36).
+
+#### P17 — Prefer the host native SHA-256 digest
+
+Layer: schema/db. One concern: which implementation answers the sync digest call.
+Done-when: `cd packages/agentic-workflow-schema && npm test` -> exit 0 with the
+three-path agreement case green; `grep -rn "from \"node:\|require(\"node:" src/` ->
+no matches; `node -e` probe asserts `sha256HexSync` routed through the native
+binding in this runtime and produced the same 64-hex digest as the pure-JS path.
+
+- Runs **before P16**; P16's close-out depends on it.
+- No static `node:` specifier and no `@types/node`: reach the binding through
+  `globalThis.process?.getBuiltinModule?.("crypto")` so an untyped optional call
+  keeps browsers, bundlers, and `engines: node >= 18` untouched.
+- Keep this package's pure-JS implementation as the fallback (D36: vendoring
+  `@noble/hashes` costs 1,419 lines across four modules for the no-native case).
+- Name the file that actually pins the digests, in the comment that cites a test
+  which does not exist (finding F36).
+
+Phase-lint: PASS (8/8) · fingerprint `P17:schema/db:7:prefer-the-host-native-sha-256-digest`
 
 ### Deploy & rollback
 
 No data migration or environment configuration. Merge publishes skill/docs
-changes; publish the schema package only after package/repository qualification.
+changes; publish the schema package (`3.5.0`) and the Pi package (`0.2.0`) only
+after package/repository qualification.
+
+The Pi publish workflow does **not** enforce "newer than the registry" (finding
+RS11): its gate is an equality test — `Skip when the version is already published`
+sets `publish=false` only when `LOCAL == PUBLISHED`, so any difference (including
+a lower local version) attempts `npm publish`. Measured today: registry
+`@gtrabanco/pi-agentic-workflow` is `0.1.0`, local is `0.2.0`; registry
+`@gtrabanco/agentic-workflow-schema` is `3.4.0`, local is `3.5.0`. The bump step
+therefore still has to be correct on its own, and the workflow does not quietly
+protect it.
+
+**Environment precondition that blocks the merge-time release** (recorded as
+known-issue 12): `publish-pi-package.yml`'s own header states the npm Trusted
+Publisher record for this package is still pending, and that any version past
+`0.1.0` fails at the publish step with `npm error 403 … OIDC permission denied`
+(the token exchange succeeds; npm rejects the PUT). So "merge ships 0.2.0" is
+true only once that record exists; otherwise the release is a manual step after
+the corrective record, and no route may claim the package shipped from a red
+publish job.
 Rollback is a PR revert plus package deprecation/new corrective version if the
 new package version was already published. Never overwrite an npm version or
 coerce stored receipts into another contract.
@@ -850,5 +1141,13 @@ coerce stored receipts into another contract.
 ### Post-merge next feature
 
 Feature 29 — `bounded-implementation-discovery`; first re-run `review-spec` and
-`review-plan` over its already-created planning artifacts so feature 28 is
-dogfooded before feature 29 implementation begins.
+`review-plan` over its planning artifacts so feature 28 is dogfooded before
+feature 29 implementation begins. That re-run has a prerequisite (finding RS10):
+unit 29 is size `M` and its folder holds `planning-evidence.md` but **no
+`planning-obligations.md`**, and the `M/L` ledger rule makes a missing obligation
+ledger a first-cycle `review-plan` finding, not a warning. So the order is:
+construct unit 29's `planning-obligations.md` from its acceptance rows as they
+stand under the legacy-adoption rule (add exactly the missing ledger, change
+nothing else, coerce no older evidence), then `review-spec`, then `review-plan`,
+then execute. Do not describe this as "re-run the reviews over already-created
+artifacts" — as written it could not complete.

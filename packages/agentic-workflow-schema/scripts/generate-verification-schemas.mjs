@@ -20,7 +20,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { VERIFICATION_CONTRACT, VERIFICATION_LIMITS } from "../dist/verification-contract.js";
+import { VERIFICATION_CONTRACT, VERIFICATION_LIMITS, whenConditions } from "../dist/verification-contract.js";
 
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -138,7 +138,18 @@ function propertySchema(field) {
 }
 
 function whenSchema(contract, spec, rule) {
-  const when = rule.when;
+  const conditions = whenConditions(rule.when);
+  if (conditions.length === 0) {
+    throw new Error(`${contract.contractId}: rule ${rule.id} has no predicate`);
+  }
+  // A conjunction (the `allOf` form the shared engine evaluates) renders as a
+  // Draft-07 `allOf` of the member conditions, so a projection can never silently
+  // narrow the predicate its runtime enforces.
+  const parts = conditions.map((when) => conditionSchema(contract, spec, rule, when));
+  return parts.length === 1 ? parts[0] : { allOf: parts };
+}
+
+function conditionSchema(contract, spec, rule, when) {
   const field = spec.fields.find((candidate) => candidate.key === when.field);
   const vocabulary = field?.enum ?? [];
   let allowed;

@@ -1,7 +1,7 @@
 ---
 name: discover-repository-state
 user-invocable: true
-version: 1.2.0
+version: 1.2.1
 description: >
   Discover repository evidence and write a frozen Normalized Repository State.
   Produces verified repository evidence and keeps facts, decisions, planned
@@ -81,3 +81,4 @@ Otherwise:
 
 → Next: /plan-feature <slug> — plan from frozen facts
   · implementation-ready feature → /execute-phase <NN>
+    (planned is not executable: no current `PLAN-REVIEW-PASS` → /review-plan <NN>)

@@ -54,6 +54,47 @@ SPEC's `## Design status` marker is the SPEC-local record and the
    applies: print the block above pointing at `/design-feature "<idea>"`
    instead of a slug.
 
+## Product-review gate (after the redirect gate, before Routing)
+
+The redirect gate proves the Product half was **designed**; this proves it was
+**independently reviewed** and unchanged since. Run it before any write on every
+planning route. Issue input has no slug yet: evaluate it on the slug
+`plan-feature-from-issue` produces, just before `plan-feature-scaffold` would run.
+
+1. Read the newest `## Pre-execution review receipt v1 — spec` block in the unit's
+   `progress.md`; none → fail closed.
+2. Recompute the SPEC-stage snapshot from the bytes on disk now — exactly one
+   artifact row (`kind: spec`, `selector: spec-product-v1`) plus the current
+   `artifactRevisionId` — digested with the schema package's canonical entry (no
+   package: record `validated: manual` and compare the stored digest line by line).
+3. Accept only when all hold: contract `agentic-workflow/
+   pre-execution-review-receipt@1`, `stage: spec`, verdict `spec-review-pass`,
+   `snapshotDigest` equals step 2, zero open or unverified material findings,
+   `contextClean: true`, and under `authorExclusion: enforced` reviewer ≠ author.
+4. Refuse, never silently: **missing** · **stale** (digest or `artifactRevisionId`
+   differs — any Product write, context change, or mutate-and-revert) ·
+   **wrong-stage** (a `plan` receipt) · **substitute** (candidate `ReviewReceipt v1`
+   or staged `VerificationReceipt v1`: different contracts, never interchangeable) ·
+   **self-approved** (reused identity under enforced exclusion, or `contextClean:
+   false`) · **author-readiness** (`READY-FOR-REVIEW` licenses a review request, it
+   is not one).
+
+Fail closed — print exactly, then touch nothing else this turn:
+
+```
+PRODUCT-REVIEW GATE — <NN>-<slug> BLOCKED (<missing|stale|wrong-stage|substitute|self-approved|author-readiness>)
+Expected: current spec-review-pass receipt bound to snapshot <digest>
+Actual:   <receipt state>
+
+→ Next: /review-spec <NN>-<slug> — the Product half needs a current independent
+    review before engineering planning can start
+  · a product choice is genuinely open → /design-feature <NN>-<slug> "<question>"
+  · no bypass flag exists for this gate
+```
+
+A stale receipt is never "refreshed" by editing the block — only a new review of a
+new snapshot produces one, and `--force` is not a `plan-feature` flag.
+
 ## Routing
 
 Once the gate passes, pick the mode — first match wins:
@@ -77,7 +118,25 @@ Once the gate passes, pick the mode — first match wins:
 | You run | Detected | Routes to | Then |
 |---|---|---|---|
 | `plan-feature 14-csv-export` (not designed) | undesigned slug | — | STOP → `/design-feature 14-csv-export` |
-| `plan-feature 131` | issue #131 | `plan-feature-from-issue` → `plan-feature-scaffold` | PR carries `Closes #131` |
-| `plan-feature 14-csv-export` (designed, `defined`) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
+| `plan-feature 14-csv-export` (designed, no current spec review) | unreviewed Product half | — | STOP → `/review-spec 14-csv-export` |
+| `plan-feature 131` | issue #131 | `plan-feature-from-issue` (stops at the Product-review gate) | `/review-spec` → re-run `plan-feature 131` |
+| `plan-feature 14-csv-export` (designed + reviewed) | designed slug | `plan-feature-scaffold` | `execute-phase 14 P1` |
 | `plan-feature 14-csv-export` (already `planned`) | already-planned slug | — | STOP → `/execute-phase 14 P1` (no re-scaffold) |
 | `plan-feature --next` | next `defined` roadmap entry | gate, then scaffold | `execute-phase NN P1` |
+
+## Mode grammar (versioned — read by `scripts/normative-drift.test.mjs`)
+
+The detection order above is prose for the human; this table is the machine form
+of the same routing: `flag` must be a flag this skill's `argument-hint:` accepts
+and `route` must be a skill that exists. A flag or a route no surface declares is
+a defect in this table, never in the hint.
+
+```text
+plan-mode-routes@1
+# owner: plan-feature
+mode | flag | route
+issue-derived | --from-issue | plan-feature-from-issue
+forced-scaffold | --scaffold | plan-feature-scaffold
+next-defined | --next | plan-feature-scaffold
+designed-slug | n/a | plan-feature-scaffold
+```

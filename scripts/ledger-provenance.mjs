@@ -31,6 +31,13 @@ import { basename, relative, resolve } from "node:path";
 
 const COMMIT_TOKEN_RE = /\b[0-9a-f]{7,40}\b/g;
 const ROW_RE = /^\|\s*(F\d+)\s*\|/;
+/**
+ * Cell boundaries are UNESCAPED pipes. A markdown table escapes a literal pipe inside
+ * a cell as `\|`, and a naive `split("|")` reads such a row as eight columns and drops
+ * it — silently, from the recount, from `--check`, and from `--annotate`, so a fix-now
+ * row vanishes while looking accounted for (unit 28's own F38 row did exactly this).
+ */
+const CELL_RE = /(?<!\\)\|/;
 
 const args = process.argv.slice(2);
 const target = args.find((arg) => !arg.startsWith("--"));
@@ -77,17 +84,39 @@ const repoRelative = (absolute) => {
   return rel && !rel.startsWith("..") ? rel : absolute;
 };
 
-/** finding-id → row cells, from one snapshot of the ledger. */
+/**
+ * finding-id → row cells, from one snapshot of the ledger, plus every line the
+ * row schema refused.
+ *
+ * A row that matched `ROW_RE` but not the 7-column schema used to `continue` past
+ * the recount with no signal at all — the silent-drop class `CELL_RE` above exists
+ * to close (finding C1, P16 fold): an arity slip, an extra column, or a repeated id
+ * removed a fix-now row from `--check` and `--annotate` while it still looked
+ * accounted for in the table. Nothing here drops a counted line: `counted` is the
+ * number of `^| F<n> |` lines in the file, `rows` the ones the schema read, and
+ * `rejected` the difference, each named with its reason. The invariant
+ * `counted === rows.size + rejected.length` is asserted by the caller, so a future
+ * branch in this parser cannot skip a line without failing the recount.
+ */
 function parseRows(text) {
   const rows = new Map();
+  const rejected = [];
+  let counted = 0;
   for (const line of text.split("\n")) {
     const match = ROW_RE.exec(line);
     if (!match) continue;
-    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
-    if (cells.length !== 7) continue;
+    counted += 1;
+    const cells = line.split(CELL_RE).slice(1, -1).map((cell) => cell.trim());
+    if (cells.length !== 7) {
+      rejected.push({ id: match[1], reason: `${cells.length} cells instead of the 7-column schema` });
+      continue;
+    }
+    if (rows.has(match[1])) {
+      rejected.push({ id: match[1], reason: "duplicate id in the file — only the last row is read" });
+    }
     rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6] });
   }
-  return rows;
+  return { rows, rejected, counted };
 }
 
 /** Paths the row cites, with `:line` ranges and prose stripped. */
@@ -143,19 +172,33 @@ function verifiedTokens(text) {
 }
 
 const rel = repoRelative(ledger);
-const current = parseRows(readFileSync(ledger, "utf8"));
+const parsed = parseRows(readFileSync(ledger, "utf8"));
+const { rows: current, rejected, counted } = parsed;
+// The parser's own completeness clause: a counted line that neither parsed nor was
+// reported is the silent drop C1 names, so the tool refuses it in itself.
+if (counted !== current.size + rejected.length) {
+  process.stderr.write(
+    `ARITY FAULT: ${counted} row line(s) counted, ${current.size} parsed, ${rejected.length} refused — the recount read neither\n`,
+  );
+  process.exitCode = 1;
+}
 
 // --- 1. flip + introduction detection: walk every historical version ---------
 const flips = new Map();
 const introduced = new Map();
 let previous = new Map();
 for (const sha of git("log", "--reverse", "--format=%H", "--", rel).split("\n").filter(Boolean)) {
-  const snapshot = parseRows(git("show", `${sha}:${rel}`));
+  // Historical snapshots are read for flips only; a malformed row in history is
+  // invisible to flip detection, which fails closed (the row reports UNPROVEN), and
+  // never to the recount of the file as it stands now.
+  const { rows: snapshot } = parseRows(git("show", `${sha}:${rel}`));
   for (const [id, row] of snapshot) {
     if (!introduced.has(id)) introduced.set(id, { sha, folded: row.folded });
     const before = previous.get(id);
-    if (before && before.folded === "no" && row.folded === "yes") flips.set(id, { sha, route: row.route });
-    if (!before && row.folded === "yes") flips.set(id, { sha, recordedYes: true });
+    // F60: `route` and `recordedYes` were written here and read nowhere — the annotate
+    // path re-derives the cell from the line itself. Only the flip sha is ever consulted.
+    if (before && before.folded === "no" && row.folded === "yes") flips.set(id, { sha });
+    if (!before && row.folded === "yes") flips.set(id, { sha });
   }
   previous = snapshot;
 }
@@ -261,11 +304,19 @@ for (const [id, row] of current) {
 }
 
 // --- 4. report and optional mutation ----------------------------------------
+// A line the schema refused is reported as its own `unparsed` entry: it is neither
+// proven nor open, and it must reach the `--check` refusal and the detail loop.
+for (const drop of rejected) {
+  report.push({ id: drop.id, folded: null, status: "unparsed", fold: null, flip: null, evidence: drop.reason });
+}
 const buckets = report.reduce((acc, e) => ({ ...acc, [e.status]: (acc[e.status] ?? 0) + 1 }), {});
 const needsWork = report.filter((e) => e.status !== "proven-cited" && e.status !== "open");
 
 if (asJson) process.stdout.write(JSON.stringify(report, null, 2) + "\n");
-if (!asJson) process.stdout.write(`rows ${report.length}  ${JSON.stringify(buckets)}\n`);
+if (!asJson) {
+  const arity = rejected.length ? ` counted ${counted} unparsed ${rejected.length}` : "";
+  process.stdout.write(`rows ${current.size}${arity}  ${JSON.stringify(buckets)}\n`);
+}
 if (!asJson) {
   for (const e of needsWork)
     process.stdout.write(`${e.id}\t${e.status}\tfold=${e.fold ?? "-"}\t${e.evidence ?? ""}\n`);
@@ -278,33 +329,56 @@ if (annotate) {
     const match = ROW_RE.exec(line);
     if (!match) return line;
     const entry = byId.get(match[1]);
-    if (!entry || entry.status === "open" || entry.status === "proven-cited") return line;
-    const cells = line.split("|");
+    // An `unparsed` row is not annotatable: writing a token into a line the schema
+    // refused would be the tool inventing the arity it just refused.
+    if (!entry || entry.status === "open" || entry.status === "proven-cited" || entry.status === "unparsed") return line;
+    const cells = line.split(CELL_RE);
     if (cells.length !== 9) return line;
     const route = cells[6].trim();
     if (entry.fold) {
-      if (new RegExp(`·\s*${entry.token}\s[0-9a-f]{7}`).test(route)) return line;
+      // F59: `\s` inside a template literal collapses to the character `s`, so the old
+      // guard pattern (`·s*folds…`) could never match the marker this branch writes.
+      // The escapes are doubled: a re-entry check that never re-matches is no check.
+      if (new RegExp(`·\\s*${entry.token}\\s[0-9a-f]{7}`).test(route)) return line;
       const tail = entry.token === "fold" && entry.tickedIn ? ` (ticked ${entry.tickedIn})` : "";
       cells[6] = ` ${route} · ${entry.token} ${entry.fold}${tail} `;
     } else {
       cells[7] = " no ";
+      // F58: the note must name only what the walk observes — the row and its missing
+      // evidence. It used to hardcode `P20`, a phase no plan of the annotated unit
+      // contains: a mechanical token inventing a fact. No phase, no fabricated number.
       cells[6] = /REOPENED/.test(route)
         ? ` ${route} `
-        : ` ${route} · REOPENED P20 — provenance unproven: ${entry.evidence} `;
+        : ` ${route} · REOPENED — provenance unproven: ${entry.evidence} `;
     }
-    if (cells.join("|").split("|").length !== 9) return line; // never break the 7-column schema
+    if (cells.join("|").split(CELL_RE).length !== 9) return line; // never break the 7-column schema
     return cells.join("|");
   });
   const changed = out.filter((line, i) => line !== original[i]).length;
-  process.stdout.write(changed ? `annotated ${changed} row(s)\n` : "nothing to annotate\n");
+  // `--check` writes nothing, so it must not claim it did (C2): past tense here reads
+  // as a mutation the flag explicitly forbids.
+  const tense = checkOnly ? "would annotate" : "annotated";
+  process.stdout.write(changed ? `${tense} ${changed} row(s)\n` : "nothing to annotate\n");
+  if (rejected.length) {
+    process.stdout.write(
+      `ARITY: ${rejected.length} row(s) matched the id pattern but the schema refused them, so they were not read: ${rejected.map((r) => `${r.id} (${r.reason})`).join(", ")}\n`,
+    );
+  }
   if (!checkOnly) writeFileSync(ledger, out.join("\n"));
 }
 
 if (checkOnly) {
+  const unparsed = report.filter((e) => e.status === "unparsed");
+  const unticked = needsWork.filter((e) => e.status !== "unparsed");
   if (needsWork.length) {
-    process.stdout.write(
-      `CHECK FAIL: ${needsWork.length} folded row(s) lack a verified commit token: ${needsWork.map((e) => e.id).join(", ")}\n`,
-    );
+    const parts = [];
+    if (unticked.length) {
+      parts.push(`${unticked.length} folded row(s) lack a verified commit token: ${unticked.map((e) => e.id).join(", ")}`);
+    }
+    if (unparsed.length) {
+      parts.push(`${unparsed.length} row(s) the 7-column schema refused were read by nothing: ${unparsed.map((e) => e.id).join(", ")}`);
+    }
+    process.stdout.write(`CHECK FAIL: ${parts.join("; ")}\n`);
     process.exit(1);
   }
   process.stdout.write("CHECK PASS: every folded row names a verified commit\n");
