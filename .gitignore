@@ -15,8 +15,7 @@ tmp/
 .serena
 .opencode/
 # Local state the pre-execution sensor writes inside the worktree.
-# The local `.claude/skills` mount is gitignored so authoring sessions can opt in
-# without risking an accidental commit.
+# Keep narrow: this ignores only the gates directory, not the full .claude/ tree.
 .claude/pre-execution-gates/
 # Local opt-in mount: `ln -sfn ../skills .claude/skills`. Excluded from commits (`git add -f` bypasses the rule).
 .claude/skills
