@@ -64,12 +64,13 @@ docs/fix/                plantilla de SPEC de fix + índice
 .github/                 plantillas de issue + PR que el flujo espera
 ```
 
-**Dogfooding model (authoring):** repo sessions consume the workflow from the
-installed release (Pi package / installed plugin), not from the working copy.
-The committed layout carries no working-copy activation surface. Authoring
-sessions opt in by creating a local, gitignored mount
-(`ln -sfn ../skills .claude/skills`) or by exercising a single working-copy
-skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`)
+**Modelo de dogfooding (autoría):** las sesiones del repo consumen el workflow
+desde la release instalada (paquete Pi / plugin instalado), no desde la copia de
+trabajo. El layout commiteado no lleva superficie de activación de la copia de
+trabajo. Las sesiones de autoría hacen opt-in creando un montaje local gitignored
+(`ln -sfn ../skills .claude/skills`) o ejercitando una única skill de la copia de
+trabajo mediante flags por sesión (p. ej.
+`pi --no-skills --skill skills/<name>/SKILL.md`).
 
 Las skills son el **comportamiento**; `template/` es el **sustrato** que leen (un
 `CLAUDE.md` genérico + mapa de documentación, plantillas de SPEC/feature/fix y
