@@ -129,6 +129,7 @@ by this planning pass.
 | Date | Approved by | Change | Linked issue |
 | --- | --- | --- | --- |
 | 2026-09-03 | user (`F1 -> a`) | Amend the frozen AC9 validator so its exclusion list also carries `\.claude/skills`: P1 of this very unit deletes the previously-tracked mount, so the deletion necessarily appears in `main...HEAD` and the original filter could never pass on a branch that succeeds. Also escape the dots in the SPEC's own copy of the alternation, which was amended by `7fad64ae` without this ledger entry. The required outcome is unchanged and not weakened: no `skills/`, `packages/`, `.claude-plugin/` or `template/` path may appear in the diff. Re-frozen as a replacement manifest with a fresh blob-bound receipt. | [#157](https://github.com/gtrabanco/agentic-workflow/issues/157) |
+| 2026-09-03 | review-findings fold (F10) | Re-freeze manifest with `$`-anchor regex precision (blob `78218f21`) to prevent prefix-matching of exclusion rules (e.g. `.gitignore.bak`); required outcome unchanged and strength retained | [#157](https://github.com/gtrabanco/agentic-workflow/issues/157) |
 
 ## Acceptance
 
