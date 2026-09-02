@@ -151,7 +151,7 @@ by this planning pass.
    with 0 failing — the committed Pi-package mirror stays byte-identical.
    (command-verified)
 9. `git diff --name-only main...HEAD | grep -vE
-   '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|docs/fix/)'`
+   '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|.claude/skills|docs/fix/)'`
    produces no output — no distribution-channel file (`skills/`, `packages/`,
    `.claude-plugin/`, `template/`) is touched by this branch. (command-verified)
 
