@@ -720,6 +720,29 @@ test("findings union, dismissal, no-progress, and second-cycle diagnosis live in
   assert.match(planOutput, /`pre-execution-review\/references\/POLICY\.md` §4/);
 });
 
+test("every receipt line the consumer parses is emitted by both stage templates (F70)", () => {
+  // The consumer reads a receipt out of progress.md by label, and a label no template
+  // writes parses as null - a check that then silently never runs. `Unit kind` got
+  // exactly that treatment: enforced for plans, skipped for specs.
+  const sensor = read("scripts/pre-execution-snapshot.mjs");
+  const labels = [...new Set([...sensor.matchAll(/fieldFrom\(chunk, "([^"]+)"\)/g)].map((m) => m[1]))];
+  assert.ok(labels.length >= 10, `only ${labels.length} parsed labels found - the scan broke`);
+  // One lineage line written two ways on purpose: a SPEC receipt has no parent and
+  // states `Parent: null`, a plan receipt states `Parent SPEC snapshot: <64-hex>`.
+  const emitted = (text, label) => {
+    if (new RegExp(`${label}:\s*[^\s\n]`).test(text)) return true;
+    if (label === "Parent SPEC snapshot") return /\bParent:\s*[^\s\n]/.test(text);
+    if (label === "Parent") return /Parent SPEC snapshot:\s*[^\s\n]/.test(text);
+    return false;
+  };
+  for (const [stage, text] of [["spec", specOutput], ["plan", planOutput]]) {
+    for (const label of labels) {
+      assert.ok(emitted(text, label),
+        `the ${stage} receipt template never emits "${label}", so the consumer's ${label} check can only no-op`);
+    }
+  }
+});
+
 test("batch repair, wording-only rule, and causal revert apply to the plan stage too", () => {
   assert.match(planOutput, /one batch over this whole set|one root-caused repair batch/);
   assert.match(policyCycle, /Wording-only/);

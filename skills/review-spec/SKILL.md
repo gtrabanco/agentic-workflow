@@ -1,7 +1,7 @@
 ---
 name: review-spec
 user-invocable: true
-version: 1.3.1
+version: 1.3.2
 argument-hint: <NN-slug | path/to/SPEC.md>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
