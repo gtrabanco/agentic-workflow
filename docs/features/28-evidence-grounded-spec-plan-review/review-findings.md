@@ -123,7 +123,7 @@ Sixth review-change cycle ran 2026-09-02 (`--adversarial 2` at head `f535a870`, 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | F62 | docs/features/_TEMPLATE/LEDGERS.md:1 (template/docs/{features,fix}/_TEMPLATE/ tree) | code | major | fix-now | fold: sync the exportable template mirror with the live _TEMPLATE rewrite (add the LEDGERS.md copies, re-sync the SPEC.md normative sections); debt trigger recorded — any future edit to either copy re-drifts them, so single-source template/ from _TEMPLATE/ or add a parity check | yes |
-| F63 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:97 | code | minor | fix-now | fold: rewrite the stranded allow/forbid rule out of the verify-command parenthesis so the parent-receipt clause parses unaided | no |
+| F63 | skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:97 | code | minor | fix-now | fold: rewrite the stranded allow/forbid rule out of the verify-command parenthesis so the parent-receipt clause parses unaided | yes |
 | F64 | packages/agentic-workflow-schema/src/pre-execution.ts:417-421 | code/security | minor | fix-now | fold: record the opening fence char and require a matching close in selectSpecProduct (CommonMark); add the missing mixed-fence test | no |
 | F65 | packages/agentic-workflow-schema/src/pre-execution.ts:522 | code | minor | fix-now | fold: emit the wrong-KIND refusal pointer at /artifacts/<i>/kind so drivers repair the offending field | no |
 | F66 | packages/agentic-workflow-schema/src/pre-execution.ts:703 | code | minor | fix-now | fold: thread selected.errors into the invalid-selector diagnostic or fix the docstring that promises it | no |

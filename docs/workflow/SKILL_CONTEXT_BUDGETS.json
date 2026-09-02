@@ -32,7 +32,7 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 9543,
+      "routeEstimateMax": 9545,
       "routeLinesMax": 616
     },
     "audit-pr:fix": {
@@ -40,7 +40,7 @@
         "audit-pr"
       ],
       "templates": [],
-      "routeEstimateMax": 9543,
+      "routeEstimateMax": 9545,
       "routeLinesMax": 616
     },
     "design-feature:product": {
