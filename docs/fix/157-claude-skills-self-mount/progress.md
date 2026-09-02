@@ -55,3 +55,8 @@
 - AC9 as re-frozen: `git diff --name-only main...HEAD | grep -vE '^(\.gitignore$|CLAUDE\.md$|README\.md$|README\.es\.md$|\.serena/|\.claude/skills$|docs/fix/)'` → no output, exit 1 → **PASS**. All nine criteria now verify against the re-frozen manifest bytes.
 - SPEC.md: Acceptance 9 and manifest AC9 now carry the identical filter (dots escaped); obligation O9 flipped `in-progress → verified`.
 - Still open and out of this unit's queue: PR #158 does not auto-close #157 (no `Closes #157` in the body, no forge closing link), so that P3 task stays unticked pending user triage.
+
+## Execution receipt v4 — F8 resolution (user-verified, no re-plan needed)
+- PR #158 body amended to carry `Closes #157` (fold F11, commit `237c11d6`); the forge now reports the closing reference: `closingIssuesReferences` → `#157`, totalCount 1 (GraphQL, verified at fold). Issue #157 auto-closes when PR #158 merges — its OPEN state until then is by design.
+- SPEC.md Issue claim ("The PR closes it via `Closes #157`") now matches the forge; P3 task "Open the PR … body includes `Closes #157`" conditions all met (PR opened, URL printed in receipts, closing keyword present) → ticked with amendment note.
+- Supersedes the stale note in Execution receipt v3 above; ledger row F8 flipped `folded: yes` (route `replan-in-unit` untouched per fold policy).
