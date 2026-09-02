@@ -234,10 +234,11 @@ function ownerCellFailures(who, cell, knownSkills) {
 
 /**
  * The annotator's real emission set, read from its source rather than a magic
- * constant. `scripts/ledger-provenance.mjs` chooses its marker word at line 248
- * (`entry.token = chosen.score === 1 ? "ticked" : "fold"`), appends it from the
- * `--annotate` branch at line 288 (`cells[6] = \` ${route} · ${entry.token} …\``)
- * and re-opens an unproven row with the `· REOPENED …` note at line 293. A token
+ * constant. `scripts/ledger-provenance.mjs` chooses its marker word from the score
+ * ladder (`entry.token = chosen.score === 1 ? "ticked" : "fold"`), appends it in the
+ * `--annotate` branch (`cells[6] = \` ${route} · ${entry.token} …\``), and re-opens an
+ * unproven row with the `· REOPENED — provenance unproven` note in the same branch —
+ * no phase number, which the git walk cannot observe (F58). A token
  * the entry names but the script cannot emit — or one the script emits that the
  * entry hides — is the drift AC16 forbids.
  */
@@ -717,8 +718,8 @@ test("the fold provenance token is pinned to the annotator line that emits it", 
   assert.equal(review.annotator, PROVENANCE_REL);
   assert.deepEqual(tokenList(review["annotator-token"]).map(tokenWord).sort(), ["REOPENED", "fold", "ticked"]);
   const source = read(PROVENANCE_REL);
-  assert.match(source, /entry\.token = chosen\.score === 1 \? "ticked" : "fold";/, "line 248 names the two marker words");
-  assert.match(source, /cells\[6\] = ` \$\{route\} · \$\{entry\.token\} \$\{entry\.fold\}\$\{tail\} `;/, "line 288 appends it into the route cell");
+  assert.match(source, /entry\.token = chosen\.score === 1 \? "ticked" : "fold";/, "the score ladder names the two marker words");
+  assert.match(source, /cells\[6\] = ` \$\{route\} · \$\{entry\.token\} \$\{entry\.fold\}\$\{tail\} `;/, "the --annotate branch appends the marker into the route cell");
   assert.match(source, /· REOPENED — provenance unproven/, "the reopen note re-opens an unproven row without naming a phase (F58)");
   assert.match(review.validator, /ledger-provenance/, "the row names the annotator's own validator");
   for (const row of declared.rows.filter((r) => r.annotator === NONE)) {

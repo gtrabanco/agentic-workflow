@@ -191,6 +191,33 @@ test("a re-opened row names no phase the annotator cannot see (F58)", (t) => {
   assert.doesNotMatch(line, /REOPENED[^|]*\bP\d/, `the reopen token names a phase it cannot observe: ${line}`);
 });
 
+test("the re-entry guard matches the token shape the annotator writes (F59)", () => {
+  // The guard was built inside a template literal as `\s`, which JS collapses to the
+  // bare character `s`: the pattern read `·s*folds[0-9a-f]{7}` and could never match
+  // the `· fold <sha>` marker line 339 writes — a re-entry check that silently never
+  // re-enters. This case evaluates the guard expression read out of the script's own
+  // source, so an escape slip fails the suite instead of disabling the guard.
+  const source = fs.readFileSync(script, "utf8");
+  const expr = /if \((new RegExp\([\s\S]*?entry\.token[\s\S]*?\))\.test\(route\)\)/.exec(source)?.[1];
+  assert.ok(expr, "the re-entry guard is gone from the --annotate branch");
+  const build = new Function("entry", `return (${expr});`);
+  assert.ok(build({ token: "fold" }).test("some route · fold 481f330 tail"), "the guard must match the shape the annotator emits");
+  assert.ok(build({ token: "ticked" }).test("route · ticked abc1234"), "and the ticked form too");
+  assert.ok(!build({ token: "fold" }).test("no marker here"), "and reject routes that carry none");
+});
+
+test("annotating twice changes nothing: tokens are not re-appended (F59 outcome)", (t) => {
+  const { root } = makeFixture(t);
+  assert.equal(run(root, "--annotate").status, 0);
+  const once = fs.readFileSync(path.join(root, LEDGER), "utf8");
+  assert.equal(run(root, "--annotate").status, 0);
+  const twice = fs.readFileSync(path.join(root, LEDGER), "utf8");
+  assert.equal(twice, once, "a second annotate pass mutated the durable ledger");
+  for (const line of once.split("\n")) {
+    assert.ok(!/· (fold|ticked) [0-9a-f]{7} · (fold|ticked) [0-9a-f]{7}/.test(line), `duplicate machine token: ${line}`);
+  }
+});
+
 test("the annotation says what it knows: `fold` for a surface change, `ticked` for a claim", (t) => {
   const { root, atomic, forgeOnly } = makeFixture(t);
   assert.equal(run(root, "--annotate").status, 0);

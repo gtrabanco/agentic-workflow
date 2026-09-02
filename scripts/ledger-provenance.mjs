@@ -195,8 +195,10 @@ for (const sha of git("log", "--reverse", "--format=%H", "--", rel).split("\n").
   for (const [id, row] of snapshot) {
     if (!introduced.has(id)) introduced.set(id, { sha, folded: row.folded });
     const before = previous.get(id);
-    if (before && before.folded === "no" && row.folded === "yes") flips.set(id, { sha, route: row.route });
-    if (!before && row.folded === "yes") flips.set(id, { sha, recordedYes: true });
+    // F60: `route` and `recordedYes` were written here and read nowhere — the annotate
+    // path re-derives the cell from the line itself. Only the flip sha is ever consulted.
+    if (before && before.folded === "no" && row.folded === "yes") flips.set(id, { sha });
+    if (!before && row.folded === "yes") flips.set(id, { sha });
   }
   previous = snapshot;
 }
@@ -334,7 +336,10 @@ if (annotate) {
     if (cells.length !== 9) return line;
     const route = cells[6].trim();
     if (entry.fold) {
-      if (new RegExp(`·\s*${entry.token}\s[0-9a-f]{7}`).test(route)) return line;
+      // F59: `\s` inside a template literal collapses to the character `s`, so the old
+      // guard pattern (`·s*folds…`) could never match the marker this branch writes.
+      // The escapes are doubled: a re-entry check that never re-matches is no check.
+      if (new RegExp(`·\\s*${entry.token}\\s[0-9a-f]{7}`).test(route)) return line;
       const tail = entry.token === "fold" && entry.tickedIn ? ` (ticked ${entry.tickedIn})` : "";
       cells[6] = ` ${route} · ${entry.token} ${entry.fold}${tail} `;
     } else {
