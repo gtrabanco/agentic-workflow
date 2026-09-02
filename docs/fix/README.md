@@ -14,7 +14,7 @@ table — history lives in git log + closed issues.
 
 | Folder | Topic | Status | Depends on | Issue |
 | ------ | ----- | ------ | ---------- | ----- |
-| `157-claude-skills-self-mount` | Untrack the always-on `.claude/skills` self-mount, gitignore local opt-in mounts, document the installed-release dogfooding model (CLAUDE.md + README EN/ES + core.md) | pending | — | [#157](https://github.com/gtrabanco/agentic-workflow/issues/157) |
+| `157-claude-skills-self-mount` | Untrack the always-on `.claude/skills` self-mount, gitignore local opt-in mounts, document the installed-release dogfooding model (CLAUDE.md + README EN/ES + core.md) | in-progress | — | [#157](https://github.com/gtrabanco/agentic-workflow/issues/157) |
 
 Historical artifacts remain under `docs/fix/`; merged and closed work is
 intentionally absent from this index.
