@@ -930,3 +930,21 @@ produce) · schema 675/675 + 15/15 docs + package/gate checks · Pi 134/134 byte
 `ledger-provenance --check` on this ledger: `rows 51 {proven-cited: 31, open: 20}`,
 **CHECK PASS**. Not executed here: the PASS receipt itself — three more context-clean
 axes at this head, which is the next step, not this one's evidence.
+
+### P16 review cycle 5 fold (2026-09-02) — the guard that never guarded (F59-F61)
+
+Four context-clean axis workers at `47e9fe1a` (each a fresh RLM worker handed only its
+axis checklist and the branch diff — the orchestrating turn authored none of the axis
+text). Code returned three fix-now rows; the full adjudication of that reviewer's
+other claims (two refuted by the current tree, one by the `(C1)` case) is in
+`review-findings.md`'s fifth-cycle paragraph. **Red first for F59:** copy the new
+`scripts/ledger-provenance.test.mjs` into `git archive 47e9fe1ad6b28140df83f58db8bf9fd566e6fa0f`
+and run it there: exit 1, 14 tests / 12 pass / **2 fail** — named
+`the re-entry guard matches the token shape the annotator writes (F59)` (the source
+expression evaluates to `·s*folds[0-9a-f]{7}` and misses the shape line :339 writes —
+the defect itself) and the environmental unit-26 archive row. The double-annotate
+byte-identity case passes pre-fix and stays as the outcome pin (the duplicate state
+is unreachable through honest classification; the guard is still the contract).
+Post-fix live: provenance 14/14, ownership 18/18, root 188/188, budgets 39 skills /
+23 routes unmoved. The verify worker died mid-suite at this head; it re-runs at the
+post-fold head, which is where box 5's receipt binds anyway.
