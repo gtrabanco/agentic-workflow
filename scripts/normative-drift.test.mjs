@@ -942,6 +942,29 @@ test("F37 has one cited owner: both boxes name POLICY.md §7 and no third copy e
   }
 });
 
+// F41 — the readiness preflight's first spec box restated the Product heading list
+// in prose, so a weak run reported `READY-FOR-REVIEW` on bytes the canonical
+// selector refused for a missing `Goal` heading. The machine owns that list; prose
+// may cite it and must not copy it.
+const SHAPE_SCHEMA_REL = "packages/agentic-workflow-schema/src/pre-execution.ts";
+const READINESS_REL = "skills/evidence-grounding/references/READINESS.md";
+
+test("F41: the readiness heading box cites the machine's Product heading list instead of restating it", () => {
+  const decl = new RegExp(`export const SPEC_PRODUCT_REQUIRED_HEADINGS = Object\\.freeze\\(\\[([\\s\\S]*?)\\] as const\\)`);
+  const found = SHAPE_SCHEMA_REL ? decl.exec(read(SHAPE_SCHEMA_REL)) : null;
+  assert.ok(found, "the machine must still own one closed Product heading list");
+  const headings = quoted(found[1]);
+  assert.ok(headings.length >= 3, `expected a non-trivial list, got ${JSON.stringify(headings)}`);
+  const readiness = read(READINESS_REL);
+  assert.match(readiness, /SPEC_PRODUCT_REQUIRED_HEADINGS/, "box 1 names the machine as the owner");
+  assert.doesNotMatch(readiness, /in template order/, "the prose restatement is gone, not kept beside the citation");
+  const copied = headings.filter((h) => new RegExp(`^\`{1}${h}\`{1}$|^ ${h}$`, "m").test(readiness));
+  assert.deepEqual(copied, [], `READINESS.md must not carry a second copy of ${JSON.stringify(headings)}`);
+  // the injection that proves the citation is load-bearing: strip it and the box is prose again
+  const stripped = readiness.replace(/SPEC_PRODUCT_REQUIRED_HEADINGS/g, "the required headings");
+  assert.ok(!/SPEC_PRODUCT_REQUIRED_HEADINGS/.test(stripped), "the fixture models a reworded-away owner");
+});
+
 test("the gate fails closed: a surface that loses its grammar block is refused", (t) => {
   if (isChildRun) return t.skip("the child run is itself the injected tree");
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "normative-drift-"));

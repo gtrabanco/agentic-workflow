@@ -959,6 +959,20 @@ headroom floors, so eight ceilings were re-based in that same commit.
 - Files: `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/GOLDEN_FIXTURE.es.md`, this unit's `review-findings.md` (F38-F41), `TASKS.md`, `testing.md`, `decisions.md`, `planning-obligations.md`, `progress.md`. No skill text changed in this commit — by this procedure's own rule.
 - Next: the targeted wording change (F40, F41) and its dated re-run row, which completes P15; then P17.
 
+**Dated completion note — 2026-09-02 (the targeted change P15's own task 4 asked
+for).** P15 ships as two commits: `5a2754c04a715387e36f5bccd0ebba344b97278b` carries
+the four legs and the findings, and this commit carries the wording change the FAIL
+leg motivated (evidence-grounding 1.4.0) plus its re-run PASS row. The gate sentence
+`weakest-executor leg carries a dated PASS row for every skill P9-P14 changed` is now
+literally present in `docs/workflow/GOLDEN_FIXTURE.md` and `grep -qE` for it exits 0,
+so the phase is done on its own terms rather than on a rounded verdict — D44's cost,
+paid. The re-run used the identical prompt and an identical starting tree (`aecf279`),
+so the only variable was the skill text: the run recognised its own position ("I am
+the delegate"), wrote `delegated-evidence.md` in the `delegated-evidence@1` shape with
+the `uncertainty` slot D42 added, skipped the author's steps, and committed nothing.
+`folded` cells for F40/F41 stay `no` in this commit: `ledger-provenance.mjs --annotate`
+binds a fold token to an existing sha, and P16's fold is where that happens.
+
 ## Unit-loop receipt — P15
 
 - Commit: pending · Gate: `grep -qE 'weakest-executor leg carries a dated PASS row for every skill P9-P14 changed' docs/workflow/GOLDEN_FIXTURE.md` (**not yet satisfied — withheld on purpose**, see the `Remains` entry: the evidence-grounding leg is a dated FAIL row until its targeted wording change lands and is re-run) + `node --test scripts/normative-drift.test.mjs` (exit 0, 14/14) + root `node --test scripts/*.test.mjs` (exit 0, 178/178) + `node --test scripts/pre-execution-quality.test.mjs` (exit 0, 61/61) + `node --test scripts/ledger-ownership.test.mjs` (exit 0, 18/18) + `node scripts/check-skill-context.mjs --routes` (exit 0, 23 routes) · Acceptance blob: `cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54` · Next: the F40/F41 targeted change + re-run leg, then P17 · Attempts: 1

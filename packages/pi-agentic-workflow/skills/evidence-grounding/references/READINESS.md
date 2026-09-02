@@ -24,8 +24,11 @@ no gate of its own, it refuses to count what that contract says is not validated
 ### `stage: spec` boxes
 
 ```
-✓ 1. Required Product headings present and in template order; no template
-  placeholder text remains anywhere in the half
+✓ 1. Required Product headings present and in the machine's order — the closed list
+  is `SPEC_PRODUCT_REQUIRED_HEADINGS` in `packages/agentic-workflow-schema/src/pre-execution.ts`,
+  and where the canonical builder refuses the selector for these bytes this box
+  FAILS however the half reads to a human; no template placeholder text remains
+  anywhere in the half
 ✓ 2. `## Design status` is literally `designed` (never stamped by this preflight
   — verify it was earned by the Spec-lint product boxes)
 ✓ 3. Entity closure: every entity row has a UI/API/test resolution or an

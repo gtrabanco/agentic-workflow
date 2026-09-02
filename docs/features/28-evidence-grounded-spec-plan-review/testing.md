@@ -707,3 +707,14 @@ changed' docs/workflow/GOLDEN_FIXTURE.md` — is **not satisfied by this commit 
 was not faked**: the sentence is absent because one leg is a FAIL row. It lands with
 the F40/F41 targeted change and its re-run, which is the only route to it that this
 file's own quality floor permits.
+
+**P15 targeted change (same day).** The F40/F41 wording change (evidence-grounding
+1.4.0) is verified by a re-run, not by assertion: identical prompt, identical starting
+tree (`/tmp/gf-p15/ev2` @ `aecf279`), and the dated PASS row at
+`GOLDEN_FIXTURE.md:317`. F41 gained a machine pin —
+`node --test scripts/normative-drift.test.mjs` 15/15 exit 0, and red-first against
+`git archive 5a2754c04a715387e36f5bccd0ebba344b97278b` via `NORMATIVE_DRIFT_REPO`:
+13 pass / 1 fail / exit 1, `AssertionError: box 1 names the machine as the owner`.
+P15's gate command:
+`grep -qE 'weakest-executor leg carries a dated PASS row for every skill P9-P14 changed' docs/workflow/GOLDEN_FIXTURE.md`
+→ exit 0.
