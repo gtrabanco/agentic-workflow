@@ -452,7 +452,10 @@ async function main() {
   }
   const bound = receipt.snapshot && /^sha256:[0-9a-f]{64}$/.test(receipt.snapshot)
     ? receipt.snapshot.slice(7) : receipt.snapshot;
-  const digestMatches = Boolean(bound) && (bound === digest || `sha256:${bound}` === `sha256:${digest}`);
+  // `bound` is the recorded digest with its prefix normalised away above, and `digest`
+  // is the bare hex the builder answers, so re-adding "sha256:" to BOTH sides compared
+  // nothing: the second disjunct was the first one written twice (F68).
+  const digestMatches = Boolean(bound) && bound === digest;
   // RS13 — the drift is attributed from the lines this receipt pins plus git
   // evidence over exactly the paths the snapshot binds. The schema comparator is
   // never handed the current object twice: that fabricated "reviewed" side is what
