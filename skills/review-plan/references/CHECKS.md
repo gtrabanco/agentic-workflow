@@ -52,10 +52,11 @@ tables is a finding. Either way `review-plan` reads the **whole** table
 Then digest it with the recipe owner —
 `pre-execution-review`'s [`SKILL.md`](<../../pre-execution-review/SKILL.md>) →
 SNAPSHOT reference: `node scripts/pre-execution-snapshot.mjs build --stage plan
---unit <unitId> --parent <Product snapshot digest> --json /tmp/plan-snapshot.json`
+--unit <unitId> --parent <Product snapshot digest>`
 (`verify` mode is what consumers run afterwards, and it shares the builder, so pass
 `--parent` there too on a feature unit; a **fix** unit omits it and binds `null`).
-Paste the digest it prints.
+The digest is stdout's first line, so this recipe writes no file; `--json` is
+in-repository only. Paste the digest it prints.
 Every verdict is bound to that digest; a Plan-only byte change invalidates only Plan PASS, while a Product
 byte/context/revision/source change invalidates this receipt **and** its parent
 lineage.

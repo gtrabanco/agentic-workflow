@@ -1,7 +1,7 @@
 ---
 name: review-plan
 user-invocable: true
-version: 1.3.0
+version: 1.3.1
 argument-hint: <NN-slug | fix-N | path/to/SPEC.md> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT

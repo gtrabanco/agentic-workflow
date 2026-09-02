@@ -44,9 +44,10 @@ contract failures, not style.
 Then build the snapshot with the recipe owner —
 `pre-execution-review`'s [`SKILL.md`](<../../pre-execution-review/SKILL.md>) →
 SNAPSHOT reference: `node scripts/pre-execution-snapshot.mjs build --stage spec
---unit <unitId> --json /tmp/spec-snapshot.json` (canonical serializer: sorted keys,
-context rows ordered by kind then identifier, UTF-8, lowercase SHA-256). Paste the
-digest it prints. Every verdict below is bound to that digest, and a refused build
+--unit <unitId>` (canonical serializer: sorted keys, context rows ordered by kind
+then identifier, UTF-8, lowercase SHA-256). The digest is stdout's first line, so
+this recipe writes no file; `--json` is in-repository only. Paste the digest it
+prints. Every verdict below is bound to that digest, and a refused build
 (partial binding) ends this turn in the refusal form [`OUTPUT.md`](OUTPUT.md) fixes —
 `Snapshot: refused` beside the builder's own code, never a hand-computed substitute.
 
