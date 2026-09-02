@@ -903,3 +903,33 @@
   `stale-context` with `changedPaths: [CLAUDE.md, docs/features/ROADMAP.md]`, which
   is P13's gotcha 2 demonstrating itself again and is covered by D32/D37's bypass,
   not by a new receipt.
+
+- **D47 — F38's currency is ancestry over bound paths, not equality with HEAD; and
+  the fold applies known-issue 17's fix rather than waiting (2026-09-02, P16 fold).**
+  Three shapes were on the table for the self-invalidating review mark. *Self-naming
+  sha* (the mark records the commit that contains it) is arithmetically impossible —
+  the sha depends on the file that would carry it. *A second counter* (a mark epoch
+  stored elsewhere) was already rejected in D41 for the delegated artifact and stays
+  rejected: two mechanisms tracking one fact is the drift this unit keeps fixing.
+  *Ancestor-or-equal* alone is too weak — any later commit to the SPEC would still
+  read as reviewed. Chosen: the mark is current while it is an ancestor of the unit's
+  head **and** `git log <mark-sha>..HEAD -- <bound paths>` prints nothing, where the
+  bound paths are the set `SNAPSHOT.md` already binds (exported as `STAGE_ARTIFACTS`
+  from the canonical tool so the sensor reads the same list rather than restating it).
+  That is AC20's intent — "the unit's current state" has always meant the state of the
+  reviewed inputs, not of every file in the repository — and it is one ordering rule
+  on top of digests that already exist.
+  Known-issue 17's `.engram/` disposition was applied here (untracked + `.gitignore`)
+  even though the item says the file "is outside every phase of this unit": P16 task 1
+  obliges the fold to clear what is open at this head, the item names the exact fix,
+  and PR #155 must not merge a 213 KB binary blob. Cost of the choice, on record: a
+  third-party commit stays in branch history (no published history was rewritten), and
+  the hygiene rule now lives in `.gitignore` rather than in a ledger, so the item stays
+  open in its second half — the next sync commit still has to be caught by hand before
+  a phase commit.
+  Ceiling movement caused here: ten route ceilings re-based to their exact
+  `ceil(measured × 1.10)` floors (design-repair 25077/1701, plan-scaffold 21832/1562,
+  plan-fix:issue 24749/1806, review-plan 16574/1067, review-spec 14794/1008), growth
+  source: F38's currency clause in `SENSOR_CORE.md`/`PRE_EXECUTION.md` and F39's
+  refusal form in the two reviewer `OUTPUT.md` files plus `CHECKS.md`. No
+  skill-level `referenceEstimateMax` moved.

@@ -15,7 +15,9 @@ object. The values come from `@gtrabanco/agentic-workflow-schema`
 (`buildPreExecutionArtifactSnapshot` → `digestPreExecutionArtifactSnapshot`): sorted
 object keys, context rows ordered by kind then identifier, UTF-8, lowercase SHA-256.
 A refused build prints the diagnostic codes and exits non-zero — a partial binding is
-never printed as a digest.
+never printed as a digest. Such a turn therefore closes with a receipt that holds no
+digest at all; the fixed form that stands in the digest's place is each stage's
+`OUTPUT.md` to own, identically at both stages, and nothing here restates it.
 
 ### What each stage binds
 

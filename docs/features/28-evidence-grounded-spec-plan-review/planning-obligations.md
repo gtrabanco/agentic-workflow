@@ -174,3 +174,10 @@ digests. Status cell only — the row's authority, validator and required-eviden
 cells are untouched, and the probe named in the validator is
 `packages/agentic-workflow-schema/scripts/probe-sha256-paths.mjs`
 (`npm run probe:sha256-paths`), which prints three paths rather than two.
+
+Reconciled 2026-09-02 (P16 fold half): **O15 stays `in-progress`** — the fold fixed
+F38 and F39 and made the annotator see escaped-pipe rows, but AC15's artifact-kind and
+ledger-row-shape clauses are still grammar-checked only (known-issues 18-19), so the
+row cannot claim `verified` and is not being nudged. No other obligation status moved
+in this commit; the close-out half confirms O15-O20 against their cited evidence at
+terminal HEAD, which is what P16 box 6 exists to do.

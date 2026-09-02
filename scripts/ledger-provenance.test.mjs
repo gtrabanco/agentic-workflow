@@ -20,6 +20,7 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const script = path.join(repoRoot, "scripts/ledger-provenance.mjs");
 const LEDGER = "docs/review-findings.md";
 const HEADER = "| id | file:line | axis | severity | class | route | folded |\n| --- | --- | --- | --- | --- | --- | --- |\n";
+const CELL_RE = /(?<!\\)\|/;
 const row = (id, file, route, folded) => `| ${id} | ${file} | code | high | fix-now | ${route} | ${folded} |\n`;
 
 const git = (cwd, ...args) => execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
@@ -185,6 +186,48 @@ test("the annotation says what it knows: `fold` for a surface change, `ticked` f
   assert.match(of("F1"), new RegExp(`· fold ${atomic.slice(0, 7)} `), "owns the surface");
   assert.match(of("F4"), new RegExp(`· ticked ${forgeOnly.slice(0, 7)} `), "only the tick claims it");
   assert.match(of("F2"), /· fold [0-9a-f]{7} \(ticked [0-9a-f]{7}\) /, "the fix and the tick are both named");
+});
+
+test("a row whose cell escapes a pipe is counted, checked and annotated like any other", (t) => {
+  // P16's fold (F38) found its own row invisible: `file:line` held
+  // "`REVIEW-RAN \| HEAD <40-hex sha>`", the naive split read eight columns, and
+  // `parseRows` dropped the row — so the recount, `--check` and `--annotate` all
+  // silently skipped a fix-now finding that was sitting there in the table.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "ledger-provenance-escaped-"));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const write = (rel, text) => fs.writeFileSync(path.join(root, rel), text);
+  const gitRun = (...args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+  gitRun("init", "-q", "-b", "main");
+  gitRun("config", "user.email", "fixture@example.invalid");
+  gitRun("config", "user.name", "Fixture");
+  fs.mkdirSync(path.join(root, "src"), { recursive: true });
+  fs.mkdirSync(path.join(root, "docs"), { recursive: true });
+  const escaped = "src/index.ts:1 (the `REVIEW-RAN \\| HEAD <40-hex sha>` row)";
+  const rows = [row("F1", escaped, "fold into current unit", "no"), row("F2", "src/index.ts:1", "fold", "no")];
+  const ledger = () => HEADER + rows.join("");
+  const ticked = (id) => rows.map((l) => (l.startsWith(`| ${id} |`) ? l.replace(/\| no \|\n$/, "| yes |\n") : l));
+  write(LEDGER, ledger());
+  write("src/index.ts", "export const a = 1;\n");
+  gitRun("add", "-A", "--", ".");
+  gitRun("commit", "-qm", "planning artifacts");
+  write("src/index.ts", "export const a = 2;\n");
+  rows.splice(0, rows.length, ...ticked("F1"));
+  write(LEDGER, ledger());
+  gitRun("add", "-A", "--", ".");
+  gitRun("commit", "-qm", "fix(x): fold F1 — repair the cited surface");
+  const sha = gitRun("rev-parse", "HEAD").slice(0, 7);
+
+  const report = JSON.parse(run(root, "--json").stdout);
+  assert.equal(report.length, 2, `the escaped-pipe row was dropped from the recount: ${JSON.stringify(report.map((e) => e.id))}`);
+  const f1 = report.find((e) => e.id === "F1");
+  assert.equal(f1.status, "recovered");
+  assert.equal(f1.fold, sha);
+
+  assert.equal(run(root, "--annotate").status, 0);
+  const line = fs.readFileSync(path.join(root, LEDGER), "utf8").split("\n").find((l) => /^\| F1 \|/.test(l));
+  assert.match(line, new RegExp(`· fold ${sha}`), "the annotated row kept no provenance");
+  assert.equal(line.split(CELL_RE).length, 9, `annotation broke the 7-column schema: ${line}`);
+  assert.equal(run(root, "--check").status, 0, "the row is still invisible to the check");
 });
 
 test("unit 26's fold ledger names a verified commit on every folded row", () => {

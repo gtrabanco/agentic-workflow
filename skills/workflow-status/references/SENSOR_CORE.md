@@ -82,10 +82,15 @@ live evidence against a frozen ledger remains a contradiction candidate.
    `review-change` for its current state run? The artifact is the unit's
    **durable review mark** — the `REVIEW-RAN` row of its `review-findings.md`
    fold ledger, whose shape and writer `pre-execution-review`'s `LEDGERS.md`
-   owns — and it counts only while the head sha it names is the unit's current
-   head. The ledger's presence is never that proof: a review that found nothing
-   writes no finding row, so presence would call a reviewed unit unreviewed and
-   an unreviewed one reviewed. Has `audit-pr` a
+   owns — and it counts while the sha it names is an ancestor of the unit's head
+   and no commit after it touched a bound input of that review, over the paths
+   `pre-execution-review`'s `SNAPSHOT.md` binds:
+   `git log <mark-sha>..HEAD -- <bound paths>` prints nothing. Equality with the
+   head is not the test and cannot be: carrying the mark is a commit, and that
+   commit moves the head, so a rule keyed on equality calls every review that
+   finished its own turn unreviewed. The ledger's presence is never that proof: a
+   review that found nothing writes no finding row, so presence would call a
+   reviewed unit unreviewed and an unreviewed one reviewed. Has `audit-pr` a
    MERGE-READY bound to the PR's current head SHA (look for the audit
    comment marker on the PR)? Derive `review_pending` (no current mark) /
    `audit_pending` / `merge_ready` per unit.

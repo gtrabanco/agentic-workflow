@@ -31,6 +31,13 @@ import { basename, relative, resolve } from "node:path";
 
 const COMMIT_TOKEN_RE = /\b[0-9a-f]{7,40}\b/g;
 const ROW_RE = /^\|\s*(F\d+)\s*\|/;
+/**
+ * Cell boundaries are UNESCAPED pipes. A markdown table escapes a literal pipe inside
+ * a cell as `\|`, and a naive `split("|")` reads such a row as eight columns and drops
+ * it — silently, from the recount, from `--check`, and from `--annotate`, so a fix-now
+ * row vanishes while looking accounted for (unit 28's own F38 row did exactly this).
+ */
+const CELL_RE = /(?<!\\)\|/;
 
 const args = process.argv.slice(2);
 const target = args.find((arg) => !arg.startsWith("--"));
@@ -83,7 +90,7 @@ function parseRows(text) {
   for (const line of text.split("\n")) {
     const match = ROW_RE.exec(line);
     if (!match) continue;
-    const cells = line.split("|").slice(1, -1).map((cell) => cell.trim());
+    const cells = line.split(CELL_RE).slice(1, -1).map((cell) => cell.trim());
     if (cells.length !== 7) continue;
     rows.set(match[1], { file: cells[1], route: cells[5], folded: cells[6] });
   }
@@ -279,7 +286,7 @@ if (annotate) {
     if (!match) return line;
     const entry = byId.get(match[1]);
     if (!entry || entry.status === "open" || entry.status === "proven-cited") return line;
-    const cells = line.split("|");
+    const cells = line.split(CELL_RE);
     if (cells.length !== 9) return line;
     const route = cells[6].trim();
     if (entry.fold) {
@@ -292,7 +299,7 @@ if (annotate) {
         ? ` ${route} `
         : ` ${route} · REOPENED P20 — provenance unproven: ${entry.evidence} `;
     }
-    if (cells.join("|").split("|").length !== 9) return line; // never break the 7-column schema
+    if (cells.join("|").split(CELL_RE).length !== 9) return line; // never break the 7-column schema
     return cells.join("|");
   });
   const changed = out.filter((line, i) => line !== original[i]).length;

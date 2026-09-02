@@ -72,7 +72,7 @@ const {
  * XS/S or fix unit legitimately embeds its ledgers in the SPEC (D20) and a fix
  * unit has no PLAN/architecture notes at all.
  */
-const STAGE_ARTIFACTS = {
+export const STAGE_ARTIFACTS = {
   spec: [
     { kind: "spec", file: "SPEC.md", selector: "spec-product-v1", required: true },
   ],
