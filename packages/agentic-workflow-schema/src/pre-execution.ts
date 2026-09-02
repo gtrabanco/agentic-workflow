@@ -66,7 +66,7 @@ import {
   utf8Bytes,
   utf8ByteCompare,
 } from "./canonical-json.js";
-import { sha256Hex, sha256HexSync } from "./sha256.js";
+import { sha256HexSync } from "./sha256.js";
 
 // ---------------------------------------------------------------------------
 // Published identities, vocabularies, and types
@@ -857,18 +857,18 @@ export function canonicalizePreExecutionReviewReceipt(
   );
 }
 
-/** D6 — digest of a validated snapshot (inherits the canonical-input guards). */
-export async function digestPreExecutionArtifactSnapshot(
+/** D6 — digest of a validated snapshot (inherits the canonical-input guards). Sync, like the family that produces it (F67). */
+export function digestPreExecutionArtifactSnapshot(
   snapshot: PreExecutionArtifactSnapshotV1,
-): Promise<string> {
-  return sha256Hex(canonicalizePreExecutionArtifactSnapshot(snapshot));
+): string {
+  return sha256HexSync(canonicalizePreExecutionArtifactSnapshot(snapshot));
 }
 
-/** D6 — digest of a validated receipt (inherits the canonical-input guards). */
-export async function digestPreExecutionReviewReceipt(
+/** D6 — digest of a validated receipt (inherits the canonical-input guards). Sync, like the family that produces it (F67). */
+export function digestPreExecutionReviewReceipt(
   receipt: PreExecutionReviewReceiptV1,
-): Promise<string> {
-  return sha256Hex(canonicalizePreExecutionReviewReceipt(receipt));
+): string {
+  return sha256HexSync(canonicalizePreExecutionReviewReceipt(receipt));
 }
 
 // ---------------------------------------------------------------------------
@@ -952,11 +952,11 @@ export function validatePreExecutionReviewReceiptV1(value: unknown): PreExecutio
  * plurality of identical models is not independence. There is no quorum to
  * satisfy, and no numeric approval model to reverse-engineer from a parent list.
  */
-export async function validatePreExecutionReceiptAgainstSnapshot(
+export function validatePreExecutionReceiptAgainstSnapshot(
   receipt: unknown,
   snapshot: unknown,
   policyVersion: string,
-): Promise<PreExecutionReceiptValidationResult> {
+): PreExecutionReceiptValidationResult {
   const collector = createCollector();
   const document = structuralRun(
     PRE_EXECUTION_CONTRACT.receipt,
@@ -990,7 +990,7 @@ export async function validatePreExecutionReceiptAgainstSnapshot(
   const reviewed = snapshot as PreExecutionArtifactSnapshotV1;
   if (bound.stage !== reviewed.stage) collector.add("invalid-stage", "/stage");
   if (bound.policyVersion !== policyVersion) collector.add("stale-policy", "/policyVersion");
-  else if (await digestPreExecutionArtifactSnapshot(reviewed) !== bound.snapshotDigest) {
+  else if (digestPreExecutionArtifactSnapshot(reviewed) !== bound.snapshotDigest) {
     collector.add("stale-snapshot", "/snapshotDigest");
   }
 
@@ -1052,12 +1052,12 @@ function stale(reasonCode: PreExecutionFreshnessCode): PreExecutionFreshnessResu
  * rotated revision asks the author for a new review. Collapsing them into "stale"
  * would leave a driver guessing which is why the codes are named per dimension.
  */
-export async function comparePreExecutionReceiptToSnapshot(
+export function comparePreExecutionReceiptToSnapshot(
   receipt: unknown,
   reviewedSnapshot: unknown,
   currentSnapshot: unknown,
   policyVersion: string,
-): Promise<PreExecutionFreshnessResult> {
+): PreExecutionFreshnessResult {
   if (!isValidSnapshot(reviewedSnapshot) || !isValidSnapshot(currentSnapshot)) {
     // An input the comparator cannot read at all is precedence 1: the receipt
     // does not bind a snapshot (reviewed side) or the document is not the thing
@@ -1071,7 +1071,7 @@ export async function comparePreExecutionReceiptToSnapshot(
 
   let reviewedDigest: string;
   try {
-    reviewedDigest = await digestPreExecutionArtifactSnapshot(reviewed);
+    reviewedDigest = digestPreExecutionArtifactSnapshot(reviewed);
   } catch {
     return stale("missing-receipt-snapshot");
   }
