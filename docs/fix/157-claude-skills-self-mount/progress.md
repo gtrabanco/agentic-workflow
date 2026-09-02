@@ -60,3 +60,9 @@
 - PR #158 body amended to carry `Closes #157` (fold F11, commit `237c11d6`); the forge now reports the closing reference: `closingIssuesReferences` → `#157`, totalCount 1 (GraphQL, verified at fold). Issue #157 auto-closes when PR #158 merges — its OPEN state until then is by design.
 - SPEC.md Issue claim ("The PR closes it via `Closes #157`") now matches the forge; P3 task "Open the PR … body includes `Closes #157`" conditions all met (PR opened, URL printed in receipts, closing keyword present) → ticked with amendment note.
 - Supersedes the stale note in Execution receipt v3 above; ledger row F8 flipped `folded: yes` (route `replan-in-unit` untouched per fold policy).
+
+## Acceptance receipt v4 — replacement manifest (F15)
+- Manifest: `docs/fix/157-claude-skills-self-mount/ACCEPTANCE.md` · Blob: `0aa2f57d43b342c9ab3b0c2ecc5a225b5e7064b3` · Status: frozen · Verified: 2026-09-03
+- Supersedes Acceptance receipt v3 (blob `78218f2189f604d30912214f8b14ace48dafcd00`). Amendment trail: review-findings fold F15, user-approved in-session → dated `## Amendments` row in SPEC.md → this replacement manifest → this receipt.
+- Change: AC9's exclusion list adds `docs/LOGS\.md` — the session log is a workflow-bookkeeping surface any session may append to, so log commits entered `main...HEAD` and re-failed the frozen validator on a unit that touches no distribution channel. Required outcome unchanged (no `skills/`, `packages/`, `.claude-plugin/`, `template/` path may appear); re-running the validator yields no output (exit 1).
+- This receipt closes the F14–F18 fold: F14 log entries corrected to the forge-verified PR #158 OPEN state; F16/F17 resolved by this commit+push; F18 duplicate `---` separator removed.

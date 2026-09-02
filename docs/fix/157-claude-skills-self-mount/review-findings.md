@@ -13,3 +13,8 @@
 | F11 | docs/fix/157-claude-skills-self-mount/SPEC.md:18 | code | low | fix-now | fold | yes |
 | F12 | .gitignore:18-19 | brand | low | fix-now | fold | yes |
 | F13 | docs/fix/README.md:17 | brand | low | fix-now | fold | yes |
+| F14 | docs/LOGS.md:36-40 | code/brand (veracity) | med | fix-now | fold | yes |
+| F15 | docs/fix/157-claude-skills-self-mount/ACCEPTANCE.md:15 | workflow/verification | med | fix-now | fold | yes |
+| F16 | branch-state (git status -sb: ahead 1, c8266f6c unpushed) | workflow | high | fix-now | fold | yes |
+| F17 | docs/LOGS.md:43-52 (working tree, uncommitted) | workflow | med | fix-now | fold | yes |
+| F18 | docs/LOGS.md:28-31 | code | low | fix-now | fold | yes |
