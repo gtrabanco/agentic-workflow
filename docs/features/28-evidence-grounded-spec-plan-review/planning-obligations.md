@@ -81,7 +81,7 @@ O8 | AC8 | transition and workflow fixtures prove current SPEC receipt gates pla
 O9 | AC9 | package and repository diffs preserve the meanings and public shapes of CandidateSnapshot v1, candidate ReviewReceipt v1, VerificationPlan v1, and VerificationReceipt v1; review-change and audit-pr retain candidate and delivery authority | P5-P8 | Qualify the pre-execution workflow | execute-phase | `node --test scripts/*.test.mjs` | exit 0, all suites pass | verified
 O10 | AC10 | package version/export/pack checks, canonical-to-Pi skill bundling/parity and Pi package tests, node scripts/check-skill-context.mjs, npx skills add . --list, skill changelogs, synchronized EN/ES docs, migration fixtures all pass | P5-P8 | Qualify the pre-execution workflow | execute-phase | `npm test` + Pi bundle + check-skill-context + skills add | exit 0, all checks pass | verified
 O11 | AC11 | required executor-path golden fixture demonstrates complete manual path through review-spec, planning, review-plan, execution gating, candidate review, and audit without provider/runtime dependency or automatic issue creation | P6-P7 | Qualify the pre-execution workflow | execute-phase | golden fixture execution | PASS with no unresolved findings | verified
-O12 | AC12 | independent review of the exact candidate reports no unresolved fix-now finding; canary protocol records baseline and post-change measurements without claiming improvement before results exist | P6, P8 | Qualify the pre-execution workflow | execute-phase | review-change + canary corpus | PASS with no fix-now findings | planned
+O12 | AC12 | independent review of the exact candidate reports no unresolved fix-now finding; canary protocol records baseline and post-change measurements without claiming improvement before results exist | P6, P8 | Qualify the pre-execution workflow | execute-phase | review-change + canary corpus | PASS with no fix-now findings | verified
 O13 | AC13 | Product and Engineering authoring follow inventory -> evidence -> draft -> readiness -> independent review; readiness gate checks complete evidence/obligation/unknown structure, binds compact planning evidence, cannot emit review PASS verdict | P2-P3 | Establish Product/Plan review readiness | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0, fixtures pass | verified
 O14 | AC14 | route fixtures and qualification corpus prove first review findings are repaired as one root-caused batch, one re-review is the normal correction path, entry into second repair/re-review cycle emits convergence anomaly with exact owner and evidence deficit; release canary includes feature/fix/cross-boundary unit, any sample needing second cycle fails qualification | P6-P7 | Qualify the pre-execution workflow | execute-phase | review-change + canary + second-cycle checks | PASS with no second-cycle sample | verified
 O15 | AC15 | F1 drift gate: a repository test fails when normative skill text orders a transition, argument, field, artifact, or ledger-row shape the machine surface does not accept, and when the machine requires something no text states; surfaces lacking fixed grammar get one; prose restating versions, SHAs, counts, next commands is render-only and the machine is authoritative | P14 | Bind normative prose to machine surfaces | execute-phase | `node --test scripts/normative-drift.test.mjs` | exit 0 green and non-zero against each of the three injected disagreements | in-progress
@@ -220,3 +220,17 @@ which acceptance clauses are machine-covered — **O15 stays `in-progress`** for
 reason it did before: AC15's artifact-kind and ledger-row-shape clauses remain grammar-checked
 only (known-issues 18-19). F58 and known-issue 24 are new open work with owners and re-checks;
 neither closes an O-row.
+
+Verified 2026-09-02 (P16 box 5): **O12 moves `planned` -> `verified`.** Its named
+validator is the independent review of the exact candidate, and it ran: the fifth
+`review-change` cycle's context-clean axes reported no unresolved fix-now finding at
+`d9545d8c63cf52103f02103bbf7a6a24752f5ead` (code and verify PASS, security PASS, perf
+no fix-now), the durable `REVIEW-RAN` mark names that sha, and the SHA-bound
+`review-change:pass` receipt is posted on PR #155 (re-read live). The row's second
+clause — canary measurements without claiming improvement before results exist — holds
+as recorded: known-issue 15's irrecoverable baseline stands, `not yet measured` is what
+the canary rows carry, and nothing in the unit's documents claims effect in either
+direction. The row's `P6, P8` phase cell predates the amendment that moved this
+receipt's production to P16; per the ledger's own rule the status cell moves and no
+other cell is edited here. F24 flips in this same commit for the same reason: the
+evidence F24 named *is* this row plus the current PASS receipt.
