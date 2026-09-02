@@ -948,3 +948,25 @@ is unreachable through honest classification; the guard is still the contract).
 Post-fix live: provenance 14/14, ownership 18/18, root 188/188, budgets 39 skills /
 23 routes unmoved. The verify worker died mid-suite at this head; it re-runs at the
 post-fold head, which is where box 5's receipt binds anyway.
+
+## P16 terminal close-out — measured 2026-09-02 at `06d860d4`
+
+Every figure below was observed in this run at the push-preparation head; the only
+later commits are unit records (`TASKS.md`, `testing.md`, `progress.md` — none of
+them inputs to any suite), and the root suite is re-run green at the pushed head
+itself as the last entry of this table.
+
+| Command | Exit | Observed |
+|---|---|---|
+| `node --test scripts/*.test.mjs` | 0 | 188 tests · 188 pass · 0 fail |
+| six named suites (`normative-drift`, `pre-execution-quality`, `ledger-ownership`, `ledger-provenance`, `workflow-status-pre-execution`; pair `bounded-delivery-loops`+`audit-pr-receipt`) | 0 | 16/16 · 62/62 · 18/18 · 14/14 · 7/7 · pair 15/15 |
+| `cd packages/agentic-workflow-schema && npm test` | 0 | 675 tests · 675 pass · 0 fail |
+| `npm run check:pre-execution-schemas` / `check:pre-execution-package` | 0 / 0 | drift-free / package drift-free |
+| `npm run test:pre-execution-docs` | 0 | 15/15 |
+| `node scripts/check-skill-context.mjs` / `--routes` | 0 / 0 | PASS 39 skills / PASS 23 routes (no ceiling moved) |
+| `packages/pi-agentic-workflow`: `bundle:skills` then `npm test` | 0 / 0 | 38 skills · 123 files, mirror byte-identical in `git status` · 134/134 |
+| `npx skills add . --list` | 0 | Found 38 skills |
+| `node scripts/ledger-provenance.mjs <unit-28 review-findings> --check` | 0 | rows 55 · 53 proven-cited · 2 open by design (F25, F49 — cells state why) |
+| diff guards | — | `git diff --name-only origin/main...HEAD` lists no `.rlm/` or `.engram/` path; every subject in the range conventional; zero `Co-authored-by` trailers |
+| engram gate | n/a | no engram gate is declared in `CLAUDE.md` |
+| `node --test scripts/*.test.mjs` re-run at the pushed head | recorded in the close-out commit's session report | (this commit moves unit records only) |
