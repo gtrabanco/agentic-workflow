@@ -29,9 +29,9 @@ For every unit whose resolved status is `defined`, `planned` or `in-progress`:
 One artifact later, the same discipline: step 8's `review_pending` keys on the
 unit's **durable review mark** — the `REVIEW-RAN` row of its `review-findings.md`
 ledger, whose shape and writer `pre-execution-review`'s `LEDGERS.md` owns — and
-counts it only while the head sha it names is the unit's current head, the
-equality every receipt above already rests on. A findings ledger with rows and no
-mark leaves the unit review-pending: its rows prove findings were folded against
+judges it by step 8's currency rule in `SENSOR_CORE.md`, never by a keying
+invented here. A findings ledger with rows and no mark leaves the unit
+review-pending: its rows prove findings were folded against
 some state, which is a different fact from *this* state being reviewed, so the
 sensor reports a missing gate, never a verdict that no review ever happened.
 

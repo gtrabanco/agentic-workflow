@@ -816,3 +816,32 @@ did not move and `node --test scripts/normative-drift.test.mjs` stays at
 **15/15 · exit 0**, with the root suite at **179/179 · exit 0**,
 `node scripts/check-skill-context.mjs` at **exit 0 (39 skills)** and
 `--routes` at **exit 0 (23 routes, no ceiling re-based)**.
+
+### P16 fold (2026-09-02) — F38, F39, and the annotator's blind spot (task 1)
+
+Red-first, all three reproduced against the pre-fold tree by copying only the new
+suite (and, for the annotator, only the new test) over
+`git archive 890f93665f54042759edbd88ba1733e4331d34b1` into a scratch checkout:
+
+| Proof | Command (in the archived tree) | Result |
+|---|---|---|
+| F38 — a real review turn's mark must be current | `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 1 · 7 tests / 1 pass / **6 fail**, first failure `AC20 fixture 1 — the mark a real review turn leaves is current at the head that carries it` |
+| F39 — a refused build ends in one named form at both stages | `node --test scripts/pre-execution-quality.test.mjs` | exit 1 · 62 tests / 60 pass / **2 fail**, named `a build the canonical builder refuses ends in one named form at both stages (F39)` |
+| The annotator must see a row with an escaped pipe | old `scripts/ledger-provenance.mjs` + new test, `node --test scripts/ledger-provenance.test.mjs` | exit 1 · 8 tests / 7 pass / **1 fail** (`unit 26's fold ledger names a verified commit on every folded row`) |
+
+After the change, on the live tree: `workflow-status-pre-execution` 7/7 exit 0 ·
+`pre-execution-quality` 62/62 exit 0 · `ledger-provenance` 8/8 exit 0 ·
+`normative-drift` 15/15 exit 0 · `ledger-ownership` 18/18 exit 0 · root
+`node --test scripts/*.test.mjs` 182/182 exit 0 · `check-skill-context` exit 0
+(39 skills) · `--routes` exit 0 (23 routes, ten ceilings re-based) · Pi
+`npm test` exit 0 (134/134, byte parity after `bundle:skills`).
+
+AC20's three states are now computed from real commits, not from an injected sha:
+no ledger → review-pending; a mark whose HEAD moved with a **bound** change →
+review-pending; a mark whose HEAD moved only with unbound writes → **review-ran**.
+That third state is the one P11's design could not produce and F38 exists to name.
+
+Not claimed: O15 stays `in-progress` (AC15's artifact-kind and ledger-row-shape
+clauses are still grammar-checked only — known-issues 18-19, untouched by this
+fold), and F38/F39's `folded: yes` carries no `· fold` token yet because the
+annotator binds to a sha that does not exist until this commit lands.

@@ -509,6 +509,7 @@ const planOutput = read("skills/review-plan/references/OUTPUT.md");
 const policyOwner = read("skills/pre-execution-review/SKILL.md");
 const policyCycle = read("skills/pre-execution-review/references/POLICY.md");
 const policyLedgers = read("skills/pre-execution-review/references/LEDGERS.md");
+const snapshotRecipe = read("skills/pre-execution-review/references/SNAPSHOT.md");
 const scaffold = read("skills/plan-feature-scaffold/SKILL.md");
 const scaffoldProcess = read("skills/plan-feature-scaffold/references/SCAFFOLD_PROCESS.md");
 const planFix = read("skills/plan-fix/SKILL.md");
@@ -767,6 +768,65 @@ test("plan-stage receipt records parent lineage and the three verdicts verbatim"
   assert.match(planOutput, /execute-phase|review-plan/);
   assert.match(reviewPlan, /PLAN-REVIEW-PASS \|\nPLAN-REVIEW-FAIL|PLAN-REVIEW-FAIL \|/);
   assert.match(reviewPlan, /Three verdicts only/);
+});
+
+// --- F39 (P16 fold): a refused build has a terminal form, not an adjective ------
+
+const DIGEST64 = /^[0-9a-f]{64}$/;
+/** The one line both stage contracts hand a reviewer whose build refused. */
+const REFUSAL_FORM_LINE = "- Snapshot: refused \u00b7 Build: refused (<the reason code the builder printed>)";
+const REFUSAL_TEMPLATE_CELL = /Snapshot: <64-hex\|refused>/;
+
+/**
+ * What the receipt's binding line is, given what the canonical builder did. Mirrors
+ * the form each stage's `OUTPUT.md` now states; it is not a second validator — the
+ * refusal path is the only place where a value could be invented at all.
+ */
+const bindingLineFor = ({ built, digest = null, reasonCodes = [] }) =>
+  built ? `- Snapshot: ${digest}` : `- Snapshot: refused \u00b7 Build: refused (${reasonCodes.join(", ")})`;
+
+/** Is a written `Snapshot:` value legal for the state the builder was in? */
+const snapshotValueIsLegal = ({ built, value }) => (built ? DIGEST64.test(value) : value === "refused");
+
+test("a build the canonical builder refuses ends in one named form at both stages (F39)", () => {
+  // The decision, computed: the two values this unit actually produced on 2026-09-02
+  // are both substitutes, and the sentinel the contracts now name is the only legal
+  // answer to a builder that printed no digest.
+  assert.equal(snapshotValueIsLegal({ built: false, value: "refused" }), true);
+  assert.equal(
+    snapshotValueIsLegal({ built: false, value: "d73b71284b03b4d17b1c8f6e9a5d2c4e6f8a0b1c2d3e4f5061728394a5b6c7d8" }),
+    false,
+    "the raw SHA-256 of one artifact reads legal — that is exactly what the Product leg wrote",
+  );
+  assert.equal(snapshotValueIsLegal({ built: false, value: "null" }), false, "`null` reads legal — what the Plan leg wrote");
+  assert.equal(snapshotValueIsLegal({ built: false, value: "" }), false, "silence reads legal");
+  assert.equal(snapshotValueIsLegal({ built: true, value: "a".repeat(64) }), true);
+  assert.equal(snapshotValueIsLegal({ built: true, value: "refused" }), false, "the sentinel may not stand where a digest was printed");
+  assert.equal(
+    bindingLineFor({ built: false, reasonCodes: ["selector-heading-missing: Goal"] }),
+    "- Snapshot: refused \u00b7 Build: refused (selector-heading-missing: Goal)",
+  );
+  assert.equal(bindingLineFor({ built: true, digest: "a".repeat(64) }), `- Snapshot: ${"a".repeat(64)}`);
+
+  // The text: both stage contracts state the pair, and state it identically.
+  const escaped = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const statedForm = (doc) => /```text\n(- Snapshot: refused[\s\S]*?)\n```/.exec(doc)?.[1];
+  for (const [stage, doc] of [["spec", specOutput], ["plan", planOutput]]) {
+    assert.match(doc, REFUSAL_TEMPLATE_CELL, `review-${stage}: the template demands a digest with no alternative`);
+    assert.match(doc, new RegExp(escaped(REFUSAL_FORM_LINE)), `review-${stage}: the refused build has no named form`);
+    assert.match(doc, /end the turn with this stage's FAIL\s+verdict/, `review-${stage}: a refusal does not say how the turn ends`);
+    assert.match(doc, /never a value\s+computed here instead/, `review-${stage}: the prohibition against a substitute is gone`);
+    assert.doesNotMatch(doc, /Snapshot: <64-hex>(?!\|refused)/, `review-${stage}: a bare <64-hex> demand is back`);
+  }
+  assert.ok(statedForm(specOutput), "review-spec states no fenced refusal form");
+  assert.equal(statedForm(specOutput), statedForm(planOutput), "the two stages name two different refusal forms");
+
+  // One owner each way: the recipe says the stage owns the form and names no lines
+  // itself, and the prohibition in CHECKS.md now points at the form it forbids.
+  assert.match(snapshotRecipe, /each stage's\s*\n?`OUTPUT\.md` to own/, "SNAPSHOT.md no longer says who owns the refusal form");
+  assert.doesNotMatch(snapshotRecipe, /Snapshot: refused/, "SNAPSHOT.md restates the stage's refusal lines");
+  assert.match(specChecks, /refused build\s*\n?\(partial binding\) ends this turn in the refusal form/, "CHECKS.md lost the prohibition");
+  assert.match(specChecks, /`Snapshot: refused`/, "CHECKS.md ends the turn without naming the form");
 });
 
 // --- P4: routing enforcement (mirrors workflow-status step 6a, execute-phase's
