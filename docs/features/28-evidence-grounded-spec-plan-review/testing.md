@@ -845,3 +845,49 @@ Not claimed: O15 stays `in-progress` (AC15's artifact-kind and ledger-row-shape
 clauses are still grammar-checked only — known-issues 18-19, untouched by this
 fold), and F38/F39's `folded: yes` carries no `· fold` token yet because the
 annotator binds to a sha that does not exist until this commit lands.
+
+### P16 close-out (2026-09-02) — The terminal gate set at the synced head (AC12 / O12)
+
+Every command the frozen manifest's `Commands` section names, plus this unit's own
+ledgers, run at the close-out head after the `origin/main` sync — no command here was
+carried forward from an earlier phase's record, and no suite was narrowed to obtain the
+answer. Mutating legs first (`tsc`, `bundle:skills`), check-only legs after, per P13.
+
+| Command | Answer | Exit |
+|---|---|---|
+| `cd packages/agentic-workflow-schema && npm test` | tests 675 · pass 675 · fail 0 | 0 |
+| `npm run check:pre-execution-schemas` | drift-free, 2 projections | 0 |
+| `npm run check:pre-execution-package` | package content and exports current | 0 |
+| `npm run test:pre-execution-docs` | 15 · 15 pass (bilingual claim set) | 0 |
+| `npm run gate:pre-execution` | whole chain green | 0 |
+| root `node --test scripts/*.test.mjs` | tests 182 · pass 182 · fail 0 | 0 |
+| `node --test scripts/pre-execution-quality.test.mjs` | 62 · 62 | 0 |
+| `node --test scripts/ledger-ownership.test.mjs` | 18 · 18 | 0 |
+| `node --test scripts/normative-drift.test.mjs` | 15 · 15 | 0 |
+| `node --test scripts/workflow-status-pre-execution.test.mjs` | 7 · 7 (real commits, no injected head) | 0 |
+| `node --test scripts/ledger-provenance.test.mjs` | 9 · 9 | 0 |
+| `node scripts/check-skill-context.mjs` | 39 skills within their ceilings | 0 |
+| `node scripts/check-skill-context.mjs --routes` | 23 routes; the ten F38/F39 ceilings at their exact `ceil(measured × 1.10)` floors | 0 |
+| `cd packages/pi-agentic-workflow && npm run bundle:skills` | 38 skills / 123 files; mirror byte-identical (`git status --porcelain` empty afterwards) | 0 |
+| `cd packages/pi-agentic-workflow && npm test` | 134 · 134 | 0 |
+| `npx skills add . --list` | 38 discoverable skills (39 minus the excluded `bump-skill`) | 0 |
+| `git diff --name-only origin/main...HEAD \| grep -c '^\.engram/'` | `0` — known-issue 17's proof at terminal HEAD | 1 (no match) |
+| `git rev-list --count HEAD..origin/main` | `0` — the branch is not behind the default branch | 0 |
+| `git hash-object docs/features/28-…/ACCEPTANCE.md` | `cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54` — equals `Acceptance receipt v4` | 0 |
+| `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit 28-… --parent 781f8127481cd59a…` | `current: false`, `fresh: false`, `reasonCode: stale-context`, observed `70251fa8…` vs the frozen `f82316b8…` | 4 (expected refusal) |
+
+The last line is the one an outsider reads as a failure and is not: it is AC19's
+invalidation clause answering at the same moment it is cited (D48), and it is also why
+this unit's pre-execution gate stays under D32/D37 rather than being "reconciled" by a
+hand-edited receipt.
+
+**Merge-resolution checks (box 2, run before and after the merge).**
+`git merge-tree --write-tree HEAD origin/main` named exactly one conflicted path,
+`docs/features/ROADMAP.md`; `git checkout origin/main -- .` was never used, and the
+conflict was resolved by row. After the merge commit `81c241d7`: rows 29 and 30 compared
+line-extracted against `git show origin/main:docs/features/ROADMAP.md` → byte-identical;
+row 28 kept the branch's; `git diff 1bc40dbc 81c241d7 --stat` → three paths, 18
+insertions, 7 deletions (`docs/LOGS.md`, unit 28's and unit 29's `SPEC.md`), i.e. `main`
+contributed a wording-only citation removal and nothing else moved;
+`git diff --name-only 1bc40dbc 81c241d7 -- skills/ scripts/ packages/` → empty, so the
+sync touched no candidate byte the review will read.

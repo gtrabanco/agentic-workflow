@@ -933,3 +933,67 @@
   source: F38's currency clause in `SENSOR_CORE.md`/`PRE_EXECUTION.md` and F39's
   refusal form in the two reviewer `OUTPUT.md` files plus `CHECKS.md`. No
   skill-level `referenceEstimateMax` moved.
+
+- **D48 — P16 close-out: what lands before the reviewed head, what cannot, and the
+  two ledger facts the close-out found rather than confirmed (2026-09-02, P16
+  close-out half).**
+  *Merge resolution.* `git merge origin/main` at `1bc40dbc` conflicted on exactly one
+  path, `docs/features/ROADMAP.md`, and within it on exactly one row, 28. Kept: this
+  branch's row, because it is the row that carries the unit's live status and its
+  finding trail; `main`'s copy is the stale `in-progress` line from before the branch
+  diverged. Rows 29 and 30 were then compared extracted-line against
+  `git show origin/main:docs/features/ROADMAP.md` and are byte-identical, so the sync
+  neither dropped nor duplicated an entry, and `git rev-list --count HEAD..origin/main`
+  answers 0. The merge also folded in `main`'s wording-only SPEC edit (external-product
+  citations removed from unit 28's and unit 29's `SPEC.md`, plus `docs/LOGS.md`): no
+  requirement, scope or acceptance row moved, and `ACCEPTANCE.md` is untouched by the
+  merge, which the blob proves (`cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54` before and
+  after). No other conflicted path existed, so the stop condition in the task ("stop and
+  report if anything else conflicts") did not fire.
+  *Ordering of the remaining writes.* D47 made a review mark current by ancestry over
+  the bound artifact set, so every write to `SPEC.md`, `ACCEPTANCE.md`,
+  `planning-evidence.md`, `planning-obligations.md`, `PLAN.md`, `TASKS.md`, `testing.md`,
+  `decisions.md` and `architecture-notes.md` lands **before** the head the review reads,
+  and the close-out therefore writes its gate figures, this decision, the obligation
+  confirmation and the box ticks into the pre-review commit. What cannot land there is
+  the evidence the review itself mints: F23/F24/F25 and **O12** are closed by a receipt
+  that does not exist until the review returns, so they flip in the commit that carries
+  the `REVIEW-RAN` mark and the SHA-bound PR comment. Cost, stated instead of hidden:
+  that commit touches two bound paths (`TASKS.md`, `planning-obligations.md`), so the
+  mark names the reviewed head and the sensor's bound-path test reads the *terminal*
+  head as one bookkeeping commit past it. This is not a regression of F38 (which fixed
+  equality, an unobtainable standard) but the residue of it: a close-out cannot tick the
+  boxes a review closes without moving a bound path. Recorded as known-issue 20 with its
+  re-trigger condition rather than solved by a second mechanism, which D47 already
+  rejected for exactly this shape.
+  *O19 moves on measured evidence, not on the cell.* Its validator answers both ways
+  (`pre-execution-quality` 62/62 exit 0; re-marking the bundler behind the freeze makes
+  it refuse), and the clause P13 withheld — a post-freeze byte change voiding current
+  receipts — is proven by `pre-execution-sensor.test.mjs`'s committed and uncommitted
+  bound-edit cases and was observed live at this head (`verify` → `current: false`,
+  exit 4, freeze `f82316b8…` against observed `70251fa8…`). O15 is **not** moved with it:
+  known-issue 19's re-trigger is about a published vocabulary the artifact-kind and
+  ledger-row cells resolve against, and no such surface exists yet.
+  *Two findings the close-out made while reading its own ledgers.* (1) `decisions.md`
+  carries **two rows numbered D44** — P14's `the drift gate parses committed source`
+  (introduced by `d2d75696`) and P15's `keeps its FAIL row and withholds its own gate
+  sentence` (introduced by `5a2754c0`) — so a citation of "D44" in `progress.md:968` and
+  `planning-obligations.md:153` is ambiguous. Nothing renumbers either published row: an
+  identifier is how other commits cite a decision, and editing an already-referenced id
+  to fix a collision would silently repoint those citations. This is why the next free id
+  here is **D48** and not a re-used D44-D47, and the collision plus its missing machine
+  check is filed as known-issue 21. (2) `git merge` reported the roadmap collision
+  before it reported anything else, which is the only reason the row-28 resolution was a
+  decision at all — `merge-tree`'s dry run is named in this phase's done-when and was run
+  first (`git merge-tree --write-tree HEAD origin/main` → conflicted: `docs/features/ROADMAP.md`
+  alone), so the sync was planned rather than discovered.
+  *What the close-out did not claim.* No `SPEC-REVIEW-PASS`/`PLAN-REVIEW-PASS` receipt was
+  minted for unit 28 at terminal HEAD even though P16's done-when names them: the gate is
+  circular for this unit by owner decision D32 as scoped by D37, `review-plan` and
+  `review-spec` are repository text rather than installed commands, and known-issue 14
+  keeps the closure condition (one consuming unit reviewed through them, which is feature
+  29's post-merge dogfood). No skill version moved, because the close-out changes no
+  `SKILL.md` — `bump-skill` has nothing to bump and `npm run bundle:skills` re-answers
+  byte-identical — and no Pi or schema package version moved, because `0.2.0`/`3.5.0` are
+  the versions AC10 already names and `3.5.0` stays unpublished until merge (known-issue
+  12's Trusted-Publisher precondition is unchanged by this phase).
