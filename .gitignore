@@ -14,11 +14,11 @@ tmp/
 .engram/
 .serena
 .opencode/
-# Local state the pre-execution sensor writes inside the worktree. Narrow on purpose:
-# the local `.claude/skills` mount is gitignored so authoring sessions can opt in
+# Local state the pre-execution sensor writes inside the worktree.
+# The local `.claude/skills` mount is gitignored so authoring sessions can opt in
 # without risking an accidental commit.
 .claude/pre-execution-gates/
-# Local opt-in mount: `ln -sfn ../skills .claude/skills`. Never committed.
+# Local opt-in mount: `ln -sfn ../skills .claude/skills`. Excluded from commits (`git add -f` bypasses the rule).
 .claude/skills
 # Recursive-language-model engine memory (episode logs) written by analysis runs.
 .rlm/
