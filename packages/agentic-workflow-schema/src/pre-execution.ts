@@ -27,6 +27,7 @@
 import {
   VERIFICATION_DIAGNOSTIC_CODES,
   applyCrossRule,
+  assertCrossRuleVocabulary,
   captureVerificationInput,
   createVerificationDiagnosticSink,
   projectStructure,
@@ -134,6 +135,12 @@ export const PRE_EXECUTION_DIAGNOSTIC_CODES = Object.freeze([
   "stale-policy",
 ] as const);
 export type PreExecutionDiagnosticCode = (typeof PRE_EXECUTION_DIAGNOSTIC_CODES)[number];
+
+// The widened `code` field on a cross rule exists for THIS family's own codes, so the
+// family is the one that has to prove every pin is published (F71). At load: a rule
+// that mistypes `invalid-topology`, or borrows a code from another contract, breaks
+// the import instead of answering a reviewer with a diagnostic no consumer knows.
+assertCrossRuleVocabulary(PRE_EXECUTION_CONTRACT, PRE_EXECUTION_DIAGNOSTIC_CODES, "pre-execution");
 
 /** One refusal row: a frozen code and the pointer to the offending location. */
 export interface PreExecutionDiagnostic {
