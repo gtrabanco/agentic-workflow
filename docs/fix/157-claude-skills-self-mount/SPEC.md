@@ -122,7 +122,13 @@ by this planning pass.
 | O6 | Issue #157 AC "No script, test, or CI reference … breaks" | Invariant: automation stays green after untracking | P3 | Verification gate | execute-phase | AC6 — grep no matches + `node scripts/check-skill-context.mjs` exit 0 | Pasted commands + exit codes in progress.md | verified |
 | O7 | Issue #157 AC "skills.sh discovery intact" | Use case: consumers can still discover and install every skill | P3 | Verification gate | execute-phase | AC7 — `npx skills add . --list` exit 0 | Pasted command + exit code in progress.md | verified |
 | O8 | Issue #157 AC "Pi package bundle + parity tests pass" | Invariant: the committed mirror stays byte-identical to `skills/` | P3 | Verification gate | execute-phase | AC8 — `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` passes | Pasted test result in progress.md | verified |
-| O9 | Issue #157 AC "marketplace.json untouched" + root `skills/` untouched | Required failure state: fix bleeds into distribution surfaces | P3 | Verification gate | execute-phase | AC9 — diff-scope filter → no output | Pasted command + output in progress.md | in-progress |
+| O9 | Issue #157 AC "marketplace.json untouched" + root `skills/` untouched | Required failure state: fix bleeds into distribution surfaces | P3 | Verification gate | execute-phase | AC9 — diff-scope filter → no output | Pasted command + output in progress.md | verified |
+
+## Amendments
+
+| Date | Approved by | Change | Linked issue |
+| --- | --- | --- | --- |
+| 2026-09-03 | user (`F1 -> a`) | Amend the frozen AC9 validator so its exclusion list also carries `\.claude/skills`: P1 of this very unit deletes the previously-tracked mount, so the deletion necessarily appears in `main...HEAD` and the original filter could never pass on a branch that succeeds. Also escape the dots in the SPEC's own copy of the alternation, which was amended by `7fad64ae` without this ledger entry. The required outcome is unchanged and not weakened: no `skills/`, `packages/`, `.claude-plugin/` or `template/` path may appear in the diff. Re-frozen as a replacement manifest with a fresh blob-bound receipt. | [#157](https://github.com/gtrabanco/agentic-workflow/issues/157) |
 
 ## Acceptance
 
@@ -151,7 +157,7 @@ by this planning pass.
    with 0 failing — the committed Pi-package mirror stays byte-identical.
    (command-verified)
 9. `git diff --name-only main...HEAD | grep -vE
-   '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|.claude/skills|docs/fix/)'`
+   '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|\.claude/skills|docs/fix/)'`
    produces no output — no distribution-channel file (`skills/`, `packages/`,
    `.claude-plugin/`, `template/`) is touched by this branch. (command-verified)
 

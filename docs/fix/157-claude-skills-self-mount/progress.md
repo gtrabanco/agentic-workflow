@@ -40,3 +40,13 @@
   triage, not fixed from this fold.
 - Gate re-run at fold: `node scripts/check-skill-context.mjs` → exit 0 (`PASS context
   budgets: 39 skills`); `node --test scripts/normative-drift.test.mjs` → 16 pass / 0 fail.
+
+## Acceptance receipt v2 — replacement manifest (F1)
+- Manifest: `docs/fix/157-claude-skills-self-mount/ACCEPTANCE.md` · Blob: `fe01d7bcfb8e3209825e8d9833f50bda279ab08a` · Status: frozen · Verified: 2026-09-03
+- Supersedes Acceptance receipt v1 (blob `9b7456a67370e7d9581e047bebdabbd0f6ccf14c`). Amendment trail: explicit user approval (`F1 -> a`) → dated `## Amendments` row in SPEC.md → this replacement manifest → this receipt.
+- Strength retained: the amended filter excludes only this unit's own `.claude/skills` untrack. Falsification probe — feeding `skills/foo/SKILL.md` and `packages/pi-agentic-workflow/src/x.js` through the same command still reports both, so a real distribution-channel touch keeps failing AC9.
+
+## Execution receipt v3 — review fold (F1)
+- AC9 as re-frozen: `git diff --name-only main...HEAD | grep -vE '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|\.claude/skills|docs/fix/)'` → no output, exit 1 → **PASS**. All nine criteria now verify against the re-frozen manifest bytes.
+- SPEC.md: Acceptance 9 and manifest AC9 now carry the identical filter (dots escaped); obligation O9 flipped `in-progress → verified`.
+- Still open and out of this unit's queue: PR #158 does not auto-close #157 (no `Closes #157` in the body, no forge closing link), so that P3 task stays unticked pending user triage.
