@@ -8,6 +8,12 @@ keeps the established `workflow-status` envelope while giving headless drivers
 a smaller result for working skills and deterministic state compiled from
 documents.
 
+That claim has an exact shape, and it is the shipped shape: `package.json`
+declares no `dependencies`, and no module under `src/` carries a static built-in
+specifier (`from "node:…"`) — so the same code loads in Node, Bun and a browser.
+The package still takes the host's own SHA-256 when the host happens to offer
+one, opportunistically and per call: see "Canonical form and vectors".
+
 ## Install
 
 ```sh
@@ -400,6 +406,18 @@ lowercase SHA-256 over those canonical bytes. Four payloads are published in
 `PRE_EXECUTION_CANONICAL_VECTORS` (both stages × both contracts); the suite
 reproduces every digest from its fixture independently through `node:crypto`, so
 a serializer change breaks a test instead of silently moving a consumer's lineage.
+
+The synchronous digest (`sha256HexSync`, used by the artifact builder) answers
+from the host's native SHA-256 wherever the host exposes one through
+`globalThis.process?.getBuiltinModule?.("crypto")` — Node v22.3.0 and v20.16.0
+and later, and Bun; browsers expose no such binding — and from this package's
+pure-JS FIPS 180-4 core everywhere else. The binding is looked up on every call
+and never cached, so a bundle that moves between hosts cannot strand a stale
+verdict, and a digest never throws because a host builtin did. Both paths return
+one identical lowercase 64-hex digest for identical bytes; the three-path case in
+`test/pre-execution-canonical.test.mjs` pins native, pure JS and async WebCrypto
+against each other, and `npm run probe:sha256-paths` prints the digests and the
+per-path cost of each on your host (check-only: it writes nothing).
 
 ```bash
 npm run gate:pre-execution   # tests + schema drift + package checks + pack
