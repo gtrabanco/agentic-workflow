@@ -90,7 +90,7 @@ O17 | AC17 | F3 terminal marking: verdict and rejection turns write the durable 
 O18 | AC18 | F4 delegated evidence standard: versioned artifact with outcome, questions, seven source fields, claims mapped to source ids, contradictions, freshness, separated product choices, unverified section; partial or blocked blocks readiness; persist-then-STOP; advisory until spot-checked | P12 | Conserve delegated evidence as a versioned artifact | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with delegated-evidence and NEEDS-EVIDENCE fixtures | verified
 O19 | AC19 | F5 normalization before freeze: every source-mutating normalizer scheduled strictly before the snapshot or freeze row, only check-only actions after, post-freeze byte change voids current receipts | P13 | Run normalizers before the artifact freeze | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 green and non-zero when a mutating step follows the freeze | in-progress
 O20 | AC20 | F6 clean-review sensing: sensor review-run proof keys on the durable review mark instead of findings-ledger presence so a zero-finding review is distinguishable from a never-reviewed unit | P11 | Prove clean reviews with a durable mark | execute-phase | `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 with mark-present and ledger-only fixtures | verified
-O21 | AC21 | F32 disposition: the sync digest prefers the host native SHA-256 through globalThis.process?.getBuiltinModule?.("crypto") where present and this package's pure-JS path otherwise, one identical lowercase 64-hex result, no static node: specifier, no @types/node, no dependency added, nothing vendored, rejected alternatives recorded with measured cost, and any future copied code carrying source, author, version and license | P17 (runs before P16) | Prefer the host native SHA-256 digest | execute-phase | `cd packages/agentic-workflow-schema && npm test` plus the no-static-node-import grep and the two-path digest probe | exit 0, identical digests from both paths, zero static builtin imports | planned
+O21 | AC21 | F32 disposition: the sync digest prefers the host native SHA-256 through globalThis.process?.getBuiltinModule?.("crypto") where present and this package's pure-JS path otherwise, one identical lowercase 64-hex result, no static node: specifier, no @types/node, no dependency added, nothing vendored, rejected alternatives recorded with measured cost, and any future copied code carrying source, author, version and license | P17 (runs before P16) | Prefer the host native SHA-256 digest | execute-phase | `cd packages/agentic-workflow-schema && npm test` plus the no-static-node-import grep and the two-path digest probe | exit 0, identical digests from both paths, zero static builtin imports | verified
 
 Reconciled 2026-09-01 (phase P11): **O17** and **O20** move to `verified`. O20's
 named validator now exists and answers —
@@ -157,3 +157,20 @@ Closed 2026-09-02 in the same phase: the F40/F41 change landed (evidence-groundi
 P15 gate sentence (`grep -qE …` exit 0). **O11 is not re-declared by these legs** — it
 stays `verified` on the P6 corpus evidence it already cited; P15 adds the P9-P14
 coverage without moving the row. F38 and F39 stay open for P16's fold (D45).
+
+Reconciled 2026-09-02 (phase P17): **O21** moves `planned` -> `verified`. Every
+clause of AC21 has its own proof now: the routing (native binding consulted per
+call) and the identical-result guarantee are pinned by
+`sha256HexSync answers from the host native SHA-256 and all three paths agree` in
+`test/pre-execution-canonical.test.mjs`, which fails red-first on the pre-P17
+tree with `the native path answered, and answered per call (got [])`; the
+no-static-`node:` clause by `grep -rn "from \"node:" src/` -> no matches (exit 1);
+the no-`@types/node` and no-dependencies clauses by `grep -n "@types" package.json`
+-> exit 1 and the `devDependencies`-only block in `package.json`; and the
+recorded-cost clause by the measured table in `architecture-notes.md` §"Digest
+paths". F36's half of the phase is closed with it: the `src/sha256.ts` header now
+names `test/pre-execution-canonical.test.mjs`, the file that truly pins the
+digests. Status cell only — the row's authority, validator and required-evidence
+cells are untouched, and the probe named in the validator is
+`packages/agentic-workflow-schema/scripts/probe-sha256-paths.mjs`
+(`npm run probe:sha256-paths`), which prints three paths rather than two.

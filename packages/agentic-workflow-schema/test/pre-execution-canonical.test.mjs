@@ -31,6 +31,7 @@ import {
   specInput,
   toySpec,
 } from "./fixtures/pre-execution-documents.mjs";
+import { sha256Hex, sha256HexSync } from "../dist/sha256.js";
 import vectors, { PRE_EXECUTION_VECTORS } from "./fixtures/pre-execution-vectors.mjs";
 
 const specBuild = (overrides = {}) =>
@@ -293,6 +294,87 @@ test("digests are repeatable and equal an independent SHA-256 of the canonical b
   const second = await digestPreExecutionArtifactSnapshot(JSON.parse(canonical));
   assert.equal(first, second, "re-serializing the same document answers the same digest");
   assert.equal(first, createHash("sha256").update(canonical, "utf8").digest("hex"));
+});
+
+// ---------------------------------------------------------------------------
+// SHA-256 path agreement (AC21 / F32 / D36)
+// ---------------------------------------------------------------------------
+
+/**
+ * The three paths AC21 names, over the ASCII / multibyte / oversized shapes this
+ * suite already pins: an all-ASCII selection, the same bytes with a four-byte
+ * codepoint in every chunk position, and the real feature-28 SPEC projection
+ * (tens of kilobytes — a document, not a token).
+ *
+ * A native binding that is present but never consulted is the failure mode this
+ * case exists for, so the native path is observed through a counting wrapper
+ * around `process.getBuiltinModule` instead of inferred from a matching digest:
+ * three agreeing digests prove the guarantee, the count proves the routing.
+ */
+const SHA_PATH_CORPUS = [
+  { label: "ASCII", text: "# Toy feature\n\n## Design status\n\n`designed`\n\nplain ascii only\n" },
+  { label: "multibyte", text: `摘要 🚀 ünïcödé ▓ ${toySpec()}` },
+  {
+    label: "oversized (real SPEC projection)",
+    text: readFileSync(
+      fileURLToPath(new URL("../../../docs/features/28-evidence-grounded-spec-plan-review/SPEC.md", import.meta.url)),
+      "utf8",
+    ),
+  },
+];
+
+/** Runs `fn` with `getBuiltinModule` replaced, and records every id requested. */
+function withBuiltinBinding(override, fn) {
+  const process_ = globalThis.process;
+  const original = process_.getBuiltinModule;
+  const requested = [];
+  process_.getBuiltinModule =
+    override === "throw"
+      ? () => {
+          requested.push("throwing");
+          throw new Error("host binding unavailable");
+        }
+      : override === "absent"
+        ? undefined
+        : (id) => {
+            requested.push(id);
+            return original.call(process_, id);
+          };
+  try {
+    return { result: fn(), requested };
+  } finally {
+    process_.getBuiltinModule = original;
+  }
+}
+
+test("sha256HexSync answers from the host native SHA-256 and all three paths agree", async () => {
+  if (typeof globalThis.process?.getBuiltinModule !== "function") {
+    assert.fail("this case asserts the native routing and needs a host that exposes the binding");
+  }
+  for (const { label, text } of SHA_PATH_CORPUS) {
+    const reference = createHash("sha256").update(text, "utf8").digest("hex");
+    // Two calls: the binding must be looked up on each one, never cached.
+    const observed = withBuiltinBinding("count", () => [sha256HexSync(text), sha256HexSync(text)]);
+    assert.equal(
+      observed.requested.filter((id) => id === "crypto").length >= 2, true,
+      `${label}: the native path answered, and answered per call (got ${JSON.stringify(observed.requested)})`,
+    );
+    const [first, second] = observed.result;
+    assert.match(first, /^[0-9a-f]{64}$/, `${label}: lowercase 64-hex`);
+    assert.equal(first, second, `${label}: repeated calls agree`);
+    assert.equal(first, reference, `${label}: native sync digest equals the node:crypto reference`);
+    assert.equal(await sha256Hex(text), reference, `${label}: WebCrypto agrees with the native path`);
+
+    // The same bytes with the binding withheld must answer identically: that is
+    // the browser condition, and the pure-JS core is what serves it.
+    const withheld = withBuiltinBinding("absent", () => sha256HexSync(text));
+    assert.equal(withheld.result, reference, `${label}: pure-JS path agrees with the native path`);
+    assert.deepEqual(withheld.requested, [], `${label}: a withheld binding is never reached`);
+
+    // A binding that exists and then fails must not throw out of a digest.
+    const throwing = withBuiltinBinding("throw", () => sha256HexSync(text));
+    assert.equal(throwing.result, reference, `${label}: a failing lookup falls back to the JS core`);
+  }
 });
 
 // ---------------------------------------------------------------------------
