@@ -13,7 +13,7 @@ tmp/
 # Agents & MCPs
 .engram/
 .serena
-.opencode
+.opencode/
 # Local state the pre-execution sensor writes inside the worktree. Narrow on purpose:
 # the tracked `.claude/skills` mount is a template artifact, so this must not widen to
 # all of `.claude/`.
