@@ -47,6 +47,25 @@ The exact change set.
 Adjacent issues this fix deliberately does NOT touch. Link to their
 own fix folder or feature where each belongs.
 
+### Planning evidence
+
+The fix's own authority, without a Product half: reproduction, root cause with
+code evidence, regression scope, rollback path, and the affected invariant or use
+case — one compact row each. Never an exploration transcript.
+
+| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
+|---|---|---|---|---|---|---|---|
+
+### Obligations
+
+One row per normative behaviour, applicable invariant, affected use case, and
+required failure state. Status is `planned | in-progress | verified | n/a |
+deferred`; `n/a` requires evidence, and no current-unit obligation may be
+`deferred` to a follow-up issue.
+
+| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
+|---|---|---|---|---|---|---|---|---|
+
 ## Acceptance
 
 Objective, verifiable conditions for "done". Each criterion is a runnable
@@ -65,6 +84,12 @@ judgement. Any FAIL → fix the SPEC before the commit.
       `read-verified`.
 - [ ] Every phase passes the 8-box Phase-lint below (already mandatory,
       owned by `skills/phase-contract/SKILL.md`).
+- [ ] `### Planning evidence` has a `current` row for the reproduction, the root
+      cause, the regression scope, and the rollback path — none blank, none
+      `n/a`.
+- [ ] `### Obligations` has one row per normative behaviour, applicable invariant,
+      affected use case, and required failure state, each with a phase and a
+      validator; no `deferred` row and none exported to a follow-up issue.
 
 ## Phases
 
