@@ -116,9 +116,9 @@ declared mechanical annotator, which may append only the token its own row
 names.** Nobody else writes a row — not a reviewer, not a later phase, not a
 script. So `fold-findings` flips only the `folded:` flag `triage-issue` gives it,
 and `scripts/ledger-provenance.mjs` appends only the marker it really emits:
-line 288's `· fold <sha>` (or `· ticked <sha>` on a row that scores 1) plus the
-`· REOPENED P20 — provenance unproven` note of line 293 when a tick has no
-matching annotation — never a `yes` of its own.
+its `· fold <sha>` (or `· ticked <sha>` on a row that scores 1) plus the
+`· REOPENED — provenance unproven` note when a tick has no matching
+annotation — never a `yes` of its own.
 
 `scripts/ledger-ownership.test.mjs` reads the block below as the single source of
 truth for the seven AC16 truth classes and the projections in
@@ -135,7 +135,7 @@ and is out of scope; a copy or shell rewrite stays the reviewer's job.
 ```text
 ledger-ownership@1
 truth-class | ledger | owner | annotator | annotator-token | validator
-review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED P<n> | node --test scripts/ledger-provenance.test.mjs
+review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | node --test scripts/ledger-provenance.test.mjs
 planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | review-spec:spec-stage-rows + review-plan:plan-stage-rows + design-feature:product-class-resolutions + plan-feature:plan-class-resolutions + plan-fix:fix-plan-class-resolutions + fold-findings:source-class-resolutions | none | none | node --test scripts/pre-execution-quality.test.mjs
 progress | docs/features/<NN>-<slug>/progress.md · docs/fix/<issue>-<topic>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none | none | node --test scripts/pre-execution-sensor.test.mjs
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none | none | node --test scripts/ledger-ownership.test.mjs
