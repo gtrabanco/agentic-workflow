@@ -8,6 +8,8 @@ import {
   buildPreExecutionArtifactSnapshot,
   comparePreExecutionReceiptToSnapshot,
   digestPreExecutionArtifactSnapshot,
+  digestPreExecutionReviewReceipt,
+  validatePreExecutionReceiptAgainstSnapshot,
 } from "../dist/index.js";
 import {
   DIGEST_A,
@@ -27,9 +29,9 @@ const builtPlan = (rev = "rev-1", overrides = {}) =>
   buildPreExecutionArtifactSnapshot(planInput(overrides.parentSpecSnapshotDigest ?? PARENT,
     { ...overrides, artifactRevisionId: rev }));
 
-async function receiptBound(snapshot, overrides = {}) {
+function receiptBound(snapshot, overrides = {}) {
   return receiptFor(snapshot, {
-    snapshotDigest: await digestPreExecutionArtifactSnapshot(snapshot),
+    snapshotDigest: digestPreExecutionArtifactSnapshot(snapshot),
     ...overrides,
   });
 }
@@ -50,6 +52,24 @@ test("the freshness vocabulary is closed, frozen, and answers alone", async () =
   const receipt = await receiptBound(snapshot);
   assert.deepEqual(await comparePreExecutionReceiptToSnapshot(receipt, snapshot, snapshot, POLICY_VERSION),
     { fresh: true }, "the fresh answer carries no reason code");
+});
+
+test("the pre-execution family answers without a promise (F67)", () => {
+  // One contract family, one calling style: the builders and validators are sync
+  // because AC2 binds bytes in a single pass, so the digest entries and the freshness
+  // comparator — whose only await was a digest — must not force ceremony on callers.
+  const snapshot = mustBuild(builtSpec());
+  const receipt = receiptBound(snapshot);
+  assert.equal(typeof digestPreExecutionArtifactSnapshot(snapshot), "string",
+    "the snapshot digest answers in place");
+  assert.equal(typeof digestPreExecutionReviewReceipt(receipt), "string",
+    "the receipt digest answers in place");
+  const answer = comparePreExecutionReceiptToSnapshot(receipt, snapshot, snapshot, POLICY_VERSION);
+  assert.equal(typeof answer.then, "undefined", "the freshness comparator answers in place");
+  assert.deepEqual(answer, { fresh: true });
+  const blessing = validatePreExecutionReceiptAgainstSnapshot(receipt, snapshot, POLICY_VERSION);
+  assert.equal(typeof blessing.then, "undefined", "the blessing entry answers in place");
+  assert.equal(blessing.ok, true, JSON.stringify(blessing.diagnostics ?? null));
 });
 
 test("stage or unit identity mismatch is refused before any content comparison", async () => {
