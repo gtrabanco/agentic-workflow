@@ -81,3 +81,38 @@
 >   session that bypassed the guard, or a hand-filed issue). The `## Amendments`
 >   -link detection path (`#89`) widens this backstop's *coverage* only — it
 >   changes nothing about `execute-phase`'s own contract or precedence.
+
+## Pre-execution lineage and obligation closure (feature and fix PRs)
+
+This gate sits downstream of both pre-execution reviews, so it verifies their
+authority **survived the build** — it never re-reviews a plan and never re-judges a
+verdict:
+
+1. **Upstream lineage is current.** The unit's `progress.md` carries
+   `## Pre-execution review receipt v1 — plan` whose digest re-derives identically
+   (`scripts/pre-execution-snapshot.mjs verify --stage plan --parent <the receipt's
+   Product digest>`; a fix unit binds no parent —
+   `structural.reasonCode`/`changedPaths` name the drifted dimension), and — for a
+   feature unit — its named `— spec` parent re-derives the same way. Bound artifacts
+   are frozen: new implementation-phase files are allowed, edits to a bound artifact
+   are not. Stale, missing or wrong-stage lineage → **BLOCKED**,
+   `→ Next: /review-plan <unit>` (or `/review-spec <unit>` when the parent is the
+   broken link). A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
+2. **Obligations are closed.** Every row of the unit's obligation ledger is
+   `verified` — with the validator that ran on this candidate — or an explicit
+   `n/a: <reason>`. Any `planned`, `in-progress`, blank, or `deferred` row is
+   **BLOCKED**, naming the ids. `deferred` is legal only when the user amended the
+   governing SPEC first (cite the amendment); without one it is an open obligation
+   wearing a new name, and it may not be exported to a follow-up issue to clear the
+   gate.
+3. **Planning findings are resolved.** `planning-findings.md` holds no open row for
+   the bound snapshot: a PASS may not coexist with an unresolved material finding.
+4. **Authority is unchanged.** `audit-pr` remains the only emitter of `MERGE-READY`;
+   a pre-execution PASS is upstream evidence, never a merge verdict, and nothing here
+   merges, closes, comments down, or files an issue.
+
+A legacy unit with no ledgers is not exempt: the missing ledgers must be constructed
+and reviewed through the adoption route (the pre-execution gate in `execute-phase`'s
+preflight) before MERGE-READY. The audit never coerces old evidence into the new
+format, never edits `ACCEPTANCE.md`, and never accepts a hand-written table that the
+plan snapshot does not bind.

@@ -1,3 +1,10 @@
+## Gate rejection traces
+
+Every gate below prints a typed `GATE REJECTION` trace. The rule that binds that
+trace to the turn is write-then-report, owned by `pre-execution-review`'s
+`POLICY.md` §8; the ledger it belongs to is the unit's `progress.md`, column set
+`execute-phase:gate-rejection-traces` in `LEDGERS.md`'s ownership map.
+
 ## Dependency gate (always, before any other step)
 
 Run this check for **every** mode (feature phase, single-pass, and `--fix`)
@@ -24,6 +31,10 @@ before touching anything:
      · fix-type dependency → /plan-fix then /execute-phase --fix
      · proceed anyway, at your own risk → /execute-phase <NN> <phase> --force
        (the override is recorded in decisions.md — never silent)
+
+   GATE REJECTION — dependency
+   Reason: <the unmet chain above, deepest first>
+   Return route: /execute-phase <deepest> P1
    ```
 
 6. **`--force`** skips the stop (never the check): the gate still runs and its
@@ -72,6 +83,10 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
    → Next: /design-feature <slug> — write the product half first
      · proceed anyway, at your own risk → /execute-phase <NN> <phase> --force
        (the override is recorded in decisions.md — never silent)
+
+   GATE REJECTION — status
+   Reason: this unit's roadmap row reads `idea` — no completed product design
+   Return route: /design-feature <slug>
    ```
 
 2. **`defined`** (product half designed, engineering half / planning
@@ -84,9 +99,14 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
    → Next: /plan-feature <NN>-<slug> — scaffold the engineering half + TASKS.md
      · proceed anyway, at your own risk → /execute-phase <NN> <phase> --force
        (the override is recorded in decisions.md — never silent)
+
+   GATE REJECTION — status
+   Reason: roadmap row reads `defined` — engineering half not scaffolded
+   Return route: /plan-feature <NN>-<slug>
    ```
 
-3. **`planned`+** → proceed to the normal workflow.
+3. **`planned`+** → proceed to the pre-execution review gate below (a `planned`
+   row alone never authorizes an edit).
 4. **Legacy compat.** A row still reading a plain `planned` with no
    five-state history: check its `SPEC.md` product half. Complete
    (`## Design status: designed`) → treat as `defined`+`planned`, no
@@ -95,6 +115,19 @@ the fix-index entry, unaffected). Read this unit's own roadmap row status
 5. **`--force`** skips the STOP (never the check), same rule as the
    dependency gate: recorded in `decisions.md` before implementation begins;
    the autopilot (`ship-roadmap`) must never pass it.
+
+## Pre-execution review gate (after the own-status gate, before the acceptance manifest)
+
+A `planned` row says the artifacts exist, never that an independent reviewer accepted
+them. Before any edit, sense the unit's `stage: plan` evidence and require a current
+`PLAN-REVIEW-PASS`; missing, stale, or wrong-stage each fail closed with the fixed
+gate block, and **`--force` never reaches this gate** — it overrides ordering stops
+the user may re-order, not a verdict only a reviewer can produce. Fix units run the
+same check on their own receipt (`/review-plan fix-<N>`). Legacy `planned`/`in-progress`
+units follow the adoption route. The slot immediately after this gate and before the
+first write is reserved for feature 29's bounded implementation discovery — do not
+implement or imitate it here. Full rule, block text, no-forgery and legacy detail:
+[pre-execution gate](PRE_EXECUTION_GATE.md).
 
 ## Acceptance-manifest gate (after dependency/own-status, before phase-lint)
 
@@ -143,6 +176,10 @@ declared layer, task list, and done-when).
      · fix-type unit → /plan-fix — re-cut or split the phase
      · proceed anyway, at your own risk → /execute-phase <NN|--fix n> <phase> --force
        (the override is recorded in decisions.md — never silent)
+
+   GATE REJECTION — phase-lint
+   Reason: <the failed boxes above, one line each>
+   Return route: /plan-feature <NN> — re-cut or split the phase
    ```
 
 3. **`--force`** skips the STOP (never the check): the lint still runs and its

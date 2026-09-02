@@ -10,6 +10,13 @@
  */
 
 import {
+  canonicalizeContractInput,
+  canonicalJSONValue,
+  utf8Bytes,
+  utf8ByteCompare,
+} from "./canonical-json.js";
+import { sha256Hex } from "./sha256.js";
+import {
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_CONTRACT,
   VERIFICATION_COST_CLASSES,
@@ -634,7 +641,9 @@ export type WorkflowIntent =
   | "discover-repository-state"
   | "resolve-repository-state"
   | "design-feature"
+  | "review-spec"
   | "plan-feature"
+  | "review-plan"
   | "plan-fix"
   | "triage-issue"
   | "execute-phase"
@@ -652,7 +661,9 @@ export const WORKFLOW_INTENTS: readonly WorkflowIntent[] = [
   "discover-repository-state",
   "resolve-repository-state",
   "design-feature",
+  "review-spec",
   "plan-feature",
+  "review-plan",
   "plan-fix",
   "triage-issue",
   "execute-phase",
@@ -789,7 +800,9 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "discover-repository-state",
       "resolve-repository-state",
       "design-feature",
+      "review-spec",
       "plan-feature",
+      "review-plan",
       "plan-fix",
       "triage-issue",
       "execute-phase",
@@ -807,7 +820,9 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
     allowed: [
       "resolve-repository-state",
       "design-feature",
+      "review-spec",
       "plan-feature",
+      "review-plan",
       "plan-fix",
       "triage-issue",
       "execute-phase",
@@ -831,6 +846,7 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
   {
     key: "design-feature",
     allowed: [
+      "review-spec",
       "plan-feature",
       "plan-fix",
       "triage-issue",
@@ -845,10 +861,28 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       + " or the named dependency unit recorded by the last outcome;"
       + " non-allowed target → stop-forbidden-transition",
   },
+  // review-spec → the Product gate. A PASS releases the roadmap unit into
+  // planning; a FAIL or needs-design returns it to design; execution is NOT
+  // reachable from here, because a reviewed Product is not an approved Plan.
+  {
+    key: "review-spec",
+    allowed: [
+      "plan-feature",
+      "plan-fix",
+      "design-feature",
+      "triage-issue",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be the unit whose Product snapshot was bound"
+      + " by the current spec-review receipt; execute-phase/audit-pr are unreachable"
+      + " without a plan review · PASS → plan-feature, FAIL/needs-design → design-feature",
+  },
   // plan-feature → active or dependency unit, max 1
   {
     key: "plan-feature",
     allowed: [
+      "review-plan",
       "triage-issue",
       "execute-phase",
       "review-change",
@@ -860,12 +894,31 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
     condition: "0..1 allowed; 0 → next roadmap unit; 1 → active unit id or named dependency;"
       + ">1 → stop-forbidden-transition",
   },
+  // review-plan → the Engineering gate, and the only pre-execution hop that can
+  // reach execution. It routes by the OWNER of the finding: a plan defect returns
+  // to the planner, a product defect returns to design (a Plan review may discover
+  // the Product itself was wrong), and an environment defect goes to a sensor.
+  {
+    key: "review-plan",
+    allowed: [
+      "execute-phase",
+      "plan-feature",
+      "plan-fix",
+      "design-feature",
+      "triage-issue",
+      "ask-human",
+      "stop",
+    ],
+    condition: "0..n allowed, each must be the unit whose Plan snapshot was bound"
+      + " by the current plan-review receipt · PASS → execute-phase, plan defect →"
+      + " plan-feature, product defect → design-feature, stale evidence → ask-human",
+  },
   // plan-fix → triage-issue only, exactly 1
   {
     key: "plan-fix",
-    allowed: ["triage-issue"],
-    condition: "exactly 1 target (the issue identity); 0 → sense-missing-evidence;"
-      + ">1 → stop-forbidden-transition",
+    allowed: ["review-plan", "triage-issue"],
+    condition: "exactly 1 target (the issue identity, or the planned fix unit for"
+      + " review-plan); 0 → sense-missing-evidence; >1 → stop-forbidden-transition",
   },
   // triage-issue → issue identities, 1..n
   {
@@ -1209,6 +1262,7 @@ export const SKILL_REQUIRED_EVIDENCE = Object.freeze([
   "audit",
   "issue-state",
   "pull-request-state",
+  "pre-execution-review",
 ] as const);
 export type SkillRequiredEvidence = (typeof SKILL_REQUIRED_EVIDENCE)[number];
 
@@ -1329,6 +1383,20 @@ export const WORKFLOW_SKILL_PROFILES: readonly BuiltInSkillProfile[] = deepFreez
     },
   },
   {
+    skill: "review-spec",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "reviewer",
+      reasoning: "critical",
+      // A pre-execution review reads and records; it never edits the artifact it
+      // judges, and it never touches the forge.
+      effects: ["repository-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "pre-execution-review"],
+    },
+  },
+  {
     skill: "plan-feature",
     output: "skill-outcome-v1",
     nativeFallback: "none",
@@ -1338,6 +1406,18 @@ export const WORKFLOW_SKILL_PROFILES: readonly BuiltInSkillProfile[] = deepFreez
       effects: ["repository-read", "repository-write", "forge-read"],
       contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
       requiredEvidence: ["workflow-snapshot"],
+    },
+  },
+  {
+    skill: "review-plan",
+    output: "skill-outcome-v1",
+    nativeFallback: "none",
+    capabilities: {
+      role: "reviewer",
+      reasoning: "critical",
+      effects: ["repository-read"],
+      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
+      requiredEvidence: ["workflow-snapshot", "pre-execution-review"],
     },
   },
   {
@@ -2339,22 +2419,6 @@ function hasUndeclaredKeys(actual: Record<string, unknown>, known: ReadonlyArray
   return Object.keys(actual).filter((k) => !known.includes(k));
 }
 
-/**
- * Compare two UTF-8 strings in ascending unsigned-byte order.
- * Returns < 0 if a < b, > 0 if a > b, 0 if equal.
- */
-const _utf8Encoder = new TextEncoder();
-
-function utf8ByteCompare(a: string, b: string): number {
-  const ba = _utf8Encoder.encode(a);
-  const bb = _utf8Encoder.encode(b);
-  const len = Math.min(ba.length, bb.length);
-  for (let i = 0; i < len; i++) {
-    const diff = ba[i] - bb[i];
-    if (diff !== 0) return diff;
-  }
-  return ba.length - bb.length;
-}
 
 // ---------------------------------------------------------------------------
 // Validator: validateCandidateSnapshotV1
@@ -2810,68 +2874,6 @@ export type FreshnessResult = FreshResult | StaleResult;
 // D4 — Canonical serialization helpers
 // ---------------------------------------------------------------------------
 
-/**
- * F100 / AC8 — the two serialization domains one canonical core serves.
- *
- * `verification` is feature 26's: a leaf outside the JSON data model is refused by
- * name, because a digest that silently drops bytes lets two different candidates
- * bind one value (the collision class F80 measured: `digest([]) === digest([fn])`).
- * `legacy` is the released 3.3.0 one: the leaf goes to `JSON.stringify`, which
- * answers the JS value `undefined` for a function, symbol or `undefined` leaf —
- * the enclosing fragment then interpolates the text `undefined` (an object field)
- * or an EMPTY element (an array, because `Array.prototype.join` renders `undefined`
- * as nothing) — and throws its own opaque TypeError for a bigint. Non-finite
- * numbers serialize as `null`.
- *
- * Both domains agree byte-for-byte on every document inside the JSON data model,
- * which is why the split moves no shipped digest: AC8 pins "pre-feature-26 export
- * meanings remain unchanged", so the strict refusal belongs to the verification
- * canonicalizers only, and the three legacy exports keep the bytes consumers
- * already hold. The cost is stated in `decisions.md`, not hidden: the legacy
- * collision class stays on the legacy path.
- */
-type CanonicalLeafDomain = "legacy" | "verification";
-
-/**
- * D4/D6 — Canonical serialization of one value.
- *
- * The domain is the JSON data model: `null`, string, finite number, boolean, array
- * and plain object. What happens *outside* it is the `domain` argument above — a
- * named refusal for the verification contracts, the 3.3.0 fallback for the legacy
- * ones. This function is the byte-level authority behind every digest in the
- * package, so the two domains are pinned by golden vectors
- * (`test/fixtures/canonical-legacy-vectors.mjs`) and by the AC5 verification
- * vectors, never by prose.
- */
-function canonicalJSONValue(v: unknown, domain: CanonicalLeafDomain = "verification"): string {
-  if (v === null) return "null";
-  const kind = typeof v;
-  if (kind === "string") return JSON.stringify(v);
-  if (kind === "number") {
-    if (!Number.isFinite(v as number)) {
-      if (domain === "verification") {
-        throw new TypeError(`canonical JSON: unsupported leaf (non-finite ${kind})`);
-      }
-      return JSON.stringify(v); // 3.3.0: NaN / ±Infinity serialize as `null`
-    }
-    return JSON.stringify(v);
-  }
-  if (kind === "boolean") return JSON.stringify(v);
-  if (Array.isArray(v)) {
-    // An explicit arrow, never `.map(canonicalJSONValue)`: `map` would pass the
-    // element INDEX as the domain, silently selecting the legacy fallback for
-    // every array leaf.
-    return "[" + v.map((item) => canonicalJSONValue(item, domain)).join(",") + "]";
-  }
-  if (kind === "object") {
-    const keys = Object.keys(v as Record<string, unknown>).sort();
-    return "{" + keys.map(k => JSON.stringify(k) + ":" + canonicalJSONValue((v as Record<string, unknown>)[k], domain)).join(",") + "}";
-  }
-  if (domain === "verification") {
-    throw new TypeError(`canonical JSON: unsupported leaf (${kind})`);
-  }
-  return JSON.stringify(v);
-}
 
 /**
  * D4 — Canonicalize a CandidateSnapshotV1.
@@ -2917,18 +2919,6 @@ export function canonicalizeReviewReceipt(receipt: ReviewReceiptV1): string {
     policyVersion: receipt.policyVersion,
   };
   return canonicalJSONValue(obj, "legacy");
-}
-
-// ---------------------------------------------------------------------------
-// SHA-256 hashing
-// ---------------------------------------------------------------------------
-
-/** D4 — SHA-256 hex digest (async via Web Crypto). */
-async function sha256Hex(data: string): Promise<string> {
-  const buf = _utf8Encoder.encode(data);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
-  const hashArray = new Uint8Array(hashBuffer);
-  return Array.from(hashArray).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 /** D4 — Digest a CandidateSnapshotV1 via canonical serialization. */
@@ -3151,10 +3141,6 @@ export { VERIFICATION_DIAGNOSTIC_CODES };
 export type VerificationDiagnosticCode = VerificationDiagnosticCodeV1;
 export type { VerificationDiagnosticV1 };
 
-/** UTF-8 byte length of a canonical form — the unit D14 payload budgets use. */
-function utf8Bytes(text: string): number {
-  return _utf8Encoder.encode(text).length;
-}
 
 /**
  * D14 canonical payload budget (F77), measured BEFORE any diagnostic is
@@ -3590,17 +3576,12 @@ export function deriveVerificationVerdict(
 }
 
 /**
- * D6 — Canonical serialization, shared by both contract sides.
+ * D6 — Canonical serialization of a verification contract, shared by both sides.
  *
- * Inputs are projected through the canonical definition first, so the bytes —
- * and therefore every digest — describe the normalized own-property contract
- * fields, never an inherited prototype value or an undeclared extra.
- *
- * The SPEC precondition ("inputs must first pass their validators") is
- * enforced defensively here (F91): a declared-array cardinality beyond D14 is
- * refused BEFORE any serialization work runs, and the canonical form itself
- * must fit the contract's byte budget. A refusal is a named TypeError that
- * quotes only the violated limit — never the submitted content.
+ * The guards (F91 cardinality, F97/F99 one-capture, the byte budget) and the
+ * own-property projection live in `canonicalizeContractInput`, which the
+ * pre-execution canonicalizers use too: one serializer, so a digest cannot mean
+ * one thing for a verification document and another for a snapshot or receipt.
  */
 function canonicalizeWithinContract(
   value: unknown,
@@ -3610,38 +3591,16 @@ function canonicalizeWithinContract(
   budgetBytes: number,
   label: "plan" | "receipt",
 ): string {
-  // F97/F99 — one bounded observation, then every guard and the serialization itself
-  // consume that snapshot. Without the capture the cardinality guard above and
-  // `projectStructure` below would read the same submission twice, so a flipping
-  // accessor could make the digest cover a document the guard never saw.
-  const submitted = captureSubmittedVerificationInput(value, budgetBytes);
-  if (!submitted.ok) {
-    throw new TypeError(
-      submitted.code === "limit-exceeded"
-        ? // The capture measured the canonical form past the budget — the same
-          // refusal F91 names, reached before the serializer could finish it.
-          `verification ${label} canonical form exceeds the D14 ${budgetBytes}-byte budget — validate before canonicalizing`
-        : `verification ${label} input is not a readable JSON document — validate before canonicalizing`,
-    );
-  }
-  const document = submitted.value;
-  if (document !== null && typeof document === "object") {
-    const items = (document as Record<string, unknown>)[collectionField];
-    if (Array.isArray(items) && items.length > maxItems) {
-      throw new TypeError(
-        `verification ${label} exceeds the D14 limit of at most ${maxItems} ${collectionField} — validate before canonicalizing`,
-      );
-    }
-  }
-  const canonical = canonicalJSONValue(
-    projectStructure(contract, contract.root, document),
-  );
-  if (utf8Bytes(canonical) > budgetBytes) {
-    throw new TypeError(
-      `verification ${label} canonical form exceeds the D14 ${budgetBytes}-byte budget — validate before canonicalizing`,
-    );
-  }
-  return canonical;
+  return canonicalizeContractInput(value, contract, {
+    collectionField,
+    maxItems,
+    budgetBytes,
+    family: "verification",
+    label,
+    // Feature 26's F91 surface pins the D14 marker inside the over-budget
+    // message; the shared serializer keeps it for this family only.
+    budgetTag: "D14",
+  });
 }
 
 /**
@@ -3787,3 +3746,86 @@ export const VERIFICATION_CANONICAL_VECTORS: ReadonlyArray<Readonly<CanonicalVec
     description: "minimal valid VerificationReceipt v1 (single passed result)",
   }),
 ] as const);
+
+// ---------------------------------------------------------------------------
+// Pre-execution evidence contracts (feature 28) — the published surface
+// ---------------------------------------------------------------------------
+
+/**
+ * Re-exported so a consumer imports ONE package root for every contract family.
+ * The implementation lives in `pre-execution.ts`; the structural definition stays
+ * package-internal, exactly as the verification family's does, and the generated
+ * Draft-07 files are projections of it, not a second authority.
+ */
+export {
+  buildPreExecutionArtifactSnapshot,
+  canonicalizePreExecutionArtifactSnapshot,
+  canonicalizePreExecutionReviewReceipt,
+  comparePreExecutionReceiptToSnapshot,
+  digestPreExecutionArtifactSnapshot,
+  digestPreExecutionReviewReceipt,
+  selectSpecProduct,
+  validatePreExecutionArtifactSnapshotV1,
+  validatePreExecutionReceiptAgainstSnapshot,
+  validatePreExecutionReviewReceiptV1,
+  PRE_EXECUTION_ARTIFACT_KINDS,
+  PRE_EXECUTION_AUTHOR_EXCLUSIONS,
+  PRE_EXECUTION_CANONICAL_VECTORS,
+  PRE_EXECUTION_CONTEXT_KINDS,
+  PRE_EXECUTION_CONTEXT_PRESENCE,
+  PRE_EXECUTION_DIAGNOSTIC_CODES,
+  PRE_EXECUTION_FINDING_CLASSES,
+  PRE_EXECUTION_FINDING_RESOLUTIONS,
+  PRE_EXECUTION_FINDING_SEVERITIES,
+  PRE_EXECUTION_FINDING_VERIFICATION,
+  PRE_EXECUTION_FRESHNESS_CODES,
+  PRE_EXECUTION_LIMITS,
+  PRE_EXECUTION_MODEL_DIVERSITY,
+  PRE_EXECUTION_PARENT_ROLES,
+  PRE_EXECUTION_RECEIPT_CONTRACT_ID,
+  PRE_EXECUTION_REVIEW_ROLES,
+  PRE_EXECUTION_RUNTIME_RULES,
+  PRE_EXECUTION_SELECTORS,
+  PRE_EXECUTION_SNAPSHOT_CONTRACT_ID,
+  PRE_EXECUTION_SNAPSHOT_SELECTOR,
+  PRE_EXECUTION_STAGES,
+  PRE_EXECUTION_UNIT_KINDS,
+  PRE_EXECUTION_VERDICTS,
+  SPEC_PRODUCT_REQUIRED_HEADINGS,
+} from "./pre-execution.js";
+
+export type {
+  PreExecutionArtifactInput,
+  PreExecutionArtifactKind,
+  PreExecutionArtifactRow,
+  PreExecutionArtifactSnapshotV1,
+  PreExecutionAuthorExclusion,
+  PreExecutionCanonicalVector,
+  PreExecutionContextBinding,
+  PreExecutionContextInput,
+  PreExecutionContextKind,
+  PreExecutionContextPresence,
+  PreExecutionDiagnostic,
+  PreExecutionDiagnosticCode,
+  PreExecutionFinding,
+  PreExecutionFindingClass,
+  PreExecutionFindingResolution,
+  PreExecutionFindingSeverity,
+  PreExecutionFindingVerification,
+  PreExecutionFreshnessCode,
+  PreExecutionFreshnessResult,
+  PreExecutionModelDiversity,
+  PreExecutionParentReceipt,
+  PreExecutionParentRole,
+  PreExecutionReceiptValidationResult,
+  PreExecutionReviewReceiptV1,
+  PreExecutionReviewerRole,
+  PreExecutionSelector,
+  PreExecutionSnapshotBuildInput,
+  PreExecutionSnapshotValidationResult,
+  PreExecutionStage,
+  PreExecutionUnitKind,
+  PreExecutionVerdict,
+  SpecProductSelection,
+  SpecProductSelectorError,
+} from "./pre-execution.js";

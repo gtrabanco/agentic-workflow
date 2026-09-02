@@ -1,7 +1,7 @@
 ---
 name: resolve-repository-state
 user-invocable: true
-version: 1.2.0
+version: 1.2.1
 argument-hint: <contradiction-id>
 description: >
   Resolve an explicit Normalized Repository State contradiction. This is the
@@ -76,4 +76,5 @@ Otherwise:
 → Next: resume the interrupted workflow named by `Reported by` — continue from the resolved snapshot
   · planning was interrupted → /plan-feature <slug>
   · implementation was interrupted → /execute-phase <NN>
+    (only while its `PLAN-REVIEW-PASS` is still current → else /review-plan <NN>)
   · review, audit, or status was interrupted → rerun that same skill

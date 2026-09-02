@@ -86,12 +86,18 @@ review-implementation:
 review-perf:
   model: sonnet
   effort: medium
+review-plan:
+  model: opus
+  effort: high
 review-security:
   model: opus
   effort: high
 review-seo:
   model: sonnet
   effort: medium
+review-spec:
+  model: opus
+  effort: high
 review-verify:
   model: sonnet
   effort: medium

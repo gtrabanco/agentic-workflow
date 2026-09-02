@@ -1,7 +1,7 @@
 ---
 name: loop-review-fold
 user-invocable: true
-version: 2.0.0
+version: 3.0.0
 argument-hint: <NN> | --fix <issue-number>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -90,6 +90,22 @@ Then continue as follows:
    `fix-now` row. Do not start another review before that queue is processed.
 4. If `fold-findings` changes and pushes the candidate, run `review-change` on
    that new HEAD. Never review an unchanged HEAD a second time.
+4a. Before step 5, split the open queue by **owning stage** (the `route` cell each
+    `review-change` finding carries: `product | plan | source | environment |
+    runtime`). Only `source`, `environment` and `runtime` rows may be folded or
+    triaged here. A `plan`-owned row stops the loop with `BLOCKED` and hands off to
+    `/plan-feature <unit>` (fix: `/plan-fix <n>`) for one root-caused re-cut, then
+    `/review-plan <unit>`; a `product`-owned row goes to `/design-feature <unit>`
+    then `/review-spec <unit>`. Folding repairs the candidate; it cannot repair the
+    authority that describes it, so never fold a row whose artifact of record is a
+    planning document, and never send one to `triage-issue` to make it disappear.
+4b. On entering a **second** local review→fold cycle for the same finding family,
+    diagnose before editing again: emit the `CONVERGENCE-ANOMALY` report defined by
+    `pre-execution-review` (repeated vs new ids, snapshot digest and
+    `artifactRevisionId` move, what was missed, owning stage, why the prior
+    repair failed, route to owner) and continue from the owner it names. A third
+    blind edit is not a repair attempt, and no cycle count here is ever hidden.
+
 5. If any finding remains unresolved (`DISPUTED`, `BLOCKED`, `REPLAN`, or an
    open row left after folding), stop the loop and hand every such ID to:
 
@@ -109,7 +125,9 @@ Then continue as follows:
 
 Do not use a hidden retry count. The loop ends at the first `PASS`, blocked
 prerequisite, unresolved finding, or required manual replan. A later user
-invocation starts from the newly persisted state.
+invocation starts from the newly persisted state. The loop files nothing: an
+unresolved finding never becomes a forge issue from here, and deferring one out of
+the unit requires the user to amend the governing SPEC first.
 
 ## Fixed output contract
 
@@ -120,6 +138,8 @@ REVIEW-FOLD LOOP — PASS | TRIAGE-REQUIRED | BLOCKED
 Unit: <unit> · PR: <url> · HEAD: <sha>
 First action: PASS | review-change | fold-findings
 Review: <PASS | FAIL | not-run> · Fold: <changed | unchanged | not-run>
+Owned elsewhere: <plan → /plan-feature + /review-plan | product → /design-feature
+  + /review-spec | none>
 Unresolved: <F1 + F2 + … | none>
 Evidence: <one concise line explaining the selected action and result>
 
@@ -139,6 +159,9 @@ and route unresolved findings to `triage-issue`.
 Forbidden: implementing a fix in this router, editing review classifications,
 marking findings folded, creating unrelated issues, weakening acceptance or
 checks, merging, or claiming that a user has implemented newly planned phases.
+Also forbidden: folding a `plan`- or `product`-owned finding, re-editing on a
+second local cycle before the convergence diagnosis is reported, and treating an
+absent pre-execution PASS as foldable debt.
 
 ## Relationship to other skills
 

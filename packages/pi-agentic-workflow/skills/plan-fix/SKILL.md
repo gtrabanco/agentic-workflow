@@ -1,25 +1,33 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 2.7.0
+version: 3.0.1
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Draft and locally commit a tightly scoped, phased fix SPEC from one or more
-  issues, then stop before push/PR and hand off to execute-phase --fix. Triggers:
-  "plan-fix", "plan a fix for issue N", "draft the fix spec".
+  issues with its planning ledgers frozen, then stop before push/PR and hand off
+  to review-plan. Triggers: "plan-fix", "plan a fix for issue N", "draft the fix
+  spec".
 ---
 
 # Plan Fix
 
-Fix-flow counterpart of `plan-feature`: draft the SPEC plus frozen acceptance,
-stop for review, then `execute-phase --fix` implements every remaining phase.
+Fix-flow counterpart of `plan-feature`: draft the SPEC plus frozen acceptance and
+the two planning ledgers, then stop. `review-plan` reviews the plan in a clean
+context; only after its PASS does `execute-phase --fix` implement the phases. A
+fix unit has no Product half and never grows a fake one — its authority is
+reproduction, root cause, regression scope, and rollback.
 
 ## Turn contract — verify before ending the turn
 
 ```
 ✓ The fix SPEC is committed on its `fix/<n>-<topic>` branch (commit sha pasted) — NOT pushed, NO PR
+✓ Both ledgers are frozen in the SPEC, `stage: plan` readiness printed
+  `READY-FOR-REVIEW`, and the `artifactRevisionId` of this write is named in the hand-off
+✓ This fix has no fabricated Product half, and the hand-off routes to
+  `/review-plan` — never straight to `/execute-phase`
 ✓ The Hand-off block was printed exactly as specified
 ✓ A multi-issue unit? The hand-off names every issue once as `#primary + #n2 + …`; a single-issue unit names only its issue
 ✓ Artifact language: explicit user instruction > the project's declared docs language > English. The CONVERSATION language never decides — a Spanish prompt still produces English artifacts unless one of the first two says otherwise
@@ -51,9 +59,14 @@ One or more GitHub issue numbers from this repo, space-separated.
   issue number or the lowest merged issue; merged SPECs retain each issue's criteria.
 - `docs/fix/<primary-issue-number>-<topic>/ACCEPTANCE.md` — the compact frozen
   finish line from `verification-contract`, retaining one criterion per issue.
+- `### Planning evidence` and `### Obligations` inside that SPEC — the two frozen
+  ledgers ([planning ledgers](<../pre-execution-review/SKILL.md>)), with the fix
+  rows `evidence-grounding` names: reproduction, root cause with code evidence,
+  regression scope, rollback path, and the affected invariant or use case. A
+  missing reproduction row is `unknown` with an owner, not "probably this".
 - Branch `fix/<primary>-<topic>` from `main`.
 - One local commit with SPEC and `docs/fix/README.md` (`pending`, all merged issues).
-- **Stop: do not push/open PR.** Hand off to `execute-phase --fix`.
+- **Stop: do not push/open PR.** Hand off to `review-plan`, then `execute-phase --fix`.
 
 ## Hard rules
 
@@ -76,6 +89,12 @@ The allowlist is exactly these five paths:
 4. Before emitting phases: load the [phase contract](<../phase-contract/SKILL.md>) for the 8-box phase-lint and phase fingerprint.
 5. Before commit: consume the [verification contract](<../verification-contract/SKILL.md>)
    and write the frozen `ACCEPTANCE.md`.
+6. While drafting: ground per [`evidence-grounding`](<../evidence-grounding/SKILL.md>)
+   and freeze both ledgers per
+   [`pre-execution-review`](<../pre-execution-review/SKILL.md>); before the
+   hand-off run evidence-grounding's `stage: plan` readiness preflight and paste
+   the block. `READY-FOR-REVIEW` licenses the hand-off; it is never a review
+   verdict, and this skill does not review its own plan.
 
 Resources are normative and one hop from this file. Missing required resource →
 stop; never approximate fixed blocks or phase rules.
@@ -90,8 +109,12 @@ Branch: fix/<primary>-<topic> (local, not pushed)
 Commit: <short hash>
 Issue set: #<primary> + #<n2> + #<n3> (print every issue in this unit; single issue → #<primary>)
 
-→ Next: review the SPEC, then /execute-phase --fix <primary> — execute every remaining phase in issue set #<primary> + #<n2> + #<n3> and open the PR
-  · explicit atomic mode → /execute-phase --fix <primary> P<n> (same issue set: #<primary> + #<n2> + #<n3>)
+→ Next: /review-plan fix-<primary> — an independent context reviews this plan and
+  these ledgers before any phase runs; /execute-phase --fix <primary> follows its
+  PLAN-REVIEW-PASS (issue set #<primary> + #<n2> + #<n3>)
+  · PLAN-REVIEW-FAIL → repair here as one batch, rotate the artifact revision, re-review
+  · a product choice is open → /design-feature, then /review-spec, then replan this fix
+  · after PASS, explicit atomic mode → /execute-phase --fix <primary> P<n> (same issue set)
   · the final `Hardening & PR` phase pushes and opens the PR with `Closes #<primary>`
     plus one `Closes #<n>` line for every other issue listed in the Issue set
   · scope looks wrong → adjust the SPEC and re-run /plan-fix

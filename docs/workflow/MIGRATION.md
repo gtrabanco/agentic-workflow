@@ -2,6 +2,94 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-08-30 — every route now refuses to start work on an unreviewed plan
+
+**Breaking routing; `workflow-status` 3.0.0, `execute-phase` 4.0.0,
+`ship-roadmap` 5.0.0, `loop-review-fold` 3.0.0, `audit-pr` 5.0.0,
+`review-change` 2.12.0, `review-implementation` 1.5.0, internal
+`pre-execution-review` 1.1.0.**
+
+The gate is no longer only at the authoring hop — it is at the *starting* hop:
+
+- **Recommendations are evidence-staged.** `workflow-status` reads each unit's
+  receipt block, recomputes its digest, and labels the stage
+  `current | missing | stale | wrong-stage | substitute | self-approved |
+  author-readiness | legacy`. A unit without a current PASS for the stage it is about
+  to enter leaves `startable_now` and becomes a `gate` blocker naming the review it
+  still needs (`detail.pre_execution[]` carries the rows). If you consumed
+  `next.recommended` as "status → command", consume it as "status + receipt →
+  command".
+- **`execute-phase` fails closed.** Between the own-status gate and the acceptance
+  manifest sits the pre-execution review gate: no edit on a missing, stale, or
+  wrong-stage `PLAN-REVIEW-PASS` (fix units: their own receipt). `--force` does not
+  reach this gate — it overrides ordering stops, not a reviewer's verdict. Drivers
+  that passed `--force` to get past a planning stop must now run `/review-plan <NN>`.
+- **The autopilot has two more stages:** DESIGN → REVIEW-SPEC → PLAN → REVIEW-PLAN →
+  EXECUTE → PR → REVIEW → AUDIT, with both reviews in a clean context. `NEEDS-DESIGN`
+  parks the unit for the human rather than guessing a product answer; merge policy is
+  unchanged.
+- **Findings carry an owning stage.** `review-change` reports `plan`- and
+  `product`-owned findings with their owner, and `loop-review-fold` refuses to fold
+  them: they return to the authoring skill plus a re-review. A second local cycle
+  emits `CONVERGENCE-ANOMALY` before editing again.
+- **`audit-pr` checks the lineage survived the build**: current plan receipt (+ parent
+  spec receipt), all obligation rows `verified`/`n/a`, no open planning finding. A
+  `deferred` row without a user-amended governing SPEC blocks. It remains the only
+  emitter of `MERGE-READY`.
+- **Legacy units adopt, they are not exempt.** `planned`/`in-progress` units from
+  before feature 28 get the two ledgers built from their current artifacts and then a
+  real `/review-plan`; nothing old is rewritten, no frozen acceptance is touched, and
+  execution resumes only on the new PASS. `legacy` ("predates the gate") and `missing`
+  ("never reviewed") are reported differently on purpose.
+- **Nothing files an issue to close a planning gap** on any of these routes, and an
+  obligation cannot be deferred to a follow-up issue unless the user amends the
+  governing SPEC first.
+
+## 2026-08-30 — designed is no longer the same as reviewed
+
+**Breaking hand-offs and routing; `design-feature` 3.1.0, `plan-feature` 5.0.0,
+`plan-feature-scaffold` 2.0.0, `plan-fix` 3.0.0, `plan-feature-from-issue` 2.0.0,
+`review-spec` 1.1.0, and the new `review-plan` 1.0.0 with the internal
+`evidence-grounding` 1.1.0 and `pre-execution-review` 1.0.0.** Product authoring and product verdicts now have
+different owners. `design-feature` closes its Product half at a deterministic
+`READY-FOR-REVIEW` preflight and hands off to `/review-spec <slug>`; it no
+longer sends work straight to `plan-feature`. `plan-feature` adds a
+Product-review gate after the redirect gate and fails closed with
+`PRODUCT-REVIEW GATE … BLOCKED` when the receipt is `missing`, `stale`,
+`wrong-stage`, a `substitute` (candidate or verification receipt), `self-approved`,
+or present only as `author-readiness`. `plan-feature-from-issue` — name kept for
+compatibility — now stops after the Product half instead of exporting an issue
+straight into scaffolding.
+
+**Migration.** Nothing on disk is invalidated: an existing `designed` SPEC simply
+has no review yet, which is the honest state. Run `/review-spec <slug>` on any
+unit you intend to plan; a SPEC written before this change will usually fail
+`C2`/`C9` (claims without evidence rows, decisions without a named owner) and
+come back as `SPEC-REVIEW-FAIL` for one batched repair in `design-feature`.
+Evidence rows are the new expectation: one per material Product claim, with
+`authority-kind`, source and location, the revision observed, and a freshness
+verdict — an unsampled model capability is `ASSUMPTION-UNVERIFIED`, never a
+repository citation. If you drive `plan-feature-from-issue` programmatically,
+expect it to stop before the Engineering half; call `plan-feature <slug>` after
+the review passes. Direct consumers that asserted the old terminal hand-off must
+now assert `/review-spec`.
+
+**Planning gains the same hop on the Engineering side.** Scaffolding and `plan-fix`
+now freeze two ledgers with the plan — `planning-evidence.md` +
+`planning-obligations.md` for M/L units, `### Planning evidence` + `### Obligations`
+embedded in the SPEC for XS/S and fix units — and hand off to `/review-plan <NN>`
+(fix: `/review-plan fix-<N>`) instead of `/execute-phase`. `review-plan` sweeps those
+ledgers (L1–L6) and the fixed Engineering checks (P1–P12, plus F1–F4 for fixes) in a
+context that did not cut the phases, and only its current `PLAN-REVIEW-PASS` lets
+`execute-phase` edit anything. A planned unit with no review is a normal, honest
+state: run `/review-plan <NN>`. A unit whose obligation rows are blank, `deferred`,
+or exported to a follow-up issue fails the review rather than the release; deferring
+one requires amending the governing SPEC first. Consumers that asserted
+`plan-feature`'s old `/execute-phase` hand-off now assert `/review-plan`, and the
+shared review-cycle rules (independence, unioned findings, counter-evidence-only
+dismissal, no-progress, the `CONVERGENCE-ANOMALY` report) moved to the internal
+`pre-execution-review` owner, so read them there instead of per-skill.
+
 ## 2026-08-21 — hybrid machine results and deterministic snapshots
 
 **Breaking driver contract; `@gtrabanco/agentic-workflow-schema` 3.0.0,

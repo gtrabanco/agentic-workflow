@@ -35,6 +35,7 @@ second local repair/re-review cycle.
 ## P5 — Qualify the pre-execution workflow
 
 Layer: hardening · synchronize docs/distribution/migration, version changed
-skills, run package and repository regressions, exercise the golden/manual
+skills, bump and release both companion packages (schema `3.5.0`, Pi `0.2.0`),
+run package and repository regressions, exercise the golden/manual
 route, qualify feature/fix/cross-boundary samples without a second correction
 cycle, independently review, and open the one implementation PR.

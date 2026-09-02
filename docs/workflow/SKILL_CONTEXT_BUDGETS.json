@@ -18,158 +18,391 @@
     },
     "orchestration-envelope": {
       "descriptionEstimateMax": 170
+    },
+    "pre-execution-review": {
+      "referenceEstimateMax": 3225
+    },
+    "execute-phase": {
+      "referenceEstimateMax": 2588
     }
   },
   "routes": {
-    "plan-feature:scoped": {
-      "skills": ["plan-feature", "planning-preflight", "phase-contract", "verification-contract"],
+    "audit-pr:feature": {
+      "skills": [
+        "audit-pr"
+      ],
       "templates": [],
-      "routeEstimateMax": 6650,
-      "routeLinesMax": 581
+      "routeEstimateMax": 9545,
+      "routeLinesMax": 616
     },
-    "plan-feature:issue": {
-      "skills": ["plan-feature", "plan-feature-from-issue", "planning-preflight", "phase-contract", "verification-contract"],
+    "audit-pr:fix": {
+      "skills": [
+        "audit-pr"
+      ],
       "templates": [],
-      "routeEstimateMax": 8610,
-      "routeLinesMax": 728
+      "routeEstimateMax": 9545,
+      "routeLinesMax": 616
     },
-    "plan-fix:issue": {
-      "skills": ["plan-fix", "planning-preflight", "phase-contract", "verification-contract"],
+    "design-feature:product": {
+      "skills": [
+        "design-feature",
+        "evidence-grounding"
+      ],
       "templates": [],
-      "routeEstimateMax": 7115,
-      "routeLinesMax": 583
+      "routeEstimateMax": 15913,
+      "routeLinesMax": 1106
+    },
+    "design-feature:repair": {
+      "skills": [
+        "design-feature",
+        "evidence-grounding",
+        "pre-execution-review"
+      ],
+      "templates": [],
+      "routeEstimateMax": 25077,
+      "routeLinesMax": 1701
+    },
+    "execute-phase:descope": {
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
+      "references": {
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md",
+          "DESCOPE.md"
+        ]
+      },
+      "templates": [],
+      "routeEstimateMax": 11125,
+      "routeLinesMax": 844
     },
     "execute-phase:feature": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FEATURE.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "WORKFLOWS_FEATURE.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md"
+        ]
       },
       "templates": [],
       "routeEstimateMax": 11280,
       "routeLinesMax": 846
     },
-    "execute-phase:small": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
+    "execute-phase:final-pr": {
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_SMALL_PHASED.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md",
+          "FORGE_BODY.md"
+        ]
       },
       "templates": [],
-      "routeEstimateMax": 11230,
-      "routeLinesMax": 847
+      "routeEstimateMax": 11155,
+      "routeLinesMax": 832
+    },
+    "execute-phase:finding": {
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
+      "references": {
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md",
+          "OPPORTUNISTIC_FINDING.md"
+        ]
+      },
+      "templates": [],
+      "routeEstimateMax": 11310,
+      "routeLinesMax": 854
     },
     "execute-phase:fix": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FIX.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "WORKFLOWS_FIX.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md"
+        ]
       },
       "templates": [],
       "routeEstimateMax": 11455,
       "routeLinesMax": 852
     },
     "execute-phase:legacy": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_LEGACY.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "WORKFLOWS_LEGACY.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md"
+        ]
       },
       "templates": [],
       "routeEstimateMax": 11075,
       "routeLinesMax": 834
     },
-    "execute-phase:final-pr": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
+    "execute-phase:small": {
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "FORGE_BODY.md"]
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "EXECUTION_CONTRACT.md",
+          "WORKFLOWS_SMALL_PHASED.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md"
+        ]
       },
       "templates": [],
-      "routeEstimateMax": 11155,
-      "routeLinesMax": 832
-    },
-    "execute-phase:descope": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
-      "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "DESCOPE.md"]
-      },
-      "templates": [],
-      "routeEstimateMax": 11125,
-      "routeLinesMax": 844
-    },
-    "execute-phase:finding": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
-      "references": {
-        "execute-phase": ["PREFLIGHT.md", "EXECUTION_CONTRACT.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md", "OPPORTUNISTIC_FINDING.md"]
-      },
-      "templates": [],
-      "routeEstimateMax": 11310,
-      "routeLinesMax": 854
-    },
-    "review-change:default-backend": {
-      "skills": ["review-change", "review-implementation", "review-debt", "verification-contract"],
-      "references": {
-        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_RECOMMENDATION.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
-      },
-      "templates": [],
-      "routeEstimateMax": 12750,
-      "routeLinesMax": 949
-    },
-    "review-change:default-web": {
-      "skills": ["review-change", "review-implementation", "review-debt", "verification-contract"],
-      "references": {
-        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_RECOMMENDATION.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
-      },
-      "templates": [],
-      "routeEstimateMax": 12750,
-      "routeLinesMax": 949
-    },
-    "review-change:adversarial": {
-      "skills": ["review-change", "review-implementation", "review-debt", "verification-contract"],
-      "references": {
-        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_SETUP.md", "ADVERSARIAL_SYNTHESIS.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
-      },
-      "templates": [],
-      "routeEstimateMax": 14485,
-      "routeLinesMax": 1062
-    },
-    "review-change:synthesize": {
-      "skills": ["review-change", "review-implementation", "review-debt", "verification-contract"],
-      "references": {
-        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_SYNTHESIS.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"]
-      },
-      "templates": [],
-      "routeEstimateMax": 13240,
-      "routeLinesMax": 972
+      "routeEstimateMax": 11230,
+      "routeLinesMax": 847
     },
     "execute-phase:unit-loop": {
-      "skills": ["execute-phase", "phase-contract", "verification-contract"],
+      "skills": [
+        "execute-phase",
+        "phase-contract",
+        "verification-contract"
+      ],
       "references": {
-        "execute-phase": ["PREFLIGHT.md", "UNIT_LOOP.md", "EXECUTION_CONTRACT.md", "WORKFLOWS_FEATURE.md", "HANDOFF.md", "CLOSEOUT.md", "FOLDING.md"]
+        "execute-phase": [
+          "PRE_EXECUTION_GATE.md",
+          "UNIT_LOOP.md",
+          "EXECUTION_CONTRACT.md",
+          "WORKFLOWS_FEATURE.md",
+          "HANDOFF.md",
+          "CLOSEOUT.md",
+          "FOLDING.md"
+        ]
       },
       "templates": [],
       "routeEstimateMax": 14000,
       "routeLinesMax": 980
     },
     "loop-review-fold:default": {
-      "skills": ["loop-review-fold", "review-change", "fold-findings", "triage-issue", "verification-contract"],
+      "skills": [
+        "loop-review-fold",
+        "review-change",
+        "fold-findings",
+        "triage-issue",
+        "verification-contract"
+      ],
       "references": {
         "loop-review-fold": [],
-        "review-change": ["REVIEW_PROCESS.md", "ADVERSARIAL_RECOMMENDATION.md", "PERSIST_AND_DECIDE.md", "OUTPUT_AND_GUARDRAILS.md"],
-        "fold-findings": ["FOLD_POLICY.md", "FOLD_PROCESS.md"],
-        "triage-issue": ["REVIEW_FINDING_PROCESS.md"]
+        "review-change": [
+          "REVIEW_PROCESS.md",
+          "ADVERSARIAL_RECOMMENDATION.md",
+          "PERSIST_AND_DECIDE.md",
+          "OUTPUT_AND_GUARDRAILS.md"
+        ],
+        "fold-findings": [
+          "FOLD_POLICY.md",
+          "FOLD_PROCESS.md"
+        ],
+        "triage-issue": [
+          "REVIEW_FINDING_PROCESS.md"
+        ]
       },
       "templates": [],
       "routeEstimateMax": 21000,
       "routeLinesMax": 1450
     },
-    "audit-pr:feature": {
-      "skills": ["audit-pr"],
+    "plan-feature:issue": {
+      "skills": [
+        "plan-feature",
+        "plan-feature-from-issue",
+        "planning-preflight",
+        "phase-contract",
+        "verification-contract"
+      ],
       "templates": [],
-      "routeEstimateMax": 8164,
-      "routeLinesMax": 617
+      "routeEstimateMax": 10917,
+      "routeLinesMax": 879
     },
-    "audit-pr:fix": {
-      "skills": ["audit-pr"],
+    "plan-feature:scaffold": {
+      "skills": [
+        "plan-feature-scaffold",
+        "phase-contract",
+        "verification-contract",
+        "evidence-grounding",
+        "pre-execution-review"
+      ],
       "templates": [],
-      "routeEstimateMax": 8164,
-      "routeLinesMax": 617
+      "routeEstimateMax": 21832,
+      "routeLinesMax": 1562
+    },
+    "plan-feature:scoped": {
+      "skills": [
+        "plan-feature",
+        "planning-preflight",
+        "phase-contract",
+        "verification-contract"
+      ],
+      "templates": [],
+      "routeEstimateMax": 8421,
+      "routeLinesMax": 701
+    },
+    "plan-fix:issue": {
+      "skills": [
+        "plan-fix",
+        "planning-preflight",
+        "phase-contract",
+        "verification-contract",
+        "evidence-grounding",
+        "pre-execution-review"
+      ],
+      "templates": [],
+      "routeEstimateMax": 24749,
+      "routeLinesMax": 1806
+    },
+    "review-change:adversarial": {
+      "skills": [
+        "review-change",
+        "review-implementation",
+        "review-debt",
+        "verification-contract"
+      ],
+      "references": {
+        "review-change": [
+          "REVIEW_PROCESS.md",
+          "ADVERSARIAL_SETUP.md",
+          "ADVERSARIAL_SYNTHESIS.md",
+          "PERSIST_AND_DECIDE.md",
+          "OUTPUT_AND_GUARDRAILS.md"
+        ]
+      },
+      "templates": [],
+      "routeEstimateMax": 15612,
+      "routeLinesMax": 1138
+    },
+    "review-change:default-backend": {
+      "skills": [
+        "review-change",
+        "review-implementation",
+        "review-debt",
+        "verification-contract"
+      ],
+      "references": {
+        "review-change": [
+          "REVIEW_PROCESS.md",
+          "ADVERSARIAL_RECOMMENDATION.md",
+          "PERSIST_AND_DECIDE.md",
+          "OUTPUT_AND_GUARDRAILS.md"
+        ]
+      },
+      "templates": [],
+      "routeEstimateMax": 13794,
+      "routeLinesMax": 1019
+    },
+    "review-change:default-web": {
+      "skills": [
+        "review-change",
+        "review-implementation",
+        "review-debt",
+        "verification-contract"
+      ],
+      "references": {
+        "review-change": [
+          "REVIEW_PROCESS.md",
+          "ADVERSARIAL_RECOMMENDATION.md",
+          "PERSIST_AND_DECIDE.md",
+          "OUTPUT_AND_GUARDRAILS.md"
+        ]
+      },
+      "templates": [],
+      "routeEstimateMax": 13794,
+      "routeLinesMax": 1019
+    },
+    "review-change:synthesize": {
+      "skills": [
+        "review-change",
+        "review-implementation",
+        "review-debt",
+        "verification-contract"
+      ],
+      "references": {
+        "review-change": [
+          "REVIEW_PROCESS.md",
+          "ADVERSARIAL_SYNTHESIS.md",
+          "PERSIST_AND_DECIDE.md",
+          "OUTPUT_AND_GUARDRAILS.md"
+        ]
+      },
+      "templates": [],
+      "routeEstimateMax": 14308,
+      "routeLinesMax": 1043
+    },
+    "review-plan:default": {
+      "skills": [
+        "review-plan",
+        "pre-execution-review"
+      ],
+      "templates": [],
+      "routeEstimateMax": 16585,
+      "routeLinesMax": 1069
+    },
+    "review-spec:default": {
+      "skills": [
+        "review-spec",
+        "pre-execution-review"
+      ],
+      "templates": [],
+      "routeEstimateMax": 14813,
+      "routeLinesMax": 1009
     }
+  },
+  "policy": {
+    "name": "relative-headroom",
+    "headroom": 0.1,
+    "declared": "2026-08-31, user decision on review finding F7 (PR #155)",
+    "rules": [
+      "ceiling = ceil(measured x 1.10) at each declared re-basis",
+      "every ceiling raise names its real growth source in the commit and changelog row",
+      "ceilings are re-based down when trim work lands (debt item D2 owns the plan-fix:issue trim)"
+    ]
   }
 }

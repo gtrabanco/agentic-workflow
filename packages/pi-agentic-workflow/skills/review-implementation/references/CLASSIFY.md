@@ -94,3 +94,27 @@ your domains):
 - **proposal** (independent future capability) → batched in the report with a
   trigger; the **user** decides whether to route it to `triage-issue` (D3).
 - **ignore** → note the rationale in the report; no further action.
+
+## Owning stage: which artifact is actually wrong
+
+Class says what to do with the finding; the **owning stage** says which artifact
+must change, and it is the owning stage that picks the hand-off. Use the five values
+published by `pre-execution-review` (`product | plan | source | environment |
+runtime`) — this skill classifies, it does not redefine them — and state one per
+finding in its `Route` cell.
+
+| Owning stage | Hand-off | Never |
+|---|---|---|
+| `source` | fold locally: `/loop-review-fold` → `/fold-findings` → re-review the changed HEAD | — |
+| `plan` | the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then a **fresh `/review-plan <unit>`** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
+| `product` | `/design-feature <unit>` repairs the half, then `/review-spec <unit>` re-judges it | patch the product claim into agreement in code |
+| `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |
+
+- `fix-now` with a `plan` or `product` owner keeps its severity but is **not**
+  foldable: it appears in the report as replan/re-review work, because the loop that
+  folds source cannot repair authority (see the no-progress/convergence rule in
+  `pre-execution-review`).
+- Cite the artifact beside the owner — `SPEC.md ## Phases`, the obligation id, the
+  acceptance id — an owning stage without a citation is a guess.
+- When both `source` and `plan` look culpable, name the one check that distinguishes
+  them, run it, and record which it refutes; do not silently pick the cheaper route.

@@ -11,5 +11,12 @@ tmp/
 .mcp.json
 
 # Agents & MCPs
+.engram/
 .serena
 .opencode
+# Local state the pre-execution sensor writes inside the worktree. Narrow on purpose:
+# the tracked `.claude/skills` mount is a template artifact, so this must not widen to
+# all of `.claude/`.
+.claude/pre-execution-gates/
+# Recursive-language-model engine memory (episode logs) written by analysis runs.
+.rlm/
