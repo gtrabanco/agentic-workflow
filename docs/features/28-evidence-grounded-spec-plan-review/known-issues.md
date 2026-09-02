@@ -160,3 +160,52 @@ No unresolved product or engineering decision blocks implementation.
     exists (P17's schema-side work is the likely host), add the `machine` cell to those
     inventory rows, and O15 flips to `verified` only when
     `node --test scripts/normative-drift.test.mjs` refuses a doctored column set.
+
+20. **A close-out's own completion ticks move a bound path after the head its review
+    mark names (F38's residue, found by doing it).** D47 made a `REVIEW-RAN` mark current
+    by ancestry over the artifact set `SNAPSHOT.md` binds, which fixed the unobtainable
+    equality rule F38 reported: the commit that carries a mark no longer invalidates it.
+    It cannot fix the terminal phase, because that phase's remaining bookkeeping — the
+    `REVIEW-RAN` row's own consequences — lives in `TASKS.md` (the boxes the review closes)
+    and `planning-obligations.md` (O12, whose required evidence *is* the receipt). Both are
+    bound paths, so the commit that honestly records a PASS is the commit that makes the
+    mark read aged by one revision. This unit chose honesty about the order over a second
+    mechanism: everything a review does not decide is written before the reviewed head, and
+    only the receipt's own consequences follow it (D48). **Re-trigger:** the first phase
+    that moves phase-completion ticks out of the bound set — a separate unbound
+    completion ledger, or a bound-path list that names candidate bytes rather than unit
+    records — deletes this item, and until then any unit whose close-out mints its own
+    review evidence inherits the same one-revision residue.
+21. **Nothing checks that a unit's decision ids are unique, and this unit proves it:**
+    `decisions.md` carries two rows numbered **D44** — P14's
+    `the drift gate parses committed source` (`d2d75696`) and P15's `keeps its FAIL row and
+    withholds its own gate sentence` (`5a2754c0`) — so a bare citation of "D44"
+    (`progress.md:968`, `planning-obligations.md:153`, both meaning P15's) resolves to two
+    owners. No script parses `decisions.md` for identifiers: `ledger-ownership` binds who
+    may write the file, `normative-drift` binds the vocabularies that have machine
+    surfaces, and a decision id has neither, so the collision is invisible to every gate in
+    this repository and surfaced only when a phase needed the next free id. Neither
+    published row is renumbered (an id is how other commits cite a decision, and repointing
+    one silently is worse than the ambiguity), which is why D48 is numbered D48 rather than
+    D44-D47 re-used. **Re-trigger:** the first phase that adds a uniqueness assertion over
+    `^\*\*D<n>` in a unit's `decisions.md` (the natural home is the ledger-ownership suite,
+    which already resolves per-file writers) deletes this item and then renumbers the
+    duplicate with its citations in one reviewed change.
+
+22. **A fold that lands in a merge commit cannot carry a provenance token.**
+    `scripts/ledger-provenance.mjs` lists a commit's files with
+    `git show --pretty= --name-only <sha>`, which prints **nothing** for a merge: git
+    omits the diff against all parents unless `--diff-merges`/`-m` is asked for. F22
+    (roadmap row 28 conflicts with `origin/main`) is closed exactly that way — the
+    conflict resolution lives inside merge commit `81c241d7` — so naming that sha as
+    `· fold 81c241d` made `--check` answer `cited-unverified` and then FAIL the whole
+    ledger, while the annotator's own recovery bound F22 to `0feaaf64`, a commit that
+    merely *mentions* F22 in its message and touches `SPEC.md`/`TASKS.md` instead. Both
+    answers are wrong: one refuses true provenance, the other invents false provenance.
+    **Chosen for this unit:** F22's row stays `folded: no` with the reason written in the
+    row, and its token binds to the commit that carries the roadmap row forward (box 8),
+    which is a real commit that changes the cited surface and verifies.
+    **Re-trigger:** the first change that teaches the provenance lister to read a merge
+    against its first parent (or `--combined`) deletes this item, and until then any
+    conflict-resolution fold must either name a non-merge commit or stay open like this
+    one does.
