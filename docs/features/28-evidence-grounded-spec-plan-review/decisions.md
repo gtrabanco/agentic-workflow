@@ -745,3 +745,63 @@
   and it is thin — the same route's floor reaches its ceiling at about 10,113 measured, so
   P14's gate-side prose is expected to need a declared re-basis. Recorded here so the next
   phase measures before it writes instead of after.
+- **D44 — P14: the drift gate parses committed source, and AC15's scope is a declared
+  table rather than a search.**
+  **Why a parser and not an import.** The gate must fail a fresh clone as loudly as it
+  fails a drifted repository, and `packages/agentic-workflow-schema/dist/` is gitignored
+  output of `npm run build` — a *mutating* normalizer that P13 places strictly before a
+  freeze. Importing `dist` would have made a docs gate depend on whether somebody ran a
+  build, and `require`-ing the package from `scripts/` would have made the root suite
+  depend on `npm install` ordering. So the machine surfaces are read from committed
+  `src/` with five fixed-shape extractors (`export const X = [...] as const`,
+  `Object.freeze` arrays, `*_CONTRACT_ID` literals, the `key`/`allowed` rows of
+  `WORKFLOW_TRANSITION_TABLE`, and the array literals passed to
+  `rejectUnexpectedKeys`, grouped by their enclosing validator), and the case
+  `machine vocabularies are parsed from committed source, never from dist` refuses any
+  read path containing `/dist/`. Grouping field lists by validator is not decoration:
+  `next` is a four-field object to the envelope and a two-field object to
+  `SkillOutcome`, and the union of the two would have made the must-name direction
+  demand prose for keys no turn contract can print.
+  **The grammar convention, stated once.** A surface is in scope iff `CLAUDE.md`'s
+  `normative-surfaces@1` table lists it and its `grammar` cell resolves: `block:<marker>`
+  (a fenced `text <name>@1` table whose `#` lines are directives), `fenced:<anchor>`
+  (every fixed-output block carrying that anchor, `+` joins alternatives),
+  `table:<heading>` (the markdown table under a section heading),
+  `frontmatter:<field>`. Free prose is unreadable by construction — no sentence is ever a
+  check input — which is AC15's "only fixed, versioned grammars" clause turned into a
+  data-structure requirement. The consequence for the phase is that six surfaces needed a
+  grammar authored (gate types, both turn-contract tables, both router tables, the sensor
+  field list), and that authoring is why this is a `hardening` phase rather than a test
+  write: the grammars are now the thing the skills must keep.
+  **Why `must-name` is three vocabularies, and declared as such.** The reverse direction
+  ("the machine requires something no text states") is only meaningful for a closed set
+  an agent chooses between; asserting it over all 30-odd published vocabularies would
+  demand prose for `SKILL_REASONING` tiers and 11 envelope states, i.e. a second
+  definition of machine internals inside the docs the gate exists to keep thin. So the
+  set is `gate-rejection-type`, `pre-execution-verdict`, `envelope-field:next`, it lives
+  in the inventory as a column rather than in the test as a constant, and the test
+  asserts the resolved set literally. That is the same cite-never-restate discipline
+  `POLICY.md` §7 owns for digests, applied to the gate's own scope.
+  **What `rendered-facts@1` refuses to pin.** Five restatements are pinned and
+  recomputed. The sixth candidate — `**17 internal steps**` — was dropped when its
+  predicate failed to close (19 skills are non-user-facing, one of them excluded from
+  distribution), because pinning a number the machine cannot derive would have made the
+  gate guard a guess. It is known-issue 18 with a re-trigger condition instead. Same
+  rule kept O15 at `in-progress`: the `artifact` and `ledger-row shape` clauses are
+  grammar-checked but not token-checked (known-issue 19), and a row is only `verified`
+  when its own validator refuses a doctored value.
+  **Budget, declared, with its growth source.** Growth source is the six new grammar
+  blocks inside route-loaded references, nothing else: `POLICY.md` (routed by
+  `pre-execution-review`), `ROUTING.md` (`plan-feature`), `PLANNING_PROCESS.md`
+  (`plan-fix`), `TURN_CONTRACT.md` and `SENSOR_CORE.md` (in no declared route, so they
+  grow up to the 2200-per-file default freely). Seven route ceilings moved to exactly
+  their measured floors: `design-feature:repair` 24711 -> 24835 / 1677 -> 1692 lines,
+  `plan-feature:issue` 10742 -> 10917 / 861 -> 879, `plan-feature:scaffold` 21466 ->
+  21590 / 1538 -> 1554, `plan-feature:scoped` 8246 -> 8421 / 682 -> 701, `plan-fix:issue`
+  24249 -> 24507 / 1765 -> 1797, `review-plan:default` 16218 -> 16342 / 1036 -> 1051,
+  `review-spec:default` 14410 -> 14535 / 975 -> 990. No skill ceiling moved, no route
+  definition or mode changed, and every moved number is `ceil(measured x 1.10)` — the
+  floors are exact, which is D39's and D41's standing condition, not headroom.
+  `CLAUDE.md` is not a routed file, so the two new tables cost nothing there; they do
+  rotate the frozen `project-guide` digest (gotcha 2 of P13, again measured).
+

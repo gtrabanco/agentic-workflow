@@ -272,6 +272,68 @@ node scripts/check-skill-context.mjs (--routes) | check-only (budget report, wri
 formatter | none declared — this repository has no Prettier, Biome or EditorConfig configuration, so the formatter category is empty here | n/a
 ```
 
+### Normative surfaces (the drift gate's scope)
+
+A *normative surface* is a place that orders what an agent may do next: a flag it
+may pass, a gate trace it may print, a verdict it may emit, a field it may write,
+a route it may hand off to. Feature 28's AC15 binds each of those to the machine
+surface that accepts it — the schema package's published vocabularies
+(`packages/agentic-workflow-schema/src/`), the `argument-hint:` frontmatter of each
+skill, and the skill directory itself. The gate reads **versioned grammar only**:
+a `block:` id, a `fenced:` fixed-output contract, a `table:` section, or frontmatter.
+It never parses a sentence, so a surface with no fixed grammar in the `grammar` cell
+is the defect this table exists to prevent, and `scripts/normative-drift.test.mjs`
+fails closed on it. `machine` names the vocabulary the surface's tokens resolve
+against (`+` joins several); `must-name` is `yes` only where the machine's every
+value must be ordered by some surface, which is the direction that catches a value
+published and never declared anywhere else. The `#` lines are directives: host
+commands a hand-off may print that are not skills.
+
+```text
+normative-surfaces@1
+# hand-off-host-commands: clear
+surface | file | grammar | machine | must-name
+skill-declared-arguments | skills/*/SKILL.md | frontmatter:argument-hint | n/a | no
+closing-hand-offs | skills/*/SKILL.md | fenced:→ Next: | skill | no
+gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | block:gate-rejection-vocabulary@1 | gate-rejection-type | yes
+preflight-gate-traces | skills/execute-phase/references/PREFLIGHT.md | fenced:GATE REJECTION — | gate-rejection-type | no
+pre-execution-gate-trace | skills/execute-phase/references/PRE_EXECUTION_GATE.md | fenced:GATE REJECTION — | gate-rejection-type | no
+plan-mode-routing | skills/plan-feature/references/ROUTING.md | block:plan-mode-routes@1 | skill+flag | no
+fix-mode-routing | skills/plan-fix/references/PLANNING_PROCESS.md | block:fix-mode-routes@1 | skill+flag | no
+review-spec-verdicts | skills/review-spec/references/OUTPUT.md | fenced:SPEC-REVIEW-PASS+Verdict: | pre-execution-verdict | yes
+review-plan-verdicts | skills/review-plan/references/OUTPUT.md | fenced:PLAN-REVIEW-PASS+Verdict: | pre-execution-verdict | yes
+review-spec-handoff | skills/review-spec/references/OUTPUT.md | fenced:→ Next: | skill | no
+review-plan-handoff | skills/review-plan/references/OUTPUT.md | fenced:→ Next: | skill | no
+sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One label per stage | n/a | no
+snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
+ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block:ledger-ownership@1 | n/a | no
+ledger-review-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:review-mark@1 | n/a | no
+sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
+turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
+turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no
+```
+
+### Rendered facts (prose that restates a machine value)
+
+Where prose repeats a version, a count, or a contract id, the machine is
+authoritative and the prose is the defect (AC15). A regex over sentences cannot
+find those, so each restatement is declared once here and the test **recomputes**
+the value: `claim` is a fixed form (`literal:<exact text>`, `version-tables`,
+`package-versions`), `machine` names the publisher, `+` joins surfaces that each
+carry the same fact. `literal:` compares the number or id inside the quoted text;
+the table kinds compare every row the same way. A restatement found in review but
+not pinned here is a known-issue with its re-trigger condition, never a silent gap.
+
+```text
+rendered-facts@1
+surface | claim | machine | rule
+docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
+docs/workflow/SKILLS.es.md | pattern:\*\*(\d+) skills orientadas al usuario\*\* | count:user-facing | equals
+CHANGELOG.md + CHANGELOG.es.md | version-tables | frontmatter:version | equals-each
+CHANGELOG.md + CHANGELOG.es.md | package-versions | package:version | equals-each
+skills/review-spec/references/OUTPUT.md + skills/review-plan/references/OUTPUT.md | literal:agentic-workflow/pre-execution-review-receipt@1 | const:PRE_EXECUTION_RECEIPT_CONTRACT_ID | equals
+```
+
 The two schema generators are the clean example of the split the rule turns on: the
 same script rewrites a projection or reports on it, and only the reporting mode may
 run after a freeze. `bundle:skills` must run after the last edit under `skills/` and

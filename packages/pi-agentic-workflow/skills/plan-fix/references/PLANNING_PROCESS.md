@@ -116,3 +116,18 @@
     Stage the SPEC and `docs/fix/README.md`; commit
     `docs(fix): draft SPEC for #<primary>[+#<n2>+…] — <topic>`. Never push or
     open a PR. Print branch, sha, and the entrypoint's hand-off block.
+
+## Mode grammar (versioned — read by `scripts/normative-drift.test.mjs`)
+
+`plan-fix` takes no flag of its own; the hand-off flag below belongs to the skill
+it routes to. `route` must be a skill that exists and `flag` must appear in that
+skill's `argument-hint:` — the rule `plan-mode-routes@1` states for `plan-feature`,
+applied here.
+
+```text
+fix-mode-routes@1
+# owner: plan-fix
+mode | flag | route
+issue-set-planned | n/a | review-plan
+after-plan-pass | --fix | execute-phase
+```
