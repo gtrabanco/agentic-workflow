@@ -40,8 +40,7 @@ no gate of its own, it refuses to count what that contract says is not validated
 ✓ 6. Expectation sweep: ≥ 10 rows (M/L) or ≥ 5 (XS/S), each forced to
   `in-scope`/`out-of-scope`/`deferred` with a pointer — and a `deferred` row
   exists only behind a user-made governing-SPEC amendment, never an issue this
-  skill filed — a `deferred` row needs a
-  governing-SPEC amendment the user made, never an issue this skill filed
+  skill filed
 ✓ 7. Every in-scope bullet maps to ≥ 1 acceptance criterion; every criterion is
   labelled command-verified or read-verified
 ✓ 8. `Deferred decisions` present and reads `none` or lists each owner

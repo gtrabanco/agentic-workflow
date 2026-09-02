@@ -209,3 +209,39 @@ No unresolved product or engineering decision blocks implementation.
     against its first parent (or `--combined`) deletes this item, and until then any
     conflict-resolution fold must either name a non-merge commit or stay open like this
     one does.
+
+23. **A legacy duplicate changelog pair is exempted by name, not repaired
+    (not this unit's write).** The per-(skill, version) row-count pin F51/A1 added reads
+    both changelogs; it immediately matched one pre-existing pair, `log-session` 1.4.0,
+    which lives in the archived tables as two rows with different prose. Deleting either
+    row would rewrite a published release history that this unit does not own, so the pin
+    carries `LEGACY_DUPLICATE_VERSION_ROWS` (`scripts/normative-drift.test.mjs:822`) naming
+    exactly that pair. Re-check: any new entry in that list is a defect, and the pair
+    disappears the moment its owner decides to reconcile the two rows; then the constant
+    must go empty rather than grow.
+
+24. **The snapshot CLI still hardcodes its policy version (deferred by F49).**
+    `scripts/pre-execution-snapshot.mjs:467` reads `policyVersion: opts.policy ?? "v1"`, so
+    a policy bump rotates the `stale-policy` axis with no publisher and no gate. Fixing it
+    properly means publishing the constant from `packages/agentic-workflow-schema` and
+    reading it there — a schema-surface change, not a fold. Re-check when the schema package
+    publishes a policy version: the CLI must import it and the literal must be gone.
+
+25. **Dated migration notes will keep reading as stale version claims (adjudicated, not
+    fixed).** `docs/workflow/MIGRATION.md:7-10` and `:51-54` name the versions a break landed
+    in (`workflow-status` 3.0.0, `pre-execution-review` 1.1.0) while those skills are now
+    3.1.0 and 1.5.0. That is correct as history and wrong as a rendered fact, and nothing
+    in `CLAUDE.md`'s `rendered-facts@1` distinguishes the two, so a future `audit-docs` or
+    weakest-executor pass will file it again. Re-check: if any pin is ever added over
+    `MIGRATION.md`, it must key on the dated heading and treat the block as immutable, or it
+    will invite a rewrite of a record.
+
+26. **The annotator's reopen token invents a phase number (F58).** When a row is marked
+    `folded: yes` with no provenance, `scripts/ledger-provenance.mjs:342-344` reopens it and
+    appends `· REOPENED P20 — provenance unproven: …`, and `P20` is a literal: this unit's
+    plan ends at P17. The reopen is right — firing it on this fold's own fifteen rows is the
+    contract working, since a fold commit cannot exist before it is made — but the payload is
+    a fabricated fact inside a mechanical token, which is the class this whole unit exists to
+    close. Re-check when the token grammar next changes: either take the reopening phase as
+    an argument or drop the number, and the row's `folded` cell must return to `yes` only
+    through `· fold <sha>`.

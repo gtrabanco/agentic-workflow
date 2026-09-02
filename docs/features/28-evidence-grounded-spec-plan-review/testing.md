@@ -891,3 +891,40 @@ insertions, 7 deletions (`docs/LOGS.md`, unit 28's and unit 29's `SPEC.md`), i.e
 contributed a wording-only citation removal and nothing else moved;
 `git diff --name-only 1bc40dbc 81c241d7 -- skills/ scripts/ packages/` → empty, so the
 sync touched no candidate byte the review will read.
+
+### P16 review fold (2026-09-02) — the record's own corrections
+
+Base for every red-first run: `git rev-parse 949ef3e5` = `949ef3e59a22af01…`, unpacked with
+`git archive` into a scratch directory; **one file copied in, everything else kept** (the
+recipe is stated per row because V1 and V2 exist — earlier rows recorded counts their
+recipe could not reproduce).
+
+| Proof | Copied into the `949ef3e5` archive | Result |
+|---|---|---|
+| F42/C1 counted-vs-parsed arity | `scripts/ledger-provenance.test.mjs` | exit 1 · 11 tests / 8 pass / **3 fail** — `(C1)` reports `rows 3 {"recovered":1,"open":2}` with no `counted` field, `(C2)` the past-tense line, plus the unit-26 row, which is environmental in a scratch archive (all 107 rows `unproven`: synthetic history carries no fold shas) |
+| F51/A1 duplicate-row pin | `scripts/normative-drift.test.mjs` | exit 1 · 16 / 15 / **1 fail** — `CHANGELOG.md states plan-feature more than once: 3.0.0 ×2`, i.e. the pin fires on the pre-fold table rather than asserting a constant |
+| F46/C5 write-only labels | pre-fold drift file + the fold's two assertions appended | exit 1 · 16 / 15 / **1 fail** — `no write-only label collection survives` |
+| F47/C6 tautological class count | new quality file + machine doctored (drop `runtime` from the published list) | exit 1 · 62 / **60 / 2 fail**; the *pre-fold* file under the same doctoring gives 62/61/1 — the old assertion could not see a vocabulary change, which is the proof |
+| F48/C7 vacuous `absent` case | new canonical file + the added clause | exit 1 · 24 / 23 / **1 fail** — `got undefined reads` |
+
+Corrections to earlier rows in this file, because the reviewers re-ran them and the
+numbers did not match what was written (F54, F55, F57):
+
+- **Proof C** (`ledger-provenance`, the escaped-pipe fix) was recorded as 8/7/1 against
+  `890f9366` with a *pre-fold* test file; the live file has 9 tests, and with the fold's
+  test the same archive yields 9/7/2 where the named unit-26 failure is environmental.
+  What actually reproduces as the proof: the pipe test fails against the old script.
+- **Proof B** (`pre-execution-quality`, F39) was recorded 62/60/2; a copy set that keeps
+  the archived `scripts/pre-execution-snapshot.mjs` yields 62/61/1. The substance stands —
+  the F39 assertion fails pre-fix — the count depended on which files came along.
+- The P16 fold-half receipt recorded `ledger-provenance` 8/8 where live is 9/9, because
+  the pipe test was added mid-fold. Corrected in place; the published commit message is
+  left exactly as it shipped.
+
+After the fold, on the live tree: provenance 11/11 · quality 62/62 · drift 16/16 ·
+ownership 18/18 · sensor-mark 7/7 · root 185/185 · context 39 skills / 23 routes (one
+ceiling re-based 13795→13794, the pre-RC2 float value no `ceil(measured × 1.10)` can
+produce) · schema 675/675 + 15/15 docs + package/gate checks · Pi 134/134 byte parity ·
+`ledger-provenance --check` on this ledger: `rows 51 {proven-cited: 31, open: 20}`,
+**CHECK PASS**. Not executed here: the PASS receipt itself — three more context-clean
+axes at this head, which is the next step, not this one's evidence.

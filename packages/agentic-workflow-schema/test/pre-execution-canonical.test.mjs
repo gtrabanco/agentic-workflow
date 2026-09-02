@@ -323,27 +323,45 @@ const SHA_PATH_CORPUS = [
   },
 ];
 
-/** Runs `fn` with `getBuiltinModule` replaced, and records every id requested. */
+/**
+ * Runs `fn` with `getBuiltinModule` replaced, and records every id requested and
+ * every read of the property itself.
+ *
+ * The read counter exists because the `absent` override otherwise leaves nothing to
+ * observe: with the binding withheld, `requested` is an array nothing can push into,
+ * so asserting it is empty holds by construction rather than by measurement (finding
+ * C7). An accessor makes the withheld case answerable — the core really did ask the
+ * host, and the host really did refuse — which is the clause that separates "ran the
+ * JS core" from "never looked".
+ */
 function withBuiltinBinding(override, fn) {
   const process_ = globalThis.process;
   const original = process_.getBuiltinModule;
   const requested = [];
-  process_.getBuiltinModule =
-    override === "throw"
-      ? () => {
-          requested.push("throwing");
-          throw new Error("host binding unavailable");
-        }
-      : override === "absent"
-        ? undefined
+  let reads = 0;
+  if (override === "absent") {
+    Object.defineProperty(process_, "getBuiltinModule", {
+      configurable: true,
+      enumerable: true,
+      get() { reads += 1; return undefined; },
+    });
+  } else {
+    process_.getBuiltinModule =
+      override === "throw"
+        ? () => {
+            requested.push("throwing");
+            throw new Error("host binding unavailable");
+          }
         : (id) => {
             requested.push(id);
             return original.call(process_, id);
           };
+  }
   try {
-    return { result: fn(), requested };
+    return { result: fn(), requested, reads };
   } finally {
-    process_.getBuiltinModule = original;
+    delete process_.getBuiltinModule;
+    if (original !== undefined) process_.getBuiltinModule = original;
   }
 }
 
@@ -366,10 +384,12 @@ test("sha256HexSync answers from the host native SHA-256 and all three paths agr
     assert.equal(await sha256Hex(text), reference, `${label}: WebCrypto agrees with the native path`);
 
     // The same bytes with the binding withheld must answer identically: that is
-    // the browser condition, and the pure-JS core is what serves it.
+    // the browser condition, and the pure-JS core is what serves it. The read count
+    // is what proves the serving was the JS core after a refused lookup (C7) — the
+    // `count` case above is the control that makes a counted read mean something.
     const withheld = withBuiltinBinding("absent", () => sha256HexSync(text));
     assert.equal(withheld.result, reference, `${label}: pure-JS path agrees with the native path`);
-    assert.deepEqual(withheld.requested, [], `${label}: a withheld binding is never reached`);
+    assert.ok(withheld.reads >= 1, `${label}: the core consulted the host and the host withheld the binding (got ${withheld.reads} reads)`);
 
     // A binding that exists and then fails must not throw out of a digest.
     const throwing = withBuiltinBinding("throw", () => sha256HexSync(text));
