@@ -15,8 +15,10 @@ tmp/
 .serena
 .opencode/
 # Local state the pre-execution sensor writes inside the worktree. Narrow on purpose:
-# the tracked `.claude/skills` mount is a template artifact, so this must not widen to
-# all of `.claude/`.
+# the local `.claude/skills` mount is gitignored so authoring sessions can opt in
+# without risking an accidental commit.
 .claude/pre-execution-gates/
+# Local opt-in mount: `ln -sfn ../skills .claude/skills`. Never committed.
+.claude/skills
 # Recursive-language-model engine memory (episode logs) written by analysis runs.
 .rlm/
