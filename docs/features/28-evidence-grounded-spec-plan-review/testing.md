@@ -718,3 +718,101 @@ tree (`/tmp/gf-p15/ev2` @ `aecf279`), and the dated PASS row at
 P15's gate command:
 `grep -qE 'weakest-executor leg carries a dated PASS row for every skill P9-P14 changed' docs/workflow/GOLDEN_FIXTURE.md`
 → exit 0.
+
+### P17 (2026-09-02) — The host native SHA-256 digest preferred (AC21 / O21)
+
+**Red first, with no install and no network.** `dist/` is gitignored and the
+archived tree has no `node_modules`, so the pre-P17 tree was built by pointing the
+checked-out package's own compiler at it — TypeScript resolves its own libs from
+the binary, not from the working directory, and this package needs no `@types/*`,
+which is exactly the property AC21 is insisting on:
+
+```sh
+git archive a42cf4857769c6991699087f6d836dfcf20ebc28 | tar -x -C /tmp/p17red/base   # pre-P17
+cd /tmp/p17red/base && git init -q . && git add -A && git commit -qm base
+cd packages/agentic-workflow-schema
+cp <live>/test/pre-execution-canonical.test.mjs test/   # the test ONLY: src/ untouched
+<live>/packages/agentic-workflow-schema/node_modules/.bin/tsc   # exit 0, emits dist/
+node --test test/pre-execution-canonical.test.mjs
+# → tests 24 · pass 23 · fail 1 · exit 1
+#   ✖ sha256HexSync answers from the host native SHA-256 and all three paths agree
+#     AssertionError: ASCII: the native path answered, and answered per call (got [])
+```
+
+The failure is the routing clause, not the agreement clause: on that tree the
+pre-existing 23 cases still pass (pure JS and WebCrypto did agree), and the
+counting wrapper sees an empty request list because the old implementation never
+asked the host for anything. The same file on this phase's tree answers
+**24 · 24 · exit 0**, and the whole package answers
+`cd packages/agentic-workflow-schema && npm test` → **tests 675 · pass 675 · fail 0 ·
+exit 0**, where `npm test` is `tsc && tsc -p tsconfig.test.json && node --test
+test/*.test.mjs` (the mutating `tsc` legs run first, per P13's rule, and every
+check-only gate below ran after them).
+
+**AC21's own conditions, each one run rather than assumed.**
+
+```sh
+grep -rn "from \"node:" src/          # exit 1 — no matches (also: no createRequire, no dynamic import)
+grep -n "@types" package.json         # exit 1 — no @types/node
+grep -n "dependencies" -A4 package.json
+# 74:  "devDependencies": {
+# 75-    "ajv": "^8.20.0",
+# 76-    "typescript": "6"
+# 77-  }                              # the only dependency-shaped key in the file
+node scripts/probe-sha256-paths.mjs   # exit 0 — output below
+npm run check:pre-execution-schemas   # exit 0 — "drift-free (2 files)"
+npm run gate:pre-execution            # exit 0 — 675/675, schemas, package, docs 15/15
+```
+
+`scripts/probe-sha256-paths.mjs` (new, check-only, writes nothing) prints the
+digest from every path available for identical bytes, names the path that
+answered, and says plainly when a host exposes no native binding. Its recorded
+run on node v24.19.0 / linux-x64:
+
+```text
+native    : exposed via process.getBuiltinModule("crypto")
+case      : ASCII (54 UTF-8 bytes)
+  native  : 0b44a05fecda…  <- sha256HexSync, host native path
+  pure JS : 0b44a05f…  <- sha256HexSync, binding withheld
+  WebCrypto: 0b44a05f…  <- sha256Hex (async)
+  identical: YES
+  cost    : native 29.7 us/op vs pure JS 76.9 us/op -> pure JS is 158% more time
+case      : multibyte (152 UTF-8 bytes)   identical: YES   9.4 vs 24.2 us/op (+157%)
+case      : oversized (9437148 UTF-8 bytes) identical: YES  37717.5 vs 382698.4 us/op (+915%)
+summary   : one sync pass over the corpus costs 37756.7 us natively and 382799.4 us in pure JS
+RESULT: all available SHA-256 paths agree (zero failures)
+```
+
+Each `pure JS` line is produced by withholding
+`globalThis.process.getBuiltinModule` for the duration of the call, so the
+browser condition is executed here instead of argued about, and the same bytes
+come back either way.
+
+**The rejected alternatives were measured in throwaway sandboxes**
+(`/tmp/p17noble`, `/tmp/p17static`; nothing was installed into this repository —
+`git status --porcelain` shows no lockfile, no `node_modules` change and no
+`package.json` dependency). The full table is in `architecture-notes.md`
+§"Digest paths"; the commands behind it:
+
+```sh
+cd /tmp/p17noble && npm pack @noble/hashes@2.4.0     # 167,626-byte tarball, 60 files
+npm install ./noble-hashes-2.4.0.tgz && du -sb node_modules/@noble/hashes   # 691,646 bytes
+grep -c '' node_modules/@noble/hashes/{sha2,_md,_u64,utils}.js   # 446 + 209 + 77 + 687 = 1,419
+node bench.mjs                                       # medians of 11 runs, table above
+npm install @types/node && du -sb node_modules/@types/node       # 2,534,873 bytes, 89 .d.ts
+cd /tmp/p17static/packages/agentic-workflow-schema
+# one line added: import { createHash } from "node:crypto"
+<live>/…/node_modules/.bin/tsc --noEmit              # exit 2 — error TS2591: Cannot find name
+                                                     # 'node:crypto'. Do you need to install type
+                                                     # definitions for node?
+```
+
+Named as **not measured**: `@noble/hashes` inside a real browser bundle (no
+bundler run in this environment) and Deno's behaviour with
+`getBuiltinModule` (Deno is not installed here — PE-020 and PE-021 carry the same
+residual). No version was bumped, per the phase header: schema `3.5.0` is still
+unpublished against registry `3.4.0`, so `rendered-facts@1`'s version restatements
+did not move and `node --test scripts/normative-drift.test.mjs` stays at
+**15/15 · exit 0**, with the root suite at **179/179 · exit 0**,
+`node scripts/check-skill-context.mjs` at **exit 0 (39 skills)** and
+`--routes` at **exit 0 (23 routes, no ceiling re-based)**.

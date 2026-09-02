@@ -10,9 +10,11 @@
  *     to await per artifact row would either force the whole pre-execution API
  *     async or hash the wrong bytes when a caller mutated content mid-flight.
  *
- * Both return lowercase 64-hex and agree byte-for-byte; `test/pre-execution-sha256.test.mjs`
- * pins that agreement against `node:crypto` over an ASCII/multibyte/oversized
- * corpus, so the sync path cannot silently drift from the async one.
+ * Both return one identical lowercase 64-hex digest for identical bytes:
+ * `test/pre-execution-canonical.test.mjs` pins that agreement over an
+ * ASCII/multibyte/oversized corpus — the async path against `node:crypto` and,
+ * since feature 28 P17, the host-native sync path, the pure-JS sync path and the
+ * WebCrypto async path against each other — so no path can silently drift.
  */
 
 const K = [
@@ -105,20 +107,80 @@ export function sha256Bytes(message: Uint8Array): Uint8Array {
   return out;
 }
 
-/** Lowercase 64-hex SHA-256 of UTF-8 bytes, computed without awaiting. */
-export function sha256HexSync(data: string): string {
-  const bytes = sha256Bytes(_encoder.encode(data));
+/** The subset of a host's built-in `crypto` module that this file uses. */
+interface NativeCrypto {
+  createHash(algorithm: string): NativeHash;
+}
+
+interface NativeHash {
+  update(data: Uint8Array): NativeHash;
+  digest(): Uint8Array;
+}
+
+/**
+ * The native path, or `null` when this host exposes none.
+ *
+ * Sourced through `globalThis.process?.getBuiltinModule?.("crypto")` — the
+ * presence-check AC21 names — because the package targets browsers too and may
+ * be bundled by a toolchain that leaves `crypto` un-resolvable. The duck-typed
+ * `NativeCrypto` interface above is what keeps that lookup type-checked without
+ * a static `node:` specifier and without `@types/node` (AC21).
+ *
+ * Deliberately NOT cached in a module-level variable: a host that answers once
+ * can stop answering later (bundle moved between runtimes, the builtin
+ * unregistered), and a cached verdict — either way — is a wrong-host assumption
+ * that would either strand Node on the JS path or throw in a browser. The
+ * lookup is three `typeof` checks and one guarded call; measured against the
+ * digest it costs, caching is not worth the risk (unit 28 D36).
+ */
+function nativeSha256(): ((bytes: Uint8Array) => Uint8Array) | null {
+  const host = globalThis as { process?: { getBuiltinModule?: (id: string) => unknown } };
+  const getBuiltinModule = host.process?.getBuiltinModule;
+  if (typeof getBuiltinModule !== "function") return null;
+  let builtin: unknown;
+  try {
+    builtin = getBuiltinModule.call(host.process, "crypto");
+  } catch {
+    return null;
+  }
+  if (typeof builtin !== "object" || builtin === null) return null;
+  const createHash = (builtin as NativeCrypto).createHash;
+  if (typeof createHash !== "function") return null;
+  return (bytes: Uint8Array): Uint8Array =>
+    (builtin as NativeCrypto).createHash("sha256").update(bytes).digest();
+}
+
+function toHex(bytes: Uint8Array): string {
   let out = "";
   for (const byte of bytes) out += HEX[byte >> 4] + HEX[byte & 0x0f];
   return out;
+}
+
+/**
+ * Lowercase 64-hex SHA-256 of UTF-8 bytes, computed without awaiting.
+ *
+ * Routed: the host's native SHA-256 where the host exposes one, this package's
+ * pure-JS FIPS 180-4 core otherwise. Both branches hash the same UTF-8 bytes
+ * and emit the same lowercase 64-hex string — the guarantee AC21 states and the
+ * three-path case in `test/pre-execution-canonical.test.mjs` pins.
+ */
+export function sha256HexSync(data: string): string {
+  const bytes = _encoder.encode(data);
+  const native = nativeSha256();
+  if (native !== null) {
+    try {
+      return toHex(native(bytes));
+    } catch {
+      // The binding was there a moment ago and failed now: answer from the
+      // JS core rather than propagating a host error out of a digest.
+    }
+  }
+  return toHex(sha256Bytes(bytes));
 }
 
 /** D4 — SHA-256 hex digest (async via Web Crypto). Same bytes as the sync path. */
 export async function sha256Hex(data: string): Promise<string> {
   const buf = _encoder.encode(data);
   const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
-  const hashArray = new Uint8Array(hashBuffer);
-  let out = "";
-  for (const byte of hashArray) out += HEX[byte >> 4] + HEX[byte & 0x0f];
-  return out;
+  return toHex(new Uint8Array(hashBuffer));
 }

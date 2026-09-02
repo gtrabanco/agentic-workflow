@@ -67,6 +67,7 @@
     "check:pre-execution-package": "node scripts/check-pre-execution-package.mjs",
     "test:pre-execution-docs": "node --test test/pre-execution-docs.test.mjs",
     "bench:verification": "node scripts/bench-verification.mjs",
+    "probe:sha256-paths": "node scripts/probe-sha256-paths.mjs",
     "test:verification-docs": "node --test test/verification-docs.test.mjs",
     "gate:verification": "npm test && npm run check:verification-schemas && npm run check:verification-package && npm run test:verification-docs && npm run bench:verification -- --commands 128",
     "gate:pre-execution": "npm test && npm run check:pre-execution-schemas && npm run check:pre-execution-package && npm run test:pre-execution-docs"

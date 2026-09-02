@@ -8,6 +8,13 @@ mantiene el envelope establecido de `workflow-status`, pero ofrece a los
 drivers headless un resultado menor para las skills de trabajo y estado
 determinista compilado desde documentos.
 
+Esa afirmación tiene una forma exacta, y es la forma empaquetada:
+`package.json` no declara `dependencies` y ningún módulo de `src/` lleva un
+especificador estático de builtin (`from "node:…"`), de modo que el mismo código
+se carga en Node, Bun y un navegador. El paquete igualmente usa el SHA-256 del
+host cuando el host lo ofrece, de forma oportunista y en cada llamada: ver
+«Forma canónica y vectores».
+
 ## Instalación
 
 ```sh
@@ -412,6 +419,19 @@ publican en `PRE_EXECUTION_CANONICAL_VECTORS` (ambas etapas × ambos contratos);
 suite reproduce cada digest desde su fixture de forma independiente con `node:crypto`,
 así que un cambio en el serializador rompe un test en lugar de mover en silencio la
 linaje de un consumidor.
+
+El digest síncrono (`sha256HexSync`, que usa el constructor de artefactos) responde
+desde el SHA-256 nativo del host siempre que el host exponga uno mediante
+`globalThis.process?.getBuiltinModule?.("crypto")` —Node v22.3.0 y v20.16.0 o
+posteriores, y Bun; los navegadores no exponen ese binding— y desde el núcleo puro
+de JavaScript FIPS 180-4 del paquete en todo lo demás. El binding se busca en cada
+llamada y nunca se cachea, así que un bundle que cambia de host no puede quedar
+anclado a un veredicto viejo, y un digest nunca lanza un error porque un builtin del
+host haya fallado. Ambos caminos devuelven un único digest idéntico, SHA-256 en
+minúsculas de 64 caracteres, para bytes idénticos; el caso de tres caminos en
+`test/pre-execution-canonical.test.mjs` enfrenta nativo, JS puro y WebCrypto
+asíncrono, y `npm run probe:sha256-paths` imprime los digests y el coste por camino
+en tu host (solo verificación: no escribe nada).
 
 ```bash
 npm run gate:pre-execution   # tests + drift de schemas + checks de paquete + pack

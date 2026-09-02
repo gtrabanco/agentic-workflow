@@ -846,3 +846,60 @@
   15913/1106, design-repair 25018/1699, plan-scaffold 21773/1560, plan-fix 24690/1803),
   growth source: the 1.4.0 delegate-identity clause, nothing else — the third such
   re-basis in this unit and the reason D42's note asked for the number to be on record.
+
+- **D46 — P17: the native digest is looked up per call through a locally typed
+  host shape, the async path is left alone, and the fallback stays ours
+  (2026-09-02).** D36 decided *what* P17 had to prefer; the shape of the lookup is
+  the remaining choice, and each option here is bought or refused with a number.
+  **Chosen:** `sha256HexSync` encodes to UTF-8 once, asks
+  `globalThis.process?.getBuiltinModule?.("crypto")` for the builtin on **every
+  call**, duck-types the answer against a two-method `NativeCrypto` interface
+  declared in `src/sha256.ts` itself, and falls through to the existing FIPS
+  180-4 core whenever the binding is absent, returns a non-object, lacks
+  `createHash`, or throws — including on the second call after a successful
+  first. One `toHex` helper now formats all three paths, so "identical lowercase
+  64-hex" cannot be broken by a formatter drift.
+  **Refused: caching the resolved binding at module load.** It is the obvious
+  optimisation and the one AC21's host-mobility clause forbids: a module
+  evaluated in Node and later bundled into a browser would keep a closure whose
+  host is gone, and a module that resolved to `null` first would strand a real
+  Node host on the JS path forever. Cost of refusing: the routing decision
+  measures **108 ns** against **24,580 ns** for the whole routed call at 6 KiB —
+  0.44% of a digest, in exchange for the guarantee that a digest never throws
+  because a host changed underneath it.
+  **Refused: `createRequire("node:crypto")` and dynamic
+  `import("node:crypto")`.** Both name the specifier as a *string* instead of a
+  binding, which keeps `grep -rn "from \"node:" src/` green while making the code
+  Node-only in fact; the whole point of the check is that the shipped bytes stay
+  host-agnostic, so a grep-shaped workaround is the defect, not the fix. Neither
+  was implemented.
+  **Refused: `@types/node`.** Not a preference — a measured necessity of the
+  static-import route: with `import { createHash } from "node:crypto"` added and
+  no types installed, `tsc --noEmit` exits **2** on `error TS2591`. AC21 names
+  `@types/node` as an acceptance condition, so the route is closed (2,534,873
+  bytes across 89 `.d.ts` files in the sandbox it was tested in, for one call).
+  **Refused: `@noble/hashes@2.4.0` and its vendored closure.** See
+  `architecture-notes.md` §"Digest paths": the dependency is 691,646 unpacked
+  bytes and is still 52–140% slower than the native path it would replace; the
+  closure is 1,419 lines across four modules (17 named imports, SHA-512/384/224
+  machinery and the `_u64` pair a SHA-256 never calls) to replace 124 owned lines,
+  and after this phase that copy would run only on hosts with no native digest at
+  all — browsers, which have `crypto.subtle`. The standing rule AC21 asks for is
+  now in `CLAUDE.md` §"Working rules" (source URL, author, version, license name
+  in the header of any copied code), so the route stays open without an
+  unattributable copy.
+  **Left alone: the async `sha256Hex`.** Every published digest in this package —
+  the four frozen `PRE_EXECUTION_CANONICAL_VECTORS` among them — is its output,
+  AC21 names only the sync entry point, and the synchronous builders are the only
+  callers of the sync path. Routing the async one too would trade a frozen digest
+  surface for a saving no caller makes.
+  **Movement this phase caused:** `CLAUDE.md`'s `normalizer-inventory@1` gains one
+  `after` row (`probe-sha256-paths.mjs`, kind says `check-only`, so P13's rule that
+  no mutating step may sit on the tail side is untouched); `rendered-facts@1`'s
+  five restatements are unchanged because no version, count or contract id moved —
+  `node --test scripts/normative-drift.test.mjs` stays 15/15 and no route ceiling
+  moved (39 skills / 23 routes, both exit 0). Editing `CLAUDE.md` does rotate the
+  bound `project-guide` context row: `pre-execution-snapshot.mjs verify` answers
+  `stale-context` with `changedPaths: [CLAUDE.md, docs/features/ROADMAP.md]`, which
+  is P13's gotcha 2 demonstrating itself again and is covered by D32/D37's bypass,
+  not by a new receipt.

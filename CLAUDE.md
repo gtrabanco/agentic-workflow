@@ -54,6 +54,17 @@ README.md / README.es.md project overview (EN / ES)
   English-only per the docs-language rule above and have **no** ES sibling — the
   bilingual sync rule applies only to docs that actually have a translatable
   sibling (human tutorial/reference prose), never to process artifacts.
+- **Vendored third-party code carries its provenance.** Any code copied from a
+  third party into this repository — into a package's `src/`, a script, or a
+  skill reference — keeps a header comment naming the **source URL, the author,
+  the version copied, and the license name**. A copy without those four is a
+  provenance defect, not a formatting slip: nothing else in the tree says where
+  the bytes came from, so an upstream relicensing or an attribution obligation
+  cannot be audited later. Vendoring is a real alternative to adding a
+  dependency and it is weighed as one (unit 28's D36 rejected a 1,419-line
+  copied `sha256` closure on measured cost and kept the package's own core, and
+  AC21 keeps the schema package dependency-free); whichever route a change
+  takes, the provenance header is mandatory for the first.
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture",
@@ -269,6 +280,7 @@ generate-pre-execution-schemas.mjs --check | check-only (drift report, `npm run 
 generate-verification-schemas.mjs --check | check-only (drift report, `npm run check:verification-schemas`) | after
 pre-execution-snapshot.mjs verify | check-only (re-derives a bound digest, writes nothing) | after
 node scripts/check-skill-context.mjs (--routes) | check-only (budget report, writes nothing) | after
+probe-sha256-paths.mjs (packages/agentic-workflow-schema) | check-only (SHA-256 path and cost probe, `npm run probe:sha256-paths`, prints digests/timings, writes nothing) | after
 formatter | none declared — this repository has no Prettier, Biome or EditorConfig configuration, so the formatter category is empty here | n/a
 ```
 
