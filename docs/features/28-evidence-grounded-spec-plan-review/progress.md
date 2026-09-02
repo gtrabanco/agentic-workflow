@@ -1071,5 +1071,44 @@ binds a fold token to an existing sha, and P16's fold is where that happens.
 
 ## Unit-loop receipt — P16 (review fold)
 
-- Commit: pending · Gate: `node --test scripts/ledger-provenance.test.mjs` exit 0 11/11 (red-first against `949ef3e5`: 11 tests / 8 pass / 3 fail — C1, C2, plus the environmental unit-26 row) · `node --test scripts/normative-drift.test.mjs` exit 0 16/16 (red-first 16/15/1 named `CHANGELOG.md states plan-feature more than once: 3.0.0 ×2`) · `node --test scripts/pre-execution-quality.test.mjs` exit 0 62/62 (C6 doctored-machine 62/60/2; pre-fold file with the same doctoring 62/61/1, which is the tautology proof) · `node --test scripts/ledger-ownership.test.mjs` 18/18 · `node --test scripts/workflow-status-pre-execution.test.mjs` 7/7 · root `node --test scripts/*.test.mjs` exit 0 **185/185** · `node scripts/check-skill-context.mjs` exit 0 (39 skills) and `--routes` exit 0 (23 routes, 13795→13794) · `cd packages/agentic-workflow-schema && npm test` exit 0 675/675 with `check:pre-execution-schemas`, `check:pre-execution-package`, `test:pre-execution-docs` 15/15 and `gate:pre-execution` green · `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` exit 0 (38 skills / 123 files, 134/134, mirror shows only `READINESS.md`) · `ledger-provenance --check` on this unit's ledger: `rows 51 {proven-cited: 31, open: 20}` → **CHECK PASS** · Acceptance blob: `cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54` · Next: box 5's PASS receipt at this head, then boxes 6-9 · Attempts: 1
+- Commit: 481f330315f77a053c7295c8e696da9f592d9b66 · Gate: `node --test scripts/ledger-provenance.test.mjs` exit 0 11/11 (red-first against `949ef3e5`: 11 tests / 8 pass / 3 fail — C1, C2, plus the environmental unit-26 row) · `node --test scripts/normative-drift.test.mjs` exit 0 16/16 (red-first 16/15/1 named `CHANGELOG.md states plan-feature more than once: 3.0.0 ×2`) · `node --test scripts/pre-execution-quality.test.mjs` exit 0 62/62 (C6 doctored-machine 62/60/2; pre-fold file with the same doctoring 62/61/1, which is the tautology proof) · `node --test scripts/ledger-ownership.test.mjs` 18/18 · `node --test scripts/workflow-status-pre-execution.test.mjs` 7/7 · root `node --test scripts/*.test.mjs` exit 0 **185/185** · `node scripts/check-skill-context.mjs` exit 0 (39 skills) and `--routes` exit 0 (23 routes, 13795→13794) · `cd packages/agentic-workflow-schema && npm test` exit 0 675/675 with `check:pre-execution-schemas`, `check:pre-execution-package`, `test:pre-execution-docs` 15/15 and `gate:pre-execution` green · `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` exit 0 (38 skills / 123 files, 134/134, mirror shows only `READINESS.md`) · `ledger-provenance --check` on this unit's ledger: `rows 51 {proven-cited: 31, open: 20}` → **CHECK PASS** · Acceptance blob: `cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54` · Next: box 5's PASS receipt at this head, then boxes 6-9 · Attempts: 1
 - Checkpoint triggers: this fold changed a gate's semantics (the arity refusal) and two reviewer-facing files, on branch material after review — box 5's receipt must therefore be obtained **at the sha this commit creates**, which is the only place it can be evidence about the merged artifact.
+
+## P16 — 2026-09-02 (F58 fold) — the annotator names only what it sees
+
+- Done: **F58 is fixed at its root** — `scripts/ledger-provenance.mjs:347` re-opens an
+  unproven tick with `· REOPENED — provenance unproven: <evidence>` and no phase number;
+  the declared grammar moved with the payload in the same commit (`LEDGERS.md` prose +
+  its `ledger-ownership@1` token cell, the `ledger-ownership` pin assertion, this suite's
+  shape assertion, and the token paragraph above), per D50's reason for dropping rather
+  than flagging the number. Red-first recorded in `testing.md` §"P16 F58 fold" (provenance
+  archive run exit 1, 12/9/3 with the two named reopen tests plus the environmental
+  unit-26 row; ownership exit 1, 18/17/1 named `the fold provenance token is pinned to
+  the annotator line that emits it`). The 15 open review-fold rows (F42–F47, F48, F50–F57)
+  got their `· fold 481f330` tokens from `--annotate` before F58 was marked; F58 itself
+  now sits `folded: yes` with no token and `--check` names it alone — the honest
+  pre-commit state, identical to what F38/F39 held in the fold-half commit; the first
+  annotate after this commit exists binds it to this commit's own sha, never hand-typed.
+- Reconciliation: the **review fold's `Unit-loop receipt` above had `Commit: pending`;
+  the sha is `481f330315f77a053c7295c8e696da9f592d9b66`** — filled in place here (never an
+  amendment of published history), which is UNIT_LOOP step 6's own rule, and it is this
+  entry, not that receipt, that says so.
+- Why this comes before the receipt: box 5's review must run at a head with no open
+  fix-now row it would immediately re-find — F58 was the last one, and a review cannot
+  mint a PASS over a finding its own head carries.
+- Gotchas: (1) **the annotator is honest about everything except its own history** — it
+  reopened these rows correctly and lied about the phase while doing it; the test bar for
+  a mechanical token is now "names only what the walk observes", recorded as D50 so the
+  next token grammar inherits the rule, not the anecdote. (2) **annotate before marking,
+  never between** — running `--annotate` with F58 already `yes` would have bound
+  `481f330` (the commit that *found* it and happened to touch the same file) as its fix
+  commit; the ordering is in `testing.md` and in D50 because both are invisible in the
+  happy path.
+- Files: `scripts/ledger-provenance.mjs`, `scripts/ledger-provenance.test.mjs`,
+  `scripts/ledger-ownership.test.mjs`, `skills/pre-execution-review/references/LEDGERS.md`
+  (+ Pi mirror), unit `review-findings.md` (15 bound tokens + F58's flip), `testing.md`,
+  `decisions.md` (D50), `known-issues.md` (item 26 disposition), `progress.md` (this entry
+  + the reconciled field). No `SKILL.md`, so no `bump-skill`; `bundle:skills` ran before
+  this commit's gates.
+- Next: the context-clean `review-change` axes at this commit's head (box 5) — the
+  `REVIEW-RAN` mark and its receipt bind that sha.

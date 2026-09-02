@@ -245,3 +245,11 @@ No unresolved product or engineering decision blocks implementation.
     close. Re-check when the token grammar next changes: either take the reopening phase as
     an argument or drop the number, and the row's `folded` cell must return to `yes` only
     through `· fold <sha>`.
+    **Disposition applied 2026-09-02 (P16 F58 fold, D50):** the number is dropped — the note
+    now emits `· REOPENED — provenance unproven: …` and names no phase, because the git walk
+    observes none (the flag route was rejected in D50: it would move the fabrication from the
+    code to the hand typing it). The `ledger-ownership@1` token cell, its prose in
+    `LEDGERS.md`, the ownership pin assertion and this suite's shape assertion moved in the
+    same commit as the emission, and the reopen behaviour itself is unchanged. This item
+    stays as the record rather than being deleted; its re-check condition is met, and any
+    future change to a mechanical token obeys the same rule: name only what the tool can see.

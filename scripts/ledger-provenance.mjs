@@ -339,9 +339,12 @@ if (annotate) {
       cells[6] = ` ${route} · ${entry.token} ${entry.fold}${tail} `;
     } else {
       cells[7] = " no ";
+      // F58: the note must name only what the walk observes — the row and its missing
+      // evidence. It used to hardcode `P20`, a phase no plan of the annotated unit
+      // contains: a mechanical token inventing a fact. No phase, no fabricated number.
       cells[6] = /REOPENED/.test(route)
         ? ` ${route} `
-        : ` ${route} · REOPENED P20 — provenance unproven: ${entry.evidence} `;
+        : ` ${route} · REOPENED — provenance unproven: ${entry.evidence} `;
     }
     if (cells.join("|").split(CELL_RE).length !== 9) return line; // never break the 7-column schema
     return cells.join("|");
