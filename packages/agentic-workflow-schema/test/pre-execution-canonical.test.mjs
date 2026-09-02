@@ -112,6 +112,63 @@ test("a fenced block cannot fake a heading, and its bytes stay bound", () => {
   assert.equal(trailing.ok, true, "the fence after the last required section is still inert");
 });
 
+test("a fence closes only on its own character, long enough and bare (F64)", () => {
+  // CommonMark: a closing fence repeats the OPENING character, is at least as long,
+  // and carries no info string. A `~~~` line inside a ``` block is content, so the
+  // `## Goal` under it must stay fenced — the char-agnostic toggle closed the block
+  // early and then read that heading as a real duplicate of the Product `## Goal`.
+  const mixedFence = [
+    "## Product half",
+    "",
+    "### Template",
+    "",
+    "```md",
+    "~~~",
+    "## Goal",
+    "",
+    "inside a fence",
+    "~~~",
+    "```",
+    "",
+    "### After the block",
+    "",
+    "product bytes still bound",
+  ].join("\n");
+  const mixed = selectSpecProduct(toySpec({ "Product half": mixedFence }));
+  assert.equal(mixed.ok, true,
+    "a `~~~` line inside a ``` block must not close it · " + JSON.stringify(mixed.errors ?? null));
+  assert.ok(mixed.content.includes("product bytes still bound"),
+    "the section after a mixed fence stays inside the Product projection: under-binding would leave its edits unchecked");
+
+  // An info string means the run opens a block, never closes one.
+  const infoString = [
+    "## Product half",
+    "",
+    "### Template",
+    "",
+    "```md",
+    "```sh",
+    "## Goal",
+    "",
+    "still inside",
+    "```",
+  ].join("\n");
+  const opened = selectSpecProduct(toySpec({ "Product half": infoString }));
+  assert.equal(opened.ok, true,
+    "a second opening run with an info string must not close the first block · " + JSON.stringify(opened.errors ?? null));
+
+  // A run shorter than the opener cannot close it; one at least as long can.
+  const tooShort = ["## Product half", "", "````", "```", "## Goal", "", "inside", "````"].join("\n");
+  const shortCloses = selectSpecProduct(toySpec({ "Product half": tooShort }));
+  assert.equal(shortCloses.ok, true,
+    "a run shorter than its opener must not close the block · " + JSON.stringify(shortCloses.errors ?? null));
+
+  const longerCloses = ["## Product half", "", "```", "````", "## Goal", "", "duplicate now real"].join("\n");
+  const closed = selectSpecProduct(toySpec({ "Product half": longerCloses }));
+  assert.equal(closed.ok, false, "a run at least as long as the opener closes it, so the heading after it is a real duplicate");
+  assert.equal(closed.errors[0].code, "selector-heading-duplicate");
+});
+
 test("CRLF input selects the same bytes as LF input", () => {
   const lf = toySpec();
   const crlf = lf.replace(/\n/g, "\r\n");
