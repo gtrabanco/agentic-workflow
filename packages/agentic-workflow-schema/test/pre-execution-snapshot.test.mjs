@@ -221,6 +221,28 @@ test("AC1: stage drives parent and selector requirements", () => {
     "a SPEC-stage snapshot binds the Product projection, never the whole mutable file");
 });
 
+test("AC1: a SPEC-stage row of the wrong kind is refused at the kind (F65)", () => {
+  // The pointer is what a driver repairs. This row carries the sanctioned
+  // `spec-product-v1` selector and a wrong kind, so naming `/selector` sends the
+  // caller patching a member that was already correct.
+  const wrongKind = ok(specSnapshot({
+    artifacts: [{
+      kind: "acceptance", path: "docs/x/SPEC.md", selector: "spec-product-v1", byteLength: 10, digest: DIGEST_A,
+    }],
+  }));
+  assert.ok(rows(wrongKind).includes('["invalid-value","/artifacts/0/kind"]'),
+    `the offending member must be named, got ${rows(wrongKind)}`);
+  assert.equal(wrongKind.diagnostics.some((d) => d.path === "/artifacts/0/selector"), false,
+    "a correct selector must not be reported as the offender");
+
+  // The selector half of the same clause keeps pointing at the selector.
+  const wrongSelector = ok(specSnapshot({
+    artifacts: [{ kind: "spec", path: "docs/x/SPEC.md", selector: "whole-file", byteLength: 10, digest: DIGEST_A }],
+  }));
+  assert.ok(rows(wrongSelector).includes('["invalid-value","/artifacts/0/selector"]'),
+    `the selector must be named, got ${rows(wrongSelector)}`);
+});
+
 test("AC1: a fix unit has no Product half, so the spec stage refuses it and the parentless plan stage is the fix path", () => {
   const result = ok(specSnapshot({ unitKind: "fix" }));
   assert.equal(result.ok, false);

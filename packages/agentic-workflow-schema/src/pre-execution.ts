@@ -540,7 +540,11 @@ function snapshotSemantics(document: Record<string, unknown>, collector: PreExec
       // The SPEC stage binds exactly one row: the Product projection of the SPEC
       // file. Binding the whole file would put the Engineering half — which the
       // plan phase is about to rewrite — under a review that only authorized it.
-      if (row.kind !== "spec" || row.selector !== PRE_EXECUTION_SNAPSHOT_SELECTOR) {
+      if (row.kind !== "spec") {
+        // Name the member that is actually wrong: a driver repairs what the pointer
+        // points at, and this row's selector may well be the sanctioned one (F65).
+        collector.add("invalid-value", `${at}/kind`);
+      } else if (row.selector !== PRE_EXECUTION_SNAPSHOT_SELECTOR) {
         collector.add("invalid-value", `${at}/selector`);
       }
     } else if (row.selector === PRE_EXECUTION_SNAPSHOT_SELECTOR) {
