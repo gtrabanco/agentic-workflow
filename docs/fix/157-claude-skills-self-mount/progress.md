@@ -46,6 +46,11 @@
 - Supersedes Acceptance receipt v1 (blob `9b7456a67370e7d9581e047bebdabbd0f6ccf14c`). Amendment trail: explicit user approval (`F1 -> a`) → dated `## Amendments` row in SPEC.md → this replacement manifest → this receipt.
 - Strength retained: the amended filter excludes only this unit's own `.claude/skills` untrack. Falsification probe — feeding `skills/foo/SKILL.md` and `packages/pi-agentic-workflow/src/x.js` through the same command still reports both, so a real distribution-channel touch keeps failing AC9.
 
+## Acceptance receipt v3 — replacement manifest (F10)
+- Manifest: `docs/fix/157-claude-skills-self-mount/ACCEPTANCE.md` · Blob: `78218f2189f604d30912214f8b14ace48dafcd00` · Status: frozen · Verified: 2026-09-03
+- Supersedes Acceptance receipt v2 (blob `fe01d7bcfb8e3209825e8d9833f50bda279ab08a`). Amendment trail: review-findings fold F10 → dated `## Amendments` row in SPEC.md → this replacement manifest → this receipt.
+- Strength retained: the `$`-anchor filter prevents prefix-matching of exclusion rules (e.g. `.gitignore.bak`, `.claude/skills-old`); re-running the AC9 validator against the re-frozen manifest yields no output.
+
 ## Execution receipt v3 — review fold (F1)
 - AC9 as re-frozen: `git diff --name-only main...HEAD | grep -vE '^(\.gitignore$|CLAUDE\.md$|README\.md$|README\.es\.md$|\.serena/|\.claude/skills$|docs/fix/)'` → no output, exit 1 → **PASS**. All nine criteria now verify against the re-frozen manifest bytes.
 - SPEC.md: Acceptance 9 and manifest AC9 now carry the identical filter (dots escaped); obligation O9 flipped `in-progress → verified`.

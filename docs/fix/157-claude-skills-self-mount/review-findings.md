@@ -9,3 +9,5 @@
 | F7 | .gitignore:17-19 | correctness | low | fix-now | fold | yes |
 | F8 | docs/fix/157-claude-skills-self-mount/SPEC.md:18 | workflow | low | fix-now | replan-in-unit | no |
 | F9 | .gitignore:21 | security/honesty | low | fix-now | fold | yes |
+| F10 | docs/fix/157-claude-skills-self-mount/progress.md:45 | code | med | fix-now | fold | yes |
+| F11 | docs/fix/157-claude-skills-self-mount/SPEC.md:18 | code | low | fix-now | fold | no |
