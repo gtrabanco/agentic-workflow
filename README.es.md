@@ -55,7 +55,6 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 
 ```
 39 skills fuente (20 de cara al usuario + 17 internas del workflow + 2 metadata-internal; 38 descubribles)
-.claude/skills           symlink → ../skills, para que este repo las use en Claude Code
 packages/                paquetes npm complementarios: @gtrabanco/agentic-workflow-schema (contratos de máquina)
                          y @gtrabanco/pi-agentic-workflow (instalación de un comando para Pi — ver Instalación)
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
@@ -64,6 +63,13 @@ docs/features/_TEMPLATE  plantilla de SPEC de feature + ROADMAP (los artefactos 
 docs/fix/                plantilla de SPEC de fix + índice
 .github/                 plantillas de issue + PR que el flujo espera
 ```
+
+**Dogfooding model (authoring):** repo sessions consume the workflow from the
+installed release (Pi package / installed plugin), not from the working copy.
+The committed layout carries no working-copy activation surface. Authoring
+sessions opt in by creating a local, gitignored mount
+(`ln -sfn ../skills .claude/skills`) or by exercising a single working-copy
+skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`)
 
 Las skills son el **comportamiento**; `template/` es el **sustrato** que leen (un
 `CLAUDE.md` genérico + mapa de documentación, plantillas de SPEC/feature/fix y
