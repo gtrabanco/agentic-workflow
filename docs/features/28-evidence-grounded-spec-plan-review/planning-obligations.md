@@ -88,7 +88,7 @@ O15 | AC15 | F1 drift gate: a repository test fails when normative skill text or
 O16 | AC16 | F2 durable-ledger write ownership: one declared owner per truth class plus declared mechanical annotator, present in the ownership map and every template; scan fails undeclared script or agent writers; gate rejections keep typed durable traces | P9 | Declare durable ledger write ownership | execute-phase | `node --test scripts/ledger-ownership.test.mjs` | exit 0 green and non-zero on the undeclared-writer fixture | verified
 O17 | AC17 | F3 terminal marking: verdict and rejection turns write the durable mark in the same act, traces name reason and return route, replay of a stale, wrong, or duplicate mark refuses with a typed reason and zero side effects | P10, P11 | Mark terminal verdicts durably, prove clean reviews with a durable mark | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with terminal-mark, rejection-trace and no-side-effect fixtures | verified
 O18 | AC18 | F4 delegated evidence standard: versioned artifact with outcome, questions, seven source fields, claims mapped to source ids, contradictions, freshness, separated product choices, unverified section; partial or blocked blocks readiness; persist-then-STOP; advisory until spot-checked | P12 | Conserve delegated evidence as a versioned artifact | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 with delegated-evidence and NEEDS-EVIDENCE fixtures | verified
-O19 | AC19 | F5 normalization before freeze: every source-mutating normalizer scheduled strictly before the snapshot or freeze row, only check-only actions after, post-freeze byte change voids current receipts | P13 | Run normalizers before the artifact freeze | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 green and non-zero when a mutating step follows the freeze | in-progress
+O19 | AC19 | F5 normalization before freeze: every source-mutating normalizer scheduled strictly before the snapshot or freeze row, only check-only actions after, post-freeze byte change voids current receipts | P13 | Run normalizers before the artifact freeze | execute-phase | `node --test scripts/pre-execution-quality.test.mjs` | exit 0 green and non-zero when a mutating step follows the freeze | verified
 O20 | AC20 | F6 clean-review sensing: sensor review-run proof keys on the durable review mark instead of findings-ledger presence so a zero-finding review is distinguishable from a never-reviewed unit | P11 | Prove clean reviews with a durable mark | execute-phase | `node --test scripts/workflow-status-pre-execution.test.mjs` | exit 0 with mark-present and ledger-only fixtures | verified
 O21 | AC21 | F32 disposition: the sync digest prefers the host native SHA-256 through globalThis.process?.getBuiltinModule?.("crypto") where present and this package's pure-JS path otherwise, one identical lowercase 64-hex result, no static node: specifier, no @types/node, no dependency added, nothing vendored, rejected alternatives recorded with measured cost, and any future copied code carrying source, author, version and license | P17 (runs before P16) | Prefer the host native SHA-256 digest | execute-phase | `cd packages/agentic-workflow-schema && npm test` plus the no-static-node-import grep and the two-path digest probe | exit 0, identical digests from both paths, zero static builtin imports | verified
 
@@ -181,3 +181,34 @@ ledger-row-shape clauses are still grammar-checked only (known-issues 18-19), so
 row cannot claim `verified` and is not being nudged. No other obligation status moved
 in this commit; the close-out half confirms O15-O20 against their cited evidence at
 terminal HEAD, which is what P16 box 6 exists to do.
+
+Confirmed 2026-09-02 (P16 close-out half, terminal HEAD): every row O15-O20 was read
+against the command its own validator cell names, re-run at this head, and judged on
+the output rather than on the cell. `normative-drift` 15/15 exit 0, `ledger-ownership`
+18/18 exit 0, `pre-execution-quality` 62/62 exit 0, `workflow-status-pre-execution` 7/7
+exit 0 — figures and the gate set around them in `testing.md` §"P16 close-out".
+**O15 stays `in-progress`**: its artifact-kind and ledger-row-shape clauses are still
+grammar-checked only, and known-issue 19's re-trigger (a published vocabulary those
+cells resolve against) has not been met, so the row keeps the cell the drift gate
+cannot yet support. **O16, O17, O18, O20 stay `verified`** on the same evidence they
+cited — the P11 note's residual for O17 (pinning `review-change`'s own persist
+reference to `review-mark@1`) shipped in P14, and O20's fixture now builds real
+commits instead of injecting a head, which strengthens rather than replaces its
+claim. **O19 moves `in-progress` → `verified`**, because the one clause P13 withheld
+is now machine-proven and observed. AC19's third clause — a byte change to a frozen
+input after the freeze invalidates current receipts and forces fresh review — is not
+asserted by a sentence here: `scripts/pre-execution-sensor.test.mjs` mints a receipt,
+moves exactly one bound byte, and refuses the stale answer in both its committed form
+(`RS13: a committed bound edit reports a specific dimension with the changed path`) and
+its uncommitted form (`RS13: an uncommitted bound edit is attributed to artifact
+content`), with `RS3b: a bound edit invalidates the receipt exactly once` pinning the
+single-invalidation rule and `RS3b: an unbound commit leaves the snapshot digest
+byte-identical` pinning the other direction. The same machinery answered live at this
+head: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit
+28-evidence-grounded-spec-plan-review --parent 781f8127481cd59a51255f86b74d8f82a8f5b0b87533c9619f4b95cb69fed4cf`
+→ `current: false`, `digestMatches: false`, `structural.fresh: false`, exit 4, with the
+2026-08-31 freeze `f82316b8ee700d79…` against the observed `70251fa8976f8455…`. P13's
+note assigned exactly this proof to "P16's receipt set, minted at a terminal HEAD where
+a post-freeze write is actually observable"; the condition is met, so the row moves.
+Status cell only: O19's authority, phase, validator and required-evidence cells are
+untouched, and no other row's text moved here.
