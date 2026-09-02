@@ -114,15 +114,15 @@ by this planning pass.
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | Issue #157 AC "git ls-files .claude/ returns nothing" | Invariant: the repo carries no always-on activation surface; fresh checkouts are inert | P1 | Drop the index entry | execute-phase | AC1 — `git ls-files .claude/` → no output, exit 0 | Pasted command + output in progress.md | planned |
-| O2 | Issue #157 AC ".claude/skills is added to .gitignore" | Required failure state: a local opt-in mount cannot be re-committed (without force) | P1 | Add the ignore rule | execute-phase | AC2 — `git check-ignore -v .claude/skills` → exit 0 naming the rule | Pasted command + output in progress.md | planned |
-| O3 | Issue #157 AC "CLAUDE.md … layout sections drop the symlink line" | Use case: repo docs describe the real layout and the authoring opt-in | P2 | CLAUDE.md layout note | execute-phase | AC3 + AC4 (CLAUDE.md counts) | Pasted grep output in progress.md | planned |
-| O4 | Issue #157 AC (README layout) + `CLAUDE.md` → Working rules bilingual rule | Bilingual pair updated in the SAME change (EN + ES, one commit) | P2 | README pair note | execute-phase | AC3 + AC4 (README.md / README.es.md counts) | Pasted grep output in progress.md | planned |
-| O5 | Issue #157 AC ".serena/memories/core.md updated" | Use case: local agent memory matches the shipped model | P2 | core.md bullet swap | execute-phase | AC5 — both greps on core.md | Pasted grep output in progress.md | planned |
-| O6 | Issue #157 AC "No script, test, or CI reference … breaks" | Invariant: automation stays green after untracking | P3 | Verification gate | execute-phase | AC6 — grep no matches + `node scripts/check-skill-context.mjs` exit 0 | Pasted commands + exit codes in progress.md | planned |
-| O7 | Issue #157 AC "skills.sh discovery intact" | Use case: consumers can still discover and install every skill | P3 | Verification gate | execute-phase | AC7 — `npx skills add . --list` exit 0 | Pasted command + exit code in progress.md | planned |
-| O8 | Issue #157 AC "Pi package bundle + parity tests pass" | Invariant: the committed mirror stays byte-identical to `skills/` | P3 | Verification gate | execute-phase | AC8 — `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` passes | Pasted test result in progress.md | planned |
-| O9 | Issue #157 AC "marketplace.json untouched" + root `skills/` untouched | Required failure state: fix bleeds into distribution surfaces | P3 | Verification gate | execute-phase | AC9 — diff-scope filter → no output | Pasted command + output in progress.md | planned |
+| O1 | Issue #157 AC "git ls-files .claude/ returns nothing" | Invariant: the repo carries no always-on activation surface; fresh checkouts are inert | P1 | Drop the index entry | execute-phase | AC1 — `git ls-files .claude/` → no output, exit 0 | Pasted command + output in progress.md | verified |
+| O2 | Issue #157 AC ".claude/skills is added to .gitignore" | Required failure state: a local opt-in mount cannot be re-committed (without force) | P1 | Add the ignore rule | execute-phase | AC2 — `git check-ignore -v .claude/skills` → exit 0 naming the rule | Pasted command + output in progress.md | verified |
+| O3 | Issue #157 AC "CLAUDE.md … layout sections drop the symlink line" | Use case: repo docs describe the real layout and the authoring opt-in | P2 | CLAUDE.md layout note | execute-phase | AC3 + AC4 (CLAUDE.md counts) | Pasted grep output in progress.md | verified |
+| O4 | Issue #157 AC (README layout) + `CLAUDE.md` → Working rules bilingual rule | Bilingual pair updated in the SAME change (EN + ES, one commit) | P2 | README pair note | execute-phase | AC3 + AC4 (README.md / README.es.md counts) | Pasted grep output in progress.md | verified |
+| O5 | Issue #157 AC ".serena/memories/core.md updated" | Use case: local agent memory matches the shipped model | P2 | core.md bullet swap | execute-phase | AC5 — both greps on core.md | Pasted grep output in progress.md | verified |
+| O6 | Issue #157 AC "No script, test, or CI reference … breaks" | Invariant: automation stays green after untracking | P3 | Verification gate | execute-phase | AC6 — grep no matches + `node scripts/check-skill-context.mjs` exit 0 | Pasted commands + exit codes in progress.md | verified |
+| O7 | Issue #157 AC "skills.sh discovery intact" | Use case: consumers can still discover and install every skill | P3 | Verification gate | execute-phase | AC7 — `npx skills add . --list` exit 0 | Pasted command + exit code in progress.md | verified |
+| O8 | Issue #157 AC "Pi package bundle + parity tests pass" | Invariant: the committed mirror stays byte-identical to `skills/` | P3 | Verification gate | execute-phase | AC8 — `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` passes | Pasted test result in progress.md | verified |
+| O9 | Issue #157 AC "marketplace.json untouched" + root `skills/` untouched | Required failure state: fix bleeds into distribution surfaces | P3 | Verification gate | execute-phase | AC9 — diff-scope filter → no output | Pasted command + output in progress.md | in-progress |
 
 ## Acceptance
 
@@ -207,13 +207,13 @@ Layer: `config/infra`. Target: git index + `.gitignore`. Done-when:
 `git ls-files .claude/` → no output AND `git check-ignore -v .claude/skills` →
 exit 0.
 
-- [ ] Drop the index entry with `git rm --cached .claude/skills` (the
+- [x] Drop the index entry with `git rm --cached .claude/skills` (the
       working-tree symlink stays for the implementer; fresh clones get no
       mount) — run from the fix branch, never on `main`.
-- [ ] Add a `.claude/skills` rule to `.gitignore`, grouped with the existing
+- [x] Add a `.claude/skills` rule to `.gitignore`, grouped with the existing
       `.claude/pre-execution-gates/` entry, so a local opt-in mount can never
       be committed accidentally.
-- [ ] Reword the `.gitignore` comment block (`.gitignore:17-19`) that calls
+- [x] Reword the `.gitignore` comment block (`.gitignore:17-19`) that calls
       the mount "tracked … template artifact" so the comment matches the
       post-fix state (`grep -n "template artifact" .gitignore` → no matches).
 
@@ -223,31 +223,31 @@ Layer: `docs`. Done-when: `grep -rn "symlink → ../skills" CLAUDE.md README.md
 README.es.md` → no matches AND `grep -c "ln -sfn ../skills .claude/skills"
 CLAUDE.md README.md README.es.md` → ≥ 1 each.
 
-- [ ] `CLAUDE.md`: drop the `.claude/skills` line from the Repository layout
+- [x] `CLAUDE.md`: drop the `.claude/skills` line from the Repository layout
       block and add a short note under the block stating the dogfooding model —
       repo sessions consume the workflow from the installed release (Pi
       package / installed plugin), the working copy is inert by default, and
       authoring sessions opt in with the gitignored mount
       (`ln -sfn ../skills .claude/skills`) or per-session single-skill flags
       (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`).
-- [ ] `README.md` + `README.es.md`: drop the layout line and add the same note
+- [x] `README.md` + `README.es.md`: drop the layout line and add the same note
       to both language siblings in this change (bilingual rule — one commit
       carries the EN and ES edits together).
-- [ ] `.serena/memories/core.md`: replace the "`.claude/skills` symlinks to
+- [x] `.serena/memories/core.md`: replace the "`.claude/skills` symlinks to
       `../skills`…" bullet with the installed-release + opt-in-mount model
       (untracked local memory — see Decisions #6).
 
 ### P3 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #157`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<n>` and push
 
 ## Testing
 
