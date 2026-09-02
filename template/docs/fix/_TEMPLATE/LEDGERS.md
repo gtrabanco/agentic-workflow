@@ -2,7 +2,7 @@
 
 Project the write-ownership map for this unit's ledgers. The single source of
 truth is
-[`LEDGERS.md`](../../skills/pre-execution-review/references/LEDGERS.md)
+`skills/pre-execution-review/references/LEDGERS.md`
 ("Durable ledger write ownership"); this table is a per-tree copy of it, pinned
 against drift by `node --test scripts/ledger-ownership.test.mjs`, so it restates
 nothing and re-explains nothing. One writer per column set; the annotator may
