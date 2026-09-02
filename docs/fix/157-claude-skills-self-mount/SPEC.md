@@ -250,9 +250,11 @@ CLAUDE.md README.md README.es.md` → ≥ 1 each.
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip
 - [x] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #157`
+      (body amended post-open to carry `Closes #157` — fold F8, trail in
+      progress.md Execution receipt v4; forge closing link verified)
 - [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
 - [x] Commit `docs: link PR #<n>` and push
 
