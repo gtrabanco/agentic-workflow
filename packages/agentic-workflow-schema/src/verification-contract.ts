@@ -1460,3 +1460,42 @@ export function applyCrossRule(
     }
   }
 }
+
+/**
+ * Every cross rule that pins a diagnostic must pin a code the family publishes.
+ *
+ * `VerificationCrossRule.code` is widened to `string` on purpose — a contract family
+ * reports one of its OWN codes there — and `applyCrossRule` casts the value back to
+ * the closed code type without checking it, so the type said "closed vocabulary"
+ * while the runtime said nothing: a mistyped code, or one borrowed from another
+ * family, would reach a caller as a diagnostic no consumer can match (F71). This is
+ * the checked half of that cast, run against the declarations at load time, where
+ * the failure is a broken import rather than a wrong verdict. It answers the codes it
+ * verified so a caller can prove the scan was not vacuous.
+ */
+export function assertCrossRuleVocabulary(
+  contracts: Record<string, VerificationContractSpec>,
+  vocabulary: readonly string[],
+  owner: string,
+): readonly string[] {
+  const pinned: string[] = [];
+  for (const [contractName, spec] of Object.entries(contracts)) {
+    for (const object of [spec.root, ...Object.values(spec.objects)]) {
+      for (const rule of object.rules) {
+        if (rule.code === undefined) continue;
+        if (!vocabulary.includes(rule.code)) {
+          throw new TypeError(
+            `${owner}/${contractName}: cross rule "${rule.id}" reports "${rule.code}", which ` +
+            `the ${vocabulary.length}-code ${owner} vocabulary does not publish`,
+          );
+        }
+        pinned.push(rule.code);
+      }
+    }
+  }
+  return Object.freeze(pinned);
+}
+
+// The family declared in this file, checked against its own closed list. The
+// pre-execution family runs the same guard with its wider vocabulary.
+assertCrossRuleVocabulary(VERIFICATION_CONTRACT, VERIFICATION_DIAGNOSTIC_CODES, "verification");
