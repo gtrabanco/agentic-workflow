@@ -10,7 +10,7 @@ contract of what may come back, and the only shape in which it may come back.
 
 | Field | Contract |
 |---|---|
-| Invoked by | the authoring skill that needs the reading: `design-feature`, `plan-feature`, `plan-feature-scaffold`, `plan-fix` |
+| Invoked by | the authoring skill that needs the reading: `design-feature`, `plan-feature`, `plan-feature-scaffold`, `plan-fix` — **and by any turn that receives this file as its input**, whichever name the invitation used: the position decides (you did not write the artifact), not the label |
 | Context | a context that did not author the artifact — a **fresh read-only context** where the host supports one (subagent, isolated session) |
 | Permissions | read-only across the repository; the one file it may write is the artifact below, in the unit named by the invocation |
 | Output | exactly one delegated-evidence artifact, then the turn ends |

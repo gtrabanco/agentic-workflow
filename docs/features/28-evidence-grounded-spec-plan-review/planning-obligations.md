@@ -151,3 +151,9 @@ rows now cover every skill P9-P14 changed. **O11 stays exactly where P6 left it*
 *PASS* row per changed executor-path skill/version and the evidence-grounding leg is
 recorded as objective PASS · procedure FAIL (box 3) until its targeted wording change
 (F40) and a re-run land. Recorded rather than rounded up — D44.
+
+Closed 2026-09-02 in the same phase: the F40/F41 change landed (evidence-grounding
+1.4.0), the re-run leg is a dated PASS row, and `GOLDEN_FIXTURE.md` now carries the
+P15 gate sentence (`grep -qE …` exit 0). **O11 is not re-declared by these legs** — it
+stays `verified` on the P6 corpus evidence it already cited; P15 adds the P9-P14
+coverage without moving the row. F38 and F39 stay open for P16's fold (D45).

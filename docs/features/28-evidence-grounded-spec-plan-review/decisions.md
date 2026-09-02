@@ -824,3 +824,25 @@
   fixture (`workflow-status-pre-execution.test.mjs` injecting `headSha`), which is
   execution work, not a fixture run; this procedure surfaces regressions and never
   edits the skill under test.
+
+- **D45 — the targeted change fixes only what blocks its own phase; F38 and F39 wait
+  for the close-out fold (2026-09-02).** P15's task 4 permits "a separate targeted
+  change" for a regression a run surfaces, and four regressions surfaced. Fixed here:
+  **F40** (a delegate could not recognise itself, so the contract was read and
+  dismissed — one clause in `SKILL.md` step 2 and one in `DELEGATION.md`'s `Invoked
+  by`) and **F41** (a prose readiness box restating a machine-owned heading list — the
+  citation now names `SPEC_PRODUCT_REQUIRED_HEADINGS`, and `normative-drift` refuses a
+  rewording). Deliberately not fixed here: **F39** needs a contracted refusal-path
+  form at *both* reviewer stages, which is an `OUTPUT.md`/`CHECKS.md` decision with
+  its own fixtures, and **F38** is not prose at all — step 8's currency test has to
+  change to something a flow can satisfy, and the AC20 fixture must stop injecting
+  `headSha` and start deriving HEAD from a commit it makes. Bundling an architectural
+  change and two suites into a hardening phase's follow-up commit is how a "small
+  wording fix" commits swallow their unit; the route cells already name the work, and
+  P16's task 1 folds every fix-now row open at terminal HEAD — which is where a
+  re-designed sensor fixture belongs, next to the close-out that has to re-freeze the
+  acceptance manifest anyway. Ceiling cost of the change that did ship: eight route
+  ceilings re-based to their exact `ceil(measured × 1.10)` floors (design-product
+  15913/1106, design-repair 25018/1699, plan-scaffold 21773/1560, plan-fix 24690/1803),
+  growth source: the 1.4.0 delegate-identity clause, nothing else — the third such
+  re-basis in this unit and the reason D42's note asked for the number to be on record.
