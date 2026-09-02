@@ -143,3 +143,11 @@ mints a receipt, lets a byte move behind it, and watches it go stale — that pr
 to the machinery above and to P16's receipt set, minted at a terminal HEAD where a
 post-freeze write is actually observable. Status cell only; no verdict, validator or
 evidence cell changed.
+
+Reconciled 2026-09-02 (phase P15, weakest-executor legs): **O11**'s named evidence is
+dated rows in `docs/workflow/GOLDEN_FIXTURE.md`, and four 2026-09-02 `nan/qwen3.6`
+rows now cover every skill P9-P14 changed. **O11 stays exactly where P6 left it**
+(`verified`) — this commit claims no movement, because the required form is a dated
+*PASS* row per changed executor-path skill/version and the evidence-grounding leg is
+recorded as objective PASS · procedure FAIL (box 3) until its targeted wording change
+(F40) and a re-run land. Recorded rather than rounded up — D44.
