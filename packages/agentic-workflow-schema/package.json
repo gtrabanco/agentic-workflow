@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Versioned machine contracts, JSON Schemas, parsers, and deterministic document snapshots for agentic-workflow orchestration.",
   "keywords": [
     "agentic-workflow",
@@ -32,7 +32,9 @@
     "./candidate-snapshot.schema.json": "./candidate-snapshot.schema.json",
     "./review-receipt.schema.json": "./review-receipt.schema.json",
     "./verification-receipt.schema.json": "./verification-receipt.schema.json",
-    "./verification-plan.schema.json": "./verification-plan.schema.json"
+    "./verification-plan.schema.json": "./verification-plan.schema.json",
+    "./pre-execution-artifact-snapshot.schema.json": "./pre-execution-artifact-snapshot.schema.json",
+    "./pre-execution-review-receipt.schema.json": "./pre-execution-review-receipt.schema.json"
   },
   "files": [
     "dist",
@@ -43,6 +45,8 @@
     "review-receipt.schema.json",
     "verification-receipt.schema.json",
     "verification-plan.schema.json",
+    "pre-execution-artifact-snapshot.schema.json",
+    "pre-execution-review-receipt.schema.json",
     "README.md",
     "README.es.md",
     "LICENSE"
@@ -59,9 +63,14 @@
     "prepublishOnly": "npm test",
     "check:verification-schemas": "tsc && node scripts/generate-verification-schemas.mjs --check",
     "check:verification-package": "node scripts/check-verification-package.mjs",
+    "check:pre-execution-schemas": "tsc && node scripts/generate-pre-execution-schemas.mjs --check",
+    "check:pre-execution-package": "node scripts/check-pre-execution-package.mjs",
+    "test:pre-execution-docs": "node --test test/pre-execution-docs.test.mjs",
     "bench:verification": "node scripts/bench-verification.mjs",
+    "probe:sha256-paths": "node scripts/probe-sha256-paths.mjs",
     "test:verification-docs": "node --test test/verification-docs.test.mjs",
-    "gate:verification": "npm test && npm run check:verification-schemas && npm run check:verification-package && npm run test:verification-docs && npm run bench:verification -- --commands 128"
+    "gate:verification": "npm test && npm run check:verification-schemas && npm run check:verification-package && npm run test:verification-docs && npm run bench:verification -- --commands 128",
+    "gate:pre-execution": "npm test && npm run check:pre-execution-schemas && npm run check:pre-execution-package && npm run test:pre-execution-docs"
   },
   "devDependencies": {
     "ajv": "^8.20.0",

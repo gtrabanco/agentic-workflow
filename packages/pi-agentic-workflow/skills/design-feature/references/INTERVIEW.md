@@ -50,3 +50,20 @@
    touches a domain genuinely new to the project (a regulation, an unfamiliar
    integration, an industry convention with no precedent in the codebase) —
    never as a systematic per-feature step.
+
+## Turn contract — design closure boxes
+
+```text
+✓ Product half written with every capability-closure row resolved (filled surface
+  or explicit `n/a: <reason>`) — zero blank rows
+✓ Spec-lint product boxes ticked, and `## Design status` set to what they prove
+  (never optimistically); roadmap row never written past `defined` here
+✓ Evidence rows: every material claim `proven`/`decision` at `current` freshness,
+  or `unknown` naming its owner and the next evidence step
+✓ `stage: spec` readiness block printed; the artifact is handed off only on
+  `READY-FOR-REVIEW`
+✓ `artifactRevisionId` rotated for the bytes just written and named in the
+  closing block
+✓ Repair turns: one batch over the whole open findings set, each finding's repair
+  class recorded, no receipt text touched
+```

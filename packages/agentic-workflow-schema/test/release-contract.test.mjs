@@ -20,9 +20,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is the minor release 3.4.0", () => {
+test("AC8 read-verified: package version is the minor release 3.5.0", () => {
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "3.4.0");
+  assert.equal(pkg.version, "3.5.0");
 });
 
 // AC7 — language-aware capability semantics. Each language is asserted with
@@ -106,33 +106,34 @@ function runProbe(mutate) {
 test("AC2 & F4: the frozen table drives the inventory and the exact-table test is its sole validator", () => {
   const source = readPkg("test/capabilities.test.mjs");
 
-  // 1. The frozen AC2 table holds exactly 12 entries, and the test binds the
-  //    exported inventory to the table's length — not to any word count.
+  // 1. The frozen AC2 table holds exactly 14 entries (12 built-ins plus the
+  //    feature-28 `review-spec`/`review-plan` reviewers), and the test binds
+  //    the exported inventory to the table's length — not to any word count.
   const expectedStart = source.indexOf("const EXPECTED");
   const expectedBlock = source.slice(expectedStart, source.indexOf("];", expectedStart));
   const tableEntries = [...expectedBlock.matchAll(/^\s+skill: "[a-z0-9-]+",\s*$/gm)];
-  assert.equal(tableEntries.length, 12, "frozen AC2 table must drive the inventory size");
+  assert.equal(tableEntries.length, 14, "frozen AC2 table must drive the inventory size");
   assert.match(
     source,
     /assert\.equal\(WORKFLOW_SKILL_PROFILES\.length,\s*EXPECTED\.length,\s*"exact inventory size"\)/,
     "exported inventory size must be bound to the frozen table"
   );
-  // 2. Single literal 12 inventory constant — the duplicate guard — lives in
+  // 2. Single literal 14 inventory constant — the duplicate guard — lives in
   //    this file and is the only inventory-count assertion in the suite.
-  assert.match(source, /assert\.equal\(new Set\(skills\)\.size,\s*12,\s*"no duplicate skills"\)/);
+  assert.match(source, /assert\.equal\(new Set\(skills\)\.size,\s*14,\s*"no duplicate skills"\)/);
   for (const file of readdirSync(join(PKG_DIR, "test"))) {
     if (!file.endsWith(".test.mjs") || file === "capabilities.test.mjs" || file === "release-contract.test.mjs") continue;
     assert.equal(
       countAssertion.test(readFileSync(join(PKG_DIR, "test", file), "utf8")),
       false,
-      `${file} must not hard-code the 12-profile inventory`
+      `${file} must not hard-code the 14-profile inventory`
     );
   }
   // 3. F4 root cause: a raw `capabilities` word count is NOT a valid proxy —
   //    the word also names the public `capabilities` field, so counting gives
-  //    14 in the source today, never the 12 built-in profiles.
+  //    19 in the source today, never the 14 built-in profiles.
   const wordCount = (readPkg("src/index.ts").match(/\bcapabilities\b/g) || []).length;
-  assert.notEqual(wordCount, 12, "word counts never equal the profile inventory");
+  assert.notEqual(wordCount, 14, "word counts never equal the profile inventory");
 });
 
 test("AC2 & F4: the exact-table test fails on a missing, duplicate, or mismatched built-in", () => {

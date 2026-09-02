@@ -2,6 +2,97 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-08-30 — ninguna ruta ya arranca trabajo sobre un plan sin revisar
+
+**Enrutado que rompe; `workflow-status` 3.0.0, `execute-phase` 4.0.0,
+`ship-roadmap` 5.0.0, `loop-review-fold` 3.0.0, `audit-pr` 5.0.0,
+`review-change` 2.12.0, `review-implementation` 1.5.0, interna
+`pre-execution-review` 1.1.0.**
+
+La puerta ya no está solo en el salto de autoría: está en el salto de *arranque*:
+
+- **Las recomendaciones van por evidencia.** `workflow-status` lee el bloque de recibo
+  de cada unidad, recalcula su digest y etiqueta el escalón
+  `current | missing | stale | wrong-stage | substitute | self-approved |
+  author-readiness | legacy`. Una unidad sin un PASS vigente para el escalón que va a
+  atacar sale de `startable_now` y pasa a un bloqueador `gate` que nombra la revisión
+  que falta (`detail.pre_execution[]` lleva las filas). Si consumías
+  `next.recommended` como «estado → orden», consúmelo como «estado + recibo → orden».
+- **`execute-phase` falla cerrado.** Entre la puerta de estado propio y el manifiesto
+  de aceptación se sitúa la puerta de revisión pre-ejecución: ninguna edición ante un
+  `PLAN-REVIEW-PASS` ausente, caducado o de escalón equivocado (unidades de fix: su
+  propio recibo). `--force` no alcanza esta puerta: anula paradas de orden, no el
+  veredicto de un revisor. Quienes pasaban `--force` para saltar una parada de
+  planificación ahora deben ejecutar `/review-plan <NN>`.
+- **El autopiloto tiene dos etapas más:** DISEÑO → REVIEW-SPEC → PLAN → REVIEW-PLAN →
+  EJECUCIÓN → PR → REVISIÓN → AUDITORÍA, con ambas revisiones en contexto limpio.
+  `NEEDS-DESIGN` aparca la unidad para el humano en lugar de adivinar una respuesta de
+  producto; la política de fusión no cambia.
+- **Los hallazgos llevan escalón dueño.** `review-change` informa los de dueño `plan` y
+  `product` con su dueño, y `loop-review-fold` se niega a plegarlos: vuelven a la
+  habilidad autora más una re-revisión. Un segundo ciclo local emite
+  `CONVERGENCE-ANOMALY` antes de volver a editar.
+- **`audit-pr` comprueba que el linaje sobrevivió a la construcción:** recibo de plan
+  vigente (más el recibo de spec padre), todas las obligaciones `verified`/`n/a` y
+  ningún hallazgo de planificación abierto. Una fila `deferred` sin SPEC rector
+  enmendado por el usuario bloquea. Sigue siendo el único emisor de `MERGE-READY`.
+- **Las unidades heredadas se adoptan, no quedan exentas.** Las unidades
+  `planned`/`in-progress` anteriores a la funcionalidad 28 reciben los dos libros
+  construidos desde sus artefactos actuales y luego un `/review-plan` real; no se
+  reescribe nada antiguo, no se toca la aceptación congelada, y la ejecución reanuda
+  solo con el PASS nuevo. `legacy` («anterior a la puerta») y `missing` («nunca
+  revisado») se informan distinto a propósito.
+- **Ninguna ruta archiva un issue para cerrar un hueco de planificación**, y una
+  obligación no puede aplazarse a un issue posterior salvo que el usuario enmiende
+  primero el SPEC rector.
+
+## 2026-08-30 — diseñado ya no es lo mismo que revisado
+
+**Entregas que rompen; `design-feature` 3.1.0, `plan-feature` 5.0.0,
+`plan-feature-scaffold` 2.0.0, `plan-fix` 3.0.0, `plan-feature-from-issue` 2.0.0,
+`review-spec` 1.1.0, y las nuevas `review-plan` 1.0.0 con las internas
+`evidence-grounding` 1.1.0 y `pre-execution-review` 1.0.0.** La autoría de producto y los veredictos de producto
+tienen dueños distintos. `design-feature` cierra su mitad de producto en una
+preverificación determinista `READY-FOR-REVIEW` y entrega a `/review-spec <slug>`;
+ya no envía el trabajo directamente a `plan-feature`. `plan-feature` añade una
+puerta de revisión de producto tras la de redirección y falla cerrado con
+`PRODUCT-REVIEW GATE … BLOCKED` cuando el recibo es `missing`, `stale`,
+`wrong-stage`, un `substitute` (recibo de candidato o de verificación),
+`self-approved`, o solo existe como `author-readiness`. `plan-feature-from-issue`
+—nombre mantenido por compatibilidad— se detiene tras la mitad de producto en vez
+de exportar un issue directamente al esqueleto de planificación.
+
+**Migración.** Nada en disco queda invalidado: un SPEC `designed` existente
+simplemente no tiene revisión, que es el estado honesto. Ejecuta `/review-spec
+<slug>` sobre cualquier unidad que vayas a planificar; un SPEC escrito antes de
+este cambio suele fallar `C2`/`C9` (afirmaciones sin fila de evidencia, decisiones
+sin dueño nombrado) y vuelve como `SPEC-REVIEW-FAIL` para una reparación por lote
+en `design-feature`. Las filas de evidencia son la nueva expectativa: una por cada
+afirmación material, con `authority-kind`, fuente y ubicación, la revisión
+observada y un veredicto de frescura — una capacidad de modelo sin muestrear es
+`ASSUMPTION-UNVERIFIED`, nunca una cita del repositorio. Si conduces
+`plan-feature-from-issue` de forma programática, espera que se detenga antes de la
+mitad de ingeniería; llama a `plan-feature <slug>` cuando la revisión apruebe. Los
+consumidores directos que asertaban la entrega terminal anterior ahora deben
+asertar `/review-spec`.
+
+**Planificación gana el mismo salto en el lado de ingeniería.** El esqueleto y
+`plan-fix` congelan ahora dos libros con el plan — `planning-evidence.md` +
+`planning-obligations.md` en unidades M/L, `### Planning evidence` +
+`### Obligations` incrustados en el SPEC para XS/S y fixes — y entregan a
+`/review-plan <NN>` (fix: `/review-plan fix-<N>`) en lugar de `/execute-phase`.
+`review-plan` barre esos libros (L1–L6) y las comprobaciones fijas de ingeniería
+(P1–P12, más F1–F4 en fixes) en un contexto que no cortó las fases, y solo su
+`PLAN-REVIEW-PASS` vigente permite que `execute-phase` edite algo. Una unidad
+planificada sin revisión es un estado normal y honesto: ejecuta `/review-plan <NN>`.
+Una unidad con obligaciones en blanco, `deferred` o exportadas a un issue posterior
+falla la revisión, no el release; aplazar una exige enmendar primero el SPEC rector.
+Quienes asertaban la antigua entrega a `/execute-phase` de `plan-feature` ahora
+asertan `/review-plan`, y las reglas compartidas del ciclo de revisión
+(independencia, hallazgos unidos, rechazo solo contra evidencia, no-progreso y el
+informe `CONVERGENCE-ANOMALY`) se trasladaron a la dueña interna
+`pre-execution-review`: léelas allí y no por habilidad.
+
 ## 2026-08-21 — resultados máquina híbridos y snapshots deterministas
 
 **Contrato de driver incompatible; `@gtrabanco/agentic-workflow-schema` 3.0.0,

@@ -1,7 +1,7 @@
 ---
 name: audit-pr
 user-invocable: true
-version: 4.3.1
+version: 5.0.3
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -34,6 +34,9 @@ independently evaluates only the delivery gates below.
   matching `review-change:pass` marker fetched together; absent or any SHA
   mismatch → blocker routed to `/review-change`, current → its scope/axes/
   acceptance coverage/manual checks acknowledged without re-review
+✓ Upstream lineage was re-verified (current plan receipt + parent spec receipt,
+  digests recomputed), every obligation row is `verified`/`n/a`, and no planning
+  finding is open — stale or missing lineage is a blocker, never a formality
 ✓ The verdict block was printed in the fixed format: `VERDICT: MERGE-READY | BLOCKED` with ranked, evidenced blockers
 ✓ The PR's FULL URL is printed in the verdict header (the user may be juggling
   several projects and agents without a CI monitor — the link in the chat is

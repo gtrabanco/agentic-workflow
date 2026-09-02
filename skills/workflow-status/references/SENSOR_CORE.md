@@ -64,16 +64,36 @@ live evidence against a frozen ledger remains a contradiction candidate.
      command matched to the exact status: `defined` → `/plan-feature <slug>`,
      `planned` → `/execute-phase <NN>`.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
+6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned` or
+   `in-progress` ([pre-execution evidence](PRE_EXECUTION.md)): read the stage's
+   newest receipt block, re-derive the bound digest with the recipe owner's
+   verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage
+   <spec|plan> --unit <id> [--parent <64-hex>]` — a snapshot digest is a canonical SHA-256, never a
+   git blob id; `structural.reasonCode` names the dimension that drifted), and
+   label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/
+   `self-approved`/`author-readiness`/`legacy`. The label **overrides step 6's
+   status-only command**: a unit without a current PASS for the stage it is about to
+   enter is demoted out of `startable_now` into a `gate` blocker naming the missing
+   review, and `detail.pre_execution[]` records the row. A roadmap row is never
+   edited here — sensing only reads.
 7. **Phase progress.** For each in-progress feature, read `TASKS.md`: current
    phase, total phases, per-phase checkbox completion.
 8. **Pending quality gates.** For each unit with commits: has the mandatory
-   `review-change` for its current state run (review report present in the
-   feature folder — the unit's `review-findings.md` fold ledger, when
-   present, IS that artifact: its presence, with any rows at all, proves
-   `review-change` ran for the unit's current state)? Has `audit-pr` a
+   `review-change` for its current state run? The artifact is the unit's
+   **durable review mark** — the `REVIEW-RAN` row of its `review-findings.md`
+   fold ledger, whose shape and writer `pre-execution-review`'s `LEDGERS.md`
+   owns — and it counts while the sha it names is an ancestor of the unit's head
+   and no commit after it touched a bound input of that review, over the paths
+   `pre-execution-review`'s `SNAPSHOT.md` binds:
+   `git log <mark-sha>..HEAD -- <bound paths>` prints nothing. Equality with the
+   head is not the test and cannot be: carrying the mark is a commit, and that
+   commit moves the head, so a rule keyed on equality calls every review that
+   finished its own turn unreviewed. The ledger's presence is never that proof: a
+   review that found nothing writes no finding row, so presence would call a
+   reviewed unit unreviewed and an unreviewed one reviewed. Has `audit-pr` a
    MERGE-READY bound to the PR's current head SHA (look for the audit
-   comment marker on the PR)? Derive `review_pending` / `audit_pending` /
-   `merge_ready` per unit.
+   comment marker on the PR)? Derive `review_pending` (no current mark) /
+   `audit_pending` / `merge_ready` per unit.
 9. **Fix-now fold ledger → `findings.fix_now[]`.** For each in-flight unit
    (feature or fix) that has a `review-findings.md` ledger, read only its
    `folded: no` rows and emit each as a structured item:
@@ -93,3 +113,23 @@ live evidence against a frozen ledger remains a contradiction candidate.
    error); no unit in the run has one → `findings.fix_now: []`, same as
    today. **Read-only**: this step only projects the ledger's current
    unfolded rows — never writes, ticks `folded`, or judges.
+
+### Envelope fields the sensor projects (versioned grammar)
+
+Steps 1-9 print these keys and no others; each row must be a field the schema
+package's envelope validator declares for that object.
+
+```text
+sensor-fields@1
+# machine: envelope
+object | field
+unit | type
+pr | merge_ready
+gates | review_pending
+gates | audit_pending
+findings | fix_now
+findings.fix_now | suggested_tier
+dependencies | unmet
+blockers | kind
+recommendations | product_audit
+```

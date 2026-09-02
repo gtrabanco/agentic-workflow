@@ -54,6 +54,17 @@ README.md / README.es.md project overview (EN / ES)
   English-only per the docs-language rule above and have **no** ES sibling — the
   bilingual sync rule applies only to docs that actually have a translatable
   sibling (human tutorial/reference prose), never to process artifacts.
+- **Vendored third-party code carries its provenance.** Any code copied from a
+  third party into this repository — into a package's `src/`, a script, or a
+  skill reference — keeps a header comment naming the **source URL, the author,
+  the version copied, and the license name**. A copy without those four is a
+  provenance defect, not a formatting slip: nothing else in the tree says where
+  the bytes came from, so an upstream relicensing or an attribution obligation
+  cannot be audited later. Vendoring is a real alternative to adding a
+  dependency and it is weighed as one (unit 28's D36 rejected a 1,419-line
+  copied `sha256` closure on measured cost and kept the package's own core, and
+  AC21 keeps the schema package dependency-free); whichever route a change
+  takes, the provenance header is mandatory for the first.
 - **Stack/architecture agnostic.** Do not introduce references to any specific
   product, stack, framework, ORM, runtime, or architecture pattern into the
   skills or the shared docs. Generic phrasing ("the project's architecture",
@@ -246,6 +257,100 @@ This repo has no application build. "Green" means:
   with `npm run bundle:skills` (the committed `packages/pi-agentic-workflow/skills/`
   mirror stays byte-identical to `skills/`; `test/alias-coverage.test.mjs`
   reads both trees) — same PR, always.
+
+### Normalizer inventory (this repository)
+
+The rule that orders these steps — and the fact that a post-freeze byte change voids
+the receipts that bound those bytes — is owned by
+`skills/execute-phase/references/PRE_EXECUTION_GATE.md` §"Normalizer order"; this list
+only says which of **our** steps rewrite bytes and where they sit relative to a
+snapshot or acceptance freeze. `scripts/pre-execution-quality.test.mjs` parses this
+block and refuses the schedule if a mutating step is ever re-marked as a tail step.
+
+```text
+normalizer-inventory@1
+step | kind | side
+bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, both CHANGELOG tables, README/SKILLS cells) | before
+npm run bundle:skills | bundler (copies `skills/` into the Pi package mirror `packages/pi-agentic-workflow/skills/`) | before
+npm run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
+generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
+generate-verification-schemas.mjs | generator (writes the verification schema projections) | before
+generate-docs | docs generator (writes `docs/site/guides/`) | before
+generate-pre-execution-schemas.mjs --check | check-only (drift report, `npm run check:pre-execution-schemas`) | after
+generate-verification-schemas.mjs --check | check-only (drift report, `npm run check:verification-schemas`) | after
+pre-execution-snapshot.mjs verify | check-only (re-derives a bound digest, writes nothing) | after
+node scripts/check-skill-context.mjs (--routes) | check-only (budget report, writes nothing) | after
+probe-sha256-paths.mjs (packages/agentic-workflow-schema) | check-only (SHA-256 path and cost probe, `npm run probe:sha256-paths`, prints digests/timings, writes nothing) | after
+formatter | none declared — this repository has no Prettier, Biome or EditorConfig configuration, so the formatter category is empty here | n/a
+```
+
+### Normative surfaces (the drift gate's scope)
+
+A *normative surface* is a place that orders what an agent may do next: a flag it
+may pass, a gate trace it may print, a verdict it may emit, a field it may write,
+a route it may hand off to. Feature 28's AC15 binds each of those to the machine
+surface that accepts it — the schema package's published vocabularies
+(`packages/agentic-workflow-schema/src/`), the `argument-hint:` frontmatter of each
+skill, and the skill directory itself. The gate reads **versioned grammar only**:
+a `block:` id, a `fenced:` fixed-output contract, a `table:` section, or frontmatter.
+It never parses a sentence, so a surface with no fixed grammar in the `grammar` cell
+is the defect this table exists to prevent, and `scripts/normative-drift.test.mjs`
+fails closed on it. `machine` names the vocabulary the surface's tokens resolve
+against (`+` joins several); `must-name` is `yes` only where the machine's every
+value must be ordered by some surface, which is the direction that catches a value
+published and never declared anywhere else. The `#` lines are directives: host
+commands a hand-off may print that are not skills.
+
+```text
+normative-surfaces@1
+# hand-off-host-commands: clear
+surface | file | grammar | machine | must-name
+skill-declared-arguments | skills/*/SKILL.md | frontmatter:argument-hint | n/a | no
+closing-hand-offs | skills/*/SKILL.md | fenced:→ Next: | skill | no
+gate-rejection-vocabulary | skills/pre-execution-review/references/POLICY.md | block:gate-rejection-vocabulary@1 | gate-rejection-type | yes
+preflight-gate-traces | skills/execute-phase/references/PREFLIGHT.md | fenced:GATE REJECTION — | gate-rejection-type | no
+pre-execution-gate-trace | skills/execute-phase/references/PRE_EXECUTION_GATE.md | fenced:GATE REJECTION — | gate-rejection-type | no
+plan-mode-routing | skills/plan-feature/references/ROUTING.md | block:plan-mode-routes@1 | skill+flag | no
+fix-mode-routing | skills/plan-fix/references/PLANNING_PROCESS.md | block:fix-mode-routes@1 | skill+flag | no
+review-spec-verdicts | skills/review-spec/references/OUTPUT.md | fenced:SPEC-REVIEW-PASS+Verdict: | pre-execution-verdict | yes
+review-plan-verdicts | skills/review-plan/references/OUTPUT.md | fenced:PLAN-REVIEW-PASS+Verdict: | pre-execution-verdict | yes
+review-spec-handoff | skills/review-spec/references/OUTPUT.md | fenced:→ Next: | skill | no
+review-plan-handoff | skills/review-plan/references/OUTPUT.md | fenced:→ Next: | skill | no
+sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One label per stage | n/a | no
+snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
+ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block:ledger-ownership@1 | n/a | no
+ledger-review-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:review-mark@1 | n/a | no
+sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
+turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
+turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no
+```
+
+### Rendered facts (prose that restates a machine value)
+
+Where prose repeats a version, a count, or a contract id, the machine is
+authoritative and the prose is the defect (AC15). A regex over sentences cannot
+find those, so each restatement is declared once here and the test **recomputes**
+the value: `claim` is a fixed form (`literal:<exact text>`, `version-tables`,
+`package-versions`), `machine` names the publisher, `+` joins surfaces that each
+carry the same fact. `literal:` compares the number or id inside the quoted text;
+the table kinds compare every row the same way. A restatement found in review but
+not pinned here is a known-issue with its re-trigger condition, never a silent gap.
+
+```text
+rendered-facts@1
+surface | claim | machine | rule
+docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
+docs/workflow/SKILLS.es.md | pattern:\*\*(\d+) skills orientadas al usuario\*\* | count:user-facing | equals
+CHANGELOG.md + CHANGELOG.es.md | version-tables | frontmatter:version | equals-each
+CHANGELOG.md + CHANGELOG.es.md | package-versions | package:version | equals-each
+skills/review-spec/references/OUTPUT.md + skills/review-plan/references/OUTPUT.md | literal:agentic-workflow/pre-execution-review-receipt@1 | const:PRE_EXECUTION_RECEIPT_CONTRACT_ID | equals
+```
+
+The two schema generators are the clean example of the split the rule turns on: the
+same script rewrites a projection or reports on it, and only the reporting mode may
+run after a freeze. `bundle:skills` must run after the last edit under `skills/` and
+before any freeze, because `test/skill-parity.test.mjs` fails a drifted mirror. No
+script or skill may keep a second copy of this list.
 
 ---
 

@@ -105,6 +105,11 @@
       · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),
         then /execute-phase on this same branch (yes: list the finding ids; no:
         omit this line)
+      · any finding owned by plan? → /plan-feature <unit> re-cuts the plan on this
+        branch, then /review-plan <unit> before execution (yes: list the ids; no:
+        omit this line)
+      · any finding owned by product? → /design-feature <unit>, then /review-spec
+        <unit> (yes: list the ids; no: omit this line)
       · independent proposals → present to the user; only the user routes them
         to /triage-issue
      · adversarial recommendation checklist fired AND this run was

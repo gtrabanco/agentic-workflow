@@ -7,7 +7,7 @@ import {
   codesOf,
   describeDiagnostics,
 } from "./fixtures/verification-diagnostics.mjs";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -24,7 +24,11 @@ import {
 } from "../dist/index.js";
 import {
   VERIFICATION_CONTRACT,
+  VERIFICATION_DIAGNOSTIC_CODES,
+  assertCrossRuleVocabulary,
 } from "../dist/verification-contract.js";
+import { PRE_EXECUTION_CONTRACT } from "../dist/pre-execution-contract.js";
+import { PRE_EXECUTION_DIAGNOSTIC_CODES } from "../dist/pre-execution.js";
 import {
   PROJECTION_FILES,
   renderProjection,
@@ -412,10 +416,11 @@ test("P7: committed projections equal the generated output (no hand-edits)", () 
   }
 });
 
-test("P7: the drift check passes on the package and fails on a mutated projection", () => {
+test("P7: the drift check passes on the package and fails on a mutated projection", (t) => {
   assert.equal(checkProjections({ packageRoot: PACKAGE_ROOT }).ok, true);
 
   const scratch = mkdtempSync(join(tmpdir(), "projection-drift-"));
+  t.after(() => rmSync(scratch, { recursive: true, force: true }));
   for (const file of PROJECTION_FILES) {
     writeFileSync(join(scratch, file), renderProjection(file));
   }
@@ -540,5 +545,50 @@ test("P7: the two public entries are the only path to a verification PASS", asyn
   assert.equal(
     Object.keys(pkg).filter((name) => /^(validate|verify)[A-Za-z]*Verification|Verification[A-Za-z]*Validate/.test(name)).length,
     2,
+  );
+});
+
+test("a cross rule cannot report a code its family never published (F71)", () => {
+  // `VerificationCrossRule.code` is widened to string so a family can pin one of its
+  // OWN codes, and `applyCrossRule` casts that value back with no check: the type says
+  // "closed vocabulary", the runtime said nothing. A typo or another family's code
+  // would reach a caller as a diagnostic no consumer can match.
+  assert.equal(typeof assertCrossRuleVocabulary, "function",
+    "the cast at the sink needs its checked half");
+
+  const typo = {
+    plan: {
+      ...VERIFICATION_CONTRACT.plan,
+      root: {
+        ...VERIFICATION_CONTRACT.plan.root,
+        rules: [...VERIFICATION_CONTRACT.plan.root.rules, {
+          id: "typo-pin", kind: "unique", collection: "commands", fields: ["id"],
+          description: "a rule that mistypes its code", projectable: false, code: "invalid-exit-stat",
+        }],
+      },
+    },
+  };
+  assert.throws(
+    () => assertCrossRuleVocabulary(typo, VERIFICATION_DIAGNOSTIC_CODES, "verification"),
+    /cross rule "typo-pin" reports "invalid-exit-stat"/,
+    "a code nobody publishes must break the import, not answer a caller",
+  );
+
+  // The shipped declarations pass, and the scan is not vacuous: rules do pin codes,
+  // including the family-specific one the widened field exists for.
+  assert.ok(
+    assertCrossRuleVocabulary(VERIFICATION_CONTRACT, VERIFICATION_DIAGNOSTIC_CODES, "verification").length > 0,
+    "the verification family's own pins are checked against its own vocabulary",
+  );
+  assert.ok(
+    assertCrossRuleVocabulary(PRE_EXECUTION_CONTRACT, PRE_EXECUTION_DIAGNOSTIC_CODES, "pre-execution")
+      .includes("invalid-topology"),
+    "pre-execution pins invalid-topology, which the shared vocabulary does not carry",
+  );
+  // Checking any list is not enough: the family's own code is refused against the
+  // shared one, so a guard wired to the wrong vocabulary cannot pass quietly.
+  assert.throws(
+    () => assertCrossRuleVocabulary(PRE_EXECUTION_CONTRACT, VERIFICATION_DIAGNOSTIC_CODES, "pre-execution"),
+    /invalid-topology/,
   );
 });

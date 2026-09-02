@@ -59,3 +59,993 @@
 - **D13 — Convergence diagnosis:** the first unioned findings set is repaired as
   one owner-bounded batch. A second cycle emits `CONVERGENCE-ANOMALY`; operational
   budgets never convert the anomaly or an open finding into PASS.
+- **D14 — Distributed internal marking:** `evidence-grounding` ships as
+  `user-invocable: false` without `metadata.internal: true`, registered in
+  `.claude-plugin/plugin.json` and `skills.sh.json`, because that flag is the
+  skills-CLI exclusion lever (#96) and a distributed skill wrongly carrying it
+  is silently omitted from installs (#141). Lint rule 7 and the
+  `bounded-delivery-loops` guard keep the marking valid.
+- **D15 — One PR releases both packages:** the schema package releases as
+  additive `3.5.0` from P1 and the Pi package bumps `0.1.0 -> 0.2.0` in P5's
+  terminal pre-merge step after the last bundle rebuild;
+  `publish-pi-package.yml` publishes on merge only when its version is newer
+  than the registry, so the final hardening step makes the terminal candidate
+  release-ready.
+- **D16 — Parent topology is binding-time, not well-formedness:** the red-first
+  receipt suite pins that a plain-reviewer receipt carrying parents passes
+  `validatePreExecutionReviewReceiptV1` and is refused with `invalid-topology`
+  only by `validatePreExecutionReceiptAgainstSnapshot`. The shared rule engine
+  therefore gained an `enforcement: "walk" | "binding"` flag: the Draft-07
+  projection renders `parent-topology-shaped`/`parent-topology-restrained`, the
+  plain walk skips binding rules, and the binding authority re-applies them over
+  the same captured document via the exported `applyCrossRule`. One definition,
+  no second inline copy of the constraint.
+- **D17 — Published-surface fidelity on the shared canonicalizer:** (a) the
+  verification family's over-budget `TypeError` keeps its pinned `D14` marker
+  (`F91`) through a `budgetTag` option on the shared canonicalizer — the
+  pre-execution family leaves it unset; (b) the projection test's path-rule
+  fragment `or ".." segments` is matched in its SERIALIZED form, because
+  `JSON.stringify` always escapes the description's double quotes and a raw
+  quoted fragment can never appear in serialized bytes — the assertion as first
+  written was unsatisfiable under any implementation and was amended, not
+  weakened (the rule, its pattern, and its description are unchanged).
+- **D18 — `evidence-grounding` carries no model tier:** it is internal and
+  always composed inside its caller's turn, so its work already runs at the
+  caller's tier (`design-feature` = opus/high). `model-routing.yml` routes only
+  entrypoints, and the precedent is explicit: `phase-contract`,
+  `verification-contract` and `planning-preflight` are referenced from routed
+  entrypoints and carry no route of their own. Adding a route for it would
+  imply it can be invoked, which the SPEC forbids (`SKILL.md:133`).
+- **D19 — P2 recalibrated the frozen route budgets:** the frozen manifest pinned
+  `plan-feature:scoped` at 6337/536 and `plan-feature:issue` at 7786/687, both
+  measured *before* the Product-review gate existed. A gate this skill must
+  emit cannot fit the old ceiling, so the two routes were raised to
+  7610/643 and 9970/814 and the two new routes registered
+  (`design-feature:product` 11950/864, `review-spec:default` 4690/352). This
+  follows the recorded feature-21 precedent ("budget manifest recalibrated to
+  the new steady state") rather than truncating mandatory contract text. Each
+  figure is a measured steady state, not a padded maximum: `check-skill-context
+  --routes` passes with the smallest route-specific buffer in the manifest.
+- **D20 — XS/S embeds both planning ledgers in the SPEC:** the snapshot then marks
+  the `planning-evidence` and `obligations` context rows `absent` because their
+  bytes are already bound by the whole-`spec` row, rather than splitting the SPEC
+  to manufacture two files. Symmetrically an M/L unit that embedded its tables is
+  a `review-plan` finding: one artifact, one complete table, and the reviewer
+  always reads the whole table while execution reads a phase slice.
+- **D21 — Route budgets model steps, not skills:** after P3 a planning invocation
+  loads the shared owners, so `plan-feature` split into `:scoped` (router + gates,
+  7610) and `:scaffold` (authoring + ledgers, 12700) and `design-feature` into
+  `:product` (11950) and `:repair` (15800, the only step that loads
+  `pre-execution-review`'s cycle policy). Inflating one ceiling to the worst-case
+  union of every step would have hidden the real per-turn cost; each declared
+  ceiling is the measured steady state of the step that actually loads those files.
+- **D23 — `--force` never reaches the pre-execution gate:** the flag exists to let a
+  human re-order *ordering* stops (dependency, own-status), which are statements about
+  sequence the user may legitimately overrule. A review PASS is a verdict about
+  quality that only an independent reviewer can produce, so the executor has nothing
+  to assert over it; making it forceable would have turned the phase's headline
+  guarantee into a warning. The gate therefore stops the turn and names `/review-plan`.
+- **D24 — the owning stage routes a finding, the class only sizes the work:**
+  `fix-now` kept meaning "belongs to this unit" while routing began keying on
+  `product | plan | source | environment | runtime`, because the P3 ledgers proved one
+  root cause can surface as several code-level findings. Folding a `plan`- or
+  `product`-owned row would silently rewrite authority with candidate code, so
+  `loop-review-fold` blocks instead and hands the row to its author plus a re-review;
+  the fold-ledger schema is unchanged (the owner rides the existing `route` cell).
+- **D25 — (numbered `D22` until finding RS7; `D23`/`D24` were already taken) —
+  `pre-execution-review` is the single owner of the shared cycle and the
+  ledger shapes, not of verdicts:** `review-spec`/`review-plan` emit verdicts, the
+  authoring skills emit readiness, and this internal owner emits nothing — the
+  suite asserts that the three ledger column lists appear in exactly one file in
+  the tree, which is what keeps the P2 spec-side text and the P3 plan-side text
+  from drifting apart later.
+
+- **D26 — (numbered `D22` until finding RS7) — Route-ceiling headroom policy (F7,
+  user decision 2026-08-31):** budget
+  ceilings are re-baselined to `ceil(measured × 1.10)` at declared re-basis
+  points, every ceiling raise must name its real growth source in the commit and
+  changelog row, and ceilings are re-based down when trim work lands. Declared
+  after F7 showed the audit-pr route ceilings pinned at exactly the measured
+  value (0 % headroom — the guard could not trip) with a misattributed bump
+  rationale (`857aa54b`); the live demonstration was the F1 fold tripping the
+  guard with a 3-line doc correction. Applied now to `audit-pr:feature/fix`
+  (9501/614 from measured 8637/558) and `plan-fix:issue` (18551/1429 from
+  measured 16864/1299, F8's re-basis); the remaining 21 routes re-baseline at
+  their next declared point. Unblocks F8's fold; the plan-fix:issue
+  duplication trim stays with debt item D2 and its recorded trigger.
+
+## Author repair batch — 2026-08-31 (findings RS3, RS8, RS12, RS13, RS14)
+
+- **D27 — the machine manifest is the record of a ceiling, and every declared
+  figure now trails it (RS8 + RS12).** The decision records fell behind the
+  budgets JSON: D19 declared `review-spec:default` at 4690/352 while the manifest
+  carried 11000/800, and D21 declared `plan-feature:scaffold` 12700 /
+  `design-feature:repair` 15800 while the manifest carried 15500/1200 and
+  18000/1300. The bridging commit (`857aa54b`) is the one D26 itself discredits
+  ("misattributed bump rationale"), so no figure is inherited from it and nothing
+  was reconstructed from it here. Re-declared from measurement instead —
+  `node scripts/check-skill-context.mjs --routes --json` at this commit:
+
+  | Route | Measured (est/lines) | Before (est/lines) | Declared now |
+  |---|---|---|---|
+  | `review-spec:default` | 10196 / 725 | 11000 / 800 | **11216** / 800 |
+  | `review-plan:default` | 11605 / 775 | 12500 / 850 | **12766 / 853** |
+  | `design-feature:product` | 11940 / 849 | 11950 / 864 | **13135 / 934** |
+  | `design-feature:repair` | 17284 / 1219 | 18000 / 1300 | **19013 / 1341** |
+  | `plan-feature:scoped` | 7496 / 620 | 7610 / 643 | **8246 / 682** |
+  | `plan-feature:scaffold` | 14334 / 1093 | 15500 / 1200 | **15768 / 1203** |
+  | `plan-feature:issue` | 9765 / 782 | 9970 / 814 | **10742 / 861** |
+  | `review-change:default-backend` / `:default-web` | 12540 / 926 | 12750 / 949 | **13795 / 1019** |
+  | `review-change:synthesize` | 13007 / 948 | 13240 / 972 | **14308 / 1043** |
+  | `review-change:adversarial` | 14192 / 1034 | 14485 / 1062 | **15612 / 1138** |
+
+  Growth source for each raise is the same event: D26's declared floor became
+  machine-enforced (below), so every route under it had to be re-baselined at one
+  declared point instead of tripping mid-correction. `audit-pr:feature/fix`
+  (9501/614) and `plan-fix:issue` (18551/1429) already sat exactly on the floor
+  from D26's own re-basis and were not touched, and the twelve routes at or above
+  10 % (`execute-phase:*` 20–22 %, `loop-review-fold:default` 36 %) were not
+  lowered: re-basing **down** stays a declared act tied to trim work (debt item
+  D2), never a side effect of this check.
+  Rule adopted with it: a decision record that names a ceiling states the
+  measured value beside it, and the manifest is authoritative when the two differ.
+  **Superseded for seven route entries by D31**, which re-based the same manifest
+  inside the same batch: this table was measured before the batch finished editing
+  the reference files its routes load.
+
+- **D28 — the headroom policy binds mechanically (RS12).** D26 was recorded in
+  `SKILL_CONTEXT_BUDGETS.json` as a `policy` block that **nothing read**:
+  `scripts/check-skill-context.mjs` compared measured against
+  `routeEstimateMax`/`routeLinesMax` and stopped there. The check now reads
+  `policy.relative-headroom` and fails any route whose ceiling sits below
+  `ceil(measured × (1 + headroom))`, naming both numbers, while a ceiling the
+  measured value has already passed stays reported as the tighter fault (the
+  breach, not the floor). The floor is deliberately one-way — trim widens
+  headroom and must not be punished by a check that demands a re-basis. Covered by
+  `scripts/check-skill-context.test.mjs`: an inflated declared headroom fails the
+  estimate and the lines dimension separately, and the **shipped** manifest must
+  satisfy its own policy. Counter-evidence against the finding's magnitude, kept
+  visible rather than silently dropped: RS12 claimed "21 of 23 routes still sit at
+  0.08–2.1 % headroom"; measured before this repair it was **11 of 23** routes
+  below the 10 % floor (0.08 %–10.34 %, 11 on estimate and 10 on lines), with the
+  other twelve at or above it. The defect was real; the count was not.
+
+- **D29 — snapshot identity is content-derived, and `verify` names what drifted
+  (RS3(b), RS13).** Two halves, both in the mechanical sensor:
+  1. `build` defaulted `sourceRevision`/`artifactRevisionId` to live `HEAD`, so the
+     canonical digest rotated on every commit — including the one that records a
+     receipt, and any commit touching no bound path. That makes a content-bound
+     verdict expire for reasons unrelated to content, which is the failure mode
+     RS3(b) names. The default is now the newest commit touching the snapshot's own
+     bound paths (artifacts plus context sources), with `--source-revision` /
+     `--artifact-revision` still overriding for an explicit authoring-event id.
+  2. `verify` passed the *current* snapshot object as both the reviewed and the
+     current input of the schema comparator, so its precedence-1
+     `missing-receipt-snapshot` branch always won and no consumer could ever learn
+     *which* bound file moved — the gate block asks for exactly that. `verify` now
+     attributes the drift from what the receipt actually records, in the
+     comparator's own precedence order and only with codes from
+     `PRE_EXECUTION_FRESHNESS_CODES`.
+     Chosen deliberately over reconstructing a synthetic "reviewed" snapshot to
+     feed the comparator: that would have manufactured the object the comparator
+     exists to check, laundering a guess into a verdict. Rejected instead: letting
+     the script keep a private precedence list, which would drift from the contract
+     the header of the same file promises it cannot.
+
+- **D30 — a fix unit's Plan snapshot binds no parent (RS14).** The contract said
+  every `stage: plan` snapshot requires a non-null `parentSpecSnapshotDigest`
+  (`plan-stage-requires-parent`), while the only sanctioned `stage: spec` binding
+  was `spec-product-v1`, which requires the Product-half headings
+  `Goal, Branch, Size, Dependencies, Product half, Design status`. A fix unit has
+  no Product half by design — P3's own task text keeps fix authority in
+  reproduction/root-cause/regression/rollback "without a fake Product half", and
+  `PRE_EXECUTION_GATE.md` states fix mode has no Product hop to substitute — so the
+  documented recipe (`SNAPSHOT.md`: "a fix unit passes its own SPEC snapshot
+  digest") was unreachable for **every** fix unit, proven before this change by
+  `node scripts/pre-execution-snapshot.mjs build --stage spec --dir
+  docs/fix/78-audit-pr-closure-integrity --unit fix-78 --unit-kind fix` →
+  `snapshot refused: invalid-selector@/files/0/content`. The rule is narrowed to
+  `stage == plan && unitKind == feature`; a fix plan snapshot carries
+  `parentSpecSnapshotDigest: null` and its receipt says so. This is a semantic
+  change to a contract, so its boundaries are explicit: the pre-execution surface
+  is new and unreleased in `3.5.0`, no published consumer can observe it, AC2's
+  feature-side Product→Plan parent binding is unchanged and still tested, and AC9's
+  frozen candidate `CandidateSnapshot`/`ReviewReceipt` and staged
+  `VerificationPlan`/`VerificationReceipt` meanings are untouched. Rejected:
+  inventing a Product half in the fix template (contradicts D6 and the fix
+  workflow's authority model), and adding a second selector vocabulary entry
+  (more surface for the same answer — a fix unit has nothing to parent, not
+  something to bind differently).
+
+- **D31 — second declared re-basis inside the RS batch (2026-09-01): a plan that
+  measures its own ceilings must measure them last (RS-batch regression found by
+  the check D28 added).** After the reference-file edits landed, `check-skill-context.mjs
+  --routes` failed 14 rows across seven route entries: D27's declared ceilings were
+  computed **before** this batch grew `skills/pre-execution-review/references/
+  SNAPSHOT.md` (+51 lines, the RS14/RS3/RS13 remedy text), `skills/review-plan/
+  references/{CHECKS,OUTPUT}.md` and `skills/audit-pr/references/
+  02_CLOSURE_AND_SCOPE_GATES.md` — so the batch invalidated its own declaration
+  while still uncommitted. Re-based at `ceil(measured × 1.10)` measured at this
+  commit, growth source = this RS-repair batch's own reference edits:
+
+  | Route | Measured (est/lines) | D27 declared | Declared now | Grew via |
+  |---|---|---|---|---|
+  | `audit-pr:feature` / `:fix` | 8675 / 560 | 9501 / 614 | **9543 / 616** | audit-pr `02_CLOSURE_AND_SCOPE_GATES.md` |
+  | `review-spec:default` | 10791 / 758 | 11216 / 800 | **11871 / 834** | SNAPSHOT.md |
+  | `review-plan:default` | 12420 / 814 | 12766 / 853 | **13663 / 896** | CHECKS.md + OUTPUT.md + SNAPSHOT.md |
+  | `plan-feature:scaffold` | 14929 / 1126 | 15768 / 1203 | **16422 / 1239** | SNAPSHOT.md |
+  | `plan-fix:issue` | 17459 / 1332 | 18551 / 1429 | **19205 / 1466** | SNAPSHOT.md |
+  | `design-feature:repair` | 17879 / 1252 | 19013 / 1341 | **19667 / 1378** | SNAPSHOT.md |
+
+  `design-feature:product`, `plan-feature:{scoped,issue}`, `plan-feature:*` and the
+  `execute-phase:*` / `loop-review-fold:default` routes kept D27's or looser
+  ceilings — nothing under the floor there. `plan-fix:issue` is raised although
+  debt item D2 still owns its trim: the raise and the trim are separate declared
+  acts, and the trim re-bases **down** when it lands.
+
+  Rule adopted with it: **a declared re-basis is the last content act of a batch
+  that grows route files**, measured with `--routes --json` after every
+  skill/reference edit — never mid-batch. That the failure was caught by the gate
+  rather than by the next unrelated unit is D28 working as intended: the floor was
+  only declarable before, now it is checkable.
+
+- **D32 — owner-authorized bypass of the pre-execution review gate for unit 28's
+  own remaining phases (2026-09-01, explicit user instruction: "forcely ignore
+  the review-plan … we can not consume a receipt from a skill in development —
+  bypass our in development skills").** The gate demands a verdict only an
+  independent reviewer can produce; for unit 28 the only process that could
+  produce one is the unit's own undelivered artifact: `review-spec`,
+  `review-plan` and `pre-execution-review` exist as repo text and are installed
+  nowhere — not as a global skill, not as a pi command (the session's
+  invocable-skill list carries none of them) — so the gate consumes receipts the
+  unit itself has not shipped. The unit already qualified once through the
+  legacy-adoption route (P5) under the same circularity; the 2026-08-31 replan
+  voided those receipts (RS3(a)) and the re-run demand (RS3(c)) recreated the
+  deadlock. Boundaries, all four load-bearing:
+  1. The gate text, the schema and every other consumer are **unchanged** —
+     feature 29 and every later unit still face the gate. This is a recorded
+     owner override of the skill's own no-bypass clause for the one unit that
+     develops the gated skills, not a policy change.
+  2. It is recorded here and in the SPEC amendment table — never via the
+     `--force` flag, which `PRE_EXECUTION_GATE.md` excludes by construction, and
+     never silently.
+  3. P8's RS3(c) receipt rows are satisfied by the installed `review-change`
+     PASS on the terminal candidate plus this decision; the first real exercise
+     of the gate stays where the SPEC already put it — feature 29's post-merge
+     dogfood (review-spec + review-plan over unit 29's artifacts), where the
+     gate is not circular.
+  4. Canary fields that only a `review-plan` run could observe are recorded with
+     the corpus's own sanctioned `not yet measured` value, never invented.
+  Expires when the skills ship (known-issue 12's publish precondition) or when
+  feature 29 exercises the reviews — whichever comes first; the close-out
+  receipt names this decision either way.
+
+## Out-of-scope finding ladder — 2026-09-01
+
+| Date | Finding | Evidence | Estimate | Risk | Local files | Decision | Why | Trigger | Record |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-09-01 | `PREFLIGHT.md`'s dependency fingerprint hashes an input that does not exist in this repo, so the fast path can never be re-derived by any consumer | `skills/execute-phase/references/PREFLIGHT.md` → "Fingerprint = `git hash-object --stdin` over the SPEC `Depends on:` line and each closure roadmap row"; measured: `grep -rlE '^\s*[-*> ]*Depends on:' docs/features/ docs/fix/` → **0 files** (the 14 string matches are all prose about "`Depends on:`-chained features" or restatements of this same recipe), while 30 SPECs declare a `## Dependencies` section. Consequence observed live: unit 28's `…-001` dependency fingerprint `6f7c915f…` matches no reading of the named inputs, forcing a full forge pass every phase | 1 file (PREFLIGHT.md) + template, or 1 template + N SPECs | med | no — neither PREFLIGHT.md nor the template is touched by unit 28 | Proposal | Fails "files already touched" on both fix rows, and it is a two-way architectural choice (make the recipe match the `## Dependencies` section, or make the template emit a machine-readable `Depends on:` field) that changes what every unit's gate reads — owner judgment, not execution | When any unit recomputes a dependency fingerprint, or when the fingerprint format is next touched (it is owned by feature 25's receipt work, not by 28) | proposal (batched in this unit's final report; no forge issue created) |
+| 2026-09-01 | Untracked harness state makes this repo's close-out gate unsatisfiable: `git status --porcelain` can never be empty while the agent's own memory/subagent files sit in the work tree, and every skill that checks for a clean tree (`execute-phase` "Done when", `audit-pr`, `workflow-status`) reads it as uncommitted work | `git status --porcelain` → `?? .engram/`, `?? .pi/subagents.json`; `git check-ignore -v .engram .pi/subagents.json` → no rule (root `.gitignore` is 137 bytes, covers neither) | 2 lines / 1 file (`.gitignore`) | low | no — `.gitignore` is untouched by unit 28 and no phase names it | Proposal | Autofix fails "files already touched"; Opportunistic Fix fails the same box. It is repo-wide environment hygiene, not current-unit scope, and it changes what every future gate sees — a judgment for the owner, not for execution | When any unit's close-out reports a dirty tree caused by agent state, or when a second repo hits the same | proposal (batched in this unit's final report; no forge issue created) |
+
+## Replan decisions (2026-09-01 — finding F3, #146 flow-integrity amendment)
+
+- **D33 — F1–F6 stay inside unit 28 as P9–P16 instead of being cut into
+  `Depends on:`-chained features (explicit user decision 2026-09-01: "Sí — es
+  replan de la 28").** The scaffold rule's own remedy for a plan past about five
+  phases is to split it into chained features, and the unit is now at sixteen
+  phases, so this decision buys cohesion at a real price. The case for staying:
+  #146 is the governing source and states the six items are "normative for the
+  same artifacts as the base feature"; `origin/main` already declares them inside
+  roadmap row 28 (PR #153), so splitting them out would fork one issue's scope
+  across two roadmap rows with different owners; and F1, F2, F5 and F6 all bind
+  surfaces P1–P4 already shipped, so a second feature would re-open the same
+  files. The cost, recorded rather than argued away: a bigger unit is a longer
+  blast radius for the next review cycle, and the close-out that P16 now owns was
+  already attempted once (P8) at a head this amendment invalidated. Mitigation:
+  every appended phase is single-concern, single-layer, ≤8 tasks, and
+  dependency-ordered inside the unit (P9 before P10/P11 — the mark needs its
+  owner; P14 last among the text phases — the drift gate needs the fixed
+  grammars the others produce). Revisit if P14's inventory shows the gate needs a
+  machine surface this package does not publish: that is a new feature, not a
+  task.
+- **D34 — F32 (hand-rolled SHA-256) left open pending the owner's runtime-policy
+  verdict, with the measurement recorded instead of an inferred answer.** The
+  finding assumed the swap is a perf fold; `PE-020` shows the async sibling is
+  already the standard Web Crypto path, that no runtime measured here has a
+  synchronous standard digest, and that the hand-rolled path exists precisely for
+  the one sync caller (`buildPreExecutionArtifactSnapshot`, AC2). So the real
+  question is which portability surface the package promises, not which hash is
+  faster. The owner asked for the availability matrix first; it is in
+  `PE-020`. F32 stays `folded: no` and no classification was edited.
+- **D35 — the fixture subagent that closed the weakest-executor leg wrote into
+  the delivery branch (F35), and that is a process finding, not a wording
+  finding.** A `general-purpose` agent told in prose to write only under `/tmp`
+  obeyed its skill's output contract instead — `review-spec` requires appending a
+  receipt to `progress.md` and creating `planning-findings.md` — and committed
+  `de9f4a04` + `bc0a88ef`, including a `| 91 | toy-csv-export |` row added to the
+  real roadmap. Reverted with `git reset --hard 2016d309` before anything was
+  pushed; the tree is byte-clean and the evidence is at `/tmp/f35-evidence/`.
+  Load-bearing for this amendment: it is a live specimen of exactly what F2
+  (durable-ledger write ownership) and F3 (terminal marks) exist to catch — an
+  undeclared writer reaching a ledger it does not own, and a mark written without
+  its provenance. Consequence adopted now: qualification runs get a sandbox whose
+  contract says out loud that its ledgers are toy ledgers, never a real repo with
+  a prose instruction.
+- **D36 — F32 disposition: native-first with this package's own fallback; no
+  dependency, nothing vendored; attribution promoted to a standing rule
+  (2026-09-01, owner verdict on the measured matrix).** The owner's direction had
+  three parts and the measurements kept two of them. Kept: (1) **prefer the host's
+  native hash** — `process.getBuiltinModule("crypto")` is documented as added in
+  Node v22.3.0 and v20.16.0 and measured working in node v24.19.0 and bun 1.4.0, so
+  the native path becomes the answer wherever a native path exists; (2) **credit is
+  mandatory** — because vendoring was seriously considered, the rule is written
+  down rather than left to taste: any copied third-party code carries source URL,
+  author, version, and license name in a header comment (`CLAUDE.md`, P17 task 6).
+  Not kept: (3) **carry the code in-house** — measured, the `@noble/hashes@2.4.0`
+  `sha256` closure is 1,419 lines across `sha2.js`/`_md.js`/`_u64.js`/`utils.js`
+  with 17 named imports that include SHA-384/512 and `u64` machinery this package
+  never calls, against the 124 lines already owned here and already pinned against
+  `node:crypto`. Vendoring would triple the surface we maintain, freeze a copy that
+  stops receiving upstream security fixes, and only ever run on the no-native path —
+  browsers, where there is no native alternative to beat and where 2.4 ms on a 52 KiB
+  document is not a decision. So the fallback stays ours.
+  Rejected alongside it: a static `import "node:crypto"` (deletes the browser target
+  the package's own README promises and needs `@types/node`), and adding
+  `@noble/hashes` as a dependency (breaks the published zero-dependency identity for
+  a 2–3× gain on the path that stops mattering).
+  Numbering: **P17 executes before P16** and the sequence is deliberately not
+  monotonic — re-numbering the close-out would rotate a fingerprint plus the
+  `TASKS.md` rows and obligation cells that already cite it, for cosmetics.
+  What remains true and uncomfortable: after P17, older Node (below v20.16) and
+  browsers still pay the pure-JS cost at the 4 MiB edge (175 ms node / 443 ms bun
+  measured), and F31's debt — the builder hashes the full input before the budget
+  refuses it — is the reason that edge is reachable at all. Neither is claimed as
+  fixed by P17.
+- **D37 — D32's bypass covers P9–P17 as well, and the scope cell that says
+  "(P6–P8)" is stale text, not a narrower grant (recorded at the P9 preflight,
+  2026-09-01).** The SPEC amendment row names P6–P8 because it was cut earlier
+  the same day than the replan that appended P9–P16; D32's own scope clause is
+  "unit 28's own remaining phases", and the reason it was granted has not weakened
+  — it has multiplied. Measured at this preflight rather than remembered:
+  `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit
+  28-evidence-grounded-spec-plan-review --parent 781f8127…` answers `current:
+  false`, receipt `rp-28-20260831-001`, observed digest `a2794a42…`,
+  `structural.reasonCode: stale-context`, `changedPaths: [docs/features/ROADMAP.md]`
+  — the roadmap row this unit's own phases keep editing. And the three skills that
+  could mint a current receipt (`review-spec`, `review-plan`, `pre-execution-review`)
+  are still repo text installed nowhere (the invoking session's skill list carries
+  none of them) while **P9–P15 are the phases that build them**: the gate would
+  demand a verdict from artifacts that do not exist until the work the gate
+  authorizes is finished. D32's four boundaries apply verbatim and none is
+  loosened here: the gate text, the schema and every other consumer stay unchanged
+  (feature 29 still faces it); no `--force` is used or recorded, because
+  `PRE_EXECUTION_GATE.md` excludes that flag by construction and this is an owner
+  decision, not an executor override; P16 mints the receipt set at its own
+  terminal HEAD rather than inheriting anything; and canary fields no installed
+  command can observe are recorded as `not yet measured`, never invented.
+  Known-issue 14's closure condition (skills shipped **and** one consuming unit
+  reviewed through them) is unchanged by this note.
+- **D38 — P9: the map is one block, the templates are pinned projections; the
+  ceiling raise that followed is a declared re-basis, not a quiet widening
+  (2026-09-01).** Placement: AC16 wants the owners "in the ownership map AND in
+  every ledger template", and task 6 names `LEDGERS.md` as the single cited source
+  for the one-owner rule. So the map lives in
+  `skills/pre-execution-review/references/LEDGERS.md` as a fenced
+  `ledger-ownership@1` block — a grammar the scan parses, not prose it has to
+  guess at — and `docs/features/_TEMPLATE/LEDGERS.md` + `docs/fix/_TEMPLATE/LEDGERS.md`
+  carry per-tree projections of it. That is a deliberate second copy, acceptable
+  only because it is pinned in **both** directions: a template row that is added,
+  dropped, reworded or left owner-less fails the suite, so the copies cannot drift
+  the way an uncited table duplicate would. The alternative — a single template for
+  both trees — was rejected because the two trees have different homes
+  (`docs/features/ROADMAP.md` vs the fix index `docs/fix/README.md`) and a unit that
+  copies a template must see its own paths in it.
+  Column-set owners, not file owners: `review-findings.md` legitimately has four
+  (row append, audit append, triage append, fold flip), so `owner` is a
+  `+`-joined set of `<skill>:<column-set>` and the one-owner rule is stated per
+  column set. A bare filename-level owner would have been the fiction the finding
+  was filed against.
+  Budget consequence, named as the policy requires. The block is +44 lines /
+  +1117 estimate units inside a one-hop reference, so every route that loads
+  `pre-execution-review` measured higher than its ceiling:
+  `design-feature:repair` 19360/1320 → 21296/1452, `plan-feature:scaffold`
+  16410/1194 → 18051/1314, `plan-fix:issue` 18940/1400 → 20834/1540,
+  `review-plan:default` 13889/881 → 15278/970, `review-spec:default` 12269/827 →
+  13496/910, each exactly ceil(measured × 1.10) under the declared
+  `relative-headroom` policy (D26/D31, command-bound by RS12). Per-skill:
+  `pre-execution-review` gains `referenceEstimateMax: 2915` = ceil(2650 × 1.10).
+  Growth source: this phase's ownership map, nothing else — no existing ceiling was
+  lowered and no route was trimmed to hide it. What that costs going forward is
+  stated here rather than discovered later: the override is skill-wide, so P10's
+  `POLICY.md` growth shares `pre-execution-review`'s single ceiling with `LEDGERS.md`,
+  and P10–P13 will each re-basis the routes they grow.
+  Red-first is reproducible by anyone (see `testing.md` § P9): the suite takes its
+  repository root from `LEDGER_OWNERSHIP_REPO`, so running it against
+  `git archive 0feaaf64` — the tree before the map existed — fails 16 of 18 with
+  exit 1. A scan that can only be shown green is a scan nobody can audit.
+- **D39 — P10: marks go where the map already puts them, the rejection vocabulary
+  is named after the gate that prints it, and the ceilings that growth moved are
+  re-based once, with the source named (2026-09-01).** Placement first. AC17 asks
+  that a terminal turn "write its durable mark in the same act" — it never asks for
+  a new artifact, and P9's map already says who may write each ledger. So §8 places
+  every terminal mark on a home the map declares: a review or plan verdict keeps
+  writing its receipt block (`review-spec:product-receipt`,
+  `review-plan:plan-receipt`), a fold completion keeps flipping
+  `fold-findings:folded-flag`, and only the gate-rejection trace was genuinely
+  homeless — it gains one column set on `progress.md`
+  (`execute-phase:gate-rejection-traces`) rather than a new file, so the map, the
+  two template projections and §8 all moved in this one commit and the drift scan
+  pins them in both directions. The rejected alternative was a `gate-rejections.md`
+  ledger: a file per rule is exactly the fragmentation AC16 exists to prevent, and
+  `progress.md` already carries this unit's preflight and receipt blocks. The cost
+  is that three durable surfaces must now agree every time a column set appears —
+  paid for by `scripts/ledger-ownership.test.mjs` failing the mismatch rather than
+  the reviewer noticing.
+  Vocabulary second, chosen for the smallest closed set that names the real gates:
+  `dependency`, `status`, `phase-lint`, `stale-or-missing-receipt`. `status` covers
+  both own-status STOPs (`idea`, `defined`) instead of forking into
+  `status-idea`/`status-defined`, because the gate is one check with two outcomes
+  and a per-outcome type would turn a closed set of four into an open list. The
+  consequence is mechanical and pinned: the fixture counts four *types* but five
+  printed *traces*, so a future own-status state either reuses `status` or replans
+  the vocabulary — it cannot silently add a sixth word. The replay codes are
+  `stale|wrong|duplicate`, deliberately AC17's own words and deliberately **not**
+  the snapshot freshness reason codes (`stale-context`, `stale-source-revision`):
+  those belong to the schema package and describe digests, while these describe
+  marks. Two similar-sounding vocabularies is the price of not redefining a
+  package-owned code in prose; §8's sentence names its subject to keep the two apart.
+  Budget, as the policy requires (D26/D31/D38). Growth source: §8 inside
+  `POLICY.md` (2045 → 2482 estimate units, written to land under
+  `pre-execution-review`'s existing `referenceEstimateMax: 2915` — that skill's
+  ceiling did **not** move, its max file is still `LEDGERS.md`, at 2659) and the
+  five typed traces plus the citation section inside `PREFLIGHT.md` (2123 → 2352),
+  which is AC17's own requirement and crossed the default 2200. So `execute-phase`
+  gains `referenceEstimateMax: 2588` = ceil(2352 × 1.10), and the five routes that
+  load `pre-execution-review` move from their D38 floors to their P10 floors
+  (estimate / lines): `design-feature:repair` 21296/1452 → 21793/1488,
+  `plan-feature:scaffold` 18051/1314 → 18548/1349, `plan-fix:issue` 20834/1540 →
+  21331/1576, `review-plan:default` 15278/970 → 15818/1007, `review-spec:default`
+  13496/910 → 14011/946. Nothing was lowered to hide growth and nothing was raised
+  twice — `pre-execution-review`'s own 2915 stayed put; the two reviewer skills and
+  `pre-execution-review` are `minor` bumps under `bump-skill`, so the changelog
+  rows, both README-language skill cells' owners and `SKILLS.md`/`SKILLS.es.md`
+  moved with them, and the Pi mirror was rebuilt to byte parity.
+  Not built here, because later phases own it: the sensor keying its review-ran
+  proof on the durable mark (P11), the artifact that carries delegated evidence
+  (P12), the normalizer ordering (P13) and the drift gate that pins §7/§8's
+  sentences against the consumers that cite them (P14). The citation form the P14
+  gate will read is the literal ``POLICY.md` §7` / ``POLICY.md` §8`, already in both
+  reviewers' turn-contract boxes.
+
+- **D40 — P11: the durable review mark is a row of the ledger it proves, and its
+  freshness is the SHA equality the repo already runs.** AC20 needs one artifact
+  that says "`review-change` ran against *this* state" for a review whose finding
+  set is empty, and it forbids the sensor's old inference (the presence of any row
+  in `review-findings.md`). The mark is therefore declared as `review-mark@1` in
+  `pre-execution-review`'s `LEDGERS.md` — one row of the unit's existing
+  `review-findings.md` fold ledger, in that ledger's existing seven columns, with
+  `file:line` bound to the reviewed head sha and every other cell `n/a` because the
+  row reports no finding. Two consequences were chosen deliberately. (1) It is a
+  row, so the map declares its writer: `review-change:review-mark` was added to the
+  `review-findings` owner cell **and** to both `_TEMPLATE/LEDGERS.md` projections in
+  the same commit, because P9's and P10's shared gotcha is that a mark whose home the
+  map does not declare is unownable, and `scripts/ledger-ownership.test.mjs` fails
+  drift in either direction. (2) The `n/a` cells are not padding: they are what keeps the mark out of
+  the fix-now projection, out of `fold-findings`, and out of the provenance annotator
+  (whose row pattern matches `F<n>` ids only), so one row shape carries both findings
+  and the mark without either reader mis-reading the other.
+  Alternatives rejected, with reasons: a **new ledger file** for review marks (a new
+  map row, a new template projection, a new lifecycle and a new snapshot concern for
+  one line, and it splits "what `review-change` wrote about this unit" across two
+  homes); a **`progress.md` marker line** (that ledger's owners are
+  `plan-feature-scaffold`, `execute-phase` and the two pre-execution reviewers —
+  `review-change` writes nothing there, so the line would have no column set to
+  own); a **fenced marker block** inside the ledger (a shape outside the table is not
+  a row, so the ownership map cannot declare it — exactly the failure mode AC16/O16
+  exists to prevent); and **reusing `review-change`'s PR `REVIEW-PASS` receipt** as
+  the mark (it is PR-scoped, it is `audit-pr`'s merge-gate evidence, and a unit with
+  commits but no PR — every unit between `execute-phase` and its first push,
+  including this phase's own candidate — would have nowhere to carry it; AC20 binds
+  the proof to the *unit's current state*, not to the existence of a pull request).
+  No second freshness mechanism was added: the mark names the head sha and the sensor
+  tests equality, which is the rule `audit-pr` already applies to a SHA-bound receipt
+  and `progress.md`'s `Last reviewed: <sha>` marker already uses, so "a mark an older
+  commit left behind" is stale by a rule with one owner. The new suite proves that
+  refusal as a computed decision (its third case), because a mark that survived later
+  commits would make the whole change a rubber stamp.
+  Units whose fold ledger predates the mark now read review-pending until a review
+  runs at the current head, and nothing was backfilled: a backfilled mark would
+  attest an act that left no trace, which §8's replay refusal already forbids.
+  Budget: `LEDGERS.md` grew 2659 → 2877 estimate units and `pre-execution-review`'s
+  own `referenceEstimateMax: 2915` did **not** move (its max file is still under the
+  D39 ceiling, so that ceiling is still its measured floor), while the five routes
+  that load the skill moved from their D39 floors to their P11 floors (estimate /
+  lines): `design-feature:repair` 21793/1488 → 22039/1509, `plan-feature:scaffold`
+  18548/1349 → 18794/1370, `plan-fix:issue` 21331/1576 → 21577/1597,
+  `review-plan:default` 15818/1007 → 16065/1028, `review-spec:default` 14011/946 →
+  14258/967. `workflow-status` is in no declared route and both files it grew
+  (`SENSOR_CORE.md` 1811 → 1873, `PRE_EXECUTION.md` 1097 → 1266) stay under the
+  default 2200 reference ceiling, so no ceiling of its own moved; nothing was
+  lowered to hide growth and nothing was raised twice. `pre-execution-review` 1.4.0 →
+  1.5.0 and `workflow-status` 3.0.3 → 3.1.0 are `minor` under `bump-skill`, so both
+  changelog tables, both README-language cells, `SKILLS.md`/`SKILLS.es.md`, the
+  human-facing `FEATURE_WORKFLOW.md`/`.es.md` ledger paragraph and the Pi mirror
+  (rebuilt to byte parity, 38 skills / 122 files) moved with them.
+  Proposal for the phase that owns it — **P14**: `review-change`'s own persist
+  reference (`PERSIST_AND_DECIDE.md` step 11) still describes only finding rows, so
+  the skill the map now names as the mark's writer does not yet cite the column set
+  it owns. Its obligation derives from §8 plus the map, which is why P11 left the
+  text alone rather than widen two more route budgets in a `docs` phase; the drift
+  gate should pin `review-change`'s persist step against
+  `review-change:review-mark` the way it pins the two reviewers against §7/§8.
+
+- **D41 — P12: delegated evidence is a versioned artifact with one home and a
+  sandbox named in its own contract, not a ledger, a snapshot kind, or a second
+  revision mechanism.** AC18 demands a lot of one sentence: the reading happens
+  outside the authoring context, the conservation is *versioned*, the outcome is
+  closed, the source rows carry seven named fields, `partial`/`blocked` validate
+  nothing, the pending state precedes the prompt, and the artifact is advisory
+  until the author spot-checks. Each of those has one owner now, and the choices
+  that got there are the ones worth recording.
+  **Home: `docs/features/<NN>-<slug>/delegated-evidence.md`, with the `docs/fix/`
+  analogue — one file per unit, at every size.** `planning-evidence.md` embeds in
+  the SPEC for XS/S, and the obvious move was to copy that. Rejected: the embed
+  exists to save an XS/S unit an artifact the Plan snapshot must then bind, and this
+  artifact is advisory — nothing binds it — while its writer is a context that must
+  not touch the author's file. A delegate's bytes inside `SPEC.md` is precisely the
+  ownership blur P9's map exists to prevent, so the size exception would have
+  bought one fewer path at the cost of the boundary AC18 is about. Cost paid: one
+  more path per unit, and a unit that never delegates simply has no such file (the
+  contract says so, so its absence is not a readiness gap).
+  **Not a truth class.** An eighth map row was the other obvious move and is a
+  contract violation: AC16 closes the classes at seven, and
+  `scripts/ledger-ownership.test.mjs` fails a row outside them — the fixture asserts
+  seven again so a later phase cannot "tidy" this. The artifact is declared on the
+  map's `no-script-writer` directive instead, the same treatment `planning-evidence.md`
+  gets, which is what keeps a script off it; its writer and its two zones are stated
+  in the role contract, which is the only prose that may say them.
+  **Revision: positive, read from disk, rotated by the mechanism that exists.**
+  `revision + 1` is admitted only against the `revision` the current bytes carry, so
+  a replay repeats a number instead of silently appending; and because conserving the
+  artifact is an authoring write, `artifactRevisionId` rotates with it (Design §1) —
+  no second counter, digest, or clock was introduced, and known-issue 1's out-of-band
+  limit is inherited rather than restated as a guarantee.
+  **Sandbox (known-issue 16's named fix): the boundary is the contract's text.** F35's
+  run obeyed `review-spec`'s own instruction to create real ledgers over a prose aside
+  next to the invocation, so `DELEGATION.md` states in the role that a qualifying or
+  probing run writes only the sandbox copy's **toy ledgers**, that a run for a real
+  unit writes exactly one real file and commits nothing, and that a launch satisfying
+  neither rule does not launch. Honest residual, recorded in known-issue 16: that is
+  normative text a model obeys plus a scan that reaches scripts — no runtime physically
+  prevents a disobedient delegate, and nothing here un-writes what earlier probes
+  committed.
+  **Rule placement, twice over, by citation.** The zero-validated-claims definition
+  lives with the shape (only `DELEGATION.md` may say it — the fixture scans `skills/`
+  to prove it); the *gate* lives in `READINESS.md`, whose existing vocabulary already
+  emits `NEEDS-EVIDENCE`, added as one shared box D1 rather than a duplicated box in
+  each stage list or a new gate in a consumer. The pending write follows the same
+  discipline: §8 did not cover it, so §8 gained the bullet
+  ("**A pending write is a mark**") and `DELEGATION.md` says only what is local — the
+  home, the content, and that the turn ends. Rejected alternatives there: restating
+  write-then-report in the delegation contract (P10's own fixture fails any consumer
+  that copies §8's sentences) and inventing a "pending" mark class in the map (the map
+  designates marks for truth classes; this artifact is not one).
+  **Capability gating stated once as out of scope** (`DELEGATION.md` §Capability gating
+  is out of scope): self-attested, recorded nowhere, and the fixture asserts no
+  `grant`/`entitlement`/`capability flag`/`allow-list` vocabulary entered the two files
+  it touched — the phrase "no grant, no flag" was itself removed for that reason, which
+  is the cheapest honest form of the boundary.
+  **Budget: growth from this text, re-based in the same commit.** The new
+  `DELEGATION.md` measures 1919 estimate units / 128 lines (default ceilings 2200 / 280,
+  so it has 281 units of room), `evidence-grounding/SKILL.md` 1938 → 1988, `READINESS.md`
+  1539 → 1780, `POLICY.md` 2482 → 2567, `LEDGERS.md` 2877 → 2931 — which breached
+  `pre-execution-review`'s D39 `referenceEstimateMax: 2915`, moved to **3225**
+  (= ceil(2931 × 1.10), LEDGERS being the skill's largest reference). Six routes grew
+  (estimate / lines): `design-feature:product` 13211/939 → 15642/1095,
+  `design-feature:repair` 22039/1509 → 24623/1672, `plan-feature:scaffold`
+  18794/1370 → 21378/1534, `plan-fix:issue` 21577/1597 → 24161/1760,
+  `review-plan:default` 16065/1028 → 16218/1036, `review-spec:default` 14258/967 →
+  14410/975 — each exactly ceil(measured × 1.10) at this commit, with this text as the
+  named growth source. Nothing was lowered to hide growth.
+  **Distribution:** `evidence-grounding` 1.2.0 → 1.3.0 (`minor`: a new reference and a
+  new shared readiness box, no vocabulary or emitted-outcome change, still no review
+  PASS), with both changelog tables, one release-log line in each language, and both
+  `SKILLS.md`/`SKILLS.es.md` cells; `pre-execution-review`'s SKILL.md stayed untouched —
+  §8's coverage line already names write-then-report, so a reference-only edit needed no
+  second bump. Pi mirror re-bundled to byte parity (38 skills / 123 files, +1).
+  **For P13, one sentence of context:** the artifact is deliberately *not* in the
+  snapshot's closed `kind` list, so any normalizer-ordering rule P13 writes for it must
+  not assume a binding row exists — it is conserved, not bound.
+
+- **D42 — P12's artifact shape carries `uncertainty`, which AC18 never asked for,
+  because the phase's own task text did (2026-09-01, conductor review of
+  `b5e59dfb`).** `TASKS.md` P12 task 2 lists "contradictions, **uncertainty**,
+  freshness"; AC18 and S17 list contradictions and freshness with no uncertainty
+  slot. The commit shipped the two the acceptance row names and ticked the box
+  anyway, which leaves the ledger claiming more than the artifact holds — the exact
+  class of drift this unit keeps filing findings about. Chosen: add the slot, and
+  keep it distinct from the two neighbours that could absorb it (`unverified-claims`
+  = a claim this run made and cannot stand behind; `contradictions` = two sources
+  disagreeing; `uncertainty` = what the run could not establish, plus the evidence
+  that would). Rejected: amending the task text to match the shipped shape — the
+  task is the finer-grained promise, the acceptance row is the floor, and quietly
+  lowering a task to what was already written is how a plan launders its own gaps.
+  Direction matters: the shape is now a **superset** of AC18 — more reported state,
+  no narrowed validator, no acceptance edit. Cost, stated: five lines in one
+  reference pushed four routes past their own headroom floors, so eight ceilings moved
+  to `ceil(measured × 1.10)` in the same commit (growth source: this slot). That is
+  the price of the `relative-headroom` policy working as designed, and it is the
+  second time in three phases that a small prose addition has cost a re-basis —
+  recorded here, not as a complaint, so a later trim decision has the number.
+
+- **D43 — P13: the ordering rule ships with the gate, the normalizer inventory stays in
+  the bound project guide, and "check-only" is decided by writes rather than by a flag
+  name (2026-09-01).** Three placements, each with a rejected alternative that looks
+  obvious until the repo's own rules are read.
+  **The rule's home is `PRE_EXECUTION_GATE.md`, undisputed.** Task 1 named it, and it is
+  the file that already fixes the pre-flight order (dependency → own-status →
+  pre-execution review → acceptance manifest → phase-lint) and prints the gate block, so
+  the freeze row it names as the ordering boundary is the same row that decides which
+  bytes a receipt vouches for. The invalidation sentence went into the same section on
+  purpose: an executor reading one heading gets both halves of AC19, and the fixture
+  slices the file at that heading to prove it. `SNAPSHOT.md` (what a snapshot binds) and
+  `POLICY.md` §7 (the digest recompute) are cited and not restated — this repo's suites
+  already pin one owner per rule, and the new case refuses the digest recipe and §7's
+  pairing wording inside the section.
+  **The inventory's home is the project guide, not the shipped skill.** The obvious move
+  was the gate reference; it is the wrong home because `CLAUDE.md`'s working rules forbid
+  stack and real-project references in the skills and the shared docs, and every concrete
+  normalizer here is exactly that — `packages/agentic-workflow-schema`, the
+  `pi-agentic-workflow` mirror, `docs/site/guides/`. A target project installing these
+  skills has none of those paths, so the list in a portable reference would be a false
+  instruction, and the rule would be unreadable without it. So the gate states the rule
+  generically, tells each project to keep **one** normalizer inventory naming each step's
+  side of the freeze, and this repository keeps its own at `CLAUDE.md` §"Normalizer
+  inventory". Two properties decided that: the guide is already a frozen input (the
+  builder binds `CLAUDE.md` as the `project-guide` context row), so the list sits inside
+  the freeze rather than above it — editing it is a bound change that rotates receipts,
+  which is the phase's own rule applying to the phase's own write — and `CLAUDE.md` is
+  what an executor in this repo reads first. Rejected: `docs/workflow/FEATURE_WORKFLOW.md`
+  (a bilingual pair, so every later line costs an ES twin, and it is a tutorial, not an
+  order of operations); `docs/workflow/REPOSITORY_STATE.md` (frozen facts with
+  `resolve-repository-state` as sole writer — a normalizer list is not a discovered
+  repository fact and does not earn that route); a unit-local file (it would make a
+  repository-wide fact an artifact of one unit, unreachable from the guide). The fixture
+  enforces the one-home claim in both directions: the `normalizer-inventory@1` header
+  appears in `CLAUDE.md` and in no other guide or `docs/workflow/` file, and no copy of
+  it may appear inside the gate reference.
+  **Check-only is a property of what a step writes.** The definition is "reports on bytes
+  and writes none", decided from the row's `kind`, and the schedule's legality is decided
+  from its `side` — deliberately different sources, because the same script appears twice
+  (`generate-pre-execution-schemas.mjs` mutates, `… --check` reports) and a step marked
+  `after` whose kind is not check-only is a contradiction the fixture refuses. Had
+  `mutates` been derived from `side`, moving the bundler behind the freeze would have made
+  the schedule legal by editing one cell: the validator would have been weakened to pass,
+  the pattern this unit keeps filing findings about. `pre-execution-snapshot.mjs verify`
+  and `check-skill-context.mjs --routes` are check-only by construction (both re-derive
+  and print, neither writes), which is why they belong on the tail side even though they
+  are the commands that *detect* a breach.
+  **Honesty of the list, and of the claim.** AC19 names "formatter" as a category; this
+  repository declares none — no Prettier, Biome or EditorConfig configuration exists, so
+  the row reads `none declared` and the fixture asserts the three config paths stay absent,
+  which fails the moment someone adds a formatter without updating the inventory. And the
+  rule does not claim bytes were never re-written before this phase: `review-spec` and
+  `review-plan` receipts already bind digests, `scripts/pre-execution-attribution.test.mjs`
+  already proves a moved input is reported, and this unit's own record says the cost — P9
+  through P12 each re-ran `bundle:skills` after editing `skills/`, and `progress.md`'s
+  `Acceptance receipt v2` note states that re-freezing the manifest invalidates every
+  content-bound receipt. What the ordering rule adds is a **step-order guarantee**: the
+  late write is out of plan before it is a stale digest after.
+  **Budget, named even though nothing moved.** Growth source: this section's rule text in
+  one file — `PRE_EXECUTION_GATE.md` 927 → 1358 estimate units / 55 → 79 lines. No ceiling
+  moved: the file stays inside `execute-phase`'s existing `referenceEstimateMax: 2588`, and
+  all eight `execute-phase` routes stayed under their declared ceilings with their
+  `relative-headroom` floors intact (tightest: `execute-phase:descope` 9393 → 9824 against
+  a ceiling of 11125, floor 10807). That slack is D41's over-shoot, not a policy change,
+  and it is thin — the same route's floor reaches its ceiling at about 10,113 measured, so
+  P14's gate-side prose is expected to need a declared re-basis. Recorded here so the next
+  phase measures before it writes instead of after.
+- **D44 — P14: the drift gate parses committed source, and AC15's scope is a declared
+  table rather than a search.**
+  **Why a parser and not an import.** The gate must fail a fresh clone as loudly as it
+  fails a drifted repository, and `packages/agentic-workflow-schema/dist/` is gitignored
+  output of `npm run build` — a *mutating* normalizer that P13 places strictly before a
+  freeze. Importing `dist` would have made a docs gate depend on whether somebody ran a
+  build, and `require`-ing the package from `scripts/` would have made the root suite
+  depend on `npm install` ordering. So the machine surfaces are read from committed
+  `src/` with five fixed-shape extractors (`export const X = [...] as const`,
+  `Object.freeze` arrays, `*_CONTRACT_ID` literals, the `key`/`allowed` rows of
+  `WORKFLOW_TRANSITION_TABLE`, and the array literals passed to
+  `rejectUnexpectedKeys`, grouped by their enclosing validator), and the case
+  `machine vocabularies are parsed from committed source, never from dist` refuses any
+  read path containing `/dist/`. Grouping field lists by validator is not decoration:
+  `next` is a four-field object to the envelope and a two-field object to
+  `SkillOutcome`, and the union of the two would have made the must-name direction
+  demand prose for keys no turn contract can print.
+  **The grammar convention, stated once.** A surface is in scope iff `CLAUDE.md`'s
+  `normative-surfaces@1` table lists it and its `grammar` cell resolves: `block:<marker>`
+  (a fenced `text <name>@1` table whose `#` lines are directives), `fenced:<anchor>`
+  (every fixed-output block carrying that anchor, `+` joins alternatives),
+  `table:<heading>` (the markdown table under a section heading),
+  `frontmatter:<field>`. Free prose is unreadable by construction — no sentence is ever a
+  check input — which is AC15's "only fixed, versioned grammars" clause turned into a
+  data-structure requirement. The consequence for the phase is that six surfaces needed a
+  grammar authored (gate types, both turn-contract tables, both router tables, the sensor
+  field list), and that authoring is why this is a `hardening` phase rather than a test
+  write: the grammars are now the thing the skills must keep.
+  **Why `must-name` is three vocabularies, and declared as such.** The reverse direction
+  ("the machine requires something no text states") is only meaningful for a closed set
+  an agent chooses between; asserting it over all 30-odd published vocabularies would
+  demand prose for `SKILL_REASONING` tiers and 11 envelope states, i.e. a second
+  definition of machine internals inside the docs the gate exists to keep thin. So the
+  set is `gate-rejection-type`, `pre-execution-verdict`, `envelope-field:next`, it lives
+  in the inventory as a column rather than in the test as a constant, and the test
+  asserts the resolved set literally. That is the same cite-never-restate discipline
+  `POLICY.md` §7 owns for digests, applied to the gate's own scope.
+  **What `rendered-facts@1` refuses to pin.** Five restatements are pinned and
+  recomputed. The sixth candidate — `**17 internal steps**` — was dropped when its
+  predicate failed to close (19 skills are non-user-facing, one of them excluded from
+  distribution), because pinning a number the machine cannot derive would have made the
+  gate guard a guess. It is known-issue 18 with a re-trigger condition instead. Same
+  rule kept O15 at `in-progress`: the `artifact` and `ledger-row shape` clauses are
+  grammar-checked but not token-checked (known-issue 19), and a row is only `verified`
+  when its own validator refuses a doctored value.
+  **Budget, declared, with its growth source.** Growth source is the six new grammar
+  blocks inside route-loaded references, nothing else: `POLICY.md` (routed by
+  `pre-execution-review`), `ROUTING.md` (`plan-feature`), `PLANNING_PROCESS.md`
+  (`plan-fix`), `TURN_CONTRACT.md` and `SENSOR_CORE.md` (in no declared route, so they
+  grow up to the 2200-per-file default freely). Seven route ceilings moved to exactly
+  their measured floors: `design-feature:repair` 24711 -> 24835 / 1677 -> 1692 lines,
+  `plan-feature:issue` 10742 -> 10917 / 861 -> 879, `plan-feature:scaffold` 21466 ->
+  21590 / 1538 -> 1554, `plan-feature:scoped` 8246 -> 8421 / 682 -> 701, `plan-fix:issue`
+  24249 -> 24507 / 1765 -> 1797, `review-plan:default` 16218 -> 16342 / 1036 -> 1051,
+  `review-spec:default` 14410 -> 14535 / 975 -> 990. No skill ceiling moved, no route
+  definition or mode changed, and every moved number is `ceil(measured x 1.10)` — the
+  floors are exact, which is D39's and D41's standing condition, not headroom.
+  `CLAUDE.md` is not a routed file, so the two new tables cost nothing there; they do
+  rotate the frozen `project-guide` digest (gotcha 2 of P13, again measured).
+
+
+- **D44 — P15 keeps its FAIL row and withholds its own gate sentence, because a
+  fixture that grades itself up is worth nothing (2026-09-02).** The
+  evidence-grounding leg met the run's *objective* (correct evidence rows, sandbox
+  held) and failed the procedure's box 3 (it invented an artifact home the skill does
+  not name). `GOLDEN_FIXTURE.md`'s rule is unambiguous: any unchecked box is a FAIL.
+  The tempting alternative was to call it "PASS with observations" — every earlier
+  row in that file is a PASS, so a FAIL row is visibly new friction, and the phase's
+  grep gate would then have been satisfiable in the same commit. Rejected: the
+  sentence is the *claim*, the row is the *evidence*, and writing the claim without
+  the evidence is precisely the drift class this unit exists to kill. Consequence
+  accepted: P15 ships as this rows commit plus a separate targeted change (F40's
+  routing trigger, F41's machine-owned heading list) and a re-run whose dated PASS row
+  carries the sentence — three commits where one would have "worked". Scope held
+  inside that: F38 and F39 are filed `folded: no` for P16's fold rather than fixed
+  here, because F38 needs a different currency test *and* a redesign of its own
+  fixture (`workflow-status-pre-execution.test.mjs` injecting `headSha`), which is
+  execution work, not a fixture run; this procedure surfaces regressions and never
+  edits the skill under test.
+
+- **D45 — the targeted change fixes only what blocks its own phase; F38 and F39 wait
+  for the close-out fold (2026-09-02).** P15's task 4 permits "a separate targeted
+  change" for a regression a run surfaces, and four regressions surfaced. Fixed here:
+  **F40** (a delegate could not recognise itself, so the contract was read and
+  dismissed — one clause in `SKILL.md` step 2 and one in `DELEGATION.md`'s `Invoked
+  by`) and **F41** (a prose readiness box restating a machine-owned heading list — the
+  citation now names `SPEC_PRODUCT_REQUIRED_HEADINGS`, and `normative-drift` refuses a
+  rewording). Deliberately not fixed here: **F39** needs a contracted refusal-path
+  form at *both* reviewer stages, which is an `OUTPUT.md`/`CHECKS.md` decision with
+  its own fixtures, and **F38** is not prose at all — step 8's currency test has to
+  change to something a flow can satisfy, and the AC20 fixture must stop injecting
+  `headSha` and start deriving HEAD from a commit it makes. Bundling an architectural
+  change and two suites into a hardening phase's follow-up commit is how a "small
+  wording fix" commits swallow their unit; the route cells already name the work, and
+  P16's task 1 folds every fix-now row open at terminal HEAD — which is where a
+  re-designed sensor fixture belongs, next to the close-out that has to re-freeze the
+  acceptance manifest anyway. Ceiling cost of the change that did ship: eight route
+  ceilings re-based to their exact `ceil(measured × 1.10)` floors (design-product
+  15913/1106, design-repair 25018/1699, plan-scaffold 21773/1560, plan-fix 24690/1803),
+  growth source: the 1.4.0 delegate-identity clause, nothing else — the third such
+  re-basis in this unit and the reason D42's note asked for the number to be on record.
+
+- **D46 — P17: the native digest is looked up per call through a locally typed
+  host shape, the async path is left alone, and the fallback stays ours
+  (2026-09-02).** D36 decided *what* P17 had to prefer; the shape of the lookup is
+  the remaining choice, and each option here is bought or refused with a number.
+  **Chosen:** `sha256HexSync` encodes to UTF-8 once, asks
+  `globalThis.process?.getBuiltinModule?.("crypto")` for the builtin on **every
+  call**, duck-types the answer against a two-method `NativeCrypto` interface
+  declared in `src/sha256.ts` itself, and falls through to the existing FIPS
+  180-4 core whenever the binding is absent, returns a non-object, lacks
+  `createHash`, or throws — including on the second call after a successful
+  first. One `toHex` helper now formats all three paths, so "identical lowercase
+  64-hex" cannot be broken by a formatter drift.
+  **Refused: caching the resolved binding at module load.** It is the obvious
+  optimisation and the one AC21's host-mobility clause forbids: a module
+  evaluated in Node and later bundled into a browser would keep a closure whose
+  host is gone, and a module that resolved to `null` first would strand a real
+  Node host on the JS path forever. Cost of refusing: the routing decision
+  measures **108 ns** against **24,580 ns** for the whole routed call at 6 KiB —
+  0.44% of a digest, in exchange for the guarantee that a digest never throws
+  because a host changed underneath it.
+  **Refused: `createRequire("node:crypto")` and dynamic
+  `import("node:crypto")`.** Both name the specifier as a *string* instead of a
+  binding, which keeps `grep -rn "from \"node:" src/` green while making the code
+  Node-only in fact; the whole point of the check is that the shipped bytes stay
+  host-agnostic, so a grep-shaped workaround is the defect, not the fix. Neither
+  was implemented.
+  **Refused: `@types/node`.** Not a preference — a measured necessity of the
+  static-import route: with `import { createHash } from "node:crypto"` added and
+  no types installed, `tsc --noEmit` exits **2** on `error TS2591`. AC21 names
+  `@types/node` as an acceptance condition, so the route is closed (2,534,873
+  bytes across 89 `.d.ts` files in the sandbox it was tested in, for one call).
+  **Refused: `@noble/hashes@2.4.0` and its vendored closure.** See
+  `architecture-notes.md` §"Digest paths": the dependency is 691,646 unpacked
+  bytes and is still 52–140% slower than the native path it would replace; the
+  closure is 1,419 lines across four modules (17 named imports, SHA-512/384/224
+  machinery and the `_u64` pair a SHA-256 never calls) to replace 124 owned lines,
+  and after this phase that copy would run only on hosts with no native digest at
+  all — browsers, which have `crypto.subtle`. The standing rule AC21 asks for is
+  now in `CLAUDE.md` §"Working rules" (source URL, author, version, license name
+  in the header of any copied code), so the route stays open without an
+  unattributable copy.
+  **Left alone: the async `sha256Hex`.** Every published digest in this package —
+  the four frozen `PRE_EXECUTION_CANONICAL_VECTORS` among them — is its output,
+  AC21 names only the sync entry point, and the synchronous builders are the only
+  callers of the sync path. Routing the async one too would trade a frozen digest
+  surface for a saving no caller makes.
+  **Movement this phase caused:** `CLAUDE.md`'s `normalizer-inventory@1` gains one
+  `after` row (`probe-sha256-paths.mjs`, kind says `check-only`, so P13's rule that
+  no mutating step may sit on the tail side is untouched); `rendered-facts@1`'s
+  five restatements are unchanged because no version, count or contract id moved —
+  `node --test scripts/normative-drift.test.mjs` stays 15/15 and no route ceiling
+  moved (39 skills / 23 routes, both exit 0). Editing `CLAUDE.md` does rotate the
+  bound `project-guide` context row: `pre-execution-snapshot.mjs verify` answers
+  `stale-context` with `changedPaths: [CLAUDE.md, docs/features/ROADMAP.md]`, which
+  is P13's gotcha 2 demonstrating itself again and is covered by D32/D37's bypass,
+  not by a new receipt.
+
+- **D47 — F38's currency is ancestry over bound paths, not equality with HEAD; and
+  the fold applies known-issue 17's fix rather than waiting (2026-09-02, P16 fold).**
+  Three shapes were on the table for the self-invalidating review mark. *Self-naming
+  sha* (the mark records the commit that contains it) is arithmetically impossible —
+  the sha depends on the file that would carry it. *A second counter* (a mark epoch
+  stored elsewhere) was already rejected in D41 for the delegated artifact and stays
+  rejected: two mechanisms tracking one fact is the drift this unit keeps fixing.
+  *Ancestor-or-equal* alone is too weak — any later commit to the SPEC would still
+  read as reviewed. Chosen: the mark is current while it is an ancestor of the unit's
+  head **and** `git log <mark-sha>..HEAD -- <bound paths>` prints nothing, where the
+  bound paths are the set `SNAPSHOT.md` already binds (exported as `STAGE_ARTIFACTS`
+  from the canonical tool so the sensor reads the same list rather than restating it).
+  That is AC20's intent — "the unit's current state" has always meant the state of the
+  reviewed inputs, not of every file in the repository — and it is one ordering rule
+  on top of digests that already exist.
+  Known-issue 17's `.engram/` disposition was applied here (untracked + `.gitignore`)
+  even though the item says the file "is outside every phase of this unit": P16 task 1
+  obliges the fold to clear what is open at this head, the item names the exact fix,
+  and PR #155 must not merge a 213 KB binary blob. Cost of the choice, on record: a
+  third-party commit stays in branch history (no published history was rewritten), and
+  the hygiene rule now lives in `.gitignore` rather than in a ledger, so the item stays
+  open in its second half — the next sync commit still has to be caught by hand before
+  a phase commit.
+  Ceiling movement caused here: ten route ceilings re-based to their exact
+  `ceil(measured × 1.10)` floors (design-repair 25077/1701, plan-scaffold 21832/1562,
+  plan-fix:issue 24749/1806, review-plan 16574/1067, review-spec 14794/1008), growth
+  source: F38's currency clause in `SENSOR_CORE.md`/`PRE_EXECUTION.md` and F39's
+  refusal form in the two reviewer `OUTPUT.md` files plus `CHECKS.md`. No
+  skill-level `referenceEstimateMax` moved.
+
+- **D48 — P16 close-out: what lands before the reviewed head, what cannot, and the
+  two ledger facts the close-out found rather than confirmed (2026-09-02, P16
+  close-out half).**
+  *Merge resolution.* `git merge origin/main` at `1bc40dbc` conflicted on exactly one
+  path, `docs/features/ROADMAP.md`, and within it on exactly one row, 28. Kept: this
+  branch's row, because it is the row that carries the unit's live status and its
+  finding trail; `main`'s copy is the stale `in-progress` line from before the branch
+  diverged. Rows 29 and 30 were then compared extracted-line against
+  `git show origin/main:docs/features/ROADMAP.md` and are byte-identical, so the sync
+  neither dropped nor duplicated an entry, and `git rev-list --count HEAD..origin/main`
+  answers 0. The merge also folded in `main`'s wording-only SPEC edit (external-product
+  citations removed from unit 28's and unit 29's `SPEC.md`, plus `docs/LOGS.md`): no
+  requirement, scope or acceptance row moved, and `ACCEPTANCE.md` is untouched by the
+  merge, which the blob proves (`cf6ced0ca1b3c8ed13cb1209eb2add292daf5c54` before and
+  after). No other conflicted path existed, so the stop condition in the task ("stop and
+  report if anything else conflicts") did not fire.
+  *Ordering of the remaining writes.* D47 made a review mark current by ancestry over
+  the bound artifact set, so every write to `SPEC.md`, `ACCEPTANCE.md`,
+  `planning-evidence.md`, `planning-obligations.md`, `PLAN.md`, `TASKS.md`, `testing.md`,
+  `decisions.md` and `architecture-notes.md` lands **before** the head the review reads,
+  and the close-out therefore writes its gate figures, this decision, the obligation
+  confirmation and the box ticks into the pre-review commit. What cannot land there is
+  the evidence the review itself mints: F23/F24/F25 and **O12** are closed by a receipt
+  that does not exist until the review returns, so they flip in the commit that carries
+  the `REVIEW-RAN` mark and the SHA-bound PR comment. Cost, stated instead of hidden:
+  that commit touches two bound paths (`TASKS.md`, `planning-obligations.md`), so the
+  mark names the reviewed head and the sensor's bound-path test reads the *terminal*
+  head as one bookkeeping commit past it. This is not a regression of F38 (which fixed
+  equality, an unobtainable standard) but the residue of it: a close-out cannot tick the
+  boxes a review closes without moving a bound path. Recorded as known-issue 20 with its
+  re-trigger condition rather than solved by a second mechanism, which D47 already
+  rejected for exactly this shape.
+  *O19 moves on measured evidence, not on the cell.* Its validator answers both ways
+  (`pre-execution-quality` 62/62 exit 0; re-marking the bundler behind the freeze makes
+  it refuse), and the clause P13 withheld — a post-freeze byte change voiding current
+  receipts — is proven by `pre-execution-sensor.test.mjs`'s committed and uncommitted
+  bound-edit cases and was observed live at this head (`verify` → `current: false`,
+  exit 4, freeze `f82316b8…` against observed `70251fa8…`). O15 is **not** moved with it:
+  known-issue 19's re-trigger is about a published vocabulary the artifact-kind and
+  ledger-row cells resolve against, and no such surface exists yet.
+  *Two findings the close-out made while reading its own ledgers.* (1) `decisions.md`
+  carries **two rows numbered D44** — P14's `the drift gate parses committed source`
+  (introduced by `d2d75696`) and P15's `keeps its FAIL row and withholds its own gate
+  sentence` (introduced by `5a2754c0`) — so a citation of "D44" in `progress.md:968` and
+  `planning-obligations.md:153` is ambiguous. Nothing renumbers either published row: an
+  identifier is how other commits cite a decision, and editing an already-referenced id
+  to fix a collision would silently repoint those citations. This is why the next free id
+  here is **D48** and not a re-used D44-D47, and the collision plus its missing machine
+  check is filed as known-issue 21. (2) `git merge` reported the roadmap collision
+  before it reported anything else, which is the only reason the row-28 resolution was a
+  decision at all — `merge-tree`'s dry run is named in this phase's done-when and was run
+  first (`git merge-tree --write-tree HEAD origin/main` → conflicted: `docs/features/ROADMAP.md`
+  alone), so the sync was planned rather than discovered.
+  *What the close-out did not claim.* No `SPEC-REVIEW-PASS`/`PLAN-REVIEW-PASS` receipt was
+  minted for unit 28 at terminal HEAD even though P16's done-when names them: the gate is
+  circular for this unit by owner decision D32 as scoped by D37, `review-plan` and
+  `review-spec` are repository text rather than installed commands, and known-issue 14
+  keeps the closure condition (one consuming unit reviewed through them, which is feature
+  29's post-merge dogfood). No skill version moved, because the close-out changes no
+  `SKILL.md` — `bump-skill` has nothing to bump and `npm run bundle:skills` re-answers
+  byte-identical — and no Pi or schema package version moved, because `0.2.0`/`3.5.0` are
+  the versions AC10 already names and `3.5.0` stays unpublished until merge (known-issue
+  12's Trusted-Publisher precondition is unchanged by this phase).
+
+- **D49 — a check that cannot see a row must say it refused it; and a review receipt
+  binds to the head that follows the fold (2026-09-02, P16 review fold).** Three choices
+  this fold had to make. **(a) Row arity.** The escaped-pipe fix made cell splitting
+  correct and left the *count* unwatched: a row the seven-column schema refused still
+  vanished silently from the recount, `--check` and `--annotate`. Options were to repair
+  on the fly (rejected: the tool would be inventing the shape it exists to verify), to
+  warn and continue (rejected: a warning inside a passing exit code is the same silence
+  with more words), or to **compare counted `^\| F<n> \|` lines against parsed rows and
+  fail when they differ** — chosen, because it makes the tool's own coverage a claim it
+  must discharge. It paid for itself immediately: the first malformed row it refused was
+  this session's F47. **(b) The changelog gate's reading.** `newestVersionCell` takes a
+  max, which is why three duplicated ES amendment rows survived an entire unit whose
+  subject is rendered-fact drift; the fix is not the deduplication but a pin that counts
+  rows per (skill, version) in both languages and asserts EN/ES version-set parity —
+  which then found a second, older omission (an ES `1.0.2` row) and one legacy duplicate
+  pair (`log-session` 1.4.0) that is exempted explicitly as history rather than deleted,
+  recorded as known-issue 23 so the exemption has an owner and a re-check. **(c) A
+  reviewer's stale-version claim is not automatically a defect.** `MIGRATION.md` was
+  flagged for naming `workflow-status 3.0.0` where the skill is now 3.1.0; those blocks
+  are dated release notes recording the version a break landed in, and the repository's
+  rule for that file is about rename notes, not current versions. Rejected: re-basing
+  them, which would have rewritten history to satisfy a check that should not have
+  applied. Accepted residue: nothing pins a dated note, so an audit pass will keep
+  mistaking it for a live claim — known-issue 25 records the adjudication.
+  The fold also settles where evidence may live: **box 5's PASS receipt cannot describe
+  `949ef3e5` once this commit exists**, because a fold is exactly the change that invalidates
+  a review. The receipt is obtained at the post-fold head, and F58 records the tool's own
+  lie — its reopen token hardcodes a phase number (`· REOPENED P20`) that no plan contains,
+  so a mechanical annotator invented a fact while reopening these rows correctly.
+  Ceiling movement: one value, `review-change:default-*` 13795 → 13794 (measured 12540);
+  the manifest's own rule already reads "at each declared re-basis", so no wording change
+  was needed anywhere in the repository — the "every ceiling sits exactly at the floor"
+  phrasing lived in loop notes, not in committed text, and is corrected here rather than
+  by editing a file to match a mistake of mine.
+- **D50 — the reopen note loses the phase number rather than gaining a flag (2026-09-02,
+  P16 F58 fold).** F58's contract payload hardcoded `· REOPENED P20`, a phase this unit's
+  plan never contained, so a mechanical annotator invented a fact while doing everything
+  else right. Options: take the reopening phase from a `--phase` flag, or name no phase.
+  Chosen: **no phase** — the tool walks git state, and "which phase is reopening this row"
+  is observable by no git state; a flag would let the caller hand-type exactly the
+  fabrication the finding exists to remove, and no consumer parses the number. The reopen
+  behaviour (flip to `no`, name the missing evidence) is correct and stays. The declared
+  grammar in `LEDGERS.md` is the single owner, so the block's `annotator-token` cell, its
+  prose, the `ledger-ownership` pin assertion and this unit's token paragraph in
+  `testing.md` move in the same commit as the emission — a grammar that lags its tool is
+  the F1 class this unit was cut to kill. Binding order matters: annotate before marking,
+  never after, when the discovery commit already names the id and touches the cited
+  surface (else the tool binds the wrong sha — recorded in `testing.md` above).
+- **D51 — F69's recipe correction re-bases the two reviewer route ceilings (2026-09-02, fold F69).** The canonical build recipe in `review-spec`/`review-plan` `CHECKS.md` passed `--json /tmp/…`, a path the builder's `contained()` guard refuses, so the documented command exited before printing any digest and left a verbatim-following reviewer with the refusal form or a forbidden hand-computed substitute. Correcting the recipe drops the flag and adds the one-line clause that tells the executor where the digest appears: one line and ~10 tokens per route. Ceiling movement caused here: `review-plan:default` 16574/1067 → 16585/1069 and `review-spec:default` 14794/1008 → 14805/1009, each raised to its exact `ceil(measured × 1.10)` floor with this clause as the named growth source. No skill-level ceiling and no other route moved.
+- **D52 — a gate sentence that had to be re-cut pays two tokens of ceiling (2026-09-02, fold F63).** `audit-pr`'s upstream-lineage step 1 kept its bound-artifact rule stranded inside the verify-command parenthesis and left the parent clause without a verb, so an executor could not parse which of the three rules was which; re-cutting it into three sentences is a wording change with a real, tiny cost. Ceiling movement caused here: `audit-pr:feature` and `audit-pr:fix` 9543 → 9545, each at its exact `ceil(measured × 1.10)` floor with this re-cut as the named growth source; no lines ceiling and no other route moved.
+- **D53 — one receipt field added to the spec template pays eight tokens of ceiling (2026-09-02, fold F70).** `review-spec`'s receipt line stopped at `Unit: … · Stage: spec · Parent: null` while the consumer parses a `Unit kind` label, so the kind half of the identity check could only no-op for SPEC-stage verdicts (the unit-id half still ran); the plan template already stated the field. Emitting it is the correction, and `pre-execution-quality.test.mjs` now fails any label the consumer parses that either stage template stops writing, so the drift cannot recur quietly. Ceiling movement caused here: `review-spec:default` 14805 → 14813 (measured 13466), at its exact `ceil(measured × 1.10)` floor with this field as the named growth source; no line ceiling and no other route moved.

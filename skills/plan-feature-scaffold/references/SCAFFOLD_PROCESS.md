@@ -10,6 +10,24 @@
    design, decisions to confirm, branch, phases, testing requirements, and dev
    scenarios covering happy path plus reproducible empty/degraded, race, and
    outage cases. Leave no placeholders; put genuine unknowns in `decisions.md`.
+   Ground it first per
+   [`evidence-grounding`](<../../evidence-grounding/SKILL.md>) — inventory,
+   evidence, draft from frozen rows — and freeze the two planning ledgers while
+   you cut phases, never afterwards from memory:
+   [planning ledgers](<../../pre-execution-review/SKILL.md>).
+
+   - Freeze `planning-evidence.md` (M/L) or `### Planning evidence` in the SPEC
+     (XS/S) and `planning-obligations.md` (M/L) or `### Obligations` (XS/S) with
+     the column order, statuses, and homes defined **once** in
+     [`pre-execution-review`](<../../pre-execution-review/SKILL.md>) — do not
+     restate or reorder those columns here. No transcripts, no discarded
+     hypotheses; one obligation row per normative behaviour, applicable invariant,
+     affected use case, and required failure state.
+   - Cut phases only after every obligation row has a phase and a validator that
+     can fail.
+   - Rotate `artifactRevisionId` for the unit's plan artifacts on this write and
+     carry it in the hand-off. A later revert to these same bytes is a new
+     authoring event and needs a new id.
 4. **Scale by size:**
 
    - **XS/S:** SPEC + `ACCEPTANCE.md`. Its `### Phases` has checkbox tasks and at least `P1`
@@ -63,8 +81,23 @@
 5. **Register and verify.** Set the roadmap row to `planned` (`defined → planned`;
    a missing row may be added directly as `planned`). Re-read it after the write.
    If it does not literally say `planned`, reapply and re-read before continuing.
-6. **Do not branch or code.** Record the future branch in the SPEC only.
-7. **Return exactly**; the `plan-feature` caller prints the closing hand-off:
+   Obligation rows are never discharged by this step: no phase may be cut with an
+   obligation pointing at a future issue, and this skill creates no forge issue —
+   `deferred` exists only after the user amends the governing SPEC
+   (`pre-execution-review` owns the rule).
+   No obligation is discharged by this step: a phase may not be cut while an
+   obligation points at a future issue, this skill creates no forge issue, and
+   `deferred` exists only after the user amends the governing SPEC
+   (`pre-execution-review` owns the rule).
+6. **Run the `stage: plan` readiness preflight** from
+   [`evidence-grounding`](<../../evidence-grounding/SKILL.md>) (it routes to
+   `READINESS.md`) and paste its block. Only `READY-FOR-REVIEW` licenses the hand-off below;
+   `NEEDS-EVIDENCE` / `NEEDS-DESIGN` / `NEEDS-REPLAN` means this turn re-runs its
+   own step, and it is never written as, quoted as, or summarized as a review
+   PASS. Never stamp a receipt or create `planning-findings.md` rows here.
+7. **Do not branch or code.** Record the future branch in the SPEC only.
+8. **Return exactly** (the caller prints the closing `→ Next:` block, which routes
+   to `/review-plan`, never to `/execute-phase`):
 
 ```
 SCAFFOLD <NN>-<slug> — size: <XS|S|M|L>
