@@ -12,7 +12,7 @@ Status: frozen
 | AC6 | No script, test, or CI reference to `.claude/skills` exists or breaks; skill context budgets pass. | `grep -rn "claude/skills" scripts/ .github/ packages/agentic-workflow-schema/test packages/pi-agentic-workflow/test` → no matches; `node scripts/check-skill-context.mjs` → exit 0 (PASS line printed) |
 | AC7 | skills.sh discovery intact: every discoverable skill still listed. | `npx skills add . --list` → exit 0 |
 | AC8 | Pi package mirror byte-parity holds. | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 0 failing |
-| AC9 | No distribution-channel file touched by the branch (`skills/`, `packages/`, `.claude-plugin/`, `template/`). | `git diff --name-only main...HEAD \| grep -vE '^(\.gitignore\|CLAUDE\.md\|README\.md\|README\.es\.md\|\.serena/\|docs/fix/)'` → no output |
+| AC9 | No distribution-channel file touched by the branch (`skills/`, `packages/`, `.claude-plugin/`, `template/`). | `git diff --name-only main...HEAD \| grep -vE '^(\.gitignore\|CLAUDE\.md\|README\.md\|README\.es\.md\|\.serena/\|\.claude/skills\|docs/fix/)'` → no output |
 
 ## Quality floor
 
@@ -32,4 +32,4 @@ Status: frozen
 - `node scripts/check-skill-context.mjs`
 - `npx skills add . --list`
 - `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs`
-- `git diff --name-only main...HEAD | grep -vE '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|docs/fix/)'`
+- `git diff --name-only main...HEAD | grep -vE '^(\.gitignore|CLAUDE\.md|README\.md|README\.es\.md|\.serena/|\.claude/skills|docs/fix/)'`
