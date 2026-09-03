@@ -1,7 +1,7 @@
 ---
 name: review-brand
 user-invocable: false
-version: 1.0.1
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -39,6 +39,15 @@ default branch. State the scope at the top of the returned table.
 - ✓ Consistency across the changed surface and its siblings (same action
   labeled the same way everywhere)
 - ✓ Placeholder/lorem text absent from the diff
+
+## Materiality bar
+
+Report a row only when a competent user's outcome changes or a rule the project
+explicitly declares is violated — cite the rule it violates beside the evidence.
+Not findings: comment/punctuation typos, formatting-only drift, style preference
+with no cited rule, hypothetical robustness beyond the SPEC's named scenarios.
+An empty table with `Decision: PASS` is the expected result for a well-formed
+change — never pad the table.
 
 ## Return exactly
 

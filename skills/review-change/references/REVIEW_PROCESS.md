@@ -10,6 +10,17 @@
    check, run `git rev-parse HEAD` once and retain its 40-hex output as the
    **reviewed head SHA**. The final PR receipt may be written only for that exact
    commit; a PR whose head changes during the review requires a fresh review.
+   **Read the unit's fold ledger (`review-findings.md`) before any pass — it is
+   the review's memory — and state the cycle number** in the report (`Cycle: <n>`,
+   completed `REVIEW-RAN` marks + 1). From cycle 2 on, **every `folded: yes` row
+   is re-verified at its cited location** before anything else: defect gone →
+   pass; defect still present → one new row marked `regression of <id>` (that is
+   the only legitimate bypass of the `file:line`+axis dedupe, and it is folded
+   with the same evidence bar as any finding); reviewer disagreement with a
+   user-approved amendment → `DISPUTED`, never a fresh row re-litigating the
+   same location. A cycle ≥ 2 that produces any new fix-now row appends the
+   `CONVERGENCE-ANOMALY` block (`pre-execution-review/references/POLICY.md` §4)
+   to the report.
 2. **Frozen acceptance + SPEC drift check (structural).** Locate sibling
    `ACCEPTANCE.md`, recompute its blob, and require an exact match with the
    execution receipt before assessing the candidate. Missing/mismatch is a
@@ -34,14 +45,27 @@
    commits follow `<type>(<scope>): <summary>`; phase labels in touched
    planning docs are `P1, P2, …` (never `S1`/"Steps"); the phase's per-phase
    docs were updated (TASKS ticks, progress entry); no commit landed on the
-   default branch; artifacts are in the project's declared docs language;
-   **the tree is clean and the remote current** — run `git status --porcelain`
-   (any tracked modification, code or docs, = a `workflow` finding: work is
-   sitting outside the commits under review) and, when the branch has an open
-   PR, `git fetch` + `git status -sb` (commits ahead of the remote = a
-   `workflow` finding: the PR and CI are judging a stale branch). Both are
-   **fix-now** — a review verdict on a branch whose real state isn't pushed
-   is worthless. Run the greps/`git log`/`git status` — don't infer compliance.
+   default branch; artifacts are in the project's declared docs language.
+   **Workspace state is a precondition, not a finding.** Run
+   `git status --porcelain`, and when the branch has an open PR `git fetch` +
+   `git status -sb`. Any tracked modification, or being ahead of/behind the
+   remote, stops the review **before any pass runs** — no findings table, no
+   ledger write, no verdict, and never a `workflow` finding persisted for it
+   (a review that filed its own dirty tree would hand the next review the
+   same finding, forever):
+
+   ```text
+   REVIEW BLOCKED — workspace state
+   - `git status --porcelain`: <lines, or `clean`>
+   - `git status -sb`: <line, or n/a: no open PR>
+   → Next: commit or stash the listed files, then re-run /review-change.
+     Untracked, non-ignored harness/toolstate nobody authored for this unit
+     (.engram/, .pi/, .serena/, session files) is committed once or added to
+     .gitignore — named here, never reviewed. A verdict on a workspace whose
+     state the forge cannot see is withheld, not filed.
+   ```
+
+   Run the greps/`git log`/`git status` — don't infer compliance.
 4. **Applicable pack passes (the finders).** For each axis the matrix +
    footprint mark as relevant, run the workflow's own internal skill for it
    (`review-code`, `review-security`, `review-verify`, `review-design`,
