@@ -1,7 +1,7 @@
 ---
 name: loop-review-fold
 user-invocable: true
-version: 3.0.0
+version: 4.0.0
 argument-hint: <NN> | --fix <issue-number>
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -105,6 +105,14 @@ Then continue as follows:
     `artifactRevisionId` move, what was missed, owning stage, why the prior
     repair failed, route to owner) and continue from the owner it names. A third
     blind edit is not a repair attempt, and no cycle count here is ever hidden.
+4c. **Cycle bound (unit-level, family-agnostic).** This loop runs at most **two**
+    review→fold cycles for a unit, counted from the unit's ledger marks and
+    receipts — new finding families do not reset the count. A third cycle never
+    starts here: stop with `TRIAGE-REQUIRED`, name every open finding ID, and
+    hand the convergence diagnosis to `/triage-issue --prioritize-now` (which
+    routes replans) or to the user. A unit that needs a third cycle has a
+    planning or root-cause defect, not a review deficit — more blind rounds
+    only manufacture findings.
 
 5. If any finding remains unresolved (`DISPUTED`, `BLOCKED`, `REPLAN`, or an
    open row left after folding), stop the loop and hand every such ID to:
@@ -160,7 +168,8 @@ Forbidden: implementing a fix in this router, editing review classifications,
 marking findings folded, creating unrelated issues, weakening acceptance or
 checks, merging, or claiming that a user has implemented newly planned phases.
 Also forbidden: folding a `plan`- or `product`-owned finding, re-editing on a
-second local cycle before the convergence diagnosis is reported, and treating an
+second local cycle before the convergence diagnosis is reported, entering a
+third review→fold cycle for the same unit, and treating an
 absent pre-execution PASS as foldable debt.
 
 ## Relationship to other skills

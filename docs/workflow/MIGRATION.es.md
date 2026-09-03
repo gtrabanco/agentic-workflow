@@ -2,6 +2,46 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-09-03 — el bucle revisión→fold queda acotado (dos ciclos, suelo de materialidad)
+
+**Cambio de contrato; `review-change` 3.0.0, `loop-review-fold` 4.0.0.**
+
+El bucle infinito revisión/fold observado en las unidades #28 y #157 queda
+cerrado estructuralmente — cuatro límites independientes, ninguno relaja una
+puerta real:
+
+- **Los hallazgos `low` ya no bloquean ni se persisten.** Solo las filas
+  fix-now `high`/`med` llegan al ledger de fold y pueden producir
+  `REVIEW-FAIL`. Un hallazgo `low` es una nota de solo-informe (la regla de los
+  finders "los minor nunca bloquean", ahora intacta a través de la
+  clasificación). Si automatizabas contra "cualquier fila fix-now abierta =
+  fallo", lee ahora las severidades.
+- **El estado del workspace es una precondición.** Un árbol sucio o una rama
+  adelantada frente a su remoto para la revisión con `REVIEW BLOCKED —
+  workspace state` **antes de ejecutar cualquier pase** — ya no es un hallazgo
+  `workflow` persistido, y `review-change` hace commit de su propio añadido al
+  ledger de hallazgos (con push si hay PR abierta) para que una revisión nunca
+  deje la suciedad contra la que después se juzgará. Con `REVIEW-PASS` y PR
+  abierta no hay escritura en el ledger: el receipt ligado al SHA es el
+  registro durable.
+- **Las filas plegadas se re-verifican, no se re-reportan.** Una re-revisión
+  lee primero el ledger de fold, declara su número de ciclo y re-comprueba cada
+  fila `folded: yes` en su localización citada; un re-informe solo es legítimo
+  como `regression of <id>` o `DISPUTED`.
+- **Dos ciclos revisión→fold por unidad, tope duro.** `loop-review-fold` cuenta
+  los ciclos a nivel de unidad (sin importar la familia) a partir de las marcas
+  `REVIEW-RAN` y los receipts. Un tercer ciclo nunca arranca — el residuo se
+  enruta a `triage-issue --prioritize-now` o al usuario con el diagnóstico
+  `CONVERGENCE-ANOMALY`.
+
+No cambió ninguna flag. Las skills que consumían la decisión de
+`review-change` no necesitan cambios; solo los consumidores que asumían que
+toda fila persistida puede bloquear deben filtrar ahora por severidad. Los
+hallazgos de las revisiones de planificación conservan su mapa de resolución
+(que `review-spec`/`review-plan` 1.4.0 imprimen ya literalmente): `product` →
+`design-feature`, `plan` → `plan-feature`/`plan-fix`, `source` → el fold del
+ejecutor — `fold-findings` nunca repara un artefacto de planificación.
+
 ## 2026-08-30 — ninguna ruta ya arranca trabajo sobre un plan sin revisar
 
 **Enrutado que rompe; `workflow-status` 3.0.0, `execute-phase` 4.0.0,

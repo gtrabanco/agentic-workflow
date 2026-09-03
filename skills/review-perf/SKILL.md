@@ -1,7 +1,7 @@
 ---
 name: review-perf
 user-invocable: false
-version: 1.1.0
+version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -53,6 +53,15 @@ default branch. State the scope at the top of the returned table.
   silently), and if the diff adds algorithmic code on input that can grow,
   add a **minor** finding recommending the project adopt the tooling via
   `init-workspace`'s Performance tooling round.
+
+## Materiality bar
+
+Report a row only when a competent user's outcome changes or a rule the project
+explicitly declares is violated — cite the rule it violates beside the evidence.
+Not findings: comment/punctuation typos, formatting-only drift, style preference
+with no cited rule, hypothetical robustness beyond the SPEC's named scenarios.
+An empty table with `Decision: PASS` is the expected result for a well-formed
+change — never pad the table.
 
 ## Return exactly
 

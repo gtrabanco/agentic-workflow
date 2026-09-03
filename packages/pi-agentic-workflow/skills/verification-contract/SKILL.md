@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.0.1
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -23,6 +23,15 @@ criterion; `Required outcome`; named `Validator`; literal quality floor; project
 commands. Prefer commands, otherwise use `read-verified: <evidence>` or
 `manual: <exact observation>`. Unlabelled prose is invalid. A planned test may
 name its future project runner; it cannot substitute a narrower runner later.
+
+**Validator stability.** A validator must never gate on a surface other workflow
+actors mutate — the branch diff as a whole, the session log, progress entries,
+review ledgers, or forge state — because any out-of-unit commit (a session-log
+append, another unit's fold) then re-fails a frozen criterion on a finished unit
+and re-opens its review loop. Grep the unit's own files and outputs; a
+diff-based validator enumerates the unit's paths or excludes the
+workflow-mutated surfaces explicitly (docs/LOGS.md, the unit's own docs
+directory, harness/toolstate).
 
 ## Freeze and receipt
 

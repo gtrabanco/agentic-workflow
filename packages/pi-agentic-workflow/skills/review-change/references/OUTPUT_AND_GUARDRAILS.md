@@ -35,7 +35,9 @@ lost, and none becomes reviewer-created backlog (D3):
 - **ignore** → note the rationale in the report; no further action.
 
 The report's `Decision:` line is **three-state** (D10): `REVIEW-PASS` when the
-table is clean, `REVIEW-FAIL` while any fix-now finding is open, and
+table is clean (the ledger carries only `high`/`med` fix-now rows — `low`
+findings are report-only notes that never block), `REVIEW-FAIL` while any
+fix-now finding is open, and
 `NEEDS-DECISION` when a decision-required finding blocks. Only `REVIEW-PASS`
 **and only when the PR exists** posts the idempotent exact-SHA receipt (step 13
 of *Persist and decide*); `REVIEW-FAIL` leaves findings in the fold ledger and
