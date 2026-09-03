@@ -20,7 +20,6 @@ Nothing here is tied to a specific stack, framework, or architecture pattern.
 
 ```
 skills/                  the workflow skills (one SKILL.md each) — the installable source
-.claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 template/                the exportable documentation scaffold (generic, copyable)
 packages/                two companion npm packages (bun-managed islands — see Packages below)
 docs/workflow/           the tutorial: feature flow, issue flow, skill reference, replication
@@ -29,6 +28,13 @@ docs/fix/                fix SPEC template + index
 .github/                 issue + PR templates the workflow expects
 README.md / README.es.md project overview (EN / ES)
 ```
+
+**Dogfooding model (authoring):** repo sessions consume the workflow from the
+installed release (Pi package / installed plugin), not from the working copy.
+The committed layout carries no working-copy activation surface. Authoring
+sessions opt in by creating a local, gitignored mount
+(`ln -sfn ../skills .claude/skills`) or by exercising a single working-copy
+skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`).
 
 ---
 

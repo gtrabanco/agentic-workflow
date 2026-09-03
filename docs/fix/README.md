@@ -15,6 +15,10 @@ table — history lives in git log + closed issues.
 | Issue | Topic | Status | Notes |
 |---|---|---|---|
 | [#159](https://github.com/gtrabanco/agentic-workflow/issues/159) | review-fold-loop-bounds | `done` · [#160](https://github.com/gtrabanco/agentic-workflow/pull/160) | Bounded the review→fold loop (materiality floor, state preconditions, folded-row re-verification, two-cycle cap) |
+| `157-claude-skills-self-mount` | Untrack the always-on `.claude/skills` self-mount, gitignore local opt-in mounts, document the installed-release dogfooding model (CLAUDE.md + README EN/ES) | done · [#158](https://github.com/gtrabanco/agentic-workflow/pull/158) | — | [#157](https://github.com/gtrabanco/agentic-workflow/issues/157) |
+
+Historical artifacts remain under `docs/fix/`; merged and closed work is
+intentionally absent from this index.
 
 ---
 
