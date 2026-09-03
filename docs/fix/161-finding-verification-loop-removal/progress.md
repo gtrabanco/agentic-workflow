@@ -120,3 +120,10 @@ Notes:
 ## Acceptance receipt v1
 - Manifest: docs/fix/161-finding-verification-loop-removal/ACCEPTANCE.md · Blob: 834ba903a93915f43a37e76c573c7876511a0c85 · Status: frozen
 - Verified: 2026-09-03 · Baseline for every phase gate (recomputed before each phase; executor may add tests, never narrow commands or weaken assertions).
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `node scripts/authoring-research.test.mjs` (exit 0) + `node --test scripts/*.test.mjs` (175 pass / 0 fail) + `check-skill-context.mjs` main+routes (PASS) · Acceptance blob: 834ba903a93915f43a37e76c573c7876511a0c85
+- Done: O1/O20 (`design-feature` 3.2.0 — `## Research gate (mandatory, fail-closed)`: ≥2 fetched sources as evidence rows (URL + access date), is/is-not + user-expectation coverage, implicit case decomposition, offline → `NEEDS-EVIDENCE`, research-before-encode; no-market-research guardrail re-scoped to a boundary); O2 (`evidence-grounding` 1.6.0 — web pass in the evidence pass; ROWS.md `document` kind accepts fetched external documentation as `source-and-location`); O3/O19 (`plan-fix` 3.1.0 + `plan-feature-scaffold` 2.2.0 — `## Research and reference trace (plan stage)`: conditional single web pass on an unanswered bounded question, mandatory symbol/reference trace deriving the blast radius; `review-code` 1.2.0 — broken-reference checklist item); task 5 (`scripts/authoring-research.test.mjs` pins O1–O3+O19–O20 red-first — red observed at the pre-contract run, exit 1; budgets manifest: `design-feature` mainEstimateMax 3400 + 4 route ceilings re-based to ceil(measured×1.10) — growth source named in the changelog rows); task 6 (5 version bumps + changelog EN+ES rows, skills English-only per CLAUDE.md scope exception).
+- Remains: none for P1. Gate validators all green; no TODO/FIXME markers added; no ES sibling created for any SKILL.md (scope exception).
+- Gotchas: design-feature was 8 bytes under its main ceiling before this phase — every growth there now needs a manifest re-basis; route ceilings (not just skill ceilings) must be re-based when a SKILL.md on a route grows (`--routes` mode caught 4 more).
+- Next: P2 · Attempts: 1
