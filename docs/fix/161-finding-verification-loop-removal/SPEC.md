@@ -111,6 +111,15 @@ recorded as issue #161 (PE-002, PE-003).
    programmatic orchestration by an external driver consuming the published
    contracts. The two-cycle cap moves into `review-change` so the bound
    survives the retirement.
+4. **Test immutability contract.** Once written, a test is unmodifiable: the
+   executor fixes code until green, never the test. The single legitimate
+   amendment is a **proven mis-encoding of external reality** — the test's
+   expectation contradicts the actual documented semantics of the
+   platform/library/language (cited from authoritative documentation), not a
+   product decision change — and even that surfaces as a finding plus SPEC
+   amendment, never a silent edit. Prevention rides the research gate:
+   platform semantics are verified against authoritative documentation
+   **before** a test encodes them (PE-013).
 
 ### Out of scope
 
@@ -143,6 +152,7 @@ The fix's own authority, without a Product half — one row per material claim.
 | PE-010 | Third prior-art anchor: GitHub Code Scanning marks an alert "Verified" only after independent confirmation — anchor for the `confirmed \| refuted` vocabulary | document | GitHub Code Scanning docs (rendered page not fetchable from this planning environment) | — | O4 | not-applicable | unknown | owner: P1 task 1 re-fetches and cites the rendered page; consequence if open: the gate cites two fetches instead of three — acceptable for review |
 | PE-011 | Verification-before-persist ends the accepted-unverified finding class: a refuted candidate never becomes a row, a fold task, or a re-review trigger | derived | rule "persist only rows carrying a confirmed finding-mark", inputs PE-003 + PE-005 | — | O4 | not-applicable | decision | — |
 | PE-012 | The verification method follows the finding's axis (code claims need a failing reproducer — red test first, unchanged code; documentation claims are corrected by direct read without ceremony), user expectations must be decomposed into their implicit case vector (the phone-input canon: values/limits, interaction states, degraded mode, backend contract, alternate paths), and affected code is located by symbol/reference search (LSP/serena when available, grep otherwise) with the blast radius derived from that search | user | SPEC `## Decisions made during drafting` item 7 (user direction, 2026-09-03) | — | O3, O19, O20, O21 | not-applicable | decision | — |
+| PE-013 | Tests are immutable once written; the sole legitimate amendment is a proven mis-encoding of external reality (the test's expectation contradicts the platform's actual documented semantics — cited from authoritative docs), surfaced as a finding + SPEC amendment, never a silent edit; the prevention is research-before-encode: platform semantics are verified against authoritative documentation before a test encodes them | user | SPEC `## Decisions made during drafting` item 8 (user direction, 2026-09-03) | — | O22, O23, O24 | not-applicable | decision | — |
 
 ### Obligations
 
@@ -169,6 +179,9 @@ The fix's own authority, without a Product half — one row per material claim.
 | O19 | PE-012 | Plan-stage reference trace is mandatory: affected code is located via symbol/reference search (LSP/serena when available, grep fallback) and the blast radius is derived from that search; `review-code` gains the broken-reference checklist item | P1 | 3 | execute-phase | `node scripts/authoring-research.test.mjs` → exit 0 (trace pins) | test output | planned |
 | O20 | PE-012 | Implicit case decomposition: each enunciated user expectation is expanded into its implicit case vector (values/limits, interaction states, degraded mode, backend contract, alternate user paths) before the Product half is cut | P1 | 1 | execute-phase | `node scripts/authoring-research.test.mjs` → exit 0 (decomposition pins) | test output | planned |
 | O21 | PE-012 | Verification method follows the finding axis: code/behavioral claims confirm only with a failing reproducer (red test written first, run against unchanged code) or reproducible command output; documentation claims confirm by direct read; missing-doc claims confirm the named user path is undocumented | P2 | 1 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (axis-method pins) | test output | planned |
+| O22 | PE-013 | `verification-contract`: tests are immutable once written — the executor fixes code until green; the sole legitimate amendment is a proven mis-encoding of external semantics (cited from authoritative docs) surfaced as a finding + SPEC amendment; research-before-encode: platform semantics are verified against authoritative documentation before a test encodes them; adding stronger tests stays allowed, editing expectations never (except the proven-mis-encoding path) | P2b | 1 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (immutability pins) | test output | planned |
+| O23 | PE-013 | Fold-side mirror: `fold-findings/references/FOLD_POLICY.md` + `execute-phase/references/FOLDING.md` forbid editing an existing test's expectation to match behavior; setup repairs keep assertions at least as strong and never touch expectations | P2b | 2 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (fold mirror pins) | test output | planned |
+| O24 | PE-013 | Immutability pins red-first + budgets manifest + version bumps/changelog rows for touched skills | P2b | 3–4 | execute-phase | `node scripts/check-skill-context.mjs` → PASS | budgets output | planned |
 
 ## Rules that must never be violated
 
@@ -244,7 +257,7 @@ skill's capability remains as the manual path + driver contracts).
    user-expectation coverage; plan-stage conditional; web evidence rows).
 2. `node --test scripts/review-loop-discipline.test.mjs` exits 0 with the
    verification pins (confirm-before-persist, `finding-mark@1` shape, refuted
-   reporting, cap now in review-change).
+   reporting, cap now in review-change) and the test-immutability pins.
 3. `grep -rn "loop-review-fold" skills/ docs/workflow/ docs/site/guides/ README.md README.es.md .claude-plugin/ docs/workflow/model-routing.yml scripts/ packages/agentic-workflow-schema/src packages/agentic-workflow-schema/skill-outcome.schema.json | grep -v MIGRATION | wc -l` → 0.
 4. `cd packages/agentic-workflow-schema && bun run test` → 0 failing (major 4.0.0).
 5. `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 0 failing;
@@ -277,6 +290,7 @@ skill's capability remains as the manual path + driver contracts).
 |---|---|---|---|
 | P1 — authoring research gate contract | planned · Phase-lint: PASS (8/8) · fingerprint `P1:docs:6:authoring-research-gate-contract` | (1) `design-feature` mandatory research gate: ≥2 fetched external sources cited as evidence rows (URL + access date), full-definition coverage, implicit case decomposition of every enunciated expectation (the phone-input case vector: values/limits, interaction states, degraded mode, backend contract, alternate paths), offline → `NEEDS-EVIDENCE` (2) `evidence-grounding`: web source rows accepted as `source-and-location`; inventory gains the web pass (3) `plan-fix` + `plan-feature-scaffold`: conditional web research (unanswered bounded question forces one web pass) + mandatory reference trace (symbol/reference search — LSP/serena when available, grep fallback — derives the blast radius) (4) `review-code`: broken-reference checklist item (reference search on every changed symbol/API) (5) new `scripts/authoring-research.test.mjs` pins O1–O3 + O19–O20 red-first; budgets manifest updated for the grown skills (6) version bumps + changelog EN+ES rows | none |
 | P2 — signed finding verification | planned · Phase-lint: PASS (8/8) · fingerprint `P2:docs:6:signed-finding-verification` | (1) `review-change` verification step between finders and synthesis: isolated recheck of every candidate by its axis's method — code/behavioral claims need a failing reproducer (red test first, unchanged code) or reproducible command output, documentation claims a direct read, missing-doc claims the undocumented user path — → `confirmed \| refuted`; only confirmed persists (2) `LEDGERS.md`: `finding-mark@1` block contract (per-finding row, `VF-` prefix, writer `review-change`, recheck method + reproducer reference, `refuted` carries counter-evidence, excluded from fold queue/sensor/annotator) (3) `CLAUDE.md` normative-surfaces row + ownership-map writer for the block (4) `ledger-provenance.mjs`: seeded-ledger test proving `VF-` rows never parse as findings (5) report contract gains the refuted section; `review-loop-discipline.test.mjs` pins O4–O7 + O21 red-first (6) version bumps + changelog EN+ES rows | P1 |
+| P2b — test immutability contract | planned · Phase-lint: PASS (8/8) · fingerprint `P2b:docs:4:test-immutability-contract` | (1) `verification-contract`: tests immutable once written — executor fixes code until green; sole legitimate amendment is a proven mis-encoding of external semantics (cited from authoritative docs) surfaced as finding + SPEC amendment; research-before-encode rule; stronger tests stay allowed (2) fold-side mirror: `FOLD_POLICY.md` + `execute-phase/references/FOLDING.md` forbid editing an existing test's expectation; setup repairs never touch expectations (3) `review-loop-discipline.test.mjs` immutability pins red-first (O22–O23) (4) budgets manifest + version bumps + changelog EN+ES rows | P2 |
 | P3a — loop-review-fold retirement across live consumers | planned · Phase-lint: PASS (8/8) · fingerprint `P3a:docs:7:loop-review-fold-retirement` | (1) delete `skills/loop-review-fold/`; clean `plugin.json` skills array, `model-routing.yml`, budgets manifest (2) `review-change` hand-off remap (`/fold-findings` + re-run + programmatic-driver line) and the two-cycle cap moves into `REVIEW_PROCESS.md` (`LOOP CAP REACHED`, cycle ≥3, explicit-user-instruction escape) (3) remap routing surfaces: `review-implementation/CLASSIFY.md` + `review-spec`/`review-plan` OUTPUT fold routes + `pre-execution-review/POLICY.md` §5 (4) remap executor surfaces: `execute-phase` SKILL + UNIT_LOOP/CLOSEOUT/FOLDING/BATCH_AND_PORTABILITY (5) remap autopilot surfaces: `ship-roadmap` SKILL/ADVANCE/MODEL_ROUTING + `triage-issue` REVIEW_FINDING_PROCESS + `verification-contract` (6) live docs EN+ES + MIGRATION EN+ES retirement note + site-guide regeneration + README EN+ES cells (7) version bumps + changelog EN+ES rows + `npx skills add . --list` sanity | P2 |
 | P3b — schema vocabulary without the loop router | planned · Phase-lint: PASS (8/8) · fingerprint `P3b:domain:4:schema-vocab-without-loop-router` | (1) `packages/agentic-workflow-schema/src/index.ts`: vocabulary, capability profiles, transition table (2) regenerate `skill-outcome.schema.json` + `dist/` via the package's own scripts (3) update `capabilities`/`machine-contract`/`workflow-decision` tests + the `scripts/*.test.mjs` pins whose text moved (4) package major bump 4.0.0 + CHANGELOG EN+ES package rows | P3a |
 | P4 — Hardening & PR | planned | copy the template's final tasks literally: full gate suite, bilingual grep, AC3 grep, GOLDEN_FIXTURE smoke for the touched review/executor skills, PR with `Closes #161`, fix-index `done` | P3b |
@@ -304,6 +318,29 @@ skill's capability remains as the manual path + driver contracts).
    PE-010 `unknown` with owner):** the planning environment could not render
    the third page, so the row is honest `unknown` instead of an invented
    citation.
+7. **User direction recorded as `PE-012` (2026-09-03):** the verification
+   circuit is the classic one — issue verified by use (e2e/user/dev) or tests;
+   reproduce the failure, write the failing test encoding the expectation
+   against unchanged code, then fix until green — and documentation is a
+   different axis (typos/wording are corrected directly, missing docs are
+   written, and only the expected user path is normally documented, which is
+   where defects surface). User expectations decompose into their implicit
+   case vector (the phone-input example: prefixes/suffixes, lengths, non-text
+   rejection, focus, no-JS/JS behavior, backend filtering/validation/parsing)
+   and that decomposition belongs to `design-feature` (features) and
+   `plan-fix` (fixes). Affected code is located by symbol/reference search
+   (serena/LSP when available) because added code can break something else or
+   imply changes in more places — the blast radius comes from the search, not
+   from memory. Conversation text is never evidence, so the direction lives
+   here and in `PE-012`.
+8. **User direction recorded as `PE-013` (2026-09-03):** tests, once written,
+   are unmodifiable. The one exception — a test whose expectation turned out
+   to contradict the platform's actual behavior — is treated as a mis-encoding
+   defect: it must be proven against authoritative documentation and surfaces
+   as a finding + SPEC amendment, never a quiet edit to go green. An agent
+   that documents itself well (verifies semantics before encoding them in a
+   test) should never need the exception; the research gate exists to make
+   that the normal path.
 7. **User direction recorded as `PE-012` (2026-09-03):** the verification
    circuit is the classic one — issue verified by use (e2e/user/dev) or tests;
    reproduce the failure, write the failing test encoding the expectation
