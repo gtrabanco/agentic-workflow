@@ -37,3 +37,31 @@ Notes:
 - Readiness (plan): **READY-FOR-REVIEW** — snapshot rebinds at the next review against `ar-161-2` bytes.
 - Commit: see `git log -1` below.
 → Next: `/review-plan fix-161` re-reviews the new artifact revision (repair cycle, not a re-review of unchanged bytes — no convergence gate applies).
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-fix161-20260903-002 · Snapshot: 2f0961c9590de6a420c4e699afe4a7238c6c81b081eef790dbaa8fec17652dca · Verdict: plan-review-fail
+- Unit: fix-161 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6)
+- Source revision: 28cf35a0c78a5ef16f93d7de818d6cde6cd761db · Artifact revision: ar-161-2
+- Reviewer: review-plan-subagent · Session: 01a06898-0cfd-7d47-8baa-27ea4a6f4c5f · Role: reviewer · Author: plan-fix (not identified in artifact)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-03T18:46:30Z/2026-09-03T19:09:00Z · Findings: 1 (material open: 1)
+- Ledgers read: planning-evidence 13 rows (PE-001…PE-013) · obligations 25 rows (O1…O25, verified-capable: 0 — all validators pin future work)
+- Prior plan receipt (re-review only): rp-fix161-20260903-001 @ a90af483ee3e89eb4e573bd304b82ddc78733a9d7e92052e5500377adb7202f3
+
+Notes:
+- Fresh-bytes repair review (cycle 2): snapshot rebuilt over the `ar-161-2` bytes via `node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-161 --dir docs/fix/161-finding-verification-loop-removal --unit-kind fix`; `verify` mode reports the prior receipt stale with changedPaths = ACCEPTANCE.md + SPEC.md — the no-progress/convergence gate does not apply to repair-after-verdict, so no CONVERGENCE-ANOMALY is printed here.
+- Manual-runtime disclosure (Portability): no runtime rotates `artifactRevisionId`; the snapshot field carries the source revision (`28cf35a0…`) and this receipt carries the planner's declared `ar-161-2` beside it. Mutate-and-revert detection depends on the next repair producing new bytes and a fresh snapshot.
+- Prior findings PF-1…PF-11: all verified as root-cause repairs in the new bytes, not cosmetics. PF-1: AC3 excludes `GOLDEN_FIXTURE{,.es}.md` by `--exclude` path flags and adds the Pi README pair; validator re-run against current bytes → 99 live hits, each task-owned; MIGRATION.md lines are excluded via the path token `grep -rn` prints (0 post-filter hits), so the sanctioned MIGRATION retirement note keeps AC3 reachable; fixture lines 4+4 confirmed excluded. PF-2: branch-ref verified (head `d421bb59`, 18 F-rows; feature-28 receipts on main@746a6d71 exist, 5 cycles, max F77). PF-3: `packages/pi-agentic-workflow/README.md:48` / `README.es.md:50` verified, now named in O12 + P3a task 6 + Affected docs + AC3 paths. PF-4: O25 verified against the cited lines (16/61/93, 56, 874/879/934); its validator command syntax runs. PF-5: O12→6, O13→7 match the P3a table. PF-6: PE-010 owner → P2 task 2 (coherent: that task writes the confirmed/refuted vocabulary). PF-7: decisions 1–8 unique. PF-8: "(6 phases)". PF-9/PF-10: resolved as proposal/self-referential with recorded evidence. PF-11: cap source `4b` (items 4/4a/4b only; cap text at `:102`).
+- Failed checks: L4, P9 — one finding, PF-12 (no phase/task owns `npm run bundle:skills`; the Pi mirror `packages/pi-agentic-workflow/skills/**` — 15 files naming the route today — drifts after every phase that edits `skills/**`, CLAUDE.md mandates the re-bundle "same PR, always", AC5 catches it only at close-out, and feature-28 precedent scheduled bundle parity in its own plan). Passing: L1, L2, L3, L5, L6, P1–P8, P10–P12, F1–F4.
+- Info notes (not findings): O18 `task: all` and O24 `task: 3–4` are deliberate phase-level aggregates (P4 is the template's literal pre-written close-out chain; P2b's tail pair) — unambiguous for execution; the `grep -v MIGRATION` token in AC3 also excludes any live line mentioning "MIGRATION" outside MIGRATION.md — currently zero such lines exist (verified), and the ACCEPTANCE "excluded by path" claim holds in effect via the path token in `grep -rn` output.
+- Repair owner: `plan-fix 161` — one mechanical fix-now row (PF-12), then `/review-plan fix-161` re-reviews the new artifact revision.
+
+## Repair batch — cycle 3 (plan-fix, post rp-fix161-20260903-002)
+- Artifact revision: `ar-161-3` (rotates `ar-161-2`; one write = one new id for the artifact set — SPEC.md only this batch).
+- Repaired the single new finding PF-12 (low, L4/P9) at root cause: no task owned the Pi-mirror re-bundle. New obligation O26 + P3a task 7 now name `npm run bundle:skills` (packages/pi-agentic-workflow) as a mandatory step after the last `skills/**` edit, validator `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 0 failing. All PF-1…PF-11 repairs from ar-161-2 are untouched.
+- Ledger state: 12/12 rows resolved with resolution-evidence; 0 open.
+- Readiness (plan): **READY-FOR-REVIEW** — snapshot rebinds at the next review against `ar-161-3` bytes.
+→ Next: `/review-plan fix-161` (cycle 3 — final cycle of the bounded loop).
