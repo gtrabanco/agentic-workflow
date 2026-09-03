@@ -54,7 +54,6 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 
 ```
 skills/                  39 source skills (20 user-facing + 17 workflow internals + 2 metadata-internal; 38 discoverable)
-.claude/skills           symlink → ../skills, so this repo dogfoods them in Claude Code
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -63,6 +62,13 @@ docs/features/_TEMPLATE  feature SPEC template + ROADMAP (the planning artifacts
 docs/fix/                fix SPEC template + index
 .github/                 issue + PR templates the workflow expects
 ```
+
+**Dogfooding model (authoring):** repo sessions consume the workflow from the
+installed release (Pi package / installed plugin), not from the working copy.
+The committed layout carries no working-copy activation surface. Authoring
+sessions opt in by creating a local, gitignored mount
+(`ln -sfn ../skills .claude/skills`) or by exercising a single working-copy
+skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md`).
 
 The skills are the **behavior**; `template/` is the **substrate** they read (a
 generic `CLAUDE.md` + documentation map, SPEC/feature/fix templates, and GitHub
