@@ -72,17 +72,37 @@ recorded as issue #161 (PE-002, PE-003).
    fetched sources on the capability's domain (fetch/WebFetch/browser), each
    cited as an evidence row (URL + access date), with explicit coverage of the
    capability's **full definition** (what it is / is not) and the **user's
-   expectation** of it. Offline or unanswered → `NEEDS-EVIDENCE`, never a
-   guess. `plan-fix` / `plan-feature-scaffold` gain the **conditional** step:
-   only when a bounded question (ROWS.md Q1–Q5) cannot be answered by repo
-   evidence — one web pass before the phase is emitted. `evidence-grounding`
-   accepts fetched web sources as `source-and-location` (URL + access date).
+   expectation** of it — including the **implicit case decomposition**: every
+   enunciated expectation is expanded into the case vector it implies before
+   design (valid/invalid values and limits, interaction states, degraded mode,
+   backend validation/filtering/parsing, alternate user paths — the canonical
+   example: a "phone number input" is not a field, it is the whole case
+   vector the product owner's one-liner hides; PE-012). Offline or
+   unanswered → `NEEDS-EVIDENCE`, never a guess. `plan-fix` /
+   `plan-feature-scaffold` gain the **conditional** web step: only when a
+   bounded question (ROWS.md Q1–Q5) cannot be answered by repo evidence — one
+   web pass before the phase is emitted — plus the **mandatory reference
+   trace**: affected code is located by symbol/reference search (LSP/serena
+   when the environment offers it, grep otherwise) and the blast radius is
+   derived from that search, never from model memory (PE-012). Finally,
+   `review-code` gains the broken-reference checklist item (every changed
+   symbol/API gets a reference search; un-updated callers are findings).
+   `evidence-grounding` accepts fetched web sources as `source-and-location`
+   (URL + access date).
 2. **Independent finding verification + durable signatures.** `review-change`
    verifies every candidate finding in an isolated context against the
-   reviewed head's bytes (cited location exists; the asserted condition
-   reproduces) before anything persists. Only **confirmed** findings reach the
-   ledger, each annotated by the `finding-mark@1` block (a per-finding durable
-   signature: reviewer, head SHA, recheck method); **refuted** candidates are
+   reviewed head's bytes before anything persists, **by the method the
+   finding's axis demands** (PE-012): a code/behavioral claim confirms only
+   with a **failing reproducer** — a red test written first that encodes the
+   expected behavior, run against unchanged code, or reproducible command
+   output (the classic reproduction → red → fix → green circuit; the fold is
+   then "fix until green", which `FOLD_POLICY` already demands) — while
+   writing/documentation claims confirm by **direct read** of the cited text
+   (typos and wording are corrected without ceremony, no test) and
+   missing-documentation claims confirm the named user path is undocumented.
+   Only **confirmed** findings reach the ledger, each annotated by the
+   `finding-mark@1` block (a per-finding durable signature: reviewer, head
+   SHA, recheck method + reproducer reference); **refuted** candidates are
    reported with their counter-evidence and never become rows. The marks are
    machine-checkable (annotator-safe `VF-` ids), so AWL can consume them.
 3. **Retire `loop-review-fold`.** Delete the skill; remap every live consumer
@@ -122,6 +142,7 @@ The fix's own authority, without a Product half — one row per material claim.
 | PE-009 | Prior art (evidence signing): in-toto attestation v1.2 binds a `Statement` to a subject digest with a typed predicate and signature — the shape for a per-finding verified mark | document | https://raw.githubusercontent.com/in-toto/attestation/main/spec/v1/README.md (fetched 2026-09-03) | — | O5 | current | proven | — |
 | PE-010 | Third prior-art anchor: GitHub Code Scanning marks an alert "Verified" only after independent confirmation — anchor for the `confirmed \| refuted` vocabulary | document | GitHub Code Scanning docs (rendered page not fetchable from this planning environment) | — | O4 | not-applicable | unknown | owner: P1 task 1 re-fetches and cites the rendered page; consequence if open: the gate cites two fetches instead of three — acceptable for review |
 | PE-011 | Verification-before-persist ends the accepted-unverified finding class: a refuted candidate never becomes a row, a fold task, or a re-review trigger | derived | rule "persist only rows carrying a confirmed finding-mark", inputs PE-003 + PE-005 | — | O4 | not-applicable | decision | — |
+| PE-012 | The verification method follows the finding's axis (code claims need a failing reproducer — red test first, unchanged code; documentation claims are corrected by direct read without ceremony), user expectations must be decomposed into their implicit case vector (the phone-input canon: values/limits, interaction states, degraded mode, backend contract, alternate paths), and affected code is located by symbol/reference search (LSP/serena when available, grep otherwise) with the blast radius derived from that search | user | SPEC `## Decisions made during drafting` item 7 (user direction, 2026-09-03) | — | O3, O19, O20, O21 | not-applicable | decision | — |
 
 ### Obligations
 
@@ -145,6 +166,9 @@ The fix's own authority, without a Product half — one row per material claim.
 | O16 | O14 | Schema + scripts test pins updated (capabilities/machine-contract/workflow-decision; `review-loop-discipline` cap pins moved to review-change) | P3b | 3 | execute-phase | `node --test scripts/*.test.mjs` → 0 failing | AC6 output | planned |
 | O17 | O14 | Package major bump 4.0.0 + CHANGELOG EN+ES package rows | P3b | 4 | execute-phase | `grep -n "4.0.0" packages/agentic-workflow-schema/package.json` | changelog rows | planned |
 | O18 | verification-contract | Full gate suite green + GOLDEN_FIXTURE smoke + PR with `Closes #161` | P4 | all | execute-phase | AC5 + AC6 + PR URL printed | PR URL in progress receipt | planned |
+| O19 | PE-012 | Plan-stage reference trace is mandatory: affected code is located via symbol/reference search (LSP/serena when available, grep fallback) and the blast radius is derived from that search; `review-code` gains the broken-reference checklist item | P1 | 3 | execute-phase | `node scripts/authoring-research.test.mjs` → exit 0 (trace pins) | test output | planned |
+| O20 | PE-012 | Implicit case decomposition: each enunciated user expectation is expanded into its implicit case vector (values/limits, interaction states, degraded mode, backend contract, alternate user paths) before the Product half is cut | P1 | 1 | execute-phase | `node scripts/authoring-research.test.mjs` → exit 0 (decomposition pins) | test output | planned |
+| O21 | PE-012 | Verification method follows the finding axis: code/behavioral claims confirm only with a failing reproducer (red test written first, run against unchanged code) or reproducible command output; documentation claims confirm by direct read; missing-doc claims confirm the named user path is undocumented | P2 | 1 | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (axis-method pins) | test output | planned |
 
 ## Rules that must never be violated
 
@@ -251,8 +275,8 @@ skill's capability remains as the manual path + driver contracts).
 
 | Phase | Status | Tasks | Depends on |
 |---|---|---|---|
-| P1 — authoring research gate contract | planned · Phase-lint: PASS (8/8) · fingerprint `P1:docs:6:authoring-research-gate-contract` | (1) `design-feature` mandatory research gate: ≥2 fetched external sources cited as evidence rows (URL + access date), full-definition + user-expectation coverage checklist, offline → `NEEDS-EVIDENCE` (2) `evidence-grounding`: web source rows accepted as `source-and-location`; inventory gains the web pass (3) `plan-fix` + `plan-feature-scaffold`: conditional research task — a bounded question repo evidence cannot answer forces one web pass before the phase is emitted (4) new `scripts/authoring-research.test.mjs` pins O1–O3 red-first (5) budgets manifest updated for the grown skills (6) version bumps + changelog EN+ES rows | none |
-| P2 — signed finding verification | planned · Phase-lint: PASS (8/8) · fingerprint `P2:docs:6:signed-finding-verification` | (1) `review-change` verification step between finders and synthesis: isolated recheck of every candidate (cited location + reproducible condition) → `confirmed \| refuted`; only confirmed persists (2) `LEDGERS.md`: `finding-mark@1` block contract (per-finding row, `VF-` prefix, writer `review-change`, `refuted` carries counter-evidence, excluded from fold queue/sensor/annotator) (3) `CLAUDE.md` normative-surfaces row + ownership-map writer for the block (4) `ledger-provenance.mjs`: seeded-ledger test proving `VF-` rows never parse as findings (5) report contract gains the refuted section; `review-loop-discipline.test.mjs` pins O4–O7 red-first (6) version bumps + changelog EN+ES rows | P1 |
+| P1 — authoring research gate contract | planned · Phase-lint: PASS (8/8) · fingerprint `P1:docs:6:authoring-research-gate-contract` | (1) `design-feature` mandatory research gate: ≥2 fetched external sources cited as evidence rows (URL + access date), full-definition coverage, implicit case decomposition of every enunciated expectation (the phone-input case vector: values/limits, interaction states, degraded mode, backend contract, alternate paths), offline → `NEEDS-EVIDENCE` (2) `evidence-grounding`: web source rows accepted as `source-and-location`; inventory gains the web pass (3) `plan-fix` + `plan-feature-scaffold`: conditional web research (unanswered bounded question forces one web pass) + mandatory reference trace (symbol/reference search — LSP/serena when available, grep fallback — derives the blast radius) (4) `review-code`: broken-reference checklist item (reference search on every changed symbol/API) (5) new `scripts/authoring-research.test.mjs` pins O1–O3 + O19–O20 red-first; budgets manifest updated for the grown skills (6) version bumps + changelog EN+ES rows | none |
+| P2 — signed finding verification | planned · Phase-lint: PASS (8/8) · fingerprint `P2:docs:6:signed-finding-verification` | (1) `review-change` verification step between finders and synthesis: isolated recheck of every candidate by its axis's method — code/behavioral claims need a failing reproducer (red test first, unchanged code) or reproducible command output, documentation claims a direct read, missing-doc claims the undocumented user path — → `confirmed \| refuted`; only confirmed persists (2) `LEDGERS.md`: `finding-mark@1` block contract (per-finding row, `VF-` prefix, writer `review-change`, recheck method + reproducer reference, `refuted` carries counter-evidence, excluded from fold queue/sensor/annotator) (3) `CLAUDE.md` normative-surfaces row + ownership-map writer for the block (4) `ledger-provenance.mjs`: seeded-ledger test proving `VF-` rows never parse as findings (5) report contract gains the refuted section; `review-loop-discipline.test.mjs` pins O4–O7 + O21 red-first (6) version bumps + changelog EN+ES rows | P1 |
 | P3a — loop-review-fold retirement across live consumers | planned · Phase-lint: PASS (8/8) · fingerprint `P3a:docs:7:loop-review-fold-retirement` | (1) delete `skills/loop-review-fold/`; clean `plugin.json` skills array, `model-routing.yml`, budgets manifest (2) `review-change` hand-off remap (`/fold-findings` + re-run + programmatic-driver line) and the two-cycle cap moves into `REVIEW_PROCESS.md` (`LOOP CAP REACHED`, cycle ≥3, explicit-user-instruction escape) (3) remap routing surfaces: `review-implementation/CLASSIFY.md` + `review-spec`/`review-plan` OUTPUT fold routes + `pre-execution-review/POLICY.md` §5 (4) remap executor surfaces: `execute-phase` SKILL + UNIT_LOOP/CLOSEOUT/FOLDING/BATCH_AND_PORTABILITY (5) remap autopilot surfaces: `ship-roadmap` SKILL/ADVANCE/MODEL_ROUTING + `triage-issue` REVIEW_FINDING_PROCESS + `verification-contract` (6) live docs EN+ES + MIGRATION EN+ES retirement note + site-guide regeneration + README EN+ES cells (7) version bumps + changelog EN+ES rows + `npx skills add . --list` sanity | P2 |
 | P3b — schema vocabulary without the loop router | planned · Phase-lint: PASS (8/8) · fingerprint `P3b:domain:4:schema-vocab-without-loop-router` | (1) `packages/agentic-workflow-schema/src/index.ts`: vocabulary, capability profiles, transition table (2) regenerate `skill-outcome.schema.json` + `dist/` via the package's own scripts (3) update `capabilities`/`machine-contract`/`workflow-decision` tests + the `scripts/*.test.mjs` pins whose text moved (4) package major bump 4.0.0 + CHANGELOG EN+ES package rows | P3a |
 | P4 — Hardening & PR | planned | copy the template's final tasks literally: full gate suite, bilingual grep, AC3 grep, GOLDEN_FIXTURE smoke for the touched review/executor skills, PR with `Closes #161`, fix-index `done` | P3b |
@@ -280,6 +304,21 @@ skill's capability remains as the manual path + driver contracts).
    PE-010 `unknown` with owner):** the planning environment could not render
    the third page, so the row is honest `unknown` instead of an invented
    citation.
+7. **User direction recorded as `PE-012` (2026-09-03):** the verification
+   circuit is the classic one — issue verified by use (e2e/user/dev) or tests;
+   reproduce the failure, write the failing test encoding the expectation
+   against unchanged code, then fix until green — and documentation is a
+   different axis (typos/wording are corrected directly, missing docs are
+   written, and only the expected user path is normally documented, which is
+   where defects surface). User expectations decompose into their implicit
+   case vector (the phone-input example: prefixes/suffixes, lengths, non-text
+   rejection, focus, no-JS/JS behavior, backend filtering/validation/parsing)
+   and that decomposition belongs to `design-feature` (features) and
+   `plan-fix` (fixes). Affected code is located by symbol/reference search
+   (serena/LSP when available) because added code can break something else or
+   imply changes in more places — the blast radius comes from the search, not
+   from memory. Conversation text is never evidence, so the direction lives
+   here and in `PE-012`.
 
 ## Effort
 
