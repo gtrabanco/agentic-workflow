@@ -49,8 +49,8 @@
         "evidence-grounding"
       ],
       "templates": [],
-      "routeEstimateMax": 15913,
-      "routeLinesMax": 1106
+      "routeEstimateMax": 16003,
+      "routeLinesMax": 1111
     },
     "design-feature:repair": {
       "skills": [
@@ -59,8 +59,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 25077,
-      "routeLinesMax": 1701
+      "routeEstimateMax": 25160,
+      "routeLinesMax": 1707
     },
     "execute-phase:descope": {
       "skills": [
@@ -260,8 +260,8 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 10917,
-      "routeLinesMax": 879
+      "routeEstimateMax": 11072,
+      "routeLinesMax": 889
     },
     "plan-feature:scaffold": {
       "skills": [
@@ -272,8 +272,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 21832,
-      "routeLinesMax": 1562
+      "routeEstimateMax": 22070,
+      "routeLinesMax": 1578
     },
     "plan-feature:scoped": {
       "skills": [
@@ -283,8 +283,8 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 8421,
-      "routeLinesMax": 701
+      "routeEstimateMax": 8576,
+      "routeLinesMax": 711
     },
     "plan-fix:issue": {
       "skills": [
@@ -296,8 +296,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24749,
-      "routeLinesMax": 1806
+      "routeEstimateMax": 24987,
+      "routeLinesMax": 1821
     },
     "review-change:adversarial": {
       "skills": [
@@ -316,8 +316,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15612,
-      "routeLinesMax": 1138
+      "routeEstimateMax": 16517,
+      "routeLinesMax": 1199
     },
     "review-change:default-backend": {
       "skills": [
@@ -335,8 +335,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13794,
-      "routeLinesMax": 1019
+      "routeEstimateMax": 14700,
+      "routeLinesMax": 1081
     },
     "review-change:default-web": {
       "skills": [
@@ -354,8 +354,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 13794,
-      "routeLinesMax": 1019
+      "routeEstimateMax": 14700,
+      "routeLinesMax": 1081
     },
     "review-change:synthesize": {
       "skills": [
@@ -373,8 +373,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 14308,
-      "routeLinesMax": 1043
+      "routeEstimateMax": 15214,
+      "routeLinesMax": 1105
     },
     "review-plan:default": {
       "skills": [
@@ -382,8 +382,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 16585,
-      "routeLinesMax": 1069
+      "routeEstimateMax": 16740,
+      "routeLinesMax": 1078
     },
     "review-spec:default": {
       "skills": [
@@ -391,8 +391,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 14813,
-      "routeLinesMax": 1009
+      "routeEstimateMax": 14972,
+      "routeLinesMax": 1019
     }
   },
   "policy": {

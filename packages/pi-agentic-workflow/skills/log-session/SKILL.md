@@ -1,7 +1,7 @@
 ---
 name: log-session
 user-invocable: true
-version: 2.0.0
+version: 2.1.0
 argument-hint: "[note to prepend to the entry]"
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -86,6 +86,12 @@ the HEAD sha and start time at session open.
    - **Next:** the concrete next step(s) — the command to run, the unfinished
      thread, the open question. Write it so a cold reader knows exactly where to
      resume.
+   - **Status words are forge-verified.** `merged`, `closed`, `approved` — any
+     claim about a PR/issue state is checked with the forge in the same turn
+     (`gh pr view <N> --json state,mergedAt`) before it is written. A log that
+     records a state the forge contradicts is a false record that the next
+     review must chase (fix #157's F14). Write the actual state: "PR #N open,
+     awaiting the human merge".
 
 4. **Append the entry** to `docs/LOGS.md`, newest at the bottom (append-only,
    chronological). Use this format so the auto-hook entries and these stay
