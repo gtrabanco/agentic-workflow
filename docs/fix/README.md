@@ -12,8 +12,9 @@ table — history lives in git log + closed issues.
 
 ## Active
 
-No active fix units. Historical artifacts remain under `docs/fix/`; merged and
-closed work is intentionally absent from this index.
+| Issue | Topic | Status | Notes |
+|---|---|---|---|
+| [#159](https://github.com/gtrabanco/agentic-workflow/issues/159) | review-fold-loop-bounds | `done` | Bounded the review→fold loop (materiality floor, state preconditions, folded-row re-verification, two-cycle cap) — PR link appended at close-out |
 
 ---
 

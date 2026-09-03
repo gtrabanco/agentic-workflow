@@ -76,6 +76,15 @@ fourth verdict.
 
 ### Routes
 
+**Resolution map — the finding's `class` cell names its resolver, and only that
+resolver:** class `product` → `design-feature` (then `/review-spec` re-judges the
+new revision) · class `plan` → `plan-feature` / `plan-fix` re-cuts the plan (then
+`/review-plan` re-judges) · class `source` | `environment` | `runtime` → the
+executor's fold path (`/loop-review-fold` → `/fold-findings`).
+**`fold-findings` never repairs a planning artifact**, and a planning finding is
+never resolved by patching the artifact during review — folding repairs source,
+not authority.
+
 | Verdict | Who repairs | What happens next |
 |---|---|---|
 | `SPEC-REVIEW-PASS` | nobody | `/plan-feature <NN-slug>` binds this receipt + exact snapshot digest |
