@@ -2,6 +2,42 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-09-03 — the review→fold loop is bounded (two cycles, materiality floor)
+
+**Breaking contract; `review-change` 3.0.0, `loop-review-fold` 4.0.0.**
+
+The infinite review/fold loop observed on units #28 and #157 is closed
+structurally — four independent bounds, none of them a relaxation of a real
+gate:
+
+- **`low` findings no longer block or persist.** Only `high`/`med` fix-now rows
+  reach the fold ledger and can produce `REVIEW-FAIL`. A `low` finding is a
+  report-only note (the finders' "minor findings never block" rule, now intact
+  through classification). If you scripted against "any fix-now row open =
+  fail", read the severities now.
+- **Workspace state is a precondition.** A dirty tree or a branch ahead of its
+  remote stops the review as `REVIEW BLOCKED — workspace state` **before any
+  pass runs** — it is no longer a persisted `workflow` finding, and
+  `review-change` commits its own findings ledger append (pushed with an open
+  PR) so a review never leaves the dirt it would next be judged against. On
+  `REVIEW-PASS` with an open PR no ledger write happens: the SHA-bound receipt
+  is the durable record.
+- **Folded rows are re-verified, not re-reported.** A re-review reads the fold
+  ledger first, states its cycle number, and re-checks every `folded: yes` row
+  at its cited location; a re-report is legitimate only as `regression of <id>`
+  or `DISPUTED`.
+- **Two review→fold cycles per unit, hard cap.** `loop-review-fold` counts
+  cycles unit-level (family-agnostic) from `REVIEW-RAN` marks and receipts. A
+  third cycle never starts — the residue routes to `triage-issue
+  --prioritize-now` or the user with the `CONVERGENCE-ANOMALY` diagnosis.
+
+No flags changed. Skills that consumed `review-change`'s decision need no
+change; only consumers that assumed every persisted row can block must now
+filter on severity. Planning-review findings keep their resolution map (which
+`review-spec`/`review-plan` 1.4.0 now print verbatim): `product` →
+`design-feature`, `plan` → `plan-feature`/`plan-fix`, `source` → the executor's
+fold — `fold-findings` never repairs a planning artifact.
+
 ## 2026-08-30 — every route now refuses to start work on an unreviewed plan
 
 **Breaking routing; `workflow-status` 3.0.0, `execute-phase` 4.0.0,

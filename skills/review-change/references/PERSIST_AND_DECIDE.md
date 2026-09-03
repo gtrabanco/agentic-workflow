@@ -12,17 +12,27 @@
 
    **Merged unit → no write** (a PR exists and its state is `MERGED` — check
    `gh pr view --json state` when a PR is open; otherwise the unit is unmerged
-   by definition). Otherwise, for each **fix-now** finding: append a row
-   (create the file with the header row if it doesn't exist yet), carrying the
+   by definition). Otherwise, for each **fix-now** finding of severity `high`
+   or `med` (only ledger severities; finder scale
+   `critical`→`high`, `major`→`med`, `minor`→`low`): append a row
+   (create the file with the header row when missing), carrying the
    verbatim `Sev` value into `severity`; `folded` always starts `no` —
    `execute-phase`'s fold cycle is the only step that ever flips it to `yes`.
-   Re-runs **dedupe by `file:line` + axis** (the same rule the adversarial mode
-   uses to merge reviewer findings, above): a finding already on the ledger at
-   that `file:line`+axis is not re-appended; a genuinely new finding gets the
-   next `Fn` id. **Non-fix-now findings are never written here** — they keep
+   A `low` finding is **never persisted to the fold ledger** — report-only
+   note (step 13), never blocking (finders' materiality floor). Re-runs
+   **dedupe by `file:line` + axis**:
+   a row already on the ledger at that `file:line`+axis is not re-appended;
+   a re-report at a folded row's location is legitimate only as `regression of <id>`
+   (fix provably failed) or `DISPUTED`; else `Fn+1`.
+   **Non-fix-now findings are never written here** — they keep
    their destinations from step 10 (outcome routing): independent future
    capabilities batch as proposals; only the user routes them to `triage-issue`
    (D3).
+   **Commit the ledger append** — rows + `REVIEW-RAN` mark, one commit
+   (`docs(<unit>): persist review findings F<n>–F<m>`), pushed when a PR is open;
+   an uncommitted append hands the next review a dirty-tree stop. On
+   `REVIEW-PASS` with an open PR no ledger write happens (the SHA-bound
+   receipt is the durable record): head and posted receipt stay identical.
 12. **Close out the final-review receipt before reporting.** First derive the
    `Decision` from step 6 and persist step 11. Then, before printing any line of
    the fixed report block or the `→ Next:` block, complete the receipt action
@@ -79,6 +89,9 @@
 
    Manual verification (a human must check):
    - <item> …
+
+   Notes (low · report-only, never persisted):
+   - <finding + evidence, or none>
 
    Proposals (step 10): <n> — batched for the user, no issues created (D3)
 

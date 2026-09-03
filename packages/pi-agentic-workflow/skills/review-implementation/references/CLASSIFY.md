@@ -15,6 +15,14 @@ only with a rationale.
 
 ### Step 2 — Is it current-unit work? (only blocking outcomes)
 
+**Severity floor first.** A `low` finding (taste, cosmetics, micro-optimization
+without a measured need) is **never persisted and never blocks**: it is carried
+as a report note with its evidence, and the fold ledger never sees it. But a
+real defect mislabeled `low` stays real: when the evidence shows a correctness,
+security, behavioral, or data-integrity defect, classify it at `med` minimum —
+deflating a real defect to `low` to unblock a review is itself a review defect.
+Only `high` and `med` findings run through the current-unit gate below.
+
 A finding belongs to the **current unit** when it maps to the governing SPEC, a
 phase, a documented invariant, correctness, security, accessibility, a required
 UX/error state, or an expectation necessary for a competent user to consider an
