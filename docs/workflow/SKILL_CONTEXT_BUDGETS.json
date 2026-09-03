@@ -13,6 +13,9 @@
     "audit-docs": {
       "descriptionEstimateMax": 240
     },
+    "design-feature": {
+      "mainEstimateMax": 3400
+    },
     "log-session": {
       "descriptionEstimateMax": 230
     },
@@ -49,8 +52,8 @@
         "evidence-grounding"
       ],
       "templates": [],
-      "routeEstimateMax": 16003,
-      "routeLinesMax": 1111
+      "routeEstimateMax": 16641,
+      "routeLinesMax": 1149
     },
     "design-feature:repair": {
       "skills": [
@@ -59,8 +62,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 25160,
-      "routeLinesMax": 1707
+      "routeEstimateMax": 25798,
+      "routeLinesMax": 1744
     },
     "execute-phase:descope": {
       "skills": [
@@ -272,8 +275,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 22070,
-      "routeLinesMax": 1578
+      "routeEstimateMax": 22385,
+      "routeLinesMax": 1597
     },
     "plan-feature:scoped": {
       "skills": [
@@ -296,8 +299,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24987,
-      "routeLinesMax": 1821
+      "routeEstimateMax": 25303,
+      "routeLinesMax": 1840
     },
     "review-change:adversarial": {
       "skills": [
