@@ -89,6 +89,15 @@ stage.
 
 ### Routes
 
+**Resolution map — the finding's `class` cell names its resolver, and only that
+resolver:** class `plan` → `plan-feature` / `plan-fix` (the author re-cuts, then
+`/review-plan` re-judges) · class `product` → `design-feature` repairs the
+Product half (then `/review-spec`, then the plan re-derives) · class `source` |
+`environment` | `runtime` → the executor's fold path (`/loop-review-fold` →
+`/fold-findings`), never by editing the plan to hide the row.
+**`fold-findings` never repairs a planning artifact** — folding repairs source,
+not authority.
+
 | Verdict / class | Who acts | What happens next |
 |---|---|---|
 | `PLAN-REVIEW-PASS` | nobody | `/execute-phase <NN>` binds this receipt + exact snapshot digest |
