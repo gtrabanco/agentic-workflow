@@ -648,7 +648,6 @@ export type WorkflowIntent =
   | "triage-issue"
   | "execute-phase"
   | "review-change"
-  | "loop-review-fold"
   | "audit-pr"
   | "merge"
   | "ask-human"
@@ -668,7 +667,6 @@ export const WORKFLOW_INTENTS: readonly WorkflowIntent[] = [
   "triage-issue",
   "execute-phase",
   "review-change",
-  "loop-review-fold",
   "audit-pr",
   "merge",
   "ask-human",
@@ -807,7 +805,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "triage-issue",
       "execute-phase",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -827,7 +824,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "triage-issue",
       "execute-phase",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -852,7 +848,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "triage-issue",
       "execute-phase",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -886,7 +881,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "triage-issue",
       "execute-phase",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -926,7 +920,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
     allowed: [
       "execute-phase",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -943,7 +936,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "plan-fix",
       "triage-issue",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -960,24 +952,6 @@ export const WORKFLOW_TRANSITION_TABLE: readonly WorkflowTransitionTableRow[] = 
       "triage-issue",
       "execute-phase",
       "review-change",
-      "loop-review-fold",
-      "audit-pr",
-      "ask-human",
-      "stop",
-    ],
-    condition: "0..n allowed, each must be a plan/execute/review skill or ask-human/stop;"
-      + " non-allowed target → stop-forbidden-transition",
-  },
-  // loop-review-fold → planning and execution
-  {
-    key: "loop-review-fold",
-    allowed: [
-      "plan-feature",
-      "plan-fix",
-      "triage-issue",
-      "execute-phase",
-      "review-change",
-      "loop-review-fold",
       "audit-pr",
       "ask-human",
       "stop",
@@ -1469,18 +1443,6 @@ export const WORKFLOW_SKILL_PROFILES: readonly BuiltInSkillProfile[] = deepFreez
     },
   },
   {
-    skill: "loop-review-fold",
-    output: "skill-outcome-v1",
-    nativeFallback: "fixed-verdict",
-    capabilities: {
-      role: "reviewer",
-      reasoning: "critical",
-      effects: ["repository-read", "repository-write", "git-write", "forge-read", "forge-write"],
-      contextSources: ["repository", "semantic-context", "episodic-memory", "execution-state"],
-      requiredEvidence: ["current-candidate", "independent-review"],
-    },
-  },
-  {
     skill: "audit-pr",
     output: "skill-outcome-v1",
     nativeFallback: "fixed-verdict",
@@ -1698,7 +1660,6 @@ function nextIntent(command: string): WorkflowIntent {
     case "plan-fix":
     case "triage-issue":
     case "review-change":
-    case "loop-review-fold":
     case "audit-pr":
       return match[1];
     case "merge":
@@ -1823,19 +1784,6 @@ function parseNativeTurn(skill: string, text: string): TurnParseResult | null {
   const nextIndex = lines.findIndex((line) => /^→\s*Next:/i.test(line.trim()));
   if (nextIndex < 0) return null;
   const command = /^→\s*Next:\s*(\/[-a-z]+(?:\s+[^\n—]+)?)\s+—/i.exec(lines[nextIndex].trim())?.[1]?.trim();
-  if (skill === "loop-review-fold") {
-    const nextIsFinal = lines.slice(nextIndex + 1).every((line) => /^·/.test(line.trim()));
-    if (!nextIsFinal || command === undefined || nextIntent(command) === "none") return null;
-    const verdict = /^REVIEW-FOLD LOOP\s+[—-]\s+(PASS|TRIAGE-REQUIRED|BLOCKED)\s*$/i.exec(lines[0])?.[1]?.toUpperCase();
-    if (verdict === undefined) return null;
-    if (!lines.some((line) => /^Unit:\s*.+\s+·\s+PR:\s*\S+\s+·\s+HEAD:\s*\S+\s*$/i.test(line.trim()))) return null;
-    if (!lines.some((line) => /^First action:\s*(PASS|review-change|fold-findings)\s*$/i.test(line.trim()))) return null;
-    if (!lines.some((line) => /^Review:\s*(PASS|FAIL|not-run)\s+·\s+Fold:\s*(changed|unchanged|not-run)\s*$/i.test(line.trim()))) return null;
-    if (!lines.some((line) => /^Unresolved:\s*(none|F\d+(?:\s*\+\s*F\d+)*)\s*$/i.test(line.trim()))) return null;
-    if (!lines.some((line) => /^Evidence:\s*\S+/i.test(line.trim()))) return null;
-    const status: SkillOutcomeStatus = verdict === "PASS" ? "completed" : verdict === "BLOCKED" ? "blocked" : "continue";
-    return nativeOutcome(skill, status, `loop-review-fold returned ${verdict}.`, command, []);
-  }
   if (skill === "audit-pr") {
     const auditBody = lines.slice(0, nextIndex).join("\n");
     const nextLines = lines.slice(nextIndex + 1);

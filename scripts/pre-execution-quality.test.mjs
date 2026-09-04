@@ -871,12 +871,12 @@ test("a build the canonical builder refuses ends in one named form at both stage
 });
 
 // --- P4: routing enforcement (mirrors workflow-status step 6a, execute-phase's
-// pre-execution gate, ship-roadmap's stage order, and loop-review-fold's split) ---
+// pre-execution gate, ship-roadmap's stage order, and the owning-stage split) ---
 
 const sensorDoc = read("skills/workflow-status/references/PRE_EXECUTION.md");
 const execGate = read("skills/execute-phase/references/PRE_EXECUTION_GATE.md");
 const advance = read("skills/ship-roadmap/references/ADVANCE.md");
-const loopFold = read("skills/loop-review-fold/SKILL.md");
+const loopFold = read("skills/pre-execution-review/references/POLICY.md");
 const classify = read("skills/review-implementation/references/CLASSIFY.md");
 const auditGates = read("skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md");
 const descope = read("skills/execute-phase/references/DESCOPE.md");
@@ -931,7 +931,7 @@ const autopilotStage = ({ status, spec, plan, legacy = false }) => {
   return NEXT_STAGE[status] ?? "EXECUTE";
 };
 
-// loop-review-fold: split the open queue by owning stage before folding.
+// review-implementation / pre-execution-review: split the open queue by owning stage before folding.
 const foldRoute = (findings, cycle = 1) => {
   const owners = new Set(findings.map((f) => f.owner));
   if (owners.has("plan")) return "BLOCKED → /plan-feature <unit> + /review-plan <unit>";
@@ -998,7 +998,7 @@ test("route fixtures: later review root causes, crash re-entry, and no-progress"
   assert.equal(afterCrash.next, "/execute-phase <NN>");
   assert.equal(sensorRoute({ status: "in-progress", plan: { ...ok(), observedDigest: "moved" } }).label, "stale");
   assert.match(loopFold, /CONVERGENCE-ANOMALY/);
-  assert.match(loopFold, /never send one to `triage-issue` to make it disappear/);
+  assert.match(loopFold, /the loop repairs source, not authority/);
   assert.match(classify, /Owning stage: which artifact is actually wrong/);
   assert.match(legacyAdoption, /### 4\. Repeats: no-progress and convergence/);
 });
@@ -1042,9 +1042,9 @@ test("P4 route contracts are pinned to the text that grants them", () => {
   assert.match(sensorDoc, /A stale receipt re-runs the \*\*review\*\*, not the authoring skill/);
   assert.match(read("skills/workflow-status/references/SENSOR_CORE.md"), /label \*\*overrides step 6's/);
   // the loop blocks on ownership instead of folding it away
-  assert.match(loopFold, /A `plan`-owned row stops the loop with `BLOCKED`/);
-  assert.match(loopFold, /a `product`-owned row goes to `\/design-feature <unit>`/);
-  assert.match(loopFold, /The loop files nothing/);
+  assert.match(classify, /the planning author re-cuts the artifact/);
+  assert.match(classify, /`\/design-feature <unit>` repairs the half/);
+  assert.match(classify, /folds source cannot repair authority/);
   // the audit turns an open obligation into a blocker, not a note
   assert.match(auditGates, /row is\n   \*\*BLOCKED\*\*, naming the ids/);
   assert.match(auditGates, /may not be exported to a follow-up issue to clear the/);
@@ -1062,8 +1062,9 @@ test("P4 routing text keeps one owner per rule", () => {
   assert.ok(!/no bypass flag exists for this gate/.test(sensorDoc));
   assert.ok(!/startable_now/.test(execGate));
   // the loop names owners, it does not redefine repair classes
-  assert.match(loopFold, /`pre-execution-review` owns|defined by\s*\n?`pre-execution-review`|report the convergence diagnosis|report the\n`CONVERGENCE-ANOMALY` report defined by\n`pre-execution-review`/);
-  assert.ok(!/Common root cause/.test(loopFold), "repair-class table stays in the policy owner");
+  assert.match(classify, /published by \`pre-execution-review\`/);
+  assert.match(loopFold, /CONVERGENCE-ANOMALY/);
+  assert.ok(!/Common root cause/.test(classify), "repair-class table stays in the policy owner");
 });
 
 

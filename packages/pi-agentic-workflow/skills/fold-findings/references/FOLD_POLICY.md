@@ -31,6 +31,8 @@ A finding is `FOLDED` only when **all** of these hold:
 ✗ Adding a known-issues.md / backlog entry instead of fixing the code
 ✗ A decisions.md tradeoff note that accepts the defect as-is
 ✗ Deleting, skipping (.skip, .only elsewhere), or loosening a test to make it pass
+✗ Editing an existing test's expectation to match behaviour — a setup repair
+  may only keep assertions at least as strong and never touch expectations
 ✗ eslint-disable / @ts-ignore / equivalent suppression AS the fix
 ✗ A TODO/FIXME stub left in place of the actual fix
 ✗ Ticking `folded: yes` without a reviewer-mappable diff behind it
@@ -41,3 +43,8 @@ A finding is `FOLDED` only when **all** of these hold:
 
 Something forbidden looks like the only option → stop, do not apply it, and
 mark the finding `DISPUTED` or `BLOCKED` with the reason instead.
+
+Never edit an existing test's expectation to match behaviour: a setup repair may
+only keep assertions at least as strong and never touch expectations; the
+test-immutability contract (`verification-contract`) owns the sole amendment
+path.

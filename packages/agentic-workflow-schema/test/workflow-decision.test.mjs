@@ -69,7 +69,7 @@ test("P1 row keys cover profiled skills and none", () => {
   // none, init-workspace, status, discover-repository-state,
   // resolve-repository-state, design-feature, review-spec, plan-feature,
   // review-plan, plan-fix, triage-issue, execute-phase, review-change,
-  // loop-review-fold, audit-pr, merge
+  // audit-pr, merge
   const expectedKeys = [
     "none",
     "init-workspace",
@@ -84,7 +84,6 @@ test("P1 row keys cover profiled skills and none", () => {
     "triage-issue",
     "execute-phase",
     "review-change",
-    "loop-review-fold",
     "audit-pr",
     "merge",
   ];

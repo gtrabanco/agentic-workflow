@@ -113,7 +113,7 @@ finding in its `Route` cell.
 
 | Owning stage | Hand-off | Never |
 |---|---|---|
-| `source` | fold locally: `/loop-review-fold` → `/fold-findings` → re-review the changed HEAD | — |
+| `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | — |
 | `plan` | the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then a **fresh `/review-plan <unit>`** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
 | `product` | `/design-feature <unit>` repairs the half, then `/review-spec <unit>` re-judges it | patch the product claim into agreement in code |
 | `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |

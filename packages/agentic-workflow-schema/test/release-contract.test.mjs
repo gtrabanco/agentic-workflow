@@ -20,9 +20,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is the minor release 3.5.0", () => {
+test("AC8 read-verified: package version is the major release 4.0.0", () => {
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "3.5.0");
+  assert.equal(pkg.version, "4.0.0");
 });
 
 // AC7 — language-aware capability semantics. Each language is asserted with
@@ -106,13 +106,13 @@ function runProbe(mutate) {
 test("AC2 & F4: the frozen table drives the inventory and the exact-table test is its sole validator", () => {
   const source = readPkg("test/capabilities.test.mjs");
 
-  // 1. The frozen AC2 table holds exactly 14 entries (12 built-ins plus the
+  // 1. The frozen AC2 table holds exactly 13 entries (11 built-ins plus the
   //    feature-28 `review-spec`/`review-plan` reviewers), and the test binds
   //    the exported inventory to the table's length — not to any word count.
   const expectedStart = source.indexOf("const EXPECTED");
   const expectedBlock = source.slice(expectedStart, source.indexOf("];", expectedStart));
   const tableEntries = [...expectedBlock.matchAll(/^\s+skill: "[a-z0-9-]+",\s*$/gm)];
-  assert.equal(tableEntries.length, 14, "frozen AC2 table must drive the inventory size");
+  assert.equal(tableEntries.length, 13, "frozen AC2 table must drive the inventory size");
   assert.match(
     source,
     /assert\.equal\(WORKFLOW_SKILL_PROFILES\.length,\s*EXPECTED\.length,\s*"exact inventory size"\)/,
@@ -120,7 +120,7 @@ test("AC2 & F4: the frozen table drives the inventory and the exact-table test i
   );
   // 2. Single literal 14 inventory constant — the duplicate guard — lives in
   //    this file and is the only inventory-count assertion in the suite.
-  assert.match(source, /assert\.equal\(new Set\(skills\)\.size,\s*14,\s*"no duplicate skills"\)/);
+  assert.match(source, /assert\.equal\(new Set\(skills\)\.size,\s*13,\s*"no duplicate skills"\)/);
   for (const file of readdirSync(join(PKG_DIR, "test"))) {
     if (!file.endsWith(".test.mjs") || file === "capabilities.test.mjs" || file === "release-contract.test.mjs") continue;
     assert.equal(

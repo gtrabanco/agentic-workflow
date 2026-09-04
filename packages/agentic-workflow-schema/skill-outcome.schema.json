@@ -20,7 +20,7 @@
   },
   "definitions": {
     "intent": {
-      "enum": ["init-workspace", "status", "discover-repository-state", "resolve-repository-state", "design-feature", "plan-feature", "plan-fix", "triage-issue", "execute-phase", "review-change", "loop-review-fold", "audit-pr", "merge", "ask-human", "stop", "none"]
+      "enum": ["init-workspace", "status", "discover-repository-state", "resolve-repository-state", "design-feature", "plan-feature", "plan-fix", "triage-issue", "execute-phase", "review-change", "audit-pr", "merge", "ask-human", "stop", "none"]
     },
     "next": {
       "type": "object",

@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 2.1.0
+version: 2.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -55,6 +55,18 @@ never reconstruct phase or close-out wording from memory.
 The [verification contract](<../verification-contract/SKILL.md>) owns the
 `ACCEPTANCE.md` schema, validation ladder, and anti-weakening rules. Consume it
 after the engineering plan is complete and before registering `planned`.
+
+## Research and reference trace (plan stage)
+
+- **Conditional web research.** Plan-stage research runs only when a bounded
+  question (ROWS.md Q1–Q5) cannot be answered from repository evidence: run
+  exactly one web pass before the phases are emitted and freeze what it
+  returns as evidence rows (URL and access date). A question the repository
+  answers is never re-fetched.
+- **Mandatory reference trace.** Affected code is located by symbol/reference
+  search — LSP/serena when the environment offers it, grep otherwise — and the
+  blast radius is derived from that search, never from model memory: added or
+  changed code can break callers the plan must name.
 
 ## Guardrails
 

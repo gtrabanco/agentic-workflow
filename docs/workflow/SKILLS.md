@@ -4,7 +4,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**20 user-facing skills** (one menu entry each) + **17 internal steps**
+**19 user-facing skills** (one menu entry each) + **17 internal steps**
 composed for you (the `plan-feature` router's two planning steps, the two
 pre-execution evidence owners `evidence-grounding` (authoring readiness) and
 `pre-execution-review` (the shared review cycle + the planning ledgers), the
@@ -15,7 +15,7 @@ internal review pack: `review-code`, `review-security`, `review-verify`,
 `review-debt`, `review-design`, `review-a11y`, `review-brand`, `review-perf`,
 `review-seo`). Additionally, **one metadata-internal** contract not discoverable
 by the `skills` CLI (`orchestration-envelope`; it carries `metadata.internal: true`
-which the CLI respects to exclude from `npx skills add` discovery). The 20
+which the CLI respects to exclude from `npx skills add` discovery). The 19
 user-facing skills cover setup, repository-state discovery/resolution, design,
 pre-execution review (product and plan), planning, execution, review, audit,
 finding folds, docs generation, issue triage, roadmap shipping, session logging,
@@ -116,9 +116,8 @@ deterministic readiness result, never a verdict.
 
 | Skill | Scope | Role | Hands off to |
 |---|---|---|---|
-| `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | `loop-review-fold` (recommended on failure) / manual `fold-findings` |
+| `review-change` | the **change** | Run applicable isolated reviews, verify the frozen acceptance blob against the current code receipt, map criteria to diff evidence, classify once, and persist one SHA-bound verdict. **Mandatory before merge** | manual `fold-findings` → re-run `review-change` (recommended on failure) |
 | `fold-findings` | the **findings ledger** | Repair the selected queue in compatible atomic batches. Every finding retains an individual ledger verdict and evidence; batching is allowed only when members share a correction rule, validator, and rollback boundary | re-run `review-change` / surface a real dispute for user decision |
-| `loop-review-fold` | the **review/fold router** | Check persisted evidence, run `fold-findings` first when a previous `review-change` left an open queue, otherwise run `review-change`; after a changed HEAD, review again. Unresolved findings route to `triage-issue --prioritize-now`, with oversized work replanned into new manual phases | `audit-pr` on pass / user triage and manual execution on unresolved findings |
 | `audit-pr` | the **PR** | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (absent/stale → blocker routed to `/review-change`, never re-reviewed) → SHA-bound MERGE-READY comment or evidenced blockers; never edits or merges. Active `ship-roadmap --fullauto` is the only consumer allowed to execute an automated merge | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | the **product** | Periodic full-spectrum health check; mines feature docs → proposes issues + roadmap add/remove (never auto-fixes); scope-export recurrence (≥ 2 consecutive units exporting scope → planning-quality finding routed to #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | the **docs** | Audit docs ↔ roadmap ↔ code ↔ fix index for drift | report (+ optional low-risk fixes) |
@@ -178,7 +177,6 @@ with no arguments uses the default stated here.
 | `init-workspace` | `/init-workspace [target-dir]` | Defaults to the current directory. On a repo that already has the scaffold it auto-switches to **upgrade mode** (proposes only the new/missing template blocks; additive-only). |
 | `log-session` | `/log-session [note]` | The optional note is prepended to the entry's Summary. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | A slug or issue reference is auto-detected; flags force a path: `--from-issue N` (issue → scoped product half), `--scaffold <slug>` (straight to engineering-half scaffolding), `--next` (next roadmap entry). An undesigned feature (roadmap row below `defined`) → stops and redirects to `/design-feature` — no bypass flag. |
-| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n>` | Runs the simple review/fold router. It selects review or fold from persisted evidence, then routes unresolved findings to `/triage-issue --prioritize-now`; oversized work becomes new `P<n>` phases that the user executes manually. |
 | `review-spec` | `/review-spec <NN-slug \| slug> [--repair]` | Reviews the Product half of one unit in a clean context. No args: reports what it can bind and stops — it never guesses a unit. `--repair` continues a recorded cycle instead of starting a new one. |
 | `review-plan` | `/review-plan <NN-slug \| fix-<n>> [--repair]` | Reviews the frozen plan (feature or fix unit) in a clean context; requires the parent Product receipt for feature units. Same no-guessing and `--repair` rules as `/review-spec`. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | One issue → one fix unit. Multiple issues → one compatible capability bundle or homogeneous mechanical batch when the whole set shares an outcome, verification plan, and atomic release/rollback. If the set fails, returns the fewest maximal compatible groups instead of splitting reflexively into one PR per issue. |
@@ -210,18 +208,18 @@ IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
                           → review-spec (clean context, read-only) ─▶ SPEC-REVIEW-PASS ─┐
                    ┌──────────────── plan-feature (router, engineering-planning only) ─┐
 DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (all phases) ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (all phases) ─▶ open PR (`done`) ─▶ fold-findings → re-run review-change ─▶ audit-pr ─▶ merge
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible batch) ─▶ review-plan ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (compatible batch) ─▶ review-plan ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ fold-findings → re-run review-change ─▶ audit-pr ─▶ merge
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-loop-review-fold ── persisted-state selection → review-change ↔ fold-findings;
-                    unresolved findings → triage-issue → replan + manual phases;
+review→fold (manual) ── fold-findings → re-run review-change on a changed HEAD;
+                 unresolved findings → triage-issue → replan + manual phases;
 review-change ── runs the applicable read-only reviews + classifies a change;
                  composes review-implementation + the platform's companion skills;
                  fix-now ─▶ folds into the open phase · replan-in-unit ─▶ new user-confirmed phases
@@ -232,7 +230,7 @@ audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anyti
 
 ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
                  roadmap → /loop { review-spec → plan-feature → review-plan → execute-phase (fresh cheap workers)
-                 → PR → loop-review-fold → audit-pr → merge } → final report;
+                 → PR → fold-findings → re-run review-change → audit-pr → merge } → final report;
                  human at the merges (default) and at product-audit (always)
 ```
 

@@ -203,8 +203,8 @@ atomic behavior and executes exactly that phase:
    without a changed code/test receipt stops as `NO-PROGRESS` instead of
    spinning.
 8. The final phase flips the roadmap row to `done` and opens the PR (never
-   branch-only), then hands off to the mandatory bounded
-   `/loop-review-fold <NN>` → `/audit-pr` gate.
+   branch-only), then hands off to the mandatory manual review→fold path
+   (`/fold-findings`, then re-run `/review-change`) → `/audit-pr` gate.
 
 **Fresh context is a phase boundary, not a user-intervention boundary.** A
 capable agent uses a fresh subagent/worker for each phase while the outer unit
@@ -254,17 +254,18 @@ like any phase.
 ## Stage 4 — Review & audit (whole branch)
 
 Unit-loop execution records risk triggers but does not interrupt for intermediate
-reviews. It hands off once at the end to mandatory `loop-review-fold`, which
-selects review or fold from persisted evidence and re-reviews only changed
-HEADs. A finished unit
+reviews. It hands off once at the end to the mandatory manual review→fold path
+(`/fold-findings`, then re-run `/review-change`), which reuses a current
+exact-SHA receipt or reviews context-clean and re-reviews only changed HEADs.
+A finished unit
 **always opens its PR and flips to `done`** (built, not merged — merge state lives in
 the forge); the final review and the merge gate then run over the PR:
 
-- **`loop-review-fold`** — the simple router. A previous review with an open
-  queue invokes `fold-findings` first; otherwise it invokes `review-change`.
-  After a changed HEAD it reviews again. Unresolved findings go to
-  `triage-issue --prioritize-now`; oversized work is replanned into new `P<n>`
-  phases that the user executes manually.
+- **manual review→fold path** — `/fold-findings`, then re-run
+  `/review-change`. A previous review with an open queue folds it first;
+  otherwise the review runs fresh. After a changed HEAD it reviews again.
+  Unresolved findings go to `triage-issue --prioritize-now`; oversized work is
+  replanned into new `P<n>` phases that the user executes manually.
 - **`review-change`** — the read-only review engine. Runs only the reviews that **apply to
   this platform**, checks **SPEC drift** (does the diff actually do what the
   SPEC promises — nothing contradicted, silently exceeded, or left untouched?),
@@ -317,7 +318,7 @@ Re-run the gate (type-check, tests, build) green.
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN                  → P1…hardening, fresh worker per phase, gate green, one commit each
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
-/loop-review-fold NN                → select review/fold from persisted evidence → review changed HEAD; triage unresolved findings
+/fold-findings → re-run /review-change → fold/review from persisted evidence → review changed HEAD; triage unresolved findings
 /audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
    → human merges
 ```
@@ -325,4 +326,4 @@ Re-run the gate (type-check, tests, build) green.
 (Pass `P1`, `P2`, … only when you intentionally want a single atomic phase.
 Legacy SPECs without `## Phases` still run implement → mark-done → open-PR in
 one pass. Every path ends in the same mandatory
-`/loop-review-fold` → `/audit-pr` gate.)
+`/fold-findings` → re-run `/review-change` → `/audit-pr` gate.)

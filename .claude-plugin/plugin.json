@@ -28,7 +28,6 @@
     "./skills/generate-docs",
     "./skills/init-workspace",
     "./skills/log-session",
-    "./skills/loop-review-fold",
     "./skills/orchestration-envelope",
     "./skills/phase-contract",
     "./skills/plan-feature",
