@@ -23,8 +23,10 @@ suite was 134/134 green after, unchanged assertions). This is a pi 0.85.0
 packaging gap, not a semantic regression of this package's contract.
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0) · Acceptance blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4
+- Commit: 0b8146aa · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0) · Acceptance blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4
 - Next: P2 · Attempts: 1
+
+Checkpoint triggers at P1 close: layer boundary (config/infra → hardening), accumulation (<400 lines), sensitivity (none — no auth/secrets/CI). Reviewed diff is the P1 commit.
 
 ## Acceptance receipt v1
 - Manifest: docs/fix/166-pi-0850-baseline-refresh/ACCEPTANCE.md · Blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4 · Status: frozen · Verified: 2026-09-04~~
