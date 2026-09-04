@@ -183,7 +183,7 @@ signature, so must the individual finding. The single writer of every finding ma
 ```text
 finding-mark@1
 id | file:line | axis | severity | class | route | folded
-VF-<n> | <file:line> · reviewer review-change · HEAD <40-hex sha> · recheck <method + reproducer> | <axis> | <severity> | finding-mark | n/a | n/a
+VF-<n> | <file:line> · reviewer review-change · HEAD <40-hex sha> · recheck <method + reproducer> | <axis> | confirmed | finding-mark | n/a | n/a
 ```
 
 `VF-` ids are deliberately outside the `F<n>` range the provenance annotator's
