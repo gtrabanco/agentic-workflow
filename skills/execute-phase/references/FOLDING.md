@@ -17,6 +17,8 @@ end up "solved" locally but absent from the merged PR:
 ```
 ✓ Fixes implemented (scope: only the routed findings — nothing extra)
 ✓ Gate RUN and green (exit codes pasted)
+✓ Never edit an existing test's expectation to match behaviour — a setup
+  repair keeps assertions at least as strong and never touches expectations
 ✓ Per-phase / unit docs updated where the finding touched them
   (known-issues.md entry resolved? progress.md notes the fold)
 ✓ Each folded finding's row in the unit's `review-findings.md` ledger (if one
