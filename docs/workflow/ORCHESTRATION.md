@@ -72,8 +72,8 @@ use the selected JSON Schema on the small final-result or repair turn, not on a
 working turn that still needs prose or tool use.
 
 `parseTurn` accepts, in order: SkillOutcome v1, strict Envelope v2, named
-legacy envelope repairs, then the fixed native verdict formats for the manual
-review→fold path (`review-change`, `audit-pr`). No other prose fallback exists.
+legacy envelope repairs, then the one remaining fixed native verdict format,
+`audit-pr`). No other prose fallback exists.
 
 ## Compile the snapshot before deciding
 
