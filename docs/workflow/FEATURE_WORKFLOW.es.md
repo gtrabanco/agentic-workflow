@@ -227,8 +227,8 @@ conserva el comportamiento atómico anterior y ejecuta exactamente esa fase:
    Cada fase dispone de tres intentos de reparación por defecto; repetir
    evidencia sin cambiar el recibo de código/tests termina en `NO-PROGRESS`.
 8. La fase final cambia la fila del roadmap a `done`, abre el PR (nunca
-   solo-rama) y entrega al gate obligatorio y acotado
-   `/loop-review-fold <NN>` → `/audit-pr`.
+   solo-rama) y entrega al camino manual obligatorio review→fold
+   (`/fold-findings`, y luego un nuevo `/review-change`) → `/audit-pr`.
 
 **El contexto limpio es un límite de fase, no un límite de intervención del
 usuario.** Un agente capaz usa un subagente/worker limpio por fase mientras la
@@ -284,20 +284,21 @@ verificada por la puerta como cualquier fase.
 ## Etapa 4 — Review & audit (rama completa)
 
 La ejecución en loop de unidad registra los disparadores de riesgo, pero no
-interrumpe con reviews intermedias. Entrega una vez al final al obligatorio
-`loop-review-fold`, que revisa una candidata congelada, agrupa correcciones
-compatibles y solo vuelve a revisar HEADs cambiados según la evidencia
-persistida.
+interrumpe con reviews intermedias. Entrega una vez al final al camino manual
+obligatorio review→fold (`/fold-findings`, y luego un nuevo `/review-change`),
+que reutiliza un recibo exact-SHA vigente o revisa en contexto limpio y solo
+vuelve a revisar HEADs cambiados.
 Una
 unidad terminada **siempre abre su PR y pasa a `done`** (construida, no
 fusionada — el estado de merge vive en la forja); la revisión final y la
 puerta de merge se ejecutan entonces sobre el PR:
 
-- **`loop-review-fold`** — el router simple. Una review anterior con una cola
-  abierta invoca primero `fold-findings`; si no, invoca `review-change`. Después
-  de un HEAD cambiado vuelve a revisar. Los hallazgos no resueltos pasan a
-  `triage-issue --prioritize-now`; el trabajo grande se replantea en nuevas
-  fases `P<n>` que el usuario ejecuta manualmente.
+- **camino manual review→fold** — `/fold-findings`, y luego un nuevo
+  `/review-change`. Una review anterior con una cola abierta la pliega primero;
+  si no, la revisión corre limpia. Después de un HEAD cambiado vuelve a revisar.
+  Los hallazgos no resueltos pasan a `triage-issue --prioritize-now`; el
+  trabajo grande se replantea en nuevas fases `P<n>` que el usuario ejecuta
+  manualmente.
 - **`review-change`** — el motor de review de solo lectura. Ejecuta solo las revisiones que
   **aplican a esta plataforma**, comprueba **desviación del SPEC** (¿el diff
   realmente hace lo que promete el SPEC — nada contradicho, superado
@@ -357,7 +358,7 @@ Vuelve a ejecutar la puerta (chequeo de tipos, tests, build) en verde.
    → engineering half filled → scaffolds docs/features/NN-<slug>/{SPEC,PLAN,TASKS,…}.md + roadmap entry
 /execute-phase  NN                  → P1…hardening, fresh worker per phase, gate green, one commit each
    → final phase: flip roadmap to `done`, open the PR ("Closes #<issue>")
-/loop-review-fold NN                → seleccionar review/fold por evidencia persistida → revisar HEAD cambiado; triar hallazgos pendientes
+/fold-findings → nuevo /review-change → plegar/revisar por evidencia persistida → revisar HEAD cambiado; triar hallazgos pendientes
 /audit-pr                           → merge gate: merge-ready or blockers (never merge with pending docs)
    → human merges
 ```
@@ -365,4 +366,4 @@ Vuelve a ejecutar la puerta (chequeo de tipos, tests, build) en verde.
 (Pasa `P1`, `P2`, … solo cuando quieras intencionadamente una fase atómica.
 Un SPEC heredado sin `## Phases` aún ejecuta implementar → marcar-como-done →
 abrir-PR en un solo pase. Todos los caminos terminan en el mismo gate
-obligatorio `/loop-review-fold` → `/audit-pr`.)
+obligatorio `/fold-findings` → nuevo `/review-change` → `/audit-pr`.)

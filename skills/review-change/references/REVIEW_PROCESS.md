@@ -124,3 +124,23 @@
     **never** sent to `triage-issue` automatically (D3). `review-change` creates
     no backlog work. No non-fix-now finding may end without a destination — none
     silently lost.
+
+## Two-cycle cap
+
+The review→fold loop runs at most **two** review→fold cycles per unit, counted
+unit-level and family-agnostic from the ledger's `REVIEW-RAN` marks and forge
+receipts — new finding families do not reset the count. After two cycles without
+convergence, the review prints
+
+```text
+LOOP CAP REACHED — <unit>
+- Finding ids: <every open id>
+- Cycles: 2 (REVIEW-RAN marks + forge receipts)
+- Route: /triage-issue --prioritize-now <unit> F<k> … (or the programmatic outer driver)
+```
+
+A **third cycle never starts** unless the user explicitly instructs it — it is
+the user's escape, never a reviewer election. The residue routes to
+`triage-issue --prioritize-now` (or the programmatic outer driver), and a unit
+that needs a third cycle has a planning or root-cause defect, not a review
+deficit.

@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.0.0
+version: 3.2.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -143,8 +143,11 @@ only for independent proposals (D3). It is Stage 4: checkpoint reviews are
 optional, the end review is mandatory and fresh. `fix-now` folds in-unit,
 `replan-in-unit` adds user-confirmed phases, and independent work becomes
 proposals. `audit-pr` consumes only the verified PR-comment receipt, never the
-chat report; `product-audit` is the periodic sweep;
-`loop-review-fold` may run this skill fresh and route FAIL to `fold-findings`.
+chat report; `product-audit` is the periodic sweep. On `REVIEW-FAIL` the manual
+correction path is `/fold-findings`, then re-run `/review-change` on the changed
+HEAD (bounded at two cycles — a third cycle never starts without an explicit
+user instruction, per `REVIEW_PROCESS.md`); a programmatic outer driver may run
+the same review→fold sequence.
 
 ## Done when
 

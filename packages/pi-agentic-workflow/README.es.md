@@ -47,7 +47,6 @@ no reciben comando propio — los componen los de arriba:
 | `/generate-docs` | Generar guías incrementales basadas en el diff. |
 | `/init-workspace` | Adaptar el andamiaje del workflow a un repositorio. |
 | `/log-session` | Añadir una entrada de sesión estructurada a `docs/LOGS.md`. |
-| `/loop-review-fold` | Revisar una unidad y plegar lo que encontró. |
 | `/plan-feature` | Dirigir el trabajo diseñado a planificación y roadmap. |
 | `/plan-fix` | Redactar un SPEC de fix por fases desde uno o varios issues. |
 | `/product-audit` | Auditar la superficie del producto, no solo el diff. |

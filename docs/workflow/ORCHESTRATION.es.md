@@ -75,9 +75,9 @@ resultado pequeño o de reparación, no en un turno de trabajo que aún necesita
 prosa o herramientas.
 
 `parseTurn` acepta, en orden: SkillOutcome v1, Envelope v2 estricto,
-reparaciones nombradas de envelopes legacy y, después, los dos formatos de
-veredicto nativos fijos (`loop-review-fold`, `audit-pr`). No existe otro
-fallback de prosa.
+reparaciones nombradas de envelopes legacy y, después, los formatos de
+veredicto nativos fijos del camino manual review→fold (`review-change`,
+`audit-pr`). No existe otro fallback de prosa.
 
 ## Compilar el snapshot antes de decidir
 
