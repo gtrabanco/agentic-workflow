@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-39 skills fuente (20 de cara al usuario + 17 internas del workflow + 2 metadata-internal; 38 descubribles)
+38 skills fuente (19 de cara al usuario + 18 internas del workflow + 1 metadata-internal; 37 descubribles)
 packages/                paquetes npm complementarios: @gtrabanco/agentic-workflow-schema (contratos de máquina)
                          y @gtrabanco/pi-agentic-workflow (instalación de un comando para Pi — ver Instalación)
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
@@ -88,7 +88,7 @@ nunca una dependencia de corrección. Ver
 
 ## Las skills
 
-**20 skills de cara al usuario** (una entrada de menú cada una) + contratos internos
+**19 skills de cara al usuario** (una entrada de menú cada una) + contratos internos
 que se componen por ti: los dos pasos de planificación del router `plan-feature`,
 los dos dueños de evidencia pre-ejecución (`evidence-grounding` para la preparación
 de autoría y `pre-execution-review` para el ciclo de revisión compartido y los libros

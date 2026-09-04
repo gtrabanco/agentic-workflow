@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.2.0
+version: 3.2.1
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -81,19 +81,19 @@ Every axis maps to a skill of the workflow's **own internal review pack**
 | API ergonomics / usage docs (inline pass) | if API | if API | flags/help | ✓✓ | ✓ |
 
 > `review-implementation` (the single classifier over the synthesized table —
-> process step 7) and `review-debt` (the debt transform over the classified
-> table — process step 8) are not axis finders: they run once per review, not
+> process step 8) and `review-debt` (the debt transform over the classified
+> table — process step 9) are not axis finders: they run once per review, not
 > per axis.
 
 ## Isolation rule (default — every pass, not only adversarial)
 
-Each applicable pass, the classifier (step 7), and debt transform (step 8) runs
+Each applicable pass, the verification pass (step 6), the classifier (step 8), and debt transform (step 9) runs
 **isolated/context-clean** and returns only its fixed findings table plus
 `PASS | FAIL`—never diff or prose. Spawn one fresh subagent/headless run per
 pass; without those, use a fresh conversation. Pass only scope, its checklist,
 and Step 0 docs; cap full non-diff reads at 10 (targeted ≤50-line reads/greps
 excluded). The orchestrator retains tables, not sources, and fuses them in step
-6. Inline fallback is sequential table reduction. A pass runs at its own tier or
+7. Inline fallback is sequential table reduction. A pass runs at its own tier or
 stronger, never weaker.
 
 
