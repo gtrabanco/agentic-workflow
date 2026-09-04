@@ -11,7 +11,7 @@ append only its declared token; anyone else reads.
 ```text
 ledger-ownership@1
 ledger | owner | annotator
-docs/features/<NN>-<slug>/review-findings.md | review-change:finding-rows + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs
+docs/features/<NN>-<slug>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs
 docs/features/<NN>-<slug>/planning-findings.md | review-spec:spec-stage-rows + review-plan:plan-stage-rows + design-feature:product-class-resolutions + plan-feature:plan-class-resolutions + plan-fix:fix-plan-class-resolutions + fold-findings:source-class-resolutions | none
 docs/features/<NN>-<slug>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none
 docs/features/<NN>-<slug>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none

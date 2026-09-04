@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.0.0
+version: 3.1.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
