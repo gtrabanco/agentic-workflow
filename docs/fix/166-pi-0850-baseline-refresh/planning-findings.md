@@ -18,3 +18,17 @@ batch and PR-3's routing recorded at artifact revision `ar-166-2`. Rows keep
 their original `snapshot-digest` cells (all bound to snapshot
 `debd8046aaec7bca56df0c18e5a12b98d1d2211b617575bb704f9dd8507f606a`); the next
 `review-plan` re-review binds a fresh snapshot over the repaired bytes.
+
+Re-review cycle 2 (2026-09-04, receipt `rp-fix166-20260904-002`, snapshot
+`5b7e8d84efd21c668621fa7b32e3131b40d20893be72853ccca73ef953bc40c9`, source
+revision `24c20e23a3431729d4a6a3428f5faac41cfabd14`, verdict
+`plan-review-pass`): no new findings opened. PR-1 and PR-2 resolutions verified
+against the repaired bytes — PR-1: AC6 validator backtick-tolerant in both
+artifacts, P5 task 8 prescribes the backticked cell (probes: 1 on #161's real
+backticked done row, 1 on each synthesized backticked/unbackticked post-flip
+row, 0 on the current `pending` row); PR-2: O12 re-anchored (P2/task 3) and
+extended to any failed smoke observation with the failure semantics in O6/AC2
+and Rules/quality-floor/P2-layer/Operational-risks aligned. PR-3 stays a
+resolved proposal. Ledger clean: no open rows, no dismissed rows. Rows above
+keep their original snapshot-digest cells (bound to
+`debd8046aaec7bca56df0c18e5a12b98d1d2211b617575bb704f9dd8507f606a`).
