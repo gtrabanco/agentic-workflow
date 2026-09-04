@@ -326,6 +326,7 @@ sensor-labels | skills/workflow-status/references/PRE_EXECUTION.md | table:One l
 snapshot-commands | skills/pre-execution-review/references/SNAPSHOT.md | fenced:--stage | pre-execution-stage+pre-execution-unit-kind | no
 ledger-ownership-map | skills/pre-execution-review/references/LEDGERS.md | block:ledger-ownership@1 | n/a | no
 ledger-review-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:review-mark@1 | n/a | no
+ledger-finding-mark-shape | skills/pre-execution-review/references/LEDGERS.md | block:finding-mark@1 | n/a | no
 sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
 turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
 turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no
