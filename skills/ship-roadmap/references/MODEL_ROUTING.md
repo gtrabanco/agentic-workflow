@@ -9,7 +9,7 @@
 | Product review (REVIEW-SPEC) | opus/high | `review-spec` in a **clean context** (fresh subagent or outside headless call) — never the turn that wrote the product half; tier equals or exceeds the author's, so the ≥ rule holds |
 | Plan review (REVIEW-PLAN) | opus/high | `review-plan` in a **clean context**, same rule; it judges the plan the previous stage froze |
 | Phase execution, single-pass, fixes | **cheap worker** | fresh context per phase following `execute-phase`; Claude branch maps this role to `sonnet`, portable drivers use their validated worker tier |
-| Final review/correction loop | opus/high | compose `loop-review-fold`; it selects review or fold from persisted evidence and routes unresolved findings to `triage-issue --prioritize-now` |
+| Final review/correction loop | opus/high | compose the manual path `/fold-findings`, then re-run `/review-change`; it reuses a current exact-SHA receipt or reviews context-clean, and routes unresolved findings to `triage-issue --prioritize-now` |
 | Merge gate | opus/high | compose `audit-pr` in-turn (the highest-stakes automated verdict; must share one turn with the floor checks) |
 | Forge/git mechanics | — | Bash tool calls; no model judgment involved |
 | Final-report evidence gathering | haiku (optional) | fan-out subagents for grep-shaped per-feature log collection when ultracode is on; synthesis stays opus |

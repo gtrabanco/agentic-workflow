@@ -2,6 +2,17 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-09-04 — `loop-review-fold` is retired to a manual path
+
+**`loop-review-fold` is removed** (fix #161, P3a). The simple review/fold router
+no longer ships. The correction loop is now the manual path
+`review-change → fold-findings → re-run review-change`, with the two-cycle cap
+living in `skills/review-change/references/REVIEW_PROCESS.md` (`LOOP CAP
+REACHED`). A programmatic outer driver may run the same review→fold sequence in
+place of the retired router. Hand-offs that used `/loop-review-fold <unit>` are
+now `/fold-findings`, then re-run `/review-change`; `/audit-pr` stays the merge
+gate.
+
 ## 2026-09-03 — the review→fold loop is bounded (two cycles, materiality floor)
 
 **Breaking contract; `review-change` 3.0.0, `loop-review-fold` 4.0.0.**

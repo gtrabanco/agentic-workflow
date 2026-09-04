@@ -16,7 +16,9 @@
    or `med` (only ledger severities; finder scale
    `critical`→`high`, `major`→`med`, `minor`→`low`): append a row
    (create the file with the header row when missing), carrying the
-   verbatim `Sev` value into `severity`; `folded` always starts `no` —
+   verbatim `Sev` value into `severity`; `folded` always starts `no` — that
+   row comes from a **confirmed** candidate only and carries its
+   `finding-mark@1` signature (reviewer, head SHA, recheck + reproducer).
    `execute-phase`'s fold cycle is the only step that ever flips it to `yes`.
    A `low` finding is **never persisted to the fold ledger** — report-only
    note (step 13), never blocking (finders' materiality floor). Re-runs
@@ -25,7 +27,7 @@
    a re-report at a folded row's location is legitimate only as `regression of <id>`
    (fix provably failed) or `DISPUTED`; else `Fn+1`.
    **Non-fix-now findings are never written here** — they keep
-   their destinations from step 10 (outcome routing): independent future
+   their destinations from step 11 (outcome routing): independent future
    capabilities batch as proposals; only the user routes them to `triage-issue`
    (D3).
    **Commit the ledger append** — rows + `REVIEW-RAN` mark, one commit
@@ -34,7 +36,7 @@
    `REVIEW-PASS` with an open PR no ledger write happens (the SHA-bound
    receipt is the durable record): head and posted receipt stay identical.
 12. **Close out the final-review receipt before reporting.** First derive the
-   `Decision` from step 6 and persist step 11. Then, before printing any line of
+   `Decision` from step 7 and persist step 11. Then, before printing any line of
    the fixed report block or the `→ Next:` block, complete the receipt action
    below. The receipt is a precondition of the report, not a follow-up.
 
@@ -85,7 +87,7 @@
    Architectural invariants: pass | finding (<ID>) | n/a: no project invariants declared
    Receipt: current at <head SHA> | n/a: no PR | none: REVIEW-FAIL/NEEDS-DECISION
 
-   <the synthesized decision table (step 6)>
+   <the synthesized decision table (step 7)>
 
    Manual verification (a human must check):
    - <item> …
@@ -93,14 +95,17 @@
    Notes (low · report-only, never persisted):
    - <finding + evidence, or none>
 
-   Proposals (step 10): <n> — batched for the user, no issues created (D3)
+   Refuted (verified false — reported with counter-evidence, never persisted):
+   - <candidate + counter-evidence, or none>
+
+   Proposals (step 11): <n> — batched for the user, no issues created (D3)
 
    Summary: <1-2 sentences>
    Decision: REVIEW-PASS | REVIEW-FAIL | NEEDS-DECISION   (D10: review says these three; only audit-pr says MERGE-READY)
    ```
 
 14. **Next step.** The `→ Next:` block is **never one static template** — branch
-   on the `Decision` value from step 6 and emit the matching block **verbatim,
+   on the `Decision` value from step 7 and emit the matching block **verbatim,
    as multiple literal lines**. Never join the `·` sub-bullets into one prose
    line — each sub-bullet is its own line, exactly as quoted below.
    For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the
@@ -111,8 +116,9 @@
    passing receipt was posted** (step 12):
 
    ```
-   → Next: /loop-review-fold <unit> — repair all open fix-now findings: <F1> + <F2> + <F3>,
-     then re-review changed HEADs within the bounded correction budget
+   → Next: /fold-findings — repair all open fix-now findings: <F1> + <F2> + <F3>,
+     then re-run /review-change on the changed HEAD (bounded at two cycles; a
+     third cycle never starts without an explicit user instruction)
      · manual path → /fold-findings, then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),

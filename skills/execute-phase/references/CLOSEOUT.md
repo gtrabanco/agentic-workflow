@@ -22,8 +22,9 @@ Write `docs/features/<NN>-<slug>/CHECKLIST.md`: schema migration applied (if any
 ## Review checkpoint & finishing a unit
 
 **Independent final review is mandatory — every unit gets one before merge.**
-Recommend `loop-review-fold` because it preserves fresh review contexts while
-handling bounded corrections; direct `review-change` is the manual path. Review
+Recommend the manual `/fold-findings` → re-run `/review-change` path because it
+preserves fresh review contexts while handling bounded corrections; direct
+`review-change` remains the manual entry. Review
 runs in its own turn (hand-off, not composed): a skill's model and
 effort are fixed at turn start, so invoking `review-change` from here would run it at
 execute-phase's `sonnet`/`medium` rather than its own `opus`/`high` — under-powering
@@ -45,8 +46,8 @@ one).
 **Finishing a unit (single-pass, `--fix`, or a feature's final phase): the last step
 is always an open PR.** Mark the unit `done`, commit the flip, push, and `gh pr create`
 (see the mode steps above) — regardless of the review/audit still to come. Then hand
-off to `/loop-review-fold` (recommended) or direct `/review-change`, which feeds
-`audit-pr` (the merge gate).
+off to `/fold-findings`, then re-run `/review-change`, which feeds `audit-pr`
+(the merge gate).
 
 **Adversarial pass at that mandatory end review.** `review-change` evaluates its
 own recommendation checklist there (`L`/sensitive change, reviewer not the

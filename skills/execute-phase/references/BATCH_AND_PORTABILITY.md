@@ -8,8 +8,9 @@ The normal omitted-phase command is already the batch:
 ```
 
 It selects every unfinished phase, gates and commits each one, skips
-intermediate review stops, opens the PR, then recommends
-`/loop-review-fold`. An explicit `P<n>` keeps the atomic/manual path.
+intermediate review stops, opens the PR, then recommends the manual
+`/fold-findings` → re-run `/review-change` path. An explicit `P<n>` keeps the
+atomic/manual path.
 
 ### Fresh-context driver (recommended for cheap models)
 
@@ -19,8 +20,8 @@ slice, and compact receipts. An external driver may implement the same contract:
 
 1. Call `workflow-status` and choose the next unfinished phase.
 2. Invoke `/execute-phase <unit> P<n>` on the cheap tool-capable tier.
-3. Repeat `CONTINUE`; route `READY_FOR_REVIEW` to `/loop-review-fold` on the
-   required review/fold tiers.
+3. Repeat `CONTINUE`; route `READY_FOR_REVIEW` to `/fold-findings`, then re-run
+   `/review-change`, on the required review/fold tiers.
 4. Stop on `NEEDS_INPUT`, `HALT`, repeated unchanged evidence, or the declared
    attempt budget.
 

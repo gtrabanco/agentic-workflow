@@ -93,8 +93,8 @@ stage.
 resolver:** class `plan` → `plan-feature` / `plan-fix` (the author re-cuts, then
 `/review-plan` re-judges) · class `product` → `design-feature` repairs the
 Product half (then `/review-spec`, then the plan re-derives) · class `source` |
-`environment` | `runtime` → the executor's fold path (`/loop-review-fold` →
-`/fold-findings`), never by editing the plan to hide the row.
+`environment` | `runtime` → the executor's fold path (`/fold-findings`, then re-run
+`/review-change`), never by editing the plan to hide the row.
 **`fold-findings` never repairs a planning artifact** — folding repairs source,
 not authority.
 

@@ -5,7 +5,7 @@
 //   1. materiality survives classification and the decision (low = report-only)
 //   2. workspace state is a precondition, not a persisted finding
 //   3. folded rows are re-verified, not re-reported
-//   4. loop-review-fold is bounded at two review→fold cycles per unit
+//   4. the review→fold loop is bounded at two review→fold cycles per unit
 // plus the plan-time prevention rules and the planning-review resolution map.
 
 import assert from "node:assert/strict";
@@ -21,7 +21,6 @@ const classify = read("skills/review-implementation/references/CLASSIFY.md");
 const reviewProcess = read("skills/review-change/references/REVIEW_PROCESS.md");
 const persist = read("skills/review-change/references/PERSIST_AND_DECIDE.md");
 const outputGuardrails = read("skills/review-change/references/OUTPUT_AND_GUARDRAILS.md");
-const loop = read("skills/loop-review-fold/SKILL.md");
 const verification = read("skills/verification-contract/SKILL.md");
 const grounding = read("skills/evidence-grounding/SKILL.md");
 const logSession = read("skills/log-session/SKILL.md");
@@ -65,9 +64,10 @@ assert.match(reviewProcess, /CONVERGENCE-ANOMALY/);
 
 // ── 4. The loop is bounded ──────────────────────────────────────────────────
 
-assert.match(loop, /at most \*\*two\*\*\s+review→fold cycles/);
-assert.match(loop, /A third cycle never\s+starts/);
-assert.match(loop, /REVIEW-FOLD LOOP — PASS \| TRIAGE-REQUIRED \| BLOCKED/);
+assert.match(reviewProcess, /LOOP CAP REACHED/);
+assert.match(reviewProcess, /at most \*\*two\*\*\s+review→fold cycles/);
+assert.match(reviewProcess, /third cycle never\s+starts/);
+assert.match(reviewProcess, /triage-issue --prioritize-now/);
 
 // ── 5. Materiality bar in every finder of the internal review pack ──────────
 

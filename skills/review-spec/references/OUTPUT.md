@@ -80,7 +80,7 @@ fourth verdict.
 resolver:** class `product` → `design-feature` (then `/review-spec` re-judges the
 new revision) · class `plan` → `plan-feature` / `plan-fix` re-cuts the plan (then
 `/review-plan` re-judges) · class `source` | `environment` | `runtime` → the
-executor's fold path (`/loop-review-fold` → `/fold-findings`).
+executor's fold path (`/fold-findings`, then re-run `/review-change`).
 **`fold-findings` never repairs a planning artifact**, and a planning finding is
 never resolved by patching the artifact during review — folding repairs source,
 not authority.

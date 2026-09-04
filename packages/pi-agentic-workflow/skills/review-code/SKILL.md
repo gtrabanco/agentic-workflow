@@ -1,7 +1,7 @@
 ---
 name: review-code
 user-invocable: false
-version: 1.1.0
+version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -41,6 +41,8 @@ default branch. State the scope at the top of the returned table.
 ✓ No new dependency not justified in the SPEC
 ✓ Simplification: any changed block that can lose lines without losing
   behavior (cite before/after)
+✓ Reference trace: every changed symbol/API got a reference search —
+  un-updated callers are findings
 ✓ Edge cases the SPEC's dev scenarios name are actually handled in code, not
   just in tests
 

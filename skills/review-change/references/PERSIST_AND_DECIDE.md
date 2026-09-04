@@ -116,8 +116,9 @@
    passing receipt was posted** (step 12):
 
    ```
-   → Next: /loop-review-fold <unit> — repair all open fix-now findings: <F1> + <F2> + <F3>,
-     then re-review changed HEADs within the bounded correction budget
+   → Next: /fold-findings — repair all open fix-now findings: <F1> + <F2> + <F3>,
+     then re-run /review-change on the changed HEAD (bounded at two cycles; a
+     third cycle never starts without an explicit user instruction)
      · manual path → /fold-findings, then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),
