@@ -135,7 +135,7 @@ and is out of scope; a copy or shell rewrite stays the reviewer's job.
 ```text
 ledger-ownership@1
 truth-class | ledger | owner | annotator | annotator-token | validator
-review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | node --test scripts/ledger-provenance.test.mjs
+review-findings | docs/features/<NN>-<slug>/review-findings.md · docs/fix/<issue>-<topic>/review-findings.md | review-change:finding-rows + review-change:finding-mark + review-change:review-mark + audit-pr:audit-rows + triage-issue:triage-rows + fold-findings:folded-flag | scripts/ledger-provenance.mjs | · fold <sha> + · ticked <sha> + · REOPENED | node --test scripts/ledger-provenance.test.mjs
 planning-findings | docs/features/<NN>-<slug>/planning-findings.md · docs/fix/<issue>-<topic>/planning-findings.md | review-spec:spec-stage-rows + review-plan:plan-stage-rows + design-feature:product-class-resolutions + plan-feature:plan-class-resolutions + plan-fix:fix-plan-class-resolutions + fold-findings:source-class-resolutions | none | none | node --test scripts/pre-execution-quality.test.mjs
 progress | docs/features/<NN>-<slug>/progress.md · docs/fix/<issue>-<topic>/progress.md | plan-feature-scaffold:create + execute-phase:phase-entries + execute-phase:gate-rejection-traces + review-spec:product-receipt + review-plan:plan-receipt | none | none | node --test scripts/pre-execution-sensor.test.mjs
 known-issues | docs/features/<NN>-<slug>/known-issues.md · docs/fix/<issue>-<topic>/known-issues.md | plan-feature-scaffold:create + execute-phase:blocker-entries-and-status | none | none | node --test scripts/ledger-ownership.test.mjs
@@ -172,3 +172,25 @@ REVIEW-RAN | HEAD <40-hex sha> | n/a | n/a | review-mark | n/a | n/a
 other cells carry `n/a` because the row reports no finding — which keeps it out of
 the fix-now projection, `fold-findings`, and the annotator (its pattern matches
 `F<n>` ids only). A mark says a review ran, never that the candidate passed.
+
+### The durable finding mark
+
+A candidate finding that verifies — or refutes — before persistence gets a
+per-finding durable signature of its own, under `review-change:finding-mark`.
+This is the fix/161 extension of the feature-28 treatment: a verdict has a
+signature, so must the individual finding. The single writer of every finding mark is `review-change`; nothing else appends one.
+
+```text
+finding-mark@1
+id | file:line | axis | severity | class | route | folded
+VF-<n> | <file:line> · reviewer review-change · HEAD <40-hex sha> · recheck <method + reproducer> | <axis> | <severity> | finding-mark | n/a | n/a
+```
+
+`VF-` ids are deliberately outside the `F<n>` range the provenance annotator's
+row pattern matches, so a finding mark is invisible to the recount, to
+`--check`, to `--annotate`, and to the fix-now projection. A `confirmed`
+finding's row carries the mark; a `refuted` candidate carries its
+counter-evidence in the same report and **never becomes a row**, a fold task,
+or a re-review trigger. The mark's `confirmed | refuted` value and the
+`recheck` cell (the method the finding's axis demands) are what let a driver
+outside the repo consume the verification the review performed.

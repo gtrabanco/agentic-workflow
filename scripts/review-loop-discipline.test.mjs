@@ -9,6 +9,7 @@
 // plus the plan-time prevention rules and the planning-review resolution map.
 
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -111,5 +112,59 @@ for (const [name, text] of [["review-spec", specOutput], ["review-plan", planOut
 const foldRoute = /class `source` \|\s*`environment` \|\s*`runtime` → the\s+executor's fold path/;
 assert.match(planOutput, foldRoute);
 assert.match(specOutput, foldRoute);
+
+// ── 8. Findings are verified before persistence (fix #161) ──────────────────
+
+// O4: the verification gate runs between the finders and synthesis, isolated,
+// against the reviewed head — and only confirmed candidates reach the ledger.
+assert.match(reviewProcess, /Verify, then synthesize/);
+assert.match(reviewProcess, /verified in an isolated context against the reviewed\s+head's bytes/);
+assert.match(persist, /comes from a \*\*confirmed\*\* candidate only/);
+assert.match(persist, /finding-mark@1/);
+
+// O21: the recheck method follows the finding's axis.
+assert.match(reviewProcess, /failing reproducer/);
+assert.match(reviewProcess, /red test written first/);
+assert.match(reviewProcess, /unchanged code/);
+assert.match(reviewProcess, /reproducible command output/);
+assert.match(reviewProcess, /direct read/);
+assert.match(reviewProcess, /named user\s+path/);
+
+// O5: the per-finding verified mark — shape, writer, routes, exclusions.
+const ledgers = read("skills/pre-execution-review/references/LEDGERS.md");
+assert.match(ledgers, /finding-mark@1/);
+assert.match(ledgers, /VF-<n>/);
+assert.match(ledgers, /confirmed \| refuted/);
+assert.match(ledgers, /counter-evidence/);
+assert.match(ledgers, /never becomes a row/);
+assert.match(ledgers, /single writer of every finding mark is `review-change`/);
+
+// O6: one writer on the ownership map + the normative-surfaces row.
+assert.match(ledgers, /review-change:finding-mark/);
+const claudeGuide = read("CLAUDE.md");
+assert.match(claudeGuide, /block:finding-mark@1/);
+
+// O7: the annotator never parses VF- rows as findings — proven against the
+// seeded fixture by running the annotator itself, not asserted from prose.
+const fixtureAbs = path.join(root, "scripts/fixtures/finding-mark-ledger.md");
+const provScript = path.join(root, "scripts/ledger-provenance.mjs");
+const entries = JSON.parse(
+  execFileSync("node", [provScript, fixtureAbs, "--json"], { encoding: "utf8" }),
+);
+assert.ok(
+  entries.some((e) => e.id === "F901" && e.status === "open") &&
+  entries.some((e) => e.id === "F902" && e.status === "open"),
+  "the fixture's F rows must parse as findings",
+);
+assert.ok(
+  !entries.some((e) => String(e.id).startsWith("VF-")),
+  "a finding-mark@1 (VF-) row was parsed as a finding",
+);
+try {
+  const checkOut = execFileSync("node", [provScript, fixtureAbs, "--check"], { encoding: "utf8" });
+  assert.match(checkOut, /CHECK PASS/);
+} catch (error) {
+  throw new Error(`ledger-provenance --check failed on the seeded fixture: ${error.stdout ?? error.message}`);
+}
 
 console.log("PASS review-loop-discipline: the review→fold loop is bounded end to end");
