@@ -170,9 +170,9 @@ recorded per phase.
 Layer: `config/infra`. Done-when: `cd packages/pi-agentic-workflow && bun run
 test` → exit 0 with the peer resolving to `0.85.x`.
 
-- [ ] Re-resolve the dev peer: `cd packages/pi-agentic-workflow && bun update @earendil-works/pi-coding-agent` → `node -p "require('./node_modules/@earendil-works/pi-coding-agent/package.json').version"` prints `0.85.x`; `bun.lock` records the new resolution (O1)
-- [ ] Run the package gate: `cd packages/pi-agentic-workflow && bun run test` → exit 0 (tsc type contract incl. `ThinkingLevelsMirrorMatchesPi` + `node --test test/*.test.mjs`); on red, O12 stops the unit before P3 (O2, O12)
-- [ ] Append the verification evidence as `- VERIFY` rows (resolved peer version, suite exit code, test counts) to `docs/fix/166-pi-0850-baseline-refresh/progress.md` (O3)
+- [x] Re-resolve the dev peer: `cd packages/pi-agentic-workflow && bun update @earendil-works/pi-coding-agent` → `node -p "require('./node_modules/@earendil-works/pi-coding-agent/package.json').version"` prints `0.85.x`; `bun.lock` records the new resolution (O1)
+- [x] Run the package gate: `cd packages/pi-agentic-workflow && bun run test` → exit 0 (tsc type contract incl. `ThinkingLevelsMirrorMatchesPi` + `node --test test/*.test.mjs`); on red, O12 stops the unit before P3 (O2, O12)
+- [x] Append the verification evidence as `- VERIFY` rows (resolved peer version, suite exit code, test counts) to `docs/fix/166-pi-0850-baseline-refresh/progress.md` (O3)
 
 Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:3:dev-peer-repoint-pi-0850`
 

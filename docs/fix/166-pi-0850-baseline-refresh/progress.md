@@ -1,5 +1,34 @@
 # fix/166 — pi-0850-baseline-refresh · progress
 
+## P1 — Re-point the dev peer at pi 0.85.x
+
+- VERIFY: resolved peer `@earendil-works/pi-coding-agent` = 0.85.0 (`node -p "require('./node_modules/@earendil-works/pi-coding-agent/package.json').version"`; `bun.lock:77` records `0.85.0`)
+- VERIFY: `bun run test` → exit 0 · tsc type contract incl. `ThinkingLevelsMirrorMatchesPi` + `node --test` · 134 tests · 134 pass · 0 fail · 0 skipped
+- VERIFY: baseline before re-point was green on 0.84.4 (134/134); the 0.85.x re-point initially surfaced 15 `shipped-adapter.test.mjs` failures
+
+### Root-cause note: why the 0.85.x suite was red and the repair
+
+pi 0.85.0's package entry (`dist/index.js`) now **eagerly re-exports `main`**
+(`export { main } from "./main.js"`) and `main.js` imports
+`./experimental/server.js`, which imports `@earendil-works/pi-server` — a
+package pi-coding-agent **0.85.0 does not declare** as a dependency
+(`package.json` deps/peer/optional do not list it; 0.84.4 had no such eager
+chain). The shipped entry (`dist/extension/index.js`) imports
+`getAgentDir` from `@earendil-works/pi-coding-agent`, so loading it through
+the 0.85.0 main entry failed with `ERR_MODULE_NOT_FOUND:
+@earendil-works/pi-server` in 15 tests across
+`test/shipped-adapter.test.mjs`. Repair: add `@earendil-works/pi-server@0.85.0`
+as a **devDependency** (setup repair; no validator or assertion touched —
+suite was 134/134 green after, unchanged assertions). This is a pi 0.85.0
+packaging gap, not a semantic regression of this package's contract.
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0) · Acceptance blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4
+- Next: P2 · Attempts: 1
+
+## Acceptance receipt v1
+- Manifest: docs/fix/166-pi-0850-baseline-refresh/ACCEPTANCE.md · Blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4 · Status: frozen · Verified: 2026-09-04~~
+
 ## Pre-execution review receipt v1 — plan
 - Review: rp-fix166-20260904-001 · Snapshot: debd8046aaec7bca56df0c18e5a12b98d1d2211b617575bb704f9dd8507f606a · Verdict: plan-review-fail
 - Unit: fix-166 · Stage: plan · Unit kind: fix
