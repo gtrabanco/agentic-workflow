@@ -78,14 +78,30 @@
    (stack-specific linters, framework skills) and they are installed, run them
    **in addition** — their findings merge into the same table. Never treat an
    absent extra as a gap; the pack already covered the axis.
-6. **Synthesize.** Fuse all findings into **one** findings table, deduped by
+6. **Verify, then synthesize.** Before fusing anything, every candidate finding
+   is **verified in an isolated context against the reviewed head's bytes** (the
+   SHA frozen in step 1) and marked `confirmed` or `refuted`. The recheck method
+   follows the finding's axis:
+   - a **code / behavioral** claim confirms only with a **failing reproducer** —
+     a red test written first and run against **unchanged code**, or
+     **reproducible command output**;
+   - a **documentation / wording** claim confirms by **direct read** of the
+     cited text (typos and wording are corrected without ceremony, no test);
+   - a **missing-documentation** claim confirms the named user path is
+     undocumented.
+   Only **confirmed** candidates flow to synthesis; a **refuted** candidate is
+   reported with its counter-evidence in the same report and never becomes a
+   row, a fold task, or a re-review trigger. The per-finding durable mark is
+   `finding-mark@1` (contract in `pre-execution-review/references/LEDGERS.md`).
+
+7. **Synthesize.** Fuse all findings into **one** findings table, deduped by
    `file:line` + axis, per the synthesis contract (the same fusion rules apply
    in the default single-reviewer case). Columns: `# | Finding | Axis | Sev |
    Evidence | Suggested fix` — **unclassified**. Overlapping signals on the same
    defect collapse into one row. Add a **`Reviewers n/N`** column when running
    in `--adversarial N` mode (omitted entirely in the default single-reviewer
    case).
-7. **Classify (once).** Run `review-implementation` over the synthesized table
+8. **Classify (once).** Run `review-implementation` over the synthesized table
    (isolated, per the *Isolation rule*) — the single classification engine
    (D5). It verifies axis coverage (every applicable axis represented; a
    missing axis is a `coverage` finding) and applies the current-unit contract:
@@ -94,17 +110,37 @@
    → the **classified decision table** (Sev, Class, WHY, impl risk, long-term
    impact, premature-opt?, Route). No per-pass or per-reviewer classification,
    no re-litigation.
-8. **Debt transform.** Run `review-debt` over the classified table — it
+9. **Debt transform.** Run `review-debt` over the classified table — it
    transforms debt-shaped findings into explicit TRIGGER-carrying debt items;
    it does not rescan the diff (SPEC contract).
-9. **Manual-verification checklist.** List what automated review **cannot** confirm
+10. **Manual-verification checklist.** List what automated review **cannot** confirm
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
-10. **Route the outcomes.** fix-now findings fold into the current unit (or gain
+11. **Route the outcomes.** fix-now findings fold into the current unit (or gain
     user-confirmed phases via replan-in-unit); decision-required stops for the
     user's decision; genuinely independent future capabilities become
     **non-blocking proposals** — batched in the report with a trigger, and
     **never** sent to `triage-issue` automatically (D3). `review-change` creates
     no backlog work. No non-fix-now finding may end without a destination — none
     silently lost.
+
+## Two-cycle cap
+
+The review→fold loop runs at most **two** review→fold cycles per unit, counted
+unit-level and family-agnostic from the ledger's `REVIEW-RAN` marks and forge
+receipts — new finding families do not reset the count. After two cycles without
+convergence, the review prints
+
+```text
+LOOP CAP REACHED — <unit>
+- Finding ids: <every open id>
+- Cycles: 2 (REVIEW-RAN marks + forge receipts)
+- Route: /triage-issue --prioritize-now <unit> F<k> … (or the programmatic outer driver)
+```
+
+A **third cycle never starts** unless the user explicitly instructs it — it is
+the user's escape, never a reviewer election. The residue routes to
+`triage-issue --prioritize-now` (or the programmatic outer driver), and a unit
+that needs a third cycle has a planning or root-cause defect, not a review
+deficit.

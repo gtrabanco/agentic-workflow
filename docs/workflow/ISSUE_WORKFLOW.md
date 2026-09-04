@@ -90,8 +90,9 @@ index, and commits on one fix branch. Then `execute-phase --fix <N>`:
 4. Runs the gate (type-check, tests, build).
 5. **Marks the fix `done` and opens the PR with `Closes #N` (always — never
    branch-only).** `done` means built, not merged.
-6. Runs mandatory `/loop-review-fold --fix <N>`; the router resumes with a
-   prior fold queue when `review-change` already ran. Unresolved findings go to
+6. Runs the mandatory manual review→fold path: `/fold-findings`, then re-run
+   `/review-change` on the changed HEAD (it resumes with the prior fold queue when
+   `review-change` already ran). Unresolved findings go to
    `/triage-issue --prioritize-now`; oversized work is replanned into new
    phases and the user resumes `/execute-phase` manually. Then `/audit-pr`
    acts as the merge gate (never merge with pending docs).

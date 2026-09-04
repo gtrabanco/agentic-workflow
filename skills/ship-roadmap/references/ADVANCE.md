@@ -70,11 +70,12 @@
      when the PR opens; any flips left at run end ride the report commit).
      Stop before the literal final `Hardening & PR` phase: PR owns that explicit
      phase so close-out has one owner. Never bundle phases into one worker.
-   - **REVIEW** — compose `loop-review-fold` in-turn (equal tier) once, over
-     the complete PR candidate. It reuses a current exact-SHA receipt or runs
-     `review-change` context-clean, batches compatible fixes through
-     `fold-findings`, and re-reviews only changed HEADs. Default correction
-     budget is two; unchanged evidence stops NO-PROGRESS. L/sensitive features
+   - **REVIEW** — compose the manual review→fold path in-turn (equal tier) once,
+     `/fold-findings`, then re-run `/review-change`, over the complete PR
+     candidate. It reuses a current exact-SHA receipt or runs `review-change`
+     context-clean, batches compatible fixes through `fold-findings`, and
+     re-reviews only changed HEADs. Default correction budget is two; unchanged
+     evidence stops NO-PROGRESS. L/sensitive features
      forward `--adversarial 2` (security/auth: `3`) as the unattended floor;
      other units use one final reviewer. There are no intermediate phase
      reviews in autopilot: phase gates + frozen acceptance guard execution,

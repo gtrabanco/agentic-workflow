@@ -85,7 +85,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11231,
+      "routeEstimateMax": 11257,
       "routeLinesMax": 844
     },
     "execute-phase:feature": {
@@ -229,34 +229,6 @@
       "routeEstimateMax": 14000,
       "routeLinesMax": 980
     },
-    "loop-review-fold:default": {
-      "skills": [
-        "loop-review-fold",
-        "review-change",
-        "fold-findings",
-        "triage-issue",
-        "verification-contract"
-      ],
-      "references": {
-        "loop-review-fold": [],
-        "review-change": [
-          "REVIEW_PROCESS.md",
-          "ADVERSARIAL_RECOMMENDATION.md",
-          "PERSIST_AND_DECIDE.md",
-          "OUTPUT_AND_GUARDRAILS.md"
-        ],
-        "fold-findings": [
-          "FOLD_POLICY.md",
-          "FOLD_PROCESS.md"
-        ],
-        "triage-issue": [
-          "REVIEW_FINDING_PROCESS.md"
-        ]
-      },
-      "templates": [],
-      "routeEstimateMax": 21000,
-      "routeLinesMax": 1450
-    },
     "plan-feature:issue": {
       "skills": [
         "plan-feature",
@@ -322,8 +294,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17100,
-      "routeLinesMax": 1235
+      "routeEstimateMax": 17397,
+      "routeLinesMax": 1261
     },
     "review-change:default-backend": {
       "skills": [
@@ -341,8 +313,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15283,
-      "routeLinesMax": 1116
+      "routeEstimateMax": 15580,
+      "routeLinesMax": 1142
     },
     "review-change:default-web": {
       "skills": [
@@ -360,8 +332,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15283,
-      "routeLinesMax": 1116
+      "routeEstimateMax": 15580,
+      "routeLinesMax": 1142
     },
     "review-change:synthesize": {
       "skills": [
@@ -379,8 +351,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15796,
-      "routeLinesMax": 1140
+      "routeEstimateMax": 16093,
+      "routeLinesMax": 1166
     },
     "review-plan:default": {
       "skills": [

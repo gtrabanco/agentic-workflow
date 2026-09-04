@@ -2,6 +2,17 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-09-04 — `loop-review-fold` se retira a un camino manual
+
+**`loop-review-fold` se elimina** (fix #161, P3a). El router simple review/fold
+ya no se distribuye. El bucle de corrección pasa a ser el camino manual
+`review-change → fold-findings → re-run review-change`, con el tope de dos
+ciclos viviendo en `skills/review-change/references/REVIEW_PROCESS.md`
+(`LOOP CAP REACHED`). Un driver exterior programático puede ejecutar la misma
+secuencia review→fold en lugar del router retirado. Los hand-offs que usaban
+`/loop-review-fold <unit>` pasan a `/fold-findings`, y luego un nuevo
+`/review-change`; `/audit-pr` sigue siendo la puerta de merge.
+
 ## 2026-09-03 — el bucle revisión→fold queda acotado (dos ciclos, suelo de materialidad)
 
 **Cambio de contrato; `review-change` 3.0.0, `loop-review-fold` 4.0.0.**

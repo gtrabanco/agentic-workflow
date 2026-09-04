@@ -1,7 +1,7 @@
 ---
 name: evidence-grounding
 user-invocable: false
-version: 1.5.0
+version: 1.6.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -75,7 +75,12 @@ Authoring is progressive. Never jump from discovery to a polished artifact.
    NEEDS-DESIGN`. Follow references and topology as far as the claim requires —
    the cap is the claim, not a file count. Wide reading that is not this turn's
    own goes out to the delegate-only role: [references/DELEGATION.md](references/DELEGATION.md)
-   is its contract and the only shape its findings may arrive in. **If you are
+   is its contract and the only shape its findings may arrive in. **Web pass** —
+   when repository evidence cannot answer a bounded question, and always at
+   design stage where `design-feature`'s research gate makes it mandatory, fetch
+   external sources and freeze each as an evidence row (URL and access date);
+   offline or unanswered material questions return `NEEDS-EVIDENCE`, never an
+   invented citation. **If you are
    that reader** — you did not write the artifact and are not writing it — the
    contract governs you: skip steps 1, 3 and 4, and produce the artifact under
    whatever name the invitation used; the position decides, not the label.

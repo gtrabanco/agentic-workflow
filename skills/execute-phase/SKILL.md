@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 4.1.0
+version: 4.2.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -105,8 +105,9 @@ use its fallback; never skip the workflow step.
 
 Planned by `plan-feature`/`plan-fix`; executes their SPEC. Explicit phases may
 hand off to `review-change` at layer/accumulation/sensitivity checkpoints and must
-at unit end. Unit-loop skips intermediate checkpoints and recommends
-`loop-review-fold` after opening the PR; direct `review-change` remains manual.
+at unit end. Unit-loop skips intermediate checkpoints and recommends the manual
+`/fold-findings` → re-run `/review-change` path after opening the PR; direct
+`review-change` remains the manual entry.
 Independent work stays a proposal. A finished unit always opens its PR and flips
 to `done`; `audit-pr` gates merge. Every invocation prints the next step.
 
@@ -117,4 +118,5 @@ to `done`; `audit-pr` gates merge. Every invocation prints the next step.
   committed on the correct branch with nothing bundled beyond scope.
 - `git status --porcelain` is empty and an open-PR branch has nothing unpushed.
 - A finished unit is `done`, has an opened PR (URL printed), and recommends the
-  mandatory `/loop-review-fold` hand-off with direct `/review-change` as manual alternative.
+  mandatory `/fold-findings` → re-run `/review-change` hand-off, with `/audit-pr`
+  as the merge gate.

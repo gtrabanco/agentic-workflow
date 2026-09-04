@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.2.2
+version: 1.3.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT

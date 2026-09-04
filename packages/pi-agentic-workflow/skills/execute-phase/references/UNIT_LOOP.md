@@ -82,7 +82,7 @@ UNIT LOOP — <unit> COMPLETE
 Phases: <n> · Commits: <sha list> · Acceptance: <blob> · Gate: PASS
 PR: <url>
 
-→ Next: /loop-review-fold <unit> — select the persisted review/fold route, then triage or replan unresolved findings
-  · manual path → /review-change, then /fold-findings and re-review as required
+→ Next: /fold-findings, then re-run /review-change on the changed HEAD — triage or replan unresolved findings
+  · manual path → /fold-findings, then re-run /review-change as required
   · merge gate after REVIEW-PASS → /audit-pr
 ```

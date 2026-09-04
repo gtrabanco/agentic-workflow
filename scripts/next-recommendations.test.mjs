@@ -51,15 +51,17 @@ test("batch triage maps each issue to its own next command", () => {
   assert.match(skill, /Replace every placeholder with every actual issue\/finding ID/);
 });
 
-test("product audit and loop review preserve complete finding sets", () => {
+test("product audit and triage preserve complete finding sets", () => {
   const productAudit = readSkill("product-audit");
-  const loop = readSkill("loop-review-fold");
+  // Fix #161: the review/fold router is retired; the complete-finding-set
+  // guarantee lives with the manual path's triage step.
+  const loop = readSkill("triage-issue");
 
   assert.match(productAudit, /Finding set: F<k> \+ F<j> \+ F<m>/);
   assert.match(productAudit, /complete actual set/);
-  assert.match(loop, /list each actual finding ID exactly\s+once joined with ` \+ `/);
-  assert.match(loop, /Replace every placeholder, list each actual finding ID/);
-  assert.match(loop, /never emit a literal ellipsis/);
+  assert.match(loop, /issue\/finding ID to its own\s+next command, joined with ` \+ `/);
+  assert.match(loop, /Replace every placeholder with every actual issue\/finding ID/);
+  assert.match(loop, /never collapses to one generic action/);
   assert.match(loop, /triage-issue --prioritize-now/);
 });
 

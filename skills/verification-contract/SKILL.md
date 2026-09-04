@@ -1,13 +1,13 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.2.0
+version: 1.2.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal contract: one compact frozen ACCEPTANCE.md per delivery unit, its
   validation ladder, anti-weakening rules, and blob-bound execution receipt.
-  Consumed by planners, execute-phase, review-change, and loop-review-fold.
+  Consumed by planners, execute-phase, and review-change.
 ---
 
 # Verification Contract (internal)

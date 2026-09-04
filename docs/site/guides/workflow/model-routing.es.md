@@ -37,7 +37,7 @@ modelo no es un recibo válido del workflow.
 
    ```text
    design-feature → plan-feature → execute-phase
-     → loop-review-fold → audit-pr → merge humano
+     → fold-findings → nuevo review-change → audit-pr → merge humano
    ```
 
 4. Si el modelo principal no está disponible o agota su cuota, reinicia la skill
@@ -139,7 +139,6 @@ antes de `execute-phase`.
 | `generate-docs` | medium | Q36/medium → M25/medium | M25P/medium → M25F/medium | S5/medium | Terra/medium → Luna/medium | Q36/medium → M25/medium |
 | `init-workspace` | high | M25/high + evidencia Q36 → DSF/max | G53/max → K3/max | O5/high → S5/high | Sol/high → Terra/high | G53/high; Q36 recopila evidencia → crítica M25 |
 | `log-session` | medium | Q36/low → M25/low | M25F/low → Hy3F/low → Luna/low | S5/low | Luna/low → Terra/low | Q36/low → M25F/low para logs no confidenciales |
-| `loop-review-fold` | high | Q36/high conduce; DSF corrige; M25 revisa | G53/high conduce; DSP/DSF corrigen; K3 o M25P revisan | O5/high conduce; S5 ejecuta | Sol/high conduce; Terra ejecuta | G53/high conduce; DSF corrige; M25 revisa |
 | `orchestration-envelope` | medium | Q36/medium → DSF/high | M25P/medium → Luna/medium | S5/medium | Terra/medium → Luna/medium | Q36/medium → DSF/high |
 | `phase-contract` | llamadora, mínimo medium | Q36/medium → DSF/high | M25P/medium → Luna/medium | S5/medium | Terra/medium → Luna/medium | Q36/medium → DSF/high |
 | `plan-feature` | high | borrador Q36/high + crítica M25/high → DSF/max; una persona cierra planes de alto riesgo | G53/max → K3/max → DSP/max | O5/high (max para planes críticos) → S5/max | Sol/high (max para planes críticos) → Terra/max | G53/max → K3/max; Q36 prepara evidencia |

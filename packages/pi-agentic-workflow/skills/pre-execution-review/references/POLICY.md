@@ -86,7 +86,7 @@ outside this policy and can never be translated into a PASS.
 - An automatic forge issue. No route in the pre-execution set — `evidence-grounding`
   readiness, `review-spec`, `review-plan`, `plan-feature-scaffold`, `plan-fix`,
   `execute-phase`, `workflow-status`, `ship-roadmap`, `review-change`,
-  `loop-review-fold`, `audit-pr` — creates one for a planning gap, and none defers
+  `audit-pr` — creates one for a planning gap, and none defers
   an obligation to a future issue: the row stays in the unit's ledger, open, until
   the **user** amends the governing SPEC. A blocker that says "file an issue" is a
   contract violation, not a workaround, and a `deferred` row without an amendment is
