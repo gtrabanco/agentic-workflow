@@ -18,7 +18,9 @@
    (create the file with the header row when missing), carrying the
    verbatim `Sev` value into `severity`; `folded` always starts `no` — that
    row comes from a **confirmed** candidate only and carries its
-   `finding-mark@1` signature (reviewer, head SHA, recheck + reproducer).
+   `finding-mark@1` signature on a **separate `VF-` row** (reviewer, head SHA,
+   recheck + reproducer), as modeled in `LEDGERS.md` (§finding-mark@1) and the
+   fixture.
    `execute-phase`'s fold cycle is the only step that ever flips it to `yes`.
    A `low` finding is **never persisted to the fold ledger** — report-only
    note (step 13), never blocking (finders' materiality floor). Re-runs
@@ -119,7 +121,6 @@
    → Next: /fold-findings — repair all open fix-now findings: <F1> + <F2> + <F3>,
      then re-run /review-change on the changed HEAD (bounded at two cycles; a
      third cycle never starts without an explicit user instruction)
-     · manual path → /fold-findings, then re-run /review-change
      · /audit-pr → only after the table is clean (not yet — findings open)
       · any finding routed replan-in-unit? → confirm the proposed SPEC phase(s),
         then /execute-phase on this same branch (yes: list the finding ids; no:
