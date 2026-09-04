@@ -167,4 +167,31 @@ try {
   throw new Error(`ledger-provenance --check failed on the seeded fixture: ${error.stdout ?? error.message}`);
 }
 
+// ── 9. Tests are immutable once written (fix #161, O22–O23) ────────────────
+
+// O22: the executor fixes code until green, never the test; the sole
+// legitimate amendment is a proven mis-encoding of external semantics, cited
+// from authoritative documentation, surfaced as a finding + SPEC amendment.
+assert.match(verification, /immutable/);
+assert.match(verification, /fixes code until green/);
+assert.match(verification, /never the test/);
+assert.match(verification, /proven mis-encoding of external semantic/);
+assert.match(verification, /authoritative documentation/);
+assert.match(verification, /finding .* SPEC amendment/);
+assert.match(verification, /research-before-encode/);
+assert.match(verification, /before a test encodes them/);
+assert.match(verification, /adding stronger tests stays allowed/);
+assert.match(verification, /editing expectations never/);
+
+// O23: the fold-side mirror — the fold never edits an existing test's
+// expectation to match behaviour; setup repairs keep assertions at least as
+// strong and never touch expectations.
+const foldPolicy = read("skills/fold-findings/references/FOLD_POLICY.md");
+const folding = read("skills/execute-phase/references/FOLDING.md");
+assert.match(foldPolicy, /edit an existing test's expectation/i);
+assert.match(foldPolicy, /setup repair/);
+assert.match(foldPolicy, /at least as strong/);
+assert.match(foldPolicy, /never touch expectations/);
+assert.match(folding, /edit an existing test's expectation/i);
+
 console.log("PASS review-loop-discipline: the review→fold loop is bounded end to end");

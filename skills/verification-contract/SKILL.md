@@ -1,7 +1,7 @@
 ---
 name: verification-contract
 user-invocable: false
-version: 1.1.0
+version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -79,6 +79,17 @@ Forbidden: deleting, skipping, narrowing, or loosening a validator; suppression,
 stub, hard-coded answer, or no-op fix used to manufacture green. A command cannot
 prove an untested read/manual row. Stronger regression tests are allowed. Repair
 test setup only when assertions stay at least as strong and the reason is logged.
+
+## Test immutability
+
+A test, once written, is **immutable**. The executor fixes code until green,
+never the test — editing an expectation to match behaviour is not a fix, it is
+a cover-up. The sole legitimate amendment is a **proven mis-encoding of external semantics**: the test's expectation contradicts the actual
+documented semantics of the platform/library/language, cited from authoritative documentation — not a product decision change. Even that surfaces as a
+**finding plus a SPEC amendment**, never a silent edit to go green.
+
+Prevention rides the research gate (**research-before-encode**): platform
+semantics are verified against authoritative documentation **before a test encodes them**, so **adding stronger tests stays allowed**; **editing expectations never** (except the proven-mis-encoding path above).
 
 ## Done when
 
