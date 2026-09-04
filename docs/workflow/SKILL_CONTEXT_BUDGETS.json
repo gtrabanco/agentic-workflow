@@ -85,7 +85,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11125,
+      "routeEstimateMax": 11231,
       "routeLinesMax": 844
     },
     "execute-phase:feature": {
@@ -266,8 +266,8 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11072,
-      "routeLinesMax": 889
+      "routeEstimateMax": 11300,
+      "routeLinesMax": 901
     },
     "plan-feature:scaffold": {
       "skills": [
@@ -278,8 +278,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 22725,
-      "routeLinesMax": 1621
+      "routeEstimateMax": 22953,
+      "routeLinesMax": 1633
     },
     "plan-feature:scoped": {
       "skills": [
@@ -289,8 +289,8 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 8576,
-      "routeLinesMax": 711
+      "routeEstimateMax": 8804,
+      "routeLinesMax": 723
     },
     "plan-fix:issue": {
       "skills": [
@@ -302,8 +302,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 25643,
-      "routeLinesMax": 1864
+      "routeEstimateMax": 25870,
+      "routeLinesMax": 1876
     },
     "review-change:adversarial": {
       "skills": [
@@ -322,8 +322,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16904,
-      "routeLinesMax": 1225
+      "routeEstimateMax": 17100,
+      "routeLinesMax": 1235
     },
     "review-change:default-backend": {
       "skills": [
@@ -341,8 +341,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15087,
-      "routeLinesMax": 1106
+      "routeEstimateMax": 15283,
+      "routeLinesMax": 1116
     },
     "review-change:default-web": {
       "skills": [
@@ -360,8 +360,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15087,
-      "routeLinesMax": 1106
+      "routeEstimateMax": 15283,
+      "routeLinesMax": 1116
     },
     "review-change:synthesize": {
       "skills": [
@@ -379,8 +379,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15601,
-      "routeLinesMax": 1130
+      "routeEstimateMax": 15796,
+      "routeLinesMax": 1140
     },
     "review-plan:default": {
       "skills": [
