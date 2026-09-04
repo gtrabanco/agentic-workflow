@@ -108,7 +108,7 @@ The fix's own authority, without a Product half — one row per material claim.
 | PE-009 | CI publishes the package on merge when the version differs from the registry, running the test gate (`prepublishOnly`: build + test) — merging this PR ships the refreshed note to npm immediately, so AC1–AC5 must hold before merge | repository | `.github/workflows/publish-pi-package.yml` (version gate + bun test gate); `packages/pi-agentic-workflow/package.json` `prepublishOnly` | 9a915094 | O8, O9 | current | proven | — |
 | PE-010 | The user directs: re-verify against 0.85.x (suite + manual smoke covering install, skills, command registration, routed set/clear, settings console, first-run hint), refresh the note with date, same-PR release bookkeeping, and a verdict per in-scope item in the PR description | forge | https://github.com/gtrabanco/agentic-workflow/issues/166 (§In scope item 5, §Acceptance criteria) | — | O4–O6, O8–O11 | not-applicable | decision | — |
 | PE-011 | The `ui_prompt_start`/`ui_prompt_end` console UX opportunity is explicitly out of scope (adopt no pi feature not needed by the existing contract); it is routed to a future feature entry, not absorbed here | forge | https://github.com/gtrabanco/agentic-workflow/issues/166 (§Out of scope; §In scope item 4) | — | — | not-applicable | decision | — |
-| PE-012 | Required failure state: the baseline note is never refreshed to a pi version the package suite does not pass — if P1's suite is red on 0.85.x, the unit stops before P3 and the break is triaged as its own finding, never folded into later phases | document | `verification-contract` anti-gaming rules; `evidence-grounding` overclaim guardrail | — | O12 | not-applicable | decision | — |
+| PE-012 | Required failure state: the baseline note is never refreshed to a pi version the package suite does not pass or on which any manual smoke observation failed — if P1's suite is red on 0.85.x, or any P2 `- SMOKE` row records `outcome: fail`, the unit stops before P3 and the break is triaged as its own finding, never folded into later phases | document | `verification-contract` anti-gaming rules; `evidence-grounding` overclaim guardrail | — | O12 | not-applicable | decision | — |
 
 ### Obligations
 
@@ -119,13 +119,13 @@ The fix's own authority, without a Product half — one row per material claim.
 | O3 | PE-008 | The suite outcome and resolved peer version are recorded as the unit's verification evidence | P1 | 3 | execute-phase | `grep -c "^- VERIFY" docs/fix/166-pi-0850-baseline-refresh/progress.md` → ≥ 2 | progress.md rows | planned |
 | O4 | PE-010 | Manual smoke part 1 on pi 0.85.x: install, package skills load, friendly command registration (19 user-facing) | P2 | 1 | execute-phase (manual) | AC2 validator → 6 | progress.md `- SMOKE` rows | planned |
 | O5 | PE-010 | Manual smoke part 2 on pi 0.85.x: one routed command set/clear, settings console round-trip, first-run hint | P2 | 2 | execute-phase (manual) | AC2 validator → 6 | progress.md `- SMOKE` rows | planned |
-| O6 | PE-010 | The six smoke observations are recorded with per-observation outcomes | P2 | 3 | execute-phase | `grep -c "^- SMOKE" docs/fix/166-pi-0850-baseline-refresh/progress.md` → 6 | progress.md | planned |
+| O6 | PE-010 | The six smoke observations are recorded with per-observation outcomes (`outcome: pass` / `outcome: fail`); every outcome must be pass — any `outcome: fail` row engages O12's stop-before-P3 | P2 | 3 | execute-phase | `grep -c "^- SMOKE" docs/fix/166-pi-0850-baseline-refresh/progress.md` → 6 | progress.md | planned |
 | O7 | PE-003 + PE-005 | The baseline note reads 0.85.0 with the date in EN and ES (one bilingual edit unit); no stale 0.84.x claim remains in either README | P3 | 1 | execute-phase | AC3 validators → 0 stale / ≥ 1 hit each | grep output in progress.md | planned |
 | O8 | PE-010 | Package version bumped 0.4.0 → 0.4.1 | P4 | 1 | execute-phase | `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → `0.4.1` | command output | planned |
 | O9 | PE-010 | CHANGELOG.md + CHANGELOG.es.md companion-package tables carry the 0.4.1 row | P4 | 2 | execute-phase | `grep -c "| 0.4.1 |" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 each | grep output | planned |
 | O10 | PE-006 + PE-010 | The PR body records a verdict (pass/adapted/not applicable) for each of the issue's five in-scope delta-scan items | P5 | write-PR-body | execute-phase | `grep -c "^- VERDICT" docs/fix/166-pi-0850-baseline-refresh/pr-body.md` → 5 | pr-body.md | planned |
-| O11 | PE-010 | The fix-index row flips to `done` with the PR link after the PR opens | P5 | close-out chain | execute-phase | AC6 validator → 1 match | docs/fix/README.md row | planned |
-| O12 | PE-012 | Required failure state: a red suite on 0.85.x stops the unit before the note is refreshed; the break is triaged as its own finding, never absorbed | P1 | 2 | execute-phase | read-verified: progress.md records any red outcome and the stop decision before P3 runs | progress.md note | planned |
+| O11 | PE-010 | The fix-index row flips to `done` (the index's backticked done-row convention, `#159`/`#161` siblings) with the PR link after the PR opens | P5 | close-out chain | execute-phase | AC6 validator → 1 match | docs/fix/README.md row | planned |
+| O12 | PE-012 | Required failure state: a red suite on 0.85.x or any failed smoke observation stops the unit before the note is refreshed; the break is triaged as its own finding, never absorbed | P2 | 3 | execute-phase | read-verified: progress.md records any red suite outcome or `- SMOKE … outcome: fail` row, plus the stop-before-P3 decision, before P3 runs | progress.md note | planned |
 
 ## Acceptance
 
@@ -147,11 +147,11 @@ judgement.
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | The package suite is green with pi 0.85.x as the resolved dev peer (type contract incl. the thinking-level drift guard + full test suite). | `cd packages/pi-agentic-workflow && bun run test` → exit 0; `node -p "require('./node_modules/@earendil-works/pi-coding-agent/package.json').version"` → starts with `0.85.` |
-| AC2 | The manual smoke ran on pi 0.85.x and its six observations are recorded with outcomes. | `grep -c "^- SMOKE" docs/fix/166-pi-0850-baseline-refresh/progress.md` → 6 (each row names the observation + outcome) |
+| AC2 | The manual smoke ran on pi 0.85.x and its six observations are recorded with per-observation outcomes (`outcome: pass` / `outcome: fail`); all six outcomes pass — any `outcome: fail` row engages O12's stop-before-P3 and the unit may not proceed to P3 or close. | `grep -c "^- SMOKE" docs/fix/166-pi-0850-baseline-refresh/progress.md` → 6 (each row names the observation + its outcome; a fail row is a required stop state, never a sanitizable detail) |
 | AC3 | The baseline note reads 0.85.0 with the date in EN and ES; no stale 0.84.x claim remains in either README. | `grep -c "0\\.84" packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md` → `0` and `0`; `grep -c "0\\.85\\.0" packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md` → ≥ 1 each |
 | AC4 | Release bookkeeping complete: package at 0.4.1 and both changelog tables carry the row. | `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → `0.4.1`; `grep -c "| 0.4.1 |" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 each |
 | AC5 | The PR body records a verdict (pass / adapted / not applicable) for each of the issue's five in-scope delta-scan items. | `grep -c "^- VERDICT" docs/fix/166-pi-0850-baseline-refresh/pr-body.md` → 5 |
-| AC6 | The fix-index row is closed with the PR link after the PR opens. | `grep -cE "\\[#166\\]\\(https://github.com/gtrabanco/agentic-workflow/issues/166\\) \\| pi-0850-baseline-refresh \\| done · \\\[#" docs/fix/README.md` → 1 |
+| AC6 | The fix-index row is closed with the PR link after the PR opens, in the index's backticked done-row convention. | ``grep -cE "\\[#166\\]\\(https://github.com/gtrabanco/agentic-workflow/issues/166\\) \\| pi-0850-baseline-refresh \\| \`?done\`? · \\[#" docs/fix/README.md`` → 1 |
 
 ## Phases
 
@@ -179,12 +179,13 @@ Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:3:dev-peer-repoint-pi-085
 ### P2 — Manual smoke on pi 0.85.x
 
 Layer: `hardening` (manual tasks — phase-contract rule 7's sanctioned home;
-the P3 note edit depends on this outcome). Done-when: `grep -c "^- SMOKE"
+the P3 note edit depends on this outcome — O12 stops before P3 on a red suite
+outcome or any failed smoke observation). Done-when: `grep -c "^- SMOKE"
 docs/fix/166-pi-0850-baseline-refresh/progress.md` → 6.
 
 - [ ] (manual) Install the package into a pi 0.85.x runtime; confirm package skills load and friendly commands register with correct names (19 user-facing skills, `docs/workflow/SKILLS.md` §"The skills") (O4)
 - [ ] (manual) Run one routed command end-to-end (set + clear); open `/agentic-workflow-settings` and complete a round-trip; confirm the first-run hint (O5)
-- [ ] Append the six observations as `- SMOKE` rows (each naming the observation and its outcome) to `progress.md` (O6)
+- [ ] Append the six observations as `- SMOKE` rows (each naming the observation and its `outcome: pass` / `outcome: fail`) to `progress.md`; any `outcome: fail` row stops the unit before P3 per O12 (O6, O12)
 
 Phase-lint: PASS (8/8) · fingerprint `P2:hardening:3:manual-smoke-on-pi-0850`
 
@@ -217,13 +218,14 @@ Phase-lint: PASS (8/8) · fingerprint `P4:docs:2:release-bookkeeping-041`
 - [ ] Set the fix-index row status to `done` and commit the flip (the flip commit also stages `pr-body.md`) (O11)
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file docs/fix/166-pi-0850-baseline-refresh/pr-body.md` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #166`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [ ] Update the fix-index row to `` `done` · [#<pr>](<pr-url>) `` — the index's backticked done-row convention (`#159`/`#161` siblings) (O11)
 - [ ] Commit `docs: link PR #<n>` and push
 
 ## Rules that must never be violated
 
 - The baseline note is never refreshed to a pi version the package suite does
-  not pass (PE-012; verification-contract anti-gaming).
+  not pass or on which any manual smoke observation failed (PE-012;
+  verification-contract anti-gaming).
 - The EN and ES note edits ship in the same change — a diff touching only one
   side of the pair is incomplete (CLAUDE.md hard rule).
 - No validator is weakened or skipped to manufacture green (verification-contract).
@@ -254,10 +256,11 @@ Phase-lint: PASS (8/8) · fingerprint `P4:docs:2:release-bookkeeping-041`
 - **CI publish on merge** (PE-009): merging publishes 0.4.1 and the refreshed
   note to npm in the same push. Mitigation: P2 smoke and AC1 must hold before
   P5 opens the PR; the PR body carries the evidence.
-- **Suite red on 0.85.x** (low probability): the fetched 0.85.0 changelog
-  lists no thinking-level enum change and no extension-API change (PE-006),
-  and the drift guard is compile-time — but if the suite fails, O12 stops the
-  unit before the note is touched; the break is triaged as its own finding.
+- **Suite red or failed smoke on 0.85.x** (low probability): the fetched
+  0.85.0 changelog lists no thinking-level enum change and no extension-API
+  change (PE-006), and the drift guard is compile-time — but if the suite
+  fails or any P2 smoke observation fails, O12 stops the unit before the note
+  is touched; the break is triaged as its own finding.
 - **`bun update` side effects**: re-resolving the peer may move transitive
   dev-only resolutions; the package suite (O2) is the gate that the new
   resolution set is sound.
