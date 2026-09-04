@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 3.0.1
+version: 3.1.0
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -67,6 +67,18 @@ One or more GitHub issue numbers from this repo, space-separated.
 - Branch `fix/<primary>-<topic>` from `main`.
 - One local commit with SPEC and `docs/fix/README.md` (`pending`, all merged issues).
 - **Stop: do not push/open PR.** Hand off to `review-plan`, then `execute-phase --fix`.
+
+## Research and reference trace (plan stage)
+
+- **Conditional web research.** Plan-stage research runs only when a bounded
+  question (ROWS.md Q1–Q5) cannot be answered from repository evidence: run
+  exactly one web pass before the phases are emitted and freeze what it
+  returns as evidence rows (URL and access date). A question the repository
+  answers is never re-fetched.
+- **Mandatory reference trace.** Affected code is located by symbol/reference
+  search — LSP/serena when the environment offers it, grep otherwise — and the
+  blast radius is derived from that search, never from model memory: added or
+  changed code can break callers the plan must name.
 
 ## Hard rules
 

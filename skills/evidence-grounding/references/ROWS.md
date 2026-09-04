@@ -28,7 +28,7 @@ id | claim-or-obligation | authority-kind | source-and-location | observed-revis
 | Value | Means | Acceptable `source-and-location` |
 |---|---|---|
 | `repository` | observed in tracked source, config, or a generated artifact | `path:line` or `path` + symbol/test name |
-| `document` | a project doc, template, SPEC, roadmap or fix-index row | `path:section` |
+| `document` | a project doc, template, SPEC, roadmap or fix-index row, or fetched external documentation | `path:section`, or the URL plus access date for a fetched source (`https://… (fetched YYYY-MM-DD)`) |
 | `ledger` | a frozen Normalized Repository State fact/decision, or an accepted architectural decision | `REPOSITORY_STATE.md` row ID (`F0nn`/`AD-nnn`) |
 | `forge` | an issue, PR, review, or CI record | absolute issue/PR URL |
 | `user` | an explicit user decision recorded this unit or in `decisions.md` | dated `decisions.md` / SPEC `## Amendments` row |

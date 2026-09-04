@@ -45,7 +45,6 @@ their own — they are composed by the ones above:
 | `/generate-docs` | Generate incremental, diff-driven developer guides. |
 | `/init-workspace` | Adapt the workflow scaffold to a repository. |
 | `/log-session` | Append a structured session entry to `docs/LOGS.md`. |
-| `/loop-review-fold` | Review a unit, then fold what it found. |
 | `/plan-feature` | Route designed work into planning and the roadmap. |
 | `/plan-fix` | Draft a phased fix SPEC from one or more issues. |
 | `/product-audit` | Audit the product surface, not just the diff. |

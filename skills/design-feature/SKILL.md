@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 3.1.0
+version: 3.2.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -53,6 +53,34 @@ evidence → draft → cut → readiness. Its outcomes (`READY-FOR-REVIEW |
 NEEDS-EVIDENCE | NEEDS-DESIGN | NEEDS-REPLAN`) are an authoring gate, never an
 approval: only `review-spec` can approve a Product half.
 
+## Research gate (mandatory, fail-closed)
+
+Before the Product half is emitted, run the research gate in the evidence pass
+(step 2 of the ordered passes):
+
+- **Fetch the domain** — acquire **at least two externally fetched sources** on
+  the capability's domain (fetch/WebFetch/browser): how the domain defines and
+  solves this capability. Repo evidence alone cannot ground a design; the bias
+  this gate closes is designing from what the repository already believes.
+  Each fetched source becomes an evidence row (URL and access date).
+- **Cover the full definition** — the rows must state what the capability **is
+  and what it is not**, and the **user's expectation of it** — accepted and
+  rejected inputs, boundaries, semantics — not just the project's current
+  framing of it.
+- **Decompose every enunciated expectation** — expand each expectation the
+  user enunciates into the implicit case decomposition it implies **before**
+  the Product half is cut: valid and invalid values and limits, interaction
+  states, degraded mode, backend validation/filtering/parsing, alternate user
+  paths. The canonical case: a "phone number input" is not a field — it is the
+  whole case vector (prefixes/suffixes, lengths, non-text rejection, focus,
+  no-JS/JS behavior, backend filtering/validation/parsing) that the product
+  owner's one-liner hides.
+- **Fail closed** — offline, or a material question the fetches do not answer,
+  returns `NEEDS-EVIDENCE` with the named owner and next fetch: never a guess,
+  never an invented citation.
+- **Research before encode** — platform semantics a test will encode are
+  verified against authoritative documentation before the test exists (the
+  prevention half of `verification-contract`'s test-immutability contract).
 
 ## Progressive loading — resolve status before product detail
 
@@ -102,7 +130,8 @@ required resource or unresolved mandatory slot returns NEEDS_INPUT; never guess.
 - The Expectation sweep enumerates **domain conventions**, not new scope: it
   may only route each expectation to in-scope / out-of-scope / deferred — it
   never silently grows the feature beyond what the user confirms.
-- No systematic per-feature market research; no global skill/MCP discovery
+- No market or competitive research — the mandatory research gate above is
+  this skill's only external research; no global skill/MCP discovery
   sweep (`product-audit`'s job); no `--update` flag — upsert is always the
   default behavior, not an opt-in.
 - Don't build a separate `DESIGN.md` — one SPEC, two halves, always.

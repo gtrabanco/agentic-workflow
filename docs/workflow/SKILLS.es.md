@@ -4,7 +4,7 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**20 skills orientadas al usuario** (una entrada de menú cada una) + **17 pasos
+**19 skills orientadas al usuario** (una entrada de menú cada una) + **17 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, los dos dueños de evidencia pre-ejecución `evidence-grounding`
 (preparación de autoría) y `pre-execution-review` (el ciclo de revisión común
@@ -18,7 +18,7 @@ metadata-internal** no descubrible por la CLI `skills` (`orchestration-envelope`
 leva `metadata.internal: true` en el frontmatter, lo que la CLI respeta para
 excluirlo del descubrimiento `npx skills add`). La skill `bump-skill` es una
 herramienta de mantenimiento del repo (no es skill del workflow) y no aparece
-en este índice. Las 20 skills orientadas al usuario cubren configuración,
+en este índice. Las 19 skills orientadas al usuario cubren configuración,
 descubrimiento/resolución de estado del repositorio, diseño, revisión
 pre-ejecución (producto y plan), planificación, ejecución, review, auditoría,
 fold de hallazgos, generación de docs, triage de issues, envío del roadmap,
@@ -118,9 +118,8 @@ un resultado de preparación determinista, nunca un veredicto.
 
 | Skill | Alcance | Rol | Entrega a |
 |---|---|---|---|
-| `review-change` | el **cambio** | Ejecuta las revisiones aisladas aplicables, verifica el blob de aceptación congelado contra el recibo de código actual, mapea criterios a evidencia del diff, clasifica una vez y persiste un veredicto ligado al SHA. **Obligatorio antes del merge** | `loop-review-fold` (recomendado si falla) / `fold-findings` manual |
+| `review-change` | el **cambio** | Ejecuta las revisiones aisladas aplicables, verifica el blob de aceptación congelado contra el recibo de código actual, mapea criterios a evidencia del diff, clasifica una vez y persiste un veredicto ligado al SHA. **Obligatorio antes del merge** | `fold-findings` manual → nuevo `review-change` (recomendado si falla) |
 | `fold-findings` | el **ledger de hallazgos** | Repara la cola seleccionada en lotes atómicos compatibles. Cada hallazgo conserva un veredicto y evidencia individuales; solo se agrupan miembros con una regla de corrección, validador y límite de rollback comunes | re-ejecutar `review-change` / presentar una disputa real al usuario |
-| `loop-review-fold` | el **router review/fold** | Comprueba la evidencia persistida, ejecuta primero `fold-findings` cuando una `review-change` anterior dejó una cola abierta; si no, ejecuta `review-change` y vuelve a revisar tras un HEAD cambiado. Los hallazgos no resueltos pasan a `triage-issue --prioritize-now`, y el trabajo grande se replantea en nuevas fases manuales | `audit-pr` al aprobar / triaje del usuario y ejecución manual ante hallazgos no resueltos |
 | `audit-pr` | el **PR** | Puerta de merge de solo lectura que **consume el recibo `REVIEW-PASS` vigente de `review-change`** (ausente/obsoleto → bloqueante enrutado a `/review-change`, nunca se re-revisa) → comentario MERGE-READY ligado al SHA o bloqueantes con evidencia; nunca edita ni fusiona. Solo un `ship-roadmap --fullauto` activo puede ejecutar un merge automatizado | `execute-phase` / `plan-fix` / `triage-issue` |
 | `product-audit` | el **producto** | Chequeo de salud periódico de espectro completo; extrae de los docs de feature → propone issues + cambios de roadmap (nunca arregla automáticamente); recurrencia de exportación de alcance (≥ 2 unidades consecutivas exportando alcance → hallazgo de calidad de planificación enrutado a #64) | `triage-issue` / `plan-feature` / `plan-fix` |
 | `audit-docs` | los **docs** | Audita docs ↔ roadmap ↔ código ↔ índice de fixes en busca de desviaciones | informe (+ arreglos opcionales de bajo riesgo) |
@@ -182,7 +181,6 @@ indicado aquí.
 | `init-workspace` | `/init-workspace [target-dir]` | Por defecto el directorio actual. En un repositorio que ya tiene el andamiaje, cambia automáticamente al **modo actualización** (propone solo los bloques de plantilla nuevos/faltantes; solo aditivo). |
 | `log-session` | `/log-session [note]` | La nota opcional se antepone al Resumen de la entrada. |
 | `plan-feature` | `/plan-feature <NN-slug \| #N> \| --from-issue N \| --scaffold <slug> \| --next` | Un slug o referencia de issue se detecta automáticamente; los flags fuerzan una ruta: `--from-issue N` (issue → mitad de producto acotada), `--scaffold <slug>` (directo al andamiaje de la mitad de ingeniería), `--next` (siguiente entrada del roadmap). Una feature sin diseñar (fila del roadmap por debajo de `defined`) → se detiene y redirige a `/design-feature` — sin flag de bypass. |
-| `loop-review-fold` | `/loop-review-fold <NN> \| --fix <n>` | Ejecuta el router simple review/fold. Elige review o fold según la evidencia persistida y lleva los hallazgos no resueltos a `/triage-issue --prioritize-now`; el trabajo grande se convierte en fases `P<n>` que el usuario ejecuta manualmente. |
 | `review-spec` | `/review-spec <NN-slug \| slug> [--repair]` | Revisa la mitad de producto de una unidad en contexto limpio. Sin argumentos: informa lo que puede ligar y se detiene — nunca adivina una unidad. `--repair` continúa un ciclo registrado en lugar de iniciar uno nuevo. |
 | `review-plan` | `/review-plan <NN-slug \| fix-<n>> [--repair]` | Revisa el plan congelado (feature o fix) en contexto limpio; requiere el recibo de producto padre para unidades de feature. Las mismas reglas de no-adivinar y `--repair` que `/review-spec`. |
 | `plan-fix` | `/plan-fix <issue-number> [<issue-number> …]` | Un issue → una unidad de fix. Varios issues → un bloque de capacidad compatible o un lote mecánico homogéneo cuando todo el conjunto comparte resultado, plan de verificación y release/rollback atómico. Si el conjunto falla, devuelve el mínimo número de grupos compatibles máximos en vez de separar por reflejo un PR por issue. |
@@ -215,17 +213,17 @@ IDEA / undesigned SPEC ─▶ design-feature (product half + capability closure)
                           → review-spec (contexto limpio, solo lectura) ─▶ SPEC-REVIEW-PASS ─┐
                    ┌──────────────── plan-feature (router, engineering-planning only) ─┐
 DESIGNED slug/SPEC ┤  --scaffold → plan-feature-scaffold (engineering half)            │
-ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (todas las fases) ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
+ISSUE(feature) ────┤  #N / --from-issue → plan-feature-from-issue                      ├─▶ execute-phase (todas las fases) ─▶ open PR (`done`) ─▶ fold-findings → nuevo review-change ─▶ audit-pr ─▶ merge
 ROADMAP --next ────┘  registers the roadmap entry, prints the next step                │
                        (undesigned input → STOP, redirect to /design-feature, no bypass)
 
-ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (lote compatible) ─▶ review-plan ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ loop-review-fold ─▶ audit-pr ─▶ merge
+ISSUE(any) ─▶ triage-issue ─┬─ fix-now ─▶ plan-fix (lote compatible) ─▶ review-plan ─▶ execute-phase --fix ─▶ open PR (`done`) ─▶ fold-findings → nuevo review-change ─▶ audit-pr ─▶ merge
                             ├─ fix-in-unit ─▶ execute-phase <NN> P<k> / fold-findings (ledger row) / replan on the open unit
                             ├─ promote ─▶ plan-feature (router → from-issue) ─▶ (feature chain above)
                             ├─ postpone ─▶ dated comment, leave open
                             └─ wontfix ─▶ propose close
 
-loop-review-fold ── selección por estado persistido → review-change ↔ fold-findings;
+review→fold (manual) ── fold-findings → nuevo review-change en un HEAD cambiado;
                     hallazgos no resueltos → triage-issue → replan + fases manuales;
 review-change ── runs the applicable read-only reviews + classifies a change;
                  composes review-implementation + the platform's companion skills;
@@ -237,7 +235,7 @@ audit-docs ───── audits docs ↔ roadmap ↔ code ↔ fix index, anyti
 
 ship-roadmap ─── AUTOPILOT around the whole feature chain: interview → founding →
                  roadmap → /loop { review-spec → plan-feature → review-plan → execute-phase (fresh cheap workers)
-                 → PR → loop-review-fold → audit-pr → merge } → final report;
+                 → PR → fold-findings → nuevo review-change → audit-pr → merge } → final report;
                  human at the merges (default) and at product-audit (always)
 ```
 
