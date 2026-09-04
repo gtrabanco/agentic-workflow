@@ -13,7 +13,7 @@ const unitLoop = read("skills/execute-phase/references/UNIT_LOOP.md");
 const findingPolicy = read("skills/execute-phase/references/OPPORTUNISTIC_FINDING.md");
 const planFix = read("skills/plan-fix/references/PLANNING_PROCESS.md");
 const fold = read("skills/fold-findings/references/FOLD_PROCESS.md");
-const loopEntry = read("skills/loop-review-fold/SKILL.md");
+const loopEntry = read("skills/review-change/references/REVIEW_PROCESS.md");
 const triage = read("skills/triage-issue/SKILL.md");
 const findingTriage = read("skills/triage-issue/references/REVIEW_FINDING_PROCESS.md");
 const verification = read("skills/verification-contract/SKILL.md");
@@ -58,19 +58,13 @@ assert.match(fold, /fewest atomic correction groups/);
 assert.match(fold, /one `FOLDED <same-sha>` line per\s+member/s);
 assert.match(fold, /never edit classification or create an\s+issue/s);
 
-assert.match(loopEntry, /Triggers: "loop-review-fold"/);
-assert.match(loopEntry, /review-change ── findings ──▶ fold-findings/);
-assert.match(loopEntry, /## When to use/);
-assert.match(loopEntry, /## Step 0 — Discover the project \(always first\)/);
-assert.match(loopEntry, /Apply this first-match table exactly/);
-assert.match(loopEntry, /## Guardrails/);
-assert.match(loopEntry, /## Relationship to other skills/);
-assert.match(loopEntry, /The loop ends at the first `PASS`, blocked\s+prerequisite, unresolved finding/);
-assert.match(loopEntry, /TRIAGE-REQUIRED/);
+// Fix #161: the bounded loop contract moved out of the retired review/fold
+// router into review-change's REVIEW_PROCESS.md (the two-cycle cap), so the pins
+// follow the cap to its owner.
+assert.match(loopEntry, /LOOP CAP REACHED/);
+assert.match(loopEntry, /at most \*\*two\*\*\s+review→fold cycles/);
+assert.match(loopEntry, /third cycle never\s+starts/);
 assert.match(loopEntry, /triage-issue --prioritize-now/);
-assert.match(loopEntry, /plan-feature <slug>/);
-assert.match(loopEntry, /plan-fix <issue-number>/);
-assert.match(loopEntry, /execute those phases manually/);
 assert.match(triage, /--prioritize-now <unit> F<k>/);
 assert.match(triage, /Review findings/);
 assert.match(triage, /new `P<n>` phases/);
@@ -90,7 +84,6 @@ assert.equal(fs.existsSync(path.join(root, "skills", "plan-feature-interview")),
 assert.match(read("skills/bump-skill/SKILL.md"), /^user-invocable: false$/m);
 assert.match(read("skills/bump-skill/SKILL.md"), /^  internal: true$/m);
 for (const requiredDependency of [
-  "loop-review-fold",
   "orchestration-envelope",
   "phase-contract",
   "planning-preflight",

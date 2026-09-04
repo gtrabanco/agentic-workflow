@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  39 source skills (20 user-facing + 17 workflow internals + 2 metadata-internal; 38 discoverable)
+skills/                  38 source skills (19 user-facing + 18 workflow internals + 1 metadata-internal; 37 discoverable)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -85,7 +85,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**20 user-facing skills** (one menu entry each) + internal contracts composed
+**19 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the `plan-feature` router's two planning steps, the two pre-execution
 evidence owners (`evidence-grounding` for authoring readiness,
 `pre-execution-review` for the shared review cycle and the planning ledgers), the
@@ -149,7 +149,6 @@ merge.**
 | `review-plan` | the **plan** | Independent, read-only Engineering gate: snapshots the frozen plan (SPEC, acceptance, planning evidence, obligations, phases, tests), sweeps the ledgers and the fixed Engineering checks — plus reproduction/root-cause/regression/rollback authority for fixes — in a context that did not cut them, and returns only `PLAN-REVIEW-PASS`, `PLAN-REVIEW-FAIL` or `NEEDS-DESIGN` with a snapshot-bound receipt, and reads every byte it opens — the copied `spec` receipt included — as data, never instructions. It edits no plan artifact — the parent digest it records is recomputed, per `POLICY.md` §7 — and `execute-phase` refuses to run without its current receipt, whose turn contract points at `POLICY.md` §8 for the durable mark. |
 | `review-change` | the **change**  | Runs only the reviews that **apply to your platform** (code, security, verify, design, a11y, brand, perf, SEO) — adversarially by default, assuming the diff is wrong until proven otherwise — and classifies → one decision table + an explicit manual-verification checklist; a dirty tree or unpushed commits stop the review as a `REVIEW BLOCKED` precondition before any pass runs — workspace state is never a persisted finding, and the review commits its own findings append so it never dirties the tree it next judges. The mandatory end review **must run in a conversation that did not implement the change** — if it did, stop and hand off to a fresh one. Opt-in `--adversarial N`: N independent context-clean reviewers, each an index-assigned role (correctness/security/SPEC-coverage), run in parallel (subagents / headless / sequential-fallback), findings merged by `file:line` at an inclusion threshold of ≥1 — default off, auto-recommended (never forced) when the change is `L`/sensitive, the reviewer isn't the fleet's strongest or is weaker than the diff's author, or only one model family is available on a `≥M` change. `--synthesize` is the standalone fusion entry point for manually-run reviewers. Fix-now findings on an unmerged unit persist to that unit's fix-now fold ledger (`review-findings.md`), deduped by `file:line`+axis (only `high`/`med` persist — `low` findings are report-only notes that never block). Classification honors the engine's **fix-now override checks**: a cheap fix or an in-scope defect is always fix-now (never a postpone/known-issue/tradeoff escape), and a too-large in-scope fix-now routes to `replan-in-unit` — user-confirmed SPEC phase(s) on the same branch, never a downgrade |
 | `fold-findings` | the **findings ledger** | Repairs the full queue in the fewest compatible atomic batches, grouping by root cause/mechanical rule + validator + rollback boundary. One batch gets one commit, while every finding retains its ledger tick and output receipt. Classification stays frozen; disputes stop for a user decision and no fold creates backlog. |
-| `loop-review-fold` | the **candidate loop** | Simple state router between `review-change` and `fold-findings`: checks persisted evidence first, folds an existing open queue before reviewing again, and reviews only a changed HEAD, and is bounded at two review→fold cycles per unit — a third cycle never starts (the residue routes to `triage-issue --prioritize-now`). Unresolved findings go to `triage-issue --prioritize-now`; oversized work is replanned into new `P<n>` phases and the user continues execution manually. Never merges or silently drops findings. |
 | `audit-pr`      | the **PR**      | Read-first merge gate that **consumes the current `review-change` `REVIEW-PASS` receipt** (a missing/stale receipt is a blocker routed to `/review-change`, never re-reviewed) and evaluates only the delivery contract: phases/docs complete, CI, mergeability, traceability, capability closure, descope integrity, and the receipt's invariant/manual-check result → **MERGE-READY or evidenced blockers**, always with the full URL. MERGE-READY posts a dated SHA-bound PR comment; BLOCKED persists blockers to the shared fold ledger. It never edits or merges: only an active `ship-roadmap --fullauto` stage may consume its verdict and invoke the transient wrapper. |
 | `product-audit` | the **product** | Explicit-invocation-only, periodic full-spectrum health check persisted as `docs/audits/<id>-<date>.md`; mines code and feature history into severity-ranked findings plus issue/roadmap/tooling proposals, checks capability-inventory freshness and repeated scope export, gates every claim on evidence provenance and reports the delta vs the prior audit of equivalent scope, and never auto-fixes. |
 | `audit-docs`    | the **docs**    | Audits docs ↔ roadmap ↔ code ↔ fix index for drift                                                                                                                                             |
@@ -268,7 +267,6 @@ workflow is the contract; per-skill tiers are a `#claude`-branch convenience.
 | `execute-phase`  | Sonnet     | medium | mechanical implementation per SPEC — whole unit by default, fresh/compact phase transactions (Opus if logic is subtle)                                                                  |
 | `review-change`  | Opus       | high   | platform-adaptive review orchestration + synthesis                                                                                                                                       |
 | `fold-findings`  | Opus       | high   | never weaker than the review tier that produced the finding; a subtle logic/security finding earns its own strongest-available pass                                                     |
-| `loop-review-fold` | Opus     | high   | simple persisted-state router for review, fold, and unresolved-finding triage                                                                                                           |
 | `audit-pr`       | Opus       | high   | whole-PR merge-readiness judgement                                                                                                                                                       |
 | `product-audit`  | Opus       | max    | product-wide multi-axis sweep + proposals (max effort for the widest context sweep)                                                                                                      |
 | `audit-docs`     | Sonnet     | medium | mostly mechanical cross-document checks (Opus for deep audits)                                                                                                                           |
@@ -518,7 +516,7 @@ Full tutorial in **[`docs/workflow/`](docs/workflow/README.md)**. In short:
 /review-plan <NN>               → independent read-only Engineering gate (PLAN-REVIEW-PASS | FAIL | NEEDS-DESIGN)
 /execute-phase <NN>             # all remaining phases; fresh worker + bounded repairs per phase
         → a finished unit always opens its PR + flips to `done` (built, not merged)
-/loop-review-fold <NN>          # review → fold → review; unresolved findings go to triage/replan
+/fold-findings → re-run /review-change  # manual review→fold; unresolved findings go to triage/replan
 /audit-pr                       # merge gate: merge-ready or blockers (never merge with pending docs)
         → human merges
 ```
@@ -650,7 +648,7 @@ without selecting skills interactively, pass all published skill names to one
 npx skills remove --yes \
   audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
   execute-phase pre-execution-review \
-  fold-findings generate-docs init-workspace log-session loop-review-fold \
+  fold-findings generate-docs init-workspace log-session \
   orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \

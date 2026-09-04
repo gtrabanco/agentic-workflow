@@ -134,7 +134,7 @@ test("parseTurn accepts the compact model-owned SkillOutcome v1", () => {
     skill: "review-change",
     status: "continue",
     summary: "Two findings remain open on the current branch.",
-    next: { intent: "loop-review-fold", targets: ["12-skill-lockfile"] },
+    next: { intent: "review-change", targets: ["12-skill-lockfile"] },
     blockers: [],
     questions: [],
     discoveries: [],
@@ -180,37 +180,7 @@ test("public validators reject undeclared model outcomes and malformed snapshots
   assert.ok(snapshot.errors.includes("unknowns[0].reason must be a string"));
 });
 
-test("parseTurn accepts only the complete loop-review-fold native contract", () => {
-  const known = parseTurn({
-    skill: "loop-review-fold",
-    text:
-      "REVIEW-FOLD LOOP — BLOCKED\nUnit: 134-machine-contract · PR: https://github.com/example/repo/pull/134 · HEAD: abc123\nFirst action: review-change\nReview: FAIL · Fold: unchanged\nUnresolved: none\nEvidence: The current review receipt is stale.\n\n→ Next: /review-change — obtain a current receipt",
-  });
-  assert.equal(known.ok, true);
-  assert.equal(known.source, "native");
-  assert.equal(known.outcome.status, "blocked");
-  assert.equal(known.outcome.next.intent, "review-change");
 
-  const incomplete = parseTurn({
-    skill: "loop-review-fold",
-    text: "REVIEW-FOLD LOOP — BLOCKED\nReview: FAIL · Fold: unchanged\n\n→ Next: /review-change — obtain a current receipt",
-  });
-  assert.equal(incomplete.ok, false);
-
-  const unknownCommand = parseTurn({
-    skill: "loop-review-fold",
-    text:
-      "REVIEW-FOLD LOOP — BLOCKED\nUnit: 134-machine-contract · PR: https://github.com/example/repo/pull/134 · HEAD: abc123\nFirst action: review-change\nReview: FAIL · Fold: unchanged\nUnresolved: none\nEvidence: The current review receipt is stale.\n\n→ Next: /made-up — do not invent routes",
-  });
-  assert.equal(unknownCommand.ok, false);
-
-  const invalidFold = parseTurn({
-    skill: "loop-review-fold",
-    text:
-      "REVIEW-FOLD LOOP — BLOCKED\nUnit: 134-machine-contract · PR: https://github.com/example/repo/pull/134 · HEAD: abc123\nFirst action: review-change\nReview: FAIL · Fold: invented\nUnresolved: none\nEvidence: The current review receipt is stale.\n\n→ Next: /review-change — obtain a current receipt",
-  });
-  assert.equal(invalidFold.ok, false);
-});
 
 test("parseTurn recognizes the complete audit-pr native verdict without requiring a duplicate envelope", () => {
   const blocked = parseTurn({
@@ -258,7 +228,6 @@ test("machine profiles cover exactly the skills AWL can invoke", () => {
       "triage-issue",
       "execute-phase",
       "review-change",
-      "loop-review-fold",
       "audit-pr",
     ],
   );

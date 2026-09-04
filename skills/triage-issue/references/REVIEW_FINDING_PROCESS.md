@@ -25,7 +25,7 @@ after `/fold-findings` leaves rows unresolved.
 
 4. Never implement the new phases in this triage turn. After a replan, ask the
    user to continue manually with `/execute-phase <unit> P<n>` (or the fix
-   equivalent), then re-run `/loop-review-fold` on the resulting HEAD.
+   equivalent), then re-run `/review-change` on the resulting HEAD (the manual path).
 
 Return exactly one block per finding:
 

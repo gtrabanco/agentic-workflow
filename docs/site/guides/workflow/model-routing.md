@@ -37,7 +37,7 @@ model's confident completion is not a workflow receipt.
 
    ```text
    design-feature → plan-feature → execute-phase
-     → loop-review-fold → audit-pr → human merge
+     → fold-findings → re-run review-change → audit-pr → human merge
    ```
 
 4. When a primary model is unavailable or its allowance is exhausted, restart
@@ -139,7 +139,6 @@ plan before `execute-phase`.
 | `generate-docs` | medium | Q36/medium → M25/medium | M25P/medium → M25F/medium | S5/medium | Terra/medium → Luna/medium | Q36/medium → M25/medium |
 | `init-workspace` | high | M25/high + Q36 evidence → DSF/max | G53/max → K3/max | O5/high → S5/high | Sol/high → Terra/high | G53/high; Q36 gathers evidence → M25 challenge |
 | `log-session` | medium | Q36/low → M25/low | M25F/low → Hy3F/low → Luna/low | S5/low | Luna/low → Terra/low | Q36/low → M25F/low for non-confidential logs |
-| `loop-review-fold` | high | Q36/high conductor; DSF folds; M25 reviews | G53/high conductor; DSP/DSF folds; K3 or M25P reviews | O5/high conductor; S5 workers | Sol/high conductor; Terra workers | G53/high conductor; DSF folds; M25 reviews |
 | `orchestration-envelope` | medium | Q36/medium → DSF/high | M25P/medium → Luna/medium | S5/medium | Terra/medium → Luna/medium | Q36/medium → DSF/high |
 | `phase-contract` | caller, at least medium | Q36/medium → DSF/high | M25P/medium → Luna/medium | S5/medium | Terra/medium → Luna/medium | Q36/medium → DSF/high |
 | `plan-feature` | high | Q36/high draft + M25/high challenge → DSF/max; human closes high-risk plans | G53/max → K3/max → DSP/max | O5/high (max for critical plans) → S5/max | Sol/high (max for critical plans) → Terra/max | G53/max → K3/max; Q36 prepares evidence |
