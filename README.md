@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  39 source skills (20 user-facing + 17 workflow internals + 2 metadata-internal; 38 discoverable)
+skills/                  38 source skills (19 user-facing + 18 workflow internals + 1 metadata-internal; 37 discoverable)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -85,7 +85,7 @@ an optional provider optimization, never a correctness dependency. See
 
 ## The skills
 
-**20 user-facing skills** (one menu entry each) + internal contracts composed
+**19 user-facing skills** (one menu entry each) + internal contracts composed
 for you: the `plan-feature` router's two planning steps, the two pre-execution
 evidence owners (`evidence-grounding` for authoring readiness,
 `pre-execution-review` for the shared review cycle and the planning ledgers), the

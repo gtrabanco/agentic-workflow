@@ -73,7 +73,7 @@ working turn that still needs prose or tool use.
 
 `parseTurn` accepts, in order: SkillOutcome v1, strict Envelope v2, named
 legacy envelope repairs, then the one remaining fixed native verdict format,
-`audit-pr`). No other prose fallback exists.
+`audit-pr`. No other prose fallback exists.
 
 ## Compile the snapshot before deciding
 
