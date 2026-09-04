@@ -42,7 +42,6 @@ Final-phase / single-pass / fix hand-off:
 PR opened: <FULL PR URL — always printed here; not every agent shows open PRs>
 Roadmap/fix-index row: done · #<n> (linked and pushed)
 → Next: /fold-findings, then re-run /review-change (unresolved findings go to triage/replan)
-  · manual path → /fold-findings, then re-run /review-change
   · clean    → /audit-pr (merge gate) → human merges
   · findings → fold fix-now into this PR; independent work remains a proposal until user triage; re-review
   · docs site declared (documentation map has a `Docs site` block) →
