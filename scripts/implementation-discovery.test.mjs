@@ -180,3 +180,58 @@ test("a newly required path, changed evidence, or contradiction stops and remaps
   assert.match(text, /newly discovered path|unexpected path|new path|newly required path/i);
   assert.match(text, /stops and remaps|stops and routes|remap/i);
 });
+
+// ── P3 — evidence-aware execution routing: verdicts route upstream, never repair ──
+
+test("Plan-level defects route to plan-feature/plan-fix plus review-plan", () => {
+  const text = skillText();
+  const body = section(text, "Routes and upstream owners") || text;
+  assert.match(body, /plan-feature|plan-fix/i);
+  assert.match(body, /review-plan/i);
+});
+
+test("Product/authority gaps route to design-feature then review-spec", () => {
+  const text = skillText();
+  const body = section(text, "Routes and upstream owners") || text;
+  assert.match(body, /design-feature/i);
+  assert.match(body, /review-spec/i);
+});
+
+test("mapping never replaces candidate review, verification, or audit authority", () => {
+  const text = skillText();
+  const body = section(text, "Routes and upstream owners") || text;
+  assert.match(body, /candidate review|review\b/i);
+  assert.match(body, /verification/i);
+  assert.match(body, /audit/i);
+});
+
+test("a second repair/re-review cycle inherits feature 28's CONVERGENCE-ANOMALY", () => {
+  const text = skillText();
+  const body = section(text, "Routes and upstream owners") || text;
+  assert.match(body, /CONVERGENCE-ANOMALY/i);
+  assert.match(body, /second/i);
+});
+
+test("source-local findings stay local; Plan/Product defects return upstream; no forge call", () => {
+  const text = skillText();
+  const body = section(text, "Routes and upstream owners") || text;
+  assert.match(body, /source-local findings stay local|findings stay local/i);
+  assert.match(body, /never calls the forge|no forge/i);
+  assert.match(body, /never a follow-up issue|not a follow-up issue/i);
+});
+
+test("legacy/manual route uses sequential fresh conversations without claiming a machine receipt", () => {
+  const text = skillText();
+  const body = section(text, "Legacy and manual routes") || text;
+  assert.match(body, /sequential fresh conversations|fresh conversations/i);
+  assert.match(body, /may not claim a machine receipt|no machine receipt/i);
+});
+
+test("semantic/symbol navigation and Engram are optional advisory locators, not authority", () => {
+  const text = skillText();
+  const body = section(text, "Advisory locators") || text;
+  assert.match(body, /Engram|memory/i);
+  assert.match(body, /semantic|symbol navigation/i);
+  assert.match(body, /never (the )?authority|not authority/i);
+  assert.match(body, /direct repository|Git.*fallback|fallback/i);
+});
