@@ -39,14 +39,14 @@ Layer: docs · Done-when: `node --test
 scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs
 scripts/audit-pr-receipt.test.mjs` -> exit 0.
 
-- [ ] Route missing/contradicted Plan-level topology, architecture, obligations, validators, or assumptions to `plan-feature`/`plan-fix` plus fresh `review-plan`; route Product gaps to design/review and unavailable evidence to one exact blocker.
-- [ ] Pass the fresh writer only frozen phase authority plus the compact map; prohibit raw exploration dumps and preserve every relevant claim, evidence pointer, contradiction, and unknown.
-- [ ] Document semantic/symbol navigation and Engram as optional advisory locators with direct repository/Git/search/read/test fallback and identical evidence requirements.
-- [ ] Integrate source-plan root causes with current review/fold routes: source-local findings stay local, Plan/Product defects return upstream, mapping never replaces candidate review, and a second cycle emits feature 28's `CONVERGENCE-ANOMALY` diagnosis.
-- [ ] Preserve current-unit obligation ownership and prohibit forge calls/automatic issues; unrelated defects remain subject to existing user-authorized opportunistic triage.
-- [ ] Add legacy/manual routes using sequential fresh conversations and exact artifact/source bindings without claiming missing machine receipts or durable guarantees.
-- [ ] Update workflow-status/ship-roadmap/orchestration handoffs only as needed to expose discovery READY/upstream/blocker outcomes without adding a competing durable state owner.
-- [ ] Add end-to-end feature/fix fixtures for compact handoff, upstream round trip, legacy/manual path, no issue/file/schema side effects, and unchanged TDD/verification/review/audit authority.
+- [x] Route missing/contradicted Plan-level topology, architecture, obligations, validators, or assumptions to `plan-feature`/`plan-fix` plus fresh `review-plan`; route Product gaps to design/review and unavailable evidence to one exact blocker.
+- [x] Pass the fresh writer only frozen phase authority plus the compact map; prohibit raw exploration dumps and preserve every relevant claim, evidence pointer, contradiction, and unknown.
+- [x] Document semantic/symbol navigation and Engram as optional advisory locators with direct repository/Git/search/read/test fallback and identical evidence requirements.
+- [x] Integrate source-plan root causes with current review/fold routes: source-local findings stay local, Plan/Product defects return upstream, mapping never replaces candidate review, and a second cycle emits feature 28's `CONVERGENCE-ANOMALY` diagnosis.
+- [x] Preserve current-unit obligation ownership and prohibit forge calls/automatic issues; unrelated defects remain subject to existing user-authorized opportunistic triage.
+- [x] Add legacy/manual routes using sequential fresh conversations and exact artifact/source bindings without claiming missing machine receipts or durable guarantees.
+- [x] Update workflow-status/ship-roadmap/orchestration handoffs only as needed to expose discovery READY/upstream/blocker outcomes without adding a competing durable state owner.
+- [x] Add end-to-end feature/fix fixtures for compact handoff, upstream round trip, legacy/manual path, no issue/file/schema side effects, and unchanged TDD/verification/review/audit authority.
 
 ## P4 — Qualify implementation discovery
 
