@@ -24,7 +24,7 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 - Next: P4 · Attempts: 1
 
 ## Unit-loop receipt — P4 (qualification)
-- Commit: pending · Gate: root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Commit: eef1ab09 · Gate: root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
 - Next: close-out (independent review + weakest-executor golden fixture are handed off, separate contexts)
 
 ## Acceptance receipt v1
