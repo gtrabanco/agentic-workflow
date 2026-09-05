@@ -46,12 +46,70 @@ export function readSkillMeta(text: string, dir: string): SkillMeta {
     const colon = line.indexOf(":");
     if (colon === -1) continue;
     const key = line.slice(0, colon).trim();
-    const value = line.slice(colon + 1).trim().replace(/^["']|["']$/gu, "");
+    const rawValue = line.slice(colon + 1).trim();
+    const value = rawValue.replace(/^["']|["']$/gu, "");
+
+    // YAML block scalars: `description: >` (folded) / `description: |` (literal)
+    // carry their content on the following indented lines, not inline. Collect
+    // those continuation lines (they never start a top-level `key: value` line)
+    // and advance the loop past them. ">" is not a description, so the old
+    // line-oriented reader storing `>` is the bug (#165).
+    if (key === "description" && (value === ">" || value === "|")) {
+      const folded = value === ">";
+      const collected: string[] = [];
+      let cursor = index + 1;
+      for (; cursor < lines.length; cursor += 1) {
+        const next = lines[cursor]!;
+        if (next.trim() === "---") break;
+        // A non-empty, non-indented line starts the next top-level key.
+        if (next !== "" && !/^[ \t]/u.test(next)) break;
+        collected.push(next);
+      }
+      meta.description = buildBlockScalar(collected, folded);
+      // Outer loop += 1 moves past the last consumed continuation line.
+      index = cursor - 1;
+      continue;
+    }
+
     if (key === "name" && value !== "") meta.name = value;
     else if (key === "description" && value !== "") meta.description = value;
     else if (key === "user-invocable") meta.userInvocable = value === "true";
   }
   return meta;
+}
+
+/**
+ * Assemble a YAML block scalar from its collected, indented continuation lines.
+ *
+ * Strip the common leading indentation, then: folded (`>`) joins non-blank
+ * lines into a single space-separated string (blank lines become page breaks);
+ * literal (`|`) preserves the line breaks. Both are trimmed of outer blank
+ * whitespace so the value matches the frontmatter's intended text.
+ */
+function buildBlockScalar(lines: string[], folded: boolean): string {
+  const nonEmpty = lines.filter((line) => line.length > 0);
+  const indent = nonEmpty.reduce((min, line) => {
+    const width = /^[ \t]*/u.exec(line)![0].length;
+    return Math.min(min, width);
+  }, Number.POSITIVE_INFINITY);
+  if (!Number.isFinite(indent)) return "";
+
+  const unindented = lines.map((line) => (line.length === 0 ? "" : line.slice(indent)));
+  if (!folded) return unindented.join("\n").trim();
+
+  const parts: string[] = [];
+  let pendingBreak = false;
+  for (const raw of unindented) {
+    const line = raw.trimEnd();
+    if (line === "") {
+      pendingBreak = true;
+      continue;
+    }
+    if (pendingBreak && parts.length > 0) parts.push("\n");
+    pendingBreak = false;
+    parts.push(line);
+  }
+  return parts.join(" ").replace(/ \n/g, "\n").trim();
 }
 
 export interface CatalogueIssue {
