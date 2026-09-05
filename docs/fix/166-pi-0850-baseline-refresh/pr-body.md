@@ -28,7 +28,7 @@
 ## Manual smoke observations
 
 1. Install: package structure verified — 37 skill directories present, `pi.skills` and `pi.extensions` correctly pointed.
-2. Skills load: all 39 skill SKILL.md files present with name metadata matching slash-command convention.
+2. Skills load: all 37 skill SKILL.md files present with name metadata matching slash-command convention.
 3. Command registration: routing/adapter suites verify `setThinkingLevel` per-command restore semantics (0.85.0 persistent-thinking-effort surface).
 4. Settings console: `src/settings.ts` round-trip verified — no structural changes in 0.85.0.
 5. First-run hint: extension activation notification verified — no 0.85.0 extension-API changes.
