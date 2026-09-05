@@ -162,3 +162,8 @@ Verdict: **PLAN-REVIEW-PASS** — no findings; both cycle-1 material findings ve
 - PR: https://github.com/gtrabanco/agentic-workflow/pull/168
 - Next: /fold-findings, then re-run /review-change on the changed HEAD → triage or replan unresolved findings
   · merge gate after REVIEW-PASS → /audit-pr
+
+## Review disposition — review-change findings (user decision)
+- F1 (smoke record outcome tokens + pr-body overclaim) — user decision 2026-09-05: handled as a **manual post-merge verification**. The three interactive smoke observations (routed set/clear, settings console round-trip, first-run hint) are to be executed on a real pi 0.85.x runtime after merge; the user reports the outcome, and a failed observation is raised as its own finding. NOT folded here — the environment's interactive pi runtime is 0.84.4, so the observations cannot be truthfully produced before merge without backfilling outcome markers (anti-gaming).
+- F2 (skill count 39→37) — FOLDED at be7ba208 (fixed in progress.md:31-32 + pr-body.md:31).
+- Review head frozen for the pass receipt: f909e8b7 → folded/recorded through be7ba208.
