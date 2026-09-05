@@ -107,3 +107,33 @@ Only Engineering-half artifacts changed (`planning-evidence.md`, `testing.md`, n
 - Prior plan receipt (re-review): rp-29-20260905-002 @ e0c71cc843bb0bd37f3541eb2461d93778a26e2b56e8892b4bec627483f802f1
 - Checks: L1–L6 pass · P1–P12 pass (12/12)
 - Notes: re-review triggered by a stale-context verify on execute-phase preflight — the roadmap context row gained rows 30–33 (commit 42bb38e7) after rp-29-20260905-002 bound snapshot `e0c71cc8…`, so the whole-file snapshot digest moved even though the plan bytes and the 29 roadmap row are byte-identical. Repeat justification per POLICY §4: the snapshot changed (`e0c71cc8…` → `701d1c3c…`), so a re-review is warranted; this is a repeat of the same plan, not a second repair/re-review cycle (no repair batch followed the PASS, so no CONVERGENCE-ANOMALY condition is met). ArtifactRevisionId = `42bb38e7…` (the newest commit touching a bound path — the roadmap/context commit; bound-path revision is shared because the snapshot binds the roadmap context).. Parent snapshot recomputed from current Product bytes with the builder (stage spec) and matched against receipt rs-29-20260905-001 — never copied. All nine applicable feature artifact rows bound at whole-file. Falsification stance: NO-CONFIRMED-GAPS — PE-001 (`skills/execute-phase/SKILL.md` file-cap guardrail), PE-002 (`skills/execute-phase/references/PREFLIGHT.md` reserved discovery slot), PE-005 re-citation (`skills/review-change/SKILL.md` `replan-in-unit` + `/fold-findings` correction path), PE-009 (Pi package present; PR #150/#155 merge commits are ancestors of HEAD) all re-verified against current bytes. Ledger sweep: planning-evidence 10 rows, obligations 13 rows (verified-capable 13); L1–L6 pass; P1–P12 pass (12/12). Findings N29-001/002/003/005 all `resolved`; no open material row. Read-only: no reviewed plan artifact was modified.
+
+## Scope extension — 2026-09-05 (owner instruction)
+
+Owner instructed folding one unissued fix into this PR after the unit's execution had closed: the
+fix sat uncommitted in the working tree during the review pass, breaking `review-change`'s
+clean-workspace precondition. One PR per unit of work is overridden here by that instruction —
+this PR carries feature 29 plus the fix below; no planning artifact (SPEC/PLAN/TASKS/ACCEPTANCE)
+was touched and no replan was run.
+
+- **Roadmap scoping** — the pre-execution snapshot builder (`scripts/pre-execution-snapshot.mjs`)
+  no longer binds the shared `docs/features/ROADMAP.md` (`roadmap-row` context removed from
+  `CONTEXT_SOURCES`). Unrelated roadmap rows and the status machine's own sanctioned writes
+  (`planned` → `in-progress` at P1, `done` at PR open) no longer invalidate recorded receipts —
+  the exact waste this unit's own rp-29-20260905-003 re-review recorded (roadmap rows 30–33
+  stale-contexted a byte-identical plan and forced the re-review). The row's safety-relevant
+  content stays guarded live by the own-status gate and the dependency gate's Dependency receipt
+  v1 fingerprint.
+- Carries: `pre-execution-review` 1.7.0 → 2.0.0 (SNAPSHOT.md contract), `review-spec` 1.5.0 →
+  1.6.0 (CHECKS.md), pi package 0.5.0 re-bundle, `MIGRATION.md`/`.es.md` entries, EN/ES
+  changelog rows, sensor regression tests.
+- **No issue**: verified against the tracker — closest open items #170 (delta re-reviews of fold
+  diffs) and #162 (verdict/receipt/roadmap desync) address different surfaces and do not cover
+  the snapshot context binding. Owner-requested, no issue.
+- Migration: receipts recorded before this change verify stale exactly once (the snapshot shape
+  no longer carries the roadmap-row context). This unit's plan receipts are historical —
+  execution closed at P4 — and no pending gate re-derives them; the fix's own review is the
+  `review-change` pass over this PR's diff.
+- Validation: sensor suite 19/19 (2 new roadmap-scoping regression tests), attribution/
+  workflow-status/dependency-gate suites 25/25, quality/drift/ledger suites 103/103, pi package
+  140/140 (byte parity), context budgets PASS (39 skills).
