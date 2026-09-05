@@ -31,6 +31,8 @@
   causal revert all follow the frozen semantics.
 - Repeated read with no new question/evidence stops; changed revision or named
   insufficiency permits a targeted reread.
+- Context/result pressure before all questions close (map:limit-hit) returns
+  compact partial evidence plus exact BLOCKED, never a truncated READY.
 - Compatibility invariant reveals an affected current-unit use case which is
   added to obligation mapping rather than exported to an issue.
 - Missing or contradicted Plan-level topology, architecture, obligation, or
