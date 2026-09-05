@@ -27,7 +27,7 @@ A SPEC-stage snapshot is deliberately narrow:
 | `artifactRevisionId` | the author's current revision id from the handoff |
 | `artifacts` | **exactly one row**: `kind: spec`, `path` normalized repo-relative, `selector: spec-product-v1`, `byteLength`, lowercase SHA-256 `digest` |
 | `parentSpecSnapshotDigest` | `null` — a SPEC snapshot roots its own lineage |
-| `contexts` | each authoritative source actually consulted: `roadmap-row`, `governing-issue`, `normalized-repository-state`, `architectural-invariants`, `dependency-unit`, `project-guide` — `present` with its exact digest, or `absent` with `null` |
+| `contexts` | each authoritative source actually consulted: `governing-issue`, `normalized-repository-state`, `architectural-invariants`, `dependency-unit`, `project-guide` — `present` with its exact digest, or `absent` with `null`. The roadmap row is read as routing data and deliberately unbound: the shared `ROADMAP.md` ledger moves for reasons this unit never reviewed (other units' rows, the status machine's own sanctioned writes) |
 
 `spec-product-v1` selects the title, `## Goal`, `## Branch`, `## Size`,
 `## Dependencies`, the whole Product half, and `## Design status` — never the

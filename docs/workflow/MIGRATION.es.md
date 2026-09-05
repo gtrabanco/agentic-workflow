@@ -2,6 +2,29 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-09-05 — los recibos ya no ligan el roadmap compartido (`pre-execution-review` 2.0.0)
+
+**Contrato de snapshot cambiado; `pre-execution-review` 2.0.0, `review-spec` 1.6.0, paquete pi 0.5.0.**
+
+El constructor del snapshot pre-ejecución ya no liga `docs/features/ROADMAP.md` como contexto
+`roadmap-row`. El roadmap es el libro mayor compartido de todas las unidades: las filas de otras
+unidades llegan mientras un plan está en vuelo, y las escrituras sancionadas de la propia máquina de
+estados (`planned` → `in-progress` en P1, `done` al abrir PR) invalidaban cada recibo de spec/plan en
+vuelo de todo el repositorio y forzaban una re-reseña que no respondía a nada.
+
+Lo que sigue invalidando un recibo (sin cambios): cualquier byte de los artefactos ligados de la
+unidad (`SPEC.md`, `ACCEPTANCE.md`, `TASKS.md`, …), las autoridades rectoras (`CLAUDE.md`,
+`docs/workflow/REPOSITORY_STATE.md`, `docs/architecture/ARCHITECTURAL_INVARIANTS.md`), la línea del
+parent, la versión de policy y un `artifactRevisionId` rotado. El contenido de la fila del roadmap
+relevante para la seguridad sigue guardado en vivo por el gate de estado propio (se lee cada
+invocación) y el gate de dependencias (su Dependency receipt v1 huella la línea `Depends on:` del
+SPEC más las filas del cierre).
+
+**Efecto único de actualizar:** cada recibo grabado antes de este cambio se re-verifica obsoleto una
+vez (la forma del snapshot ya no lleva el contexto roadmap-row), así que re-ejecuta la reseña de la
+etapa — `/review-spec` y luego `/review-plan` — en cada unidad en vuelo. Las unidades grabadas
+frescas tras la actualización no se ven afectadas.
+
 ## 2026-09-04 — `loop-review-fold` se retira a un camino manual
 
 **`loop-review-fold` se elimina** (fix #161, P3a). El router simple review/fold
