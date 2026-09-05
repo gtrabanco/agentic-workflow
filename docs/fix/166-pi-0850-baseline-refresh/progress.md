@@ -135,3 +135,30 @@ Verdict: **PLAN-REVIEW-FAIL** — findings PR-1 + PR-2 open material; repair own
 - F1–F4: pass (reproduction PE-001 at cited revision; root cause evidenced `2bf91948` + ruled-out competitor #164; regression scope AC1/AC2/AC3 + CI gate; rollback single-revert + republish caveat verified in workflow comments) ✓
 
 Verdict: **PLAN-REVIEW-PASS** — no findings; both cycle-1 material findings verified repaired; execution may bind this receipt for snapshot `5b7e8d84efd21c668621fa7b32e3131b40d20893be72853ccca73ef953bc40c9`.
+
+## P4 — Release bookkeeping 0.4.1
+
+- Updated `packages/pi-agentic-workflow/package.json`: version 0.4.0 → 0.4.1
+- Added 0.4.1 row to CHANGELOG.md (English) — patch release, pi baseline refresh
+- Added 0.4.1 row to CHANGELOG.es.md (Spanish) — bilingual pair
+
+## P5 — Hardening & PR
+
+- Verification gate: `tsc` compile ✅ · `bun run test` → 134 pass · 0 fail · exit 0
+- Pending-docs check: `git status --porcelain -- docs/` → empty (unit artifacts committed)
+- PR body written: `docs/fix/166-pi-0850-baseline-refresh/pr-body.md` (5 VERDICT lines)
+- Fix-index row flipped to `done` · [#168](https://github.com/gtrabanco/agentic-workflow/pull/168)
+- PR opened: https://github.com/gtrabanco/agentic-workflow/pull/168
+- `Closes #166` in PR body
+
+## Unit-loop receipt — P5 (close-out)
+- Commit: e023975c · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0) · Acceptance blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4
+- Phases completed: P1 · P2 · P3 · P4 · P5
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/168
+- Status: done
+
+## UNIT LOOP — fix/166 COMPLETE
+- Phases: 5 · Commits: 6c997324, e023975c · Acceptance: 33e3526f · Gate: PASS
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/168
+- Next: /fold-findings, then re-run /review-change on the changed HEAD → triage or replan unresolved findings
+  · merge gate after REVIEW-PASS → /audit-pr
