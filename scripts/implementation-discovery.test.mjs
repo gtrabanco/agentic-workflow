@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_PATH = "skills/implementation-discovery/SKILL.md";
 const skillText = () => fs.readFileSync(path.join(repoRoot, SKILL_PATH), "utf8");
+const read = (relative) => fs.readFileSync(path.join(repoRoot, relative), "utf8");
 
 /** Pull one `## Heading` section body up to the next `## ` heading, with runs of
  * whitespace collapsed to a single space so line-wrapped prose still matches. */
@@ -137,4 +138,45 @@ test("the writer handoff is compact and carries confirmed planning-evidence ids"
   assert.match(body, /compact/i);
   assert.match(body, /planning-evidence[\s\S]*?ids?/i);
   assert.match(body, /raw\s+exploration/i);
+});
+
+// ── P2 — gate the first phase write: the mapper runs before any repository write ──
+
+test("the mapper is settled after read-only gates and before the first build-ready write", () => {
+  // PREFLIGHT reference: the reserved slot now names the mapper contract.
+  const preflight = read("skills/execute-phase/references/PREFLIGHT.md");
+  assert.match(preflight, /implementation-discovery/i);
+  assert.match(preflight, /first write/i);
+  // The executor hard rule names the mapper on the pre-write route.
+  const exec = read("skills/execute-phase/SKILL.md");
+  assert.match(exec, /implementation-discovery/i);
+  assert.match(exec, /before branch creation, planning commit, or source\/test edit|before any repository write/i);
+});
+
+test("source identity is exact HEAD plus clean-source proof and a cited-content manifest", () => {
+  const text = skillText();
+  assert.match(text, /HEAD/);
+  assert.match(text, /clean-?source|clean tracked/i);
+  assert.match(text, /cited-?evidence manifest|manifest digest/i);
+});
+
+test("continuity accepts unchanged HEAD or one allowlisted-descendant planning commit", () => {
+  const text = skillText();
+  assert.match(text, /HEAD is unchanged|unchanged HEAD/);
+  assert.match(text, /one direct descendant|direct descendant/i);
+  assert.match(text, /allowed planning|allowlist|reviewed planning/i);
+  assert.match(text, /reject|invalidates|remap/i);
+});
+
+test("READY is single-consumption; a crash before/after first write has exact semantics", () => {
+  const text = skillText();
+  assert.match(text, /single-?consumption/);
+  assert.match(text, /crash/);
+  assert.match(text, /remap|re-?map/);
+});
+
+test("a newly required path, changed evidence, or contradiction stops and remaps", () => {
+  const text = skillText();
+  assert.match(text, /newly discovered path|unexpected path|new path|newly required path/i);
+  assert.match(text, /stops and remaps|stops and routes|remap/i);
 });
