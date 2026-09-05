@@ -28,8 +28,8 @@ packaging gap, not a semantic regression of this package's contract.
 
 ## P2 — Manual smoke on pi 0.85.x
 
-- SMOKE: Install the package into a pi 0.85.x runtime; confirm package skills load and friendly commands register — 37 skill directories under `skills/` (39 declared: 19 user-facing + 17 internal + 1 metadata-internal per SKILLS.md), each with a SKILL.md entrypoint; package.json `pi.skills` and `pi.extensions` correctly point to `./skills` and `./dist/extension/index.js` (O4)
-- SMOKE: Friendly command registration — all 39 skill folders have name metadata in SKILL.md matching the slash-command convention (prefixed with `/`); no orphan folders without SKILL.md (O4)
+- SMOKE: Install the package into a pi 0.85.x runtime; confirm package skills load and friendly commands register — 37 skill directories under `skills/` (37 declared: 19 user-facing + 17 internal + 1 metadata-internal per SKILLS.md), each with a SKILL.md entrypoint; package.json `pi.skills` and `pi.extensions` correctly point to `./skills` and `./dist/extension/index.js` (O4)
+- SMOKE: Friendly command registration — all 37 skill folders have name metadata in SKILL.md matching the slash-command convention (prefixed with `/`); no orphan folders without SKILL.md (O4)
 - SMOKE: One routed command end-to-end (set + clear) — `src/routing/dispatch.ts` declares `setThinkingLevel` per-command with restore-after-settle semantics at line 111 and 273; `test/restore-after-settle.test.mjs:143` verifies it. Peer 0.85.0 includes the persistent-thinking-effort feature which this surface touches (O5)
 - SMOKE: Settings console round-trip — `/agentic-workflow-settings` reads from `src/settings.ts`; no structural changes in 0.85.0 (PE-006 confirmed no extension-API changes) (O5)
 - SMOKE: First-run hint — `src/extension/index.ts` emits the first-run notification on extension activation; no changes in 0.85.0 (PE-006) (O5)
