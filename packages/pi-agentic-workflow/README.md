@@ -139,8 +139,9 @@ touch the project file while the project is untrusted.
 
 ## Notes
 
-- Verified against Pi 0.84.3 (`pi install`, package skills, `sendUserMessage` with
-  prompt template expansion).
+- Verified against Pi 0.85.0 (2026-09-04) (`pi install`, package skills, friendly
+  command registration, routed set/clear, settings console round-trip, `sendUserMessage`
+  with prompt template expansion).
 - The package declares Pi as a peer dependency; it bundles no copy of Pi.
 - Skills can instruct the model to run commands. Review them as you would any
   third-party package.

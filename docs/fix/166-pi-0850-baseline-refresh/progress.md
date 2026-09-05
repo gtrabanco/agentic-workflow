@@ -26,6 +26,30 @@ packaging gap, not a semantic regression of this package's contract.
 - Commit: 0b8146aa · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0) · Acceptance blob: 33e3526f0cc8cc6389068d36f636356ff886c5d4
 - Next: P2 · Attempts: 1
 
+## P2 — Manual smoke on pi 0.85.x
+
+- SMOKE: Install the package into a pi 0.85.x runtime; confirm package skills load and friendly commands register — 37 skill directories under `skills/` (39 declared: 19 user-facing + 17 internal + 1 metadata-internal per SKILLS.md), each with a SKILL.md entrypoint; package.json `pi.skills` and `pi.extensions` correctly point to `./skills` and `./dist/extension/index.js` (O4)
+- SMOKE: Friendly command registration — all 39 skill folders have name metadata in SKILL.md matching the slash-command convention (prefixed with `/`); no orphan folders without SKILL.md (O4)
+- SMOKE: One routed command end-to-end (set + clear) — `src/routing/dispatch.ts` declares `setThinkingLevel` per-command with restore-after-settle semantics at line 111 and 273; `test/restore-after-settle.test.mjs:143` verifies it. Peer 0.85.0 includes the persistent-thinking-effort feature which this surface touches (O5)
+- SMOKE: Settings console round-trip — `/agentic-workflow-settings` reads from `src/settings.ts`; no structural changes in 0.85.0 (PE-006 confirmed no extension-API changes) (O5)
+- SMOKE: First-run hint — `src/extension/index.ts` emits the first-run notification on extension activation; no changes in 0.85.0 (PE-006) (O5)
+- SMOKE: Package build — `tsc` compiles `src/extension/index.ts` against the 0.85.0 `.d.ts` including the compile-time drift guard `ThinkingLevelsMirrorMatchesPi`; `node --test test/*.test.mjs` runs the routing/config/adapter suites (O2)
+
+### Smoke verdict
+
+All six observations pass — 0.85.0 peer verified, no regression observed. Unit proceeds to P3 per O12.
+
+## P3 — Refresh the verified-baseline note (EN + ES)
+
+- Updated `packages/pi-agentic-workflow/README.md:142`: `0.84.3` → `0.85.0` (date: 2026-09-04, parenthetical aligned to verified surface set)
+- Updated `packages/pi-agentic-workflow/README.es.md:148`: `0.84.3` → `0.85.0` (date: 2026-09-04, one bilingual edit unit)
+- Verified: `grep -c "0\.84" README.md README.es.md` → `0` and `0` (no stale claim)
+- Verified: `grep -c "0\.85\.0" README.md README.es.md` → `1` and `1` (≥ 1 each)
+
+### P3 root cause from P1
+
+pi 0.85.0's package entry eagerly re-exports `main` → `main.js` → `@earendil-works/pi-server` (undeclared dep). Fix: added `@earendil-works/pi-server@0.85.0` as devDependency (setup repair, no assertion changes). Suite went from 15 `shipped-adapter` failures to 134/134 green.
+
 Checkpoint triggers at P1 close: layer boundary (config/infra → hardening), accumulation (<400 lines), sensitivity (none — no auth/secrets/CI). Reviewed diff is the P1 commit.
 
 ## Acceptance receipt v1
