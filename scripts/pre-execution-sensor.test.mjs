@@ -175,7 +175,9 @@ test("RS3b: the identity fields default to the newest commit that touched a boun
   const unbound = f.commit("chore: unrelated implementation commit");
   assert.notEqual(unbound, git(f.root, "rev-parse", "HEAD~1"), "the unbound commit is now HEAD");
   const { snapshot } = f.build("--stage", "spec", "--dir", f.dir, "--unit", f.unit);
-  const bound = git(f.root, "log", "-1", "--format=%H", "--", `${f.dir}/SPEC.md`, "docs/features/ROADMAP.md", "CLAUDE.md");
+  // ROADMAP.md is deliberately NOT a bound path (shared lifecycle ledger): the
+  // identity covers the unit's artifacts plus the governing authorities only.
+  const bound = git(f.root, "log", "-1", "--format=%H", "--", `${f.dir}/SPEC.md`, "CLAUDE.md");
   assert.equal(snapshot.sourceRevision, bound,
     "sourceRevision is the revision the bound bytes were actually read at");
   assert.equal(snapshot.artifactRevisionId, bound,
@@ -389,6 +391,37 @@ test("RS14: a fix plan receipt recorded with a null parent verifies current", (t
   assert.equal(recorded.snapshot.parentSpecSnapshotDigest, null);
   const v = f.run("verify", "--stage", "plan", "--dir", f.dir, "--unit", f.unit, "--unit-kind", "fix");
   assert.equal(v.status, 0, `fix receipt must survive its own recording commit: ${v.stdout}`);
+});
+
+// ---------------------------------------------------------------------------
+// Roadmap scoping — the shared ROADMAP.md is lifecycle state, not bound authority
+// ---------------------------------------------------------------------------
+
+test("roadmap: an unrelated unit's row does not stale a recorded receipt", (t) => {
+  const f = makeRepo(t);
+  recordReceipt(f, { stage: "spec" });
+  f.write("docs/features/ROADMAP.md", "# Roadmap\n\n| 99 | 99-toy | planned |\n| 100 | 100-other | planned |\n");
+  const uncommitted = report(verify(f, "spec"));
+  assert.equal(uncommitted.digestMatches, true, "an uncommitted roadmap edit binds none of this unit's bytes");
+  assert.equal(uncommitted.current, true);
+  f.commit("docs(roadmap): schedule another feature");
+  const committed = report(verify(f, "spec"));
+  assert.equal(committed.digestMatches, true, JSON.stringify(committed.structural));
+  assert.equal(committed.current, true,
+    "another unit's roadmap row never invalidates this unit's receipt");
+});
+
+test("roadmap: the unit's own sanctioned status transition does not stale its receipts", (t) => {
+  const f = makeRepo(t);
+  const spec = recordReceipt(f, { stage: "spec" });
+  recordReceipt(f, { stage: "plan", parent: spec.digest });
+  // execute-phase P1's mandated write: row → in-progress.
+  f.write("docs/features/ROADMAP.md", "# Roadmap\n\n| 99 | 99-toy | in-progress |\n");
+  f.commit("docs(roadmap): 99-toy in-progress (P1)");
+  const v = verify(f, "plan", ["--parent", spec.digest]);
+  const r = report(v);
+  assert.equal(v.status, 0, `the status machine's own write must not force a re-review: ${JSON.stringify(r.structural)}`);
+  assert.equal(r.current, true);
 });
 
 // ---------------------------------------------------------------------------
