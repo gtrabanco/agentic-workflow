@@ -6,10 +6,17 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 
 | Phase | Status | Evidence |
 |---|---|---|
-| P1 — Define bounded implementation discovery | pending | Awaiting merged implementation of feature 28 |
+| P1 — Define bounded implementation discovery | done (`33b6c5a9` resolved) | `node --test scripts/implementation-discovery.test.mjs` -> exit 0 (11/11 discovery-contract fixtures) |
 | P2 — Gate the first phase write | pending | Depends on P1 discovery contract and feature-28 receipts |
 | P3 — Integrate evidence-aware execution routing | pending | Depends on P2 execution integration |
 | P4 — Qualify implementation discovery | pending | Depends on P1-P3 |
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `node --test scripts/implementation-discovery.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Next: P2 · Attempts: 1
+
+## Acceptance receipt v1
+- Blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e · Verified: 2026-09-05 · Source: ACCEPTANCE.md
 
 ## Planning record
 
