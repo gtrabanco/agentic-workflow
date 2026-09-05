@@ -90,7 +90,16 @@ export const STAGE_ARTIFACTS = {
 };
 
 const CONTEXT_SOURCES = [
-  { kind: "roadmap-row", file: "docs/features/ROADMAP.md", identifier: "roadmap-row" },
+  // `docs/features/ROADMAP.md` is deliberately NOT bound (roadmap scoping). It is
+  // the shared lifecycle ledger of every unit: rows for other units are appended
+  // while a plan is in flight, and the status machine's own sanctioned writes
+  // (`planned` → `in-progress` set by execute-phase P1, `done` at PR open) would
+  // otherwise invalidate every recorded receipt repo-wide and force pointless
+  // re-reviews. Its safety-relevant content is owned by gates that re-read it
+  // live: the own-status gate (every invocation) and the dependency gate (its
+  // Dependency receipt v1 fingerprints the SPEC `Depends on:` line plus the
+  // closure roadmap rows). The unit's own artifacts and the governing
+  // authorities below stay fully bound.
   { kind: "project-guide", file: "CLAUDE.md" },
   { kind: "normalized-repository-state", file: "docs/workflow/REPOSITORY_STATE.md" },
   // The *project's* declared invariants only: docs/workflow/WORKFLOW_INVARIANTS.md
