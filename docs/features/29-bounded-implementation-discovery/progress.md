@@ -23,6 +23,24 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 - Commit: edae72f4 · Gate: `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
 - Next: P4 · Attempts: 1
 
+## Fold — 2026-09-05 (review-change cycle 1 finding F1)
+
+- Folding the one material fix-now finding from review-change cycle 1
+  (head `f038d229`): the internal `implementation-discovery` skill had no
+  sanctioned registration shape. Registered it in
+  `.claude-plugin/plugin.json` (alphabetical entry; 37 → 38) so it ships to
+target installs — `metadata.internal` was rejected because the `execute-phase`
+pre-write route links it by relative path. Reconciled EN/ES README count cells
+(38/37 → 39 source · 38 discoverable) and both uninstall rosters.
+- Gates re-run green: `npx skills add . --list` → "Found 38 skills";
+  `check-skill-context` → "PASS context budgets: 39 skills";
+  `implementation-discovery.test` 23/23; `pre-execution-quality.test` 63/63;
+  `normative-drift` 16/16; `bounded-delivery-loops` 1/1; `ledger-ownership` 18/18;
+  pi `alias-coverage` 14/14. `check-skill-context --routes --json` remains red at
+  clean HEAD too — pre-existing route-budget ceiling drift (plan-feature:scaffold,
+  plan-fix:issue, review-spec, review-plan), not attributable to this fold.
+- `review-findings.md` row F1 flipped `folded: yes`.
+
 ## Unit-loop receipt — P4 (qualification)
 - Commit: eef1ab09 · Gate: root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
 - Next: close-out (independent review + weakest-executor golden fixture are handed off, separate contexts)

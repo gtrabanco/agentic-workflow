@@ -54,7 +54,7 @@ agente** que lea skills — Claude Code, Cursor, Codex, OpenCode, Cline y
 ## Qué incluye
 
 ```
-38 skills fuente (19 de cara al usuario + 18 internas del workflow + 1 metadata-internal; 37 descubribles)
+39 skills fuente (19 de cara al usuario + 19 internas del workflow + 1 metadata-internal; 38 descubribles)
 packages/                paquetes npm complementarios: @gtrabanco/agentic-workflow-schema (contratos de máquina)
                          y @gtrabanco/pi-agentic-workflow (instalación de un comando para Pi — ver Instalación)
 template/                 el scaffold de documentación exportable (el sustrato que leen las skills)
@@ -679,7 +679,7 @@ skills publicadas a un único comando `remove`:
 npx skills remove --yes \
   audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
   execute-phase pre-execution-review \
-  fold-findings generate-docs init-workspace log-session \
+  fold-findings generate-docs implementation-discovery init-workspace log-session \
   orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \

@@ -26,6 +26,7 @@
     "./skills/execute-phase",
     "./skills/fold-findings",
     "./skills/generate-docs",
+    "./skills/implementation-discovery",
     "./skills/init-workspace",
     "./skills/log-session",
     "./skills/orchestration-envelope",
