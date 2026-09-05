@@ -9,14 +9,14 @@ Layer: docs · Done-when: `node --test
 scripts/implementation-discovery.test.mjs` -> exit 0 for discovery-contract
 fixtures.
 
-- [ ] Write red-first fixtures for all seven questions, every fixed map field, phase-relevant planning-evidence confirmation, complete ordered obligation coverage, and the four closed decisions.
-- [ ] Add one internal non-user-invocable implementation-discovery skill/reference with exact inputs, read-only boundary, compact output, stop conditions, and `SkillOutcome v1` handoff.
-- [ ] Define inline eligibility and fresh-mapper triggers from evidence completeness, uncertainty, topology, public/persistence/security/recovery/compatibility risk, prior attempts, and authoring bias.
-- [ ] Delete/prohibit every file/search/read-count proxy and add one-file, many-file same-layer, and cross-layer route fixtures proving equivalent question closure.
-- [ ] Define path:line/symbol/test evidence, planning-evidence confirmation/refinement, affected-surface discovery, helper/pattern/invariant reuse, expected-write-to-obligation mapping, and unknown ownership.
-- [ ] Require the cheapest relevant observed read-only falsification probe before READY and encode failed/unavailable high-risk outcomes.
-- [ ] Define repeated-search/read no-progress and context compaction: conclusions once, reread only for changed source, new question, insufficient evidence, or contradiction.
-- [ ] Bump/changelog the new internal skill surface and keep its entry/reference within current progressive-context budgets.
+- [x] Write red-first fixtures for all seven questions, every fixed map field, phase-relevant planning-evidence confirmation, complete ordered obligation coverage, and the four closed decisions.
+- [x] Add one internal non-user-invocable implementation-discovery skill/reference with exact inputs, read-only boundary, compact output, stop conditions, and `SkillOutcome v1` handoff.
+- [x] Define inline eligibility and fresh-mapper triggers from evidence completeness, uncertainty, topology, public/persistence/security/recovery/compatibility risk, prior attempts, and authoring bias.
+- [x] Delete/prohibit every file/search/read-count proxy and add one-file, many-file same-layer, and cross-layer route fixtures proving equivalent question closure.
+- [x] Define path:line/symbol/test evidence, planning-evidence confirmation/refinement, affected-surface discovery, helper/pattern/invariant reuse, expected-write-to-obligation mapping, and unknown ownership.
+- [x] Require the cheapest relevant observed read-only falsification probe before READY and encode failed/unavailable high-risk outcomes.
+- [x] Define repeated-search/read no-progress and context compaction: conclusions once, reread only for changed source, new question, insufficient evidence, or contradiction.
+- [x] Bump/changelog the new internal skill surface and keep its entry/reference within current progressive-context budgets.
 
 ## P2 — Gate the first phase write
 
