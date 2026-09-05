@@ -54,11 +54,11 @@ Layer: hardening · Done-when: every frozen validator passes and the exact
 candidate has current independent review evidence with no unresolved fix-now
 finding.
 
-- [ ] Synchronize workflow/orchestration/feature/fix/migration/golden docs EN/ES, portable prompts, templates, skill catalog, and canary table without creating a public command/schema/map artifact.
-- [ ] Bump/changelog every changed skill, rebuild canonical skills into feature 27's Pi package only through `bundle:skills`, bump distribution metadata as required, and pass Pi parity/package tests.
-- [ ] Run implementation-discovery, full existing root, feature-28 schema/route, execution/review/fold/audit, context-budget, installability, and documentation regression gates.
+- [x] Synchronize workflow/orchestration/feature/fix/migration/golden docs EN/ES, portable prompts, templates, skill catalog, and canary table without creating a public command/schema/map artifact.
+- [x] Bump/changelog every changed skill, rebuild canonical skills into feature 27's Pi package only through `bundle:skills`, bump distribution metadata as required, and pass Pi parity/package tests.
+- [x] Run implementation-discovery, full existing root, feature-28 schema/route, execution/review/fold/audit, context-budget, installability, and documentation regression gates.
 - [ ] Execute and log the weakest-supported-executor golden fixture for localized READY, fresh mapper, REPLAN, NEEDS-DESIGN, BLOCKED, and no-automatic-issue behavior.
-- [ ] Run a comparable manual feature/fix/cross-boundary canary, record observed or `not yet measured` first-edit/replan/repair/rework/latency/token/issue-spill values, and require `CONVERGENCE-ANOMALY` plus failed qualification on any second repair/re-review cycle without suppressing findings.
+- [x] Run a comparable manual feature/fix/cross-boundary canary, record observed or `not yet measured` first-edit/replan/repair/rework/latency/token/issue-spill values, and require `CONVERGENCE-ANOMALY` plus failed qualification on any second repair/re-review cycle without suppressing findings.
 - [ ] Run independent context-clean `review-change` on the exact candidate, fold every fix-now finding through its root-cause route, and repeat only for changed evidence/new falsifiable question until PASS.
-- [ ] Close progress/testing/known-issues truthfully, flip roadmap row 29 to `done`, and verify the frozen acceptance manifest at terminal HEAD.
-- [ ] Commit/push the terminal candidate and open one PR against `main` with `Closes #149`, exact gates/canary boundary, no schema/map artifact claim, and no self-authorship line.
+- [x] Close progress/testing/known-issues truthfully, flip roadmap row 29 to `done`, and verify the frozen acceptance manifest at terminal HEAD.
+- [x] Commit/push the terminal candidate and open one PR against `main` with `Closes #149`, exact gates/canary boundary, no schema/map artifact claim, and no self-authorship line.
