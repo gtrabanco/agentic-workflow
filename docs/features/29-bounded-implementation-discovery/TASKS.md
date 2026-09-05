@@ -24,14 +24,14 @@ Layer: docs · Done-when: `node --test
 scripts/implementation-discovery.test.mjs` -> exit 0 for ordering, identity,
 continuity, drift, consumption, and recovery fixtures.
 
-- [ ] Insert discovery in `execute-phase` after dependency/status/acceptance/phase/feature-28 receipt checks and before branch creation, planning commit, or implementation edit.
-- [ ] Define source identity as exact HEAD, clean tracked/untracked source proof, allowed current-unit planning paths, cited-content manifest digest, receipt/phase bindings, and opaque mapping revision.
-- [ ] Add deterministic continuity verification for unchanged HEAD or one direct descendant whose entire diff is the exact reviewed planning allowlist; reject every other setup mutation.
-- [ ] Make READY require every field/question/phase obligation, confirmation of every carried planning-evidence row, no material contradiction/unknown, observed probe, and expected writes wholly inside frozen phase authority.
-- [ ] Consume READY at the first implementation write; a newly required path, changed evidence, or contradiction stops before expanding and remaps/routes.
-- [ ] Add crash/re-entry semantics: resume before write only with current unconsumed proof; after any partial write always remap current source before continuing.
-- [ ] Add drift/non-resurrection fixtures for SPEC/Plan/receipt/phase/HEAD/cited-content/setup changes, consumed map, interrupted write, revert/new causal attempt, and out-of-protocol limitation.
-- [ ] Bump/changelog `execute-phase` and update its progressive preflight/recovery references without duplicating the discovery contract.
+- [x] Insert discovery in `execute-phase` after dependency/status/acceptance/phase/feature-28 receipt checks and before branch creation, planning commit, or implementation edit.
+- [x] Define source identity as exact HEAD, clean tracked/untracked source proof, allowed current-unit planning paths, cited-content manifest digest, receipt/phase bindings, and opaque mapping revision.
+- [x] Add deterministic continuity verification for unchanged HEAD or one direct descendant whose entire diff is the exact reviewed planning allowlist; reject every other setup mutation.
+- [x] Make READY require every field/question/phase obligation, confirmation of every carried planning-evidence row, no material contradiction/unknown, observed probe, and expected writes wholly inside frozen phase authority.
+- [x] Consume READY at the first implementation write; a newly required path, changed evidence, or contradiction stops before expanding and remaps/routes.
+- [x] Add crash/re-entry semantics: resume before write only with current unconsumed proof; after any partial write always remap current source before continuing.
+- [x] Add drift/non-resurrection fixtures for SPEC/Plan/receipt/phase/HEAD/cited-content/setup changes, consumed map, interrupted write, revert/new causal attempt, and out-of-protocol limitation.
+- [x] Bump/changelog `execute-phase` and update its progressive preflight/recovery references without duplicating the discovery contract.
 
 ## P3 — Integrate evidence-aware execution routing
 
