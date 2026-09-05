@@ -9,7 +9,7 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 | P1 — Define bounded implementation discovery | done (`33b6c5a9` resolved) | `node --test scripts/implementation-discovery.test.mjs` -> exit 0 (11/11 discovery-contract fixtures) |
 | P2 — Gate the first phase write | done (`ef06a210`) | `node --test scripts/implementation-discovery.test.mjs` -> exit 0 (16/16 ordering/identity/continuity/drift/consumption/recovery fixtures) |
 | P3 — Integrate evidence-aware execution routing | done (`ee8a5ae7`) | `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` -> exit 0 (23/23 + route suites) |
-| P4 — Qualify implementation discovery | pending | Depends on P1-P3 |
+| P4 — Qualify implementation discovery | done (qualification gates green) | root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 · installability ✓ · independent review + weakest-executor golden fixture handed off |
 
 ## Unit-loop receipt — P1
 - Commit: ef06a210 · Gate: `node --test scripts/implementation-discovery.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
@@ -20,8 +20,12 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 - Next: P3 · Attempts: 1
 
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Commit: edae72f4 · Gate: `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
 - Next: P4 · Attempts: 1
+
+## Unit-loop receipt — P4 (qualification)
+- Commit: pending · Gate: root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Next: close-out (independent review + weakest-executor golden fixture are handed off, separate contexts)
 
 ## Acceptance receipt v1
 - Blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e · Verified: 2026-09-05 · Source: ACCEPTANCE.md
