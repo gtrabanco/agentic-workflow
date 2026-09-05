@@ -23,6 +23,15 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 - Commit: edae72f4 · Gate: `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
 - Next: P4 · Attempts: 1
 
+
+## P4 completion — 2026-09-05 (fold-findings cycle 2 + weakest-executor golden fixture)
+
+- review-change cycle 2: F1 verified gone (plugin.json entry, README reconciliation), 0 new fix-now findings, REPLY-PASS.
+- Weakest-executor golden fixture (qwen3.6): 4 scenarios PASS — READY (branch+write), BLOCKED (no branch/write), REPLAN (no branch/write), no-automatic-issue (no forge call, no issue filed). All zero invented steps. Logged to GOLDEN_FIXTURE.md.
+- TASKS.md updated: both remaining P4 checkboxes ticked.
+- Progress: P4 complete, PR #175 open, branch pushed.
+
+
 ## Fold — 2026-09-05 (review-change cycle 1 finding F1)
 
 - Folding the one material fix-now finding from review-change cycle 1
@@ -155,3 +164,10 @@ was touched and no replan was run.
 - Validation: sensor suite 19/19 (2 new roadmap-scoping regression tests), attribution/
   workflow-status/dependency-gate suites 25/25, quality/drift/ledger suites 103/103, pi package
   140/140 (byte parity), context budgets PASS (39 skills).
+
+## P4 completion — 2026-09-05 (fold-findings cycle 2 + weakest-executor golden fixture)
+
+- review-change cycle 2: F1 verified gone (plugin.json entry present, README count reconciled, uninstall roster updated), 0 new fix-now findings. REPLY-PASS.
+- Weakest-executor golden fixture (qwen3.6): 4 scenarios PASS — READY (branch+write), BLOCKED (no branch/write), REPLAN (no branch/write), no-automatic-issue (no forge call, no issue filed). All zero invented steps. Logged to `GOLDEN_FIXTURE.md`.
+- TASKS.md updated: both remaining P4 checkboxes ticked.
+- P4 complete. PR #175 open and pushed.
