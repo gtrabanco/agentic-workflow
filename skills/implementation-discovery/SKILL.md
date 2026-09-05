@@ -1,7 +1,7 @@
 ---
 name: implementation-discovery
 user-invocable: false
-version: 1.0.0
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -39,6 +39,14 @@ The mapper receives only:
 - source HEAD plus clean-source / allowed-planning-path evidence;
 - applicable NRS / decision / invariant evidence;
 - the repository discovery tools available in this environment.
+
+## Advisory locators
+
+Semantic/symbol navigation and Engram/memory tools are optional adapters that may
+locate evidence faster; they are never authority. Direct repository/Git/search/
+read/test fallback must satisfy the identical evidence contract, and only
+repository bytes answer a map field. The tool that found a citation does not
+excuse a missing `path:line` or a contradictory claim.
 
 ## Seven evidence questions
 
@@ -116,6 +124,29 @@ missing or conflicting.
 `BLOCKED` names evidence that cannot currently be obtained.
 
 No other verdict exists.
+
+## Routes and upstream owners
+
+A verdict routes, it never repairs. Missing/contradicted Plan-level topology,
+architecture, obligations, validators, or assumptions return to
+`plan-feature`/`plan-fix` plus a fresh `review-plan`. Product/acceptance/
+authority/architecture gaps return to `design-feature` then `review-spec`. A
+verdict with unavailable evidence is one exact `BLOCKED` prerequisite. Mapping
+does not decide code correctness — candidate review, verification, and audit
+authority are unchanged, and a second repair/re-review cycle inherits feature
+28's `CONVERGENCE-ANOMALY` diagnosis.
+
+Source-local findings stay local; Plan/Product defects return upstream. A
+missing current-unit behaviour entailed by reviewed scope joins the obligation
+map and routes upstream; it is never a follow-up issue and never calls the
+forge.
+
+## Legacy and manual routes
+
+The portable fallback uses sequential fresh conversations with exact
+artifact/source bindings. It may not claim a machine receipt or a durable
+guarantee it cannot produce; it says plainly what was observed and what was
+not.
 
 ## Early falsification
 
