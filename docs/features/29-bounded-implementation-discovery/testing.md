@@ -54,3 +54,23 @@ caused by this feature; record confounders and avoid a savings claim without a
 comparable baseline. Any sample entering a second repair/re-review cycle fails
 qualification until its owning root cause is corrected and the sample reruns;
 the threshold never authorizes dropping a finding.
+
+## Canary record (feature 29 qualification, 2026-09-05)
+
+Cross-boundary unit: feature 29 itself (four phases, docs+hardening, execute-phase
+integration). Values are observations of THIS run, not a savings claim; see
+predictions below.
+
+| Field | Observation |
+|---|---|
+| Elapsed time / model calls to first correct edit | model calls to first READY-producing branch (P1 commit `ef06a210`); no claimed improvement, no baseline |
+| REPLAN / NEEDS-DESIGN / BLOCKED before edit | 0 for the mapping — the reviewed plan confirmed against source; the only pre-edit halt was the stale pre-execution receipt (resolved by re-review, not READY) |
+| Post-review repairs | none yet at this record; independent `review-change` runs in a separate context |
+| Files/lines rewritten | bounded: 1 internal skill + 1 fixture suite + execute-phase/PREFLIGHT + docs |
+| Total latency / exposed tokens | not yet measured (no comparable measured baseline) |
+| Current-unit obligations moved to follow-up issues | 0 — no forge issue, no deferred obligation |
+
+Predictions / confounders: this canary is observational only. A smaller number
+is not automatically caused by this feature; the mandatory independent
+`review-change` and the weakest-executor golden fixture run in separate
+contexts and append their own dated rows before this unit closes.
