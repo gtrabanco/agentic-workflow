@@ -151,3 +151,28 @@ be interpreted without a focused excerpt. The map preserves the phase-relevant p
 their current confirmation. The writer may only touch expected paths /
 obligations; a newly discovered path or contradiction stops and remaps/routes
 rather than expanding silently.
+
+## Source identity
+
+Source identity is exact pre-map HEAD, proof that tracked/untracked changes
+outside the allowed planning paths are absent, an ordered manifest digest of
+every cited evidence path/content plus the current phase/receipt bindings, and
+an opaque `mappingRevisionId` created for this mapping event.
+
+## Preparation continuity
+
+After READY, deterministic setup may create the branch and commit only the
+already-reviewed planning paths. Before the first source/test edit the executor
+proves either HEAD is unchanged or the new commit is a direct descendant whose
+entire diff is the allowed planning set and whose authority/content digests
+match. Any other path, parent, receipt, phase, or evidence change invalidates
+the map and routes again.
+
+## Consumption and recovery
+
+READY is single-consumption: the first implementation write consumes it. A crash
+before the write may resume only after freshness/no-consumption proof. A crash
+after any partial write remaps current source during recovery. A new map
+revision plus changed Git causal identity prevents reuse after revert; direct
+out-of-protocol state manipulation cannot be claimed detectable without runtime
+history.
