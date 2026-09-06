@@ -105,6 +105,12 @@ sensor exists to catch: they carry no bound digest, so they fail as
 `missing-receipt-snapshot` rather than being interpreted charitably. Nothing here
 grants a verdict — only a reviewer turn writes the block.
 
+**The reviewer is consumer zero.** This re-verify recipe, run by the reviewer itself
+in the same act as persisting the receipt (POLICY §8), is the self-check that makes
+write-then-report mechanical: the reviewer runs `verify --stage …` for its own stage
+before it prints the verdict and pastes the sensor's answer beside the block. The
+recipe owner stays this file; §8 owns the rule the recipe serves.
+
 ### Authoring side: rotating the revision
 
 The author's `artifactRevisionId` is the field that lets a reviewer prove its own

@@ -116,8 +116,12 @@ Notes:
 - Next: P4 — Roadmap-label gate independence · Attempts: 1
 
 ## Unit-loop receipt — P4
-- Commit: pending · Gate: AC2 greps — `→ Next: nothing` 0, `roadmap rows are labels` 1, SENSOR_CORE unmerged 2 · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Commit: a9883e81 · Gate: AC2 greps — `→ Next: nothing` 0, `roadmap rows are labels` 1, SENSOR_CORE unmerged 2 · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
 - Next: P5 — Arbitration ownership contract · Attempts: 1
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: AC3/AC4/O8 greps + AC5–AC11 suites + `node scripts/check-skill-context.mjs --routes` (exit 0) + `node --test scripts/*.test.mjs` (exit 0, 206 pass) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Next: P6 — Hardening & PR · Attempts: 1
 
 ## P1 — 2026-09-06
 - Done: schema publishes the `impossible-timeline` freshness code (after `stale-policy`), `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` (300_000) and the pure `isImpossibleReceiptTimeline` predicate (boolean|null, fail-open); comparator docstring precedence renumbered 1–10; `VERDICTS_BY_STAGE.plan` narrowed to the two plan verdicts; all three re-exported from `src/index.ts`; red-first pins (new `pre-execution-timeline.test.mjs`, explicit `VERDICTS_BY_STAGE.plan` deepEqual + matrix `:95` flip in `pre-execution-receipt.test.mjs`, `impossible-timeline` in the lineage closed-list); schema package 4.0.1 → 4.1.0 with EN+ES CHANGELOG rows and version-pin test co-change.
@@ -146,3 +150,10 @@ Notes:
 - Gotchas: AC2's `roadmap rows are labels` validator is a single-line literal grep, so the phrase had to sit on one physical line (markdown hard-wraps split it and grep -c returned 0 until re-wrapped). `→ Next: nothing` count reached 0 by replacing the shipped-block; confirmed no other occurrence.
 - Files: skills/pre-execution-review/references/POLICY.md, skills/plan-feature/references/ROUTING.md, skills/workflow-status/references/SENSOR_CORE.md
 - Next: P5 — Arbitration ownership contract
+
+## P5 — 2026-09-06
+- Done: review-plan loses the design-verdict verdict entirely (OUTPUT.md deletes the block + routes row + closing branch, `Verdict:` line two-verdict set, closed-set prose maps product-intent gaps to `PLAN-REVIEW-FAIL with class: product`; SKILL.md 4 mentions updated to the two-verdict set); POLICY §4 clause — guards gate blind re-reviews, never a verdict-response repair; REPAIR §4 — a verdict-response repair is never a loop defect, no "already complete"; PERSIST_AND_DECIDE — two-cycle cap scoped to the review→fold loop on source findings, a `class: plan`/`product` repair is a verdict response; audit-pr/02 lineage blocker enumeration names `impossible-timeline`. Version bumps ×8 skills (minor) with EN+ES CHANGELOG rows + pi package 0.5.0→0.6.0 re-bundle (`bundle:skills` 38 skills) + row; declared route-budget re-basis + reference-budget raise in `SKILL_CONTEXT_BUDGETS.json` naming `fix/162`.
+- Remains: P6 close-out (full gate, docs pending, flip done, push, PR).
+- Gotchas: the P1→P5 coupling (normative-drift `review-plan-verdicts` red after the map narrow, until review-plan loses the token) resolved — moving the review-plan OUTPUT.md prose to avoid the literal token was REQUIRED by AC3's `grep -rni needs-design → 0` (the P5 task text "NEEDS-DESIGN is not a verdict" self-hits AC3; the frozen acceptance wins, so the intent is phrased "the design-verdict token is not a verdict"). The `pre-execution-quality.test.mjs` pin encoded the OLD three-verdict contract (PLAN_VERDICTS + `/Three verdicts only/` + a line-wrap regex); Decision 11 genuinely changed the contract, so these are legitimate contract co-changes, not test edits to manufacture green. The budget blast radius was much larger than the plan's 5-route estimate (the shared pre-execution-review reference is a component of ~14 routes; my additions are all AC-mandated literals, so trimming would break AC1/AC3/AC4/O8) — resolved via the sanctioned declared re-basis naming `fix/162` (route ceilings × 14, reference ceilings review-plan, all to ceil(measured×1.10)). Full root suite re-run green.
+- Files: skills/review-plan/** (OUTPUT.md, SKILL.md), skills/pre-execution-review/references/POLICY.md, skills/design-feature/references/REPAIR.md, skills/review-change/references/PERSIST_AND_DECIDE.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, skills/{pre-execution-review,review-spec,review-plan,plan-feature,workflow-status,design-feature,review-change,audit-pr}/SKILL.md (versions), docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/pi-agentic-workflow/**, scripts/pre-execution-quality.test.mjs, CHANGELOG.md, CHANGELOG.es.md
+- Next: P6 — Hardening & PR
