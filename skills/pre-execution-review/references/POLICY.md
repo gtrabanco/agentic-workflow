@@ -142,6 +142,19 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   a gate rejection. The mark is what the ownership map designates for that truth
   class — receipt block, folded row, rejection trace — at the home and column set
   [`LEDGERS.md`](LEDGERS.md) names. This section opens no second home.
+- **The reviewer is consumer zero.** Write-then-report is mechanical, not prose: in
+  the same act as persisting the receipt, the reviewer runs the sensor's own
+  `verify --stage <spec|plan> --unit <id> [--dir …]` (the fix unit's recipe; a
+  feature plan adds `--parent`) and pastes the sensor's JSON answer beside the
+  verdict block *before* the report is printed. A digest-bound receipt requires
+  `structural.fresh: true` (and, for a PASS verdict, `current: true`); exit 3
+  (`missing-receipt-snapshot`) or a digest-bound `structural.fresh: false` means
+  the mark did not land — the reviewer fixes the write and re-runs, and the verdict
+  is not emit-able in that turn. A `Snapshot: refused` receipt's
+  `missing-receipt-snapshot` answer is its sanctioned form. A verdict block
+  printed without the pasted self-check output is a contract defect, and every
+  consumer reads a chat-only verdict as `missing-receipt-snapshot` — it does not
+  exist to the sensor.
 - **A gate rejection is typed**, from a closed set of four: `dependency`, `status`,
   `phase-lint`, `stale-or-missing-receipt`. Each fixed gate block carries its type
   and names what it read and where the turn goes:
