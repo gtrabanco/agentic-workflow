@@ -301,7 +301,8 @@ display the guarantees the schema cannot state.
 | `PRE_EXECUTION_PARENT_ROLES` | `critic` · `synthesis` · `arbitration` — What a parent receipt was — there is no quorum over them. |
 | `PRE_EXECUTION_AUTHOR_EXCLUSIONS` | `enforced` · `not-enforceable` — Whether the runtime can prove the reviewer did not author the artifact set. |
 | `PRE_EXECUTION_MODEL_DIVERSITY` | `same-model` · `cross-model` · `not-applicable` — A truthful label, never a threshold. |
-| `PRE_EXECUTION_FRESHNESS_CODES` | `invalid-stage` · `invalid-unit` · `stale-policy` · `stale-context` · `stale-source-revision` · `stale-parent` · `stale-artifact-revision` · `stale-artifact-content` · `missing-receipt-snapshot` — Ordered precedence: see Freshness. |
+| `PRE_EXECUTION_FRESHNESS_CODES` | `invalid-stage` · `invalid-unit` · `stale-policy` · `impossible-timeline` · `stale-context` · `stale-source-revision` · `stale-parent` · `stale-artifact-revision` · `stale-artifact-content` · `missing-receipt-snapshot` — Ordered precedence: see Freshness. |
+| `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` | `300000` — The published clock-drift tolerance (±5 min) for the `impossible-timeline` check, so the git-backed sensor cannot drift from the contract. |
 | `PRE_EXECUTION_DIAGNOSTIC_CODES` | `invalid-type` · `missing-field` · `unknown-field` · `invalid-value` · `limit-exceeded` · `duplicate-id` · `unknown-command` · `invalid-order` · `invalid-stage` · `invalid-exit-state` · `invalid-evidence` · `invalid-skip` · `invalid-fail-fast` · `digest-mismatch` · `verdict-mismatch` · `budget-exceeded` · `missing-artifact-kind` · `invalid-artifact-set` · `invalid-selector` · `invalid-author` · `invalid-context` · `invalid-topology` · `stale-snapshot` · `stale-policy` — Redacted: codes and pointers only, never a submitted value. |
 
 ### What the snapshot binds
@@ -378,12 +379,15 @@ an unresolved material finding, and `modelDiversity` is a truthful label
 
 `comparePreExecutionReceiptToSnapshot` answers `{ fresh: true }` or
 `{ fresh: false, reasonCode }` from the closed `PRE_EXECUTION_FRESHNESS_CODES`,
-in this fixed precedence: `stale-policy` → `stale-context` →
-`stale-source-revision` → `stale-parent` → `stale-artifact-content` →
-`stale-artifact-revision` → `missing-receipt-snapshot`, with `invalid-stage` and
-`invalid-unit` refused before any comparison. Because a revert that rotates
-`artifactRevisionId` still changes the snapshot digest, an old PASS cannot be
-resurrected by editing a document back to its previous bytes.
+in this fixed precedence: `stale-policy` → [`impossible-timeline` — the
+receipt's own recorded finish/commit timeline is judgeable only by a git-backed
+caller; the pure comparator leaves it un-evaluated (fail-open)] →
+`stale-context` → `stale-source-revision` → `stale-parent` →
+`stale-artifact-content` → `stale-artifact-revision` →
+`missing-receipt-snapshot`, with `invalid-stage` and `invalid-unit` refused
+before any comparison. Because a revert that rotates `artifactRevisionId`
+still changes the snapshot digest, an old PASS cannot be resurrected by editing
+a document back to its previous bytes.
 
 ### Published limits
 

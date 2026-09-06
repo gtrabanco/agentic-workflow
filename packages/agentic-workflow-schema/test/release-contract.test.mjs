@@ -20,9 +20,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is 4.0.1", () => {
+test("AC8 read-verified: package version is 4.1.0", () => {
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "4.0.1");
+  assert.equal(pkg.version, "4.1.0");
 });
 
 // AC7 — language-aware capability semantics. Each language is asserted with
