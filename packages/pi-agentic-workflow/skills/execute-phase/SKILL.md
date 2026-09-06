@@ -1,7 +1,7 @@
 ---
 name: execute-phase
 user-invocable: true
-version: 4.2.0
+version: 4.3.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]
 allowed-tools: [Bash, Read, Edit, Write, MultiEdit]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -54,6 +54,11 @@ Load and verify the **canonical** [Turn contract](.claude/skills/orchestration-e
   unit). Missing, stale, or wrong-stage stops the turn with the gate block; this is
   the one preflight gate `--force` does not reach — the block, no-forgery and legacy
   rules live in [pre-execution gate](references/PRE_EXECUTION_GATE.md).
+- **Pre-write discovery before any repository write** — after the read-only gates
+  and before branch creation, planning commit, or source/test edit, settle the
+  mapper contract (`implementation-discovery`). It answers the seven evidence
+  questions, emits the fixed compact map, and routes `READY | REPLAN |
+  NEEDS-DESIGN | BLOCKED`; only `READY` authorizes the first write.
 
 ## Context budget (hard rule — context is repaid every turn)
 
@@ -76,6 +81,10 @@ the listed one-hop route resource immediately before its step.
 1. Every invocation: consume [verification contract](<../verification-contract/SKILL.md>),
    read/run [preflight gates](references/PREFLIGHT.md), and stop on a contracted
    blocker before editing. This route owns NRS and Architectural invariants gates.
+   After the read-only pre-execution gate and before any branch/planning/source
+   write, load and settle the pre-write mapper
+   [`implementation-discovery`](<../implementation-discovery/SKILL.md>) — it emits
+   the fixed map and routes READY | REPLAN | NEEDS-DESIGN | BLOCKED.
 2. Without explicit `P<n>`, read [unit loop](references/UNIT_LOOP.md), then
    [execution contract](references/EXECUTION_CONTRACT.md), then exactly one
    workflow: [feature](references/WORKFLOWS_FEATURE.md),

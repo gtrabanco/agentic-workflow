@@ -43,10 +43,17 @@ Rules the builder enforces and no caller may improvise around:
   Passing a fix unit's own SPEC bytes off as a parent is refused by the contract,
   because the field means "the Product review I descend from".
 - **Context rows are the authorities actually consulted**, each `present` with its
-  digest or `absent` with `null`: `roadmap-row`, `project-guide`,
-  `normalized-repository-state`, `architectural-invariants` (the *project's* declared
-  file — the portable workflow contract is not a project's rule set), plus
-  `governing-issue` and `dependency-unit` when the unit has them.
+  digest or `absent` with `null`: `project-guide`, `normalized-repository-state`,
+  `architectural-invariants` (the *project's* declared file — the portable workflow
+  contract is not a project's rule set), plus `governing-issue` and
+  `dependency-unit` when the unit has them. **The roadmap row is deliberately not
+  bound:** `ROADMAP.md` is every unit's shared lifecycle ledger — rows for other
+  units land while a plan is in flight, and the status machine's own sanctioned
+  writes (`planned` → `in-progress` at P1, `done` at PR open) must never invalidate
+  a recorded receipt. Its safety-relevant content is owned by gates that re-read it
+  live (the own-status gate, and the dependency gate's fingerprint over the SPEC
+  `Depends on:` line plus the closure roadmap rows); the unit's artifacts and the
+  authorities above stay bound.
 - **A snapshot digest is not a git blob id.** `git hash-object` stays the convention
   for the frozen `ACCEPTANCE.md` manifest receipt only; comparing it to a snapshot
   digest proves nothing and a sensor that does so is wrong, not cheap.

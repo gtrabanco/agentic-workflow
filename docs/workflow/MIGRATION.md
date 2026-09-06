@@ -2,6 +2,30 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-09-05 — receipts no longer bind the shared roadmap (`pre-execution-review` 2.0.0)
+
+**Changed snapshot contract; `pre-execution-review` 2.0.0, `review-spec` 1.6.0, pi package 0.5.0.**
+
+The pre-execution snapshot builder no longer binds `docs/features/ROADMAP.md` as a
+`roadmap-row` context. The roadmap is every unit's shared lifecycle ledger: rows for
+other units land while a plan is in flight, and the status machine's own sanctioned
+writes (`planned` → `in-progress` at P1, `done` at PR open) used to invalidate every
+in-flight spec/plan receipt repo-wide and force a re-review that answered nothing.
+
+What still invalidates a receipt (unchanged): any bound unit artifact byte
+(`SPEC.md`, `ACCEPTANCE.md`, `TASKS.md`, …), the governing authorities
+(`CLAUDE.md`, `docs/workflow/REPOSITORY_STATE.md`,
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md`), the parent lineage, the policy
+version, and a rotated `artifactRevisionId`. The roadmap row's safety-relevant
+content stays guarded live by the own-status gate (read every invocation) and the
+dependency gate (its Dependency receipt v1 fingerprints the SPEC `Depends on:` line
+plus the closure roadmap rows).
+
+**One-time effect of upgrading:** every receipt recorded before this change
+re-verifies stale once (the snapshot shape no longer carries the roadmap-row
+context), so re-run the stage's review — `/review-spec` then `/review-plan` — on
+each in-flight unit. Units recorded fresh after the upgrade are unaffected.
+
 ## 2026-09-04 — `loop-review-fold` is retired to a manual path
 
 **`loop-review-fold` is removed** (fix #161, P3a). The simple review/fold router

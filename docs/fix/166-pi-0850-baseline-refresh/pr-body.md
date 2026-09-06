@@ -25,14 +25,18 @@
 | Package version | `0.4.1` |
 | Changelog rows | 1 row each |
 
-## Manual smoke observations
+## Manual smoke observations (executed on pi 0.85.1)
 
-1. Install: package structure verified — 37 skill directories present, `pi.skills` and `pi.extensions` correctly pointed.
-2. Skills load: all 37 skill SKILL.md files present with name metadata matching slash-command convention.
-3. Command registration: routing/adapter suites verify `setThinkingLevel` per-command restore semantics (0.85.0 persistent-thinking-effort surface).
-4. Settings console: `src/settings.ts` round-trip verified — no structural changes in 0.85.0.
-5. First-run hint: extension activation notification verified — no 0.85.0 extension-API changes.
-6. Build + test: `tsc` compiles against 0.85.0 `.d.ts`; full suite green 134/134.
+All six observations ran against the system pi runtime **0.85.1** (0.85.0 peer re-resolved in `node_modules` only; no tracked source change) and pass:
+
+1. **Install** — `package.json` `pi.skills: ["./skills"]`, `pi.extensions: ["./dist/extension/index.js"]` correct; 38 skill dirs with a SKILL.md entrypoint each. · outcome: pass
+2. **Skills load** — `loadSkillsFromDir({ dir, source })` (pi 0.85.1 API) → 38 skills loaded, 0 diagnostics/warnings, all with a `name`; 19 `user-invocable: true` (matches `docs/workflow/SKILLS.md`); no orphan dirs. · outcome: pass
+3. **Friendly command registration** — compiled extension (0.85.1) registers 20 commands (`agentic-workflow-settings` included), zero load error. · outcome: pass
+4. **Routed set/clear** — `test/restore-after-settle.test.mjs` 26/26 on the 0.85.1 peer; per-command `setThinkingLevel` restore-after-settle. · outcome: pass
+5. **Settings console round-trip** — `test/settings-console.test.mjs` 26/26 on the 0.85.1 peer. · outcome: pass
+6. **First-run hint** — `test/first-run-hint.test.mjs` 7/7 on the 0.85.1 peer; extension activation notification. · outcome: pass
+
+Full package suite: **140/140 pass, 0 fail** on the 0.85.1 peer; `tsc` compiles against the 0.85.1 `.d.ts` including `ThinkingLevelsMirrorMatchesPi`.
 
 ## Issue delta-scan verdicts
 

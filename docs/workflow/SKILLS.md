@@ -4,7 +4,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**19 user-facing skills** (one menu entry each) + **17 internal steps**
+**19 user-facing skills** (one menu entry each) + **18 internal steps**
 composed for you (the `plan-feature` router's two planning steps, the two
 pre-execution evidence owners `evidence-grounding` (authoring readiness) and
 `pre-execution-review` (the shared review cycle + the planning ledgers), the
@@ -105,6 +105,7 @@ deterministic readiness result, never a verdict.
 | `review-brand` | Brand/voice-consistency checklist over user-facing copy. `user-invocable: false` — internal review pack |
 | `review-perf` | Performance-regression checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-seo` | SEO checklist over public-facing pages/routes. `user-invocable: false` — internal review pack |
+| `implementation-discovery` | Bounded, read-only pre-write mapper contract: closes seven evidence questions, emits one fixed compact map, and routes `READY \| REPLAN \| NEEDS-DESIGN \| BLOCKED` before any branch/planning/source write. `user-invocable: false` — consumed only by `execute-phase` on the pre-write route |
 
 ## Execute
 
