@@ -48,6 +48,14 @@ export const PRE_EXECUTION_STAGES = Object.freeze(["spec", "plan"] as const);
 export const PRE_EXECUTION_UNIT_KINDS = Object.freeze(["feature", "fix"] as const);
 
 /**
+ * The review-policy version a receipt is bound to. A policy bump rotates the
+ * `stale-policy` axis: a receipt produced under a different version no longer
+ * blesses a verdict. This is the ONE authority the pre-execution snapshot CLI
+ * reads instead of a hardcoded literal (known-issue 24 / review finding F49).
+ */
+export const PRE_EXECUTION_POLICY_VERSION = "v1" as const;
+
+/**
  * The artifact roles a pre-execution snapshot may bind. Deliberately excludes
  * execution progress (`progress.md`), raw exploration history, and findings
  * resolution: none of them are Plan authority (SPEC Design §2).

@@ -79,6 +79,14 @@ function cleanEnv() {
   return env;
 }
 
+// Spawn the runner on a probe file. `node --test <file>` and `bun test <file>`
+// both start a runner; `bun --test <file>` does NOT — bun only starts a runner
+// through the `test` subcommand, so passing `--test` as a flag under bun
+// executes the file as a plain script and every `test()` call throws
+// "Cannot use test outside of the test runner". The probe inherits whatever
+// runner the suite is running under.
+const testRunArgs = (file) => (process.versions?.bun ? ["test", file] : ["--test", file]);
+
 // Run the committed exact-table test file with a data-only mutation applied
 // and report its exit status. The mutation never touches test logic: it only
 // edits EXPECTED fixture data, so a nonzero exit proves the guard itself.
@@ -91,7 +99,7 @@ function runProbe(mutate) {
     );
     const probePath = join(dir, "capabilities.test.mjs");
     writeFileSync(probePath, mutate(source));
-    const result = spawnSync(process.execPath, ["--test", probePath], {
+    const result = spawnSync(process.execPath, testRunArgs(probePath), {
       encoding: "utf8",
       // The parent test-runner marks spawned files with NODE_TEST_CONTEXT;
       // the probe would inherit it and refuse to run (exit 0, no tests).

@@ -6,10 +6,56 @@ Planning baseline: `32e69287b391946963bf6331506c9c1837298932`
 
 | Phase | Status | Evidence |
 |---|---|---|
-| P1 — Define bounded implementation discovery | pending | Awaiting merged implementation of feature 28 |
-| P2 — Gate the first phase write | pending | Depends on P1 discovery contract and feature-28 receipts |
-| P3 — Integrate evidence-aware execution routing | pending | Depends on P2 execution integration |
-| P4 — Qualify implementation discovery | pending | Depends on P1-P3 |
+| P1 — Define bounded implementation discovery | done (`33b6c5a9` resolved) | `node --test scripts/implementation-discovery.test.mjs` -> exit 0 (11/11 discovery-contract fixtures) |
+| P2 — Gate the first phase write | done (`ef06a210`) | `node --test scripts/implementation-discovery.test.mjs` -> exit 0 (16/16 ordering/identity/continuity/drift/consumption/recovery fixtures) |
+| P3 — Integrate evidence-aware execution routing | done (`ee8a5ae7`) | `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` -> exit 0 (23/23 + route suites) |
+| P4 — Qualify implementation discovery | done (qualification gates green) | root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 · installability ✓ · independent review + weakest-executor golden fixture handed off |
+
+## Unit-loop receipt — P1
+- Commit: ef06a210 · Gate: `node --test scripts/implementation-discovery.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Next: P2 · Attempts: 1
+
+## Unit-loop receipt — P2
+- Commit: ee8a5ae7 · Gate: `node --test scripts/implementation-discovery.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Next: P3 · Attempts: 1
+
+## Unit-loop receipt — P3
+- Commit: edae72f4 · Gate: `node --test scripts/implementation-discovery.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Next: P4 · Attempts: 1
+
+
+## P4 completion — 2026-09-05 (fold-findings cycle 2 + weakest-executor golden fixture)
+
+- review-change cycle 2: F1 verified gone (plugin.json entry, README reconciliation), 0 new fix-now findings, REPLY-PASS.
+- Weakest-executor golden fixture (qwen3.6): 4 scenarios PASS — READY (branch+write), BLOCKED (no branch/write), REPLAN (no branch/write), no-automatic-issue (no forge call, no issue filed). All zero invented steps. Logged to GOLDEN_FIXTURE.md.
+- TASKS.md updated: both remaining P4 checkboxes ticked.
+- Progress: P4 complete, PR #175 open, branch pushed.
+
+
+## Fold — 2026-09-05 (review-change cycle 1 finding F1)
+
+- Folding the one material fix-now finding from review-change cycle 1
+  (head `f038d229`): the internal `implementation-discovery` skill had no
+  sanctioned registration shape. Registered it in
+  `.claude-plugin/plugin.json` (alphabetical entry; 37 → 38) so it ships to
+target installs — `metadata.internal` was rejected because the `execute-phase`
+pre-write route links it by relative path. Reconciled EN/ES README count cells
+(38/37 → 39 source · 38 discoverable) and both uninstall rosters.
+- Gates re-run green: `npx skills add . --list` → "Found 38 skills";
+  `check-skill-context` → "PASS context budgets: 39 skills";
+  `implementation-discovery.test` 23/23; `pre-execution-quality.test` 63/63;
+  `normative-drift` 16/16; `bounded-delivery-loops` 1/1; `ledger-ownership` 18/18;
+  pi `alias-coverage` 14/14. `check-skill-context --routes --json` remains red at
+  clean HEAD too — pre-existing route-budget ceiling drift (plan-feature:scaffold,
+  plan-fix:issue, review-spec, review-plan), not attributable to this fold.
+- `review-findings.md` row F1 flipped `folded: yes`.
+
+## Unit-loop receipt — P4 (qualification)
+- Commit: eef1ab09 · Gate: root 198/198 · schema 679/679 · Pi bundle+test 140/140 (parity OK) · context budgets 39 (exit 0) · Acceptance blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e
+- Next: close-out (independent review + weakest-executor golden fixture are handed off, separate contexts)
+
+## Acceptance receipt v1
+- Blob: 5b11f34c22731ec15d5b9d725ec2175f5224220e · Verified: 2026-09-05 · Source: ACCEPTANCE.md
 
 ## Planning record
 
@@ -74,3 +120,54 @@ Only Engineering-half artifacts changed (`planning-evidence.md`, `testing.md`, n
 - Prior plan receipt (re-review): rp-29-20260905-001 @ faae9acd2ec2e2f7fbed31d88e64fe5d46dc43e3a920ae9ff11533da415c6a42
 - Checks: L1–L6 pass · P1–P12 pass (12/12)
 - Notes: repeat justification per POLICY §4 — changed plan snapshot `faae9acd…` → `e0c71cc8…` after the one sanctioned repair batch (N29-001/002/003/005, resolving revision d8404285); this is the first re-review, not a second cycle. Parent snapshot recomputed from current Product bytes with the builder (stage spec) and matched against receipt rs-29-20260905-001 — never copied. No handoff artifactRevisionId was supplied; the content-derived revision d2455259 (newest commit touching a bound path) is recorded per RS3(b), identical to both prior receipts because the repair batch is still uncommitted worktree state on allowed planning paths. Snapshot built with `node scripts/pre-execution-snapshot.mjs build --stage plan --unit 29-bounded-implementation-discovery --parent b9f49d07…`; all nine applicable feature artifact rows bound at whole-file. Falsification stance: NO-CONFIRMED-GAPS — PE-001 (`skills/execute-phase/SKILL.md` file-cap guardrail), PE-002 (`skills/execute-phase/references/PREFLIGHT.md` reserved discovery slot), PE-005 re-citation (`skills/review-change/SKILL.md` `replan-in-unit` + `/fold-findings` correction path, lines ~143–156), PE-009 (Pi package present; PR #150/#155 merge commits are ancestors of HEAD) all re-verified against current bytes. Repairs verified in the bound snapshot: PE-005 re-cited to real owners, `map:limit-hit` present in testing.md's scenario inventory and obligation O8, `planning-obligations.md` present with O1–O13 one-to-one AC1–AC13. All 13 obligations planned, none blank/deferred/unvalidated. Info-only note (no finding row emitted): PE-006's freshness label predates the feature-28 merge, but its named next evidence (bind current receipts post-merge) was discharged by rs-29-20260905-001 and rp-29-20260905-001, and its pre-execution revalidation requirement remains scheduled and is honored by this receipt's binding. A further plan change invalidates this receipt; a second repair/re-review cycle must print CONVERGENCE-ANOMALY first (POLICY §4). Read-only: no reviewed plan artifact (SPEC.md, PLAN.md, TASKS.md, ACCEPTANCE.md, planning-evidence.md, planning-obligations.md, testing.md, decisions.md, architecture-notes.md, roadmap) was modified.
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-29-20260905-003 · Snapshot: 701d1c3c9b6c203022aa980ba48b39e3b3638f25a076195d296b621507a3429b · Verdict: plan-review-pass
+- Unit: 29-bounded-implementation-discovery · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: b9f49d07b1c53a798f1acac28e4241addc433bcbe26405c2cfe261cb8ccf4e16 · Parent Product receipt: rs-29-20260905-001
+- Source revision: 42bb38e7524cd7f590ef31f3113a88b1529c9ffc · Artifact revision: 42bb38e7524cd7f590ef31f3113a88b1529c9ffc
+- Reviewer: review-plan-session · Session: 20260905-review-plan-29-3 · Role: reviewer · Author: plan-team (2026-08-30 planning sessions)
+- Author exclusion: not-enforceable · Context clean: true (this conversation authored neither the Engineering half, its ledgers, nor the repair batch; re-review of the unit)
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-05T13:00:00Z/2026-09-05T13:10:00Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 10 rows · obligations 13 rows (verified-capable: 13)
+- Prior plan receipt (re-review): rp-29-20260905-002 @ e0c71cc843bb0bd37f3541eb2461d93778a26e2b56e8892b4bec627483f802f1
+- Checks: L1–L6 pass · P1–P12 pass (12/12)
+- Notes: re-review triggered by a stale-context verify on execute-phase preflight — the roadmap context row gained rows 30–33 (commit 42bb38e7) after rp-29-20260905-002 bound snapshot `e0c71cc8…`, so the whole-file snapshot digest moved even though the plan bytes and the 29 roadmap row are byte-identical. Repeat justification per POLICY §4: the snapshot changed (`e0c71cc8…` → `701d1c3c…`), so a re-review is warranted; this is a repeat of the same plan, not a second repair/re-review cycle (no repair batch followed the PASS, so no CONVERGENCE-ANOMALY condition is met). ArtifactRevisionId = `42bb38e7…` (the newest commit touching a bound path — the roadmap/context commit; bound-path revision is shared because the snapshot binds the roadmap context).. Parent snapshot recomputed from current Product bytes with the builder (stage spec) and matched against receipt rs-29-20260905-001 — never copied. All nine applicable feature artifact rows bound at whole-file. Falsification stance: NO-CONFIRMED-GAPS — PE-001 (`skills/execute-phase/SKILL.md` file-cap guardrail), PE-002 (`skills/execute-phase/references/PREFLIGHT.md` reserved discovery slot), PE-005 re-citation (`skills/review-change/SKILL.md` `replan-in-unit` + `/fold-findings` correction path), PE-009 (Pi package present; PR #150/#155 merge commits are ancestors of HEAD) all re-verified against current bytes. Ledger sweep: planning-evidence 10 rows, obligations 13 rows (verified-capable 13); L1–L6 pass; P1–P12 pass (12/12). Findings N29-001/002/003/005 all `resolved`; no open material row. Read-only: no reviewed plan artifact was modified.
+
+## Scope extension — 2026-09-05 (owner instruction)
+
+Owner instructed folding one unissued fix into this PR after the unit's execution had closed: the
+fix sat uncommitted in the working tree during the review pass, breaking `review-change`'s
+clean-workspace precondition. One PR per unit of work is overridden here by that instruction —
+this PR carries feature 29 plus the fix below; no planning artifact (SPEC/PLAN/TASKS/ACCEPTANCE)
+was touched and no replan was run.
+
+- **Roadmap scoping** — the pre-execution snapshot builder (`scripts/pre-execution-snapshot.mjs`)
+  no longer binds the shared `docs/features/ROADMAP.md` (`roadmap-row` context removed from
+  `CONTEXT_SOURCES`). Unrelated roadmap rows and the status machine's own sanctioned writes
+  (`planned` → `in-progress` at P1, `done` at PR open) no longer invalidate recorded receipts —
+  the exact waste this unit's own rp-29-20260905-003 re-review recorded (roadmap rows 30–33
+  stale-contexted a byte-identical plan and forced the re-review). The row's safety-relevant
+  content stays guarded live by the own-status gate and the dependency gate's Dependency receipt
+  v1 fingerprint.
+- Carries: `pre-execution-review` 1.7.0 → 2.0.0 (SNAPSHOT.md contract), `review-spec` 1.5.0 →
+  1.6.0 (CHECKS.md), pi package 0.5.0 re-bundle, `MIGRATION.md`/`.es.md` entries, EN/ES
+  changelog rows, sensor regression tests.
+- **No issue**: verified against the tracker — closest open items #170 (delta re-reviews of fold
+  diffs) and #162 (verdict/receipt/roadmap desync) address different surfaces and do not cover
+  the snapshot context binding. Owner-requested, no issue.
+- Migration: receipts recorded before this change verify stale exactly once (the snapshot shape
+  no longer carries the roadmap-row context). This unit's plan receipts are historical —
+  execution closed at P4 — and no pending gate re-derives them; the fix's own review is the
+  `review-change` pass over this PR's diff.
+- Validation: sensor suite 19/19 (2 new roadmap-scoping regression tests), attribution/
+  workflow-status/dependency-gate suites 25/25, quality/drift/ledger suites 103/103, pi package
+  140/140 (byte parity), context budgets PASS (39 skills).
+
+## P4 completion — 2026-09-05 (fold-findings cycle 2 + weakest-executor golden fixture)
+
+- review-change cycle 2: F1 verified gone (plugin.json entry present, README count reconciled, uninstall roster updated), 0 new fix-now findings. REPLY-PASS.
+- Weakest-executor golden fixture (qwen3.6): 4 scenarios PASS — READY (branch+write), BLOCKED (no branch/write), REPLAN (no branch/write), no-automatic-issue (no forge call, no issue filed). All zero invented steps. Logged to `GOLDEN_FIXTURE.md`.
+- TASKS.md updated: both remaining P4 checkboxes ticked.
+- P4 complete. PR #175 open and pushed.
