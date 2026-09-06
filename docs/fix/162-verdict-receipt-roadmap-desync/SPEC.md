@@ -115,7 +115,11 @@ The exact change set, file by file:
   `skills/design-feature/references/REPAIR.md` §4 clause;
   `skills/review-change/references/PERSIST_AND_DECIDE.md` cap-scope clause;
   `skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` lineage gate names
-  `impossible-timeline`.
+  `impossible-timeline`. The machine grammar follows the prose:
+  `packages/agentic-workflow-schema/src/pre-execution-contract.ts` —
+  `VERDICTS_BY_STAGE.plan` drops `needs-design` (its `pre-execution-receipt.test.mjs`
+  pins flip red-first; P1 task, O11/AC11 — Decision 11), so the persisted state
+  machine stops validating as well-formed exactly the emission (c) forbids.
 - **(d) Added scope — `impossible-timeline` receipt guard** (P1 schema, P2
   sensor): one additive freshness code, comparator-precedence slot, published
   skew constant + pure predicate, `receipts()` timeline parsing,
@@ -140,11 +144,16 @@ The exact change set, file by file:
 - #173's turn-contract single-owner migration — its bespoke-contract list
   excludes `review-spec`/`review-plan` (their boxes are skill-specific
   additions inside references), so no conflict and no absorption.
-- The broader SKILL context-route slimming (#176) — this unit only restores the
-  two routes it grows (see Decisions 7).
-- Any change to the receipt schema (`PreExecutionReviewReceiptV1`), the verdict
-  enum (`needs-design` stays, emitted by `review-spec`), the snapshot contract,
-  or any historical artifact/receipt (rewriting one is forgery — POLICY §6).
+- The broader SKILL context-route slimming (#176) — this unit restores the
+  routes it grows by trim and raises the pre-existing shared-component ceilings
+  via the declared re-basis (see Decisions 7 and 12); the slim-vs-raise policy
+  question (refactor the skills or raise ceilings) stays #176's.
+- Any change to the receipt schema (`PreExecutionReviewReceiptV1`), the flat
+  verdict enum (`PRE_EXECUTION_VERDICTS` — `needs-design` stays, emitted by
+  `review-spec`), the snapshot contract, or any historical artifact/receipt
+  (rewriting one is forgery — POLICY §6). The one deliberate exception is the
+  per-stage map: `VERDICTS_BY_STAGE.plan` drops `needs-design` (P1, O11/AC11 —
+  Decision 11) so the machine contract stops sanctioning what (c) forbids.
 
 ### Planning evidence
 
@@ -161,11 +170,12 @@ use case — one compact row each.
 | PE-005 | Added scope: `receipts()` parses no `Started/finished:` line and `attributeFreshness` has no timeline dimension — a receipt's internal timeline is never checked | repository | `scripts/pre-execution-snapshot.mjs` (`receipts()`, `attributeFreshness`) | b18fb612 | O6 | current | proven | — |
 | PE-006 | Field case: a back-dated `PLAN-REVIEW-PASS` receipt (unit 31, `agentic-workflow-loop`) verified honestly against the canonical builder; only its recorded timeline (finish ~20 h before its source revision's commit date) exposed it | forge | [#162](https://github.com/gtrabanco/agentic-workflow/issues/162) "Added scope" section | b18fb612 | O6 | current | proven | — |
 | PE-007 | Regression scope: freshness-code consumers (`execute-phase/references/PRE_EXECUTION_GATE.md`, `audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md`, `workflow-status` 6a) route on `current`/`structural.reasonCode` generically, so the additive code needs no consumer change; only `audit-pr`'s lineage text enumerates dimensions ("Stale, missing or wrong-stage") and gains the one word | repository | those three files | b18fb612 | O8 | current | proven | — |
-| PE-008 | Baseline at `b18fb612` (clean tree): root suite 199/200 (`scripts/check-skill-context.test.mjs` red — `review-plan:default`/`review-spec:default` route ceilings exceeded on `main`); schema package 679/679; pi package 140/140; skills budgets PASS (39 skills) | repository | run this session at `b18fb612` | b18fb612 | O9 | current | proven | the red is pre-existing; this unit restores the two routes it touches green (trim or declared re-basis naming fix/162), the broader slimming stays #176 |
+| PE-008 | Baseline at `b18fb612` (clean tree): root suite red on `scripts/check-skill-context.test.mjs`; `node scripts/check-skill-context.mjs --routes` reports **five** exceeded routes — `review-plan:default` and `review-spec:default` (grown by this unit), plus pre-existing red on `design-feature:repair`, `plan-feature:scaffold`, `plan-fix:issue` (the latter two share the `pre-execution-review` reference this unit grows); schema package 679/679; pi package 140/140; skills budgets PASS (39 skills) | repository | re-run at `b18fb612` (git worktree) and at HEAD by review rp-fix162-20260906-001; planner's original run this session at `b18fb612` | b18fb612 | O9 | current | proven | the two grown routes return green by trim; the three pre-existing ceilings rise via the budgets file's declared re-basis naming `fix/162` — the unit grows the shared `pre-execution-review` reference component of those routes (Decision 12); the slim-vs-raise policy question is #176's and does not block this gate |
 | PE-009 | Rollback: one PR revert; the schema member is additive; no data cleanup; legacy receipts and consumers are untouched by the revert | derived | rule: revert `fix/162-…` PR; inputs are PE-002–PE-005 | b18fb612 | O10 | current | proven | — |
 | PE-010 | Skew constant = 5 minutes (`300_000 ms`), published from the schema package so the sensor cannot drift from the contract | derived | rule: the skew must absorb cross-machine clock drift but stay ≪ the field case's ~20 h contradiction; 5 min satisfies both | b18fb612 | O6 | current | proven | — |
 | PE-011 | Removing review-plan's `NEEDS-DESIGN` keeps the `pre-execution-verdict` machine vocabulary covered: `review-spec/references/OUTPUT.md` still declares it (`must-name` surface) | repository | `CLAUDE.md` § Normative surfaces (`review-spec-verdicts`, `review-plan-verdicts` rows) | b18fb612 | O3 | current | proven | — |
 | PE-012 | The pure comparator cannot evaluate the timeline (no git access: "Pure, deterministic, and total"); the schema publishes the code, the documented slot, the skew, and the pure predicate; the git-backed sensor evaluates the slot and the parity test documents the composition | repository | `packages/agentic-workflow-schema/src/pre-execution.ts` comparator docstring; `scripts/pre-execution-attribution.test.mjs` | b18fb612 | O5, O7 | current | proven | — |
+| PE-013 | The machine verdict-stage map still sanctions plan-stage `needs-design`: `VERDICTS_BY_STAGE.plan` includes it (`packages/agentic-workflow-schema/src/pre-execution-contract.ts:127-131`), the `verdict-stage-matrix` projection rule validates such receipts well-formed (`:608-618`), the schema suite pins it (`test/pre-execution-receipt.test.mjs:47,90,95`), and no historical plan-stage `needs-design` receipt exists in the repository (`grep -rn "Verdict: needs-design" docs/` → 0) — narrowing the map invalidates no persisted receipt; the drift model reads the map from src (adaptive), the flat `PRE_EXECUTION_VERDICTS` and the `spec` stage keep the token | repository | file reads + grep run by review rp-fix162-20260906-001 at HEAD | 6efe9b54 | O11 | current | proven | — |
 
 ### Obligations
 
@@ -179,8 +189,9 @@ use case — one compact row each.
 | O6 | AC6 — the sensor refuses a back-dated receipt under its own reason code | Receipt integrity (anti-forgery); the PE-006 field case is the regression | P2 | Sensor timeline verification | `execute-phase --fix 162` | `node --test scripts/pre-execution-timeline.test.mjs` → pass | suite tail in `progress.md` | planned |
 | O7 | AC7 — the sensor-only dimension composes with the comparator's documented precedence | Sensor cannot drift from the contract it prints | P2 | Sensor timeline verification | `execute-phase --fix 162` | `node --test scripts/pre-execution-attribution.test.mjs scripts/pre-execution-sensor.test.mjs` → pass | suite tail in `progress.md` | planned |
 | O8 | PE-007 — `audit-pr`'s lineage gate names the new dimension | Merge-gate honesty for the new dimension | P5 | Arbitration ownership contract | `execute-phase --fix 162` | `grep -c "impossible-timeline" skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md` ≥ 1 | grep output in `progress.md` | planned |
-| O9 | PE-008 — the two route ceilings this unit touches return to green | Context budgets stay enforced | P5 | Arbitration ownership contract | `execute-phase --fix 162` | `node scripts/check-skill-context.mjs --routes` → exit 0 | tail in `progress.md` | planned |
+| O9 | PE-008 — the routes this unit grows return green by trim; the pre-existing shared-component ceilings rise via the declared re-basis (Decision 12) | Context budgets stay enforced | P5 | Arbitration ownership contract | `execute-phase --fix 162` | `node scripts/check-skill-context.mjs --routes` → exit 0 | tail in `progress.md` | planned |
 | O10 | AC8–AC10 — versions, changelogs (EN+ES same-PR), Pi-mirror re-bundle, packages green | Release hygiene invariants (`CLAUDE.md`) | P5 + P6 | Arbitration ownership contract + Hardening & PR | `execute-phase --fix 162` | AC8–AC10 commands; `cd packages/pi-agentic-workflow && bun run test` → fail 0 | tails in `progress.md` | planned |
+| O11 | AC11 — the machine verdict-stage map no longer sanctions `needs-design` at the plan stage (the flat `PRE_EXECUTION_VERDICTS` keeps it — `review-spec` still emits) | Single verdict arbiter: the persisted state machine stops accepting what (c) forbids (PF-2, Decision 11) | P1 | Impossible-timeline freshness code | `execute-phase --fix 162` | `cd packages/agentic-workflow-schema && bun run test` → fail 0 (with the flipped plan-stage `needs-design` pin in `test/pre-execution-receipt.test.mjs`); `grep -c 'plan: ["plan-review-pass", "plan-review-fail"]' packages/agentic-workflow-schema/src/pre-execution-contract.ts` ≥ 1 | suite tail + grep output in `progress.md` | planned |
 
 ## Rules that must never be violated
 
@@ -211,7 +222,8 @@ use case — one compact row each.
 - **The `gate-rejection-vocabulary@1` block and the receipt templates' fixed
   fields are versioned grammar** — edits stay outside those blocks; the plan
   receipt's `Verdict:` line vocabulary change (dropping `needs-design`) is the
-  reviewed, versioned change this fix makes deliberately.
+  reviewed, versioned change this fix makes deliberately — mirrored in the
+  machine grammar by the `VERDICTS_BY_STAGE.plan` narrowing (O11, Decision 11).
 
 ## Operational risks
 
@@ -220,9 +232,12 @@ use case — one compact row each.
   unpublished code (`attributeFreshness`'s vocabulary guard), so P1 lands before
   P2 and the PR ships both. CI clock drift across machines is absorbed by the
   published skew constant (PE-010).
-- The route-budget red is pre-existing (`PE-008`); P5's trim-or-declared-re-basis
-  task is sequenced after the last `skills/**` edit so the check measures the
-  final bytes.
+- Five routes exceed their ceilings at the baseline (`PE-008`): the two this
+  unit grows return green by trim, the three pre-existing rise via the declared
+  re-basis (Decision 12); P5's trim-or-declared-re-basis task is sequenced after
+  the last `skills/**` edit so the check measures the final bytes. The
+  verdict-stage map narrowing ships in the same schema package version as the
+  additive freshness code — one bump, one changelog row pair.
 
 ## Security risks
 
@@ -261,16 +276,7 @@ n/a — no domain or compliance rules apply to this repository.
 | #171 | open | parallel with file overlap — planning-side materiality + hard cap | this fix lands first (it re-homes `NEEDS-DESIGN` and scopes the guards); #171 rebases — its "third cycle ends in NEEDS-DESIGN" reads the re-homed emitter (`review-spec`) and keeps the verdict-response exception |
 | #172 | open | parallel with file overlap (LEDGERS, PERSIST_AND_DECIDE, audit-pr, workflow-status) | not absorbed; one-clause edits rebase cleanly |
 | #173 | open | parallel — turn-contract single-owner migration | its bespoke list excludes `review-spec`/`review-plan`; the skill-specific boxes edited here are the sanctioned addition surface |
-| #176 | open | related — route-budget slimming after work settles | this fix restores only the two routes it grows (O9); the broader slimming stays #176 |
-
-## Rollback
-
-One command: revert the PR (`gh pr revert <N>` — or `git revert -m 1 <merge-sha>`
-after a merge). Data cleanup: none. Preserved: every receipt, ledger row, and
-roadmap row written by the workflow; the schema member is additive, so a revert
-restores the 4.0.1 vocabulary without touching persisted state. Lost: nothing —
-the fix introduces no data format; the sensor simply stops checking timelines
-and the review contract returns to prose-enforced write-then-report.
+| #176 | open | related — route-budget policy: slim the skills or raise ceilings (the refactor decision) | this fix restores the routes it grows by trim and raises the pre-existing shared-component ceilings via the declared re-basis (Decision 12); the slim-vs-raise policy question stays #176's |
 
 ## Acceptance
 
@@ -319,11 +325,12 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 
 Layer: `domain`. Done-when: `cd packages/agentic-workflow-schema && bun run test`
 → exit 0, fail 0.
-Phase-lint: PASS (8/8) · fingerprint `P1:domain:5:impossible-timeline-freshness-code`
+Phase-lint: PASS (8/8) · fingerprint `P1:domain:6:impossible-timeline-freshness-code`
 
 - [ ] Red-first `packages/agentic-workflow-schema/test/pre-execution-timeline.test.mjs`: pins `impossible-timeline` membership in `PRE_EXECUTION_FRESHNESS_CODES`, `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS === 300_000`, and the predicate's two primary answers — a back-dated finish (earlier than commit − skew) → `true`, an honest finish (later than commit) → `false`
 - [ ] Extend the same test file red-first with the fail-open answers: a finish within the skew before the commit date → `false`, and missing or unparsable stamps → `null` (the predicate never throws)
 - [ ] `packages/agentic-workflow-schema/src/pre-execution.ts`: add `"impossible-timeline"` to `PRE_EXECUTION_FRESHNESS_CODES` directly after `"stale-policy"`; export `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` and the pure `isImpossibleReceiptTimeline({ finishedAt, sourceCommitDate, skewMs })` (returns `boolean | null`); re-export both from `src/index.ts`; `comparePreExecutionReceiptToSnapshot`'s docstring precedence gains the slot as item 4 (list renumbered 1–10) annotated "evaluated by git-backed callers at this slot; the pure comparator leaves it un-evaluated (fail-open)"
+- [ ] `packages/agentic-workflow-schema/src/pre-execution-contract.ts`: drop `"needs-design"` from `VERDICTS_BY_STAGE.plan` (it stays in the `spec` row and in the flat `PRE_EXECUTION_VERDICTS`); red-first pin updates in `test/pre-execution-receipt.test.mjs` — the stage-map list (`:47`) and the matrix case (`:95`, `"plan" + "needs-design"` flips to invalid); the `verdict-stage-matrix` rule reads the map, no rule edit; `normative-drift` reads the map from src (adaptive); `bun run build` regenerates `dist/` (O11/AC11, Decision 11, PE-013)
 - [ ] Update any suite pin that enumerates the closed freshness list red-first (`test/pre-execution-lineage.test.mjs`, `test/pre-execution-docs.test.mjs`, `scripts/pre-execution-quality.test.mjs`) so the whole vocabulary stays pinned
 - [ ] Schema package version 4.0.1 → 4.1.0 in `package.json` + one row each in the `CHANGELOG.md` and `CHANGELOG.es.md` "Companion npm packages" tables; `bun run build` then `bun run test` → fail 0
 
@@ -372,7 +379,7 @@ Phase-lint: PASS (8/8) · fingerprint `P5:docs:8:arbitration-ownership-contract`
 - [ ] `skills/review-change/references/PERSIST_AND_DECIDE.md`: one clause scoping the two-cycle cap to the review→fold loop on source findings (a planning repair routed by a `class: plan`/`product` finding is a verdict response under POLICY §4, never a loop-defect stop)
 - [ ] `skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md`: the lineage gate's blocker enumeration becomes "Stale, missing, wrong-stage **or impossible-timeline** lineage → BLOCKED"
 - [ ] Version bumps: minor for every touched skill (`pre-execution-review`, `review-spec`, `review-plan` via bump-skill — it edits SKILL.md; the reference-only skills `plan-feature`, `workflow-status`, `design-feature`, `review-change`, `audit-pr` bumped manually), each with a row in `CHANGELOG.md` + `CHANGELOG.es.md`; `npm run bundle:skills` in `packages/pi-agentic-workflow` after the last `skills/**` edit of this unit + pi package version bump with its own changelog rows
-- [ ] Budgets: run `node scripts/check-skill-context.mjs --routes`; for each exceeded route first trim redundant added text, then raise the remaining exceedance via the declared re-basis in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` with the growth source named (`fix/162`) — until the command exits 0
+- [ ] Budgets: run `node scripts/check-skill-context.mjs --routes`; for each exceeded route first trim redundant added text, then raise the remaining exceedance via the declared re-basis in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` naming the growth pathway this unit actually grows — the shared `pre-execution-review` reference — as `fix/162` (five routes exceed at the baseline: the two grown routes return green by trim; the three pre-existing ceilings rise by the same declared re-basis, Decision 12; the slim-vs-raise policy stays #176) — until the command exits 0
 
 ### P6 — Hardening & PR
 
@@ -397,16 +404,26 @@ Phase-lint: PASS (8/8) · fingerprint `P5:docs:8:arbitration-ownership-contract`
 - Architecture/parity: `scripts/pre-execution-attribution.test.mjs` extended —
   the sensor's timeline dimension composes with
   `comparePreExecutionReceiptToSnapshot`'s documented precedence.
+- Verdict-stage map: `packages/agentic-workflow-schema/test/pre-execution-receipt.test.mjs`
+  red-first — the stage-map list pin (`:47`) loses the plan-stage
+  `needs-design` member and the matrix case (`:95`) flips to invalid;
+  `pre-execution-docs.test.mjs` and `pre-execution-quality.test.mjs` stay
+  untouched (the flat enum and the `spec` stage keep the token).
 - Docs-side criteria are `read-verified` greps (they pin contract text, not
   behavior); the machine surfaces stay validated by `normative-drift`,
   `pre-execution-quality`, `ledger-ownership`, and the budgets check.
 
 ## Rollback
 
-Revert the unit's PR (`gh pr revert <N>`). The schema member is additive; no
-persisted state, receipt, ledger row, or roadmap row is rewritten. Legacy
-receipts and all consumers keep working unchanged (the sensor's timeline check
-fails open). Data cleanup: none.
+Revert the unit's PR (`gh pr revert <N>` — or `git revert -m 1 <merge-sha>`
+after a merge). The freshness member is additive and the verdict-stage
+narrowing invalidates no persisted receipt (PE-013), so no persisted state,
+receipt, ledger row, or roadmap row is rewritten; a revert restores the 4.0.1
+vocabulary and the permissive plan-stage map. Legacy receipts and all consumers
+keep working unchanged (the sensor's timeline check fails open). Data cleanup:
+none. Lost: nothing — the fix introduces no data format; the sensor simply
+stops checking timelines and the review contract returns to prose-enforced
+write-then-report.
 
 ## Status
 
@@ -447,11 +464,14 @@ fails open). Data cleanup: none.
    from the schema package so the sensor cannot drift from the contract
    (PE-010). The field case's ~20 h contradiction is three orders of magnitude
    beyond it.
-7. **The two exceeded route ceilings are restored in-unit** (O9): the red is
-   pre-existing at `b18fb612` (PE-008) and this unit grows `review-spec`'s
-   route, so leaving it red is not an option for this unit's own gate; the
-   trim-or-declared-re-basis procedure is the budgets file's own sanctioned
-   mechanism, and the broader slimming stays #176's.
+7. **The route-budget red is resolved in-unit by trim + declared re-basis**
+   (O9): five routes exceed at `b18fb612` (PE-008, re-run at the bound revision
+   by review rp-fix162-20260906-001) — the two this unit grows return green by
+   trim, and the three pre-existing (`design-feature:repair`,
+   `plan-feature:scaffold`, `plan-fix:issue`) rise via the budgets file's own
+   sanctioned declared re-basis naming `fix/162`, because this unit grows the
+   shared `pre-execution-review` reference that is a component of those routes
+   (Decision 12); leaving any of them red fails this unit's own gate.
 8. **`SENSOR_CORE.md` 6a extension is limited to `done`-with-open-PR
    (unmerged) units** — a merged unit's gates are closed by the merge itself;
    sensing receipts for merged units would report solved drift forever.
@@ -463,6 +483,27 @@ fails open). Data cleanup: none.
     `packages/agentic-workflow-schema/src/` (`write-then-report`, `NEEDS-DESIGN`,
     `stale-parent`, `PRE_EXECUTION_FRESHNESS_CODES`, `done`/roadmap readers);
     the blast radius in PE-007 is derived from those searches, not from memory.
+11. **`VERDICTS_BY_STAGE.plan` drops `needs-design` — the machine map is
+    aligned with the prose re-homing, not left permissive** (repair ar-162-2,
+    review finding PF-2). The fix's thesis is that the persisted state machine
+    is the only arbiter; leaving the stage map sanctioning plan-stage
+    `needs-design` would keep machine-valid exactly the emission (c) forbids —
+    the same prose-vs-machine gap (a) exists to close. The flat
+    `PRE_EXECUTION_VERDICTS` keeps the token (`review-spec` still emits —
+    PE-011), and no persisted plan-stage `needs-design` receipt exists in this
+    repository (PE-013), so the narrowing invalidates nothing historical.
+    Schema minor bump retained (4.1.0): the map's consumers are the internal
+    `verdict-stage-matrix` rule and the drift model, both updated or adaptive
+    in-unit (PE-013).
+12. **Route-budget baseline corrected; the pre-existing ceiling policy routes
+    to #176 (owner instruction, repair ar-162-2).** The draft's PE-008 claimed
+    two exceeded routes; the true baseline at `b18fb612` is five (review
+    finding PF-1, re-run at the bound revision). The factual half is repaired
+    (PE-008 re-cited, O9/P5-task-8 reworded); the policy half — whether the
+    skills are slimmed or refactored, and where ceilings should sit long-term —
+    is #176's and does not block this unit's gate: the declared re-basis names
+    `fix/162` because the unit grows the shared `pre-execution-review`
+    reference component of the affected routes.
 
 ## Effort
 
