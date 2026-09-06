@@ -76,6 +76,13 @@ on a Product- or Plan-rooted finding is invalid even when the candidate changed:
 the loop repairs source, not authority. Runtime retry and budget mechanics stay
 outside this policy and can never be translated into a PASS.
 
+The guards above gate **blind re-reviews** — an identical snapshot with the
+identical question — and never a repair performed in response to a persisted
+verdict: a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new
+snapshot by design, so no cycle cap or anomaly rule may block or end it. The
+anomaly is printed and routed, never a stop, and no cap converts a verdict into a
+dead end.
+
 ### 5. What a cycle can never produce
 
 - A verdict from an author turn, a readiness preflight, a roadmap status, or a
