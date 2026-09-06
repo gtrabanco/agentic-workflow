@@ -287,6 +287,7 @@ display the guarantees the schema cannot state.
 | --- | --- |
 | `PRE_EXECUTION_STAGES` | `spec` · `plan` — The two review stages. Drives the required artifact set and the verdict matrix. |
 | `PRE_EXECUTION_UNIT_KINDS` | `feature` · `fix` — `fix` has no Product half, so it has no SPEC-stage snapshot. |
+| `PRE_EXECUTION_POLICY_VERSION` | `v1` — The review-policy version a receipt is bound to. A policy bump rotates the `stale-policy` axis, so a receipt reviewed under a different version no longer blesses a verdict. The one authority the snapshot CLI reads instead of a hardcoded literal. |
 | `PRE_EXECUTION_ARTIFACT_KINDS` | `spec` · `acceptance` · `plan` · `tasks` · `testing` · `decisions` · `architecture-notes` · `planning-evidence` · `obligations` — Roles a bound document may play. |
 | `PRE_EXECUTION_SELECTORS` | `whole-file` · `spec-product-v1` — How bound bytes were chosen out of a file. |
 | `PRE_EXECUTION_CONTEXT_KINDS` | `roadmap-row` · `governing-issue` · `normalized-repository-state` · `architectural-invariants` · `dependency-unit` · `project-guide` — Authorities a reviewer was allowed to rely on. |
