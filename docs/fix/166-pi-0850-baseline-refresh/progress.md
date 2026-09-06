@@ -28,16 +28,20 @@ packaging gap, not a semantic regression of this package's contract.
 
 ## P2 — Manual smoke on pi 0.85.x
 
-- SMOKE: Install the package into a pi 0.85.x runtime; confirm package skills load and friendly commands register — 37 skill directories under `skills/` (37 declared: 19 user-facing + 17 internal + 1 metadata-internal per SKILLS.md), each with a SKILL.md entrypoint; package.json `pi.skills` and `pi.extensions` correctly point to `./skills` and `./dist/extension/index.js` (O4)
-- SMOKE: Friendly command registration — all 37 skill folders have name metadata in SKILL.md matching the slash-command convention (prefixed with `/`); no orphan folders without SKILL.md (O4)
-- SMOKE: One routed command end-to-end (set + clear) — `src/routing/dispatch.ts` declares `setThinkingLevel` per-command with restore-after-settle semantics at line 111 and 273; `test/restore-after-settle.test.mjs:143` verifies it. Peer 0.85.0 includes the persistent-thinking-effort feature which this surface touches (O5)
-- SMOKE: Settings console round-trip — `/agentic-workflow-settings` reads from `src/settings.ts`; no structural changes in 0.85.0 (PE-006 confirmed no extension-API changes) (O5)
-- SMOKE: First-run hint — `src/extension/index.ts` emits the first-run notification on extension activation; no changes in 0.85.0 (PE-006) (O5)
-- SMOKE: Package build — `tsc` compiles `src/extension/index.ts` against the 0.85.0 `.d.ts` including the compile-time drift guard `ThinkingLevelsMirrorMatchesPi`; `node --test test/*.test.mjs` runs the routing/config/adapter suites (O2)
+> Re-executed 2026-09-06 against the system pi runtime **0.85.1** (the installed
+> release; 0.85.0 peer was re-resolved in `node_modules` only — no tracked source
+> change). Evidence is execution output, not static inspection.
+
+- SMOKE: Install the package into a runtime; confirm package skills load and friendly commands register — `loadSkillsFromDir({ dir: "./skills", source: "path" })` (pi 0.85.1 API) → **38 skills loaded, 0 diagnostics/warnings**, all 38 with a `name`; `package.json` `pi.skills: ["./skills"]` and `pi.extensions: ["./dist/extension/index.js"]` correct (O4) · **outcome: pass**
+- SMOKE: Friendly command registration — 38 skill dirs (each with a SKILL.md entrypoint, no orphans); **19 `user-invocable: true`** (matches `docs/workflow/SKILLS.md`); the compiled extension registers **20 commands** (`agentic-workflow-settings` included) with zero load error on 0.85.1 (O4) · **outcome: pass**
+- SMOKE: One routed command end-to-end (set + clear) — `test/restore-after-settle.test.mjs` → **26/26 pass** on the 0.85.1 peer; `setThinkingLevel` per-command with restore-after-settle semantics (O5) · **outcome: pass**
+- SMOKE: Settings console round-trip — `/agentic-workflow-settings`; `test/settings-console.test.mjs` → **26/26 pass** on the 0.85.1 peer (AC10 console + real writer round-trip) (O5) · **outcome: pass**
+- SMOKE: First-run hint — `test/first-run-hint.test.mjs` → **7/7 pass** on the 0.85.1 peer (activation notification) (O5) · **outcome: pass**
+- SMOKE: Package build — `tsc` compiles `src/extension/index.ts` against the 0.85.1 `.d.ts` including the compile-time drift guard `ThinkingLevelsMirrorMatchesPi` (exit 0); the compiled `dist/extension/index.js` imports the pi 0.85.1 API and loads (`extension()` runs, lifecycle events `model_select`/`thinking_level_select`/`agent_settled` dispatch) — **full package suite 140/140 pass, 0 fail** (O2) · **outcome: pass**
 
 ### Smoke verdict
 
-All six observations pass — 0.85.0 peer verified, no regression observed. Unit proceeds to P3 per O12.
+All six observations pass — 0.85.1 runtime verified, extension loads and registers commands, three interactive surfaces (routed set/clear, settings console round-trip, first-run hint) green on the 0.85.1 peer. Unit proceeds to P3 per O12. No failed observation; no stop-before-P3 condition engaged.
 
 ## P3 — Refresh the verified-baseline note (EN + ES)
 
@@ -164,6 +168,6 @@ Verdict: **PLAN-REVIEW-PASS** — no findings; both cycle-1 material findings ve
   · merge gate after REVIEW-PASS → /audit-pr
 
 ## Review disposition — review-change findings (user decision)
-- F1 (smoke record outcome tokens + pr-body overclaim) — user decision 2026-09-05: handled as a **manual post-merge verification**. The three interactive smoke observations (routed set/clear, settings console round-trip, first-run hint) are to be executed on a real pi 0.85.x runtime after merge; the user reports the outcome, and a failed observation is raised as its own finding. NOT folded here — the environment's interactive pi runtime is 0.84.4, so the observations cannot be truthfully produced before merge without backfilling outcome markers (anti-gaming).
 - F2 (skill count 39→37) — FOLDED at be7ba208 (fixed in progress.md:31-32 + pr-body.md:31).
+- F1 (smoke record outcome tokens + pr-body overclaim) — resolved 2026-09-06. The system pi runtime is now **0.85.1**; the three interactive smoke observations were re-executed on that runtime (evidence above: routed set/clear, settings console round-trip, first-run hint all green on the 0.85.1 peer), all six `- SMOKE` rows now carry real `outcome: pass` markers, and the `pr-body.md` overclaim was corrected to the measured evidence. Folded in the same commit as the records.
 - Review head frozen for the pass receipt: f909e8b7 → folded/recorded through be7ba208.
