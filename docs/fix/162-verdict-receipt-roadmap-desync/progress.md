@@ -108,8 +108,12 @@ Notes:
 - Next: P2 — Sensor timeline verification · Attempts: 1
 
 ## Unit-loop receipt — P2
-- Commit: pending · Gate: `node --test scripts/pre-execution-timeline.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` (exit 0, 30 pass / 0 fail) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Commit: aed62fd3 · Gate: `node --test scripts/pre-execution-timeline.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` (exit 0, 30 pass / 0 fail) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
 - Next: P3 — Reviewer receipt self-check · Attempts: 1
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: AC1 greps — `verify --stage` 1/2/3/4, `exit 3` 2/2 (each file ≥1) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Next: P4 — Roadmap-label gate independence · Attempts: 1
 
 ## P1 — 2026-09-06
 - Done: schema publishes the `impossible-timeline` freshness code (after `stale-policy`), `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` (300_000) and the pure `isImpossibleReceiptTimeline` predicate (boolean|null, fail-open); comparator docstring precedence renumbered 1–10; `VERDICTS_BY_STAGE.plan` narrowed to the two plan verdicts; all three re-exported from `src/index.ts`; red-first pins (new `pre-execution-timeline.test.mjs`, explicit `VERDICTS_BY_STAGE.plan` deepEqual + matrix `:95` flip in `pre-execution-receipt.test.mjs`, `impossible-timeline` in the lineage closed-list); schema package 4.0.1 → 4.1.0 with EN+ES CHANGELOG rows and version-pin test co-change.
@@ -124,3 +128,10 @@ Notes:
 - Gotchas: the schema predicate returns `true` cleanly; the sensor-verify failure was the `Started/finished:` field regex letting the `· Findings:` suffix into the parsed `finishedAt` (Date.parse → NaN → predicate → null → skipped). Fixed the parser to regex exactly the two whitespace-free slash-separated timestamps. The pre-existing `pre-execution-sensor.test.mjs` fixtures hardcode a `2026-08-31` receipt finish while committing "now" (post-Sep-6) — the new guard correctly flagged them back-dated, so the fixture harness now dates every commit `2026-08-30T00:00:00Z` (before the finish) — a fixture-setup repair (keeps every assertion at least as strong; the new invariant is exactly the guard being added), not a test edit to manufacture green. Done-when/AC commands re-verified green.
 - Files: scripts/pre-execution-snapshot.mjs, scripts/pre-execution-timeline.test.mjs (new), scripts/pre-execution-attribution.test.mjs, scripts/pre-execution-sensor.test.mjs
 - Next: P3 — Reviewer receipt self-check
+
+## P3 — 2026-09-06
+- Done: POLICY §8 gains the mechanical receipt self-check (reviewer is consumer zero — runs `verify --stage …` in the same act as persisting, pastes the sensor JSON beside the verdict block before reporting; digest-bound requires `structural.fresh: true` + `current: true` on PASS; exit 3 / fresh:false → fix and re-run, verdict not emit-able; `Snapshot: refused`'s missing-receipt-snapshot is its sanctioned form); SNAPSHOT.md "reviewer is consumer zero" note in the re-verify section; both reviewers' OUTPUT.md persist sections gain the self-check step with the `verify --stage` command (review-spec `--stage spec`; review-plan feature names `--parent`, fix omits it), and both turn-contract boxes become RUN boxes (verify RUN in-turn, JSON pasted, exit-3/fresh emit condition).
+- Remains: P4 roadmap-label; P5 arbitration (removes review-plan needs-design — required to clear the P1↔P5 normative-drift coupling); P6 close-out.
+- Gotchas: a transient full-gate red exists AFTER P1 and until P5: `normative-drift`'s machine→text check flags `review-plan-verdicts: skills/review-plan/references/OUTPUT.md offers needs-design at stage plan, which VERDICTS_BY_STAGE does not allow`. This is the SPEC's own P1-before-P5 ordering (the machine map lands first; P5 removes the prose token). Not introduced by P3; resolved when P5 deletes `needs-design` from review-plan's OUTPUT.md. AC1 greps (P3 done-when) all pass; the P6 full gate runs green after P5.
+- Files: skills/pre-execution-review/references/POLICY.md, skills/pre-execution-review/references/SNAPSHOT.md, skills/review-spec/references/OUTPUT.md, skills/review-plan/references/OUTPUT.md
+- Next: P4 — Roadmap-label gate independence
