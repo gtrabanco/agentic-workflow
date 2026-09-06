@@ -298,6 +298,7 @@ conductor pueda mostrar las garantías que el schema no puede expresar.
 | --- | --- |
 | `PRE_EXECUTION_STAGES` | `spec` · `plan` — Las dos etapas de revisión. Define el conjunto de artefactos requerido y la matriz de veredictos. |
 | `PRE_EXECUTION_UNIT_KINDS` | `feature` · `fix` — Una unidad `fix` no tiene mitad de Producto, así que no tiene snapshot de etapa SPEC. |
+| `PRE_EXECUTION_POLICY_VERSION` | `v1` — La versión de política de revisión a la que se ata un receipt. Un cambio de política rota el eje `stale-policy`, así que un receipt revisado bajo otra versión ya no bendice un veredicto. La única autoridad que el CLI de snapshot lee en lugar de un literal hardcodeado. |
 | `PRE_EXECUTION_ARTIFACT_KINDS` | `spec` · `acceptance` · `plan` · `tasks` · `testing` · `decisions` · `architecture-notes` · `planning-evidence` · `obligations` — Los roles que un documento atado puede desempeñar. |
 | `PRE_EXECUTION_SELECTORS` | `whole-file` · `spec-product-v1` — Cómo se eligieron los bytes atados dentro del archivo. |
 | `PRE_EXECUTION_CONTEXT_KINDS` | `roadmap-row` · `governing-issue` · `normalized-repository-state` · `architectural-invariants` · `dependency-unit` · `project-guide` — Autoridades en las que el revisor pudo apoyarse. |
