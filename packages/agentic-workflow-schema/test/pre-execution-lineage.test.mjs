@@ -43,8 +43,8 @@ function mustBuild(result) {
 
 test("the freshness vocabulary is closed, frozen, and answers alone", async () => {
   for (const code of ["stale-artifact-revision", "stale-artifact-content", "stale-context",
-    "stale-source-revision", "stale-parent", "stale-policy", "missing-receipt-snapshot",
-    "invalid-stage", "invalid-unit"]) {
+    "stale-source-revision", "stale-parent", "stale-policy", "impossible-timeline",
+    "missing-receipt-snapshot", "invalid-stage", "invalid-unit"]) {
     assert.ok(PRE_EXECUTION_FRESHNESS_CODES.includes(code), `${code} missing`);
   }
   assert.equal(Object.isFrozen(PRE_EXECUTION_FRESHNESS_CODES), true);

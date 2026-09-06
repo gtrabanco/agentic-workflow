@@ -99,3 +99,17 @@ Notes:
 - Out-of-scope observations for the owner (carried, not re-filed): fix-index rows for merged #159/#161/#157 still present in `docs/fix/README.md` (#172 territory); this unit's own fix-index row still reads `pending` while its branch is open (label hygiene — gates are receipt-based and unaffected; the row flips `done` at P6 per the plan). Sensor field vocabulary used by the P3 contract text (`structural.fresh`, `reasonCode`, exit 0 = fresh) verified real in the sensor output shape.
 - Read-only: no plan artifact modified — SPEC.md/ACCEPTANCE.md byte-identical before and after this review; `planning-findings.md` untouched (zero new rows to append; ledger stays 4/4 resolved).
 - Next consumer: `execute-phase --fix 162` binds this receipt for snapshot `631b0356…` (source revision `ed6f8179`).
+
+## Acceptance receipt v1
+- Manifest: docs/fix/162-verdict-receipt-roadmap-desync/ACCEPTANCE.md · Blob: 63e50c17431578508cdc202771436c7f72783e54 · Status: frozen · Verified: 2026-09-06
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `cd packages/agentic-workflow-schema && bun run test` (exit 0, 684 pass / 0 fail) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Next: P2 — Sensor timeline verification · Attempts: 1
+
+## P1 — 2026-09-06
+- Done: schema publishes the `impossible-timeline` freshness code (after `stale-policy`), `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` (300_000) and the pure `isImpossibleReceiptTimeline` predicate (boolean|null, fail-open); comparator docstring precedence renumbered 1–10; `VERDICTS_BY_STAGE.plan` narrowed to the two plan verdicts; all three re-exported from `src/index.ts`; red-first pins (new `pre-execution-timeline.test.mjs`, explicit `VERDICTS_BY_STAGE.plan` deepEqual + matrix `:95` flip in `pre-execution-receipt.test.mjs`, `impossible-timeline` in the lineage closed-list); schema package 4.0.1 → 4.1.0 with EN+ES CHANGELOG rows and version-pin test co-change.
+- Remains: P2 sensor timeline verification; P3–P5 docs; P6 close-out.
+- Gotchas: the version bump required co-changing two version-anchor tests (`verification-gates.test.mjs`, `release-contract.test.mjs`) — the SPEC's P1 task 6 itself mandates the bump, so these are in-scope non-weakening pins, not test edits to manufacture green. `pre-execution-docs.test.mjs` derives its export list and freshness codes from the built schema, so the new `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` and `impossible-timeline` had to be documented in the package README (EN+ES) for `bun run test` to pass; `VERDICTS_BY_STAGE` and `isImpossibleReceiptTimeline` are not in `PRE_EXECUTION_EXPORTS` (the filter is `/^PRE_EXECUTION_/` + named function prefixes), so no README row was needed for them.
+- Files: packages/agentic-workflow-schema/src/pre-execution.ts, src/pre-execution-contract.ts, src/index.ts, test/pre-execution-timeline.test.mjs, test/pre-execution-receipt.test.mjs, test/pre-execution-lineage.test.mjs, test/verification-gates.test.mjs, test/release-contract.test.mjs, README.md, README.es.md, package.json, CHANGELOG.md, CHANGELOG.es.md
+- Next: P2 — Sensor timeline verification

@@ -312,7 +312,8 @@ conductor pueda mostrar las garantías que el schema no puede expresar.
 | `PRE_EXECUTION_PARENT_ROLES` | `critic` · `synthesis` · `arbitration` — Qué fue el recibo padre — no hay quórum sobre ellos. |
 | `PRE_EXECUTION_AUTHOR_EXCLUSIONS` | `enforced` · `not-enforceable` — Si el runtime puede probar que el revisor no creó el conjunto de artefactos. |
 | `PRE_EXECUTION_MODEL_DIVERSITY` | `same-model` · `cross-model` · `not-applicable` — Una etiqueta veraz, nunca un umbral. |
-| `PRE_EXECUTION_FRESHNESS_CODES` | `invalid-stage` · `invalid-unit` · `stale-policy` · `stale-context` · `stale-source-revision` · `stale-parent` · `stale-artifact-revision` · `stale-artifact-content` · `missing-receipt-snapshot` — Precedencia ordenada: ver Frescura. |
+| `PRE_EXECUTION_FRESHNESS_CODES` | `invalid-stage` · `invalid-unit` · `stale-policy` · `impossible-timeline` · `stale-context` · `stale-source-revision` · `stale-parent` · `stale-artifact-revision` · `stale-artifact-content` · `missing-receipt-snapshot` — Precedencia ordenada: ver Frescura. |
+| `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` | `300000` — La tolerancia de deriva de reloj publicada (±5 min) para el chequeo `impossible-timeline`, de modo que el sensor respaldado por git no pueda desviarse del contrato. |
 | `PRE_EXECUTION_DIAGNOSTIC_CODES` | `invalid-type` · `missing-field` · `unknown-field` · `invalid-value` · `limit-exceeded` · `duplicate-id` · `unknown-command` · `invalid-order` · `invalid-stage` · `invalid-exit-state` · `invalid-evidence` · `invalid-skip` · `invalid-fail-fast` · `digest-mismatch` · `verdict-mismatch` · `budget-exceeded` · `missing-artifact-kind` · `invalid-artifact-set` · `invalid-selector` · `invalid-author` · `invalid-context` · `invalid-topology` · `stale-snapshot` · `stale-policy` — Redactado: solo códigos y punteros, jamás un valor enviado. |
 
 ### Qué ata el snapshot
@@ -390,7 +391,9 @@ material sin resolver, y `modelDiversity` es una etiqueta veraz
 
 `comparePreExecutionReceiptToSnapshot` responde `{ fresh: true }` o
 `{ fresh: false, reasonCode }` desde el vocabulario cerrado
-`PRE_EXECUTION_FRESHNESS_CODES`, con esta precedencia fija: `stale-policy` →
+`PRE_EXECUTION_FRESHNESS_CODES`, con esta precedencia fija: `stale-policy` → [`impossible-timeline` — la línea
+temporal de fin/commit registrada en el propio receipt solo puede juzgarla un
+caller respaldado por git; el comparador puro la deja sin evaluar (fail-open)] →
 `stale-context` → `stale-source-revision` → `stale-parent` →
 `stale-artifact-content` → `stale-artifact-revision` → `missing-receipt-snapshot`,
 y `invalid-stage` / `invalid-unit` se rechazan antes de comparar. Como una reversión
