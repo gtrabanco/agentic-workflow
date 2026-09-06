@@ -261,6 +261,8 @@ change in what was approved.
 | `digestPreExecutionArtifactSnapshot(snapshot)` | lowercase SHA-256 hex |
 | `canonicalizePreExecutionReviewReceipt(receipt)` / `digestPreExecutionReviewReceipt(receipt)` | same pair for receipts |
 | `comparePreExecutionReceiptToSnapshot(receipt, reviewed, current, policyVersion)` | freshness decision |
+| `isImpossibleReceiptTimeline({ finishedAt, sourceCommitDate, skewMs })` | pure predicate — returns true when a receipt's finish predates its source revision's commit date beyond the published skew; false when honest; null on unparsable input (fail-open) |
+| `VERDICTS_BY_STAGE` | per-stage verdict map: spec, plan narrowings — the flat PRE_EXECUTION_VERDICTS keeps all values |
 
 Every entry accepts `unknown`, never throws on hostile input, and answers the
 closed, redacted diagnostic vocabulary `PRE_EXECUTION_DIAGNOSTIC_CODES` — codes
