@@ -29,10 +29,15 @@ SPEC's `## Design status` marker is the SPEC-local record and the
    → Next: /execute-phase <NN> <next-phase> — this feature is already being
      implemented; resume the current phase, don't re-plan it.
    ```
-4. **Roadmap row status `done`** → **STOP**. Print exactly:
+4. **Roadmap row status `done`** → **STOP** (replanning stays forbidden — the
+   feature is fully built), and: `done` means built + PR open with the human merge
+   pending (a lifecycle label, never a gate verdict), so this is **not** "nothing
+   pending". Route to the merge gate instead. Print exactly:
 
    ```
-   → Next: nothing — <NN>-<slug> already shipped (roadmap status `done`).
+   → Next: /audit-pr <PR> — done means built + PR open, merge pending (a lifecycle label, never a gate verdict)
+     · the row's PR is merged → nothing pending, pick the next unit → /plan-feature --next
+     · no PR is open → the row is mislabeled or execution stopped → /execute-phase <NN> (never a replan)
    ```
 5. **Roadmap row status `idea`, or no row at all** → **STOP**. Print exactly:
 
