@@ -136,7 +136,14 @@ export function readCatalogue(skillsDir: string, readFile: (path: string) => str
   const issues: CatalogueIssue[] = [];
   const taken = new Map<string, string>();
 
-  for (const dir of readdirSync(skillsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
+  // Iterate directories in a stable order: readdir order is filesystem-dependent
+  // (bun and node return different orders for the same directory), and the
+  // duplicate-name rule is "first owner claims the command". Sorting makes that
+  // owner deterministic across runtimes and platforms.
+  const dirs = readdirSync(skillsDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .sort((left, right) => left.name.localeCompare(right.name));
+  for (const dir of dirs) {
     let meta: SkillMeta;
     try {
       meta = readSkillMeta(readFile(join(skillsDir, dir.name, SKILL_FILE)), dir.name);

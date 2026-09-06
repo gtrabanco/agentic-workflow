@@ -4,7 +4,7 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**19 skills orientadas al usuario** (una entrada de menú cada una) + **17 pasos
+**19 skills orientadas al usuario** (una entrada de menú cada una) + **18 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, los dos dueños de evidencia pre-ejecución `evidence-grounding`
 (preparación de autoría) y `pre-execution-review` (el ciclo de revisión común
@@ -107,6 +107,7 @@ un resultado de preparación determinista, nunca un veredicto.
 | `review-brand` | Checklist de consistencia de marca/voz sobre el texto de cara al usuario. `user-invocable: false` — paquete de revisión interno |
 | `review-perf` | Checklist de regresión de rendimiento sobre el diff. `user-invocable: false` — paquete de revisión interno |
 | `review-seo` | Checklist de SEO sobre páginas/rutas públicas. `user-invocable: false` — paquete de revisión interno |
+| `implementation-discovery` | Contrato del mapper pre-escritura acotado y de solo lectura: cierra siete preguntas de evidencia, emite un mapa compacto fijo y enruta `READY \| REPLAN \| NEEDS-DESIGN \| BLOCKED` antes de cualquier escritura de rama/planificación/código. `user-invocable: false` — consumido solo por `execute-phase` en la ruta pre-escritura |
 
 ## Ejecución
 

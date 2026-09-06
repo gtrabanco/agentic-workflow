@@ -53,7 +53,7 @@ reads skills — Claude Code, Cursor, Codex, OpenCode, Cline, and
 ## What's inside
 
 ```
-skills/                  38 source skills (19 user-facing + 18 workflow internals + 1 metadata-internal; 37 discoverable)
+skills/                  39 source skills (19 user-facing + 19 workflow internals + 1 metadata-internal; 38 discoverable)
 packages/                companion npm packages: @gtrabanco/agentic-workflow-schema (machine contracts)
                          and @gtrabanco/pi-agentic-workflow (one-command install for Pi — see Install)
 template/                 the exportable documentation scaffold (the substrate the skills read)
@@ -648,7 +648,7 @@ without selecting skills interactively, pass all published skill names to one
 npx skills remove --yes \
   audit-docs audit-pr design-feature discover-repository-state evidence-grounding \
   execute-phase pre-execution-review \
-  fold-findings generate-docs init-workspace log-session \
+  fold-findings generate-docs implementation-discovery init-workspace log-session \
   orchestration-envelope phase-contract plan-feature plan-feature-from-issue \
   plan-feature-scaffold plan-fix planning-preflight product-audit \
   resolve-repository-state review-a11y review-brand review-change review-code \

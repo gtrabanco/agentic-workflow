@@ -56,6 +56,7 @@ const schema = fs.existsSync(schemaPath)
 const {
   buildPreExecutionArtifactSnapshot,
   digestPreExecutionArtifactSnapshot,
+  PRE_EXECUTION_POLICY_VERSION,
   PRE_EXECUTION_RECEIPT_CONTRACT_ID,
   PRE_EXECUTION_STAGES,
   PRE_EXECUTION_ARTIFACT_KINDS,
@@ -90,7 +91,16 @@ export const STAGE_ARTIFACTS = {
 };
 
 const CONTEXT_SOURCES = [
-  { kind: "roadmap-row", file: "docs/features/ROADMAP.md", identifier: "roadmap-row" },
+  // `docs/features/ROADMAP.md` is deliberately NOT bound (roadmap scoping). It is
+  // the shared lifecycle ledger of every unit: rows for other units are appended
+  // while a plan is in flight, and the status machine's own sanctioned writes
+  // (`planned` → `in-progress` set by execute-phase P1, `done` at PR open) would
+  // otherwise invalidate every recorded receipt repo-wide and force pointless
+  // re-reviews. Its safety-relevant content is owned by gates that re-read it
+  // live: the own-status gate (every invocation) and the dependency gate (its
+  // Dependency receipt v1 fingerprints the SPEC `Depends on:` line plus the
+  // closure roadmap rows). The unit's own artifacts and the governing
+  // authorities below stay fully bound.
   { kind: "project-guide", file: "CLAUDE.md" },
   { kind: "normalized-repository-state", file: "docs/workflow/REPOSITORY_STATE.md" },
   // The *project's* declared invariants only: docs/workflow/WORKFLOW_INVARIANTS.md
@@ -467,7 +477,7 @@ async function main() {
     recorded: receipt,
     snapshot,
     observedDigest: digest,
-    policyVersion: opts.policy ?? "v1",
+    policyVersion: opts.policy ?? PRE_EXECUTION_POLICY_VERSION,
     changedArtifacts: moved.filter((p) => artifactPaths.includes(p)),
     changedContexts: moved.filter((p) => contextPaths.includes(p)),
   });

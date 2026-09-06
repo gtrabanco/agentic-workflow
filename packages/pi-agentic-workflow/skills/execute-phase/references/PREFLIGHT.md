@@ -125,8 +125,11 @@ gate block, and **`--force` never reaches this gate** — it overrides ordering 
 the user may re-order, not a verdict only a reviewer can produce. Fix units run the
 same check on their own receipt (`/review-plan fix-<N>`). Legacy `planned`/`in-progress`
 units follow the adoption route. The slot immediately after this gate and before the
-first write is reserved for feature 29's bounded implementation discovery — do not
-implement or imitate it here. Full rule, block text, no-forgery and legacy detail:
+first write is owned by the pre-write mapper contract — load
+[`implementation-discovery`](<../implementation-discovery/SKILL.md>) and settle it
+before any branch/planning/source write; it routes READY | REPLAN | NEEDS-DESIGN
+| BLOCKED and is the only contract allowed to confirm the map here. Full rule,
+block text, no-forgery and legacy detail:
 [pre-execution gate](PRE_EXECUTION_GATE.md).
 
 ## Acceptance-manifest gate (after dependency/own-status, before phase-lint)
