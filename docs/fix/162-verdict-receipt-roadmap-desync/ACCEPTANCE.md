@@ -14,6 +14,7 @@ Status: frozen
 | AC8 | Root suites and context budgets are green (the two touched route ceilings restored) | `node --test scripts/*.test.mjs` → 0 fail; `node scripts/check-skill-context.mjs --routes` → exit 0 |
 | AC9 | Both package suites pass on the re-bundled tree | `cd packages/agentic-workflow-schema && bun run test` → fail 0; `cd packages/pi-agentic-workflow && bun run test` → fail 0 (includes the `skills/` mirror parity test) |
 | AC10 | Version/changelog hygiene: schema 4.1.0, pi package bump, every touched skill's `version:` bump, both CHANGELOG tables updated same-PR | `grep -c "4\.1\.0" CHANGELOG.md CHANGELOG.es.md` → each ≥ 1; read-verified: every touched skill's frontmatter `version:` appears in both CHANGELOG tables (diff the touched-skills list against the changelog rows) |
+| AC11 | The machine verdict-stage map no longer sanctions `needs-design` at the plan stage: `VERDICTS_BY_STAGE.plan` carries only the two plan verdicts (the flat `PRE_EXECUTION_VERDICTS` keeps `needs-design` — `review-spec` still emits) | `grep -c 'plan: ["plan-review-pass", "plan-review-fail"]' packages/agentic-workflow-schema/src/pre-execution-contract.ts` ≥ 1; `cd packages/agentic-workflow-schema && bun run test` → fail 0 (with the flipped plan-stage `needs-design` pin in `test/pre-execution-receipt.test.mjs`) |
 
 ## Quality floor
 
