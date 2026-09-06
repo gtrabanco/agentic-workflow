@@ -252,6 +252,14 @@ function compileAndRun(index, block) {
   } catch (error) {
     assert.fail(`example ${index + 1} failed at runtime:\n${error.stdout || ""}${error.stderr || error.message}`);
   }
-  assert.match(out, /review bound \d+ [a-f0-9]{12} \{ fresh: true \} \{ fresh: false, reasonCode: 'stale-artifact-revision' \}/,
-    "the example must actually demonstrate freshness and revocation, not just compile");
+  // The example prints an object, and the formatter differs by runtime: node
+  // emits single-line, single-quoted JSON-ish output; bun emits multi-line with
+  // double quotes and trailing commas. Both carry the same proof, so match the
+  // semantic tokens (freshness, the reasonCode, the review binding) across
+  // whitespace/quote variation instead of node's exact formatting.
+  assert.match(
+    out,
+    /review bound \d+ [a-f0-9]{12}[\n ]*\{[\s\S]*?fresh:\s*true[\s\S]*?fresh:\s*false[\s\S]*?reasonCode:\s*["']stale-artifact-revision["']/,
+    "the example must actually demonstrate freshness and revocation, not just compile",
+  );
 }
