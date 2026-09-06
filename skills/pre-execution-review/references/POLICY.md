@@ -93,6 +93,14 @@ outside this policy and can never be translated into a PASS.
   an open row with a new name.
 - Execution authority from a neighbouring stage: a `SPEC-REVIEW-PASS` never unlocks
   `execute-phase`, and a `PLAN-REVIEW-PASS` never certifies the Product half.
+- A gate answer from a roadmap row's status. Gates read receipts only;
+  roadmap rows are labels and never answer a gate. `done` means built + PR open
+  with the human merge pending (`docs/features/ROADMAP.md` § Status legend;
+  `docs/fix/README.md` § Status legend), so it never satisfies or suppresses a
+  pre-execution/verification gate, never retires the obligation to re-derive a
+  receipt, and never lets a reviewer or consumer report a unit closed while its
+  PR is unmerged. The complement of §5's "no verdict *from* a status" — and the
+  same rule read the other way: a status never **suppresses** a gate either.
 
 ### 6. Legacy adoption (units planned before this gate existed)
 

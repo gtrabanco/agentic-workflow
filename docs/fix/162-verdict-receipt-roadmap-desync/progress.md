@@ -112,8 +112,12 @@ Notes:
 - Next: P3 — Reviewer receipt self-check · Attempts: 1
 
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: AC1 greps — `verify --stage` 1/2/3/4, `exit 3` 2/2 (each file ≥1) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Commit: e4c9e54c · Gate: AC1 greps — `verify --stage` 1/2/3/4, `exit 3` 2/2 (each file ≥1) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
 - Next: P4 — Roadmap-label gate independence · Attempts: 1
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: AC2 greps — `→ Next: nothing` 0, `roadmap rows are labels` 1, SENSOR_CORE unmerged 2 · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Next: P5 — Arbitration ownership contract · Attempts: 1
 
 ## P1 — 2026-09-06
 - Done: schema publishes the `impossible-timeline` freshness code (after `stale-policy`), `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` (300_000) and the pure `isImpossibleReceiptTimeline` predicate (boolean|null, fail-open); comparator docstring precedence renumbered 1–10; `VERDICTS_BY_STAGE.plan` narrowed to the two plan verdicts; all three re-exported from `src/index.ts`; red-first pins (new `pre-execution-timeline.test.mjs`, explicit `VERDICTS_BY_STAGE.plan` deepEqual + matrix `:95` flip in `pre-execution-receipt.test.mjs`, `impossible-timeline` in the lineage closed-list); schema package 4.0.1 → 4.1.0 with EN+ES CHANGELOG rows and version-pin test co-change.
@@ -135,3 +139,10 @@ Notes:
 - Gotchas: a transient full-gate red exists AFTER P1 and until P5: `normative-drift`'s machine→text check flags `review-plan-verdicts: skills/review-plan/references/OUTPUT.md offers needs-design at stage plan, which VERDICTS_BY_STAGE does not allow`. This is the SPEC's own P1-before-P5 ordering (the machine map lands first; P5 removes the prose token). Not introduced by P3; resolved when P5 deletes `needs-design` from review-plan's OUTPUT.md. AC1 greps (P3 done-when) all pass; the P6 full gate runs green after P5.
 - Files: skills/pre-execution-review/references/POLICY.md, skills/pre-execution-review/references/SNAPSHOT.md, skills/review-spec/references/OUTPUT.md, skills/review-plan/references/OUTPUT.md
 - Next: P4 — Roadmap-label gate independence
+
+## P4 — 2026-09-06
+- Done: POLICY §5 gains the complement bullet — no gate answer is read from a roadmap row's status; `done` means built + PR open with the merge pending, so it never satisfies/suppresses a gate, never retires the re-derive obligation, never lets a unit report closed while unmerged (gates read receipts; roadmap rows are labels); ROUTING step 4's `done` STOP keeps forbidding a replan and replaces `→ Next: nothing — already shipped` with an `/audit-pr <PR>` merge-gate block (merged → `--next`; no open PR → `/execute-phase <NN>`, never a replan); SENSOR_CORE 6a's receipt-sensing set gains `done`-with-open-PR (unmerged) units, so a stale/missing receipt on a done-but-unmerged unit surfaces as a gate blocker; merged units stay excluded.
+- Remains: P5 arbitration (removes review-plan needs-design — clears the P1↔P5 coupling); P6 close-out.
+- Gotchas: AC2's `roadmap rows are labels` validator is a single-line literal grep, so the phrase had to sit on one physical line (markdown hard-wraps split it and grep -c returned 0 until re-wrapped). `→ Next: nothing` count reached 0 by replacing the shipped-block; confirmed no other occurrence.
+- Files: skills/pre-execution-review/references/POLICY.md, skills/plan-feature/references/ROUTING.md, skills/workflow-status/references/SENSOR_CORE.md
+- Next: P5 — Arbitration ownership contract
