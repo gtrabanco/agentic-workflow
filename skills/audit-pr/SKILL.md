@@ -1,5 +1,7 @@
 ---
 name: audit-pr
+model: opus
+effort: high
 user-invocable: true
 version: 5.0.3
 argument-hint: <pr-number> (optional — defaults to the current branch's PR)

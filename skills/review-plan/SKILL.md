@@ -1,5 +1,7 @@
 ---
 name: review-plan
+model: opus
+effort: high
 user-invocable: true
 version: 1.5.0
 argument-hint: <NN-slug | fix-N | path/to/SPEC.md> [--adversarial N]

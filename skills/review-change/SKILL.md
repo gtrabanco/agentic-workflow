@@ -1,5 +1,7 @@
 ---
 name: review-change
+model: opus
+effort: high
 user-invocable: true
 version: 3.2.1
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]

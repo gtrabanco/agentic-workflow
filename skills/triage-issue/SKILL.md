@@ -1,5 +1,7 @@
 ---
 name: triage-issue
+model: opus
+effort: high
 user-invocable: true
 version: 2.7.0
 argument-hint: <issue-number> [more issue numbers…] | <audit-id> F<k> [F<j>…] | --prioritize-now <unit> F<k> [F<j>…]

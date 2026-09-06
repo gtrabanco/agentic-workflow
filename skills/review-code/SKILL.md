@@ -1,5 +1,7 @@
 ---
 name: review-code
+model: opus
+effort: high
 user-invocable: false
 version: 1.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"

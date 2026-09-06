@@ -1,5 +1,7 @@
 ---
 name: review-spec
+model: opus
+effort: high
 user-invocable: true
 version: 1.6.0
 argument-hint: <NN-slug | path/to/SPEC.md>

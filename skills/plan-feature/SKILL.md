@@ -1,5 +1,7 @@
 ---
 name: plan-feature
+model: opus
+effort: high
 user-invocable: true
 version: 5.0.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
@@ -139,7 +141,7 @@ enables:
   skill's `SKILL.md` (wherever your agent installed the skills) and follow it
   literally, in a fresh conversation: hand-offs assume a clean context. The
   internal steps above are the exception — they run inline, in this one.
-- **No per-skill `model:`/`effort:`** — on the `#claude` branch the frontmatter pins these tiers; here, pick tiers yourself:
+- **No per-skill `model:`/`effort:`** — the frontmatter tiers state intent:
   planning is judgment work — run it on your **strongest** model. The
   execution it hands off to may run cheaper.
 

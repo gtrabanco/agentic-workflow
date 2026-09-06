@@ -1,5 +1,7 @@
 ---
 name: review-implementation
+model: opus
+effort: high
 user-invocable: false
 version: 1.7.0
 argument-hint: <path-or-glob>

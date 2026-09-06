@@ -1,5 +1,7 @@
 ---
 name: discover-repository-state
+model: sonnet
+effort: medium
 user-invocable: true
 version: 1.2.1
 description: >

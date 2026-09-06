@@ -1,5 +1,7 @@
 ---
 name: execute-phase
+model: sonnet
+effort: medium
 user-invocable: true
 version: 4.3.0
 argument-hint: <NN> [P<k>] | --fix <n> [P<k>] | [--max-attempts N] [--force]

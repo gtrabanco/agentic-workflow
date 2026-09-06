@@ -1,5 +1,7 @@
 ---
 name: review-a11y
+model: sonnet
+effort: medium
 user-invocable: false
 version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
