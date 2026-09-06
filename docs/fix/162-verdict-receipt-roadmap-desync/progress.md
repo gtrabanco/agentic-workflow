@@ -104,8 +104,12 @@ Notes:
 - Manifest: docs/fix/162-verdict-receipt-roadmap-desync/ACCEPTANCE.md · Blob: 63e50c17431578508cdc202771436c7f72783e54 · Status: frozen · Verified: 2026-09-06
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `cd packages/agentic-workflow-schema && bun run test` (exit 0, 684 pass / 0 fail) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Commit: 20801323 · Gate: `cd packages/agentic-workflow-schema && bun run test` (exit 0, 684 pass / 0 fail) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
 - Next: P2 — Sensor timeline verification · Attempts: 1
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `node --test scripts/pre-execution-timeline.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs` (exit 0, 30 pass / 0 fail) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Next: P3 — Reviewer receipt self-check · Attempts: 1
 
 ## P1 — 2026-09-06
 - Done: schema publishes the `impossible-timeline` freshness code (after `stale-policy`), `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` (300_000) and the pure `isImpossibleReceiptTimeline` predicate (boolean|null, fail-open); comparator docstring precedence renumbered 1–10; `VERDICTS_BY_STAGE.plan` narrowed to the two plan verdicts; all three re-exported from `src/index.ts`; red-first pins (new `pre-execution-timeline.test.mjs`, explicit `VERDICTS_BY_STAGE.plan` deepEqual + matrix `:95` flip in `pre-execution-receipt.test.mjs`, `impossible-timeline` in the lineage closed-list); schema package 4.0.1 → 4.1.0 with EN+ES CHANGELOG rows and version-pin test co-change.
@@ -113,3 +117,10 @@ Notes:
 - Gotchas: the version bump required co-changing two version-anchor tests (`verification-gates.test.mjs`, `release-contract.test.mjs`) — the SPEC's P1 task 6 itself mandates the bump, so these are in-scope non-weakening pins, not test edits to manufacture green. `pre-execution-docs.test.mjs` derives its export list and freshness codes from the built schema, so the new `PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS` and `impossible-timeline` had to be documented in the package README (EN+ES) for `bun run test` to pass; `VERDICTS_BY_STAGE` and `isImpossibleReceiptTimeline` are not in `PRE_EXECUTION_EXPORTS` (the filter is `/^PRE_EXECUTION_/` + named function prefixes), so no README row was needed for them.
 - Files: packages/agentic-workflow-schema/src/pre-execution.ts, src/pre-execution-contract.ts, src/index.ts, test/pre-execution-timeline.test.mjs, test/pre-execution-receipt.test.mjs, test/pre-execution-lineage.test.mjs, test/verification-gates.test.mjs, test/release-contract.test.mjs, README.md, README.es.md, package.json, CHANGELOG.md, CHANGELOG.es.md
 - Next: P2 — Sensor timeline verification
+
+## P2 — 2026-09-06
+- Done: sensor `receipts()` parses `Started/finished:` into `startedAt`/`finishedAt` (regex extracts clean timestamps, trailing `· Findings:` stripped); `attributeFreshness` gains `sourceCommitDate` and evaluates the `impossible-timeline` slot right after `stale-policy` (before the drift dimensions) via the schema predicate, naming both timestamps; `main()` verify fetches the recorded revision's committer date with `git show -s --format=%cI` (empty → fail-open); file header names the new dimension; black-box `pre-execution-timeline.test.mjs` (back-dated → `impossible-timeline` at its own revision, honest → `current: true`, legacy no-timeline / within-skew / unresolvable-revision all fail-open) and the attribution parity test extended with the git-backed-composition case.
+- Remains: P3–P5 docs; P6 close-out.
+- Gotchas: the schema predicate returns `true` cleanly; the sensor-verify failure was the `Started/finished:` field regex letting the `· Findings:` suffix into the parsed `finishedAt` (Date.parse → NaN → predicate → null → skipped). Fixed the parser to regex exactly the two whitespace-free slash-separated timestamps. The pre-existing `pre-execution-sensor.test.mjs` fixtures hardcode a `2026-08-31` receipt finish while committing "now" (post-Sep-6) — the new guard correctly flagged them back-dated, so the fixture harness now dates every commit `2026-08-30T00:00:00Z` (before the finish) — a fixture-setup repair (keeps every assertion at least as strong; the new invariant is exactly the guard being added), not a test edit to manufacture green. Done-when/AC commands re-verified green.
+- Files: scripts/pre-execution-snapshot.mjs, scripts/pre-execution-timeline.test.mjs (new), scripts/pre-execution-attribution.test.mjs, scripts/pre-execution-sensor.test.mjs
+- Next: P3 — Reviewer receipt self-check

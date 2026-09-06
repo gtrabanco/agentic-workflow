@@ -38,6 +38,12 @@
  * it prints is the code the contract answers (`attributeFreshness`). It never
  * fabricates a reviewed object to feed the comparator: that would be evidence
  * forgery wearing a real reason code.
+ *
+ * The git-backed `impossible-timeline` dimension (fix/162) is the one slot the
+ * pure comparator cannot evaluate: only a git-backed caller can know a recorded
+ * revision's committer date, so `verify` fetches it and the attribute function
+ * refuses a back-dated receipt under its own reason code (fail-open on an
+ * unresolvable revision or a legacy receipt with no parsable timeline).
  */
 
 import fs from "node:fs";
@@ -63,7 +69,9 @@ const {
   PRE_EXECUTION_CONTEXT_KINDS,
   PRE_EXECUTION_SELECTORS,
   PRE_EXECUTION_FRESHNESS_CODES,
+  PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS,
   PRE_EXECUTION_VERDICTS,
+  isImpossibleReceiptTimeline,
 } = schema;
 
 /**
@@ -300,7 +308,25 @@ function receipts(dir) {
     authorExclusion: fieldFrom(chunk, "Author exclusion"),
     contextClean: fieldFrom(chunk, "Context clean"),
     policy: fieldFrom(chunk, "Policy"),
+    startedAt: timelineField(chunk, 0),
+    finishedAt: timelineField(chunk, 1),
   }));
+}
+
+/**
+ * The receipt's own recorded `Started/finished:` line (`…/…`), split on the
+ * slash. An unparsable or absent value stays `null` (fail-open): the
+ * `impossible-timeline` guard never flags a receipt it cannot read.
+ */
+function timelineField(chunk, index) {
+  const line = chunk.split(/\n/).find((l) => l.trim().startsWith("- Started/finished:"));
+  if (!line) return null;
+  // The timestamps are whitespace-free tokens separated by `/`; the field ends at
+  // the ` · Findings:` sentence, so a regex that grabs exactly the two tokens never
+  // lets a trailing column into a value that is then handed to a date parser.
+  const m = line.match(/Started\/finished:\s*([^\s]+)\/([^\s]+)/);
+  if (!m) return null;
+  return recordedValue(m[index + 1]);
 }
 
 const DIGEST64 = /^[a-f0-9]{64}$/;
@@ -340,7 +366,7 @@ const recordedDigest = (value) => {
  */
 export function attributeFreshness({
   recorded = {}, snapshot, observedDigest, policyVersion,
-  changedArtifacts = [], changedContexts = [],
+  changedArtifacts = [], changedContexts = [], sourceCommitDate,
 } = {}) {
   const bound = recordedDigest(recorded.snapshot);
   const paths = [...new Set([...changedContexts, ...changedArtifacts])].sort();
@@ -378,6 +404,19 @@ export function attributeFreshness({
   const recordedPolicy = recordedValue(recorded.policy) ?? "";
   if (recordedPolicy !== policyVersion) {
     return report("stale-policy", `the receipt was produced under Policy: ${recordedPolicy || "(unrecorded)"}, the current policy is ${policyVersion}`);
+  }
+  // The `impossible-timeline` slot sits directly after `stale-policy`, before the
+  // drift dimensions, per the comparator's documented precedence: it reads the
+  // receipt's own recorded timeline (finish vs its recorded revision's commit
+  // date) and refuses a back-dated receipt under its own reason code. Fail-open:
+  // a legacy receipt with no parsable timeline, or a source revision git cannot
+  // resolve (an empty commit date from `main()`), is unflagged.
+  const finishedAt = recordedValue(recorded.finishedAt);
+  if (finishedAt !== null && sourceCommitDate !== null && sourceCommitDate !== undefined) {
+    if (isImpossibleReceiptTimeline({ finishedAt, sourceCommitDate }) === true) {
+      return report("impossible-timeline",
+        `the receipt records a finish (${finishedAt}) before its recorded source revision's commit date (${sourceCommitDate}) beyond the ${PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS} ms skew`);
+    }
   }
   // The identity lines a receipt states are assertions, not decoration, so they are
   // checked before a matching digest may answer FRESH: a receipt that binds the
@@ -473,6 +512,13 @@ async function main() {
   // could name no moved file. `pre-execution-attribution.test.mjs` proves this path
   // answers what the comparator answers, dimension by dimension, in its precedence.
   const moved = changedBoundPaths(git, receipt.sourceRevision, [...artifactPaths, ...contextPaths]);
+  // The `impossible-timeline` dimension judges the receipt's own finish against its
+  // recorded source revision's committer date. An unresolvable revision (or a
+  // receipt recording no revision) answers an empty date, which the attribute
+  // function treats as fail-open: no flag, no invented reason code.
+  const sourceCommitDate = isRevision(receipt.sourceRevision)
+    ? (git("show", "-s", "--format=%cI", receipt.sourceRevision) || null)
+    : null;
   const structural = attributeFreshness({
     recorded: receipt,
     snapshot,
@@ -480,6 +526,7 @@ async function main() {
     policyVersion: opts.policy ?? PRE_EXECUTION_POLICY_VERSION,
     changedArtifacts: moved.filter((p) => artifactPaths.includes(p)),
     changedContexts: moved.filter((p) => contextPaths.includes(p)),
+    sourceCommitDate,
   });
   const report = {
     // Fails closed on an inconsistent receipt: a bound digest that matches while its
