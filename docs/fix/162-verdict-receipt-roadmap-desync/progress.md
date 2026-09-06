@@ -120,7 +120,7 @@ Notes:
 - Next: P5 — Arbitration ownership contract · Attempts: 1
 
 ## Unit-loop receipt — P5
-- Commit: pending · Gate: AC3/AC4/O8 greps + AC5–AC11 suites + `node scripts/check-skill-context.mjs --routes` (exit 0) + `node --test scripts/*.test.mjs` (exit 0, 206 pass) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Commit: 1e225a81 · Gate: AC3/AC4/O8 greps + AC5–AC11 suites + `node scripts/check-skill-context.mjs --routes` (exit 0) + `node --test scripts/*.test.mjs` (exit 0, 206 pass) · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
 - Next: P6 — Hardening & PR · Attempts: 1
 
 ## P1 — 2026-09-06
@@ -157,3 +157,11 @@ Notes:
 - Gotchas: the P1→P5 coupling (normative-drift `review-plan-verdicts` red after the map narrow, until review-plan loses the token) resolved — moving the review-plan OUTPUT.md prose to avoid the literal token was REQUIRED by AC3's `grep -rni needs-design → 0` (the P5 task text "NEEDS-DESIGN is not a verdict" self-hits AC3; the frozen acceptance wins, so the intent is phrased "the design-verdict token is not a verdict"). The `pre-execution-quality.test.mjs` pin encoded the OLD three-verdict contract (PLAN_VERDICTS + `/Three verdicts only/` + a line-wrap regex); Decision 11 genuinely changed the contract, so these are legitimate contract co-changes, not test edits to manufacture green. The budget blast radius was much larger than the plan's 5-route estimate (the shared pre-execution-review reference is a component of ~14 routes; my additions are all AC-mandated literals, so trimming would break AC1/AC3/AC4/O8) — resolved via the sanctioned declared re-basis naming `fix/162` (route ceilings × 14, reference ceilings review-plan, all to ceil(measured×1.10)). Full root suite re-run green.
 - Files: skills/review-plan/** (OUTPUT.md, SKILL.md), skills/pre-execution-review/references/POLICY.md, skills/design-feature/references/REPAIR.md, skills/review-change/references/PERSIST_AND_DECIDE.md, skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md, skills/{pre-execution-review,review-spec,review-plan,plan-feature,workflow-status,design-feature,review-change,audit-pr}/SKILL.md (versions), docs/workflow/SKILL_CONTEXT_BUDGETS.json, packages/pi-agentic-workflow/**, scripts/pre-execution-quality.test.mjs, CHANGELOG.md, CHANGELOG.es.md
 - Next: P6 — Hardening & PR
+
+## Unit-loop receipt — P6
+- Commit: 2820f8da · Gate: full gate — root `node --test scripts/*.test.mjs` (206/0), schema 684/0, pi 140/0, `--routes` exit 0 · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54
+- Next: none — unit finished · Attempts: 1
+
+## Terminal
+- Unit fix-162 COMPLETE · Phases: 6 (P1–P6) · Commits: 20801323 aed62fd3 e4c9e54c a9883e81 1e225a81 8e6b3d38 2820f8da · Acceptance blob: 63e50c17431578508cdc202771436c7f72783e54 · Gate: PASS
+- PR: https://github.com/gtrabanco/agentic-workflow/pull/178 (Closes #162) · Branch remote-current: yes
