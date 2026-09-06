@@ -75,7 +75,7 @@ live evidence against a frozen ledger remains a contradiction candidate.
    <spec|plan> --unit <id> [--parent <64-hex>]` — a snapshot digest is a canonical SHA-256, never a
    git blob id; `structural.reasonCode` names the dimension that drifted), and
    label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/
-   `self-approved`/`author-readiness`/`legacy`. The label **overrides step 6's
+   `self-approved`/`author-readiness`/`legacy`/`impossible-timeline`. The label **overrides step 6's
    status-only command**: a unit without a current PASS for the stage it is about to
    enter is demoted out of `startable_now` into a `gate` blocker naming the missing
    review, and `detail.pre_execution[]` records the row. A roadmap row is never

@@ -127,8 +127,9 @@ is ever lost between cycles.
 ✓ All 14 Product checks resolved to pass / finding / n/a with a reason
 ✓ One verdict block returned verbatim from the closed set
 ✓ RUN `verify --stage spec` for this stage in-turn, JSON pasted beside the block;
-  `exit 0` (+ `current: true` on PASS) — `exit 3`/`structural.fresh: false` means
-  the mark did not land, fix and re-run, verdict not emit-able
+  `structural.fresh: true` (+ `current: true` on PASS) — `exit 3`/`structural.fresh: false` means
+  the mark did not land, fix and re-run, verdict not emit-able; `exit 4`/`current: false` means
+  a verdict persisted but not a PASS — the verdict itself is the emit result, route per verdict
 ✓ `git status --porcelain` shows no change to any reviewed artifact
 ✓ Closing `→ Next:` printed as the absolute last output
 ```

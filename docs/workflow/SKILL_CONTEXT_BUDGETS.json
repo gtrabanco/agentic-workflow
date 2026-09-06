@@ -363,8 +363,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 18208,
-      "routeLinesMax": 1164
+      "routeEstimateMax": 18248,
+      "routeLinesMax": 1165
     },
     "review-spec:default": {
       "skills": [
@@ -372,14 +372,14 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 16464,
-      "routeLinesMax": 1108
+      "routeEstimateMax": 16505,
+      "routeLinesMax": 1109
     }
   },
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31, user decision on review finding F7 (PR #155)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines)",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
