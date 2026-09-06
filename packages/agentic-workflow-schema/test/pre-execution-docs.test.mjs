@@ -107,7 +107,9 @@ for (const claim of CLAIMS) {
 const PRE_EXECUTION_EXPORTS = Object.keys(schema).filter(
   (name) => /^PRE_EXECUTION_/.test(name)
     || /^(validate|build|select|canonicalize|digest|compare)PreExecution/.test(name)
-    || name === "selectSpecProduct",
+    || name === "selectSpecProduct"
+    || name === "isImpossibleReceiptTimeline"
+    || name === "VERDICTS_BY_STAGE",
 );
 
 test("AC8: every runtime export of the family is named in both references", () => {

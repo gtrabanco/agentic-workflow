@@ -132,8 +132,9 @@ into `review-change → fold-findings`, which repairs source, not plan authority
 ✓ Obligation ledger swept row by row: none blank, deferred, duplicated, unvalidated
 ✓ One verdict block returned verbatim from the closed set
 ✓ RUN `verify --stage plan` for this stage in-turn (feature plan names `--parent`;
-  fix omits it), JSON pasted beside the block; `exit 0` (+ `current: true` on PASS) —
-  `exit 3`/`structural.fresh: false` means the mark did not land, fix and re-run
+  fix omits it), JSON pasted beside the block; `structural.fresh: true` (+ `current: true` on PASS) —
+  `exit 3`/`structural.fresh: false` means the mark did not land, fix and re-run;
+  `exit 4`/`current: false` means a verdict persisted but not a PASS — the verdict itself is the emit result, route per verdict
 ✓ Receipt appended to progress.md and findings appended to planning-findings.md
 ✓ `git status --porcelain` shows no change to any reviewed plan artifact
 ✓ Closing `→ Next:` printed as the absolute last output

@@ -47,6 +47,7 @@ sensor reports a missing gate, never a verdict that no review ever happened.
 | `self-approved` | the author of the artifact recorded the PASS | that stage's review in a clean context |
 | `author-readiness` | an authoring readiness result sits where a verdict should be | that stage's review — readiness never licenses execution |
 | `legacy` | `planned`/`in-progress` unit with no ledgers and no receipt (predates feature 28) | the adoption route below |
+| `impossible-timeline` | `structural.fresh: true`, `structural.reasonCode: impossible-timeline` — digest and revision match by construction; a receipt's own recorded timeline is physically impossible (finish predating source revision's commit date beyond the published skew) | that stage's review — the timeline is self-refuting, not a stale source |
 
 A stale receipt re-runs the **review**, not the authoring skill: the artifacts may be
 exactly right and simply need re-judging in a clean context. A missing verdict block,

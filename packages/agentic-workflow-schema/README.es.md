@@ -272,6 +272,8 @@ a un cambio en lo que fue aprobado.
 | `digestPreExecutionArtifactSnapshot(snapshot)` | SHA-256 hexadecimal en minúsculas |
 | `canonicalizePreExecutionReviewReceipt(receipt)` / `digestPreExecutionReviewReceipt(receipt)` | el mismo par para recibos |
 | `comparePreExecutionReceiptToSnapshot(receipt, reviewed, current, policyVersion)` | decisión de frescura |
+| `isImpossibleReceiptTimeline({ finishedAt, sourceCommitDate, skewMs })` | predicado puro — devuelve `true` cuando el finish de un recibo predice la fecha de commit de su revisión fuente más allá del skew publicado; `false` cuando honesto; `null` con entrada no parseable (fail-open) |
+| `VERDICTS_BY_STAGE` | mapa de veredictos por etapa: `spec: ["spec-review-pass", "spec-review-fail", "needs-design"]`, `plan: ["plan-review-pass", "plan-review-fail"]` — estrecha qué veredictos puede emitir cada etapa (el `PRE_EXECUTION_VERDICTS` plano mantiene todos los valores) |
 
 Toda entrada acepta `unknown`, nunca lanza con entrada hostil y responde con el
 vocabulario cerrado y redactado `PRE_EXECUTION_DIAGNOSTIC_CODES`: solo códigos y
