@@ -64,8 +64,12 @@ live evidence against a frozen ledger remains a contradiction candidate.
      command matched to the exact status: `defined` → `/plan-feature <slug>`,
      `planned` → `/execute-phase <NN>`.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
-6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned` or
-   `in-progress` ([pre-execution evidence](PRE_EXECUTION.md)): read the stage's
+6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned`,
+   `in-progress`, **or `done` with a linked PR that is still open (unmerged — merge
+   state lives in the forge)** ([pre-execution evidence](PRE_EXECUTION.md)). A
+   done-but-unmerged row is a lifecycle label, never merge-ready, so a stale or
+   missing receipt there surfaces as a gate blocker; merged units stay excluded
+   (the merge itself closes their gates). Read the stage's
    newest receipt block, re-derive the bound digest with the recipe owner's
    verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage
    <spec|plan> --unit <id> [--parent <64-hex>]` — a snapshot digest is a canonical SHA-256, never a

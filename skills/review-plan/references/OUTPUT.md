@@ -13,7 +13,7 @@ One `PreExecutionReviewReceipt v1`
 
 ```text
 ## Pre-execution review receipt v1 — plan
-- Review: <receipt-id> · Snapshot: <64-hex|refused> · Verdict: <plan-review-pass|plan-review-fail|needs-design>
+- Review: <receipt-id> · Snapshot: <64-hex|refused> · Verdict: <plan-review-pass|plan-review-fail>
 - Unit: <unitId> · Stage: plan · Unit kind: <feature|fix>
 - Parent SPEC snapshot: <64-hex> · Parent Product receipt: <receipt-id of the current SPEC-REVIEW-PASS>
 - Source revision: <40-hex> · Artifact revision: <artifactRevisionId>
@@ -92,20 +92,11 @@ PLAN-REVIEW-FAIL — <NN-slug|fix-N> BLOCKED
 - Parent state: <current | stale-parent → review-spec first | missing → review-spec first>
 ```
 
-```text
-NEEDS-DESIGN — <NN-slug|fix-N>
-- Snapshot: <digest> · Blocking rows: <Lnn / Pnn / obligation-id>
-- Missing choice (product authority only): <one bounded question>
-- Recommended default: <the smallest coherent answer>
-- Downstream: this Plan receipt and every execution decision bound to the parent
-  Product half are invalid until the answer lands and the Product half is re-reviewed
-```
-
-`NEEDS-DESIGN` when the answer requires inventing product intent, scope, role,
-authority, or user outcome; `PLAN-REVIEW-FAIL` when the plan is decidable but
-incomplete, contradictory, unowned, or unsupported. Never blend them; never emit
-a fourth verdict, a generic "approved", or a `SPEC-REVIEW-*` verdict from this
-stage.
+`PLAN-REVIEW-FAIL` when the plan is decidable but incomplete, contradictory,
+unowned, or unsupported. A gap that requires **inventing product intent is
+`PLAN-REVIEW-FAIL` with `class: product`** — the design-verdict token is not a
+verdict at this stage: only `review-spec` may emit it. Never emit a generic
+"approved" or a `SPEC-REVIEW-*` verdict from this stage.
 
 ### Routes
 
@@ -124,7 +115,6 @@ not authority.
 | `PLAN-REVIEW-FAIL`, `class: plan` | `plan-feature` / `plan-fix` (the author) | one root-caused repair batch → new `artifactRevisionId` → re-review of the new snapshot |
 | `PLAN-REVIEW-FAIL`, `class: product` | `design-feature` | repair the Product half → `review-spec` → the Plan receipt is re-derived (`stale-parent`) |
 | `PLAN-REVIEW-FAIL`, `class: source\|environment\|runtime` | its owner, later | record the row, keep it `open`, route it. Do not edit the plan to hide it and do not start `execute-phase` on a plan carrying an open material row |
-| `NEEDS-DESIGN` | the human, through `design-feature` | dated amendment → new Product revision → `review-spec` → `plan-feature` replan → `/review-plan` again |
 
 Repeating this review follows the no-progress and convergence rules in
 `pre-execution-review/references/POLICY.md` §4 — a repeat needs
@@ -159,7 +149,7 @@ On PASS:
   · Product half moved after this receipt → the parent went stale: /review-spec <NN>
 ```
 
-On FAIL or NEEDS-DESIGN, name every finding id once, in order, joined with ` + `:
+On FAIL, name every finding id once, in order, joined with ` + `:
 
 ```
 → Next: /plan-feature <NN-slug> "<instruction>" (or /plan-fix <N> "<instruction>") —
