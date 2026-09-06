@@ -56,6 +56,7 @@ const schema = fs.existsSync(schemaPath)
 const {
   buildPreExecutionArtifactSnapshot,
   digestPreExecutionArtifactSnapshot,
+  PRE_EXECUTION_POLICY_VERSION,
   PRE_EXECUTION_RECEIPT_CONTRACT_ID,
   PRE_EXECUTION_STAGES,
   PRE_EXECUTION_ARTIFACT_KINDS,
@@ -476,7 +477,7 @@ async function main() {
     recorded: receipt,
     snapshot,
     observedDigest: digest,
-    policyVersion: opts.policy ?? "v1",
+    policyVersion: opts.policy ?? PRE_EXECUTION_POLICY_VERSION,
     changedArtifacts: moved.filter((p) => artifactPaths.includes(p)),
     changedContexts: moved.filter((p) => contextPaths.includes(p)),
   });

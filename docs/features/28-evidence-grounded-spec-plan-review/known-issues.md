@@ -220,12 +220,14 @@ No unresolved product or engineering decision blocks implementation.
     disappears the moment its owner decides to reconcile the two rows; then the constant
     must go empty rather than grow.
 
-24. **The snapshot CLI still hardcodes its policy version (deferred by F49).**
+24. **The snapshot CLI still hardcodes its policy version (deferred by F49).** ~~closed~~
     `scripts/pre-execution-snapshot.mjs:467` reads `policyVersion: opts.policy ?? "v1"`, so
     a policy bump rotates the `stale-policy` axis with no publisher and no gate. Fixing it
     properly means publishing the constant from `packages/agentic-workflow-schema` and
-    reading it there — a schema-surface change, not a fold. Re-check when the schema package
-    publishes a policy version: the CLI must import it and the literal must be gone.
+    reading it there — a schema-surface change, not a fold. **CLOSED by F49's fold:**
+    `PRE_EXECUTION_POLICY_VERSION` is now exported from `packages/agentic-workflow-schema`
+    and `pre-execution-snapshot.mjs` imports it (`opts.policy ?? PRE_EXECUTION_POLICY_VERSION`),
+    the hardcoded literal is gone, and the AC8 docs test names it in both READMEs.
 
 25. **Dated migration notes will keep reading as stale version claims (adjudicated, not
     fixed).** `docs/workflow/MIGRATION.md:7-10` and `:51-54` name the versions a break landed
