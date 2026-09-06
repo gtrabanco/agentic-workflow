@@ -247,7 +247,7 @@ function compileAndRun(index, block) {
   try {
     execFileSync(
       process.execPath,
-      [join(process.cwd(), "node_modules", "typescript", "bin", "tsc"), "-p", dir],
+      [join(fileURLToPath(new URL("..", import.meta.url)), "node_modules", "typescript", "bin", "tsc"), "-p", dir],
       { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
     );
   } catch (error) {

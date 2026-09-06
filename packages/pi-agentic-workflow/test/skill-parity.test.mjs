@@ -111,7 +111,10 @@ test("AC2 fixture: bundling a toy skills tree applies the inclusion rule", (t) =
   const result = bundleSkills({ sourceDir, targetDir });
   assert.deepEqual(result.included, ["composed-skill", "public-skill"]);
   assert.deepEqual(result.excluded, ["maintenance-skill"]);
-  assert.equal(readdirSync(targetDir).join(","), "composed-skill,public-skill");
+  // readdir order is filesystem-dependent (node and bun differ for the same
+  // directory); the property being checked is that the bundle holds exactly the
+  // included slots and no excluded one, so compare the sorted set.
+  assert.equal(readdirSync(targetDir).sort().join(","), "composed-skill,public-skill");
   assert.equal(result.files, 4);
 
   for (const slug of result.included) {

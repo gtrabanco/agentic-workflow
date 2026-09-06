@@ -45,6 +45,13 @@ const root = process.env.LEDGER_OWNERSHIP_REPO ? path.resolve(process.env.LEDGER
 const isChildRun = Boolean(process.env.LEDGER_OWNERSHIP_REPO);
 const thisFile = fileURLToPath(import.meta.url);
 
+// Spawn the runner on the same test file. `node --test <file>` and
+// `bun test <file>` both start a runner; `bun --test <file>` does NOT — bun
+// only starts a runner through the `test` subcommand, so passing `--test` as a
+// flag under bun executes the file as a plain script and every `test()` call
+// throws "Cannot use test outside of the test runner".
+const testRunArgs = (file) => (process.versions?.bun ? ["test", file] : ["--test", file]);
+
 const MAP_REL = "skills/pre-execution-review/references/LEDGERS.md";
 const FEATURE_TEMPLATE_REL = "docs/features/_TEMPLATE/LEDGERS.md";
 const FIX_TEMPLATE_REL = "docs/fix/_TEMPLATE/LEDGERS.md";
@@ -766,7 +773,7 @@ function runSuiteAgainst(dir) {
   const env = { ...process.env, LEDGER_OWNERSHIP_REPO: dir };
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_TEST_WORKER_ID;
-  return spawnSync(process.execPath, ["--test", thisFile], { encoding: "utf8", env });
+  return spawnSync(process.execPath, testRunArgs(thisFile), { encoding: "utf8", env });
 }
 
 test("node --test exits non-zero on the undeclared-writer fixture tree", (t) => {

@@ -58,6 +58,13 @@ const root = process.env.NORMATIVE_DRIFT_REPO ? path.resolve(process.env.NORMATI
 const isChildRun = Boolean(process.env.NORMATIVE_DRIFT_REPO);
 const thisFile = fileURLToPath(import.meta.url);
 
+// Spawn the runner on the same test file. `node --test <file>` and
+// `bun test <file>` both start a runner; `bun --test <file>` does NOT — bun
+// only starts a runner through the `test` subcommand, so passing `--test` as a
+// flag under bun executes the file as a plain script and every `test()` call
+// throws "Cannot use test outside of the test runner".
+const testRunArgs = (file) => (process.versions?.bun ? ["test", file] : ["--test", file]);
+
 const read = (rel) => fs.readFileSync(path.join(root, rel), "utf8");
 const exists = (rel) => fs.existsSync(path.join(root, rel));
 
@@ -1092,7 +1099,7 @@ test("the gate fails closed: a surface that loses its grammar block is refused",
   const env = { ...process.env, NORMATIVE_DRIFT_REPO: tmp };
   delete env.NODE_TEST_CONTEXT;
   delete env.NODE_TEST_WORKER_ID;
-  const child = spawnSync(process.execPath, ["--test", thisFile], { cwd: tmp, env, encoding: "utf8" });
+  const child = spawnSync(process.execPath, testRunArgs(thisFile), { cwd: tmp, env, encoding: "utf8" });
   assert.notEqual(child.status, 0, `a normative surface stripped of its fixed grammar must not read as green\n${child.stdout.slice(-1500)}\n${child.stderr.slice(-500)}`);
   assert.match(`${child.stdout}${child.stderr}`, /undeclared-grammar|has no gate-rejection-vocabulary@1 block/);
 });
