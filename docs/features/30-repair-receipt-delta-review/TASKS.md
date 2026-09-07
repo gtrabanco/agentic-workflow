@@ -42,10 +42,10 @@ Layer: docs · Done-when: `node --test
 scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs
 scripts/ledger-provenance.test.mjs` -> exit 0.
 
-- [ ] Write a red-first pin in `scripts/review-loop-discipline.test.mjs` asserting that `LEDGERS.md` §"The durable finding mark" names `fold-findings` as the `recheck` cell's consumer (materialize-never-rederive).
-- [ ] Add one consumption sentence to `skills/pre-execution-review/references/LEDGERS.md` §"The durable finding mark" (fold-findings reads the `recheck` cell to materialize the reproducer; the row shape, `VF-` exclusions, and the `review-change` single-writer rule stay untouched).
-- [ ] Bump `pre-execution-review` 2.1.0 → 2.2.0 via the `bump-skill` contract.
-- [ ] Run the discipline + ledger-ownership + ledger-provenance suites green; confirm the ownership block, the `VF-` annotator-exclusion fixture behavior, and the template copies (`docs/features/_TEMPLATE/LEDGERS.md`, `docs/fix/_TEMPLATE/LEDGERS.md`) are unchanged.
+- [x] Write a red-first pin in `scripts/review-loop-discipline.test.mjs` asserting that `LEDGERS.md` §"The durable finding mark" names `fold-findings` as the `recheck` cell's consumer (materialize-never-rederive).
+- [x] Add one consumption sentence to `skills/pre-execution-review/references/LEDGERS.md` §"The durable finding mark" (fold-findings reads the `recheck` cell to materialize the reproducer; the row shape, `VF-` exclusions, and the `review-change` single-writer rule stay untouched).
+- [x] Bump `pre-execution-review` 2.1.0 → 2.2.0 via the `bump-skill` contract.
+- [x] Run the discipline + ledger-ownership + ledger-provenance suites green; confirm the ownership block, the `VF-` annotator-exclusion fixture behavior, and the template copies (`docs/features/_TEMPLATE/LEDGERS.md`, `docs/fix/_TEMPLATE/LEDGERS.md`) are unchanged.
 
 ## P4 — Qualify the delta-review unit
 

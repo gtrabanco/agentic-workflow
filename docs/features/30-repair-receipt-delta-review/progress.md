@@ -218,3 +218,14 @@ was reported, then re-run green.)
 ## Unit-loop receipt — P2
 - Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853
 - Next: P3 · Attempts: 1
+
+## P3 — 2026-09-07
+- Done: Bound recheck-cell consumption in the durable mark contract: red-first P3 pin in `scripts/review-loop-discipline.test.mjs` (section 12) requiring LEDGERS.md §"The durable finding mark" to name `fold-findings` as the `recheck` cell's consumer; added the consumption sentence (fold-findings reads the `recheck` cell to materialize the reproducer, never re-derives, `BLOCKED <missing input>` when unmaterializable; row shape, `VF-` exclusions, `review-change` single-writer rule untouched); bumped `pre-execution-review` 2.1.0 → 2.2.0 in both changelogs. Ownership block + both template copies byte-unchanged.
+- Remains: P4 — qualification (narrative sync, context re-measure, full regression set, Pi re-bundle, PR open).
+- Gotchas: the initial P3 pin matched pre-existing LEDGERS text ("consume the verification"), so it was not a red-first; the genuinely-specific assertion (`fold-findings` ... reads ... `recheck` cell) made it red, then the consumed sentence drove it green. pre-execution-review context budget (978) is far under its 3557 ceiling — no manifest change needed for it.
+- Files: scripts/review-loop-discipline.test.mjs; skills/pre-execution-review/references/LEDGERS.md; skills/pre-execution-review/SKILL.md; CHANGELOG.md; CHANGELOG.es.md; docs/features/30-repair-receipt-delta-review/{TASKS.md,progress.md}
+- Next: P4 — Qualify the delta-review unit
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853
+- Next: P4 · Attempts: 1
