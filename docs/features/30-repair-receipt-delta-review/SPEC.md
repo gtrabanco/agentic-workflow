@@ -535,129 +535,322 @@ boxes all tick. Awaiting independent review by `review-spec`.
 ## Engineering half
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`.
+half above is marked `designed`. Artifact revision of this plan set:
+`30-plan-1` (2026-09-07).
 
 ### Technical goals
 
-The architectural outcomes — not implementation detail.
+- **The loop's next step becomes a derived, printed decision.** Every fold
+  turn ends in a REPAIR-RECEIPT whose batch class and branch a consumer
+  (orchestrator or human) can act on mechanically — the decision is emitted
+  once, with evidence, by the skill that just folded (IS-1…IS-3).
+- **The post-fold re-review becomes delta-scoped by default.** The re-review
+  covers the fold diff plus the folded rows' cited locations, escalating to a
+  full pass only on defined triggers — removing the loop's largest recurring
+  token cost without touching any loop invariant (IS-5…IS-7).
+- **The reviewer's verification is reused, not repeated.** The fold
+  materializes the finding's own `recheck` reproducer as its regression check
+  instead of re-deriving a weaker one (IS-8).
 
 ### Architecture impact
 
-How the feature interacts with the project's architecture and layering
-(as defined in its architecture doc). State the invariants the
-implementation must hold (e.g. "outer-layer-only — no changes to the
-core/domain layer"). If the feature touches the core/domain, justify it
-here.
+Docs-layer change only — no source code, no schema, no runtime dependency.
+
+- **Surfaces** (all `path` evidence at HEAD `98afaad4`):
+  - `skills/fold-findings/SKILL.md` + `references/FOLD_PROCESS.md` +
+    `references/FOLD_POLICY.md` — receipt emission, classification, freeze,
+    branches, reproducer handoff (P1).
+  - `skills/review-change/references/REVIEW_PROCESS.md` — delta-mode default,
+    escalation, dedupe extension, cap sentence (P2).
+  - `skills/pre-execution-review/references/LEDGERS.md` — one consumption
+    sentence in §"The durable finding mark"; row shape, `VF-` exclusions, and
+    the single-writer rule untouched (P3).
+  - `scripts/review-loop-discipline.test.mjs` — new pin sections (P1–P3).
+  - `docs/workflow/REVIEW_AND_CLASSIFY.md` + `.es.md`, `MIGRATION.md`,
+    `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (P4).
+  - `packages/pi-agentic-workflow` — re-bundled only through `bundle:skills`
+    (P4). `skills/audit-pr` and `packages/agentic-workflow-schema` untouched
+    (AC-10, E-D5).
+- **Invariants held** (workflow invariants are the project's declared
+  invariants; the architectural-invariants doc is absent, F010):
+  `review-change` stays the final-diff authority; the `review-change +
+  fold-findings` pair keeps its owners, its two-cycle bound, its
+  no-reclassification rule, and its never-merge-or-discard behavior
+  (`docs/workflow/WORKFLOW_INVARIANTS.md` workflow-responsibilities rows);
+  `audit-pr` stays the only MERGE-READY emitter and consumes the same
+  SHA-bound receipt unchanged.
+
+**Preflight: NRS consumed · invariant classification: preserves** (project
+invariants `n/a: no project invariants declared` per REPOSITORY_STATE.md F010;
+every applicable WORKFLOW_INVARIANTS row preserves — cited above; frozen NRS
+fact F010 + AD-008 consumed as evidence, per planning-evidence.md PE-016).
 
 ### Design
 
-The substantive technical content: entities, ports, adapters, schema,
-data shapes, algorithms, state machines. Pre-resolve every decision the
-implementer would otherwise have to guess. Close inherited open
-questions explicitly. This is the section that most reduces
-implementation risk — if it is vague, the implementation improvises.
+#### 1. REPAIR-RECEIPT — fixed printed block (fold-findings output contract)
+
+Printed after the per-finding table and tally, as part of the ABSOLUTE-last
+output together with the branching `→ Next:` block. Five fields, always
+present; pinned verbatim by the discipline suite (AC-01):
+
+```text
+## REPAIR-RECEIPT
+- Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
+- Refuted/open: <F-ids joined ` + `, or `none`>
+- Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
+- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+```
+
+- The gate line carries the actual exit codes observed at the head the gate
+  ran on — green or red (expectation 7, 11); a failed gate never silences the
+  receipt.
+- The shortstat comes from a real `git diff` run over the batch's commits
+  (expectation 8; definition in §4).
+- The receipt is immutable once printed; a later fold prints a new receipt
+  (append-only output history; D30-3: no ledger row, no schema field).
+
+#### 2. Impact-rule batch classification (from frozen fields only)
+
+The batch class derives from the taken queue's frozen rows; the fold never
+reclassifies (E-D6, AC-02):
+
+| Condition over the taken batch | Batch class | Fold behavior |
+|---|---|---|
+| ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch**: nothing folds — no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops and routes to planning (IS-4, D30-2) |
+| all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
+| empty queue (zero findings taken) | `none` | receipt only (E-D1) |
+
+The class vocabulary references only `review-implementation`'s closed class
+set (`CLASSIFY.md`); the receipt invents no parallel vocabulary (AC-02).
+
+#### 3. Branch table (decided once, at emission)
+
+| Batch state | Branch | `→ Next:` (consumer) |
+|---|---|---|
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | plan-fix/execute-phase on this unit after the user confirms the replan |
+| `all-repair-in-place` + docs-only (every fold-diff file is a doc file) + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision (E-D2) |
+| empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged (E-D1) |
+| anything else (behavioral surface or any folded row `high`) | `RE-REVIEW-REQUIRED (delta)` | `/review-change` — delta mode mandatory default |
+
+- **Docs-only test (E-D3)**: every file changed by the fold diff is a
+  Markdown/documentation file; otherwise the batch is behavioral. Frozen
+  severity `high` on any folded row forces REQUIRED (delta) regardless.
+- **SKIPPED (E-D2)**: printed only by a turn carrying an explicit prior
+  consumer decision to skip; the unattended default with no decision is
+  always re-review (the literal pinned default line, AC-03).
+- The manual path and the programmatic outer driver consume the same receipt
+  text (IS-10, expectation 13).
+
+#### 4. Fold-diff definition and escalation computation (E-D4)
+
+`Fold diff` = `git diff <pre-batch HEAD>..<batch HEAD>` over the commits this
+turn's batch produced (`FOLD_PROCESS` step 5); an empty batch diffs nothing.
+The delta review's escalation triggers read the same range:
+
+- **Width** — any changed file outside the union of the batch's cited files
+  (the folded rows' `file:line`), or any changed line in a cited file more
+  than 50 lines from every cited line in that file (changed-line starts read
+  from `git diff --unified=0` hunk headers).
+- **Size** — added+deleted changed lines > 200, or changed files > 15
+  (`git diff --numstat`).
+
+Either trigger escalates the post-fold re-review to a **full pass**, and the
+escalation states which trigger fired and the observed numbers (IS-6, AC-06).
+
+#### 5. Delta-mode review scope (REVIEW_PROCESS.md step 1, P2)
+
+When the preceding fold receipt's branch is `RE-REVIEW-REQUIRED (delta)`
+(or OPTIONAL acted on with the re-review decision), `review-change` runs
+**delta mode**:
+
+1. Re-verify every `folded: yes` row at the `file:line` cited in its
+   `review-findings.md` row (the existing cycle-≥2 rule — pin 3 keeps its
+   phrase verbatim).
+2. Review the fold diff only (the §4 range).
+3. Require the gate green at the reviewed head and the sibling
+   `ACCEPTANCE.md` blob recomputed to an exact match — the existing step-2
+   structural precondition, unchanged and still mandatory (PE-004).
+4. Append the normal `review-mark@1` `REVIEW-RAN` mark — delta cycles count
+   toward the two-cycle cap from the unchanged source (marks + forge
+   receipts); `LOOP CAP REACHED` and the user-only third cycle survive
+   verbatim (IS-7, D30-6).
+5. New findings must be genuinely new: a same-`file:line`+axis re-report
+   inside the delta scope is admitted only as `regression of <id>` or
+   `DISPUTED` (extending the existing cycle-2 rule from folded rows to the
+   whole delta scope).
+6. A clean delta pass posts the normal SHA-bound `REVIEW-PASS` — identical
+   discipline for `audit-pr`, which stays unchanged (IS-10, AC-10).
+
+#### 6. Reproducer handoff (FOLD_POLICY, P1 + P3)
+
+Before repairing a behavioral finding, `FOLD_POLICY` reads the row's
+`finding-mark@1` `recheck` cell (method + reproducer, written by
+`review-change` at verification time) and materializes it as the regression
+check — the method as written (red test first, reproducible command output, or
+direct read). The fold runner **never invents or re-derives** the reproducer.
+A recheck cell that cannot be materialized as a runnable check yields
+`BLOCKED <missing input>`. `LEDGERS.md` §"The durable finding mark" gains one
+consumption sentence naming `fold-findings` as the recheck cell's consumer;
+the row shape, `VF-` exclusions, and the `review-change` single-writer rule
+stay untouched (AC-08).
+
+#### 7. Skill versioning and distribution
+
+Minor bumps via the `bump-skill` contract (both changelog siblings):
+`fold-findings` 1.3.0 → 1.4.0, `review-change` 3.3.0 → 3.4.0,
+`pre-execution-review` 2.1.0 → 2.2.0 (PE-009). The Pi mirror is re-bundled
+only through `packages/pi-agentic-workflow`'s `bundle:skills` (PE-012);
+context budgets re-measured in P4 (PE-011); normative-drift version tables
+kept in sync (PE-010).
 
 ### Planning evidence
 
-One compact row per Engineering claim that a phase relies on — never an
-exploration transcript. M/L units freeze this table in
-`planning-evidence.md` and leave the heading here reading
-`see planning-evidence.md`; XS/S units fill it in place.
-
-| id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
-|---|---|---|---|---|---|---|---|---|
+see planning-evidence.md (PE-001…PE-017, frozen 2026-09-07 at HEAD
+`98afaad4`).
 
 ### Obligations
 
-One row per normative behaviour, applicable compatibility invariant, affected use
-case, and required failure state — the completeness map `execute-phase` and
-`audit-pr` read. M/L units freeze it in `planning-obligations.md`; XS/S units fill
-it in place. Status is `planned | in-progress | verified | n/a | deferred`;
-`n/a` requires evidence, and no current-unit obligation may be `deferred` to a
-follow-up issue.
-
-| obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
-|---|---|---|---|---|---|---|---|---|
+see planning-obligations.md (O1…O12; every row `planned`, none deferred).
 
 ### Decisions to confirm
 
-Engineering decisions the project lead must make (or has made) before
-implementation starts. Record the chosen option and the rationale, so
-later reviewers understand the trade-off.
+Recorded with rationale in `decisions.md` (2026-09-07, engineering half) —
+each is an interpretation of reviewed product text, frozen for
+`review-plan` to confirm:
+
+- **E-D1** — empty-batch class `none` + failed-gate receipt behavior.
+- **E-D2** — `RE-REVIEW-SKIPPED` records a prior consumer decision; the fold
+  emits `RE-REVIEW-OPTIONAL`.
+- **E-D3** — docs-only is judged on the fold diff's file set; frozen severity
+  `high` forces delta re-review regardless.
+- **E-D4** — fold-diff range (`git diff <pre-batch>..<batch>`) and the
+  escalation computation inputs.
+- **E-D5** — AC-10's `packages/` clause guards `audit-pr` +
+  `packages/agentic-workflow-schema`; the Pi mirror re-bundle is expected
+  (flagged in known-issues.md #1).
+- **E-D6** — freeze-batch trigger set: `replan-in-unit` ∪ `decision-required`
+  frozen rows in the taken batch.
 
 ### Testing requirements
 
-What must be tested and how. State the test layer (unit / integration
-/ architecture) and any tooling or runtime constraints. The project
-prefers integration and architecture tests over heavy mocking.
+Integration/architecture-level text-contract tests: this repo pins skill
+contracts with regex assertions over the real bytes and runs real scripts over
+seeded fixtures — no unit mocking, no new test framework (PE-005, PE-007).
+
+- New pins are written **red-first** inside P1–P3 and made green by the same
+  phase's edit; existing pins are strengthened in place, never weakened
+  (test-immutability contract).
+- Every pinned phrase that exists today (e.g. "every `folded: yes` row is
+  re-verified at its cited location", "one `FOLDED <same-sha>` line per
+  member", `LOOP CAP REACHED`, "third cycle never starts", `regression of
+  <id>`) must survive the edits verbatim (PE-004, PE-005).
+- The annotator behaviors (`VF-` exclusion, `--check`, `--json`) are proven
+  against the seeded fixture `scripts/fixtures/finding-mark-ledger.md`, not
+  from prose.
+- Full validator ladder and the mandatory scenario inventory: `testing.md`.
 
 ### Dev scenarios
 
-The situations this feature introduces that must be reproducible in local
-dev — happy path **and** failure modes (empty/degraded state, races,
-outages, mass changes, data loss). Seed the failure modes from this **fixed
-category list** — walk every category and write a scenario or
-`n/a: <reason>` (unaided recall under-enumerates; the list makes coverage a
-presence check): empty/zero state · invalid or oversized input · permission
-denied / wrong role · dependency outage or timeout · concurrent/duplicate
-action · limit or threshold hit. For each, name it and state how it is
-reached through an **existing** mechanism (queued message, guard threshold,
-manual override, stubbed source) — scenarios are orchestration, never new
-domain. If the project has a runnable dev-scenario harness, register each
-scenario there (dev-gated, never reaching production) and link it here;
-otherwise list them as prose.
-
 | Scenario | Reproduces | Mechanism it drives |
 |---|---|---|
-| `<area>:<name>` | the situation | the existing trigger |
+| `fold:empty-batch` | receipt on a unit with zero `folded: no` rows (empty/zero state) | run `/fold-findings` on a fully-folded ledger; P1 empty-batch pins |
+| `fold:failed-gate` | gate red at fold time (failed-gate receipt, nothing folded) | break a test on a scratch branch and run `/fold-findings`; P1 failed-gate pins |
+| `fold:freeze-batch` | a `replan-in-unit` row in the queue freezes the whole batch (limit/threshold: classification boundary) | seed the ledger with one replan-class row; P1 freeze pins |
+| `fold:unmaterializable-recheck` | a `recheck` cell naming no runnable method → `BLOCKED` with the missing input (invalid input state) | seed a `finding-mark@1` row whose recheck cell has no method; P1 reproducer pins |
+| `review:delta-default` | delta re-review covers the fold diff + cited rows only | REQUIRED (delta) receipt then `/review-change`; P2 delta pins |
+| `review:escalation-width` | a changed file outside the cited union (or a changed line >50 from cited lines) escalates to a full pass (limit/threshold hit) | fold batch whose diff widens beyond the cited set; P2 escalation pins |
+| `review:escalation-size` | fold diff >200 lines or >15 files escalates with trigger + numbers (mass-change state) | fold batch over many files; P2 escalation pins |
+| `review:same-location-re-report` | same `file:line`+axis candidate → `regression of <id>` or `DISPUTED`, never a plain row (duplicate-action state) | re-report an already-folded location during delta mode; P2 dedupe pins |
+| n/a: permission denied / wrong role | no runtime permission surface exists | the capability role matrix (SPEC) denies reclassification/review-authority; covered by the no-reclassification pins |
+| n/a: concurrent fold turns | the workflow is single-writer per turn | the ownership map (`fold-findings:folded-flag`) + `REOPENED` annotations cover provenance; no new concurrency model |
+| n/a: dependency outage | forge/network loss is an existing precondition | `REVIEW BLOCKED` workspace check + BLOCKED verdicts; the receipt records observed gate exit codes |
 
 ### Phases
 
-High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
-**Phases are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or
-"Steps".** `execute-phase <NN>` runs all remaining phases by default; an
-explicit `P<n>` runs one atomic phase. Planning (producing the planning artifacts) is done by `plan-feature`
-before execution, so it is **not** a numbered phase here. `P1` is the first
-implementation phase (it also commits the planning artifacts); the **last phase
-is always hardening** (edge cases + the dev-scenario failure modes). For **M/L**,
-opening the PR is the final *step* of the hardening phase (its `TASKS.md`
-checklist ends with the literal close-out tasks), not a phase of its own. For
-**XS/S** (SPEC-only, no `TASKS.md`), list the phases **here, with checkbox
-tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
-carrying the literal close-out tasks (fixed wording — see
-`docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` ticks this section as
-its ledger. Each implementation phase
-header is followed by `Layer: <schema/db|domain|api|ui|config/infra|docs|
-hardening>. Done-when: <command> → <expected outcome>.` before its task list
-(same scaffold as `docs/fix/_TEMPLATE/SPEC.md` `### P1`) — the phase-lint's
-"one declared layer" and "machine-checkable done-when" boxes need somewhere to
-be filled in, not invented.
+Detailed tasks: `TASKS.md`. Phase order matches the dependency-free cut
+(no `Depends on` chain inside the unit); the final phase is hardening.
+
+#### P1 — Pin the REPAIR-RECEIPT contract in fold-findings
+
+Layer: docs. Done-when: `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (new receipt/classification/freeze/branch/empty/failed-gate/reproducer pins green; all existing pins pass).
+
+#### P2 — Make delta mode the default post-fold re-review
+
+Layer: docs. Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → exit 0 (delta/escalation/dedupe/cap pins green; pin 3 phrase unchanged).
+
+#### P3 — Bind recheck-cell consumption in the durable mark contract
+
+Layer: docs. Done-when: `node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs` → exit 0 (consumption pin green; ownership block and template copies unchanged).
+
+#### P4 — Qualify the delta-review unit
+
+Layer: hardening. Done-when: every frozen validator in `ACCEPTANCE.md` passes, Pi bundle parity green, and the PR is open with `Closes #170` (PR URL printed).
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
-Every implementation phase below must pass all 8 boxes before it is emitted
-(planner skills) or executed (`execute-phase` pre-flight). Fail-closed: any
-unticked box blocks emission/execution until the phase is re-cut or split.
-Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
-record the result here as `Phase-lint: PASS (8/8) · fingerprint
-<P<n>:<layer>:<n-tasks>:<title-deliverable>>` (or `BLOCKED — box <n>: …`).
+Every implementation phase above passed the canonical eight-box phase-lint
+before emission (titles name one deliverable; one declared layer each; ≤ 8
+tasks — P4 is the close-out phase at 9 with only the literal close-out chain
+added; one checkbox = one deliverable; zero decision words; no conditional
+scope mutation; no external/manual gates inside implementation phases — the
+read-verified bilingual check lives in P4 hardening and is marked
+read-verified; machine-checkable done-when per phase):
+
+```text
+Phase-lint: PASS (8/8) · fingerprint P1:docs:8-tasks:Pin the REPAIR-RECEIPT contract in fold-findings
+Phase-lint: PASS (8/8) · fingerprint P2:docs:6-tasks:Make delta mode the default post-fold re-review
+Phase-lint: PASS (8/8) · fingerprint P3:docs:4-tasks:Bind recheck-cell consumption in the durable mark contract
+Phase-lint: PASS (8/8) · fingerprint P4:hardening:9-tasks:Qualify the delta-review unit
+```
 
 ### Deploy & rollback
 
-Only when shipping needs more than merging: schema migrations and their order,
-feature flag (if gradual rollout), config/env changes, and the rollback path
-(revert PR? data cleanup?). State **n/a** explicitly when merging is enough.
+n/a — merging is enough. Docs-layer skills re-bundle with the PR; the
+rollback path is `git revert` of the single PR; no migrations, flags, or
+config.
 
 ### Open questions / risks
 
-Known unknowns and risks. Promote to `TASKS.md` if they become
-blockers. Mark inherited questions as RESOLVED or DEFERRED with a
-pointer to where they are now handled.
+- **RESOLVED (E-D5, flagged)** — AC-10's `packages/` wording vs the
+  integration row: interpreted as `audit-pr` + schema-package untouched,
+  Pi re-bundle expected; `review-plan` confirms or amends
+  (known-issues.md #1).
+- **RESOLVED (E-D1…E-D4, E-D6)** — the empty/SKIPPED/docs-only/diff-range/
+  freeze-trigger interpretations the reviewed Product half left to engineering;
+  all frozen in `decisions.md` for `review-plan` confirmation.
+- **DEFERRED (upstream)** — escalation-number recalibration (±50/200/15) stays
+  a SPEC-amendment decision with evidence (D30-5); feature 31 owns the
+  planning-side mirror of the loop; feature 32 owns the severity-conversion
+  table this feature must not pre-empt.
+- **Risk** — budget headroom on the three bumped skills; growth is declared
+  in `SKILL_CONTEXT_BUDGETS.json` with source `feature 30`, never silent
+  (PE-011).
 
 ### Deliverables
 
-The concrete artifacts the PR contains.
+- Updated skills: `skills/fold-findings/SKILL.md` + 2 references (receipt,
+  classification, freeze, branches, reproducer handoff; v1.4.0),
+  `skills/review-change/references/REVIEW_PROCESS.md` (delta mode,
+  escalation, cap; v3.4.0), `skills/pre-execution-review/references/LEDGERS.md`
+  (consumption note; v2.2.0).
+- Updated pins: `scripts/review-loop-discipline.test.mjs` (new sections;
+  existing pins strengthened in place).
+- Docs: `docs/workflow/REVIEW_AND_CLASSIFY.md` + `.es.md` (delta + receipt
+  narrative), `docs/workflow/MIGRATION.md` (additive note),
+  `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (re-measured).
+- Distribution: `packages/pi-agentic-workflow` re-bundled through
+  `bundle:skills` (+ distribution metadata bump as required).
+- Planning artifacts: this unit's SPEC Engineering half, `ACCEPTANCE.md`,
+  `PLAN.md`, `TASKS.md`, `testing.md`, `known-issues.md`,
+  `architecture-notes.md`, `planning-evidence.md`, `planning-obligations.md`.
+- One PR against `main` with `Closes #170`; the PR diff touches no file under
+  `packages/agentic-workflow-schema/` or `skills/audit-pr/` (E-D5).
 
 ### Post-merge next feature
 
-The expected next feature in the sequence — see `docs/features/ROADMAP.md`.
+Feature 31 — `planning-review-materiality` (issue #171): the planning-side
+loop alignment this feature deliberately leaves untouched. Then 32
+(`review-consistency-pack`) and 33 (`turn-contract-single-owner`), per
+`docs/features/ROADMAP.md` dependency order.
