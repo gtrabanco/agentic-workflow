@@ -32,3 +32,24 @@ defect gone (run-log row at `docs/workflow/GOLDEN_FIXTURE.md:369`) — fold conf
 | F8 | docs/fix/162-verdict-receipt-roadmap-desync/SPEC.md:384 | workflow | med | fix-now | plan re-cut — SPEC P6 tick state (user-confirmed; not /fold-findings) | no |
 | VF-8 | docs/fix/162-verdict-receipt-roadmap-desync/SPEC.md:384-394 · reviewer review-change · HEAD f6dbd47e264555fcdc721ad69cfb321e43f621fa · recheck direct read: all seven P6 (Hardening & PR) tasks read `- [ ]` while `progress.md` carries the P6 unit-loop receipt (commit 2820f8da, full gate green), the terminal COMPLETE receipt, PR #178, and the fix-index row `done · [#178]` — the execution ledger misdescribes the executed build | workflow | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD f6dbd47e264555fcdc721ad69cfb321e43f621fa | n/a | n/a | review-mark | n/a | n/a |
+
+Cycle 3 — reviewed head `471212217f2959d14202da7c64babb30790d0728` (PR #178, open).
+Scope: branch diff vs `main` (68 files, +1531/−145). User-authorized third cycle: the
+two-cycle cap was reached at cycle 2 and the user explicitly invoked this review.
+F1–F6 re-verified first at their cited locations: defect gone in all six (GOLDEN_FIXTURE
+run-log row present EN `:369` + ES `:386`; `exit 4`/`current: false` named in both RUN boxes
+(review-spec OUTPUT.md:131, review-plan OUTPUT.md:137); `isImpossibleReceiptTimeline` +
+`VERDICTS_BY_STAGE` documented in both package READMEs (EN :264-265, ES :275-276); the
+NEEDS-DESIGN disjunct gone from PRE_EXECUTION_GATE.md's route block; the
+`impossible-timeline` label row (PRE_EXECUTION.md:50) + 6a member (SENSOR_CORE.md:78)
+present) — folds confirmed. F8 re-verified: defect still present (SPEC.md:384-394 P6
+tasks all `- [ ]`) — row stands, not re-appended. F7 was never on this ledger (reported
+outside it in cycle 2); the id gap is preserved.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F9 | docs/workflow/SKILLS.md:72 | code | med | fix-now | fold into current unit (/fold-findings) | no |
+| VF-9 | docs/workflow/SKILLS.md:72 + SKILLS.es.md:74 + README.md:149 + README.md:516 + README.es.md:155 + skills/ship-roadmap/references/ADVANCE.md:46-47 · reviewer review-change · HEAD 471212217f2959d14202da7c64babb30790d0728 · recheck direct read of all six cells + machine map `packages/agentic-workflow-schema/src/pre-execution-contract.ts:133-136` (`plan: ["plan-review-pass", "plan-review-fail"]`) + reproducer: `node --test scripts/normative-drift.test.mjs` → 16/16 green over the stale cells — the checker attributes verdict stages by file path (`normative-drift.test.mjs:544`) and none of the six paths contains "review-plan" | code | confirmed | finding-mark | n/a | n/a |
+| F10 | skills/workflow-status/references/PRE_EXECUTION.md:50 | brand | med | fix-now | fold into current unit (/fold-findings) | no |
+| VF-10 | skills/workflow-status/references/PRE_EXECUTION.md:50 + SENSOR_CORE.md:77-78 · reviewer review-change · HEAD 471212217f2959d14202da7c64babb30790d0728 · recheck direct read + grep: the sensor-level fail-open (a legacy receipt without a parsable `Started/finished:` line, or a source revision git cannot resolve, stays unflagged under `impossible-timeline`) is disclosed at `scripts/pre-execution-snapshot.mjs:41-45` and `docs/fix/162-verdict-receipt-roadmap-desync/SPEC.md:218-220` and in the schema README (pure comparator), but `grep -i "fail-open\|unresolvable\|legacy\|unparsable"` over both operating docs surfaces no fail-open statement for this dimension (SENSOR_CORE.md: "unresolvable" 0 hits) — undisclosed enforced limitation, CLAUDE.md honest-copy hard rule | brand | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 471212217f2959d14202da7c64babb30790d0728 | n/a | n/a | review-mark | n/a | n/a |
