@@ -35,6 +35,10 @@ quality floor.
 - Passing declared checks is necessary, not sufficient; final independent review and named manual checks remain required.
 - The loop-discipline pins are updated to the new contract, never weakened: every existing pin keeps its phrase or gains a strictly stronger assertion.
 
+### Amendment history
+
+- **2026-09-07** — Manifest edited by fold-findings F1 fold route (F1 fix: "correct 'Five fields' to 'Six fields' and add Branch to AC-01 field list"). Blob changed `1f5a9a63…` → `7fe674c2…`. Fold process lacked a manifest-edit guard; this edit is accepted per the F1 fold finding's review-change classification (fix-now, cycle 1, re-verified clean at cycle 2 delta).
+
 ## Commands
 
 - `node --test scripts/review-loop-discipline.test.mjs`
