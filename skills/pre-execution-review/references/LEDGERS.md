@@ -194,3 +194,9 @@ counter-evidence in the same report and **never becomes a row**, a fold task,
 or a re-review trigger. The mark's `confirmed | refuted` value and the
 `recheck` cell (the method the finding's axis demands) are what let a driver
 outside the repo consume the verification the review performed.
+
+`fold-findings` reads the `recheck` cell to **materialize** the finding's
+reproducer as its regression check — it never re-derives it; a `recheck` cell
+that cannot be materialized yields `BLOCKED <missing input>`. This consumption
+leaves the row shape, the `VF-` exclusions, and the `review-change`
+single-writer rule untouched.

@@ -2,7 +2,9 @@
 
 1. **Build the queue.** Take every `folded: no` fix-now row, or the explicit ID
    subset, in severity/id order. `replan-in-unit` rows emit `REPLAN`; they stay
-   on the same SPEC/branch/PR and never become issues.
+   on the same SPEC/branch/PR and never become issues. **Empty batch:** an
+   empty queue (zero findings taken) prints a REPAIR-RECEIPT with batch class `none`
+   and nothing folded — a receipt only, no flips, no commits.
 2. **Form the fewest atomic correction groups.** Findings may share one group
    only when all boxes pass:
 
@@ -33,9 +35,44 @@
    member so no finding disappears inside the batch.
 6. **Continue groups.** A blocked/disputed group does not prevent independent
    groups from folding. Leave its rows `no` and emit individual outcomes.
-7. **Disputes.** Non-reproducible/already-fixed/wrong findings become
+   **Failed gate:** if the group's gate is red, do not fold the group — the
+   receipt records the observed gate exit codes and nothing is folded for it;
+   never silence the receipt and never commit red.
+7. **Batch classification.** The batch class derives from the taken queue's
+   frozen rows only, and the fold never reclassifies:
+
+   | Condition over the taken batch | Batch class | Fold behavior |
+   |---|---|---|
+   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops and routes to planning |
+   | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
+   | empty queue (zero findings taken) | `none` | receipt only |
+
+   The batch-class vocabulary references only `review-implementation`'s closed
+   class set (`CLASSIFY.md`); the receipt invents no parallel vocabulary.
+
+   The emitted branch follows the closing-block decision inputs in the skill:
+   a freeze-batch always selects `REPLAN-ROUTE`; otherwise the docs-only
+   file-set test (E-D3) and the frozen-severity-`high` override (E-D2) select
+   `RE-REVIEW-OPTIONAL` vs `RE-REVIEW-REQUIRED (delta)`.
+8. **Disputes.** Non-reproducible/already-fixed/wrong findings become
    `DISPUTED <evidence → user decision>`; never edit classification or create an
    issue.
-8. **Replan.** If the smallest correct group exceeds a reviewable correction,
+9. **Replan.** If the smallest correct group exceeds a reviewable correction,
    emit `REPLAN` with proposed phases appended to the same unit. After user
    confirmation, `/execute-phase <unit>` completes them and ticks the rows.
+
+## REPAIR-RECEIPT — fixed printed block (verbatim copy)
+
+Printed after the per-finding table and tally, as part of the ABSOLUTE-last
+output together with the branching `→ Next:` block. Six fields, always
+present:
+
+```text
+## REPAIR-RECEIPT
+- Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
+- Refuted/open: <F-ids joined ` + `, or `none`>
+- Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
+- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+```

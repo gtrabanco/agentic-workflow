@@ -2,6 +2,21 @@
 
 > 🇬🇧 [English version](MIGRATION.md)
 
+## 2026-09-07 — el bucle review→fold es dirigido por decisión y de alcance delta (aditivo)
+
+**Bumps menores aditivos, sin migración requerida.** `fold-findings` 1.4.0,
+`review-change` 3.4.0 y `pre-execution-review` 2.2.0 añaden el contrato de
+**REPAIR-RECEIPT** y **modo delta** (issue #170, feature 30): un turno de fold
+ahora emite un recibo fijo cuya rama un consumidor puede accionar
+(`RE-REVIEW-REQUIRED (delta)` / `RE-REVIEW-OPTIONAL` / `RE-REVIEW-SKIPPED` /
+`REPLAN-ROUTE`), la re-revisión posterior al fold pasa por defecto al alcance
+delta (re-verificar filas plegadas en ubicaciones citadas, revisar solo el diff
+de fold, gate verde + blob `ACCEPTANCE.md` exacto, dedupe solo-nuevos), y el
+reproductor de la celda `recheck` se materializa, nunca se re-deriva. No se
+rompe ningún contrato existente ni cambia ningún estado persistido — las reglas
+previas de escritor único y tope de dos ciclos sobreviven verbatim. Los recibos
+y bucles existentes no se ven afectados.
+
 ## 2026-09-05 — los recibos ya no ligan el roadmap compartido (`pre-execution-review` 2.0.0)
 
 **Contrato de snapshot cambiado; `pre-execution-review` 2.0.0, `review-spec` 1.6.0, paquete pi 0.5.0.**
