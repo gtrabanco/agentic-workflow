@@ -42,9 +42,9 @@
    - **REVIEW-PLAN** (only between PLAN and EXECUTE) — compose `review-plan` in a
      clean context at the routed tier over the plan the previous stage just froze.
      `PLAN-REVIEW-PASS` releases EXECUTE. A FAIL routes by root cause: plan-local
-     (bad phase cut, blank validator, ledger drift) → one root-caused re-cut by the
-     planning author and a fresh review; product-rooted or an assumption this record
-     cannot settle → `NEEDS-DESIGN` → park as in REVIEW-SPEC. A second local cycle
+     (bad phase cut, blank validator, ledger drift) → root-caused re-cut by the
+     planning author and a review; product-rooted or an assumption this record
+     cannot settle → PLAN-REVIEW-FAIL with class: product → design-feature. A second local cycle
      that changes nothing stops editing and reports `CONVERGENCE-ANOMALY` instead of
      burning a third budget. **No stage between PLAN and EXECUTE may create a forge
      issue or defer an obligation to one** — an unmet obligation fails this stage, it

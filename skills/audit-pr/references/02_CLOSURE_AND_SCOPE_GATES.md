@@ -95,7 +95,7 @@ verdict:
    `structural.reasonCode`/`changedPaths` name the drifted dimension), and — for a
    feature unit — its named `— spec` parent re-derives the same way. Bound artifacts
    are frozen: new implementation-phase files are allowed, edits to a bound artifact
-   are not. Stale, missing or wrong-stage lineage → **BLOCKED**,
+   are not. Stale, missing, wrong-stage **or impossible-timeline** lineage → **BLOCKED**,
    `→ Next: /review-plan <unit>` (or `/review-spec <unit>` when the parent is the
    broken link). A `SPEC-REVIEW-PASS` never satisfies the plan hop, and vice versa.
 2. **Obligations are closed.** Every row of the unit's obligation ledger is

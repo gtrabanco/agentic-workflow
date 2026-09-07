@@ -69,7 +69,7 @@ limits.
 | Skill | Role | Hands off to |
 |---|---|---|
 | `review-spec` | **Independent Product gate.** Read-only review of the designed Product half in a context that did not write it: builds the frozen `stage: spec` snapshot, runs the fixed checks, and returns one of `SPEC-REVIEW-PASS` / `SPEC-REVIEW-FAIL` / `NEEDS-DESIGN` with a snapshot-bound receipt in `progress.md`. A FAIL's findings go to the unit's stage-aware `planning-findings.md`; the author's own readiness result can never stand in for the verdict. | `plan-feature` on a current PASS; `design-feature` to repair; the human when a product choice is genuinely open |
-| `review-plan` | **Independent Engineering gate.** Same contract over the frozen plan (`stage: plan` snapshot: SPEC, `ACCEPTANCE.md`, planning evidence, obligations, phases, tests; the parent Product snapshot digest is required): ledger sweep L1–L6, checks P1–P12 (F1–F4 on fix units), then `PLAN-REVIEW-PASS` / `PLAN-REVIEW-FAIL` / `NEEDS-DESIGN` + receipt. | `execute-phase` on a current PASS; the planning author to re-cut; `design-feature` on `NEEDS-DESIGN` |
+| `review-plan` | **Independent Engineering gate.** Same contract over the frozen plan (`stage: plan` snapshot: SPEC, `ACCEPTANCE.md`, planning evidence, obligations, phases, tests; the parent Product snapshot digest is required): ledger sweep L1–L6, checks P1–P12 (F1–F4 on fix units), then `PLAN-REVIEW-PASS` / `PLAN-REVIEW-FAIL` + receipt. | `execute-phase` on a current PASS; a gap that requires inventing product intent → `design-feature` |
 
 Both are read-only over every artifact they judge, share one policy
 (`pre-execution-review`: independence, unioned findings, counter-evidence-only

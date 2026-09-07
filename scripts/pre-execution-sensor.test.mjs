@@ -108,10 +108,20 @@ function makeRepo(t, { unitKind = "feature", dir = UNIT_DIR, unit = "99-toy" } =
   git(root, "config", "user.email", "fixture@example.invalid");
   git(root, "config", "user.name", "Fixture");
   git(root, "config", "commit.gpgsign", "false");
+  // fix/162: the receipts these fixtures record carry a hardcoded reached finish
+  // (2026-08-31). Every commit is dated BEFORE that finish so the new
+  // impossible-timeline guard (which requires a finish after the recorded
+  // revision's commit date) never mis-flags the fixture as back-dated — the
+  // fixture's own assertion is that the commit predates the review it enables.
+  const FIXTURE_DATE = "2026-08-30T00:00:00Z";
+  const gitDate = (...args) => execFileSync("git", args, {
+    cwd: root, encoding: "utf8",
+    env: { ...process.env, GIT_COMMITTER_DATE: FIXTURE_DATE, GIT_AUTHOR_DATE: FIXTURE_DATE },
+  }).trim();
   const commit = (message) => {
-    git(root, "add", "-A", "--", ".");
-    git(root, "commit", "-qm", message);
-    return git(root, "rev-parse", "HEAD");
+    gitDate("add", "-A", "--", ".");
+    gitDate("commit", "-qm", message);
+    return gitDate("rev-parse", "HEAD");
   };
   commit("planning artifacts frozen");
   const run = (...args) =>

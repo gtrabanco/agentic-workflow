@@ -1,15 +1,16 @@
 ---
 name: review-plan
 user-invocable: true
-version: 1.5.0
+version: 1.6.0
 argument-hint: <NN-slug | fix-N | path/to/SPEC.md> [--adversarial N]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Independent read-only review of a frozen Engineering plan before execution, in a
   context that did not cut it: feature or fix snapshot, obligation ledger sweep,
-  phase and validator checks. Returns only PLAN-REVIEW-PASS, PLAN-REVIEW-FAIL, or
-  NEEDS-DESIGN with a snapshot-bound receipt. Never edits a plan artifact.
+  phase and validator checks. Returns only PLAN-REVIEW-PASS or PLAN-REVIEW-FAIL
+  with a snapshot-bound receipt (a product-intent gap is PLAN-REVIEW-FAIL with
+  `class: product`). Never edits a plan artifact.
   Triggers: "review-plan", "review the plan", "review the phases".
 ---
 
@@ -81,7 +82,7 @@ another `references/` path.
 |---|---|---|
 | Roadmap row read, unit kind known (feature or fix) | [checks](references/CHECKS.md) — snapshot construction, falsification, the L1–L6 ledger sweep | [eng-checks](references/ENG-CHECKS.md) and [output](references/OUTPUT.md) |
 | Snapshot bound and the ledgers swept clean enough to judge the plan | [eng-checks](references/ENG-CHECKS.md) — P1–P12, plus F1–F4 for a fix unit | [output](references/OUTPUT.md) until every check has a result |
-| Any check failed, the parent receipt is missing/stale, or a product choice is open | [output](references/OUTPUT.md) for the FAIL / `NEEDS-DESIGN` block and route | — |
+| Any check failed, the parent receipt is missing/stale, or a product choice is open | [output](references/OUTPUT.md) for the FAIL block (product-intent gaps get `class: product`) and route | — |
 | A prior Plan receipt exists for this unit | [output](references/OUTPUT.md) §Repeats for the no-progress / convergence gate before re-running anything | never blend rows from two snapshots |
 
 ## Guardrails
@@ -98,12 +99,13 @@ another `references/` path.
   candidate `ReviewReceipt` or a staged `VerificationReceipt` answers different
   questions and never stands in for a Plan review. A missing parent receipt is
   reported, not repaired by assumption.
-- **Three verdicts only.** Exactly `PLAN-REVIEW-PASS | PLAN-REVIEW-FAIL |
-  NEEDS-DESIGN`. No partial pass, no "approve with caveats", no SPEC verdict, no
-  generic "approved" verb (PD1).
+- **Two verdicts only.** Exactly `PLAN-REVIEW-PASS | PLAN-REVIEW-FAIL`.
+  No partial pass, no "approve with caveats", no SPEC verdict, no generic
+  "approved" verb (PD1). The design-verdict token is not a verdict at this stage — a gap
+  requiring invented product intent is `PLAN-REVIEW-FAIL` with `class: product`.
 - **No engineering decisions invented.** Where the right phase cut, validator, or
   migration depends on a product choice this review cannot make, return
-  `NEEDS-DESIGN` and route it to the human through `design-feature` — invalidating
+  `class: product` and route it to the human through `design-feature` — invalidating
   downstream Plan evidence is the point.
 - **No source fixes.** A plan defect that this turn could "just patch" is still a
   defect: report it and route it. Implementing while reviewing collapses the gate.

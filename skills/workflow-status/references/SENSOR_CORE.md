@@ -64,14 +64,18 @@ live evidence against a frozen ledger remains a contradiction candidate.
      command matched to the exact status: `defined` → `/plan-feature <slug>`,
      `planned` → `/execute-phase <NN>`.
    - deps unmet (any status ≥ `defined`) → `blocked_units` (unchanged).
-6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned` or
-   `in-progress` ([pre-execution evidence](PRE_EXECUTION.md)): read the stage's
+6a. **Sense the pre-execution receipts** for every unit at `defined`, `planned`,
+   `in-progress`, **or `done` with a linked PR that is still open (unmerged — merge
+   state lives in the forge)** ([pre-execution evidence](PRE_EXECUTION.md)). A
+   done-but-unmerged row is a lifecycle label, never merge-ready, so a stale or
+   missing receipt there surfaces as a gate blocker; merged units stay excluded
+   (the merge itself closes their gates). Read the stage's
    newest receipt block, re-derive the bound digest with the recipe owner's
    verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage
    <spec|plan> --unit <id> [--parent <64-hex>]` — a snapshot digest is a canonical SHA-256, never a
    git blob id; `structural.reasonCode` names the dimension that drifted), and
    label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/
-   `self-approved`/`author-readiness`/`legacy`. The label **overrides step 6's
+   `self-approved`/`author-readiness`/`legacy`/`impossible-timeline` (unresolvable revision or unparsable timeline: fail-open → unflagged). The label **overrides step 6's
    status-only command**: a unit without a current PASS for the stage it is about to
    enter is demoted out of `startable_now` into a `gate` blocker naming the missing
    review, and `detail.pre_execution[]` records the row. A roadmap row is never

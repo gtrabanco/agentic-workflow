@@ -44,7 +44,9 @@ const routing = read("docs/workflow/model-routing.yml");
 const GROUNDING_OUTCOMES = ["CONTEXT-PREPARED", "NEEDS-EVIDENCE", "NEEDS-DESIGN"];
 const READINESS_OUTCOMES = ["READY-FOR-REVIEW", "NEEDS-EVIDENCE", "NEEDS-DESIGN", "NEEDS-REPLAN"];
 const SPEC_VERDICTS = ["SPEC-REVIEW-PASS", "SPEC-REVIEW-FAIL", "NEEDS-DESIGN"];
-const PLAN_VERDICTS = ["PLAN-REVIEW-PASS", "PLAN-REVIEW-FAIL", "NEEDS-DESIGN"];
+// fix/162 (Decision 11): the plan stage carries ONLY the two plan verdicts — the
+// design-verdict token belongs to review-spec, so it is not a review-plan verdict.
+const PLAN_VERDICTS = ["PLAN-REVIEW-PASS", "PLAN-REVIEW-FAIL"];
 const FINDING_CLASSES = ["product", "plan", "source", "environment", "runtime"];
 const SEVERITIES = ["info", "low", "medium", "high", "critical"];
 const MATERIAL = SEVERITIES.filter((s) => s !== "info");
@@ -801,14 +803,15 @@ test("each P3 entrypoint routes to its references and stays one-hop", () => {
   }
 });
 
-test("plan-stage receipt records parent lineage and the three verdicts verbatim", () => {
+test("plan-stage receipt records parent lineage and the two verdicts verbatim", () => {
   assert.match(planOutput, /## Pre-execution review receipt v1 — plan/);
   assert.match(planOutput, /Parent SPEC snapshot: <64-hex> · Parent Product receipt: <receipt-id/);
   assert.match(planOutput, /Parent note: fix unit — no Product half exists \(D6\)/);
   for (const v of PLAN_VERDICTS) assert.ok(planOutput.includes(v) || planOutput.toLowerCase().includes(v.toLowerCase()), `OUTPUT must render ${v}`);
   assert.match(planOutput, /execute-phase|review-plan/);
-  assert.match(reviewPlan, /PLAN-REVIEW-PASS \|\nPLAN-REVIEW-FAIL|PLAN-REVIEW-FAIL \|/);
-  assert.match(reviewPlan, /Three verdicts only/);
+  assert.match(reviewPlan, /PLAN-REVIEW-PASS \| PLAN-REVIEW-FAIL|PLAN-REVIEW-FAIL/);
+  assert.match(reviewPlan, /Two verdicts only/);
+  assert.doesNotMatch(reviewPlan, /Three verdicts only/);
 });
 
 // --- F39 (P16 fold): a refused build has a terminal form, not an adjective ------

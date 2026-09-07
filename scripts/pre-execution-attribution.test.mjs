@@ -135,6 +135,33 @@ test("the sensor's attribution answers exactly what the comparator answers", asy
   }
 });
 
+test("the timeline dimension is git-backed: the pure comparator cannot see it, the sensor fires at its slot", async () => {
+  const reviewed = await build(specInput());
+  const current = await build(specInput());
+  const receipt = { contract: PRE_EXECUTION_RECEIPT_CONTRACT_ID, snapshotDigest: reviewed.digest, policyVersion: POLICY };
+  // The pure comparator has no git access, so it cannot judge a receipt's own
+  // finish-vs-commit timeline: identical snapshots answer FRESH.
+  const structural = await comparePreExecutionReceiptToSnapshot(receipt, reviewed.snapshot, current.snapshot, POLICY);
+  assert.equal(structural.fresh, true, "the pure comparator leaves the timeline slot un-evaluated (fail-open)");
+  // The git-backed sensor evaluates the documented slot and refuses a back-dated
+  // receipt under its own reason code, at its documented place in the precedence.
+  const attributed = attributeFreshness({
+    recorded: {
+      ...recordedFrom(reviewed.snapshot, reviewed.digest),
+      startedAt: "2026-09-05T07:50:00Z",
+      finishedAt: "2026-09-05T08:00:00Z",
+    },
+    snapshot: current.snapshot,
+    observedDigest: current.digest,
+    policyVersion: POLICY,
+    sourceCommitDate: "2026-09-06T09:00:00Z",
+  });
+  assert.equal(attributed.fresh, false);
+  assert.equal(attributed.reasonCode, "impossible-timeline", JSON.stringify(attributed));
+  assert.ok(PRE_EXECUTION_FRESHNESS_CODES.includes(attributed.reasonCode),
+    "the sensor may print no code outside the published vocabulary");
+});
+
 test("a bound digest recorded with a prefix or in backticks still binds", async () => {
   const reviewed = await build(specInput());
   for (const shape of [`sha256:${reviewed.digest}`, `\`${reviewed.digest}\``, reviewed.digest]) {
