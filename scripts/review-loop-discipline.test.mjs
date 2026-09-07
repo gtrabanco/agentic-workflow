@@ -317,4 +317,18 @@ assert.match(reviewProcess, /two.*review→fold cycles/);
 assert.match(reviewProcess, /third cycle never\s+starts/);
 assert.match(reviewProcess, /REVIEW-RAN/);
 
+// ── 12. Recheck-cell consumption in the durable finding mark (issue #170, P3) ─
+
+// The durable finding mark's `recheck` cell is consumed by fold-findings
+// (materialize, never re-derive); the row shape, `VF-` exclusions, and the
+// `review-change` single-writer rule stay untouched. The consumption sentence
+// names fold-findings as the recheck cell's consumer.
+assert.match(ledgers, /fold-findings/);
+assert.match(ledgers, /recheck/);
+assert.match(ledgers, /`fold-findings` .*reads.*`recheck` cell/);
+assert.match(ledgers, /materializ/);
+assert.match(ledgers, /never .*re-derive|never re-derives/);
+assert.match(ledgers, /single writer of every finding mark is `review-change`/);
+assert.match(ledgers, /VF-/);
+
 console.log("PASS review-loop-discipline: the review→fold loop is bounded end to end");
