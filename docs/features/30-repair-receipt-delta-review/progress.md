@@ -144,3 +144,52 @@ was reported, then re-run green.)
 - Read-only: no reviewed plan artifact (`SPEC.md`, `PLAN.md`, `TASKS.md`,
   `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, roadmap)
   was modified; only this receipt and the findings rows below are written.
+
+## Pre-execution review receipt v1 — plan (re-review)
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: rp-30-20260907-002 · Snapshot: b6b46eb0777479eba78ec21b717eac39100d45d078c00c02e832568d37da4835 · Verdict: plan-review-pass
+- Unit: 30-repair-receipt-delta-review · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 42c0091e965f62f27bacfd4bae73dbc9f8a9610725092e2fea9a5bb39728b6d3 · Parent Product receipt: spec-review-30-1
+- Source revision: 9630b3febb3aff6abf1d55a018d3cf9593ea63cb · Artifact revision: 30-plan-2
+- Reviewer: review-plan@pi · Session: pi-web-manual · Role: reviewer · Author: plan-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-07T19:05:00Z/2026-09-07T19:37:28Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 17 rows · obligations 14 rows (verified-capable: 13)
+- Prior plan receipt (re-review only): rp-30-20260907-001 @ 92f676a52de5fbab747f83846b52170b1358b4a0e380d1ec168558d9c5fdd6f4
+```
+
+- Snapshot built with `node scripts/pre-execution-snapshot.mjs build --stage plan
+  --unit 30-repair-receipt-delta-review --parent 42c0091e… --artifact-revision
+  30-plan-2`; schema-validated by the builder.
+- Parent currency re-proven by this reviewer, not copied: the parent snapshot
+  digest `42c0091e` was rebuilt from the parent revision `9a0e6f8f` bytes in a
+  throwaway worktree and reproduced exactly, and the `spec-product-v1`
+  projection digest is identical (`17fce82b…`, 37453 bytes) at `9a0e6f8f` and at
+  this review's source revision `9630b3fe` — the Engineering-half append and the
+  repair batch rotated only whole-file bytes (standalone `verify --stage spec`
+  reports `stale-source-revision`), never Product bytes.
+- Re-review gate: this is the first repair/re-review cycle (normal correction
+  path, POLICY §4) — one changed snapshot (`92f676a5` → `b6b46eb0`, revision
+  `30-plan-1` → `30-plan-2`) with the same falsifiable question. No
+  `CONVERGENCE-ANOMALY` applies; no second cycle is being entered.
+- Falsification stance: NO-CONFIRMED-GAPS. New checks this cycle: E-D3's
+  persisted-row premise verified (`PERSIST_AND_DECIDE.md:25` — `low` rows are
+  report-only, never persisted, so the med/high severity vocabulary of the
+  docs-only override is faithful); forge state re-verified (PR #175 MERGED
+  2026-09-06; #170 OPEN; #179 CLOSED; fix-179 tip `e2daa79e`); PE-009 versions
+  re-confirmed (1.3.0/3.3.0/2.1.0); every cited `path:line` row re-verified at
+  HEAD (REVIEW_PROCESS 16–17/25/128, LEDGERS 186 + ownership block, budgets
+  keys, `check-skill-context.mjs:161` defaults spread, `package.json:46`).
+- Self-check (`verify --stage plan`) pasted beside the verdict: `current: true`,
+  `structural.fresh: true`, exit 0. Pairing note: the verify rebuild must carry
+  the same handoff id (`--artifact-revision 30-plan-2`) the receipt records —
+  the comparator's identity default (the last commit touching the bound paths,
+  `9630b3fe`) then mismatches the recorded `30-plan-2` and reports
+  `stale-artifact-revision`; the pairing, not a substitution, is what the
+  sensor answers on (POLICY §7: recorded value beside the recomputed one).
+- Read-only: no reviewed plan artifact was modified; only this receipt is
+  written (zero new findings — P30-1/P30-2 verified resolved at `30-plan-2`,
+  and the re-review produced no new findings).
