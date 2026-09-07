@@ -127,6 +127,26 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
 - **Owner**: `resolve-repository-state` (next session touching repository
   normalization).
 
+## 2026-09-07 — Manifest amendment: F1 fold edit to ACCEPTANCE.md
+
+- **What**: the fold-findings F1 repair (cycle 1, fix-now, `folded: yes`) edited
+  the frozen manifest `ACCEPTANCE.md` — AC-01 field list gained `Branch` (the
+  field list now has six fields instead of five). This changed the manifest's
+  git-blob from `1f5a9a63…` to `7fe674c2…`. The fold process had no rule for
+  manifest edits, so the fold receipt recorded the old blob as "Unchanged".
+  This decision accepts the edit as valid under the F1 fold route (the fix
+  strengthens the assertion — strictly stronger, never weaker — and the field
+  count correction is required by the same review finding).
+- **Why**: ACCEPTANCE.md's own quality floor requires a user-approved SPEC
+  amendment for manifest edits. The F1 fold finding was classified fix-now by
+  `review-change` (cycle 1), re-verified clean at cycle 2 delta, and the
+  correction is a direct consequence of the finding's root cause. The manifest
+  edit is in-scope: AC-01's field list must reflect the actual receipt fields
+  (six, not five).
+- **Authority**: review-change cycle 1 verdict (F1 fix-now → fold into P4);
+  cycle 2 delta re-verification (F1 confirmed clean, manifest edit accepted);
+  user instruction accepted the F1 route.
+
 ## 2026-09-07 — Traceability
 
 - Closes issue #170 (verified open on the forge, 2026-09-07: "Review-loop
