@@ -279,4 +279,42 @@ assert.match(foldSkill, /version: 1\.4\.0/);
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
 assert.match(foldProcess, /never edit classification or create an/);
 
+// ── 11. Delta-mode default post-fold re-review (issue #170, P2) ─────────────
+
+// 11a. Delta mode is the default when the preceding fold receipt's branch is
+// RE-REVIEW-REQUIRED (delta) (or OPTIONAL acted on with the re-review
+// decision).
+assert.match(reviewProcess, /delta mode/);
+assert.match(reviewProcess, /RE-REVIEW-REQUIRED \(delta\)/);
+assert.match(reviewProcess, /re-verify every `folded: yes` row at the `file:line` cited/i);
+assert.match(reviewProcess, /review the fold diff|fold diff only/);
+
+// 11b. The gate-green + exact ACACCEPTANCE.md blob precondition (the existing
+// step-2 structural precondition is unchanged and still mandatory).
+assert.match(reviewProcess, /gate green at the reviewed head/);
+assert.match(reviewProcess, /`ACCEPTANCE\.md` blob/);
+assert.match(reviewProcess, /exact match/);
+
+// 11c. Escalation triggers with the state-the-trigger-and-numbers requirement:
+// width (file outside cited-file union, or changed line >50 lines from every
+// cited line in its file) and size (>200 changed lines or >15 files).
+assert.match(reviewProcess, /escalat/);
+assert.match(reviewProcess, /outside the union of the batch's cited files/);
+assert.match(reviewProcess, /50 lines/);
+assert.match(reviewProcess, /200/);
+assert.match(reviewProcess, /> \*\*15\*\*|> 15/);
+assert.match(reviewProcess, /which trigger fired|state .*trigger|trigger.*numbers/);
+
+// 11d. Cycle-≥2 genuinely-new dedupe extension: a same-`file:line`+axis
+// re-report inside the delta scope is admitted only as `regression of <id>` or
+// `DISPUTED`; the two-cycle cap counts deltas from the unchanged source
+// (review-mark@1 marks + forge receipts); the third-cycle-user-only line
+// survives verbatim.
+assert.match(reviewProcess, /regression of <id>/);
+assert.match(reviewProcess, /DISPUTED/);
+assert.match(reviewProcess, /LOOP CAP REACHED/);
+assert.match(reviewProcess, /two.*review→fold cycles/);
+assert.match(reviewProcess, /third cycle never\s+starts/);
+assert.match(reviewProcess, /REVIEW-RAN/);
+
 console.log("PASS review-loop-discipline: the review→fold loop is bounded end to end");
