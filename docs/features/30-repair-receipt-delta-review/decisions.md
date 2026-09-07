@@ -147,6 +147,27 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
   cycle 2 delta re-verification (F1 confirmed clean, manifest edit accepted);
   user instruction accepted the F1 route.
 
+## 2026-09-07 — Fold-receipt branch reconciliation: F5 (triage --prioritize-now)
+
+- **What**: the F4 fold's ledger receipt (fold-findings `REVIEW-RAN` mark at
+  `review-findings.md:14`) records `branch: RE-REVIEW-OPTIONAL (docs-only, F4
+  high frozen → RE-REVIEW-REQUIRED (delta))`. Its batch folded F4 (frozen
+  severity `high`, `folded: yes`), so the pinned frozen-severity-`high`
+  override (`skills/fold-findings/SKILL.md:193-195`) mandates the effective
+  branch `RE-REVIEW-REQUIRED (delta)` — which the mark's own parenthetical
+  states. This decision reconciles the record: the mark's primary branch
+  value is superseded; consumers of the F4 fold read the effective branch as
+  `RE-REVIEW-REQUIRED (delta)`. The receipt itself stays immutable (no
+  rewrite); future folds must apply the override before printing the branch.
+- **Why**: a machine-consumed branch value must not contradict the pinned
+  decision input the same record cites. Review-change cycle 3 verified the
+  contradiction (F5, workflow, major); the two-cycle review→fold cap is
+  consumed, so the residue routes through `triage-issue --prioritize-now`
+  (user-instructed 2026-09-07), and the correction is recorded here instead
+  of editing the immutable receipt.
+- **Authority**: review-change cycle 3 verdict (F5 fix-now, workflow, med);
+  explicit user instruction to triage the findings (2026-09-07).
+
 ## 2026-09-07 — Traceability
 
 - Closes issue #170 (verified open on the forge, 2026-09-07: "Review-loop
