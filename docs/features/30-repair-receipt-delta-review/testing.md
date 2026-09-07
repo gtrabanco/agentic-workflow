@@ -5,6 +5,7 @@
 | Layer | Required evidence | Command or check |
 |---|---|---|
 | Receipt contract (fold surface) | fixed REPAIR-RECEIPT block, field list, empty/failed-gate/frozen branches pinned verbatim in the skill texts | `node --test scripts/review-loop-discipline.test.mjs` (new receipt pin sections) |
+| Branch selection (repair P30-2) | the docs-only file-set test (E-D3), the frozen-severity-`high` override, and the SKIPPED-requires-prior-consumer-decision rule (E-D2) are pinned, not just the branch literals — the suite must fail if `fold-findings` omits IS-3's materiality condition | `node --test scripts/review-loop-discipline.test.mjs` (branch-selection decision-input pin sections) |
 | Classification vocabulary | batch-class field uses only `review-implementation`'s closed class set | `grep -c "replan-in-unit" skills/review-implementation/references/CLASSIFY.md` ≥ 1 before/after + discipline suite |
 | Delta review surface | delta default, escalation triggers + observed numbers, genuinely-new dedupe, cap counts deltas | same discipline suite (delta/escalation/cap sections) + `node --test scripts/bounded-delivery-loops.test.mjs` |
 | Durable mark contract | recheck-cell consumption note pinned; `finding-mark@1` shape, `VF-` exclusions, single writer unchanged | discipline suite + `node --test scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs` (fixture-backed annotator behavior, not prose assertions) |
@@ -28,6 +29,15 @@ phase's pins:
   and nothing folded. Pinned in P1 (failed-gate branch pins).
 - **fold:freeze-batch** — the queue contains a `replan-in-unit` row: no flips,
   no commits, REPLAN-ROUTE with retained ids. Pinned in P1.
+- **fold:docs-only-batch** (repair P30-2) — an all-repair-in-place batch whose
+  fold diff touches only documentation files selects `RE-REVIEW-OPTIONAL` via
+  the docs-only file-set test (E-D3); the boundary variant — one folded row
+  frozen severity `high` inside a docs-only diff — overrides to
+  `RE-REVIEW-REQUIRED (delta)`. Pinned in P1 (branch-selection pins).
+- **fold:skipped-without-decision** (repair P30-2) — a fold turn with no
+  recorded prior consumer decision never prints `RE-REVIEW-SKIPPED`: the
+  closing block shows `RE-REVIEW-OPTIONAL` with the literal re-review default
+  (E-D2). Pinned in P1 (branch-selection pins).
 - **review:delta-default** — a REQUIRED (delta) receipt precedes the review:
   `review-change` re-verifies folded rows at cited locations and reviews the
   fold diff only. Pinned in P2.

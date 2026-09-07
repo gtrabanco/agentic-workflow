@@ -536,7 +536,9 @@ boxes all tick. Awaiting independent review by `review-spec`.
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
 half above is marked `designed`. Artifact revision of this plan set:
-`30-plan-1` (2026-09-07).
+`30-plan-2` (2026-09-07; rotated from `30-plan-1` by the repair batch for
+review receipt `rp-30-20260907-001`, findings P30-1 + P30-2 — Product half
+untouched, projection digest unchanged).
 
 ### Technical goals
 
@@ -712,7 +714,9 @@ see planning-evidence.md (PE-001…PE-017, frozen 2026-09-07 at HEAD
 
 ### Obligations
 
-see planning-obligations.md (O1…O12; every row `planned`, none deferred).
+see planning-obligations.md (O1…O14; every row `planned`, none deferred;
+repair P30-1 split the two-phase rows — AC-08 across O8 (P1) + O13 (P3),
+IS-10 across O12 (P2) + O14 (P4)).
 
 ### Decisions to confirm
 
@@ -763,6 +767,8 @@ seeded fixtures — no unit mocking, no new test framework (PE-005, PE-007).
 | `review:escalation-width` | a changed file outside the cited union (or a changed line >50 from cited lines) escalates to a full pass (limit/threshold hit) | fold batch whose diff widens beyond the cited set; P2 escalation pins |
 | `review:escalation-size` | fold diff >200 lines or >15 files escalates with trigger + numbers (mass-change state) | fold batch over many files; P2 escalation pins |
 | `review:same-location-re-report` | same `file:line`+axis candidate → `regression of <id>` or `DISPUTED`, never a plain row (duplicate-action state) | re-report an already-folded location during delta mode; P2 dedupe pins |
+| `fold:docs-only-batch` (repair P30-2) | an all-repair-in-place docs-only batch selects `RE-REVIEW-OPTIONAL` via the docs-only file-set test; a frozen-severity-`high` row overrides to REQUIRED (delta) (classification boundary) | seed an all-repair-in-place batch whose fold diff touches only doc files / one `high` row inside it; P1 branch-selection pins |
+| `fold:skipped-without-decision` (repair P30-2) | no recorded prior consumer decision → the closing block never prints `RE-REVIEW-SKIPPED`; OPTIONAL + the literal re-review default (invalid state for SKIPPED) | run `/fold-findings` with no recorded consumer decision; P1 branch-selection pins |
 | n/a: permission denied / wrong role | no runtime permission surface exists | the capability role matrix (SPEC) denies reclassification/review-authority; covered by the no-reclassification pins |
 | n/a: concurrent fold turns | the workflow is single-writer per turn | the ownership map (`fold-findings:folded-flag`) + `REOPENED` annotations cover provenance; no new concurrency model |
 | n/a: dependency outage | forge/network loss is an existing precondition | `REVIEW BLOCKED` workspace check + BLOCKED verdicts; the receipt records observed gate exit codes |
@@ -774,7 +780,7 @@ Detailed tasks: `TASKS.md`. Phase order matches the dependency-free cut
 
 #### P1 — Pin the REPAIR-RECEIPT contract in fold-findings
 
-Layer: docs. Done-when: `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (new receipt/classification/freeze/branch/empty/failed-gate/reproducer pins green; all existing pins pass).
+Layer: docs. Done-when: `node --test scripts/review-loop-discipline.test.mjs` → exit 0 (new receipt/classification/freeze/branch/branch-selection/empty/failed-gate/reproducer pins green; all existing pins pass).
 
 #### P2 — Make delta mode the default post-fold re-review
 
