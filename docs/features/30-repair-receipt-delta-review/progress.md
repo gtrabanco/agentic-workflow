@@ -111,3 +111,36 @@ Self-check (`verify --stage spec`):
 (exit 0 — first run printed `stale-policy` because the Policy field named the
 policy file instead of its version; fixed in-place to `v1` before any verdict
 was reported, then re-run green.)
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: rp-30-20260907-001 · Snapshot: 92f676a52de5fbab747f83846b52170b1358b4a0e380d1ec168558d9c5fdd6f4 · Verdict: plan-review-fail
+- Unit: 30-repair-receipt-delta-review · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 42c0091e965f62f27bacfd4bae73dbc9f8a9610725092e2fea9a5bb39728b6d3 · Parent Product receipt: spec-review-30-1
+- Source revision: c8594481560fbf36cd78e026b5dab66071d87056 · Artifact revision: 30-plan-1
+- Reviewer: review-plan@pi · Session: pi-web-manual · Role: reviewer · Author: plan-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-07T18:03:52Z/2026-09-07T18:26:49Z · Findings: 4 (material open: 2)
+- Ledgers read: planning-evidence 17 rows · obligations 12 rows (verified-capable: 12)
+- Prior plan receipt (re-review only): none — first cycle
+```
+
+- Snapshot built with `node scripts/pre-execution-snapshot.mjs build --stage plan
+  --unit 30-repair-receipt-delta-review --parent 42c0091e… --artifact-revision
+  30-plan-1`; schema-validated by the builder (refusal would print no digest).
+- Parent currency proven on bytes, not assumed: the `spec-product-v1` projection
+  digest is identical at the reviewed revision `9a0e6f8f` and at this review's
+  source revision `c8594481` (`17fce82b…`), and the recorded parent digest
+  `42c0091e` reproduces exactly from the current bytes at the recorded revision —
+  the plan's Engineering-half append rotated the whole-file contentRevision
+  (standalone `verify --stage spec` reports `stale-source-revision`), but the
+  Product projection and all bound contexts are unchanged, so L1 holds.
+- Falsification stance: CONFIRMED-GAPS (P30-1, P30-2). PE-001/002/004/005/006/009/011/012/015/016/017
+  re-verified against current source and the live forge (PR #175 MERGED
+  2026-09-06; issue #170 OPEN; fix-179 branch depends on 30, issue #179 CLOSED).
+- Read-only: no reviewed plan artifact (`SPEC.md`, `PLAN.md`, `TASKS.md`,
+  `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, roadmap)
+  was modified; only this receipt and the findings rows below are written.
