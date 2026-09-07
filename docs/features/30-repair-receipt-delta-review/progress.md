@@ -193,3 +193,13 @@ was reported, then re-run green.)
 - Read-only: no reviewed plan artifact was modified; only this receipt is
   written (zero new findings — P30-1/P30-2 verified resolved at `30-plan-2`,
   and the re-review produced no new findings).
+
+## Acceptance receipt v1
+- Manifest: docs/features/30-repair-receipt-delta-review/ACCEPTANCE.md · Blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · Status: frozen · Verified: 2026-09-07
+
+## P1 — 2026-09-07
+- Done: Pinned the REPAIR-RECEIPT contract in `fold-findings`: red-first pins in `scripts/review-loop-discipline.test.mjs` (sections 10a-10k); `SKILL.md` gained the fixed receipt block + empty/failed-gate branches + impact-rule batch classification + freeze-batch rule + four-branch closing block with branch-selection decision inputs (E-D3 docs-only test, frozen-severity-`high` override, E-D2 SKIPPED-requires-prior-consumer-decision); `FOLD_PROCESS.md` gained batch classification + empty/failed-gate branches + freeze edge; `FOLD_POLICY.md` gained the materialize-reproducer rule (recheck-cell consume, never re-derive, BLOCKED <missing input>); bumped `fold-findings` 1.3.0 → 1.4.0 in both changelogs.
+- Remains: P2 — delta mode default; P3 — recheck-cell consumption note; P4 — qualification.
+- Gotchas: several pin regexes needed single-line-safe matching because the prose wraps across lines in the skill files (`green or red`, `every fold-diff`, `batch class \`none\``, `no-decision → re-review default`, `one FOLDED <same-sha> line` and `never edit classification` live in FOLD_PROCESS.md not SKILL.md). Red-first written first, then made green by the skill edits — never edited to pass.
+- Files: scripts/review-loop-discipline.test.mjs; skills/fold-findings/SKILL.md; skills/fold-findings/references/FOLD_PROCESS.md; skills/fold-findings/references/FOLD_POLICY.md; CHANGELOG.md; CHANGELOG.es.md; docs/features/30-repair-receipt-delta-review/{TASKS.md,progress.md,testing.md}
+- Next: P2 — Make delta mode the default post-fold re-review

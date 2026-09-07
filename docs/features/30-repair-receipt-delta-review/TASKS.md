@@ -13,14 +13,14 @@ classification, freeze, branch, branch-selection decision-input,
 empty/failed-gate, and reproducer pins green and every existing pin still
 passing.
 
-- [ ] Write red-first pins in `scripts/review-loop-discipline.test.mjs` asserting the fixed REPAIR-RECEIPT block, its field list, its empty-batch / failed-gate / frozen-batch branches, and the branch-selection decision inputs (docs-only file-set test E-D3, frozen-severity-`high` override, SKIPPED-requires-prior-consumer-decision rule E-D2) verbatim in `skills/fold-findings/SKILL.md` + `references/FOLD_PROCESS.md`.
-- [ ] Add the fixed REPAIR-RECEIPT block (fields: repaired ids + `finding-mark@1` refs, refuted/open, gate exit codes at head, batch class, fold-diff shortstat) to `fold-findings`' report contract and turn-contract box, printed after the tally as the ABSOLUTE-last output.
-- [ ] Add the impact-rule batch classification (`all-repair-in-place` vs `frozen (replan present)`, from the frozen class set only) and the freeze-batch rule (a replan-class member folds nothing: no flips, no commits; route + retained ids) to `FOLD_PROCESS.md`.
-- [ ] Add the four-branch closing block (`RE-REVIEW-REQUIRED (delta)` / `RE-REVIEW-OPTIONAL` / `RE-REVIEW-SKIPPED` / `REPLAN-ROUTE`) with the literal no-decision→re-review default and the branch-selection rules (docs-only file-set test E-D3, frozen-severity-`high` override, SKIPPED-requires-prior-consumer-decision rule E-D2) to `SKILL.md`'s closing-block spec.
-- [ ] Add the empty-batch (nothing taken → receipt with `none` class) and failed-gate (gate red → receipt with observed exit codes, nothing folded) branches to the report contract.
-- [ ] Add the materialize-reproducer rule to `FOLD_POLICY.md` (consume the `finding-mark@1` `recheck` cell; never re-derive; unmaterializable → `BLOCKED` with the missing input named).
-- [ ] Bump `fold-findings` 1.3.0 → 1.4.0 via the `bump-skill` contract (both changelog siblings get rows) and keep the skill inside its context budget.
-- [ ] Run the discipline suite green and confirm pins 1–4 plus the bounded-loop fold pins (`one FOLDED <same-sha> line per member`, `never edit classification or create an issue`) still pass unchanged.
+- [x] Write red-first pins in `scripts/review-loop-discipline.test.mjs` asserting the fixed REPAIR-RECEIPT block, its field list, its empty-batch / failed-gate / frozen-batch branches, and the branch-selection decision inputs (docs-only file-set test E-D3, frozen-severity-`high` override, SKIPPED-requires-prior-consumer-decision rule E-D2) verbatim in `skills/fold-findings/SKILL.md` + `references/FOLD_PROCESS.md`.
+- [x] Add the fixed REPAIR-RECEIPT block (fields: repaired ids + `finding-mark@1` refs, refuted/open, gate exit codes at head, batch class, fold-diff shortstat) to `fold-findings`' report contract and turn-contract box, printed after the tally as the ABSOLUTE-last output.
+- [x] Add the impact-rule batch classification (`all-repair-in-place` vs `frozen (replan present)`, from the frozen class set only) and the freeze-batch rule (a replan-class member folds nothing: no flips, no commits; route + retained ids) to `FOLD_PROCESS.md`.
+- [x] Add the four-branch closing block (`RE-REVIEW-REQUIRED (delta)` / `RE-REVIEW-OPTIONAL` / `RE-REVIEW-SKIPPED` / `REPLAN-ROUTE`) with the literal no-decision→re-review default and the branch-selection rules (docs-only file-set test E-D3, frozen-severity-`high` override, SKIPPED-requires-prior-consumer-decision rule E-D2) to `SKILL.md`'s closing-block spec.
+- [x] Add the empty-batch (nothing taken → receipt with `none` class) and failed-gate (gate red → receipt with observed exit codes, nothing folded) branches to the report contract.
+- [x] Add the materialize-reproducer rule to `FOLD_POLICY.md` (consume the `finding-mark@1` `recheck` cell; never re-derive; unmaterializable → `BLOCKED` with the missing input named).
+- [x] Bump `fold-findings` 1.3.0 → 1.4.0 via the `bump-skill` contract (both changelog siblings get rows) and keep the skill inside its context budget.
+- [x] Run the discipline suite green and confirm pins 1–4 plus the bounded-loop fold pins (`one FOLDED <same-sha> line per member`, `never edit classification or create an issue`) still pass unchanged.
 
 ## P2 — Make delta mode the default post-fold re-review
 
