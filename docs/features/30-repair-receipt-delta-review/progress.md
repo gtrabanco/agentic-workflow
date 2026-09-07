@@ -241,5 +241,5 @@ was reported, then re-run green.)
 - Manifest: docs/features/30-repair-receipt-delta-review/ACCEPTANCE.md · Blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · Status: frozen · Verified: 2026-09-07 (terminal HEAD, unchanged — AC-01…AC-11 all met)
 
 ## Unit-loop receipt — P4 (final)
-- Commit: pending · Gate: full regression + schema + Pi suite (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · Roadmap: 30 → done · [#<pr>](<url>)
+- Commit: e77c6f60 · Gate: full regression + schema + Pi suite (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · PR: [#188](https://github.com/gtrabanco/agentic-workflow/pull/188) · Roadmap: 30 → done · [#188](https://github.com/gtrabanco/agentic-workflow/pull/188)
 - Next: unit finished
