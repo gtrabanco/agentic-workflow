@@ -49,7 +49,8 @@ Two rules meet without a bridge:
    git-backed sensor reproduces it from the receipt's own recorded revision
    (`scripts/pre-execution-snapshot.mjs:430-434`), where `sourceRevision`
    derives from the newest commit touching *any* bound path
-   (`scripts/pre-execution-snapshot.mjs:117-131`).
+   (`scripts/pre-execution-snapshot.mjs:182`, used at `:258`; RS3(b)
+   docstring `:168-171`).
 2. **fix-162 (PR #178) made gates receipt-arbitrated** ("gates read receipts;
    roadmap rows are labels" — `POLICY.md` §5 final bullet) and gave `audit-pr` a
    lineage gate that blocks on stale lineage
@@ -119,7 +120,7 @@ accepted an open known issue rather than pay the re-review).
 7. **Audit gate** — `audit-pr`'s lineage gate answers `declared-delta` as a
    named non-blocking warning (MERGE-READY reachable); the BLOCKED enumeration
    ("Stale, missing, wrong-stage or impossible-timeline") is unchanged.
-8. **Tests + release** — red-first sensor suite (six-case matrix + red-first at
+8. **Tests + release** — red-first sensor suite (seven-case matrix + red-first at
    pre-fix bytes), parity-table divergence case, discipline/ownership pins,
    skill version bumps, pi bundle re-sync, budgets re-basis.
 
@@ -145,11 +146,11 @@ accepted an open known issue rather than pay the re-review).
 | id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|---|
 | PE-001 | Reproduction: the verify command answers `current:false` / `stale-source-revision` / changedPaths `[SPEC.md]` / exit 4 at HEAD, for a delta that is 0 non-checkbox lines | repository | run at HEAD `a22130ba` on `docs/fix/162-verdict-receipt-roadmap-desync` + `git diff ed6f8179…worktree -- SPEC.md` | a22130ba | O1, O2 | current | proven | executed during drafting; command + JSON recorded in Detected in |
-| PE-002 | Root cause (a): receipts bind whole-file digests by design (mutate-and-revert protection); precedence 6 fires on any bound-byte change | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:1085-1144` (precedence list, `stale-source-revision` branch) + `scripts/pre-execution-snapshot.mjs:117-131` (`contentRevision` over newest touching commit), `:430-434` | a22130ba | O1, O2 | current | proven | — |
+| PE-002 | Root cause (a): receipts bind whole-file digests by design (mutate-and-revert protection); precedence 6 fires on any bound-byte change | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:1085-1144` (precedence list, `stale-source-revision` branch) + `scripts/pre-execution-snapshot.mjs:168-171` (RS3(b) docstring), `:182` (`contentRevision` definition), `:258` (used over the newest commit touching any bound path), `:430-434` | 25a0764c | O1, O2 | current | proven | — |
 | PE-003 | Root cause (b): gates are receipt-arbitrated and `audit-pr`'s lineage gate blocks stale lineage | document | `skills/pre-execution-review/references/POLICY.md` §5 final bullet; `skills/audit-pr/references/02_CLOSURE_AND_SCOPE_GATES.md:85-98` | a22130ba | O4 | current | proven | — |
 | PE-004 | F12 is the live instance: route cell demanded plan re-review and excluded `/fold-findings`; user chose DISPUTED (option B), `folded: no` | ledger | `docs/fix/162-verdict-receipt-roadmap-desync/review-findings.md:75` (F12 + VF-12 rows); commit `079b1b72` | a22130ba | O5 | current | proven | — |
-| PE-005 | The sensor may only speak the published vocabulary: it refuses invented codes | repository | `scripts/pre-execution-snapshot.mjs:247-253` (guard on `PRE_EXECUTION_FRESHNESS_CODES`) | a22130ba | O3 | current | proven | — |
-| PE-006 | A new code requires the schema package to publish it and the README EN+ES to mirror it in the same PR (the docs test derives the table from the schema) | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:159-171`; `test/pre-execution-docs.test.mjs:106-113`; `README.md:306,384-390`; `README.es.md` mirror | a22130ba | O3 | current | proven | — |
+| PE-005 | The sensor may only speak the published vocabulary: it refuses invented codes | repository | `scripts/pre-execution-snapshot.mjs:377` (guard on `PRE_EXECUTION_FRESHNESS_CODES`; import `:71`, publish `:471`) | 25a0764c | O3 | current | proven | — |
+| PE-006 | A new code requires the schema package to publish it and the README EN+ES to mirror it in the same PR (the docs test derives the table from the schema) | repository | `packages/agentic-workflow-schema/src/pre-execution.ts:159-171`; `test/pre-execution-docs.test.mjs:161-164` (the AC8 derivation test); `README.md:306,384-390`; `README.es.md` mirror | 25a0764c | O3 | current | proven | — |
 | PE-007 | Git-backed sensor refinements of pure-comparator answers have a documented precedent: `impossible-timeline` (fix-162) added the code at its slot with a parity-test divergence case | repository | `scripts/pre-execution-attribution.test.mjs` (timeline parity case); fix-162 SPEC P1/P2 tasks | a22130ba | O1, O6 | current | proven | — |
 | PE-008 | Regression scope: consumers other than `audit-pr` key on `current`/`reasonCode` and fail closed — `execute-phase`'s gate (missing/stale/wrong-stage) and `workflow-status` 6a's label table | repository | `skills/execute-phase/references/PRE_EXECUTION_GATE.md`; `skills/workflow-status/references/PRE_EXECUTION.md` (6a labels) | a22130ba | O12 | current | proven | — |
 | PE-009 | Rollback path: the class is additive — reverting the sensor classification + the audit-pr treatment restores today's fail-closed void; receipts/ledgers untouched | derived | additive design (new enum member + new code path guarded by declared evidence); issue §Rollback strategy | a22130ba | Rollback | current | proven | — |
@@ -167,7 +168,7 @@ accepted an open known issue rather than pay the re-review).
 | O3 | AC5 | The sensor's reason vocabulary change is published by the schema package and mirrored in README EN+ES in the same PR | P1 | schema code + docs | execute-phase | `cd packages/agentic-workflow-schema && bun run test` → fail 0 (docs test derives READMEs); grep both READMEs for `declared-delta` | suite output + grep counts | planned |
 | O4 | AC6 | `audit-pr`'s lineage gate treats `declared-delta` as a declared, non-blocking warning; MERGE-READY reachable; the BLOCKED enumeration is unchanged | P4 | audit gate + skill box | execute-phase | grep `02_CLOSURE_AND_SCOPE_GATES.md` + `SKILL.md` (non-blocking, BLOCKED set intact); `node --test scripts/audit-pr-receipt.test.mjs` → fail 0 | grep counts + suite output | planned |
 | O5 | AC3 | A verify-axis finding with defect = process-expected staleness + docs-claim inaccuracy classifies `fix-now`/`fold-findings`; only a cited content delta routes to plan re-review — pinned in the discipline test | P4 | CLASSIFY rule + pins | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` → fail 0 with the new pins | suite output | planned |
-| O6 | AC4 | No weakening: mutate-and-revert protection, verdict exclusivity, the two-cycle cap, and the third-cycle user escape are unchanged — pins updated, never weakened | P2+P3+P4 | all text + tests | execute-phase | `node --test scripts/review-loop-discipline.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/ledger-ownership.test.mjs scripts/bounded-delivery-loops.test.mjs` → fail 0 | suite output | planned |
+| O6 | AC4 | No weakening: mutate-and-revert protection, verdict exclusivity, the two-cycle cap, and the third-cycle user escape are unchanged — pins updated, never weakened | P6 | full verification gate re-run (Hardening & PR) | execute-phase | `node --test scripts/review-loop-discipline.test.mjs scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/ledger-ownership.test.mjs scripts/bounded-delivery-loops.test.mjs` → fail 0 | suite output | planned |
 | O7 | Policy §9 | The executor declares ledger-state amendments at amendment time — the same commit carries the tick flips and the declaration row | P3 | execute-phase mandate | execute-phase | grep `EXECUTION_CONTRACT.md` mandate; sensor test proves undeclared ticks fail closed | grep count + suite output | planned |
 | O8 | Policy §9 | The fold route records retro declaration rows when folding a verify-axis staleness finding (record of fact, never reclassification) | P3 | fold-findings fold step | execute-phase | grep `FOLD_PROCESS.md`; suite green | grep count | planned |
 | O9 | LEDGERS map | The ownership map carries the two amendment writers; projections and validators stay consistent | P3 | LEDGERS + map pins | execute-phase | `node --test scripts/ledger-ownership.test.mjs scripts/bounded-delivery-loops.test.mjs` → fail 0 | suite output | planned |
@@ -184,7 +185,10 @@ accepted an open known issue rather than pay the re-review).
   (+ README EN/ES, version, changelogs); `scripts/pre-execution-snapshot.mjs`
   (+ `scripts/pre-execution-sensor.test.mjs`, `scripts/pre-execution-attribution.test.mjs`,
   quality/ownership/discipline/audit pins); `skills/pre-execution-review/references/POLICY.md`
-  + `LEDGERS.md`; `skills/execute-phase/references/EXECUTION_CONTRACT.md`;
+  + `LEDGERS.md` (+ the two template projections `docs/features/_TEMPLATE/LEDGERS.md`
+  and `docs/fix/_TEMPLATE/LEDGERS.md` — their `progress` ownership rows, which
+  the ledger-ownership suite requires to agree with the map);
+  `skills/execute-phase/references/EXECUTION_CONTRACT.md`;
   `skills/fold-findings/references/FOLD_PROCESS.md`;
   `skills/review-implementation/references/CLASSIFY.md`;
   `skills/audit-pr/SKILL.md` + `references/02_CLOSURE_AND_SCOPE_GATES.md`;
@@ -200,7 +204,7 @@ accepted an open known issue rather than pay the re-review).
 ## Rules that must never be violated
 
 - **The freshness vocabulary is closed.** The sensor refuses any code outside
-  `PRE_EXECUTION_FRESHNESS_CODES` (`scripts/pre-execution-snapshot.mjs:247-253`);
+  `PRE_EXECUTION_FRESHNESS_CODES` (`scripts/pre-execution-snapshot.mjs:377`);
   `declared-delta` must be published by the schema package before the sensor
   emits it (P1 before P2).
 - **Mutate-and-revert protection is never relaxed** (schema S6): an empty-diff
@@ -355,7 +359,7 @@ Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:5:sensor-declared-delta-c
 
 - [ ] Red-first `scripts/pre-execution-sensor.test.mjs` (throwaway git
       repository, black-box over the CLI like the existing cases) with the
-      six-case matrix: (a) SPEC tick flips committed + declaration rows →
+      seven-case matrix: (a) SPEC tick flips committed + declaration rows →
       `current:false`, `structural.reasonCode:"declared-delta"`,
       `declaredDelta.amendments[]` naming commit+path, exit 4; (b) same flips
       without declaration → `stale-source-revision`; (c) flips + one content
@@ -365,7 +369,10 @@ Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:5:sensor-declared-delta-c
       `declared-delta`; (g) a forged declaration row naming a commit that never
       touched the path → `stale-source-revision`; run the suite at pre-fix
       bytes → red (O2's red-first proof; paste the red output in the phase's
-      progress entry)
+      progress entry); declaration-row fixtures are written byte-for-byte in
+      the frozen row shape this plan freezes (P3 → `LEDGERS.md`) — parser ↔
+      frozen-format agreement: a parser or a freeze drifting from the frozen
+      shape fails the suite
 - [ ] `scripts/pre-execution-snapshot.mjs`: parse the unit's
       `## Ledger-state amendments` rows from `progress.md`; add
       `classifyLedgerStateDelta(git, recordedSource, changedPaths)` — per
@@ -414,10 +421,17 @@ Phase-lint: PASS (8/8) · fingerprint `P3:docs:5:amendment-class-policy-ledgers`
       `- <ISO-8601 date> · commit <40-hex> · <bound path> · <tick-flip |
       obligation-status> · <changed-line-count> · by <execute-phase P<k> |
       fold-findings F<k>>`) and the `ledger-ownership@1` `progress` row gains
-      `execute-phase:amendment-rows + fold-findings:amendment-rows`
+      `execute-phase:amendment-rows + fold-findings:amendment-rows` — mirrored
+      identically in `docs/features/_TEMPLATE/LEDGERS.md` and
+      `docs/fix/_TEMPLATE/LEDGERS.md` (their `progress` rows), which
+      `scripts/ledger-ownership.test.mjs` requires to agree with the map in
+      both directions
 - [ ] `scripts/ledger-ownership.test.mjs` + `scripts/bounded-delivery-loops.test.mjs`:
-      red-first pins for the two new writers on the progress ledger; run →
-      green with the map change
+      red-first pins for the two new writers on the progress ledger; a
+      byte-exact pin that both templates' `progress` rows and `LEDGERS.md`'s
+      frozen declaration-row shape equal the bytes the P2 sensor-suite fixtures
+      use (parser ↔ frozen-format agreement, both directions); run → green with
+      the map change
 - [ ] `skills/execute-phase/references/EXECUTION_CONTRACT.md`: the tick rule
       gains the declaration mandate — a commit that only ticks bound-ledger
       state (SPEC/PLAN/TASKS checkboxes, obligation `status` cells) appends the
@@ -505,9 +519,11 @@ Phase-lint: PASS (8/8) · fingerprint `P5:docs:4:release-hygiene-bundle-budgets`
   mirror) — `packages/agentic-workflow-schema/test/pre-execution-lineage.test.mjs`,
   `test/pre-execution-docs.test.mjs`.
 - **Sensor (integration, black-box CLI in throwaway git repos):**
-  `scripts/pre-execution-sensor.test.mjs` — the six-case matrix (declared tick,
-  declared status-cell, undeclared, content hunk, uncommitted, context move),
-  red-first at pre-fix bytes (O2), exit-code and payload assertions.
+  `scripts/pre-execution-sensor.test.mjs` — the seven-case matrix (declared
+  tick, declared status-cell, undeclared, content hunk, uncommitted, context
+  move, forged declaration), red-first at pre-fix bytes (O2), exit-code and
+  payload assertions; declaration-row fixtures byte-for-byte the frozen row
+  shape (parser ↔ frozen-format agreement).
 - **Parity:** `scripts/pre-execution-attribution.test.mjs` — the documented
   divergence case (declared class) with dimension-by-dimension parity preserved
   elsewhere.
@@ -515,7 +531,7 @@ Phase-lint: PASS (8/8) · fingerprint `P5:docs:4:release-hygiene-bundle-budgets`
   classification rule + every existing no-weakening pin stays green.
 - **Ownership:** `scripts/ledger-ownership.test.mjs` +
   `scripts/bounded-delivery-loops.test.mjs` — the two new progress-ledger
-  writers.
+  writers + the byte-exact frozen-row-shape pin.
 - **Audit:** `scripts/audit-pr-receipt.test.mjs` — lineage blocker-set pin
   updated if it enumerates the set.
 - **Repo gate:** schema + pi suites, all scripts suites, discovery CLI, budgets
