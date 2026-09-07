@@ -104,21 +104,33 @@ for (const claim of CLAIMS) {
 // Names, numbers and codes: the reference must equal the compiled surface
 // ---------------------------------------------------------------------------
 
-const PRE_EXECUTION_EXPORTS = Object.keys(schema).filter(
-  (name) => /^PRE_EXECUTION_/.test(name)
-    || /^(validate|build|select|canonicalize|digest|compare)PreExecution/.test(name)
+test("AC8: every runtime export of the family is named in both references", () => {
+  // Fail-closed: derive the guarded set from name patterns (not an allowlist
+  // that can silently pass exports outside the patterns — the guard was
+  // previously a hard-coded name list that let CANONICAL_VECTORS and
+  // FINDING_SEVERITIES escape, proven by the F4 miss on this unit).
+  const allExports = Object.keys(schema);
+  const preExec = allExports.filter((name) =>
+    // Pattern-captured family: 100% of PRE_EXECUTION_* and all PreExecution-
+    // verb variants — new exports matching these patterns are automatically
+    // checked with zero allowlist maintenance.
+    /^PRE_EXECUTION_/.test(name)
+    || /PreExecution/.test(name)
+    // Known family members that don't follow the patterns — these are the
+    // only 2 that must stay in the allowlist. Every future export that lands
+    // in the README's pre-execution section but doesn't match either pattern
+    // must be added here; the test floor catches shrinkage.
+    || name === "CANONICAL_VECTORS"
+    || name === "FINDING_SEVERITIES"
     || name === "selectSpecProduct"
     || name === "isImpossibleReceiptTimeline"
     || name === "VERDICTS_BY_STAGE",
-);
+  );
 
-test("AC8: every runtime export of the family is named in both references", () => {
-  assert.ok(PRE_EXECUTION_EXPORTS.length >= 26,
-    `only ${PRE_EXECUTION_EXPORTS.length} exports found — the surface shrank`);
+  assert.ok(preExec.length >= 26,
+    `only ${preExec.length} pre-execution exports found — the surface shrank`);
   for (const [file, section] of Object.entries(SECTIONS)) {
-    for (const name of PRE_EXECUTION_EXPORTS) {
-      // Constants and functions must appear; type-only names are exercised through
-      // the example, which imports them by name.
+    for (const name of preExec) {
       if (!(name in schema)) continue;
       assert.ok(section.includes(name), `${file} never names ${name}`);
     }
