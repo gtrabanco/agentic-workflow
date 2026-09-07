@@ -251,3 +251,12 @@ was reported, then re-run green.)
 - Acceptance blob: b069ffd25ab3ff37586a8022daa7215166d67382 · Re-frozen 2026-09-07: fold-findings F1 edit AC-01 + amendment note recorded
 - Commit: 596a9f25 · Pushed
 - Branch: RE-REVIEW-OPTIONAL → `/review-change` (default, delta mode)
+
+## Triage receipt — F5 (+ 2 report-only notes)
+- Triaged: 2026-09-07 · Route: `triage-issue --prioritize-now 30-repair-receipt-delta-review F5` (user-instructed) · Mode: review-finding
+- F5 (workflow, med, fix-now): F4 fold receipt's Branch field `RE-REVIEW-OPTIONAL` contradicts the pinned frozen-severity-`high` override (`SKILL.md:193-195`, mandates `RE-REVIEW-REQUIRED (delta)` — the batch folded F4, frozen `high`, `folded: yes`). Fix materialized: dated reconciliation decision in `decisions.md` ("Fold-receipt branch reconciliation: F5") — receipt left immutable, effective branch for consumers = `RE-REVIEW-REQUIRED (delta)`. Row stays `folded: no`; `/fold-findings` verifies + flips (single-writer rule).
+- Report-only note (citation precision, low): ledger F2 row cites `REVIEW_AND_CLASSIFY.md:95-99`, a file the F2 fold (`596a9f25`) never modified — the narrative pre-dated the fold via `e77c6f60`; the actual fix location is `skills/fold-findings/SKILL.md:180-198`. Correction recorded here + in the F5 decision; historical rows not edited (provenance preserved; original citation visible in git history at `bc5aca61^`).
+- Report-only note (provenance, low): the F4 fold rewrote its route cell (long route → concise paraphrase) instead of only flipping `folded`; the original route text remains authoritative in git history (`373e4955^`). Correction recorded here; historical row not edited.
+- Report-only note (EOF newline, low): resolved at `038d9f8f` — the F5 append added the file's trailing newline as a side effect (last byte `0a`; the glued-row defect it transiently caused was repaired in the same commit).
+- Gate: `node --test scripts/review-loop-discipline.test.mjs` → exit 0 · `node --test scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs` → exit 0 · `node scripts/check-skill-context.mjs` → exit 0
+- Commit: 71bed21 · Pushed
