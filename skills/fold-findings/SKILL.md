@@ -95,7 +95,7 @@ Omit `· Replan: r` when `r = 0` (preserves the existing three-field format).
 Then print the REPAIR-RECEIPT as the ABSOLUTE-last output, together with the
 branching `→ Next:` block below. The receipt is immutable once printed; a
 later fold prints a new receipt (append-only output history — no ledger row,
-no schema field). Five fields, always present:
+no schema field). Six fields, always present:
 
 ```
 ## REPAIR-RECEIPT
@@ -180,6 +180,7 @@ decision to skip.
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
 | freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | plan-fix/execute-phase on this unit after the user confirms the replan |
+| `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |
 | anything else (behavioral surface or any folded row `high`) | `RE-REVIEW-REQUIRED (delta)` | `/review-change` — delta mode mandatory default |
