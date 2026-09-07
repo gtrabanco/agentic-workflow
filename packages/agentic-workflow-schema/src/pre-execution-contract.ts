@@ -127,7 +127,11 @@ type Verdict = (typeof PRE_EXECUTION_VERDICTS)[number];
 export const VERDICTS_BY_STAGE: Readonly<Record<Stage, readonly Verdict[]>> =
   Object.freeze({
     spec: ["spec-review-pass", "spec-review-fail", "needs-design"],
-    plan: ["plan-review-pass", "plan-review-fail", "needs-design"],
+    // fix/162 Decision 11: the machine map no longer sanctions a plan-stage
+    // needs-design — ONLY review-spec may emit it. The flat PRE_EXECUTION_VERDICTS
+    // keeps the token (review-spec still emits it), and no persisted plan-stage
+    // needs-design receipt exists, so the narrowing invalidates nothing historical.
+    plan: ["plan-review-pass", "plan-review-fail"],
   });
 
 export const PRE_EXECUTION_MODEL_DIVERSITY = Object.freeze([

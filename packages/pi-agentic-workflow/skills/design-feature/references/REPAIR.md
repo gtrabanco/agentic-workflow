@@ -65,6 +65,11 @@ further edit, then routes to that owner. More cycles stay allowed when
 correctness needs them; they never earn a PASS, and an exhausted cycle budget
 does not downgrade an open finding.
 
+A repair responding to a persisted verdict is **never** a loop defect (POLICY §4
+scopes every guard to blind re-reviews): a unit whose `progress.md` carries an open
+FAIL/NEEDS-DESIGN receipt is being repaired by definition, so no "already complete"
+answer exists for it and no cycle cap converts its verdict into a dead end.
+
 The spec-stage detail this skill adds: the owning stage of a Product-half miss is
 `product` unless the evidence proves the plan asked for something the SPEC never
 said — then it is `plan`, and it leaves this skill for `plan-feature`.
