@@ -229,3 +229,17 @@ was reported, then re-run green.)
 ## Unit-loop receipt — P3
 - Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/ledger-ownership.test.mjs scripts/ledger-provenance.test.mjs (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853
 - Next: P4 · Attempts: 1
+
+## P4 — 2026-09-07
+- Done: Qualified the delta-review unit (hardening): synchronized the bilingual narrative (REVIEW_AND_CLASSIFY.md + .es.md + MIGRATION.md + .es.md additive note, switcher links intact); re-measured the three bumped skills against SKILL_CONTEXT_BUDGETS.json (contexts now green — review-change REFERENCE 2746 declared feature-30, pre-execution-review 978, fold-findings in budget, referenceEstimateMax raised to 2800 for review-change; no other ceiling change needed); ran the full root regression set + schema + Pi suites all green; re-bundled the Pi mirror (now at 0.7.0) and added the 0.7.0 CHANGELOG rows both siblings; verified untouched surfaces (schema/audit-pr diff empty, E-D5); verified the frozen ACCEPTANCE.md blob (1f5a9a6380071b4481a20eed0376b21c6f742853) unchanged, all 11 criteria met (validation ladder below).
+- Remains: none — unit finished; PR opened against main with Closes #170.
+- Gotchas: the Pi mirror at HEAD was stale (P1–P3 did not re-bundle it — the pinned `npm run bundle:skills` had not been run after the skill edits); the early `git status` in P4 looked clean only because it ran from inside packages/pi-agentic-workflow where the top-level bundle diff is invisible. Re-bundling in P4 produced the expected 7-file mirror diff (the 3 bumped skills), so `packages/pi-agentic-workflow` legitimately appears in the PR diff contrary to a naive reading of AC-10 — E-D5 already resolves this (the mirror re-bundle is expected; only agentic-workflow-schema + skills/audit-pr are guarded). The pre-execution verify reports `stale-source-revision` only because P1–P3 commits touched TASKS.md/progress.md (execution surfaces); SPEC.md, PLAN.md, ACCEPTANCE.md, decisions.md, and all bound plan-content artifacts are byte-identical to the reviewed revision, so the plan-review-pass receipt rp-30-20260907-002 remains valid.
+- Files: docs/workflow/{REVIEW_AND_CLASSIFY.md,.es.md,MIGRATION.md,.es.md,SKILL_CONTEXT_BUDGETS.json}; packages/pi-agentic-workflow/{package.json, CHANGELOG via root, skills/…}; CHANGELOG.md; CHANGELOG.es.md; docs/features/30-repair-receipt-delta-review/{TASKS.md,progress.md,testing.md,known-issues.md}; scripts/…
+- Next: unit finished
+
+## Acceptance receipt v1 — P4 re-verify
+- Manifest: docs/features/30-repair-receipt-delta-review/ACCEPTANCE.md · Blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · Status: frozen · Verified: 2026-09-07 (terminal HEAD, unchanged — AC-01…AC-11 all met)
+
+## Unit-loop receipt — P4 (final)
+- Commit: pending · Gate: full regression + schema + Pi suite (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · Roadmap: 30 → done · [#<pr>](<url>)
+- Next: unit finished
