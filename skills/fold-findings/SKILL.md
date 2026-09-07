@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.3.0
+version: 1.4.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -92,6 +92,37 @@ Folded: n/m · Disputed: k · Blocked: j · Replan: r
 
 Omit `· Replan: r` when `r = 0` (preserves the existing three-field format).
 
+Then print the REPAIR-RECEIPT as the ABSOLUTE-last output, together with the
+branching `→ Next:` block below. The receipt is immutable once printed; a
+later fold prints a new receipt (append-only output history — no ledger row,
+no schema field). Five fields, always present:
+
+```
+## REPAIR-RECEIPT
+- Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
+- Refuted/open: <F-ids joined ` + `, or `none`>
+- Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
+- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+```
+
+- The `Gate` line carries the actual exit codes observed at the head the gate
+  ran on — green or red. A **failed gate never silences the receipt**: the
+  batch is reported with the observed exit codes and nothing folded (a red gate
+  is not a silent gap).
+- The `Fold diff` shortstat comes from a real `git diff` run over the batch's
+  commits.
+- The `Batch class` derives from the taken queue's frozen rows only — the fold
+  never reclassifies (`all-repair-in-place`, `frozen (replan present)`, or
+  `none` for an empty queue); the vocabulary comes from
+  `review-implementation`'s closed class set.
+
+**Freeze-batch (replan present).** When the taken queue contains any row whose
+frozen class is `replan-in-unit` or `decision-required`, nothing folds: no
+`folded: yes` flips, no commits. The receipt records the `REPLAN-ROUTE` branch
+and every retained (unfolded) row id, and the loop stops to route to planning.
+
 ## Guardrails
 
 Scope is the ledger (or explicit ID subset); unlisted discoveries are proposals
@@ -139,3 +170,29 @@ or touched outside the queue.
 
 Replace placeholders with every actual affected finding ID before printing; never
 print `<F2>`, `…`, or a single representative ID in a live hand-off.
+
+## Closing-block decision branch (choose one, at emission)
+
+The closing block picks exactly one of four outcomes. The **no-decision →
+re-review default** holds whenever the turn carries no recorded prior consumer
+decision to skip.
+
+| Batch state | Branch | `→ Next:` (consumer) |
+|---|---|---|
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | plan-fix/execute-phase on this unit after the user confirms the replan |
+| `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
+| empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |
+| anything else (behavioral surface or any folded row `high`) | `RE-REVIEW-REQUIRED (delta)` | `/review-change` — delta mode mandatory default |
+
+**Branch-selection decision inputs.**
+
+- **Docs-only test (E-D3).** ``RE-REVIEW-OPTIONAL`` requires every fold-diff
+  file to be a Markdown/documentation file; otherwise the batch is behavioral
+  (→ `RE-REVIEW-REQUIRED (delta)`).
+- **Frozen-severity-`high` override.** A folded row whose frozen severity is
+  `high` forces `RE-REVIEW-REQUIRED (delta)` even on a docs-only diff. Frozen
+  fields are never edited to reach a branch.
+- **SKIPPED requires prior consumer decision (E-D2).** `RE-REVIEW-SKIPPED`
+  is printed only by a turn carrying an explicit prior consumer decision to
+  skip. A turn with no recorded prior consumer decision prints
+  `RE-REVIEW-OPTIONAL` + the re-review default, **never** `RE-REVIEW-SKIPPED`.
