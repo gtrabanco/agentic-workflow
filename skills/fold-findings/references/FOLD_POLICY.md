@@ -48,3 +48,16 @@ Never edit an existing test's expectation to match behaviour: a setup repair may
 only keep assertions at least as strong and never touch expectations; the
 test-immutability contract (`verification-contract`) owns the sole amendment
 path.
+
+## Reproducer handoff (materialize, never re-derive)
+
+Before repairing a **behavioral** finding, read the row's `finding-mark@1`
+`recheck` cell (method + reproducer, written by `review-change` at verification
+time) and materialize it as the regression check — the method as written (red
+test first, reproducible command output, or direct read). The fold runner
+**never invents or re-derives** the reproducer; it consumes the cell as the
+allowed materialization.
+
+- A `recheck` cell that cannot be materialized as a runnable check yields
+  `BLOCKED <missing input>` and names the missing input.
+- Never substitute a weaker re-derived check for the recorded reproducer.
