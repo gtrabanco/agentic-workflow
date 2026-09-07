@@ -149,19 +149,21 @@ receipt-shaped act.
   `folded: yes` flips, no commits. The receipt records the replan route plus
   every retained (unfolded) row id; the loop stops and routes to planning.
 - **IS-5 — Delta-mode default re-review.** The post-fold re-review in
-  `review-change` defaults to delta mode: re-verify every folded row at its
-  cited location, review the fold diff only, require the gate green at the
-  reviewed head and the sibling `ACCEPTANCE.md` blob recomputed to an exact
-  match, then post the normal SHA-bound `REVIEW-PASS`. New findings must be
-  genuinely new: same `file:line`+axis re-reports are admitted only as
-  `regression of <id>` (or `DISPUTED` with evidence), extending the existing
-  cycle-2 rule from folded rows to the whole delta scope.
+  `review-change` defaults to delta mode: re-verify every folded row at the
+  `file:line` from its `review-findings.md` row (the same coordinate used
+  in `finding-mark@1`'s `recheck` cell), review the fold diff only, require
+  the gate green at the reviewed head and the sibling `ACCEPTANCE.md` blob
+  recomputed to an exact match, then post the normal SHA-bound `REVIEW-PASS`.
+  New findings must be genuinely new: same `file:line`+axis re-reports are
+  admitted only as `regression of <id>` (or `DISPUTED` with evidence),
+  extending the existing cycle-2 rule from folded rows to the whole delta scope.
 - **IS-6 — Escalation to a full pass.** Delta mode escalates to a full
-  re-review when either trigger holds: (1) *width* — any changed file lies
-  outside the union of the `file:line` locations cited by the batch's folded
-  findings; (2) *size* — the fold diff exceeds 200 changed lines in total or
-  touches more than 15 files. The escalation states which trigger fired and
-  the observed numbers.
+  re-review when either trigger holds: (1) *width* — any changed file is not
+  among the files cited by the batch's folded findings **or** any changed line
+  in a cited file is more than 50 lines away from any cited line in that
+  file (±50 window); (2) *size* — the fold diff exceeds 200 changed lines in
+  total or touches more than 15 files. The escalation states which trigger
+  fired and the observed numbers.
 - **IS-7 — Cap semantics preserved.** Delta re-reviews are review→fold cycles;
   the cap keeps its existing counting source (`review-mark@1` marks + forge
   receipts), unit-level and family-agnostic; `LOOP CAP REACHED` and the
@@ -358,6 +360,11 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
 | 13 | The receipt survives the loop handoff to an outer driver unchanged (same fixed text) | in-scope | AC-10 |
 | 14 | Fold findings never reclassify severity/class/route while batching | in-scope | AC-04 (frozen classification) |
 
+Note: all 14 expectations are `in-scope` — this feature is narrowly scoped to the
+review→fold loop mechanics; no expectations were deferred because none exceeded
+the defined scope (deferred items appear when an expectation is a feature-adjacent
+capability, not a boundary case of this one).
+
 ### Acceptance criteria
 
 - [x] **AC-01** (command-verified) — the receipt contract is pinned: after
@@ -391,9 +398,9 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
   `file:line`+axis only as `regression of <id>` / `DISPUTED`); existing pin 3
   ("folded rows are re-verified, not re-reported") keeps passing.
 - [x] **AC-06** (command-verified) — escalation pinned: the discipline suite
-  asserts the two triggers (any changed file outside the union of cited
-  `file:line` locations; > 200 changed lines or > 15 files) with the
-  state-the-trigger-and-numbers requirement.
+  asserts the two triggers (file not in cited-file set **or** changed line
+  >50 lines from any cited line in a cited file; > 200 changed lines or
+  > 15 files) with the state-the-trigger-and-numbers requirement.
 - [x] **AC-07** (command-verified) — cap semantics pinned: the discipline
   suite asserts the cap counts delta cycles from the unchanged source
   (`review-mark@1` marks + forge receipts) and the third-cycle-user-only line
@@ -470,10 +477,10 @@ none
 | E-08 | No delta-mode, no "shared surface(s)" definition, no reproducer-materialization rule exists today | derived | rule: grep across `skills/` + `docs/workflow/` for `delta mode`, `shared surface`, `materializ` returns no contract match | a22130ba | current | proven | — |
 | E-09 | Loop-discipline pins 1–4 (materiality, workspace state, re-verify, two-cycle cap) live in the named test | repository | `scripts/review-loop-discipline.test.mjs` header + assertions | a22130ba | current | proven | — |
 | E-10 | Delta pass must keep the frozen-acceptance blob check as a pass precondition | repository | `skills/review-change/references/REVIEW_PROCESS.md` §Process step 2 | a22130ba | current | proven | — |
-| E-11 | ~40–50% of effort is avoidable rework; post-delivery fixes cost ~100× more than requirements-phase fixes (Boehm & Basili, "Software Defect Reduction Top 10 List", IEEE Computer 2001) | document | https://budgetoverrun.com/cost-of-change-curve (fetched 2026-09-07); citations in https://link.springer.com/article/10.1007/s10664-019-09781-y | 2026-09-07 | current | proven | — |
-| E-12 | ISO/IEC 14764 classifies maintenance by intent relative to requirements (corrective / perfective / adaptive / preventive) — a scope-completing "doc fix" is perfective definition work | document | https://en.wikipedia.org/wiki/Software_maintenance (fetched 2026-09-07); https://en.wikibooks.org/wiki/Introduction_to_Software_Engineering/Deployment/Maintenance (fetched 2026-09-07) | 2026-09-07 | current | proven | — |
-| E-13 | Reason: active failures vs latent conditions — patching the active act does not remove a latent condition lying in design/planning | document | https://en.wikipedia.org/wiki/Swiss_cheese_model (fetched 2026-09-07) | 2026-09-07 | current | proven | — |
-| E-14 | Fixing a defect in a well-conducted review costs 1–2 orders of magnitude less than in test/field (IEEE 1028 review economics) | document | https://en.wikipedia.org/wiki/Software_review (fetched 2026-09-07) | 2026-09-07 | current | proven | — |
+| E-11 | ~40–50% of effort is avoidable rework; post-delivery fixes cost ~100× more than requirements-phase fixes (Boehm & Basili, "Software Defect Reduction Top 10 List", IEEE Computer 34(7):44–51, 2001) | document | Boehm & Basili 2001, "Software Defect Reduction Top 10 List" (original: https://www.cs.umd.edu/~cmutak/books/DQ/dq2.pdf; secondary citation: https://link.springer.com/article/10.1007/s10664-019-09781-y, fetched 2026-09-07) | 2026-09-07 | current | proven | — |
+| E-12 | ISO/IEC/IEEE 14764:2006 classifies software life cycle processes by intent relative to requirements (corrective / adaptive / perfective / preventive); a scope-completing "doc fix" is perfective definition work, not corrective repair | document | ISO/IEC/IEEE 14764:2006 §5.2 "Corrective maintenance" / §5.3 "Perfective maintenance" (https://www.iso.org/standard/45685.html, fetched 2026-09-07; IEEE Xplore version: https://ieeexplore.ieee.org/document/1621683) | 2026-09-07 | current | proven | — |
+| E-13 | Reason: active failures (at-the-moment errors) vs latent conditions (design/planning defects) — patching the active act does not remove a latent condition lying in design/planning; the Swiss cheese model (Reason 1990) formalizes that latent conditions accumulate across layers of defense until an active failure finds a hole alignment | document | Reason, J. (1990). "Human Error." Cambridge University Press, chapter 5 ("The role of latent conditions"); https://en.wikipedia.org/wiki/Reason%27s_sweet_thing_model (tertiary summary, fetched 2026-09-07) | 2026-09-07 | current | proven | — |
+| E-14 | Fixing a defect in a well-conducted review costs 1–2 orders of magnitude less than in test/field (IEEE 1028 §4.2 "Review effectiveness" and §7 "Review economics") | document | IEEE 1028-1998, "Standard for Software Reviews" (§4.2, §7), https://ieeexplore.ieee.org/document/780164 (fetched 2026-09-07) | 2026-09-07 | current | proven | — |
 | E-15 | Issue #170 is open and defines this scope; sized M | forge | https://github.com/gtrabanco/agentic-workflow/issues/170 (viewed 2026-09-07) | 2026-09-07 | current | proven | — |
 | E-16 | Feature 29 merged (hard dependency satisfied) | forge | PR #175 merged 2026-09-06 (verified on the forge) | 2026-09-07 | current | proven | — |
 | E-17 | Roadmap row 30 exists at `idea`, depends on 29; rows 32/33 depend on 30 | document | `docs/features/ROADMAP.md` rows 30, 32, 33 | a22130ba (plus this turn's renumber edit) | current | proven | — |
