@@ -88,6 +88,24 @@ the review (D3):
 
 Then it prints the next step (clean → `/audit-pr`).
 
+## The review→fold loop is decision-driven and delta-scoped
+
+A fold turn ends in a **REPAIR-RECEIPT** (repaired ids + `finding-mark@1` refs,
+refuted/open, gate exit codes at head, batch class, fold-diff shortstat) whose
+branch a consumer can act on mechanically — `RE-REVIEW-REQUIRED (delta)` for
+behavioral/high batches, `RE-REVIEW-OPTIONAL`/`RE-REVIEW-SKIPPED` for docs-only
+batches (orchestrator/human decides; no decision defaults to re-review), and
+`REPLAN-ROUTE` for a freeze-batch. The post-fold re-review then defaults to
+**delta mode**: `review-change` re-verifies every folded row at its cited
+`file:line`, reviews the fold diff only, requires the gate green at the
+reviewed head + the exact `ACCEPTANCE.md` blob, and admits a candidate only
+when genuinely new (same-`file:line`+axis re-reports come back only as
+`regression of <id>`/`DISPUTED`). A large or shared-surface diff escalates to a
+full pass (width or size trigger, with the observed numbers). Delta cycles
+count toward the same two-cycle cap; `audit-pr` stays the merge gate. See
+`fold-findings`, `review-change`, and `pre-execution-review` for the full
+contract.
+
 ## Adversarial multi-reviewer (opt-in)
 
 `review-change --adversarial N` runs **N independent, context-clean, diff-only

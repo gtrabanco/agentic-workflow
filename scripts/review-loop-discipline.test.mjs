@@ -194,4 +194,141 @@ assert.match(foldPolicy, /at least as strong/);
 assert.match(foldPolicy, /never touch expectations/);
 assert.match(folding, /edit an existing test's expectation/i);
 
+// ── 10. REPAIR-RECEIPT contract (issue #170 / major, P1) ───────────────────
+
+const foldSkill = read("skills/fold-findings/SKILL.md");
+const foldProcess = read("skills/fold-findings/references/FOLD_PROCESS.md");
+
+// 10a. The fixed REPAIR-RECEIPT block is printed as the ABSOLUTE-last output —
+// its header and every one of its five fields (repaired ids + finding-mark@1
+// refs, refuted/open, gate exit codes at head, batch class, fold-diff shortstat)
+// appear verbatim in the skill's report contract.
+assert.match(foldSkill, /## REPAIR-RECEIPT/);
+assert.match(foldSkill, /- Repaired: <F-ids with \(VF-<n>\) refs, joined ` \+ `, or `none`>/);
+assert.match(foldSkill, /- Refuted\/open: <F-ids joined ` \+ `, or `none`>/);
+assert.match(foldSkill, /- Gate: <command> .*exit <n> at head <40-hex sha>/);
+assert.match(foldSkill, /- Batch class: <all-repair-in-place \| frozen \(replan present\) \| none>/);
+assert.match(foldSkill, /- Fold diff: <shortstat from a real `git diff` run>/);
+assert.match(foldSkill, /- Branch: <RE-REVIEW-REQUIRED \(delta\) \| RE-REVIEW-OPTIONAL \| RE-REVIEW-SKIPPED \| REPLAN-ROUTE>/);
+
+// 10b. The receipt is immutable once printed and emitted after the tally as
+// the ABSOLUTE-last output together with the branching block.
+assert.match(foldSkill, /immutable once printed/);
+assert.match(foldSkill, /ABSOLUTE[- ]last output/);
+
+// 10c. Empty-batch and failed-gate branches — a nothing-folded turn prints the
+// receipt with `none` class / observed gate exit codes, never a silent gap.
+assert.match(foldProcess, /empty queue|nothing folded|no targets taken/);
+assert.match(foldProcess, /batch class `none`/);
+assert.match(foldSkill, /green or red/);
+assert.match(foldSkill, /failed gate never silences the receipt/);
+
+// 10d. Impact-rule batch classification — the class derives from the frozen
+// rows only, referencing only the closed CLASSIFY set, never reclassifying.
+assert.match(foldProcess, /batch class/);
+assert.match(foldSkill, /all-repair-in-place/);
+assert.match(foldSkill, /frozen \(replan present\)/);
+assert.match(foldSkill, /reclassif/);
+
+// 10e. Freeze-batch: a replan-class member folds nothing (no flips, no
+// commits), and the receipt records the REPLAN-ROUTE with retained ids.
+assert.match(foldSkill, /replan-in-unit/);
+assert.match(foldSkill, /decision-required/);
+assert.match(foldProcess, /no `folded: yes` flips/);
+assert.match(foldProcess, /REPLAN-ROUTE/);
+assert.match(foldProcess, /retained/);
+
+// 10f. Four-branch closing block + the literal no-decision→re-review default.
+assert.match(foldSkill, /RE-REVIEW-REQUIRED \(delta\)/);
+assert.match(foldSkill, /RE-REVIEW-OPTIONAL/);
+assert.match(foldSkill, /RE-REVIEW-SKIPPED/);
+assert.match(foldSkill, /no-decision/);
+assert.match(foldSkill, /re-review default/);
+
+// 10g. Branch-selection decision inputs (repair P30-2): the docs-only file-set
+// test (E-D3), the frozen-severity-`high` override, and the SKIPPED-requires-
+// prior-consumer-decision rule (E-D2).
+assert.match(foldSkill, /every fold-diff/);
+assert.match(foldSkill, /Markdown\/documentation file/);
+assert.match(foldSkill, /frozen severity/);
+assert.match(foldSkill, /`high`/);
+assert.match(foldSkill, /RE-REVIEW-REQUIRED \(delta\)/);
+assert.match(foldSkill, /prior consumer decision/);
+assert.match(foldSkill, /RE-REVIEW-OPTIONAL/);
+assert.match(foldSkill, /never.*RE-REVIEW-SKIPPED/);
+
+// 10h. The receipt contract is pinned verbatim in FOLD_PROCESS.md too (the
+// classification + freeze edge is stated there, not only in the SKILL).
+assert.match(foldProcess, /REPAIR-RECEIPT/);
+assert.match(foldProcess, /all-repair-in-place/);
+assert.match(foldProcess, /none/);
+
+// 10i. Reproducer handoff — FOLD_POLICY consumes the finding-mark@1 `recheck`
+// cell, never re-derives, and yields BLOCKED with the missing input when not
+// materializable.
+assert.match(foldPolicy, /recheck/);
+assert.match(foldPolicy, /never .*re-derive|never invents/);
+assert.match(foldPolicy, /BLOCKED/);
+assert.match(foldPolicy, /missing input/);
+assert.match(foldPolicy, /materializ/);
+
+// 10j. Version — fold-findings is bumped to 1.4.0 for this contract.
+assert.match(foldSkill, /version: 1\.4\.0/);
+
+// 10k. The existing bounded-loop fold pins survive verbatim.
+assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
+assert.match(foldProcess, /never edit classification or create an/);
+
+// ── 11. Delta-mode default post-fold re-review (issue #170, P2) ─────────────
+
+// 11a. Delta mode is the default when the preceding fold receipt's branch is
+// RE-REVIEW-REQUIRED (delta) (or OPTIONAL acted on with the re-review
+// decision).
+assert.match(reviewProcess, /delta mode/);
+assert.match(reviewProcess, /RE-REVIEW-REQUIRED \(delta\)/);
+assert.match(reviewProcess, /re-verify every `folded: yes` row at the `file:line` cited/i);
+assert.match(reviewProcess, /review the fold diff|fold diff only/);
+
+// 11b. The gate-green + exact ACACCEPTANCE.md blob precondition (the existing
+// step-2 structural precondition is unchanged and still mandatory).
+assert.match(reviewProcess, /gate green at the reviewed head/);
+assert.match(reviewProcess, /`ACCEPTANCE\.md` blob/);
+assert.match(reviewProcess, /exact match/);
+
+// 11c. Escalation triggers with the state-the-trigger-and-numbers requirement:
+// width (file outside cited-file union, or changed line >50 lines from every
+// cited line in its file) and size (>200 changed lines or >15 files).
+assert.match(reviewProcess, /escalat/);
+assert.match(reviewProcess, /outside the union of the batch's cited files/);
+assert.match(reviewProcess, /50 lines/);
+assert.match(reviewProcess, /200/);
+assert.match(reviewProcess, /> \*\*15\*\*|> 15/);
+assert.match(reviewProcess, /which trigger fired|state .*trigger|trigger.*numbers/);
+
+// 11d. Cycle-≥2 genuinely-new dedupe extension: a same-`file:line`+axis
+// re-report inside the delta scope is admitted only as `regression of <id>` or
+// `DISPUTED`; the two-cycle cap counts deltas from the unchanged source
+// (review-mark@1 marks + forge receipts); the third-cycle-user-only line
+// survives verbatim.
+assert.match(reviewProcess, /regression of <id>/);
+assert.match(reviewProcess, /DISPUTED/);
+assert.match(reviewProcess, /LOOP CAP REACHED/);
+assert.match(reviewProcess, /two.*review→fold cycles/);
+assert.match(reviewProcess, /third cycle never\s+starts/);
+assert.match(reviewProcess, /REVIEW-RAN/);
+
+// ── 12. Recheck-cell consumption in the durable finding mark (issue #170, P3) ─
+
+// The durable finding mark's `recheck` cell is consumed by fold-findings
+// (materialize, never re-derive); the row shape, `VF-` exclusions, and the
+// `review-change` single-writer rule stay untouched. The consumption sentence
+// names fold-findings as the recheck cell's consumer.
+assert.match(ledgers, /fold-findings/);
+assert.match(ledgers, /recheck/);
+assert.match(ledgers, /`fold-findings` .*reads.*`recheck` cell/);
+assert.match(ledgers, /materializ/);
+assert.match(ledgers, /never .*re-derive|never re-derives/);
+assert.match(ledgers, /single writer of every finding mark is `review-change`/);
+assert.match(ledgers, /VF-/);
+
 console.log("PASS review-loop-discipline: the review→fold loop is bounded end to end");

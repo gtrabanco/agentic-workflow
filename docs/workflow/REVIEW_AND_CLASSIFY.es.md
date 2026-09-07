@@ -98,6 +98,26 @@ y la revisión no crea backlog (D3):
 
 Luego imprime el siguiente paso (limpio → `/audit-pr`).
 
+## El bucle review→fold es dirigido por decisión y de alcance delta
+
+Un turno de fold termina en un **REPAIR-RECEIPT** (ids reparados + refs
+`finding-mark@1`, refutados/abiertos, códigos de salida del gate en el head,
+clase de lote, shortstat del diff de fold) cuya rama un consumidor puede
+accionar mecánicamente — `RE-REVIEW-REQUIRED (delta)` para lotes
+conductuales/high, `RE-REVIEW-OPTIONAL`/`RE-REVIEW-SKIPPED` para lotes
+solo-docs (orquestador/humano decide; sin decisión el valor por defecto es
+re-revisar), y `REPLAN-ROUTE` para un freeze-batch. La re-revisión posterior al
+fold pasa por defecto a **modo delta**: `review-change` re-verifica cada fila
+plegada en su `file:line` citado, revisa solo el diff de fold, exige el gate
+verde en el head revisado + el blob `ACCEPTANCE.md` exacto, y admite un
+candidato solo si es genuinamente nuevo (los re-reportes del mismo
+`file:line`+eje vuelven solo como `regression of <id>`/`DISPUTED`). Un diff
+grande o de superficie compartida escala a una pasada completa (trigger de
+ancho o tamaño, con los números observados). Los ciclos delta cuentan para el
+mismo tope de dos ciclos; `audit-pr` sigue siendo la puerta de merge. Ver
+`fold-findings`, `review-change` y `pre-execution-review` para el contrato
+completo.
+
 ## Multi-revisor adversarial (opt-in)
 
 `review-change --adversarial N` ejecuta **N revisores independientes, de

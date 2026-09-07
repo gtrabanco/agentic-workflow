@@ -26,7 +26,10 @@
       "referenceEstimateMax": 3557
     },
     "review-change": {
-      "referenceEstimateMax": 2501
+      "referenceEstimateMax": 2800,
+      "referenceSources": {
+        "feature 30 / issue #170": "delta-mode + escalation growth in REVIEW_PROCESS.md (measured 2746)"
+      }
     },
     "review-plan": {
       "referenceEstimateMax": 2350
