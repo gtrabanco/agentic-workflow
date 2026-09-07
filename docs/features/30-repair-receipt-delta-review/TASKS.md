@@ -53,12 +53,12 @@ Layer: hardening · Done-when: every frozen validator in `ACCEPTANCE.md`
 passes, the Pi bundle parity is green, and the PR is open with `Closes #170`
 (read-verified PR URL printed in the chat).
 
-- [ ] Synchronize the workflow narrative: `docs/workflow/REVIEW_AND_CLASSIFY.md` and its `.es.md` sibling gain the delta-mode + REPAIR-RECEIPT narrative in one commit (reciprocal switcher links intact), and `docs/workflow/MIGRATION.md` gains the additive version-bump note.
-- [ ] Re-measure the three bumped skills against `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (update the manifest where growth is declared) and run `node scripts/check-skill-context.mjs` green.
-- [ ] Run the full root regression set: `node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/normative-drift.test.mjs` -> exit 0.
-- [ ] Verify untouched surfaces: `cd packages/agentic-workflow-schema && npm test` -> exit 0 and `git diff --name-only main...HEAD -- packages/agentic-workflow-schema skills/audit-pr` -> empty (AC-10, scope per decisions.md E-D5).
-- [ ] Re-bundle the Pi mirror only through `cd packages/pi-agentic-workflow && npm run bundle:skills`, bump the package's distribution metadata as required, and pass its suite/parity tests.
-- [ ] Close `progress.md`, `testing.md`, and `known-issues.md` truthfully and verify the frozen `ACCEPTANCE.md` manifest at the terminal HEAD (blob recomputed and recorded in the receipt).
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] Synchronize the workflow narrative: `docs/workflow/REVIEW_AND_CLASSIFY.md` and its `.es.md` sibling gain the delta-mode + REPAIR-RECEIPT narrative in one commit (reciprocal switcher links intact), and `docs/workflow/MIGRATION.md` gains the additive version-bump note.
+- [x] Re-measure the three bumped skills against `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (update the manifest where growth is declared) and run `node scripts/check-skill-context.mjs` green.
+- [x] Run the full root regression set: `node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/normative-drift.test.mjs` -> exit 0.
+- [x] Verify untouched surfaces: `cd packages/agentic-workflow-schema && npm test` -> exit 0 and `git diff --name-only main...HEAD -- packages/agentic-workflow-schema skills/audit-pr` -> empty (AC-10, scope per decisions.md E-D5).
+- [x] Re-bundle the Pi mirror only through `cd packages/pi-agentic-workflow && npm run bundle:skills`, bump the package's distribution metadata as required, and pass its suite/parity tests.
+- [x] Close `progress.md`, `testing.md`, and `known-issues.md` truthfully and verify the frozen `ACCEPTANCE.md` manifest at the terminal HEAD (blob recomputed and recorded in the receipt).
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] commit `docs: link PR #<n>` and push

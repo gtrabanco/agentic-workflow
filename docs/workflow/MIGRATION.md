@@ -2,6 +2,20 @@
 
 > 🇪🇸 [Versión en español](MIGRATION.es.md)
 
+## 2026-09-07 — the review→fold loop is decision-driven and delta-scoped (additive)
+
+**Additive minor bumps, no migration required.** `fold-findings` 1.4.0,
+`review-change` 3.4.0, and `pre-execution-review` 2.2.0 add the
+**REPAIR-RECEIPT** and **delta-mode** contract (issue #170, feature 30): a fold
+turn now emits a fixed receipt whose branch a consumer can act on
+(`RE-REVIEW-REQUIRED (delta)` / `RE-REVIEW-OPTIONAL` / `RE-REVIEW-SKIPPED` /
+`REPLAN-ROUTE`), the post-fold re-review defaults to delta scope (re-verify
+folded rows at cited locations, review the fold diff only, gate green + exact
+`ACCEPTANCE.md` blob, genuinely-new-only dedupe), and the `recheck` cell's
+reproducer is materialized, never re-derived. No existing contract is broken
+and no persisted state changes — the previous single-owner and two-cycle-cap
+rules survive verbatim. Existing receipts and loops are unaffected.
+
 ## 2026-09-05 — receipts no longer bind the shared roadmap (`pre-execution-review` 2.0.0)
 
 **Changed snapshot contract; `pre-execution-review` 2.0.0, `review-spec` 1.6.0, pi package 0.5.0.**
