@@ -42,6 +42,22 @@ verdict, and file one finding row per refused artifact carrying its code verbati
 checks bind to a snapshot, so with no snapshot none of them ran. `SNAPSHOT.md` owns why
 a refusal prints no digest and what a consumer then reads this receipt as.
 
+**Self-check (`verify --stage spec …`, POLICY §8).** In the same act as appending the
+receipt, run the recipe owner's re-verify for this stage and paste the sensor's JSON
+answer beside the verdict block before reporting:
+
+```bash
+node scripts/pre-execution-snapshot.mjs verify --stage spec --unit <NN-slug> --dir docs/features/<NN>-<slug> --unit-kind <feature|fix>
+```
+
+A digest-bound receipt requires `structural.fresh: true` (and, for a PASS verdict,
+`current: true`); `exit 3` (`missing-receipt-snapshot`) or a digest-bound
+`structural.fresh: false` means the mark did not land — fix the write and re-run, the
+verdict is not emit-able in this turn. A `Snapshot: refused` receipt's
+`missing-receipt-snapshot` answer is its sanctioned form. A verdict block printed
+without the pasted self-check output is a contract defect — chat-only is
+`missing-receipt-snapshot` to every consumer.
+
 ### Verdict blocks — return exactly one
 
 ```text
@@ -110,7 +126,10 @@ is ever lost between cycles.
 ✓ Snapshot digest computed from one revision and pasted; no mixed-revision bytes
 ✓ All 14 Product checks resolved to pass / finding / n/a with a reason
 ✓ One verdict block returned verbatim from the closed set
-✓ Receipt appended to the unit's progress.md before the report was printed
+✓ RUN `verify --stage spec` for this stage in-turn, JSON pasted beside the block;
+  `structural.fresh: true` (+ `current: true` on PASS) — `exit 3`/`structural.fresh: false` means
+  the mark did not land, fix and re-run, verdict not emit-able; `exit 4`/`current: false` means
+  a verdict persisted but not a PASS — the verdict itself is the emit result, route per verdict
 ✓ `git status --porcelain` shows no change to any reviewed artifact
 ✓ Closing `→ Next:` printed as the absolute last output
 ```

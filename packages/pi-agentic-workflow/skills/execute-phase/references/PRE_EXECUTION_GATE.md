@@ -21,7 +21,7 @@ Actual:   <receipt state — what was read, and `structural.changedPaths` +
           `structural.reasonCode` from the verify run naming which bound file moved>
 
 → Next: /review-plan <NN>-<slug> — the plan needs a current independent review
-  · the review returned NEEDS-DESIGN / a Product-rooted finding → /design-feature <NN>-<slug>
+  · the review returned a Product-rooted finding → /design-feature <NN>-<slug>
   · a bound artifact is genuinely wrong → /plan-feature <NN>-<slug> (re-cut), then re-review
   · no bypass flag exists for this gate: --force has never covered it and does not now
 

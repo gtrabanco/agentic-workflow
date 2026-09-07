@@ -242,8 +242,7 @@
           "verdict": {
             "enum": [
               "plan-review-pass",
-              "plan-review-fail",
-              "needs-design"
+              "plan-review-fail"
             ]
           }
         }

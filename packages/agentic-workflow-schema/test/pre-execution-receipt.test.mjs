@@ -16,6 +16,7 @@ import {
   PRE_EXECUTION_RECEIPT_CONTRACT_ID,
   PRE_EXECUTION_REVIEW_ROLES,
   PRE_EXECUTION_VERDICTS,
+  VERDICTS_BY_STAGE,
   buildPreExecutionArtifactSnapshot,
   digestPreExecutionArtifactSnapshot,
   validatePreExecutionReceiptAgainstSnapshot,
@@ -46,6 +47,11 @@ test("receipt vocabularies are frozen and closed", () => {
     "spec-review-pass", "spec-review-fail",
     "plan-review-pass", "plan-review-fail", "needs-design",
   ]);
+  // fix/162 Decision 11: the machine map no longer sanctions a plan-stage
+  // needs-design — the flat enum keeps it (review-spec still emits); the durable
+  // list pin the suite lacked, red until the map drops the member.
+  assert.deepEqual([...VERDICTS_BY_STAGE.plan], ["plan-review-pass", "plan-review-fail"]);
+  assert.deepEqual([...VERDICTS_BY_STAGE.spec], ["spec-review-pass", "spec-review-fail", "needs-design"]);
   assert.deepEqual([...PRE_EXECUTION_FINDING_CLASSES], ["product", "plan", "source", "environment", "runtime"]);
   assert.deepEqual([...PRE_EXECUTION_FINDING_VERIFICATION], ["verified", "unverified"]);
   assert.deepEqual([...PRE_EXECUTION_FINDING_RESOLUTIONS], ["open", "resolved", "dismissed"]);
@@ -92,7 +98,7 @@ test("the verdict/stage matrix is closed: spec verdicts need the spec stage and 
     ["spec", "plan-review-fail", false],
     ["plan", "plan-review-pass", true],
     ["plan", "plan-review-fail", true],
-    ["plan", "needs-design", true],
+    ["plan", "needs-design", false],
     ["plan", "spec-review-pass", false],
     ["plan", "spec-review-fail", false],
   ];

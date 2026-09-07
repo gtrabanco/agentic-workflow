@@ -160,6 +160,7 @@ export const PRE_EXECUTION_FRESHNESS_CODES = Object.freeze([
   "invalid-stage",
   "invalid-unit",
   "stale-policy",
+  "impossible-timeline",
   "stale-context",
   "stale-source-revision",
   "stale-parent",
@@ -168,6 +169,49 @@ export const PRE_EXECUTION_FRESHNESS_CODES = Object.freeze([
   "missing-receipt-snapshot",
 ] as const);
 export type PreExecutionFreshnessCode = (typeof PRE_EXECUTION_FRESHNESS_CODES)[number];
+
+/**
+ * The published clock-drift tolerance for the `impossible-timeline` check.
+ * 5 minutes absorbs cross-machine clock drift while staying three orders of
+ * magnitude below the field case's ~20 h contradiction (fix/162, PE-010).
+ * Published from the schema so the git-backed sensor cannot drift from the
+ * contract it prints.
+ */
+export const PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS = 300_000;
+
+/**
+ * The `impossible-timeline` pure predicate: is the receipt's own recorded
+ * timeline physically impossible? A finish that predates its recorded source
+ * revision's commit date by more than the published skew cannot be honest —
+ * the review claiming it would have finished before the bytes it reviewed were
+ * committed. Fail-open: an input it cannot read (a missing or unparsable
+ * stamp, or an invalid skew) answers `null`, never throws, and never flags a
+ * receipt it cannot judge. Git-backed callers evaluate this at the documented
+ * comparator slot; the pure comparator (which has no git access) is unchanged.
+ */
+export function isImpossibleReceiptTimeline({
+  finishedAt,
+  sourceCommitDate,
+  skewMs = PRE_EXECUTION_RECEIPT_TIMELINE_SKEW_MS,
+}: {
+  finishedAt: unknown;
+  sourceCommitDate: unknown;
+  skewMs?: unknown;
+}): boolean | null {
+  const finish = parseStamp(finishedAt);
+  const commit = parseStamp(sourceCommitDate);
+  const skew = typeof skewMs === "number" && Number.isFinite(skewMs) && skewMs >= 0 ? skewMs : null;
+  if (finish === null || commit === null || skew === null) return null;
+  return finish < commit - skew;
+}
+
+/** Parse a timestamp-like value to epoch ms, or `null` when it cannot be read. */
+function parseStamp(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string" || value.trim() === "") return null;
+  const ms = Date.parse(value.trim());
+  return Number.isNaN(ms) ? null : ms;
+}
 
 /** The Product-half headings the selector binds, in required order. */
 export const SPEC_PRODUCT_REQUIRED_HEADINGS = Object.freeze([
@@ -1044,17 +1088,21 @@ function stale(reasonCode: PreExecutionFreshnessCode): PreExecutionFreshnessResu
  *   2. `invalid-stage` / `invalid-unit` — the two snapshots are not the same review
  *      target, which no content comparison can repair;
  *   3. `stale-policy` — the review policy moved under the approval;
- *   4. `stale-context` — an authority the reviewer relied on changed;
- *   5. `stale-source-revision` — the repository revision the artifacts were read at
+ *   4. `impossible-timeline` — evaluated by git-backed callers at this slot; the
+ *      pure comparator leaves it un-evaluated (fail-open), because it has no git
+ *      access and the receipt's own recorded finish/commit timeline is only
+ *      judgeable against the recorded revision's commit date;
+ *   5. `stale-context` — an authority the reviewer relied on changed;
+ *   6. `stale-source-revision` — the repository revision the artifacts were read at
  *      changed;
- *   6. `stale-parent` — the Product snapshot a Plan approval descends from changed
+ *   7. `stale-parent` — the Product snapshot a Plan approval descends from changed
  *      (lineage, so a Product rewrite erases the descendant approval);
- *   7. `stale-artifact-content` — a bound artifact's bytes changed;
- *   8. `stale-artifact-revision` — the authoring revision rotated with identical
+ *   8. `stale-artifact-content` — a bound artifact's bytes changed;
+ *   9. `stale-artifact-revision` — the authoring revision rotated with identical
  *      bytes, which is why content is checked first: a mutate-then-revert with a
  *      rotated `artifactRevisionId` still lands here and an older PASS never
  *      resurrects (S6);
- *   9. otherwise `{ fresh: true }`.
+ *  10. otherwise `{ fresh: true }`.
  *
  * Every dimension is reported alone because a caller routes on it: a stale context
  * asks a sensor to re-read, a stale artifact asks the reviewer to re-read, and a
