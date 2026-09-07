@@ -21,6 +21,37 @@
    same location. A cycle ≥ 2 that produces any new fix-now row appends the
    `CONVERGENCE-ANOMALY` block (`pre-execution-review/references/POLICY.md` §4)
    to the report.
+
+   **Delta mode (default on a post-fold re-review).** When the preceding fold
+   receipt's branch is `RE-REVIEW-REQUIRED (delta)` — or `RE-REVIEW-OPTIONAL`
+   acted on with the re-review decision — the review runs **delta mode**:
+
+   1. Re-verify every `folded: yes` row at the `file:line` cited in its
+      `review-findings.md` row (the existing cycle-≥2 rule above);
+   2. Review the **fold diff only** (`git diff <pre-batch HEAD>..<batch HEAD>`
+      over the commits this turn's batch produced);
+   3. Require the **gate green at the reviewed head** and the sibling
+      `ACCEPTANCE.md` blob recomputed to an **exact match** — the step-2
+      structural precondition, unchanged and still mandatory;
+   4. Append the normal `review-mark@1` `REVIEW-RAN` mark — delta cycles count
+      toward the two-cycle cap from the unchanged source (marks + forge
+      receipts), never a fresh reset;
+   5. Admit a candidate only when **genuinely new**: a same-`file:line`+axis
+      re-report inside the delta scope is admitted only as
+      `regression of <id>` or `DISPUTED`, never a plain new row (extending the
+      cycle-2 rule to the whole delta scope);
+   6. A clean delta pass posts the normal SHA-bound `REVIEW-PASS`.
+
+   **Escalation to a full pass.** Either trigger escalates a delta review to a
+   full pass, and the escalation **states which trigger fired and the observed
+   numbers**:
+
+   - **Width** — any changed file outside the union of the batch's cited files
+     (the folded rows' `file:line`), or any changed line in a cited file more
+     than **50 lines** from every cited line in that file (changed-line starts
+     read from `git diff --unified=0` hunk headers);
+   - **Size** — added+deleted changed lines **> 200**, or changed files
+     **> 15** (`git diff --numstat`).
 2. **Frozen acceptance + SPEC drift check (structural).** Locate sibling
    `ACCEPTANCE.md`, recompute its blob, and require an exact match with the
    execution receipt before assessing the candidate. Missing/mismatch is a
@@ -129,8 +160,10 @@
 
 The review→fold loop runs at most **two** review→fold cycles per unit, counted
 unit-level and family-agnostic from the ledger's `REVIEW-RAN` marks and forge
-receipts — new finding families do not reset the count. After two cycles without
-convergence, the review prints
+receipts — new finding families do not reset the count. **Delta cycles count
+from the same unchanged source** (the `review-mark@1` marks + forge receipts), so
+a delta-scoped re-review does not escape or reset the two-cycle bound. After two
+cycles without convergence, the review prints
 
 ```text
 LOOP CAP REACHED — <unit>
