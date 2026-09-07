@@ -71,3 +71,18 @@ phase's pins:
 - The `--check`/`--json` annotator behaviors are proven against the seeded
   fixture (`scripts/fixtures/finding-mark-ledger.md`), never asserted from
   prose alone.
+
+## P4 run-log (qualification, 2026-09-07)
+
+| Validator | Command | Result |
+|---|---|---|
+| Receipt + delta + branch pins | `node --test scripts/review-loop-discipline.test.mjs` | PASS (127/127)
+| Regression set (full) | `node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs scripts/normative-drift.test.mjs` | PASS (exit 0)
+| Context budgets | `node scripts/check-skill-context.mjs` | PASS (39 skills)
+| Normative drift / version cells | `node --test scripts/normative-drift.test.mjs` | PASS
+| Untouched surfaces | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema skills/audit-pr` | empty (PASS)
+| Schema package | `cd packages/agentic-workflow-schema && npm test` | PASS (684/684)
+| Pi distribution | `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` | PASS (140/140, 38 skills bundled)
+| Frozen acceptance | `git hash-object …/ACCEPTANCE.md` | `1f5a9a6380071b4481a20eed0376b21c6f742853` (unchanged)
+| Bilingual sync (AC-11) | read-verified at PR time | PASS (both siblings + MIGRATION note, switcher links intact)
+| Classification vocabulary | `grep -c "replan-in-unit" …/CLASSIFY.md` | 3 (≥1 before and after)

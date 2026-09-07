@@ -2,6 +2,17 @@
 
 No unresolved product or engineering decision blocks implementation.
 
+## P4 close-out (2026-09-07)
+
+All 8 known boundaries were preserved and verified green at qualification.
+The one boundary that surfaces in the PR diff is **#1 (E-D5)**: the Pi mirror
+re-bundle legitimately touches `packages/pi-agentic-workflow`, which AC-10's
+validator excludes (only `packages/agentic-workflow-schema` and
+`skills/audit-pr` are guarded, and their diff is empty). The frozen
+`ACCEPTANCE.md` blob (`1f5a9a6380071b4481a20eed0376b21c6f742853`) is intact
+and AC-01…AC-11 all pass. No product or engineering blocker surfaced during
+qualification.
+
 ## Known boundaries to preserve
 
 1. **AC-10's `packages/` clause vs the integration row (E-D5).** The SPEC's
