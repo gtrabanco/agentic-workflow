@@ -357,7 +357,7 @@ docs) and walked row by row. Offer recorded: seed `docs/CAPABILITIES.md` from
 | 10 | The unattended default on OPTIONAL/SKIPPED is to re-review, never to skip silently | in-scope | AC-03 |
 | 11 | A fold whose gate fails prints a receipt too (failed gate is evidence, not silence) | in-scope | AC-01 (failure branch) |
 | 12 | No new tooling/MCP is required to consume the receipt | out-of-scope | Out of scope: "No runtime/provider dependency" |
-| 13 | The receipt survives the loop handoff to an outer driver unchanged (same fixed text) | in-scope | AC-10 |
+| 13 | The receipt survives the loop handoff to an outer driver unchanged (same fixed text) | in-scope | AC-01 (verbatim block pins ensure the fixed text is emitted verbatim at every emission point; D30-3: no ledger row or schema field is written for it, so an outer driver reading stdout gets the exact same text on every run) |
 | 14 | Fold findings never reclassify severity/class/route while batching | in-scope | AC-04 (frozen classification) |
 
 Note: all 14 expectations are `in-scope` — this feature is narrowly scoped to the
@@ -736,6 +736,35 @@ each is an interpretation of reviewed product text, frozen for
   (flagged in known-issues.md #1).
 - **E-D6** — freeze-batch trigger set: `replan-in-unit` ∪ `decision-required`
   frozen rows in the taken batch.
+
+### Deviation from issue #170 (2026-09-07)
+
+Issue #170's body described a receipt design with vocabulary
+`behavioral-high|behavioral-med|docs-only` and three route values.
+This SPEC deviated in three ways (all user-accepted via dated decisions):
+
+- **D30-1** — batch classification uses the **impact rule** (`all-repair-in-place`
+  / `frozen (replan present)`) instead of artifact-type vocabulary
+  (`behavioral-high|behavioral-med|docs-only`). Rationale: a code fix can be
+  in-place (missing insert function) and a docs fix can be replan-class
+  (completing ill-defined scope); classification by intent is single-owner
+  via `review-implementation`'s closed set.
+- **D30-3** — the receipt is a **printed fixed output block** (greppable,
+  immutable once printed) rather than a ledger row. Rationale: durable state
+  already lives in `folded: yes` flags + `REOPENED` annotations; a second
+  copy would fork the truth class.
+- **REPLAN-ROUTE branch** — the SPEC adds a fourth closing branch
+  (`REPLAN-ROUTE`) beyond the issue's three route values. This is a logical
+  extension: a batch containing `replan-in-unit` / `decision-required` rows
+  needs a distinct route that stops the loop and returns to planning, which
+  the original three routes did not capture (freeze-batch folds nothing,
+  optional/skipped are docs-only). D30-2 documents the freeze-batch rule
+  that triggers this branch.
+
+This deviation is recorded in-spec as user-accepted decisions (D30-1/D30-3 +
+`REPLAN-ROUTE` logic in D30-2). The issue's non-goal
+("no new vocabulary beyond the receipt block and the three route values")
+was superseded by the user-accepted impact-rule design.
 
 ### Testing requirements
 
