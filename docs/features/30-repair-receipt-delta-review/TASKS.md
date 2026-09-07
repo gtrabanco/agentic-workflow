@@ -29,12 +29,12 @@ scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs`
 -> exit 0 with the delta, escalation, dedupe, and cap pins green and existing
 pin 3 unchanged.
 
-- [ ] Write red-first pins in `scripts/review-loop-discipline.test.mjs` asserting the delta-mode default, the two escalation triggers with the state-trigger-and-numbers requirement, the genuinely-new dedupe wording, and the delta-cap sentence in `skills/review-change/references/REVIEW_PROCESS.md`.
-- [ ] Extend `REVIEW_PROCESS.md` step 1 with the delta-mode default: re-verify every `folded: yes` row at its ledger `file:line`, review the fold diff only, and require gate green at the reviewed head plus the exact sibling `ACCEPTANCE.md` blob before any pass.
-- [ ] Add the escalation rule to `REVIEW_PROCESS.md`: width (changed file outside the cited-file union, or changed line more than 50 lines from every cited line in its file) or size (more than 200 changed lines or more than 15 files) escalates to a full pass, stating which trigger fired and the observed numbers.
-- [ ] Extend the cycle-≥2 dedupe paragraph: a same-`file:line`+axis re-report inside the delta scope is admitted only as `regression of <id>` or `DISPUTED`, and delta cycles are counted by the existing two-cycle cap source (`review-mark@1` marks + forge receipts) with the third-cycle-user-only line preserved verbatim.
-- [ ] Bump `review-change` 3.3.0 → 3.4.0 via the `bump-skill` contract and keep the skill inside its context budget.
-- [ ] Run the discipline + bounded-loop suites green; verify the `LOOP CAP REACHED` / `third cycle never starts` / `regression of <id>` pins and `REVIEW_PROCESS.md`'s step-2 blob precondition survive unchanged.
+- [x] Write red-first pins in `scripts/review-loop-discipline.test.mjs` asserting the delta-mode default, the two escalation triggers with the state-trigger-and-numbers requirement, the genuinely-new dedupe wording, and the delta-cap sentence in `skills/review-change/references/REVIEW_PROCESS.md`.
+- [x] Extend `REVIEW_PROCESS.md` step 1 with the delta-mode default: re-verify every `folded: yes` row at its ledger `file:line`, review the fold diff only, and require gate green at the reviewed head plus the exact sibling `ACCEPTANCE.md` blob before any pass.
+- [x] Add the escalation rule to `REVIEW_PROCESS.md`: width (changed file outside the cited-file union, or changed line more than 50 lines from every cited line in its file) or size (more than 200 changed lines or more than 15 files) escalates to a full pass, stating which trigger fired and the observed numbers.
+- [x] Extend the cycle-≥2 dedupe paragraph: a same-`file:line`+axis re-report inside the delta scope is admitted only as `regression of <id>` or `DISPUTED`, and delta cycles are counted by the existing two-cycle cap source (`review-mark@1` marks + forge receipts) with the third-cycle-user-only line preserved verbatim.
+- [x] Bump `review-change` 3.3.0 → 3.4.0 via the `bump-skill` contract and keep the skill inside its context budget (declared feature-30 growth in SKILL_CONTEXT_BUDGETS.json).
+- [x] Run the discipline + bounded-loop suites green; verify the `LOOP CAP REACHED` / `third cycle never starts` / `regression of <id>` pins and `REVIEW_PROCESS.md`'s step-2 blob precondition survive unchanged.
 
 ## P3 — Bind recheck-cell consumption in the durable mark contract
 

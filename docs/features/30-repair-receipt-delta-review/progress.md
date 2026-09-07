@@ -203,3 +203,18 @@ was reported, then re-run green.)
 - Gotchas: several pin regexes needed single-line-safe matching because the prose wraps across lines in the skill files (`green or red`, `every fold-diff`, `batch class \`none\``, `no-decision → re-review default`, `one FOLDED <same-sha> line` and `never edit classification` live in FOLD_PROCESS.md not SKILL.md). Red-first written first, then made green by the skill edits — never edited to pass.
 - Files: scripts/review-loop-discipline.test.mjs; skills/fold-findings/SKILL.md; skills/fold-findings/references/FOLD_PROCESS.md; skills/fold-findings/references/FOLD_POLICY.md; CHANGELOG.md; CHANGELOG.es.md; docs/features/30-repair-receipt-delta-review/{TASKS.md,progress.md,testing.md}
 - Next: P2 — Make delta mode the default post-fold re-review
+
+## Unit-loop receipt — P1
+- Commit: 5d512a62 · Gate: node --test scripts/review-loop-discipline.test.mjs (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853
+- Next: P2 · Attempts: 1
+
+## P2 — 2026-09-07
+- Done: Made delta mode the default post-fold re-review in `review-change`: red-first delta/escalation/dedupe/cap pins in `scripts/review-loop-discipline.test.mjs` (section 11); `REVIEW_PROCESS.md` step 1 gained the delta-mode default (re-verify folded rows at cited file:line, review the fold diff only, gate green at reviewed head + exact ACCEPTANCE blob, delta REVIEW-RAN counts toward the two-cycle cap from unchanged source, same-file:line+axis admitted only as regression of <id>/DISPUTED) and the two escalation triggers (width: file outside cited union or changed line >50 lines; size: >200 lines or >15 files) with the state-trigger-and-numbers requirement; the two-cycle cap section gained the delta-cycles-count-from-unchanged-source sentence. Bumped review-change 3.3.0 → 3.4.0 in both changelogs; declared feature-30 growth in SKILL_CONTEXT_BUDGETS.json (REVIEW_PROCESS measured 2746).
+- Remains: P3 — recheck-cell consumption note; P4 — qualification.
+- Gotchas: the context-budget check (AC-09) is a whole-unit validator that failed after the REVIEW_PROCESS growth (2746 > 2501); resolved by clearing the manifest's referenceEstimateMax to 2800 and declaring the feature-30 source — P4 re-measures all three and confirms. Existing pin 3 ("every `folded: yes` row is re-verified at its cited location") survived verbatim.
+- Files: scripts/review-loop-discipline.test.mjs; skills/review-change/references/REVIEW_PROCESS.md; skills/review-change/SKILL.md; CHANGELOG.md; CHANGELOG.es.md; docs/workflow/SKILL_CONTEXT_BUDGETS.json; docs/features/30-repair-receipt-delta-review/{TASKS.md,progress.md}
+- Next: P3 — Bind recheck-cell consumption in the durable mark contract
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853
+- Next: P3 · Attempts: 1
