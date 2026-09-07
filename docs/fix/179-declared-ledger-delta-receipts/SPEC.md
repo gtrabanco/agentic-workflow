@@ -120,7 +120,7 @@ accepted an open known issue rather than pay the re-review).
 7. **Audit gate** — `audit-pr`'s lineage gate answers `declared-delta` as a
    named non-blocking warning (MERGE-READY reachable); the BLOCKED enumeration
    ("Stale, missing, wrong-stage or impossible-timeline") is unchanged.
-8. **Tests + release** — red-first sensor suite (seven-case matrix + red-first at
+8. **Tests + release** — red-first sensor suite (eight-case matrix + red-first at
    pre-fix bytes), parity-table divergence case, discipline/ownership pins,
    skill version bumps, pi bundle re-sync, budgets re-basis.
 
@@ -158,13 +158,14 @@ accepted an open known issue rather than pay the re-review).
 | PE-011 | The declaration home is the unit's own execution ledger (`progress.md`), already parsed by the sensor for receipts; its current writers are scaffold/execute-phase/reviewers | document | `skills/pre-execution-review/references/LEDGERS.md` § durable-ledger map (`progress` row); `scripts/pre-execution-snapshot.mjs` `receipts()` | a22130ba | O7, O8, O9 | current | proven | — |
 | PE-012 | Dependencies open: #170/#171/#172 (features 30/31/32) touch the same contract files and are prerequisites per the issue | forge | issues #170, #171, #172 OPEN (fetched 2026-09-07); `docs/features/ROADMAP.md` rows 30–32; issue #179 §Depends on | a22130ba | Cross-issue | current | proven | dependency gate blocks execution until they merge |
 | PE-013 | Skill-reference growth needs the budgets gate: the shared `pre-execution-review` references exceeded for fix/162 and were re-based with a declared growth pathway | document | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (`declared` 2026-08-31/2026-09-06 entries, ceiling rule); CLAUDE.md § Verification | a22130ba | O10 | current | proven | — |
+| PE-014 | The empty-diff refusal (Rules §2) names a real failure state that no prior scenario or validator could catch: the sensor's precedence-6 `stale-source-revision` answer is diff-blind (it fires on any commit moving `contentRevision` and reports paths without inspecting diff content), the classification would read a vacuous `every()` over zero hunks as all-in-class, and no existing case exercises a commit-touched bound path with identical bytes at the CLI (RS13 rotates via the explicit `--artifact-revision` override and lands at precedence 7 with `changedPaths: []`; the quality pin covers the artifact-revision void, not this branch; the parity test's sole divergence case is `impossible-timeline`) — a no-op implementation of the refusal therefore passed every validator. The classification must require ≥ 1 in-class hunk, pinned by matrix case (h): declared tick flips + declared revert commits, total diff empty → `stale-source-revision` | repository | `scripts/pre-execution-snapshot.mjs:430-434` (precedence-6 branch, diff-blind); `scripts/pre-execution-sensor.test.mjs:308-314` (RS13); `scripts/pre-execution-quality.test.mjs:328`; `scripts/pre-execution-attribution.test.mjs:160`; PF-6 evidence cell (receipt `rp-fix179-20260907-002`) | bb524559aa166ccbdde0fe4400d84278d20359bb | O2 | current | proven | — |
 
 ### Obligations
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
 | O1 | AC1 | A pinned plan receipt whose subsequent bound deltas are exactly declared ledger-state amendments verifies as `declared-delta` (reasonCode + payload), not `stale-source-revision` | P2 | sensor classification + tests | execute-phase | `node --test scripts/pre-execution-sensor.test.mjs` → declared cases green | test case output pasted in progress.md | planned |
-| O2 | AC2 | A delta touching reviewed planning content, undeclared, uncommitted, or outside the class still answers `stale-source-revision`/`stale-artifact-content` and blocks — fail-closed preserved, proven red-first at pre-fix bytes | P2 | sensor classification + tests | execute-phase | same suite → fail-closed cases green; red-first run pasted in progress.md | red-first evidence in progress.md | planned |
+| O2 | AC2 | A delta touching reviewed planning content, undeclared, uncommitted, empty-diff (mutate-and-revert sentinel, case (h)), or outside the class still answers `stale-source-revision`/`stale-artifact-content` and blocks — fail-closed preserved, proven red-first at pre-fix bytes | P2 | sensor classification + tests | execute-phase | same suite → fail-closed cases green (incl. (h)); red-first run pasted in progress.md | red-first evidence in progress.md | planned |
 | O3 | AC5 | The sensor's reason vocabulary change is published by the schema package and mirrored in README EN+ES in the same PR | P1 | schema code + docs | execute-phase | `cd packages/agentic-workflow-schema && bun run test` → fail 0 (docs test derives READMEs); grep both READMEs for `declared-delta` | suite output + grep counts | planned |
 | O4 | AC6 | `audit-pr`'s lineage gate treats `declared-delta` as a declared, non-blocking warning; MERGE-READY reachable; the BLOCKED enumeration is unchanged | P4 | audit gate + skill box | execute-phase | grep `02_CLOSURE_AND_SCOPE_GATES.md` + `SKILL.md` (non-blocking, BLOCKED set intact); `node --test scripts/audit-pr-receipt.test.mjs` → fail 0 | grep counts + suite output | planned |
 | O5 | AC3 | A verify-axis finding with defect = process-expected staleness + docs-claim inaccuracy classifies `fix-now`/`fold-findings`; only a cited content delta routes to plan re-review — pinned in the discipline test | P4 | CLASSIFY rule + pins | execute-phase | `node --test scripts/review-loop-discipline.test.mjs` → fail 0 with the new pins | suite output | planned |
@@ -197,7 +198,7 @@ accepted an open known issue rather than pay the re-review).
   `reasonCode` value it treats as non-current (fail-closed default); only
   `audit-pr`'s lineage gate changes treatment. Fix/feature units planned before
   this fix behave exactly as today (undeclared ticks stay `stale-source-revision`).
-- **Detection lead time:** immediate — the sensor suite's seven-case matrix and
+- **Detection lead time:** immediate — the sensor suite's eight-case matrix and
   the parity test detect a wrong classification at CI time, before any unit
   relies on it.
 
@@ -359,7 +360,7 @@ Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:5:sensor-declared-delta-c
 
 - [ ] Red-first `scripts/pre-execution-sensor.test.mjs` (throwaway git
       repository, black-box over the CLI like the existing cases) with the
-      seven-case matrix: (a) SPEC tick flips committed + declaration rows →
+      eight-case matrix: (a) SPEC tick flips committed + declaration rows →
       `current:false`, `structural.reasonCode:"declared-delta"`,
       `declaredDelta.amendments[]` naming commit+path, exit 4; (b) same flips
       without declaration → `stale-source-revision`; (c) flips + one content
@@ -367,9 +368,15 @@ Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:5:sensor-declared-delta-c
       `stale-artifact-content`; (e) bound context moved + flips →
       `stale-context`; (f) declared obligation `status` cell transition →
       `declared-delta`; (g) a forged declaration row naming a commit that never
-      touched the path → `stale-source-revision`; run the suite at pre-fix
-      bytes → red (O2's red-first proof; paste the red output in the phase's
-      progress entry); declaration-row fixtures are written byte-for-byte in
+      touched the path → `stale-source-revision`; (h) declared tick flips +
+      declared revert commits — both commits named by declaration rows, total
+      diff since the recorded revision empty (bytes returned to the reviewed
+      state) → `stale-source-revision`, never `declared-delta` (Rules §2's
+      mutate-and-revert sentinel: an older PASS cannot resurrect); run the
+      suite at pre-fix bytes → red (O2's red-first proof — the declared cases
+      (a)/(f) carry the red; the fail-closed cases are regression pins; paste
+      the red output in the phase's progress entry); declaration-row fixtures
+      are written byte-for-byte in
       the frozen row shape this plan freezes (P3 → `LEDGERS.md`) — parser ↔
       frozen-format agreement: a parser or a freeze drifting from the frozen
       shape fails the suite
@@ -378,7 +385,12 @@ Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:5:sensor-declared-delta-c
       `classifyLedgerStateDelta(git, recordedSource, changedPaths)` — per
       changed bound path: the total diff hunks are all tick-flip
       (checkbox-token-only) or single-cell obligation-status transitions (both
-      values in the closed vocabulary), `ACCEPTANCE.md` never in-class, and
+      values in the closed vocabulary) **and non-vacuous — the classification
+      requires ≥ 1 in-class hunk (Rules §2: actual in-class byte deltas); an
+      empty total diff — declared tick flips plus declared revert commits,
+      bytes returned to the reviewed state — never classifies and answers
+      `stale-source-revision` (case (h)); a vacuous `every()` over zero hunks
+      is refused**, `ACCEPTANCE.md` never in-class, and
       every commit in `git log <recorded>..HEAD -- <path>` is named by a
       declaration row for that path; `attributeFreshness` gains the optional
       `declaredDelta` parameter and answers `declared-delta` ONLY at the
@@ -519,9 +531,10 @@ Phase-lint: PASS (8/8) · fingerprint `P5:docs:4:release-hygiene-bundle-budgets`
   mirror) — `packages/agentic-workflow-schema/test/pre-execution-lineage.test.mjs`,
   `test/pre-execution-docs.test.mjs`.
 - **Sensor (integration, black-box CLI in throwaway git repos):**
-  `scripts/pre-execution-sensor.test.mjs` — the seven-case matrix (declared
+  `scripts/pre-execution-sensor.test.mjs` — the eight-case matrix (declared
   tick, declared status-cell, undeclared, content hunk, uncommitted, context
-  move, forged declaration), red-first at pre-fix bytes (O2), exit-code and
+  move, forged declaration, empty-diff revert movement), red-first at pre-fix
+  bytes (O2), exit-code and
   payload assertions; declaration-row fixtures byte-for-byte the frozen row
   shape (parser ↔ frozen-format agreement).
 - **Parity:** `scripts/pre-execution-attribution.test.mjs` — the documented
