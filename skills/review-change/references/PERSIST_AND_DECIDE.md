@@ -135,6 +135,12 @@
      · adversarial recommendation checklist fired AND this run was
        single-reviewer? → re-run the fold review as /review-change
        --adversarial N (N per the ladder below) instead of single-reviewer
+
+   The two-cycle cap scopes the **review→fold loop on source findings** only (a
+   finding already on the branch, repaired here). A planning repair routed by a
+   `class: plan`/`product` finding is a **verdict response** under
+   `pre-execution-review` POLICY §4 — it re-derives plan/Product authority, not
+   source — so it is never a loop-defect stop and never counts against this cap.
        (yes: <which box fired>; no: omit this line)
      · SPEC drift flagged here AND on a prior unit? → /product-audit (yes: the
        founding assumptions are probably stale — don't keep patching a

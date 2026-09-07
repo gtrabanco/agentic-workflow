@@ -113,7 +113,7 @@ test("files and exports agree on the shipped schema documents", () => {
 });
 
 test("the package version matches the AC7 release contract", () => {
-  assert.equal(manifest.version, "4.0.1");
+  assert.equal(manifest.version, "4.1.0");
 });
 
 // ---------------------------------------------------------------------------

@@ -76,6 +76,13 @@ on a Product- or Plan-rooted finding is invalid even when the candidate changed:
 the loop repairs source, not authority. Runtime retry and budget mechanics stay
 outside this policy and can never be translated into a PASS.
 
+The guards above gate **blind re-reviews** — an identical snapshot with the
+identical question — and never a repair performed in response to a persisted
+verdict: a repair turn whose input is a FAIL/NEEDS-DESIGN receipt produces a new
+snapshot by design, so no cycle cap or anomaly rule may block or end it. The
+anomaly is printed and routed, never a stop, and no cap converts a verdict into a
+dead end.
+
 ### 5. What a cycle can never produce
 
 - A verdict from an author turn, a readiness preflight, a roadmap status, or a
@@ -93,6 +100,14 @@ outside this policy and can never be translated into a PASS.
   an open row with a new name.
 - Execution authority from a neighbouring stage: a `SPEC-REVIEW-PASS` never unlocks
   `execute-phase`, and a `PLAN-REVIEW-PASS` never certifies the Product half.
+- A gate answer from a roadmap row's status. Gates read receipts only;
+  roadmap rows are labels and never answer a gate. `done` means built + PR open
+  with the human merge pending (`docs/features/ROADMAP.md` § Status legend;
+  `docs/fix/README.md` § Status legend), so it never satisfies or suppresses a
+  pre-execution/verification gate, never retires the obligation to re-derive a
+  receipt, and never lets a reviewer or consumer report a unit closed while its
+  PR is unmerged. The complement of §5's "no verdict *from* a status" — and the
+  same rule read the other way: a status never **suppresses** a gate either.
 
 ### 6. Legacy adoption (units planned before this gate existed)
 
@@ -142,6 +157,19 @@ reports; a printed verdict whose mark is still "for next turn" is not finished.
   a gate rejection. The mark is what the ownership map designates for that truth
   class — receipt block, folded row, rejection trace — at the home and column set
   [`LEDGERS.md`](LEDGERS.md) names. This section opens no second home.
+- **The reviewer is consumer zero.** Write-then-report is mechanical, not prose: in
+  the same act as persisting the receipt, the reviewer runs the sensor's own
+  `verify --stage <spec|plan> --unit <id> [--dir …]` (the fix unit's recipe; a
+  feature plan adds `--parent`) and pastes the sensor's JSON answer beside the
+  verdict block *before* the report is printed. A digest-bound receipt requires
+  `structural.fresh: true` (and, for a PASS verdict, `current: true`); exit 3
+  (`missing-receipt-snapshot`) or a digest-bound `structural.fresh: false` means
+  the mark did not land — the reviewer fixes the write and re-runs, and the verdict
+  is not emit-able in that turn. A `Snapshot: refused` receipt's
+  `missing-receipt-snapshot` answer is its sanctioned form. A verdict block
+  printed without the pasted self-check output is a contract defect, and every
+  consumer reads a chat-only verdict as `missing-receipt-snapshot` — it does not
+  exist to the sensor.
 - **A gate rejection is typed**, from a closed set of four: `dependency`, `status`,
   `phase-lint`, `stale-or-missing-receipt`. Each fixed gate block carries its type
   and names what it read and where the turn goes:
