@@ -137,3 +137,97 @@ Product-half decisions recorded by `design-feature` (append-only; newest last).
 - Features 32 and 33 declare dependencies on this feature; this design must not
   pre-empt their scope (severity conversion table, LEDGERS prose fixes,
   turn-contract single-owner migration).
+
+---
+
+# Engineering-half decisions (2026-09-07)
+
+Recorded by `plan-feature` / `plan-feature-scaffold` when cutting the
+Engineering half (owner: `plan-feature:engineering-decisions`); append-only,
+newest last. Product decisions above are untouched.
+
+## E-D1: empty-batch and failed-gate receipt states
+
+- **What**: an empty batch (zero findings taken) prints the receipt with batch
+  class `none` (`Repaired: none`, `Gate: n/a`, `Fold diff: none`) and branch
+  `RE-REVIEW-OPTIONAL`; the safe default (no decision) routes to re-review,
+  which is harmless on an unchanged head. A turn whose gate is red prints the
+  receipt with the observed nonzero exit codes and nothing folded; the fold
+  keeps repairing that group per `FOLD_PROCESS` step 4 and only reports the
+  receipt at the turn's end.
+- **Why**: IS-1 requires the receipt "including an empty or frozen one" and
+  expectation 11 requires it on a failed gate, but the SPEC's two class states
+  (`all-repair-in-place`, `frozen (replan present)`) leave the empty case
+  without a value. `none` is the minimal third value; no new branch is added.
+- **Authority**: engineering interpretation of IS-1 + expectation 1/11; frozen
+  for `review-plan` to confirm.
+
+## E-D2: SKIPPED records a prior consumer decision; the fold emits OPTIONAL
+
+- **What**: `fold-findings` emits `RE-REVIEW-OPTIONAL` on every
+  all-repair-in-place docs-only batch; `RE-REVIEW-SKIPPED` is printed only by a
+  turn that carries an explicit prior consumer decision (user or orchestrator
+  instruction recorded in the turn) to skip the re-review. With no decision the
+  closing block always recommends `/review-change` (delta mode).
+- **Why**: the receipt is printed at emission, before any consumer reads it, so
+  a value that records a decision must reflect a decision that already exists;
+  otherwise SKIPPED would silently do what D30-4 forbids (skip without a
+  decision).
+- **Authority**: engineering interpretation of IS-3 + D30-4.
+
+## E-D3: docs-only vs behavioral is judged on the fold diff's file set
+
+- **What**: a batch is **docs-only** when every file changed by the fold diff
+  is a Markdown/documentation file (`*.md`, `docs/**`, skill reference `.md`);
+  otherwise it is behavioral. Any folded row with frozen severity `high`
+  forces `RE-REVIEW-REQUIRED (delta)` even when the diff is docs-only. The
+  frozen fields (severity, class, axis) are never edited to reach a branch.
+- **Why**: IS-3 branches on "behavioral or high-severity" vs "report-note
+  materiality (docs-only)", and the fold queue only persists `med`/`high` rows
+  (low rows are report-only and never reach the ledger), so the decidable,
+  frozen-field-faithful test is the diff's file set plus the severity check.
+- **Authority**: engineering interpretation of IS-3 + the persisted-row
+  materiality rule (`review-change` PERSIST_AND_DECIDE); frozen for
+  `review-plan` to confirm.
+
+## E-D4: fold-diff definition and escalation computation
+
+- **What**: the receipt's `Fold diff` shortstat and the escalation inputs come
+  from a real `git diff <pre-batch HEAD>..<batch HEAD>` over the commits this
+  turn's batch produced (per `FOLD_PROCESS` step 5; an empty batch diffs
+  nothing). Width trigger: any changed file outside the union of the batch's
+  cited files, or any changed line in a cited file more than 50 lines from
+  every cited line in that file (changed-line starts read from
+  `git diff --unified=0` hunk headers). Size trigger: added+deleted > 200
+  lines or changed files > 15 (`git diff --numstat`).
+- **Why**: the receipt must be evidence, not estimates (expectation 8); a
+  single deterministic diff range makes the ±50 window and the 200/15 numbers
+  mechanically checkable by a weak executor.
+- **Authority**: engineering concretization of IS-6/D30-5.
+
+## E-D5: AC-10's `packages/` clause guards audit-pr + the schema package
+
+- **What**: AC-10's validator is written as "no file under
+  `packages/agentic-workflow-schema/` or `skills/audit-pr/` changed" plus the
+  two untouched-surface suites. The Pi mirror's bundled copies
+  (`packages/pi-agentic-workflow`) ARE re-bundled this feature through
+  `bundle:skills`, per the SPEC's integration-closure row.
+- **Why**: AC-10's literal "no file under `packages/`" contradicts the
+  integration row ("bundled copies of the three skills re-synced"); the intent
+  (audit-pr + schema untouched) is preserved and the mirror re-bundle follows
+  feature 29's established practice.
+- **Authority**: engineering interpretation; **flagged in known-issues.md #1
+  for `review-plan` to confirm or amend.**
+
+## E-D6: freeze-batch trigger set
+
+- **What**: freeze-batch triggers when the taken batch contains at least one
+  frozen row with class `replan-in-unit` or `decision-required` (the SPEC's
+  replan-class definition). `fix-now` rows never freeze; `ignore`/`proposal`
+  rows are never in the fold queue. An explicit-ID scope that includes a
+  replan-class row freezes that batch the same way.
+- **Why**: IS-2/D30-1 name `replan-in-unit` / `decision-required` as
+  replan-class; mapping them to the freeze trigger keeps the classification
+  single-owner (`CLASSIFY.md`'s closed set) and the receipt never invents a
+  parallel vocabulary (AC-02).
+- **Authority**: engineering concretization of IS-2 + IS-4.
