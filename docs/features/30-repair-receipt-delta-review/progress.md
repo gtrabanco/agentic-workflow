@@ -243,3 +243,11 @@ was reported, then re-run green.)
 ## Unit-loop receipt — P4 (final)
 - Commit: e77c6f60 · Gate: full regression + schema + Pi suite (exit 0) · Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · PR: [#188](https://github.com/gtrabanco/agentic-workflow/pull/188) · Roadmap: 30 → done · [#188](https://github.com/gtrabanco/agentic-workflow/pull/188)
 - Next: unit finished
+
+## Fold receipt — F1+F2+F3
+- Folded: 3/3 · Disputed: 0 · Blocked: 0
+- Batch class: all-repair-in-place · Fold diff: 5 files changed, 29 insertions(+), 3 deletions(-)
+- Gate: `node --test scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs scripts/audit-pr-receipt.test.mjs` → exit 0 at head 596a9f25 · Gate: `node --test scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/pre-execution-quality.test.mjs` → exit 0 · Gate: `node scripts/check-skill-context.mjs` → exit 0 (PASS context budgets: 39 skills) · Gate: `node --test scripts/normative-drift.test.mjs` → exit 0
+- Acceptance blob: 1f5a9a6380071b4481a20eed0376b21c6f742853 · Unchanged
+- Commit: 596a9f25 · Pushed
+- Branch: RE-REVIEW-OPTIONAL → `/review-change` (default, delta mode)
