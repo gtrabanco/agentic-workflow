@@ -383,15 +383,15 @@ Phase-lint: PASS (8/8) · fingerprint `P5:docs:8:arbitration-ownership-contract`
 
 ### P6 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted): `node --test scripts/*.test.mjs` → 0 fail (route budgets green after P5's re-basis); `cd packages/agentic-workflow-schema && bun run test` → fail 0; `cd packages/pi-agentic-workflow && bun run test` → fail 0 (includes the `skills/` mirror parity test)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Re-run the project's full verification gate (commands + exit codes pasted): `node --test scripts/*.test.mjs` → 0 fail (route budgets green after P5's re-basis); `cd packages/agentic-workflow-schema && bun run test` → fail 0; `cd packages/pi-agentic-workflow && bun run test` → fail 0 (includes the `skills/` mirror parity test)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #162`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<n>` and push
 
 ## Testing
 
