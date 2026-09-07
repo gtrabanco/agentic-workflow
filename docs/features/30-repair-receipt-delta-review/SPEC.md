@@ -592,7 +592,7 @@ fact F010 + AD-008 consumed as evidence, per planning-evidence.md PE-016).
 #### 1. REPAIR-RECEIPT — fixed printed block (fold-findings output contract)
 
 Printed after the per-finding table and tally, as part of the ABSOLUTE-last
-output together with the branching `→ Next:` block. Five fields, always
+output together with the branching `→ Next:` block. Six fields, always
 present; pinned verbatim by the discipline suite (AC-01):
 
 ```text

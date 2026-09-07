@@ -60,3 +60,19 @@
 9. **Replan.** If the smallest correct group exceeds a reviewable correction,
    emit `REPLAN` with proposed phases appended to the same unit. After user
    confirmation, `/execute-phase <unit>` completes them and ticks the rows.
+
+## REPAIR-RECEIPT — fixed printed block (verbatim copy)
+
+Printed after the per-finding table and tally, as part of the ABSOLUTE-last
+output together with the branching `→ Next:` block. Six fields, always
+present:
+
+```text
+## REPAIR-RECEIPT
+- Repaired: <F-ids with (VF-<n>) refs, joined ` + `, or `none`>
+- Refuted/open: <F-ids joined ` + `, or `none`>
+- Gate: <command> → exit <n> at head <40-hex sha> · n/a when nothing was folded
+- Batch class: <all-repair-in-place | frozen (replan present) | none>
+- Fold diff: <shortstat from a real `git diff` run> · none when nothing was folded
+- Branch: <RE-REVIEW-REQUIRED (delta) | RE-REVIEW-OPTIONAL | RE-REVIEW-SKIPPED | REPLAN-ROUTE>
+```
