@@ -115,3 +115,15 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Non-material observation filed: RP2-F1 (info) — ACCEPTANCE.md AC4/AC5 say "effort" where the field is `thinking` (SPEC, obligations, and src use `thinking`; `src/` has 0 "effort" occurrences). Wording only — no validator, required outcome, or behaviour affected.
 
 
+
+## Acceptance receipt v1
+- Manifest: docs/fix/154-settings-picker-search-bulk-chain/ACCEPTANCE.md · Blob: b582c5008cda34e59d20c7b08ba379067a67e6f6 · Status: frozen · Verified: 2026-09-08
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` (exit 0, 16 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Next: P2 · Attempts: 1
+- Done: model-chain config schema — `ModelSetting = "inherit" | ModelRef | readonly ModelRef[]`, `MAX_MODEL_CHAIN = 4` (types.ts); `checkRoute` accepts a non-empty chain of ≤4 reference strings, every violation reported at `$.commands.<name>.model` naming the offending element or the limit (schema.ts); merge picks a chain as one per-key value with order preserved — no code change needed, `pick(first-defined)` already treats a chain as an opaque value once types.ts makes it a valid ModelSetting; **7 new chain tests** in config-merge.test.mjs.
+- Remains: P2 (chain-probe dispatch) … P8 (hardening & PR).
+- Gotchas: the scoped validator `bun test test/<file>` needs `bun run build` (tsc) first because the suite imports `../dist/…` and `dist/` is gitignored (not committed). A `/\"…\"/u` regex is a SyntaxError under the `u` flag — used `assert.ok(msg.includes(…))` instead. merge.ts needed no edit despite P1 task 4 naming it (verified by the round-trip and global-only chain tests).
+- Files: src/config/types.ts, src/config/schema.ts, test/config-merge.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
+- Next: P2 chain-probe dispatch.

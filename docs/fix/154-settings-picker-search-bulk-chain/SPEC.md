@@ -427,19 +427,19 @@ Layer: `domain`. Done-when:
 (`Ran N tests across 1 file`) pasted — the file exists by then (created by
 this phase's first task).
 
-- [ ] Red-first tests in `test/config-merge.test.mjs`: a chain
+- [x] Red-first tests in `test/config-merge.test.mjs`: a chain
       (`"model": ["a/m1", "b/m2"]`) merges project-over-global per key and
       round-trips its order; legacy `"inherit"` and single-string `model`
       files parse unchanged; a non-reference element and a > 4-entry chain
       are rejected with the path `$.commands.<name>.model` (OB-6, OB-11).
-- [ ] Extend `ModelSetting` / `RouteFile.model` / `Route.model` in
+- [x] Extend `ModelSetting` / `RouteFile.model` / `Route.model` in
       `src/config/types.ts` to the union
       `"inherit" | ModelRef | readonly ModelRef[]` (OB-6).
-- [ ] Extend `checkRoute` in `src/config/schema.ts`: an array `model` must be
+- [x] Extend `checkRoute` in `src/config/schema.ts`: an array `model` must be
       non-empty, hold only reference strings, and hold at most 4 entries;
       every violation reports at `$.commands.<name>.model` naming the
       offending element or the limit (OB-6, OB-11).
-- [ ] Extend `mergeConfigs`/`resolveRoute` in `src/config/merge.ts` so a
+- [x] Extend `mergeConfigs`/`resolveRoute` in `src/config/merge.ts` so a
       chain is picked as one per-key value (project over global) with its
       order preserved; no other merge behaviour changes (OB-7).
 
