@@ -183,6 +183,6 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Next: P8 hardening & PR.
 
 ## Unit-loop receipt — P8
-- Commit: pending · Gate: `bun run test` (exit 0, 171 pass / 0 fail) + acceptance blob `b582c5008cda34e59d20c7b08ba379067a67e6f6` (re-derived, exact) + `git status --porcelain docs/` → empty · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Commit: cc626760 · Gate: `bun run test` (exit 0, 171 pass / 0 fail) + acceptance blob `b582c5008cda34e59d20c7b08ba379067a67e6f6` (re-derived, exact) + `git status --porcelain docs/` → empty · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Close-out: fix-index row flipped to `done`; push; PR opened with `Closes #154`; link row to `done · [#<pr>](<url>)`.
 - Next: none (unit complete) — `/review-change` on the changed HEAD is the mandatory end review.
