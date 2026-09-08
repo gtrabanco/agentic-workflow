@@ -71,8 +71,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27038,
-      "routeLinesMax": 1819
+      "routeEstimateMax": 27188,
+      "routeLinesMax": 1829
     },
     "execute-phase:descope": {
       "skills": [
@@ -256,8 +256,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 23758,
-      "routeLinesMax": 1678
+      "routeEstimateMax": 23908,
+      "routeLinesMax": 1688
     },
     "plan-feature:scoped": {
       "skills": [
@@ -280,8 +280,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 26675,
-      "routeLinesMax": 1921
+      "routeEstimateMax": 26825,
+      "routeLinesMax": 1931
     },
     "review-change:adversarial": {
       "skills": [
@@ -300,8 +300,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17523,
-      "routeLinesMax": 1269
+      "routeEstimateMax": 18069,
+      "routeLinesMax": 1305
     },
     "review-change:default-backend": {
       "skills": [
@@ -319,8 +319,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15706,
-      "routeLinesMax": 1150
+      "routeEstimateMax": 16252,
+      "routeLinesMax": 1186
     },
     "review-change:default-web": {
       "skills": [
@@ -338,8 +338,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 15706,
-      "routeLinesMax": 1150
+      "routeEstimateMax": 16252,
+      "routeLinesMax": 1186
     },
     "review-change:synthesize": {
       "skills": [
@@ -357,8 +357,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16220,
-      "routeLinesMax": 1174
+      "routeEstimateMax": 16766,
+      "routeLinesMax": 1210
     },
     "review-plan:default": {
       "skills": [
@@ -366,8 +366,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 18248,
-      "routeLinesMax": 1165
+      "routeEstimateMax": 18397,
+      "routeLinesMax": 1175
     },
     "review-spec:default": {
       "skills": [
@@ -375,8 +375,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 16505,
-      "routeLinesMax": 1109
+      "routeEstimateMax": 16652,
+      "routeLinesMax": 1119
     }
   },
   "policy": {

@@ -43,7 +43,7 @@ de carga progresiva bajaron de 30.868 a 16.046 tokens estimados combinados,
 conservando sus contratos tras rutas explícitas. Valida el catálogo con:
 
 ```sh
-node scripts/check-skill-context.mjs
+bun scripts/check-skill-context.mjs   # node scripts/check-skill-context.mjs — alternativa si no hay bun
 ```
 
 La caché de prompts puede reducir latencia repetida o input facturado en un
