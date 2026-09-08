@@ -85,3 +85,33 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Spec-lint re-run post-repair: placeholder grep returns only the pre-existing literal loader path `$.commands.<name>.model` and the canonical phase-lint template lines (unchanged from the reviewed draft); zero residual `bun run test test/` validator cells.
 - Findings ledger: RP1-F1, RP1-F2 → `resolved` with resolution evidence, `resolving-artifact-revision: 7aeab75d` (planning-findings.md).
 - Repair commit: `7aeab75d` `docs(fix): repair scoped validators + PE-011 citation for #154 (RP1-F1, RP1-F2)` — SPEC.md + ACCEPTANCE.md; findings/progress resolution recorded in this commit.
+## Pre-execution review receipt v1 — plan (re-review, cycle 2)
+- Review: rp-fix154-20260908-002 · Snapshot: 989184d22a5670184540f3249a5cc992dbede5349e604a66ade0f08e1e0e18dc · Verdict: plan-review-pass
+- Unit: fix-154 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); no `review-spec` upstream, none claimed
+- Source revision: 7aeab75d42896e8bc3b8b458a9eb603e74b81931 · Artifact revision: 7aeab75d42896e8bc3b8b458a9eb603e74b81931
+- Reviewer: review-plan (fresh pi session) · Session: pi-web re-review turn on `fix/154-settings-picker-search-bulk-chain` · Role: reviewer · Author: plan-fix (commit `7aeab75d`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Context-clean note: this conversation wrote/replanned no part of the unit (review-only turn)
+- Started/finished: 2026-09-08 (session clock finish 2026-09-08T22:49Z) · Findings: 1 (material open: 0)
+- Ledgers read: planning-evidence 13 rows (PE-001…PE-013, embedded in the SPEC) · obligations 16 rows (OB-1…OB-16, verified-capable: 0 — all validators pin future work)
+- Prior plan receipt (re-review only): rp-fix154-20260908-001 @ a0ed8357905ab4763fe15273ebfd086a7fd5b1e4116261dab8fff3e8e4cb70a6 (PLAN-REVIEW-FAIL, RP1-F1 medium + RP1-F2 low)
+- No-progress gate: satisfied — the snapshot changed (`a0ed83…` → `989184d2…` via the repair batch `7aeab75d`), so this re-review judges a new artifact revision, not a repeat of the cycle-1 question. First re-review; no CONVERGENCE-ANOMALY.
+- Portability note: unchanged — the runtime does not rotate `artifactRevisionId`; the repair commit `7aeab75d` is the current artifact revision, and fff08ffe touched only progress.md/planning-findings.md (not snapshot-bound bytes).
+
+### Repair verification (both RP1 rows re-checked at this revision)
+
+- RP1-F1 (scoped validators) — **repaired, verified**: zero residual `bun run test test/` cells in SPEC `### Obligations` + `## Phases` done-whens and ACCEPTANCE.md validator cells (grep → 0). Fresh falsification probes at this revision: `bun test test/config-merge.test.mjs` → `9 pass, 1 file` (direct form scopes); `bun test test/config-merge.test.mjs test/unavailable-stop.test.mjs` → `17 pass, 2 files`; `bun run test test/picker-filter.test.mjs` → full suite `140 pass / 0 fail, 14 files, exit 0` (full form never scopes — the repair was necessary); missing-file: `bun test test/zzz-missing.test.mjs` → **exit 1** at bun 1.4.2 with only a note and no summary line (fail-closed — stronger than the exit-0 behaviour the cycle-1 evidence recorded); mixed case `bun test test/config-merge.test.mjs test/picker-filter.test.mjs` (one file absent) → exit 0 but summary `across 1 file`, which fails every required-evidence cell pinning `across 2 files`. All three no-op paths (file absent, partial file set, full-form arg) now fail closed or are betrayed by the required summary line. L5/P10 restore to pass.
+- RP1-F2 (PE-011 citation) — **repaired, verified**: SPEC PE-011 now cites `src/extension/factory.ts:92` (`registrar.registerCommand(SETTINGS_COMMAND, …)`), `factory.ts:79` (`knownCommands`), `index.ts:96-104` as the `runSettingsConsole` wiring; re-read at HEAD confirms all three (`grep -n` → factory.ts :79, :92; index.ts :94 wiring block). No packages/ bytes changed since `f48dff00` (`git diff --name-only f48dff00..HEAD -- packages/` → empty), so all 13 PE rows keep `current` + `proven`.
+
+### Re-review checks
+
+- Ledger sweep: L1 pass (fix unit — snapshot `parentSpecSnapshotDigest: null`, stated plainly, no borrowed Product receipt) · L2 pass (13/13 rows current+proven; PE-011 corrected; no unknown/drifted/stale) · L3 pass (16 obligations, ids stable, no duplicates) · L4 pass (each row: one phase, one task, owner `execute-phase --fix`, validator copied, required evidence named, no blank/deferred) · L5 pass (scenario↔validator↔phase closure restored — see probes above; no validator weakened: the full gate OB-16/AC13 keeps `bun run test`) · L6 pass (RP1-F1, RP1-F2 resolved with resolution evidence @ `7aeab75d`; no open material row carried into execution)
+- Engineering checks (fix unit): P1–P9 pass (unchanged from cycle 1 — surfaces, closure, compatibility boundary, security n/a, no migration, recovery, rollback, observability, phase-lint fingerprints 8/8 across P1–P8) · P10 pass (restored — every scoped validator can fail for its scope; required-evidence pins the `Ran N tests across K file(s)` summary) · P11 pass (unchanged) · P12 pass (restored — PE-011 corrected; all other citations verified at this revision)
+- Fix checks: F1–F4 pass (unchanged from cycle 1)
+- Falsification stance: **NO-CONFIRMED-GAPS** — strongest hostile-reader candidates probed and refuted: (1) "a scoped validator still passes on a no-op" → refuted by the three probe paths above; (2) "an Engineering claim is invented" → PE-011 was the one imprecise row, now corrected and re-verified; (3) "a phase's deliverable is accepted while its validator passes for the wrong reason" → a file set smaller than the validator names produces `across K file(s)` with K < the required count, so the evidence paste fails; partial-implementation risk (existing file, missing cases) is the ordinary test-validator residual owned by `review-change`, not a no-op.
+- Non-material observation filed: RP2-F1 (info) — ACCEPTANCE.md AC4/AC5 say "effort" where the field is `thinking` (SPEC, obligations, and src use `thinking`; `src/` has 0 "effort" occurrences). Wording only — no validator, required outcome, or behaviour affected.
+
+
