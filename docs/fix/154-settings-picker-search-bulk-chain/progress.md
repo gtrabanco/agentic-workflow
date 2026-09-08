@@ -156,10 +156,19 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Next: P5 current-value field editing.
 
 ## Unit-loop receipt — P5
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` (exit 0, 33 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Commit: bfd2aa09 · Gate: `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` (exit 0, 33 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Next: P6 · Attempts: 1
 - Done: current-value field editing — `editRoute` opens on the merged value in force (`currentFor(target)`), the field chooser (`prompts.fields` — both/model/thinking) asks only the marked field and leaves an unmarked one at its merged value (AC4 field independence), a no-change edit saves a byte-identical file; the ordered chain builder (append via the picker, remove-last, done, capped at MAX_MODEL_CHAIN=4) saves the model as a chain in build order; model-entry rejection keeps the loader path shape `$.commands.<name>.model` (including chain elements hand-typed or inherit-in-chain); `renderMergedConfig` renders a chain in order (`a/m1 → b/m2 / inherit`) with single-ref/inherit unchanged. 5 new console tests (model-only, thinking-only, byte-identical, chain builder, merged chain render).
 - Remains: P6 (bulk apply/clear) … P8 (hardening & PR).
 - Gotchas: (1) **label gap** — OB-3/AC3 names `(current)` / `(default route)` labels in the picker; the implemented behavior preselects the value in force via `pick(…, { initial })` and reproduces the file byte-identically, but the literal label suffix is not rendered by the picker (the seam's `pick` takes values only, and `SelectList` labels are not wired to it). Flag for review-change; the manual AC3 check covers the labelled display. (2) `askModel` validation now uses `parseModelReference` (schema-consistent) instead of the old console regex, so `provider/modelId/id` (a slash inside the id) is accepted — consistent with the schema, which already accepted it. (3) The field chooser a menu (both/model/thinking) rather than independent multi-select toggles — behaviorally equivalent to "only marked fields asked; none → untouched".
 - Files: src/settings/console.ts, src/settings/view.ts, test/settings-console.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
 - Next: P6 bulk apply and bulk clear.
+
+## Unit-loop receipt — P6
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` (exit 0, 36 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Next: P7 · Attempts: 1
+- Done: bulk apply + bulk clear — `runSettingsConsole` gains `bulkApply`/`bulkClear` menu entries; `pickCommandsMulti` picks several commands over the seam's `multiple` mode (with a repeated-select fallback for a non-rich UI); bulk apply runs ONE field pass (model via the chain builder + thinking) and applies it to every selected command, warning per command when a chosen reference is absent from the live registry (never blocks the write — dispatch's probe stays authoritative); bulk clear removes every selected override in one save. 3 new console tests (apply-to-two-matches-single-pass, clear-two, missing-ref-warning-per-command).
+- Remains: P7 (docs + release bookkeeping) … P8 (hardening & PR).
+- Gotchas: the multi-select command pick uses `prompts.command` over the seam's `multiple: true`; the scripted harness returns the whole selection for a multiple pick (and a queue for a single pick). The non-rich fallback loops single selects + a confirm; the tests drive the rich path. `route.model` is optional on the `RouteFile` return, so `warnMissingModel` receives `route.model ?? inherit`.
+- Files: src/settings/console.ts, test/settings-console.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
+- Next: P7 package docs and release bookkeeping.

@@ -58,6 +58,9 @@ export const prompts = {
   setDefaultRoute: "Set the default route",
   setOverride: "Set a command override",
   clearOverride: "Clear a command override",
+  bulkApply: "Apply one route to several commands",
+  bulkClear: "Clear several overrides",
+  addAnother: "Add another?",
   policy: "Set the unavailable-route policy",
   save: "Save",
   cancel: "Cancel",
@@ -99,6 +102,8 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       prompts.setDefaultRoute,
       prompts.setOverride,
       prompts.clearOverride,
+      prompts.bulkApply,
+      prompts.bulkClear,
       prompts.policy,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
@@ -130,6 +135,31 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       if (name === undefined) continue;
       const rest = { ...draft.commands };
       delete rest[name];
+      draft = { ...draft, commands: rest };
+      continue;
+    }
+    if (choice === prompts.bulkApply) {
+      // One field pass (model via the chain builder + thinking), applied to every
+      // selected command. A reference missing from the live registry warns per
+      // command but never blocks the write (OB-4 — dispatch's probe stays the
+      // authoritative availability gate).
+      const selected = await pickCommandsMulti(deps, commandChoices(deps, draft));
+      if (selected === undefined || selected.length === 0) continue;
+      const route = await editRoute(deps, selected[0], currentFor(selected[0]));
+      if (route === undefined) continue;
+      const nextCommands = { ...draft.commands };
+      for (const name of selected) {
+        nextCommands[name] = route;
+        warnMissingModel(deps, name, route.model ?? INHERIT);
+      }
+      draft = { ...draft, commands: nextCommands };
+      continue;
+    }
+    if (choice === prompts.bulkClear) {
+      const names = await pickCommandsMulti(deps, Object.keys(draft.commands ?? {}));
+      if (names === undefined || names.length === 0) continue;
+      const rest = { ...draft.commands };
+      for (const name of names) delete rest[name];
       draft = { ...draft, commands: rest };
       continue;
     }
@@ -306,6 +336,45 @@ async function pickCommand(deps: SettingsDeps, options: readonly string[]): Prom
     return undefined;
   }
   return deps.ui.select(prompts.command, [...options].sort((a, b) => a.localeCompare(b)));
+}
+
+/** Multi-select command picker over the seam's `multiple` mode; a non-rich UI falls back to repeated single selects. */
+async function pickCommandsMulti(deps: SettingsDeps, options: readonly string[]): Promise<readonly string[] | undefined> {
+  if (options.length === 0) {
+    deps.ui.notify("There is no command to pick here.", "warning");
+    return undefined;
+  }
+  const sorted = [...options].sort((a, b) => a.localeCompare(b));
+  if (typeof deps.ui.pick === "function") {
+    const picked = await deps.ui.pick(prompts.command, sorted, { multiple: true });
+    if (picked === undefined) return undefined;
+    return typeof picked === "string" ? [picked] : picked;
+  }
+  // Non-rich fallback: repeatedly select one candidate until the operator stops.
+  const chosen: string[] = [];
+  for (;;) {
+    const remaining = sorted.filter((option) => !chosen.includes(option));
+    if (remaining.length === 0) break;
+    const picked = await deps.ui.select(prompts.command, remaining);
+    if (picked === undefined) break;
+    chosen.push(picked);
+    if (!(await deps.ui.confirm(prompts.addAnother, `Picked ${chosen.join(", ")}.`))) break;
+  }
+  return chosen.length > 0 ? chosen : undefined;
+}
+
+/** Advisory per-command warning when a chosen reference is absent from the live registry (OB-4). */
+function warnMissingModel(deps: SettingsDeps, target: string, model: ModelSetting): void {
+  if (!deps.models || deps.models.length === 0) return;
+  const refs = typeof model === "string" ? [model] : model;
+  for (const ref of refs) {
+    if (ref !== INHERIT && !deps.models.includes(ref)) {
+      deps.ui.notify(
+        `/${target}: ${ref} is not in the live model registry — dispatch will decide availability when the route runs.`,
+        "warning",
+      );
+    }
+  }
 }
 
 function commandChoices(deps: SettingsDeps, draft: ConfigFile): string[] {

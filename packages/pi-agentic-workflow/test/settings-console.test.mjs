@@ -54,6 +54,8 @@ function scriptedUi(answers) {
         asked.push({ title, kind: "pick", options, opts });
         if (!Object.hasOwn(answers, title)) throw new Error(`no scripted pick answer for: ${title}`);
         const value = answers[title];
+        // A multiple pick returns the whole selection; a single pick consumes a queue.
+        if (opts.multiple) return Array.isArray(value) ? value : [value];
         return Array.isArray(value) ? value.shift() : value;
       },
       input: async (title) => take(title, "input"),
@@ -372,6 +374,79 @@ test("AC11/OB-14: the merged view renders a route's ordered model chain", async 
   });
   const text = renderMergedConfig(loaded, commands).join("\n");
   assert.ok(text.includes("plan-feature: a/m1 → b/m2 / inherit"), `chain rendered in order: ${text}`);
+});
+
+// --- P6 / OB-4: bulk apply and bulk clear ---
+
+test("AC5/OB-4: one bulk apply assigns model+thinking to two commands, matching a single pass per command", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      models: ["a/m1", "b/m2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "execute-phase"],
+        [prompts.fields]: prompts.fieldsBoth,
+        [prompts.modelPicked("plan-feature")]: "a/m1",
+        [prompts.thinking("plan-feature")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.commands, {
+    "plan-feature": { model: "a/m1", thinking: "high" },
+    "execute-phase": { model: "a/m1", thinking: "high" },
+  }, "each selected command got the same single-pass route");
+});
+
+test("AC5/OB-4: one bulk clear removes several overrides in a single save", async () => {
+  const { outcome, written } = await run(
+    { [paths.project]: '{"commands":{"plan-feature":{"model":"a/m1"},"design-feature":{"model":"b/m2"}}}' },
+    {
+      trusted: true,
+      answers: {
+        [prompts.scope]: "Project",
+        [prompts.menu]: [prompts.bulkClear, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "design-feature"],
+        [prompts.saveTo(paths.project)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.project));
+  assert.equal(saved.commands, undefined, "clearing the last overrides persists no empty map");
+});
+
+test("AC5/OB-4: a bulk route using a registry-missing reference warns per command but still writes", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: ["a/m1", "b/m2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "execute-phase"],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelPicked("plan-feature")]: "Type another reference…",
+        [prompts.model("plan-feature")]: "zzz/missing",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.commands, {
+    "plan-feature": { model: "zzz/missing", thinking: "inherit" },
+    "execute-phase": { model: "zzz/missing", thinking: "inherit" },
+  }, "a missing reference still writes the route");
+  const warnings = scripted.notify.filter((entry) => entry.message.includes("zzz/missing") && entry.kind === "warning");
+  assert.equal(warnings.length, 2, `one advisory warning per selected command: ${JSON.stringify(warnings)}`);
 });
 
 test("AC10: clearing a per-command override removes only that command", async () => {
