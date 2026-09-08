@@ -54,5 +54,14 @@ Verdict: **PLAN-REVIEW-PASS** — 0 findings, 0 material open.
 - Note: `bun install` (v1.4.2) would not auto-upgrade the peer already in `node_modules`; a clean re-resolve (`rm -rf node_modules bun.lock && bun install`) was required to honor `>=0.85.1` and prune `pi-server`.
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `bun run test` (exit 0 · 140/140) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
+- Commit: 16fd9ee2 · Gate: `bun run test` (exit 0 · 140/140) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
 - Next: P2 · Attempts: 1
+
+## P2 — Refresh the baseline note to pi 0.85.1 (EN + ES)
+
+- VERIFY baseline note EN+ES (AC3/O5): `grep -c "0\.85\.0" packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md` → `0` and `0`; `grep -c "0\.85\.1" packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md` → `1` and `1`
+- Bilingual pair edited in the same change: `README.md:142` `Verified against Pi 0.85.1 (2026-09-05)` · `README.es.md:148` `Probado con Pi 0.85.1 (2026-09-05)`
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: AC3 greps (0.85.0 0/0 · 0.85.1 1/1) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
+- Next: P3 · Attempts: 1
