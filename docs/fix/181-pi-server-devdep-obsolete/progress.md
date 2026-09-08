@@ -73,5 +73,14 @@ Verdict: **PLAN-REVIEW-PASS** — 0 findings, 0 material open.
 - Bilingual changelog rows added above the 0.7.0 row in the `@gtrabanco/pi-agentic-workflow` "Companion npm packages" subsections (CHANGELOG.md / CHANGELOG.es.md)
 
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: AC4 (version 0.7.1 · changelog rows 1/1) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
+- Commit: bd2df74e · Gate: AC4 (version 0.7.1 · changelog rows 1/1) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
 - Next: P4 close-out · Attempts: 1
+
+## P4 — Hardening & PR (close-out)
+
+- Full gate re-run 2026-09-08: `bun run test` → exit 0 / 140/140; AC1–AC4 green; acceptance blob unchanged `9ff45eb7…` (matches receipt); pending-docs `git status --porcelain -- docs/` → empty.
+- Fix-index row flipped to `` `done` `` then `` `done` · [#190](https://github.com/gtrabanco/agentic-workflow/pull/190) ``(AC5: 1).
+- PR opened: https://github.com/gtrabanco/agentic-workflow/pull/190 (base `main`, head `fix/181-pi-server-devdep-obsolete`, MERGEABLE, body includes `Closes #181`).
+- Commits: `16fd9ee2` (P1) · `c1789112` (P2) · `bd2df74e` (P3) · done flip + `65de74e5` (P4). Branch pushed; working tree clean.
+
+UNIT LOOP — fix/181 COMPLETE · Phases: 4 · Acceptance: 9ff45eb7b4424d10725fc010aaa654716330ad74 · Gate: PASS · PR: https://github.com/gtrabanco/agentic-workflow/pull/190
