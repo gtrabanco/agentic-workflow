@@ -8,7 +8,7 @@ Status: frozen
 | AC2 | Every reordered block leads with `/review-change`; fold appears only as the correction leg after a verdict | `grep -rn "→ Next: /review-change" skills/execute-phase/references/UNIT_LOOP.md skills/execute-phase/references/FOLDING.md skills/execute-phase/references/CLOSEOUT.md` → ≥ 3 matches (one per file); `grep -n "off to .*review-change" skills/execute-phase/references/CLOSEOUT.md` → 1 match (CLOSEOUT hand-off sentence, not the pre-existing checkpoint block at line 68) |
 | AC3 | Verdict-following fold uses did not regress | `grep -c "fold-findings" skills/review-change/SKILL.md skills/review-plan/references/OUTPUT.md skills/review-spec/references/OUTPUT.md skills/review-implementation/references/CLASSIFY.md skills/fold-findings/SKILL.md` → every count ≥ 1 |
 | AC4 | Discipline suite green with a new red-first pin of the canonical order on `UNIT_LOOP.md` | `node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → all pass, new pin present |
-| AC5 | Full project gate green | `npm test` → all pass |
+| AC5 | Full project gate green | discipline suite `node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → exit 0 (all pass); `node scripts/check-skill-context.mjs` → exit 0; `packages/pi-agentic-workflow` `bun run test` → all pass; `packages/agentic-workflow-schema` `bun run test` → all pass; `bundle:skills` then `git status --porcelain packages/pi-agentic-workflow/skills/` → empty |
 | AC6 | The word "mandatory" never labels the fold hand-off | `grep -rn "mandatory \`/fold-findings\`" skills/execute-phase/` → 0 matches; `grep -n "mandatory" skills/execute-phase/references/CLOSEOUT.md` matches only review-mandatory sentences |
 | AC7 | Context budgets still pass for both edited skills | `node scripts/check-skill-context.mjs` → exit 0 |
 | AC8 | Release bookkeeping: `execute-phase` → 4.4.1, `ship-roadmap` → 5.2.1 with CHANGELOG rows | `grep -n "4.4.1" skills/execute-phase/SKILL.md CHANGELOG.md CHANGELOG.es.md` → ≥ 1 match per file; `grep -n "5.2.1" skills/ship-roadmap/SKILL.md CHANGELOG.md CHANGELOG.es.md` → ≥ 1 match per file |
@@ -26,11 +26,13 @@ Status: frozen
 - Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.
 - Do not modify this manifest during execution without a user-approved SPEC amendment.
 - Passing declared checks is necessary, not sufficient; final independent review and named manual checks remain required.
-- Amendment provenance: manifest replaced 2026-09-08 under the SPEC `## Amendments` row (user-approved replan; issue #191 follow-up) — AC1–AC10 unchanged, AC11–AC16 added.
+- Amendment provenance: manifest replaced 2026-09-08 under the SPEC `## Amendments` row (user-approved replan; issue #191 follow-up) — AC1–AC10 unchanged, AC11–AC16 added. AC5 validator re-cut 2026-09-08 under SPEC amendment `ar-191-3` (user-approved): `npm test` was unrunnable as written (no root `package.json` — bun-islands repo); replaced by the real gate set (discipline suite · check-skill-context · package test suites · bundle mirror parity).
 - Runtime note: skill reference reads resolve to `skills/` in the repo — never `node_modules/` (stale installed copy until release).
 
 ## Commands
 
 - `node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs`
-- `npm test`
 - `node scripts/check-skill-context.mjs`
+- `cd packages/pi-agentic-workflow && bun run test`
+- `cd packages/agentic-workflow-schema && bun run test`
+- `cd packages/pi-agentic-workflow && bun run bundle:skills`
