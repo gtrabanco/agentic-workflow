@@ -628,3 +628,10 @@ tidy past entries — they're a record.
 - **Files:** `docs/fix/200-over-budget-fixture-stale-guard/SPEC.md`, `ACCEPTANCE.md`, `docs/fix/README.md`
 - **Summary:** Invoked plan-fix #200 and drafted a new SPEC (7fa68074), but discovered PR #202 is already OPEN on this same branch from a prior session that completed the full execution cycle (review-plan → execute-phase → PR). My draft was absorbed into the existing branch history; the prior session's implementation (manifest-derived fixture sizing in `scripts/check-skill-context.test.mjs`) is the actual delivery. This turn's draft is a no-op.
 - **Next:** PR #202 (`https://github.com/gtrabanco/agentic-workflow/pull/202`) is OPEN, mergeable, clean — the human merge is the next step. After merge: remove fix-index row #200 from `docs/fix/README.md`.
+
+## 2026-09-09T03:00Z — fix/200-over-budget-fixture-stale-guard — manual
+- **Commits:** 1 (`3872fa1a`)
+- **Files:** `scripts/check-skill-context.test.mjs`
+- **Summary:** Ran `/review-change` on PR #202 (fix-200). All four applicable finder passes (code, security, verify, perf) returned PASS. Four candidates surfaced: C1 pre-existing route-budget red at `test.mjs:118` (ignore, out-of-scope #176/D2), C2 NaN risk from `ceiling * 8` disarming the over-budget guard silently (fix-now), C3 perf immaterial read (ignore), C4 unrelated docs housekeeping in PR (accepted by user).
+- **Decisions:** (1) C1 → ignore: route red pre-existing, declared out-of-scope by SPEC AC6 + PE-009/PE-010, belongs to #176/D2 territory. (2) C2 → fixed: added `Number.isFinite(ceiling)` guard before `repeat()` at `test.mjs:87–90` — without it, `undefined * 8 = NaN` → `repeat(NaN)` = `""` → fixture 0 bytes → guard disarms silently. (3) C3 → ignore: one-shot manifest read is immaterial; no `bench` command is pre-existing project gap. (4) C4 → accepted: user wants LOGS.md + roadmap rows in this PR, no action. Fold ledger never created (all findings were low severity, below the high/med persistence floor).
+- **Next:** /audit-pr on PR #202 (`https://github.com/gtrabanco/agentic-workflow/pull/202`) for the merge gate; after merge: remove fix-index row #200, then /plan-feature --next.
