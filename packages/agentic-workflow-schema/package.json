@@ -75,7 +75,7 @@
     "gate:pre-execution": "bun run test && bun run check:pre-execution-schemas && bun run check:pre-execution-package && bun run test:pre-execution-docs"
   },
   "devDependencies": {
-    "ajv": "^8.20.0",
+    "ajv": "8.20.0",
     "typescript": "6"
   }
 }
