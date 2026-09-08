@@ -194,8 +194,8 @@ Layer: `docs`. Done-when: `node -p
 "require('./packages/pi-agentic-workflow/package.json').version"` → `0.7.1`;
 `grep -c "| 0.7.1 |" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 each.
 
-- [ ] Bump `packages/pi-agentic-workflow/package.json` `version:` 0.7.0 → 0.7.1 (O6)
-- [ ] Add the 0.7.1 patch row to the "Companion npm packages" table in `CHANGELOG.md` and its `CHANGELOG.es.md` sibling — one bilingual change (O7)
+- [x] Bump `packages/pi-agentic-workflow/package.json` `version:` 0.7.0 → 0.7.1 (O6)
+- [x] Add the 0.7.1 patch row to the "Companion npm packages" table in `CHANGELOG.md` and its `CHANGELOG.es.md` sibling — one bilingual change (O7)
 
 Phase-lint: PASS (8/8) · fingerprint `P3:docs:2:release-bookkeeping-071`
 
