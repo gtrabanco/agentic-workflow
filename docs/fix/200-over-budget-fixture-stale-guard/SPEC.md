@@ -279,6 +279,33 @@ change is a manifest read + one `repeat()` argument).
   `docs/LOGS.md` + `docs/features/ROADMAP.md` changes when this branch was
   cut; they are not part of this unit and are not staged by the draft commit.
   The cycle-2 repair additionally left them unstaged (unchanged decision).
+- **Session-log commits within unit scope (approved override, 2026-09-09)** —
+  the user confirmed they authored commit `274efa5e` (`docs: log
+  2026-09-09 sessions + register roadmap rows 42–45`) themselves. The session
+  log (`docs/LOGS.md`) is inherently within the scope of every feature or fix
+  — the unit's `progress.md` records the session, so a LOGS.md commit on the
+  unit's branch is not an unrelated deviation but a scope-bound housekeeping
+  action. The recorded decision "left unstaged" is superseded by this user
+  approval.
+
+## Amendments
+
+- **2026-09-09 — User-approved override (F3)**: The `review-change` adversarial
+  review surfaced F3 — commit `274efa5e` committed `docs/LOGS.md` +
+  `docs/features/ROADMAP.md` edits the SPEC's "Decisions made during drafting"
+  declared "left unstaged / not part of this unit". User confirmed: authored
+  the commit themselves; session-log entries are within every feature/fix
+  scope. Decision accepted — the recorded "left unstaged" decision is
+  superseded by this user approval. The LOGS.md / ROADMAP.md commits stay on
+  the branch.
+
+- **2026-09-09 — Over-budget fixture sizing (F1, AC5/OB-5 literal stale)
+  resolved at terminal state**: The user confirmed the unit is complete: the
+  fix-index row `done · [#202](https://github.com/gtrabanco/agentic-workflow/pull/202)`
+  is the terminal state. The frozen AC5/OB-5 validator literal `in-progress`
+  was a point-in-time check that passed at its execution time (receipt
+  `rp-fix200-20260908-002`); no amendment needed — the validator remains valid
+  as a historical record. No fix-now or replan action required.
 - **Validator re-scoped to the fixture pin (cycle-2 repair, receipt
   `rp-fix200-20260908-001`)** — the cycle-1 validator (`suite` → exit 0) was
   unreachable inside the unit's scope because of the masked route red
