@@ -1,0 +1,56 @@
+# Unit 191 — progress log (fix/191-handoff-review-fold-order)
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-fix191-20260908-001 · Snapshot: a96ad417c7f00b38f7916738345ca34e437d7e80412001d625d40d3d822e9a1e · Verdict: plan-review-pass
+- Unit: fix-191 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); no `review-spec` upstream, none claimed
+- Source revision: 919d88befd5e54b58645c16434a64b1792815f06 · Artifact revision: 919d88befd5e54b58645c16434a64b1792815f06
+- Reviewer: review-plan (fresh pi session) · Session: pi-web review turn on `fix/191-handoff-review-fold-order` · Role: reviewer · Author: plan-fix (commit `919d88be`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Context-clean note: this conversation wrote/replanned no part of the unit (review-only turn)
+- Started/finished: 2026-09-08 · Findings: 2 (material open: 0)
+- Ledgers read: planning-evidence 8 rows (PE-001…PE-008, embedded in the SPEC) · obligations 5 rows (O1…O5, verified-capable: 0 — all validators pin future work)
+- Prior plan receipt (re-review only): none — first cycle
+- Portability note: the planner's handoff declared no `artifactRevisionId`; the builder fell back to the source revision. Nothing in this runtime rotates the id — mutate-and-revert detection depends on the next repair producing new bytes and a fresh snapshot.
+
+### Review-run evidence (commands + results)
+
+- `node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-191 --dir docs/fix/191-handoff-review-fold-order` → digest `a96ad417c7f00b38f7916738345ca34e437d7e80412001d625d40d3d822e9a1e`, stable; `unitKind: fix`, artifacts: spec (22541 B) + acceptance (2963 B), `parentSpecSnapshotDigest: null` ✓. Ledgers are embedded in the SPEC (fix template convention), so `planning-evidence`/`obligations` snapshot rows are absent and bound through the whole-file `spec` row. Contexts: `architectural-invariants` absent (optional doc does not exist — invariant classification carried by the SPEC's "Rules that must never be violated" + PE rows); `normalized-repository-state` and `project-guide` present and bound.
+- PE-001: `grep -n "fold-findings" skills/execute-phase/references/UNIT_LOOP.md` → line 85 `→ Next: /fold-findings, then re-run /review-change on the changed HEAD`; `grep -n "fold-findings" skills/execute-phase/references/FOLDING.md` → line 44 `→ Next: /fold-findings, then re-run /review-change (unresolved findings go to triage/replan)` → proven ✓
+- PE-002: `git show 0523586e -- skills/execute-phase/references/UNIT_LOOP.md` shows the remap from `/loop-review-fold` → `/fold-findings` first (inverted) with diff at lines 82-87 of the commit; `docs/fix/161-finding-verification-loop-removal/SPEC.md` line 296 declares `review-change → fold-findings → re-run review-change` as the canonical order → proven ✓
+- PE-003: `grep -c "fold-findings" skills/review-change/SKILL.md` → 1; `skills/review-plan/references/OUTPUT.md` → 3; `skills/review-spec/references/OUTPUT.md` → 2; `skills/review-implementation/references/CLASSIFY.md` → 1; `skills/fold-findings/SKILL.md` → 4 → all ≥ 1 ✓
+- PE-004: `grep -n "mandatory" skills/execute-phase/references/CLOSEOUT.md` → line 24 (review-mandatory) and lines 52, 57, 67 (end-review-mandatory); the recommend paragraph at line 25 calls fold hand-off mandatory → proven ✓
+- PE-005: `skills/fold-findings/SKILL.md` "When to use" requires `REVIEW-FAIL` from `review-change` or `VERDICT: BLOCKED` from `audit-pr` → fold-first is a no-op by construction → proven ✓
+- PE-006: `scripts/next-recommendations.test.mjs`, `scripts/review-loop-discipline.test.mjs`, `scripts/bounded-delivery-loops.test.mjs` all exist (planned red-first pin not yet added) → proven ✓
+- PE-007: docs-only change — no data/schema/runtime state → proven ✓
+- PE-008: `CLAUDE.md` "Complete dynamic hand-offs" rule → every closing recommendation must name real next commands → proven ✓
+- Falsification stance before checking: NO-CONFIRMED-GAPS — the three strongest hostile-reader candidates (PE-001 inverted block confirmed at UNIT_LOOP.md:85, PE-004 mandatory wording confirmed at CLOSEOUT.md:25, PE-005 fold-findings precondition confirmed at fold-findings SKILL.md) all resolved to repository evidence; no SPEC obligation silently dies (O1–O5 ↔ AC1–AC8 ↔ affected surfaces); no validator passes on a no-op (all greps/commands fail against current bytes)
+
+Ledger sweep L1–L6: L1 pass (`parentSpecSnapshotDigest: null`, stated plainly) · L2 pass (8/8 rows current, proven or decision; no unknown/drifted/stale) · L3 pass (5 obligations, none missing/duplicated) · L4 pass (each row: one phase, one task reference, owner `execute-phase`, validator copied from ACCEPTANCE, evidence target; all `planned`) · L5 pass (required failure states — grep failure, test failure — have scenario + phase + validator that can fail) · L6 pass (no prior findings ledger — first cycle).
+
+Engineering checks: P1 pass (affected surfaces named with path:line evidence rows; invariant = preserves) · P2 pass (Depends on: none, origin fix #161 merged) · P3 pass (boundary = skill text only; no public contracts or stored data) · P4 pass (n/a: docs-only change, no secrets/auth/PII/dependency exposure) · P5 pass (bilingual EN+ES scheduled same change per CLAUDE.md hard rule; version bumps listed) · P6 pass (progress.md receipts, idempotent re-entry for grep/tests) · P7 pass (single git revert of PR commits; no data/doc side effects) · P8 pass (npm test + check-skill-context prove health; no runtime surface) · P9 pass (both phases lint PASS 8/8 with fingerprints `P1:docs:8:reorder-review-fold-handoffs` and `P2:hardening:7:hardening-pr-closeout`; P2 is last/closing; order matches depends closure) · P10 pass (all done-when are commands with expected outcomes and exit codes; real gates npm test + grep + node --test) · P11 pass (no concurrency/edge cases for docs-only change; all named failure states — grep mismatch, test failure, wording drift — mapped to phase and validator) · P12 pass (cited files exist at 919d88be, versions 4.4.0/5.2.0 confirmed on execute-phase/SKILL.md and ship-roadmap/SKILL.md)
+
+Fix checks: F1 pass (reproduction: commit 0523586e at UNIT_LOOP.md:85 + FOLDING.md:44 shows inverted block; no-op fold observed in fix-181) · F2 pass (root cause: commit 0523586e remap inverted review→fold to fold→review; confirmed by git diff and #161 SPEC canonical order) · F3 pass (affected surfaces = execute-phase/references/UNIT_LOOP.md + FOLDING.md + CLOSEOUT.md + BATCH_AND_PORTABILITY.md + SKILL.md + ship-roadmap/SKILL.md + ADVANCE.md + MODEL_ROUTING.md; tests = discipline suite in next-recommendations.test.mjs, review-loop-discipline.test.mjs, bounded-delivery-loops.test.mjs) · F4 pass (single git revert of PR commits; no data/doc side effects)
+
+Findings:
+- F1 (LOW, plan): Task numbering references in obligation table (O1: "Tasks 1–4", O2: "Task 5", O3: "Tasks 3–4", O4: "Task 7", O5: "Task 8") don't match P1's 8 actual bullet points (P1 tasks are bulleted, not numbered 1–8). These references are the author's mental model of task scope, not indexed values that execute-phase would parse. Non-blocking.
+- F2 (LOW, plan): Fix-index row (docs/fix/README.md:17) shows `pending` but branch `fix/191-handoff-review-fold-order` is open. Per fix-index legend, `pending` = "SPEC drafted, branch not yet open". Status should be `in-progress`. This is a process gap on the plan-fix that opened the branch — the index update to `in-progress` should have accompanied the branch creation, not deferred to close-out.
+
+Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
+
+## Acceptance receipt v1
+- Manifest: docs/fix/191-handoff-review-fold-order/ACCEPTANCE.md · Blob: 2be43ec7fac2e5c61827a675c247f7563774d8e0 · Status: frozen · Verified: 2026-09-08
+- Note: the originally recorded blob `34cddb37…` was not a `git hash-object` of the manifest (not a git object); the correct value is `2be43ec7…` (committed/working-tree blob at `919d88be`). The finish line is unchanged — the plan snapshot `a96ad417` re-derives to the same bytes. Reconciled per verification-contract at first execution.
+
+## Dependency receipt v1
+- Fingerprint: (empty closure) · Closure: fix-191-handoff-review-fold-order ← none
+- Merged PRs: none · Fully merged: yes · Verified: 2026-09-08
+
+## P1 — 2026-09-08
+- Done: reordered every execute-phase and ship-roadmap terminal/hand-off block from the inverted `fold-findings → re-run review-change` to the canonical `review-change → /fold-findings (only on a REVIEW-FAIL) → re-run review-change`; dropped "mandatory" from the fold hand-off; added red-first discipline pin; bumped execute-phase 4.4.1 + ship-roadmap 5.2.1 with CHANGELOG EN+ES rows; re-ran bundle:skills (38 skills).
+- Remains: close-out (P2) — full gate, done flip, PR.
+- Gotchas: AC1 greps the exact contiguous string `fold-findings, then re-run /review-change`, so the corrected sub-bullets were worded to preserve the review→fold→re-review order without that contiguous string; the grid test regex needed backtick-tolerance for `command` → `command` paths. Pre-existing out-of-scope finding: `node --test scripts/check-skill-context.test.mjs` fails on clean HEAD too (fixture 'over-budget reference should fail closed' expects a non-zero exit, got 0) — reproduced via `git stash` on `919d88be`, so it is NOT caused by this fix. Recorded per the opportunistic finding policy; not fixed here (out of scope; the runner `node scripts/check-skill-context.mjs` itself exits 0). The repo root has no `npm test` (bun islands), so AC5's `npm test` is not literally runnable at root; the equivalent gate run was: 3-file discipline suite (8/8), `check-skill-context.mjs` (exit 0), and `bun run test` in the touched `packages/pi-agentic-workflow` (140/140).
+- Files: skills/execute-phase/SKILL.md, skills/execute-phase/references/{UNIT_LOOP,FOLDING,CLOSEOUT,BATCH_AND_PORTABILITY}.md, skills/ship-roadmap/{SKILL.md,references/ADVANCE.md,references/MODEL_ROUTING.md}, scripts/next-recommendations.test.mjs, CHANGELOG.md, CHANGELOG.es.md, packages/pi-agentic-workflow/skills/**
+- Next: P2 — Hardening & PR
