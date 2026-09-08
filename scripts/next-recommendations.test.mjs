@@ -69,6 +69,32 @@ test("review and fold hand-offs preserve every finding ID", () => {
   assert.match(fold, /never\s+print `<F2>`, `…`, or a single representative ID/);
 });
 
+test("review-change review-end boundary (fix #191 extension)", () => {
+  const reviewSkill = readSkill("review-change");
+  const output = readReference("review-change", "OUTPUT_AND_GUARDRAILS.md");
+  const review = readReference("review-change", "PERSIST_AND_DECIDE.md");
+  const process = readReference("review-change", "REVIEW_PROCESS.md");
+
+  // C1 — the review-end turn boundary box is present: the skill ends at the
+  // report on REVIEW-FAIL/NEEDS-DECISION and never self-invokes a fold/executor.
+  assert.match(reviewSkill, /ends at the report/);
+  assert.match(reviewSkill, /separate user-initiated invocations/);
+
+  // C2 — folder destination phrasing: the review never runs the fold itself.
+  assert.doesNotMatch(reviewSkill, /folds in-unit/);
+  assert.match(reviewSkill, /never run by this review/);
+
+  // C4 — routing phrasing: fold is invoked after this review ends, not in-review.
+  assert.doesNotMatch(output, /folded into the current phase/);
+  assert.match(output, /invoked after this review ends/);
+
+  // C3 — the → Next: recommendation is a hand-off, not a to-do list for this turn.
+  assert.match(review, /recommendation, not a to-do list/);
+
+  // C5 — two-cycle re-runs are separate review invocations, not in-session steps.
+  assert.match(process, /separate review invocations/);
+});
+
 test("batch triage maps each issue to its own next command", () => {
   const skill = readSkill("triage-issue");
 

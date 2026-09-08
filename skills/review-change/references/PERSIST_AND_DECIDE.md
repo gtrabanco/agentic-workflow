@@ -37,6 +37,10 @@
    an uncommitted append hands the next review a dirty-tree stop. On
    `REVIEW-PASS` with an open PR no ledger write happens (the SHA-bound
    receipt is the durable record): head and posted receipt stay identical.
+   This skill's only mutations are this ledger commit (step 11) and, on
+   `REVIEW-PASS` with a PR, the receipt comment (step 12) — it never runs a
+   fold, executes a phase, or edits source (see the review-end turn boundary in
+   the SKILL.md Turn contract).
 12. **Close out the final-review receipt before reporting.** First derive the
    `Decision` from step 7 and persist step 11. Then, before printing any line of
    the fixed report block or the `→ Next:` block, complete the receipt action
@@ -112,6 +116,10 @@
    line — each sub-bullet is its own line, exactly as quoted below.
    For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the
    closing recommendation, joined with ` + `; never hand off only the first.
+   The `→ Next:` block is a **recommendation, not a to-do list**: it names what
+   the *next* user-initiated invocation should be, and this turn ends when the
+   report block (step 13) is printed — emit the block and end the run; do not
+   begin the recommended command.
 
    **`Decision: REVIEW-FAIL`** (any fix-now finding open) — the recommended line
    is the fold, never the merge gate. Findings were persisted in step 11; **no
