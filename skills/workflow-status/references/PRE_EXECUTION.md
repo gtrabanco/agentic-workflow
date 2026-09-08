@@ -12,7 +12,7 @@ For every unit whose resolved status is `defined`, `planned` or `in-progress`:
    unit's `progress.md` (no `progress.md`, or no block for that stage → `missing`).
 2. The `snapshot` line — the `sha256:` digest the receipt binds — and each bound
    artifact's current bytes: re-derive the digest with the recipe owner's verify
-   mode — `node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit
+   mode — `bun scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit
    <id> [--parent <64-hex>]` (`pre-execution-review` owns the recipe; a feature plan
    check needs the Product digest it descended from, a fix check binds no parent).
    Read `structural.reasonCode` and `structural.changedPaths` out of the JSON — they

@@ -43,7 +43,7 @@ contract failures, not style.
 
 Then build the snapshot with the recipe owner —
 `pre-execution-review`'s [`SKILL.md`](<../../pre-execution-review/SKILL.md>) →
-SNAPSHOT reference: `node scripts/pre-execution-snapshot.mjs build --stage spec
+SNAPSHOT reference: `bun scripts/pre-execution-snapshot.mjs build --stage spec
 --unit <unitId>` (canonical serializer: sorted keys, context rows ordered by kind
 then identifier, UTF-8, lowercase SHA-256). The digest is stdout's first line, so
 this recipe writes no file; `--json` is in-repository only. Paste the digest it

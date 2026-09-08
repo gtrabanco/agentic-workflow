@@ -47,7 +47,7 @@ receipt, run the recipe owner's re-verify for this stage and paste the sensor's 
 answer beside the verdict block before reporting:
 
 ```bash
-node scripts/pre-execution-snapshot.mjs verify --stage spec --unit <NN-slug> --dir docs/features/<NN>-<slug> --unit-kind <feature|fix>
+bun scripts/pre-execution-snapshot.mjs verify --stage spec --unit <NN-slug> --dir docs/features/<NN>-<slug> --unit-kind <feature|fix>
 ```
 
 A digest-bound receipt requires `structural.fresh: true` (and, for a PASS verdict,

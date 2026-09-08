@@ -16,15 +16,15 @@
  * blob id (git blob ids stay the acceptance-manifest convention).
  *
  * Usage
- *   node scripts/pre-execution-snapshot.mjs build --stage spec|plan --unit <id>
+ *   bun scripts/pre-execution-snapshot.mjs build --stage spec|plan --unit <id>
  *        [--dir <artifact-dir>] [--unit-kind feature|fix]
  *        [--artifact-revision <id>] [--source-revision <sha>]
  *        [--parent <64-hex>] [--json <out-file>]
- *   node scripts/pre-execution-snapshot.mjs verify --stage spec|plan --unit <id>
+ *   bun scripts/pre-execution-snapshot.mjs verify --stage spec|plan --unit <id>
  *        [--dir <artifact-dir>] [--unit-kind feature|fix] [--receipt <id|64-hex>]
  *        [--parent <64-hex>] [--policy <version>] [--artifact-revision <id>]
  *        [--source-revision <sha>]
- *   node scripts/pre-execution-snapshot.mjs contract
+ *   bun scripts/pre-execution-snapshot.mjs contract
  *
  * Exit codes: 0 fresh / digest printed · 1 usage or refused snapshot ·
  * 3 no receipt for that stage · 4 receipt exists but is no longer current.
@@ -547,7 +547,7 @@ async function main() {
 // Importable without side effects: `pre-execution-attribution.test.mjs` imports
 // `attributeFreshness` to prove the sensor agrees with the contract, and a CLI that
 // ran itself on import would answer a usage error into every importer's exit status.
-// Spawned as `node scripts/pre-execution-snapshot.mjs …` this path still matches.
+// Spawned as `bun scripts/pre-execution-snapshot.mjs …` this path still matches.
 const invokedDirectly = process.argv[1]
   && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (invokedDirectly) {
