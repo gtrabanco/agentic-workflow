@@ -71,7 +71,7 @@ live evidence against a frozen ledger remains a contradiction candidate.
    missing receipt there surfaces as a gate blocker; merged units stay excluded
    (the merge itself closes their gates). Read the stage's
    newest receipt block, re-derive the bound digest with the recipe owner's
-   verify mode (`node scripts/pre-execution-snapshot.mjs verify --stage
+   verify mode (`bun scripts/pre-execution-snapshot.mjs verify --stage
    <spec|plan> --unit <id> [--parent <64-hex>]` — a snapshot digest is a canonical SHA-256, never a
    git blob id; `structural.reasonCode` names the dimension that drifted), and
    label the stage `current`/`missing`/`stale`/`wrong-stage`/`substitute`/

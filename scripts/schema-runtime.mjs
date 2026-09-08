@@ -38,7 +38,7 @@ if (!fs.existsSync(distEntry)) {
     "schema runtime is not built: "
       + `${path.relative(repoRoot, distEntry)} is missing (dist/ is a gitignored `
       + "build output). Build it first: (cd packages/agentic-workflow-schema && "
-      + "`npm run build`) — or run that package's `npm test`, which builds before "
+      + "`npm run build`) — or run that package's `bun run test`, which builds before "
       + "it tests.",
   );
 }

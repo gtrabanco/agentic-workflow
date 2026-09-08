@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/agentic-workflow-schema",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Versioned machine contracts, JSON Schemas, parsers, and deterministic document snapshots for agentic-workflow orchestration.",
   "keywords": [
     "agentic-workflow",
@@ -52,28 +52,30 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "bun": ">=1.4"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "build": "tsc",
-    "test": "tsc && tsc -p tsconfig.test.json && node --test test/*.test.mjs",
-    "prepublishOnly": "npm test",
-    "check:verification-schemas": "tsc && node scripts/generate-verification-schemas.mjs --check",
-    "check:verification-package": "node scripts/check-verification-package.mjs",
-    "check:pre-execution-schemas": "tsc && node scripts/generate-pre-execution-schemas.mjs --check",
-    "check:pre-execution-package": "node scripts/check-pre-execution-package.mjs",
-    "test:pre-execution-docs": "node --test test/pre-execution-docs.test.mjs",
-    "bench:verification": "node scripts/bench-verification.mjs",
-    "probe:sha256-paths": "node scripts/probe-sha256-paths.mjs",
-    "test:verification-docs": "node --test test/verification-docs.test.mjs",
-    "gate:verification": "npm test && npm run check:verification-schemas && npm run check:verification-package && npm run test:verification-docs && npm run bench:verification -- --commands 128",
-    "gate:pre-execution": "npm test && npm run check:pre-execution-schemas && npm run check:pre-execution-package && npm run test:pre-execution-docs"
+    "test": "tsc && tsc -p tsconfig.test.json && bun test test/*.test.mjs",
+    "test:node": "tsc && tsc -p tsconfig.test.json && node --test test/*.test.mjs",
+    "prepublishOnly": "bun run test",
+    "check:verification-schemas": "tsc && bun scripts/generate-verification-schemas.mjs --check",
+    "check:verification-package": "bun scripts/check-verification-package.mjs",
+    "check:pre-execution-schemas": "tsc && bun scripts/generate-pre-execution-schemas.mjs --check",
+    "check:pre-execution-package": "bun scripts/check-pre-execution-package.mjs",
+    "test:pre-execution-docs": "bun test test/pre-execution-docs.test.mjs",
+    "bench:verification": "bun scripts/bench-verification.mjs",
+    "probe:sha256-paths": "bun scripts/probe-sha256-paths.mjs",
+    "test:verification-docs": "bun test test/verification-docs.test.mjs",
+    "gate:verification": "bun run test && bun run check:verification-schemas && bun run check:verification-package && bun run test:verification-docs && bun run bench:verification -- --commands 128",
+    "gate:pre-execution": "bun run test && bun run check:pre-execution-schemas && bun run check:pre-execution-package && bun run test:pre-execution-docs"
   },
   "devDependencies": {
-    "ajv": "^8.20.0",
+    "ajv": "8.20.0",
     "typescript": "6"
   }
 }
