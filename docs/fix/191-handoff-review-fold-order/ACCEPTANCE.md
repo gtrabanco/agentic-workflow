@@ -14,12 +14,20 @@ Status: frozen
 | AC8 | Release bookkeeping: `execute-phase` → 4.4.1, `ship-roadmap` → 5.2.1 with CHANGELOG rows | `grep -n "4.4.1" skills/execute-phase/SKILL.md CHANGELOG.md CHANGELOG.es.md` → ≥ 1 match per file; `grep -n "5.2.1" skills/ship-roadmap/SKILL.md CHANGELOG.md CHANGELOG.es.md` → ≥ 1 match per file |
 | AC9 | ES sibling CHANGELOG row ships in the same change; `bundle:skills` re-bundle committed | read-verified: diff of the unit's commit shows faithful `CHANGELOG.es.md` row + bundle mirror files |
 | AC10 | Every reordered block's wording matches the canonical correction path declared by `skills/review-change/SKILL.md` (review → fold-if-findings → re-review; two-cycle cap pointer preserved where present) | read-verified: side-by-side of each edited block against `review-change` SKILL.md correction-path wording |
+| AC11 | The review-end turn boundary exists in `review-change`: on `REVIEW-FAIL`/`NEEDS-DECISION` the skill ends at the report and never self-invokes the fold or an executor | `grep -n "ends at the report" skills/review-change/SKILL.md` → ≥ 1 match; `grep -n "separate user-initiated invocations" skills/review-change/SKILL.md` → ≥ 1 match |
+| AC12 | The in-review-fold destination phrasing is gone: fold is a separate invocation, never run by the review | `grep -rn "folds in-unit" skills/review-change/` → 0 matches; `grep -n "never run by this review" skills/review-change/SKILL.md` → ≥ 1 match |
+| AC13 | The routing phrasing routes findings to the phase's fold cycle instead of reading as in-review execution | `grep -rn "folded into the current phase" skills/review-change/` → 0 matches; `grep -n "invoked after this review ends" skills/review-change/references/OUTPUT_AND_GUARDRAILS.md` → ≥ 1 match |
+| AC14 | The hand-off recommendation and two-cycle re-run are stated as separate invocations, not in-session to-do steps | `grep -n "recommendation, not a to-do list" skills/review-change/references/PERSIST_AND_DECIDE.md` → ≥ 1 match; `grep -n "separate review invocations" skills/review-change/references/REVIEW_PROCESS.md` → ≥ 1 match |
+| AC15 | Discipline suite green with the review-end pin; reverting the boundary text fails the pin | `node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → all pass; full revert of the turn-boundary text in `skills/review-change/SKILL.md` fails the pin |
+| AC16 | Release bookkeeping for the extension: `review-change` → 3.5.0 with CHANGELOG rows; Pi mirror synced | `grep -n "3.5.0" skills/review-change/SKILL.md CHANGELOG.md CHANGELOG.es.md` → ≥ 1 match per file; after `bundle:skills`, `git status --porcelain packages/pi-agentic-workflow/skills/` → empty |
 
 ## Quality floor
 
 - Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.
 - Do not modify this manifest during execution without a user-approved SPEC amendment.
 - Passing declared checks is necessary, not sufficient; final independent review and named manual checks remain required.
+- Amendment provenance: manifest replaced 2026-09-08 under the SPEC `## Amendments` row (user-approved replan; issue #191 follow-up) — AC1–AC10 unchanged, AC11–AC16 added.
+- Runtime note: skill reference reads resolve to `skills/` in the repo — never `node_modules/` (stale installed copy until release).
 
 ## Commands
 

@@ -17,6 +17,19 @@ review verdict behind it has nothing to fold — its own "When to use"
 session, PR #190) the recommendation was followed as written and produced a no-op
 step plus confusion about whether the mandatory end review had been skipped.
 
+**Replan amendment (2026-09-08, issue #191 follow-up comment):** the unit's scope
+is extended with the mirror-image defect on the `review-change` side — same
+fold/review boundary, opposite direction. On `REVIEW-FAIL` with fix-now findings,
+the review does not stop at the report: it ran `/fold-findings` inline (fix-191
+session, PR #193, commit `163ae34c` — findings F1–F4 folded, code/tests/docs
+edited, committed and pushed from inside the review session). `review-change` is
+findings-only ("never edit or refactor", `skills/review-change/SKILL.md:18`), but
+the fencing is weak: it already commits and pushes the ledger append, has no
+turn-boundary marker on the fail path, and its destination phrasing ("`fix-now`
+folds in-unit", "folded into the current phase") reads as "the review folds it
+now". The fix-side reorder (P1, already executed) stays as shipped; the new
+phases fence the reviewer side.
+
 ## Issue
 
 `#191` — tracked issue in the project's forge. The PR must close it via
@@ -52,12 +65,43 @@ instead of behind a review verdict. `review-change`'s own correction path
 the manual correction path is `/fold-findings`, then re-run `/review-change`") is
 the correct ordering — fold is only ever the **second** leg, after a verdict.
 
+**Reviewer-side root causes (issue #191 follow-up, verified at `skills/` HEAD
+2026-09-08):** five weaknesses in `skills/review-change/` let the review execute
+the fold it only recommends:
+
+1. **`review-change` already mutates** — `references/PERSIST_AND_DECIDE.md` step
+   11 orders the review itself to "Commit the ledger append — pushed when a PR is
+   open", so the agent is in commit-and-push mode inside the skill and continuing
+   into the fold reads as the next step of the same flow.
+2. **No turn-boundary marker on `REVIEW-FAIL`** — step 14's `→ Next:
+   /fold-findings — repair all open fix-now findings: F1 + F2 + F3…` block quotes
+   the full command; nothing states the skill **ends** at the report and that the
+   fold is a separate user-initiated invocation. The receipt closeout condition
+   (the end-of-turn discipline) applies to `REVIEW-PASS` only.
+3. **Destination phrasing reads as instruction** — `SKILL.md:143` "`fix-now`
+   folds in-unit" and `references/OUTPUT_AND_GUARDRAILS.md:24` "folded into the
+   current phase (unmerged work)" describe the finding's *destination* but read
+   as "the review folds it now".
+4. **Turn contract has no stop box for `REVIEW-FAIL`/`NEEDS-DECISION`** — the
+   Turn contract (`SKILL.md:20–37`) only adds the receipt-closeout box for
+   `REVIEW-PASS`; the fail path has no closing condition at all.
+5. **Cycle-cap chain in one paragraph** — the correction path and
+   `references/REVIEW_PROCESS.md` §"Two-cycle cap" ("then re-run
+   `/review-change` on the changed HEAD") read as an in-session to-do chain
+   rather than a sequence of separate invocations.
+
 ## Detected in
 
 Issue #191 (2026-09-08, label `bug`), reported after the fix-181 session
 (2026-09-08, PR #190) followed the execute-phase terminal block as written and hit
 the no-op fold. Cross-checked against `git log` for commit `0523586e` and the
 canonical order declared by the #161 SPEC.
+
+Reviewer-side half detected in the issue follow-up comment (2026-09-08T14:08Z):
+confirmed live while running `/review-change` on this unit's own PR #193 — on
+`REVIEW-FAIL` with 4 fix-now findings the review folded F1–F4 inline (commit
+`163ae34c`, pushed to the PR) inside the review session itself. Verified at
+`skills/` HEAD 2026-09-08 (P1 already executed on this branch).
 
 ## Scope
 
@@ -97,6 +141,36 @@ bookkeeping convention:
 - `skills/ship-roadmap/references/MODEL_ROUTING.md` — "Final review/correction
   loop" row ("compose the manual path `/fold-findings`, then re-run
   `/review-change`").
+
+**Replan extension — reviewer-side fencing (`skills/review-change/`, verified at
+HEAD 2026-09-08; all line refs current):**
+
+- `skills/review-change/SKILL.md` Turn contract (lines 20–37) — add a
+  turn-boundary box: on `REVIEW-FAIL`/`NEEDS-DECISION` the skill **ends at the
+  report**; it never invokes `/fold-findings`, `/execute-phase`,
+  `/plan-feature`, `/design-feature` or `/triage-issue` itself — those are
+  separate user-initiated invocations (C1).
+- `skills/review-change/SKILL.md:143` — "`fix-now` folds in-unit" → "`fix-now`
+  is routed to the unit's fold cycle — a **separate** `/fold-findings`
+  invocation, never run by this review" (C2).
+- `skills/review-change/references/PERSIST_AND_DECIDE.md` step 11 (~line 35) —
+  state explicitly that this skill's only mutations are the ledger commit
+  (step 11) and, on `REVIEW-PASS`, the receipt comment (step 12) (C3, part 1).
+- `skills/review-change/references/PERSIST_AND_DECIDE.md` step 14 (~line 121) —
+  state explicitly that the `→ Next:` block is a hand-off **recommendation, not
+  a to-do list for this turn** — emit it and end the run (C3, part 2).
+- `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md:24` — "folded into
+  the current phase" → "routed to the current phase's fold cycle
+  (`/fold-findings`, invoked after this review ends)" (C4).
+- `skills/review-change/references/REVIEW_PROCESS.md` §"Two-cycle cap" (~line
+  159) — clarify that "re-run" counts **separate review invocations**, not steps
+  of the same session (C5).
+- `scripts/next-recommendations.test.mjs` — extend the existing review-change
+  pin (already reads `review-change` SKILL.md + `PERSIST_AND_DECIDE.md`) with
+  the review-end boundary, red-first (C1–C5 discipline pin).
+- Version bump `review-change` 3.4.0 → 3.5.0, `CHANGELOG.md` EN row +
+  `CHANGELOG.es.md` sibling in the same change, `bundle:skills` Pi-mirror
+  re-bundle (release bookkeeping convention).
 - Discipline tests that pin the affected blocks — updated red-first, never
   weakened: `scripts/next-recommendations.test.mjs` and any sibling test pinning
   the exact inverted wording (`scripts/bounded-delivery-loops.test.mjs`,
@@ -109,9 +183,11 @@ bookkeeping convention:
 ### Out of scope
 
 - Surfaces that already state the fold as the second leg after a verdict — do
-  not regress them: `skills/review-change/SKILL.md` ("On `REVIEW-FAIL` …"
-  correction path), `skills/review-change/references/REVIEW_PROCESS.md`
-  (two-cycle cap), `skills/review-plan/references/OUTPUT.md` (class-route map),
+  not regress them. `skills/review-change/SKILL.md`'s **correction path order**
+  and `references/REVIEW_PROCESS.md`'s **two-cycle bound values** are correct
+  and unchanged — the replan extension only adds the review-end fencing and
+  clarifies phrasing inside those same files; it does not reorder them.
+  `skills/review-plan/references/OUTPUT.md` (class-route map),
   `skills/review-spec/references/OUTPUT.md` (class-route map),
   `skills/review-implementation/references/CLASSIFY.md` (owning-stage table),
   `skills/pre-execution-review/references/POLICY.md` §5,
@@ -134,6 +210,13 @@ bookkeeping convention:
 | PE-006 | Tests pin discipline over these blocks; the affected pins live in `scripts/next-recommendations.test.mjs` (finding-ID hand-offs) and sibling discipline readers (`review-loop-discipline.test.mjs`, `bounded-delivery-loops.test.mjs`) — none currently pins the inverted order, so red-first means adding a pin, not loosening one. | repo | grep over `scripts/*.test.mjs` (2026-09-08) | 2026-09-08 | P1 task 7 (pin canonical order red-first) | current | proven | execute-phase |
 | PE-007 | Rollback path: single revert of the unit's commit(s) on the PR branch; no data, schema, or runtime state involved (docs-only change). | repo | `git revert` flow in `## Rollback` | 2026-09-08 | Rollback section | current | proven | — |
 | PE-008 | Affected invariant: "Complete dynamic hand-offs" (CLAUDE.md) — every closing recommendation must name the real next command; a fold-first hand-off names an impossible step. | repo | `CLAUDE.md` "Working rules" — Complete dynamic hand-offs | 2026-09-08 | Obligations O1–O4 | current | proven | — |
+| PE-009 | Reproduction (reviewer side): on `REVIEW-FAIL` with 4 fix-now findings, the review session executed `/fold-findings` inline — folded F1–F4, edited code/tests/docs, committed `163ae34c`, pushed to PR #193 — instead of stopping at the report. | forge | issue #191 follow-up comment (2026-09-08T14:08Z); `git show 163ae34c`; PR #193 timeline | @ `163ae34c` (2026-09-08) | P3 tasks 1–7 | current | proven | review-change |
+| PE-010 | Root cause (reviewer side, R1): `review-change` already commits-and-pushes the ledger append (step 11) and has no turn-boundary marker on `REVIEW-FAIL` — step 14 quotes the fold command as `→ Next:` while the receipt-closeout end-of-turn condition applies to `REVIEW-PASS` only. | repo | `skills/review-change/references/PERSIST_AND_DECIDE.md:35,121`; `skills/review-change/SKILL.md:20–37` | @ `163ae34c` parent (2026-09-08) | P3 tasks 2, 4, 5 | current | proven | review-change |
+| PE-011 | Root cause (reviewer side, R2): destination phrasing reads as in-review execution — `SKILL.md:143` "`fix-now` folds in-unit"; `references/OUTPUT_AND_GUARDRAILS.md:24` "folded into the current phase (unmerged work)". | repo | `skills/review-change/SKILL.md:143`; `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md:24` | 2026-09-08 | P3 tasks 3, 6 | current | proven | review-change |
+| PE-012 | Root cause (reviewer side, R3): the correction-path + two-cycle-cap wording reads as an in-session to-do chain — "then re-run `/review-change` on the changed HEAD" never states that re-runs are separate invocations. | repo | `skills/review-change/SKILL.md:145–150`; `skills/review-change/references/REVIEW_PROCESS.md:159–165` | 2026-09-08 | P3 task 7 | current | proven | review-change |
+| PE-013 | Regression scope (reviewer side): the fencing adds a boundary only — the correction-path **order** and the two-cycle **bound values** stay byte-stable; the fix-side reorder (P1) and all verdict-following uses must not regress. The existing pin (`scripts/next-recommendations.test.mjs:40–63`) already reads `review-change` SKILL.md + `PERSIST_AND_DECIDE.md`, so the new pin extends it. | repo | grep `review-change` over `scripts/next-recommendations.test.mjs` (2026-09-08) | @ `163ae34c` | P3 tasks 1, 8 + AC3, AC15 | current | proven | review-change |
+| PE-014 | Rollback path (unchanged): single revert of the unit's commit(s) on the PR branch; no data, schema, or runtime state involved (docs-only change). | repo | `git revert` flow in `## Rollback` | 2026-09-08 | Rollback section | current | proven | — |
+| PE-015 | Runtime note: the installed package copy (`node_modules/@gtrabanco/pi-agentic-workflow/skills/`) predates this fix's source changes and is expected to lag until release; during execution and review, skill reference reads resolve to `skills/` in the repo — never node_modules. | repo | issue #191 follow-up "Evidence note" (2026-09-08); `packages/pi-agentic-workflow/skills/` mirror diff | 2026-09-08 | P3, P4 execution discipline | current | proven | execute-phase |
 
 ### Obligations
 
@@ -144,6 +227,9 @@ bookkeeping convention:
 | O3 | PE-004 | The "mandatory" label sits on the review, never on the fold hand-off | P1 | Tasks 3–4 | execute-phase | `grep -n "mandatory \`/fold-findings\`" skills/execute-phase/SKILL.md skills/execute-phase/references/CLOSEOUT.md` → 0 hits | grep output pasted in phase notes | planned |
 | O4 | PE-003 / PE-006 | Discipline tests pin the canonical order and the old wording cannot return; verdict-following uses in `review-change`/`review-plan`/`review-spec`/`review-implementation`/`fold-findings` still pass | P1 | Task 7 | execute-phase | `node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → all pass, with a new red-first pin added | test run output pasted | planned |
 | O5 | PE-008 / CLAUDE.md version rule | Release bookkeeping complete: both skills bumped, CHANGELOG EN+ES rows, bundle re-sync | P1 | Task 8 | execute-phase | `git status --porcelain` shows the four release artifacts; `CHANGELOG.md` and `CHANGELOG.es.md` each contain a row for the bump | diff visible in commit | planned |
+| O6 | PE-009 / PE-010 | On `REVIEW-FAIL`/`NEEDS-DECISION`, `review-change` ends at the report — it never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`, `/design-feature` or `/triage-issue` itself; the Turn contract carries the stop box | P3 | Tasks 1–2 | execute-phase | AC11 greps (`ends at the report`, `separate user-initiated invocations` in `skills/review-change/SKILL.md`) + red-first pin fails on revert | grep output + red output pasted | planned |
+| O7 | PE-011 / PE-012 | Destination phrasing never reads as in-review execution: "folds in-unit" and "folded into the current phase" are gone; the fold is "a separate `/fold-findings` invocation"; two-cycle "re-run" counts separate review invocations | P3 | Tasks 3–7 | execute-phase | AC12–AC14 greps → removed phrasings 0 matches, replacement wording ≥ 1 match each | grep output pasted | planned |
+| O8 | PE-009 / CLAUDE.md version rule | Release bookkeeping for the extension: `review-change` 3.4.0 → 3.5.0, CHANGELOG EN+ES rows, `bundle:skills` mirror re-sync | P3 | Task 8 | execute-phase | AC16 greps: `3.5.0` present in `skills/review-change/SKILL.md`, both CHANGELOGs; mirror clean after bundle | diff visible in commit | planned |
 
 ## Acceptance
 
@@ -171,6 +257,32 @@ command, or labelled `read-verified` — never unlabelled prose.
   `skills/review-change/SKILL.md` ("On `REVIEW-FAIL` the manual correction path
   is `/fold-findings`, then re-run `/review-change` …") — same order, same
   two-cycle pointer where the block already carried it.
+- **AC11 (command-verified, replan)** — the review-end turn boundary exists:
+  `grep -n "ends at the report" skills/review-change/SKILL.md` → ≥ 1 match, and
+  `grep -n "separate user-initiated invocations" skills/review-change/SKILL.md`
+  → ≥ 1 match.
+- **AC12 (command-verified, replan)** — the in-review-fold phrasing is gone:
+  `grep -rn "folds in-unit" skills/review-change/` → 0 matches, and
+  `grep -n "never run by this review" skills/review-change/SKILL.md` → ≥ 1 match.
+- **AC13 (command-verified, replan)** — the routing phrasing is fenced:
+  `grep -rn "folded into the current phase" skills/review-change/` → 0 matches,
+  and `grep -n "invoked after this review ends"
+  skills/review-change/references/OUTPUT_AND_GUARDRAILS.md` → ≥ 1 match.
+- **AC14 (command-verified, replan)** — the hand-off/re-run phrasing is
+  clarified: `grep -n "recommendation, not a to-do list"
+  skills/review-change/references/PERSIST_AND_DECIDE.md` → ≥ 1 match, and
+  `grep -n "separate review invocations"
+  skills/review-change/references/REVIEW_PROCESS.md` → ≥ 1 match.
+- **AC15 (command-verified, replan)** — the discipline suite is green with the
+  review-end pin: `node --test scripts/next-recommendations.test.mjs
+  scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs`
+  → all pass; a full revert of the new turn-boundary text in
+  `skills/review-change/SKILL.md` fails the pin.
+- **AC16 (command-verified, replan)** — release bookkeeping for the extension:
+  `grep -n "3.5.0" skills/review-change/SKILL.md CHANGELOG.md CHANGELOG.es.md`
+  → ≥ 1 match per file; after `bundle:skills`,
+  `git status --porcelain packages/pi-agentic-workflow/skills/` → empty (mirror
+  synced).
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -200,6 +312,10 @@ default; an explicit `P<n>` runs exactly one phase. Final phase is
   (single layer `docs`; 8 tasks; one deliverable).
 - P2: `Phase-lint: PASS (8/8) · fingerprint P2:hardening:7:hardening-pr-closeout`
   (test-only/hardening layer; literal close-out chain).
+- P3: `Phase-lint: PASS (8/8) · fingerprint P3:docs:8:fence-review-change-review-end-boundary`
+  (single layer `docs`; 8 tasks; one deliverable — the review-end fence).
+- P4: `Phase-lint: PASS (8/8) · fingerprint P4:hardening:6:hardening-pr-closeout`
+  (hardening layer; close-out chain amends the already-open PR #193 — no new PR).
 
 ### P1 — Reorder review-fold hand-offs across execute-phase and ship-roadmap
 
@@ -227,6 +343,35 @@ Layer: `docs`. Done-when:
 - [x] Update the fix-index row to `done · [#193](https://github.com/gtrabanco/agentic-workflow/pull/193)`
 - [x] Commit `docs: link PR #193` and push
 
+### P3 — Fence review-change review-end boundary
+
+Layer: `docs`. Done-when:
+`grep -rn "folds in-unit\|folded into the current phase" skills/review-change/`
+→ 0 matches, and `node --test scripts/next-recommendations.test.mjs
+scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs`
+→ all pass.
+
+- [ ] Red-first: extend the existing review-change pin in `scripts/next-recommendations.test.mjs` (it already reads `review-change` SKILL.md and `PERSIST_AND_DECIDE.md`) to assert the review-end boundary — turn-boundary box present, `folds in-unit` and `folded into the current phase` absent, `recommendation, not a to-do list` present — run it and paste the red output before editing the skills.
+- [ ] Add the turn-boundary box to the `skills/review-change/SKILL.md` Turn contract: on `REVIEW-FAIL`/`NEEDS-DECISION` the skill ends at the report — it never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`, `/design-feature` or `/triage-issue` itself; those are separate user-initiated invocations (C1).
+- [ ] Rewrite `skills/review-change/SKILL.md:143` "`fix-now` folds in-unit" to "`fix-now` is routed to the unit's fold cycle — a separate `/fold-findings` invocation, never run by this review" (C2).
+- [ ] Extend `skills/review-change/references/PERSIST_AND_DECIDE.md` step 11: state that this skill's only mutations are the ledger commit (step 11) and, on `REVIEW-PASS`, the receipt comment (step 12) (C3 part 1).
+- [ ] Extend `skills/review-change/references/PERSIST_AND_DECIDE.md` step 14: state that the `→ Next:` block is a hand-off recommendation, not a to-do list for this turn — emit it and end the run (C3 part 2).
+- [ ] Rewrite `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md:24` "folded into the current phase" to "routed to the current phase's fold cycle (`/fold-findings`, invoked after this review ends)" (C4).
+- [ ] Extend `skills/review-change/references/REVIEW_PROCESS.md` §"Two-cycle cap": clarify that "re-run" counts separate review invocations, not steps of the same session (C5).
+- [ ] Green check: run the discipline suite and the full gate, bump `review-change` 3.4.0 → 3.5.0 (bump-skill: CHANGELOG EN+ES rows, README tables), re-run `bundle:skills`, commit P3.
+
+### P4 — Hardening & PR
+
+Amends the already-open PR #193 — no new PR is opened; the body already carries
+`Closes #191`.
+
+- [ ] Re-run the project's full verification gate (discipline suite, `node scripts/check-skill-context.mjs`, `bun run test` in the touched pi package) and paste commands + exit codes
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → only this unit's files
+- [ ] `git push` — new commits extend PR #193
+- [ ] Post the scope-extension note on PR #193 (`gh pr comment 193 --body-file <path>`)
+- [ ] Update the fix-index row description to name the review-change fencing scope (row stays `in-progress · #193` until merge)
+- [ ] Commit `docs: note fix-191 scope extension on the fix index` and push
+
 ## Testing
 
 - Layer: docs (skills). No runtime code exists — the "tests" are the repo's
@@ -234,7 +379,13 @@ Layer: `docs`. Done-when:
   `scripts/next-recommendations.test.mjs` is the regression test for this fix
   (AC4); the full suite (`npm test`) guards every other pin (AC5).
 - Regression-risk test: AC3 pins the verdict-following uses so the reorder cannot
-  accidentally strip correct second-leg fold wording.
+  accidentally strip correct second-leg fold wording; AC15's review-end pin is
+  the regression test for the replan extension (a full revert of the boundary
+  text must fail it).
+- Runtime note (PE-015): the installed package copy under `node_modules/` is
+  stale until release and is never read or updated — execution and review read
+  `skills/` in the repo, and `bundle:skills` is the only mechanism that touches
+  the committed mirror.
 
 ## Rollback
 
@@ -268,8 +419,9 @@ in CI on the PR, plus the issue auto-close (`Closes #191`).
 
 ## Effort
 
-**S** (≤ 4h, 2 commits): eight mechanical text reorders + one test pin + release
-bookkeeping across two skills; no behavioral logic to re-derive.
+**S** (≤ 4h, ~4 commits): the executed P1/P2 plus six further mechanical text
+edits, one test-pin extension, and release bookkeeping across a third skill —
+no behavioral logic to re-derive.
 
 ## Security risks
 
@@ -288,7 +440,8 @@ n/a.
 ## Impact
 
 - Layers touched: `docs` (skill text) — single layer, no code.
-- Files: the eight surfaces listed in `### In scope` plus
+- Files: the eight surfaces listed in `### In scope`, the six
+  `skills/review-change/` surfaces from the replan extension, plus
   `scripts/next-recommendations.test.mjs`, `CHANGELOG.md`, `CHANGELOG.es.md`,
   `docs/fix/README.md`, and the `bundle:skills` mirror output.
 - Blast radius: users of `execute-phase` and `ship-roadmap` terminal hand-offs
@@ -308,8 +461,14 @@ n/a.
 - Bilingual hard rule (`CLAUDE.md`): the `CHANGELOG.es.md` sibling row ships in
   the same change.
 
+## Amendments
+
+| date | amendment | authority | artifact revision |
+|---|---|---|---|
+| 2026-09-08 | Scope extended with the reviewer-side mirror defect (C1–C5: `review-change` review-end fencing, `3.4.0 → 3.5.0` bump) from the issue #191 follow-up comment; user directed the replan (`/plan-fix 191`, "replan because the issue was updated"). P1/P2 remain executed as shipped; P3 + P4 added. | issue #191 follow-up (2026-09-08T14:08Z) + explicit user instruction | `ar-191-2` |
+
 ## Status
 
-`pending`
+`in-progress`
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
