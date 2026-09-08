@@ -41,7 +41,10 @@ function configLines(config: EffectiveConfig, commands: readonly string[]): stri
 }
 
 function route(value: Route): string {
-  return `${value.model} / ${value.thinking}`;
+  // A chain renders its references in order, with the fallback arrow the spec
+  // names (OB-14); a single reference and `inherit` keep their existing render.
+  const model = Array.isArray(value.model) ? value.model.join(" → ") : value.model;
+  return `${model} / ${value.thinking}`;
 }
 
 function problems(list: readonly ConfigProblem[]): string[] {

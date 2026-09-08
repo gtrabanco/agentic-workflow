@@ -12,9 +12,9 @@ import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
 import { effectiveRoute } from "../config/merge.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
-import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
+import { MAX_MODEL_CHAIN, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
-import type { ConfigFile, ModelSetting, Route, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
+import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 
 export interface SettingsDeps {
@@ -64,6 +64,14 @@ export const prompts = {
   model: (target: string): string => `Model for ${target}?`,
   modelPicked: (target: string): string => `Which model for ${target}?`,
   thinking: (target: string): string => `Thinking level for ${target}?`,
+  fields: "Which fields should change?",
+  fieldsBoth: "model and thinking",
+  fieldsModel: "model only",
+  fieldsThinking: "thinking only",
+  chainAction: (target: string): string => `Model chain for ${target}?`,
+  chainAppend: "Add a fallback",
+  chainRemoveLast: "Remove the last",
+  chainDone: "Done",
 } as const;
 
 const GLOBAL_LABEL = "Global";
@@ -178,14 +186,39 @@ async function openAScope(
 
 /** Ask for a model and a thinking level; `undefined` means nothing changed. */
 async function editRoute(deps: SettingsDeps, target: string, current: Route): Promise<RouteFile | undefined> {
-  const model = await askModel(deps, target, current.model);
-  if (model === undefined) return undefined;
-  const thinking = await askThinking(deps, target, current.thinking);
-  if (thinking === undefined) return undefined;
-  return { model, thinking };
+  const fields = await askFields(deps);
+  if (fields === undefined) return undefined; // nothing marked — the route is left untouched (OB-3)
+
+  // Start from the value in force so only the marked field is replaced; the other
+  // keeps its merged value (AC4: changing only model asks no thinking question).
+  const route: RouteFile = {
+    ...(current.model !== undefined ? { model: current.model } : {}),
+    ...(current.thinking !== undefined ? { thinking: current.thinking } : {}),
+  };
+  if (fields.model) {
+    const model = await askModel(deps, target, current.model);
+    if (model === undefined) return undefined;
+    route.model = model;
+  }
+  if (fields.thinking) {
+    const thinking = await askThinking(deps, target, current.thinking);
+    if (thinking === undefined) return undefined;
+    route.thinking = thinking;
+  }
+  return route;
 }
 
-async function askModel(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<ModelSetting | undefined> {
+/** Which fields the operator wants to change; `undefined` means none (leave untouched). */
+async function askFields(deps: SettingsDeps): Promise<{ model: boolean; thinking: boolean } | undefined> {
+  const choice = await deps.ui.select(prompts.fields, [prompts.fieldsBoth, prompts.fieldsModel, prompts.fieldsThinking]);
+  if (choice === prompts.fieldsBoth) return { model: true, thinking: true };
+  if (choice === prompts.fieldsModel) return { model: true, thinking: false };
+  if (choice === prompts.fieldsThinking) return { model: false, thinking: true };
+  return undefined;
+}
+
+/** Ask for one model entry; `undefined` means cancelled/skipped, `"inherit"` means the whole-route setting. */
+async function pickModelEntry(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<"inherit" | ModelRef | undefined> {
   let answer: string | undefined;
   if (typeof deps.ui.pick === "function" && deps.models && deps.models.length > 0) {
     // Rich seam: filterable, windowed, preselected to the value in force (OB-1).
@@ -204,7 +237,8 @@ async function askModel(deps: SettingsDeps, target: string, current?: ModelSetti
 
   const value = answer.trim();
   if (value === INHERIT) return INHERIT;
-  if (!/^[^/\s]+\/[^/\s]+$/.test(value)) {
+  const parts = parseModelReference(value);
+  if (!parts) {
     // Rejected in the operator's terms and in the schema's: the value, and the
     // field path the loader would name for the same mistake in a file (AC5).
     deps.ui.notify(
@@ -213,8 +247,40 @@ async function askModel(deps: SettingsDeps, target: string, current?: ModelSetti
     );
     return undefined;
   }
-  const parts = parseModelReference(value);
-  return parts ? `${parts.provider}/${parts.id}` : undefined;
+  return `${parts.provider}/${parts.id}`;
+}
+
+/** Ask for a model; a lone reference is returned as-is, several references are returned as an ordered chain. */
+async function askModel(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<ModelSetting | undefined> {
+  const first = await pickModelEntry(deps, target, typeof current === "string" ? current : undefined);
+  if (first === undefined) return undefined;
+  if (first === INHERIT) return INHERIT;
+
+  const chain: ModelRef[] = [first];
+  while (chain.length < MAX_MODEL_CHAIN) {
+    const action = await deps.ui.select(prompts.chainAction(target), [
+      prompts.chainAppend,
+      prompts.chainRemoveLast,
+      prompts.chainDone,
+    ]);
+    if (action === prompts.chainAppend) {
+      const next = await pickModelEntry(deps, target);
+      if (next === undefined) continue;
+      if (next === INHERIT) {
+        deps.ui.notify(
+          `Only "provider/modelId" references can be chain entries; "inherit" is a whole-route setting (${routePath(target)}.model).`,
+          "error",
+        );
+        continue;
+      }
+      chain.push(next);
+    } else if (action === prompts.chainRemoveLast) {
+      if (chain.length > 1) chain.pop();
+    } else {
+      break;
+    }
+  }
+  return chain.length === 1 ? chain[0] : chain;
 }
 
 async function askThinking(deps: SettingsDeps, target: string, current?: ThinkingSetting): Promise<ThinkingSetting | undefined> {
