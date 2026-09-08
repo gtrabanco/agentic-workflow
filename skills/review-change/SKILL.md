@@ -42,7 +42,9 @@ finding.
 On `REVIEW-FAIL` or `NEEDS-DECISION`, this skill **ends at the report**: it
 never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`,
 `/design-feature` or `/triage-issue` — those are separate user-initiated invocations,
-run in a fresh turn. The review's only mutations are the ledger commit (persist step 11) and, on `REVIEW-PASS` with a PR, the
+run in a fresh turn (a programmatic outer driver may compose the same
+sequence in-turn, per `REVIEW_PROCESS.md`). The review's only mutations are the
+ledger commit (persist step 11) and, on `REVIEW-PASS` with a PR, the
 receipt comment (persist step 12); it never folds a finding, executes a phase,
 or edits code. A `REVIEW-FAIL`/`NEEDS-DECISION` turn closes when the report
 block is printed (report step 13).
