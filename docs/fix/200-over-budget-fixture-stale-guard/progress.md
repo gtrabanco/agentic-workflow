@@ -57,3 +57,10 @@ Notes:
 - Gotchas: The suite still exits 1, but ONLY at the pre-existing out-of-scope route red (`routeJson` assertion, now test.mjs:118 after the fixture's +6 comment/const shift) — the route assertions expect `--routes` exit 0 while the shipped route ceilings sit below the declared `relative-headroom` floor (15 exceedances, PE-009). Do NOT touch route assertions or the manifest. The unit's finish line is only the fixture red being gone, not a green suite. Two pre-existing unstaged docs (`docs/LOGS.md`, `docs/features/ROADMAP.md`) were left unstaged per the SPEC decision and are outside this unit.
 - Files: scripts/check-skill-context.test.mjs · docs/fix/200-over-budget-fixture-stale-guard/SPEC.md (P1 ticks) · docs/fix/200-over-budget-fixture-stale-guard/progress.md (receipt + P1 entry)
 - Next: P2 — Hardening & PR
+
+## P2 — 2026-09-08
+- Done: Full gate re-run — `bun scripts/check-skill-context.mjs` (exit 0, `PASS context budgets: 39 skills`), `--budgets` (exit 0), `node --test scripts/*.test.mjs` (207/208, the sole failure at the pre-existing out-of-scope route red `test.mjs:118`). Unit docs committed; pending-docs scoped-check clean (the 2 unrelated unstaged `docs/LOGS.md`/`docs/features/ROADMAP.md` are pre-existing, per the SPEC decision). Fix-index #200 flipped to `done` then `done · [#202](https://github.com/gtrabanco/agentic-workflow/pull/202)`; branch pushed; PR #202 opened with `Closes #200`.
+- Remains: none (unit finished — independent review-change + audit-pr merge gate remain).
+- Gotchas: The suite stays red ONLY at the pre-existing route-budget red (`--routes` 15 ceiling-below-`relative-headroom`-floor exceedances, PE-009) — never touched here. The fail-closed fixture pin is green on both runtimes. The P1 comment shift moved the `routeJson` assertion from `test.mjs:112` to `:118`.
+- Files: docs/fix/README.md (done + PR link) · docs/fix/200-over-budget-fixture-stale-guard/SPEC.md (P1 ticks) · docs/fix/200-over-budget-fixture-stale-guard/progress.md (receipt + P1/P2 entries) · scripts/check-skill-context.test.mjs
+- Next: unit finished
