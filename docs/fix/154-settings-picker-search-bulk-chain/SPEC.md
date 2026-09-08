@@ -451,21 +451,21 @@ Layer: `api`. Done-when:
 (`Ran N tests across 2 files`) pasted — both files exist by then (extended by
 this phase's first task; `default-inherit.test.mjs` already exists).
 
-- [ ] Red-first tests in `test/unavailable-stop.test.mjs`: an exhausted chain
+- [x] Red-first tests in `test/unavailable-stop.test.mjs`: an exhausted chain
       with `stop` refuses naming every candidate and why it was skipped
       (unknown vs. no auth); with `inherit` it dispatches on the session
       model with the same explanation; a chain whose first entry resolves
       and has auth applies exactly that entry; `setModel` is called at most
       once per routed turn (OB-8, OB-9, OB-10).
-- [ ] Extend `dispatch.ts` route resolution: when `route.model` is a chain,
+- [x] Extend `dispatch.ts` route resolution: when `route.model` is a chain,
       probe entries in order with `ctx.find` + `ctx.hasConfiguredAuth` only
       (no session mutation), collect one skip reason per entry, and apply
       the first usable entry (OB-8, OB-10).
-- [ ] Route the exhausted-chain outcome through the existing
+- [x] Route the exhausted-chain outcome through the existing
       `onUnavailableRoute` handling (whose two policies keep their current
       meanings) with the per-candidate message; keep the single-reference
       path byte-identical in behaviour and message shape (OB-9).
-- [ ] Keep the post-probe `setModel` failure handling exactly as today
+- [x] Keep the post-probe `setModel` failure handling exactly as today
       (refuse or inherit-continue), now reachable per chain entry selection,
       with the probe-purity assertion covering it: a failed selection must
       not add a second `setModel` call (OB-9, OB-10).

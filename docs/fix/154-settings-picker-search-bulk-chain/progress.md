@@ -120,10 +120,19 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Manifest: docs/fix/154-settings-picker-search-bulk-chain/ACCEPTANCE.md · Blob: b582c5008cda34e59d20c7b08ba379067a67e6f6 · Status: frozen · Verified: 2026-09-08
 
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` (exit 0, 16 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Commit: 18ba3c3b · Gate: `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` (exit 0, 16 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Next: P2 · Attempts: 1
 - Done: model-chain config schema — `ModelSetting = "inherit" | ModelRef | readonly ModelRef[]`, `MAX_MODEL_CHAIN = 4` (types.ts); `checkRoute` accepts a non-empty chain of ≤4 reference strings, every violation reported at `$.commands.<name>.model` naming the offending element or the limit (schema.ts); merge picks a chain as one per-key value with order preserved — no code change needed, `pick(first-defined)` already treats a chain as an opaque value once types.ts makes it a valid ModelSetting; **7 new chain tests** in config-merge.test.mjs.
 - Remains: P2 (chain-probe dispatch) … P8 (hardening & PR).
 - Gotchas: the scoped validator `bun test test/<file>` needs `bun run build` (tsc) first because the suite imports `../dist/…` and `dist/` is gitignored (not committed). A `/\"…\"/u` regex is a SyntaxError under the `u` flag — used `assert.ok(msg.includes(…))` instead. merge.ts needed no edit despite P1 task 4 naming it (verified by the round-trip and global-only chain tests).
 - Files: src/config/types.ts, src/config/schema.ts, test/config-merge.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
 - Next: P2 chain-probe dispatch.
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs test/default-inherit.test.mjs` (exit 0, 25 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Next: P3 · Attempts: 1
+- Done: chain-probe dispatch — `dispatch.ts` probes a `route.model` chain in order with only `ctx.find` + `ctx.hasConfiguredAuth` (no session mutation), collects one skip reason per entry, applies the first usable one, and routes an exhausted chain through `onUnavailableRoute` (`stop` refuses / `inherit` notifies) naming every candidate and why it was skipped; the single-reference path is byte-identical in behaviour and message shape; the select-failure message now names the chosen entry via `chosenRef`. **7 new chain tests** in unavailable-stop.test.mjs (applies-first-usable, skip-no-auth, swallow-unknown, exhausted-stop, exhausted-inherit, probe-purity once, no-second-setModel).
+- Remains: P3 (alias) … P8 (hardening & PR).
+- Gotchas: the chain `stop` message shape is `… the configured model chain <refs> is unavailable (<reason>; <reason>).` — the single-reference path keeps its original `… the configured model <ref> <blocker>.` phrasing. `chosenRef` records the specific reference behind `target` so a select failure on a chain names only the chosen entry (not the whole array). `selectFails: true` still refuses via `setModel` returning false; probing never calls `setModel`.
+- Files: src/routing/dispatch.ts, test/unavailable-stop.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
+- Next: P3 `/aw-settings` alias command.
