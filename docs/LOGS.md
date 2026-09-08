@@ -423,3 +423,17 @@ tidy past entries — they're a record.
 - **Decisions:** The `plan-review-fail` → one-batch-repair → re-review cycle is the normal correction path per POLICY §4 (one repair/re-review cycle). A second cycle would print `CONVERGENCE-ANOMALY`. The plan-review pass certifies the plan for execution: `/execute-phase 30` is now the next step.
 - **Next:** `/execute-phase 30` (implement all 4 phases P1–P4, then run the review-and-fold cycles, then `/audit-pr 188`). After merge: roadmap items 31–36 queued.
 
+
+## 2026-09-08T10:30Z — fix/181-pi-server-devdep-obsolete — manual
+- **Commits:** 7 (`3687c291…7e13c31d`)
+- **Files:** `packages/pi-agentic-workflow/package.json`, `packages/pi-agentic-workflow/bun.lock`, `packages/pi-agentic-workflow/README.md`, `packages/pi-agentic-workflow/README.es.md`, `CHANGELOG.md`, `CHANGELOG.es.md`, `docs/fix/README.md`, `docs/fix/181-pi-server-devdep-obsolete/SPEC.md`, `docs/fix/181-pi-server-devdep-obsolete/ACCEPTANCE.md`, `docs/fix/181-pi-server-devdep-obsolete/planning-findings.md`, `docs/fix/181-pi-server-devdep-obsolete/progress.md`
+- **Summary:** Executed fix #181 (`pi-server-devdep-obsolete`) through all 4 phases via `/execute-phase --fix 181`. Dropped the obsolete `@earendil-works/pi-server@0.85.0` devDependency (shim from fix #166, now dead since pi 0.85.1 removed the defective re-export chain), pinned the peer range from `*` to `>=0.85.1`, re-resolved the lock to pi 0.85.1 (pruned pi-server from `bun.lock` + `node_modules`), refreshed the verified-baseline note in EN+ES READMEs to 0.85.1 (2026-09-05), and completed same-PR release bookkeeping (0.7.1 patch bump + changelog rows). Full suite green 140/140 including the shipped-adapter detector. PR #190 opened (base `main`, MERGEABLE, `Closes #181`).
+- **Decisions:** `bun install` (v1.4.2) does NOT auto-upgrade a peer already present in `node_modules` — it warns and keeps the old resolution even with `--force`, leaving the lock unsatisfying `>=0.85.1` and breaking CI's frozen-lockfile. A clean re-resolve (`rm -rf node_modules bun.lock && bun install`) was required. The fix-index row was flipped to `` `done` `` before PR creation, then updated to `` `done` · [#190](…) `` after the PR opened (two-commit close-out pattern per fix-166 precedent).
+- **Next:** `/fold-findings` → re-run `/review-change` on PR #190 → `/audit-pr 190` as the merge gate. Keep the fix-index row until the PR merges.
+
+## 2026-09-08T10:55Z — fix/181-pi-server-devdep-obsolete — manual
+- **Commits:** 0 (review only — no artifacts modified)
+- **Files:** `docs/fix/181-pi-server-devdep-obsolete/planning-findings.md` (new, 0 findings), `docs/fix/181-pi-server-devdep-obsolete/progress.md` (new receipt block appended)
+- **Summary:** Ran `/review-plan fix-181` (first plan review). Built the plan snapshot (digest `684309e5…`, fix unit → `parentSpecSnapshotDigest: null`). Swept L1–L6 ledgers and all 16 engineering/fix checks (P1–P12 + F1–F4) with live-verified evidence (npm registry 0.85.1 confirmed, issue #181 fetched via `gh`, all cited `path:line` re-read). Falsification stance: NO-CONFIRMED-GAPS. Zero findings. Verdict: PLAN-REVIEW-PASS. Self-check: `current: true`, `structural.fresh: true`, exit 0. Note: this is a post-execution review — the plan was already committed and executed (7 commits, PR #190 open) in the prior session (2026-09-08T10:30Z).
+- **Next:** /audit-pr 190 → merge gate on PR #190.
+
