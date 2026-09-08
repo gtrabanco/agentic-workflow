@@ -113,3 +113,10 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
 - Scope-extension note posted on PR #193 (comment 5587385051); fix-index row updated to name the review-change fencing scope (row stays `in-progress · #193` until merge).
 - Branch clean + remote-current; acceptance blob unchanged (cb15be76).
 - Next: none (unit complete) — review hand-off /fold-findings → re-run /review-change; /audit-pr is the merge gate.
+
+## Amendment ar-191-3 — AC5 validator re-cut (2026-09-08)
+- User approval: ask f8d67831 ("approve_gate_set") — F4 (regression of F3) replan-in-unit repair, plan owner.
+- SPEC `## Amendments` row `ar-191-3` appended; ACCEPTANCE.md AC5 validator re-cut (`npm test` unrunnable: no root `package.json`, bun islands) to the real gate set; `## Commands` updated.
+- New acceptance blob: `3e5857769f52a0427facdf45217d730110fa59d4` (git hash-object ACCEPTANCE.md at the amendment).
+- Gate run at the amendment: discipline suite exit 0 (9/9) · check-skill-context exit 0 · packages/pi-agentic-workflow `bun run test` exit 0 (140/140) · packages/agentic-workflow-schema `bun run test` exit 0 (684/684) · `bundle:skills` + `git status --porcelain packages/pi-agentic-workflow/skills/` → empty.
+- F4 folded in the same commit as the manifest re-cut; next: /review-change delta re-review.
