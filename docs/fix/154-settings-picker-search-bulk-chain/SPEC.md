@@ -478,15 +478,15 @@ Layer: `api`. Done-when:
 (`Ran N tests across 1 file`) pasted — the file exists by then (extended by
 this phase's first task).
 
-- [ ] Red-first test in `test/alias-coverage.test.mjs`: the extension
+- [x] Red-first test in `test/alias-coverage.test.mjs`: the extension
       registers both `agentic-workflow-settings` and `aw-settings`, and the
       alias handler opens the same console (same `settings` handler invoked)
       with no separate route key (OB-5).
-- [ ] Export an `SETTINGS_COMMAND_ALIAS = "aw-settings"` constant beside
+- [x] Export an `SETTINGS_COMMAND_ALIAS = "aw-settings"` constant beside
       `SETTINGS_COMMAND` in `src/routing/types.ts` and register the alias in
       `src/extension/factory.ts` with the same description and handler
       (OB-5).
-- [ ] Add the alias to `knownCommands` so a route name typo check stays
+- [x] Add the alias to `knownCommands` so a route name typo check stays
       exact, and assert the registered-command count in the alias test
       (OB-5).
 

@@ -4,7 +4,7 @@ import { readCatalogue } from "../routing/catalogue.js";
 import type { Catalogue } from "../routing/catalogue.js";
 import { createRouter } from "../routing/dispatch.js";
 import type { Router } from "../routing/dispatch.js";
-import { SETTINGS_COMMAND } from "../routing/types.js";
+import { SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../routing/types.js";
 import type { ExtensionSurface, InvocationContext, ModelRef, RoutingControls } from "../routing/types.js";
 import type { HintStore } from "../routing/state.js";
 
@@ -76,7 +76,11 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     }
   };
 
-  const knownCommands = new Set<string>([...catalogue.commands.map((entry) => entry.name), SETTINGS_COMMAND]);
+  const knownCommands = new Set<string>([
+    ...catalogue.commands.map((entry) => entry.name),
+    SETTINGS_COMMAND,
+    SETTINGS_COMMAND_ALIAS,
+  ]);
   const router = createRouter<M>({ surface, loadConfig: read, hint, settingsCommand: SETTINGS_COMMAND, knownCommands });
 
   for (const command of catalogue.commands) {
@@ -89,20 +93,28 @@ export function createExtension<M extends ModelRef = ModelRef>(deps: ExtensionDe
     });
   }
 
+  // One handler for both names — `/aw-settings` is a pointer to the same console
+  // and the same two config files, never a separate route surface (OB-5, AC6).
+  const settingsHandler = async (_args: string, ctx: InvocationContext<M>): Promise<void> => {
+    reportCatalogueIssues(ctx);
+    // Bound for the console: two verbs and the session they act on, so it cannot
+    // reach for `settle` or `dispatch` by accident.
+    const routing = { inFlight: () => router.inFlight(), undoInFlight: () => router.undoInFlight(ctx) };
+    try {
+      await settings({ catalogue, ctx, routing });
+    } catch (error) {
+      // A console that dies mid-question must say so, not take the session down.
+      ctx.notify(`Settings could not be opened: ${(error as Error).message}`, "error");
+    }
+  };
+
   registrar.registerCommand(SETTINGS_COMMAND, {
     description: "Show and configure per-command model routing",
-    handler: async (_args, ctx) => {
-      reportCatalogueIssues(ctx);
-      // Bound for the console: two verbs and the session they act on, so it cannot
-      // reach for `settle` or `dispatch` by accident.
-      const routing = { inFlight: () => router.inFlight(), undoInFlight: () => router.undoInFlight(ctx) };
-      try {
-        await settings({ catalogue, ctx, routing });
-      } catch (error) {
-        // A console that dies mid-question must say so, not take the session down.
-        ctx.notify(`Settings could not be opened: ${(error as Error).message}`, "error");
-      }
-    },
+    handler: settingsHandler,
+  });
+  registrar.registerCommand(SETTINGS_COMMAND_ALIAS, {
+    description: "Show and configure per-command model routing",
+    handler: settingsHandler,
   });
 
   return { router, catalogue };

@@ -85,6 +85,8 @@ export type DispatchOutcome =
 
 /** Slash name of the settings console (SPEC S4, AC3, AC10). */
 export const SETTINGS_COMMAND = "agentic-workflow-settings";
+/** Shorthand alias for the same console — a pointer to the same handler, never a separate route (OB-5, AC6). */
+export const SETTINGS_COMMAND_ALIAS = "aw-settings";
 
 /**
  * The router, as the settings console needs it: two verbs, already bound to the
