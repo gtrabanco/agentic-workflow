@@ -1,7 +1,7 @@
 ---
 name: ship-roadmap
 user-invocable: true
-version: 5.2.0
+version: 5.2.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--fullauto] | --continue [--fullauto]"
@@ -102,7 +102,7 @@ fallback only when a primitive is unavailable; keep stage order and safety floor
 
 | Relation | Skills/policy |
 |---|---|
-| Compose (same/lower tier) | `init-workspace`; JIT `design-feature` + `plan-feature-scaffold`; `plan-feature`; the review→fold manual path (`/fold-findings` → re-run `/review-change`); verdict-only `audit-pr`; `audit-docs`. |
+| Compose (same/lower tier) | `init-workspace`; JIT `design-feature` + `plan-feature-scaffold`; `plan-feature`; the review→fold manual path (`/review-change` → `/fold-findings` on `REVIEW-FAIL` → re-run `/review-change`); verdict-only `audit-pr`; `audit-docs`. |
 | Cheap workers | `execute-phase` (fresh context/phase), mechanical folds, audit-blocker fixes; use the validated worker model. |
 | Human hand-off | Default merges, `product-audit` (higher effort), and report issue batches via `triage-issue`. |
 | Sibling | `workflow-status` supplies the strict sensor result; worker skills use the package-owned output profiles, while the conductor keeps its native `SHIP:` turn contract. |
