@@ -47,3 +47,13 @@ Notes:
 - Falsification stance before checking: NO-CONFIRMED-GAPS — no engineering claim was invented, no obligation is undeliverable, and the re-scoped validator is falsifiable (a fixture regression re-emits the pinned `over-budget reference should fail closed` line; an early crash would break the AC1 "tail shows the route red" compound). Checks: L1–L6 pass, P1–P12 pass, F1–F4 pass.
 - Unrelated working-tree edits (`docs/LOGS.md`, `docs/features/ROADMAP.md`, unstaged, from a prior session) are outside this unit's artifacts and are already declared by the SPEC's "Unrelated working-tree edits left unstaged" decision; no plan artifact was touched by them.
 - Read-only on plan authority: this review wrote only this receipt block and the three resolution-cell updates in `planning-findings.md`.
+
+## Acceptance receipt v1
+- Manifest: docs/fix/200-over-budget-fixture-stale-guard/ACCEPTANCE.md · Blob: 964fe595e54172096f77136193375f5e2b0edc68 · Status: frozen · Verified: 2026-09-08
+
+## P1 — 2026-09-08
+- Done: The `over-budget reference` fixture (test.mjs:78-93) now sizes its body from the manifest at runtime — `effectiveReviewChangeCeiling = { ...defaults, ...skills["review-change"] }.referenceEstimateMax` (2800) × 8 chars, landed at ~2× the reference-estimate ceiling. Assertion (`assert.notEqual(result.status, 0, …)`) and regex (`/estimate .* >|lines .* > /`) byte-identical; only the fixture input was resized. Validators: bun suite → 0 `over-budget reference should fail closed`; node suite → 0; `--budgets` → exit 0, `PASS context budgets: 39 skills`.
+- Remains: P2 — Hardening & PR (re-run gate, pending-docs check, mark done, push, open PR, link fix-index).
+- Gotchas: The suite still exits 1, but ONLY at the pre-existing out-of-scope route red (`routeJson` assertion, now test.mjs:118 after the fixture's +6 comment/const shift) — the route assertions expect `--routes` exit 0 while the shipped route ceilings sit below the declared `relative-headroom` floor (15 exceedances, PE-009). Do NOT touch route assertions or the manifest. The unit's finish line is only the fixture red being gone, not a green suite. Two pre-existing unstaged docs (`docs/LOGS.md`, `docs/features/ROADMAP.md`) were left unstaged per the SPEC decision and are outside this unit.
+- Files: scripts/check-skill-context.test.mjs · docs/fix/200-over-budget-fixture-stale-guard/SPEC.md (P1 ticks) · docs/fix/200-over-budget-fixture-stale-guard/progress.md (receipt + P1 entry)
+- Next: P2 — Hardening & PR

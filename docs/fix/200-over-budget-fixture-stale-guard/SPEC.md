@@ -337,7 +337,7 @@ reference should fail closed"` → `0` (the suite's remaining red at this
 revision is the pre-existing route red at `test.mjs:112`, out of scope —
 PE-009; never the fixture).
 
-- [ ] In `scripts/check-skill-context.test.mjs`, replace the hard-coded
+- [x] In `scripts/check-skill-context.test.mjs`, replace the hard-coded
       `"x".repeat(10_000)` body of the `"over-budget reference"` fixture
       (lines 78–83) with a runtime-derived size: read
       `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, compute the effective
@@ -345,11 +345,11 @@ PE-009; never the fixture).
       (`{ ...defaults, ...skills["review-change"] }.referenceEstimateMax`),
       and write `"x".repeat(effectiveCeiling * 8)` so the generated
       reference's estimate is ≈ 2× the ceiling (OB-1, OB-2, PE-002, PE-003).
-- [ ] Keep the fail-closed assertion and regex byte-identical:
+- [x] Keep the fail-closed assertion and regex byte-identical:
       `assert.notEqual(result.status, 0, …)` and
       `/estimate .* >|lines .* > /` unchanged (test immutability; only the
       fixture *input* is resized).
-- [ ] Run the full suite on both runtimes and paste outputs:
+- [x] Run the full suite on both runtimes and paste outputs:
       `bun scripts/check-skill-context.test.mjs` and
       `node scripts/check-skill-context.test.mjs` — each paste must show **no**
       `over-budget reference should fail closed` line (any remaining failure
