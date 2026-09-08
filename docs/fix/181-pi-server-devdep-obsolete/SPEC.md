@@ -184,7 +184,7 @@ Layer: `docs`. Done-when: `grep -c "0\.85\.0"
 packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md`
 → `0` and `0`.
 
-- [ ] Update the Notes baseline line in `README.md:142` and `README.es.md:148` as one bilingual edit: version → 0.85.1, date → 2026-09-05 (O5)
+- [x] Update the Notes baseline line in `README.md:142` and `README.es.md:148` as one bilingual edit: version → 0.85.1, date → 2026-09-05 (O5)
 
 Phase-lint: PASS (8/8) · fingerprint `P2:docs:1:baseline-note-pi-0851`
 
