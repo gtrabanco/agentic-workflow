@@ -70,9 +70,7 @@
      when the PR opens; any flips left at run end ride the report commit).
      Stop before the literal final `Hardening & PR` phase: PR owns that explicit
      phase so close-out has one owner. Never bundle phases into one worker.
-   - **REVIEW** — compose the manual review→fold path in-turn (equal tier) once,
-     `/fold-findings`, then re-run `/review-change`, over the complete PR
-     candidate. It reuses a current exact-SHA receipt or runs `review-change`
+   - **REVIEW** — compose the review→fold path (equal tier) once: `/review-change`, then `/fold-findings` (on `REVIEW-FAIL`), then re-run `/review-change`. It reuses a current exact-SHA receipt or runs `review-change`
      context-clean, batches compatible fixes through `fold-findings`, and
      re-reviews only changed HEADs. Default correction budget is two; unchanged
      evidence stops NO-PROGRESS. L/sensitive features
