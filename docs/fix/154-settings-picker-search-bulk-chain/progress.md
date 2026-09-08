@@ -129,10 +129,19 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Next: P2 chain-probe dispatch.
 
 ## Unit-loop receipt — P2
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs test/default-inherit.test.mjs` (exit 0, 25 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Commit: 939b41f3 · Gate: `cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs test/default-inherit.test.mjs` (exit 0, 25 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Next: P3 · Attempts: 1
 - Done: chain-probe dispatch — `dispatch.ts` probes a `route.model` chain in order with only `ctx.find` + `ctx.hasConfiguredAuth` (no session mutation), collects one skip reason per entry, applies the first usable one, and routes an exhausted chain through `onUnavailableRoute` (`stop` refuses / `inherit` notifies) naming every candidate and why it was skipped; the single-reference path is byte-identical in behaviour and message shape; the select-failure message now names the chosen entry via `chosenRef`. **7 new chain tests** in unavailable-stop.test.mjs (applies-first-usable, skip-no-auth, swallow-unknown, exhausted-stop, exhausted-inherit, probe-purity once, no-second-setModel).
 - Remains: P3 (alias) … P8 (hardening & PR).
 - Gotchas: the chain `stop` message shape is `… the configured model chain <refs> is unavailable (<reason>; <reason>).` — the single-reference path keeps its original `… the configured model <ref> <blocker>.` phrasing. `chosenRef` records the specific reference behind `target` so a select failure on a chain names only the chosen entry (not the whole array). `selectFails: true` still refuses via `setModel` returning false; probing never calls `setModel`.
 - Files: src/routing/dispatch.ts, test/unavailable-stop.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
 - Next: P3 `/aw-settings` alias command.
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/alias-coverage.test.mjs` (exit 0, 15 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Next: P4 · Attempts: 1
+- Done: `/aw-settings` alias — `SETTINGS_COMMAND_ALIAS = "aw-settings"` exported beside `SETTINGS_COMMAND` (routing/types.ts); `factory.ts` extracts the settings command into a shared `settingsHandler` and registers both names with the same description + handler (a pointer, never a separate route surface), and adds the alias to `knownCommands` so a route-name typo check stays exact. New red-first test pins both registrations, the same description, the same handler invocation (calls.notify === ["settings"]), and the registered-command count (3). The two existing exact-registered-set assertions updated to include the alias.
+- Remains: P4 (picker primitive) … P8 (hardening & PR).
+- Gotchas: adding the alias is a real new registered command, so the existing exact-set assertions in alias-coverage.test.mjs legitimately change (they were pinned pre-alias). The AC15 README command-table test still passes because `/aw-settings` is not yet added to the README table — P7 must add it in the settings section, not as a separate command-table row, or that test re-fails.
+- Files: src/routing/types.ts, src/extension/factory.ts, test/alias-coverage.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
+- Next: P4 searchable windowed picker primitive.
