@@ -31,6 +31,32 @@ test("plan-feature preserves every dependency in a blocked hand-off", () => {
   assert.match(skill, /never print `…`/);
 });
 
+test("execute-phase terminal hand-offs recommend the review before the fold (fix #191)", () => {
+  const unitLoop = readReference("execute-phase", "UNIT_LOOP.md");
+  const folding = readReference("execute-phase", "FOLDING.md");
+  const closeout = readReference("execute-phase", "CLOSEOUT.md");
+  const skill = readSkill("execute-phase");
+
+  // Every terminal block leads with /review-change — the mandatory end review.
+  assert.match(unitLoop, /→ Next: \/review-change/);
+  assert.match(folding, /→ Next: \/review-change/);
+  assert.match(closeout, /`?\/review-change`? → `?\/fold-findings`?/);
+  // Positive pin: CLOSEOUT hand-off sentence preserves review→fold order.
+  assert.match(closeout, /\`?\/review-change\`?.*mandatory.*\`?\/fold-findings\`?/);
+
+  // The fold is never the first leg — review-change precedes any fold step.
+  assert.doesNotMatch(unitLoop, /\/fold-findings, then re-run \/review-change/);
+  assert.doesNotMatch(folding, /\/fold-findings, then re-run \/review-change/);
+  // Tolerate backtick / optional newline between hand-off words and the fold token.
+  // Regex: backtick is a literal char in regex, `?` makes it optional, /? handles `→ /` vs `→ /`.
+  assert.doesNotMatch(closeout, /hand\s+off\s+to\s+`?\/fold-findings/);
+
+  // "mandatory" labels the review, never the fold hand-off.
+  // Catches both `mandatory /fold-findings` and `mandatory `/fold-findings``.
+  assert.doesNotMatch(skill, /mandatory\s+`?\/fold-findings/);
+  assert.doesNotMatch(closeout, /mandatory\s+`?\/fold-findings/);
+});
+
 test("review and fold hand-offs preserve every finding ID", () => {
   const review = readReference("review-change", "PERSIST_AND_DECIDE.md");
   const reviewSkill = readSkill("review-change");
@@ -41,6 +67,32 @@ test("review and fold hand-offs preserve every finding ID", () => {
   assert.match(review, /resolve all open findings: <F1> \+ <F2> \+ <F3>/);
   assert.match(fold, /list every affected finding ID once as `F1 \+ F2 \+ …`/);
   assert.match(fold, /never\s+print `<F2>`, `…`, or a single representative ID/);
+});
+
+test("review-change review-end boundary (fix #191 extension)", () => {
+  const reviewSkill = readSkill("review-change");
+  const output = readReference("review-change", "OUTPUT_AND_GUARDRAILS.md");
+  const review = readReference("review-change", "PERSIST_AND_DECIDE.md");
+  const process = readReference("review-change", "REVIEW_PROCESS.md");
+
+  // C1 — the review-end turn boundary box is present: the skill ends at the
+  // report on REVIEW-FAIL/NEEDS-DECISION and never self-invokes a fold/executor.
+  assert.match(reviewSkill, /ends at the report/);
+  assert.match(reviewSkill, /separate user-initiated invocations/);
+
+  // C2 — folder destination phrasing: the review never runs the fold itself.
+  assert.doesNotMatch(reviewSkill, /folds in-unit/);
+  assert.match(reviewSkill, /never run by this review/);
+
+  // C4 — routing phrasing: fold is invoked after this review ends, not in-review.
+  assert.doesNotMatch(output, /folded into the current phase/);
+  assert.match(output, /invoked after this review ends/);
+
+  // C3 — the → Next: recommendation is a hand-off, not a to-do list for this turn.
+  assert.match(review, /recommendation, not a to-do list/);
+
+  // C5 — two-cycle re-runs are separate review invocations, not in-session steps.
+  assert.match(process, /separate review invocations/);
 });
 
 test("batch triage maps each issue to its own next command", () => {

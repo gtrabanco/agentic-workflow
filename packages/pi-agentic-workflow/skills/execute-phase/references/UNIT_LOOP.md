@@ -82,6 +82,7 @@ UNIT LOOP — <unit> COMPLETE
 Phases: <n> · Commits: <sha list> · Acceptance: <blob> · Gate: PASS
 PR: <url>
 
-→ Next: /fold-findings, then re-run /review-change on the changed HEAD — triage or replan unresolved findings
+→ Next: /review-change on the changed HEAD — the mandatory end review (fold-findings only after a REVIEW-FAIL)
+  · findings → /fold-findings (only on a REVIEW-FAIL), then re-run /review-change — triage or replan unresolved findings
   · merge gate after REVIEW-PASS → /audit-pr
 ```

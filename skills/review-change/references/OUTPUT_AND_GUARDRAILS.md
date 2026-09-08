@@ -21,10 +21,11 @@ Every finding gets a destination under the current-unit contract — none silent
 lost, and none becomes reviewer-created backlog (D3):
 
 - **fix-now** → persisted to the unit's `review-findings.md` fold ledger, then
-  folded into the current phase (unmerged work) — never a tracked issue, never
-  `plan-fix`. Classification honors `review-implementation`'s **current-unit
-  contract**: in-scope defects are always fix-now / replan-in-unit — never a
-  postpone/tradeoff/wontfix/new-issue escape.
+  routed to the current phase's fold cycle (`/fold-findings`, invoked after this review ends)
+  — never a tracked issue, never `plan-fix`. Classification honors
+  `review-implementation`'s **current-unit contract**: in-scope defects are
+  always fix-now / replan-in-unit — never a postpone/tradeoff/wontfix/new-issue
+  escape.
 - **fix-now / `replan-in-unit`** (too large to fold as-is) → keeps its fix-now
   class and ledger row; propose the new SPEC phase(s) to the user, then
   `execute-phase` on the same branch folds it.
