@@ -365,12 +365,12 @@ scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs`
 Amends the already-open PR #193 — no new PR is opened; the body already carries
 `Closes #191`.
 
-- [ ] Re-run the project's full verification gate (discipline suite, `node scripts/check-skill-context.mjs`, `bun run test` in the touched pi package) and paste commands + exit codes
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → only this unit's files
-- [ ] `git push` — new commits extend PR #193
-- [ ] Post the scope-extension note on PR #193 (`gh pr comment 193 --body-file <path>`)
-- [ ] Update the fix-index row description to name the review-change fencing scope (row stays `in-progress · #193` until merge)
-- [ ] Commit `docs: note fix-191 scope extension on the fix index` and push
+- [x] Re-run the project's full verification gate (discipline suite, `node scripts/check-skill-context.mjs`, `bun run test` in the touched pi package) and paste commands + exit codes (discipline 9/9 exit 0; check-skill-context exit 0; bun run test 140/140 exit 0)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → only this unit's files
+- [x] `git push` — new commits extend PR #193
+- [x] Post the scope-extension note on PR #193 (`gh pr comment 193 --body-file <path>`)
+- [x] Update the fix-index row description to name the review-change fencing scope (row stays `in-progress · #193` until merge)
+- [x] Commit `docs: note fix-191 scope extension on the fix index` and push
 
 ## Testing
 
