@@ -217,9 +217,9 @@ Layer: `docs`. Done-when:
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (`npm test` + `node scripts/check-skill-context.mjs`) and paste commands + exit codes
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (`npm test` + `node scripts/check-skill-context.mjs`) and paste commands + exit codes (root has no `npm test` — bun islands; ran discipline suite exit 0, `node scripts/check-skill-context.mjs` exit 0, `bun run test` in the touched pi package exit 0)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip (commit `35f0aace`)
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
