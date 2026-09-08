@@ -385,6 +385,7 @@ hoists.
   lockfiles resurrected once, on main, and had to be removed again). The npm
   CLI is still used for the publish step only (Trusted Publishing +
   `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
+- **Dependency versions are pinned.** Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges) — a fresh install must reproduce the committed lockfile byte-for-byte. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
 - **Version bumps are manual and same-PR.** Bump `version:` in the touched
   package's `package.json` and add a row to the "Companion npm packages" /
   "Paquetes npm complementarios" table in `CHANGELOG.md` + `CHANGELOG.es.md`

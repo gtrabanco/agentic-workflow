@@ -5,7 +5,7 @@
     "": {
       "name": "@gtrabanco/pi-agentic-workflow",
       "devDependencies": {
-        "@types/node": "^24",
+        "@types/node": "24.13.3",
         "typescript": "6",
       },
       "peerDependencies": {
