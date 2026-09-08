@@ -51,7 +51,7 @@ tables is a finding. Either way `review-plan` reads the **whole** table
 
 Then digest it with the recipe owner —
 `pre-execution-review`'s [`SKILL.md`](<../../pre-execution-review/SKILL.md>) →
-SNAPSHOT reference: `node scripts/pre-execution-snapshot.mjs build --stage plan
+SNAPSHOT reference: `bun scripts/pre-execution-snapshot.mjs build --stage plan
 --unit <unitId> --parent <Product snapshot digest>`
 (`verify` mode is what consumers run afterwards, and it shares the builder, so pass
 `--parent` there too on a feature unit; a **fix** unit omits it and binds `null`).

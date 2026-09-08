@@ -5,7 +5,7 @@ digest**. One command produces it, so an author, a reviewer and a consumer canno
 drift apart while reading the same bytes.
 
 ```bash
-node scripts/pre-execution-snapshot.mjs build --stage <spec|plan> --unit <NN-slug|fix-N> \
+bun scripts/pre-execution-snapshot.mjs build --stage <spec|plan> --unit <NN-slug|fix-N> \
   [--dir <artifact-dir>] [--unit-kind <feature|fix>] [--artifact-revision <id>] \
   [--source-revision <sha>] [--parent <64-hex>] [--json <out-file>]
 ```
@@ -61,7 +61,7 @@ Rules the builder enforces and no caller may improvise around:
 ### Re-verifying a receipt (consumers)
 
 ```bash
-node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit <NN-slug|fix-N> \
+bun scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit <NN-slug|fix-N> \
   [--dir <artifact-dir>] [--unit-kind <feature|fix>] [--receipt <receipt-id-or-digest>] \
   [--parent <64-hex>] [--policy <version>] [--source-revision <sha>] [--artifact-revision <id>]
 ```
