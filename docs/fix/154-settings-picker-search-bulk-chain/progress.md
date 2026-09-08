@@ -174,10 +174,15 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Next: P7 package docs and release bookkeeping.
 
 ## Unit-loop receipt — P7
-- Commit: pending · Gate: read-verified — chain + `aw-settings` present in both README.md and README.es.md; version bumped 0.7.2 → 0.8.0 with a row in the "Companion npm packages" tables of CHANGELOG.md + CHANGELOG.es.md; full gate `bun run test` exit 0, 171 pass / 0 fail (AC15 README command-table, troubleshooting-quote, example-identity and section-count checks all green) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Commit: 7fd87ea5 · Gate: read-verified — chain + `aw-settings` present in both README.md and README.es.md; version bumped 0.7.2 → 0.8.0 with a row in the "Companion npm packages" tables of CHANGELOG.md + CHANGELOG.es.md; full gate `bun run test` exit 0, 171 pass / 0 fail (AC15 README command-table, troubleshooting-quote, example-identity and section-count checks all green) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Next: P8 · Attempts: 1
 - Done: package docs + release bookkeeping — README.md config-schema section documents the ordered fallback chain (`model` array of 1–4 refs, dispatch probes with `find`/`hasConfiguredAuth`, exhaustion names candidates), the searchable windowed picker behaviour (filter, current-value preselection, position indicator, non-TUI fallback), the field-choice + byte-identical no-change + bulk apply/clear, and the `/aw-settings` alias; README.es.md carries the faithful sibling with the byte-identical config example (same commit, AD-002); package.json version → 0.8.0 (minor) with a bilingual changelog row in both CHANGELOG.md/CHANGELOG.es.md.
 - Remains: P8 (hardening & PR).
 - Gotchas: the AC15 alias-coverage checks pin the README: `/aw-settings` must NOT appear in the main command-table (it is documented in the settings-console section only) or that test re-fails; the config example JSON must stay byte-identical EN==ES; section counts must match. Kept `/aw-settings` out of the command table and the example identical — AC15 green. The `0.8.0` changelog row uses the `0.7.2` row's date epoch (2026-09-09) to stay monotonic.
 - Files: packages/pi-agentic-workflow/README.md, README.es.md, package.json, CHANGELOG.md, CHANGELOG.es.md, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
 - Next: P8 hardening & PR.
+
+## Unit-loop receipt — P8
+- Commit: pending · Gate: `bun run test` (exit 0, 171 pass / 0 fail) + acceptance blob `b582c5008cda34e59d20c7b08ba379067a67e6f6` (re-derived, exact) + `git status --porcelain docs/` → empty · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Close-out: fix-index row flipped to `done`; push; PR opened with `Closes #154`; link row to `done · [#<pr>](<url>)`.
+- Next: none (unit complete) — `/review-change` on the changed HEAD is the mandatory end review.
