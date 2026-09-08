@@ -218,8 +218,13 @@ export function createRouter<M extends ModelRef = ModelRef>({
       const session = surface(ctx);
       const route = effectiveRoute(loaded.config, command.name);
       let target: M | undefined;
+      /** The reference string behind `target`, for the select-failure message (a chain names the chosen entry). */
+      let chosenRef: string | undefined;
 
-      if (route.model !== "inherit") {
+      if (route.model === "inherit") {
+        // inherit: no probe — run on the session model (OB-9).
+      } else if (typeof route.model === "string") {
+        // Single reference: behaviour and message shape unchanged (OB-9).
         const reference = parseModelReference(route.model);
         const found = reference ? ctx.find(reference.provider, reference.id) : undefined;
         const blocker = !found
@@ -242,6 +247,42 @@ export function createRouter<M extends ModelRef = ModelRef>({
           );
         } else {
           target = found;
+          chosenRef = route.model;
+        }
+      } else {
+        // Chain: probe entries in order with only ctx.find + hasConfiguredAuth
+        // (no session mutation), collecting one skip reason per entry, and apply
+        // the first usable one (OB-8, OB-9, OB-10).
+        const reasons: string[] = [];
+        for (const reference of route.model) {
+          const parsed = parseModelReference(reference);
+          const found = parsed ? ctx.find(parsed.provider, parsed.id) : undefined;
+          if (!found) {
+            reasons.push(`${reference} is not in the model registry`);
+            continue;
+          }
+          if (!ctx.hasConfiguredAuth(found)) {
+            reasons.push(`${reference} has no configured credentials`);
+            continue;
+          }
+          target = found;
+          chosenRef = reference;
+          break;
+        }
+        if (!target) {
+          const tried = route.model.join(", ");
+          const detail = reasons.join("; ");
+          if (loaded.config.onUnavailableRoute !== "inherit") {
+            return refuse(
+              ctx,
+              "unavailable-route",
+              `/${command.name} stopped: the configured model chain ${tried} is unavailable (${detail}). ${configureHint}`,
+            );
+          }
+          ctx.notify(
+            `/${command.name}: the configured model chain ${tried} is unavailable (${detail}), so it runs on the current session model. ${configureHint}`,
+            "warning",
+          );
         }
       }
 
@@ -255,11 +296,11 @@ export function createRouter<M extends ModelRef = ModelRef>({
             return refuse(
               ctx,
               "unavailable-route",
-              `/${command.name} stopped: ${route.model} could not be selected. ${configureHint}`,
+              `/${command.name} stopped: ${chosenRef} could not be selected. ${configureHint}`,
             );
           }
           ctx.notify(
-            `/${command.name}: ${route.model} could not be selected, so it runs on the current session model. ${configureHint}`,
+            `/${command.name}: ${chosenRef} could not be selected, so it runs on the current session model. ${configureHint}`,
             "warning",
           );
         } else {
