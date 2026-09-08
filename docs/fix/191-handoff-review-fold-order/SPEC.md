@@ -220,12 +220,12 @@ Layer: `docs`. Done-when:
 - [x] Re-run the project's full verification gate (`npm test` + `node scripts/check-skill-context.mjs`) and paste commands + exit codes (root has no `npm test` — bun islands; ran discipline suite exit 0, `node scripts/check-skill-context.mjs` exit 0, `bun run test` in the touched pi package exit 0)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the fix-index row status to `done` and commit the flip (commit `35f0aace`)
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #191`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+      PRINT THE PR URL in the chat; the body includes `Closes #191` (PR #193)
+- [x] Update the fix-index row to `done · [#193](https://github.com/gtrabanco/agentic-workflow/pull/193)`
+- [x] Commit `docs: link PR #193` and push
 
 ## Testing
 
