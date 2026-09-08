@@ -148,7 +148,7 @@
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
-11. **Route the outcomes.** fix-now findings fold into the current unit (or gain
+11. **Route the outcomes.** fix-now findings are routed to the unit's fold cycle (a separate `/fold-findings` invocation, never run by this review; or gain
     user-confirmed phases via replan-in-unit); decision-required stops for the
     user's decision; genuinely independent future capabilities become
     **non-blocking proposals** — batched in the report with a trigger, and
@@ -172,10 +172,8 @@ LOOP CAP REACHED — <unit>
 - Route: /triage-issue --prioritize-now <unit> F<k> … (or the programmatic outer driver)
 ```
 
-A **third cycle never starts** unless the user explicitly instructs it — it is
-the user's escape, never a reviewer election. The residue routes to
+A **third cycle never starts** unless the user explicitly instructs it — the residue routes to
 `triage-issue --prioritize-now` (or the programmatic outer driver), and a unit
 that needs a third cycle has a planning or root-cause defect, not a review
 deficit. Re-runs count **separate review invocations**, not in-session steps:
-`/review-change` is invoked by the user in a fresh turn each time, and a
-"re-run" is a new invocation, never a step the same review turn takes.
+`/review-change` is invoked by the user in a fresh turn each time.
