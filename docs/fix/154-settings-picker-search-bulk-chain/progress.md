@@ -1,0 +1,77 @@
+# Unit 154 — progress log (fix/154-settings-picker-search-bulk-chain)
+
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-fix154-20260908-001 · Snapshot: a0ed8357905ab4763fe15273ebfd086a7fd5b1e4116261dab8fff3e8e4cb70a6 · Verdict: plan-review-fail
+- Unit: fix-154 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); no `review-spec` upstream, none claimed
+- Source revision: 86e35298df1709c98bacc6aca143621c2ba06fa0 · Artifact revision: 86e35298df1709c98bacc6aca143621c2ba06fa0
+- Reviewer: review-plan (fresh pi session) · Session: pi-web review turn on `fix/154-settings-picker-search-bulk-chain` · Role: reviewer · Author: plan-fix (commit `86e35298`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Context-clean note: this conversation wrote/replanned no part of the unit (review-only turn)
+- Started/finished: 2026-09-08 · Findings: 2 (material open: 2)
+- Ledgers read: planning-evidence 13 rows (PE-001…PE-013, embedded in the SPEC) · obligations 16 rows (OB-1…OB-16, verified-capable: 0 — all validators pin future work)
+- Prior plan receipt (re-review only): none — first cycle
+- Portability note: the planner's handoff declared no `artifactRevisionId`; the builder fell back to the source revision `86e35298` (the draft-SPEC commit). Nothing in this runtime rotates the id — mutate-and-revert detection depends on the next repair producing new bytes and a fresh snapshot.
+
+### Review-run evidence (commands + results)
+
+- `node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-154 --dir docs/fix/154-settings-picker-search-bulk-chain --unit-kind fix` → digest `a0ed8357905ab4763fe15273ebfd086a7fd5b1e4116261dab8fff3e8e4cb70a6`; `unitKind: fix`, artifacts: spec (41391 B) + acceptance (5345 B), `parentSpecSnapshotDigest: null` ✓. Ledgers are embedded in the SPEC (fix template convention), so `planning-evidence`/`obligations` snapshot rows are absent and bound through the whole-file `spec` row. Contexts: `architectural-invariants` absent (optional doc does not exist — invariant classification carried by the SPEC's "Rules that must never be violated" + PE rows); `normalized-repository-state` and `project-guide` present and bound.
+- PE-001: `gh issue view 154` → state OPEN, label `bug`, author `gtrabanco`, title matches the SPEC's Issue section; issue body repro steps 1–6 and the Expected-behaviour table (Filter/Scroll/Current value/Bulk edit/Fallback order) match OB-1…OB-9 authority rows; `pi-coding-agent 0.85.1` `dist/modes/interactive/components/extension-selector.js` renders one `Text` child per option (`:54`) and contains 0 `setFilter` occurrences → proven ✓
+- PE-002: `src/routing/types.ts:49` = `SettingsUi.select(title, options)` ✓; console.ts verified line-by-line: `:70` TYPED, `:86` menu, `:109-115` setOverride single command, `:116-121` clearOverride single, `:125` policy, `:149` scope, `:176-183` editRoute both fields in sequence, `:184-206` askModel, `:187` whole-registry select + TYPED last, `:188,190` free-text fall-throughs, `:209-212` askThinking, `:217-223` pickCommand, `:222` select → proven ✓
+- PE-003: `src/config/types.ts:21` `ModelSetting = "inherit" | ModelRef`, `:30` `RouteFile.model?: ModelSetting` ✓; `src/routing/dispatch.ts:222-234` resolves exactly one reference via `parseModelReference` + `ctx.find`, one global `onUnavailableRoute` policy (`:231-241`) → proven ✓
+- PE-004: installed versions `@earendil-works/pi-coding-agent@0.85.1` + `@earendil-works/pi-tui@0.85.1` ✓; `dist/core/extensions/types.d.ts` ~116-136 `custom<T>(factory, {overlay…})` ✓; pi-tui `select-list.d.ts:38-39` `setFilter`/`setSelectedIndex`, `maxVisible`/`getVisibleRange` windowing + `scrollInfo` theme slot ✓; `fuzzyFilter` found only inside `.js.map` source maps, absent from `dist/index.d.ts` exports → not exported, correction upheld ✓; `ModelSelectorComponent` exported but its constructor requires `modelRuntime: ModelRuntime` (`model-selector.d.ts:43`) and `ModelRuntime` appears nowhere in the extension-context typings → SelectList-based picker justified ✓
+- PE-005: `dispatch.ts:224-227` probes with `ctx.find` + `ctx.hasConfiguredAuth` only; `setModel` first called at `:249` after the blocker check; N-3 comment ("Pi re-derives thinking inside `setModel`… session half-switched") at `:265-269` → proven ✓
+- PE-006: baseline re-run at `86e35298`: `cd packages/pi-agentic-workflow && bun run test` → **140 pass / 0 fail, 14 files** — matches the SPEC's recorded baseline; all 8 named suite files exist in `test/` → proven ✓
+- PE-008: `src/settings/view.ts:14-19` `routePath` = `$.commands.<target>` shape ✓; `console.ts:243-259` save/clean region with the loader-second-opinion comment at `:259` ✓
+- PE-009: `gh pr list --state open` → `[]` (no open PRs, 2026-09-08); `gh pr view 150` → MERGED 2026-08-30 (F-27 merged, P2 closure) ✓
+- PE-011: substantive claim proven — registration by name exists and `knownCommands` guards route-name typos — but the cited location is wrong: `registerCommand(SETTINGS_COMMAND, …)` is at `src/extension/factory.ts:92`, `knownCommands` at `factory.ts:79`; `index.ts:96-104` is the `runSettingsConsole` wiring, not registration → finding RP1-F2 (low, plan)
+- PE-012: `README.md:120` (`/agentic-workflow-settings` block) + `:131` troubleshooting table ✓; `README.es.md:125/:137` siblings ✓; AD-002 at `docs/workflow/REPOSITORY_STATE.md:38` ✓; bilingual same-commit rule + exact-version pinning + `bun.lock`-only rules confirmed in `CLAUDE.md` ✓
+- Falsification stance before checking: CONFIRMED-GAPS — the three strongest hostile-reader candidates: (1) "a phase's deliverable could be accepted while its validator passes for the wrong reason" → **confirmed**: every scoped validator (`bun run test test/<file>`) runs the full suite and exits 0 before any phase work exists (P4's named `test/picker-filter.test.mjs` is absent today, validator exit 0) → RP1-F1; (2) "an Engineering claim a hostile reader could call invented" → PE-011's registration location, refuted as cited, confirmed one hop away → RP1-F2; (3) "a SPEC obligation this plan cannot deliver" → none: OB-1…OB-16 ↔ AC1–AC13 ↔ phase tasks all map, every validator's target suite exists or is created by its phase's tasks, and no obligation silently dies.
+- Validator no-op runs (L5 falsification, all at `86e35298`): `bun run test test/picker-filter.test.mjs` → `140 pass / 0 fail, 14 files`, exit **0** (file absent — P4 not executed); `bun run test test/config-merge.test.mjs` → full suite, exit 0 (P1 no-op passes); direct `bun test test/config-merge.test.mjs` → `9 pass, 1 file` (the direct form scopes once the file exists); direct `bun test test/zzz-missing.test.mjs` → exit **0** (bun treats an unmatched path as a filter — even the repaired shape needs task ordering / required-evidence to cover the missing-file case)
+
+### Ledger sweep L1–L6
+
+- L1 **pass** — fix unit: snapshot carries `parentSpecSnapshotDigest: null` and this receipt states the parent note plainly; no Product receipt borrowed or claimed (D6/D30).
+- L2 **pass** — 13/13 PE rows `current` + `proven`; no `unknown`, `drifted`, or `stale` row; no unsampled model/service assumption cited as fact (PE-004 samples the installed 0.85.1 dist typings; the `fuzzyFilter` correction is itself a refuted issue claim). PE-011's location imprecision is filed as RP1-F2, not an evidence-lifecycle defect.
+- L3 **pass** — 16 obligations, one per normative behaviour, applicable invariant (honest routing, rejection-path shape, fail-closed config, bilingual docs, dependency policy), affected use case, and required failure state (exhaustion refusal, inherit fallback, probe purity, non-TUI fallback, invalid elements, cap rejection, advisory warnings); no duplicates, ids stable.
+- L4 **pass** — every row: exactly one phase + one task reference, owner `execute-phase --fix`, validator copied from ACCEPTANCE/phase done-when, `required-evidence` named; no blank status, no `deferred`.
+- L5 **FAIL** — scenario↔validator↔phase closure holds on paper, but the validators as written cannot fail for their stated scope: each scoped command passes on a no-op of its phase's work (RP1-F1). Every other validator (full gate OB-16, read-verified greps OB-15) can fail today.
+- L6 **pass** — no prior findings ledger existed; this receipt seeds `planning-findings.md` with both cycle-1 rows, both open.
+
+### Engineering checks (fix unit: P1–P12 + F1–F4)
+
+- P1 pass — affected surfaces named with path:line (root cause A–E, Impact section, PE-001…PE-005, PE-011); invariant classification present ("Rules that must never be violated" + PE-008: preserves honest routing, rejection-path shape, fail-closed config)
+- P2 pass — Depends on: none; F-27 (PR #150) MERGED 2026-08-30 (verified via `gh`); no phase depends on unwritten work outside the unit
+- P3 pass — boundary stated: seam stays a structural superset (PE-010), legacy string/`inherit` configs load byte-identically (PE-006/OB-6), no `settings.json` keys, alias adds no config key or route key, `knownCommands` typo-check stays exact (P3 task)
+- P4 pass — n/a justified without contradicting scope: no auth/secrets/PII/webhooks; console writes only the two files it already wrote; project-file trust gate untouched and re-pinned by the existing `untrusted-project-config` test
+- P5 pass — no schema/data migration (additive union; OB-6); README EN+ES scheduled as one change (OB-15, AD-002); version bump + bilingual changelog tables same PR, manual-bump rule honoured
+- P6 pass — recovery rides execute-phase's progress receipts + per-phase commits; every done-when command is idempotently re-runnable; no phase leaves the tree mid-write without a tell (commit per phase)
+- P7 pass — rollback executable at per-commit granularity (PE-007: A–D+alias vs E commit sets), out-of-band causal limit stated honestly (a chain-form config file does not parse on reverted code — flatten to string; revert message will state it)
+- P8 pass — health signals are the `ui.notify` message families, each pinned by test assertions (PE-013); gate exit status as the suite sensor; no metrics/alerts exist and none claimed
+- P9 pass — 8 phases, each with a recorded `Phase-lint: PASS (8/8)` fingerprint; task counts 4/4/3/5/6/4/3/7 all ≤ limits; one deliverable per title; layer order domain → api → api → ui → ui → ui → docs → close-out matches the none-closure; last phase is the literal Hardening & PR chain
+- P10 **finding** — done-when commands exist with expected outcomes and the gate set is real, but the scoped validator shape cannot fail for its scope (RP1-F1); no validator was weakened relative to today's gates, yet 14/16 obligations and 6 phase done-whens pass on a no-op
+- P11 pass — failure states mapped to phase+validator: chain exhaustion (P2/OB-9), probe purity (P2/OB-10), invalid element + cap + path shape (P1/OB-6, OB-11; P5/OB-13), non-TUI fallback (P4/OB-12), byte-identical no-change (P5/OB-3), bulk equivalence + advisory warnings (P6/OB-4); oversize via the ≥100-model fixture (AC1); concurrency explicitly bounded (console runs only while idle)
+- P12 **finding** — all citations verified at `86e35298` except PE-011's `index.ts:96-104` (actual registration at `factory.ts:92`, RP1-F2); version claims 0.85.1/0.85.1, PR #150 merged, `SETTINGS_COMMAND` constant, and the baseline 140/140 all confirmed
+
+### Fix checks
+
+- F1 pass — reproduction: issue #154 repro steps 1–6 (forge, OPEN/bug) + code-level confirmation of each defect at cited `path:line` (PE-001/PE-002) + observed output recorded (baseline 140/140: every defect is a missing capability, not a failing assertion)
+- F2 pass — root cause evidenced in code and is exactly what the fix edits: the `SettingsUi.select(title, options)` seam (types.ts:49) + every console prompt through it, and the single-reference `ModelSetting`/dispatch resolution (types.ts:21,30; dispatch.ts:222-234); competing hypothesis for E ("regression") ruled out — F-27's own config-schema scope, recorded
+- F3 pass — regression scope named: the 8 suite files + baseline output (PE-006), callers of the seam (console call sites, tests, factory wiring, PE-010), E additive so string configs load unchanged (PE-006/OB-6)
+- F4 pass — per-commit revert path with data/doc side effects stated (chain-form file flatten note); no fake Product-half ceremony
+
+### Verdict
+
+Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F2 low), failed checks L5 + P10 (P12 finding).
+
+- Failed checks: L5, P10 (P12 finding)
+- Findings (unioned, one row each — full rows in `planning-findings.md`):
+  | id | severity | class | check | claim | evidence | verification |
+  |---|---|---|---|---|---|---|
+  | RP1-F1 | medium | plan | L5/P10 | Scoped validators `bun run test test/<file>` never scope (arg appended after the whole script) and exit 0 with the named file absent — every implementation phase's validator passes on a no-op | no-op runs at `86e35298`: 140/14 files, exit 0 for absent `test/picker-filter.test.mjs`; direct `bun test <missing>` exit 0 | re-run commands listed in Review-run evidence |
+  | RP1-F2 | low | plan | P12 | PE-011 cites `index.ts:96-104` for the settings-command registration; actual registration is `factory.ts:92` (`knownCommands` at `:79`) | grep of `factory.ts` / `index.ts` | re-read at `86e35298` |
+- Repair owner: `plan-fix 154` — one batch over both rows (rewrite the scoped validators in SPEC `### Obligations` + phase done-whens and in ACCEPTANCE.md's validator cells; correct the PE-011 citation), then `/review-plan fix-154` re-reviews the new artifact revision
+- Parent state: current (fix unit — no parent)
