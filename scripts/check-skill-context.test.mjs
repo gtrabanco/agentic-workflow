@@ -85,6 +85,9 @@ runFixture(
     // rotted when review-change's ceiling grew; see #200).
     const budgets = JSON.parse(fs.readFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), "utf8"));
     const ceiling = { ...budgets.defaults, ...(budgets.skills["review-change"] ?? {}) }.referenceEstimateMax;
+    if (!Number.isFinite(ceiling) || ceiling <= 0) {
+      throw new Error(`referenceEstimateMax must be a finite positive number in manifest (defaults + skills["review-change"]); got ${ceiling}`);
+    }
     fs.writeFileSync(path.join(referencesDir(fixture), "huge.md"), `# Huge\n${"x".repeat(ceiling * 8)}\n`);
   },
   /estimate .* >|lines .* > /,
