@@ -251,7 +251,7 @@ This repo has no application build. "Green" means:
 
 - The `skills` CLI discovers every skill: `npx skills add . --list` lists them all.
 - Markdown is well-formed; cross-references between docs resolve.
-- Context budgets pass: `node scripts/check-skill-context.mjs` (every skill's
+- Context budgets pass: `bun scripts/check-skill-context.mjs` (every skill's
   `SKILL.md` is within its enforced line/token budget and reference reachability).
 - No stack/real-project references leaked into the skills or shared docs.
 - If `packages/agentic-workflow-schema/` was touched: `bun run test` passes
@@ -263,6 +263,16 @@ This repo has no application build. "Green" means:
   with `npm run bundle:skills` (the committed `packages/pi-agentic-workflow/skills/`
   mirror stays byte-identical to `skills/`; `test/alias-coverage.test.mjs`
   reads both trees) — same PR, always.
+
+**Runtime convention (one rule, everywhere):** scripts run with **bun first**
+(`bun scripts/x.mjs`, `bun run <pkg-script>`); when bun is absent, the same
+command with `node` (`node scripts/x.mjs`, `npm run <pkg-script>`) is the
+guaranteed fallback, enforced by a node-compat CI job. Skill prose and usage
+strings show the bun form; skills running in user projects resolve
+bun-else-node at invocation (`AGENTIC_WORKFLOW_RUNTIME=bun|node` overrides;
+`npm_config_user_agent` starting with `bun/` pins bun). The shebangs stay
+`#!/usr/bin/env node` — the portable fallback, since a shebang cannot express
+"bun else node".
 
 ### Normalizer inventory (this repository)
 
@@ -277,16 +287,16 @@ block and refuses the schedule if a mutating step is ever re-marked as a tail st
 normalizer-inventory@1
 step | kind | side
 bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, both CHANGELOG tables, README/SKILLS cells) | before
-npm run bundle:skills | bundler (copies `skills/` into the Pi package mirror `packages/pi-agentic-workflow/skills/`) | before
-npm run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
+bun run bundle:skills | bundler (copies `skills/` into the Pi package mirror `packages/pi-agentic-workflow/skills/`) | before
+bun run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
 generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
 generate-verification-schemas.mjs | generator (writes the verification schema projections) | before
 generate-docs | docs generator (writes `docs/site/guides/`) | before
-generate-pre-execution-schemas.mjs --check | check-only (drift report, `npm run check:pre-execution-schemas`) | after
-generate-verification-schemas.mjs --check | check-only (drift report, `npm run check:verification-schemas`) | after
+generate-pre-execution-schemas.mjs --check | check-only (drift report, `bun run check:pre-execution-schemas`) | after
+generate-verification-schemas.mjs --check | check-only (drift report, `bun run check:verification-schemas`) | after
 pre-execution-snapshot.mjs verify | check-only (re-derives a bound digest, writes nothing) | after
-node scripts/check-skill-context.mjs (--routes) | check-only (budget report, writes nothing) | after
-probe-sha256-paths.mjs (packages/agentic-workflow-schema) | check-only (SHA-256 path and cost probe, `npm run probe:sha256-paths`, prints digests/timings, writes nothing) | after
+bun scripts/check-skill-context.mjs (--routes) | check-only (budget report, writes nothing) | after
+probe-sha256-paths.mjs (packages/agentic-workflow-schema) | check-only (SHA-256 path and cost probe, `bun run probe:sha256-paths`, prints digests/timings, writes nothing) | after
 formatter | none declared — this repository has no Prettier, Biome or EditorConfig configuration, so the formatter category is empty here | n/a
 ```
 
