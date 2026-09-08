@@ -44,6 +44,12 @@ function scriptedUi(answers) {
         const value = answers[title];
         return Array.isArray(value) ? value.shift() : value;
       },
+      pick: async (title, options, opts = {}) => {
+        asked.push({ title, kind: "pick", options, opts });
+        if (!Object.hasOwn(answers, title)) throw new Error(`no scripted pick answer for: ${title}`);
+        const value = answers[title];
+        return Array.isArray(value) ? value.shift() : value;
+      },
       input: async (title) => take(title, "input"),
       confirm: async (title) => take(title, "confirm"),
       notify: (message, kind) => notify.push({ message, kind }),
@@ -59,11 +65,21 @@ function writeCollector() {
   return { written, writeFile: (path, text) => written.set(path, text) };
 }
 
-function consoleOver(files, { trusted = true, answers = {}, models } = {}) {
+function consoleOver(files, { trusted = true, answers = {}, models, rich = true } = {}) {
   const collector = writeCollector();
   const scripted = scriptedUi(answers);
+  // `rich: false` strips the picker so the non-TUI fallback path is exercised
+  // (OB-12): a console without a rich picker must still complete via select/input.
+  const ui = rich
+    ? scripted.ui
+    : {
+        select: scripted.ui.select,
+        input: scripted.ui.input,
+        confirm: scripted.ui.confirm,
+        notify: scripted.ui.notify,
+      };
   const result = runSettingsConsole({
-    ui: scripted.ui,
+    ui,
     agentDir,
     cwd,
     projectTrusted: trusted,
@@ -187,6 +203,56 @@ test("AC10: a command chosen from the registry list is written as its exact refe
   );
 
   assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.global)), {
+    commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "low" } },
+  });
+});
+
+test("P4/OB-1: the model picker uses the rich seam and passes the value currently in force", async () => {
+  const { outcome, scripted } = await run(
+    { [paths.global]: '{"default":{"model":"anthropic/claude-opus-4-5","thinking":"high"}}' },
+    {
+      models: ["anthropic/claude-opus-4-5", "openai/gpt-5.2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "design-feature",
+        [prompts.modelPicked("design-feature")]: "openai/gpt-5.2",
+        [prompts.thinking("design-feature")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const modelPick = scripted.asked.find((entry) => entry.title === prompts.modelPicked("design-feature"));
+  assert.ok(modelPick, "the model question went to the rich picker");
+  assert.equal(modelPick.kind, "pick", "the rich seam, not the plain select, handled the model question");
+  assert.deepEqual(modelPick.opts, { initial: "anthropic/claude-opus-4-5" }, "the value in force is preselected");
+  assert.ok(modelPick.options.includes("openai/gpt-5.2"), "the live-registry options are offered");
+});
+
+test("P4/OB-12: without a rich picker the console falls back to select/input and still completes", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      rich: false,
+      models: ["anthropic/claude-opus-4-5", "openai/gpt-5.2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "design-feature",
+        [prompts.modelPicked("design-feature")]: "openai/gpt-5.2",
+        [prompts.thinking("design-feature")]: "low",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const modelQuestion = scripted.asked.find((entry) => entry.title === prompts.modelPicked("design-feature"));
+  assert.equal(modelQuestion.kind, "select", "non-TUI falls back to the plain select");
+  assert.ok(scripted.asked.every((entry) => entry.kind !== "pick"), "no rich picker was used");
   assert.deepEqual(JSON.parse(written.get(paths.global)), {
     commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "low" } },
   });
