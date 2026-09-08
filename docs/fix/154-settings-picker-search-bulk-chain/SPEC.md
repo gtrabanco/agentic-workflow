@@ -155,7 +155,7 @@ assertion.
 | PE-008 | Affected invariant / use case: F-27's "honest routing" invariant — a configured route applies to one invocation and is restored after `agent_settled`; a rejection names the value and the field path the loader would use (`$.commands.<name>.model`, AC5 shape); `clean()` elides empty routes by VALUE, never by default-agreement (F4). All must survive the console and schema changes | document | `docs/features/27-pi-agentic-workflow/SPEC.md` §"Engineering half" (Technical goals, Command surface, Settings console); `src/settings/console.ts:243-259` (clean, F4 comment); `src/settings/view.ts:14-19` (routePath) | current tree | OB-11, OB-13, AC3, AC9 | current | proven | — |
 | PE-009 | Cross-issue exposure: no open PRs exist (2026-09-08). #201 (review-pass routing), #198/#196 (package layout), #174 (state flow) share no file or flow with this fix. #200's branch is separate; this unit was re-branched from `main` at `f48dff00` to stay independent | forge | `gh pr list --state open` → `[]`; issues #201, #198, #196, #174, #200 (titles read 2026-09-08) | 2026-09-08 | Cross-issue notes | current | proven | — |
 | PE-010 | Seam-superset claim (compilation): adding an optional member to `SettingsUi` cannot break existing call sites — all current uses (`console.ts`, tests, factory wiring) reference only the existing four members | derived | rule: TypeScript structural typing over an optional member; input rows PE-002, PE-006 | `f48dff00` | AC13, P4 task 1 | current | proven | — |
-| PE-011 | Alias surface: commands are registered by name via `registerCommand` (`src/extension/index.ts:96-104` registers `agentic-workflow-settings`); `knownCommands` guards route-name typos (`factory.ts`, `dispatch.ts` unknown-routes warning). A second registration `aw-settings` with the same handler is a pointer — config keys and `routePath` are unaffected | repository | `packages/pi-agentic-workflow/src/extension/index.ts:96-104`; `src/extension/factory.ts` (knownCommands); `test/alias-coverage.test.mjs` (pins the settings command today) | `f48dff00` | AC6 | current | proven | — |
+| PE-011 | Alias surface: commands are registered by name via `registrar.registerCommand(SETTINGS_COMMAND, …)` (`src/extension/factory.ts:92`; the `knownCommands` guard is at `factory.ts:79`; `index.ts:96-104` is the console wiring `runSettingsConsole({…})` inside the `settings:` surface callback, not the registration). A second registration `aw-settings` with the same handler is a pointer — config keys and `routePath` are unaffected | repository | `packages/pi-agentic-workflow/src/extension/factory.ts:79,92` (knownCommands + settings registration); `src/extension/index.ts:96-104` (console wiring); `test/alias-coverage.test.mjs` (pins the settings command today) | `f48dff00` | AC6 | current | proven | — |
 | PE-012 | Docs surfaces: the package README pair documents the settings command and the invalid-configuration path (`README.md:120,131`; `README.es.md:125,137`) and must gain the chain schema + alias; the bilingual same-commit rule is a repo hard rule (AD-002). Package version bumps are manual and same-PR with the changelog package tables | document + ledger | `packages/pi-agentic-workflow/README.md` / `README.es.md`; `CLAUDE.md` §"Working rules" (bilingual hard rule) + §"Packages" (version bumps); `REPOSITORY_STATE.md` AD-002 | current tree | AC12, P7 | current | proven | — |
 | PE-013 | Observability surface: the package has no metrics/alerts; health is expressed through `ui.notify` messages (refusals, warnings, saves) and the test suite's exit status. Both new message families (chain-exhausted refusal, bulk advisory warnings) are pinned by tests, not by prose | repository | `src/routing/dispatch.ts` (refuse/notify pattern); `test/unavailable-stop.test.mjs` (message assertions) | `f48dff00` | Observability section, AC8 | current | proven | — |
 
@@ -164,22 +164,37 @@ repository + installed-package evidence (PE-001..PE-013).
 
 ### Obligations
 
+**Scoped validator shape (OB-1…OB-14 and every P1–P6 done-when).** Scoped
+validators use the direct form `cd packages/pi-agentic-workflow && bun test
+test/<file>…`, never `bun run test <args>` — the package's test script is
+`tsc && bun test test/*.test.mjs`, so `bun run` appends args after the whole
+script and never scopes, while the direct form scopes to the named files **only
+when they exist**: `bun test` on an unmatched path exits 0 printing just a note
+and no summary line. The missing-file case is covered two ways: (1) task
+ordering — every file-creating task precedes the phase whose validator names
+the file (P1 task 1 extends `config-merge.test.mjs`; P2 task 1 extends
+`unavailable-stop.test.mjs`; P4 tasks 4–5 create `picker-filter.test.mjs` and
+extend `settings-console.test.mjs`; every other named file exists before its
+phase); (2) required evidence — every scoped validator's required evidence is
+the pasted summary line `Ran N tests across K file(s)`, which an absent file
+cannot produce. The full gate (OB-16) stays `bun run test` (tsc + whole suite).
+
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
-| OB-1 | Issue #154 "Expected behaviour" (Filter, Scroll) + PE-001/PE-004 | Any list that can overflow filters while typing, keeps the cursor visible, and shows a position indicator | P4 | Picker task 4 | execute-phase --fix | `bun run test test/settings-console.test.mjs test/picker-filter.test.mjs` → exit 0 | Test names pasted in the phase tick | planned |
-| OB-2 | Issue #154 (Filter semantics) + PE-004 | `flash` matches every ref containing flash; `nan/` matches provider `nan` only (token/subsequence, slash-aware) | P4 | Picker filter unit test | execute-phase --fix | `bun run test test/picker-filter.test.mjs` → exit 0 with the two pinned cases | Test output pasted | planned |
-| OB-3 | Issue #154 (Current value; Independent fields) + PE-008 | Route editing opens on the value in force (labelled), asks only changed fields, and a no-change edit saves a byte-identical file | P5 | Field-chooser + preselection tasks | execute-phase --fix | `bun run test test/settings-console.test.mjs` → exit 0 (byte-identical + independence cases) | Test output pasted | planned |
-| OB-4 | Issue #154 (Bulk edit) | One pass assigns model + thinking to ≥ 2 commands and one pass clears ≥ 2; result equals N single passes; per-command advisory warning for registry-missing refs | P6 | Bulk tasks | execute-phase --fix | `bun run test test/settings-console.test.mjs` → exit 0 (bulk equivalence fixtures) | Test output pasted | planned |
-| OB-5 | Issue #154 (Shorthand) + PE-011 | `/aw-settings` opens the same console editing the same file; config keys unaffected; alias-coverage pins it | P3 | Alias tasks | execute-phase --fix | `bun run test test/alias-coverage.test.mjs` → exit 0 | Test output pasted | planned |
-| OB-6 | Issue #154 (Fallback order) + PE-003/PE-005 | A route's `model` accepts an ordered reference chain (1–4 entries); schema rejects non-reference elements and > 4 entries; single-string and `inherit` load unchanged | P1 | Red-first chain tests task | execute-phase --fix | `bun run test test/config-merge.test.mjs` → exit 0 | Test output pasted | planned |
-| OB-7 | Issue #154 (Fallback order) + PE-003 | Merge preserves a chain project-over-global per key, with its order round-tripping through a save | P1 | Merge task | execute-phase --fix | `bun run test test/config-merge.test.mjs` → exit 0 (order round-trip case) | Test output pasted | planned |
-| OB-8 | Issue #154 (Fallback order) + PE-005 | Dispatch applies the first chain entry that resolves AND has configured auth, probing without session mutation | P2 | Chain-probe tests task | execute-phase --fix | `bun run test test/unavailable-stop.test.mjs` → exit 0 | Test output pasted | planned |
-| OB-9 | Issue #154 (Fallback order, exhaustion) + PE-013 | Chain exhausted: `stop` refuses naming every candidate and why it was skipped (unknown vs. no auth); `inherit` runs the session model with the same explanation | P2 | Exhaustion message task | execute-phase --fix | `bun run test test/unavailable-stop.test.mjs` → exit 0 | Test output pasted | planned |
-| OB-10 | Issue #154 (probe purity) + PE-005 | Chain probing never mutates session state: `setModel` called at most once per routed turn | P2 | Probe-purity test task | execute-phase --fix | `bun run test test/unavailable-stop.test.mjs` → exit 0 (setModel-call-count assertion) | Test output pasted | planned |
-| OB-11 | PE-008 (AC5 path shape, schema side) | Schema rejections keep the loader's field-path shape (`$.commands.<name>.model`), naming the offending element or the limit | P1 | Schema validation task | execute-phase --fix | `bun run test test/config-merge.test.mjs` → exit 0 (invalid-element path cases) | Test output pasted | planned |
-| OB-12 | PE-004 (mode guard) | Non-TUI modes keep a working text-input path: the picker falls back to `select`/`input`, the console never dead-ends | P4 | Fallback task | execute-phase --fix | `bun run test test/settings-console.test.mjs` → exit 0 (fallback fixture) | Test output pasted | planned |
-| OB-13 | PE-008 (AC5 path shape, console side) | Console rejections — including hand-typed chain elements — keep the loader's path shape (`$.commands.<name>.model` / `...thinking`) | P5 | Rejection-path task | execute-phase --fix | `bun run test test/settings-console.test.mjs` → exit 0 | Test output pasted | planned |
-| OB-14 | AC11 + PE-003 | The merged view renders a route's chain in order | P5 | Merged-view task | execute-phase --fix | `bun run test test/settings-console.test.mjs` → exit 0 (chain-render case) | Test output pasted | planned |
+| OB-1 | Issue #154 "Expected behaviour" (Filter, Scroll) + PE-001/PE-004 | Any list that can overflow filters while typing, keeps the cursor visible, and shows a position indicator | P4 | Picker task 4 | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs test/picker-filter.test.mjs` → exit 0 with the picker cases green + scoped summary (`Ran N tests across 2 files`) | Scoped summary line + test names pasted in the phase tick | planned |
+| OB-2 | Issue #154 (Filter semantics) + PE-004 | `flash` matches every ref containing flash; `nan/` matches provider `nan` only (token/subsequence, slash-aware) | P4 | Picker filter unit test | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/picker-filter.test.mjs` → exit 0 with the two pinned cases + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-3 | Issue #154 (Current value; Independent fields) + PE-008 | Route editing opens on the value in force (labelled), asks only changed fields, and a no-change edit saves a byte-identical file | P5 | Field-chooser + preselection tasks | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 (byte-identical + independence cases) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-4 | Issue #154 (Bulk edit) | One pass assigns model + thinking to ≥ 2 commands and one pass clears ≥ 2; result equals N single passes; per-command advisory warning for registry-missing refs | P6 | Bulk tasks | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 (bulk equivalence fixtures) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-5 | Issue #154 (Shorthand) + PE-011 | `/aw-settings` opens the same console editing the same file; config keys unaffected; alias-coverage pins it | P3 | Alias tasks | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/alias-coverage.test.mjs` → exit 0 + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-6 | Issue #154 (Fallback order) + PE-003/PE-005 | A route's `model` accepts an ordered reference chain (1–4 entries); schema rejects non-reference elements and > 4 entries; single-string and `inherit` load unchanged | P1 | Red-first chain tests task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` → exit 0 + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-7 | Issue #154 (Fallback order) + PE-003 | Merge preserves a chain project-over-global per key, with its order round-tripping through a save | P1 | Merge task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` → exit 0 (order round-trip case) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-8 | Issue #154 (Fallback order) + PE-005 | Dispatch applies the first chain entry that resolves AND has configured auth, probing without session mutation | P2 | Chain-probe tests task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs` → exit 0 + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-9 | Issue #154 (Fallback order, exhaustion) + PE-013 | Chain exhausted: `stop` refuses naming every candidate and why it was skipped (unknown vs. no auth); `inherit` runs the session model with the same explanation | P2 | Exhaustion message task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs` → exit 0 + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-10 | Issue #154 (probe purity) + PE-005 | Chain probing never mutates session state: `setModel` called at most once per routed turn | P2 | Probe-purity test task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs` → exit 0 (setModel-call-count assertion) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-11 | PE-008 (AC5 path shape, schema side) | Schema rejections keep the loader's field-path shape (`$.commands.<name>.model`), naming the offending element or the limit | P1 | Schema validation task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` → exit 0 (invalid-element path cases) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-12 | PE-004 (mode guard) | Non-TUI modes keep a working text-input path: the picker falls back to `select`/`input`, the console never dead-ends | P4 | Fallback task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 (fallback fixture) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-13 | PE-008 (AC5 path shape, console side) | Console rejections — including hand-typed chain elements — keep the loader's path shape (`$.commands.<name>.model` / `...thinking`) | P5 | Rejection-path task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
+| OB-14 | AC11 + PE-003 | The merged view renders a route's chain in order | P5 | Merged-view task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 (chain-render case) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
 | OB-15 | PE-012 (docs + release bookkeeping) | README EN+ES document the chain schema, the picker and the alias in the same change; version bump + bilingual changelog tables in the same PR | P7 | Docs tasks | execute-phase --fix | read-verified: chain + `aw-settings` present in both READMEs; `git status --porcelain docs/` → empty after commit | Grep output + PR diff pasted | planned |
 | OB-16 | PE-006 (gate) | The package gate is green on the final tree, including tsc | P7 | Verify-only gate task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun run test` → exit 0, `0 fail` | Command output pasted | planned |
 
@@ -407,8 +422,10 @@ record the result here as `Phase-lint: PASS (8/8) · fingerprint
 ### P1 — Model-chain config schema
 
 Layer: `domain`. Done-when:
-`cd packages/pi-agentic-workflow && bun run test test/config-merge.test.mjs`
-→ exit 0 with the new chain cases green.
+`cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs`
+→ exit 0 with the new chain cases green and the scoped summary line
+(`Ran N tests across 1 file`) pasted — the file exists by then (created by
+this phase's first task).
 
 - [ ] Red-first tests in `test/config-merge.test.mjs`: a chain
       (`"model": ["a/m1", "b/m2"]`) merges project-over-global per key and
@@ -429,8 +446,10 @@ Layer: `domain`. Done-when:
 ### P2 — Chain-probe dispatch
 
 Layer: `api`. Done-when:
-`cd packages/pi-agentic-workflow && bun run test test/unavailable-stop.test.mjs test/default-inherit.test.mjs`
-→ exit 0 with the new chain cases green.
+`cd packages/pi-agentic-workflow && bun test test/unavailable-stop.test.mjs test/default-inherit.test.mjs`
+→ exit 0 with the new chain cases green and the scoped summary line
+(`Ran N tests across 2 files`) pasted — both files exist by then (extended by
+this phase's first task; `default-inherit.test.mjs` already exists).
 
 - [ ] Red-first tests in `test/unavailable-stop.test.mjs`: an exhausted chain
       with `stop` refuses naming every candidate and why it was skipped
@@ -454,8 +473,10 @@ Layer: `api`. Done-when:
 ### P3 — `/aw-settings` alias command
 
 Layer: `api`. Done-when:
-`cd packages/pi-agentic-workflow && bun run test test/alias-coverage.test.mjs`
-→ exit 0 with the alias pin green.
+`cd packages/pi-agentic-workflow && bun test test/alias-coverage.test.mjs`
+→ exit 0 with the alias pin green and the scoped summary line
+(`Ran N tests across 1 file`) pasted — the file exists by then (extended by
+this phase's first task).
 
 - [ ] Red-first test in `test/alias-coverage.test.mjs`: the extension
       registers both `agentic-workflow-settings` and `aw-settings`, and the
@@ -472,8 +493,10 @@ Layer: `api`. Done-when:
 ### P4 — Searchable windowed picker primitive
 
 Layer: `ui`. Done-when:
-`cd packages/pi-agentic-workflow && bun run test test/picker-filter.test.mjs test/settings-console.test.mjs`
-→ exit 0 with the picker cases green.
+`cd packages/pi-agentic-workflow && bun test test/picker-filter.test.mjs test/settings-console.test.mjs`
+→ exit 0 with the picker cases green and the scoped summary line
+(`Ran N tests across 2 files`) pasted — both files exist by then (created by
+this phase's tasks 4–5; the phase cannot complete before they exist).
 
 - [ ] Add the optional rich picker to the `SettingsUi` seam in
       `src/routing/types.ts` (filterable select with initial selection,
@@ -499,8 +522,9 @@ Layer: `ui`. Done-when:
 ### P5 — Current-value field editing
 
 Layer: `ui`. Done-when:
-`cd packages/pi-agentic-workflow && bun run test test/settings-console.test.mjs`
-→ exit 0 with the current-value cases green.
+`cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs`
+→ exit 0 with the current-value cases green and the scoped summary line
+(`Ran N tests across 1 file`) pasted — the file exists since P4.
 
 - [ ] Red-first tests: editing an existing route opens the model and
       thinking pickers on the values in force, labelled `(current)` /
@@ -528,8 +552,9 @@ Layer: `ui`. Done-when:
 ### P6 — Bulk apply and bulk clear
 
 Layer: `ui`. Done-when:
-`cd packages/pi-agentic-workflow && bun run test test/settings-console.test.mjs`
-→ exit 0 with the bulk cases green.
+`cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs`
+→ exit 0 with the bulk cases green and the scoped summary line
+(`Ran N tests across 1 file`) pasted — the file exists since P4.
 
 - [ ] Red-first tests: one pass assigns model + thinking to ≥ 2 commands and
       the saved file equals what N single-command passes produce; one pass
