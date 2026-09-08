@@ -91,6 +91,72 @@ test("AC5: merge is a pure read — neither validated file is mutated", () => {
   assert.equal(projectCfg.commands?.["a"]?.model, undefined);
 });
 
+// --- AC7 / OB-6 / OB-7: ordered model fallback chain (issue #154, root cause E) ---
+// A route's `model` may be `"inherit"`, a single `provider/modelId`, or an
+// ordered chain of 1–4 references. Written red-first: the schema did not accept
+// an array when these landed.
+
+test("AC7: a model chain merges project-over-global per key and round-trips its order", () => {
+  const globalCfg = valid('{"commands":{"plan-feature":{"model":["global/m1","global/m2"]}}}', "global");
+  const projectCfg = valid(
+    '{"commands":{"plan-feature":{"model":["project/m1","project/m2","project/m3"],"thinking":"high"}}}',
+    "project",
+  );
+
+  const merged = mergeConfigs(globalCfg, projectCfg);
+  assert.deepEqual(merged.commands["plan-feature"].model, ["project/m1", "project/m2", "project/m3"]);
+  assert.equal(merged.commands["plan-feature"].thinking, "high");
+});
+
+test("AC7: a chain declared only at global scope survives into the merged route", () => {
+  const globalCfg = valid('{"commands":{"design-feature":{"model":["a/x","b/y"]}}}', "global");
+  const merged = mergeConfigs(globalCfg, {});
+  assert.deepEqual(merged.commands["design-feature"].model, ["a/x", "b/y"]);
+});
+
+test("AC7/OB-6: legacy `inherit` and single-string model files parse and merge unchanged", () => {
+  const inheritCfg = valid('{"default":{"model":"inherit","thinking":"high"}}', "global");
+  assert.equal(inheritCfg.default.model, "inherit");
+  assert.deepEqual(mergeConfigs(inheritCfg, {}).default, { model: "inherit", thinking: "high" });
+
+  const singleCfg = valid('{"commands":{"plan-feature":{"model":"openai/gpt-5.2"}}}', "global");
+  const merged = mergeConfigs(singleCfg, {});
+  assert.equal(merged.commands["plan-feature"].model, "openai/gpt-5.2");
+  assert.equal(typeof merged.commands["plan-feature"].model, "string");
+});
+
+test("AC7/OB-11: a non-reference chain element is rejected naming the loaders model path", () => {
+  const result = parseConfigFile('{"commands":{"plan-feature":{"model":["a/m1","not-a-reference"]}}}');
+  assert.equal(result.ok, false);
+  assert.equal(result.issues.length, 1);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.plan-feature.model"]);
+  assert.match(result.issues[0].message, /not-a-reference/u);
+  assert.ok(result.issues[0].message.includes('provider/modelId'), `expected a reference hint: ${result.issues[0].message}`);
+});
+
+test("AC7/OB-6: a chain longer than 4 entries is rejected naming the limit", () => {
+  const chain = ["a/m1", "a/m2", "a/m3", "a/m4", "a/m5"];
+  const result = parseConfigFile(`{"commands":{"plan-feature":{"model":${JSON.stringify(chain)}}}}`);
+  assert.equal(result.ok, false);
+  assert.equal(result.issues.length, 1);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.plan-feature.model"]);
+  assert.match(result.issues[0].message, /4/u);
+});
+
+test("AC7/OB-6: an empty chain array is rejected", () => {
+  const result = parseConfigFile('{"commands":{"plan-feature":{"model":[]}}}');
+  assert.equal(result.ok, false);
+  assert.equal(result.issues.length, 1);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.commands.plan-feature.model"]);
+  assert.match(result.issues[0].message, /non-empty/u);
+});
+
+test("AC7/OB-11: a single invalid element inside a chain is still rejected with the schema path shape", () => {
+  const result = parseConfigFile('{"default":{"model":["a/m1",42]}}');
+  assert.equal(result.ok, false);
+  assert.deepEqual(result.issues.map((issue) => issue.path), ["$.default.model"]);
+});
+
 test("AC12 loader leg: malformed JSON is an error object, never a silent inherit", () => {
   const result = parseConfigFile('{"default": {"model": "openai/gpt-5.2",}');
   assert.equal(result.ok, false);
