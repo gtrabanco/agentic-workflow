@@ -78,7 +78,17 @@ runFixture(
   "over-budget reference",
   (fixture) => {
     link(fixture, "huge.md");
-    fs.writeFileSync(path.join(referencesDir(fixture), "huge.md"), `# Huge\n${"x".repeat(10_000)}\n`);
+    // Size the body from the manifest at runtime so the reference is over-budget
+    // by construction at ANY future ceiling: the checker merges
+    // { ...defaults, ...skills[skill] } and estimates ceil(UTF-8 bytes / 4), so
+    // ceiling * 8 chars lands at ~2x the reference-estimate ceiling (a constant
+    // rotted when review-change's ceiling grew; see #200).
+    const budgets = JSON.parse(fs.readFileSync(path.join(fixture, "docs/workflow/SKILL_CONTEXT_BUDGETS.json"), "utf8"));
+    const ceiling = { ...budgets.defaults, ...(budgets.skills["review-change"] ?? {}) }.referenceEstimateMax;
+    if (!Number.isFinite(ceiling) || ceiling <= 0) {
+      throw new Error(`referenceEstimateMax must be a finite positive number in manifest (defaults + skills["review-change"]); got ${ceiling}`);
+    }
+    fs.writeFileSync(path.join(referencesDir(fixture), "huge.md"), `# Huge\n${"x".repeat(ceiling * 8)}\n`);
   },
   /estimate .* >|lines .* > /,
 );
