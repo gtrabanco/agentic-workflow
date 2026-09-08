@@ -145,7 +145,7 @@ archivo de proyecto mientras el proyecto no sea de confianza.
 
 ## Notas
 
-- Probado con Pi 0.85.0 (2026-09-04) (`pi install`, skills de paquete, registro de
+- Probado con Pi 0.85.1 (2026-09-05) (`pi install`, skills de paquete, registro de
   comandos amigables, set/clear enrutado, round-trip de consola de ajustes,
   `sendUserMessage` con expansión de plantillas).
 - El paquete declara Pi como peer dependency; no incluye ninguna copia de Pi.
