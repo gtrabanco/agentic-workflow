@@ -5,7 +5,7 @@ Status: frozen
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | The inverted fold-first pattern is gone from both verified surfaces | `grep -rn "fold-findings, then re-run /review-change" skills/execute-phase/ skills/ship-roadmap/` → 0 matches |
-| AC2 | Every reordered block leads with `/review-change`; fold appears only as the correction leg after a verdict | `grep -rn "→ Next: /review-change" skills/execute-phase/references/UNIT_LOOP.md skills/execute-phase/references/FOLDING.md skills/execute-phase/references/CLOSEOUT.md` → ≥ 3 matches (one per file) |
+| AC2 | Every reordered block leads with `/review-change`; fold appears only as the correction leg after a verdict | `grep -rn "→ Next: /review-change" skills/execute-phase/references/UNIT_LOOP.md skills/execute-phase/references/FOLDING.md skills/execute-phase/references/CLOSEOUT.md` → ≥ 3 matches (one per file); `grep -n "off to .*review-change" skills/execute-phase/references/CLOSEOUT.md` → 1 match (CLOSEOUT hand-off sentence, not the pre-existing checkpoint block at line 68) |
 | AC3 | Verdict-following fold uses did not regress | `grep -c "fold-findings" skills/review-change/SKILL.md skills/review-plan/references/OUTPUT.md skills/review-spec/references/OUTPUT.md skills/review-implementation/references/CLASSIFY.md skills/fold-findings/SKILL.md` → every count ≥ 1 |
 | AC4 | Discipline suite green with a new red-first pin of the canonical order on `UNIT_LOOP.md` | `node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → all pass, new pin present |
 | AC5 | Full project gate green | `npm test` → all pass |
