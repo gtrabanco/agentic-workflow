@@ -106,3 +106,10 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
 - Files: skills/review-change/{SKILL.md,references/{PERSIST_AND_DECIDE,OUTPUT_AND_GUARDRAILS,REVIEW_PROCESS}.md}, scripts/next-recommendations.test.mjs, CHANGELOG.md, CHANGELOG.es.md, packages/pi-agentic-workflow/skills/**, docs/fix/191-*/{SPEC,progress}.md
 - Acceptance receipt refreshed: manifest amended by user-approved replan (ar-191-2) → fresh blob cb15be76 recorded.
 - Next: P4 — Hardening & PR (amends open PR #193, no new PR)
+
+## Unit-loop receipt — P4 (2026-09-08)
+- Commit: b7ebe916 · Gate: discipline suite exit 0 (9/9); check-skill-context exit 0; bun run test 140/140 · Acceptance blob: cb15be765888a4bf2f037d4fb7cdc0814ac4a1b2
+- Pushed: aff803dd..b7ebe916 → fix/191-handoff-review-fold-order (extends open PR #193, no new PR)
+- Scope-extension note posted on PR #193 (comment 5587385051); fix-index row updated to name the review-change fencing scope (row stays `in-progress · #193` until merge).
+- Branch clean + remote-current; acceptance blob unchanged (cb15be76).
+- Next: none (unit complete) — review hand-off /fold-findings → re-run /review-change; /audit-pr is the merge gate.
