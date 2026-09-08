@@ -31,6 +31,27 @@ test("plan-feature preserves every dependency in a blocked hand-off", () => {
   assert.match(skill, /never print `…`/);
 });
 
+test("execute-phase terminal hand-offs recommend the review before the fold (fix #191)", () => {
+  const unitLoop = readReference("execute-phase", "UNIT_LOOP.md");
+  const folding = readReference("execute-phase", "FOLDING.md");
+  const closeout = readReference("execute-phase", "CLOSEOUT.md");
+  const skill = readSkill("execute-phase");
+
+  // Every terminal block leads with /review-change — the mandatory end review.
+  assert.match(unitLoop, /→ Next: \/review-change/);
+  assert.match(folding, /→ Next: \/review-change/);
+  assert.match(closeout, /`?\/review-change`? → `?\/fold-findings`?/);
+
+  // The fold is never the first leg — review-change precedes any fold step.
+  assert.doesNotMatch(unitLoop, /\/fold-findings, then re-run \/review-change/);
+  assert.doesNotMatch(folding, /\/fold-findings, then re-run \/review-change/);
+  assert.doesNotMatch(closeout, /hand off to \/fold-findings/);
+
+  // "mandatory" labels the review, never the fold hand-off.
+  assert.doesNotMatch(skill, /mandatory \/fold-findings/);
+  assert.doesNotMatch(closeout, /mandatory #?\/?fold-findings/);
+});
+
 test("review and fold hand-offs preserve every finding ID", () => {
   const review = readReference("review-change", "PERSIST_AND_DECIDE.md");
   const reviewSkill = readSkill("review-change");
