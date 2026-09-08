@@ -466,6 +466,7 @@ n/a.
 | date | amendment | authority | artifact revision |
 |---|---|---|---|
 | 2026-09-08 | Scope extended with the reviewer-side mirror defect (C1–C5: `review-change` review-end fencing, `3.4.0 → 3.5.0` bump) from the issue #191 follow-up comment; user directed the replan (`/plan-fix 191`, "replan because the issue was updated"). P1/P2 remain executed as shipped; P3 + P4 added. | issue #191 follow-up (2026-09-08T14:08Z) + explicit user instruction | `ar-191-2` |
+| 2026-09-08 | AC5 validator re-cut: `npm test` is unrunnable as written (no root `package.json` — this is a skills/docs repo with two bun islands under `packages/`; `npm test` → ENOENT, exit 1; `git log --all --diff-filter=A -- package.json` → empty). The frozen manifest's validator was replaced by the real project gate set: discipline suite (`node --test scripts/next-recommendations.test.mjs scripts/review-loop-discipline.test.mjs scripts/bounded-delivery-loops.test.mjs` → exit 0, 9/9), `node scripts/check-skill-context.mjs` → exit 0, `packages/pi-agentic-workflow` `bun run test` → all pass, `packages/agentic-workflow-schema` `bun run test` → all pass, `bundle:skills` + `git status --porcelain packages/pi-agentic-workflow/skills/` → empty. Closes F4 (regression of F3) from the cycle-3 review of PR #193. | user approval (ask f8d67831, "approve_gate_set", 2026-09-08) | `ar-191-3` |
 
 ## Status
 
