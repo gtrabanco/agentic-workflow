@@ -526,25 +526,25 @@ Layer: `ui`. Done-when:
 → exit 0 with the current-value cases green and the scoped summary line
 (`Ran N tests across 1 file`) pasted — the file exists since P4.
 
-- [ ] Red-first tests: editing an existing route opens the model and
+- [x] Red-first tests: editing an existing route opens the model and
       thinking pickers on the values in force, labelled `(current)` /
       `(default route)`; Enter with no change saves a byte-identical file;
       changing only the thinking asks no model question and changing only
       the model asks no thinking question (OB-3).
-- [ ] Pass the merged effective values for the target into `editRoute` in
+- [x] Pass the merged effective values for the target into `editRoute` in
       `src/settings/console.ts` (resolved from the merged view, so
       `(default route)` shows when inheriting) (OB-3).
-- [ ] Add the field chooser to `editRoute`: the operator marks the fields to
+- [x] Add the field chooser to `editRoute`: the operator marks the fields to
       change (model, thinking) as separate selectable answers; only the
       marked fields are asked; marking none leaves the route untouched
       (OB-3).
-- [ ] Add the ordered chain builder to the model field: repeated append via
+- [x] Add the ordered chain builder to the model field: repeated append via
       the picker, remove-last, done — the saved `model` is the chain in
       built order (OB-6, OB-7).
-- [ ] Keep every rejection message in the loader's path shape
+- [x] Keep every rejection message in the loader's path shape
       (`$.commands.<name>.model` / `...thinking`), including for chain
       elements typed by hand (OB-13).
-- [ ] Extend `renderMergedConfig` in `src/settings/view.ts` so a route with
+- [x] Extend `renderMergedConfig` in `src/settings/view.ts` so a route with
       a chain renders its references in order (e.g.
       `a/m1 → b/m2 / inherit`), keeping the existing single-reference and
       `inherit` renderings unchanged (OB-14).
