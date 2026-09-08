@@ -556,18 +556,18 @@ Layer: `ui`. Done-when:
 → exit 0 with the bulk cases green and the scoped summary line
 (`Ran N tests across 1 file`) pasted — the file exists since P4.
 
-- [ ] Red-first tests: one pass assigns model + thinking to ≥ 2 commands and
+- [x] Red-first tests: one pass assigns model + thinking to ≥ 2 commands and
       the saved file equals what N single-command passes produce; one pass
       clears ≥ 2 overrides; a reference missing from the live registry
       produces a per-command warning and still writes the route
       (OB-4).
-- [ ] Add the bulk menu entries to `runSettingsConsole` and a multi-select
+- [x] Add the bulk menu entries to `runSettingsConsole` and a multi-select
       command picker over the seam's multi mode (OB-4).
-- [ ] Implement bulk apply: one field pass (model via P5's builder +
+- [x] Implement bulk apply: one field pass (model via P5's builder +
       thinking) applied to every selected command, with the per-command
       advisory warning against the live registry when one is reachable
       (OB-4).
-- [ ] Implement bulk clear: multi-select over existing overrides, removing
+- [x] Implement bulk clear: multi-select over existing overrides, removing
       every selected key in one save (OB-4).
 
 ### P7 — Package docs and release bookkeeping
