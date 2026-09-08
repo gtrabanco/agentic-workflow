@@ -25,3 +25,25 @@ Notes:
 - Out-of-scope observation for the owner (not a finding row): the route-budget red (RP1-F1) needs its own disposition regardless of this fix — either a declared re-basis in `docs/workflow/SKILL_CONTEXT_BUDGETS.json` naming the growth source (per the manifest's own policy; suspect #199's skill rewrites, which would be a fix-index row against the merged PR) or a route trim (#176/D2 territory). This plan must not grow it silently.
 - Read-only on plan authority: `git status --porcelain` shows no change to `SPEC.md`/`ACCEPTANCE.md` (byte-identical); this receipt + `planning-findings.md` are the only files this review wrote.
 - Repair owner: `plan-fix 200` — one root-caused batch over RP1-F1 + RP1-F2 (re-scope the validator to something the unit can actually satisfy — e.g. validate the fixture pin at the fixture level and record the route red as a separate, indexed unit — plus re-cite PE-004 honestly), then `/review-plan fix-200` re-reviews the new artifact revision. RP1-F3 is resolved on the source side (revert or accept the unsanctioned edit), not in the plan.
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-fix200-20260908-002 · Snapshot: b64dfe3d64853665dcd0ccfc51a2bc0256affc0b3a9e34d18f42195d4ff5ad1e · Verdict: plan-review-pass
+- Unit: fix-200 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6)
+- Source revision: c1ff890e469a4514c4a96698300b947800c50949 · Artifact revision: c1ff890e469a4514c4a96698300b947800c50949
+- Reviewer: review-plan · Session: 01a082dd-34e2-76a0-a7ea-71f40f8fe26b · Role: reviewer · Author: plan-fix (cycle-2 repair batch)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-08T21:14Z/2026-09-08T21:26Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 12 rows (PE-001…PE-012, embedded in SPEC) · obligations 6 rows (OB-1…OB-6, embedded in SPEC; verified-capable: 2 — OB-5/OB-6 greps are runnable today and pass at `docs/fix/README.md:17` / the SPEC's out-of-scope citations)
+- Prior plan receipt (re-review only): rp-fix200-20260908-001 @ 04092de89c9bb4a3505c748ab9d02995e75d03601ee19e6b99066ec6ad6c608f
+
+Notes:
+- Re-review of the cycle-2 repair batch (`c1ff890e`): snapshot rebuilt over the new bytes (`node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-200 --dir docs/fix/200-over-budget-fixture-stale-guard --unit-kind fix` → digest above; `parentSpecSnapshotDigest: null`, D6/D30). Prior receipt confirmed stale by `verify` (`exit 4`, `stale-source-revision`) before this review — the sanctioned repeat condition (changed snapshot) holds.
+- RP1-F1/F2/F3 resolutions verified against the repair and recorded in `planning-findings.md` with `resolving-artifact-revision` `c1ff890e` (fix-191 precedent `79ff4888`: the re-review writes cycle-1 resolutions after verifying the repair). Zero open material rows remain.
+- Manual-runtime disclosure (Portability): nothing rotates `artifactRevisionId`; the repair commit declares no id, so the receipt carries the source revision beside it. Mutate-and-revert detection depends on the next commit producing new bytes.
+- Evidence spot-checks re-run at `c1ff890e` (all verified against the cited bytes): PE-001 reproduced on both runtimes (`bun`/`node scripts/check-skill-context.test.mjs` → exit 1, `AssertionError: over-budget reference should fail closed`); PE-002 exact arithmetic (fixture body `# Huge\n` + 10 000 + `\n` = 10 008 bytes → estimate 2502 ≤ 2800; `estimate = Math.ceil(bytes/4)` at `check-skill-context.mjs:69`; effective merge at `:161`; manifest 2200/2800); PE-003 verified (2800×8 chars → estimate 5600 = 2×); PE-009 re-verified (`--routes` → exit 1, 15 exceedance lines: 7 `execute-phase:*` estimate, 8 `review-change:*` estimate+lines); PE-011 verified (bare gate and `--budgets` → exit 0, `PASS context budgets: 39 skills`); PE-012 verified (`git status --porcelain -- scripts/` → empty; fixture still `"x".repeat(10_000)`); PE-008 verified (3 workflows, none runs the suite); PE-005/PE-007 verified (`gh pr list --state open` → empty).
+- Falsification stance before checking: NO-CONFIRMED-GAPS — no engineering claim was invented, no obligation is undeliverable, and the re-scoped validator is falsifiable (a fixture regression re-emits the pinned `over-budget reference should fail closed` line; an early crash would break the AC1 "tail shows the route red" compound). Checks: L1–L6 pass, P1–P12 pass, F1–F4 pass.
+- Unrelated working-tree edits (`docs/LOGS.md`, `docs/features/ROADMAP.md`, unstaged, from a prior session) are outside this unit's artifacts and are already declared by the SPEC's "Unrelated working-tree edits left unstaged" decision; no plan artifact was touched by them.
+- Read-only on plan authority: this review wrote only this receipt block and the three resolution-cell updates in `planning-findings.md`.
