@@ -41,15 +41,20 @@ test("execute-phase terminal hand-offs recommend the review before the fold (fix
   assert.match(unitLoop, /→ Next: \/review-change/);
   assert.match(folding, /→ Next: \/review-change/);
   assert.match(closeout, /`?\/review-change`? → `?\/fold-findings`?/);
+  // Positive pin: CLOSEOUT hand-off sentence preserves review→fold order.
+  assert.match(closeout, /\`?\/review-change\`?.*mandatory.*\`?\/fold-findings\`?/);
 
   // The fold is never the first leg — review-change precedes any fold step.
   assert.doesNotMatch(unitLoop, /\/fold-findings, then re-run \/review-change/);
   assert.doesNotMatch(folding, /\/fold-findings, then re-run \/review-change/);
-  assert.doesNotMatch(closeout, /hand off to \/fold-findings/);
+  // Tolerate backtick / optional newline between hand-off words and the fold token.
+  // Regex: backtick is a literal char in regex, `?` makes it optional, /? handles `→ /` vs `→ /`.
+  assert.doesNotMatch(closeout, /hand\s+off\s+to\s+`?\/fold-findings/);
 
   // "mandatory" labels the review, never the fold hand-off.
-  assert.doesNotMatch(skill, /mandatory \/fold-findings/);
-  assert.doesNotMatch(closeout, /mandatory #?\/?fold-findings/);
+  // Catches both `mandatory /fold-findings` and `mandatory `/fold-findings``.
+  assert.doesNotMatch(skill, /mandatory\s+`?\/fold-findings/);
+  assert.doesNotMatch(closeout, /mandatory\s+`?\/fold-findings/);
 });
 
 test("review and fold hand-offs preserve every finding ID", () => {
