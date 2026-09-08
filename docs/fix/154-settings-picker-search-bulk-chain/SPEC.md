@@ -576,13 +576,13 @@ Layer: `docs`. Done-when:
 read-verified — chain + alias present in both READMEs; version bumped with
 changelog rows.
 
-- [ ] Update `packages/pi-agentic-workflow/README.md`: the config schema
+- [x] Update `packages/pi-agentic-workflow/README.md`: the config schema
       section documents the chain form with an example, the picker behaviour
       (filter, current value, bulk, non-TUI fallback), and the
       `/aw-settings` alias (OB-15).
-- [ ] Update `packages/pi-agentic-workflow/README.es.md` with the faithful
+- [x] Update `packages/pi-agentic-workflow/README.es.md` with the faithful
       Spanish sibling of the same edits — same commit (OB-15, AD-002).
-- [ ] Bump `version:` in `packages/pi-agentic-workflow/package.json` (minor)
+- [x] Bump `version:` in `packages/pi-agentic-workflow/package.json` (minor)
       and add the row to the "Companion npm packages" tables in
       `CHANGELOG.md` + `CHANGELOG.es.md` in the same PR (OB-15).
 

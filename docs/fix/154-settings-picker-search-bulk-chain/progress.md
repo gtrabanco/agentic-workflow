@@ -165,10 +165,19 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 - Next: P6 bulk apply and bulk clear.
 
 ## Unit-loop receipt — P6
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` (exit 0, 36 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Commit: 82239504 · Gate: `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` (exit 0, 36 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Next: P7 · Attempts: 1
 - Done: bulk apply + bulk clear — `runSettingsConsole` gains `bulkApply`/`bulkClear` menu entries; `pickCommandsMulti` picks several commands over the seam's `multiple` mode (with a repeated-select fallback for a non-rich UI); bulk apply runs ONE field pass (model via the chain builder + thinking) and applies it to every selected command, warning per command when a chosen reference is absent from the live registry (never blocks the write — dispatch's probe stays authoritative); bulk clear removes every selected override in one save. 3 new console tests (apply-to-two-matches-single-pass, clear-two, missing-ref-warning-per-command).
 - Remains: P7 (docs + release bookkeeping) … P8 (hardening & PR).
 - Gotchas: the multi-select command pick uses `prompts.command` over the seam's `multiple: true`; the scripted harness returns the whole selection for a multiple pick (and a queue for a single pick). The non-rich fallback loops single selects + a confirm; the tests drive the rich path. `route.model` is optional on the `RouteFile` return, so `warnMissingModel` receives `route.model ?? inherit`.
 - Files: src/settings/console.ts, test/settings-console.test.mjs, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
 - Next: P7 package docs and release bookkeeping.
+
+## Unit-loop receipt — P7
+- Commit: pending · Gate: read-verified — chain + `aw-settings` present in both README.md and README.es.md; version bumped 0.7.2 → 0.8.0 with a row in the "Companion npm packages" tables of CHANGELOG.md + CHANGELOG.es.md; full gate `bun run test` exit 0, 171 pass / 0 fail (AC15 README command-table, troubleshooting-quote, example-identity and section-count checks all green) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
+- Next: P8 · Attempts: 1
+- Done: package docs + release bookkeeping — README.md config-schema section documents the ordered fallback chain (`model` array of 1–4 refs, dispatch probes with `find`/`hasConfiguredAuth`, exhaustion names candidates), the searchable windowed picker behaviour (filter, current-value preselection, position indicator, non-TUI fallback), the field-choice + byte-identical no-change + bulk apply/clear, and the `/aw-settings` alias; README.es.md carries the faithful sibling with the byte-identical config example (same commit, AD-002); package.json version → 0.8.0 (minor) with a bilingual changelog row in both CHANGELOG.md/CHANGELOG.es.md.
+- Remains: P8 (hardening & PR).
+- Gotchas: the AC15 alias-coverage checks pin the README: `/aw-settings` must NOT appear in the main command-table (it is documented in the settings-console section only) or that test re-fails; the config example JSON must stay byte-identical EN==ES; section counts must match. Kept `/aw-settings` out of the command table and the example identical — AC15 green. The `0.8.0` changelog row uses the `0.7.2` row's date epoch (2026-09-09) to stay monotonic.
+- Files: packages/pi-agentic-workflow/README.md, README.es.md, package.json, CHANGELOG.md, CHANGELOG.es.md, docs/fix/154-settings-picker-search-bulk-chain/SPEC.md, docs/fix/154-settings-picker-search-bulk-chain/progress.md.
+- Next: P8 hardening & PR.

@@ -74,7 +74,7 @@ Dos archivos JSON, ambos opcionales:
 {
   "default": { "model": "anthropic/claude-opus-4-5", "thinking": "high" },
   "commands": {
-    "plan-feature": { "model": "anthropic/claude-sonnet-4-5", "thinking": "medium" },
+    "plan-feature": { "model": ["anthropic/claude-sonnet-4-5", "openai/gpt-5.2"], "thinking": "medium" },
     "review-change": { "thinking": "max" }
   },
   "onUnavailableRoute": "stop"
@@ -87,8 +87,14 @@ de arriba usa el modelo del default con thinking `max`; todo lo demás corre con
 que ya tuviera la sesión, porque la ruta por defecto del paquete es
 `{"model": "inherit", "thinking": "inherit"}`.
 
-- `model` debe ser `provider/modelId` — la referencia exacta que muestra
-  `/model` — o `"inherit"`.
+- `model` puede ser `provider/modelId` — la referencia exacta que muestra
+  `/model` — `"inherit"`, o un **array** ordenado de 1–4 referencias (una cadena
+  de respaldo). Para una cadena, el dispatch prueba cada referencia en orden y
+  aplica la primera que se resuelve y tiene credenciales, sin tocar la sesión
+  mientras prueba; cuando todas las entradas son inservibles el comando se
+  detiene (o, con `onUnavailableRoute` en `inherit`, avisa y corre con el modelo
+  actual), nombrando cada candidato y por qué se saltó. `plan-feature` de arriba
+  prueba `anthropic/claude-sonnet-4-5` primero y luego `openai/gpt-5.2`.
 - `thinking` es uno de `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`,
   o `"inherit"`.
 - Claves desconocidas, `null` y referencias mal formadas se **rechazan**, no se
@@ -125,10 +131,23 @@ vuelve.
 /agentic-workflow-settings
 ```
 
+`/aw-settings` es un atajo para la misma consola.
+
 Muestra en qué corre cada comando ahora mismo, y qué archivo se niega a parsearse,
 y luego deja editar **un archivo a la vez** y guardar en alcance global o de
 proyecto. No guarda encima de un archivo que no sabe leer, y no toca el
 archivo de proyecto mientras el proyecto no sea de confianza.
+
+Los selectores de modelo y thinking de la consola son buscables y con ventana:
+escribir estrecha la lista, el cursor se queda en pantalla, un indicador de
+posición muestra dónde estás y el valor en vigor viene preseleccionado y
+etiquetado `(current)` / `(default route)`. Una edición de ruta pregunta qué
+campo cambiar (model, thinking), así que guardar sin cambios deja el archivo
+byte a byte idéntico; el campo de modelo puede construir una cadena de respaldo
+ordenada (`a/m1 → b/m2`); y una sola pasada puede aplicar o limpiar una ruta en
+varios comandos, avisando por comando cuando una referencia falta del registro
+vivo. Fuera de una sesión TUI los selectores caen a un prompt simple, así que la
+consola nunca se queda sin salida.
 
 ## Diagnóstico
 
