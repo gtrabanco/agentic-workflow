@@ -172,7 +172,8 @@ LOOP CAP REACHED — <unit>
 - Route: /triage-issue --prioritize-now <unit> F<k> … (or the programmatic outer driver)
 ```
 
-A **third cycle never starts** unless the user explicitly instructs it — the residue routes to
+A **third cycle never starts** unless the user explicitly instructs it — it is
+the user's escape, never a reviewer election. The residue routes to
 `triage-issue --prioritize-now` (or the programmatic outer driver), and a unit
 that needs a third cycle has a planning or root-cause defect, not a review
 deficit. Re-runs count **separate review invocations**, not in-session steps:
