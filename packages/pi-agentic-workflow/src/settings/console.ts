@@ -10,10 +10,11 @@
 
 import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
+import { effectiveRoute } from "../config/merge.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
 import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
-import type { ConfigFile, ModelSetting, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
+import type { ConfigFile, ModelSetting, Route, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 
 export interface SettingsDeps {
@@ -72,7 +73,10 @@ const INHERIT = "inherit";
 
 export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOutcome> {
   const paths = configFilePaths(deps.agentDir, deps.cwd);
-  deps.ui.notify(renderMergedConfig(loadConfig({ agentDir: deps.agentDir, cwd: deps.cwd, projectTrusted: deps.projectTrusted, readFile: deps.readFile }), deps.commands).join("\n"), "info");
+  const merged = loadConfig({ agentDir: deps.agentDir, cwd: deps.cwd, projectTrusted: deps.projectTrusted, readFile: deps.readFile });
+  deps.ui.notify(renderMergedConfig(merged, deps.commands).join("\n"), "info");
+  /** The value in force for a target (the merged route, or the default when the target is "the default route"). */
+  const currentFor = (target: string): Route => effectiveRoute(merged.config, target);
 
   const opened = await openAScope(deps, paths.global, paths.project);
   if (!opened) return { status: "cancelled", edited: false };
@@ -102,14 +106,14 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     }
 
     if (choice === prompts.setDefaultRoute) {
-      const edited = await editRoute(deps, DEFAULT_ROUTE);
+      const edited = await editRoute(deps, DEFAULT_ROUTE, currentFor(DEFAULT_ROUTE));
       if (edited) draft = { ...draft, default: edited };
       continue;
     }
     if (choice === prompts.setOverride) {
       const name = await pickCommand(deps, commandChoices(deps, draft));
       if (name === undefined) continue;
-      const route = await editRoute(deps, name);
+      const route = await editRoute(deps, name, currentFor(name));
       if (route) draft = { ...draft, commands: { ...draft.commands, [name]: route } };
       continue;
     }
@@ -173,17 +177,24 @@ async function openAScope(
 }
 
 /** Ask for a model and a thinking level; `undefined` means nothing changed. */
-async function editRoute(deps: SettingsDeps, target: string): Promise<RouteFile | undefined> {
-  const model = await askModel(deps, target);
+async function editRoute(deps: SettingsDeps, target: string, current: Route): Promise<RouteFile | undefined> {
+  const model = await askModel(deps, target, current.model);
   if (model === undefined) return undefined;
-  const thinking = await askThinking(deps, target);
+  const thinking = await askThinking(deps, target, current.thinking);
   if (thinking === undefined) return undefined;
   return { model, thinking };
 }
 
-async function askModel(deps: SettingsDeps, target: string): Promise<ModelSetting | undefined> {
+async function askModel(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<ModelSetting | undefined> {
   let answer: string | undefined;
-  if (deps.models && deps.models.length > 0) {
+  if (typeof deps.ui.pick === "function" && deps.models && deps.models.length > 0) {
+    // Rich seam: filterable, windowed, preselected to the value in force (OB-1).
+    const picked = await deps.ui.pick(prompts.modelPicked(target), [...deps.models, TYPED], {
+      initial: typeof current === "string" ? current : undefined,
+    });
+    answer = typeof picked === "string" ? picked : undefined;
+    if (answer === TYPED || answer === undefined) answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
+  } else if (deps.models && deps.models.length > 0) {
     answer = await deps.ui.select(prompts.modelPicked(target), [...deps.models, TYPED]);
     if (answer === TYPED || answer === undefined) answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
   } else {
@@ -206,8 +217,17 @@ async function askModel(deps: SettingsDeps, target: string): Promise<ModelSettin
   return parts ? `${parts.provider}/${parts.id}` : undefined;
 }
 
-async function askThinking(deps: SettingsDeps, target: string): Promise<ThinkingSetting | undefined> {
-  const answer = await deps.ui.select(prompts.thinking(target), [...THINKING_LEVELS, INHERIT]);
+async function askThinking(deps: SettingsDeps, target: string, current?: ThinkingSetting): Promise<ThinkingSetting | undefined> {
+  const options = [...THINKING_LEVELS, INHERIT];
+  let answer: string | undefined;
+  if (typeof deps.ui.pick === "function") {
+    const picked = await deps.ui.pick(prompts.thinking(target), options, {
+      initial: typeof current === "string" ? current : undefined,
+    });
+    answer = typeof picked === "string" ? picked : undefined;
+  } else {
+    answer = await deps.ui.select(prompts.thinking(target), options);
+  }
   if (answer === undefined) return undefined;
   if (answer === INHERIT || isThinkingLevel(answer)) return answer;
   deps.ui.notify(`Rejected: thinking must be one of ${THINKING_LEVELS.join(", ")}, or "inherit" (${routePath(target)}.thinking).`, "error");

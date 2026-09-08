@@ -3,12 +3,14 @@ import { fileURLToPath } from "node:url";
 
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import type { SelectListTheme } from "@earendil-works/pi-tui";
 
 import { loadConfig } from "../config/load.js";
 import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
-import type { InvocationContext } from "../routing/types.js";
+import type { InvocationContext, SettingsUi } from "../routing/types.js";
+import { createPickerComponent, PICKER_MAX_VISIBLE } from "../settings/picker.js";
 import { createHintStore, stateFilePath } from "../routing/state.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
@@ -43,6 +45,50 @@ type ThinkingLevelsMirrorMatchesPi = [PiThinkingLevel] extends [(typeof THINKING
   : false;
 const thinkingLevelsInSyncWithPi: ThinkingLevelsMirrorMatchesPi = true;
 
+/**
+ * The interactive slice the settings console sees: Pi's own `ui` plus the rich
+ * picker (P4). The picker is terminal-only, so a non-TUI mode (headless/RPC)
+ * gets the plain `select` path — the console never dead-ends (OB-12, PE-004).
+ */
+function richUi(ctx: ExtensionContext): SettingsUi {
+  const base = ctx.ui;
+  return {
+    select: (title, options) => base.select(title, [...options]),
+    input: (title, placeholder) => base.input(title, placeholder),
+    confirm: (title, message) => base.confirm(title, message),
+    notify: (message, kind) => base.notify(message, kind),
+    pick: async (title, options, opts = {}) => {
+      if (ctx.mode !== "tui") {
+        const picked = await base.select(title, [...options]);
+        if (opts.multiple) return picked ? [picked] : undefined;
+        return picked;
+      }
+      const items = options.map((value) => ({ value, label: value }));
+      const result = await base.custom<string | undefined>(
+        (_tui, theme, _keybindings, done) => {
+          const selectListTheme: SelectListTheme = {
+            selectedPrefix: (text) => theme.bold(`› ${text}`),
+            selectedText: (text) => theme.inverse(text),
+            description: (text) => `  ${text}`,
+            scrollInfo: (text) => theme.bold(text),
+            noMatch: (text) => theme.italic(text),
+          };
+          return createPickerComponent({
+            items,
+            maxVisible: PICKER_MAX_VISIBLE,
+            theme: selectListTheme,
+            onSelect: (value) => done(value),
+            onCancel: () => done(undefined),
+          });
+        },
+        { overlay: true },
+      );
+      if (opts.multiple) return result === undefined ? undefined : [result];
+      return result;
+    },
+  };
+}
+
 function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> {
   return {
     cwd: ctx.cwd,
@@ -52,7 +98,7 @@ function toInvocationContext(ctx: ExtensionContext): InvocationContext<PiModel> 
     isIdle: () => ctx.isIdle(),
     isProjectTrusted: () => ctx.isProjectTrusted(),
     notify: (message, kind) => ctx.ui.notify(message, kind),
-    ui: ctx.ui,
+    ui: richUi(ctx),
     availableModels: () => ctx.modelRegistry.getAll(),
     find: (provider, modelId) => ctx.modelRegistry.find(provider, modelId),
     hasConfiguredAuth: (model) => ctx.modelRegistry.hasConfiguredAuth(model),

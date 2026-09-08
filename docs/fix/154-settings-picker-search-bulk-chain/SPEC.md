@@ -498,24 +498,24 @@ Layer: `ui`. Done-when:
 (`Ran N tests across 2 files`) pasted — both files exist by then (created by
 this phase's tasks 4–5; the phase cannot complete before they exist).
 
-- [ ] Add the optional rich picker to the `SettingsUi` seam in
+- [x] Add the optional rich picker to the `SettingsUi` seam in
       `src/routing/types.ts` (filterable select with initial selection,
       multi-select, position indicator) as a structural superset — existing
       call sites compile unchanged (OB-1, PE-010).
-- [ ] Add `@earendil-works/pi-tui` as a pinned dependency in
+- [x] Add `@earendil-works/pi-tui` as a pinned dependency in
       `package.json` (exact version matching the pi peer line) and run
       `bun install` so `bun.lock` records it (OB-1, PE-004).
-- [ ] Implement the picker in the Pi adapter (`src/extension/index.ts` +
+- [x] Implement the picker in the Pi adapter (`src/extension/index.ts` +
       a new `src/settings/picker.ts` component): `ctx.ui.custom()` over
       `SelectList` with in-package subsequence/slash-aware filtering,
       windowed rendering with the `N–M of K` indicator, guarded by the
       session mode — non-TUI modes fall back to `select`/`input`
       (OB-1, OB-12, PE-004).
-- [ ] Red-first `test/picker-filter.test.mjs`: `flash` matches every
+- [x] Red-first `test/picker-filter.test.mjs`: `flash` matches every
       reference containing flash; `nan/` matches provider `nan` only;
       subsequence tokens match in order; empty query returns all
       (OB-2).
-- [ ] Red-first scripted cases in `test/settings-console.test.mjs`: the
+- [x] Red-first scripted cases in `test/settings-console.test.mjs`: the
       model picker consumes the rich seam, filters while typing, and
       accepts the pre-selected current value (OB-1).
 
