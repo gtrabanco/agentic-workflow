@@ -1,6 +1,6 @@
 {
   "name": "@gtrabanco/pi-agentic-workflow",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Pi package: canonical agentic-workflow skills, friendly slash commands, and per-command model routing.",
   "keywords": [
     "pi-package",
@@ -36,18 +36,20 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "bun": ">=1.4"
   },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
     "build": "tsc",
-    "bundle:skills": "node scripts/bundle-skills.mjs",
-    "test": "tsc && node --test test/*.test.mjs",
-    "prepublishOnly": "npm run build && npm test",
-    "mutation": "node scripts/mutation-check.mjs",
-    "prepare": "npm run build"
+    "bundle:skills": "bun scripts/bundle-skills.mjs",
+    "test": "tsc && bun test test/*.test.mjs",
+    "test:node": "tsc && node --test test/*.test.mjs",
+    "prepublishOnly": "bun run build && bun run test",
+    "mutation": "bun scripts/mutation-check.mjs",
+    "prepare": "bun run build"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": ">=0.85.1"

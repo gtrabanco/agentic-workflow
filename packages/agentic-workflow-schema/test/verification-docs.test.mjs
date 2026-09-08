@@ -475,7 +475,7 @@ test("npm run test:verification-docs is the command the acceptance names", () =>
   const manifest = JSON.parse(read("../package.json"));
   assert.equal(
     manifest.scripts["test:verification-docs"],
-    "node --test test/verification-docs.test.mjs",
+    "bun test test/verification-docs.test.mjs",
     "the docs command must drive this file",
   );
 });
