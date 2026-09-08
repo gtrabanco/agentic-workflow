@@ -171,10 +171,10 @@ Layer: `config/infra`. Done-when: `cd packages/pi-agentic-workflow && bun run
 test` → exit 0 with the peer resolving to `0.85.1` and no `pi-server` in
 `bun.lock`.
 
-- [ ] Edit `packages/pi-agentic-workflow/package.json`: remove `"@earendil-works/pi-server": "0.85.0"` from `devDependencies` and set `peerDependencies["@earendil-works/pi-coding-agent"]` to `>=0.85.1` (O1)
-- [ ] Re-resolve: `cd packages/pi-agentic-workflow && bun install` → `bun.lock` drops both `pi-server` entries and pins `@earendil-works/pi-coding-agent@0.85.1`; `node -p "require('./node_modules/@earendil-works/pi-coding-agent/package.json').version"` → `0.85.1`; `test ! -d node_modules/@earendil-works/pi-server` → exit 0 (O2)
-- [ ] Run the gate: `cd packages/pi-agentic-workflow && bun run test` → exit 0 (tsc type contract incl. `ThinkingLevelsMirrorMatchesPi` + `node --test test/*.test.mjs` incl. `shipped-adapter.test.mjs`); on red, O8 stops the unit before P2 (O3, O8)
-- [ ] Append the verification evidence as `- VERIFY` rows (resolved peer version, suite exit code + counts, lock grep, `node_modules` absence) to `docs/fix/181-pi-server-devdep-obsolete/progress.md` (O4)
+- [x] Edit `packages/pi-agentic-workflow/package.json`: remove `"@earendil-works/pi-server": "0.85.0"` from `devDependencies` and set `peerDependencies["@earendil-works/pi-coding-agent"]` to `>=0.85.1` (O1)
+- [x] Re-resolve: `cd packages/pi-agentic-workflow && bun install` → `bun.lock` drops both `pi-server` entries and pins `@earendil-works/pi-coding-agent@0.85.1`; `node -p "require('./node_modules/@earendil-works/pi-coding-agent/package.json').version"` → `0.85.1`; `test ! -d node_modules/@earendil-works/pi-server` → exit 0 (O2)
+- [x] Run the gate: `cd packages/pi-agentic-workflow && bun run test` → exit 0 (tsc type contract incl. `ThinkingLevelsMirrorMatchesPi` + `node --test test/*.test.mjs` incl. `shipped-adapter.test.mjs`); on red, O8 stops the unit before P2 (O3, O8)
+- [x] Append the verification evidence as `- VERIFY` rows (resolved peer version, suite exit code + counts, lock grep, `node_modules` absence) to `docs/fix/181-pi-server-devdep-obsolete/progress.md` (O4)
 
 Phase-lint: PASS (8/8) · fingerprint `P1:config/infra:4:drop-devdep-pin-peer`
 
