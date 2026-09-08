@@ -16,7 +16,7 @@
  *  4. everything else is UNPROVEN and re-opens: asserted provenance is worse than
  *     none, because it silently passes the recount that F106 exists to satisfy.
  *
- * Usage: node scripts/ledger-provenance.mjs docs/features/<unit>/review-findings.md
+ * Usage: bun scripts/ledger-provenance.mjs docs/features/<unit>/review-findings.md
  *        [--json] [--check] [--annotate]
  *
  *   --check     exit 1 unless every `folded: yes` row carries a verified commit
@@ -42,7 +42,7 @@ const CELL_RE = /(?<!\\)\|/;
 const args = process.argv.slice(2);
 const target = args.find((arg) => !arg.startsWith("--"));
 if (!target) {
-  console.error("usage: node scripts/ledger-provenance.mjs <review-findings.md> [--json] [--check] [--annotate]");
+  console.error("usage: bun scripts/ledger-provenance.mjs <review-findings.md> [--json] [--check] [--annotate]");
   process.exit(2);
 }
 const ledger = resolve(target);

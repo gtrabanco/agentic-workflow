@@ -41,7 +41,7 @@ to 16,046 estimated tokens while preserving their contracts behind explicit
 routes. Validate the catalog with:
 
 ```sh
-node scripts/check-skill-context.mjs
+bun scripts/check-skill-context.mjs   # node scripts/check-skill-context.mjs — fallback when bun is absent
 ```
 
 Prompt caching may reduce repeated latency or billed input on a supporting

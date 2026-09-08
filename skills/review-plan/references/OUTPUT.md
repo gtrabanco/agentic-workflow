@@ -59,9 +59,9 @@ answer beside the verdict block before reporting. A feature plan run names `--pa
 
 ```bash
 # feature plan — binds the Product snapshot it descends from
-node scripts/pre-execution-snapshot.mjs verify --stage plan --unit <NN-slug> --dir docs/features/<NN>-<slug> --unit-kind feature --parent <64-hex>
+bun scripts/pre-execution-snapshot.mjs verify --stage plan --unit <NN-slug> --dir docs/features/<NN>-<slug> --unit-kind feature --parent <64-hex>
 # fix unit — no Product half exists (D6)
-node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-<N> --dir docs/fix/<N> --unit-kind fix
+bun scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-<N> --dir docs/fix/<N> --unit-kind fix
 ```
 
 A digest-bound receipt requires `structural.fresh: true` (and, for a PASS verdict,

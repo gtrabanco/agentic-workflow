@@ -52,6 +52,29 @@ permissions:
   id-token: write # required for npm Trusted Publishing + --provenance
 
 jobs:
+  # The fallback guarantee (#197): the package must pass under plain node when
+  # bun is absent. The `publish` job runs the bun-first gate; this job runs the
+  # same suite through the `test:node` variant on the setup-node toolchain.
+  node-compat:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/agentic-workflow-schema
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+      - name: Setup Node
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version-file: .node-version
+      - name: Install (bun as installer only — frozen lockfile)
+        uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+      - name: Build + test (node runtime — the guaranteed fallback)
+        run: bun run test:node
+
   publish:
     runs-on: ubuntu-latest
     defaults:

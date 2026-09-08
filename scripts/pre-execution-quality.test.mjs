@@ -1563,8 +1563,8 @@ test("normalizer inventory: one home, and every entry names its side of the free
   assert.equal(byStep.size, rows.length, "no step is listed twice");
   // the categories AC19 names, closed against this repository's real surfaces
   for (const [step, side] of [
-    ["bump-skill", "before"], ["npm run bundle:skills", "before"],
-    ["npm run build (packages/agentic-workflow-schema)", "before"],
+    ["bump-skill", "before"], ["bun run bundle:skills", "before"],
+    ["bun run build (packages/agentic-workflow-schema)", "before"],
     ["generate-pre-execution-schemas.mjs", "before"],
     ["generate-verification-schemas.mjs", "before"],
     ["generate-docs", "before"],
@@ -1588,9 +1588,9 @@ test("normalizer inventory: one home, and every entry names its side of the free
   }
   assert.deepEqual(scheduleVerdict(inventorySchedule(rows)), { ok: true, offenders: [] },
     "the scheduled order the inventory declares is legal");
-  const moved = rows.map((r) => (r.step === "npm run bundle:skills" ? { ...r, side: "after" } : r));
+  const moved = rows.map((r) => (r.step === "bun run bundle:skills" ? { ...r, side: "after" } : r));
   assert.deepEqual(scheduleVerdict(inventorySchedule(moved)),
-    { ok: false, offenders: ["npm run bundle:skills"] }, "re-marking a bundler as a tail step is refused");
+    { ok: false, offenders: ["bun run bundle:skills"] }, "re-marking a bundler as a tail step is refused");
   // one home: the grammar block exists once, and the gate points at it generically
   const homes = ["CLAUDE.md", ...fs.readdirSync(path.join(root, "docs", "workflow")).filter((n) => n.endsWith(".md")).map((n) => `docs/workflow/${n}`)]
     .filter((f) => read(f).includes(INVENTORY_HEADER));
