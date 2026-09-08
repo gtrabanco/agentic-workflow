@@ -63,5 +63,15 @@ Verdict: **PLAN-REVIEW-PASS** — 0 findings, 0 material open.
 - Bilingual pair edited in the same change: `README.md:142` `Verified against Pi 0.85.1 (2026-09-05)` · `README.es.md:148` `Probado con Pi 0.85.1 (2026-09-05)`
 
 ## Unit-loop receipt — P2
-- Commit: pending · Gate: AC3 greps (0.85.0 0/0 · 0.85.1 1/1) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
+- Commit: c1789112 · Gate: AC3 greps (0.85.0 0/0 · 0.85.1 1/1) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
 - Next: P3 · Attempts: 1
+
+## P3 — Release bookkeeping 0.7.1
+
+- VERIFY package version (AC4/O6): `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → `0.7.1`
+- VERIFY changelog row EN+ES (AC4/O7): `grep -c "| 0.7.1 |" CHANGELOG.md CHANGELOG.es.md` → `1` and `1`
+- Bilingual changelog rows added above the 0.7.0 row in the `@gtrabanco/pi-agentic-workflow` "Companion npm packages" subsections (CHANGELOG.md / CHANGELOG.es.md)
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: AC4 (version 0.7.1 · changelog rows 1/1) · Acceptance blob: 9ff45eb7b4424d10725fc010aaa654716330ad74
+- Next: P4 close-out · Attempts: 1
