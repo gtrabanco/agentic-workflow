@@ -42,8 +42,8 @@ Findings:
 Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
 
 ## Acceptance receipt v1
-- Manifest: docs/fix/191-handoff-review-fold-order/ACCEPTANCE.md · Blob: 2be43ec7fac2e5c61827a675c247f7563774d8e0 · Status: frozen · Verified: 2026-09-08
-- Note: the originally recorded blob `34cddb37…` was not a `git hash-object` of the manifest (not a git object); the correct value is `2be43ec7…` (committed/working-tree blob at `919d88be`). The finish line is unchanged — the plan snapshot `a96ad417` re-derives to the same bytes. Reconciled per verification-contract at first execution.
+- Manifest: docs/fix/191-handoff-review-fold-order/ACCEPTANCE.md · Blob: cb15be765888a4bf2f037d4fb7cdc0814ac4a1b2 · Status: frozen · Verified: 2026-09-08
+- Note: the finish line was legitimately amended by the user-approved replan (`ar-191-2`, commit `190ef808`) — AC1–AC10 unchanged, AC11–AC16 added, per the SPEC `## Amendments` row and the manifest's `Amendment provenance` note. This receipt supersedes the cycle-1 value `2be43ec7` (manifest at `919d88be`, AC1–AC10 only). Rediscovered/re-derives to `1882c268…`; the plan-recv-002 receipt (rp-fix191-20260908-002) is bound to this same amended manifest.
 
 ## Dependency receipt v1
 - Fingerprint: (empty closure) · Closure: fix-191-handoff-review-fold-order ← none
@@ -97,3 +97,12 @@ Findings (this cycle — all info, ledger: planning-findings.md):
 
 Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
 
+
+## Unit-loop receipt — P3 (2026-09-08)
+- Commit: d8237b65 · Gate: discipline suite exit 0 (9/9) · Acceptance blob: cb15be765888a4bf2f037d4fb7cdc0814ac4a1b2
+- Red-first: new `review-change review-end boundary` test FAILED before skill edits (`ends at the report` absent); GREEN after (7/7 → 9/9 discipline).
+- Validators: AC11 (ends at the report + separate user-initiated invocations ✓), AC12 (folds in-unit 0 ✓, never run by this review ✓), AC13 (folded into the current phase 0 ✓, invoked after this review ends ✓), AC14 (recommendation, not a to-do list ✓, separate review invocations ✓), AC16 (3.5.0 in SKILL.md + both CHANGELOGs ✓, mirror clean after bundle ✓).
+- Full gate: `check-skill-context.mjs` exit 0; `bun run test` in packages/pi-agentic-workflow 140/140; mirror parity (bump-skill exclusion only).
+- Files: skills/review-change/{SKILL.md,references/{PERSIST_AND_DECIDE,OUTPUT_AND_GUARDRAILS,REVIEW_PROCESS}.md}, scripts/next-recommendations.test.mjs, CHANGELOG.md, CHANGELOG.es.md, packages/pi-agentic-workflow/skills/**, docs/fix/191-*/{SPEC,progress}.md
+- Acceptance receipt refreshed: manifest amended by user-approved replan (ar-191-2) → fresh blob cb15be76 recorded.
+- Next: P4 — Hardening & PR (amends open PR #193, no new PR)

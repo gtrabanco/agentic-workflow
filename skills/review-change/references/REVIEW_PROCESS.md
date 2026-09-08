@@ -176,4 +176,6 @@ A **third cycle never starts** unless the user explicitly instructs it — it is
 the user's escape, never a reviewer election. The residue routes to
 `triage-issue --prioritize-now` (or the programmatic outer driver), and a unit
 that needs a third cycle has a planning or root-cause defect, not a review
-deficit.
+deficit. Re-runs count **separate review invocations**, not in-session steps:
+`/review-change` is invoked by the user in a fresh turn each time, and a
+"re-run" is a new invocation, never a step the same review turn takes.

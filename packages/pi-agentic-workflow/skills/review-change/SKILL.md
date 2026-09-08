@@ -1,7 +1,7 @@
 ---
 name: review-change
 user-invocable: true
-version: 3.4.0
+version: 3.5.0
 argument-hint: <path-or-glob> [--adversarial N] [--synthesize]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -36,6 +36,16 @@ without that current receipt must not recommend `/audit-pr`.
 For `REVIEW-FAIL` or `NEEDS-DECISION`, list every open finding ID in the closing
 recommendation, joined with ` + `; the review must never hand off only the first
 finding.
+
+## Review-end turn boundary
+
+On `REVIEW-FAIL` or `NEEDS-DECISION`, this skill **ends at the report**: it
+never invokes `/fold-findings`, `/execute-phase`, `/plan-feature`,
+`/design-feature` or `/triage-issue` — those are separate user-initiated invocations,
+run in a fresh turn. The review's only mutations are the ledger commit (persist step 11) and, on `REVIEW-PASS` with a PR, the
+receipt comment (persist step 12); it never folds a finding, executes a phase,
+or edits code. A `REVIEW-FAIL`/`NEEDS-DECISION` turn closes when the report
+block is printed (report step 13).
 
 Consume the internal [verification contract](<../verification-contract/SKILL.md>);
 the reviewer checks the same frozen `ACCEPTANCE.md` blob as the executor before
@@ -140,7 +150,8 @@ Orchestrates internal finders (`review-code`, `review-security`, `review-verify`
 one `review-implementation` classifier and `review-debt` transform, isolated by
 default; installed platform packs are optional. `triage-issue` is user-invoked
 only for independent proposals (D3). It is Stage 4: checkpoint reviews are
-optional, the end review is mandatory and fresh. `fix-now` folds in-unit,
+optional, the end review is mandatory and fresh. `fix-now` is routed to the
+unit's fold cycle — a separate `/fold-findings` invocation, never run by this review;
 `replan-in-unit` adds user-confirmed phases, and independent work becomes
 proposals. `audit-pr` consumes only the verified PR-comment receipt, never the
 chat report; `product-audit` is the periodic sweep. On `REVIEW-FAIL` the manual
