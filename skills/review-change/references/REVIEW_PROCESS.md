@@ -148,8 +148,8 @@
    and a human must check — visual correctness, real-device/locale behavior, UX
    feel, perf under load, anything marked *verify*. Be explicit so the dev has zero
    doubt about what to eyeball.
-11. **Route the outcomes.** fix-now findings are routed to the unit's fold cycle (a separate `/fold-findings` invocation, never run by this review; or gain
-    user-confirmed phases via replan-in-unit); decision-required stops for the
+11. **Route the outcomes.** fix-now findings are routed to the unit's fold cycle (a separate `/fold-findings` invocation, never run by this review), or gain
+    user-confirmed phases via replan-in-unit; decision-required stops for the
     user's decision; genuinely independent future capabilities become
     **non-blocking proposals** — batched in the report with a trigger, and
     **never** sent to `triage-issue` automatically (D3). `review-change` creates
