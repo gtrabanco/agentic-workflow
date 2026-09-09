@@ -69,6 +69,76 @@
   does not take.
 - **Date**: 2026-09-09
 
+## AD-45-008 — Pass-entry `thinking` semantics (repair, SF-45-022)
+
+- **Decision**: a pass entry's `thinking` accepts exactly the route vocabulary
+  already shipped — a Pi thinking level `off|minimal|low|medium|high|xhigh|max`
+  or `"inherit"` (`packages/pi-agentic-workflow/src/config/types.ts`
+  `THINKING_LEVELS`/`ThinkingSetting`; the package README documents the same
+  list for today's routes) — as a **single scalar only** (no array/chain: a
+  model chain falls back over model availability, which a thinking level does
+  not have), carried verbatim into the resolved table; an **absent** `thinking`
+  key (or absent pass entry) resolves to `"inherit"`, mirroring the shipped
+  default route `{"model": "inherit", "thinking": "inherit"}`; a pass resolved
+  `inline` carries `thinking: "inherit"` as well. Non-scalar or unknown values
+  are strict-validator rejections at `$.passes.<name>.thinking` (invalid-types
+  class — no new rejection class). Issue #201 Mechanics 1 names `{model,
+  thinking}` but enumerates only `model`'s values; this fills that gap without
+  changing scope — `thinking` was already committed in-scope (SPEC in-scope
+  items 2 and 4) and merely undefined.
+- **Rationale**: the resolved table is a product-visible output (AC8's byte
+  stability cannot catch wrong `thinking` content), so the implementer must not
+  guess values, shapes, or absence behaviour; reusing the shipped route
+  vocabulary avoids inventing a second thinking vocabulary for one platform.
+- **Date**: 2026-09-09
+
+## Repair batch v5 — 2026-09-09 (SF-45-020…SF-45-022, response to RS-45-05)
+
+One batch over the full open findings set (two low + one medium); all three
+classified `product`. Route honored from RS-45-05's printed CONVERGENCE-ANOMALY
+("Route to owner: design-feature repair batch v5 — ONE batch over the full open
+set, then /review-spec re-review of the new snapshot").
+
+- **Closure completion (REPAIR class 2, evidence acquired)** — all three:
+  - SF-45-020: issue #201's README/CHANGELOG affected-surface pair **claimed in
+    scope** per the operator's dated instruction (2026-09-09: "claim the
+    README/CHANGELOG affected-surface pair (in scope or an explicit
+    out-of-scope row with an owner)") — in-scope item 9 added, derived-subsystem
+    row "Package documentation" added, sweep row 14 added, AC19 added
+    (command-verified, anchors pre-verified at HEAD `e13096d3`: `"passes"` → 0
+    matches in both package READMEs, CHANGELOG anchor → 0/0, exit 1 — the
+    pre-verified anchoring SF-45-019 introduced). Scope alignment, not widening:
+    the pair is on issue #201's own affected-surface list (frozen in E1), so
+    the SPEC now covers the issue it implements. Evidence row E13 added.
+  - SF-45-021: AC17 added (command-verified) — invalid model reference → exit
+    ≠ 0 reported at `$.passes.<name>.model` (issue #201 Tests first reporting
+    shape), for both the bare-`"nope"` scalar and the non-`provider/modelId`
+    chain-element shapes; semantics §3's fourth rejection class now observed;
+    pointers extended (in-scope 2, item 8, sweep row 12).
+  - SF-45-022: AD-45-008 appended (above) + new SPEC subsection "Pass-entry
+    `thinking` semantics" (valid values, accepted shape, absent-entry
+    resolution); AC18 added (command-verified) observing explicit-value
+    carriage, absent → `"inherit"`, and non-scalar rejection; in-scope item 4
+    now states the resolved table carries both fields; Evidence row E14 added.
+- **Mechanical, intent-preserving (REPAIR class 1)** — none in this batch; every
+  repair added previously-missing coverage (class 2). Spec-lint count updates
+  (sweep 13→14, ACs 16→19, derived subsystems 6→7, in-scope items 8→9) are
+  bookkeeping of the additions, dated here.
+- **Not done here**: no counter-evidence dismissal, no receipt text touched, no
+  forge issue created, no engineering content written; findings resolved via the
+  `status/resolution-evidence/resolving-artifact-revision` columns only. One
+  repair-class note: defining `thinking`'s semantics was directed by the
+  operator's dated instruction ("record thinking's semantics (valid values,
+  accepted shapes, absent-entry resolution in the table)") and is grounded in
+  shipped code (`types.ts`) — no product change beyond what the reviewed in-scope
+  set already committed.
+- **Evidence**: issue #201 re-read 2026-09-09 via `gh issue view 201` (Summary,
+  Mechanics 1, Tests first, Affected surfaces, Open questions — matching frozen
+  E1); `packages/pi-agentic-workflow/src/config/types.ts` + `src/config/schema.ts`
+  + `README.md`/`README.es.md` + root `CHANGELOG.md`/`CHANGELOG.es.md` read at
+  HEAD `e13096d3`; greps for AC19's anchors run at the same HEAD (0 matches,
+  exit 1).
+
 ## Repair batch v3 — 2026-09-09 (SF-45-016…SF-45-018, response to RS-45-03)
 
 One batch over the full open findings set (two low + one info); all classified

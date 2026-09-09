@@ -90,7 +90,12 @@ quality (e.g. `nan/glm5.3-flash`).
    closed pass vocabulary of issue #201: the `review-*` finder passes, `verify`,
    `classify`, `debt`) to `{model, thinking}`, where `model` accepts the same
    single-value or array shape. `model: "inherit"` resolves to the `default`
-   chain. Unknown pass names are rejected by the strict-validator rule (AC2, AC5, AC12, AC16).
+   chain. Unknown pass names are rejected by the strict-validator rule
+   (AC2, AC5, AC12, AC16, AC17); an invalid model reference is likewise a
+   validator rejection, reported at the per-pass model path
+   `$.passes.<pass-name>.model` per issue #201's Tests first (AC17). `thinking` semantics — valid values, accepted shape,
+   absent-entry resolution — are fixed in the `thinking` semantics section below
+   (AC18).
 3. **`"auto"` model value**: a sanctioned "let the orchestrating agent decide"
    marker — valid but documented as operator-delegated (AC5, AC14).
 4. **`resolve-passes` producer**: deterministic producer shipped by feature 43's
@@ -98,7 +103,8 @@ quality (e.g. `nan/glm5.3-flash`).
    ladder). It reads `pi-agentic-workflow.json` including `passes`, applies the
    fail-closed resolution rules **in code** (never re-derived by the model before
    each spawn), and emits a byte-stable resolved pass→model/thinking table (JSON)
-   on stdout (AC1, AC4, AC8, AC12).
+   on stdout — every pass row carries both resolved fields (the model chain and
+   the `thinking` value per the semantics below) (AC1, AC4, AC8, AC12, AC18).
 5. **review-change integration**: `review-change/SKILL.md` and
    `references/ADVERSARIAL_SETUP.md` read the resolved table before spawning;
    each pass is launched with its configured model. A pass whose chain cannot
@@ -114,7 +120,17 @@ quality (e.g. `nan/glm5.3-flash`).
    pass-routing smoke test as a model precondition (AC13).
 8. **Tests**: schema round-trip for arrays; `resolve-passes` golden fixtures
    (absent → default, chain resolution, `inherit` resolution, `auto` passthrough,
-   unresolvable chain → inline, invalid config → exit non-zero) (AC1–AC5, AC9–AC12, AC16).
+   unresolvable chain → inline, invalid config → exit non-zero) (AC1–AC5, AC9–AC12, AC16, AC17).
+9. **Package documentation (README/CHANGELOG, EN+ES same commit)**: the pi
+   package README (`README.md` + `README.es.md`) documents the extended
+   vocabulary — the new `passes` key with a per-pass entry example and the
+   chain-shaped `model`/`default` — and the root CHANGELOG (`CHANGELOG.md` +
+   `CHANGELOG.es.md`) records the change; the EN and ES sides of both pairs are
+   edited in the same commit (bilingual-doc pairing, `REPOSITORY_STATE.md` F011).
+   This claims issue #201's affected-surface pair — the package README is where
+   today's `default`/`commands`/`onUnavailableRoute` examples live, so an
+   operator reading it must be able to learn `passes` and the chain shapes
+   (AC19).
 
 #### Unavailable-model and chain-exhaustion semantics
 
@@ -149,6 +165,37 @@ the recorded fallback decision (AD-45-001) and issue #201's fail-closed rule:
    `"auto"` in the global file is the operator's own writing (AD-45-004).
    This resolves issue #201's open question ("Should `auto` be refused while
    the project is untrusted? Proposed: yes") as yes-by-construction (AD-45-007).
+
+#### Pass-entry `thinking` semantics
+
+These fix `thinking` — the second field of every pass entry and of every row of
+the resolved table (issue #201 Mechanics 1 names `{model, thinking}` but
+enumerates only `model`'s values). Grounded in the existing route vocabulary
+(AD-45-008):
+
+1. **Valid values** — exactly the route vocabulary already shipped: a Pi
+   thinking level `off|minimal|low|medium|high|xhigh|max`, or `"inherit"`
+   (`packages/pi-agentic-workflow/src/config/types.ts` `THINKING_LEVELS` /
+   `ThinkingSetting`; the package README documents the same list for today's
+   routes). `"inherit"` means "whatever the consuming turn already uses" — the
+   same meaning it has on today's routes; unlike `model: "inherit"` it does not
+   redirect to any chain, because thinking has no chain to inherit.
+2. **Accepted shape** — a single scalar only; no array/chain. A model chain is
+   a fallback over model *availability*, which a thinking level does not have:
+   a level is always applicable, so there is nothing to fall through to. A
+   non-scalar or unknown `thinking` value is a strict-validator rejection
+   reported at the per-pass thinking path `$.passes.<pass-name>.thinking`
+   (same path convention as the model path; it folds under the "invalid
+   types" class of §3 —
+   no fourth-plus rejection class is added).
+3. **Absent-entry resolution** — the resolved table is fully resolved: every
+   pass row carries both fields, so no consumer reasons about optionality
+   (mirrors `EffectiveConfig`). An absent `thinking` key — or a whole absent
+   pass entry — resolves to `"inherit"`, mirroring the shipped default route
+   `{"model": "inherit", "thinking": "inherit"}`; a pass resolved `inline`
+   under §4 above carries `thinking: "inherit"` too (no routed level applies to
+   an inline run). Otherwise `thinking` is carried verbatim and is never
+   rewritten by chain resolution or by `auto`, which apply to `model` only.
 
 #### Out of scope / non-goals
 
@@ -238,6 +285,7 @@ the skills tree; recorded because the inventory is unseeded):
 - [x] golden-fixture — `docs/workflow/GOLDEN_FIXTURE.md` gains the pass-routing smoke test · test: AC13
 - [x] init-workspace — `references/BOOTSTRAP_WRITE.md` + `references/UPGRADE.md` gain the pass-routing step · test: AC7
 - [x] `docs/workflow/model-routing.yml` (documented tiers) — pass tiers for the #claude branch; new keys alphabetical per `CLAUDE.md` Conventions · test: AC10
+- [x] Package documentation — `packages/pi-agentic-workflow/README.md` + `README.es.md` document the extended config vocabulary (the `passes` key, per-pass `{model, thinking}` entries, chain-shaped `model`/`default`); root `CHANGELOG.md` + `CHANGELOG.es.md` record the change; each EN+ES pair is edited in the same commit (F011 pairing) · test: AC19
 
 ### Expectation sweep
 
@@ -254,8 +302,9 @@ the skills tree; recorded because the inventory is unseeded):
 | 9 | Config validation rejects non-ModelRef values in arrays | in-scope | AC9 |
 | 10 | Model routing YAML keys stay alphabetical (CLAUDE.md rule) | in-scope | AC10 |
 | 11 | A single string `model` value still works (backward compat) | in-scope | AC11 |
-| 12 | resolve-passes exits non-zero on config the strict validator rejects | in-scope | AC12 + AC16 |
+| 12 | resolve-passes exits non-zero on config the strict validator rejects | in-scope | AC12 + AC16 + AC17 |
 | 13 | An untrusted project's `passes` entry (`"auto"` included) never delegates model choice (issue #201 open question, resolved yes-by-construction) | in-scope | AC14 + §Product decisions (AD-45-007) |
+| 14 | The package README (EN+ES) and root CHANGELOG (EN+ES, same commit) document the extended `passes`/chain vocabulary so an operator can learn it from the docs (issue #201 affected-surface pair) | in-scope | AC19 |
 
 ### Acceptance criteria
 
@@ -280,6 +329,9 @@ satisfies the same commands.
 - [x] AC14 (read-verified): `auto` needs no trust gate of its own — `packages/pi-agentic-workflow/src/config/load.ts` does not read the project config file while the project is untrusted (S11: a cloned repository must not be able to steer routing) and `src/settings/console.ts` refuses project-scope edits while untrusted, so an untrusted project's `passes` entry — `"auto"` included — is never honored; `"auto"` in the global config is operator-written (AD-45-004, AD-45-007)
 - [x] AC15 (command-verified): post-install recommendation note in the two non-bootstrapping surfaces — `grep -in "pass.?routing" skills/ship-roadmap/references/MODEL_ROUTING.md docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match in each file, and the matched line(s) form the recommendation note (not auto-written) pointing the operator to configure `default` + `passes` entries. The criterion anchors on the recommendation phrase, not the bare token `passes`: unrelated `passes` occurrences in these files (e.g. the existing audit-prose occurrence at GOLDEN_FIXTURE.md:252) are outside its scope
 - [x] AC16 (command-verified): unknown pass name rejected — `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"review-code":{"model":"nan/glm5.3-flash"},"bogus-pass":{"model":"nan/glm5.3-flash"}}}' | aw resolve-passes` → exit code ≠ 0 (the strict validator rejects `passes` keys outside the closed pass vocabulary of issue #201 Mechanics 1: `review-*` finders, `verify`, `classify`, `debt`)
+- [x] AC17 (command-verified): invalid model reference rejected with issue #201's reporting shape — `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"review-code":{"model":"nope"}}}' | aw resolve-passes` → exit code ≠ 0 and the rejection is reported at the path `$.passes.review-code.model` (issue #201 Tests first: an invalid pass model reference reports the `$.passes.<pass-name>.model` path); likewise a chain element without the `provider/modelId` shape — `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"verify":{"model":["nan/glm5.3-flash","also-nope"]}}}' | aw resolve-passes` → exit code ≠ 0, reported under the same `$.passes.<pass-name>.model` path prefix (element rejections carry the array index). This is the fourth strict-validator rejection class of semantics §3
+- [x] AC18 (command-verified): `thinking` carried and resolved per the semantics section — `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"debt":{"model":"nan/qwen3.6","thinking":"high"}}}' | aw resolve-passes` → exit 0, resolved `passes.debt.thinking` == `"high"` and `passes.review-code.thinking` == `"inherit"` (absent `thinking` → `"inherit"`, mirroring the shipped default route); and `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"verify":{"model":"auto","thinking":["high"]}}}' | aw resolve-passes` → exit code ≠ 0 (non-scalar `thinking` rejected at the `$.passes.<pass-name>.thinking` path, the invalid-types class of semantics §3)
+- [x] AC19 (command-verified): README/CHANGELOG (EN+ES, same commit) document the claimed affected-surface pair — `grep -n '"passes"' packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md` → ≥ 1 match in each README, each match part of the documented config example / vocabulary line for the new `passes` key and the chain-shaped `model`/`default` (docs, not code); and `grep -cin "pass.?routing\|passes config" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 matching line in each CHANGELOG (the version row documenting this feature). Verified at HEAD `e13096d3` before the docs land: `"passes"` → 0 matches in both READMEs and the CHANGELOG anchor → 0/0 (exit 1), so the criterion is achievable and decidable once the docs land (the pre-verified anchoring SF-45-019 introduced). The EN and ES sides of each pair are edited in the same commit (F011); the root README/README.es are not part of this pair — issue #201 names the package README and the CHANGELOG
 
 ### Tooling
 
@@ -352,6 +404,8 @@ Compact grounding rows for the Product half (base row per
 | No project invariants document declared | ledger | `REPOSITORY_STATE.md` F010 | snapshot 2026-08-30 | current | proven | — |
 | `auto` carries no separate trust gate: the project config file is not read while the project is untrusted (S11), and the settings console refuses project-scope edits while untrusted | repository | `packages/pi-agentic-workflow/src/config/load.ts` (S11 note + `projectTrusted` gate); `packages/pi-agentic-workflow/src/settings/console.ts:156` | HEAD at write | current | proven | — |
 | The two post-install recommendation surfaces exist — ship-roadmap's model-routing reference and the golden-fixture procedure doc | repository | `skills/ship-roadmap/references/MODEL_ROUTING.md`; `docs/workflow/GOLDEN_FIXTURE.md` | HEAD at write | current | proven | — |
+| The issue-#201 README/CHANGELOG EN+ES surfaces all exist; the package README (`README.md:73-92` + `README.es.md:75-93`) documents today's `default`/`commands`/`onUnavailableRoute` vocabulary incl. the `thinking` bullet, and carries no `"passes"` key or pass-routing/CHANGELOG anchor yet (`grep -n '"passes"'` both READMEs → 0 matches; `grep -cin "pass.?routing\|passes config"` both CHANGELOGs → 0/0, exit 1) — so AC19's anchors are genuinely new doc work and decidable | repository | `packages/pi-agentic-workflow/README.md`; `packages/pi-agentic-workflow/README.es.md`; `CHANGELOG.md`; `CHANGELOG.es.md` (grep run 2026-09-09 at HEAD `e13096d3`) | HEAD at write | current | proven | — |
+| `thinking`'s valid values are the route vocabulary already shipped: `THINKING_LEVELS` = `off|minimal|low|medium|high|xhigh|max`, `ThinkingSetting` = level or `"inherit"`; the shipped default route is `{"model": "inherit", "thinking": "inherit"}`, and validator rejections are addressed by a JSON-path-ish `ConfigIssue.path` | repository | `packages/pi-agentic-workflow/src/config/types.ts` (THINKING_LEVELS, ThinkingSetting, Route, ConfigFile, ConfigIssue); `packages/pi-agentic-workflow/README.md:86,90-91` (shipped default route + vocabulary bullet) | HEAD at write | current | proven | — |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -364,26 +418,26 @@ block**, per the box wording — the lint block's own text is out of scope):
 - [x] Every Capability closure row is filled or `n/a: <reason>` — zero blank rows; every `n/a` carries its reason inline
 - [x] Integration closure has one row per subsystem listed in
       `docs/CAPABILITIES.md` (or, when the project has no inventory, per the
-      derived inventory recorded in the section) — zero subsystems skipped. 13/13 CAPABILITIES.md rows walked (1 in-scope, 12 `n/a` with reasons) + 6 derived project subsystem rows; inventory status recorded (exists, unseeded)
+      derived inventory recorded in the section) — zero subsystems skipped. 13/13 CAPABILITIES.md rows walked (1 in-scope, 12 `n/a` with reasons) + 7 derived project subsystem rows; inventory status recorded (exists, unseeded)
 - [x] Every capability's role matrix lists EVERY role in the capability
       inventory with an explicit `allowed`/`denied` — inventory Roles table is an unseeded placeholder; derived roles listed explicitly: operator allowed, orchestrating agent allowed, spawned pass denied
 - [x] `### Expectation sweep` has ≥ 10 resolved rows (M/L) or ≥ 5 (XS/S);
       every row's resolution is `in-scope`, `out-of-scope`, or `deferred`
-      with a pointer — an unresolved or pointer-less row FAILs. 13 rows, all `in-scope` with pointers
+      with a pointer — an unresolved or pointer-less row FAILs. 14 rows, all `in-scope` with pointers
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same
       wording or an explicit reference) — an in-scope item with no criterion
-      FAILs. 1→AC11/AC3 · 2→AC2/AC5/AC12/AC16 · 3→AC5/AC14 · 4→AC1/AC4/AC8/AC12 · 5→AC6 · 6→AC7/AC15 · 7→AC13 · 8→AC1–AC5, AC9–AC12, AC16
+      FAILs. 1→AC11/AC3 · 2→AC2/AC5/AC12/AC16/AC17 · 3→AC5/AC14 · 4→AC1/AC4/AC8/AC12/AC18 · 5→AC6 · 6→AC7/AC15 · 7→AC13 · 8→AC1–AC5, AC9–AC12, AC16, AC17 · 9→AC19
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — all 16 labelled: 14 `command-verified` (piped `printf | aw resolve-passes`, `grep`, `bun test`), 2 `read-verified` (AC6, skill-contract behaviour; AC14, existing loader/console trust-gate behaviour)
+      `read-verified` — all 19 labelled: 17 `command-verified` (piped `printf | aw resolve-passes`, `grep`, `bun test`), 2 `read-verified` (AC6, skill-contract behaviour; AC14, existing loader/console trust-gate behaviour)
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none` — 2 rows, both with triggers
 
 ## Design status
 
 `designed` — repaired product half (batches SF-45-001…SF-45-011,
-SF-45-012…SF-45-015, SF-45-016…SF-45-018, and SF-45-019): capability closure
-complete, all expectation sweep rows resolved, spec-lint product boxes ticked on
-the bounded runs pasted above.
+SF-45-012…SF-45-015, SF-45-016…SF-45-018, SF-45-019, and SF-45-020…SF-45-022):
+capability closure complete, all expectation sweep rows resolved, spec-lint
+product boxes ticked on the bounded runs pasted above.
 
 ---
 
