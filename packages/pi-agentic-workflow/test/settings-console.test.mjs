@@ -376,6 +376,57 @@ test("AC11/OB-14: the merged view renders a route's ordered model chain", async 
   assert.ok(text.includes("plan-feature: a/m1 → b/m2 / inherit"), `chain rendered in order: ${text}`);
 });
 
+// --- P9 / OB-17 (amendment A1, F2): chain-edit visibility ---
+
+test("AC14/OB-17: editing a chain route opens the builder seeded with the value in force (chain preserved on Done)", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"default":{"model":["a/m1","b/m2"],"thinking":"high"}}' },
+    {
+      models: ["a/m1", "b/m2", "c/m3"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.chainAction("the default route")]: [prompts.chainDone],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.default.model, ["a/m1", "b/m2"], "Done with no change keeps the existing chain");
+  const shown = scripted.notify.map((entry) => entry.message).join("\n");
+  assert.match(shown, /a\/m1 → b\/m2/u, "the current chain is labelled in the edit flow");
+});
+
+test("AC14/OB-17: the seeded chain builder appends a fallback and remove-last trims the tail", async () => {
+  const { outcome, written } = await run(
+    { [paths.global]: '{"commands":{"plan-feature":{"model":["a/m1","b/m2"],"thinking":"inherit"}}}' },
+    {
+      models: ["a/m1", "b/m2", "c/m3"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.chainAction("plan-feature")]: [
+          prompts.chainAppend,
+          prompts.chainRemoveLast,
+          prompts.chainAppend,
+          prompts.chainDone,
+        ],
+        [prompts.modelPicked("plan-feature")]: ["c/m3", "d/m4"],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.commands["plan-feature"].model, ["a/m1", "b/m2", "d/m4"], "append added a fallback, remove-last dropped c/m3, the seeded a/m1 + b/m2 tail survives; final = a/m1, b/m2, d/m4");
+});
+
 // --- P6 / OB-4: bulk apply and bulk clear ---
 
 test("AC5/OB-4: one bulk apply assigns model+thinking to two commands, matching a single pass per command", async () => {
