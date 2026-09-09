@@ -86,8 +86,10 @@ of truth for the envelope shape.
 
 #### In scope
 
-1. New script `scripts/workflow-status.mjs` (Node.js, no new deps — only the
-   existing schema package).
+1. New script `scripts/workflow-status.mjs` (Node.js, no new dependencies — the
+   schema package's vocabulary is consumed through the repo's established
+   `scripts/schema-runtime.mjs` loader, not a dependency install; Product
+   decision 2).
 2. Script executes the published fixed SENSOR_CORE sequence (steps 1–9, incl.
    6a — the nine numbered steps `SENSOR_CORE.md` publishes, through step 8
    *pending quality gates* and step 9 *fix-now fold ledger*), and emits Envelope
@@ -229,14 +231,14 @@ expectations are value too: they stop being future surprises.
 |---|---|---|---|
 | 1 | Exit code 0 on success (standard CLI convention) | in-scope | A:2 (fixture-repo property test — output is valid Envelope v2, implies success) |
 | 2 | Non-zero exit on fatal errors — the sensor's fatal class is invalid invocation (an unknown flag is a usage error); environmental failures (no network, missing git, timed-out forge) are **not** fatal — they degrade to declared codes with exit 0 (Product decision 6 names `unavailable-git-missing`), so the row's original "like missing git" example was stale wording, corrected against the reviewed decision | in-scope | A:20 (unknown flag → non-zero exit, usage diagnostic on stderr) |
-| 3 | No interactive prompts (non-interactive tool for automation) | in-scope | A:3 (script is deterministic and headless; no prompts in code path) |
+| 3 | No interactive prompts (non-interactive tool for automation) | in-scope | A:22 (grep proves no prompt/TTY-read call exists in the code path) |
 | 4 | JSON output is deterministic and machine-parseable | in-scope | A:2 (property test over field presence) + A:5 (idempotence test) |
 | 5 | `--help` / `--version` flags available (standard CLI discoverability) | in-scope | A:10 (--help / --version flags for script-level discoverability) |
-| 6 | Stdout for data, stderr for diagnostics (standard CLI separation) | in-scope | A:3 (script prints JSON to stdout; diagnostics to stderr) |
+| 6 | Stdout for data, stderr for diagnostics (standard CLI separation) | in-scope | A:23 (stdout alone parses as one valid JSON document; the offline run's diagnostics land on stderr) |
 | 7 | Exit 0 on degraded (offline mode) — output reflects degradation, not failure | in-scope | A:4 (offline fixture: no network → declared degradation codes in output, exit 0, no hang) |
 | 8 | Idempotence: consecutive runs on the same tree produce byte-identical output — verbatim, no volatile fields by construction (same guarantee A:5 binds; F9 removed the old timestamp carve-out) | in-scope | A:5 (idempotence test: two consecutive runs on same tree → byte-identical output) |
 | 9 | No side effects — the script never creates, modifies, or deletes any file outside its own output | in-scope | A:3 (read-only enforcement) + A:12 (static analysis confirms no forge writes) |
-| 10 | Timeout for forge commands (slow but available network should not hang the script) | in-scope | A:4 (declared in degradation behavior: timed-out forge calls → unavailability codes) |
+| 10 | Timeout for forge commands (slow but available network should not hang the script) | in-scope | A:21 (fixture produces the hang case: non-terminating `gh` shim → exit 0 within the forge timeout, `unavailable-forge-timeout` in `detail`) |
 | 11 | Color / ANSI output for human readability in the terminal | out-of-scope | Out of scope / non-goals §6 (output is for machine consumers, not terminal formatting) |
 | 12 | File output option (e.g. `--output <path>`) for writing the envelope to disk | out-of-scope | Out of scope / non-goals §5 (output goes to stdout only) |
 | 13 | A version flag that reports the script version matching the package version | in-scope | A:10 (--version prints the schema package version; in-scope item 11) |
@@ -254,7 +256,7 @@ genuinely judgement-only criteria labelled `read-verified`.
       push, label mutation, issue/PR writes, file writes) — check:
       `grep -nE '(createBranch|git push|gh pr (edit|merge|close|create)|gh issue (edit|close|label|create)|writeFile|fs\.write|unlink)' scripts/workflow-status.mjs`
       returns nothing (label *reading* stays — required by A:7's labels-only scan)
-- [ ] A:4 Offline fixture: no network → forge sections degrade to declared codes, exit 0, no hang — check: fixture-repo test with network severed
+- [ ] A:4 Offline fixture: no network → forge sections degrade to declared codes, exit 0, no hang — check: fixture-repo test with network severed. Scope note: severed network makes `gh` fail fast — this criterion covers the fail-fast case only; the slow-but-alive (stalling) forge case sweep row 10 names is A:21's fixture
 - [ ] A:5 Idempotence: two consecutive runs on the same fixture tree → byte-identical output verbatim — the script emits no volatile fields by construction (Envelope v2 has no timestamp field, and `detail` performs no clock reads), so the check carries no modulo carve-out — check: `diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs)` returns empty
 - [ ] A:6 Ambiguous roadmap row → mapped state + named degradation in output — check: fixture-repo test with ambiguous roadmap row, verify `detail` output
 - [ ] A:7 Urgency labels read from the labels object only (labels-only
@@ -267,24 +269,32 @@ genuinely judgement-only criteria labelled `read-verified`.
       script must reference it: carrying an already-fetched title through to the
       envelope is output, not a scan (the read-verified criterion below owns the
       full labels-only review)
-- [ ] A:8 Script imports the schema package's Envelope v2 vocabulary — check:
+- [ ] A:8 Script consumes the schema package's Envelope v2 vocabulary through
+      the repo's established schema-runtime loader — the built local package
+      loaded by explicit path (`scripts/schema-runtime.mjs`, which deliberately
+      does not fall back to a published `@gtrabanco/agentic-workflow-schema`:
+      a published build can be older than the source under review) — check:
+      `grep -nE "from ['\"]\\./schema-runtime\\.mjs['\"]" scripts/workflow-status.mjs`
+      returns a match AND
       `grep -nE "^import .*'@gtrabanco/agentic-workflow-schema'" scripts/workflow-status.mjs`
-      returns a match (a genuine import line; the old two-stage grep piped
-      `workflow-status` first, but the package name is
-      `@gtrabanco/agentic-workflow-schema` — it contains neither the substring
-      `workflow-status` nor satisfies that pipe, so a real import could never
-      count while a stray comment could)
+      returns nothing (the repo provides no bare-specifier resolution for
+      `scripts/` — no root package.json, no installed `@gtrabanco`, `dist/` is
+      a gitignored build output; verified live 2026-09-09 — so a bare-specifier
+      import line could never resolve and must not be mandated)
 - [ ] A:9 `skills/workflow-status/SKILL.md` slimmed: SENSOR_CORE sequence replaced by script call reference — check: `git diff` shows SENSOR_CORE steps reduced, script call added
 - [ ] A:10 `--help` and `--version` flags supported — check: `node scripts/workflow-status.mjs --help` exits 0 and prints usage; `--version` exits 0 and prints version
-- [ ] A:11 No external dependencies beyond the schema package — check:
-      `node -e "import('./scripts/workflow-status.mjs')"` succeeds (exit 0) with
-      only the schema package in the dependency graph — the specifier carries
-      the mandatory `./` prefix: under `node -e`, a bare `scripts/...` specifier
-      resolves as a package name and fails `ERR_MODULE_NOT_FOUND` regardless of
-      the graph (control-verified live on Node v24.19.0: bare →
-      `ERR_MODULE_NOT_FOUND`, `./`-prefixed → exit 0; the legacy
-      `--experimental-specifier-resolution=node` flag added nothing on this
-      runtime and is dropped)
+- [ ] A:11 No external dependencies beyond the schema package (consumed via the
+      schema-runtime loader's built-dist precondition, same as the repo's root
+      tests) — check, two cases: (a) with the schema runtime built
+      (`packages/agentic-workflow-schema/dist/index.js` exists — build
+      precondition; `dist/` is a gitignored build output),
+      `node -e "import('./scripts/workflow-status.mjs')"` exits 0 (the specifier
+      carries the mandatory `./` prefix — a bare specifier resolves as a package
+      name and fails `ERR_MODULE_NOT_FOUND` regardless of the graph;
+      control-verified live on Node v24.19.0); (b) with `dist/` hidden, the same
+      import fails with the loader's named precondition error ("schema runtime
+      is not built"), never a bare `ERR_MODULE_NOT_FOUND` — the script states
+      its build precondition instead of looking like a broken module
 - [ ] A:12 `decideWorkflowAction()` is NOT referenced in the script — check: `grep -c 'decideWorkflowAction' scripts/workflow-status.mjs` equals 0
 - [ ] A:13 No change to the envelope vocabulary — check: `git diff` of `packages/agentic-workflow-schema/` is empty
 - [ ] A:14 Discipline-test pins and `check-skill-context` budgets re-based for the
@@ -314,12 +324,33 @@ genuinely judgement-only criteria labelled `read-verified`.
       established CLI convention: `scripts/ledger-provenance.mjs
       --not-a-real-flag` → usage + exit 2, `scripts/check-skill-context.mjs
       --not-a-real-flag` → exit 1)
+- [ ] A:21 Slow-but-alive forge cannot hang the script: forge calls run under a
+      bounded wall-clock timeout, and a forge that accepts connections but never
+      answers degrades to `unavailable-forge-timeout` (Product decision 6) with
+      exit 0 — the timed-out case is actually produced, not just declared
+      (severed-network A:4 covers only `gh` failing fast) — check: fixture-repo
+      test with `gh` replaced by a shim that accepts and never terminates →
+      script exits 0 within its forge timeout, `detail` names
+      `unavailable-forge-timeout`, and no forge call outlives the bound
+- [ ] A:22 No interactive prompts — the script is headless by construction and
+      never reads stdin interactively — check:
+      `grep -nE '(readline|createInterface|process\\.stdin\\.(read|setRawMode)|@clack|inquirer|prompts?\\(|confirm\\()' scripts/workflow-status.mjs`
+      returns nothing
+- [ ] A:23 Stdout for data, stderr for diagnostics — check:
+      `node scripts/workflow-status.mjs 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{JSON.parse(s)})'`
+      exits 0 (stdout alone is one valid JSON document — stderr cannot leak into
+      the data stream), and the offline fixture run (A:4) asserts the
+      degradation/diagnostic lines land on stderr while stdout stays valid
+      envelope JSON
 - [ ] read-verified: Feature 15's injection-safety invariant (urgency from labels only) is preserved in the new script — verified by code review against feature 15 merge
 
 ### Tooling
 
 - `@gtrabanco/agentic-workflow-schema` (**v4.1.1**, verified live) — Envelope v2
-  schema vocabulary, already an existing dependency. NRS F002 still freezes
+  schema vocabulary; consumed via the repo's established `scripts/schema-runtime.mjs`
+  loader (built local package by explicit path, named fail-fast build
+  precondition, deliberately no published-package fallback — no dependency
+  install exists or is added; Product decision 2). NRS F002 still freezes
   3.4.0 — drifted vs live, contradiction candidate for `/resolve-repository-state`
   (see Product evidence row 2); not silently edited here.
 - `gh` CLI — forge state commands (already used by `workflow-status` skill, part of SENSOR_CORE).
@@ -332,9 +363,21 @@ genuinely judgement-only criteria labelled `read-verified`.
    convention in the repository. No transpilation, no bundler. Direct ES module
    imports.
 
-2. **No new dependencies.** The script only imports the schema package
-   (`@gtrabanco/agentic-workflow-schema`), which is already an existing dependency.
-   This keeps the script lightweight and avoids pull-in of unnecessary packages.
+2. **No new dependencies; schema vocabulary via the established loader.** The
+   script consumes the schema package's Envelope v2 vocabulary through the
+   repo's established `scripts/schema-runtime.mjs` loader — the built local
+   package loaded by explicit path (`packages/agentic-workflow-schema/dist/index.js`),
+   with a named fail-fast precondition ("schema runtime is not built → build
+   it first") and deliberately no fallback to a published
+   `@gtrabanco/agentic-workflow-schema` (a published build can be older than
+   the source under review). The repository provides no bare-specifier
+   resolution for `scripts/` (no root package.json, no installed `@gtrabanco`,
+   `dist/` is a gitignored build output — verified live 2026-09-09), so no
+   dependency install exists or is added. Reviewed intent unchanged from the
+   original decision (F23 repair, 2026-09-09): only the schema package, no new
+   packages — only the resolution mechanism, previously recorded as the false
+   claim "already an existing dependency", is corrected to the repo's
+   documented precedent.
 
 3. **Output: stdout only.** JSON is printed to stdout by default. This is
    consistent with existing CLI tools in the repo and enables piping /
@@ -357,7 +400,10 @@ genuinely judgement-only criteria labelled `read-verified`.
    4's example style). e.g. `unavailable-forge-no-network`,
    `unavailable-forge-timeout`, `unavailable-forge-auth`,
    `unavailable-git-missing`. The consumer (driver/orchestrator) matches the
-   prefix `unavailable-` to route degraded readings appropriately.
+   prefix `unavailable-` to route degraded readings appropriately. Forge calls
+   run under a bounded wall-clock timeout (implementation constant; value fixed
+   at implementation), so `unavailable-forge-timeout` is a reachable code rather
+   than a declared-but-unreachable one (grounded by A:21's fixture, F21).
 
 7. **Flag pass-through semantics (resolved via bounded questions to the human
    design owner, 2026-09-09).** `--json-only`: accepted no-op — the script always
@@ -404,6 +450,8 @@ A claim that cannot be evidenced stays `unknown` with an owner — never guessed
 | Script-side flag semantics resolved: `--json-only` accepted no-op; `--last-envelope <json|path>` computed by the script (hint diff + no-progress guard → `detail.workflow_observations`); hint never overrides recomputed state; unreadable/malformed hint fail-open (`unavailable-hint-<cause>`, exit 0) | human decision | `ask_user` bounded questions q1–q4 (2026-09-09) | — | current | proven | — |
 | The existing skill contract for the flags: `--json-only` skips the human summary; `--last-envelope <json|path>` is a crash-recovery hint (never authoritative) whose supply makes the no-progress guard mandatory, emitting a `workflow_observations` note; `detail` is schema-unconstrained so the note needs no schema-package change | skill reference + npm package | `skills/workflow-status/SKILL.md:7,40,62`, `references/CRASH_RECOVERY.md:22-33`, `references/ENVELOPE_FIELDS.md:3-9,56`, `packages/agentic-workflow-schema/src/index.ts:182` (verified 2026-09-09) | v3.2.1 / v4.1.1 | current | proven | — |
 | `docs/CAPABILITIES.md` at this revision is the unfilled seeded template — placeholder `Exists` cells and a template-only roles row; the 13 integration-closure subsystems are the template's fixed floor set, each reconciled with project-specific reasons (not inventory facts) | repo file | `docs/CAPABILITIES.md:17-47` (re-verified live 2026-09-09) | current main | current | proven | seeding `docs/CAPABILITIES.md` proposed to the design owner — user confirmation pending (upsert-safe) |
+| The repository provides no bare-specifier resolution for `scripts/` — no root package.json, no installed `@gtrabanco` in node_modules, `packages/agentic-workflow-schema/dist/` is a gitignored build output; the established mechanism (`scripts/schema-runtime.mjs`) loads the built local package by explicit path with a named fail-fast precondition and deliberately no published-package fallback | repo file + live checks | `scripts/schema-runtime.mjs:5-20,47-49`; live 2026-09-09: no root `package.json`, `ls node_modules/@gtrabanco` → empty, `git check-ignore packages/agentic-workflow-schema/dist` → ignored, `packages/agentic-workflow-schema/package.json:22` `"main": "./dist/index.js"` | current main | current | proven | grounds A:8/A:11 + Tooling + Product decision 2 (F23 repair) |
+| Forge calls are bounded by a wall-clock timeout; a slow-but-alive forge degrades to `unavailable-forge-timeout` with exit 0 instead of hanging | design decision | Product decision 6 (vocabulary) + A:21 fixture (behavior to be produced at implementation) | — | current | decision | feature 38 implementation — verified by A:21 fixture test (F21 repair) |
 | Under `node -e`, a dynamic-import specifier must carry the `./` prefix — a bare `scripts/...` specifier resolves as a package name and fails `ERR_MODULE_NOT_FOUND` independent of the dependency graph; the legacy `--experimental-specifier-resolution=node` flag neither fixes nor affects this | live control run | control on Node v24.19.0 (2026-09-09): bare `import('scripts/ctl.mjs')` → `ERR_MODULE_NOT_FOUND`; `./`-prefixed → exit 0; repo CLI convention: unknown flag → usage on stderr + non-zero exit (`scripts/ledger-provenance.mjs` → 2, `scripts/check-skill-context.mjs` → 1) | Node v24.19.0 | current | proven | grounds A:11's and A:20's check forms |
 
 ### Spec-lint (mechanical — presence checks only)
@@ -442,22 +490,25 @@ Product boxes:
 - [x] `### Expectation sweep` has ≥ 10 resolved rows (M/L) — **13 rows**.
       Every row's resolution is `in-scope` (11), `out-of-scope` (2), or `deferred` (0 —
       none; the sweep's two earlier `deferred` rows were in-scope work mislabelled,
-      repaired to A:10) with a pointer. Counts unchanged by F17's repair: sweep
-      row 2 stays `in-scope`, re-pointed from the aspirational A:4 parenthetical
-      to the new real criterion A:20.
+      repaired to A:10) with a pointer. F17's repair re-pointed row 2 to A:20;
+      this batch (F21/F22) re-pointed rows 3→A:22, 6→A:23, 10→A:21 — all three
+      now resolve to criteria whose checks carry their claims.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same wording or an explicit reference).
-      In-scope items 1–12 map to A:1 through A:19 (item 10's flag pass-through →
-      A:17–A:19) and the inline criterion comments; A:20 additionally resolves
-      expectation-sweep row 2's fatal-exit expectation (a sweep expectation, not
-      an in-scope bullet).
+      In-scope items 1–12 map to A:1 through A:23 (item 10's flag pass-through →
+      A:17–A:19) and the inline criterion comments; A:20 resolves
+      expectation-sweep row 2's fatal-exit expectation, A:21 resolves sweep row 10
+      (timed-out forge), A:22 resolves sweep row 3 (no prompts), A:23 resolves
+      sweep row 6 (stdout/stderr) — sweep expectations, not in-scope bullets.
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — **20 runnable criteria (A:1–A:20) + 1 labelled
+      `read-verified` — **23 runnable criteria (A:1–A:23) + 1 labelled
       `read-verified` criterion** (injection-safety preservation): A:1 (file exists),
       A:2 (fixture test), A:3 (mutation grep), A:4 (offline fixture), A:5 (diff),
       A:6 (fixture test), A:7 (grep), A:8 (grep), A:9 (diff check),
       A:10–A:11 (flag/import tests), A:12 (grep), A:13 (diff check),
       A:14 (budget re-base), A:15 (fixture test), A:16 (grep), A:17 (diff),
-      A:18 (fixture test), A:19 (fixture test), A:20 (unknown-flag non-zero exit).
+      A:18 (fixture test), A:19 (fixture test), A:20 (unknown-flag non-zero exit),
+      A:21 (fixture: non-terminating `gh` shim → timeout degradation), A:22 (grep),
+      A:23 (stdout-alone JSON parse + stderr fixture).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none`. One row with a decide-by trigger (row 2, --output — still deferred; row 1 resolved via bounded question)
       to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).
