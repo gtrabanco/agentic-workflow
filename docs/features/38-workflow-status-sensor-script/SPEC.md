@@ -374,7 +374,7 @@ Product boxes:
       A:10–A:11 (flag/import tests), A:12 (grep), A:13 (diff check),
       A:14 (budget re-base), A:15 (fixture test), A:16 (grep).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
-      the section reads `none`. Two rows, both with decide-by triggers (row 1 routed
+      the section reads `none`. One row with a decide-by trigger (row 2, --output — still deferred; row 1 resolved via bounded question)
       to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).
 
 Engineering boxes (additionally, at scaffold time):
