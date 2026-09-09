@@ -18,7 +18,17 @@ export type ThinkingSetting = ThinkingLevel | "inherit";
 
 /** `"inherit"` or an exact `provider/modelId` reference (split at the first slash). */
 export type ModelRef = `${string}/${string}`;
-export type ModelSetting = "inherit" | ModelRef;
+/** An ordered fallback chain of references; the first resolvable + configured entry wins (issue #154, root cause E). */
+export type ModelChain = readonly ModelRef[];
+/**
+ * `"inherit"`, one reference, or an ordered fallback chain of 1–4 references.
+ * A chain is probed by order, and the first entry that resolves AND has
+ * configured auth is applied (OB-6, OB-8, OB-9).
+ */
+export type ModelSetting = "inherit" | ModelRef | ModelChain;
+
+/** Cap on chain length (issue deliberation: 8 was "almost certainly a mistake"; 4 keeps the view readable). */
+export const MAX_MODEL_CHAIN = 4;
 
 export interface Route {
   model: ModelSetting;

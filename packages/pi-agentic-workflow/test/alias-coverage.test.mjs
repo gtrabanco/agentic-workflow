@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { readCatalogue, readSkillMeta } from "../dist/routing/catalogue.js";
 import { createExtension } from "../dist/extension/factory.js";
-import { SETTINGS_COMMAND } from "../dist/routing/types.js";
+import { SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS } from "../dist/routing/types.js";
 import { createRouter } from "../dist/routing/dispatch.js";
 import { configFor, modelRef } from "./helpers/session.mjs";
 import { listSkills, parseSkillFrontmatter } from "../scripts/bundle-skills.mjs";
@@ -93,9 +93,32 @@ test("AC3: `agentic-workflow-settings` is registered alongside the skill aliases
     writeFileSync(join(skillsDir, "plan-feature", "SKILL.md"), skillFile("plan-feature", { description: "Plan a feature" }));
 
     const { registered } = extensionOver(skillsDir);
-    assert.deepEqual([...registered.keys()], ["plan-feature", SETTINGS_COMMAND]);
+    assert.deepEqual([...registered.keys()], ["plan-feature", SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
     assert.equal(registered.get("plan-feature").description, "Plan a feature");
     assert.equal(typeof registered.get(SETTINGS_COMMAND).handler, "function");
+    assert.equal(typeof registered.get(SETTINGS_COMMAND_ALIAS).handler, "function");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("AC6/OB-5: the /aw-settings alias opens the same settings handler with no separate route key", async () => {
+  const root = mkdtempSync(join(tmpdir(), "paw-alias-settings-"));
+  try {
+    const skillsDir = join(root, "skills");
+    mkdirSync(join(skillsDir, "plan-feature"), { recursive: true });
+    writeFileSync(join(skillsDir, "plan-feature", "SKILL.md"), skillFile("plan-feature", { description: "Plan a feature" }));
+
+    const { registered, calls, noopContext } = extensionOver(skillsDir);
+    assert.equal(registered.get(SETTINGS_COMMAND).description, "Show and configure per-command model routing");
+    assert.equal(registered.get(SETTINGS_COMMAND_ALIAS).description, registered.get(SETTINGS_COMMAND).description, "the alias keeps the same description");
+    // Registered-command count: exactly the skill command plus the two console names.
+    assert.equal([...registered.keys()].length, 3, "plan-feature + settings command + aw-settings alias");
+
+    // The alias handler opens the same console: it invokes the shared settings
+    // handler, so no separate route key or config surface is introduced.
+    await registered.get(SETTINGS_COMMAND_ALIAS).handler("", noopContext);
+    assert.deepEqual(calls.notify, ["settings"], "the alias invoked the shared settings handler exactly once");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -145,7 +168,7 @@ test("AC3: catalogue problems are reported once, on the first command of the ses
     mkdirSync(join(skillsDir, "no-file"), { recursive: true });
 
     const { registered, calls, noopContext } = extensionOver(skillsDir);
-    assert.deepEqual([...registered.keys()], ["alpha", SETTINGS_COMMAND]);
+    assert.deepEqual([...registered.keys()], ["alpha", SETTINGS_COMMAND, SETTINGS_COMMAND_ALIAS]);
     assert.equal(calls.notify.length, 0, "nothing is reported before a command runs");
 
     registered.get("alpha").handler("", noopContext);
@@ -242,9 +265,12 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
     extension(pi);
 
     const expected = readCatalogue(bundleSkills).commands.map((command) => command.name).sort();
-    const names = [...registered.keys()].filter((name) => name !== SETTINGS_COMMAND).sort();
+    const names = [...registered.keys()]
+      .filter((name) => name !== SETTINGS_COMMAND && name !== SETTINGS_COMMAND_ALIAS)
+      .sort();
     assert.deepEqual(names, expected);
     assert.ok(registered.has(SETTINGS_COMMAND), "the settings command comes from the entry too");
+    assert.ok(registered.has(SETTINGS_COMMAND_ALIAS), "the /aw-settings alias is registered from the entry too");
     assert.deepEqual(
       surfaceCalls.filter(([call]) => call === "on").map(([, type]) => type).sort(),
       ["agent_settled", "model_select", "thinking_level_select"],
