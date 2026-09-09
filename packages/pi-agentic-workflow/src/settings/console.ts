@@ -10,10 +10,11 @@
 
 import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
+import { effectiveRoute } from "../config/merge.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
-import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
+import { MAX_MODEL_CHAIN, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
-import type { ConfigFile, ModelSetting, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
+import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 
 export interface SettingsDeps {
@@ -57,12 +58,23 @@ export const prompts = {
   setDefaultRoute: "Set the default route",
   setOverride: "Set a command override",
   clearOverride: "Clear a command override",
+  bulkApply: "Apply one route to several commands",
+  bulkClear: "Clear several overrides",
+  addAnother: "Add another?",
   policy: "Set the unavailable-route policy",
   save: "Save",
   cancel: "Cancel",
   model: (target: string): string => `Model for ${target}?`,
   modelPicked: (target: string): string => `Which model for ${target}?`,
   thinking: (target: string): string => `Thinking level for ${target}?`,
+  fields: "Which fields should change?",
+  fieldsBoth: "model and thinking",
+  fieldsModel: "model only",
+  fieldsThinking: "thinking only",
+  chainAction: (target: string): string => `Model chain for ${target}?`,
+  chainAppend: "Add a fallback",
+  chainRemoveLast: "Remove the last",
+  chainDone: "Done",
 } as const;
 
 const GLOBAL_LABEL = "Global";
@@ -72,7 +84,10 @@ const INHERIT = "inherit";
 
 export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOutcome> {
   const paths = configFilePaths(deps.agentDir, deps.cwd);
-  deps.ui.notify(renderMergedConfig(loadConfig({ agentDir: deps.agentDir, cwd: deps.cwd, projectTrusted: deps.projectTrusted, readFile: deps.readFile }), deps.commands).join("\n"), "info");
+  const merged = loadConfig({ agentDir: deps.agentDir, cwd: deps.cwd, projectTrusted: deps.projectTrusted, readFile: deps.readFile });
+  deps.ui.notify(renderMergedConfig(merged, deps.commands).join("\n"), "info");
+  /** The value in force for a target (the merged route, or the default when the target is "the default route"). */
+  const currentFor = (target: string): Route => effectiveRoute(merged.config, target);
 
   const opened = await openAScope(deps, paths.global, paths.project);
   if (!opened) return { status: "cancelled", edited: false };
@@ -87,6 +102,8 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       prompts.setDefaultRoute,
       prompts.setOverride,
       prompts.clearOverride,
+      prompts.bulkApply,
+      prompts.bulkClear,
       prompts.policy,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
@@ -102,14 +119,14 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     }
 
     if (choice === prompts.setDefaultRoute) {
-      const edited = await editRoute(deps, DEFAULT_ROUTE);
+      const edited = await editRoute(deps, DEFAULT_ROUTE, currentFor(DEFAULT_ROUTE));
       if (edited) draft = { ...draft, default: edited };
       continue;
     }
     if (choice === prompts.setOverride) {
       const name = await pickCommand(deps, commandChoices(deps, draft));
       if (name === undefined) continue;
-      const route = await editRoute(deps, name);
+      const route = await editRoute(deps, name, currentFor(name));
       if (route) draft = { ...draft, commands: { ...draft.commands, [name]: route } };
       continue;
     }
@@ -118,6 +135,31 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       if (name === undefined) continue;
       const rest = { ...draft.commands };
       delete rest[name];
+      draft = { ...draft, commands: rest };
+      continue;
+    }
+    if (choice === prompts.bulkApply) {
+      // One field pass (model via the chain builder + thinking), applied to every
+      // selected command. A reference missing from the live registry warns per
+      // command but never blocks the write (OB-4 — dispatch's probe stays the
+      // authoritative availability gate).
+      const selected = await pickCommandsMulti(deps, commandChoices(deps, draft));
+      if (selected === undefined || selected.length === 0) continue;
+      const route = await editRoute(deps, selected[0], currentFor(selected[0]));
+      if (route === undefined) continue;
+      const nextCommands = { ...draft.commands };
+      for (const name of selected) {
+        nextCommands[name] = route;
+        warnMissingModel(deps, name, route.model ?? INHERIT);
+      }
+      draft = { ...draft, commands: nextCommands };
+      continue;
+    }
+    if (choice === prompts.bulkClear) {
+      const names = await pickCommandsMulti(deps, Object.keys(draft.commands ?? {}));
+      if (names === undefined || names.length === 0) continue;
+      const rest = { ...draft.commands };
+      for (const name of names) delete rest[name];
       draft = { ...draft, commands: rest };
       continue;
     }
@@ -173,17 +215,49 @@ async function openAScope(
 }
 
 /** Ask for a model and a thinking level; `undefined` means nothing changed. */
-async function editRoute(deps: SettingsDeps, target: string): Promise<RouteFile | undefined> {
-  const model = await askModel(deps, target);
-  if (model === undefined) return undefined;
-  const thinking = await askThinking(deps, target);
-  if (thinking === undefined) return undefined;
-  return { model, thinking };
+async function editRoute(deps: SettingsDeps, target: string, current: Route): Promise<RouteFile | undefined> {
+  const fields = await askFields(deps);
+  if (fields === undefined) return undefined; // nothing marked — the route is left untouched (OB-3)
+
+  // Start from the value in force so only the marked field is replaced; the other
+  // keeps its merged value (AC4: changing only model asks no thinking question).
+  const route: RouteFile = {
+    ...(current.model !== undefined ? { model: current.model } : {}),
+    ...(current.thinking !== undefined ? { thinking: current.thinking } : {}),
+  };
+  if (fields.model) {
+    const model = await askModel(deps, target, current.model);
+    if (model === undefined) return undefined;
+    route.model = model;
+  }
+  if (fields.thinking) {
+    const thinking = await askThinking(deps, target, current.thinking);
+    if (thinking === undefined) return undefined;
+    route.thinking = thinking;
+  }
+  return route;
 }
 
-async function askModel(deps: SettingsDeps, target: string): Promise<ModelSetting | undefined> {
+/** Which fields the operator wants to change; `undefined` means none (leave untouched). */
+async function askFields(deps: SettingsDeps): Promise<{ model: boolean; thinking: boolean } | undefined> {
+  const choice = await deps.ui.select(prompts.fields, [prompts.fieldsBoth, prompts.fieldsModel, prompts.fieldsThinking]);
+  if (choice === prompts.fieldsBoth) return { model: true, thinking: true };
+  if (choice === prompts.fieldsModel) return { model: true, thinking: false };
+  if (choice === prompts.fieldsThinking) return { model: false, thinking: true };
+  return undefined;
+}
+
+/** Ask for one model entry; `undefined` means cancelled/skipped, `"inherit"` means the whole-route setting. */
+async function pickModelEntry(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<"inherit" | ModelRef | undefined> {
   let answer: string | undefined;
-  if (deps.models && deps.models.length > 0) {
+  if (typeof deps.ui.pick === "function" && deps.models && deps.models.length > 0) {
+    // Rich seam: filterable, windowed, preselected to the value in force (OB-1).
+    const picked = await deps.ui.pick(prompts.modelPicked(target), [...deps.models, TYPED], {
+      initial: typeof current === "string" ? current : undefined,
+    });
+    answer = typeof picked === "string" ? picked : undefined;
+    if (answer === TYPED || answer === undefined) answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
+  } else if (deps.models && deps.models.length > 0) {
     answer = await deps.ui.select(prompts.modelPicked(target), [...deps.models, TYPED]);
     if (answer === TYPED || answer === undefined) answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
   } else {
@@ -193,7 +267,8 @@ async function askModel(deps: SettingsDeps, target: string): Promise<ModelSettin
 
   const value = answer.trim();
   if (value === INHERIT) return INHERIT;
-  if (!/^[^/\s]+\/[^/\s]+$/.test(value)) {
+  const parts = parseModelReference(value);
+  if (!parts) {
     // Rejected in the operator's terms and in the schema's: the value, and the
     // field path the loader would name for the same mistake in a file (AC5).
     deps.ui.notify(
@@ -202,12 +277,78 @@ async function askModel(deps: SettingsDeps, target: string): Promise<ModelSettin
     );
     return undefined;
   }
-  const parts = parseModelReference(value);
-  return parts ? `${parts.provider}/${parts.id}` : undefined;
+  return `${parts.provider}/${parts.id}`;
 }
 
-async function askThinking(deps: SettingsDeps, target: string): Promise<ThinkingSetting | undefined> {
-  const answer = await deps.ui.select(prompts.thinking(target), [...THINKING_LEVELS, INHERIT]);
+/** Ask for a model; a lone reference is returned as-is, several references are returned as an ordered chain. */
+async function askModel(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<ModelSetting | undefined> {
+  // The value in force (OB-3). For a route whose model is already a chain, seed
+  // the builder with the current references so the operator sees and edits the
+  // chain instead of rebuilding it blind (OB-17 / F2, amendment A1). Fresh and
+  // single-string editing keep the existing flow: the picker is preselected to
+  // the string value in force.
+  const seed: ModelRef[] = Array.isArray(current) ? [...current] : [];
+
+  if (seed.length > 0) {
+    // Already a chain: label the current chain, then let the operator append,
+    // trim, or keep it. Done with no change leaves the chain byte-identical.
+    deps.ui.notify(`Current ${target} model chain: ${seed.join(" → ")}`, "info");
+    return buildModelChain(deps, target, [...seed]);
+  }
+
+  const first = await pickModelEntry(deps, target, typeof current === "string" ? current : undefined);
+  if (first === undefined) return undefined;
+  if (first === INHERIT) return INHERIT;
+
+  return buildModelChain(deps, target, [first]);
+}
+
+/** Drive the ordered chain builder over the given starting chain; a single entry collapses to a bare reference. */
+async function buildModelChain(deps: SettingsDeps, target: string, chain: ModelRef[]): Promise<ModelSetting | undefined> {
+  for (;;) {
+    const atCap = chain.length >= MAX_MODEL_CHAIN;
+    if (atCap) {
+      deps.ui.notify(
+        `A model chain is capped at ${MAX_MODEL_CHAIN} references — remove the last to make room (${routePath(target)}.model).`,
+        "info",
+      );
+    }
+    const action = await deps.ui.select(prompts.chainAction(target), [
+      ...(atCap ? [] : [prompts.chainAppend]),
+      prompts.chainRemoveLast,
+      prompts.chainDone,
+    ]);
+    if (action === prompts.chainAppend) {
+      const next = await pickModelEntry(deps, target);
+      if (next === undefined) continue;
+      if (next === INHERIT) {
+        deps.ui.notify(
+          `Only "provider/modelId" references can be chain entries; "inherit" is a whole-route setting (${routePath(target)}.model).`,
+          "error",
+        );
+        continue;
+      }
+      chain.push(next);
+    } else if (action === prompts.chainRemoveLast) {
+      if (chain.length > 1) chain.pop();
+    } else {
+      break;
+    }
+  }
+  return chain.length === 1 ? chain[0] : chain;
+}
+
+async function askThinking(deps: SettingsDeps, target: string, current?: ThinkingSetting): Promise<ThinkingSetting | undefined> {
+  const options = [...THINKING_LEVELS, INHERIT];
+  let answer: string | undefined;
+  if (typeof deps.ui.pick === "function") {
+    const picked = await deps.ui.pick(prompts.thinking(target), options, {
+      initial: typeof current === "string" ? current : undefined,
+    });
+    answer = typeof picked === "string" ? picked : undefined;
+  } else {
+    answer = await deps.ui.select(prompts.thinking(target), options);
+  }
   if (answer === undefined) return undefined;
   if (answer === INHERIT || isThinkingLevel(answer)) return answer;
   deps.ui.notify(`Rejected: thinking must be one of ${THINKING_LEVELS.join(", ")}, or "inherit" (${routePath(target)}.thinking).`, "error");
@@ -220,6 +361,45 @@ async function pickCommand(deps: SettingsDeps, options: readonly string[]): Prom
     return undefined;
   }
   return deps.ui.select(prompts.command, [...options].sort((a, b) => a.localeCompare(b)));
+}
+
+/** Multi-select command picker over the seam's `multiple` mode; a non-rich UI falls back to repeated single selects. */
+async function pickCommandsMulti(deps: SettingsDeps, options: readonly string[]): Promise<readonly string[] | undefined> {
+  if (options.length === 0) {
+    deps.ui.notify("There is no command to pick here.", "warning");
+    return undefined;
+  }
+  const sorted = [...options].sort((a, b) => a.localeCompare(b));
+  if (typeof deps.ui.pick === "function") {
+    const picked = await deps.ui.pick(prompts.command, sorted, { multiple: true });
+    if (picked === undefined) return undefined;
+    return typeof picked === "string" ? [picked] : picked;
+  }
+  // Non-rich fallback: repeatedly select one candidate until the operator stops.
+  const chosen: string[] = [];
+  for (;;) {
+    const remaining = sorted.filter((option) => !chosen.includes(option));
+    if (remaining.length === 0) break;
+    const picked = await deps.ui.select(prompts.command, remaining);
+    if (picked === undefined) break;
+    chosen.push(picked);
+    if (!(await deps.ui.confirm(prompts.addAnother, `Picked ${chosen.join(", ")}.`))) break;
+  }
+  return chosen.length > 0 ? chosen : undefined;
+}
+
+/** Advisory per-command warning when a chosen reference is absent from the live registry (OB-4). */
+function warnMissingModel(deps: SettingsDeps, target: string, model: ModelSetting): void {
+  if (!deps.models || deps.models.length === 0) return;
+  const refs = typeof model === "string" ? [model] : model;
+  for (const ref of refs) {
+    if (ref !== INHERIT && !deps.models.includes(ref)) {
+      deps.ui.notify(
+        `/${target}: ${ref} is not in the live model registry — dispatch will decide availability when the route runs.`,
+        "warning",
+      );
+    }
+  }
 }
 
 function commandChoices(deps: SettingsDeps, draft: ConfigFile): string[] {
