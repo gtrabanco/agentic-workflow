@@ -75,7 +75,8 @@ Two JSON files, both optional:
     "plan-feature": { "model": ["anthropic/claude-sonnet-4-5", "openai/gpt-5.2"], "thinking": "medium" },
     "review-change": { "thinking": "max" }
   },
-  "onUnavailableRoute": "stop"
+  "onUnavailableRoute": "stop",
+  "onSettle": "keep"
 }
 ```
 
@@ -95,6 +96,8 @@ whatever the session already had, because the shipped default route is
   then `openai/gpt-5.2`.
 - `thinking` is one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`,
   or `"inherit"`.
+- `` `onSettle` `` is one of `"keep"` (the default) or `"restore"` — see
+  [Your session after a command](#your-session-after-a-command).
 - Unknown keys, `null`s and malformed references are **rejected**, not ignored: a
   typo that silently did nothing is the bug you would never find.
 
@@ -112,13 +115,28 @@ nothing runs on a model you did not pick. To run anyway on the current model, se
 { "onUnavailableRoute": "inherit" }
 ```
 
-## Your session comes back
+## Your session after a command
 
-Routing lasts one command. When the turn settles, the session is put back the way
-you had it — the model *and* the thinking level, because selecting a model can
-move the level. If you change the model yourself mid-turn, with `/model`, say,
-nothing is restored: your choice wins, and the command says so. Change only the
-thinking level and you keep it while the model still comes back.
+By default (**`onSettle: "keep"`**), the routed model and thinking level **stay**
+in the open chat window once the command settles. If `plan-feature` runs on
+`glm-5` and you want to tweak the plan it produced, your next prompt keeps
+running on `glm-5` — same for a follow-up question. When you don't need the
+heavy model, switch it yourself with `/model` (or Ctrl+P) to something cheaper;
+nothing restores over your choice.
+
+To bring back the pre-command model and thinking level after a command settles,
+set:
+
+```json
+{ "onSettle": "restore" }
+```
+
+(The `restore` mode is the historical AC8 contract: after a routed command the
+session is put back the way you had it — the model *and* the thinking level,
+because selecting a model can move the level. If you change the model yourself
+mid-turn, with `/model` say, nothing is restored: your choice wins, and the
+command says so. Change only the thinking level and you keep it while the model
+still comes back.)
 
 ## Settings console
 
@@ -152,7 +170,7 @@ fall back to a plain prompt, so the console never dead-ends.
 | `could not be selected` | Pi refused the switch. The command stops with the reason — unless `onUnavailableRoute` is `inherit`, in which case it warns and runs on your current model. |
 | `refused: the agent is busy` | A turn is running. Wait for it to settle. |
 | `is still routed` | The previous routed command has not settled yet. |
-| `leaving the model you chose in place` | You changed the model during a routed turn, so nothing was restored — your choice won. |
+| `leaving the model you chose in place` | (in `restore` mode) You changed the model during a routed turn, so nothing was restored — your choice won. |
 | `these configured routes match no command` | A `commands` key names nothing. Fix the spelling or delete the entry. |
 
 ## Notes

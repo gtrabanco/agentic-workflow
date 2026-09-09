@@ -134,6 +134,26 @@ test("AC10: the view's fallback line follows the effective policy, not a constan
   assert.doesNotMatch(text, /unavailable: stop/u, "and never a remembered default");
 });
 
+test("AC10: the view shows the keep-on-settle policy in force, and it follows the config", () => {
+  const kept = loadConfig({
+    agentDir,
+    cwd,
+    projectTrusted: true,
+    readFile: readFrom({ [paths.global]: '{"onSettle":"keep"}' }),
+  });
+  const keepText = renderMergedConfig(kept, commands).join("\n");
+  assert.match(keepText, /after a routed command settles: keep/u, "keep is the shipped default and is shown");
+
+  const restored = loadConfig({
+    agentDir,
+    cwd,
+    projectTrusted: true,
+    readFile: readFrom({ [paths.global]: '{"onSettle":"restore"}' }),
+  });
+  const restoreText = renderMergedConfig(restored, commands).join("\n");
+  assert.match(restoreText, /after a routed command settles: restore/u, "the view follows the effective policy, not a constant");
+});
+
 test("AC10: the view shows project values winning over global ones per command", () => {
   const loaded = loadConfig({
     agentDir,
@@ -546,20 +566,40 @@ test("AC10: clearing the last override persists no empty map", async () => {
   assert.deepEqual(loaded.config.commands, {}, "an emptied override map is absent, not present-and-empty");
 });
 
-test("AC10: set the unavailable-route policy", async () => {
+test("AC10: set the settle keep/restore policy", async () => {
   const { written } = await run(
     {},
     {
       answers: {
         [prompts.scope]: "Global",
-        [prompts.menu]: [prompts.policy, prompts.save, prompts.cancel],
-        [prompts.policyChoice]: "inherit",
+        [prompts.menu]: [prompts.settle, prompts.save, prompts.cancel],
+        [prompts.settleChoice]: "restore",
         [prompts.saveTo(paths.global)]: true,
       },
     },
   );
 
-  assert.deepEqual(JSON.parse(written.get(paths.global)), { onUnavailableRoute: "inherit" });
+  assert.deepEqual(JSON.parse(written.get(paths.global)), { onSettle: "restore" });
+});
+
+test("AC10: setting the settle policy to keep is written explicitly, shadowing a lower scope", async () => {
+  // The F4 rule applies to any policy: an explicit choice survives the save so it
+  // can shadow a lower scope — including re-arming keep over a global restore.
+  const { written } = await run(
+    { [paths.global]: '{"onSettle":"restore"}' },
+    {
+      answers: {
+        [prompts.scope]: "Project",
+        [prompts.menu]: [prompts.settle, prompts.save, prompts.cancel],
+        [prompts.settleChoice]: "keep",
+        [prompts.saveTo(paths.project)]: true,
+      },
+    },
+  );
+
+  assert.deepEqual(JSON.parse(written.get(paths.project)), { onSettle: "keep" });
+  const loaded = loadConfig({ agentDir, cwd, projectTrusted: true, readFile: readFrom({ [paths.global]: '{"onSettle":"restore"}', [paths.project]: written.get(paths.project) }) });
+  assert.equal(loaded.config.onSettle, "keep", "the project keep wins over the global restore");
 });
 
 test("AC10: a project edit is refused while the project is untrusted", async () => {
