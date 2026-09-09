@@ -1,7 +1,7 @@
 import { effectiveRoute } from "../config/merge.js";
 import { parseModelReference } from "../config/schema.js";
 import type { LoadedConfig } from "../config/load.js";
-import type { ThinkingLevel } from "../config/types.js";
+import type { SettlePolicy, ThinkingLevel } from "../config/types.js";
 import type {
   DispatchOutcome,
   ExtensionSurface,
@@ -45,6 +45,8 @@ interface PendingTurn<M extends ModelRef = ModelRef> {
     /** The level Pi derived from our own model switch — ours, not the operator's. */
     modelThinking?: ThinkingLevel;
   };
+  /** What `settle()` does: put the snapshot back, or leave the routed model in place. */
+  settlePolicy: SettlePolicy;
   userChangedModel: boolean;
   userChangedThinking: boolean;
   /** The level the operator picked mid-turn, if any. It survives the restore. */
@@ -167,6 +169,11 @@ export function createRouter<M extends ModelRef = ModelRef>({
       // Cleared first: the restore fires its own select events, and a turn that is
       // already over must not read them as operator changes.
       pending = undefined;
+      // `keep`: leave the routed model and thinking level in the open chat window,
+      // so a follow-up edit or question keeps running on the model that planned it.
+      // The operator's own mid-turn choice is still untouched (nothing is restored,
+      // so it cannot be overwritten). Only "restore" puts the snapshot back (AC8).
+      if (turn.settlePolicy === "keep") return;
       await restore(turn, surface(ctx), ctx, "finished");
     },
 
@@ -331,7 +338,14 @@ export function createRouter<M extends ModelRef = ModelRef>({
       }
 
       if (applied.model || applied.thinking) {
-        pending = { command: command.name, snapshot, applied, userChangedModel: false, userChangedThinking: false };
+        pending = {
+          command: command.name,
+          snapshot,
+          applied,
+          settlePolicy: loaded.config.onSettle,
+          userChangedModel: false,
+          userChangedThinking: false,
+        };
       }
 
       // Pi expands `/skill:<x>` by the skill's frontmatter `name:`, and passes an
@@ -351,7 +365,16 @@ export function createRouter<M extends ModelRef = ModelRef>({
         const rolledBack = Boolean(applied.model || applied.thinking);
         if (rolledBack) {
           await restore(
-            { command: command.name, snapshot, applied, userChangedModel: false, userChangedThinking: false },
+            {
+              command: command.name,
+              snapshot,
+              applied,
+              // The turn never started, so the rollback always restores — it is not a
+              // settle, and `onSettle` does not apply. Explicit, not read from config.
+              settlePolicy: "restore",
+              userChangedModel: false,
+              userChangedThinking: false,
+            },
             session,
             ctx,
             `dispatch failed (${(error as Error).message}); the session was put back`,

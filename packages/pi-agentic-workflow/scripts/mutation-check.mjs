@@ -56,6 +56,10 @@ export const MUTANTS = [
   { file: "src/routing/dispatch.ts", from: 'else ctx.notify(`/${turn.command} switched a session that had no model; nothing to restore.`, "warning");', to: "else void turn;", suite: "restore-after-settle", rule: "F11 a restore with no prior model is announced" },
   { file: "src/routing/dispatch.ts", from: "if (turn.applied.model) {", to: "if (turn.applied.model || turn.applied.thinking) {", suite: "restore-after-settle", rule: "F16 a thinking-only settle never touches the model" },
   { file: "src/settings/console.ts", from: "const undone = (await deps.routing?.undoInFlight()) ?? false;", to: "await deps.routing?.undoInFlight();\n      const undone = true;", suite: "settings-console", rule: "the console reports a failed undo honestly" },
+  // Keep-on-settle (0.9.0 / onSettle): the shipped policy leaves the routed model
+  // in the window instead of restoring it. The suite is `on-settle-keep`.
+  { file: "src/routing/dispatch.ts", from: "if (turn.settlePolicy === \"keep\") return;", to: "if (turn.settlePolicy === \"keep\") await restore(turn, surface(ctx), ctx, \"finished\");", suite: "on-settle-keep", rule: "keep leaves the routed model in the window" },
+  { file: "src/settings/console.ts", from: "if (draft.onSettle) file.onSettle = draft.onSettle;", to: 'if (draft.onSettle && draft.onSettle !== "keep") file.onSettle = draft.onSettle;', suite: "settings-console", rule: "F4 an explicit keep onSettle is saved" },
 ];
 
 const root = mkdtempSync(join("/tmp", "paw-mutation-"));

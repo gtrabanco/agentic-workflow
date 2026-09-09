@@ -1,5 +1,5 @@
-import { MAX_MODEL_CHAIN, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
-import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "./types.js";
+import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
+import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "./types.js";
 
 /**
  * Strict validator for one config file (SPEC S5-S8, D-E5).
@@ -11,7 +11,7 @@ import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, ThinkingSetting, Una
  * default, and that decision belongs to the loader.
  */
 
-const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute"]);
+const ROOT_KEYS = new Set(["default", "commands", "onUnavailableRoute", "onSettle"]);
 const ROUTE_KEYS = new Set(["model", "thinking"]);
 const COMMAND_NAME = /^[a-z0-9][a-z0-9._-]*$/u;
 
@@ -49,6 +49,10 @@ function isThinkingSetting(value: unknown): value is ThinkingSetting {
 
 function isUnavailableRoutePolicy(value: unknown): value is UnavailableRoutePolicy {
   return UNAVAILABLE_ROUTE_POLICIES.includes(value as UnavailableRoutePolicy);
+}
+
+function isSettlePolicy(value: unknown): value is SettlePolicy {
+  return SETTLE_POLICIES.includes(value as SettlePolicy);
 }
 
 function describe(value: unknown): string {
@@ -136,7 +140,7 @@ function validateConfig(value: unknown): ParseResult {
     if (!ROOT_KEYS.has(key)) {
       issues.push({
         path: `$.${displayKey(key)}`,
-        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute)`,
+        message: `unknown config key "${key}" (allowed: default, commands, onUnavailableRoute, onSettle)`,
       });
     }
   }
@@ -171,6 +175,17 @@ function validateConfig(value: unknown): ParseResult {
       });
     } else {
       config.onUnavailableRoute = value.onUnavailableRoute;
+    }
+  }
+
+  if (value.onSettle !== undefined) {
+    if (!isSettlePolicy(value.onSettle)) {
+      issues.push({
+        path: "$.onSettle",
+        message: `must be "keep" or "restore", got ${describe(value.onSettle)}`,
+      });
+    } else {
+      config.onSettle = value.onSettle;
     }
   }
 
