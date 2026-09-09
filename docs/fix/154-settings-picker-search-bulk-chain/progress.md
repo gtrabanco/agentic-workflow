@@ -119,6 +119,10 @@ Verdict: **PLAN-REVIEW-FAIL** — 2 material open findings (RP1-F1 medium, RP1-F
 ## Acceptance receipt v1
 - Manifest: docs/fix/154-settings-picker-search-bulk-chain/ACCEPTANCE.md · Blob: b582c5008cda34e59d20c7b08ba379067a67e6f6 · Status: frozen · Verified: 2026-09-08
 
+## Acceptance amendment A1 (2026-09-09) — F2 chain-edit visibility → P9
+- Manifest: docs/fix/154-settings-picker-search-bulk-chain/ACCEPTANCE.md · Blob: bc8f74f3abed6f1f0d5bcca2109279f9fead760a · Status: frozen (amended) · Verified: 2026-09-09
+- Change: added AC14 (chain-edit seed visibility) and OB-17 / P9 phase; no criterion or validator weakened (AC3 unchanged). User-approved replan-in-unit for review finding F2 (decision-required).
+
 ## Unit-loop receipt — P1
 - Commit: 18ba3c3b · Gate: `cd packages/pi-agentic-workflow && bun test test/config-merge.test.mjs` (exit 0, 16 pass / 0 fail) · Acceptance blob: b582c5008cda34e59d20c7b08ba379067a67e6f6
 - Next: P2 · Attempts: 1

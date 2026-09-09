@@ -31,6 +31,7 @@ suite).
 | AC11 | The merged view (`renderMergedConfig`) shows a route's chain in order | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 with the chain-render case green + scoped summary (`Ran N tests across 1 file`) pasted |
 | AC12 | Non-TUI modes (headless/RPC) keep a working text-input path — the picker falls back to `select`/`input` and the console never dead-ends | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 with the non-TUI fallback fixture green + scoped summary (`Ran N tests across 1 file`) pasted |
 | AC13 | The package gate is green on the final tree (tsc + full suite), and the README pair documents the chain schema, the picker behaviour and the alias in the same commit, with the version bump + bilingual changelog tables in the same PR | `cd packages/pi-agentic-workflow && bun run test` → exit 0, `0 fail`; read-verified: chain + `aw-settings` present in both `README.md` and `README.es.md`; `git status --porcelain docs/` → empty after the docs commit |
+| AC14 | Editing a route whose `model` is a chain (≥2 references) opens the chain builder seeded with the value in force — the current references are shown and editable (append, remove-last, Done) — and Done with no change keeps the chain | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 with the chain-edit seed cases green + scoped summary (`Ran N tests across 1 file`) pasted |
 
 ## Quality floor
 
