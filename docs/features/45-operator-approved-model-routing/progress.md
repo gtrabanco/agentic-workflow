@@ -25,6 +25,22 @@ Notes:
 - Zero open findings classified outside `product`; no counter-evidence dismissal used; no forge issue created; scope not widened (all repairs align to recorded AD-45-001…005 and the governing issues).
 - Offered, not done: seeding `docs/CAPABILITIES.md` from its template (init-workspace owns seeding; needs user confirmation).
 
+## Pre-execution review receipt v1 — spec
+- Review: RS-45-02 · Snapshot: a845bd3f97592f9d893953d55841aa9de728f5686aa91bec848e29ccb4686cf7 · Verdict: spec-review-fail
+- Unit: 45-operator-approved-model-routing · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: 2032e203c1805e857dd709cef12e0618292e68f9 · Artifact revision: 2032e203c1805e857dd709cef12e0618292e68f9
+- Reviewer: pi-web:review-spec@1.7.1 · Session: manual (no runtime session identity exposed) · Role: reviewer · Author: design-feature repair session (commit 2032e203; identity not exposed)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-09T00:28Z/2026-09-09T00:38Z · Findings: 4 (material open: 4)
+
+Notes:
+- Post-repair re-review of the RS-45-01 repair batch (SF-45-001…011 all resolved at revision `2032e203…`). Snapshot built with `bun scripts/pre-execution-snapshot.mjs build --stage spec --unit 45-operator-approved-model-routing`; artifact revision derived from the newest commit touching `SPEC.md` (`2032e203…`, `docs(features): repair 45 product half after SPEC-REVIEW-FAIL`) — matches the handoff id; sourceRevision and artifactRevisionId coincide by derivation.
+- Builder context kinds: architectural-invariants: absent; normalized-repository-state: present, digest `e8509783…`; project-guide: present, digest `9ae03966…`. Two further authorities consulted this review, not representable in the builder's context list, recorded as manual notes (`validated: manual`): governing-issue #201 (OPEN, fetched via `gh issue view 201`; Mechanics 1, Tests first, Open questions re-read) and dependency-unit (roadmap row 43 `producer-package`, `idea`; `packages/` contains only `agentic-workflow-schema` and `pi-agentic-workflow`).
+- Check results: C1–C7 pass, C8 finding (SF-45-012), C9 findings (SF-45-012, SF-45-015), C10 pass, C11 finding (SF-45-014), C12 finding (SF-45-013), C13 pass, C14 pass. Failed checks: C8, C9, C11, C12.
+- Verified repository claims (C10): `packages/pi-agentic-workflow/src/config/schema.ts` ROOT_KEYS `default|commands|onUnavailableRoute`; `docs/CAPABILITIES.md` unseeded (13 placeholder subsystem rows 35–47, placeholder Roles row 24); `skills/init-workspace/references/{BOOTSTRAP_WRITE,UPGRADE}.md` and `skills/review-change/references/ADVERSARIAL_SETUP.md` exist; `docs/workflow/model-routing.yml` exists with the alphabetical-key assertion at `scripts/pre-execution-quality.test.mjs:482`; `docs/workflow/GOLDEN_FIXTURE.md` exists; roadmap rows 43 (`idea`, #196) and 45 (`defined`, deps 43).
+- Zero writes to reviewed artifacts: SPEC.md, decisions.md, ROADMAP.md untouched by this review (receipt + findings rows only; `git status --porcelain` re-checked after the ledger writes).
+
 ### READINESS — 45-operator-approved-model-routing spec READY-FOR-REVIEW
 - Artifact revision: 2032e203c1805e857dd709cef12e0618292e68f9 · Rows checked: 10 (Evidence E1–E10) · Unknowns open: 0
 - Evidence: SPEC Product half (`### Evidence`) + `decisions.md` · Frozen: 2026-09-09
