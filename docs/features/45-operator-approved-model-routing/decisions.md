@@ -48,6 +48,62 @@
   availability judgement belongs to the consuming skill at spawn-time.
 - **Date**: 2026-09-09
 
+## AD-45-007 — `auto` and the project-trust gate (repair, SF-45-013)
+
+- **Decision**: `auto` carries no gate of its own — it is honored exactly where
+  its config file is honored. The pi package's project-trust gate refuses to
+  read an untrusted project's config file at all
+  (`packages/pi-agentic-workflow/src/config/load.ts`, S11 — "a cloned
+  repository must not be able to steer routing"), and the settings console
+  refuses project-scope edits while untrusted
+  (`src/settings/console.ts:156`), so an untrusted project's `passes` entry
+  (`"auto"` included) can never delegate model choice. `"auto"` in the global
+  file is operator-written (AD-45-004). Resolves issue #201's open question
+  ("Should `auto` be refused while the project is untrusted? Proposed: yes")
+  as yes-by-construction: the gate the question proposed already exists at
+  config-load time; a second, dedicated `auto` gate would be unreachable dead
+  code. No scope added or removed — AD-45-004's meaning of the value is
+  unchanged.
+- **Rationale**: closes the inherited open question with repository evidence;
+  the alternative (a new dedicated gate) would be a product change this repair
+  does not take.
+- **Date**: 2026-09-09
+
+## Repair batch v2 — 2026-09-09 (SF-45-012…SF-45-015, response to RS-45-02)
+
+One batch over the full open findings set; all four classified `product`.
+
+- **Mechanical, intent-preserving (REPAIR class 1)** — SF-45-012 (AC4's
+  trailing clause "chain holds only invalid references → same inline result
+  with a per-pass reason" removed: it contradicted semantics §3 + AC12 and was
+  unimplementable for an offline producer; AC4 + semantics §4 now reserve the
+  per-pass reason `no default chain` for schema-level degenerate chains —
+  absent/empty `default`, or an entry that yields no chain — while invalid
+  references stay validator rejections (AC12) and runtime unavailability stays
+  spawn-time (AC6); this refines issue #201's "chain of unresolvable refs →
+  inline with reason" fixture wording, preserving the fail-closed inline
+  outcome AD-45-006 already recorded), SF-45-014 (Evidence row E7 refreshed:
+  roadmap row 45 reads `defined`, deps `43` — the status this feature's repair
+  batch itself wrote — instead of the stale `idea`), SF-45-015 (vocabulary
+  note: AD-45-002's "per-skill, not per-pass" phrasing was imprecise — the
+  SPEC's `passes` map is keyed by the closed pass-name vocabulary of issue #201
+  Mechanics 1 (`review-*` finders, `verify`, `classify`, `debt`), entries are
+  optional per-pass-name overrides (no entry → `default` chain), and the
+  contrast AD-45-002 draws is per-subagent-instance granularity: all instances
+  of one pass name share one chain. The SPEC's §Product decisions restatement
+  ("per pass name, not per subagent instance") is the correct framing;
+  AD-45-005's "per-skill chain" reads as the per-pass-name chain).
+- **Closure completion (REPAIR class 2, evidence acquired)** — SF-45-013
+  (AD-45-007 appended: issue #201's open question resolved yes-by-construction
+  from `load.ts` S11 + `console.ts:156`; semantics item 5, sweep row 13, AC14
+  read-verified, Evidence row E11 added).
+- **Not done here**: no product change taken (the dedicated-gate alternative
+  for `auto` was not adopted), no counter-evidence dismissal, no receipt text
+  touched, findings resolved via the status/resolution columns only.
+- **Evidence**: issue #201 fetched 2026-09-09 (Mechanics 1, Tests first, Open
+  questions); `packages/pi-agentic-workflow/src/config/load.ts` +
+  `src/settings/console.ts:156` read at HEAD.
+
 ## Repair batch — 2026-09-09 (SF-45-001…SF-45-011)
 
 - **Mechanical, intent-preserving (REPAIR class 1)** — SF-45-001 (dependency

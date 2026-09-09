@@ -92,7 +92,7 @@ quality (e.g. `nan/glm5.3-flash`).
    single-value or array shape. `model: "inherit"` resolves to the `default`
    chain. Unknown pass names are rejected by the strict-validator rule (AC2, AC5, AC12).
 3. **`"auto"` model value**: a sanctioned "let the orchestrating agent decide"
-   marker — valid but documented as operator-delegated (AC5).
+   marker — valid but documented as operator-delegated (AC5, AC14).
 4. **`resolve-passes` producer**: deterministic producer shipped by feature 43's
    crate as `aw resolve-passes` (issue #196; `.mjs` fallback per its execution
    ladder). It reads `pi-agentic-workflow.json` including `passes`, applies the
@@ -131,9 +131,24 @@ the recorded fallback decision (AD-45-001) and issue #201's fail-closed rule:
 3. `resolve-passes` exit code is non-zero only for config the strict validator
    rejects (unknown root key, invalid types, invalid model references, unknown
    pass names); a valid config always exits 0 with a fully resolved table.
-4. Where the degrade is declared: resolve-time for schema-level facts (the
-   table marks an unresolvable chain inline with a per-pass reason), spawn-time
-   for runtime availability (the consumer states the degrade in its report).
+4. Where the degrade is declared: resolve-time for schema-level facts — the
+   table marks a pass left with no chain by schema-level facts (absent or empty
+   `default`, or a pass entry that yields no chain) `inline` with the per-pass
+   reason `no default chain`; spawn-time for runtime availability — the consumer
+   states the degrade in its report. Schema-invalid references are never an
+   inline case: the strict validator rejects them (§3, AC12). This refines
+   issue #201's golden fixture "chain of unresolvable refs → inline with
+   reason": its inline-with-reason outcome applies to schema-level degenerate
+   chains; runtime unavailability degrades at spawn-time per §1; invalid
+   references are validator rejections per §3.
+5. `auto` requires no trust gate of its own: the pi package's project-trust
+   gate already refuses to read an untrusted project's config file at all
+   (`packages/pi-agentic-workflow/src/config/load.ts`, S11 — "a cloned
+   repository must not be able to steer routing"), so an untrusted project's
+   `passes` entry, `"auto"` included, can never delegate model choice;
+   `"auto"` in the global file is the operator's own writing (AD-45-004).
+   This resolves issue #201's open question ("Should `auto` be refused while
+   the project is untrusted? Proposed: yes") as yes-by-construction (AD-45-007).
 
 #### Out of scope / non-goals
 
@@ -240,6 +255,7 @@ the skills tree; recorded because the inventory is unseeded):
 | 10 | Model routing YAML keys stay alphabetical (CLAUDE.md rule) | in-scope | AC10 |
 | 11 | A single string `model` value still works (backward compat) | in-scope | AC11 |
 | 12 | resolve-passes exits non-zero on config the strict validator rejects | in-scope | AC12 |
+| 13 | An untrusted project's `passes` entry (`"auto"` included) never delegates model choice (issue #201 open question, resolved yes-by-construction) | in-scope | AC14 + §Product decisions (AD-45-007) |
 
 ### Acceptance criteria
 
@@ -251,7 +267,7 @@ satisfies the same commands.
 - [x] AC1 (command-verified): absent pass entry + default chain exists → pass = default chain — `printf '%s' '{"default":["nan/glm5.3-flash"]}' | aw resolve-passes` → exit 0; every pass with no `passes` entry resolves to the `["nan/glm5.3-flash"]` chain
 - [x] AC2 (command-verified): `inherit` → default — `printf '%s' '{"default":["nan/cheap1"],"passes":{"review-code":{"model":"inherit"}}}' | aw resolve-passes` → resolved `passes.review-code` chain equals the `default` chain
 - [x] AC3 (command-verified): per-pass chain vs global default — `printf '%s' '{"default":["nan/cheap1","nan/cheap2"],"passes":{"review-code":{"model":"nan/expensive"}}}' | aw resolve-passes` → `passes.review-code` resolves to `["nan/expensive"]` and every other pass to `["nan/cheap1","nan/cheap2"]`
-- [x] AC4 (command-verified): fail-closed inline degrade — `printf '%s' '{}' | aw resolve-passes` → exit 0; every pass resolved `inline` at the orchestrator's model; a config whose chain holds only invalid references produces the same inline result with a per-pass reason string in the table
+- [x] AC4 (command-verified): fail-closed inline degrade — `printf '%s' '{}' | aw resolve-passes` → exit 0; every pass resolved `inline` with the per-pass reason `no default chain`; the same inline result for `"default": []`, and for a pass entry `{"model":"inherit"}` with no usable `default`. A chain of schema-invalid references is not this case — the strict validator rejects it (exit ≠ 0, AC12); a chain of schema-valid but runtime-unavailable models is judged at spawn-time by the consumer, which states the degrade in its report (AC6) — the offline producer never samples runtime availability (scope item 4)
 - [x] AC5 (command-verified): auto passthrough — `printf '%s' '{"passes":{"verify":{"model":"auto"}}}' | aw resolve-passes` → resolved `passes.verify` chain contains `"auto"`
 - [x] AC6 (read-verified): adversarial model assignment — `skills/review-change/SKILL.md` + `references/ADVERSARIAL_SETUP.md` name the per-pass model resolution from the resolved table and the round-robin distribution (wraps when N > chain length); a pass whose chain cannot provide a model degrades inline with the degrade stated in the report
 - [x] AC7 (command-verified): init-workspace bootstrap write — `grep -n "passes" skills/init-workspace/references/BOOTSTRAP_WRITE.md skills/init-workspace/references/UPGRADE.md` → the pass-routing step appears in both, writing `default` and recommended `passes` entries
@@ -261,6 +277,7 @@ satisfies the same commands.
 - [x] AC11 (command-verified): backward compatibility — `printf '%s' '{"default":"nan/glm5.3-flash"}' | aw resolve-passes` → treated as the single-element chain `["nan/glm5.3-flash"]`
 - [x] AC12 (command-verified): invalid config exits non-zero — `passes` IS a known root key of this feature; an actually-unknown root key is rejected: `printf '%s' '{"default":"nan/glm5.3-flash","bogus":true}' | aw resolve-passes` → exit code ≠ 0; likewise `printf '%s' '{"default":42}' | aw resolve-passes` → exit code ≠ 0
 - [x] AC13 (command-verified): golden fixture smoke test — `grep -n "pass-routing\|resolve-passes" docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match (the smoke test is registered as a model precondition)
+- [x] AC14 (read-verified): `auto` needs no trust gate of its own — `packages/pi-agentic-workflow/src/config/load.ts` does not read the project config file while the project is untrusted (S11: a cloned repository must not be able to steer routing) and `src/settings/console.ts` refuses project-scope edits while untrusted, so an untrusted project's `passes` entry — `"auto"` included — is never honored; `"auto"` in the global config is operator-written (AD-45-004, AD-45-007)
 
 ### Tooling
 
@@ -291,6 +308,15 @@ satisfies the same commands.
 - **Adversarial distribution**: round-robin from the per-pass chain; wraps when
   N > chain length. Rationale: simple, deterministic, no new configuration
   needed. (AD-45-005.)
+- **`auto` and the project-trust gate**: `auto` carries no gate of its own — it
+  is honored exactly where its config file is honored. The pi package's
+  project-trust gate refuses to read an untrusted project's config file at all
+  (`packages/pi-agentic-workflow/src/config/load.ts`, S11), so an untrusted
+  project's `passes` entry, `"auto"` included, can never delegate model choice;
+  `"auto"` in the global file is operator-written. Resolves issue #201's open
+  question as yes-by-construction — the gate it proposed already exists at
+  config-load time; a second, dedicated `auto` gate would be unreachable dead
+  code. (AD-45-007.)
 - **Unavailable-model semantics**: spawn-time ordered fallthrough; exhausted or
   empty chain → inline at the orchestrator's model with the degrade stated; the
   offline producer applies schema-level resolution only and exits non-zero only
@@ -318,10 +344,11 @@ Compact grounding rows for the Product half (base row per
 | Pi config roots are exactly `default`, `commands`, `onUnavailableRoute`; strict validator semantics | repository | `packages/pi-agentic-workflow/src/config/schema.ts:17` (ROOT_KEYS) | HEAD at write | current | proven | — |
 | Pi config validation lives in the pi package; the schema package holds no RouteFile validator and the pi package does not depend on it | repository | `packages/pi-agentic-workflow/package.json` (no schema-pkg dependency); `packages/agentic-workflow-schema/src/` (grep RouteFile: none) | HEAD at write | current | proven | — |
 | `docs/CAPABILITIES.md` exists as an unseeded template — 13 placeholder subsystem rows, placeholder Roles row | repository | `docs/CAPABILITIES.md` | HEAD at write | current | proven | — |
-| Roadmap row 43 is `producer-package` (issue #196); row 45 exists with status `idea` | document | `docs/features/ROADMAP.md:53,55` | HEAD at write | current | proven | — |
+| Roadmap row 43 is `producer-package` (issue #196); row 45 exists with status `defined`, deps `43` (written by this feature's repair batch, SF-45-002) | document | `docs/features/ROADMAP.md:53,55` | HEAD at write | current | proven | — |
 | No `packages/agentic-workflow` package exists; only `agentic-workflow-schema` and `pi-agentic-workflow` | repository | `ls packages/` | HEAD at write | current | proven | — |
 | Exhaustion/empty chain → inline at the orchestrator's model, degrade stated; offline producer exits non-zero only for invalid config | user | `decisions.md` AD-45-001 + AD-45-006 (2026-09-09); issue #201 fail-closed rule | dated rows | not-applicable | decision | — |
 | No project invariants document declared | ledger | `REPOSITORY_STATE.md` F010 | snapshot 2026-08-30 | current | proven | — |
+| `auto` carries no separate trust gate: the project config file is not read while the project is untrusted (S11), and the settings console refuses project-scope edits while untrusted | repository | `packages/pi-agentic-workflow/src/config/load.ts` (S11 note + `projectTrusted` gate); `packages/pi-agentic-workflow/src/settings/console.ts:156` | HEAD at write | current | proven | — |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -339,20 +366,20 @@ block**, per the box wording — the lint block's own text is out of scope):
       inventory with an explicit `allowed`/`denied` — inventory Roles table is an unseeded placeholder; derived roles listed explicitly: operator allowed, orchestrating agent allowed, spawned pass denied
 - [x] `### Expectation sweep` has ≥ 10 resolved rows (M/L) or ≥ 5 (XS/S);
       every row's resolution is `in-scope`, `out-of-scope`, or `deferred`
-      with a pointer — an unresolved or pointer-less row FAILs. 12 rows, all `in-scope` with pointers
+      with a pointer — an unresolved or pointer-less row FAILs. 13 rows, all `in-scope` with pointers
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same
       wording or an explicit reference) — an in-scope item with no criterion
-      FAILs. 1→AC11/AC3 · 2→AC2/AC5/AC12 · 3→AC5 · 4→AC1/AC4/AC8/AC12 · 5→AC6 · 6→AC7 · 7→AC13 · 8→AC1–AC5, AC9–AC12
+      FAILs. 1→AC11/AC3 · 2→AC2/AC5/AC12 · 3→AC5/AC14 · 4→AC1/AC4/AC8/AC12 · 5→AC6 · 6→AC7 · 7→AC13 · 8→AC1–AC5, AC9–AC12
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — all 13 labelled: 12 `command-verified` (piped `printf | aw resolve-passes`, `grep`, `bun test`), 1 `read-verified` (AC6, skill-contract behaviour)
+      `read-verified` — all 14 labelled: 12 `command-verified` (piped `printf | aw resolve-passes`, `grep`, `bun test`), 2 `read-verified` (AC6, skill-contract behaviour; AC14, existing loader/console trust-gate behaviour)
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none` — 2 rows, both with triggers
 
 ## Design status
 
-`designed` — repaired product half (batch SF-45-001…SF-45-011): capability
-closure complete, all expectation sweep rows resolved, spec-lint product boxes
-ticked on the bounded runs pasted above.
+`designed` — repaired product half (batches SF-45-001…SF-45-011 and
+SF-45-012…SF-45-015): capability closure complete, all expectation sweep rows
+resolved, spec-lint product boxes ticked on the bounded runs pasted above.
 
 ---
 
