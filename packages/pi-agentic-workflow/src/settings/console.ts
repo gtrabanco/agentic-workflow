@@ -282,14 +282,39 @@ async function pickModelEntry(deps: SettingsDeps, target: string, current?: Mode
 
 /** Ask for a model; a lone reference is returned as-is, several references are returned as an ordered chain. */
 async function askModel(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<ModelSetting | undefined> {
+  // The value in force (OB-3). For a route whose model is already a chain, seed
+  // the builder with the current references so the operator sees and edits the
+  // chain instead of rebuilding it blind (OB-17 / F2, amendment A1). Fresh and
+  // single-string editing keep the existing flow: the picker is preselected to
+  // the string value in force.
+  const seed: ModelRef[] = Array.isArray(current) ? [...current] : [];
+
+  if (seed.length > 0) {
+    // Already a chain: label the current chain, then let the operator append,
+    // trim, or keep it. Done with no change leaves the chain byte-identical.
+    deps.ui.notify(`Current ${target} model chain: ${seed.join(" → ")}`, "info");
+    return buildModelChain(deps, target, [...seed]);
+  }
+
   const first = await pickModelEntry(deps, target, typeof current === "string" ? current : undefined);
   if (first === undefined) return undefined;
   if (first === INHERIT) return INHERIT;
 
-  const chain: ModelRef[] = [first];
-  while (chain.length < MAX_MODEL_CHAIN) {
+  return buildModelChain(deps, target, [first]);
+}
+
+/** Drive the ordered chain builder over the given starting chain; a single entry collapses to a bare reference. */
+async function buildModelChain(deps: SettingsDeps, target: string, chain: ModelRef[]): Promise<ModelSetting | undefined> {
+  for (;;) {
+    const atCap = chain.length >= MAX_MODEL_CHAIN;
+    if (atCap) {
+      deps.ui.notify(
+        `A model chain is capped at ${MAX_MODEL_CHAIN} references — remove the last to make room (${routePath(target)}.model).`,
+        "info",
+      );
+    }
     const action = await deps.ui.select(prompts.chainAction(target), [
-      prompts.chainAppend,
+      ...(atCap ? [] : [prompts.chainAppend]),
       prompts.chainRemoveLast,
       prompts.chainDone,
     ]);
