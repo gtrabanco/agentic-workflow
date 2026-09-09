@@ -120,6 +120,7 @@ Next: bounded delta re-review — spec first (Product half moved), then plan.
 - Review: rp-38-20260909-008 · Snapshot: 22cba9ae43d09dfddf85a2a26f4d2dbb3da4e21af98c2ce4b7213595c7b846e5 · Verdict: spec-review-pass
 - Unit: 38-workflow-status-sensor-script · Stage: spec · Unit kind: feature · Parent: null
 - Source revision: 2e34445b6ddd9a14e7ec1e67f980ceb101c2cec7 · Artifact revision: 2e34445b6ddd9a14e7ec1e67f980ceb101c2cec7
+- Revision notes: bounded delta re-review per operator ruling; artifact revision re-bound to the builder's canonical RS3(b) identity (same value as source revision) with no bound byte moved; planner handoff id 38-c51c1416f9bf = first 12 hex of sha256(SPEC.md) c51c1416f9bfa47b… recorded as lineage provenance per POLICY §7
 - Revision notes: bounded delta re-review per operator ruling (issue #205 "Immediate operator unblock", recorded in decisions.md 2026-09-09). Delta reviewed = commits 2b5675bb + 2e34445b; unchanged bytes not re-swept. Handoff pairing verified: 38-c51c1416f9bf = first 12 hex of sha256(SPEC.md) c51c1416f9bfa47b9cc22e23b50aa46e8b4316e0e16593e1116c87c3fd083c1c, recomputed at this revision — the handoff id is lineage provenance, not the bound identity (precedent rp-005/rp-007). Initial §8 self-check run returned exit 4 (stale-artifact-revision — the receipt had carried the handoff id 38-c51c1416f9bf in the Artifact revision field); per the rp-005 precedent the field was re-bound to the builder's canonical RS3(b) identity (source revision 2e34445b) with no bound byte moved, and the verify re-run returned structural.fresh=true, current=true.
 - Reviewer: fresh pi coding-agent context (no authoring turns for this unit) · Session: pi-web review-spec 38 (seventh review, re-review after operator-authorized repair batch) · Role: reviewer · Author: design-feature + plan-feature-scaffold + repair batch 2026-09-09 (handoff id 38-c51c1416f9bf)
 - Author exclusion: not-enforceable · Context clean: true
@@ -131,3 +132,20 @@ Next: bounded delta re-review — spec first (Product half moved), then plan.
 - Falsification: NO-CONFIRMED-GAPS under the operator's materiality bar (three invented-decision probes grounded in dated human decisions; no promise lacking an observable check; no unspecified role)
 - Prior cycle: rp-38-20260909-007 (plan review, F25–F28 open) → this batch resolves all four; no repeated material findings; no new material findings
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): JSON pasted beside the verdict block in the reporting turn
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-38-20260909-009 · Snapshot: 6bb8b1dbe6c2a3e5f3c29e6983c2f09b51c1980f23a8b1f553a83d3611e271a3 · Verdict: plan-review-pass
+- Unit: 38-workflow-status-sensor-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 22cba9ae43d09dfddf85a2a26f4d2dbb3da4e21af98c2ce4b7213595c7b846e5 · Parent Product receipt: rp-38-20260909-008
+- Source revision: 2e34445b6ddd9a14e7ec1e67f980ceb101c2cec7 · Artifact revision: 2e34445b6ddd9a14e7ec1e67f980ceb101c2cec7
+- Handoff pairing: planner handoff id 38-c51c1416f9bf = first 12 hex of sha256(SPEC.md) c51c1416f9bfa47b… recomputed at this revision, recorded as provenance per POLICY §7; bound identity is the builder's RS3(b) default
+- Reviewer: fresh pi coding-agent context (no authoring turns for this unit) · Session: pi-web review-plan 38 (second plan review, bounded delta per operator ruling) · Role: reviewer · Author: plan-feature-scaffold + operator-authorized repair batch 2026-09-09 (handoff id 38-c51c1416f9bf)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-09T17:55:00Z/2026-09-09T18:10:00Z · Findings: 1 (material open: 0 — F30 info, advisory, non-material)
+- Ledgers read: planning-evidence 17 rows · obligations 27 rows (verified-capable: 27)
+- Prior plan receipt (re-review only): rp-38-20260909-007 @ 5cf504ef6be5d572c89d2289b86007403826149a6979c41d3e2e459624c79ca3
+- Delta verification (bounded per operator ruling in decisions.md / issue #205): F25 ✓ (A-17/A-20 pins red-first in P1 task 1 + P1 done-when; P2 re-asserts unchanged; P2 task 4 --help/--version only), F26 ✓ (A-24 row frozen, A-09 shape mirrored), F27 ✓ (dev scenario sensor:envelope-mismatch + P1 mismatch pin + O27), F28 ✓ (A-07 scoped to forge request field lists); spec-lint counts 24 runnable + mapping box item 7 → A:24 ✓; phase task counts unchanged 8/8/7/10, fingerprints valid; SPEC A:7 note, planning-obligations O27, testing ladder split + inventory row all present
+- Failed checks: none · Passed: L1 L2 L3 L4 L5 L6 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 (evaluated on the delta plus F25–F28 resolution evidence; open advisory rows F24/F29 unchanged, non-material)
+- Falsification: NO-CONFIRMED-GAPS under the operator's materiality bar (evidence probes re-run live: schema-runtime loader + named precondition, schema package v4.1.1, skill 780-line total, ENVELOPE_FIELDS note shape, dev scenario row)
+- Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted beside the verdict block in the reporting turn
