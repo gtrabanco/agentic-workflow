@@ -181,11 +181,16 @@ For EACH role / permission this feature introduces:
 ```
 
 **2. Integration closure** — the feature reconciled against the project's
-**capability inventory** (`docs/CAPABILITIES.md` — the maintained list of
-cross-cutting subsystems: auth, ACL/roles, navigation surfaces, notifications,
-search, audit log, settings, …). One row per inventory subsystem — **no
-subsystem skipped**; if the project has no inventory yet, derive one from the
-architecture doc + codebase, walk it, and propose seeding the file:
+**capability inventory** (`docs/CAPABILITIES.md` — provenance, stated per F19:
+at this revision the file is the **unfilled template** `init-workspace` seeds —
+placeholder `Exists` cells and a template-only roles row, not a populated
+inventory; the 13 subsystems walked below are the template's **fixed floor
+set**, each reconciled here with project-specific reasons rather than inventory
+facts — **seeding `docs/CAPABILITIES.md` from the template is proposed** to the
+design owner (user confirms; upsert-safe, see decisions.md)). One row per
+inventory subsystem — **no subsystem skipped**; if the project has no inventory
+yet, derive one from the architecture doc + codebase, walk it, and propose
+seeding the file:
 
 ```markdown
 For EACH subsystem in docs/CAPABILITIES.md (or the derived inventory):
@@ -223,13 +228,13 @@ expectations are value too: they stop being future surprises.
 | # | Expectation | Resolution | Pointer |
 |---|---|---|---|
 | 1 | Exit code 0 on success (standard CLI convention) | in-scope | A:2 (fixture-repo property test — output is valid Envelope v2, implies success) |
-| 2 | Non-zero exit on fatal errors (unrecoverable failures like missing git) | in-scope | A:4 (offline fixture — exit 0 on degraded; fatal errors outside scope should still exit non-zero) |
+| 2 | Non-zero exit on fatal errors — the sensor's fatal class is invalid invocation (an unknown flag is a usage error); environmental failures (no network, missing git, timed-out forge) are **not** fatal — they degrade to declared codes with exit 0 (Product decision 6 names `unavailable-git-missing`), so the row's original "like missing git" example was stale wording, corrected against the reviewed decision | in-scope | A:20 (unknown flag → non-zero exit, usage diagnostic on stderr) |
 | 3 | No interactive prompts (non-interactive tool for automation) | in-scope | A:3 (script is deterministic and headless; no prompts in code path) |
 | 4 | JSON output is deterministic and machine-parseable | in-scope | A:2 (property test over field presence) + A:5 (idempotence test) |
 | 5 | `--help` / `--version` flags available (standard CLI discoverability) | in-scope | A:10 (--help / --version flags for script-level discoverability) |
 | 6 | Stdout for data, stderr for diagnostics (standard CLI separation) | in-scope | A:3 (script prints JSON to stdout; diagnostics to stderr) |
 | 7 | Exit 0 on degraded (offline mode) — output reflects degradation, not failure | in-scope | A:4 (offline fixture: no network → declared degradation codes in output, exit 0, no hang) |
-| 8 | Idempotence: consecutive runs on the same tree produce byte-identical output (modulo volatile timestamps) | in-scope | A:5 (idempotence test: two consecutive runs on same tree → byte-identical output) |
+| 8 | Idempotence: consecutive runs on the same tree produce byte-identical output — verbatim, no volatile fields by construction (same guarantee A:5 binds; F9 removed the old timestamp carve-out) | in-scope | A:5 (idempotence test: two consecutive runs on same tree → byte-identical output) |
 | 9 | No side effects — the script never creates, modifies, or deletes any file outside its own output | in-scope | A:3 (read-only enforcement) + A:12 (static analysis confirms no forge writes) |
 | 10 | Timeout for forge commands (slow but available network should not hang the script) | in-scope | A:4 (declared in degradation behavior: timed-out forge calls → unavailability codes) |
 | 11 | Color / ANSI output for human readability in the terminal | out-of-scope | Out of scope / non-goals §6 (output is for machine consumers, not terminal formatting) |
@@ -271,7 +276,15 @@ genuinely judgement-only criteria labelled `read-verified`.
       count while a stray comment could)
 - [ ] A:9 `skills/workflow-status/SKILL.md` slimmed: SENSOR_CORE sequence replaced by script call reference — check: `git diff` shows SENSOR_CORE steps reduced, script call added
 - [ ] A:10 `--help` and `--version` flags supported — check: `node scripts/workflow-status.mjs --help` exits 0 and prints usage; `--version` exits 0 and prints version
-- [ ] A:11 No external dependencies beyond the schema package — check: `node --experimental-specifier-resolution=node -e "import('scripts/workflow-status.mjs')"` succeeds with only schema package in graph
+- [ ] A:11 No external dependencies beyond the schema package — check:
+      `node -e "import('./scripts/workflow-status.mjs')"` succeeds (exit 0) with
+      only the schema package in the dependency graph — the specifier carries
+      the mandatory `./` prefix: under `node -e`, a bare `scripts/...` specifier
+      resolves as a package name and fails `ERR_MODULE_NOT_FOUND` regardless of
+      the graph (control-verified live on Node v24.19.0: bare →
+      `ERR_MODULE_NOT_FOUND`, `./`-prefixed → exit 0; the legacy
+      `--experimental-specifier-resolution=node` flag added nothing on this
+      runtime and is dropped)
 - [ ] A:12 `decideWorkflowAction()` is NOT referenced in the script — check: `grep -c 'decideWorkflowAction' scripts/workflow-status.mjs` equals 0
 - [ ] A:13 No change to the envelope vocabulary — check: `git diff` of `packages/agentic-workflow-schema/` is empty
 - [ ] A:14 Discipline-test pins and `check-skill-context` budgets re-based for the
@@ -294,6 +307,13 @@ genuinely judgement-only criteria labelled `read-verified`.
       test with a missing path and with invalid JSON → machine-readable
       `unavailable-hint-<cause>` note in `detail.workflow_observations`, exit 0,
       recomputed envelope unaffected
+- [ ] A:20 Invalid invocation is the only fatal exit class and exits non-zero
+      (every environmental failure degrades with exit 0 per Product decisions
+      4/6) — check: `node scripts/workflow-status.mjs --not-a-real-flag` exits
+      non-zero and prints a usage diagnostic to stderr (matches the repo's
+      established CLI convention: `scripts/ledger-provenance.mjs
+      --not-a-real-flag` → usage + exit 2, `scripts/check-skill-context.mjs
+      --not-a-real-flag` → exit 1)
 - [ ] read-verified: Feature 15's injection-safety invariant (urgency from labels only) is preserved in the new script — verified by code review against feature 15 merge
 
 ### Tooling
@@ -383,6 +403,8 @@ A claim that cannot be evidenced stays `unknown` with an owner — never guessed
 | The schema package declares no degradation-code vocabulary — `Envelope.detail` is `unknown` (schema-unconstrained, "documented per skill") | npm package | `packages/agentic-workflow-schema/src/index.ts` `Envelope.detail` (verified live 2026-09-09) | v4.1.1 | current | proven | grounds the original F7 routing; resolved via bounded question (namespaced) -- see Product decisions |
 | Script-side flag semantics resolved: `--json-only` accepted no-op; `--last-envelope <json|path>` computed by the script (hint diff + no-progress guard → `detail.workflow_observations`); hint never overrides recomputed state; unreadable/malformed hint fail-open (`unavailable-hint-<cause>`, exit 0) | human decision | `ask_user` bounded questions q1–q4 (2026-09-09) | — | current | proven | — |
 | The existing skill contract for the flags: `--json-only` skips the human summary; `--last-envelope <json|path>` is a crash-recovery hint (never authoritative) whose supply makes the no-progress guard mandatory, emitting a `workflow_observations` note; `detail` is schema-unconstrained so the note needs no schema-package change | skill reference + npm package | `skills/workflow-status/SKILL.md:7,40,62`, `references/CRASH_RECOVERY.md:22-33`, `references/ENVELOPE_FIELDS.md:3-9,56`, `packages/agentic-workflow-schema/src/index.ts:182` (verified 2026-09-09) | v3.2.1 / v4.1.1 | current | proven | — |
+| `docs/CAPABILITIES.md` at this revision is the unfilled seeded template — placeholder `Exists` cells and a template-only roles row; the 13 integration-closure subsystems are the template's fixed floor set, each reconciled with project-specific reasons (not inventory facts) | repo file | `docs/CAPABILITIES.md:17-47` (re-verified live 2026-09-09) | current main | current | proven | seeding `docs/CAPABILITIES.md` proposed to the design owner — user confirmation pending (upsert-safe) |
+| Under `node -e`, a dynamic-import specifier must carry the `./` prefix — a bare `scripts/...` specifier resolves as a package name and fails `ERR_MODULE_NOT_FOUND` independent of the dependency graph; the legacy `--experimental-specifier-resolution=node` flag neither fixes nor affects this | live control run | control on Node v24.19.0 (2026-09-09): bare `import('scripts/ctl.mjs')` → `ERR_MODULE_NOT_FOUND`; `./`-prefixed → exit 0; repo CLI convention: unknown flag → usage on stderr + non-zero exit (`scripts/ledger-provenance.mjs` → 2, `scripts/check-skill-context.mjs` → 1) | Node v24.19.0 | current | proven | grounds A:11's and A:20's check forms |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -413,22 +435,29 @@ Product boxes:
       `| n/a: <reason>` convention tail), zero blank, zero skipped.
 - [x] Every capability's role matrix lists EVERY role in the capability
       inventory with an explicit `allowed`/`denied` — no role unlisted.
-      3 roles: consumer-processes, weak-executor-models, human-operators — all `allowed`.
+      3 roles: consumer-processes, weak-executor-models, human-operators — all `allowed`
+      (provenance per F19: these are derived from the sensor's consumer set,
+      not `docs/CAPABILITIES.md` rows — the inventory's Roles table is still
+      the template row).
 - [x] `### Expectation sweep` has ≥ 10 resolved rows (M/L) — **13 rows**.
       Every row's resolution is `in-scope` (11), `out-of-scope` (2), or `deferred` (0 —
       none; the sweep's two earlier `deferred` rows were in-scope work mislabelled,
-      repaired to A:10) with a pointer.
+      repaired to A:10) with a pointer. Counts unchanged by F17's repair: sweep
+      row 2 stays `in-scope`, re-pointed from the aspirational A:4 parenthetical
+      to the new real criterion A:20.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same wording or an explicit reference).
       In-scope items 1–12 map to A:1 through A:19 (item 10's flag pass-through →
-      A:17–A:19) and the inline criterion comments.
+      A:17–A:19) and the inline criterion comments; A:20 additionally resolves
+      expectation-sweep row 2's fatal-exit expectation (a sweep expectation, not
+      an in-scope bullet).
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — **19 runnable criteria (A:1–A:19) + 1 labelled
+      `read-verified` — **20 runnable criteria (A:1–A:20) + 1 labelled
       `read-verified` criterion** (injection-safety preservation): A:1 (file exists),
       A:2 (fixture test), A:3 (mutation grep), A:4 (offline fixture), A:5 (diff),
       A:6 (fixture test), A:7 (grep), A:8 (grep), A:9 (diff check),
       A:10–A:11 (flag/import tests), A:12 (grep), A:13 (diff check),
       A:14 (budget re-base), A:15 (fixture test), A:16 (grep), A:17 (diff),
-      A:18 (fixture test), A:19 (fixture test).
+      A:18 (fixture test), A:19 (fixture test), A:20 (unknown-flag non-zero exit).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none`. One row with a decide-by trigger (row 2, --output — still deferred; row 1 resolved via bounded question)
       to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).
