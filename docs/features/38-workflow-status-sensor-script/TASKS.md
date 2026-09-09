@@ -206,7 +206,9 @@ scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
   `check-skill-context.mjs` metrics (ceil(UTF-8 bytes / 4) for the estimate).
   Write the budget entry to the manifest with the re-measured value.
 - [ ] Bump `workflow-status` 3.2.1 → 3.3.0 via the bump-skill contract — minor bump
-  (process rewording, external argv + envelope contract unchanged, E-38-2). Both CHANGELOG
+  (process rewording, external argv + envelope contract unchanged, E-38-2); compliant
+  with fix #209's freeze-majors policy (minor, not major; breaking intent would carry a
+  `BREAKING CHANGE:` footer while #176 is open). Both CHANGELOG
   siblings gain a version-row at the top of the version history. Update the version table
   in `docs/workflow/SKILLS.md` (the skill count + version columns). Keep the skill inside
   the context budget (the slimmed skill's budget entry is added in step 6, so the total
@@ -218,59 +220,36 @@ Layer: hardening · Done-when: every frozen validator in `ACCEPTANCE.md`
 passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
 → empty, and the PR is open with `Closes #185` (PR URL printed in the chat).
 
-- [ ] Wire driver contract in `docs/workflow/ORCHESTRATION.md` — add the script as the
-  envelope's deterministic producer. Reference the script path
-  `scripts/workflow-status.mjs` in the driver integration section where the envelope is
-  consumed. State the invocation convention: `node scripts/workflow-status.mjs [--json-only]
-  [--last-envelope <json|path>]`. Note that the script's output is the single source of
-  truth for the envelope shape (business goal 3). The driver reads the script's JSON and
-  interprets `next.recommended`.
-- [ ] Synchronize bilingual driver wiring in `docs/workflow/ORCHESTRATION.es.md` — the
-  same script wiring as the EN file (reciprocal switcher links intact; the ES sibling must
-  be updated in the same change per the CLAUDE.md bilingual sync rule).
+- [ ] Wire driver contract in `docs/workflow/ORCHESTRATION.md` + `.es.md` — name the script
+  as the envelope's deterministic producer; add the script path and invocation convention
+  to the driver integration section; bilingual sync with reciprocal switcher links in the
+  same change.
 - [ ] Add additive MIGRATION note — `docs/workflow/MIGRATION.md` gains a dated note about
-  the workflow-status slimming: "The `workflow-status` sensor (v3.3.0) now runs the
-  deterministic script `scripts/workflow-status.mjs` instead of prose-instructed git/gh
-  commands; the envelope shape and the machine contract are identical. The script provides
-  declared degradation codes, bounds forge latency, and enforces read-only by construction."
+  the workflow-status slimming (the sensor now runs the script instead of prose; the
+  envelope shape and the machine contract are identical).
 - [ ] Verify the schema package is byte-untouched — `git diff --name-only main...HEAD --
-  packages/agentic-workflow-schema` → empty. The envelope vocabulary is unchanged (A:13);
-  `detail` is schema-unconstrained, so every new `detail` shape needs no package change.
-- [ ] Run full regression suite — execute every root discipline suite:
-  `node --test scripts/workflow-status-sensor.test.mjs` (new sensor suite),
-  `node --test scripts/bounded-delivery-loops.test.mjs` (loop discipline with re-targeted pins),
-  `node --test scripts/pre-execution-quality.test.mjs` (pre-execution quality with re-targeted pins),
-  `node --test scripts/workflow-status-pre-execution.test.mjs` (pre-execution sensor with re-targeted pins),
-  `node --test scripts/normative-drift.test.mjs` (versioned grammar drift check),
-  `node --test scripts/ledger-provenance.test.mjs` (ledger provenance),
-  `node --test scripts/ledger-ownership.test.mjs` (ledger ownership),
-  `node --test scripts/audit-pr-receipt.test.mjs` (audit-pr receipt),
-  `node --test scripts/review-loop-discipline.test.mjs` (review-loop discipline),
-  `node --test scripts/check-skill-context.mjs` (context budgets); all must exit 0.
-  `cd packages/agentic-workflow-schema && npm test` must exit 0 (schema package untouched).
+  packages/agentic-workflow-schema` → empty.
+- [ ] Run full regression suite — all root discipline suites exit 0 with the re-targeted
+  pins: `node --test scripts/workflow-status-sensor.test.mjs
+  scripts/bounded-delivery-loops.test.mjs
+  scripts/pre-execution-quality.test.mjs
+  scripts/workflow-status-pre-execution.test.mjs
+  scripts/normative-drift.test.mjs
+  scripts/ledger-provenance.test.mjs
+  scripts/ledger-ownership.test.mjs
+  scripts/audit-pr-receipt.test.mjs
+  scripts/review-loop-discipline.test.mjs
+  scripts/check-skill-context.mjs` → exit 0; schema package suite green.
 - [ ] Run Pi mirror re-bundle — `cd packages/pi-agentic-workflow && npm run bundle:skills`;
-  verify parity tests pass; update distribution metadata as required. The bundle copies
-  skill trees only; root `scripts/` do not travel (PE-009). In-repo dogfooding is unaffected.
-  The installed-release gap is tracked in known-issues.md → #198.
-- [ ] Close planning docs truthfully — `progress.md` gains a handoff entry with Done
-  (P4 complete), Remains (PR merge), Gotchas (the scripts/ distribution gap for installed
-  copies), Files (list all changed files). `testing.md` is complete (validation ladder all
-  rows PASS). `known-issues.md` has no remaining blockers.
-- [ ] Open the PR — `gh pr create --body-file docs/features/38-workflow-status-sensor-script/pr-body.md`
-  (body written as a Markdown file, real backticks, never inline `--body`/heredoc that
-  leaves `\`-escaped backticks). The PR body must include: `Closes #185`, the branch name
-  `feat/38-workflow-status-sensor-script`, a summary of changes (new script, slimmed skill,
-  re-targeted pins), and the acceptance verification results.
-- [ ] Update the roadmap row — change from `defined` to `in-progress` (PR open, merge
-  pending). Format: `in-progress · [PR #<n>](<pr-url>) · Depends on: none`
-  (status `in-progress` means PR is open but not yet merged; the merge state lives in the
-  forge).
-- [ ] Commit and push — `git commit -a -m "feat(38): deterministic workflow-status sensor script"`;
-  `git push origin feat/38-workflow-status-sensor-script`.
-- [ ] Update roadmap row to `done` — after merge, update the row to
-  `done · [#<pr>](<pr-url>)` and commit.
-- [ ] Close the PR — the PR is open and awaiting merge; this step is manual (per the
-  repository's convention of human merge).
+  verify parity tests pass; update distribution metadata as required.
+- [ ] Close planning docs truthfully — `progress.md` gains a handoff entry (Done/Remains/
+  Gotchas/Files); `testing.md` is complete; `known-issues.md` has no remaining blockers.
+- [ ] Open the PR and update roadmap — `gh pr create --body-file` (body as Markdown file,
+  `Closes #185`, branch `feat/38-workflow-status-sensor-script`); update roadmap row to
+  `in-progress · [PR #<n>](<pr-url>) · Depends on: none`; commit `feat(38): deterministic
+  workflow-status sensor script` and push.
 - [ ] Recompute and record the frozen `ACCEPTANCE.md` blob —
   `git hash-object docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md` → sha;
   append an acceptance receipt to `progress.md` with `Status: frozen` + `Verified: 2026-09-09`.
+- [ ] Print the PR URL — `gh pr view <n> --json url` → verify the PR is open and the
+  URL matches the printed value (read-verified).

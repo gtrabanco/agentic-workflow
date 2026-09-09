@@ -2,6 +2,21 @@
 
 Last reviewed: —
 
+## 2026-09-10 — scope amendment: fold fix #209 into 38 (artifactRevisionId: 2bee477ba469)
+
+Operator-approved scope amendment: fix #209's release policy (no majors until
+#176 merges; breaking → minor + `BREAKING CHANGE:` footer) folded into 38's
+deliverables. `CLAUDE.md` policy line pre-executed in this batch (A:25 / AC-24 /
+O28). SPEC artifactRevisionId rotated: 38-plan-1 → 2bee477ba469. Bound receipts
+rp-38-20260909-007 and rp-38-20260909-008 stale for the amended set →
+**bounded delta re-review required** (spec first, then plan). New row count:
+25 runnable criteria (A:1–A:25), in-scope items 1–13. Plan P4 bump task extended
+with #209 compliance note. Roadmap row 38 updated with fold note.
+
+### Pre-execution validator output (A:25)
+- `grep -nE '#176' CLAUDE.md` → ≥ 1 (line 188-190: freeze-majors rule present)
+- `grep -nE 'BREAKING CHANGE:' CLAUDE.md` → ≥ 1 (line 190: breaking-change footer convention present)
+
 ## 2026-09-09 — planned (artifactRevisionId: 38-plan-1)
 
 Plan artifacts created by `plan-feature-scaffold`. Engineering half filled, acceptance
