@@ -34,12 +34,13 @@ test("AC6: no config files anywhere resolve to the shipped inherit default", () 
   assert.deepEqual(effectiveRoute(result.config, "design-feature"), { model: "inherit", thinking: "inherit" });
 });
 
-test("AC6: the shipped default is inherit/inherit with the fail-closed fallback", () => {
+test("AC6: the shipped default is inherit/inherit with the fail-closed fallback and the keep-on-settle policy", () => {
   assert.deepEqual(DEFAULT_ROUTE, { model: "inherit", thinking: "inherit" });
   assert.deepEqual(DEFAULT_CONFIG, {
     default: { model: "inherit", thinking: "inherit" },
     commands: {},
     onUnavailableRoute: "stop",
+    onSettle: "keep",
   });
 });
 
