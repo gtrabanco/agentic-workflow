@@ -248,3 +248,57 @@ Notes:
 - Ledger note: all 23 prior findings (SF-45-001…SF-45-023) are resolved; planning-findings.md fence and plain rows are intact. SF-45-023 resolution row at HEAD carries `resolving-artifact-revision: 9c79644a78fdf1564edbdc1740acc2d6d2f0b2a6` — the artifact revision this receipt binds.
 - Cycle note (seventh review of the unit): the one finding from RS-45-06 (SF-45-023, the default-value shape mischaracterization) was addressed directly by repair batch v6 — the batch re-grounded item 1 against `checkRoute`'s accepted shapes, re-written AC11/AC12, and added AD-45-009. The CONVERGENCE-ANOMALY from RS-45-06 noted the root cause: prior reviewers verified ROOT_KEYS and pass vocabulary but never re-grounded item 1's "(existing)" claim against `schema.ts`. This batch fixed that root cause. The finding ids: repeated = none / new = none (SF-45-023 was the only finding from RS-45-06, now resolved). No prior-passing checks regressed — the same checks (C8, C10) now pass where they were blocked by SF-45-023. No CONVERGENCE-ANOMALY printed: the previous PASS on checks C8/C10 is explained by the removal of SF-45-023's material content on those checks, not by blind re-review.
 - Zero writes to reviewed artifacts: SPEC.md, decisions.md, ROADMAP.md untouched by this review (receipt + findings rows only; `git status --porcelain` re-checked after the ledger writes).
+
+## Scaffold — plan-feature-scaffold (response to RS-45-07)
+
+- **Done**: Engineering half filled (technical goals, architecture impact, design
+  incl. resolved-table shape D-E45-5, planning evidence PE-001–PE-021, obligations
+  O1–O23, decisions to confirm D-E45-1…D-E45-7, testing requirements, 7 dev
+  scenarios, five single-layer phases P1–P5 with 8/8 phase-lint fingerprints);
+  `ACCEPTANCE.md` frozen (AC1–AC19, all with named validators); engineering
+  decisions AD-45-010…AD-45-013 appended to `decisions.md`; roadmap row 45
+  `defined → planned` (re-read after the write: literally `planned`, deps `43`).
+- **Remains**: execution (P1–P5) after a current PLAN-REVIEW-PASS; feature 43
+  (`idea`) must be designed/built before or alongside execution — it owns the
+  `aw` rung of the producer ladder this plan's `.mjs` tier falls back to.
+- **Gotchas**: the claude-branch injector treats every `model-routing.yml`
+  top-level key as a skill, so the new `passes` section requires the
+  non-skill-key skip (PE-011/D-E45-6) or `sync-claude` fails on push to main;
+  the Product-half projection is byte-identical after the Engineering-half
+  append (`spec-product-v1` digest `3f770298…`, byteLength 39780 — RS-45-07's
+  binding holds); the plan snapshot binds the whole SPEC (XS/S ledgers embedded
+  per LEDGERS, so its planning-evidence/obligations rows are `absent` by design).
+- **Files**: SPEC.md (engineering half), ACCEPTANCE.md (new), decisions.md,
+  ROADMAP.md, progress.md (this entry).
+- **Next**: `/review-plan 45` — independent context; a plan with no current
+  Plan review receipt is not executable.
+
+- Acceptance manifest blob (`git hash-object ACCEPTANCE.md`):
+  `9b3a2c320c24273a076e66ab88d4ae6b093887fd` · Status: frozen
+
+Preflight: Stage 1 — NRS consumed · arch: deferred
+Preflight: NRS consumed · invariant classification: n/a (no project invariants declared — F010)
+
+### READINESS — 45-operator-approved-model-routing plan READY-FOR-REVIEW
+
+- Artifact revision: 3c0b777212c6ebd4b48bc107eb54e071d291c318 · Rows checked: 21 (PE-001–PE-021) · Unknowns open: 0
+- Evidence: SPEC `### Planning evidence` (XS/S embed; obligations O1–O23 alongside) · Frozen: 2026-09-09
+- Boxes: B1 parent `designed` + current SPEC-REVIEW-PASS (RS-45-07, snapshot
+  `28eca844…`, Product projection digest `3f770298…` unchanged after the
+  Engineering-half append); B2 `ACCEPTANCE.md` frozen, 19 stable IDs, named
+  validators, blob recorded above; B3 architecture impact names the affected
+  surfaces with path evidence (PE-001…PE-019) + invariant classification
+  `n/a` (F010); B4 obligations O1–O23, one phase + one task each, zero blank
+  cells, none deferred; B5 planning-evidence table in its XS/S home, every
+  Engineering claim resolved (PE-001–PE-021); B6 scenario matrix walks all six
+  fixed failure categories, each naming its existing mechanism; B7 phase-lint
+  8/8 recorded with fingerprints (P1 7 tasks · P2 8 · P3 4 · P4 6 · P5 7);
+  B8 phase order matches the deps closure, no early build of a later
+  deliverable, final phase = Hardening & PR; B9 compatibility boundary +
+  rollback stated (additive config, strict validator loud-failure boundary),
+  no unnamed public contract change (`auto`-only-in-passes closed reading
+  recorded as D-E45-4); B10 no decision words in phases; open questions all
+  RESOLVED or owner-named; B11 every evidence row `current`, zero unknowns.
+  D1: no delegated-evidence run (n/a).
+- Readiness is an authoring gate, not a review verdict — handoff to
+  `/review-plan 45` for the independent review of the new snapshot.
