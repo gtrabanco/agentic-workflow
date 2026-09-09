@@ -83,9 +83,13 @@ quality (e.g. `nan/glm5.3-flash`).
 #### In scope
 
 1. **Config extension**: extend `default` in `pi-agentic-workflow.json` to accept
-   both a single `provider/modelId` (existing) and a **fallback chain** (array of
-   `provider/modelId` strings). A chain is tried in the operator's order until
-   one model is usable (AC11 backward-compat single value, AC3 chain shape).
+   a fallback chain — `default` now accepts either a plain array of
+   `provider/modelId` strings (chain form) or a RouteFile object `{model, thinking}`
+   where the `model` field also extends from a single `provider/modelId` to also
+   accept an array chain. A chain is tried in the operator's order until
+   one model is usable (AC11 backward-compat object form, AC3 chain shape). A
+   bare-string value (e.g. `"nan/glm5.3-flash"`) is NOT valid — the operator
+   must use the object form or the array form.
 2. **Per-pass override**: new top-level `passes` key mapping **pass names** (the
    closed pass vocabulary of issue #201: the `review-*` finder passes, `verify`,
    `classify`, `debt`) to `{model, thinking}`, where `model` accepts the same
@@ -323,8 +327,8 @@ satisfies the same commands.
 - [x] AC8 (command-verified): byte stability — two runs of `aw resolve-passes` on the same input produce byte-identical stdout
 - [x] AC9 (command-verified): schema rejects invalid array element — a config whose `default` array holds a non-ModelRef value (e.g. `"default": ["nan/glm5.3-flash", 42]`) fails the pi package's strict validator round-trip test (`packages/pi-agentic-workflow/src/config/schema.ts`)
 - [x] AC10 (command-verified): alphabetical keys — `bun test scripts/pre-execution-quality.test.mjs` → the model-routing.yml key-order assertion passes with the new `passes` section in place
-- [x] AC11 (command-verified): backward compatibility — `printf '%s' '{"default":"nan/glm5.3-flash"}' | aw resolve-passes` → treated as the single-element chain `["nan/glm5.3-flash"]`
-- [x] AC12 (command-verified): invalid config exits non-zero — `passes` IS a known root key of this feature; an actually-unknown root key is rejected: `printf '%s' '{"default":"nan/glm5.3-flash","bogus":true}' | aw resolve-passes` → exit code ≠ 0; likewise `printf '%s' '{"default":42}' | aw resolve-passes` → exit code ≠ 0
+- [x] AC11 (command-verified): backward compatibility and chain forms — `printf '%s' '{"default":{"model":"nan/glm5.3-flash","thinking":"inherit"}}' | aw resolve-passes` → exit 0 (the existing RouteFile object form accepted after the schema extension, treated as a single-element chain); and `printf '%s' '{"default":["nan/glm5.3-flash"]}' | aw resolve-passes` → exit 0 (the plain-array chain form accepted after the schema extension); and `printf '%s' '{"default":{"model":["nan/cheap","nan/expensive"],"thinking":"high"}}' | aw resolve-passes` → exit 0 (the chain-in-object form with explicit thinking); and `printf '%s' '{"default":"nan/glm5.3-flash"}'` → exit code ≠ 0 (a bare-string `default` is rejected by the existing validator and by the extension; use the object form or the array form). This covers all three accepted `default` shapes.
+- [x] AC12 (command-verified): invalid config exits non-zero — `passes` IS a known root key of this feature; an actually-unknown root key is rejected: `printf '%s' '{"default":{"model":"nan/glm5.3-flash","thinking":"inherit"},"bogus":true}' | aw resolve-passes` → exit code ≠ 0; likewise `printf '%s' '{"default":42}' | aw resolve-passes` → exit code ≠ 0 (a number is not a valid RouteFile or array)
 - [x] AC13 (command-verified): golden fixture smoke test — `grep -n "pass-routing\|resolve-passes" docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match (the smoke test is registered as a model precondition)
 - [x] AC14 (read-verified): `auto` needs no trust gate of its own — `packages/pi-agentic-workflow/src/config/load.ts` does not read the project config file while the project is untrusted (S11: a cloned repository must not be able to steer routing) and `src/settings/console.ts` refuses project-scope edits while untrusted, so an untrusted project's `passes` entry — `"auto"` included — is never honored; `"auto"` in the global config is operator-written (AD-45-004, AD-45-007)
 - [x] AC15 (command-verified): post-install recommendation note in the two non-bootstrapping surfaces — `grep -in "pass.?routing" skills/ship-roadmap/references/MODEL_ROUTING.md docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match in each file, and the matched line(s) form the recommendation note (not auto-written) pointing the operator to configure `default` + `passes` entries. The criterion anchors on the recommendation phrase, not the bare token `passes`: unrelated `passes` occurrences in these files (e.g. the existing audit-prose occurrence at GOLDEN_FIXTURE.md:252) are outside its scope
