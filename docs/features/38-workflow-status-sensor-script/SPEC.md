@@ -542,9 +542,142 @@ above is marked `designed`.
 
 ### Technical goals
 
+1. **One deterministic producer.** `scripts/workflow-status.mjs` executes the
+   published SENSOR_CORE sequence (steps 1–9 incl. 6a) and emits Envelope v2
+   assembled field-for-field from the schema package's own vocabulary — the
+   envelope is validated (`validateEnvelope`) before it leaves the process.
+2. **Interpret-only model surface.** After P3 the `workflow-status` skill runs
+   the script, reads the JSON, interprets `next.recommended` per the published
+   contract, and prints the human report — it no longer runs the ~10-command
+   assembly sequence (the biggest recurring token saver in the system).
+3. **Declared failure, never improvised.** Every environmental failure (no
+   network, slow forge, missing git, bad hint) degrades to a namespaced
+   `unavailable-<source>-<cause>` code with exit 0; only invalid invocation is
+   fatal.
+4. **Read-only by construction.** The tool performs no write action — the
+   greps in A:3/A:7/A:22 are structural proofs, not prose promises.
+
 ### Architecture impact
 
+Surfaces (layers per the repo's docs/config/infra split; no domain/api/ui layer
+is touched):
+
+- **NEW `scripts/workflow-status.mjs`** (config/infra). Consumes the schema
+  vocabulary through the repo's established loader `scripts/schema-runtime.mjs`
+  — built local package by explicit path, named fail-fast precondition, no
+  published-package fallback (PE-001). No new dependency, no root
+  `package.json`, no install (PE-001; Product decision 2).
+- **`skills/workflow-status/SKILL.md`, `references/SENSOR_CORE.md`,
+  `references/ENVELOPE_CORE.md`** (docs layer) slim to interpret-and-recommend
+  (in-scope item 7). The other six reference files stay byte-identical (PE-015):
+  CRASH_RECOVERY / ENVELOPE_FIELDS / GUARDRAILS / PRE_EXECUTION / PORTABILITY /
+  SENSOR_SIGNALS own semantics the slimmed skill still applies. SENSOR_CORE.md
+  keeps the `sensor-fields@1` grammar block — it is the normative-drift surface
+  (`scripts/normative-drift.test.mjs:845`) and the field contract the script
+  implements (PE-004, PE-007).
+- **Discipline tests re-targeted, never weakened** (O26): the prose pins that
+  lose their home when SENSOR_CORE.md slims (`bounded-delivery-loops.test.mjs`
+  6a heading + SKILL.md routing pin, `workflow-status-pre-execution.test.mjs`
+  step-8 rule source, `pre-execution-quality.test.mjs` label-override pin)
+  move to script-behavior form — the mechanical rule's single home becomes the
+  script itself (E-38-3; PE-007).
+- **`docs/workflow/SKILL_CONTEXT_BUDGETS.json`** gains the slimmed sensor
+  entry (currently unlisted — defaults apply; PE-008; A:14).
+- **`docs/workflow/ORCHESTRATION.md` + `.es.md`** (docs layer): the driver
+  contract names the script as the envelope's deterministic producer (A:16,
+  O16/O25; PE-010).
+- **Untouched by contract:** `packages/agentic-workflow-schema/` (A:13 — the
+  envelope vocabulary is unchanged; `detail` is schema-unconstrained,
+  `envelope.schema.json:184`, so every new `detail` shape needs no package
+  change, PE-003); the six non-slimmed reference files; the schema package's
+  `decideWorkflowAction()` stays consumer-side (A:12).
+- **Distribution boundary:** the pi package's bundle copies skill trees only;
+  root `scripts/` do not travel (PE-009). In-repo dogfooding is unaffected;
+  the installed-release gap is tracked (known-issues → #198, E-38-7).
+
+Invariants the implementation must hold: read-only (A:3), labels-only urgency
+(A:7 + the read-verified criterion), no decision logic (A:12), envelope
+vocabulary unchanged (A:13), no dependency (A:8/A:11), fail-open posture for
+every environmental failure (A:4/A:19/A:21) with invalid invocation as the
+only fatal class (A:20).
+
 ### Design
+
+**Script shape.** Single ESM file `scripts/workflow-status.mjs`, Node ≥ 18,
+`main()` entry, no bundler, no transpilation (Product decision 1). Imports
+`loadSchemaRuntime` from `./schema-runtime.mjs` — the loader throws the named
+"schema runtime is not built" precondition when `dist/` is missing (PE-001;
+A:11's case (b)).
+
+**Collection (SENSOR_CORE steps 1–9, PE-004).**
+- Steps 1–2: `git branch --show-current` / `git status --porcelain` / `git
+  fetch` + `git status -sb`; the three `gh` list commands verbatim from
+  SENSOR_CORE step 2. Forge calls run under a bounded wall-clock timeout
+  (implementation constant, suite-pinned) so a hanging forge yields
+  `unavailable-forge-timeout` (A:21).
+- Step 3: urgency is the labels-only scan of the step-2 open-issue list
+  (`{number, title, label}`; `urgent` dominates when both labels present) plus
+  the in-flight unit's interruptibility facts reusing the same reads — bodies
+  and comments are never fetched (A:7).
+- Steps 4–5: roadmap + fix-index parsing into the five-state machine; a
+  non-standard status maps to the nearest five-state value with
+  `default: idea` and notes the raw string in `workflow_observations` (A:6);
+  transitive depends-on closure with met/unmet edges (a `done` row with an
+  open PR is NOT met) and cycle/consistency substrate blockers.
+- Steps 6–6a: readiness classification (`idea` → `design_candidates` deps-
+  agnostic; `defined`/`planned` + deps met → `startable_now`; unmet deps →
+  `blocked_units`) and receipt sensing by shelling out to the snapshot
+  verifier (`node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan>
+  --unit <id> [--parent <64-hex> for plan-stage features]` — PE-005), mapping
+  its structured verdict to the label table; the label overrides the
+  status-only command (demotion into a `gate` blocker, `detail.pre_execution`
+  row). Unresolvable revisions fail open → unflagged.
+- Steps 7–9: phase progress from each in-flight `TASKS.md`; pending quality
+  gates from the `review-findings.md` review-mark ancestry rule (mark sha is
+  an ancestor of head and no later commit touched a bound input); fix-now
+  fold-ledger projection with the fixed `suggested_tier` table (`high` →
+  `strong`; axis ∈ {security, correctness, logic, architecture, design,
+  concurrency} → `strong`; else `cheap`).
+
+**Envelope assembly (PE-002/PE-003/PE-014).** One literal object in the
+schema's field order → `validateEnvelope` self-check → print exactly one JSON
+document to stdout. Mismatch → stderr diagnostic, envelope still printed, exit
+0 (E-38-1: the self-check is a diagnostic, not a gate — A:20 restricts the
+fatal class to invalid invocation; A:2's fixture suite owns correctness).
+Determinism: the output path reads no clock, key order is a fixed literal,
+arrays follow roadmap-table order / numeric forge sorting — byte-identical
+consecutive runs (A:5; PE-012). The crash-recovery mapping and substrate
+override are reproduced as published (PE-014); no new state.
+
+**Failure contract (Product decisions 4/6/7).** Namespaced
+`unavailable-<source>-<cause>` codes in `detail`: forge (no-network, timeout,
+auth, missing-cli), git (missing), hint (missing/unreadable/invalid). Missing
+`gh` binary or missing git degrade with exit 0. `--json-only` is an accepted
+no-op (argv parity, A:17). `--last-envelope <json|path>` is computed: load the
+hint (inline JSON or file path), diff against the recomputed envelope, run the
+no-progress guard with the exact note shape from ENVELOPE_FIELDS.md, append
+divergence + note to `detail.workflow_observations`; the hint never mutates
+`state`/`next` (A:18). An unreadable/malformed hint degrades fail-open:
+`unavailable-hint-<cause>` note, exit 0, recomputed envelope unaffected
+(A:19). `--help` prints usage (exit 0); `--version` prints the schema
+package's version read from `packages/agentic-workflow-schema/package.json`
+(E-38-4 — no root `package.json` exists; the vocabulary source is the version
+the script emits from). An unknown flag is the only fatal class: usage
+diagnostic on stderr + non-zero exit (value fixed at implementation per the
+repo convention 1–2, suite-pinned — A:20; PE-006).
+
+**Slimming (P3, PE-015/PE-016/PE-017).** SKILL.md slims to: run `node
+scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`,
+read the JSON, interpret `next.recommended` (tier map, suggested triggers) and
+the degradation codes per the published contract, print the human summary then
+the envelope last; the turn-contract boxes stay (read-only, envelope on every
+invocation, the no-progress guard ran — by the script when the flag is
+supplied). SENSOR_CORE.md slims the numbered-command prose to the script call
+and keeps the `sensor-fields@1` grammar block; ENVELOPE_CORE.md slims the
+assembly prose and keeps the state mapping + tier map the skill interprets.
+The human report layout is a non-goal (§8) — unchanged. Skill bumps 3.2.1 →
+3.3.0 via the bump-skill contract (E-38-2: process rewording, external argv +
+envelope contract unchanged → minor).
 
 ### Planning evidence
 
@@ -556,16 +689,164 @@ see planning-obligations.md
 
 ### Decisions to confirm
 
+All engineering decisions are resolved here and recorded in `decisions.md`
+(2026-09-09 planning batch, `38-plan-1`); none is left for the implementer:
+
+- **E-38-1** envelope self-validation is a stderr diagnostic, never a gate
+  (exit 0); correctness is A:2's fixture suite's job.
+- **E-38-2** skill bump level is **minor** (3.2.1 → 3.3.0): process rewording,
+  external argv + envelope contract unchanged (PE-016/PE-017).
+- **E-38-3** discipline pins re-target from prose-presence to script-behavior
+  assertions — every pin keeps its asserted behavior and gains the stronger
+  form; the mechanical rules' single home becomes the script (never weakened,
+  O26).
+- **E-38-4** `--version` prints the schema package's version (no root
+  `package.json`; PE-008's manifest facts, PE-001).
+- **E-38-5** the forge timeout and the unknown-flag exit code are
+  implementation constants pinned red-first by the suite (repo convention:
+  non-zero, stderr usage — PE-006).
+- **E-38-6** fix #179 overlap declared disjoint and sequenced (its dependency
+  gate holds until features 31/32 merge; its sensor-side amendment then moves
+  script + PRE_EXECUTION.md together — PE-011).
+- **E-38-7** the scripts/ distribution gap (pi bundle carries skill trees only,
+  PE-009) is a recorded boundary tracked in known-issues.md → #198; not
+  blocking for the repo's dogfooding model.
+- **E-38-8** step 6a receipt sensing invokes the snapshot verifier as a
+  subprocess (`--stage`, `--unit`, `--parent` for plan-stage features; PE-005)
+  and maps its structured verdict through the label table; unresolvable
+  revisions fail open → unflagged.
+
 ### Testing requirements
+
+- **New suite `scripts/workflow-status-sensor.test.mjs`** (P1/P2, red-first,
+  written inside the phase that implements the behavior): git-init fixture repo
+  per the established harness pattern (`workflow-status-pre-execution.test.mjs`
+  builds fixture repos with `git init` + scripted commits); network control by
+  a `gh` shim on PATH (missing, failing-fast, non-terminating variants);
+  hints as inline JSON and file paths. Pins: schema validity + field presence
+  (A-02), read-only greps (A-03/A-07/A-22), idempotence (A-05), ambiguous-row
+  mapping (A-06), loader import form (A-08), offline/timeout/missing-git
+  degradation (A-04/A-15/A-21), flags (A-10/A-17/A-20), hint guard + fail-open
+  (A-18/A-19), stream separation (A-23).
+- **Discipline suites re-targeted in P3, never weakened** (O26):
+  `bounded-delivery-loops.test.mjs`, `pre-execution-quality.test.mjs`,
+  `workflow-status-pre-execution.test.mjs`, `normative-drift.test.mjs` —
+  every existing pin keeps its asserted behavior; prose pins that lose their
+  home gain the script-behavior form. `PRE_EXECUTION.md` pins keep passing
+  unchanged (file not slimmed).
+- **Untouched-surface regressions (P4):** schema package suite green + empty
+  `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
+  (A-13); pi bundle parity after `bundle:skills`; ledger + audit-pr receipt
+  suites; `check-skill-context.mjs` with the re-based budget (A-14).
+- **Runtime:** Node ≥ 18 (loader + existing `scripts/*.mjs` convention);
+  validators use the repo's root-suite convention (`node --test`, `node
+  scripts/<tool>.mjs`) as in feature 30's frozen manifest.
 
 ### Dev scenarios
 
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `sensor:empty-state` | empty/zero state — no roadmap rows, no PRs, no in-flight units | fixture repo with an empty roadmap + no forge output; envelope prints the empty shapes (`design_candidates: []`, `fix_now: []`), exit 0 (A-02 fixture) |
+| `sensor:invalid-input` | invalid/oversized input — unknown flag; malformed or missing hint | `--not-a-real-flag` → non-zero + stderr usage (A-20); missing path / invalid JSON hint → `unavailable-hint-<cause>` note, exit 0 (A-19) |
+| `sensor:dependency-outage` | dependency outage + timeout — network severed; forge accepts and never answers | `gh` shim failing fast → fail-fast degradation codes, exit 0 (A-04); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (A-21) |
+| `sensor:concurrent-action` | concurrent/duplicate action — two simultaneous sensor runs | run twice in parallel on the same tree: both exit 0, outputs byte-identical, no locks or shared state (A-05 fixture run concurrently) |
+| `sensor:limit-threshold` | limit/threshold hit — caps in the projections | fixture with > 5 open issues → `untriaged_issues.oldest_open` capped at 5; merged-PR list capped at 20 (ENVELOPE_FIELDS/SENSOR_CORE caps) |
+| `sensor:permission-denied` | n/a: the sensor is a read-only CLI with no auth, role, or permission surface — a permission-denied state cannot arise (Capability closure: Authentication/ACL rows n/a) | — |
+| `sensor:data-loss` | n/a: the script writes no file and deletes nothing (stdout-only output, non-goal §5; Delete row of entity closure) | — |
+
 ### Phases
+
+Four phases (under the ~5 split threshold; every phase is one layer, zero open
+decisions, locally verifiable). Detailed checklists in `TASKS.md`; the frozen
+finish line is `ACCEPTANCE.md`.
+
+#### P1 — Sensor script core emission
+
+Layer: config/infra · Done-when: `node --test
+scripts/workflow-status-sensor.test.mjs` → exit 0 with the schema-validity,
+field-presence, read-only, idempotence, roadmap-mapping, and labels-only pins
+green on the git fixture repo, and the existing root suites still exit 0.
+
+`scripts/workflow-status.mjs` exists and executes SENSOR_CORE steps 1–9 into
+one schema-valid Envelope v2 on stdout (collection + assembly + read-only
+greps + idempotence). Phase-lint: PASS (8/8) · fingerprint
+`P1:config/infra:8:sensor-script-core-emission`
+
+#### P2 — Sensor script failure contract
+
+Layer: config/infra · Done-when: `node --test
+scripts/workflow-status-sensor.test.mjs` → exit 0 with the offline,
+forge-timeout, missing-git, hint-guard, hint-fail-open, flag, and
+stream-separation pins green and every P1 pin unchanged.
+
+The script's declared-failure surface: namespaced degradation codes, bounded
+forge latency, `--json-only` no-op, `--help`/`--version`, `--last-envelope`
+hint diff + no-progress guard, fail-open hints, invalid-invocation fatal
+class, stdout/stderr separation. Phase-lint: PASS (8/8) · fingerprint
+`P2:config/infra:8:sensor-script-failure-contract`
+
+#### P3 — Workflow-status skill slimming
+
+Layer: docs · Done-when: `node scripts/check-skill-context.mjs` → exit 0 with
+the re-based `workflow-status` entry, and `node --test
+scripts/bounded-delivery-loops.test.mjs scripts/pre-execution-quality.test.mjs
+scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
+→ exit 0 with the re-targeted pins.
+
+The slimmed interpret-and-recommend skill (SKILL.md + SENSOR_CORE.md +
+ENVELOPE_CORE.md), re-targeted discipline pins, re-based budgets, version bump
+3.2.1 → 3.3.0. Phase-lint: PASS (8/8) · fingerprint
+`P3:docs:7:workflow-status-skill-slimming`
+
+#### P4 — Qualify the sensor unit
+
+Layer: hardening · Done-when: every frozen validator in `ACCEPTANCE.md`
+passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
+→ empty, and the PR is open with `Closes #185` (PR URL printed in the chat).
+
+Driver wiring (EN + ES), MIGRATION note, pi bundle parity, full frozen
+validation ladder, read-verified injection-safety pass, truthful planning-doc
+close-out, PR open + roadmap flip. Phase-lint: PASS (8/8) · fingerprint
+`P4:hardening:10:qualify-sensor-unit`
 
 ### Deploy & rollback
 
+n/a — merging is enough: the script is a repo tool, the skill bump is a docs
+change, and no data, config, or service state exists. Rollback = revert the
+PR (the skill's pre-slimming prose is recoverable from git history).
+
 ### Open questions / risks
+
+- **RESOLVED — fix #179 overlap:** sequenced, disjoint (E-38-6, PE-011).
+- **RESOLVED — scripts/ distribution gap:** recorded boundary → #198
+  (E-38-7, PE-009); tracked in known-issues.md.
+- **Risk — pin re-targeting breadth:** four root suites pin sensor prose;
+  re-targeting must keep every untouched pin green. Mitigated by O26's
+  validator (all four suites exit 0) and by slimming only the pinned surface
+  the SPEC names (PE-015).
+- **Risk — envelope drift between script and skill prose:** if the skill's
+  interpretation prose and the script's output diverge, consumers break.
+  Mitigated by the script being the single producer (A-02 validates against
+  the schema package directly) and `normative-drift` keeping the grammar
+  block bound (PE-007).
 
 ### Deliverables
 
+- `scripts/workflow-status.mjs` — the deterministic sensor (new).
+- `scripts/workflow-status-sensor.test.mjs` — the fixture-repo suite (new).
+- `skills/workflow-status/SKILL.md`, `references/SENSOR_CORE.md`,
+  `references/ENVELOPE_CORE.md` — slimmed (interpret-and-recommend).
+- `scripts/bounded-delivery-loops.test.mjs`, `scripts/pre-execution-quality.test.mjs`,
+  `scripts/workflow-status-pre-execution.test.mjs` — re-targeted pins.
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — re-based sensor entry.
+- `docs/workflow/ORCHESTRATION.md` + `.es.md` — driver wiring; `docs/workflow/MIGRATION.md`
+  — additive note; `CHANGELOG.md` — 3.2.1 → 3.3.0 row.
+- `packages/pi-agentic-workflow` — bundle re-synced (metadata per its own
+  contract); `packages/agentic-workflow-schema/` — byte-untouched.
+
 ### Post-merge next feature
+
+Per `docs/features/ROADMAP.md`: feature 31 (`planning-review-materiality`,
+`idea`) becomes the next designable unit on the #171 issue; features 30–33
+chain around it. The script this feature ships is also the sensor the
+`workflow-status` route of every later unit consumes.

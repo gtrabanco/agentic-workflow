@@ -75,3 +75,14 @@
 - Failed checks: none · Passed: C1 C2 C3 C4 C5 C6 C7 C8 C9 C10 C11 C12 C13 C14 (F24 recorded as a non-material info note against C7; precedent F18/rp-004)
 - Prior cycle: rp-38-20260909-005 (F21–F23 resolved; sixth review, fifth re-review — CONVERGENCE-ANOMALY printed this turn per POLICY §4: entering a fifth repair/re-review cycle; repeated findings: none material; new material findings: none (1 info note, F24); owning stage product — route discharged by this PASS, no further repair/re-review loop entered)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): first run exit 4 (stale-source-revision — the draft receipt's own fabricated revision id, corrected above); re-run after correction: structural.fresh=true, current=true — exit 0, JSON pasted beside the verdict block in the reporting turn
+
+## Scaffold — 38-workflow-status-sensor-script (2026-09-09)
+
+plan-feature scoped route ran after spec receipt rp-38-20260909-006
+(verdict pass, snapshot 02c17f26…). Engineering half filled; planning
+evidence PE-001…PE-017 and obligations O1…O26 frozen; ACCEPTANCE.md frozen
+with rows A-01…A-23 + A-RV. Manifest blob at freeze:
+c771e70cdb838fec3ad958d23e477117556e867a. Roadmap row re-read after the write: 38 → planned.
+artifactRevisionId of the plan set: 38-plan-1 (handoff carries it; the
+bindable identity is the commit that lands these bytes, per the builder's
+RS3(b) default). Readiness preflight stage: plan — READY-FOR-REVIEW.
