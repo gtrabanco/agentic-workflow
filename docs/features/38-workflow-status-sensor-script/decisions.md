@@ -159,3 +159,73 @@ Spec-lint product boxes re-run: all pass, counts unchanged (13 sweep rows —
 11 in-scope / 2 out / 0 deferred; 19 runnable + 1 `read-verified` criteria;
 13 integration rows; items 1–12 → A:1–A:19). Readiness preflight `stage: spec`:
 READY-FOR-REVIEW.
+
+## 2026-09-09 — repair batch over open findings F17 + F18 + F19 + F20 (artifactRevisionId: 38-626571011339)
+
+**Decision:** One evidence-bounded repair batch over the four open findings from
+review receipt rp-38-20260909-004 (third re-review cycle; POLICY §4's
+CONVERGENCE-ANOMALY was printed by the reviewer and routed to owning stage
+`product` / `design-feature`, which is this turn). No receipt text touched; no
+severity edited; no forge issue opened to hold an obligation. New SPEC
+artifactRevisionId `38-626571011339` = first 12 hex of sha256(SPEC.md) at this
+write — POLICY §7 manual pairing (same as every prior turn).
+
+**Method change this batch (design-owner instruction):** every acceptance-check
+command was run against live reality before being written — the runnable checks
+were executed at this revision (`node scripts/check-skill-context.mjs` → exit 0,
+39 skills PASS; process-substitution `diff <(…) <(…)` → empty; GNU grep `-E`
+`\b` word-boundary form → match; `git diff` of the schema package → empty; the
+sensor script itself is still absent, so script-targeting greps/diffs were
+form-validated), and the two check *forms* with no runnable subject were
+verified against live controls (below). This closes the shared root cause of
+F15/F16/F20: acceptance greps and commands written against string-presence or
+assumed runtime behavior instead of executed reality.
+
+**Root cause (shared):** the reviewer's four findings trace to one authoring
+bias — criteria and closure wording stated *aspirationally* (what should be
+true) rather than as commands run against the repository's actual runtime and
+files. All four `class: product`, spec stage; repaired as **mechanical,
+intent-preserving** plus one **closure completion** — reviewed product intent
+unchanged, so no bounded question was needed:
+
+- **F17 (A:20, closure completion):** sweep row 2's fatal-exit expectation
+  pointed at an aspirational A:4 parenthetical. Given reviewed Product decision
+  6 (namespaced degradation vocabulary incl. `unavailable-git-missing`),
+  environmental failures are *not* fatal — they degrade with exit 0. The
+  sensor's only fatal class is **invalid invocation** (an unknown flag is a
+  usage error). New criterion A:20 (unknown flag → non-zero exit + usage
+  diagnostic on stderr), check form verified against the repo's own CLI
+  convention (live: `ledger-provenance.mjs` unknown flag → usage + exit 2;
+  `check-skill-context.mjs` → exit 1). Sweep row 2 stays in-scope, re-pointed
+  to A:20, its stale "like missing git" example corrected against the reviewed
+  decision.
+- **F18 (mechanical):** sweep row 8's "(modulo volatile timestamps)" aligned to
+  A:5's operative strictness (byte-identical verbatim — no volatile fields by
+  construction; F9 removed the carve-out from the criterion, the row still
+  echoed it).
+- **F19 (mechanical + provenance evidence row):** §2's preamble now states the
+  provenance — `docs/CAPABILITIES.md` is the unfilled template `init-workspace`
+  seeds (placeholder `Exists` cells, template-only roles row); the 13 walked
+  subsystems are the template's fixed floor set, each integration row
+  self-grounded with project-specific reasons. The spec-lint roles box now
+  says the 3 roles are derived from the sensor's consumer set, not inventory
+  rows. New evidence row pins the template state (re-verified live 2026-09-09).
+- **F20 (mechanical):** A:11's check rewritten to the working form
+  `node -e "import('./scripts/workflow-status.mjs')"` — the `./` prefix is
+  mandatory (control-verified live on Node v24.19.0: bare `scripts/...`
+  specifier → `ERR_MODULE_NOT_FOUND`; `./`-prefixed → exit 0); the legacy
+  `--experimental-specifier-resolution=node` flag neither fixed nor affected
+  the failure on this runtime and is dropped. The criterion's claim ("no
+  external dependencies beyond the schema package") is unchanged.
+
+**Seeding proposal (user confirmation pending, not executed):** seed
+`docs/CAPABILITIES.md` from the template with the project's real subsystems
+and roles — the file's own header assigns seeding to `init-workspace`, so the
+proposal rides the next `init-workspace` (or a dedicated ask); upsert-safe and
+outside this SPEC's scope. The 13-row floor set walked in §2 remains valid
+until then.
+
+Spec-lint product boxes re-run mechanically (greps pasted below): all pass —
+counts unchanged (13 sweep rows: 11 in-scope / 2 out / 0 deferred; 20 runnable
++ 1 `read-verified` criteria; 13 integration rows; items 1–12 → A:1–A:19,
+A:20 from sweep row 2). Readiness preflight `stage: spec`: READY-FOR-REVIEW.
