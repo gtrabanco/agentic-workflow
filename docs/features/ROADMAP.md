@@ -52,7 +52,7 @@ every row must have a folder (or be explicitly marked "scheduled").
 | 42 | `deterministic-review-change` | idea | — | Issue [#194](https://github.com/gtrabanco/agentic-workflow/issues/194) (M): explicit changed-file scope, footprint-driven axis applicability, inline-first passes — review-change is the highest recurring token consumer; this applies the same determinization treatment as the #183–#186 family |
 | 43 | `producer-package` | idea | — | Issue [#196](https://github.com/gtrabanco/agentic-workflow/issues/196) (S/M): one JS crate for deterministic scripts (node/bun required) + `.agentic-workflow/tmp` convention — self-contained binary (`aw`) distributed alongside skills, agent-agnostic |
 | 44 | `per-skill-package-layout` | idea | — | Issue [#198](https://github.com/gtrabanco/agentic-workflow/issues/198) (S/M): per-skill package layout — scripts ship inside their skill folder + shared runtime resolver; fixes distribution gap (skill-referenced `scripts/*.mjs` do not travel with skills on install) |
-| 45 | `operator-approved-model-routing` | idea | — | Issue [#201](https://github.com/gtrabanco/agentic-workflow/issues/201) (S): operator-approved model routing for spawned review passes (passes config + resolve-passes); mid-turn subagent model pinning and approval flow |
+| 45 | `operator-approved-model-routing` | defined | 43 | Issue [#201](https://github.com/gtrabanco/agentic-workflow/issues/201) (S): operator-approved model routing for spawned review passes (passes config + resolve-passes); mid-turn subagent model pinning and approval flow |
 
 ## Status legend
 
