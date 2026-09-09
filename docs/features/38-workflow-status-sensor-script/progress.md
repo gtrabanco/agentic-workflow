@@ -22,3 +22,16 @@
 - Snapshot artifact: docs/features/38-workflow-status-sensor-script/SPEC.md (kind spec, selector spec-product-v1, 28400 bytes, digest 636006b9b51417ddc5a9f694e32b39430886bfed8069bcf21031286eec202a46); contexts: architectural-invariants absent, normalized-repository-state present (e8509783…), project-guide present (9ae03966…); roadmap row read as routing data, unbound
 - Failed checks: C8 C11 · Passed: C1 C2 C3 C4 C5 C6 C7 C9 C10 C12 C13 C14
 - Prior cycle: rp-38-20260909-001 (F1–F11 all resolved; this is the second review, first re-review of the repaired revision — no CONVERGENCE-ANOMALY: repair batch changed the snapshot)
+
+## Pre-execution review receipt v1 — spec
+- Review: rp-38-20260909-003 · Snapshot: 21fadfc815161d1c6606c7524443b52a0186c85a46706fe9259efa90e4bff742 · Verdict: spec-review-fail
+- Unit: 38-workflow-status-sensor-script · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: bd97a98e9b99a618482c048042c4c80af938edf2 · Artifact revision: bd97a98e9b99a618482c048042c4c80af938edf2
+- Reviewer: fresh pi coding-agent context (no authoring turns for this unit) · Session: pi-web review-spec 38 (re-review after repair batch 2) · Role: reviewer · Author: design-feature session 2026-08-30 + repair batches 2026-09-09 (handoff id 38-e820dfebe700, recorded beside the recomputed whole-file digest e820dfebe700… — POLICY §7 pairing; no runtime rotates the revision id here, so the mutate-and-revert guarantee rides this manual handoff)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-09T10:05:00Z/2026-09-09T10:46:00Z · Findings: 2 (material open: 2)
+- Snapshot artifact: docs/features/38-workflow-status-sensor-script/SPEC.md (kind spec, selector spec-product-v1, 32526 bytes, digest 5923b9c15131bc3978751b6aaba39b7634946e339d6543aeb20694c83045e6cd); contexts: architectural-invariants absent, normalized-repository-state present (e8509783…), project-guide present (9ae03966…); roadmap row read as routing data, unbound
+- Failed checks: C8 C9 · Passed: C1 C2 C3 C4 C5 C6 C7 C10 C11 C12 C13 C14
+- Prior cycle: rp-38-20260909-002 (F12/F14 resolved; this is the third review, second re-review — CONVERGENCE-ANOMALY printed and routed this turn per POLICY §4: second repair/re-review cycle, new findings F15/F16, owning stage product, route design-feature)
+- Note: the reviewer committed the repair batch's uncommitted bytes first (commit bd97a98e, mechanical recording only — SPEC digest 5923b9c1… identical before and after) so the receipt binds at one revision; handoff pairing re-verified at this revision (sha256 of SPEC.md = e820dfebe7005cbc…)

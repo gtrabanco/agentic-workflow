@@ -121,3 +121,41 @@ corrected to A:1–A:19.
 stale — the folder now exists holding this unit's artifacts. Row refreshed to
 the current fact (folder exists, contents listed, re-verified 2026-09-09); the
 authoring-time check retained as history only — mechanical.
+
+## 2026-09-09 — repair batch over open findings F15 + F16 (artifactRevisionId: 38-d04b301f28d6)
+
+**Decision:** One repair batch over the two open findings from review receipt
+rp-38-20260909-003 (CONVERGENCE-ANOMALY printed and routed to owning stage
+`product` / `design-feature`, per POLICY §4, recorded in the receipt); no
+receipt text touched; no severity edited; no forge issue opened to hold an
+obligation. New SPEC artifactRevisionId `38-d04b301f28d6` = first 12 hex of
+sha256(SPEC.md) at this write — POLICY §7 manual pairing (same as every prior
+turn).
+
+**Root cause (shared):** both findings are acceptance-criteria greps written
+against string-presence instead of the property they claim to verify. Both
+`class: product`, spec stage; both repaired as **mechanical,
+intent-preserving** — reviewed product intent unchanged, so no bounded question
+was needed:
+
+- **F15 (A:7):** the old forbidden-string grep banned `title`, which the
+  published SENSOR_CORE step 3 mandates (`urgent.issues[].title`, emitted from
+  the step-2 `gh issue list` output; the envelope example carries it too). The
+  rewritten check bans `body`/`comment` only (the script never fetches or reads
+  them) and adds a positive labels-path check (`grep -cE 'labels'` ≥ 1). The
+  labels-only *scanning* invariant — in-scope item 6, A:3's note, and the
+  `read-verified` criterion — is untouched: carrying an already-fetched title
+  through to the envelope is output, not a scan.
+- **F16 (A:8):** the old two-stage grep (`workflow-status` → `schema`) could
+  never count a genuine import — the package name
+  `@gtrabanco/agentic-workflow-schema` does not contain `workflow-status` —
+  while a stray comment containing both strings passed with no import at all.
+  Replaced with a direct import grep on the real package name. The claim
+  "imports the schema package's Envelope v2 vocabulary" is unchanged.
+
+No new evidence rows required (the SENSOR_CORE/envelope/package facts were
+already cited in the findings' evidence cells and re-verified 2026-09-09).
+Spec-lint product boxes re-run: all pass, counts unchanged (13 sweep rows —
+11 in-scope / 2 out / 0 deferred; 19 runnable + 1 `read-verified` criteria;
+13 integration rows; items 1–12 → A:1–A:19). Readiness preflight `stage: spec`:
+READY-FOR-REVIEW.
