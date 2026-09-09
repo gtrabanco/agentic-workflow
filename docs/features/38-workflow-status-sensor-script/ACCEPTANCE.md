@@ -4,7 +4,9 @@ Status: frozen
 
 Frozen 2026-09-09 by `plan-feature-scaffold` from the SPEC's acceptance
 criteria A:1…A:23 + read-verified. One stable ID per SPEC criterion;
-validators copied from the criteria. Modifying this manifest during execution
+validators copied from the criteria. Extended 2026-09-10 by operator-approved
+scope amendment folding fix #209 into 38's deliverables (AC-24 / A:25,
+CLAUDE.md release-policy check). Modifying this manifest during execution
 requires a user-approved SPEC amendment.
 
 | ID | Required outcome | Validator |
@@ -32,6 +34,7 @@ requires a user-approved SPEC amendment.
 | AC-21 | Slow-but-alive forge cannot hang the script — bounded wall-clock timeout degrades to `unavailable-forge-timeout` | fixture-repo test with `gh` shim that accepts connections but never terminates → script exits 0 within the timeout bound, `unavailable-forge-timeout` in `detail` |
 | AC-22 | No interactive prompts — the script is headless by construction | `grep -nE '(readline|createInterface|process\.stdin\.(read|setRawMode)|@clack|inquirer|prompts?\(|confirm\()' scripts/workflow-status.mjs` → nothing |
 | AC-23 | Stdout for data, stderr for diagnostics — stdout alone parses as one valid JSON document | `node scripts/workflow-status.mjs 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{JSON.parse(s)})'` → exit 0 (stdout alone is valid JSON) |
+| AC-24 | Fix #209's release policy documented in `CLAUDE.md` versioning guidance — freeze-majors rule (minor/patch only until #176 merges; breaking → minor + `BREAKING CHANGE:` footer) present | `grep -nE '#176' CLAUDE.md` → ≥ 1 AND `grep -nE 'BREAKING CHANGE:' CLAUDE.md` → ≥ 1 (operator-approved scope amendment 2026-09-10, A:25; pre-executed in fold batch) |
 | AC-RV | Feature 15's injection-safety invariant (urgency from labels only) preserved in the new script | read-verified at PR time: code review against feature 15 (PR #47) merge commit; urgency labels-only path preserved verbatim |
 
 ## Quality floor
