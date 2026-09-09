@@ -286,3 +286,68 @@ sweep rows (11 in-scope / 2 out / 0 deferred), 23 runnable + 1 `read-verified`
 criteria (A:1–A:23 contiguous), 13 integration rows, in-scope items 1–12 →
 A:1–A:23 with sweep rows 2/3/6/10 resolved by A:20/A:22/A:23/A:21. Readiness
 preflight `stage: spec`: READY-FOR-REVIEW.
+
+## 2026-09-09 — engineering planning batch (artifactRevisionId: 38-plan-1)
+
+`plan-feature` scoped route after the Product-review gate passed (receipt
+`rp-38-20260909-006`, snapshot `02c17f26…`, zero open material findings). The
+Product half was not touched. Engineering decisions E-38-1…E-38-8 (also in
+SPEC `### Decisions to confirm`):
+
+**E-38-1 — Envelope self-validation is a diagnostic, never a gate.** The
+script runs `validateEnvelope` before printing; a mismatch prints a stderr
+diagnostic and still emits the envelope with exit 0 (fail-open). Rationale:
+A:20 restricts the fatal class to invalid invocation; the degradation posture
+(A:4/A:19/A:21) keeps drivers unblocked; envelope correctness is A:2's
+fixture suite's job. Evidence: `src/index.ts` `validateEnvelope` export
+(planning-evidence PE-002).
+
+**E-38-2 — Skill bump level: minor (3.2.1 → 3.3.0).** The slimming rewords
+the skill's process (assembly → script call + interpretation); the external
+contract — argv parity, envelope shape, human report layout (non-goal §8) —
+is unchanged. Evidence: PE-015/PE-016/PE-017.
+
+**E-38-3 — Discipline pins re-target from prose-presence to script-behavior
+form.** Pins that lose their prose home when SENSOR_CORE.md slims
+(bounded-delivery 6a heading + SKILL.md routing pin; workflow-status-pre-
+execution step-8 rule source; pre-execution-quality label-override pin) move
+to asserting the script's behavior — the mechanical rules' single home
+becomes the script. Never weakened: every pin keeps its asserted behavior or
+gains the stronger form (O26). Evidence: PE-007.
+
+**E-38-4 — `--version` prints the schema package's version.** No root
+`package.json` exists; the version that matters is the one whose vocabulary
+the script emits from (`packages/agentic-workflow-schema/package.json`).
+Evidence: PE-001/PE-008.
+
+**E-38-5 — Forge timeout + unknown-flag exit code are implementation
+constants pinned red-first.** Values fixed at implementation; tests pin the
+behavior (bounded latency; non-zero + stderr usage), matching the repo CLI
+convention (live 2026-09-09: ledger-provenance exit 2, check-skill-context
+exit 1). Evidence: PE-006.
+
+**E-38-6 — Fix #179 overlap declared disjoint and sequenced.** #179
+(pending) amends the sensor 6a vocabulary after its dependency gate opens
+(features 31/32 merged) and touches surfaces outside 38's file list; from
+this unit on it amends the script + PRE_EXECUTION.md together. Not blocking.
+Evidence: PE-011.
+
+**E-38-7 — Scripts/ distribution gap recorded, not blocking.** The pi bundle
+copies skill trees only; the slimmed skill references a root script that an
+installed release lacks. Tracked in known-issues.md → issue #198; in-repo
+dogfooding unaffected. Evidence: PE-009.
+
+**E-38-8 — Step 6a receipt sensing shells out to the snapshot verifier.**
+`node scripts/pre-execution-snapshot.mjs verify --stage <spec|plan> --unit
+<id> [--parent <64-hex> for plan-stage features]`, structured verdict mapped
+through the label table; unresolvable revisions fail open → unflagged.
+Evidence: PE-005.
+
+Phase cut: 4 phases (P1 script core, P2 failure contract, P3 skill slimming,
+P4 qualification) — under the ~5 split threshold, one layer each, zero open
+decisions. Stage-2 architectural classification: `n/a` (no project-invariants
+document exists — NRS F010); workflow invariants (read-only, labels-only, no
+decision logic, vocabulary unchanged, no dependency) are carried as
+obligations O3/O7/O12/O13/O8/O11 and preserved by design. Readiness preflight
+`stage: plan`: READY-FOR-REVIEW (artifactRevisionId `38-plan-1`, planning
+evidence PE-001…PE-017, obligations O1…O26, zero unknowns).
