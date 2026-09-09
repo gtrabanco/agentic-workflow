@@ -110,8 +110,18 @@ of truth for the envelope shape.
 8. Fix the discipline-test pins for the slimmed skill (fewer lines = fewer
    budget tokens consumed).
 9. Re-base `check-skill-context` budgets for the slimmed sensor route.
-10. Support existing flags `--json-only` and `--last-envelope` (pass-through to
-    script behavior).
+10. Support existing flags `--json-only` and `--last-envelope <json|path>` —
+    pass-through semantics resolved (bounded questions to the human design owner,
+    2026-09-09 — Product decision 7): `--json-only` is an accepted no-op (the
+    script's output is already envelope-only; the flag preserves argv parity so
+    callers pass the same argv to script and skill); `--last-envelope <json|path>`
+    (inline JSON string or file path) is **computed by the script** — the hint is
+    diffed against recomputed state and the no-progress guard runs whenever the
+    flag is supplied (the skill's turn contract makes it mandatory), appending the
+    divergence line and guard note to `detail.workflow_observations` (shape per
+    `references/ENVELOPE_FIELDS.md`); the hint never overrides recomputed state;
+    an unreadable or malformed hint degrades to a machine-readable
+    `unavailable-hint-<cause>` note with exit 0 (fail-open).
 11. Support `--help` / `--version` for script-level discoverability.
 12. Update `docs/workflow/ORCHESTRATION.md` so the driver contract points
     consumers at the script as the envelope's deterministic producer (business
@@ -256,6 +266,19 @@ genuinely judgement-only criteria labelled `read-verified`.
 - [ ] A:16 `docs/workflow/ORCHESTRATION.md` driver wiring points consumers at the
       script — check: `grep -c 'workflow-status.mjs' docs/workflow/ORCHESTRATION.md`
       ≥ 1
+- [ ] A:17 `--json-only` is an accepted no-op — check:
+      `diff <(node scripts/workflow-status.mjs --json-only) <(node scripts/workflow-status.mjs)`
+      returns empty
+- [ ] A:18 `--last-envelope <json|path>` guard: fixture-repo test supplies a stale
+      hint (inline-JSON and file-path variants) whose `next.recommended` targeted a
+      unit still at its pre-advance status → `detail.workflow_observations`
+      contains the no-progress note (shape per `references/ENVELOPE_FIELDS.md`),
+      the divergence line is present when hint and recomputed state differ, and
+      the recomputed `state`/`next` are unchanged by the hint
+- [ ] A:19 Unreadable/malformed hint degrades without failing — check: fixture-repo
+      test with a missing path and with invalid JSON → machine-readable
+      `unavailable-hint-<cause>` note in `detail.workflow_observations`, exit 0,
+      recomputed envelope unaffected
 - [ ] read-verified: Feature 15's injection-safety invariant (urgency from labels only) is preserved in the new script — verified by code review against feature 15 merge
 
 ### Tooling
@@ -291,7 +314,7 @@ genuinely judgement-only criteria labelled `read-verified`.
 5. **Script-level UX flags: `--help` and `--version`.** Added for discoverability
    (a developer running the script manually should know what it does and what
    version it is). `--json-only` and `--last-envelope` from the existing skill
-   are passed through as-is.
+   are passed through — semantics resolved in Product decision 7.
 
 6. **Degradation-code vocabulary: namespaced `unavailable-<source>-<cause>`.**
    The design owner selected namespaced codes (resolved via bounded question
@@ -300,6 +323,20 @@ genuinely judgement-only criteria labelled `read-verified`.
    `unavailable-forge-timeout`, `unavailable-forge-auth`,
    `unavailable-git-missing`. The consumer (driver/orchestrator) matches the
    prefix `unavailable-` to route degraded readings appropriately.
+
+7. **Flag pass-through semantics (resolved via bounded questions to the human
+   design owner, 2026-09-09).** `--json-only`: accepted no-op — the script always
+   prints only the envelope, so the flag exists purely for argv parity between
+   script and skill. `--last-envelope <json|path>` (inline JSON string or file
+   path): computed by the script — hint diff against recomputed state plus the
+   no-progress guard, which the skill's turn contract makes mandatory whenever
+   the flag is supplied; results append to `detail.workflow_observations` (note
+   shape per `references/ENVELOPE_FIELDS.md`); the hint never overrides
+   recomputed state; an unreadable or malformed hint is fail-open — a
+   machine-readable `unavailable-hint-<cause>` note (vocabulary per Product
+   decision 6) with exit 0, because the sensor is the lowest link in the
+   automation chain and must keep returning usable output even when the caller's
+   input is bad.
 
 ### Deferred decisions
 
@@ -326,9 +363,11 @@ A claim that cannot be evidenced stays `unknown` with an owner — never guessed
 | `decideWorkflowAction()` is consumer-side only (not in the script) | issue proposal | issue #185 body (proposed design) | issue body | current | decision | feature 38 implementation — verify at plan review |
 | The `workflow-status` skill (v3.2.1) is the most frequently invoked surface | usage pattern | skill name + argument-hint `--last-envelope` implies frequent driver use | v3.2.1 | current | decision | verifiable from `gh` logs or telemetry if available |
 | Offline degradation produces valid JSON with declared codes | design assumption | issue #185 body (proposed) | issue body | current | decision | feature 38 implementation — verified by offline fixture test |
-| Slug is free: no existing folder at `docs/features/38-workflow-status-sensor-script` | directory check | `ls docs/features/` | current main | current | proven | — |
+| Feature folder exists at `docs/features/38-workflow-status-sensor-script/` and holds this unit's artifacts (SPEC.md, decisions.md, progress.md, planning-findings.md); the authoring-time "slug is free" check (2026-08-30) predates the folder's creation and is retained only as history | directory check | `ls docs/features/38-workflow-status-sensor-script/` (re-verified 2026-09-09) | current main | current | proven | — |
 | Design-owner resolution: namespaced `unavailable-<source>-<cause>` vocabulary | human decision | `ask_user` response 2026-09-09 — selected `namespaced` (self-describing, extensible, consistent with Product decision 4's example style) | v4.1.1 | current | proven | F7 resolved: the vocabulary is now a deterministic product decision in Product decisions
 | The schema package declares no degradation-code vocabulary — `Envelope.detail` is `unknown` (schema-unconstrained, "documented per skill") | npm package | `packages/agentic-workflow-schema/src/index.ts` `Envelope.detail` (verified live 2026-09-09) | v4.1.1 | current | proven | grounds the original F7 routing; resolved via bounded question (namespaced) -- see Product decisions |
+| Script-side flag semantics resolved: `--json-only` accepted no-op; `--last-envelope <json|path>` computed by the script (hint diff + no-progress guard → `detail.workflow_observations`); hint never overrides recomputed state; unreadable/malformed hint fail-open (`unavailable-hint-<cause>`, exit 0) | human decision | `ask_user` bounded questions q1–q4 (2026-09-09) | — | current | proven | — |
+| The existing skill contract for the flags: `--json-only` skips the human summary; `--last-envelope <json|path>` is a crash-recovery hint (never authoritative) whose supply makes the no-progress guard mandatory, emitting a `workflow_observations` note; `detail` is schema-unconstrained so the note needs no schema-package change | skill reference + npm package | `skills/workflow-status/SKILL.md:7,40,62`, `references/CRASH_RECOVERY.md:22-33`, `references/ENVELOPE_FIELDS.md:3-9,56`, `packages/agentic-workflow-schema/src/index.ts:182` (verified 2026-09-09) | v3.2.1 / v4.1.1 | current | proven | — |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -365,14 +404,16 @@ Product boxes:
       none; the sweep's two earlier `deferred` rows were in-scope work mislabelled,
       repaired to A:10) with a pointer.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same wording or an explicit reference).
-      In-scope items 1–12 map to A:1 through A:16 and the inline criterion comments.
+      In-scope items 1–12 map to A:1 through A:19 (item 10's flag pass-through →
+      A:17–A:19) and the inline criterion comments.
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — **16 runnable criteria (A:1–A:16) + 1 labelled
+      `read-verified` — **19 runnable criteria (A:1–A:19) + 1 labelled
       `read-verified` criterion** (injection-safety preservation): A:1 (file exists),
       A:2 (fixture test), A:3 (mutation grep), A:4 (offline fixture), A:5 (diff),
       A:6 (fixture test), A:7 (grep), A:8 (grep), A:9 (diff check),
       A:10–A:11 (flag/import tests), A:12 (grep), A:13 (diff check),
-      A:14 (budget re-base), A:15 (fixture test), A:16 (grep).
+      A:14 (budget re-base), A:15 (fixture test), A:16 (grep), A:17 (diff),
+      A:18 (fixture test), A:19 (fixture test).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none`. One row with a decide-by trigger (row 2, --output — still deferred; row 1 resolved via bounded question)
       to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).

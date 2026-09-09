@@ -82,3 +82,42 @@ guarantee rides this manual handoff, same as the 2026-08-30 authoring turn).
 package at 3.4.0 with 554/554 passing; the live package is 4.1.1. Live-vs-frozen
 conflict recorded in Product evidence row 2 as a contradiction candidate — only
 `/resolve-repository-state` may update frozen facts.
+
+## 2026-09-09 — repair batch over open findings F12 + F14 (artifactRevisionId: 38-e820dfebe700)
+
+**Decision:** One repair batch over the two open findings from review receipt
+rp-38-20260909-002; no receipt text touched; no severity edited; no forge issue
+opened to hold an obligation. New SPEC artifactRevisionId `38-e820dfebe700` =
+first 12 hex of sha256(SPEC.md) at this write — POLICY §7 manual pairing (same
+as both prior turns).
+
+**F12 (class: product, medium):** in-scope item 10's flag pass-through mapped to
+no acceptance criterion. Resolved by **extending the acceptance set** (the
+instruction's primary path, human-selected over re-scoping) with three criteria
+after four bounded questions to the human design owner (ask_user 2026-09-09):
+
+- **q1 script-computes:** the script computes the hint diff + no-progress guard
+  itself. The skill's turn contract makes the guard mandatory whenever
+  `--last-envelope` is supplied; leaving it model-side would keep exactly the
+  prose-computation feature 38 exists to eliminate.
+- **q2 no-op:** `--json-only` accepted, byte-identical output — the script always
+  prints only the envelope; the flag exists purely for argv parity between
+  script and skill.
+- **q3 fail-open:** unreadable/malformed hint → machine-readable
+  `unavailable-hint-<cause>` note, exit 0. Rationale explained to the human and
+  accepted: the sensor is the lowest link in the automation chain — it must keep
+  returning usable output on bad caller input; fail-closed would crash drivers
+  on input that is the caller's bug, and the recomputed state is correct either
+  way (consistent with Product decision 4's degradation behavior).
+- **q4 workflow_observations:** hint results append to the array
+  `references/ENVELOPE_FIELDS.md` documents; `detail` is schema-unconstrained
+  (v4.1.1), so no schema-package change.
+
+Folded into: in-scope item 10 (concretized), Product decision 7 (new), evidence
+rows 11–12 (new), acceptance criteria A:17–A:19 (new), spec-lint mapping box
+corrected to A:1–A:19.
+
+**F14 (class: product, low):** Product evidence row 8 ("Slug is free") was
+stale — the folder now exists holding this unit's artifacts. Row refreshed to
+the current fact (folder exists, contents listed, re-verified 2026-09-09); the
+authoring-time check retained as history only — mechanical.
