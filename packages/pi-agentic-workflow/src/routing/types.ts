@@ -44,12 +44,30 @@ export interface ExtensionSurface<M extends ModelRef = ModelRef> {
   setThinkingLevel(level: ThinkingLevel): void;
 }
 
+/** Options for the optional rich picker (OB-1, OB-3, P4/P6). */
+export interface PickerOptions {
+  /** The value already in force, preselected when the picker opens (OB-3). */
+  initial?: string;
+  /** Allow selecting several entries (bulk apply/clear, P6). */
+  multiple?: boolean;
+}
+
 /** The interactive slice of `ctx.ui` the settings console uses (AC10). */
 export interface SettingsUi {
   select(title: string, options: readonly string[]): Promise<string | undefined> | string | undefined;
   input(title: string, placeholder?: string): Promise<string | undefined> | string | undefined;
   confirm(title: string, message: string): Promise<boolean> | boolean;
   notify(message: string, kind?: "info" | "warning" | "error"): void;
+  /**
+   * Optional rich picker: filterable, windowed, with a position indicator and a
+   * preselected current value. A structural superset — a caller without it
+   * falls back to `select`/`input`. Returns `readonly string[]` when `multiple`.
+   */
+  pick?(
+    title: string,
+    options: readonly string[],
+    opts?: PickerOptions,
+  ): Promise<string | readonly string[] | undefined> | string | readonly string[] | undefined;
 }
 
 /**
@@ -85,6 +103,8 @@ export type DispatchOutcome =
 
 /** Slash name of the settings console (SPEC S4, AC3, AC10). */
 export const SETTINGS_COMMAND = "agentic-workflow-settings";
+/** Shorthand alias for the same console — a pointer to the same handler, never a separate route (OB-5, AC6). */
+export const SETTINGS_COMMAND_ALIAS = "aw-settings";
 
 /**
  * The router, as the settings console needs it: two verbs, already bound to the

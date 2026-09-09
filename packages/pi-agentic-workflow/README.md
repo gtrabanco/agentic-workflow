@@ -72,7 +72,7 @@ Two JSON files, both optional:
 {
   "default": { "model": "anthropic/claude-opus-4-5", "thinking": "high" },
   "commands": {
-    "plan-feature": { "model": "anthropic/claude-sonnet-4-5", "thinking": "medium" },
+    "plan-feature": { "model": ["anthropic/claude-sonnet-4-5", "openai/gpt-5.2"], "thinking": "medium" },
     "review-change": { "thinking": "max" }
   },
   "onUnavailableRoute": "stop"
@@ -85,8 +85,14 @@ above runs on the default model with `max` thinking; anything else runs on
 whatever the session already had, because the shipped default route is
 `{"model": "inherit", "thinking": "inherit"}`.
 
-- `model` must be `provider/modelId` — the exact reference `/model` shows — or
-  `"inherit"`.
+- `model` can be `provider/modelId` — the exact reference `/model` shows —
+  `"inherit"`, or an ordered **array** of 1–4 references (a fallback chain). For
+  a chain, dispatch probes each reference in order and applies the first one that
+  resolves and has credentials, without touching the session while probing; when
+  every entry is unusable the command stops (or, with `onUnavailableRoute`
+  `inherit`, warns and runs on the current model), naming each candidate and why
+  it was skipped. `plan-feature` above tries `anthropic/claude-sonnet-4-5` first,
+  then `openai/gpt-5.2`.
 - `thinking` is one of `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`,
   or `"inherit"`.
 - Unknown keys, `null`s and malformed references are **rejected**, not ignored: a
@@ -120,9 +126,21 @@ thinking level and you keep it while the model still comes back.
 /agentic-workflow-settings
 ```
 
+`/aw-settings` is a shorthand for the same console.
+
 Shows what each command runs on right now, and which file is refusing to parse,
 then lets you edit **one file at a time** and save to global or project scope. It will not save over a file it cannot parse, and it will not
 touch the project file while the project is untrusted.
+
+The console's model and thinking pickers are searchable and windowed: typing
+narrows the list, the cursor stays on screen, a position indicator shows where
+you are, and the value currently in force is pre-selected and labelled
+`(current)` / `(default route)`. A route edit asks which field to change
+(model, thinking), so a no-change save leaves the file byte-identical; the
+model field can build an ordered fallback chain (`a/m1 → b/m2`); and one pass
+can apply or clear a route across several commands, warning per command when a
+reference is missing from the live registry. Outside a TUI session the pickers
+fall back to a plain prompt, so the console never dead-ends.
 
 ## Troubleshooting
 

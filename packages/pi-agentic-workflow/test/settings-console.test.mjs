@@ -40,8 +40,22 @@ function scriptedUi(answers) {
     ui: {
       select: async (title, options) => {
         asked.push({ title, kind: "select", options });
+        // The ordered chain builder asks "Model chain for <target>?" after every
+        // model pick; default it to Done so a single-model route needs no extra
+        // answer. A test that builds a chain provides an explicit chainAction slot.
+        if (!Object.hasOwn(answers, title) && /^Model chain for .+\?$/u.test(title)) {
+          return prompts.chainDone;
+        }
         if (!Object.hasOwn(answers, title)) throw new Error(`no scripted select answer for: ${title}`);
         const value = answers[title];
+        return Array.isArray(value) ? value.shift() : value;
+      },
+      pick: async (title, options, opts = {}) => {
+        asked.push({ title, kind: "pick", options, opts });
+        if (!Object.hasOwn(answers, title)) throw new Error(`no scripted pick answer for: ${title}`);
+        const value = answers[title];
+        // A multiple pick returns the whole selection; a single pick consumes a queue.
+        if (opts.multiple) return Array.isArray(value) ? value : [value];
         return Array.isArray(value) ? value.shift() : value;
       },
       input: async (title) => take(title, "input"),
@@ -59,11 +73,24 @@ function writeCollector() {
   return { written, writeFile: (path, text) => written.set(path, text) };
 }
 
-function consoleOver(files, { trusted = true, answers = {}, models } = {}) {
+function consoleOver(files, { trusted = true, answers = {}, models, rich = true } = {}) {
   const collector = writeCollector();
-  const scripted = scriptedUi(answers);
+  // P5 added the field chooser to every route edit. Default to "both" so the
+  // pre-existing fixtures (which supply model + thinking answers) behave as
+  // before; tests that exercise field independence override `prompts.fields`.
+  const scripted = scriptedUi({ [prompts.fields]: prompts.fieldsBoth, ...answers });
+  // `rich: false` strips the picker so the non-TUI fallback path is exercised
+  // (OB-12): a console without a rich picker must still complete via select/input.
+  const ui = rich
+    ? scripted.ui
+    : {
+        select: scripted.ui.select,
+        input: scripted.ui.input,
+        confirm: scripted.ui.confirm,
+        notify: scripted.ui.notify,
+      };
   const result = runSettingsConsole({
-    ui: scripted.ui,
+    ui,
     agentDir,
     cwd,
     projectTrusted: trusted,
@@ -190,6 +217,287 @@ test("AC10: a command chosen from the registry list is written as its exact refe
   assert.deepEqual(JSON.parse(written.get(paths.global)), {
     commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "low" } },
   });
+});
+
+test("P4/OB-1: the model picker uses the rich seam and passes the value currently in force", async () => {
+  const { outcome, scripted } = await run(
+    { [paths.global]: '{"default":{"model":"anthropic/claude-opus-4-5","thinking":"high"}}' },
+    {
+      models: ["anthropic/claude-opus-4-5", "openai/gpt-5.2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "design-feature",
+        [prompts.modelPicked("design-feature")]: "openai/gpt-5.2",
+        [prompts.thinking("design-feature")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const modelPick = scripted.asked.find((entry) => entry.title === prompts.modelPicked("design-feature"));
+  assert.ok(modelPick, "the model question went to the rich picker");
+  assert.equal(modelPick.kind, "pick", "the rich seam, not the plain select, handled the model question");
+  assert.deepEqual(modelPick.opts, { initial: "anthropic/claude-opus-4-5" }, "the value in force is preselected");
+  assert.ok(modelPick.options.includes("openai/gpt-5.2"), "the live-registry options are offered");
+});
+
+test("P4/OB-12: without a rich picker the console falls back to select/input and still completes", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      rich: false,
+      models: ["anthropic/claude-opus-4-5", "openai/gpt-5.2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "design-feature",
+        [prompts.modelPicked("design-feature")]: "openai/gpt-5.2",
+        [prompts.thinking("design-feature")]: "low",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const modelQuestion = scripted.asked.find((entry) => entry.title === prompts.modelPicked("design-feature"));
+  assert.equal(modelQuestion.kind, "select", "non-TUI falls back to the plain select");
+  assert.ok(scripted.asked.every((entry) => entry.kind !== "pick"), "no rich picker was used");
+  assert.deepEqual(JSON.parse(written.get(paths.global)), {
+    commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "low" } },
+  });
+});
+
+// --- P5 / OB-3: current-value field editing, field independence, chain builder ---
+
+test("AC4/OB-3: changing only the model asks no thinking question and keeps the current thinking", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"default":{"model":"anthropic/claude-opus-4-5","thinking":"high"}}' },
+    {
+      models: ["anthropic/claude-opus-4-5", "openai/gpt-5.2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelPicked("the default route")]: "openai/gpt-5.2",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.ok(
+    !scripted.asked.some((entry) => entry.title === prompts.thinking("the default route")),
+    "changing only the model asks no thinking question",
+  );
+  assert.deepEqual(JSON.parse(written.get(paths.global)), { default: { model: "openai/gpt-5.2", thinking: "high" } });
+});
+
+test("AC4/OB-3: changing only the thinking asks no model question and keeps the current model", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"default":{"model":"anthropic/claude-opus-4-5","thinking":"high"}}' },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+        [prompts.fields]: prompts.fieldsThinking,
+        [prompts.thinking("the default route")]: "low",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.ok(
+    !scripted.asked.some((entry) => /Model for the default route\?|Which model for the default route\?/u.test(entry.title)),
+    "changing only the thinking asks no model question",
+  );
+  assert.deepEqual(JSON.parse(written.get(paths.global)), { default: { model: "anthropic/claude-opus-4-5", thinking: "low" } });
+});
+
+test("AC3/OB-3: editing a route without changing it saves a byte-identical file", async () => {
+  const pretty = (obj) => `${JSON.stringify(obj, null, 2)}\n`;
+  const original = pretty({ commands: { "plan-feature": { model: "openai/gpt-5.2", thinking: "low" } } });
+  const { outcome, written } = await run(
+    { [paths.global]: original },
+    {
+      models: ["openai/gpt-5.2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsBoth,
+        [prompts.modelPicked("plan-feature")]: "openai/gpt-5.2",
+        [prompts.thinking("plan-feature")]: "low",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(written.get(paths.global), original, "no change leaves the saved file byte-identical");
+});
+
+test("AC7/OB-3: the ordered chain builder saves the model as a chain in build order", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      models: ["a/m1", "b/m2", "c/m3"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelPicked("the default route")]: ["a/m1", "b/m2", "c/m3"],
+        [prompts.chainAction("the default route")]: [
+          prompts.chainAppend,
+          prompts.chainAppend,
+          prompts.chainDone,
+        ],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.deepEqual(JSON.parse(written.get(paths.global)), {
+    default: { model: ["a/m1", "b/m2", "c/m3"], thinking: "inherit" },
+  });
+});
+
+test("AC11/OB-14: the merged view renders a route's ordered model chain", async () => {
+  const loaded = loadConfig({
+    agentDir,
+    cwd,
+    projectTrusted: true,
+    readFile: readFrom({ [paths.project]: '{"commands":{"plan-feature":{"model":["a/m1","b/m2"],"thinking":"inherit"}}}' }),
+  });
+  const text = renderMergedConfig(loaded, commands).join("\n");
+  assert.ok(text.includes("plan-feature: a/m1 → b/m2 / inherit"), `chain rendered in order: ${text}`);
+});
+
+// --- P9 / OB-17 (amendment A1, F2): chain-edit visibility ---
+
+test("AC14/OB-17: editing a chain route opens the builder seeded with the value in force (chain preserved on Done)", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"default":{"model":["a/m1","b/m2"],"thinking":"high"}}' },
+    {
+      models: ["a/m1", "b/m2", "c/m3"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.chainAction("the default route")]: [prompts.chainDone],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.default.model, ["a/m1", "b/m2"], "Done with no change keeps the existing chain");
+  const shown = scripted.notify.map((entry) => entry.message).join("\n");
+  assert.match(shown, /a\/m1 → b\/m2/u, "the current chain is labelled in the edit flow");
+});
+
+test("AC14/OB-17: the seeded chain builder appends a fallback and remove-last trims the tail", async () => {
+  const { outcome, written } = await run(
+    { [paths.global]: '{"commands":{"plan-feature":{"model":["a/m1","b/m2"],"thinking":"inherit"}}}' },
+    {
+      models: ["a/m1", "b/m2", "c/m3"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.chainAction("plan-feature")]: [
+          prompts.chainAppend,
+          prompts.chainRemoveLast,
+          prompts.chainAppend,
+          prompts.chainDone,
+        ],
+        [prompts.modelPicked("plan-feature")]: ["c/m3", "d/m4"],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.commands["plan-feature"].model, ["a/m1", "b/m2", "d/m4"], "append added a fallback, remove-last dropped c/m3, the seeded a/m1 + b/m2 tail survives; final = a/m1, b/m2, d/m4");
+});
+
+// --- P6 / OB-4: bulk apply and bulk clear ---
+
+test("AC5/OB-4: one bulk apply assigns model+thinking to two commands, matching a single pass per command", async () => {
+  const { outcome, written } = await run(
+    {},
+    {
+      models: ["a/m1", "b/m2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "execute-phase"],
+        [prompts.fields]: prompts.fieldsBoth,
+        [prompts.modelPicked("plan-feature")]: "a/m1",
+        [prompts.thinking("plan-feature")]: "high",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.commands, {
+    "plan-feature": { model: "a/m1", thinking: "high" },
+    "execute-phase": { model: "a/m1", thinking: "high" },
+  }, "each selected command got the same single-pass route");
+});
+
+test("AC5/OB-4: one bulk clear removes several overrides in a single save", async () => {
+  const { outcome, written } = await run(
+    { [paths.project]: '{"commands":{"plan-feature":{"model":"a/m1"},"design-feature":{"model":"b/m2"}}}' },
+    {
+      trusted: true,
+      answers: {
+        [prompts.scope]: "Project",
+        [prompts.menu]: [prompts.bulkClear, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "design-feature"],
+        [prompts.saveTo(paths.project)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.project));
+  assert.equal(saved.commands, undefined, "clearing the last overrides persists no empty map");
+});
+
+test("AC5/OB-4: a bulk route using a registry-missing reference warns per command but still writes", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: ["a/m1", "b/m2"],
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: ["plan-feature", "execute-phase"],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelPicked("plan-feature")]: "Type another reference…",
+        [prompts.model("plan-feature")]: "zzz/missing",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.deepEqual(saved.commands, {
+    "plan-feature": { model: "zzz/missing", thinking: "inherit" },
+    "execute-phase": { model: "zzz/missing", thinking: "inherit" },
+  }, "a missing reference still writes the route");
+  const warnings = scripted.notify.filter((entry) => entry.message.includes("zzz/missing") && entry.kind === "warning");
+  assert.equal(warnings.length, 2, `one advisory warning per selected command: ${JSON.stringify(warnings)}`);
 });
 
 test("AC10: clearing a per-command override removes only that command", async () => {
@@ -369,6 +677,7 @@ test("AC10: what the console saves is what the dispatcher reads", async () => {
   const scripted = scriptedUi({
     [prompts.scope]: "Global",
     [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+    [prompts.fields]: prompts.fieldsBoth,
     [prompts.model("the default route")]: "openai/gpt-5.6-sol",
     [prompts.thinking("the default route")]: "medium",
     [prompts.saveTo(configFilePaths(agent, project).global)]: true,
@@ -446,6 +755,8 @@ test("AC10: the shipped command, run through the real entry, writes the real glo
     const answer = {
       [prompts.scope]: "Global",
       [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+      [prompts.fields]: prompts.fieldsBoth,
+      [prompts.chainAction("the default route")]: prompts.chainDone,
       // The registry has one model, so the entry path offers it as a list.
       [prompts.modelPicked("the default route")]: "anthropic/claude-sonnet-4-5",
       [prompts.thinking("the default route")]: "low",

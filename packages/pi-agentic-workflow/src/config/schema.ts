@@ -1,4 +1,4 @@
-import { THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
+import { MAX_MODEL_CHAIN, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "./types.js";
 import type { ConfigFile, ConfigIssue, ModelRef, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "./types.js";
 
 /**
@@ -68,6 +68,36 @@ function checkRoute(value: unknown, path: string, issues: ConfigIssue[]): RouteF
       continue;
     }
     if (key === "model") {
+      if (Array.isArray(entry)) {
+        // A chain must be non-empty, hold only references, and stay within the cap.
+        if (entry.length === 0) {
+          issues.push({
+            path: `${path}.model`,
+            message: `must be "inherit", "provider/modelId", or a non-empty chain of references, got an empty array`,
+          });
+          continue;
+        }
+        if (entry.length > MAX_MODEL_CHAIN) {
+          issues.push({
+            path: `${path}.model`,
+            message: `chain holds ${entry.length} entries; ${MAX_MODEL_CHAIN} is the maximum`,
+          });
+          continue;
+        }
+        let chainValid = true;
+        for (let index = 0; index < entry.length; index += 1) {
+          if (!isModelReference(entry[index])) {
+            issues.push({
+              path: `${path}.model`,
+              message: `chain entry ${index + 1} (${describe(entry[index])}) must be "provider/modelId"`,
+            });
+            chainValid = false;
+            break;
+          }
+        }
+        if (chainValid) route.model = entry;
+        continue;
+      }
       if (entry !== "inherit" && !isModelReference(entry)) {
         issues.push({
           path: `${path}.model`,

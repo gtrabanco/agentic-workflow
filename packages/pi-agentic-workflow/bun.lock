@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "@gtrabanco/pi-agentic-workflow",
+      "dependencies": {
+        "@earendil-works/pi-tui": "0.85.1",
+      },
       "devDependencies": {
         "@types/node": "24.13.3",
         "typescript": "6",
