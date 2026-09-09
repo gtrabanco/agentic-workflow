@@ -39,7 +39,7 @@ the injection-safety preservation. Row shape and column order per
 
 ## Closure
 
-- Every acceptance criterion AC-01…AC-23 maps to obligation rows with exactly one
+- Every acceptance criterion AC-01…AC-24 maps to obligation rows with exactly one
   phase each: AC-01→O1(P1), AC-02→O2(P2), AC-03→O3(P1), AC-04→O4(P2), AC-05→O5(P2),
   AC-06→O6(P2), AC-07→O7(P2), AC-08→O8(P1), AC-09→O9(P3), AC-10→O10(P1),
   AC-11→O11(P1), AC-12→O12(P2), AC-13→O13(P4), AC-14→O14(P3), AC-15→O15(P2),
