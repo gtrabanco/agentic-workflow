@@ -35,3 +35,15 @@
 - Failed checks: C8 C9 · Passed: C1 C2 C3 C4 C5 C6 C7 C10 C11 C12 C13 C14
 - Prior cycle: rp-38-20260909-002 (F12/F14 resolved; this is the third review, second re-review — CONVERGENCE-ANOMALY printed and routed this turn per POLICY §4: second repair/re-review cycle, new findings F15/F16, owning stage product, route design-feature)
 - Note: the reviewer committed the repair batch's uncommitted bytes first (commit bd97a98e, mechanical recording only — SPEC digest 5923b9c1… identical before and after) so the receipt binds at one revision; handoff pairing re-verified at this revision (sha256 of SPEC.md = e820dfebe7005cbc…)
+
+## Pre-execution review receipt v1 — spec
+- Review: rp-38-20260909-004 · Snapshot: 4195c762f300577c2e2cfa592d3e8afe1be79595ec804e1cb20db5f3d7588f0a · Verdict: spec-review-fail
+- Unit: 38-workflow-status-sensor-script · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: fa470218a8f95f574b41360ebd032e041d9f61a3 · Artifact revision: 38-d04b301f28d6
+- Reviewer: fresh pi coding-agent context (no authoring turns for this unit) · Session: pi-web review-spec 38 (fourth review, third re-review of the repaired revision) · Role: reviewer · Author: design-feature session 2026-08-30 + repair batches 2026-09-09 (handoff id 38-d04b301f28d6, recorded beside the recomputed sha256 of SPEC.md d04b301f28d6524e8c6a126422c72ea… — POLICY §7 pairing; no runtime rotates the revision id here, so the mutate-and-revert guarantee rides this manual handoff)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-09T11:10:00Z/2026-09-09T11:47:00Z · Findings: 4 (material open: 2)
+- Snapshot artifact: docs/features/38-workflow-status-sensor-script/SPEC.md (kind spec, selector spec-product-v1, 33486 bytes, digest 44fb43f502352d7ebea50c62a81550a2f861514da87815961be770fbce25bf62); contexts: architectural-invariants absent, normalized-repository-state present (e8509783…), project-guide present (9ae03966…); roadmap row read as routing data, unbound; snapshot built with explicit `--source-revision fa470218…` (the revision actually read, per review-spec CHECKS §1) + `--artifact-revision 38-d04b301f28d6` (the handoff id) — the builder's RS3(b) identity default (newest commit touching bound paths, cb619a03) was observed and not substituted
+- Failed checks: C7 C8 · Passed: C1 C2 C3 C4 C5 C6 C9 C10 C11 C12 C13 C14 (F18/F19 recorded as non-material info notes against C9/C10)
+- Prior cycle: rp-38-20260909-003 (F15/F16 resolved; fourth review, third re-review — CONVERGENCE-ANOMALY printed this turn per POLICY §4: entering a third repair/re-review cycle, new material findings F17/F20, owning stage product, route design-feature)
