@@ -11,4 +11,5 @@ export const DEFAULT_CONFIG: EffectiveConfig = {
   default: { ...DEFAULT_ROUTE },
   commands: {},
   onUnavailableRoute: "stop",
+  onSettle: "keep",
 };

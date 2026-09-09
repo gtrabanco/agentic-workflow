@@ -12,9 +12,9 @@ import { loadConfig, configFilePaths } from "../config/load.js";
 import type { ConfigProblem } from "../config/types.js";
 import { effectiveRoute } from "../config/merge.js";
 import { parseConfigFile, parseModelReference } from "../config/schema.js";
-import { MAX_MODEL_CHAIN, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
+import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_POLICIES } from "../config/types.js";
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
-import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
+import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
 
 export interface SettingsDeps {
@@ -53,6 +53,7 @@ export const prompts = {
   undone: "The routing was undone and the session put back.",
   command: "Which command?",
   policyChoice: "What should happen when a configured model is unavailable?",
+  settleChoice: "What should happen after a routed command settles?",
   saveTo: (path: string): string => `Save the draft to ${path}?`,
   discard: "Discard the draft?",
   setDefaultRoute: "Set the default route",
@@ -62,6 +63,7 @@ export const prompts = {
   bulkClear: "Clear several overrides",
   addAnother: "Add another?",
   policy: "Set the unavailable-route policy",
+  settle: "Set the post-command model keep/restore policy",
   save: "Save",
   cancel: "Cancel",
   model: (target: string): string => `Model for ${target}?`,
@@ -105,6 +107,7 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
       prompts.bulkApply,
       prompts.bulkClear,
       prompts.policy,
+      prompts.settle,
       ...(deps.routing?.inFlight() ? [prompts.undoInFlight] : []),
       prompts.save,
       prompts.cancel,
@@ -166,6 +169,11 @@ export async function runSettingsConsole(deps: SettingsDeps): Promise<ConsoleOut
     if (choice === prompts.policy) {
       const picked = await deps.ui.select(prompts.policyChoice, [...UNAVAILABLE_ROUTE_POLICIES]);
       if (isPolicy(picked)) draft = { ...draft, onUnavailableRoute: picked };
+      continue;
+    }
+    if (choice === prompts.settle) {
+      const picked = await deps.ui.select(prompts.settleChoice, [...SETTLE_POLICIES]);
+      if (isSettle(picked)) draft = { ...draft, onSettle: picked };
       continue;
     }
     if (choice === prompts.save) {
@@ -450,6 +458,7 @@ function describeRouting(file: ConfigFile): string {
     file.default ? `default: ${file.default.model ?? "inherit"} / ${file.default.thinking ?? "inherit"}` : "default: inherit / inherit",
     ...Object.entries(file.commands ?? {}).map(([name, route]) => `${name}: ${route.model ?? "inherit"} / ${route.thinking ?? "inherit"}`),
     `unavailable: ${file.onUnavailableRoute ?? "stop"}`,
+    `settle: ${file.onSettle ?? "keep"}`,
   ];
   return routes.join(" · ");
 }
@@ -470,6 +479,7 @@ function clean(draft: ConfigFile): ConfigFile {
   }
   if (Object.keys(commands).length > 0) file.commands = commands;
   if (draft.onUnavailableRoute) file.onUnavailableRoute = draft.onUnavailableRoute;
+  if (draft.onSettle) file.onSettle = draft.onSettle;
   return file;
 }
 
@@ -494,4 +504,8 @@ function isThinkingLevel(value: string): value is ThinkingSetting {
 
 function isPolicy(value: string | undefined): value is UnavailableRoutePolicy {
   return value === "stop" || value === "inherit";
+}
+
+function isSettle(value: string | undefined): value is SettlePolicy {
+  return value === "keep" || value === "restore";
 }

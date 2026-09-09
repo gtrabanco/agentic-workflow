@@ -45,6 +45,7 @@ export function mergeConfigs(globalFile: ConfigFile = {}, projectFile: ConfigFil
     commands,
     onUnavailableRoute:
       projectFile.onUnavailableRoute ?? globalFile.onUnavailableRoute ?? DEFAULT_CONFIG.onUnavailableRoute,
+    onSettle: projectFile.onSettle ?? globalFile.onSettle ?? DEFAULT_CONFIG.onSettle,
   };
 }
 
