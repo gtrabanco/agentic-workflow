@@ -351,3 +351,50 @@ decision logic, vocabulary unchanged, no dependency) are carried as
 obligations O3/O7/O12/O13/O8/O11 and preserved by design. Readiness preflight
 `stage: plan`: READY-FOR-REVIEW (artifactRevisionId `38-plan-1`, planning
 evidence PE-001…PE-017, obligations O1…O26, zero unknowns).
+
+## 2026-09-09 — operator-authorized consolidated unblock batch (artifactRevisionId: 38-c51c1416f9bf)
+
+**Operator instruction (2026-09-09, this session):** the design↔review and
+plan↔review loops do not converge (38: six spec cycles + first plan review;
+45: seven spec cycles — reported with researched fix directions in forge issue
+[#205](https://github.com/gtrabanco/agentic-workflow/issues/205)). The operator
+directed one consolidated repair batch over the four open plan-review findings
+F25–F28 followed by a **bounded delta re-review** — the exception recorded in
+issue #205's "Immediate operator unblock", not a change to the review contract
+(the durable fix lands through the issue, design-side).
+
+**Per-finding resolutions (all mechanical or closure completion; no reviewed
+product intent changed):**
+
+- **F25 (plan, P9):** A-17/A-20 behavior and pins moved into the same phase —
+  the pins are red-first inside P1 (pin task before the implementation task)
+  and P2 re-asserts them unchanged; P2 keeps `--help`/`--version` (genuinely
+  red at P2 start). SPEC P1/P2 phase paragraphs, TASKS, PLAN, testing ladder
+  updated consistently. Task counts unchanged (8/8).
+- **F26 (product, L4):** criterion **A:24** added — `references/ENVELOPE_CORE.md`
+  slimmed: script-backed reference present (`grep -c 'scripts/workflow-status.mjs'`
+  ≥ 1) AND assembly self-check prose gone (`grep -cE 'self-check before
+  printing'` → 0; the script owns the self-check per E-38-1). ACCEPTANCE row
+  A-24 frozen; spec-lint counts 24 runnable + mapping box item 7 → A:24. The
+  F12 resolution form (extend the acceptance set) — no new product choice:
+  the criterion mirrors A:9's shape on a surface the SPEC already names.
+- **F27 (plan, L5):** dev scenario `sensor:envelope-mismatch` added (forced
+  mismatch via a stub schema build swapped through the explicit-path loader,
+  PE-001) + P1 red-first mismatch pin + obligation **O27** (P1, suite
+  validator). E-38-1's contract is now enforced: a gating implementation
+  fails the pin.
+- **F28 (product, info):** A:7/A-07's forbidden set scoped to forge request
+  field lists — documenting the labels-only invariant in a source comment can
+  no longer flip the check; the invariant itself unchanged (in-scope item 6 +
+  A-RV).
+
+**Operator ruling for this unit's remaining reviews (bounded):** delta review
+over the changed surfaces + the findings' resolution evidence; a finding
+blocks only if it names a user-visible outcome the frozen acceptance manifest
+misses or a contract violation — `low`/`info` process findings are recorded,
+advisory, never cycle-restarting. This ruling is the temporary local form of
+issue #205's proposed materiality bar and is superseded by it once landed.
+
+New SPEC artifactRevisionId `38-c51c1416f9bf` = first 12 hex of
+sha256(SPEC.md) at this write — POLICY §7 manual pairing. Readiness preflight
+`stage: plan`: READY-FOR-REVIEW (delta, bounded per the operator ruling).

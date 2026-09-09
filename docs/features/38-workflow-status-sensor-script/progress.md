@@ -76,6 +76,22 @@
 - Prior cycle: rp-38-20260909-005 (F21–F23 resolved; sixth review, fifth re-review — CONVERGENCE-ANOMALY printed this turn per POLICY §4: entering a fifth repair/re-review cycle; repeated findings: none material; new material findings: none (1 info note, F24); owning stage product — route discharged by this PASS, no further repair/re-review loop entered)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): first run exit 4 (stale-source-revision — the draft receipt's own fabricated revision id, corrected above); re-run after correction: structural.fresh=true, current=true — exit 0, JSON pasted beside the verdict block in the reporting turn
 
+## Pre-execution review receipt v1 — plan
+- Review: rp-38-20260909-007 · Snapshot: 5cf504ef6be5d572c89d2289b86007403826149a6979c41d3e2e459624c79ca3 · Verdict: plan-review-fail
+- Unit: 38-workflow-status-sensor-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 02c17f26c4580628d116ee43d9ef9e37422d6ab152c79b8a46402eca301f1b60 · Parent Product receipt: rp-38-20260909-006
+- Source revision: 2b5675bba65087063d28ba1546c25b222510be10 · Artifact revision: 2b5675bba65087063d28ba1546c25b222510be10
+- Reviewer: fresh pi coding-agent context (no authoring turns for this unit) · Session: pi-web review-plan 38 · Role: reviewer · Author: plan-feature-scaffold session 2026-09-09 (handoff artifactRevisionId 38-plan-1)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-09T17:05:00Z/2026-09-09T17:32:00Z · Findings: 4 (material open: 3 — F25 low/plan, F26 medium/product, F27 low/plan; F28 info, non-material)
+- Ledgers read: planning-evidence 17 rows · obligations 26 rows (verified-capable: 26)
+- Prior plan receipt (re-review only): none — first cycle
+- Revision notes: artifact revision is the RS3(b) default = the scaffold commit 2b5675bb that lands the plan bytes; the planner's handoff id `38-plan-1` is lineage provenance, not the bound identity. Product lineage re-derived, never copied — the `spec-product-v1` projection was recomputed at this revision (`selectSpecProduct` over the whole-file bytes, 42030 bytes, digest b63bda92ee22dc31bd1b1c76d816da084bdb9b8a6c429eeb115a0cd3a7f7bade) and is byte-identical to the rp-006 bound digest; the verify run's `stale-source-revision` code reflects only the planning batch's Engineering-half append (whole-file digest 9bb4c741…) which the selector deliberately excludes — no Product byte, context, or revision move. Contexts unchanged (project-guide 9ae03966…, normalized-repository-state e8509783…). Snapshot built with the recipe owner's canonical identity (RS3(b) default = 2b5675bb, the commit that lands the plan bytes) and `--parent 02c17f26…`; all 9 applicable artifact rows bound (spec, acceptance, planning-evidence, obligations, plan, tasks, testing, decisions, architecture-notes). Evidence integrity: all 17 PE rows spot-verified live at this revision, incl. PE-006's control runs re-executed (ledger-provenance unknown flag → usage + exit 2; check-skill-context → exit 1) and the root discipline suites re-run green (87/87) to ground P1's baseline. Phase-lint verified by hand against phase-contract v1.0.1 (no `scripts/phase-lint.mjs` exists — feature 37 is still `idea`): 4 fingerprints match `P<n>:<layer>:<n-tasks>:<deliverable>`, task counts 8/8/7/10 match TASKS.md, one layer each, P4 hardening carries the literal close-out chain within the ≤10 carve-out (feature 30 precedent P4:hardening:9-tasks PASS).
+- Failed checks: L4, L5, P9 (+ P11 finding, same row F27) · Passed: L1 L2 L3 L6 P1 P2 P3 P4 P5 P6 P7 P8 P10 P12
+- Falsification: CONFIRMED-GAPS — claims a hostile reader could call invented: none (all 17 PE rows verified live); SPEC obligation this plan cannot deliver: O9's ENVELOPE_CORE.md surface (F26); validator passing for the wrong reason: P3 task 4 accepted with every frozen gate green (F26); failure state with no scenario: E-38-1's mismatch path (F27)
+- Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted in the reporting turn
+
 ## Scaffold — 38-workflow-status-sensor-script (2026-09-09)
 
 plan-feature scoped route ran after spec receipt rp-38-20260909-006
@@ -86,3 +102,16 @@ c771e70cdb838fec3ad958d23e477117556e867a. Roadmap row re-read after the write: 3
 artifactRevisionId of the plan set: 38-plan-1 (handoff carries it; the
 bindable identity is the commit that lands these bytes, per the builder's
 RS3(b) default). Readiness preflight stage: plan — READY-FOR-REVIEW.
+
+## Repair batch — F25–F28, operator-authorized unblock (2026-09-09)
+
+One consolidated batch over the rp-38-20260909-007 findings (issue #205's
+bounded-unblock exception). SPEC artifactRevisionId rotated: `38-plan-1` →
+`38-c51c1416f9bf` (first 12 hex of sha256(SPEC.md) recomputed at this write;
+handoff pairing recorded beside it per POLICY §7). Touched: SPEC (A:7 scoped,
+A:24 added, spec-lint counts, P1/P2 phase cut, dev scenario
+sensor:envelope-mismatch), ACCEPTANCE (A-07 scoped, A-24 row), TASKS (P1
+pins + done-when, P2 pins/done-when/task 4), PLAN (P1/P2 summaries), testing
+(ladder split + inventory row), planning-obligations (O27),
+planning-findings (F25–F28 resolved), decisions (operator ruling + batch).
+Next: bounded delta re-review — spec first (Product half moved), then plan.
