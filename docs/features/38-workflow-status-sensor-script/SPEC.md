@@ -51,7 +51,7 @@ Written by `design-feature`. Not complete until `## Design status` below reads
 
 ### Context
 
-`workflow-status` (v3.2.1, 780 lines across SKILL.md + 7 reference files) is the
+`workflow-status` (v3.2.1, 780 lines across SKILL.md + 8 reference files) is the
 most frequently invoked surface in the system — every driver checkpoint, every
 `ship-roadmap` stage, every crash-recovery reconcile runs it. Today it is
 **prose-instructed**: the skill tells a model to run ~10 git/gh commands and
@@ -88,8 +88,10 @@ of truth for the envelope shape.
 
 1. New script `scripts/workflow-status.mjs` (Node.js, no new deps — only the
    existing schema package).
-2. Script executes the published fixed SENSOR_CORE sequence (steps 1–7) and
-   emits Envelope v2 JSON built from the schema package's own vocabulary.
+2. Script executes the published fixed SENSOR_CORE sequence (steps 1–9, incl.
+   6a — the nine numbered steps `SENSOR_CORE.md` publishes, through step 8
+   *pending quality gates* and step 9 *fix-now fold ledger*), and emits Envelope
+   v2 JSON built from the schema package's own vocabulary.
 3. Read-only by construction — the tool never edits, commits, labels, or
    resolves anything (enforced by tool behavior, not just declared in prose).
 4. Offline / partial-availability behaviour is declared, not improvised — no
@@ -101,14 +103,20 @@ of truth for the envelope shape.
 6. Urgency labels read from the `labels` object only — injection-safety
    invariant preserved verbatim from feature 15 (title/body/comments never
    read).
-7. Slim the `workflow-status` skill to "run the script, read the JSON,
-   interpret `next.recommended` per the contract, print the human report."
+7. Slim the `workflow-status` skill — `SKILL.md` plus the sequence/envelope
+   reference files (`references/SENSOR_CORE.md` and `references/ENVELOPE_CORE.md`,
+   whose fixed-sequence prose slims to the script call) — to "run the script, read
+   the JSON, interpret `next.recommended` per the contract, print the human report."
 8. Fix the discipline-test pins for the slimmed skill (fewer lines = fewer
    budget tokens consumed).
 9. Re-base `check-skill-context` budgets for the slimmed sensor route.
 10. Support existing flags `--json-only` and `--last-envelope` (pass-through to
     script behavior).
 11. Support `--help` / `--version` for script-level discoverability.
+12. Update `docs/workflow/ORCHESTRATION.md` so the driver contract points
+    consumers at the script as the envelope's deterministic producer (business
+    goal 3's consumer wiring — issue #185: "Drivers consume the same JSON
+    directly").
 
 #### Out of scope / non-goals
 
@@ -143,7 +151,10 @@ For EACH entity this feature introduces or touches:
 - [x] Create — UI entry point: n/a · API: new file in scripts/ · test: fixture-repo property test (envelope matches schema)  | n/a: <reason>
 - [x] Read/list — UI: n/a · API: consumed by drivers, ship-roadmap, humans · test: fixture test (output is valid Envelope v2)  | n/a: <reason>
 - [x] Update — UI: n/a · API: updated via PR (not runtime) · test: diff check (schema package untouched)  | n/a: <reason>
-- [x] Delete — UI: n/a · API: part of feature lifecycle, removed when feature is merged  | n/a: <reason>
+- [x] Delete — UI: n/a · API: no runtime delete path; the script performs only
+      reads (removing the script file itself is an ordinary PR, not a runtime
+      capability of the sensor) · test: `grep -nE '(unlink|fs\.rm|rmSync|writeFile)'`
+      returns nothing
 - [x] State transitions (suspend/block/archive/…): n/a  | n/a: script is immutable once merged
 
 For EACH capability (action a user can take):
@@ -178,6 +189,14 @@ For EACH subsystem in docs/CAPABILITIES.md (or the derived inventory):
 - [x] Notifications (email, push, in-app) — no — no notifications. test: n/a  | n/a: no notifications
 - [x] Search — no — not a search feature. test: n/a  | n/a: no search
 - [x] Audit log / activity trail — no — but script output is consumed by audit-adjacent tools. test: n/a  | n/a: output is read-only data, not an audit log
+- [x] File / media storage — no — the script writes no files (stdout-only output,
+      non-goal §5) and reads no media. test: n/a — no file I/O in the script  | n/a:
+      no file/media storage in this product
+- [x] Feature flags — no — no flag store exists in this project; the script's only
+      flags are CLI arguments, not runtime feature flags. test: n/a  | n/a: no
+      feature-flag subsystem in this product (inventory floor row)
+- [x] Billing / payments — no — internal developer tool; no billing surfaces.
+      test: n/a  | n/a: billing cannot apply to this product (inventory floor row)
 ```
 
 ### Expectation sweep
@@ -197,7 +216,7 @@ expectations are value too: they stop being future surprises.
 | 2 | Non-zero exit on fatal errors (unrecoverable failures like missing git) | in-scope | A:4 (offline fixture — exit 0 on degraded; fatal errors outside scope should still exit non-zero) |
 | 3 | No interactive prompts (non-interactive tool for automation) | in-scope | A:3 (script is deterministic and headless; no prompts in code path) |
 | 4 | JSON output is deterministic and machine-parseable | in-scope | A:2 (property test over field presence) + A:5 (idempotence test) |
-| 5 | `--help` / `--version` flags available (standard CLI discoverability) | deferred | A:10 (--help / --version flags for script-level discoverability) |
+| 5 | `--help` / `--version` flags available (standard CLI discoverability) | in-scope | A:10 (--help / --version flags for script-level discoverability) |
 | 6 | Stdout for data, stderr for diagnostics (standard CLI separation) | in-scope | A:3 (script prints JSON to stdout; diagnostics to stderr) |
 | 7 | Exit 0 on degraded (offline mode) — output reflects degradation, not failure | in-scope | A:4 (offline fixture: no network → declared degradation codes in output, exit 0, no hang) |
 | 8 | Idempotence: consecutive runs on the same tree produce byte-identical output (modulo volatile timestamps) | in-scope | A:5 (idempotence test: two consecutive runs on same tree → byte-identical output) |
@@ -205,7 +224,7 @@ expectations are value too: they stop being future surprises.
 | 10 | Timeout for forge commands (slow but available network should not hang the script) | in-scope | A:4 (declared in degradation behavior: timed-out forge calls → unavailability codes) |
 | 11 | Color / ANSI output for human readability in the terminal | out-of-scope | Out of scope / non-goals §6 (output is for machine consumers, not terminal formatting) |
 | 12 | File output option (e.g. `--output <path>`) for writing the envelope to disk | out-of-scope | Out of scope / non-goals §5 (output goes to stdout only) |
-| 13 | A version flag that reports the script version matching the package version | deferred | A:10 (--version for script-level discoverability) |
+| 13 | A version flag that reports the script version matching the package version | in-scope | A:10 (--version prints the schema package version; in-scope item 11) |
 
 ### Acceptance criteria
 
@@ -216,9 +235,12 @@ genuinely judgement-only criteria labelled `read-verified`.
 
 - [ ] A:1 `scripts/workflow-status.mjs` exists — check: `test -f scripts/workflow-status.mjs`
 - [ ] A:2 Script output is valid Envelope v2 JSON — check: fixture-repo property test matches schema package's envelope schema
-- [ ] A:3 Script is read-only — check: `grep -rE '(createBranch|push|label|write)' scripts/workflow-status.mjs` returns nothing
+- [ ] A:3 Script is read-only: it performs no mutation action (branch creation,
+      push, label mutation, issue/PR writes, file writes) — check:
+      `grep -nE '(createBranch|git push|gh pr (edit|merge|close|create)|gh issue (edit|close|label|create)|writeFile|fs\.write|unlink)' scripts/workflow-status.mjs`
+      returns nothing (label *reading* stays — required by A:7's labels-only scan)
 - [ ] A:4 Offline fixture: no network → forge sections degrade to declared codes, exit 0, no hang — check: fixture-repo test with network severed
-- [ ] A:5 Idempotence: two consecutive runs on the same tree → byte-identical output (modulo volatile timestamps) — check: `diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs)` returns empty
+- [ ] A:5 Idempotence: two consecutive runs on the same fixture tree → byte-identical output verbatim — the script emits no volatile fields by construction (Envelope v2 has no timestamp field, and `detail` performs no clock reads), so the check carries no modulo carve-out — check: `diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs)` returns empty
 - [ ] A:6 Ambiguous roadmap row → mapped state + named degradation in output — check: fixture-repo test with ambiguous roadmap row, verify `detail` output
 - [ ] A:7 Urgency labels read from labels object only — check: `grep -E 'title|body|comment' scripts/workflow-status.mjs` returns nothing
 - [ ] A:8 Script imports the schema package's Envelope v2 vocabulary — check: `grep 'workflow-status' scripts/workflow-status.mjs | grep -c 'schema'` ≥ 1
@@ -227,14 +249,21 @@ genuinely judgement-only criteria labelled `read-verified`.
 - [ ] A:11 No external dependencies beyond the schema package — check: `node --experimental-specifier-resolution=node -e "import('scripts/workflow-status.mjs')"` succeeds with only schema package in graph
 - [ ] A:12 `decideWorkflowAction()` is NOT referenced in the script — check: `grep -c 'decideWorkflowAction' scripts/workflow-status.mjs` equals 0
 - [ ] A:13 No change to the envelope vocabulary — check: `git diff` of `packages/agentic-workflow-schema/` is empty
-- [ ] A:14 Discipline-test pins updated for the slimmed skill — check: `node scripts/check-skill-context.mjs` passes with updated budget for workflow-status
-- [ ] A:15 `check-skill-context` budgets re-based — check: `node scripts/check-skill-context.mjs` passes with slimmed sensor route budget
-- [ ] A:16 Envelope v2 output includes `detail` section listing each degraded dimension (when offline) — check: offline fixture output contains `detail` key with degradation entries
+- [ ] A:14 Discipline-test pins and `check-skill-context` budgets re-based for the
+      slimmed sensor route — check: `node scripts/check-skill-context.mjs` exits 0
+      with the updated budget for `workflow-status`
+- [ ] A:15 Envelope v2 output includes `detail` section listing each degraded dimension (when offline) — check: offline fixture output contains `detail` key with degradation entries
+- [ ] A:16 `docs/workflow/ORCHESTRATION.md` driver wiring points consumers at the
+      script — check: `grep -c 'workflow-status.mjs' docs/workflow/ORCHESTRATION.md`
+      ≥ 1
 - [ ] read-verified: Feature 15's injection-safety invariant (urgency from labels only) is preserved in the new script — verified by code review against feature 15 merge
 
 ### Tooling
 
-- `@gtrabanco/agentic-workflow-schema` (v3.4.0) — Envelope v2 schema vocabulary, already an existing dependency (NRS F002).
+- `@gtrabanco/agentic-workflow-schema` (**v4.1.1**, verified live) — Envelope v2
+  schema vocabulary, already an existing dependency. NRS F002 still freezes
+  3.4.0 — drifted vs live, contradiction candidate for `/resolve-repository-state`
+  (see Product evidence row 2); not silently edited here.
 - `gh` CLI — forge state commands (already used by `workflow-status` skill, part of SENSOR_CORE).
 - `git` — repository state commands (already used by `workflow-status` skill).
 - Node.js ≥ 18 (already required by existing `scripts/*.mjs` files in the repo).
@@ -273,7 +302,7 @@ is lost. Write `none` when the section is empty.
 
 | Decision | Why deferred | Decide by (trigger or phase) |
 |---|---|---|
-| Exact degradation code vocabulary (e.g. `"unavailable-no-network"` vs `"offline"` vs `"network-error"`) | Consumer-side already expects `detail` codes; the schema package may have a preferred set. Re-evaluate when reviewing the schema package's existing codes. | Implementation phase — pick a code that matches or extends schema package's vocabulary |
+| Exact degradation code vocabulary (e.g. `"unavailable-no-network"` vs `"offline"` vs `"network-error"`) | Bounded machine-readable contract surface consumers parse. Verified live: the schema package (v4.1.1) declares **no** code vocabulary — `detail` is schema-unconstrained and opaque per skill — and no repo surface defines one, so this is a design-owner choice, not an implementer default. | Human design owner — bounded question routed in repair batch 2026-09-09 (class-3 product change; the answer folds into `Product decisions`) |
 | Whether to add `--output <path>` for file output | stdout-only is sufficient for current consumers (drivers, ship-roadmap, humans). No consumer currently requests file output. | Post-merge — if a consumer requests file output, add it in a follow-up |
 
 ### Product evidence
@@ -283,14 +312,15 @@ A claim that cannot be evidenced stays `unknown` with an owner — never guessed
 
 | claim-or-obligation | authority-kind | source-and-location | observed-revision | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|
-| SENSOR_CORE steps 1–7 define the fixed command sequence for workflow-status | skill reference | `skills/workflow-status/references/SENSOR_CORE.md` | current main (merged) | current | proven | — |
-| Envelope v2 schema is stable at v3.4.0 with published test vectors | npm package | `packages/agentic-workflow-schema/` (NRS F002) | v3.4.0 | current | proven | NRS F002 |
+| SENSOR_CORE's published fixed sequence spans numbered steps 1–9 (incl. 6a): git, forge, urgency, roadmap/fix-index, dependency tree, readiness, receipts, phase progress, pending quality gates, fix-now fold ledger — steps 8 and 9 are envelope producers in scope | skill reference | `skills/workflow-status/references/SENSOR_CORE.md` (numbered steps, "Steps 1-9 print these keys") | current main (merged) | current | proven | — |
+| Envelope v2 schema is stable at v4.1.1 with published schemas and test vectors | npm package | `packages/agentic-workflow-schema/package.json` + `envelope.schema.json` + `test/` (verified live 2026-09-09) | main (4.1.1) | current | proven | NRS F002 still freezes 3.4.0 — drifted vs live; contradiction candidate for `/resolve-repository-state`, never silently edited |
 | Urgency labels are read-only in existing code (injection-safety preserved) | prior feature merge | feature 15 `#47` (merged on main) | merged on main | current | proven | — |
-| The schema package exports Envelope v2 vocabulary (stable types) | npm package | `@gtrabanco/agentic-workflow-schema` (published) | v3.4.0 | current | proven | — |
+| The schema package v4.1.1 exports the Envelope v2 vocabulary (`Envelope`, `validateEnvelope`, `parseEnvelope`, `decideWorkflowAction`) | npm package | `packages/agentic-workflow-schema/src/index.ts` (verified live 2026-09-09) | v4.1.1 | current | proven | — |
 | `decideWorkflowAction()` is consumer-side only (not in the script) | issue proposal | issue #185 body (proposed design) | issue body | current | decision | feature 38 implementation — verify at plan review |
 | The `workflow-status` skill (v3.2.1) is the most frequently invoked surface | usage pattern | skill name + argument-hint `--last-envelope` implies frequent driver use | v3.2.1 | current | decision | verifiable from `gh` logs or telemetry if available |
 | Offline degradation produces valid JSON with declared codes | design assumption | issue #185 body (proposed) | issue body | current | decision | feature 38 implementation — verified by offline fixture test |
 | Slug is free: no existing folder at `docs/features/38-workflow-status-sensor-script` | directory check | `ls docs/features/` | current main | current | proven | — |
+| The schema package declares no degradation-code vocabulary — `Envelope.detail` is `unknown` (schema-unconstrained, "documented per skill") | npm package | `packages/agentic-workflow-schema/src/index.ts` `Envelope.detail` (verified live 2026-09-09) | v4.1.1 | current | proven | grounds the F7 routing: the vocabulary is a design-owner choice, not implementer default |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -311,28 +341,33 @@ Product boxes:
       leftover template placeholders remain). All other sections contain concrete text.
 - [x] `#### Out of scope / non-goals` has ≥ 1 concrete bullet — **8 bullets** present.
 - [x] Every Capability closure row is filled or `n/a: <reason>` — zero blank
-      rows. Entity closure: 5 Create/Read/Update/Delete + 5 State transitions rows;
-      2 Capability rows (entry point + role matrix); 3 Role rows. Integration: 8 subsystems.
+      rows. Entity closure: 4 CRUD rows + 1 state-transitions row;
+      2 Capability rows (entry point + role matrix); 3 Role rows. Integration: 13 subsystems.
 - [x] Integration closure has one row per subsystem listed in
       `docs/CAPABILITIES.md` (or, when the project has no inventory, per the
       derived inventory recorded in the section) — zero subsystems skipped.
-      All 13 template subsystems are covered (8 with filled rows, 5 marked `n/a`
-      with reason).
+      All 13 template subsystems are covered — 13 rows (8 with filled resolutions,
+      5 with explicit `n/a:` reasons; every row also carries the template's
+      `| n/a: <reason>` convention tail), zero blank, zero skipped.
 - [x] Every capability's role matrix lists EVERY role in the capability
       inventory with an explicit `allowed`/`denied` — no role unlisted.
       3 roles: consumer-processes, weak-executor-models, human-operators — all `allowed`.
 - [x] `### Expectation sweep` has ≥ 10 resolved rows (M/L) — **13 rows**.
-      Every row's resolution is `in-scope` (8), `out-of-scope` (2), or `deferred` (3)
-      with a pointer.
+      Every row's resolution is `in-scope` (11), `out-of-scope` (2), or `deferred` (0 —
+      none; the sweep's two earlier `deferred` rows were in-scope work mislabelled,
+      repaired to A:10) with a pointer.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same wording or an explicit reference).
-      In-scope items 1–11 map to A:1 through A:16 and the inline criterion comments.
+      In-scope items 1–12 map to A:1 through A:16 and the inline criterion comments.
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — 15 `read-verified` markers present; A:1 (file exists),
-      A:2–A:6 (fixture tests), A:7 (grep), A:8 (grep), A:9 (diff check),
-      A:10–A:11 (flag tests), A:12 (grep/static analysis), A:13 (diff check),
-      A:14–A:15 (budget re-base), A:16 (fixture test).
+      `read-verified` — **16 runnable criteria (A:1–A:16) + 1 labelled
+      `read-verified` criterion** (injection-safety preservation): A:1 (file exists),
+      A:2 (fixture test), A:3 (mutation grep), A:4 (offline fixture), A:5 (diff),
+      A:6 (fixture test), A:7 (grep), A:8 (grep), A:9 (diff check),
+      A:10–A:11 (flag/import tests), A:12 (grep), A:13 (diff check),
+      A:14 (budget re-base), A:15 (fixture test), A:16 (grep).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
-      the section reads `none`. Two rows, both have decide-by triggers.
+      the section reads `none`. Two rows, both with decide-by triggers (row 1 routed
+      to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).
 
 Engineering boxes (additionally, at scaffold time):
 
