@@ -10,10 +10,11 @@ A-RV); obligations in `planning-obligations.md` (O1–O26).
 
 Layer: config/infra · Done-when: `node --test
 scripts/workflow-status-sensor.test.mjs` -> exit 0 with the schema-validity,
-field-presence, read-only, idempotence, roadmap-mapping, and labels-only pins
-green on the git fixture repo, and the existing root suites still exit 0.
+field-presence, read-only, idempotence, roadmap-mapping, labels-only,
+flag-contract (A-17/A-20), and envelope-mismatch (E-38-1) pins green on the
+git fixture repo, and the existing root suites still exit 0.
 
-- [ ] Write red-first pins in new `scripts/workflow-status-sensor.test.mjs` (git-init fixture repo per the `workflow-status-pre-execution.test.mjs` harness pattern): output parses as one JSON document that `validateEnvelope` accepts; steps 1–9 field presence per the `sensor-fields@1` grammar; idempotence (two runs byte-identical); the A-03 mutation grep, A-07 labels-only greps, A-08 loader-import greps, A-12 no-`decideWorkflowAction` grep, and A-22 no-prompts grep.
+- [ ] Write red-first pins in new `scripts/workflow-status-sensor.test.mjs` (git-init fixture repo per the `workflow-status-pre-execution.test.mjs` harness pattern): output parses as one JSON document that `validateEnvelope` accepts; steps 1–9 field presence per the `sensor-fields@1` grammar; idempotence (two runs byte-identical); the A-03 mutation grep, A-07 labels-only greps, A-08 loader-import greps, A-12 no-`decideWorkflowAction` grep, and A-22 no-prompts grep; the `--json-only` byte-identical no-op (A-17), unknown-flag non-zero + stderr usage (A-20), and envelope-mismatch diagnostic (E-38-1: forced mismatch via a stub schema build whose `validateEnvelope` always fails, swapped in through the explicit-path loader → stderr diagnostic, envelope still printed, exit 0) pins.
 - [ ] Create `scripts/workflow-status.mjs`: ESM, `import { loadSchemaRuntime } from "./schema-runtime.mjs"` (named fail-fast precondition, no published fallback), argv parsing over the closed flag set (`--json-only`, `--last-envelope <json|path>`, `--help`, `--version`), unknown flag -> usage on stderr + non-zero exit.
 - [ ] Implement steps 1–3: git state commands, forge state via the SENSOR_CORE `gh` list commands, urgency labels-only scan (`{number, title, label}`, `urgent` dominates) + in-flight interruptibility facts reusing the same reads.
 - [ ] Implement steps 4–5: roadmap + fix-index row parsing into the five-state machine (ambiguous status -> nearest value, `default: idea`, raw string noted in `workflow_observations`); transitive depends-on closure with met/unmet edges (`done`-with-open-PR is NOT met) and cycle/consistency substrate blockers.
@@ -26,13 +27,13 @@ green on the git fixture repo, and the existing root suites still exit 0.
 
 Layer: config/infra · Done-when: `node --test
 scripts/workflow-status-sensor.test.mjs` -> exit 0 with the offline,
-forge-timeout, missing-git, hint-guard, hint-fail-open, flag, and
-stream-separation pins green and every P1 pin unchanged.
+forge-timeout, missing-git, hint-guard, hint-fail-open, `--help`/`--version`,
+and stream-separation pins green and every P1 pin unchanged.
 
-- [ ] Write red-first pins: severed-network fixture (A-04), non-terminating `gh` shim (A-21), missing-git fixture (degradation code, exit 0), missing-path + invalid-JSON hints (A-19), unknown-flag non-zero + stderr usage (A-20), stdout-alone-JSON parse + offline diagnostics on stderr (A-23), `--json-only` byte-identical no-op (A-17), stale-hint no-progress note with recomputed `state`/`next` unchanged (A-18, inline-JSON + file-path variants).
+- [ ] Write red-first pins: severed-network fixture (A-04), non-terminating `gh` shim (A-21), missing-git fixture (degradation code, exit 0), missing-path + invalid-JSON hints (A-19), stdout-alone-JSON parse + offline diagnostics on stderr (A-23), stale-hint no-progress note with recomputed `state`/`next` unchanged (A-18, inline-JSON + file-path variants). The `--json-only` no-op (A-17) and unknown-flag fatal (A-20) pins are P1 pins — re-asserted unchanged here, never re-written red-first (F25 repair: behavior and pin live in the same phase).
 - [ ] Emit namespaced `unavailable-<source>-<cause>` degradation codes into the corresponding `detail` dimensions (forge: no-network, timeout, auth, missing-cli; git: missing; hint: missing, unreadable, invalid — Product decision 6).
 - [ ] Bound every forge call with a wall-clock timeout (implementation constant, suite-pinned) so a hanging forge degrades to `unavailable-forge-timeout` with exit 0; missing `gh` binary and missing git degrade with exit 0.
-- [ ] Implement `--json-only` as an accepted no-op and `--help`/`--version` (usage text; `--version` prints the schema package's version from `packages/agentic-workflow-schema/package.json`).
+- [ ] Implement `--help`/`--version` (usage text; `--version` prints the schema package's version from `packages/agentic-workflow-schema/package.json`); `--json-only` stays the P1 accepted no-op — nothing to implement here.
 - [ ] Implement `--last-envelope <json|path>`: load the hint (inline JSON string or file path), diff it against the recomputed envelope, run the no-progress guard with the exact note shape from ENVELOPE_FIELDS.md, and append the divergence line + guard note to `detail.workflow_observations`; the hint never mutates `state`/`next`.
 - [ ] Degrade unreadable/malformed hints fail-open: `unavailable-hint-<cause>` note in `detail.workflow_observations`, exit 0, recomputed envelope unaffected.
 - [ ] Keep stdout = one JSON document and stderr = diagnostics in every code path, including degraded runs.

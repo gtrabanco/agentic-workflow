@@ -261,8 +261,11 @@ genuinely judgement-only criteria labelled `read-verified`.
 - [ ] A:6 Ambiguous roadmap row → mapped state + named degradation in output — check: fixture-repo test with ambiguous roadmap row, verify `detail` output
 - [ ] A:7 Urgency labels read from the labels object only (labels-only
       scanning — the issue's title/body/comments are never scanned for urgency)
-      — check: `grep -nE '\b(body|comment)' scripts/workflow-status.mjs` returns
-      nothing (the script never fetches or reads issue bodies or comments) AND
+      — check: `grep -nE '\-\-json[^|]*(body|comment)' scripts/workflow-status.mjs`
+      returns nothing (no forge request field list ever includes `body` or
+      `comment` — those fields are never fetched or read; the forbidden set is
+      scoped to forge request fields so documenting the invariant in a source
+      comment cannot flip the check — F28 repair, intent-preserving) AND
       `grep -cE 'labels' scripts/workflow-status.mjs` ≥ 1 (the labels-only scan
       path exists); `title` is deliberately NOT in the forbidden set — SENSOR_CORE
       step 3 emits `urgent.issues[].title` from the step-2 list output, so the
@@ -342,6 +345,16 @@ genuinely judgement-only criteria labelled `read-verified`.
       the data stream), and the offline fixture run (A:4) asserts the
       degradation/diagnostic lines land on stderr while stdout stays valid
       envelope JSON
+- [ ] A:24 `references/ENVELOPE_CORE.md` slimmed to interpret-and-recommend:
+      the envelope-shape/assembly prose (self-check reminders and per-field
+      assembly notes) is replaced by script-backed references, keeping the
+      crash-recovery state mapping and the `next.tier` command map the skill
+      interprets — check: `grep -c 'scripts/workflow-status.mjs'
+      skills/workflow-status/references/ENVELOPE_CORE.md` ≥ 1 (script-backed
+      reference present) AND `grep -cE 'self-check before printing'
+      skills/workflow-status/references/ENVELOPE_CORE.md` → 0 (assembly
+      self-check prose gone — the script owns the self-check, E-38-1; F26
+      repair: closes the in-scope item 7 surface that mapped to no criterion)
 - [ ] read-verified: Feature 15's injection-safety invariant (urgency from labels only) is preserved in the new script — verified by code review against feature 15 merge
 
 ### Tooling
@@ -494,13 +507,13 @@ Product boxes:
       this batch (F21/F22) re-pointed rows 3→A:22, 6→A:23, 10→A:21 — all three
       now resolve to criteria whose checks carry their claims.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same wording or an explicit reference).
-      In-scope items 1–12 map to A:1 through A:23 (item 10's flag pass-through →
-      A:17–A:19) and the inline criterion comments; A:20 resolves
+      In-scope items 1–12 map to A:1 through A:24 (item 10's flag pass-through →
+      A:17–A:19; item 7's ENVELOPE_CORE.md slimming → A:24) and the inline criterion comments; A:20 resolves
       expectation-sweep row 2's fatal-exit expectation, A:21 resolves sweep row 10
       (timed-out forge), A:22 resolves sweep row 3 (no prompts), A:23 resolves
       sweep row 6 (stdout/stderr) — sweep expectations, not in-scope bullets.
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — **23 runnable criteria (A:1–A:23) + 1 labelled
+      `read-verified` — **24 runnable criteria (A:1–A:24) + 1 labelled
       `read-verified` criterion** (injection-safety preservation): A:1 (file exists),
       A:2 (fixture test), A:3 (mutation grep), A:4 (offline fixture), A:5 (diff),
       A:6 (fixture test), A:7 (grep), A:8 (grep), A:9 (diff check),
@@ -508,7 +521,8 @@ Product boxes:
       A:14 (budget re-base), A:15 (fixture test), A:16 (grep), A:17 (diff),
       A:18 (fixture test), A:19 (fixture test), A:20 (unknown-flag non-zero exit),
       A:21 (fixture: non-terminating `gh` shim → timeout degradation), A:22 (grep),
-      A:23 (stdout-alone JSON parse + stderr fixture).
+      A:23 (stdout-alone JSON parse + stderr fixture), A:24 (ENVELOPE_CORE.md
+      slimmed: script-backed reference present + assembly self-check prose gone).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none`. One row with a decide-by trigger (row 2, --output — still deferred; row 1 resolved via bounded question)
       to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).
@@ -748,6 +762,7 @@ All engineering decisions are resolved here and recorded in `decisions.md`
 |---|---|---|
 | `sensor:empty-state` | empty/zero state — no roadmap rows, no PRs, no in-flight units | fixture repo with an empty roadmap + no forge output; envelope prints the empty shapes (`design_candidates: []`, `fix_now: []`), exit 0 (A-02 fixture) |
 | `sensor:invalid-input` | invalid/oversized input — unknown flag; malformed or missing hint | `--not-a-real-flag` → non-zero + stderr usage (A-20); missing path / invalid JSON hint → `unavailable-hint-<cause>` note, exit 0 (A-19) |
+| `sensor:envelope-mismatch` | forced invalid envelope — assembly output fails `validateEnvelope` | a stub schema build whose `validateEnvelope` always fails is swapped in via the explicit-path loader (PE-001; `dist/` is a gitignored build output) → stderr diagnostic, envelope still printed, exit 0 (E-38-1; P1 mismatch pin — F27 repair) |
 | `sensor:dependency-outage` | dependency outage + timeout — network severed; forge accepts and never answers | `gh` shim failing fast → fail-fast degradation codes, exit 0 (A-04); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (A-21) |
 | `sensor:concurrent-action` | concurrent/duplicate action — two simultaneous sensor runs | run twice in parallel on the same tree: both exit 0, outputs byte-identical, no locks or shared state (A-05 fixture run concurrently) |
 | `sensor:limit-threshold` | limit/threshold hit — caps in the projections | fixture with > 5 open issues → `untriaged_issues.oldest_open` capped at 5; merged-PR list capped at 20 (ENVELOPE_FIELDS/SENSOR_CORE caps) |
@@ -764,26 +779,30 @@ finish line is `ACCEPTANCE.md`.
 
 Layer: config/infra · Done-when: `node --test
 scripts/workflow-status-sensor.test.mjs` → exit 0 with the schema-validity,
-field-presence, read-only, idempotence, roadmap-mapping, and labels-only pins
-green on the git fixture repo, and the existing root suites still exit 0.
+field-presence, read-only, idempotence, roadmap-mapping, labels-only,
+flag-contract (A-17/A-20), and envelope-mismatch (E-38-1) pins green on the
+git fixture repo, and the existing root suites still exit 0.
 
 `scripts/workflow-status.mjs` exists and executes SENSOR_CORE steps 1–9 into
-one schema-valid Envelope v2 on stdout (collection + assembly + read-only
-greps + idempotence). Phase-lint: PASS (8/8) · fingerprint
+one schema-valid Envelope v2 on stdout (collection + assembly + the closed
+flag contract — `--json-only` accepted no-op, unknown-flag fatal class — +
+the validateEnvelope mismatch diagnostic path + read-only greps +
+idempotence). Phase-lint: PASS (8/8) · fingerprint
 `P1:config/infra:8:sensor-script-core-emission`
 
 #### P2 — Sensor script failure contract
 
 Layer: config/infra · Done-when: `node --test
 scripts/workflow-status-sensor.test.mjs` → exit 0 with the offline,
-forge-timeout, missing-git, hint-guard, hint-fail-open, flag, and
-stream-separation pins green and every P1 pin unchanged.
+forge-timeout, missing-git, hint-guard, hint-fail-open, `--help`/`--version`,
+and stream-separation pins green and every P1 pin unchanged.
 
 The script's declared-failure surface: namespaced degradation codes, bounded
-forge latency, `--json-only` no-op, `--help`/`--version`, `--last-envelope`
-hint diff + no-progress guard, fail-open hints, invalid-invocation fatal
-class, stdout/stderr separation. Phase-lint: PASS (8/8) · fingerprint
-`P2:config/infra:8:sensor-script-failure-contract`
+forge latency, `--help`/`--version` (usage/version output), `--last-envelope`
+hint diff + no-progress guard, fail-open hints, stdout/stderr separation —
+the `--json-only` no-op and the invalid-invocation fatal class ship in P1
+(F25 repair: behavior and pin in the same phase). Phase-lint: PASS (8/8) ·
+fingerprint `P2:config/infra:8:sensor-script-failure-contract`
 
 #### P3 — Workflow-status skill slimming
 

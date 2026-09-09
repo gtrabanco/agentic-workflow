@@ -10,7 +10,8 @@
 | Roadmap/dependency semantics (P1) | five-state mapping with ambiguous-row fallback + transitive dependency closure | suite ambiguous-row + dependency sections (A-06) |
 | Loader consumption (P1) | `./schema-runtime.mjs` import present; no bare-specifier import; named precondition when `dist/` missing | A-08 greps + A-11 two-case import test |
 | Degradation matrix (P2) | offline fail-fast, non-terminating forge shim, missing git -> namespaced codes in `detail`, exit 0 | suite offline/timeout/missing-git sections (A-04, A-15, A-21) |
-| Flag contract (P2) | `--json-only` no-op, `--help`/`--version`, unknown flag fatal class | suite flag sections + A-10/A-17/A-20 commands |
+| Flag contract core (P1) | `--json-only` no-op + unknown-flag fatal class + envelope-mismatch diagnostic | suite P1 flag/mismatch sections (A-17/A-20 pins + E-38-1 pin) |
+| Flag discoverability (P2) | `--help` usage text, `--version` prints the schema package's version | suite flag section + A-10 commands |
 | Hint guard (P2) | stale hint -> no-progress note + divergence line, `state`/`next` unchanged; malformed hint fail-open | suite stale-hint + fail-open sections (A-18, A-19) |
 | Stream separation (P2) | stdout alone is one valid JSON document; diagnostics on stderr | A-23 command + offline fixture stderr assertion |
 | Slimmed skill + pins (P3) | script call present, numbered-step prose gone, grammar block intact; pins re-targeted, never weakened | A-09 greps; `node --test scripts/bounded-delivery-loops.test.mjs scripts/pre-execution-quality.test.mjs scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs` |
@@ -31,6 +32,10 @@ phase's pins:
 - **sensor:invalid-input** — unknown flag -> non-zero + stderr usage;
   malformed/missing hint -> `unavailable-hint-<cause>`, exit 0. Pinned in P2
   (flag + fail-open sections).
+- **sensor:envelope-mismatch** — forced invalid envelope (stub schema build
+  whose `validateEnvelope` always fails, swapped via the explicit-path loader,
+  PE-001) -> stderr diagnostic, envelope still printed, exit 0. Pinned in P1
+  (envelope-mismatch section; E-38-1).
 - **sensor:dependency-outage** — severed network -> fail-fast codes; non-
   terminating `gh` shim -> `unavailable-forge-timeout` within the bound. Pinned
   in P2 (offline + timeout sections).

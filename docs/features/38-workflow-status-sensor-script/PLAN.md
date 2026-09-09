@@ -8,14 +8,17 @@ and slimming surface are frozen in `SPEC.md` (`## Engineering half` →
 ## P1 — Sensor script core emission
 
 Layer: config/infra. `scripts/workflow-status.mjs` executes SENSOR_CORE steps
-1–9 into one schema-valid Envelope v2 on stdout; red-first fixture suite.
+1–9 into one schema-valid Envelope v2 on stdout; closed flag contract
+(`--json-only` no-op, unknown-flag fatal class) + the validateEnvelope mismatch
+diagnostic path; red-first fixture suite.
 
 ## P2 — Sensor script failure contract
 
 Layer: config/infra. Namespaced degradation codes, bounded forge latency,
-`--json-only` no-op, `--help`/`--version`, `--last-envelope` hint diff +
-no-progress guard, fail-open hints, invalid-invocation fatal class,
-stdout/stderr separation.
+`--help`/`--version` (usage/version output), `--last-envelope` hint diff +
+no-progress guard, fail-open hints, stdout/stderr separation — the
+`--json-only` no-op and the invalid-invocation fatal class ship in P1 (F25
+repair: behavior and pin in the same phase).
 
 ## P3 — Workflow-status skill slimming
 
