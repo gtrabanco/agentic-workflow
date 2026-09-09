@@ -197,6 +197,7 @@ cannot produce. The full gate (OB-16) stays `bun run test` (tsc + whole suite).
 | OB-14 | AC11 + PE-003 | The merged view renders a route's chain in order | P5 | Merged-view task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 (chain-render case) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
 | OB-15 | PE-012 (docs + release bookkeeping) | README EN+ES document the chain schema, the picker and the alias in the same change; version bump + bilingual changelog tables in the same PR | P7 | Docs tasks | execute-phase --fix | read-verified: chain + `aw-settings` present in both READMEs; `git status --porcelain docs/` → empty after commit | Grep output + PR diff pasted | planned |
 | OB-16 | PE-006 (gate) | The package gate is green on the final tree, including tsc | P7 | Verify-only gate task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun run test` → exit 0, `0 fail` | Command output pasted | planned |
+| OB-17 | AC14 + PE-008 (F2 / A1) | Editing a route whose `model` is a chain (≥2 refs) opens the chain builder seeded with the value in force and labels it, so the operator sees and can edit the current chain rather than rebuilding it blind | P9 | Chain-builder seed task | execute-phase --fix | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs` → exit 0 (chain-edit seed cases) + scoped summary (`Ran N tests across 1 file`) | Scoped summary line pasted | planned |
 
 ## Acceptance
 
@@ -586,17 +587,37 @@ changelog rows.
       and add the row to the "Companion npm packages" tables in
       `CHANGELOG.md` + `CHANGELOG.es.md` in the same PR (OB-15).
 
-### P8 — Hardening & PR
+### P9 — Chain-edit visibility
 
-- [x] Re-run the project's full verification gate (commands + exit codes pasted)
-- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [x] Set the fix-index row status to `done` and commit the flip
-- [x] `git push`
-- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
-      Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #154`
-- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [x] Commit `docs: link PR #<n>` and push
+Added post-P8 by amendment A1 (below) — the unit's replan-in-unit resolution of
+review finding F2. Layer: `ui`. Done-when:
+`cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs`
+→ exit 0 with the chain-edit seed cases green and the scoped summary line
+(`Ran N tests across 1 file`) pasted — the file exists since P4.
+
+- [ ] Red-first tests: editing a route whose `model` is a chain (≥2 references)
+      opens the chain builder seeded with the value in force; remove-last trims
+      the tail; append adds a fallback up to the cap; Done with no change keeps
+      the chain (OB-17 / F2).
+- [ ] Seed `askModel` in `src/settings/console.ts`: when `current.model` is a
+      chain, start the builder from the existing references instead of empty and
+      label the current chain so the operator sees what they are editing; fresh
+      and single-string editing keep the existing flow (OB-17).
+- [ ] Keep the chain capped at `MAX_MODEL_CHAIN` and every rejection in the
+      loader's field-path shape `$.commands.<name>.model` (OB-17, OB-13, OB-11).
+
+## Amendments
+
+### A1 — 2026-09-09 · F2 (review-change cycle 1, adversarial 2): chain-edit visibility → P9
+
+User-approved replan-in-unit for review finding **F2** (decision-required).
+OB-3/AC3 promise route editing "opens on the value in force (labelled)" — true
+for single-string models, but editing a route whose `model` is a chain gave the
+picker `initial: undefined` and started the chain builder empty, so the operator
+could not see or edit the existing chain and had to rebuild it blind. This
+amendment adds phase P9 (seed the chain builder from the current chain) and
+acceptance criterion AC14 pinning it. No acceptance criterion or validator is
+weakened: AC3's validator is unchanged; AC14 is added alongside it.
 
 ## Status
 
