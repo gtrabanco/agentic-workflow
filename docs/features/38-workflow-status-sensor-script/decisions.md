@@ -352,6 +352,22 @@ obligations O3/O7/O12/O13/O8/O11 and preserved by design. Readiness preflight
 `stage: plan`: READY-FOR-REVIEW (artifactRevisionId `38-plan-1`, planning
 evidence PE-001…PE-017, obligations O1…O26, zero unknowns).
 
+## 2026-09-10 — operator-approved scope amendment: fold fix #209 into 38 (artifactRevisionId: 2bee477ba469)
+
+**What:** Fix #209 (release policy — no majors until #176 merges) folded into
+feature 38's scope: `CLAUDE.md`'s versioning guidance gains the freeze rule
+(A:25 / AC-24 / O28); implemented pre-execution in this amendment commit
+(E-38-9). Feature 38's own bump (E-38-2, 3.2.1 → 3.3.0 minor) already complies.
+
+**Why:** Operator instruction to include the version-policy line within 38's
+deliverables; the policy directly governs how this feature versions itself.
+
+**New SPEC artifactRevisionId:** `2bee477ba469` = first 12 hex of
+sha256(SPEC.md) at this write — POLICY §7 manual pairing. Readiness preflight
+`stage: plan`: READY-FOR-REVIEW (delta, bounded per the operator ruling).
+
+---
+
 ## 2026-09-09 — operator-authorized consolidated unblock batch (artifactRevisionId: 38-c51c1416f9bf)
 
 **Operator instruction (2026-09-09, this session):** the design↔review and

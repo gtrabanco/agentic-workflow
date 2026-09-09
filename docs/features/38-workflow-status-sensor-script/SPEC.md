@@ -129,6 +129,11 @@ of truth for the envelope shape.
     consumers at the script as the envelope's deterministic producer (business
     goal 3's consumer wiring — issue #185: "Drivers consume the same JSON
     directly").
+13. Fold fix #209's release policy into this feature's deliverables —
+    `CLAUDE.md`'s versioning guidance gains the freeze-majors rule (minor/patch
+    only until #176 merges; breaking changes ship as minor with a `BREAKING
+    CHANGE:` footer); this feature's own bump (E-38-2, 3.2.1 → 3.3.0 minor)
+    complies with the freeze.
 
 #### Out of scope / non-goals
 
@@ -355,6 +360,8 @@ genuinely judgement-only criteria labelled `read-verified`.
       skills/workflow-status/references/ENVELOPE_CORE.md` → 0 (assembly
       self-check prose gone — the script owns the self-check, E-38-1; F26
       repair: closes the in-scope item 7 surface that mapped to no criterion)
+- [ ] A:25 Fix #209's release policy is documented in the repo's versioning
+      guidance — check: `grep -nE '#176' CLAUDE.md` → ≥ 1 AND `grep -nE 'BREAKING CHANGE:' CLAUDE.md` → ≥ 1 (the freeze-majors rule names the gating milestone #176 and the breaking-change footer convention; operator-approved scope amendment 2026-09-10 folding fix #209 into 38's deliverables)
 - [ ] read-verified: Feature 15's injection-safety invariant (urgency from labels only) is preserved in the new script — verified by code review against feature 15 merge
 
 ### Tooling
@@ -507,13 +514,14 @@ Product boxes:
       this batch (F21/F22) re-pointed rows 3→A:22, 6→A:23, 10→A:21 — all three
       now resolve to criteria whose checks carry their claims.
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same wording or an explicit reference).
-      In-scope items 1–12 map to A:1 through A:24 (item 10's flag pass-through →
-      A:17–A:19; item 7's ENVELOPE_CORE.md slimming → A:24) and the inline criterion comments; A:20 resolves
+      In-scope items 1–13 map to A:1 through A:25 (item 10's flag pass-through →
+      A:17–A:19; item 7's ENVELOPE_CORE.md slimming → A:24; item 13's release-policy →
+      A:25) and the inline criterion comments; A:20 resolves
       expectation-sweep row 2's fatal-exit expectation, A:21 resolves sweep row 10
       (timed-out forge), A:22 resolves sweep row 3 (no prompts), A:23 resolves
       sweep row 6 (stdout/stderr) — sweep expectations, not in-scope bullets.
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — **24 runnable criteria (A:1–A:24) + 1 labelled
+      `read-verified` — **25 runnable criteria (A:1–A:25) + 1 labelled
       `read-verified` criterion** (injection-safety preservation): A:1 (file exists),
       A:2 (fixture test), A:3 (mutation grep), A:4 (offline fixture), A:5 (diff),
       A:6 (fixture test), A:7 (grep), A:8 (grep), A:9 (diff check),
@@ -522,7 +530,8 @@ Product boxes:
       A:18 (fixture test), A:19 (fixture test), A:20 (unknown-flag non-zero exit),
       A:21 (fixture: non-terminating `gh` shim → timeout degradation), A:22 (grep),
       A:23 (stdout-alone JSON parse + stderr fixture), A:24 (ENVELOPE_CORE.md
-      slimmed: script-backed reference present + assembly self-check prose gone).
+      slimmed: script-backed reference present + assembly self-check prose gone),
+      A:25 (fix #209 release-policy line in CLAUDE.md: freeze-majors rule present).
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none`. One row with a decide-by trigger (row 2, --output — still deferred; row 1 resolved via bounded question)
       to the human design owner — repair batch 2026-09-09; row 2 post-merge trigger).
@@ -546,6 +555,10 @@ Engineering boxes (additionally, at scaffold time):
 
 `designed` — capability closure complete, expectation sweep resolved, spec-lint
 product boxes pass. `plan-feature` may now plan this feature.
+
+2026-09-10 scope amendment (fix #209 fold): A:25 added, 24→25 runnable criteria,
+in-scope items 1–12→1–13, E-38-9 recorded; artifactRevisionId: 2bee477ba469
+(first 12 hex of sha256(SPEC.md)).
 
 ---
 
@@ -709,7 +722,12 @@ All engineering decisions are resolved here and recorded in `decisions.md`
 - **E-38-1** envelope self-validation is a stderr diagnostic, never a gate
   (exit 0); correctness is A:2's fixture suite's job.
 - **E-38-2** skill bump level is **minor** (3.2.1 → 3.3.0): process rewording,
-  external argv + envelope contract unchanged (PE-016/PE-017).
+  external argv + envelope contract unchanged (PE-016/PE-017); compliant with
+  fix #209's freeze-majors policy (minor, not major — breaking intent would
+  carry a `BREAKING CHANGE:` footer while #176 is open).
+- **E-38-9** fix #209's release-policy fold into 38's scope — operator-approved
+  amendment 2026-09-10; `CLAUDE.md` line implemented pre-execution (A:25).
+  artifactRevisionId rotated (see Design status).
 - **E-38-3** discipline pins re-target from prose-presence to script-behavior
   assertions — every pin keeps its asserted behavior and gains the stronger
   form; the mechanical rules' single home becomes the script (never weakened,
@@ -729,6 +747,11 @@ All engineering decisions are resolved here and recorded in `decisions.md`
   subprocess (`--stage`, `--unit`, `--parent` for plan-stage features; PE-005)
   and maps its structured verdict through the label table; unresolvable
   revisions fail open → unflagged.
+- **E-38-9** fix #209's release policy fold into 38's scope — operator-approved
+  amendment 2026-09-10. `CLAUDE.md` versioning guidance gains the freeze-majors
+  rule (A:25 / AC-24). The feature's bump is minor (3.2.1 → 3.3.0), fully
+  compliant; any future breaking change on this branch would carry a `BREAKING
+  CHANGE:` commit footer while #176 is open.
 
 ### Testing requirements
 
@@ -826,7 +849,7 @@ passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
 Driver wiring (EN + ES), MIGRATION note, pi bundle parity, full frozen
 validation ladder, read-verified injection-safety pass, truthful planning-doc
 close-out, PR open + roadmap flip. Phase-lint: PASS (8/8) · fingerprint
-`P4:hardening:10:qualify-sensor-unit`
+`P4:hardening:9:qualify-sensor-unit`
 
 ### Deploy & rollback
 
@@ -858,7 +881,8 @@ PR (the skill's pre-slimming prose is recoverable from git history).
 - `scripts/bounded-delivery-loops.test.mjs`, `scripts/pre-execution-quality.test.mjs`,
   `scripts/workflow-status-pre-execution.test.mjs` — re-targeted pins.
 - `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — re-based sensor entry.
-- `docs/workflow/ORCHESTRATION.md` + `.es.md` — driver wiring; `docs/workflow/MIGRATION.md`
+- `CLAUDE.md` — fix #209's release-policy line (pre-executed in the fold batch);
+  `docs/workflow/ORCHESTRATION.md` + `.es.md` — driver wiring; `docs/workflow/MIGRATION.md`
   — additive note; `CHANGELOG.md` — 3.2.1 → 3.3.0 row.
 - `packages/pi-agentic-workflow` — bundle re-synced (metadata per its own
   contract); `packages/agentic-workflow-schema/` — byte-untouched.
