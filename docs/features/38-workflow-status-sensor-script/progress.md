@@ -172,3 +172,20 @@ Next: bounded delta re-review — spec first (Product half moved), then plan.
 - Failed checks: none · Passed: L1 L2 L3 L4 L5 L6 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 (evaluated on the delta plus F25–F28 resolution evidence; open advisory rows F24/F29 unchanged, non-material)
 - Falsification: NO-CONFIRMED-GAPS under the operator's materiality bar (evidence probes re-run live: schema-runtime loader + named precondition, schema package v4.1.1, skill 780-line total, ENVELOPE_FIELDS note shape, dev scenario row)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted beside the verdict block in the reporting turn
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-38-20260909-010 · Snapshot: 96025bc24a9075a8192fd3b1d7e5a723170d0a774567cab4ff9eec602f8c4d6b · Verdict: plan-review-fail
+- Unit: 38-workflow-status-sensor-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 22cba9ae43d09dfddf85a2a26f4d2dbb3da4e21af98c2ce4b7213595c7b846e5 · Parent Product receipt: rp-38-20260909-008
+- Source revision: 1ce0bfae21234c323bb3cae9ea3ca476de5bd994 · Artifact revision: 1ce0bfae21234c323bb3cae9ea3ca476de5bd994
+- Revision notes: artifact revision bound to the builder's canonical RS3(b) identity (= source revision); the first self-check run carried the planner handoff id 2bee477ba469 in this field and returned exit 4 stale-artifact-revision — re-bound to the canonical identity with no bound byte moved, per the rp-005/rp-008 precedent (the handoff id is lineage provenance, not the bound identity)
+- Handoff pairing: fold-batch handoff id 2bee477ba469 is recorded in progress.md (§ scope amendment 2026-09-10) and in SPEC Design status; the bound identity for this receipt is the snapshot digest above, never the handoff id (precedent rp-005/rp-007/rp-009)
+- Reviewer: fresh pi coding-agent context (no authoring turns for this unit) · Session: pi-web review-plan 38 (third plan review; re-review triggered by a changed snapshot — operator-approved scope amendment folding fix #209, not a repeated question) · Role: reviewer · Author: plan-feature-scaffold 2026-09-09 + post-plan-review batch ed7aae98 + fold batch 32bb6434/1ce0bfae (handoff artifactRevisionId 2bee477ba469)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-09T21:33:00Z/2026-09-09T22:00:33Z · Findings: 4 (material open: 4 — F31 medium/product, F32 low/plan, F33 medium/plan, F34 low/plan; F30 superseded by F32's re-verification)
+- Ledgers read: planning-evidence 19 rows · obligations 27 rows (verified-capable: 27 — but the id set changed vs the parent revision: O24–O27 dropped, see F33)
+- Prior plan receipt (re-review only): rp-38-20260909-009 @ 6bb8b1dbe6c2a3e5f3c29e6983c2f09b51c1980f23a8b1f553a83d3611e271a3
+- L1 parent-current result: FAIL — the Product half moved after the newest SPEC-REVIEW-PASS (rp-008): spec-product-v1 projection e6d71d51 (43160 B) → 4f2c60ff (44201 B), spec-stage snapshot 22cba9ae → 15875fe2, artifactRevisionId 38-c51c1416f9bf → 2bee477ba469, project-guide context CLAUDE.md 9ae03966 → 89908a32 (both moved in the fold commit 32bb6434, which pre-executed the release-policy line into CLAUDE.md); plan-stage bytes moved after plan PASS rp-009 (ed7aae98 + 1ce0bfae), so rp-009 binds no current bytes either. Per CHECKS §3 the sweep stopped at L1 (route: review-spec first — an orphaned plan is not reviewed); F32–F34 were recorded from the lineage-verification reads so the repair batch sees them, and L2–L6/P1–P12 were not swept this cycle
+- Falsification: CONFIRMED-GAPS — a validator (ACCEPTANCE A-07) no longer matches the governing SPEC criterion it copies (F32); frozen F27 resolution's obligation row missing from the ledger (F33); a testing.md scenario pointer contradicting the SPEC/TASKS phase cut (F34)
+- Sensor self-check (POLICY §8, run in the same act as persisting this receipt): verify --stage plan --parent 22cba9ae… → structural.fresh true after this append, current false (verdict is FAIL — the sanctioned exit-4 shape); JSON pasted beside the verdict block in the reporting turn
