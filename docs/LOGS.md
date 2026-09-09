@@ -29,6 +29,13 @@ tidy past entries — they're a record.
 
 <!-- entries appended below this line -->
 
+## 2026-09-09T08 — feat/45-operator-approved-model-routing — manual
+- **Commits:** 1 (`00c42bfd`)
+- **Files:** docs/features/45-operator-approved-model-routing/SPEC.md, docs/features/45-operator-approved-model-routing/decisions.md
+- **Summary:** Designed product half for feature 45 (operator-approved model routing for spawned subagent passes). Conducted interview with the operator to clarify: (1) goal is operator-controlled model tiers (frontier for orchestration, cheap for subagents); (2) fallback chains (arrays) for model unavailability — try each in order, no limit on chain length; (3) global chain via `default` (accepts array), per-skill overrides via new `passes` key, `"inherit"` shares global chain; (4) `"auto"` value for sanctioned delegation; (5) per-skill granularity (not per-pass); (6) configurable fallback default (inherit, the orchestrator's model). Capability closure walked: config file entity, resolve-passes producer entity, 6 integration subsystem rows, 12 expectation sweep rows all in-scope. Drafted 5 product decisions. Readiness: READY-FOR-REVIEW.
+- **Decisions:** `default` extends to accept array (not new top-level key); per-skill config granularity; `"auto"` included but documented as operator-delegated; adversarial round-robin from chain (wraps if N > length); fallback default = inherit (orchestrator's model) when all chain models unavailable.
+- **Next:** /review-spec 45-operator-approved-model-routing — independent review before engineering planning
+
 ## 2026-09-08T23:30:00Z — fix/200-over-budget-fixture-stale-guard — manual
 - **Commits:** 10 (`7fa68074`…`98797b38`) → PR [#202](https://github.com/gtrabanco/agentic-workflow/pull/202) OPEN, MERGE-READY (this session)
 - **Files:** `docs/fix/200-over-budget-fixture-stale-guard/{SPEC.md,ACCEPTANCE.md,progress.md,planning-findings.md}`, `docs/fix/README.md`, `docs/LOGS.md`, `docs/features/ROADMAP.md`, `scripts/check-skill-context.test.mjs`
