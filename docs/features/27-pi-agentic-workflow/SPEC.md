@@ -306,9 +306,16 @@ Roles: `pi user`, `project maintainer`, `package maintainer`.
   model and thinking level, calls `setModel` / `setThinkingLevel` before
   dispatch, and restores both after `agent_settled` unless the user changed
   the model during that turn.
-- [ ] **AC8 — command-verified:** after a routed command settles, the session
-  model id and thinking level equal the pre-dispatch snapshot. Check:
-  package test `restore-after-settle`.
+- [ ] **AC8 — command-verified:** before the 0.9.0 amendment, after a routed
+  command settles the session model id and thinking level equal the
+  pre-dispatch snapshot. Check: package test `restore-after-settle`. **Amended
+  (0.9.0, commit `8ee6d33a`):** restore is no longer the default — the shipped
+  policy is `onSettle: "keep"`, which leaves the routed model and thinking level
+  in the window after the turn; AC8's restore is now the explicit
+  `onSettle: "restore"` opt-in, still pinned by `restore-after-settle` and now
+  by the `keep` suite (`on-settle-keep`). Both policies share: never overwrite
+  an operator's mid-turn `/model`/Ctrl+P choice, and always roll back a dispatch
+  whose send throws (the turn never started).
 - [ ] **AC9 — command-verified:** a configured `provider/modelId` that is
   missing or has no API key does not dispatch when `onUnavailableRoute` is
   `stop` (default); the operator sees a message naming the command, the
@@ -420,9 +427,10 @@ half above is marked `designed`.
 - **One install, zero setup:** `pi install npm:@gtrabanco/pi-agentic-workflow` yields friendly
   `/design-feature`-style commands with `inherit` default routing — no config file is required for
   the first dispatch.
-- **Honest routing:** a configured non-inherit route applies to exactly one invocation and is
-  restored after `agent_settled`; an unavailable configured route stops with a named explanation
-  instead of silently downgrading.
+- **Honest routing:** a configured non-inherit route applies to exactly one invocation and,
+  after `agent_settled`, is either kept in the open window (default, `onSettle: "keep"`) or
+  restored to the pre-dispatch model/thinking level (`onSettle: "restore"`); an unavailable
+  configured route stops with a named explanation instead of silently downgrading.
 - **Single workflow implementation:** bundled skills are byte-identical build copies of `skills/`
   with a parity test as the drift guard; no skill prose is forked.
 - **Clean packaging:** self-contained npm package with a `pi` manifest; nothing outside
@@ -507,9 +515,12 @@ named exactly after the skill's frontmatter `name:` (S3/D-P9). A handler run:
    in order (S3; AC4 pins `/plan-feature 27-pi-agentic-workflow` → `plan-feature` +
    `27-pi-agentic-workflow`), using the extension messaging mechanism cited in the product
    design (`examples/extensions/send-user-message.ts`).
-5. **Restore (S7):** after `agent_settled`, restore the snapshotted model + thinking level —
-   **unless** the user changed the model during the routed turn (S14/AC7: never restore over an
-   explicit user change).
+5. **Settle (S7, amended 0.9.0):** after `agent_settled`, apply the `onSettle`
+   policy resolved by the dispatch. `"keep"` (the shipped default) leaves the
+   routed model + thinking level in the open chat window; `"restore"` puts the
+   snapshotted model + thinking level back. Either way, never restore over an
+   explicit user model/thinking change made during the routed turn (S14/AC7), and
+   a dispatch whose send throws is rolled back regardless of policy.
 6. **First-run hint (S9):** on the first workflow-command dispatch, show a one-time hint that
    per-command models are optional (`/agentic-workflow-settings` or the JSON files); persist the
    acknowledgement in a dedicated global state file (`~/.pi/agent/pi-agentic-workflow-state.json`,
@@ -520,8 +531,9 @@ named exactly after the skill's frontmatter `name:` (S3/D-P9). A handler run:
 per-command override · set `onUnavailableRoute` · save to **global** or **project** scope with an
 explicit scope choice; project save is refused when the project is untrusted (S11/AC10).
 
-**State machine (from the SPEC's entity closure):** `idle → routing → dispatched → settled →
-restored`; busy or invalid-config input never leaves `idle`.
+**State machine (from the SPEC's entity closure):** `idle → routing → dispatched → settled`;
+the settle step is policy-dependent — `settled → kept` (default, `onSettle: "keep"`) or
+`settled → restored` (`onSettle: "restore"`). Busy or invalid-config input never leaves `idle`.
 
 ### Decisions to confirm
 
