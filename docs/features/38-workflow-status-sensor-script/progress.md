@@ -1,5 +1,13 @@
 # Progress — 38-workflow-status-sensor-script
 
+Last reviewed: —
+
+## 2026-09-09 — planned (artifactRevisionId: 38-plan-1)
+
+Plan artifacts created by `plan-feature-scaffold`. Engineering half filled, acceptance
+manifest frozen, phases cut (P1–P4), roadmap row updated to `planned`, ledgers
+frozen. Ready for independent plan review.
+
 ## Pre-execution review receipt v1 — spec
 - Review: rp-38-20260909-001 · Snapshot: 605c8ee72203a3ad466af7d39f929cc32b3f58f802e4d2711849682800511ace · Verdict: spec-review-fail
 - Unit: 38-workflow-status-sensor-script · Stage: spec · Unit kind: feature · Parent: null
