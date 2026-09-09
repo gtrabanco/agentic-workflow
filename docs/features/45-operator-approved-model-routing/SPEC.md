@@ -451,100 +451,293 @@ Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
 half above is marked `designed`.
 
 ### Technical goals
+### Technical goals
 
-The architectural outcomes — not implementation detail.
+- One strict-validated config vocabulary that covers both routed command turns
+  and mid-turn spawned passes, so every model an agent runs is either
+  operator-configured or an explicitly delegated `"auto"`.
+- A deterministic offline producer (`resolve-passes`) that applies the
+  fail-closed resolution rules **in code** and emits a byte-stable resolved
+  pass→model/thinking table — the model is never re-derived before a spawn.
+- A skill-side spawn contract that never improvises a model: ordered chain
+  fallthrough at spawn time, and a fail-closed inline degrade at the
+  orchestrator's model with the degrade stated in the report.
 
 ### Architecture impact
 
-How the feature interacts with the project's architecture and layering
-(as defined in its architecture doc). State the invariants the
-implementation must hold (e.g. "outer-layer-only — no changes to the
-core/domain layer"). If the feature touches the core/domain, justify it
-here.
+`n/a: no project invariants declared` (`docs/architecture/ARCHITECTURAL_INVARIANTS.md`
+absent — `REPOSITORY_STATE.md` F010; planning-preflight Stage 2 below records
+the final classification).
+
+- **Pi package — config module only.** The change lives in
+  `packages/pi-agentic-workflow/src/config/` (`types.ts`, `schema.ts`,
+  `merge.ts`) plus the chain-aware consumption in `src/routing/dispatch.ts`.
+  The domain layer stays Pi-free (the existing pattern: `THINKING_LEVELS`
+  mirrored in `types.ts`, never imported from Pi). The settings console
+  (`src/settings/console.ts`) is untouched — picker UX is issue #154.
+- **No new skill.** `review-change` and `init-workspace` gain wording and one
+  reference step each; every SKILL.md edit must stay within the enforced
+  context budgets (`bun scripts/check-skill-context.mjs`) and be re-bundled
+  into the pi package mirror (`bun run bundle:skills`,
+  `test/alias-coverage.test.mjs` reads both trees).
+- **Bilingual pairing (F011).** The two documentation pairs this feature
+  edits — the package README (`README.md` + `README.es.md`) and the root
+  CHANGELOG (`CHANGELOG.md` + `CHANGELOG.es.md`) — are edited EN+ES in the
+  same commit. `GOLDEN_FIXTURE.md` has an `.es.md` sibling: its EN edit and
+  ES sibling land in the same commit too. Skills and SPECs stay English-only.
+- **Claude-branch sync safety.** `model-routing.yml` gains a non-skill
+  top-level `passes` section; the frontmatter injector
+  (`.github/scripts/inject_claude_frontmatter.py`) currently treats *every*
+  top-level key as a skill, so it must skip non-skill keys or the
+  `sync-claude` workflow fails (PE-011).
 
 ### Design
 
-The substantive technical content: entities, ports, adapters, schema,
-data shapes, algorithms, state machines. Pre-resolve every decision the
-implementer would otherwise have to guess. Close inherited open
-questions explicitly. This is the section that most reduces
-implementation risk — if it is vague, the implementation improvises.
+#### Config vocabulary (pi package, `src/config/types.ts`)
+
+```ts
+export const PASS_NAMES = [
+  "review-code", "review-security", "review-verify", "review-design",
+  "review-a11y", "review-brand", "review-perf", "review-seo",
+  "verify", "classify", "debt",
+] as const;                                  // closed vocabulary — issue #201 Mechanics 1
+export type PassName = (typeof PASS_NAMES)[number];
+
+export type ModelChain = readonly ModelRef[];              // ordered fallback chain
+export type RouteModelSetting = ModelSetting | ModelChain; // default / commands routes
+export type PassModelSetting = "auto" | RouteModelSetting; // passes entries add `auto`
+
+export interface PassEntry { model?: PassModelSetting; thinking?: ThinkingSetting; }
+
+// RouteFile.model widens from ModelSetting to RouteModelSetting (both
+// `default` and `commands` entries may carry a chain).
+export interface ConfigFile {
+  default?: RouteFile;
+  commands?: Record<string, RouteFile>;
+  onUnavailableRoute?: UnavailableRoutePolicy;
+  passes?: Partial<Record<PassName, PassEntry>>;
+}
+```
+
+`THINKING_LEVELS` / `ThinkingSetting` / `ModelRef` / `ConfigIssue` are
+unchanged. `"auto"` is valid **only** in `passes` entries (D-E45-4): a global
+`default` of `auto` is meaningless — the default already *is* the
+orchestrator's model.
+
+#### Strict validator (`schema.ts`)
+
+- `ROOT_KEYS` gains `passes`. `default` accepts exactly three forms
+  (AD-45-009): the existing RouteFile object (its `model` now scalar-or-chain),
+  a plain array of ModelRef (implicit `thinking: "inherit"`), and a
+  chain-in-object (`{model: [...], thinking: <level|inherit>}`). A bare string
+  stays a rejection, reported at `$.default`.
+- A `passes` entry is checked like a route, plus: unknown pass name → issue at
+  `$.passes.<key>`; `model` additionally accepts `"auto"` and array chains;
+  `thinking` stays scalar-only (no chain — semantics §2). Rejection paths:
+  `$.passes.<pass-name>.model` (chain-element rejections carry the index,
+  `$.passes.<pass-name>.model[1]`) and `$.passes.<pass-name>.thinking`
+  (folds under the existing "invalid types" class — no new class).
+
+#### Runtime chain consumption (`merge.ts`, `routing/dispatch.ts`)
+
+- `resolveRoute` picks `model` as a whole value (project value replaces global;
+  chains are never spliced — a project that overrides a chain restates the
+  full operator order, D-E45-3). `thinking` keeps the existing key-granularity
+  rule. `mergeConfigs` carries `passes` entries project-over-global at
+  entry granularity; the turn router itself never consumes `passes`.
+- `dispatch.ts` consumes a chain by trying entries in the operator's order
+  against its existing model-registry check; the first usable entry wins
+  (semantics §1). A chain exhausted with no usable entry follows the existing
+  `onUnavailableRoute` policy (`stop` | `inherit`) — the command-turn analogue
+  of AD-45-001's fail-closed rule, reusing the shipped mechanism.
+
+#### resolve-passes producer (`scripts/resolve-passes.mjs`)
+
+- **Invocation contract** (fixed by the SPEC's ACs): reads one JSON config
+  from stdin, writes the resolved table as JSON to stdout, exit 0 on valid
+  config, exit ≠ 0 on config the strict validator rejects; validator issues
+  go to stderr, one JSON object per line (`{"path": …, "message": …}`) using
+  the same paths as the pi package validator.
+- **Resolved table shape** (D-E45-5, byte-stable):
+
+  ```json
+  {
+    "default": { "model": ["nan/glm5.3-flash"], "thinking": "inherit" },
+    "passes": {
+      "review-code": { "model": ["nan/qwen3.6"], "thinking": "inherit" },
+      "verify":      { "model": "auto", "thinking": "inherit" },
+      "debt":        { "model": "inline", "thinking": "inherit", "reason": "no default chain" }
+    }
+  }
+  ```
+
+  `default` first, then every pass of the closed vocabulary in issue #201
+  Mechanics 1's order. Every row carries both fields. Row `model` values:
+  the resolved chain array (`"inherit"` and absent entries resolve to the
+  default chain; scalar refs resolve to a one-element chain), `"auto"`
+  carried verbatim, or `"inline"` when no default chain exists (absent or
+  empty `default`, or an entry that yields no chain) with
+  `"reason": "no default chain"` and `thinking: "inherit"` (semantics §2/§4).
+  `thinking` is carried verbatim, absent → `"inherit"`, never rewritten
+  (semantics §3). No timestamps, no environment data — two runs on the same
+  input are byte-identical (AC8). Fixed key order = the declaration order
+  above; a stable JSON serialization, no pretty-printing variation.
+- **Vehicle**: self-contained zero-dependency `.mjs` at the repository's
+  deterministic-scripts home (`scripts/`), runnable bun-first / node-fallback
+  per the repo's runtime convention. `aw resolve-passes` (feature 43's crate,
+  issue #196) is the execution ladder's top rung once feature 43 lands; the
+  script is written so the crate can absorb it verbatim, and the skills'
+  documented ladder is `aw resolve-passes` → `bun|node scripts/resolve-passes.mjs`
+  → prose contract, degradation declared (D-E45-1).
+
+#### Skill contracts (wording only)
+
+- `review-change/SKILL.md` isolation rule: each pass's model comes from the
+  resolved table (via the ladder above) — never re-derived. A pass whose
+  chain cannot provide a model at spawn-time runs inline at the orchestrator's
+  model and the report states the degrade (AC6, semantics §2).
+- `references/ADVERSARIAL_SETUP.md`: `--adversarial N` assigns the N reviewers
+  models round-robin from the per-pass chain (wraps when N > chain length;
+  `inherit` uses the global chain; `auto` = host-agent choice, sanctioned by
+  AD-45-004) (AC6, AD-45-005).
+- `init-workspace/references/BOOTSTRAP_WRITE.md` + `UPGRADE.md`: a pass-routing
+  interview step writing `default` + recommended `passes` entries for the
+  review family into `pi-agentic-workflow.json` (upgrade mode: additive-only
+  block) (AC7).
 
 ### Planning evidence
 
-One compact row per Engineering claim that a phase relies on — never an
-exploration transcript. M/L units freeze this table in
-`planning-evidence.md` and leave the heading here reading
-`see planning-evidence.md`; XS/S units fill it in place.
-
 | id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|---|
+| PE-001 | Pi config roots are exactly `default`, `commands`, `onUnavailableRoute`; the validator is strict with JSON-path-ish issue reporting | repository | `packages/pi-agentic-workflow/src/config/schema.ts:14,97-104` | HEAD 02b12676 | O9, O12, D-E45-2 | current | proven | — |
+| PE-002 | `checkRoute` requires route values to be records; a bare-string `default` and `42` are rejections today; `model` must be `inherit` or `provider/modelId` | repository | `packages/pi-agentic-workflow/src/config/schema.ts:59-98` | HEAD 02b12676 | O11 | current | proven | — |
+| PE-003 | `THINKING_LEVELS` = `off…max`, `ThinkingSetting` = level or `inherit`; `ModelRef` = `provider/modelId`, split at the first slash | repository | `packages/pi-agentic-workflow/src/config/types.ts:8-16,24-28` | HEAD 02b12676 | O1, O18 | current | proven | — |
+| PE-004 | Pi package test command is `tsc && bun test test/*.test.mjs` (node fallback `test:node`) | repository | `packages/pi-agentic-workflow/package.json` scripts | HEAD 02b12676 | P1 done-when | current | proven | — |
+| PE-005 | Command-turn dispatch consumes `effectiveRoute(...).model` via `parseModelReference` plus a model-registry check, with the `onUnavailableRoute` policy as the unavailable-model outcome | repository | `packages/pi-agentic-workflow/src/routing/dispatch.ts:219-236` | HEAD 02b12676 | O20, D-E45-3 | current | proven | — |
+| PE-006 | Merge granularity is the individual route key, project over global; inputs are validated files | repository | `packages/pi-agentic-workflow/src/config/merge.ts` | HEAD 02b12676 | O20 | current | proven | — |
+| PE-007 | Deterministic scripts live at `scripts/*.mjs` with tests at `scripts/*.test.mjs` run `bun test`; bun-first / node-fallback is the repo runtime convention | repository | `scripts/` tree; `CLAUDE.md` "Runtime convention" | HEAD 02b12676 | D-E45-1, P2 done-when | current | proven | — |
+| PE-008 | Execution ladder for deterministic producers: `aw` binary → `.mjs` (node/bun) → prose contract, degradation declared; `resolve-passes` is reserved to feature 43's crate | forge | https://github.com/gtrabanco/agentic-workflow/issues/196 (Mechanics; fetched 2026-09-09) | issue open at fetch | O1–O5, D-E45-1 | current | proven | — |
+| PE-009 | Closed pass vocabulary: `review-code, review-security, review-verify, review-design, review-a11y, review-brand, review-perf, review-seo, verify, classify, debt` | forge | https://github.com/gtrabanco/agentic-workflow/issues/201 (Mechanics 1; fetched 2026-09-09) | issue open at fetch | O1, O16, D-E45-5 | current | proven | — |
+| PE-010 | `model-routing.yml` top-level keys must stay alphabetical; pinned at the model-routing assertion of `scripts/pre-execution-quality.test.mjs` (line 482) | repository | `docs/workflow/model-routing.yml`; `scripts/pre-execution-quality.test.mjs:482` | HEAD 02b12676 | O10 | current | proven | — |
+| PE-011 | The claude-branch injector iterates every top-level key of `model-routing.yml` as a skill name and exits non-zero when the matching `skills/` SKILL.md entry has no `name:` line — a non-skill `passes:` key would break the `sync-claude` workflow | repository | `.github/scripts/inject_claude_frontmatter.py` (`for name, cfg in routing.items()`); `.github/workflows/sync-derived-branches.yml` | HEAD 02b12676 | O10 | current | proven | — |
+| PE-012 | `BOOTSTRAP_WRITE.md` carries numbered write-verify steps (step 10 seeds the urgency labels); `UPGRADE.md` carries seven ordered steps with additive-only writes | repository | `skills/init-workspace/references/BOOTSTRAP_WRITE.md`; `skills/init-workspace/references/UPGRADE.md` | HEAD 02b12676 | O7 | current | proven | — |
+| PE-013 | `GOLDEN_FIXTURE.md` has a "Tool-calling smoke test (model precondition)" section (line 149) as the pattern the pass-routing smoke test joins; the unrelated `passes` prose at line 252 is outside AC15's scope | repository | `docs/workflow/GOLDEN_FIXTURE.md:149,252` | HEAD 02b12676 | O13, O15 | current | proven | — |
+| PE-014 | Ship-roadmap's model-routing reference exists and carries the stage/tier table including the cheap-worker row the pass tiers mirror | repository | `skills/ship-roadmap/references/MODEL_ROUTING.md` | HEAD 02b12676 | O15 | current | proven | — |
+| PE-015 | The package README documents today's config vocabulary at `README.md:73-92` / `README.es.md:75-93` and carries no `"passes"` key yet (grep → 0 matches, pre-verified 2026-09-09 per SPEC Evidence E13) | repository | `packages/pi-agentic-workflow/README.md`; `packages/pi-agentic-workflow/README.es.md` | HEAD 02b12676 | O19 | current | proven | — |
+| PE-016 | Root CHANGELOG carries bilingual version tables + a companion-package table; rendered-facts pins `version-tables`/`package-versions` equality | repository | `CHANGELOG.md`; `CHANGELOG.es.md`; `CLAUDE.md` rendered-facts@1 | HEAD 02b12676 | O19 | current | proven | — |
+| PE-017 | Skill edits must be re-bundled (`bun run bundle:skills`) — the committed `packages/pi-agentic-workflow/skills/` mirror stays byte-identical and `test/alias-coverage.test.mjs` reads both trees | repository | `CLAUDE.md` Verification + normalizer-inventory@1 | HEAD 02b12676 | O22 | current | proven | — |
+| PE-018 | `review-change`'s isolation rule (passes run in isolation, "its own tier or stronger") and `ADVERSARIAL_SETUP.md`'s fixed reviewer contract are the insertion points for the model-resolution contract | repository | `skills/review-change/SKILL.md:100-110`; `skills/review-change/references/ADVERSARIAL_SETUP.md` | HEAD 02b12676 | O6 | current | proven | — |
+| PE-019 | Feature 43 (`producer-package`) is `idea` — no crate and no `aw` binary exist; the ladder's `.mjs` tier is the executable vehicle this feature ships | repository | `ls packages/` (only `agentic-workflow-schema`, `pi-agentic-workflow`); `docs/features/ROADMAP.md` row 43 | HEAD 02b12676 | D-E45-1 | current | proven | — |
+| PE-020 | Current versions: `review-change` 3.5.0, `init-workspace` 2.8.0, `@gtrabanco/pi-agentic-workflow` 0.7.2 | repository | skill frontmatter; `packages/pi-agentic-workflow/package.json:3` | HEAD 02b12676 | O19, O22 | current | proven | — |
+| PE-021 | Human workflow documentation is bilingual when paired; skills, SPECs, and machine config are English-only | ledger | `REPOSITORY_STATE.md` F011 | snapshot 2026-08-30 | O21 | current | proven | — |
 
 ### Obligations
 
-One row per normative behaviour, applicable compatibility invariant, affected use
-case, and required failure state — the completeness map `execute-phase` and
-`audit-pr` read. M/L units freeze it in `planning-obligations.md`; XS/S units fill
-it in place. Status is `planned | in-progress | verified | n/a | deferred`;
-`n/a` requires evidence, and no current-unit obligation may be `deferred` to a
-follow-up issue.
-
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
+| O1 | AC1 | Absent pass entry + default chain → pass = default chain | P2 | task 2 | execute-phase | `printf '%s' '{"default":["nan/glm5.3-flash"]}' \| aw resolve-passes` (or `.mjs`) → exit 0, rows = default chain | test row in `scripts/resolve-passes.test.mjs` | planned |
+| O2 | AC2 | `inherit` pass entry → default chain | P2 | task 2 | execute-phase | AC2 command → resolved chain equals default chain | test row | planned |
+| O3 | AC3 | Per-pass override wins over the default chain | P2 | task 3 | execute-phase | AC3 command → `["nan/expensive"]` vs default | test row | planned |
+| O4 | AC4 | No default chain → inline + `no default chain` reason (absent/empty default, no-yield entry) | P2 | task 4 | execute-phase | AC4 commands → exit 0, inline rows with reason | test row | planned |
+| O5 | AC5 | `auto` carried verbatim | P2 | task 6 | execute-phase | AC5 command → row contains `"auto"` | test row | planned |
+| O6 | AC6 | review-change consumes the resolved table; round-robin with wrap; spawn-time degrade stated in report | P3 | tasks 1–3 | execute-phase | grep anchors (SKILL.md + ADVERSARIAL_SETUP.md name the resolved table, round-robin wrap, inline degrade) — read-verified | AC6 grep output pasted | planned |
+| O7 | AC7 | init-workspace writes `default` + recommended `passes` entries in bootstrap and upgrade | P4 | task 1 | execute-phase | AC7 grep → pass-routing step in both references | grep output | planned |
+| O8 | AC8 | Byte stability: same input → byte-identical stdout | P2 | tasks 7–8 | execute-phase | two-run byte-identical assertion green | test row | planned |
+| O9 | AC9 | Schema rejects non-ModelRef array element | P1 | task 6 | execute-phase | package suite: rejection case green | test name in package `test/` | planned |
+| O10 | AC10 | model-routing.yml keys stay alphabetical with the `passes` section in place; claude-branch injector tolerates non-skill keys | P1 | task 8 | execute-phase | `bun test scripts/pre-execution-quality.test.mjs` → exit 0 | exit code pasted | planned |
+| O11 | AC11 | Three accepted `default` forms resolve; bare string rejected | P1 | tasks 2, 5 / P2 task 3 | execute-phase | AC11 commands → 3× exit 0 + 1× exit ≠ 0 | test rows both suites | planned |
+| O12 | AC12 | Unknown root key / invalid types → exit ≠ 0 | P2 | task 5 | execute-phase | AC12 commands → exit ≠ 0 | test rows in `scripts/resolve-passes.test.mjs` AND the package rejection suite (D-E45-2 pinning) | planned |
+| O13 | AC13 | Pass-routing smoke test registered as a model precondition in GOLDEN_FIXTURE.md (EN+ES same commit) | P4 | task 3 | execute-phase | AC13 grep → ≥ 1 match | grep output | planned |
+| O14 | AC14 | `auto` needs no gate of its own: untrusted project config never read (S11); verified as existing behavior | P1 | task 5 (assertion in suite) | execute-phase | AC14 read-verified: loader/console gates re-checked in the suite notes | suite note + read check | planned |
+| O15 | AC15 | Recommendation note (not auto-written) in ship-roadmap MODEL_ROUTING.md + GOLDEN_FIXTURE.md, anchored on the recommendation phrase | P4 | task 2 | execute-phase | AC15 grep → ≥ 1 match per file, matched lines are the note | grep output | planned |
+| O16 | AC16 | Unknown pass name rejected (closed vocabulary) | P2 | task 5 | execute-phase | AC16 command → exit ≠ 0 | test rows in both suites (D-E45-2 pinning) | planned |
+| O17 | AC17 | Invalid model reference rejected at `$.passes.<pass-name>.model` (indexed elements) | P2 | task 5 | execute-phase | AC17 commands → exit ≠ 0 with the path in stderr | test rows in both suites + stderr sample | planned |
+| O18 | AC18 | `thinking` carried verbatim, absent → `inherit`, non-scalar rejected at `$.passes.<pass-name>.thinking` | P2 | task 6 | execute-phase | AC18 commands → exit 0 values + exit ≠ 0 | test rows in both suites | planned |
+| O19 | AC19 (README half) | Package README EN+ES document the `passes` key + chain-shaped `default`/`model`; pair edited in one commit | P4 | task 4 | execute-phase | `grep -n '"passes"' packages/pi-agentic-workflow/README.md packages/pi-agentic-workflow/README.es.md` → ≥ 1 match per file; `git log --name-only` shows both sides in one commit | grep output + commit list | planned |
+| O20 | Scope item 1 + semantics §1 (runtime consumer) | Command-turn dispatch consumes chains in operator order; exhausted → existing `onUnavailableRoute` policy | P1 | task 4 | execute-phase | package suite incl. dispatch chain tests → exit 0 | test names pasted | planned |
+| O21 | AC19 (CHANGELOG half) | Root CHANGELOG EN+ES record the change ("passes config"/"pass routing" anchor) + companion-package row for the pi minor bump; pair edited in one commit | P4 | task 5 | execute-phase | `grep -cin "pass.?routing\|passes config" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 each; `git log --name-only` shows both sides in one commit | grep output + commit list | planned |
+| O22 | CLAUDE.md bilingual rule / F011 | `GOLDEN_FIXTURE.md` and its `.es.md` sibling land in the same commit | P4 | task 3 | execute-phase | `git log --name-only` → both sides listed in the same commit | commit output | planned |
+| O23 | CLAUDE.md Verification (mirror parity + budgets) | Skills mirror re-bundled after the last skills edit; context budgets green | P4 | task 6 | execute-phase | `bun run bundle:skills`; `bun scripts/check-skill-context.mjs` → PASS | exit codes | planned |
 
 ### Decisions to confirm
 
-Engineering decisions the project lead must make (or has made) before
-implementation starts. Record the chosen option and the rationale, so
-later reviewers understand the trade-off.
+- **D-E45-1 — producer home.** The `.mjs` fallback is a self-contained
+  zero-dependency `scripts/resolve-passes.mjs` at the repo's deterministic
+  scripts home, runnable bun-first / node-fallback. `aw resolve-passes`
+  (feature 43's crate) stays the ladder's top rung once feature 43 lands; the
+  script is written so the crate can absorb it verbatim (PE-008, PE-019).
+  Chosen over a pi-package CLI entry: the producer must be reachable from
+  every agent's skills tree, not only pi installs, and the repo's script
+  tests convention (`bun test scripts/*.test.mjs`) applies as-is.
+- **D-E45-2 — bounded vocabulary duplication, pinned by fixtures.** The pi
+  package schema remains the config-validation authority for the extension;
+  the producer re-states the same accept/reject rules in its own code. The
+  two are pinned equal by the shared AC case table (every AC command case
+  appears in both `test/config-*.test.mjs` and `scripts/resolve-passes.test.mjs`),
+  so drift fails one of the two suites. Feature 43's crate unifies the
+  vehicle later; until then this is the same pattern the repo already accepts
+  (a script and the code it wraps pinned by tests), recorded rather than
+  silently duplicated.
+- **D-E45-3 — chain merge + runtime consumption.** Chains merge whole-value
+  (project chain replaces the global chain — no splicing); command-turn
+  dispatch resolves a chain in operator order against the existing registry
+  check, exhausted → the existing `onUnavailableRoute` policy. Grounded in
+  scope item 1's own chain semantics and `dispatch.ts`'s shipped
+  registry/policy behavior (PE-005); no new runtime mechanism invented.
+- **D-E45-4 — `auto` scope.** `"auto"` is valid only in `passes` entries. A
+  global `default` of `auto` is a contradiction (the default is what the
+  orchestrator already runs); the validator rejects it at `$.default.model`.
+- **D-E45-5 — resolved-table shape.** Fixed JSON: `default` row + one row per
+  closed-vocabulary pass in issue #201 Mechanics 1's order; rows carry both
+  fields; `reason` appears only on `inline` rows; scalar refs resolve to
+  one-element chains; no timestamps. This is what makes AC1–AC5, AC8, AC18
+  mechanically decidable.
+- **D-E45-6 — injector tolerance.** `inject_claude_frontmatter.py` skips
+  top-level keys with no matching skill directory under `skills/`, so
+  `model-routing.yml` can carry the `passes` section without breaking the
+  `sync-claude` workflow (PE-011). Skill keys keep the current behavior.
+- **D-E45-7 — size confirmed.** Size stays **S** (SPEC + ACCEPTANCE.md only,
+  phases ledgered in the SPEC): five phases, none multi-layer, no unresolved
+  design decision — the mandatory split rule is not triggered at exactly five
+  phases; a sixth phase or any multi-layer phase would trigger the split.
 
 ### Testing requirements
 
-What must be tested and how. State the test layer (unit / integration
-/ architecture) and any tooling or runtime constraints. The project
-prefers integration and architecture tests over heavy mocking.
+- Pi package: `bun run test` (`tsc && bun test test/*.test.mjs`; node fallback
+  `test:node`) — table-driven round-trip for the extended vocabulary; every
+  rejection asserts its exact issue path (no `assert.throws` without path).
+  Prefer table-driven fixtures over per-case mocks; the package prefers
+  integration tests.
+- Producer: `bun test scripts/resolve-passes.test.mjs` — golden fixtures for
+  every AC case (absent → default, chain resolution, inherit, auto
+  passthrough, unresolvable → inline, invalid config → non-zero) plus the
+  two-run byte-identical assertion. Node fallback exercised via
+  `node --test` on the same fixtures (CI node-compat).
+- Repo gates touched by this feature: `bun test scripts/pre-execution-quality.test.mjs`
+  (alphabetical model-routing keys), `bun scripts/check-skill-context.mjs`
+  (context budgets after skill edits), `bun run bundle:skills` mirror parity
+  (`test/alias-coverage.test.mjs`), `npx skills add . --list`.
+- No runtime model availability is ever sampled in tests (the producer is
+  offline by contract); spawn-time behavior is verified as skill wording
+  (read-verified), never as a mocked spawn.
 
 ### Dev scenarios
 
-The situations this feature introduces that must be reproducible in local
-dev — happy path **and** failure modes (empty/degraded state, races,
-outages, mass changes, data loss). Seed the failure modes from this **fixed
-category list** — walk every category and write a scenario or
-`n/a: <reason>` (unaided recall under-enumerates; the list makes coverage a
-presence check): empty/zero state · invalid or oversized input · permission
-denied / wrong role · dependency outage or timeout · concurrent/duplicate
-action · limit or threshold hit. For each, name it and state how it is
-reached through an **existing** mechanism (queued message, guard threshold,
-manual override, stubbed source) — scenarios are orchestration, never new
-domain. If the project has a runnable dev-scenario harness, register each
-scenario there (dev-gated, never reaching production) and link it here;
-otherwise list them as prose.
-
 | Scenario | Reproduces | Mechanism it drives |
 |---|---|---|
-| `<area>:<name>` | the situation | the existing trigger |
+| `resolve-passes:no-default` | empty/zero state — config with no `default` (or `"default": []`) → every pass inline with the `no default chain` reason | existing mechanism: pipe `{}` / `{"default":[]}` to `resolve-passes` (AC4 fixture) |
+| `resolve-passes:invalid-config` | invalid or oversized input — unknown root key, `42` default, non-ModelRef element, non-scalar thinking → exit ≠ 0 with the exact path | existing mechanism: piped fixture configs (AC9, AC12, AC16–AC18 fixtures) |
+| `resolve-passes:unknown-pass-name` | invalid input against the closed vocabulary — a `bogus-pass` key → exit ≠ 0 | piped fixture (AC16 fixture) |
+| `routing:untrusted-project` | permission denied / wrong role — an untrusted project's `passes` entry (with `"auto"`) is never honored | existing mechanism: the S11 project-trust gate (config not read while untrusted) — read-verified suite note (AC14) |
+| `spawn:ladder-degradation` | dependency outage — `aw` absent → the skill ladders to `bun|node scripts/resolve-passes.mjs`; a runtime-unavailable model falls through the chain; exhausted → inline degrade stated in the report | documented ladder + spawn-time consumer wording (semantics §1–2, AC6) |
+| `spawn:round-robin-wrap` | limit/threshold hit — `--adversarial N` with N > chain length wraps | ADVERSARIAL_SETUP.md round-robin rule, read-verified against a fixture table (AC6) |
+| `resolve-passes:byte-stability` | concurrent/duplicate action — two resolution runs on the same input | two-run byte-identical assertion in the fixture suite (AC8) |
 
 ### Phases
 
-High-level phase breakdown; detailed tasks are expanded in `TASKS.md`.
-**Phases are labelled `P1, P2, …` and called *phases* — never `S1`/`S2` or
-"Steps".** `execute-phase <NN>` runs all remaining phases by default; an
-explicit `P<n>` runs one atomic phase. Planning (producing the planning artifacts) is done by `plan-feature`
-before execution, so it is **not** a numbered phase here. `P1` is the first
-implementation phase (it also commits the planning artifacts); the **last phase
-is always hardening** (edge cases + the dev-scenario failure modes). For **M/L**,
-opening the PR is the final *step* of the hardening phase (its `TASKS.md`
-checklist ends with the literal close-out tasks), not a phase of its own. For
-**XS/S** (SPEC-only, no `TASKS.md`), list the phases **here, with checkbox
-tasks** — **always ≥ 2**: `P1` implementation, final phase `P2 — Hardening & PR`
-carrying the literal close-out tasks (fixed wording — see
-`docs/fix/_TEMPLATE/SPEC.md` `## Phases`); `execute-phase` ticks this section as
-its ledger. Each implementation phase
-header is followed by `Layer: <schema/db|domain|api|ui|config/infra|docs|
-hardening>. Done-when: <command> → <expected outcome>.` before its task list
-(same scaffold as `docs/fix/_TEMPLATE/SPEC.md` `### P1`) — the phase-lint's
-"one declared layer" and "machine-checkable done-when" boxes need somewhere to
-be filled in, not invented.
+`P1, P2, …` phases; `execute-phase 45` runs all remaining phases by default,
+`execute-phase 45 P1` runs one atomic phase. Detailed rationale lives in this
+SPEC's Engineering half; the checkboxes below are the execution ledger.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
@@ -555,22 +748,188 @@ Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
 record the result here as `Phase-lint: PASS (8/8) · fingerprint
 <P<n>:<layer>:<n-tasks>:<title-deliverable>>` (or `BLOCKED — box <n>: …`).
 
+#### P1 — Extended pass-routing config vocabulary
+
+Layer: `config/infra`. Done-when: `cd packages/pi-agentic-workflow && bun run test` →
+exit 0 with the new table-driven round-trip and rejection suites green.
+
+- [ ] `types.ts`: add the closed `PASS_NAMES` vocabulary (11 names, issue #201
+  Mechanics 1 order), `ModelChain`, `RouteModelSetting`, `PassModelSetting`
+  (`"auto"` allowed only in pass entries — D-E45-4), `PassEntry`, and the
+  `passes` field on `ConfigFile` (AC2, AC5, AC9 shapes).
+- [ ] `schema.ts`: extend `default` validation to the three accepted forms —
+  existing RouteFile object (model scalar-or-chain), plain-array chain,
+  chain-in-object — keeping the bare-string rejection at `$.default` (AC11).
+- [ ] `schema.ts`: validate `passes` entries (route keys model/thinking only;
+  `model` additionally accepts `"auto"` and chains; `thinking` scalar only)
+  with the exact reporting paths `$.passes.<pass-name>.model` (indexed
+  elements) and `$.passes.<pass-name>.thinking`, and the closed pass-name
+  vocabulary (AC12, AC16, AC17, AC18).
+- [ ] `merge.ts` + `routing/dispatch.ts`: whole-value chain merge
+  (project over global); dispatch consumes a chain in operator order against
+  the existing registry check, exhausted → the existing `onUnavailableRoute`
+  policy (D-E45-3, O20).
+- [ ] Package tests: table-driven valid-shape round-trip — object form,
+  plain-array chain, chain-in-object, `passes` entries with
+  `inherit`/`auto`/scalar/chain models and level/`inherit` thinking (AC2,
+  AC5, AC11 valid side).
+- [ ] Package tests: table-driven rejection suite covering semantics §3's
+  classes with exact paths — non-ModelRef array element (AC9), unknown root
+  key and non-record `default` (AC12), invalid model references at
+  `$.passes.<pass-name>.model` incl. indexed elements and `auto` outside
+  `passes` (AC17, D-E45-4), unknown pass name (AC16), non-scalar `thinking`
+  path (AC18); plus the AC14 read-verified note (untrusted-project gates).
+- [ ] `docs/workflow/model-routing.yml`: add the alphabetical `passes`
+  section (per-pass recommended tiers for the `#claude` branch, mirroring
+  ship-roadmap's cheap-worker row) and teach
+  `.github/scripts/inject_claude_frontmatter.py` to skip top-level keys with
+  no matching skill directory (D-E45-6) — `bun test scripts/pre-execution-quality.test.mjs`
+  stays exit 0 (AC10).
+
+#### P2 — resolve-passes producer
+
+Layer: `config/infra`. Done-when: `bun test scripts/resolve-passes.test.mjs` →
+exit 0.
+
+- [ ] `scripts/resolve-passes.mjs` CLI contract: read one JSON config from
+  stdin, emit the resolved table (D-E45-5 shape) to stdout; exit 0 valid,
+  exit ≠ 0 rejected; validator issues to stderr as one JSON object per line
+  with the validator's paths (AC1, AC12).
+- [ ] Default-chain resolution: a pass with no `passes` entry and a pass with
+  `model: "inherit"` both resolve to the `default` chain (AC1, AC2).
+- [ ] Per-pass override: a pass with its own model/chain wins; all three
+  accepted `default` forms resolve to the operator's order (AC3, AC11).
+- [ ] Inline degrade marking: absent/empty `default` or an entry yielding no
+  chain → row `model: "inline"`, `reason: "no default chain"`,
+  `thinking: "inherit"` (AC4).
+- [ ] Strict validation in code: the four rejection classes (unknown root
+  key · invalid types · invalid model reference at `$.passes.<pass-name>.model`
+  with indexed elements · unknown pass name) → exit ≠ 0 (AC12, AC16, AC17).
+- [ ] `thinking` and `auto` handling: verbatim carriage, absent → `"inherit"`,
+  non-scalar rejected at the `$.passes.<pass-name>.thinking` path; `auto`
+  passed through untouched (AC5, AC18).
+- [ ] Byte-stable emission: fixed key order, no timestamps — two runs on the
+  same input produce byte-identical stdout (AC8).
+- [ ] `scripts/resolve-passes.test.mjs`: golden fixture suite covering the
+  full AC case table (AC1–AC5, AC8, AC11, AC12, AC16–AC18), bun-first with
+  the same fixtures green under `node --test` (node-compat).
+
+#### P3 — review-change pass-routing contract
+
+Layer: `docs`. Done-when: `grep -n "resolve-passes" skills/review-change/SKILL.md
+skills/review-change/references/ADVERSARIAL_SETUP.md` → ≥ 1 match in each.
+
+- [ ] `skills/review-change/SKILL.md` isolation rule: every spawned pass
+  resolves its model from the resolved table via the documented ladder
+  (`aw resolve-passes` → `bun|node scripts/resolve-passes.mjs` → prose
+  contract, degradation declared); a pass whose chain cannot provide a model
+  at spawn-time runs inline at the orchestrator's model with the degrade
+  stated in the report (AC6, semantics §2).
+- [ ] `skills/review-change/SKILL.md`: report contract states the per-pass
+  model used and any inline degrade (AC6).
+- [ ] `references/ADVERSARIAL_SETUP.md`: `--adversarial N` reviewers consume
+  the per-pass chain round-robin, wrapping when N > chain length; `inherit`
+  uses the global chain; `auto` = sanctioned host-agent choice (AC6,
+  AD-45-004, AD-45-005).
+- [ ] Bump `review-change` 3.5.0 → 3.6.0 (minor: new spawn contract) via
+  bump-skill — CHANGELOG EN+ES rows and README tables updated.
+
+#### P4 — Operator onboarding documentation
+
+Layer: `docs`. Done-when: `grep -n "passes" skills/init-workspace/references/BOOTSTRAP_WRITE.md
+skills/init-workspace/references/UPGRADE.md` → ≥ 1 match in each (AC7).
+
+- [ ] `skills/init-workspace/references/BOOTSTRAP_WRITE.md` + `UPGRADE.md`:
+  pass-routing interview step that writes `default` + recommended `passes`
+  entries for the review family into `pi-agentic-workflow.json` (upgrade:
+  additive-only block, never clobbering an existing decision) (AC7).
+- [ ] `skills/ship-roadmap/references/MODEL_ROUTING.md` +
+  `docs/workflow/GOLDEN_FIXTURE.md`: post-install recommendation note (not
+  auto-written) pointing the operator to configure `default` + `passes`
+  entries — the note carries the "pass routing" phrase AC15 anchors on, and
+  the unrelated `passes` prose at GOLDEN_FIXTURE.md:252 stays untouched
+  (AC15).
+- [ ] `docs/workflow/GOLDEN_FIXTURE.md` + `GOLDEN_FIXTURE.es.md` (same
+  commit): register the pass-routing smoke test as a model precondition for
+  pass-spawning runs — resolve a fixture config once, require exit 0 and a
+  byte-stable table, before any pass-spawning review run (AC13).
+- [ ] Package README EN+ES (same commit): document the extended vocabulary —
+  the `passes` key with a per-pass `{model, thinking}` example and the
+  chain-shaped `default`/`model` — in the config section (AC19).
+- [ ] Root CHANGELOG EN+ES (same commit): feature row anchored on "passes
+  config"/"pass routing"; companion-package table row for the pi package
+  minor bump 0.7.2 → 0.8.0 (AC19).
+- [ ] Bump `init-workspace` 2.8.0 → 2.9.0 via bump-skill; then run
+  `bun run bundle:skills` so the pi package skills mirror is byte-identical
+  (O21, O22).
+
+#### P5 — Hardening & PR
+
+- [ ] Re-run the project's full verification gate — `cd packages/pi-agentic-workflow && bun run test` → exit 0; `bun test scripts/resolve-passes.test.mjs` → exit 0; `bun test scripts/pre-execution-quality.test.mjs` → exit 0; `bun scripts/check-skill-context.mjs` → PASS; `npx skills add . --list` → exit 0 (commands + exit codes pasted)
+- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [ ] Set the roadmap row status to `done` and commit the flip
+- [ ] `git push`
+- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+      Markdown file, real backticks, never inline `--body`/heredoc) and
+      PRINT THE PR URL in the chat; the body includes `Closes #201`
+- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [ ] Commit `docs: link PR #<n>` and push
+
+#### Phase-lint
+
+- P1 — `Phase-lint: PASS (8/8) · fingerprint P1:config/infra:7:Extended pass-routing config vocabulary`
+- P2 — `Phase-lint: PASS (8/8) · fingerprint P2:config/infra:8:resolve-passes producer`
+- P3 — `Phase-lint: PASS (8/8) · fingerprint P3:docs:4:review-change pass-routing contract`
+- P4 — `Phase-lint: PASS (8/8) · fingerprint P4:docs:6:Operator onboarding documentation`
+- P5 — `Phase-lint: PASS (8/8) · fingerprint P5:close-out:7:Hardening & PR`
+
 ### Deploy & rollback
 
-Only when shipping needs more than merging: schema migrations and their order,
-feature flag (if gradual rollout), config/env changes, and the rollback path
-(revert PR? data cleanup?). State **n/a** explicitly when merging is enough.
+n/a — merging is enough. The pi package publishes on merge when its version
+differs from the registry (CI workflow, manual same-PR version bump);
+config changes are additive (unknown keys are rejected, so an old extension
+reading a new config fails loudly, never silently — the shipped strict
+validator is the rollback boundary). No migrations, no feature flag.
 
 ### Open questions / risks
 
-Known unknowns and risks. Promote to `TASKS.md` if they become
-blockers. Mark inherited questions as RESOLVED or DEFERRED with a
-pointer to where they are now handled.
+- **Feature 43 not merged** (`producer-package`, `idea`): the `aw` rung of
+  the ladder does not exist at execution time; the `.mjs` tier is the
+  executable vehicle and the prose contract is the floor. Recorded, not
+  blocking planning; the dependency check routes the build-order
+  recommendation (43 first). RESOLVED-by-design: the producer invocation
+  contract (`aw resolve-passes` + `.mjs` fallback, stdin→stdout) is frozen by
+  the Product half, so feature 43 cannot drift it.
+- **Issue #154 (settings console picker)** may change the ordered-chain UX
+  shape: pass entries adopt its shape when it lands — DEFERRED with its
+  recorded trigger (SPEC Deferred decisions row 1).
+- **Inherited questions**: issue #201's `auto`-untrusted question RESOLVED
+  (AD-45-007, yes-by-construction); granularity RESOLVED (AD-45-002).
+- **Risk — validator equivalence drift** between `schema.ts` and the
+  producer: mitigated by the shared AC case table in both suites (D-E45-2);
+  a review finding here is expected to fail one suite, not hide.
 
 ### Deliverables
 
-The concrete artifacts the PR contains.
+- `packages/pi-agentic-workflow/src/config/{types,schema,merge}.ts` +
+  `src/routing/dispatch.ts`: extended vocabulary, strict validation, chain
+  consumption + package test suites.
+- `scripts/resolve-passes.mjs` + `scripts/resolve-passes.test.mjs`: the
+  producer and its golden-fixture suite.
+- `docs/workflow/model-routing.yml` `passes` section +
+  `.github/scripts/inject_claude_frontmatter.py` non-skill-key tolerance.
+- `skills/review-change/SKILL.md` + `references/ADVERSARIAL_SETUP.md`
+  (version bump), `skills/init-workspace/references/BOOTSTRAP_WRITE.md` +
+  `UPGRADE.md` (version bump), `skills/ship-roadmap/references/MODEL_ROUTING.md`
+  note, `docs/workflow/GOLDEN_FIXTURE.md` (+ ES sibling).
+- `packages/pi-agentic-workflow/README.md` + `README.es.md`, root
+  `CHANGELOG.md` + `CHANGELOG.es.md`, pi package version bump, re-bundled
+  skills mirror.
 
 ### Post-merge next feature
 
-The expected next feature in the sequence — see `docs/features/ROADMAP.md`.
+Feature 43 `producer-package` (issue #196) — the `aw` crate that becomes this
+feature's ladder top rung (currently `idea`: `/design-feature
+43-producer-package` first). Thereafter the next `defined`/`idea` roadmap row
+per `docs/features/ROADMAP.md` (e.g. 31 `planning-review-materiality`, deps
+merged).

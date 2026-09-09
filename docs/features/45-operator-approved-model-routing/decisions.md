@@ -305,3 +305,78 @@ One batch over the full open findings set; all four classified `product`.
   observing in-scope item 7 — GOLDEN_FIXTURE.md pass-routing smoke test).
 - **Evidence**: issues #196, #201, #154 fetched 2026-09-09 (SPEC `### Evidence`
   rows frozen); roadmap rows and `packages/` inspected at HEAD.
+
+## AD-45-010 — Producer implementation home and vehicle ladder — 2026-09-09 (engineering)
+
+**Decision**: the `.mjs` fallback tier of the resolve-passes execution ladder is a
+self-contained, zero-dependency `scripts/resolve-passes.mjs` at the repository's
+deterministic-scripts home, runnable bun-first / node-fallback. `aw resolve-passes`
+(feature 43's crate, issue #196) stays the ladder's top rung once feature 43 lands;
+the script is written so the crate can absorb it verbatim. Skills document the ladder
+`aw resolve-passes` → `bun|node scripts/resolve-passes.mjs` → prose contract, with
+degradation declared.
+
+**Why**: the producer must be reachable from every agent's skills tree (not only pi
+installs); feature 43 is still `idea`, so no crate exists to host the logic; the
+repo's script convention (`bun test scripts/*.test.mjs`, bun-else-node) applies as-is.
+Grounded in issue #196's ladder ("if absent, run the `.mjs` …; the prose contract is
+the floor") and the SPEC's producer-invocation freeze.
+
+**Consequence**: bounded vocabulary duplication between the pi package's `schema.ts`
+(config authority for the extension) and the producer. Pinned by the shared AC case
+table — every AC command case appears in both the package suite and
+`scripts/resolve-passes.test.mjs`, so drift fails one of the two suites (AD-45-011).
+Feature 43's crate later unifies the vehicle.
+
+## AD-45-011 — Validator equivalence pinned by shared AC cases — 2026-09-09 (engineering)
+
+**Decision**: the strict-validator accept/reject rules exist twice during this unit —
+in `packages/pi-agentic-workflow/src/config/schema.ts` (extension config loading) and
+in `scripts/resolve-passes.mjs` (offline producer). Both are pinned to the same
+behavior by the shared AC case table (AC9, AC12, AC16, AC17, AC18) with identical
+rejection paths; both suites must stay green.
+
+**Why**: node cannot import the package's TypeScript directly, and the producer must
+not require the pi package; single-source is restored when feature 43's crate absorbs
+the script. Recorded deliberately rather than left as silent duplication — a
+`review-plan`/`review-change` finding on this is routed to this row, not re-litigated.
+
+## AD-45-012 — Chain merge granularity and runtime consumption — 2026-09-09 (engineering)
+
+**Decision**: `model` chains merge **whole-value** (a project-level chain replaces the
+global chain — no splicing; a project overriding a chain restates the full operator
+order). Command-turn dispatch consumes a chain by trying entries in the operator's
+order against the existing model-registry check; an exhausted chain follows the
+existing `onUnavailableRoute` policy (`stop` | `inherit`).
+
+**Why**: matches `merge.ts`'s validated-inputs, project-over-global design and
+`dispatch.ts`'s shipped registry check + unavailable-policy mechanism (no new runtime
+mechanism), and operationalizes scope item 1's "tried in the operator's order" for the
+one consumer the runtime owns. Spawned passes keep the producer/skill path (AC6).
+
+## AD-45-013 — `auto` is valid only in `passes` entries — 2026-09-09 (engineering)
+
+**Decision**: `"auto"` is accepted as a `model` value only inside `passes` entries.
+The strict validator rejects `"auto"` at `$.default.model` and `$.commands.*.model`.
+
+**Why**: a global `default` of `"auto"` is a contradiction — the default already *is*
+the orchestrator's model; delegating to "the orchestrating agent" is meaningful only
+for a spawned pass. Scope item 3 introduces `auto` in the pass-entry vocabulary
+(AC5 tests it under `passes`); nothing in the Product half or issue #201 extends it
+to command turns. Closed reading, recorded so the executor does not guess.
+
+## Engineering scaffold — 2026-09-09 (plan-feature-scaffold)
+
+- Size confirmed **S** (SPEC + ACCEPTANCE.md; phases ledgered in the SPEC): five
+  phases, each single-layer, no unresolved design decision — the mandatory split rule
+  is not triggered at exactly five phases.
+- Phase cut: P1 config vocabulary (config/infra) · P2 resolve-passes producer
+  (config/infra) · P3 review-change contract (docs) · P4 onboarding docs (docs) ·
+  P5 Hardening & PR (close-out). Fingerprints in the SPEC's Phase-lint block.
+- Engineering discovery grounding: `inject_claude_frontmatter.py` treats every
+  `model-routing.yml` top-level key as a skill, so the new `passes` section requires
+  the injector to skip non-skill keys (PE-011 / D-E45-6) — without this the
+  `sync-claude` workflow fails on push to main.
+- Runtime chain consumption added to P1 (AD-45-012): the schema accepts chains, so
+  `dispatch.ts` must consume them; shipping a valid-but-unhandled config shape would
+  be an incomplete feature.
