@@ -99,6 +99,31 @@ One batch over the full open findings set (two low + one info); all classified
   row E12 added); issue #201 Tests first re-read via `gh issue view 201`
   (2026-09-09, frozen already in E1).
 
+## Repair batch v4 — 2026-09-09 (SF-45-019, response to RS-45-04)
+
+One finding, one batch; classified `product`, class 1 mechanical, intent-preserving
+(the finding itself names the class and states the recommendation work is fine).
+
+- **Mechanical, intent-preserving (REPAIR class 1)** — SF-45-019: AC15's
+  universal match-quantifier ("≥ 1 match in each file, and each match is a
+  recommendation") was unsatisfiable — the broad pattern `"pass routing\|passes"`
+  already matches unrelated prose (`GOLDEN_FIXTURE.md:252`, the stored-audit
+  "passes only when it states a reason" sentence), so once the recommendation
+  note lands the grep yields a non-recommendation match and no implementation
+  can satisfy the criterion. Rewritten to anchor on the recommendation phrase:
+  `grep -in "pass.?routing" …` → ≥ 1 match in each file, the matched line(s)
+  form the recommendation note (not auto-written) pointing to `default` +
+  `passes`, with bare-`passes` prose matches (GOLDEN_FIXTURE.md:252) explicitly
+  out of scope. Verified at HEAD `1ad375dd`: `grep -in "pass.?routing"` → zero
+  matches in both files today (the note is genuinely new work, so ≥ 1 match per
+  file is achievable and decidable once it lands). The recommendation work, its
+  two surfaces, its not-auto-written property, and every pointer (in-scope item
+  6 → AC7/AC15, spec-lint label counts 16/16) are unchanged.
+- **Not done here**: no product change, no scope widening, no receipt text
+  touched, no counter-evidence dismissal, no forge issue; findings resolved via
+  the status/resolution columns only.
+- **Evidence**: `grep -in "pass.?routing" skills/ship-roadmap/references/MODEL_ROUTING.md docs/workflow/GOLDEN_FIXTURE.md` run 2026-09-09 at HEAD `1ad375dd` (0 matches, exit 1); the reviewer's broad-pattern run at `fcfd5263` (SF-45-019 evidence column).
+
 ## Repair batch v2 — 2026-09-09 (SF-45-012…SF-45-015, response to RS-45-02)
 
 One batch over the full open findings set; all four classified `product`.

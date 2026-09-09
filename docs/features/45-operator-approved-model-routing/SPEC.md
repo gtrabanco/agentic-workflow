@@ -278,7 +278,7 @@ satisfies the same commands.
 - [x] AC12 (command-verified): invalid config exits non-zero — `passes` IS a known root key of this feature; an actually-unknown root key is rejected: `printf '%s' '{"default":"nan/glm5.3-flash","bogus":true}' | aw resolve-passes` → exit code ≠ 0; likewise `printf '%s' '{"default":42}' | aw resolve-passes` → exit code ≠ 0
 - [x] AC13 (command-verified): golden fixture smoke test — `grep -n "pass-routing\|resolve-passes" docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match (the smoke test is registered as a model precondition)
 - [x] AC14 (read-verified): `auto` needs no trust gate of its own — `packages/pi-agentic-workflow/src/config/load.ts` does not read the project config file while the project is untrusted (S11: a cloned repository must not be able to steer routing) and `src/settings/console.ts` refuses project-scope edits while untrusted, so an untrusted project's `passes` entry — `"auto"` included — is never honored; `"auto"` in the global config is operator-written (AD-45-004, AD-45-007)
-- [x] AC15 (command-verified): post-install recommendation note in the two non-bootstrapping surfaces — `grep -in "pass routing\|passes" skills/ship-roadmap/references/MODEL_ROUTING.md docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match in each file, and each match is a recommendation (not auto-written) pointing the operator to configure `default` + `passes` entries
+- [x] AC15 (command-verified): post-install recommendation note in the two non-bootstrapping surfaces — `grep -in "pass.?routing" skills/ship-roadmap/references/MODEL_ROUTING.md docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match in each file, and the matched line(s) form the recommendation note (not auto-written) pointing the operator to configure `default` + `passes` entries. The criterion anchors on the recommendation phrase, not the bare token `passes`: unrelated `passes` occurrences in these files (e.g. the existing audit-prose occurrence at GOLDEN_FIXTURE.md:252) are outside its scope
 - [x] AC16 (command-verified): unknown pass name rejected — `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"review-code":{"model":"nan/glm5.3-flash"},"bogus-pass":{"model":"nan/glm5.3-flash"}}}' | aw resolve-passes` → exit code ≠ 0 (the strict validator rejects `passes` keys outside the closed pass vocabulary of issue #201 Mechanics 1: `review-*` finders, `verify`, `classify`, `debt`)
 
 ### Tooling
@@ -381,9 +381,9 @@ block**, per the box wording — the lint block's own text is out of scope):
 ## Design status
 
 `designed` — repaired product half (batches SF-45-001…SF-45-011,
-SF-45-012…SF-45-015, and SF-45-016…SF-45-018): capability closure complete, all
-expectation sweep rows resolved, spec-lint product boxes ticked on the bounded
-runs pasted above.
+SF-45-012…SF-45-015, SF-45-016…SF-45-018, and SF-45-019): capability closure
+complete, all expectation sweep rows resolved, spec-lint product boxes ticked on
+the bounded runs pasted above.
 
 ---
 
