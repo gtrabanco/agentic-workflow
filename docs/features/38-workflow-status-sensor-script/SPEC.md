@@ -293,6 +293,14 @@ genuinely judgement-only criteria labelled `read-verified`.
    version it is). `--json-only` and `--last-envelope` from the existing skill
    are passed through as-is.
 
+6. **Degradation-code vocabulary: namespaced `unavailable-<source>-<cause>`.**
+   The design owner selected namespaced codes (resolved via bounded question
+   2026-09-09 — self-describing, extensible, consistent with Product decision
+   4's example style). e.g. `unavailable-forge-no-network`,
+   `unavailable-forge-timeout`, `unavailable-forge-auth`,
+   `unavailable-git-missing`. The consumer (driver/orchestrator) matches the
+   prefix `unavailable-` to route degraded readings appropriately.
+
 ### Deferred decisions
 
 Decisions deliberately postponed instead of resolved now — the interview's
@@ -302,7 +310,6 @@ is lost. Write `none` when the section is empty.
 
 | Decision | Why deferred | Decide by (trigger or phase) |
 |---|---|---|
-| Exact degradation code vocabulary (e.g. `"unavailable-no-network"` vs `"offline"` vs `"network-error"`) | Bounded machine-readable contract surface consumers parse. Verified live: the schema package (v4.1.1) declares **no** code vocabulary — `detail` is schema-unconstrained and opaque per skill — and no repo surface defines one, so this is a design-owner choice, not an implementer default. | Human design owner — bounded question routed in repair batch 2026-09-09 (class-3 product change; the answer folds into `Product decisions`) |
 | Whether to add `--output <path>` for file output | stdout-only is sufficient for current consumers (drivers, ship-roadmap, humans). No consumer currently requests file output. | Post-merge — if a consumer requests file output, add it in a follow-up |
 
 ### Product evidence
@@ -320,7 +327,8 @@ A claim that cannot be evidenced stays `unknown` with an owner — never guessed
 | The `workflow-status` skill (v3.2.1) is the most frequently invoked surface | usage pattern | skill name + argument-hint `--last-envelope` implies frequent driver use | v3.2.1 | current | decision | verifiable from `gh` logs or telemetry if available |
 | Offline degradation produces valid JSON with declared codes | design assumption | issue #185 body (proposed) | issue body | current | decision | feature 38 implementation — verified by offline fixture test |
 | Slug is free: no existing folder at `docs/features/38-workflow-status-sensor-script` | directory check | `ls docs/features/` | current main | current | proven | — |
-| The schema package declares no degradation-code vocabulary — `Envelope.detail` is `unknown` (schema-unconstrained, "documented per skill") | npm package | `packages/agentic-workflow-schema/src/index.ts` `Envelope.detail` (verified live 2026-09-09) | v4.1.1 | current | proven | grounds the F7 routing: the vocabulary is a design-owner choice, not implementer default |
+| Design-owner resolution: namespaced `unavailable-<source>-<cause>` vocabulary | human decision | `ask_user` response 2026-09-09 — selected `namespaced` (self-describing, extensible, consistent with Product decision 4's example style) | v4.1.1 | current | proven | F7 resolved: the vocabulary is now a deterministic product decision in Product decisions
+| The schema package declares no degradation-code vocabulary — `Envelope.detail` is `unknown` (schema-unconstrained, "documented per skill") | npm package | `packages/agentic-workflow-schema/src/index.ts` `Envelope.detail` (verified live 2026-09-09) | v4.1.1 | current | proven | grounds the original F7 routing; resolved via bounded question (namespaced) -- see Product decisions |
 
 ### Spec-lint (mechanical — presence checks only)
 
