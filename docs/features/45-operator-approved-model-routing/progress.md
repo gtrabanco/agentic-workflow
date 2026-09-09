@@ -46,3 +46,29 @@ Notes:
 - Evidence: SPEC Product half (`### Evidence`) + `decisions.md` · Frozen: 2026-09-09
 - Boxes: B1 bounded placeholder grep → no output; B2 `designed` earned by spec-lint; B3 zero blank entity rows; B4 13/13 inventory rows + 6 derived; B5 role matrix complete (operator allowed, orchestrator allowed, pass denied); B6 12/12 sweep rows resolved with pointers; B7 in-scope→AC map + every AC labelled (13/13); B8 deferred rows carry triggers; B9 all evidence rows `current` + `proven`/`decision`; B10 no memory/chat-sourced claims. D1: no delegated-evidence run (n/a).
 - Readiness is an authoring gate, not a review verdict — handoff to `/review-spec` for the independent re-review of the new snapshot.
+
+## Repair batch v2 — design-feature (response to RS-45-02)
+- Scope: ONE batch over the full open findings set SF-45-012…SF-45-015 (all `class: product`; REPAIR §1 — no per-finding re-review, no split by file).
+- Classes: SF-45-012/014/015 mechanical (intent-preserving; dated line in `decisions.md` "Repair batch v2"); SF-45-013 closure completion (evidence acquired: issue #201 Open questions fetched 2026-09-09; `packages/pi-agentic-workflow/src/config/load.ts` S11 + `src/settings/console.ts:156` read at HEAD; AD-45-007 appended).
+- Repairs: AC4 + semantics item 4 rewritten (per-pass reason `no default chain` reserved for schema-level degenerate chains — absent/empty `default`, or an entry that yields no chain; schema-invalid references stay strict-validator rejections §3/AC12; runtime availability stays spawn-time consumer behaviour AC6 — refines issue #201's "chain of unresolvable refs → inline with reason" fixture wording, preserving AD-45-006); AD-45-007 appended + semantics item 5 + sweep row 13 + AC14 (read-verified) + Evidence row E11 (issue #201's `auto` open question resolved yes-by-construction via the existing project-trust gate — no new gate invented, no product change taken); Evidence E7 refreshed (row 45 `defined`, deps `43`); decisions.md vocabulary note (AD-45-002's "per-skill, not per-pass" phrasing imprecise; `passes` keyed by the closed pass-name vocabulary with optional overrides — contrast is per-subagent-instance granularity).
+- Gates re-run and pasted: spec-lint product boxes (bounded runs in the SPEC's `### Spec-lint`; placeholder grep re-run → no output, exit 1); readiness preflight stage:spec — all 10 boxes tick, `READY-FOR-REVIEW` (below).
+- New `artifactRevisionId`: `8ae76d8754e9ce9da1575285f2f9d7549820a40a` (commit that produced the repaired SPEC bytes; mandatory rotation per evidence-grounding).
+- Receipts untouched: RS-45-02 and all finding severities/claims unchanged; rows resolved via the `status/resolution-evidence/resolving-artifact-revision` columns only.
+- Zero open findings classified outside `product`; no counter-evidence dismissal used; no forge issue created; scope not widened (the dedicated-`auto`-gate alternative for SF-45-013 was a possible product change and was NOT taken — the proposed "yes" is satisfied by the existing gate).
+
+```text
+CONVERGENCE-ANOMALY — 45-operator-approved-model-routing spec
+- Finding ids: repeated: none / new: SF-45-012, SF-45-013, SF-45-014, SF-45-015
+- Snapshots: a845bd3f97592f9d893953d55841aa9de728f5686aa91bec848e29ccb4686cf7 → 8ae76d8754e9ce9da1575285f2f9d7549820a40a (artifactRevisionId 2032e203c1805e857dd709cef12e0618292e68f9 → 8ae76d8754e9ce9da1575285f2f9d7549820a40a)
+- Missed: Evidence row E7 (left stale by the same batch that wrote the roadmap status it cites); AC4's inherited issue-#201 fixture clause (never re-grounded against the recorded AD-45-006 semantics); issue #201's `auto` open question (inherited, unowned); decisions.md vocabulary drift (AD-45-002 vs the SPEC's pass-name map)
+- Owning stage: product
+- Why the prior repair failed: the batch rewrote the SPEC around AD-45-006 but did not re-ground every inherited issue-#201 clause and open question against it, and left a fact its own batch had just written (E7) stale
+- Route to owner: design-feature repair batch v2 (this turn, complete) → /review-spec re-review of the new snapshot
+```
+Second repair/re-review cycle — recorded per POLICY §4: a repair responding to a persisted verdict produces a new snapshot by design (never blocked); the anomaly is printed and routed, not a stop.
+
+### READINESS — 45-operator-approved-model-routing spec READY-FOR-REVIEW
+- Artifact revision: 8ae76d8754e9ce9da1575285f2f9d7549820a40a · Rows checked: 11 (Evidence E1–E11) · Unknowns open: 0
+- Evidence: SPEC Product half (`### Evidence`) + `decisions.md` · Frozen: 2026-09-09
+- Boxes: B1 bounded placeholder grep → no output (re-run exit 1); B2 `designed` earned by spec-lint; B3 zero blank entity rows; B4 13/13 inventory rows + 6 derived; B5 role matrix complete (operator allowed, orchestrator allowed, pass denied); B6 13/13 sweep rows resolved with pointers; B7 in-scope→AC map + every AC labelled (14/14); B8 deferred rows carry triggers; B9 all evidence rows `current` + `proven`/`decision` (E1–E11); B10 no memory/chat-sourced claims. D1: no delegated-evidence run (n/a).
+- Readiness is an authoring gate, not a review verdict — handoff to `/review-spec` for the independent re-review of the new snapshot.
