@@ -69,6 +69,36 @@
   does not take.
 - **Date**: 2026-09-09
 
+## Repair batch v3 — 2026-09-09 (SF-45-016…SF-45-018, response to RS-45-03)
+
+One batch over the full open findings set (two low + one info); all classified
+`product`.
+
+- **Closure completion (REPAIR class 2, evidence acquired)** — SF-45-016
+  (AC15 added, command-verified: the post-install recommendation note in the
+  two named non-bootstrapping surfaces — `skills/ship-roadmap/references/MODEL_ROUTING.md`
+  and `docs/workflow/GOLDEN_FIXTURE.md` — now has an observing criterion;
+  in-scope item 6 maps 6→AC7/AC15; surfaces verified to exist at HEAD),
+  SF-45-017 (AC16 added, command-verified: an unknown pass name under `passes`
+  → exit ≠ 0 per the strict-validator rule, the inherited test obligation from
+  issue #201's Tests first — "unknown pass names rejected per the
+  strict-validator rule"; in-scope item 2 maps 2→AC2/AC5/AC12/AC16, item 8
+  extends to AC16, expectation row 12's pointer extended to AC12 + AC16).
+- **Mechanical, intent-preserving (REPAIR class 1)** — SF-45-018 (AC9's
+  illustrative shape fixed to the described shape: the example is now a
+  non-ModelRef element inside the `default` array
+  (`"default": ["nan/glm5.3-flash", 42]`) instead of the object value it
+  showed, so an implementer cannot test only the illustrated shape and leave
+  the described array-element case untested; criterion decidable both ways
+  before, unchanged in substance).
+- **Not done here**: no product change taken, no scope widened, no
+  counter-evidence dismissal, no receipt text touched; findings resolved via
+  the status/resolution columns only.
+- **Evidence**: `skills/ship-roadmap/references/MODEL_ROUTING.md` +
+  `docs/workflow/GOLDEN_FIXTURE.md` verified to exist at HEAD (SPEC Evidence
+  row E12 added); issue #201 Tests first re-read via `gh issue view 201`
+  (2026-09-09, frozen already in E1).
+
 ## Repair batch v2 — 2026-09-09 (SF-45-012…SF-45-015, response to RS-45-02)
 
 One batch over the full open findings set; all four classified `product`.

@@ -90,7 +90,7 @@ quality (e.g. `nan/glm5.3-flash`).
    closed pass vocabulary of issue #201: the `review-*` finder passes, `verify`,
    `classify`, `debt`) to `{model, thinking}`, where `model` accepts the same
    single-value or array shape. `model: "inherit"` resolves to the `default`
-   chain. Unknown pass names are rejected by the strict-validator rule (AC2, AC5, AC12).
+   chain. Unknown pass names are rejected by the strict-validator rule (AC2, AC5, AC12, AC16).
 3. **`"auto"` model value**: a sanctioned "let the orchestrating agent decide"
    marker — valid but documented as operator-delegated (AC5, AC14).
 4. **`resolve-passes` producer**: deterministic producer shipped by feature 43's
@@ -109,12 +109,12 @@ quality (e.g. `nan/glm5.3-flash`).
 6. **init-workspace bootstrap**: `init-workspace` interview adds a pass-routing
    step that writes `default` + recommended `passes` entries for the review
    family. Other skills (golden-fixture, ship-roadmap) get a post-install
-   recommendation note (not auto-written) (AC7).
+   recommendation note (not auto-written) (AC7, AC15).
 7. **Golden fixture update**: `docs/workflow/GOLDEN_FIXTURE.md` gains a
    pass-routing smoke test as a model precondition (AC13).
 8. **Tests**: schema round-trip for arrays; `resolve-passes` golden fixtures
    (absent → default, chain resolution, `inherit` resolution, `auto` passthrough,
-   unresolvable chain → inline, invalid config → exit non-zero) (AC1–AC5, AC9–AC12).
+   unresolvable chain → inline, invalid config → exit non-zero) (AC1–AC5, AC9–AC12, AC16).
 
 #### Unavailable-model and chain-exhaustion semantics
 
@@ -254,7 +254,7 @@ the skills tree; recorded because the inventory is unseeded):
 | 9 | Config validation rejects non-ModelRef values in arrays | in-scope | AC9 |
 | 10 | Model routing YAML keys stay alphabetical (CLAUDE.md rule) | in-scope | AC10 |
 | 11 | A single string `model` value still works (backward compat) | in-scope | AC11 |
-| 12 | resolve-passes exits non-zero on config the strict validator rejects | in-scope | AC12 |
+| 12 | resolve-passes exits non-zero on config the strict validator rejects | in-scope | AC12 + AC16 |
 | 13 | An untrusted project's `passes` entry (`"auto"` included) never delegates model choice (issue #201 open question, resolved yes-by-construction) | in-scope | AC14 + §Product decisions (AD-45-007) |
 
 ### Acceptance criteria
@@ -272,12 +272,14 @@ satisfies the same commands.
 - [x] AC6 (read-verified): adversarial model assignment — `skills/review-change/SKILL.md` + `references/ADVERSARIAL_SETUP.md` name the per-pass model resolution from the resolved table and the round-robin distribution (wraps when N > chain length); a pass whose chain cannot provide a model degrades inline with the degrade stated in the report
 - [x] AC7 (command-verified): init-workspace bootstrap write — `grep -n "passes" skills/init-workspace/references/BOOTSTRAP_WRITE.md skills/init-workspace/references/UPGRADE.md` → the pass-routing step appears in both, writing `default` and recommended `passes` entries
 - [x] AC8 (command-verified): byte stability — two runs of `aw resolve-passes` on the same input produce byte-identical stdout
-- [x] AC9 (command-verified): schema rejects invalid array element — a config whose `default` array holds a non-ModelRef value (e.g. `"default": {"model": "not-a-reference"}`) fails the pi package's strict validator round-trip test (`packages/pi-agentic-workflow/src/config/schema.ts`)
+- [x] AC9 (command-verified): schema rejects invalid array element — a config whose `default` array holds a non-ModelRef value (e.g. `"default": ["nan/glm5.3-flash", 42]`) fails the pi package's strict validator round-trip test (`packages/pi-agentic-workflow/src/config/schema.ts`)
 - [x] AC10 (command-verified): alphabetical keys — `bun test scripts/pre-execution-quality.test.mjs` → the model-routing.yml key-order assertion passes with the new `passes` section in place
 - [x] AC11 (command-verified): backward compatibility — `printf '%s' '{"default":"nan/glm5.3-flash"}' | aw resolve-passes` → treated as the single-element chain `["nan/glm5.3-flash"]`
 - [x] AC12 (command-verified): invalid config exits non-zero — `passes` IS a known root key of this feature; an actually-unknown root key is rejected: `printf '%s' '{"default":"nan/glm5.3-flash","bogus":true}' | aw resolve-passes` → exit code ≠ 0; likewise `printf '%s' '{"default":42}' | aw resolve-passes` → exit code ≠ 0
 - [x] AC13 (command-verified): golden fixture smoke test — `grep -n "pass-routing\|resolve-passes" docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match (the smoke test is registered as a model precondition)
 - [x] AC14 (read-verified): `auto` needs no trust gate of its own — `packages/pi-agentic-workflow/src/config/load.ts` does not read the project config file while the project is untrusted (S11: a cloned repository must not be able to steer routing) and `src/settings/console.ts` refuses project-scope edits while untrusted, so an untrusted project's `passes` entry — `"auto"` included — is never honored; `"auto"` in the global config is operator-written (AD-45-004, AD-45-007)
+- [x] AC15 (command-verified): post-install recommendation note in the two non-bootstrapping surfaces — `grep -in "pass routing\|passes" skills/ship-roadmap/references/MODEL_ROUTING.md docs/workflow/GOLDEN_FIXTURE.md` → ≥ 1 match in each file, and each match is a recommendation (not auto-written) pointing the operator to configure `default` + `passes` entries
+- [x] AC16 (command-verified): unknown pass name rejected — `printf '%s' '{"default":["nan/glm5.3-flash"],"passes":{"review-code":{"model":"nan/glm5.3-flash"},"bogus-pass":{"model":"nan/glm5.3-flash"}}}' | aw resolve-passes` → exit code ≠ 0 (the strict validator rejects `passes` keys outside the closed pass vocabulary of issue #201 Mechanics 1: `review-*` finders, `verify`, `classify`, `debt`)
 
 ### Tooling
 
@@ -349,6 +351,7 @@ Compact grounding rows for the Product half (base row per
 | Exhaustion/empty chain → inline at the orchestrator's model, degrade stated; offline producer exits non-zero only for invalid config | user | `decisions.md` AD-45-001 + AD-45-006 (2026-09-09); issue #201 fail-closed rule | dated rows | not-applicable | decision | — |
 | No project invariants document declared | ledger | `REPOSITORY_STATE.md` F010 | snapshot 2026-08-30 | current | proven | — |
 | `auto` carries no separate trust gate: the project config file is not read while the project is untrusted (S11), and the settings console refuses project-scope edits while untrusted | repository | `packages/pi-agentic-workflow/src/config/load.ts` (S11 note + `projectTrusted` gate); `packages/pi-agentic-workflow/src/settings/console.ts:156` | HEAD at write | current | proven | — |
+| The two post-install recommendation surfaces exist — ship-roadmap's model-routing reference and the golden-fixture procedure doc | repository | `skills/ship-roadmap/references/MODEL_ROUTING.md`; `docs/workflow/GOLDEN_FIXTURE.md` | HEAD at write | current | proven | — |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -369,17 +372,18 @@ block**, per the box wording — the lint block's own text is out of scope):
       with a pointer — an unresolved or pointer-less row FAILs. 13 rows, all `in-scope` with pointers
 - [x] Every `#### In scope` bullet maps to ≥ 1 Acceptance criterion (same
       wording or an explicit reference) — an in-scope item with no criterion
-      FAILs. 1→AC11/AC3 · 2→AC2/AC5/AC12 · 3→AC5/AC14 · 4→AC1/AC4/AC8/AC12 · 5→AC6 · 6→AC7 · 7→AC13 · 8→AC1–AC5, AC9–AC12
+      FAILs. 1→AC11/AC3 · 2→AC2/AC5/AC12/AC16 · 3→AC5/AC14 · 4→AC1/AC4/AC8/AC12 · 5→AC6 · 6→AC7/AC15 · 7→AC13 · 8→AC1–AC5, AC9–AC12, AC16
 - [x] Every Acceptance criterion is a runnable command OR labelled
-      `read-verified` — all 14 labelled: 12 `command-verified` (piped `printf | aw resolve-passes`, `grep`, `bun test`), 2 `read-verified` (AC6, skill-contract behaviour; AC14, existing loader/console trust-gate behaviour)
+      `read-verified` — all 16 labelled: 14 `command-verified` (piped `printf | aw resolve-passes`, `grep`, `bun test`), 2 `read-verified` (AC6, skill-contract behaviour; AC14, existing loader/console trust-gate behaviour)
 - [x] `### Deferred decisions` exists; every row has a decide-by trigger, or
       the section reads `none` — 2 rows, both with triggers
 
 ## Design status
 
-`designed` — repaired product half (batches SF-45-001…SF-45-011 and
-SF-45-012…SF-45-015): capability closure complete, all expectation sweep rows
-resolved, spec-lint product boxes ticked on the bounded runs pasted above.
+`designed` — repaired product half (batches SF-45-001…SF-45-011,
+SF-45-012…SF-45-015, and SF-45-016…SF-45-018): capability closure complete, all
+expectation sweep rows resolved, spec-lint product boxes ticked on the bounded
+runs pasted above.
 
 ---
 
