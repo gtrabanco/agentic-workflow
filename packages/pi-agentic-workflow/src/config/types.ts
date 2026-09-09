@@ -45,9 +45,19 @@ export interface ConfigFile {
   default?: RouteFile;
   commands?: Record<string, RouteFile>;
   onUnavailableRoute?: UnavailableRoutePolicy;
+  /** What happens to the routed model and thinking level after the command settles. */
+  onSettle?: SettlePolicy;
 }
 
 export type UnavailableRoutePolicy = "stop" | "inherit";
+
+/**
+ * What the session holds after a routed command settles.
+ *  - `"keep"` — the routed model and thinking level stay in the open chat window,
+ *    so a follow-up edit or question keeps running on the model that planned it.
+ *  - `"restore"` — the pre-dispatch model and thinking level come back (AC8).
+ */
+export type SettlePolicy = "keep" | "restore";
 
 /** One rejected field inside one config file, addressed by a JSON-path-ish string. */
 export interface ConfigIssue {
@@ -57,10 +67,13 @@ export interface ConfigIssue {
 
 export const UNAVAILABLE_ROUTE_POLICIES: readonly UnavailableRoutePolicy[] = ["stop", "inherit"];
 
+export const SETTLE_POLICIES: readonly SettlePolicy[] = ["keep", "restore"];
+
 export interface EffectiveConfig {
   default: Route;
   commands: Record<string, Route>;
   onUnavailableRoute: UnavailableRoutePolicy;
+  onSettle: SettlePolicy;
 }
 
 export interface ConfigProblem {
