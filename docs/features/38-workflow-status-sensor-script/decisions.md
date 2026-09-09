@@ -229,3 +229,60 @@ Spec-lint product boxes re-run mechanically (greps pasted below): all pass —
 counts unchanged (13 sweep rows: 11 in-scope / 2 out / 0 deferred; 20 runnable
 + 1 `read-verified` criteria; 13 integration rows; items 1–12 → A:1–A:19,
 A:20 from sweep row 2). Readiness preflight `stage: spec`: READY-FOR-REVIEW.
+
+## 2026-09-09 — repair batch over review receipt rp-38-20260909-005 (artifactRevisionId: 38-6821d835490b)
+
+**Decision:** One evidence-bounded repair batch over findings F21/F22/F23 (all
+stage `spec`, class `product` — the owning stage, per the receipt's routing to
+design-feature). No receipt text touched; no severity edited; no forge issue
+opened to hold an obligation; no scope added, removed, or redirected. New SPEC
+artifactRevisionId `38-6821d835490b` = first 12 hex of sha256(SPEC.md) at this
+write — POLICY §7 manual pairing (no runtime rotates the revision id).
+
+**Per-finding classes and edits:**
+
+- **F21 (closure completion):** the timed-out-forge degradation was declared in
+  three places but no check produced the case — severed network makes `gh` fail
+  fast, so A:4 never exercised a stall. **A:21 added**: fixture-repo test with a
+  `gh` shim that accepts and never terminates → exit 0 within the forge timeout,
+  `unavailable-forge-timeout` in `detail`. A:4 gained a scope note (fail-fast
+  case only, cross-reference A:21); sweep row 10 re-pointed from A:4 to A:21;
+  Product decision 6 now states forge calls run under a bounded wall-clock
+  timeout (implementation constant) so the code is reachable; decision evidence
+  row added (`decision`, verified at implementation by the A:21 fixture).
+- **F22 (closure completion):** sweep rows 3 (no interactive prompts) and 6
+  (stdout/stderr separation) pointed at A:3, whose check is a mutation-only
+  grep and carries neither claim. **A:22 added** (grep proves no
+  readline/createInterface/stdin-read/prompt-library call) and **A:23 added**
+  (stdout alone parses as one valid JSON document; the A:4 offline fixture
+  asserts diagnostics land on stderr); sweep rows 3 and 6 re-pointed.
+- **F23 (closure completion + mechanical):** the half's "schema package is
+  already an existing dependency" claim was false at the resolution-mechanism
+  level — the repo provides no bare-specifier resolution for `scripts/`
+  (re-verified live: no root package.json, `node_modules/@gtrabanco` empty,
+  `dist/` gitignored), and the established mechanism
+  (`scripts/schema-runtime.mjs`) loads the built local package by explicit path
+  with a named fail-fast precondition and deliberately no published-package
+  fallback. Product decision 2 and Tooling corrected to that mechanism (the
+  original decision's reviewed intent — only the schema package, no new
+  packages — is unchanged; no root package.json or dependency install is
+  proposed, so reviewed scope is untouched); in-scope item 1 aligned. **A:8**
+  rewritten: grep for the `./schema-runtime.mjs` loader import + forbid the
+  bare-specifier import (which could never resolve). **A:11** rewritten into
+  two cases: built-dist import exits 0; `dist/` hidden → the loader's named
+  precondition error, never a bare `ERR_MODULE_NOT_FOUND`. New evidence row
+  pins the live mechanism (`proven`, re-verified 2026-09-09).
+
+**Why autonomous (no user question):** every edit preserves reviewed product
+intent — the vocabulary, scope, roles, and user outcomes are unchanged; F23's
+correction adopts the repository's own documented precedent rather than
+introducing a new surface (the alternative, adding a root package.json +
+dependency install, would have been scope growth and would have stopped for a
+bounded question). Grounding is the evidence rows added with this batch, not
+memory.
+
+Spec-lint product boxes re-run mechanically after the write: all pass — 13
+sweep rows (11 in-scope / 2 out / 0 deferred), 23 runnable + 1 `read-verified`
+criteria (A:1–A:23 contiguous), 13 integration rows, in-scope items 1–12 →
+A:1–A:23 with sweep rows 2/3/6/10 resolved by A:20/A:22/A:23/A:21. Readiness
+preflight `stage: spec`: READY-FOR-REVIEW.
