@@ -139,6 +139,60 @@ set, then /review-spec re-review of the new snapshot").
   HEAD `e13096d3`; greps for AC19's anchors run at the same HEAD (0 matches,
   exit 1).
 
+## AD-45-009 — Default-value extension: chain forms (repair, SF-45-023)
+
+- **Decision**: `default` accepts two valid value shapes:
+  (a) the existing RouteFile object `{model, thinking}` where the `model` field
+      extends from a single `provider/modelId` to also accept an array chain
+      (the `thinking` key is available and applies to the chain); and
+  (b) a plain array of `provider/modelId` strings (chain shorthand, `thinking`
+      implicitly `"inherit"`)
+  A bare-string value (e.g. `"nan/glm5.3-flash"`) is NOT valid — rejected by
+  the existing validator and by the extension. This design is chosen because:
+  (1) it preserves the existing RouteFile structure that the README already
+      documents; (2) it is consistent with `passes.<name>` which is always a
+      RouteFile object; (3) the plain-array form is a convenient shorthand for
+      operators who don't need a non-default thinking level.
+- **Rationale**: closes the gap discovered in SF-45-023 where the SPEC
+  mischaracterized the existing `default` shape as a single model reference
+  (the real existing shape is a RouteFile object) and provided no AC for the
+  object form's continuation. Both chain forms are now observed by AC11.
+- **Date**: 2026-09-09
+
+## Repair batch v6 — 2026-09-09 (SF-45-023, response to RS-45-06)
+
+One finding, one batch; classified `product`, class 2 closure completion
+(correcting a mischaracterization + adding an observing criterion).
+
+- **Closure completion (REPAIR class 2, evidence acquired)** — SF-45-023: in-scope
+  item 1 rewritten — the `(existing)` claim was incorrect (the real existing
+  `default` shape is a RouteFile object `{model, thinking}`, not a bare string);
+  the chain extension is described as a second valid shape alongside the object
+  form, with a bare-string explicitly excluded. AD-45-009 appended for the
+  design choice (two chain forms: plain-array with implicit `thinking: inherit`,
+  or chain-in-object with explicit model+thinking). AC11 re-ground: three
+  sub-commands test (a) the existing object form backward compat, (b) the
+  plain-array chain form, (c) the chain-in-object form with thinking, and
+  (d) bare-string rejection. AC12 re-ground: uses a valid RouteFile object as
+  the default value in the test (not a bare string). Every chain form is now
+  observed by AC; in-scope item 1 claims the complete value-shape vocabulary.
+- **Mechanical, intent-preserving (REPAIR class 1)** — AC11 command rewrite and
+  AC12 command rewrite are intent-preserving (same validation outcomes, more
+  accurate input shapes). Spec-lint counts unchanged (19 ACs, 14 sweep rows,
+  9 in-scope items).
+- **Not done here**: no product change, no scope widening, no receipt text
+  touched, no forge issue; findings resolved via the status/resolution
+  columns only. One note: the `default` value-shape premise predates the entire
+  repair cycle (it was present in the original SPEC cut); it was not caught
+  earlier because prior reviewers verified ROOT_KEYS and pass vocabulary but
+  did not re-ground item 1's "(existing)" claim against `checkRoute`'s accepted
+  value shapes — this is the root cause RS-45-06's CONVERGENCE-ANOMALY notes.
+- **Evidence**: `packages/pi-agentic-workflow/src/config/schema.ts` read at HEAD
+  (`checkRoute` line 59: `!isRecord(value) → rejection`; `schema.ts` line 98:
+  `default` check via `checkRoute`); `types.ts` RouteFile/ConfigFile definitions
+  read at HEAD (default?: RouteFile); AC11 re-run commands verified against
+  schema extensions.
+
 ## Repair batch v3 — 2026-09-09 (SF-45-016…SF-45-018, response to RS-45-03)
 
 One batch over the full open findings set (two low + one info); all classified
