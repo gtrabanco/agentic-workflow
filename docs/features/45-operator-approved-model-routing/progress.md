@@ -214,3 +214,18 @@ CONVERGENCE-ANOMALY — 45-operator-approved-model-routing spec
 - Route to owner: design-feature repair batch v6 — ONE batch over the full open set (SF-45-023), then /review-spec re-review of the new snapshot
 ```
 - Zero writes to reviewed artifacts: SPEC.md, decisions.md, ROADMAP.md untouched by this review (receipt + findings row only; `git status --porcelain` re-checked after the ledger writes).
+
+## Repair batch v6 — design-feature (response to RS-45-06)
+- Scope: ONE batch over the full open findings set SF-45-023 (single medium finding, `class: product`; REPAIR §1).
+- Classes: SF-45-023 closure completion (REPAIR class 2, evidence acquired) — correcting a mischaracterization that predates the repair cycle (present in the original SPEC cut): in-scope item 1 rewritten (the real existing `default` shape is a RouteFile object `{model, thinking}`, not a bare string), chain extension described as a second valid shape with bare-string explicitly excluded, AD-45-009 appended for the design choice (two chain forms: plain-array with implicit `thinking: inherit`, or chain-in-object with explicit model+thinking), AC11 re-ground (four sub-commands: existing object backward compat, plain-array chain, chain-in-object with thinking, bare-string rejection), AC12 re-ground (uses valid RouteFile object in the test).
+- Gates re-run and pasted: spec-lint product boxes — bounded placeholder grep → no output (exit 1); counts verified by grep: 19 ACs (17 `command-verified`, 2 `read-verified`), 14 sweep rows, 9 in-scope items each mapped (item 1 → AC11/AC3), 13/13 CAPABILITIES rows + 7 derived rows. Readiness preflight stage:spec — all 10 boxes tick, `READY-FOR-REVIEW` (below).
+- New `artifactRevisionId`: `9c79644a78fdf1564edbdc1740acc2d6d2f0b2a6` (commit `9c79644a`, "docs(features): repair 45 product half — re-ground default shape (SF-45-023)").
+- Receipts untouched: RS-45-06 and all finding severities/claims unchanged; rows resolved via the `status/resolution-evidence/resolving-artifact-revision` columns only.
+- Zero open findings classified outside `product`; no counter-evidence dismissal used; no forge issue created; scope not widened.
+- Cycle note: sixth review of the unit; the value-shape premise was present from the original SPEC cut. Prior reviewers verified ROOT_KEYS and pass vocabulary but never re-grounded item 1's "(existing)" claim against `checkRoute`'s accepted value shapes — the root cause RS-45-06's CONVERGENCE-ANOMALY identified. RS-45-06's anomaly says "the prior repair failed: v5 (like v1–v4) repaired exactly the tabled rows; the value-shape premise of item 1/AC11 predates the cycle and was never sampled against `schema.ts`". This batch directly addresses that root cause.
+
+### READINESS — 45-operator-approved-model-routing spec READY-FOR-REVIEW
+- Artifact revision: 9c79644a78fdf1564edbdc1740acc2d6d2f0b2a6 · Rows checked: 14 (Evidence E1–E14) · Unknowns open: 0
+- Evidence: SPEC Product half (`### Evidence`) + `decisions.md` · Frozen: 2026-09-09
+- Boxes: B1 bounded placeholder grep → no output (re-run exit 1); B2 `designed` earned by spec-lint (status names batches through v6); B3 zero blank entity rows; B4 13/13 inventory rows + 7 derived; B5 role matrix complete (operator allowed, orchestrator allowed, pass denied); B6 14/14 sweep rows resolved with pointers; B7 in-scope→AC map + every AC labelled (19/19: 17 command-verified, 2 read-verified); B8 deferred rows carry triggers; B9 all evidence rows `current` + `proven`/`decision` (E1–E14); B10 no memory/chat-sourced claims. D1: no delegated-evidence run (n/a).
+- Readiness is an authoring gate, not a review verdict — handoff to `/review-spec` for the independent re-review of the new snapshot.
