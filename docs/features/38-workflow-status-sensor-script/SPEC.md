@@ -252,8 +252,23 @@ genuinely judgement-only criteria labelled `read-verified`.
 - [ ] A:4 Offline fixture: no network → forge sections degrade to declared codes, exit 0, no hang — check: fixture-repo test with network severed
 - [ ] A:5 Idempotence: two consecutive runs on the same fixture tree → byte-identical output verbatim — the script emits no volatile fields by construction (Envelope v2 has no timestamp field, and `detail` performs no clock reads), so the check carries no modulo carve-out — check: `diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs)` returns empty
 - [ ] A:6 Ambiguous roadmap row → mapped state + named degradation in output — check: fixture-repo test with ambiguous roadmap row, verify `detail` output
-- [ ] A:7 Urgency labels read from labels object only — check: `grep -E 'title|body|comment' scripts/workflow-status.mjs` returns nothing
-- [ ] A:8 Script imports the schema package's Envelope v2 vocabulary — check: `grep 'workflow-status' scripts/workflow-status.mjs | grep -c 'schema'` ≥ 1
+- [ ] A:7 Urgency labels read from the labels object only (labels-only
+      scanning — the issue's title/body/comments are never scanned for urgency)
+      — check: `grep -nE '\b(body|comment)' scripts/workflow-status.mjs` returns
+      nothing (the script never fetches or reads issue bodies or comments) AND
+      `grep -cE 'labels' scripts/workflow-status.mjs` ≥ 1 (the labels-only scan
+      path exists); `title` is deliberately NOT in the forbidden set — SENSOR_CORE
+      step 3 emits `urgent.issues[].title` from the step-2 list output, so the
+      script must reference it: carrying an already-fetched title through to the
+      envelope is output, not a scan (the read-verified criterion below owns the
+      full labels-only review)
+- [ ] A:8 Script imports the schema package's Envelope v2 vocabulary — check:
+      `grep -nE "^import .*'@gtrabanco/agentic-workflow-schema'" scripts/workflow-status.mjs`
+      returns a match (a genuine import line; the old two-stage grep piped
+      `workflow-status` first, but the package name is
+      `@gtrabanco/agentic-workflow-schema` — it contains neither the substring
+      `workflow-status` nor satisfies that pipe, so a real import could never
+      count while a stray comment could)
 - [ ] A:9 `skills/workflow-status/SKILL.md` slimmed: SENSOR_CORE sequence replaced by script call reference — check: `git diff` shows SENSOR_CORE steps reduced, script call added
 - [ ] A:10 `--help` and `--version` flags supported — check: `node scripts/workflow-status.mjs --help` exits 0 and prints usage; `--version` exits 0 and prints version
 - [ ] A:11 No external dependencies beyond the schema package — check: `node --experimental-specifier-resolution=node -e "import('scripts/workflow-status.mjs')"` succeeds with only schema package in graph
