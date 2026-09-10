@@ -66,3 +66,17 @@
   fixed wording `Hardening & PR` conflicts with phase-contract rule 1's
   inclusion of `&` as a fail joiner; a future fix could align phase-contract
   or the templates repo-wide.
+
+## Engineering decisions (plan-feature replan, artifact revision 37-plan-3)
+
+- **ED6 (2026-09-10, owner decision approved in session — resolves F5)** —
+  Option 1: the `Hardening & PR` box-1 exception is **sanctioned in the rule
+  owner, and the amendment lands inside this PR**. P1 amends
+  `skills/phase-contract/SKILL.md` rule 1 (v1.0.1 → 1.0.2) so that only the
+  templates' literal closing title `Hardening & PR` is exempt — its
+  title-deliverable normalizes to `hardening-pr` (`&` is a normalization
+  separator, not a connector of deliverables) — while any other `&`-joined
+  title still FAILs. The mirror is re-bundled via `npm run bundle:skills`.
+  SPEC §Design box-1 stays verbatim with respect to the amended owner, with no
+  local rule semantics. This supersedes ED5's separate-triage proposal, which
+  is no longer needed.

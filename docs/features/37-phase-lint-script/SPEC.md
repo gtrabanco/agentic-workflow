@@ -306,7 +306,11 @@ returned `READY-FOR-REVIEW`.
 ## Engineering half
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`. Engineering artifact revision: `37-plan-2`.
+half above is marked `designed`. Engineering artifact revision: `37-plan-3`.
+
+> Replan 3 (2026-09-10, user-approved in session): the F5 resolution lands the
+> rule-1 `Hardening & PR` exception IN the rule owner (`skills/phase-contract/SKILL.md`,
+> amended by P1 of this same PR) instead of locally in the SPEC — see ED6.
 
 ### Technical goals
 
@@ -324,11 +328,15 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-2`.
 ### Architecture impact
 
 - Affected surfaces: `scripts/phase-lint.mjs` (new), `scripts/phase-lint.test.mjs`
-  (new), `skills/plan-feature-scaffold/SKILL.md`, `skills/plan-fix/SKILL.md`,
-  `skills/execute-phase/SKILL.md` (+ its preflight reference), and the pi package
-  mirror (`packages/pi-agentic-workflow`, re-bundled via `npm run bundle:skills`).
-- Invariant held: one writer per phase-lint rule set — `phase-contract` is not
-  edited and the script points to it rather than restating rule semantics
+  (new), `skills/phase-contract/SKILL.md` (rule-1 amendment, v1.0.1 → 1.0.2 —
+  owner-sanctioned, P1 of this PR), `skills/plan-feature-scaffold/SKILL.md`,
+  `skills/plan-fix/SKILL.md`, `skills/execute-phase/SKILL.md` (+ its preflight
+  reference), and the pi package mirror (`packages/pi-agentic-workflow`,
+  re-bundled via `npm run bundle:skills`).
+- Invariant held: one writer per phase-lint rule set — `phase-contract` is
+  amended exactly once in this PR (P1, the owner-approved `Hardening & PR`
+  rule-1 exception) and never re-edited by this feature's other phases; the
+  script points to the owner rather than restating rule semantics
   (roadmap row 32 will separately audit this relationship; nothing here
   pre-empts it).
 - Invariant held: read-only reporting — the linter never writes or rewrites a
@@ -364,13 +372,15 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-2`.
 **Rule checks** (implementing the eight rules verbatim as `phase-contract`
 states them; rule ids `box-1`…`box-8` for finding lines):
 
-- box-1: the title-deliverable must not contain a noun-joining `+`, `,`, `&`,
-  `/`, ` and `, or ` y ` between deliverable words — except the templates'
-  conventional final-phase title `Hardening & PR`
-  (`docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`), which is
-  kept literally by mandate and whose title-deliverable normalizes to
-  `hardening-pr` (`&` is a normalization separator, not a deliverable joiner).
-  Any other `&`-joined title still FAILs.
+- box-1: implemented verbatim per `skills/phase-contract/SKILL.md` rule 1 as
+  amended in this PR (v1.0.2): FAIL if the title-deliverable joins nouns with
+  `+`, `,`, `&`, `and`/`y`, or `/` — with the sole owner-sanctioned exception of
+  the templates' literal closing title `Hardening & PR`
+  (`docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`), kept
+  literally by template mandate and normalized to the title-deliverable
+  `hardening-pr` (`&` is a normalization separator, not a deliverable joiner);
+  any other `&`-joined title still FAILs. No semantics beyond the owner's text
+  are carried here.
 - box-2: every task's referenced file paths (path-like tokens
   `[\w./-]+\.[A-Za-z0-9]{1,5}`) must map to the declared layer via a fixed
   prefix table frozen here: `skills/`, `docs/`, `template/`, `*.md` → `docs`;
@@ -416,10 +426,11 @@ zero phase headings; `unparseable` for read/parse/ambiguity failures.
 fixtures dir dependency): a minimal valid 2-phase plan; an invalid plan
 violating boxes 1, 4, 5; an ambiguous-layer plan (`Layer:` line absent) →
 `unparseable`; a plan with no phases → `no-phases`; missing file →
-`missing-plan`; a determinism pair (two runs byte-identical); a node-fallback
-parity run.
+`missing-plan`; a 9-task-phase plan → `BLOCKED — box 3` (owns the
+`lint:threshold` dev scenario); a determinism pair (two runs byte-identical);
+a node-fallback parity run.
 
-**Skill slims (P3):** in each of the three consumer skills, the phase-lint
+**Skill slims (P4):** in each of the three consumer skills, the phase-lint
 step becomes: run `bun scripts/phase-lint.mjs <plan>` (node fallback) and paste
 its stdout block; on exit 1, stop with the pasted output. `phase-contract`
 remains the prose owner and is not edited. Version bumps: minor per skill.
@@ -441,6 +452,15 @@ see planning-obligations.md
   amendment. The vehicle rule is still satisfied: this feature creates the
   `packages/agentic-workflow` crate skeleton + `.agentic-workflow/tmp/` (AC10);
   features 38/42 land their producers as subcommands of it.
+- **ED6 (2026-09-10, owner decision approved in session — F5 resolution,
+  option 1):** the templates' `Hardening & PR` box-1 exception is **sanctioned
+  in the rule owner, and the amendment lands inside this PR**. P1 amends
+  `skills/phase-contract/SKILL.md` rule 1 (v1.0.1 → 1.0.2) with the exception
+  and re-bundles the mirror; SPEC §Design box-1 stays verbatim with respect to
+  the amended owner (no local semantics); `phase-contract` is not edited again
+  by any other phase of this feature (AC8/O12 re-scoped accordingly). This
+  supersedes ED5's separate-triage proposal. The re-cut to 5 phases re-orders
+  P1–P5: rule-owner amendment → linter → crate → consumer slims → hardening.
 - **ED2:** `.agentic-workflow/tmp/` is committed with a `.gitkeep` so the
   convention exists on fresh clones and `test -d` (AC10) passes off-clone.
 - **ED3:** no `--json` mode in v1 (PD2); machine consumption is feature 38/42
@@ -455,7 +475,7 @@ see planning-obligations.md
   convention, node fallback enforced by AC7).
 - Skill-surface tests: existing suites must stay green
   (`scripts/check-skill-context.mjs`, skills CLI discovery,
-  `bundle:skills` parity, ledger-ownership suite) after P3.
+  `bundle:skills` parity, ledger-ownership suite) after P4.
 
 ### Dev scenarios
 
@@ -475,15 +495,29 @@ see planning-obligations.md
 Detailed tasks live in `TASKS.md`; this section is the high-level ledger
 `execute-phase` ticks.
 
-#### P1 — Implement the deterministic phase linter
+#### P1 — Amend phase-contract rule 1
+
+Layer: docs. Done-when: `grep -n "Hardening & PR" skills/phase-contract/SKILL.md` → matches rule 1, and `npm run bundle:skills` → exit 0.
+
+Amend `skills/phase-contract/SKILL.md` rule 1 with the owner-sanctioned
+exception: the templates' literal closing title `Hardening & PR` is the only
+authorized `&`-joined title; its title-deliverable normalizes to
+`hardening-pr` (`&` is a normalization separator, not a deliverable joiner);
+any other `&`-joined title still FAILs. Version bump 1.0.1 → 1.0.2;
+re-run `npm run bundle:skills` for pi mirror parity. This phase implements the
+F5 resolution (ED6) — the rule amendment lands in the owner, inside this PR.
+
+#### P2 — Implement the deterministic phase linter
 
 Layer: config/infra. Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0.
 
-Build `scripts/phase-lint.mjs` (parser, eight rule checks, reason codes,
-output block, fingerprints) and `scripts/phase-lint.test.mjs` (corpus) per the
-Design section; verify determinism and node-fallback parity.
+Write the corpus test red-first, then build `scripts/phase-lint.mjs`
+(parser, eight rule checks — box-1 implementing the amended rule 1 verbatim —,
+reason codes, output block, fingerprints) and `scripts/phase-lint.test.mjs`
+(corpus incl. the 9-task `lint:threshold` fixture); verify determinism and
+node-fallback parity.
 
-#### P2 — Create the producer crate vehicle
+#### P3 — Create the producer crate vehicle
 
 Layer: config/infra. Done-when: `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` → exit 0.
 
@@ -491,15 +525,16 @@ Create the minimal `packages/agentic-workflow` crate skeleton (package.json,
 README stub; no build, no dependencies) and the `.agentic-workflow/tmp/.gitkeep`
 scratch convention, per ED1/ED2.
 
-#### P3 — Slim the three consumer routes to run-and-paste
+#### P4 — Slim the three consumer routes to run-and-paste
 
 Layer: docs. Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches in all three, and `bun scripts/check-skill-context.mjs` + `npx skills add . --list` → exit 0.
 
 Edit `plan-feature-scaffold`, `plan-fix`, and `execute-phase` so their
-phase-lint steps run the script and paste its output; keep `phase-contract`
-untouched; minor version bumps; re-run `npm run bundle:skills`.
+phase-lint steps run the script and paste its output; `phase-contract` is NOT
+touched in this phase (amended once in P1); minor version bumps; re-run
+`npm run bundle:skills`.
 
-#### P4 — Hardening & PR
+#### P5 — Hardening & PR
 
 Layer: hardening. Done-when: `git status --porcelain -- docs/` → empty, and the
 project verification gate commands exit 0.
@@ -510,10 +545,11 @@ the literal close-out tasks.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
-- P1 — Phase-lint: PASS (8/8) · fingerprint P1:config/infra:6:implement-deterministic-phase-linter
-- P2 — Phase-lint: PASS (8/8) · fingerprint P2:config/infra:3:create-producer-crate-vehicle
-- P3 — Phase-lint: PASS (8/8) · fingerprint P3:docs:6:slim-consumer-routes-to-run-and-paste
-- P4 — Phase-lint: PASS (8/8) · fingerprint P4:hardening:8:hardening-pr
+- P1 — Phase-lint: PASS (8/8) · fingerprint P1:docs:2:amend-phase-contract-rule-1
+- P2 — Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:implement-deterministic-phase-linter
+- P3 — Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:create-producer-crate-vehicle
+- P4 — Phase-lint: PASS (8/8) · fingerprint P4:docs:6:slim-consumer-routes-to-run-and-paste
+- P5 — Phase-lint: PASS (8/8) · fingerprint P5:hardening:8:hardening-pr
 
 ### Deploy & rollback
 
