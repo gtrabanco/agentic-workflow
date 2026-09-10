@@ -44,3 +44,46 @@ Notes:
 - L1–L6 swept: ledgers clean (O1–O10 `planned` with validators copied from ACCEPTANCE; O11 `verified`; O12 owned) except PE-007 status-wording drift (L2/P12, F4). No `unknown`, `drifted`, or deferred row survives. No duplicate or missing obligation; scenario↔validator↔phase closure holds (L5) — the two material findings are plan defects, not ledger gaps.
 - Zero writes to any reviewed artifact: only progress.md (receipt) and planning-findings.md (F2–F4) were appended.
 - No prior plan receipt exists; this is cycle 1. Planning artifacts are uncommitted on `main` (planner scaffold state); no commit made by this review — reviewer wrote evidence only.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-2 · Snapshot: c55328a451c065c3f0381ac8ed55eee54704561caa59e9b0f4c3b9fbf1140780 · Verdict: plan-review-fail
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0 · Parent Product receipt: SPEC-REVIEW-37-1
+- Source revision: 0e39cbe23160503212efe1f30a808d32131880d5 · Artifact revision: 0e39cbe23160503212efe1f30a808d32131880d5
+- Reviewer: review-plan (independent session) · Session: review-plan-37-cycle2-2026-09-10 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-10 / 2026-09-10 · Findings: 3 (material open: 3)
+- Ledgers read: planning-evidence 9 rows · obligations 12 rows (verified-capable: 1)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-1 @ 800b79d3caaf5c1f3320d1fd1d04c1584a6c22cd3e9a0d67a901045a8861d2fb
+```
+
+Notes:
+- Cycle 2 of the plan loop: cycle 1 (PLAN-REVIEW-37-1, verdict fail) → user-directed replan (ED5, folds F2+F3+F4, revision `37-plan-2`) → this review. No-progress gate satisfied by a changed snapshot (`800b79d3…` → `c55328a4…`); falsification stance CONFIRMED-GAPS, run per CHECKS.md §2.
+- Fold verification at `37-plan-2`: F2 verified — SPEC §Phase-lint, PLAN §P4, and TASKS.md P4 all state 8 tasks and fingerprint `P4:hardening:8:hardening-pr`. F4 verified — PE-007 now reads roadmap row 37 `planned`, matching the working tree. F3 verified as written but recurred materially as F5 (the box-1 exemption is not authorized by the sole rule owner).
+- Parent lineage: the Product half is byte-identical between the parent receipt's revision (05480514) and this review (product-half diff empty; builder `changedPaths: []`). Re-deriving the `stage: spec` snapshot at the parent receipt's recorded source revision (`--source-revision 05480514…`) reproduces `8f736cc9…` exactly; the naive default rebuild prints `74349f31…` only because RS3(b) `contentRevision` rotates to the fold commit `0e39cbe…` (an engineering-half edit that touched `SPEC.md`). The parent receipt's `Policy: pre-execution-review@current` string reads stale against current policy `v1` — a formatting-era artifact, not a byte or context move.
+- Snapshot bound with `--parent 8f736cc9…`; digest is stdout's first line; `artifactRevisionId` defaults to `contentRevision` (0e39cbe…) with the planner's handoff label `37-plan-2` recorded above.
+- Falsification confirmed F5 (box-1 owner contradiction — invented rule semantics), plus two non-owner defects: AC8's third grep target is a directory without `-r` (F6) and the `lint:threshold` scenario has no owning task (F7).
+- Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F5–F7) were appended.
+- Self-check `verify --stage plan --parent 8f736cc9…` pasted beside the verdict block in chat (write-then-report: receipt written before report).
+- Receipt write fixed once before reporting: the `Artifact revision:` field first carried the planner's handoff label `37-plan-2`; the verifier refused it (`stale-artifact-revision`, no bound byte moved) because the builder's canonical revision is the digest-derived `0e39cbe…` — the handoff label stays recorded in the notes above, the receipt field binds the digest-derivable value.
+
+## Replan 3 — F5 resolution fold (2026-09-10)
+
+User decision (owner, approved in session): F5 resolved via option 1 — the `Hardening & PR`
+box-1 exception is sanctioned in the rule owner and the amendment lands inside this PR.
+
+Folds applied (revision `37-plan-3`):
+- F5: new P1 amends `skills/phase-contract/SKILL.md` rule 1 (v1.0.1 → 1.0.2) + re-bundle;
+  SPEC §Design box-1 kept verbatim to the amended owner; ED6 recorded in decisions.md,
+  superseding ED5's separate-triage proposal. Plan re-cut to 5 phases (P1 amend rule owner →
+  P2 linter → P3 crate → P4 consumer slims → P5 Hardening & PR) with fingerprints recomputed.
+- F6: AC8/O8 third grep target corrected to `skills/execute-phase/SKILL.md`.
+- F7: 9-task threshold fixture added to the linter corpus (owns `lint:threshold` dev scenario).
+- AC8 and O12 re-scoped: phase-contract is amended in this PR (P1) and not re-edited by other phases.
+
+Note: SPEC product-half engineering-section edits (AC8) mean the SPEC-REVIEW-37-1 receipt
+snapshot no longer binds the current SPEC bytes; a fresh review cycle is required.
