@@ -224,3 +224,14 @@ Notes:
 ## Unit-loop receipt — P2
 - Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` → exit 0 (13/13) · `node --test scripts/normative-drift.test.mjs` → exit 0 (16/16) · `bun scripts/check-skill-context.mjs` → PASS (39 skills) · `npx skills add . --list` → exit 0 · dogfood `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → `verdict PASS`, 5/5 recorded fingerprints, sha256 `b012730370…` · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: P3 · Attempts: 1
+
+## P3 — 2026-09-10
+- Done: created the producer crate vehicle — `packages/agentic-workflow/package.json` (private, zero dependencies, no build step), `packages/agentic-workflow/README.md` stub stating the vehicle rule and the scratch convention, and the committed `.agentic-workflow/tmp/.gitkeep`; P2 commit `4828900d` reconciled.
+- Remains: P4–P5.
+- Gotchas: none — the new package is inert (no scripts, no deps, not published), and adding it left the repository scripts suite at its pre-existing 220/221.
+- Files: packages/agentic-workflow/package.json, packages/agentic-workflow/README.md, .agentic-workflow/tmp/.gitkeep, docs/features/37-phase-lint-script/{TASKS.md,progress.md}
+- Next: P4 — Slim the three consumer routes to run-and-paste
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` → exit 0 (AC10) · `node --test scripts/*.test.mjs` → 220/221 (only the pre-existing `check-skill-context` failure) · phase-lint P3 → PASS (8/8) `P3:config/infra:3:create-producer-crate-vehicle` · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: P4 · Attempts: 1
