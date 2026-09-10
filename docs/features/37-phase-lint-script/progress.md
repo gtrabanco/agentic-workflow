@@ -87,3 +87,28 @@ Folds applied (revision `37-plan-3`):
 
 Note: SPEC product-half engineering-section edits (AC8) mean the SPEC-REVIEW-37-1 receipt
 snapshot no longer binds the current SPEC bytes; a fresh review cycle is required.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-3 · Snapshot: 27565d4a0867a2a3ddb025f82a983edafd65c280a4f1737c40feb2c133ce6c50 · Verdict: plan-review-fail
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0 · Parent Product receipt: SPEC-REVIEW-37-1
+- Source revision: 81a2166aff3cdab4f3e8c0bde9388f145166c816 · Artifact revision: 81a2166aff3cdab4f3e8c0bde9388f145166c816
+- Reviewer: review-plan (independent session) · Session: review-plan-37-cycle3-2026-09-10 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-10 / 2026-09-10 · Findings: 4 (material open: 4)
+- Ledgers read: planning-evidence 9 rows · obligations 12 rows (verified-capable: 1)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-2 @ c55328a451c065c3f0381ac8ed55eee54704561caa59e9b0f4c3b9fbf1140780
+```
+
+Notes:
+- Cycle 3 of the plan loop. No-progress gate satisfied: snapshot changed 800b79d3… → c55328a4… → 27565d4a… (the `37-plan-3` fold + the PE sync commit `81a2166a` re-cut phase labels and PE-001's owner revision).
+- Parent lineage re-proven against current bytes instead of assumed: the Product projection (`selectSpecProduct`, digest `a365fa7b…`, 20345 bytes) is byte-identical at the first committed revision (`28353158`) and at HEAD, and no bound context file moved since the spec review (CLAUDE.md and REPOSITORY_STATE.md unchanged; architectural-invariants absent on both sides). Reproducing the parent receipt's exact identity required BOTH `--source-revision 05480514…` AND `--artifact-revision 05480514…` — the `--source-revision` flag alone does not pin `artifactRevisionId`, which defaults to the newest commit touching the bound paths (cycle 2's notes under-describe this). L1 holds.
+- Falsification stance before checking: CONFIRMED-GAPS → confirmed F8 (PE-008's resolution claim contradicted by the frozen product bytes it cites), F9 (version bumps with no CHANGELOG/`bump-skill` step vs the plan's own normative-drift version-tables gate), F10 (P1 fingerprint `:2:` vs 3 tasks — F2's drift class recurring on a new phase), F11 (frozen box-2 heuristic scans "referenced file paths" where the rule owner's rule 2 says "target file" — P4's own task text embeds config/infra script paths in a docs phase, so the recorded P4 PASS is unprovable under the frozen grammar).
+- Ledger sweep L1–L6: L3/L4/L5 hold (O1–O10 planned with validators copied from ACCEPTANCE, O11 verified, O12 owned; F7's threshold-fixture gap was genuinely closed in P2's corpus task). L2 fails on PE-008 only (F8). P-checks: P1–P4, P6–P8, P11, P12 pass; P5, P9, P10 carry findings; no n/a rows.
+- CONVERGENCE-ANOMALY applies to the next repair cycle: the recurring family across cycles 1–3 is plan-self-conformance (F2 → F10/F11) — each replan hand-patches the reported row instead of re-deriving fingerprints/grammar mechanically over the re-cut plan. The next batch must state its convergence argument (mechanical fingerprint + grammar re-derivation before hand-off) or the owner should re-scope before a fourth cycle.
+- Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F8–F11) were appended; the reviewer made no commit (the author's fold commit carries them, as in cycles 1–2).
+- Self-check `verify --stage plan --parent 8f736cc9…` pasted beside the verdict block in chat (write-then-report: receipt written before report).

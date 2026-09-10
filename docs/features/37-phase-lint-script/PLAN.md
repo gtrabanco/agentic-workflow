@@ -4,7 +4,8 @@ Five implementation phases (rule-owner amendment → linter implementation →
 vehicle crate → consumer skill slimming → hardening & PR). The input grammar,
 rule-check semantics, reason codes, and output contract are frozen in
 `SPEC.md` (`## Engineering half` → `### Design`). Artifact revision of this
-plan set: `37-plan-3`.
+plan set: `37-plan-4` (repair batch for review receipt PLAN-REVIEW-37-3 — folds
+F8–F11; fingerprints re-derived mechanically over the re-cut plan, see ED7).
 
 ## P1 — Amend phase-contract rule 1
 
@@ -12,11 +13,12 @@ Layer: docs · amend `skills/phase-contract/SKILL.md` rule 1 with the
 owner-sanctioned exception: the templates' literal closing title
 `Hardening & PR` is the only authorized `&`-joined title; its title-deliverable
 normalizes to `hardening-pr` (`&` is a normalization separator, not a
-deliverable joiner); any other `&`-joined title still FAILs. Version bump
-1.0.1 → 1.0.2, then re-run `npm run bundle:skills` for pi mirror parity. This
-implements the F5 resolution (ED6) — the rule amendment lands in the rule
-owner, inside this PR. `phase-contract` is not edited again by any other phase
-of this feature.
+deliverable joiner); any other `&`-joined title still FAILs. Run `bump-skill`
+for the amended skill (bump version 1.0.1 to 1.0.2 and add the new rows in
+CHANGELOG.md and CHANGELOG.es.md with README/SKILLS table sync), then re-run
+`npm run bundle:skills` for pi mirror parity. This implements the F5 resolution
+(ED6) — the rule amendment lands in the rule owner, inside this PR.
+`phase-contract` is not edited again by any other phase of this feature.
 
 ## P2 — Implement the deterministic phase linter
 
@@ -43,8 +45,11 @@ Layer: docs · edit `skills/plan-feature-scaffold/SKILL.md`,
 `references/PREFLIGHT.md`) so the phase-lint step runs
 `bun scripts/phase-lint.mjs <plan.md>` and pastes its output; keep the
 `phase-contract` pointer as sole rule owner (amended once in P1 — this phase
-does not touch it); minor version bumps for all three; re-run
-`npm run bundle:skills` for pi mirror parity.
+does not touch it); run `bump-skill` for the three edited skills (minor bumps +
+CHANGELOG rows in both CHANGELOGs + README/SKILLS table sync); re-run
+`npm run bundle:skills` for pi mirror parity. Each task's target file is the
+edited skill itself; the run-and-paste command inside the prose is quoted
+content, not a file the phase edits.
 
 ## P5 — Hardening & PR
 

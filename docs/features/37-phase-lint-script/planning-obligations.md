@@ -2,7 +2,7 @@
 
 One row per normative behaviour, applicable invariant, affected use case, and
 required failure state (ledger contract: `pre-execution-review/references/LEDGERS.md` §2).
-Artifact revision: `37-plan-3`.
+Artifact revision: `37-plan-4`.
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
@@ -13,7 +13,7 @@ Artifact revision: `37-plan-3`.
 | O5 | SPEC AC5 | Corpus of test plans (valid, invalid, ambiguous) maps to expected verdict + reason code under `node --test scripts/phase-lint.test.mjs` | P2 | corpus test suite | execute-phase | `node --test scripts/phase-lint.test.mjs` | suite exit 0 | planned |
 | O6 | SPEC AC6 | No network calls in the linter | P2 / P5 | grep guard | execute-phase | `grep -nE "fetch\(|require\(['\"](http|https)" scripts/phase-lint.mjs` → empty | gate output in TASKS.md tick | planned |
 | O7 | SPEC AC7 | Node fallback parity: `node scripts/phase-lint.mjs <valid-plan>` → exit 0 | P2 | node fallback run | execute-phase | `node scripts/phase-lint.mjs <corpus-valid-plan.md>` | exit 0 recorded | planned |
-| O8 | SPEC AC8 | The three consumer skills reference and run the script; `phase-contract` amended once in P1 (rule-owner exception) and never re-edited afterward; context budgets + skills CLI discovery pass; pi mirror re-bundled | P4 | skill slim edits | execute-phase | greps + `bun scripts/check-skill-context.mjs` + `npx skills add . --list` + `npm run bundle:skills` | command outputs in TASKS.md tick | planned |
+| O8 | SPEC AC8 | The three consumer skills reference and run the script; `phase-contract` amended once in P1 (rule-owner exception) and never re-edited afterward; version surface driven by `bump-skill` (minor bumps + CHANGELOG rows ×2 + README/SKILLS tables); context budgets + skills CLI discovery pass; pi mirror re-bundled | P4 | skill slim edits | execute-phase | greps + `bun scripts/check-skill-context.mjs` + `npx skills add . --list` + `npm run bundle:skills` + newest-CHANGELOG-row/version consistency for the four edited skills | command outputs in TASKS.md tick | planned |
 | O9 | SPEC AC9 | No change to `packages/agentic-workflow-schema` (no new vocabulary) | P2 / P5 | untouched-schema check | execute-phase | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty | diff output in TASKS.md tick | planned |
 | O10 | SPEC AC10; vehicle rule (PE-005) | Producer crate + tmp convention exist: `packages/agentic-workflow/` with `package.json`, and `.agentic-workflow/tmp/` | P3 | crate + tmp creation | execute-phase | `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` | command exit 0 in TASKS.md tick | planned |
 | O11 | Roadmap conventions | Roadmap row 37 reads `planned` after scaffold, re-read and confirmed | — (scaffold) | roadmap write | plan-feature-scaffold | re-read of `docs/features/ROADMAP.md` row 37 | row text `planned` | verified |
