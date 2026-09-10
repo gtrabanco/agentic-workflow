@@ -33,13 +33,13 @@ Layer: config/infra · Done-when: `test -d packages/agentic-workflow && test -f 
 
 Layer: docs · Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches in all three, and `bun scripts/check-skill-context.mjs` + `npx skills add . --list` → exit 0.
 
-- [ ] `skills/plan-feature-scaffold/SKILL.md`: replace model-reasoning lint with run-and-paste of `bun scripts/phase-lint.mjs <plan>`; minor bump
-- [ ] `skills/plan-fix/SKILL.md`: same replacement; minor bump
-- [ ] `skills/execute-phase/SKILL.md` + `references/PREFLIGHT.md`: pre-flight runs the script instead of model reasoning; minor bump
-- [ ] Do not touch `skills/phase-contract/SKILL.md` in this phase (amended once in P1, sole rule owner)
-- [ ] Run `bump-skill` for the three edited skills: minor bumps + CHANGELOG rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
-- [ ] Re-run `npm run bundle:skills` (pi mirror parity)
-- [ ] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list` — both green
+- [x] `skills/plan-feature-scaffold/SKILL.md`: replace model-reasoning lint with run-and-paste of `bun scripts/phase-lint.mjs <plan>`; minor bump
+- [x] `skills/plan-fix/SKILL.md`: same replacement; minor bump
+- [x] `skills/execute-phase/SKILL.md` + `references/PREFLIGHT.md`: pre-flight runs the script instead of model reasoning; minor bump
+- [x] Do not touch `skills/phase-contract/SKILL.md` in this phase (amended once in P1, sole rule owner)
+- [x] Run `bump-skill` for the three edited skills: minor bumps + CHANGELOG rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
+- [x] Re-run `npm run bundle:skills` (pi mirror parity)
+- [x] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list` — both green
 
 ## P5 — Hardening & PR
 

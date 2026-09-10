@@ -1,7 +1,7 @@
 ---
 name: plan-feature-scaffold
 user-invocable: false
-version: 2.2.0
+version: 2.3.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -47,7 +47,10 @@ The reference allowlist is exactly one path. After Step 0, read and execute the
 complete [scaffold process](references/SCAFFOLD_PROCESS.md). It owns the product-
 half gate, artifact scaling, roadmap transition, re-read, and fixed completion
 report. The [phase contract](<../phase-contract/SKILL.md>) owns the 8-box
-phase-lint and the normalized phase fingerprint.
+phase-lint and the normalized phase fingerprint, and
+`bun scripts/phase-lint.mjs <plan>` (node fallback) runs it: run the linter over
+the emitted plan before reporting and paste its stdout block verbatim — exit 1
+is a blocked phase to re-cut, never a verdict to re-derive by reading the rules.
 
 The resource is normative and one hop from this file. Missing resource → stop;
 never reconstruct phase or close-out wording from memory.

@@ -42,9 +42,11 @@
    - Every phase passes: independently checkable tasks without judgment; zero
      open design decisions; one layer/concern; locally runnable verification.
      Re-cut or split on any failure.
-    - Run the canonical eight-box Phase-lint owned by the
-      [phase contract](<../../phase-contract/SKILL.md>) against every phase
-      before emission. Any FAIL is re-cut/split; never emit an unticked phase.
+   - Run the canonical eight-box Phase-lint — owned by the
+     [phase contract](<../../phase-contract/SKILL.md>), executed with
+     `bun scripts/phase-lint.mjs <plan>` (node fallback) — over every phase
+     before emission, and paste its stdout block into the report. Exit 1 is a
+     blocked phase: re-cut or split it; never emit an unticked phase.
    - Run the feature template's full Spec-lint after the Engineering half is
      filled, including Product-half regression boxes. Fix every presence failure
      before reporting.
