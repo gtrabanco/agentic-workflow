@@ -2,7 +2,7 @@
 name: evidence-grounding
 user-invocable: false
 version: 1.6.0
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Internal shared owner of evidence-grounded authoring: the fixed

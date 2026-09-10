@@ -3,7 +3,7 @@ name: generate-docs
 user-invocable: true
 version: 2.0.1
 argument-hint: "[NN-slug | fix-n | path/glob] [--review]"
-author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
+author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
   Generate incremental, diff-driven developer guides through the project's
