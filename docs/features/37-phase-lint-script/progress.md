@@ -112,3 +112,51 @@ Notes:
 - CONVERGENCE-ANOMALY applies to the next repair cycle: the recurring family across cycles 1–3 is plan-self-conformance (F2 → F10/F11) — each replan hand-patches the reported row instead of re-deriving fingerprints/grammar mechanically over the re-cut plan. The next batch must state its convergence argument (mechanical fingerprint + grammar re-derivation before hand-off) or the owner should re-scope before a fourth cycle.
 - Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F8–F11) were appended; the reviewer made no commit (the author's fold commit carries them, as in cycles 1–2).
 - Self-check `verify --stage plan --parent 8f736cc9…` pasted beside the verdict block in chat (write-then-report: receipt written before report).
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-4 · Snapshot: 81aefd1c05f762ff85e05c9eb2069c73a491e710bb7d77d84a2a820c29dcd689 · Verdict: plan-review-fail
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0 · Parent Product receipt: SPEC-REVIEW-37-1
+- Source revision: dd68f05075a88abbd0deb3f4f055278f161cf8b2 · Artifact revision: dd68f05075a88abbd0deb3f4f055278f161cf8b2
+- Reviewer: review-plan (independent session) · Session: review-plan-37-cycle4-2026-09-10 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-10 (UTC not recorded by runtime) / 2026-09-10 · Findings: 2 (material open: 1)
+- Ledgers read: planning-evidence 9 rows · obligations 12 rows (verified-capable: 1)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-3 @ 27565d4a0867a2a3ddb025f82a983edafd65c280a4f1737c40feb2c133ce6c50
+```
+
+Notes:
+- Cycle 4 of the plan loop; no-progress gate satisfied: snapshot changed 27565d4a… → 81aefd1c… (the `37-plan-4` fold commit `dd68f050`). Falsification stance before checking: CONFIRMED-GAPS → confirmed on L1 only (F12).
+- L1 fails (stale-parent): the parent Product receipt SPEC-REVIEW-37-1 (snapshot `8f736cc9…`) no longer binds the current Product half. Recomputation per POLICY §7: the F8 fold commit `dd68f050` edited SPEC §Scope in-scope bullet 7 (AC9→AC10 mapping) — inside the `spec-product-v1` projection, which ends at `## Engineering half`. The current Product projection is 20439 bytes · digest `4f33d5979f1e7e0169051bd83096dd8ffaa3013dd9e6440d5281cca693cb613f`; a `stage: spec` build at the receipt's own pinned revisions (05480514…) over the current tree prints `2a072615…` — neither reproduces the recorded `8f736cc9…` (20345 bytes). Context authorities did NOT move: CLAUDE.md (`9ae03966…`) and REPOSITORY_STATE.md (`e8509783…`) recomputed byte-identical 05480514→dd68f050; architectural-invariants absent on both sides; no `governing-issue`/`dependency-unit` context exists in the builder. So `changedPaths` is empty and the moved bytes are exactly the unit's own Product half. Claimed value `8f736cc9…` recorded beside the recomputed values — the pairing is the defect, never a substitution.
+- Per CHECKS §3 the review stops at L1 rather than reviewing an orphaned plan: L2–L6 and P1–P12 were read but not adjudicated this cycle. The ledgers themselves swept clean on read (planning-evidence 9 rows all `current`/`proven|decision`; obligations 12 rows, none blank/deferred/duplicated, O11 `verified`); that is context, not an adjudication.
+- Fold verification (context for the next cycle, not an adjudication): F8's SPEC edit is present (§Scope bullet 7 now maps to AC10 — this is the very edit that moved the Product half); F9 verified (bump-skill steps in PLAN/TASKS P1+P4; testing.md names the normative-drift dependency); F10 verified (fingerprints re-derived 3/6/3/7/8 = TASKS.md checkbox counts; P4 `P4:docs:7:slim-three-consumer-routes-to-run-and-paste`); F11 verified (box-2 frozen to target-file semantics with the no-target exemption and package-README rule; PE-002's `path:line` citations match the working tree at `af4fe86`). The plan-self-conformance family from cycles 1–3 did not recur.
+- Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F12–F13) were appended; the reviewer made no commit.
+- Self-check `verify --stage plan --parent 8f736cc9…` pasted beside the verdict block in chat (write-then-report: receipt written before report).
+
+## Replan 5 — F12+F13 fold: Product-half byte restore + PE-008 re-point (2026-09-10)
+
+Owner decision (user, approved in session): resolve F12/F13 via option 2 — restore
+the Product half to the exact bytes SPEC-REVIEW-37-1 reviewed, and repair PE-008
+plan-side only. No product semantics changed.
+
+Folds applied (revision `37-spec-2`):
+- F12: SPEC §Scope in-scope bullet 7 reverted to the SPEC-REVIEW-37-1-reviewed text
+  ("→ AC9 (n/a pending planning)"). Digest proof: `bun scripts/pre-execution-snapshot.mjs
+  build --stage spec --unit 37-phase-lint-script --source-revision 05480514…
+  --artifact-revision 05480514…` → `8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0`
+  — exact match with the receipt's bound snapshot; the Product receipt binds the
+  Product half again. Context authorities unchanged (CLAUDE.md, REPOSITORY_STATE.md
+  diff vs `dd68f050` empty).
+- F13: PE-008's `source-and-location` re-pointed plan-side only, from the SPEC Scope
+  bullet to `SPEC §Acceptance criteria AC9/AC10` (the AC10 location F1 verified),
+  citing the spec-stage F1 ledger row as authority — planning-evidence.md is not a
+  Product-half byte, so the parent digest stays `8f736cc9…`.
+- `## Design status` and all other Product-half bytes untouched; no content
+  re-review needed — this is a byte-identity restore, not a product change.
+
+Note: planning-evidence.md moved (not a Product-half byte); a `stage: plan` rebuild
+is expected for the next review-plan cycle with parent `8f736cc9…`.
