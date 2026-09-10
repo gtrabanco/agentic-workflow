@@ -25,9 +25,9 @@ Layer: config/infra · Done-when: `node --test scripts/phase-lint.test.mjs` → 
 
 Layer: config/infra · Done-when: `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` → exit 0.
 
-- [ ] Create `packages/agentic-workflow/package.json` (name `@gtrabanco/agentic-workflow`, private, zero dependencies)
-- [ ] Create `packages/agentic-workflow/README.md` stub
-- [ ] Create `.agentic-workflow/tmp/.gitkeep` (committed, so the convention exists on fresh clones)
+- [x] Create `packages/agentic-workflow/package.json` (name `@gtrabanco/agentic-workflow`, private, zero dependencies)
+- [x] Create `packages/agentic-workflow/README.md` stub
+- [x] Create `.agentic-workflow/tmp/.gitkeep` (committed, so the convention exists on fresh clones)
 
 ## P4 — Slim the three consumer routes to run-and-paste
 
