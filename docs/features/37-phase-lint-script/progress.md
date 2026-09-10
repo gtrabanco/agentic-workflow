@@ -160,3 +160,45 @@ Folds applied (revision `37-spec-2`):
 
 Note: planning-evidence.md moved (not a Product-half byte); a `stage: plan` rebuild
 is expected for the next review-plan cycle with parent `8f736cc9…`.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-5 · Snapshot: 8c81bd16b8392e415558a0b7554112e45f78eab933b326fd02003ed9d47d21e4 · Verdict: plan-review-pass
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0 · Parent Product receipt: SPEC-REVIEW-37-1
+- Source revision: f46cf4504bb9995665f89cc0e0f04fc53526d1a5 · Artifact revision: f46cf4504bb9995665f89cc0e0f04fc53526d1a5
+- Reviewer: review-plan (independent session) · Session: review-plan-37-cycle5-2026-09-10 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-10 / 2026-09-10 · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 9 rows · obligations 12 rows (verified-capable: 1)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-4 @ 81aefd1c05f762ff85e05c9eb2069c73a491e710bb7d77d84a2a820c29dcd689
+```
+
+Notes:
+- Cycle 5 of the plan loop; no-progress gate satisfied: snapshot changed 27565d4a… → 81aefd1c… → 8c81bd16… (the `37-spec-2` fold commit `f46cf450`). The planner's handoff label is `37-spec-2`; the receipt's `Artifact revision:` binds the builder's canonical digest-derived value `f46cf450…` (handoff label recorded here, as in cycles 2–4).
+- Parent lineage re-proven, never copied: `stage: spec` build at the parent receipt's own pinned revisions (`--source-revision 05480514… --artifact-revision 05480514…`) over the current tree reproduces `8f736cc9…` exactly — the F12 fold's byte-restore claim verified; context authorities recomputed byte-identical (CLAUDE.md `9ae03966…`, REPOSITORY_STATE.md `e8509783…`, diff 05480514→f46cf450 empty; architectural-invariants absent both sides). L1 holds.
+- Falsification stance before checking: CONFIRMED-GAPS → no confirmed gaps. Fold verification: F12 verified (the in-scope bullet reads the SPEC-REVIEW-37-1 text again and the digest reproduces), F13 verified (PE-008 now cites `SPEC §Acceptance criteria AC9/AC10` with the spec-stage F1 row as authority). F8–F11 stand verified from cycle 4's read.
+- Ledger sweep: L2 clean (9 evidence rows, all `current` + `proven`/`decision`; PE-002's path:line citations match the tree at f46cf450); L3–L4 clean (12 obligation rows, none blank/deferred/duplicated, O11 `verified`); L5 closure holds (8 dev scenarios ↔ validators ↔ phases; validators can fail); L6 honest (F2–F11 folded with evidence; spec-stage F1 is info, non-material). P1–P12 all pass — P9's fingerprints re-derived mechanically (checkbox counts 3/6/3/7/8 = TASKS.md; layers declared; P5 normalizes to `hardening-pr` per the P1-amended rule 1, ED6), P10's gate set matches the project's real gates incl. the normative-drift version-tables dependency (F9 fold), P12's citations re-verified (`plan-fix/SKILL.md:101`, `execute-phase/SKILL.md:50`, `PREFLIGHT.md:154`, phase-contract v1.0.1, fix #191 row).
+- Zero writes to any reviewed artifact: only progress.md (this receipt) was appended; no new finding rows — planning-findings.md unchanged this cycle.
+- Self-check `verify --stage plan --parent 8f736cc9…` pasted beside the verdict block in chat (write-then-report: receipt written before report).
+
+## Pre-flight gates — 2026-09-10 (execute-phase, whole-unit mode)
+
+- Branch: `feat/37-phase-lint-script` (`git branch --show-current` → `feat/37-phase-lint-script`; not `main`).
+- Own-status: roadmap row 37 reads `planned` (`docs/features/ROADMAP.md:47`) → proceed.
+- Dependency gate: SPEC §Dependencies declares **Hard: none**, **Soft: none** — transitive closure empty, all met.
+- Pre-execution review gate: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit 37-phase-lint-script --parent 8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0` → `"current": true`, `PLAN-REVIEW-37-5` `plan-review-pass`, digest `8c81bd16b8392e415558a0b7554112e45f78eab933b326fd02003ed9d47d21e4`, `changedPaths: []`.
+- Architectural invariants: `n/a: no project invariants declared` (NRS F010; `docs/architecture/ARCHITECTURAL_INVARIANTS.md` absent).
+- NRS: `docs/workflow/REPOSITORY_STATE.md` status `frozen` — consumed; no applicable contradiction for this unit.
+- Phase-lint pre-flight (model reasoning — the deterministic linter this feature writes does not exist yet): all five phases PASS (8/8), fingerprints matching SPEC §Phase-lint (P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`, P5 `hardening:8` — P5's `Hardening & PR` exempt per the P1-amended rule 1).
+- Queue (whole-unit mode): P1, P2, P3, P4, P5 — all remaining phases; TASKS.md unticked at `f46cf450`.
+
+## Dependency receipt v1
+- Fingerprint: 5d64ad9d1cf8767025ba9ccb7b58ab1f4d294351 · Closure: 37-phase-lint-script ← (none declared)
+- Merged PRs: none (no dependencies declared) · Fully merged: yes · Verified: 2026-09-10
+
+## Acceptance receipt v1
+- Manifest: docs/features/37-phase-lint-script/ACCEPTANCE.md · Blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4 · Status: frozen · Verified: 2026-09-10
