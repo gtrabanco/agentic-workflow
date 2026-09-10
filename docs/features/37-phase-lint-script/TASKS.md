@@ -49,7 +49,7 @@ Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and 
 - [x] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the roadmap row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #184`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #184`
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<n>` and push

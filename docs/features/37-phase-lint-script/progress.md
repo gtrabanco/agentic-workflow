@@ -249,11 +249,11 @@ Notes:
 
 ## P5 — 2026-09-10
 - Done: full verification gate re-run — `node --test scripts/phase-lint.test.mjs` exit 0 (13/13), `node --test scripts/normative-drift.test.mjs` exit 0 (16/16), `bun scripts/check-skill-context.mjs` exit 0 (PASS, 39 skills), `npx skills add . --list` exit 0, `bun run test` in `packages/pi-agentic-workflow` exit 0 (185/185), AC1–AC10 re-run green (AC1 `5` PASS lines, AC2 exit 1 with rule + BLOCKED lines, AC4 byte-identical, AC6 grep empty, AC9 diff empty, AC10 exit 0); the dev-scenario edge corpus exercised (oversized input, permission-denied, concurrent runs — 3/3); `git status --porcelain -- docs/` empty; roadmap row 37 flipped to `done`; P4 commit `d3ee1658` reconciled.
-- Remains: push, open the PR, link it in the roadmap row.
-- Gotchas: `node --test scripts/*.test.mjs` is 220/221 — the single red is the pre-existing `check-skill-context.test.mjs` route-budget fixture failure owned by fix #200 / issue #176 (`known-issues.md` §Disclosed limitations), present at `f46cf450` too and not introduced or repaired here.
+- Remains: none — unit finished (PR open).
+- Gotchas: `node --test scripts/*.test.mjs` is 220/221 — the single red is the pre-existing `check-skill-context.test.mjs` route-budget fixture failure owned by fix #200 / issue #176 (`known-issues.md` §Disclosed limitations), present at `f46cf450` too and not introduced or repaired here. The `PLAN-REVIEW-37-5` snapshot no longer matches `TASKS.md` after the P2 plan-conflict repair (recorded in `decisions.md`); a receipt refresh would be forgery, so only a fresh `/review-plan` can restore it.
 - Files: docs/features/37-phase-lint-script/{TASKS.md,progress.md,known-issues.md}, docs/features/ROADMAP.md
-- Next: P5 — close-out (push, PR, link)
+- Next: unit finished — `/review-change` on the changed HEAD
 
 ## Unit-loop receipt — P5
-- Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` 0 (13/13) · `node --test scripts/normative-drift.test.mjs` 0 (16/16) · `bun scripts/check-skill-context.mjs` 0 · `npx skills add . --list` 0 · `bun run test` (pi package) 0 (185/185) · `node --test scripts/*.test.mjs` 1 (220/221, pre-existing #200/#176) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
-- Next: close-out · Attempts: 1
+- Commit: `cdcec97c` (done flip) + link commit · Gate: `node --test scripts/phase-lint.test.mjs` 0 (13/13) · `node --test scripts/normative-drift.test.mjs` 0 (16/16) · `bun scripts/check-skill-context.mjs` 0 · `npx skills add . --list` 0 · `bun run test` (pi package) 0 (185/185) · `node --test scripts/*.test.mjs` 1 (220/221, pre-existing #200/#176) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: close-out complete · PR: https://github.com/gtrabanco/agentic-workflow/pull/212 · Attempts: 1
