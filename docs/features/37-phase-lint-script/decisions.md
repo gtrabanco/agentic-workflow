@@ -136,6 +136,55 @@
 |---|---|---|---|---|---|---|---|---|---|
 | 2026-09-10 | EN `CHANGELOG.md` lost the `@gtrabanco/pi-agentic-workflow` `0.8.0` row (present in `CHANGELOG.es.md` and at `7fd87ea5`), so `node --test scripts/normative-drift.test.mjs` fails the bilingual version-set symmetry check at HEAD (`15 pass / 1 fail`, reproduced in a clean worktree at `f46cf450`) — P5's own gate | `/tmp/aw-base` at `f46cf450`: `node --test scripts/normative-drift.test.mjs` → `ℹ fail 1`; `CHANGELOG.md:96` jumps `0.9.0` → `0.7.2`; `git show 7fd87ea5:CHANGELOG.md:95` carries the row | 1 line / 1 file | low | yes — `CHANGELOG.md` (already touched by P1) | Autofix | all boxes: ≤15 lines, ≤2 files, file already touched, low risk, no API/schema/dependency/acceptance change, objective unchanged | drop the fix if the drift is resolved upstream first | this commit (P1) |
 
+## Plan conflicts (execute-phase)
+
+- **P2 (2026-09-10) — `TASKS.md` lacked the phase grammar its own linter consumes.**
+  The frozen input grammar (`SPEC §Design`) requires every `P<n>` phase body to
+  carry a `Layer:` line and a `Done-when:` line, and the canonical M/L plans do
+  (e.g. `docs/features/29-bounded-implementation-discovery/TASKS.md:10`,
+  `docs/features/30-repair-receipt-delta-review/TASKS.md:10`). Feature 37's
+  `TASKS.md` carried neither, so the reviewed plan's own recorded fingerprints
+  (`P1:docs:3…` … `P5:hardening:8…`, SPEC §Phase-lint) could not be reproduced
+  by the linter the plan commissions — the recurring plan-self-conformance
+  family (F2/F10/F11) one more time. Repair applied under the execute-phase
+  plan-conflict rule: the five `Layer: <layer> · Done-when: <command>` lines
+  were added to `TASKS.md` **verbatim from `SPEC.md` §Phases** (the frozen
+  values — no semantics, scope, or acceptance change), and the linter now
+  reproduces all five recorded fingerprints exactly
+  (`bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` →
+  `verdict PASS`, sha256 `b012730370…`).
+  Consequence recorded, not hidden: `TASKS.md` is a bound `stage: plan` artifact,
+  so `PLAN-REVIEW-37-5`'s snapshot no longer matches the working tree. The
+  whole-unit loop re-checks the acceptance blob (unchanged) and the phase gates,
+  not the plan receipt, so execution continues; the Product half and
+  `ACCEPTANCE.md` are untouched. If the project wants the plan receipt current
+  again, that is a fresh `/review-plan` on the amended plan — never a receipt
+  refresh.
+
+## Implementation definitions (execute-phase, P2)
+
+Deterministic definitions of the frozen approximations, pinned by
+`scripts/phase-lint.test.mjs` (the SPEC authorizes approximation, the corpus owns
+its exact behaviour):
+
+- **box-4 `→` chain** — two or more arrows in one task are a chain; a single
+  arrow is an outcome annotation. Real plans use a single arrow inside tasks and
+  `Done-when:` lines (e.g. `docs/features/24-workflow-transition-decider/TASKS.md:87`,
+  `docs/features/30-repair-receipt-delta-review/TASKS.md:19-21`), so counting any
+  arrow would block them.
+- **box-4 enumerated cases** — numbered/lettered markers (`(1)`, (a)) or ordinal
+  words, not a bare comma list; a corpus case with four markers pins the branch.
+- **box-8 done-when block** — the remainder runs from `Done-when:` to the end of
+  its paragraph (blank line or first task), matching the SPEC's “in the same
+  block”; real plans wrap long commands across lines
+  (`docs/features/29-bounded-implementation-discovery/TASKS.md:11-13`).
+- **title-deliverable** — articles (`the`, `a`, `an`) are dropped as standalone
+  words wherever they appear, not only when leading: the recorded fingerprints
+  `P2:…:implement-deterministic-phase-linter`,
+  `P3:…:create-producer-crate-vehicle` and
+  `P4:…:slim-three-consumer-routes-to-run-and-paste` (SPEC §Phase-lint) are only
+  reproducible under that reading.
+
 ## Fold notes (37-plan-4 mechanical re-derivation, 2026-09-10)
 
 Mechanical walk over the re-cut plan (the same derivation the linter will

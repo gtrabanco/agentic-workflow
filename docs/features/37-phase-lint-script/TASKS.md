@@ -4,26 +4,34 @@ Per-phase execution checklists. Artifact revision: `37-plan-4`.
 
 ## P1 — Amend phase-contract rule 1
 
+Layer: docs · Done-when: `grep -n "Hardening & PR" skills/phase-contract/SKILL.md` → matches rule 1, and `npm run bundle:skills` → exit 0.
+
 - [x] Amend `skills/phase-contract/SKILL.md` rule 1: authorize the templates' literal closing title `Hardening & PR` as the sole exception (`&` is a normalization separator; title-deliverable normalizes to `hardening-pr`); any other `&`-joined title still FAILs
 - [x] Run `bump-skill` for `phase-contract`: bump version 1.0.1 to 1.0.2 and add new rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
 - [x] Re-run `npm run bundle:skills` (pi mirror parity)
 
 ## P2 — Implement the deterministic phase linter
 
-- [ ] Create `scripts/phase-lint.mjs` with the plan-grammar parser (phase headings, `Layer:` line, tasks, `Done-when:`) per SPEC Design
-- [ ] Implement the eight rule checks (`box-1`…`box-8`) with per-phase verdict lines in the fixed output block; box-1 implements the amended rule 1 verbatim
-- [ ] Implement fail-closed reason codes (`missing-plan`, `no-phases`, `unparseable`, `lint-blocked`) and exit codes 0/1
-- [ ] Compute per-phase fingerprints and the file-level sha256 fingerprint line
-- [ ] Write the corpus fixtures in `scripts/phase-lint.test.mjs` (valid, invalid, ambiguous-layer, no-phases, missing-plan, 9-task-phase threshold fixture asserting `BLOCKED — box 3`) asserting verdicts + reason codes
-- [ ] Verify determinism and node fallback parity (AC4, AC7)
+Layer: config/infra · Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0.
+
+- [x] Create `scripts/phase-lint.mjs` with the plan-grammar parser (phase headings, `Layer:` line, tasks, `Done-when:`) per SPEC Design
+- [x] Implement the eight rule checks (`box-1`…`box-8`) with per-phase verdict lines in the fixed output block; box-1 implements the amended rule 1 verbatim
+- [x] Implement fail-closed reason codes (`missing-plan`, `no-phases`, `unparseable`, `lint-blocked`) and exit codes 0/1
+- [x] Compute per-phase fingerprints and the file-level sha256 fingerprint line
+- [x] Write the corpus fixtures in `scripts/phase-lint.test.mjs` (valid, invalid, ambiguous-layer, no-phases, missing-plan, 9-task-phase threshold fixture asserting `BLOCKED — box 3`) asserting verdicts + reason codes
+- [x] Verify determinism and node fallback parity (AC4, AC7)
 
 ## P3 — Create the producer crate vehicle
+
+Layer: config/infra · Done-when: `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` → exit 0.
 
 - [ ] Create `packages/agentic-workflow/package.json` (name `@gtrabanco/agentic-workflow`, private, zero dependencies)
 - [ ] Create `packages/agentic-workflow/README.md` stub
 - [ ] Create `.agentic-workflow/tmp/.gitkeep` (committed, so the convention exists on fresh clones)
 
 ## P4 — Slim the three consumer routes to run-and-paste
+
+Layer: docs · Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches in all three, and `bun scripts/check-skill-context.mjs` + `npx skills add . --list` → exit 0.
 
 - [ ] `skills/plan-feature-scaffold/SKILL.md`: replace model-reasoning lint with run-and-paste of `bun scripts/phase-lint.mjs <plan>`; minor bump
 - [ ] `skills/plan-fix/SKILL.md`: same replacement; minor bump
@@ -34,6 +42,8 @@ Per-phase execution checklists. Artifact revision: `37-plan-4`.
 - [ ] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list` — both green
 
 ## P5 — Hardening & PR
+
+Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)

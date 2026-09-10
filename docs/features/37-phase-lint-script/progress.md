@@ -213,3 +213,14 @@ Notes:
 ## Unit-loop receipt — P1
 - Commit: pending · Gate: `node --test scripts/normative-drift.test.mjs` → exit 0 (16/16) · P1 done-when: `grep -n "Hardening & PR" skills/phase-contract/SKILL.md` → match at :35, `bun run bundle:skills` → exit 0 (38 skills) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: P2 · Attempts: 1
+
+## P2 — 2026-09-10
+- Done: `scripts/phase-lint.mjs` (parser, eight rule checks, four reason codes, exit 0/1, per-phase fingerprints, whole-plan sha256) and `scripts/phase-lint.test.mjs` (13 CLI-level corpus tests: valid, invalid boxes 1+4+5, enumerated-cases, 9-task threshold, ambiguous layer, no phases, missing file/argument, permission denied, oversized input, determinism, concurrency, node/bun parity); P1 commit `509d685c` reconciled.
+- Remains: P3–P5.
+- Gotchas: the frozen grammar is only satisfiable by the file carrying the task list — `TASKS.md` — and this unit's `TASKS.md` was missing its five `Layer:`/`Done-when:` lines, so the reviewed plan could not reproduce its own recorded fingerprints; repaired verbatim from `SPEC.md` §Phases (plan-conflict rule) and recorded in `decisions.md`, with the `PLAN-REVIEW-37-5` snapshot consequence disclosed. The linter now reproduces all five fingerprints exactly. Lint target + disclosed limitations in `known-issues.md`/`testing.md`.
+- Files: scripts/phase-lint.mjs, scripts/phase-lint.test.mjs, docs/features/37-phase-lint-script/{TASKS.md,decisions.md,known-issues.md,testing.md,progress.md}
+- Next: P3 — Create the producer crate vehicle
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` → exit 0 (13/13) · `node --test scripts/normative-drift.test.mjs` → exit 0 (16/16) · `bun scripts/check-skill-context.mjs` → PASS (39 skills) · `npx skills add . --list` → exit 0 · dogfood `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → `verdict PASS`, 5/5 recorded fingerprints, sha256 `b012730370…` · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: P3 · Attempts: 1
