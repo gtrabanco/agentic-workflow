@@ -202,3 +202,14 @@ Notes:
 
 ## Acceptance receipt v1
 - Manifest: docs/features/37-phase-lint-script/ACCEPTANCE.md · Blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4 · Status: frozen · Verified: 2026-09-10
+
+## P1 — 2026-09-10
+- Done: `phase-contract` rule 1 amended with the owner-sanctioned `Hardening & PR` exception; version 1.0.1 → 1.0.2 through the `bump-skill` surface (CHANGELOG.md + CHANGELOG.es.md rows and Release log lines); pi mirror re-bundled (38 skills, 123 files).
+- Remains: P2–P5.
+- Gotchas: the frozen plan pins `1.0.2` while the versioning policy maps a rule-semantics change to a minor bump — kept `1.0.2` per PLAN/SPEC/PE-001 and labelled the CHANGELOG row `patch` with the exception described explicitly; flagged for the end review. EN `CHANGELOG.md` had lost the pi-package `0.8.0` row (pre-existing, `normative-drift` red at HEAD) — folded as an Autofix, see decisions.md §Opportunistic findings. `npm run bundle:skills` resolves only from `packages/pi-agentic-workflow` (no root package.json).
+- Files: skills/phase-contract/SKILL.md, CHANGELOG.md, CHANGELOG.es.md, packages/pi-agentic-workflow/skills/phase-contract/SKILL.md, docs/features/37-phase-lint-script/{TASKS.md,decisions.md,progress.md}
+- Next: P2 — Implement the deterministic phase linter
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `node --test scripts/normative-drift.test.mjs` → exit 0 (16/16) · P1 done-when: `grep -n "Hardening & PR" skills/phase-contract/SKILL.md` → match at :35, `bun run bundle:skills` → exit 0 (38 skills) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: P2 · Attempts: 1

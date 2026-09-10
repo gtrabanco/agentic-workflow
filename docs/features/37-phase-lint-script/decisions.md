@@ -130,6 +130,12 @@
   convergence argument here before hand-off — no fingerprint or grammar claim
   in this plan is hand-patched; each is re-derived from the cut tasks.
 
+## Opportunistic findings (execute-phase)
+
+| Date | Finding | Evidence | Estimate | Risk | Local files | Decision | Why | Trigger | Record |
+|---|---|---|---|---|---|---|---|---|---|
+| 2026-09-10 | EN `CHANGELOG.md` lost the `@gtrabanco/pi-agentic-workflow` `0.8.0` row (present in `CHANGELOG.es.md` and at `7fd87ea5`), so `node --test scripts/normative-drift.test.mjs` fails the bilingual version-set symmetry check at HEAD (`15 pass / 1 fail`, reproduced in a clean worktree at `f46cf450`) — P5's own gate | `/tmp/aw-base` at `f46cf450`: `node --test scripts/normative-drift.test.mjs` → `ℹ fail 1`; `CHANGELOG.md:96` jumps `0.9.0` → `0.7.2`; `git show 7fd87ea5:CHANGELOG.md:95` carries the row | 1 line / 1 file | low | yes — `CHANGELOG.md` (already touched by P1) | Autofix | all boxes: ≤15 lines, ≤2 files, file already touched, low risk, no API/schema/dependency/acceptance change, objective unchanged | drop the fix if the drift is resolved upstream first | this commit (P1) |
+
 ## Fold notes (37-plan-4 mechanical re-derivation, 2026-09-10)
 
 Mechanical walk over the re-cut plan (the same derivation the linter will

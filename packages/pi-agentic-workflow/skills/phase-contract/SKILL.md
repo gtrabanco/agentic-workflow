@@ -1,7 +1,7 @@
 ---
 name: phase-contract
 user-invocable: false
-version: 1.0.1
+version: 1.0.2
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -31,7 +31,11 @@ skills) or executed (`execute-phase` pre-flight). Fail-closed: any unticked box
 blocks emission/execution until the phase is re-cut or split.
 
 1. **Title names ONE deliverable** — FAIL if it joins nouns with `+`, `,`, `&`,
-   `and`/`y`, or `/`.
+   `and`/`y`, or `/`. Sole authorized exception: the templates' literal closing
+   title `Hardening & PR` (`docs/features/_TEMPLATE/SPEC.md`,
+   `docs/fix/_TEMPLATE/SPEC.md`) is kept verbatim — its `&` is a *normalization
+   separator*, not a deliverable joiner, and its title-deliverable normalizes to
+   `hardening-pr`. Any other `&`-joined title still FAILs.
 2. **One declared layer** — each phase declares exactly one of the fixed enum
    `schema/db | domain | api | ui | config/infra | docs | hardening | close-out`;
    FAIL if any task's target file belongs to another. Tests for the phase's own
