@@ -306,7 +306,7 @@ returned `READY-FOR-REVIEW`.
 ## Engineering half
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`. Engineering artifact revision: `37-plan-1`.
+half above is marked `designed`. Engineering artifact revision: `37-plan-2`.
 
 ### Technical goals
 
@@ -365,7 +365,12 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-1`.
 states them; rule ids `box-1`…`box-8` for finding lines):
 
 - box-1: the title-deliverable must not contain a noun-joining `+`, `,`, `&`,
-  ` and `, or ` y ` between deliverable words.
+  `/`, ` and `, or ` y ` between deliverable words — except the templates'
+  conventional final-phase title `Hardening & PR`
+  (`docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`), which is
+  kept literally by mandate and whose title-deliverable normalizes to
+  `hardening-pr` (`&` is a normalization separator, not a deliverable joiner).
+  Any other `&`-joined title still FAILs.
 - box-2: every task's referenced file paths (path-like tokens
   `[\w./-]+\.[A-Za-z0-9]{1,5}`) must map to the declared layer via a fixed
   prefix table frozen here: `skills/`, `docs/`, `template/`, `*.md` → `docs`;
@@ -508,7 +513,7 @@ the literal close-out tasks.
 - P1 — Phase-lint: PASS (8/8) · fingerprint P1:config/infra:6:implement-deterministic-phase-linter
 - P2 — Phase-lint: PASS (8/8) · fingerprint P2:config/infra:3:create-producer-crate-vehicle
 - P3 — Phase-lint: PASS (8/8) · fingerprint P3:docs:6:slim-consumer-routes-to-run-and-paste
-- P4 — Phase-lint: PASS (8/8) · fingerprint P4:hardening:7:hardening-pr
+- P4 — Phase-lint: PASS (8/8) · fingerprint P4:hardening:8:hardening-pr
 
 ### Deploy & rollback
 
