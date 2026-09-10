@@ -103,9 +103,8 @@ rules; this feature only mechanizes checking them.
 - Consumer integration: `plan-feature-scaffold`/`plan-fix`/`execute-phase`
   pre-flight slims to run-and-paste (invoke the script, paste its output). → AC8
 - Vehicle rule (declined 43): mechanics of the first-producer-creates-the-crate
-  redistribution — see Product decisions and Deferred decisions. → AC10 (crate
-  + tmp convention); AC9 is n/a for this bullet (it verifies no schema-package
-  change, not the vehicle rule)
+  redistribution — see Product decisions and Deferred decisions. → AC9 (n/a
+  pending planning)
 
 #### Out of scope / non-goals
 
