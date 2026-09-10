@@ -235,3 +235,14 @@ Notes:
 ## Unit-loop receipt — P3
 - Commit: pending · Gate: `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` → exit 0 (AC10) · `node --test scripts/*.test.mjs` → 220/221 (only the pre-existing `check-skill-context` failure) · phase-lint P3 → PASS (8/8) `P3:config/infra:3:create-producer-crate-vehicle` · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: P4 · Attempts: 1
+
+## P4 — 2026-09-10
+- Done: the three consumer routes now run the linter instead of reasoning — `plan-feature-scaffold` 2.2.0→2.3.0 (`SKILL.md`, `references/SCAFFOLD_PROCESS.md`), `plan-fix` 3.1.0→3.2.0 (`SKILL.md`, `references/PLANNING_PROCESS.md`), `execute-phase` 4.4.1→4.5.0 (`SKILL.md`, `references/PREFLIGHT.md`); both CHANGELOGs (rows + Release log), README/README.es cells, and the pi mirror re-bundled; P3 commit `1a96ccc9` reconciled.
+- Remains: P5.
+- Gotchas: route estimate ceilings were already over “measured × 1.10” repo-wide at HEAD (23 routes across 5 skills, the cause of the pre-existing `check-skill-context.test.mjs` failure) — the plain budget check is green and the `--routes` overrun is disclosed in `known-issues.md`, not repaired here. `execute-phase`'s per-reference ceiling (2588) left only 191 bytes of headroom, so the script prose lives in `SKILL.md` (main budget) and `PREFLIGHT.md` kept a compact swap (est 2463).
+- Files: skills/plan-feature-scaffold/{SKILL.md,references/SCAFFOLD_PROCESS.md}, skills/plan-fix/{SKILL.md,references/PLANNING_PROCESS.md}, skills/execute-phase/{SKILL.md,references/PREFLIGHT.md}, CHANGELOG.md, CHANGELOG.es.md, README.md, README.es.md, packages/pi-agentic-workflow/skills/**, docs/features/37-phase-lint-script/{TASKS.md,progress.md}
+- Next: P5 — Hardening & PR
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches at :51/:101/:51 · `bun scripts/check-skill-context.mjs` → PASS (39 skills) · `npx skills add . --list` → exit 0 · `node --test scripts/normative-drift.test.mjs` → 16/16 · `bun run bundle:skills` → 38 skills/123 files · mirror parity `diff -r skills packages/pi-agentic-workflow/skills` → only `bump-skill` (excluded) · `git diff --stat -- skills/phase-contract` → empty (O12) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: P5 · Attempts: 1
