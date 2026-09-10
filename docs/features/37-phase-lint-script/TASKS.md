@@ -45,10 +45,10 @@ Layer: docs · Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the roadmap row status to `done` and commit the flip
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the roadmap row status to `done` and commit the flip
 - [ ] `git push`
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #184`
 - [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`

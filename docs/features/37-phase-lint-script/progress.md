@@ -246,3 +246,14 @@ Notes:
 ## Unit-loop receipt — P4
 - Commit: pending · Gate: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches at :51/:101/:51 · `bun scripts/check-skill-context.mjs` → PASS (39 skills) · `npx skills add . --list` → exit 0 · `node --test scripts/normative-drift.test.mjs` → 16/16 · `bun run bundle:skills` → 38 skills/123 files · mirror parity `diff -r skills packages/pi-agentic-workflow/skills` → only `bump-skill` (excluded) · `git diff --stat -- skills/phase-contract` → empty (O12) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: P5 · Attempts: 1
+
+## P5 — 2026-09-10
+- Done: full verification gate re-run — `node --test scripts/phase-lint.test.mjs` exit 0 (13/13), `node --test scripts/normative-drift.test.mjs` exit 0 (16/16), `bun scripts/check-skill-context.mjs` exit 0 (PASS, 39 skills), `npx skills add . --list` exit 0, `bun run test` in `packages/pi-agentic-workflow` exit 0 (185/185), AC1–AC10 re-run green (AC1 `5` PASS lines, AC2 exit 1 with rule + BLOCKED lines, AC4 byte-identical, AC6 grep empty, AC9 diff empty, AC10 exit 0); the dev-scenario edge corpus exercised (oversized input, permission-denied, concurrent runs — 3/3); `git status --porcelain -- docs/` empty; roadmap row 37 flipped to `done`; P4 commit `d3ee1658` reconciled.
+- Remains: push, open the PR, link it in the roadmap row.
+- Gotchas: `node --test scripts/*.test.mjs` is 220/221 — the single red is the pre-existing `check-skill-context.test.mjs` route-budget fixture failure owned by fix #200 / issue #176 (`known-issues.md` §Disclosed limitations), present at `f46cf450` too and not introduced or repaired here.
+- Files: docs/features/37-phase-lint-script/{TASKS.md,progress.md,known-issues.md}, docs/features/ROADMAP.md
+- Next: P5 — close-out (push, PR, link)
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` 0 (13/13) · `node --test scripts/normative-drift.test.mjs` 0 (16/16) · `bun scripts/check-skill-context.mjs` 0 · `npx skills add . --list` 0 · `bun run test` (pi package) 0 (185/185) · `node --test scripts/*.test.mjs` 1 (220/221, pre-existing #200/#176) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: close-out · Attempts: 1
