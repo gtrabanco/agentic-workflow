@@ -1,0 +1,32 @@
+{
+  "name": "agwo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "license": "MIT",
+  "author": "Gabriel Trabanco <gtrabanco@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtrabanco/agentic-workflow.git",
+    "directory": "packages/agwo"
+  },
+  "homepage": "https://github.com/gtrabanco/agentic-workflow/tree/main/packages/agwo#readme",
+  "main": "src/index.js",
+  "type": "module",
+  "files": [
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18",
+    "bun": ">=1.4"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "echo \"No tests configured yet\""
+  }
+}
