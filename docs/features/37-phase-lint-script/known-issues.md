@@ -15,10 +15,12 @@
   a re-cut at planning time, never a relaxed rule — `phase-contract` stays the
   sole rule owner.
 - **Pre-existing repo defect** (not this unit's): `node --test
-  scripts/check-skill-context.test.mjs` fails at HEAD and at `f46cf450` because
-  `node scripts/check-skill-context.mjs --routes --json` exits 1 (route-budget
-  report) while the test expects 0. Disclosed for P5; not fixed here (different
-  layer, no owning obligation in this feature).
+  scripts/check-skill-context.test.mjs` fails at HEAD and at `f46cf450` for two
+  independent reasons owned elsewhere — the stale over-budget fixture and the
+  route-budget red are tracked by fix #200
+  (`docs/fix/200-over-budget-fixture-stale-guard/SPEC.md` §Goal, which declares
+  the route red out of its scope) and by issue #176 (slim the routes that
+  overshoot their budgets). Disclosed for P5; not repaired here.
 
 ## Deferred items
 
