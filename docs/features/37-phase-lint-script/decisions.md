@@ -80,3 +80,71 @@
   SPEC §Design box-1 stays verbatim with respect to the amended owner, with no
   local rule semantics. This supersedes ED5's separate-triage proposal, which
   is no longer needed.
+
+## Engineering decisions (plan-feature repair batch, artifact revision 37-plan-4)
+
+- **ED7 (2026-09-10, repair batch for review receipt PLAN-REVIEW-37-3 — folds
+  F8 + F9 + F10 + F11; convergence argument stated per the CONVERGENCE-ANOMALY
+  notice)** — One batch, four folds:
+  1. **F8** — PE-008's claim cited the wrong SPEC location: the correction F1
+     describes lives in `SPEC §Acceptance criteria` (AC10 covers the vehicle
+     rule), not in the in-scope bullet. The SPEC in-scope bullet 7 was amended
+     to read `→ AC10 (crate + tmp convention); AC9 is n/a for this bullet`,
+     and PE-008's source-and-location cell now cites both surfaces, so the
+     `proven` claim is backed by the bound artifact bytes. The Product-half
+     correction itself was user-approved in the design interview (F1,
+     verified); no product semantics changed.
+  2. **F9** — The plan's version surface is now explicit and mechanical: P1
+     runs `bump-skill` for `phase-contract` (1.0.1 → 1.0.2 + CHANGELOG.md +
+     CHANGELOG.es.md rows + README/SKILLS table sync) and P4 runs `bump-skill`
+     for the three slimmed skills (minor bumps + same surface), replacing the
+     bare "minor version bumps" wording that no step could satisfy. This keeps
+     `scripts/normative-drift.test.mjs` (P5's own gate) green by construction.
+  3. **F10** — P1 and P4 re-cut so the recorded fingerprints match the actual
+     checkbox counts: P1 = 3 tasks (`P1:docs:3:amend-phase-contract-rule-1`,
+     bump-skill replaces the bare version-bump task), P4 = 7 tasks
+     (`P4:docs:7:slim-three-consumer-routes-to-run-and-paste`, bump-skill
+     replaces the prose "minor bumps" mention).
+  4. **F11** — SPEC §Design box-2's check object aligned to the rule owner's
+     rule 2 ("each task's **target file**"): the frozen prefix table now maps
+     the target file — defined mechanically as the task's first path-like
+     token outside a quoted command span; a task with no target file (a
+     command, assertion, or process step) is exempt — and `packages/<pkg>/README.md`
+     follows its package into `config/infra`, not the generic `.md` rule.
+     Checking-surface determinism sentences were also added to box-1 (joiners
+     are word separators; hyphen-joined compounds are one token) and to the
+     grammar (title-deliverable normalization: lowercase, kebab, `&` as
+     separator, leading articles dropped). No new grammar concept and no
+     semantics beyond the owner's rules are introduced; every check stays
+     deterministic and fail-closed as before, and the full mechanical walk
+     over the re-cut plan (all 27 tasks, 10 targets, 5 fingerprints) is clean
+     — recorded in the fold notes below.
+  **Convergence argument (required by the cycle-3 CONVERGENCE-ANOMALY):** the
+  recurring family across cycles 1–3 was plan-self-conformance (F2 → F10/F11):
+  each replan hand-patched the reported row instead of re-deriving the plan's
+  self-conformance claims. This batch re-derives every fingerprint mechanically
+  from the re-cut phase tasks (checkbox counts in TASKS.md, `Layer:`
+  declarations, kebab-cased title-deliverables, P5's `Hardening & PR` →
+  `hardening-pr` per the amended rule 1), re-walks the frozen box-2 grammar
+  against every phase body including P4's own task text, and states the
+  convergence argument here before hand-off — no fingerprint or grammar claim
+  in this plan is hand-patched; each is re-derived from the cut tasks.
+
+## Fold notes (37-plan-4 mechanical re-derivation, 2026-09-10)
+
+Mechanical walk over the re-cut plan (the same derivation the linter will
+perform), run before hand-off:
+
+- Fingerprints: all 5 phases re-derived from TASKS.md checkbox counts +
+  `Layer:` lines + kebab-cased title-deliverables — all match the recorded
+  lines in SPEC §Phase-lint (P1 `P1:docs:3:…`, P2 `:6:`, P3 `:3:`,
+  P4 `P4:docs:7:slim-three-consumer-routes-to-run-and-paste`, P5
+  `P5:hardening:8:hardening-pr`).
+- box-1: all 5 title-deliverables clean under the frozen joiner detection
+  (word-separator `and`/`y`, `+`/`,`/`/` between word chars, hyphenated
+  compounds are one token; P5 exempt via the amended rule 1).
+- box-2: 27 tasks walked; 10 target files checked against the frozen prefix
+  table (incl. the `packages/<pkg>/README.md` package rule); 17 tasks exempt
+  (no target file — command/assertion/process steps); zero ambiguous, zero
+  cross-layer targets.
+- box-3: task counts 3/6/3/7/8, all within the ≤ 8 (≤ 10 hardening) limits.
