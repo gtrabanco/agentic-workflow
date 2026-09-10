@@ -1,11 +1,11 @@
 # TASKS — 37-phase-lint-script
 
-Per-phase execution checklists. Artifact revision: `37-plan-3`.
+Per-phase execution checklists. Artifact revision: `37-plan-4`.
 
 ## P1 — Amend phase-contract rule 1
 
 - [ ] Amend `skills/phase-contract/SKILL.md` rule 1: authorize the templates' literal closing title `Hardening & PR` as the sole exception (`&` is a normalization separator; title-deliverable normalizes to `hardening-pr`); any other `&`-joined title still FAILs
-- [ ] Bump `skills/phase-contract/SKILL.md` version 1.0.1 → 1.0.2
+- [ ] Run `bump-skill` for `phase-contract`: bump version 1.0.1 to 1.0.2 and add new rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
 - [ ] Re-run `npm run bundle:skills` (pi mirror parity)
 
 ## P2 — Implement the deterministic phase linter
@@ -29,6 +29,7 @@ Per-phase execution checklists. Artifact revision: `37-plan-3`.
 - [ ] `skills/plan-fix/SKILL.md`: same replacement; minor bump
 - [ ] `skills/execute-phase/SKILL.md` + `references/PREFLIGHT.md`: pre-flight runs the script instead of model reasoning; minor bump
 - [ ] Do not touch `skills/phase-contract/SKILL.md` in this phase (amended once in P1, sole rule owner)
+- [ ] Run `bump-skill` for the three edited skills: minor bumps + CHANGELOG rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
 - [ ] Re-run `npm run bundle:skills` (pi mirror parity)
 - [ ] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list` — both green
 

@@ -1,6 +1,6 @@
 # Testing — 37-phase-lint-script
 
-Artifact revision: `37-plan-3`.
+Artifact revision: `37-plan-4`.
 
 ## Test layers
 
@@ -14,7 +14,10 @@ Artifact revision: `37-plan-3`.
 - **Skill-surface regression (existing suites, unchanged):**
   `bun scripts/check-skill-context.mjs`, `npx skills add . --list`,
   `npm run bundle:skills` parity, `node --test scripts/ledger-ownership.test.mjs`,
-  `node --test scripts/normative-drift.test.mjs`.
+  `node --test scripts/normative-drift.test.mjs` — the last one recomputes each
+  skill's newest CHANGELOG row against its frontmatter version, so P1/P4 must
+  drive their version surface through `bump-skill` (CHANGELOG ×2 + README
+  tables) or this gate goes red at P5.
 
 ## Command rule
 

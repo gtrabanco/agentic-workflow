@@ -103,8 +103,9 @@ rules; this feature only mechanizes checking them.
 - Consumer integration: `plan-feature-scaffold`/`plan-fix`/`execute-phase`
   pre-flight slims to run-and-paste (invoke the script, paste its output). → AC8
 - Vehicle rule (declined 43): mechanics of the first-producer-creates-the-crate
-  redistribution — see Product decisions and Deferred decisions. → AC9 (n/a
-  pending planning)
+  redistribution — see Product decisions and Deferred decisions. → AC10 (crate
+  + tmp convention); AC9 is n/a for this bullet (it verifies no schema-package
+  change, not the vehicle rule)
 
 #### Out of scope / non-goals
 
@@ -306,11 +307,18 @@ returned `READY-FOR-REVIEW`.
 ## Engineering half
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`. Engineering artifact revision: `37-plan-3`.
+half above is marked `designed`. Engineering artifact revision: `37-plan-4`.
 
 > Replan 3 (2026-09-10, user-approved in session): the F5 resolution lands the
 > rule-1 `Hardening & PR` exception IN the rule owner (`skills/phase-contract/SKILL.md`,
 > amended by P1 of this same PR) instead of locally in the SPEC — see ED6.
+
+> Replan 4 (2026-09-10, repair batch for review receipt PLAN-REVIEW-37-3): folds
+> F8–F11 — PE-008's SPEC citation corrected to AC10; version-bump surface
+> (CHANGELOG×2 + `bump-skill`) added to P1/P4; P1/P4 re-cut so the recorded
+> fingerprints match the actual task counts; box-2's check object aligned to the
+> rule owner's rule 2 (`target file`). Fingerprints re-derived mechanically over
+> the re-cut plan — see ED7.
 
 ### Technical goals
 
@@ -357,7 +365,9 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-3`.
 
 - A *phase heading* is a Markdown heading of level 2–4 whose text matches
   `^P(\d+)\s*[—-]\s*(.+)$`. The title-deliverable is the text after the
-  separator.
+  separator, normalized for the fingerprint: lowercased, kebab-cased, `&`
+  treated as a separator (amended rule 1), and leading articles (`the`, `a`,
+  `an`) dropped.
 - The *body* of a phase runs from its heading to the next phase heading (or
   end of file). Within a body:
   - the *layer declaration* is the first line matching
@@ -379,14 +389,26 @@ states them; rule ids `box-1`…`box-8` for finding lines):
   (`docs/features/_TEMPLATE/SPEC.md`, `docs/fix/_TEMPLATE/SPEC.md`), kept
   literally by template mandate and normalized to the title-deliverable
   `hardening-pr` (`&` is a normalization separator, not a deliverable joiner);
-  any other `&`-joined title still FAILs. No semantics beyond the owner's text
+  any other `&`-joined title still FAILs. Mechanical determinism (checking
+  surface only, no owner semantics added): the joiners are detected as word
+  separators — space-delimited `and`/`y` between words, or `+`, `,`, `/`
+  between word characters; hyphen-joined compound words (`run-and-paste`) are
+  one token, never a joiner. No semantics beyond the owner's text
   are carried here.
-- box-2: every task's referenced file paths (path-like tokens
-  `[\w./-]+\.[A-Za-z0-9]{1,5}`) must map to the declared layer via a fixed
-  prefix table frozen here: `skills/`, `docs/`, `template/`, `*.md` → `docs`;
-  `scripts/`, `packages/`, `.github/`, `.agentic-workflow/` → `config/infra`.
-  Tests live with the phase's own layer. A path the table cannot map is
-  *ambiguous* → the file-level verdict is `BLOCKED: unparseable`, never a guess.
+- box-2: each task's **target file** (per the rule owner's rule 2) must map to
+  the declared layer via a fixed prefix table frozen here: `skills/`, `docs/`,
+  `template/`, `*.md` → `docs`; `scripts/`, `packages/` (source/manifest
+  files; a `README.md` inside a package directory follows its package, not
+  the `.md` rule), `.github/`,
+  `.agentic-workflow/` → `config/infra`. The target file is the task's first
+  path-like token outside a quoted command; a task with no target file (a
+  command, assertion, or process step — e.g. running a bundler or flipping a
+  status) is exempt. A backticked span beginning with a runtime word (`bun`,
+  `node`, `npm`, `npx`, `git`, `grep`, `diff`, `test`, `gh`) is a quoted
+  command, never a target; path-like tokens after the target file are quoted
+  references, not check objects. Tests live with the phase's own layer. A
+  target file the table cannot map is *ambiguous* → the file-level verdict is
+  `BLOCKED: unparseable`, never a guess.
 - box-3: task count ≤ 8 (final hardening/close-out phase: ≤ 10).
 - box-4: per task, FAIL if the task text contains a `→` chain of implementation
   steps, enumerates more than 3 numbered/enumerated cases, or names more than
@@ -499,13 +521,24 @@ Detailed tasks live in `TASKS.md`; this section is the high-level ledger
 
 Layer: docs. Done-when: `grep -n "Hardening & PR" skills/phase-contract/SKILL.md` → matches rule 1, and `npm run bundle:skills` → exit 0.
 
+- [ ] Amend `skills/phase-contract/SKILL.md` rule 1: authorize the templates'
+      literal closing title `Hardening & PR` as the sole exception (`&` is a
+      normalization separator; title-deliverable normalizes to `hardening-pr`);
+      any other `&`-joined title still FAILs
+- [ ] Run `bump-skill` for the amended skill: bump version 1.0.1 to 1.0.2 and
+      add the new
+      CHANGELOG.md and CHANGELOG.es.md rows + README/SKILLS table sync
+- [ ] Re-run `npm run bundle:skills` (pi mirror parity)
+
 Amend `skills/phase-contract/SKILL.md` rule 1 with the owner-sanctioned
 exception: the templates' literal closing title `Hardening & PR` is the only
 authorized `&`-joined title; its title-deliverable normalizes to
 `hardening-pr` (`&` is a normalization separator, not a deliverable joiner);
-any other `&`-joined title still FAILs. Version bump 1.0.1 → 1.0.2;
-re-run `npm run bundle:skills` for pi mirror parity. This phase implements the
-F5 resolution (ED6) — the rule amendment lands in the owner, inside this PR.
+any other `&`-joined title still FAILs. The mechanical version/documentation
+surface is driven by `bump-skill` (version, both CHANGELOGs, README tables) so
+the normative-drift version-tables gate stays green after this phase. This
+phase implements the F5 resolution (ED6) — the rule amendment lands in the
+owner, inside this PR.
 
 #### P2 — Implement the deterministic phase linter
 
@@ -529,10 +562,28 @@ scratch convention, per ED1/ED2.
 
 Layer: docs. Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches in all three, and `bun scripts/check-skill-context.mjs` + `npx skills add . --list` → exit 0.
 
+- [ ] `skills/plan-feature-scaffold/SKILL.md`: replace model-reasoning lint
+      with run-and-paste of `bun scripts/phase-lint.mjs <plan>`; its phase-lint
+      step's target file is the skill itself (docs layer)
+- [ ] `skills/plan-fix/SKILL.md`: same replacement
+- [ ] `skills/execute-phase/SKILL.md` + `references/PREFLIGHT.md`: pre-flight
+      runs the script instead of model reasoning
+- [ ] Do not touch `skills/phase-contract/SKILL.md` in this phase (amended
+      once in P1, sole rule owner)
+- [ ] Run `bump-skill` for the three edited skills: minor bumps + CHANGELOG
+      rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
+- [ ] Re-run `npm run bundle:skills` (pi mirror parity)
+- [ ] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list`
+      — both green
+
 Edit `plan-feature-scaffold`, `plan-fix`, and `execute-phase` so their
 phase-lint steps run the script and paste its output; `phase-contract` is NOT
-touched in this phase (amended once in P1); minor version bumps; re-run
-`npm run bundle:skills`.
+touched in this phase (amended once in P1). The mechanical version/documentation
+surface for all three edited skills is driven by `bump-skill` (version, both
+CHANGELOGs, README tables) so the normative-drift version-tables gate stays
+green. Each task's target file is the edited skill itself — the run-and-paste
+command inside the prose is quoted content, not a file the phase creates or
+edits.
 
 #### P5 — Hardening & PR
 
@@ -545,10 +596,15 @@ the literal close-out tasks.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
-- P1 — Phase-lint: PASS (8/8) · fingerprint P1:docs:2:amend-phase-contract-rule-1
+Fingerprints below were re-derived mechanically from the `37-plan-4` phase
+tasks (checkbox counts in TASKS.md, `Layer:` declarations, title-deliverables
+kebab-cased; P5's `Hardening & PR` normalizes to `hardening-pr` per the
+amended rule 1 — see ED7):
+
+- P1 — Phase-lint: PASS (8/8) · fingerprint P1:docs:3:amend-phase-contract-rule-1
 - P2 — Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:implement-deterministic-phase-linter
 - P3 — Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:create-producer-crate-vehicle
-- P4 — Phase-lint: PASS (8/8) · fingerprint P4:docs:6:slim-consumer-routes-to-run-and-paste
+- P4 — Phase-lint: PASS (8/8) · fingerprint P4:docs:7:slim-three-consumer-routes-to-run-and-paste
 - P5 — Phase-lint: PASS (8/8) · fingerprint P5:hardening:8:hardening-pr
 
 ### Deploy & rollback
