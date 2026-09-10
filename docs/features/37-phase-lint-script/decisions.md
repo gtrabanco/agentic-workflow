@@ -40,8 +40,8 @@
   `packages/agentic-workflow-schema` (AC9); machine consumption is feature
   38/42 work.
 - **ED4 (risk note)** — Fix #191 (in-progress · PR #193) edits
-  `skills/execute-phase/` terminal hand-off text; P3 touches the same file's
-  preflight section (disjoint area). P3 re-bases on current `main` at execution
+  `skills/execute-phase/` terminal hand-off text; P4 touches the same file's
+  preflight section (disjoint area). P4 re-bases on current `main` at execution
   time.
 
 ## Open questions

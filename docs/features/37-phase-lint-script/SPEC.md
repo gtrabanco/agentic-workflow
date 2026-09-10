@@ -561,8 +561,8 @@ migrations, flags, or config changes.
 - RESOLVED (was SPEC Deferred decisions row 1): vehicle-rule mechanics — see
   ED1–ED3 above.
 - Risk: fix #191 (`handoff-review-fold-order`, in-progress · PR #193) edits
-  `skills/execute-phase/` terminal hand-offs; P3 touches the same file's
-  preflight section. Mitigation: rebase P3's edit on current `main` at
+  `skills/execute-phase/` terminal hand-offs; P4 touches the same file's
+  preflight section. Mitigation: rebase P4's edit on current `main` at
   execution time; the touch areas (preflight vs terminal hand-off) are disjoint
   by design.
 - Risk: rule-4 heuristics (`→` chains, enumerated cases, created files) are
