@@ -23,3 +23,14 @@ Artifact revision: `37-plan-4`.
 
 bun first (`bun scripts/phase-lint.mjs <plan.md>`), node fallback with the same
 argv; shebang `#!/usr/bin/env node`; both runtimes must pass.
+
+## Lint target (this unit)
+
+The lint target for this unit is `TASKS.md` (the file carrying the phase tasks):
+`bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` must
+exit 0 and reproduce the five fingerprints recorded in SPEC §Phase-lint
+(P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`,
+P5 `hardening:8`). Verified in P2 (whole-plan sha256
+`b0127303708f2b471731a51a383180548c209b926251b0e79422958414f583c5`). M/L
+`SPEC.md` `### Phases` sections carry no checkboxes, so a SPEC run answers
+`:0:` task counts — see `known-issues.md`.
