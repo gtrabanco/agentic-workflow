@@ -1,6 +1,6 @@
 # TASKS — 37-phase-lint-script
 
-Per-phase execution checklists. Artifact revision: `37-plan-1`.
+Per-phase execution checklists. Artifact revision: `37-plan-2`.
 
 ## P1 — Implement the deterministic phase linter
 

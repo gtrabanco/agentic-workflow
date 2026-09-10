@@ -1,7 +1,7 @@
 # Planning evidence — 37-phase-lint-script
 
 Plan-stage evidence table (row shape owned by `evidence-grounding/references/ROWS.md`
-§ "Plan-stage table — one declared extension"). Artifact revision: `37-plan-1`.
+§ "Plan-stage table — one declared extension"). Artifact revision: `37-plan-2`.
 
 | id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -11,6 +11,6 @@ Plan-stage evidence table (row shape owned by `evidence-grounding/references/ROW
 | PE-004 | Skill edits require `npm run bundle:skills` (pi mirror parity, `packages/pi-agentic-workflow`) and context budgets + CLI discovery gates (`bun scripts/check-skill-context.mjs`; `npx skills add . --list`) | repository | `packages/pi-agentic-workflow/package.json:47` (`bundle:skills`); `CLAUDE.md` §Verification | current | O-AC8 | current | proven | — |
 | PE-005 | Vehicle rule: first producer feature implemented (37/38/42/45) creates the `packages/agentic-workflow` crate + the `.agentic-workflow/tmp` scratch convention if absent; the rest land as subcommands | ledger | `docs/features/ROADMAP.md` row 43 (declined, redistribution) + row 37 vehicle clause; issue https://github.com/gtrabanco/agentic-workflow/issues/196 | current | O-AC10, ED1, ED2 | current | decision | — |
 | PE-006 | Repo test convention for standalone scripts is `node --test scripts/<name>.test.mjs` colocated in `scripts/` | repository | `scripts/*.test.mjs` (e.g. `scripts/ledger-ownership.test.mjs`); `CLAUDE.md` §Verification | current | O-AC5 | current | proven | — |
-| PE-007 | Roadmap row 37 is `defined`, depends on none; features 40 and 42 depend on 37 (40 also on 38) | document | `docs/features/ROADMAP.md` rows 37/40/42; `docs/features/ROADMAP_EXECUTION_ORDER.md` | current | ordering, P-phase order | current | proven | — |
+| PE-007 | Roadmap row 37 is `planned`, depends on none; features 40 and 42 depend on 37 (40 also on 38) | document | `docs/features/ROADMAP.md` rows 37/40/42; `docs/features/ROADMAP_EXECUTION_ORDER.md` | current | ordering, P-phase order | current | proven | — |
 | PE-008 | Spec review F1 (info, verified): in-scope bullet 7's "AC9 (n/a pending planning)" mapping was corrected by the design interview to AC10; AC9 verifies no schema change — this plan treats AC9 and AC10 as independent criteria | ledger | `planning-findings.md` F1 | receipt snapshot `8f736cc9…` | O-AC9, O-AC10 | current | proven | — |
 | PE-009 | Fix #191 (`handoff-review-fold-order`, in-progress · PR #193) edits `skills/execute-phase/` terminal hand-off text — a P3 touch area | forge | `docs/fix/README.md` row #191; https://github.com/gtrabanco/agentic-workflow/pull/193 | open 2026-09-09 | SPEC §Open questions risk 1 | current | proven | re-check at P3 execution time |

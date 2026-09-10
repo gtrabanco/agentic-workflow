@@ -2,7 +2,7 @@
 
 One row per normative behaviour, applicable invariant, affected use case, and
 required failure state (ledger contract: `pre-execution-review/references/LEDGERS.md` §2).
-Artifact revision: `37-plan-1`.
+Artifact revision: `37-plan-2`.
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
