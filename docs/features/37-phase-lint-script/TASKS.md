@@ -4,9 +4,9 @@ Per-phase execution checklists. Artifact revision: `37-plan-4`.
 
 ## P1 — Amend phase-contract rule 1
 
-- [ ] Amend `skills/phase-contract/SKILL.md` rule 1: authorize the templates' literal closing title `Hardening & PR` as the sole exception (`&` is a normalization separator; title-deliverable normalizes to `hardening-pr`); any other `&`-joined title still FAILs
-- [ ] Run `bump-skill` for `phase-contract`: bump version 1.0.1 to 1.0.2 and add new rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
-- [ ] Re-run `npm run bundle:skills` (pi mirror parity)
+- [x] Amend `skills/phase-contract/SKILL.md` rule 1: authorize the templates' literal closing title `Hardening & PR` as the sole exception (`&` is a normalization separator; title-deliverable normalizes to `hardening-pr`); any other `&`-joined title still FAILs
+- [x] Run `bump-skill` for `phase-contract`: bump version 1.0.1 to 1.0.2 and add new rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
+- [x] Re-run `npm run bundle:skills` (pi mirror parity)
 
 ## P2 — Implement the deterministic phase linter
 
