@@ -1,6 +1,6 @@
 # Architecture notes — 37-phase-lint-script
 
-Artifact revision: `37-plan-2`.
+Artifact revision: `37-plan-3`.
 
 ## Layer placement
 
@@ -9,7 +9,8 @@ Artifact revision: `37-plan-2`.
   shebang).
 - Consumer skill edits (`plan-feature-scaffold`, `plan-fix`, `execute-phase`)
   → `docs` layer (skill prose); `phase-contract` stays the sole rule owner and
-  is not edited.
+  is amended exactly once (P1, owner-sanctioned rule-1 `Hardening & PR`
+  exception, v1.0.1 → 1.0.2 — ED6), never re-edited by other phases.
 - `packages/agentic-workflow` crate + `.agentic-workflow/tmp/` → `config/infra`
   (vehicle rule, declined 43 → producer family).
 

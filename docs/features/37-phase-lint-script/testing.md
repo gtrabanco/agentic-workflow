@@ -1,6 +1,6 @@
 # Testing — 37-phase-lint-script
 
-Artifact revision: `37-plan-2`.
+Artifact revision: `37-plan-3`.
 
 ## Test layers
 
