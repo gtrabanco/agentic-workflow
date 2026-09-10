@@ -3,7 +3,7 @@
 Four implementation phases (linter implementation → vehicle crate → consumer
 skill slimming → hardening & PR). The input grammar, rule-check semantics,
 reason codes, and output contract are frozen in `SPEC.md` (`## Engineering half`
-→ `### Design`). Artifact revision of this plan set: `37-plan-1`.
+→ `### Design`). Artifact revision of this plan set: `37-plan-2`.
 
 ## P1 — Implement the deterministic phase linter
 
@@ -33,6 +33,7 @@ re-run `npm run bundle:skills` for pi mirror parity.
 ## P4 — Hardening & PR
 
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [ ] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the roadmap row status to `done` and commit the flip
 - [ ] `git push`
