@@ -5,12 +5,13 @@ applicable axes code/security/verify/brand/perf — design/a11y/seo skipped: no
 UI/web surface; PR #212 head `d693fe8e`). Cycle 1. The review re-anchored
 mid-review from `f8afc6d0` to `d693fe8e` after a docs/log-only delta
 (`docs/LOGS.md` +84, zero overlap with every finding surface); all marks bind
-the re-anchored head. Not ledgered, per outcome routing: **F5**
-(decision-required — blocks the unit until the user rules on a
-`phase-contract` amendment), low report-only notes **F11/F14/F16/F17**, and
-**F18** (owner resolved mid-review: `.pi/mcp.json` `@latest` is intentional).
-F7 is classified `replan-in-unit` — its row stays `folded: no` until the
-plan-owner re-cut lands.
+the re-anchored head. Not ledgered at review time, per outcome routing: low
+report-only notes **F11/F14/F16/F17**, and **F18** (owner resolved mid-review:
+`.pi/mcp.json` `@latest` is intentional). **F5** was `decision-required` at
+review time (blocks the unit until the user rules on a `phase-contract`
+amendment); the user ruled strict-block and the fold runner ledgered it in the
+`F5` table below, then folded it. F7 is classified `replan-in-unit` — its row
+stays `folded: no` until the plan-owner re-cut lands.
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
