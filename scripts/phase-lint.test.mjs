@@ -140,6 +140,154 @@ test("a phase with more than eight tasks fails box 3", () => {
   assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 3: /m);
 });
 
+// Fold F3 — the ≤10 budget is only the FINAL hardening/close-out phase; a
+// mid-plan `Layer: hardening` phase keeps the ≤8 base limit.
+const MID_HARDENING_OVER_BUDGET = `# Mid hardening over budget
+
+### P1 — Harden the parser
+
+Layer: hardening. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+${Array.from({ length: 9 }, (_, i) => `- [ ] Re-run gate ${i + 1} and paste the exit code`).join("\n")}
+
+### P2 — Hardening & PR
+
+Layer: hardening. Done-when: \`git status --porcelain\` → empty.
+
+- [ ] Re-run the full gate
+`;
+
+test("a mid-plan hardening phase with nine tasks fails box 3 (close-out keeps ten)", () => {
+  const file = fixture("mid-hardening.md", MID_HARDENING_OVER_BUDGET);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-3: /m);
+  assert.match(stdout, /^P2 Phase-lint: PASS \(8\/8\)/m);
+});
+
+// Fold F2 — the box-2 `ambiguous` flag must reach the file-level verdict.
+const UNMAPPABLE_TARGET_PLAN = `# Unmappable target
+
+### P1 — Implement the parser entry
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Implement \`src/index.ts\` parser entry
+`;
+
+test("a box-2 target the prefix table cannot map blocks as unparseable", () => {
+  const file = fixture("unmappable-target.md", UNMAPPABLE_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+// Fold F2 (supporting refinement) — a bare numeric ratio is an assertion, not a
+// target file, so fail-closed box-2 does not false-block it.
+const RATIO_ASSERTION_PLAN = `# Ratio assertion
+
+### P1 — Wire the exit codes
+
+Layer: config/infra. Done-when: \`node --test scripts/exit.test.mjs\` → exit 0.
+
+- [ ] Implement exit codes 0/1 for the linter
+`;
+
+test("a bare numeric ratio is an assertion, not an unmappable target", () => {
+  const file = fixture("ratio-assertion.md", RATIO_ASSERTION_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:wire-exit-codes$/m);
+});
+
+// Fold F12 — the frozen grammar reads tasks from `- [( |x)] ` and phase
+// headings from `[—-]`, so an uppercase checkbox is not a task and an en dash
+// is not a phase separator.
+const UPPERCASE_CHECKBOX_PLAN = `# Uppercase checkbox
+
+### P1 — Add the schema file
+
+Layer: config/infra. Done-when: \`node --test scripts/schema.test.mjs\` → exit 0.
+
+- [X] Decide the schema now
+- [ ] Create \`scripts/schema.mjs\`
+`;
+
+const EN_DASH_PLAN = `# En dash
+
+## P1 – Docs
+
+Layer: docs. Done-when: \`grep -n tokenizer docs/tokenizer.md\` → matches.
+
+- [ ] Create \`docs/tokenizer.md\`
+`;
+
+test("an uppercase checkbox is not a task (frozen `( |x)` grammar)", () => {
+  const file = fixture("uppercase-checkbox.md", UPPERCASE_CHECKBOX_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:add-schema-file$/m);
+});
+
+test("an en-dash phase separator is not a heading (frozen `[—-]` grammar)", () => {
+  const file = fixture("en-dash.md", EN_DASH_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: no-phases$/m);
+});
+
+// Fold F13 — box-1 joiner detection is Unicode-aware.
+const UNICODE_JOINER_PLAN = `# Café + Bar
+
+### P1 — Café + Bar
+
+Layer: docs. Done-when: \`grep -n cafe docs/cafe.md\` → matches.
+
+- [ ] Create \`docs/cafe.md\`
+`;
+
+test("a non-ASCII word joined by `+` fails box 1", () => {
+  const file = fixture("unicode-joiner.md", UNICODE_JOINER_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-1: /m);
+});
+
+// Fold F15 — the box-8 outcome test is word-anchored, so `bypasses` is not a
+// `pass` outcome.
+const BYPASS_OUTCOME_PLAN = `# Bypass outcome
+
+### P1 — Wire the linter
+
+Layer: config/infra. Done-when: \`bun run lint\` bypasses nothing.
+
+- [ ] Create \`scripts/lint-wire.mjs\`
+`;
+
+test("`bypasses` is not a box-8 `pass` outcome", () => {
+  const file = fixture("bypass-outcome.md", BYPASS_OUTCOME_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: /m);
+});
+
+// Fold F4 — box-7 matches the frozen substring `manual`, catching `manually`.
+const MANUALLY_GATED_PLAN = `# Manual gate
+
+### P1 — Render the docs
+
+Layer: docs. Done-when: \`node --test scripts/render.test.mjs\` → exit 0.
+
+- [ ] Verify the rendered site manually on staging
+`;
+
+test("a task containing `manually` outside hardening fails box 7", () => {
+  const file = fixture("manually-gated.md", MANUALLY_GATED_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-7: /m);
+});
+
 test("a P<n> phase without a Layer line is unparseable", () => {
   const file = fixture("ambiguous-layer.md", AMBIGUOUS_LAYER_PLAN);
   const { status, stdout } = nodeRun(file);
