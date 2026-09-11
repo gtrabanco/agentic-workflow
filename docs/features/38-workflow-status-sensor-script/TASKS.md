@@ -13,11 +13,11 @@ field-presence, read-only, idempotence, roadmap-mapping, labels-only,
 flag-contract (A-17/A-20), and envelope-mismatch (E-38-1) pins green on the
 git fixture repo, and the existing root suites still exit 0.
 
-- [ ] Write the module scaffold in `scripts/workflow-status.mjs` — ES module header,
+- [x] Write the module scaffold in `scripts/workflow-status.mjs` — ES module header,
   Node ≥ 18 shebang, shebang line `#!/usr/bin/env node`, import `loadSchemaRuntime` from
   `./schema-runtime.mjs`, `loadSchemaRuntime()` call in `main()`, schema package version
   read from `packages/agentic-workflow-schema/package.json` (PE-001; E-38-4).
-- [ ] Implement argv parsing — `--help` (prints usage text to stdout, exit 0),
+- [x] Implement argv parsing — `--help` (prints usage text to stdout, exit 0),
   `--version` (reads schema package version from
   `packages/agentic-workflow-schema/package.json` line 3 field `version`, prints it,
   exit 0), `--json-only` (flag present = accepted no-op; no behavior change),
@@ -25,14 +25,14 @@ git fixture repo, and the existing root suites still exit 0.
   file-read later, json is inline string), unknown flag → usage diagnostic on stderr
   + non-zero exit (value: 1, following the repo convention 1–2 from
   `scripts/check-skill-context.mjs` and `scripts/ledger-provenance.mjs` — A:20 pin).
-- [ ] Implement read-only enforcement — the script source code is never mutated by the
+- [x] Implement read-only enforcement — the script source code is never mutated by the
   script itself; structural proof that the script does not call any mutation functions
   via the test suite (A:3 greps for `createBranch|git push|gh pr (edit|merge|close|create)|
   gh issue (edit|close|label|create)|writeFile|fs\.write|unlink` in the script; returns
   nothing). The no-prompt check (A:22) greps for `readline|createInterface|process\.stdin\.
   (read|setRawMode)|@clack|inquirer|prompts?\(|confirm\(` — returns nothing. Both greps
   are fixture-test assertions (regex against the script source file, not runtime calls).
-- [ ] Implement envelope skeleton — build the Envelope v2 object in the schema's literal
+- [x] Implement envelope skeleton — build the Envelope v2 object in the schema's literal
   interface order (F35 repair: all 14 required keys, `envelope.schema.json` root
   `required` = `Envelope` :167-182): `skill` (`"workflow-status"`), `state` (`"OK"`),
   `summary` (placeholder string), `unit` (`{type: "none", id: null, issue: null,
@@ -47,16 +47,16 @@ git fixture repo, and the existing root suites still exit 0.
   `next.state` key exists), `detail` (`{}` — required, may be empty). The shape
   authority is the schema (PE-002), not this prose: the skeleton must pass
   `validateEnvelope` (A-02's red pin).
-- [ ] Implement self-validation — call `validateEnvelope(envelope)` after building it;
+- [x] Implement self-validation — call `validateEnvelope(envelope)` after building it;
   if validation fails, print the validation error to stderr but still print the envelope
   to stdout with exit 0 (E-38-1: the self-check is diagnostic, not a gate). If validation
   passes, proceed to stdout print. The envelope-mismatch pin asserts that a stubbed
   failing schema's `validateEnvelope` produces stderr diagnostic + envelope printed + exit 0.
-- [ ] Implement stdout/stderr separation — `process.stdout.write(json)` for the envelope;
+- [x] Implement stdout/stderr separation — `process.stdout.write(json)` for the envelope;
   `process.stderr.write()` for diagnostics, validation errors, and error messages;
   the `--json-only` flag suppresses any human-readable summary (the script only prints
   the envelope anyway — A:17 no-op). A:23 pin asserts stdout alone parses as valid JSON.
-- [ ] Write red-first fixture tests — build `scripts/workflow-status-sensor.test.mjs` with
+- [x] Write red-first fixture tests — build `scripts/workflow-status-sensor.test.mjs` with
   a git-init fixture repo following the pattern from `scripts/workflow-status-pre-execution.test.mjs`:
   `git init`, `git config user.email/name`, create a minimal `ROADMAP.md` row, add fixture
   `gh` shim. Test: skeleton envelope validates (`validateEnvelope` → `valid`), field
@@ -64,7 +64,7 @@ git fixture repo, and the existing root suites still exit 0.
   idempotence (`diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs)`
   empty), flag contracts (`--help` exit 0, `--version` exit 0, `--json-only` byte-identical,
   unknown flag non-zero + stderr usage).
-- [ ] Phase-lint all 8 tasks against the 8-box contract (phase-contract: title names one
+- [x] Phase-lint all 8 tasks against the 8-box contract (phase-contract: title names one
   deliverable, one layer = config/infra, ≤ 8 tasks, one checkbox = one deliverable,
   zero decision words, no conditional scope, no external manual gates, machine-checkable
   done-when). Record fingerprint `P1:config/infra:8:sensor-script-core-emission`.
