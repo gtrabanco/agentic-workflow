@@ -77,7 +77,8 @@ Dos archivos JSON, ambos opcionales:
     "plan-feature": { "model": ["anthropic/claude-sonnet-4-5", "openai/gpt-5.2"], "thinking": "medium" },
     "review-change": { "thinking": "max" }
   },
-  "onUnavailableRoute": "stop"
+  "onUnavailableRoute": "stop",
+  "onSettle": "keep"
 }
 ```
 
@@ -97,6 +98,8 @@ que ya tuviera la sesión, porque la ruta por defecto del paquete es
   prueba `anthropic/claude-sonnet-4-5` primero y luego `openai/gpt-5.2`.
 - `thinking` es uno de `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`,
   o `"inherit"`.
+- `` `onSettle` `` es uno de `"keep"` (el default) o `"restore"` — ver
+  [Tu sesión después de un comando](#tu-sesión-después-de-un-comando).
 - Claves desconocidas, `null` y referencias mal formadas se **rechazan**, no se
   ignoran: un error tipográfico que no hace nada en silencio es el bug que nunca
   encuentras.
@@ -116,14 +119,28 @@ aun así:
 { "onUnavailableRoute": "inherit" }
 ```
 
-## Tu sesión vuelve
+## Tu sesión después de un comando
 
-El enrutamiento dura un comando. Cuando el turno termina, la sesión vuelve a
-como estaba — el modelo *y* el nivel de thinking, porque seleccionar un modelo
-puede mover el nivel. Si cambias el modelo tú mismo a mitad de turno, con
-`/model` por ejemplo, no se restaura nada: tu elección gana, y el comando lo
-dice. Si mueves solo el nivel de thinking, lo conservas mientras el modelo
-vuelve.
+Por defecto (**`onSettle: "keep"`**), el modelo enrutado y el nivel de thinking
+**se quedan** en la ventana de chat abierta cuando el comando termina. Si
+`plan-feature` corre en `glm-5` y quieres retocar el plan que produjo, tu siguiente
+prompt sigue corriendo en `glm-5` — igual con una pregunta posterior. Cuando no
+necesitas el modelo pesado, lo cambias tú con `/model` (o Ctrl+P) a algo más
+barato; nada restaura sobre tu elección.
+
+Para volver a traer el modelo y el nivel de thinking previos al comando cuando este
+termina, pon:
+
+```json
+{ "onSettle": "restore" }
+```
+
+(El modo `restore` es el histórico contrato AC8: tras un comando enrutado la
+sesión vuelve a como estaba — el modelo *y* el nivel de thinking, porque
+seleccionar un modelo puede mover el nivel. Si cambias el modelo tú mismo a
+mitad de turno, con `/model` por ejemplo, no se restaura nada: tu elección gana,
+y el comando lo dice. Si mueves solo el nivel de thinking, lo conservas mientras
+el modelo vuelve.)
 
 ## Consola de configuración
 
@@ -159,7 +176,7 @@ consola nunca se queda sin salida.
 | `could not be selected` | Pi rechazó el cambio. El comando se detiene con el motivo — salvo que `onUnavailableRoute` sea `inherit`, en cuyo caso avisa y se ejecuta con tu modelo actual. |
 | `refused: the agent is busy` | Hay un turno en ejecución. Espera a que termine. |
 | `is still routed` | El comando enrutado anterior no ha terminado. |
-| `leaving the model you chose in place` | Cambiaste el modelo durante el turno enrutado, así que no se restauró nada: tu elección ganó. |
+| `leaving the model you chose in place` | (en modo `restore`) Cambiaste el modelo durante un turno enrutado, así que no se restauró nada: tu elección ganó. |
 | `these configured routes match no command` | Una clave de `commands` no nombra nada. Corrige la escritura o elimina la entrada. |
 
 ## Notas

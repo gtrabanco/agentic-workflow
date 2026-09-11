@@ -64,6 +64,39 @@ test("AC5: commands neither scope mentions keep the global route; new project co
   assert.deepEqual(effectiveRoute(merged, "execute-phase"), { model: "openai/gpt-5.2", thinking: "inherit" });
 });
 
+test("AC5: the keep-on-settle policy survives project-over-global merge with the shipped default", () => {
+  const globalCfg = valid('{"onSettle":"restore"}', "global");
+  const projectCfg = valid('{"onSettle":"keep"}', "project");
+
+  const merged = mergeConfigs(globalCfg, projectCfg);
+  assert.equal(merged.onSettle, "keep", "the project value wins");
+
+  const onlyGlobal = mergeConfigs(globalCfg, {});
+  assert.equal(onlyGlobal.onSettle, "restore", "an absent project keeps the global value");
+
+  assert.equal(mergeConfigs({}, {}).onSettle, "keep", "the shipped default is keep");
+});
+
+test("AC5: a keep-on-settle route is round-tripped by the schema", () => {
+  const kept = valid('{"onSettle":"keep"}', "global");
+  assert.equal(kept.onSettle, "keep");
+
+  const restored = valid('{"onSettle":"restore"}', "global");
+  assert.equal(restored.onSettle, "restore");
+});
+
+test("AC5: an invalid settle policy is rejected naming the field", () => {
+  const invalid = parseConfigFile('{"onSettle":"yolo"}');
+  assert.equal(invalid.ok, false);
+  assert.deepEqual(invalid.issues.map((issue) => issue.path), ["$.onSettle"]);
+  assert.match(invalid.issues[0].message, /"keep" or "restore"/u);
+});
+
+test("AC5: an absent onSettle resolves to the shipped keep via the loader", () => {
+  const merged = mergeConfigs({}, {});
+  assert.equal(merged.onSettle, "keep");
+});
+
 test("AC5: a command with no route anywhere resolves to the effective default route", () => {
   const globalCfg = valid('{"default":{"model":"openai/gpt-5.2","thinking":"medium"}}', "global");
   const merged = mergeConfigs(globalCfg, {});
@@ -174,6 +207,7 @@ test("AC12 loader leg: schema violations name the offending path", () => {
     ['{"commands":{"plan-feature":{"thinking":"high","extra":1}}}', "$.commands.plan-feature.extra"],
     ['{"commands":{"plan-feature":"openai/gpt-5.2"}}', "$.commands.plan-feature"],
     ['{"onUnavailableRoute":"continue"}', "$.onUnavailableRoute"],
+    ['{"onSettle":"restore-and-dance"}', "$.onSettle"],
     ['{"default":{"model":"inherit","thinking":"high"},"unknown":true}', "$.unknown"],
     ['[1,2,3]', "$"],
     ['null', "$"],
