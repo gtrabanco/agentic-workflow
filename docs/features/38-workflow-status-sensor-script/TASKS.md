@@ -77,7 +77,7 @@ forge-timeout, forge-auth, forge-missing-cli, missing-git, hint-guard,
 hint-fail-open, `--help`/`--version`, and stream-separation pins green and
 every P1 pin unchanged.
 
-- [ ] Implement SENSOR_CORE steps 1–2 — `git branch --show-current` (returns current branch
+- [x] Implement SENSOR_CORE steps 1–2 — `git branch --show-current` (returns current branch
   name), `git status --porcelain` (dirty tree detection), `git fetch` + `git status -sb`
   (ahead/behind). Forge: the three `gh` list commands verbatim from `SENSOR_CORE.md` step 2:
   `gh pr list --state open --json number,title,headRefName,url,statusCheckRollup`,
@@ -85,14 +85,14 @@ every P1 pin unchanged.
   `gh issue list --state open --json number,title,labels`. Each `gh` call wrapped in a
   bounded wall-clock timeout (implementation constant, suite-pinned at E-38-5 value;
   the timeout value is a module constant, tested via A:21's non-terminating `gh` shim).
-- [ ] Implement SENSOR_CORE step 3 — urgency labels-only scan: read the `labels` array from
+- [x] Implement SENSOR_CORE step 3 — urgency labels-only scan: read the `labels` array from
   each item in the step-2 issue list JSON output (already fetched); for items carrying
   `urgent` or `fix-next`, emit `{number, title, label}`; an issue with both labels is
   reported as `urgent` (strictly dominates — `fix-next` head-of-queue, no-interrupt path
   is redundant); in-flight unit's interruptibility facts: current phase from step 7
   (later), dirty tree from step 1, distance to commit boundary — all from the same
   reads. A:7 pin asserts the script source never references `body` or `comment` strings.
-- [ ] Implement SENSOR_CORE steps 4–5 — roadmap/fix-index parsing: read
+- [x] Implement SENSOR_CORE steps 4–5 — roadmap/fix-index parsing: read
   `docs/features/ROADMAP.md` rows into the five-state machine
   (`idea/defined/planned/in-progress/done`); for rows with non-standard status, map to the
   nearest five-state value with `default: idea` and note the raw status string in
@@ -101,7 +101,7 @@ every P1 pin unchanged.
   each edge met (dep's PR merged = `done`-with-PR-and-merged) or unmet; detect cycles
   (a unit depends on itself transitively) and inconsistencies (a `done` row whose own deps
   aren't merged) — report as `substrate` blockers. A:6 pin asserts ambiguous row mapping.
-- [ ] Implement SENSOR_CORE steps 6–6a — readiness: for each unit, classify based on status
+- [x] Implement SENSOR_CORE steps 6–6a — readiness: for each unit, classify based on status
   and deps: `idea` → list under `design_candidates` (never `startable_now`, next command
   `/design-feature <slug>`); `defined` or `planned` + deps met → `startable_now`, next
   command `defined` → `/plan-feature <slug>`, `planned` → `/execute-phase <NN>`; unmet deps
@@ -114,7 +114,7 @@ every P1 pin unchanged.
   current PASS for the stage it is about to enter is demoted from `startable_now` to a
   `gate` blocker naming the missing review; `detail.pre_execution` records the row.
   Unresolvable revisions fail open → unflagged (E-38-8).
-- [ ] Implement SENSOR_CORE steps 7–9 — phase progress: for each in-flight unit, read
+- [x] Implement SENSOR_CORE steps 7–9 — phase progress: for each in-flight unit, read
   `docs/features/<NN>-<slug>/TASKS.md` — `current` phase number, `total` phases, per-phase
   checkbox completion count. Pending quality gates: for each unit with commits, read its
   `docs/features/<NN>-<slug>/review-findings.md` ledger, find the newest `REVIEW-RAN`
@@ -125,7 +125,7 @@ every P1 pin unchanged.
   items with `suggested_tier` from the fixed table: `high` → `strong`; axis in
   `{security, correctness, logic, architecture, design, concurrency}` → `strong`; else
   `cheap`.
-- [ ] Implement crash-recovery verdict mapping — checklist from CRASH_RECOVERY.md: check
+- [x] Implement crash-recovery verdict mapping — checklist from CRASH_RECOVERY.md: check
   working tree per unit branch (`git status --porcelain` + unpushed commits), check
   phase-ledger coherence (`progress.md`/`TASKS.md` vs commits), classify each unit's
   verdict (`CLEAN`/`RESUMABLE`/`AMBIGUOUS`). Reduce multi-branch verdicts to the worst
@@ -134,7 +134,7 @@ every P1 pin unchanged.
   with `needs_input.question` and `needs_input.options`. Substrate blocker: if NRS ledger
   is missing/draft/contradicted/resolved, emit `BLOCKED` + concrete discovery command.
   `CRASH RECOVERY` sub-block appended to the human report.
-- [ ] Implement `--last-envelope` no-progress guard — if the flag value is present: load
+- [x] Implement `--last-envelope` no-progress guard — if the flag value is present: load
   the hint (if it contains `{`, treat as inline JSON; otherwise read from file path).
   Diff the hint's `next.recommended` against the recomputed state: if the hint recommended
   `/plan-feature <slug>` or `/design-feature <slug>` for a unit that is still at the same
@@ -142,7 +142,7 @@ every P1 pin unchanged.
   `workflow_observations` note per `ENVELOPE_FIELDS.md` shape (name it as suspected, not
   confirmed). Append the divergence note to `detail.workflow_observations`; the hint never
   mutates `state`/`next` (A:18 pin).
-- [ ] Implement degrade-to-namespaced-codes — every environmental failure produces a
+- [x] Implement degrade-to-namespaced-codes — every environmental failure produces a
   namespaced code in `detail`: forge `unavailable-forge-no-network`,
   `unavailable-forge-timeout` (bounded wall-clock timeout), `unavailable-forge-auth`,
   `unavailable-forge-missing-cli` (`gh` absent from PATH — F37 repair: all four forge

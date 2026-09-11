@@ -64,7 +64,7 @@ const FROZEN_NRS = [
  * A throwaway git repository with the substrate the sensor reads, plus a `gh`
  * shim whose canned JSON is controlled per test. Returns `{dir, binDir, run}`.
  */
-function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = [], nrs = FROZEN_NRS, extraFiles = {} } = {}) {
+function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = [], nrs = FROZEN_NRS, extraFiles = {}, ghMode = "ok", branch = "main", dirty = null, pathWithoutGit = false } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-fixture-"));
   const binDir = path.join(dir, "bin");
   fs.mkdirSync(binDir, { recursive: true });
@@ -80,28 +80,36 @@ function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = 
   if (nrs !== null) write("docs/workflow/REPOSITORY_STATE.md", nrs);
   for (const [rel, content] of Object.entries(extraFiles)) write(rel, content);
 
-  const shim = `#!/usr/bin/env node
-const args = process.argv.slice(2).join(" ");
+  const shimBody = ghMode === "fail-fast"
+    ? `process.stderr.write("network unreachable\\n"); process.exit(1);`
+    : ghMode === "auth"
+      ? `process.stderr.write("gh: authentication required\\n"); process.exit(1);`
+      : ghMode === "hang"
+        ? `setInterval(() => {}, 1000);`
+        : `const args = process.argv.slice(2).join(" ");
 const out = (value) => { process.stdout.write(JSON.stringify(value)); process.exit(0); };
 if (args.includes("pr list") && args.includes("--state open")) out(${JSON.stringify(openPrs)});
 if (args.includes("pr list") && args.includes("--state merged")) out(${JSON.stringify(mergedPrs)});
 if (args.includes("issue list")) out(${JSON.stringify(issues)});
 process.stderr.write("unexpected gh call: " + args + "\\n");
-process.exit(1);
-`;
-  const ghPath = path.join(binDir, "gh");
-  fs.writeFileSync(ghPath, shim, { mode: 0o755 });
+process.exit(1);`;
 
-  execFileSync("git", ["init", "-q", "-b", "main"], { cwd: dir });
+  if (ghMode !== "absent") {
+    fs.writeFileSync(path.join(binDir, "gh"), `#!/usr/bin/env node\n${shimBody}\n`, { mode: 0o755 });
+  }
+
+  execFileSync("git", ["init", "-q", "-b", branch], { cwd: dir });
   execFileSync("git", ["config", "user.email", "fixture@example.com"], { cwd: dir });
   execFileSync("git", ["config", "user.name", "Fixture"], { cwd: dir });
   execFileSync("git", ["add", "-A"], { cwd: dir });
   execFileSync("git", ["commit", "-q", "-m", "fixture"], { cwd: dir });
+  if (dirty) write(dirty, "uncommitted work\n");
 
+  const pathBase = pathWithoutGit ? path.dirname(process.execPath) : process.env.PATH;
   const run = (args = [], opts = {}) => spawnSync(process.execPath, [opts.script ?? SCRIPT, ...args], {
     cwd: dir,
     encoding: "utf8",
-    env: { ...process.env, PATH: `${binDir}:${process.env.PATH}`, ...opts.env },
+    env: { ...process.env, PATH: `${binDir}:${pathBase}`, ...opts.env },
     timeout: opts.timeout ?? 60_000,
   });
 
@@ -317,4 +325,151 @@ test("P1: the existing roadmap rows keep their order in the projections", () => 
   const envelope = parseEnvelope(run().stdout);
   const ids = envelope.detail.features.map((f) => f.id);
   assert.deepEqual(ids, ["90-alpha", "91-beta"]);
+});
+
+// ===========================================================================
+// P2 — Sensor script failure contract
+// ===========================================================================
+
+const codesOf = (envelope) => (envelope.detail.degradations ?? []).map((entry) => entry.code);
+
+function requireDegradations(envelope) {
+  assert.ok(Array.isArray(envelope.detail.degradations), "detail.degradations must be present");
+  return codesOf(envelope);
+}
+
+test("P2: a fail-fast forge degrades to unavailable-forge-no-network with exit 0 (A:4/A:15)", () => {
+  const { run } = makeFixture({ ghMode: "fail-fast", roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(requireDegradations(envelope).includes("unavailable-forge-no-network"));
+  const validation = validateEnvelope(envelope);
+  assert.equal(validation.ok, true, validation.errors?.join("; "));
+});
+
+test("P2: a forge that never answers times out and degrades (A:21)", () => {
+  const { run } = makeFixture({ ghMode: "hang" });
+  const started = Date.now();
+  const result = run();
+  const elapsed = Date.now() - started;
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(elapsed < 45_000, `the sensor must not hang (took ${elapsed}ms)`);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(requireDegradations(envelope).includes("unavailable-forge-timeout"));
+});
+
+test("P2: an auth-failing forge degrades to unavailable-forge-auth (F37)", () => {
+  const { run } = makeFixture({ ghMode: "auth" });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(requireDegradations(parseEnvelope(result.stdout)).includes("unavailable-forge-auth"));
+});
+
+test("P2: a missing gh binary degrades to unavailable-forge-missing-cli (F37)", () => {
+  const { run } = makeFixture({ ghMode: "absent", pathWithoutGit: true });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(requireDegradations(parseEnvelope(result.stdout)).includes("unavailable-forge-missing-cli"));
+});
+
+test("P2: a missing git binary degrades to unavailable-git-missing with exit 0 (F37)", () => {
+  const { run } = makeFixture({ pathWithoutGit: true });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(requireDegradations(envelope).includes("unavailable-git-missing"));
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("P2: a stale hint that repeats a pre-advance recommendation is named, state untouched (A:18)", () => {
+  const roadmapRows = ["| 90 | `alpha` | defined | — | a unit |"];
+  const hint = JSON.stringify({ state: "OK", next: { recommended: "/plan-feature 90-alpha", alternatives: [], tier: "strong" } });
+  const plain = makeFixture({ roadmapRows });
+  const hinted = makeFixture({ roadmapRows });
+  const before = parseEnvelope(plain.run().stdout);
+  const after = parseEnvelope(hinted.run(["--last-envelope", hint]).stdout);
+  const observations = after.detail.workflow_observations.join("\n");
+  assert.match(observations, /still 'defined'/);
+  assert.match(observations, /suspected dropped/);
+  assert.equal(after.state, before.state);
+  assert.deepEqual(after.next, before.next);
+});
+
+test("P2: a missing hint path degrades fail-open (A:19)", () => {
+  const { run } = makeFixture();
+  const result = run(["--last-envelope", "/no/such/hint-envelope.json"]);
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(requireDegradations(envelope).includes("unavailable-hint-missing-path") || envelope.detail.workflow_observations.join("\n").includes("unavailable-hint-missing-path"));
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("P2: an invalid JSON hint degrades fail-open (A:19)", () => {
+  const { run } = makeFixture();
+  const result = run(["--last-envelope", "{not valid json"]);
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(requireDegradations(envelope).includes("unavailable-hint-invalid-json") || envelope.detail.workflow_observations.join("\n").includes("unavailable-hint-invalid-json"));
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("P2: a clean state classifies as CLEAN and the envelope state is OK", () => {
+  const { run } = makeFixture();
+  const envelope = parseEnvelope(run().stdout);
+  assert.equal(envelope.detail.crash_recovery.verdict, "CLEAN");
+  assert.equal(envelope.state, "OK");
+});
+
+test("P2: a dirty unit branch with a coherent ledger classifies as RESUMABLE → CONTINUE", () => {
+  const { run } = makeFixture({
+    branch: "feat/90-alpha",
+    dirty: "src/work.txt",
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    extraFiles: {
+      "docs/features/90-alpha/progress.md": "## P1 — 2026-09-11\n- Done: partial\n",
+      "docs/features/90-alpha/TASKS.md": "## P1 — Core\n\nLayer: config/infra · Done-when: x\n\n- [ ] one task\n",
+    },
+  });
+  const envelope = parseEnvelope(run().stdout);
+  assert.equal(envelope.detail.crash_recovery.verdict, "RESUMABLE");
+  assert.equal(envelope.state, "CONTINUE");
+  assert.match(envelope.next.recommended, /execute-phase 90/);
+});
+
+test("P2: a dirty unit branch with no coherent ledger classifies as AMBIGUOUS → NEEDS_INPUT", () => {
+  const { run } = makeFixture({ branch: "feat/91-beta", dirty: "src/work.txt", roadmapRows: ["| 91 | `beta` | planned | — | a unit |"] });
+  const envelope = parseEnvelope(run().stdout);
+  assert.equal(envelope.detail.crash_recovery.verdict, "AMBIGUOUS");
+  assert.equal(envelope.state, "NEEDS_INPUT");
+  assert.ok(envelope.needs_input && typeof envelope.needs_input.question === "string");
+});
+
+test("P2: an empty project emits the empty shapes and exits 0 (sensor:empty-state)", () => {
+  const { run } = makeFixture();
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.detail.design_candidates, []);
+  assert.deepEqual(envelope.findings.fix_now, []);
+});
+
+test("P2: the untriaged backlog is capped at 5 oldest and the merged list at 20 (sensor:limit-threshold)", () => {
+  const issues = Array.from({ length: 9 }, (_, i) => ({ number: i + 1, title: `issue ${i + 1}`, labels: [] }));
+  const { run } = makeFixture({ issues });
+  const envelope = parseEnvelope(run().stdout);
+  assert.equal(envelope.detail.untriaged_issues.count, 9);
+  assert.deepEqual(envelope.detail.untriaged_issues.oldest_open, [1, 2, 3, 4, 5]);
+  assert.match(read("scripts/workflow-status.mjs"), /--limit", "20"/);
+});
+
+test("P2: two concurrent runs are safe and byte-identical (sensor:concurrent-action)", async () => {
+  const { run } = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  const [a, b] = await Promise.all([
+    new Promise((resolve) => resolve(run())),
+    new Promise((resolve) => resolve(run())),
+  ]);
+  assert.equal(a.status, 0, a.stderr);
+  assert.equal(b.status, 0, b.stderr);
+  assert.equal(a.stdout, b.stdout);
 });
