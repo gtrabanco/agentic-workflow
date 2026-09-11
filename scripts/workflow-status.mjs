@@ -141,7 +141,13 @@ const NRS_BLOCKING = new Set(["missing", "draft", "contradicted", "resolved"]);
 // ---------------------------------------------------------------------------
 
 function readGitState() {
-  const branch = git("branch", "--show-current") ?? "";
+  const degradations = [];
+  const branchProbe = run("git", ["branch", "--show-current"]);
+  if (branchProbe.missing) {
+    degradations.push({ source: "git", code: "unavailable-git-missing", detail: "the git binary was not found on PATH" });
+    return { branch: "", dirty: false, dirtyFiles: [], ahead: 0, observations: ["git is unavailable — git-derived facts are omitted"], porcelain: "", degradations };
+  }
+  const branch = branchProbe.ok ? branchProbe.stdout : "";
   const porcelain = git("status", "--porcelain") ?? "";
   const fetch = run("git", ["fetch", "--quiet"]);
   const shortStatus = git("status", "-sb") ?? "";
@@ -154,10 +160,13 @@ function readGitState() {
   if (ahead && Number(ahead) > 0) {
     observations.push(`branch ${branch} is ${ahead} commit(s) ahead of its upstream`);
   }
-  if (!fetch.ok && !fetch.missing) {
+  if (!fetch.ok && !fetch.missing && !fetch.timedOut) {
     observations.push("git fetch did not complete (offline or no remote)");
   }
-  return { branch, dirty: dirtyFiles.length > 0, dirtyFiles, ahead: ahead ? Number(ahead) : 0, observations, porcelain };
+  if (fetch.timedOut) {
+    degradations.push({ source: "git", code: "unavailable-git-fetch-timeout", detail: "git fetch exceeded its bound" });
+  }
+  return { branch, dirty: dirtyFiles.length > 0, dirtyFiles, ahead: ahead ? Number(ahead) : 0, observations, porcelain, degradations };
 }
 
 // ---------------------------------------------------------------------------
@@ -172,28 +181,50 @@ const FORGE_READS = {
 
 function readForgeState() {
   const observations = [];
+  const degradations = [];
+
   const readList = (key) => {
     const result = gh(...FORGE_READS[key]);
-    if (!result.ok) {
-      observations.push(`forge read '${key}' unavailable`);
-      return { data: [], available: false };
+    if (result.ok) {
+      try {
+        return { data: JSON.parse(result.stdout), available: true };
+      } catch {
+        return { data: [], available: false };
+      }
     }
-    try {
-      return { data: JSON.parse(result.stdout), available: true };
-    } catch {
-      observations.push(`forge read '${key}' returned unparsable JSON`);
-      return { data: [], available: false };
-    }
+    return { data: [], available: false, failure: result };
   };
-  const openPrs = readList("openPrs");
+
+  /** A forge read failure degrades the whole dimension with one declared code. */
+  const degradationFor = (failure) => {
+    if (failure.missing) return "unavailable-forge-missing-cli";
+    if (failure.timedOut) return "unavailable-forge-timeout";
+    if (/authenticat|401|credential|bad credentials/i.test(failure.stderr ?? "")) return "unavailable-forge-auth";
+    return "unavailable-forge-no-network";
+  };
+
+  const first = readList("openPrs");
+  if (!first.available) {
+    const code = degradationFor(first.failure ?? {});
+    degradations.push({ source: "forge", code, detail: "forge reads are unavailable; forge-derived sections are omitted" });
+    observations.push(`forge unavailable (${code})`);
+    return { openPrs: [], mergedPrs: [], openIssues: [], observations, available: false, degradations };
+  }
+
   const mergedPrs = readList("mergedPrs");
   const openIssues = readList("openIssues");
+  if (!mergedPrs.available || !openIssues.available) {
+    const code = degradationFor(!mergedPrs.available ? (mergedPrs.failure ?? {}) : (openIssues.failure ?? {}));
+    degradations.push({ source: "forge", code, detail: "a partial forge read failed; affected sections are omitted" });
+    observations.push(`forge partially unavailable (${code})`);
+  }
   return {
-    openPrs: openPrs.data,
+    openPrs: first.data,
     mergedPrs: mergedPrs.data,
     openIssues: openIssues.data,
     observations,
-    available: openPrs.available || mergedPrs.available || openIssues.available,
+    available: true,
+    degradations,
   };
 }
 
@@ -496,6 +527,101 @@ function readFixNow(unitDir) {
 }
 
 // ---------------------------------------------------------------------------
+// Crash recovery (step 17) + hint guard
+// ---------------------------------------------------------------------------
+
+function readCrashRecovery({ gitState, units, phases }) {
+  const branch = gitState.branch;
+  const isUnitBranch = /^(feat|fix)\//.test(branch);
+  const branches = [];
+  if (!isUnitBranch) {
+    branches.push({ branch: branch || "—", evidence: "clean tree, coherent ledgers", verdict: "CLEAN", resume_command: null });
+    return { verdict: "CLEAN", branches };
+  }
+  const unit = units.find((candidate) => branch.endsWith(candidate.id)
+    || branch.includes(candidate.id)
+    || (candidate.issue != null && branch.includes(`/${candidate.issue}-`)));
+  const hasUpstream = git("rev-parse", "--abbrev-ref", `${branch}@{u}`) !== null;
+  const unpushed = !hasUpstream || gitState.ahead > 0;
+  if (!gitState.dirty && !unpushed) {
+    branches.push({ branch, evidence: "clean tree; branch pushed", verdict: "CLEAN", resume_command: null });
+    return { verdict: "CLEAN", branches };
+  }
+  const phase = unit ? phases.get(unit.id) : null;
+  if (unit && phase?.current) {
+    const resume = `/execute-phase ${unit.nn ?? unit.issue} ${phase.current}`;
+    branches.push({
+      branch,
+      evidence: `${gitState.dirty ? `${gitState.dirtyFiles.length} dirty file(s)` : "clean tree"}; ledger points at ${phase.current}/${phase.total}`,
+      verdict: "RESUMABLE",
+      resume_command: resume,
+    });
+    return { verdict: "RESUMABLE", branches };
+  }
+  branches.push({
+    branch,
+    evidence: `${gitState.dirty ? `${gitState.dirtyFiles.length} dirty file(s)` : "clean tree"}; no unique next phase (unknown or contradictory ledger)`,
+    verdict: "AMBIGUOUS",
+    resume_command: null,
+  });
+  return { verdict: "AMBIGUOUS", branches };
+}
+
+function loadHint(value) {
+  if (value === null || value === undefined) return { provided: false };
+  const trimmed = String(value).trim();
+  let text = trimmed;
+  if (!trimmed.startsWith("{")) {
+    const abs = path.isAbsolute(trimmed) ? trimmed : path.join(PROJECT, trimmed);
+    try {
+      if (!fs.existsSync(abs)) return { provided: true, code: "unavailable-hint-missing-path" };
+      text = fs.readFileSync(abs, "utf8");
+    } catch {
+      return { provided: true, code: "unavailable-hint-unreadable" };
+    }
+  }
+  try {
+    return { provided: true, hint: JSON.parse(text) };
+  } catch {
+    return { provided: true, code: "unavailable-hint-invalid-json" };
+  }
+}
+
+function hintGuard(hintInfo, units, envelopeState, recomputedNext) {
+  const degradations = [];
+  const observations = [];
+  if (!hintInfo.provided) return { degradations, observations };
+  if (hintInfo.code) {
+    degradations.push({ source: "hint", code: hintInfo.code, detail: "the hint envelope could not be read" });
+    observations.push(`hint unavailable (${hintInfo.code})`);
+    return { degradations, observations };
+  }
+  const hint = hintInfo.hint ?? {};
+  const recommended = typeof hint?.next?.recommended === "string" ? hint.next.recommended : "";
+  const bySlug = (slug) => units.find((unit) => unit.id === slug || unit.slug === slug || unit.id.endsWith(slug));
+  const planMatch = /^\/plan-feature\s+(\S+)/.exec(recommended);
+  const designMatch = /^\/design-feature\s+(\S+)/.exec(recommended);
+  if (planMatch) {
+    const unit = bySlug(planMatch[1]);
+    if (unit && unit.status === "defined") {
+      observations.push(`${unit.id} still 'defined' after the hint's /plan-feature ${unit.id} recommendation — suspected dropped defined→planned write (see #51)`);
+    }
+  }
+  if (designMatch) {
+    const unit = bySlug(designMatch[1]);
+    if (unit && unit.status === "idea") {
+      observations.push(`${unit.id} still 'idea' after the hint's /design-feature ${unit.id} recommendation — suspected dropped idea→defined write (see #51)`);
+    }
+  }
+  if (hint.state && hint.state !== envelopeState) {
+    observations.push(`hint envelope diverges from recomputed state (hint ${hint.state}, recomputed ${envelopeState})`);
+  } else if (recommended && recomputedNext && recommended !== recomputedNext) {
+    observations.push(`hint envelope diverges from recomputed next (hint ${recommended}, recomputed ${recomputedNext})`);
+  }
+  return { degradations, observations };
+}
+
+// ---------------------------------------------------------------------------
 // Envelope assembly
 // ---------------------------------------------------------------------------
 
@@ -511,13 +637,20 @@ function summarize(units, startable, designCandidates, openPrs) {
   return parts.join(", ");
 }
 
-function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows }) {
+function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriaged, receiptRows, crash }) {
   const alternatives = [];
   if (nrs && NRS_BLOCKING.has(nrs.status)) {
     const command = nrs.status === "contradicted"
       ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
       : "/discover-repository-state";
     return { recommended: command, alternatives, tier: tierFor(command) };
+  }
+  if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
+    const command = crash.branches[0].resume_command;
+    return { recommended: command, alternatives, tier: tierFor(command) };
+  }
+  if (crash?.verdict === "AMBIGUOUS") {
+    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status") };
   }
   if (state === "BLOCKED" && receiptRows.length > 0) {
     const gate = receiptRows.find((row) => row.label !== "current");
@@ -680,13 +813,31 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   runScopedBlockers.push(...dependencies.blockers);
   const blockers = [...runScopedBlockers, ...gateBlockers];
 
-  // Top-level state.
-  let state = "OK";
+  // Crash recovery (step 17) — classified before the envelope state is reduced.
+  const crash = readCrashRecovery({ gitState, units, phases });
+
+  // Top-level state: the NRS/substrate gate overrides the crash-recovery mapping.
+  let state;
   if (nrs && NRS_BLOCKING.has(nrs.status)) state = "BLOCKED";
   else if (dependencies.blockers.some((blocker) => blocker.scope === "run")) state = "BLOCKED";
+  else if (crash.verdict === "AMBIGUOUS") state = "NEEDS_INPUT";
+  else if (crash.verdict === "RESUMABLE") state = "CONTINUE";
+  else state = "OK";
+
+  const needsInput = state === "NEEDS_INPUT"
+    ? {
+        question: `Interrupted state on ${crash.branches[0]?.branch ?? gitState.branch} is ambiguous — the ledger does not name a unique next phase`,
+        options: ["resume the phase from the dirty work", "redo the phase from a clean tree", "discard the dirty work"],
+      }
+    : null;
 
   const designCandidates_ = designCandidates;
-  const next = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows });
+  const next = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash });
+
+  const hintInfo = loadHint(lastEnvelope);
+  const hint = hintGuard(hintInfo, units, state, next.recommended);
+  observations.push(...hint.observations);
+  const degradations = [...(gitState.degradations ?? []), ...(forge.degradations ?? []), ...hint.degradations];
 
   const currentUnit = units.find((unit) => {
     const branch = gitState.branch;
@@ -705,6 +856,8 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     pending_triage: [],
     untriaged_issues: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) },
     workflow_observations: observations,
+    degradations,
+    crash_recovery: { verdict: crash.verdict, branches: crash.branches },
     urgent: {
       issues: urgentIssues,
       interruptibility: {
@@ -743,7 +896,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     blockers,
     dependencies: { unmet: dependencies.unmet, build_order: dependencies.buildOrder },
     recommendations: { product_audit: false, reason: null },
-    needs_input: null,
+    needs_input: needsInput,
     next,
     detail,
   };

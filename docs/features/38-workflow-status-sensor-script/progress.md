@@ -431,3 +431,14 @@ Recorded for the next plan review (digests recomputed here, never copied):
 ## Unit-loop receipt — P1
 - Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs (exit 0, 19/19) · Acceptance blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b
 - Next: P2 · Attempts: 1
+
+## P2 — 2026-09-11
+- Done: full declared-failure contract — namespaced `unavailable-<source>-<cause>` codes in `detail.degradations` (forge: no-network/timeout/auth/missing-cli; git: missing), bounded forge timeout (first failed read short-circuits the dimension, so a hanging forge costs one bound), crash-recovery verdict mapping (CLEAN→OK, RESUMABLE→CONTINUE with the resume command, AMBIGUOUS→NEEDS_INPUT + `needs_input`) surfaced in `detail.crash_recovery`, and the `--last-envelope` no-progress guard + fail-open hint (`unavailable-hint-missing-path`/`-invalid-json`); P2 pins green and every P1 pin unchanged.
+- Remains: P3 skill slimming (SKILL.md + SENSOR_CORE.md + ENVELOPE_CORE.md), discipline-pin re-targeting, budget re-basis (incl. the pre-existing route ceilings, known-issues B-04), version bump 3.2.1 → 3.3.0.
+- Gotchas: (1) the environment has a real `gh` at `/usr/bin/gh`, so an “absent gh” fixture must also drop `/usr/bin` from PATH (the missing-cli pin uses the minimal-PATH fixture). (2) The forge dimension short-circuits after the first failed read — deliberate, so a hanging forge costs one `FORGE_TIMEOUT_MS` bound instead of three. (3) P1 commit `497e24e7`.
+- Files: scripts/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md}
+- Next: P3 — Workflow-status skill slimming
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs (exit 0, 33/33) · Acceptance blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b
+- Next: P3 · Attempts: 1
