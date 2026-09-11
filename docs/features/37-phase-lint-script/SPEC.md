@@ -408,7 +408,7 @@ states them; rule ids `box-1`…`box-8` for finding lines):
   references, not check objects. Tests live with the phase's own layer. A
   target file the table cannot map is *ambiguous* → the file-level verdict is
   `BLOCKED: unparseable`, never a guess.
-- box-3: task count ≤ 8 (final hardening/close-out phase: ≤ 10).
+- box-3: ≥ 1 task per phase (fail-closed, `phase-contract` v1.0.3); task count ≤ 8 (final hardening/close-out phase: ≤ 10).
 - box-4: per task, FAIL if the task text contains a `→` chain of implementation
   steps, enumerates more than 3 numbered/enumerated cases, or names more than
   1 created file of distinct concerns (creation verbs + > 1 path).

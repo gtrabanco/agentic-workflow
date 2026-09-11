@@ -41,7 +41,7 @@ plan-owner re-cut lands.
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F5 | scripts/phase-lint.mjs:111 + SPEC §Design box-3 + skills/phase-contract/SKILL.md rule 3 | code | med | fix-now | fold: add ≥1-task minimum (box-3 lint-blocked at 0 tasks) + amend phase-contract rule 3 + amend SPEC §Design box-3 + update known-issues.md disclosure | no |
+| F5 | scripts/phase-lint.mjs:111 + SPEC §Design box-3 + skills/phase-contract/SKILL.md rule 3 | code | med | fix-now | fold: add ≥1-task minimum (box-3 lint-blocked at 0 tasks) + amend phase-contract rule 3 + amend SPEC §Design box-3 + update known-issues.md disclosure | yes |
 | VF-5 | scripts/phase-lint.mjs:111 · reviewer review-change · HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 · recheck observed: zero-checkbox phase bodies pass all 8 boxes vacuously; user ratified the strict-block ruling ("si eso pasa o el plan está mal o hay que borrar la fase") — amendment approved | code | confirmed | finding-mark | n/a | n/a |
 
 | id | file:line | axis | severity | class | route | folded |
