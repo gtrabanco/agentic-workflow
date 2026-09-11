@@ -498,3 +498,35 @@ for the folded set → bounded delta re-review required: /review-plan 38 (the
 spec receipt rp-011 stays current — the `spec-product-v1` projection excludes
 the Engineering half, verified `digestMatches: true` post-write), then
 /execute-phase 38.
+
+## 2026-09-11 — P1 phase-cut reconciliation (SPEC P1 vs PLAN/TASKS P2 bullet placement)
+
+**What:** P1 delivered the SENSOR_CORE steps 1–9 happy path (git/forge
+collection, urgency labels-only scan, roadmap + fix-index parsing, transitive
+dependency closure, readiness + step-6a receipt sensing, phase progress, review
+marks, fix-now fold projection, envelope assembly) as the SPEC `#### P1`
+definition mandates — “`scripts/workflow-status.mjs` exists and executes
+SENSOR_CORE steps 1–9 into one schema-valid Envelope v2 on stdout”. P1's frozen
+done-when (schema-validity, field-presence, read-only, idempotence,
+roadmap-mapping, labels-only, flag-contract, envelope-mismatch) is therefore
+green at the P1 commit.
+
+**Why:** the PLAN.md/TASKS.md P2 checklist groups the same step 1–9 bullets
+under P2, while the SPEC P1 prose + done-when and the obligations ledger
+(P1-owned O1/O3/O8/O10/O11/O17/O20/O22/O23/O27) and `testing.md` ladder row 1
+place the happy path's pins in P1. The SPEC phase definition governs: P1's gate
+can only be green if the happy path ships in P1.
+
+**Resolution (mechanical, intent-preserving, no criterion/task/scope change):**
+P1 owns the happy path; P2 owns the declared-failure contract (crash-recovery
+verdict mapping, namespaced degradation codes + bounded timeout,
+`--last-envelope` no-progress guard + fail-open hint, forge/git shim scenarios)
+and re-asserts every P1 pin unchanged. The overlap is checklist placement only —
+every acceptance criterion still has exactly one implementing phase as the
+obligations ledger records. Recorded here per the execute-phase hard rule
+(“Plan conflict: update TASKS.md/PLAN.md and record why in decisions.md”).
+
+**P1 gate:** `node --test scripts/workflow-status-sensor.test.mjs` → exit 0
+(19/19 P1 pins); `node --test scripts/*.test.mjs` → 226/227, the single failure
+pre-existing on `main` (`check-skill-context` route ceilings — known-issues
+B-04).
