@@ -586,3 +586,42 @@ test("F5: a done unit with a still-open PR is sensed (step 6a)", () => {
   );
   assert.ok(!envelope.dependencies.unmet.includes("90-alpha"), "an open PR never counts as merged");
 });
+
+// ===========================================================================
+// F19 — the forge dimension spends one shared wall-clock budget
+// ===========================================================================
+
+test("F19: a slow-but-alive forge costs one shared bound, never one bound per read", () => {
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | long shipped |"],
+  });
+  // The open-PR read answers; every other forge read hangs. Without a shared
+  // budget each read pays its own 10s bound (merged → issues → all-states ≈ 30s)
+  // and the urgency read still runs; with it the first hang spends the dimension.
+  fixture.write("bin/gh", `#!/usr/bin/env node
+const args = process.argv.slice(2).join(" ");
+if (args.includes("pr list") && args.includes("--state open")) { process.stdout.write("[]"); process.exit(0); }
+if (args.includes("issue list")) {
+  process.stdout.write(JSON.stringify([{ number: 7, title: "urgent thing", labels: [{ name: "urgent" }] }]));
+  process.exit(0);
+}
+setInterval(() => {}, 1000);
+`);
+  fs.chmodSync(path.join(fixture.dir, "bin", "gh"), 0o755);
+
+  const started = Date.now();
+  const result = fixture.run();
+  const elapsed = Date.now() - started;
+
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(
+    envelope.detail.degradations.some((row) => row.code === "unavailable-forge-timeout"),
+    `a hanging forge names the declared timeout code: ${JSON.stringify(envelope.detail.degradations)}`,
+  );
+  assert.deepEqual(
+    envelope.detail.urgent.issues, [],
+    "the reads left after the budget is spent never spawn — the urgency read must not have answered",
+  );
+  assert.ok(elapsed < 20_000, `one shared bound, not one per read (elapsed ${elapsed}ms)`);
+});
