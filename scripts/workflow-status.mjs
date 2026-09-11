@@ -1073,6 +1073,18 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     return branch && (branch.endsWith(unit.id) || branch.includes(unit.id) || branch.includes(`/${unit.issue}-`));
   }) ?? null;
 
+  /**
+   * The current unit's PR state, from the forge evidence already in hand: `open`
+   * when the forge lists the PR open, `merged` when the merge resolver proves the
+   * `done` row shipped, else `none`. A hardcoded `open` told every consumer that a
+   * merged PR was still open (F23).
+   */
+  const prStateFor = (unit) => {
+    if (!unit?.pr) return "none";
+    if (isOpenPr(unit)) return "open";
+    return mergeResolver(unit) ? "merged" : "none";
+  };
+
   const detail = {
     repository_state: nrs,
     design_candidates: designCandidates_,
@@ -1109,7 +1121,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       ? { current: phases.get(currentUnit.id)?.current ?? null, total: phases.get(currentUnit.id)?.total ?? null, completed: phases.get(currentUnit.id)?.completed ?? null }
       : { current: null, total: null, completed: null },
     pr: currentUnit?.pr
-      ? { number: currentUnit.pr.number, url: currentUnit.pr.url, state: "open", head_sha: null, merge_ready: null, ci: null }
+      ? { number: currentUnit.pr.number, url: currentUnit.pr.url, state: prStateFor(currentUnit), head_sha: null, merge_ready: null, ci: null }
       : { number: null, url: null, state: "none", head_sha: null, merge_ready: null, ci: null },
     gates: {
       verification: null,
