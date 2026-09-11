@@ -1,5 +1,7 @@
 # `@gtrabanco/agentic-workflow`
 
+> 🇪🇸 [Versión en español](README.es.md)
+
 Producer crate for the deterministic agentic-workflow scripts. Feature 37
 created it as the vehicle the roadmap mandated (rows 37/38/42/45, declined 43):
 the first producer feature creates the crate, later producers land their scripts
