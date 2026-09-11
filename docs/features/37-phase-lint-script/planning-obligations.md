@@ -2,7 +2,7 @@
 
 One row per normative behaviour, applicable invariant, affected use case, and
 required failure state (ledger contract: `pre-execution-review/references/LEDGERS.md` §2).
-Artifact revision: `37-plan-4`.
+Artifact revision: `37-plan-5`.
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
@@ -18,3 +18,4 @@ Artifact revision: `37-plan-4`.
 | O10 | SPEC AC10; vehicle rule (PE-005) | Producer crate + tmp convention exist: `packages/agentic-workflow/` with `package.json`, and `.agentic-workflow/tmp/` | P3 | crate + tmp creation | execute-phase | `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` | command exit 0 in TASKS.md tick | planned |
 | O11 | Roadmap conventions | Roadmap row 37 reads `planned` after scaffold, re-read and confirmed | — (scaffold) | roadmap write | plan-feature-scaffold | re-read of `docs/features/ROADMAP.md` row 37 | row text `planned` | verified |
 | O12 | SPEC §Architecture impact | `skills/phase-contract/SKILL.md` is amended twice: by P1 (owner-sanctioned rule-1 exception, v1.0.1 → 1.0.2) and by the cycle-1 review fold F5 (user-approved rule-3 ≥ 1-task minimum, v1.0.2 → 1.0.3); no other phase of this feature re-edits it | P1 / P4 / review fold F5 | rule-owner amendment (P1) + no-re-edit check (P4) + F5 amendment | execute-phase | `git diff --name-only main...HEAD -- skills/phase-contract` limited to the P1 + F5 amendments; no phase-contract changes introduced by P4 | diff output in TASKS.md tick | planned |
+| O13 | SPEC AC5 + SPEC §Design box-2 (F7 fold) | The owner-sanctioned test-only shape passes box-2: a test-file target (basename contains `.test.`) in a phase declared `hardening` maps to `hardening`; a source target in a `hardening` phase still FAILs box-2; test files outside `hardening` keep the prefix-table mapping | P5 | red-first corpus fixtures + mapping implementation | execute-phase | `node --test scripts/phase-lint.test.mjs` → exit 0 (new fixtures green) and `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0 | test output in TASKS.md tick | planned |

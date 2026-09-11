@@ -405,9 +405,18 @@ states them; rule ids `box-1`…`box-8` for finding lines):
   status) is exempt. A backticked span beginning with a runtime word (`bun`,
   `node`, `npm`, `npx`, `git`, `grep`, `diff`, `test`, `gh`) is a quoted
   command, never a target; path-like tokens after the target file are quoted
-  references, not check objects. Tests live with the phase's own layer. A
-  target file the table cannot map is *ambiguous* → the file-level verdict is
-  `BLOCKED: unparseable`, never a guess.
+  references, not check objects. A **test file** is a target whose basename
+  contains `.test.` (frozen mechanical definition — the repository's
+  colocated-test naming convention, PE-006; the surrounding dots keep
+  `latest.config` / `unit.testing.mjs` out). In a phase declared `hardening`,
+  a test-file target maps to `hardening` — the owner-sanctioned test-only
+  shape (`phase-contract` rule 2: "a test-only phase declares `hardening`";
+  the F7 fold): a non-test target in a `hardening` phase still maps via the
+  prefix table and FAILs unless exempt, and a test file everywhere else maps
+  via the prefix table like any file — tests live with their implementation's
+  layer, the phase's own layer. A target file the table cannot map is
+  *ambiguous* → the file-level verdict is `BLOCKED: unparseable`, never a
+  guess.
 - box-3: ≥ 1 task per phase (fail-closed, `phase-contract` v1.0.3); task count ≤ 8 (final hardening/close-out phase: ≤ 10).
 - box-4: per task, FAIL if the task text contains a `→` chain of implementation
   steps, enumerates more than 3 numbered/enumerated cases, or names more than
@@ -584,7 +593,31 @@ green. Each task's target file is the edited skill itself — the run-and-paste
 command inside the prose is quoted content, not a file the phase creates or
 edits.
 
-#### P5 — Hardening & PR
+#### P5 — Implement the box-2 test-file mapping
+
+Layer: config/infra. Done-when: `node --test scripts/phase-lint.test.mjs` →
+exit 0, and `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0.
+
+- [ ] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: a
+      test-only `Layer: hardening` phase creating `scripts/tokenizer.test.mjs`
+      expects box-2 PASS (the VF-7 reproducer); a `Layer: hardening` phase with
+      source target `scripts/tokenizer.mjs` expects `BLOCKED — box 2`; a
+      `Layer: config/infra` phase creating `scripts/phase-lint.test.mjs` beside
+      its implementation keeps box-2 PASS
+- [ ] Implement the mapping in `scripts/phase-lint.mjs`: a test-file target
+      (basename containing `.test.`) in a phase declared `hardening` maps to
+      `hardening`; every other target keeps the frozen prefix-table mapping;
+      the ambiguous flow is unchanged
+
+Re-cut for the code-review F7 fold (replan-in-unit, user-directed
+2026-09-11): the frozen box-2 table could not express the owner-sanctioned
+test-only shape — a test-only phase declared `hardening` was BLOCKED on its
+own test files, which map to their implementation's layer. The SPEC §Design
+box-2 amendment in this replan freezes the test-file mapping; this phase
+lands it red-first in the corpus and in the script. `phase-contract` is not
+touched (amended once in P1, sole rule owner).
+
+#### P6 — Hardening & PR
 
 Layer: hardening. Done-when: `git status --porcelain -- docs/` → empty, and the
 project verification gate commands exit 0.
@@ -595,16 +628,18 @@ the literal close-out tasks.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
-Fingerprints below were re-derived mechanically from the `37-plan-4` phase
+Fingerprints below were re-derived mechanically from the `37-plan-5` phase
 tasks (checkbox counts in TASKS.md, `Layer:` declarations, title-deliverables
-kebab-cased; P5's `Hardening & PR` normalizes to `hardening-pr` per the
-amended rule 1 — see ED7):
+kebab-cased; P6's `Hardening & PR` normalizes to `hardening-pr` per the
+amended rule 1 — see ED7; re-derived by `scripts/phase-lint.mjs` itself at
+the F7 re-cut, see decisions.md):
 
 - P1 — Phase-lint: PASS (8/8) · fingerprint P1:docs:3:amend-phase-contract-rule-1
 - P2 — Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:implement-deterministic-phase-linter
 - P3 — Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:create-producer-crate-vehicle
 - P4 — Phase-lint: PASS (8/8) · fingerprint P4:docs:7:slim-three-consumer-routes-to-run-and-paste
-- P5 — Phase-lint: PASS (8/8) · fingerprint P5:hardening:8:hardening-pr
+- P5 — Phase-lint: PASS (8/8) · fingerprint P5:config/infra:2:implement-box-2-test-file-mapping
+- P6 — Phase-lint: PASS (8/8) · fingerprint P6:hardening:8:hardening-pr
 
 ### Deploy & rollback
 

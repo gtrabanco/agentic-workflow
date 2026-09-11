@@ -257,3 +257,39 @@ Notes:
 ## Unit-loop receipt — P5
 - Commit: `cdcec97c` (done flip) + link commit · Gate: `node --test scripts/phase-lint.test.mjs` 0 (13/13) · `node --test scripts/normative-drift.test.mjs` 0 (16/16) · `bun scripts/check-skill-context.mjs` 0 · `npx skills add . --list` 0 · `bun run test` (pi package) 0 (185/185) · `node --test scripts/*.test.mjs` 1 (220/221, pre-existing #200/#176) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: close-out complete · PR: https://github.com/gtrabanco/agentic-workflow/pull/212 · Attempts: 1
+
+## Replan 6 — F7 fold: box-2 test-file mapping (2026-09-11)
+
+User directive: plan the F7 resolution (review-findings.md F7 — med, class
+`replan-in-unit`, user-confirmed; its row stays `folded: no` until this
+re-cut's execution lands and a fresh review re-verifies it). Folds applied
+(revision `37-plan-5`), docs-only on the planning set — no code changed this
+cycle:
+
+- SPEC §Design box-2: the sentence "Tests live with the phase's own layer."
+  replaced by the frozen test-file mapping for the owner-sanctioned test-only
+  `hardening` shape (owner rule 2; `.test.` mechanical basename definition;
+  `close-out` deliberately excluded — fail-closed). See decisions.md.
+- PLAN/TASKS/SPEC §Phases re-cut to six phases: new P5 "Implement the box-2
+  test-file mapping" (config/infra — red-first corpus fixtures + mapping
+  implementation; O13, PE-010); former close-out P5 renumbered P6 (tasks,
+  ticks and fingerprint unchanged except the number).
+- testing.md fingerprint record updated (six, incl. `P5:config/infra:2`);
+  planning-obligations gains O13; planning-evidence gains PE-010; ACCEPTANCE.md
+  and `skills/phase-contract/` untouched (O12; frozen acceptance blob stays
+  `21adb084…`).
+- Mechanical re-derivation (convergence argument): `node scripts/phase-lint.mjs
+  docs/features/37-phase-lint-script/TASKS.md` → verdict PASS, six per-phase
+  fingerprints matching SPEC §Phase-lint exactly, whole-plan sha256
+  `3ea28e5b965e08cfc59d5410f80fed542e5fb8e5398268130a82f98bc4794940`;
+  `node --test scripts/phase-lint.test.mjs` → 26/26; parent Product snapshot
+  re-proven: `bun scripts/pre-execution-snapshot.mjs build --stage spec --unit
+  37-phase-lint-script --source-revision 05480514… --artifact-revision
+  05480514…` → `8f736cc9…` exact (SPEC-REVIEW-37-1 still binds the Product
+  half — SPEC edits confined to the Engineering half).
+- Same-surface check: the only other `scripts/phase-lint.mjs` consumers, fix
+  units 81 (legacy-spec carve-out) and 82 (heading wrap), are both `done` — no
+  open fix-now work on the surface.
+
+Next: /review-plan 37 (fresh re-review; prior receipt PLAN-REVIEW-37-5), then
+/execute-phase 37 for P5 plus the P6 close-out re-run.
