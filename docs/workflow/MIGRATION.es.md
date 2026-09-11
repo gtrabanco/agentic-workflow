@@ -1,6 +1,24 @@
 # Notas de migración
 
-> 🇬🇧 [English version](MIGRATION.md)
+> 🇪🇸 [Versión en español](MIGRATION.es.md)
+
+## 2026-09-11 — el envelope de workflow-status tiene un productor determinista por script (`workflow-status` 3.3.0, aditivo)
+
+**Bump menor aditivo, sin migración requerida.** `workflow-status` 3.2.1 → 3.3.0
+incluye `scripts/workflow-status.mjs`, el productor determinista del Envelope v2
+que la skill antes ensamblaba desde prosa. El script ejecuta la secuencia
+publicada `SENSOR_CORE` (pasos 1–9 incl. 6a), se autovalida con `validateEnvelope`
+del paquete de esquema (solo diagnóstico) e imprime un único documento JSON; los
+fallos ambientales degradan a `unavailable-<source>-<cause>` en
+`detail.degradations` con salida 0, y solo una invocación inválida es fatal.
+
+La skill se aligera a «ejecuta el script, lee el JSON, interpreta
+`next.recommended`». El **argv externo y el contrato del envelope no cambian** —
+mismos flags (`--json-only`, `--last-envelope <json|path>`), misma forma de
+Envelope v2, mismo mapeo de estado — así que los drivers y skills existentes
+siguen funcionando. Nota operativa: el script vive en `scripts/workflow-status.mjs`
+del repositorio, no en la skill empaquetada (la brecha de distribución de
+`scripts/`, known-issues `B-01` → feature 44 / #198).
 
 ## 2026-09-07 — el bucle review→fold es dirigido por decisión y de alcance delta (aditivo)
 

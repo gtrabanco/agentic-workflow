@@ -453,3 +453,10 @@ Recorded for the next plan review (digests recomputed here, never copied):
 ## Unit-loop receipt — P3
 - Commit: pending · Gate: node scripts/check-skill-context.mjs (exit 0) + discipline suites (exit 0, 87/87) · Acceptance blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b
 - Next: P4 · Attempts: 1
+
+## P4 — 2026-09-11
+- Done: driver wiring in `docs/workflow/ORCHESTRATION.md` + `.es.md` (the script named as the envelope's deterministic producer, with its invocation convention); additive bilingual `MIGRATION.md`/`.es.md` note (no migration required); schema package byte-untouched (`git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty); full regression green (root 241/241, schema package 684/684, pi package 173/173 after `bundle:skills`); Pi mirror re-bundled (3 slimmed files); planning docs closed; read-verified A-RV (urgency labels-only path preserved; no forge `--json` field list requests `body`/`comment`).
+- Remains: PR open + roadmap flip to `done · [#<pr>](url)`.
+- Gotchas: (1) The frozen schema-package command `npm test` needs its devDependencies — `bun install` in `packages/agentic-workflow-schema` and `packages/pi-agentic-workflow` restores `tsc`/`ajv` from the lockfile (no tracked-file change). (2) `docs/CAPABILITIES.md`: `n/a` — the sensor script is a read-only tool, not a new cross-cutting subsystem, role, or permission. (3) TASKS P4 wrote the roadmap flip as `in-progress · [PR #n]`, but the roadmap's own five-state legend says the PR-open step writes `done` — the sanctioned edge is `done · [#n](url)` (the divergence is recorded in decisions.md). (4) P3 commit `0bd91cbf`.
+- Files: docs/workflow/ORCHESTRATION.md, docs/workflow/ORCHESTRATION.es.md, docs/workflow/MIGRATION.md, docs/workflow/MIGRATION.es.md, packages/pi-agentic-workflow/skills/workflow-status/{SKILL.md,references/SENSOR_CORE.md,references/ENVELOPE_CORE.md}, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}
+- Next: PR open + roadmap `done` (close-out)
