@@ -14,7 +14,7 @@ plan-owner re-cut lands.
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F1 | docs/fix/_TEMPLATE/SPEC.md:119 | code (owner conformance) | high | fix-now | fold: add the missing `Layer: hardening · Done-when:` header to the template's mandated closing phase (aligns the template with owner rules 2+8; historical fix SPECs stay legacy shapes under the known-issues disclosure) | no |
+| F1 | docs/fix/_TEMPLATE/SPEC.md:119 | code (owner conformance) | high | fix-now | fold: add the missing `Layer: hardening · Done-when:` header to the template's mandated closing phase (aligns the template with owner rules 2+8; historical fix SPECs stay legacy shapes under the known-issues disclosure) | yes |
 | VF-1 | docs/fix/_TEMPLATE/SPEC.md:112-119 · reviewer review-change · HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 · recheck direct read (P1 carries `Layer:`/`Done-when:` at :114, mandated P2 none) + observed `bun scripts/phase-lint.mjs docs/fix/_TEMPLATE/SPEC.md` and `…/docs/fix/100-stale-fix-index-rows/SPEC.md` → both `verdict BLOCKED: unparseable` exit 1 | code | confirmed | finding-mark | n/a | n/a |
 | F2 | scripts/phase-lint.mjs:192 | code | med | fix-now | fold: stop discarding box-2's `ambiguous` flag (the `BOXES` wrapper `(phase) => box2(phase).findings`) + corpus fixture for an unmappable target | no |
 | VF-2 | scripts/phase-lint.mjs:192 · reviewer review-change · HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 · recheck failing reproducer: config/infra task `- [ ] Implement \`src/index.ts\` parser entry` → `PASS (8/8)` exit 0; SPEC §Design box-2 requires `BLOCKED: unparseable` ("never a guess") | code | confirmed | finding-mark | n/a | n/a |
@@ -38,6 +38,11 @@ plan-owner re-cut lands.
 | VF-13 | scripts/phase-lint.mjs:139 · reviewer review-change · HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 · recheck failing reproducer: title "Café + Bar" → box-1 PASS (ASCII `\w` misses `é + B`); owner rule 1 "joins nouns with `+`…" | code | confirmed | finding-mark | n/a | n/a |
 | F15 | scripts/phase-lint.mjs:216 | code | med | fix-now | fold: anchor the box-8 outcome regex (`\bpass(?:es|ed)?\b`) + corpus fixture | no |
 | VF-15 | scripts/phase-lint.mjs:216 · reviewer review-change · HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 · recheck failing reproducer: done-when "`bun run lint` bypasses nothing" → box-8 passes (unanchored `pass` matches "bypasses") | code | confirmed | finding-mark | n/a | n/a |
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F5 | scripts/phase-lint.mjs:111 + SPEC §Design box-3 + skills/phase-contract/SKILL.md rule 3 | code | med | fix-now | fold: add ≥1-task minimum (box-3 lint-blocked at 0 tasks) + amend phase-contract rule 3 + amend SPEC §Design box-3 + update known-issues.md disclosure | no |
+| VF-5 | scripts/phase-lint.mjs:111 · reviewer review-change · HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 · recheck observed: zero-checkbox phase bodies pass all 8 boxes vacuously; user ratified the strict-block ruling ("si eso pasa o el plan está mal o hay que borrar la fase") — amendment approved | code | confirmed | finding-mark | n/a | n/a |
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
