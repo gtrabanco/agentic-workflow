@@ -128,14 +128,32 @@ function createdTargets(text) {
   return [...new Set(pathTokens(text))];
 }
 
+/**
+ * Neutralize plan-derived text before echoing it into a finding line (F21).
+ * A phase title can originate in a third-party forge issue body (`plan-fix`),
+ * so the echo must carry neither instructions nor fake block lines into the
+ * stdout block the consumer skills paste: control and format characters become
+ * spaces, backticks are dropped, whitespace collapses, and the length is
+ * bounded. Rule decisions read the RAW title; only the echo is sanitized.
+ */
+function sanitizeEcho(text, limit = 120) {
+  const cleaned = text
+    .replace(/[\p{Cc}\p{Cf}]+/gu, " ")
+    .replace(/`+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.length > limit ? `${cleaned.slice(0, limit)}…` : cleaned;
+}
+
 /** Box 1 — the title names ONE deliverable. */
 const SYMBOL_JOINER = /[\p{L}\p{N}_]\s*[+,/&]\s*[\p{L}\p{N}_]/u;
 const WORD_JOINER = /(?:^|[^\p{L}\p{N}_])[\p{L}\p{N}_]+\s+(?:and|y)\s+[\p{L}\p{N}_]+(?:$|[^\p{L}\p{N}_])/iu;
 function box1(phase) {
   const title = phase.title.trim();
   if (title === HARDENING_TITLE) return [];
-  if (SYMBOL_JOINER.test(title)) return [`title joins deliverables with “+”, “,”, “/” or “&”: “${title}”`];
-  if (WORD_JOINER.test(title)) return [`title joins deliverables with “and”/“y”: “${title}”`];
+  const shown = sanitizeEcho(title);
+  if (SYMBOL_JOINER.test(title)) return [`title joins deliverables with “+”, “,”, “/” or “&”: “${shown}”`];
+  if (WORD_JOINER.test(title)) return [`title joins deliverables with “and”/“y”: “${shown}”`];
   return [];
 }
 
@@ -343,5 +361,8 @@ const invokedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href =
 if (invokedDirectly) {
   const result = main(process.argv.slice(2));
   process.stdout.write(`${result.lines.join("\n")}\n`);
-  process.exit(result.exitCode);
+  // `process.exit()` here would kill the process before an async pipe write
+  // drains, truncating the block past the pipe buffer (F22). Setting the code
+  // and letting the event loop empty flushes stdout first.
+  process.exitCode = result.exitCode;
 }
