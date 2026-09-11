@@ -657,3 +657,32 @@ test("F21: an out-of-repo receipt behind a directory symlink never enters the en
     fs.rmSync(outside, { recursive: true, force: true });
   }
 });
+
+// ===========================================================================
+// F23 — the reported PR state is the forge's answer
+// ===========================================================================
+
+test("F23: a merged PR is never reported open, and an open PR is never reported merged", () => {
+  const mergedRun = makeFixture({
+    branch: "feat/90-alpha",
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | shipped long ago |"],
+    mergedPrs: [{ number: 901, headRefName: "feat/90-alpha" }],
+  }).run();
+  assert.equal(mergedRun.status, 0, mergedRun.stderr);
+  const merged = parseEnvelope(mergedRun.stdout);
+  assert.equal(merged.pr.state, "merged", `a merged PR is not open: ${JSON.stringify(merged.pr)}`);
+
+  const openRun = makeFixture({
+    branch: "feat/90-alpha",
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | at the merge gate |"],
+    openPrs: [{ number: 901, title: "alpha", headRefName: "feat/90-alpha", url: "https://example.invalid/pr/901", statusCheckRollup: [] }],
+  }).run();
+  assert.equal(openRun.status, 0, openRun.stderr);
+  assert.equal(parseEnvelope(openRun.stdout).pr.state, "open");
+
+  const noneRun = makeFixture({
+    branch: "feat/90-alpha",
+    roadmapRows: ["| 90 | `alpha` | planned | — | no PR yet |"],
+  }).run();
+  assert.equal(parseEnvelope(noneRun.stdout).pr.state, "none");
+});

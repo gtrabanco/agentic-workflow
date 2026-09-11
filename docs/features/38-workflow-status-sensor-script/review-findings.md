@@ -38,7 +38,7 @@ symlink gap the confinement leaves open).
 | F20 | scripts/workflow-status.mjs:916,923-924,517 | perf | med | fix-now | fold into phase | no |
 | F21 | scripts/workflow-status.mjs:105-121 (projectPath/readProject; same leaf-only pattern pre-execution-snapshot.mjs:167) | security | med | fix-now | fold into phase | yes |
 | F22 | docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md (SPEC criterion A:24 row dropped) | workflow | med | fix-now | replan-in-unit (user-confirmed manifest amendment, then /review-plan 38) | no |
-| F23 | scripts/workflow-status.mjs:1064 | code | med | fix-now | fold into phase | no |
+| F23 | scripts/workflow-status.mjs:1064 | code | med | fix-now | fold into phase | yes |
 | F24 | scripts/workflow-status.mjs:586-593 | code | med | fix-now | fold into phase | no |
 | F25 | scripts/workflow-status.mjs:482-500 | code | med | fix-now | fold into phase | no |
 | F26 | docs/workflow/MIGRATION.md:12-13 + .es.md:12-13 + ORCHESTRATION.md:41-43 + .es.md:43-44 | usage-docs | med | fix-now | fold into phase | no |
