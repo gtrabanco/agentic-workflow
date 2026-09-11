@@ -179,22 +179,58 @@ function box4(phase) {
   return findings;
 }
 
+/** Single-pass `either … or` scan (never a `[\s\S]*` backtracking walk). */
+function hasEitherOr(task) {
+  const at = task.search(/\beither\b/i);
+  return at !== -1 && /\bor\b/i.test(task.slice(at));
+}
+
+/**
+ * Single-pass `If … then <scope change>` scan, dot-bounded like the rule: all
+ * three tokens must sit in the same sentence. The first `if` and the first
+ * `then` after it dominate any later pair (a later `then` is also after the
+ * first `if`), so one linear walk per sentence is equivalent.
+ */
+function hasIfThenScopeChange(task) {
+  for (const segment of task.split(".")) {
+    const at = segment.search(/\bif\b/i);
+    if (at === -1) continue;
+    const then = /\bthen\b/i.exec(segment.slice(at));
+    if (then && /\b(?:add|remove|move|split|merge|defer)\w*\b/i.test(segment.slice(at + then.index))) return true;
+  }
+  return false;
+}
+
 /** Box 5 — zero decision words. */
 function box5(phase) {
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
     if (/\b(?:decide|decides|decided|choose|chooses|choosing)\b/i.test(task)) findings.push(`task ${index + 1} carries a decision word`);
-    else if (/\beither\b[\s\S]*\bor\b/i.test(task)) findings.push(`task ${index + 1} offers either/or alternatives`);
-    else if (/\bif\b[^.]*\bthen\b[^.]*\b(?:add|remove|move|split|merge|defer)\w*\b/i.test(task)) findings.push(`task ${index + 1} carries an “If … then” scope change`);
+    else if (hasEitherOr(task)) findings.push(`task ${index + 1} offers either/or alternatives`);
+    else if (hasIfThenScopeChange(task)) findings.push(`task ${index + 1} carries an “If … then” scope change`);
   }
   return findings;
+}
+
+/**
+ * Single-pass move-target scan: within one sentence, a `to|into P<n>` after
+ * the first move/defer verb also follows every later one, so one walk per
+ * sentence is equivalent to the old `[^.]*` per-verb walk.
+ */
+function movesToPhase(task) {
+  for (const segment of task.split(".")) {
+    const at = segment.search(/\b(?:moves?|defers?)\b/i);
+    if (at === -1) continue;
+    if (/\b(?:to|into)\s+P\d+\b/i.test(segment.slice(at))) return true;
+  }
+  return false;
 }
 
 /** Box 6 — no conditional scope mutation across phases. */
 function box6(phase) {
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
-    if (/\b(?:moves?|defers?)\b[^.]*\b(?:to|into)\s+P\d+\b/i.test(task)) findings.push(`task ${index + 1} moves work to another phase`);
+    if (movesToPhase(task)) findings.push(`task ${index + 1} moves work to another phase`);
   }
   return findings;
 }
