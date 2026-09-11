@@ -258,12 +258,12 @@ passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
   verify parity tests pass; update distribution metadata as required.
 - [x] Close planning docs truthfully — `progress.md` gains a handoff entry (Done/Remains/
   Gotchas/Files); `testing.md` is complete; `known-issues.md` has no remaining blockers.
-- [ ] Open the PR and update roadmap — `gh pr create --body-file` (body as Markdown file,
+- [x] Open the PR and update roadmap — `gh pr create --body-file` (body as Markdown file,
   `Closes #185`, branch `feat/38-workflow-status-sensor-script`); update roadmap row to
   `in-progress · [PR #<n>](<pr-url>) · Depends on: none`; commit `feat(38): deterministic
   workflow-status sensor script` and push.
-- [ ] Recompute and record the frozen `ACCEPTANCE.md` blob —
+- [x] Recompute and record the frozen `ACCEPTANCE.md` blob —
   `git hash-object docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md` → sha;
   append an acceptance receipt to `progress.md` with `Status: frozen` + `Verified: 2026-09-09`.
-- [ ] Print the PR URL — `gh pr view <n> --json url` → verify the PR is open and the
+- [x] Print the PR URL — `gh pr view <n> --json url` → verify the PR is open and the
   URL matches the printed value (read-verified).
