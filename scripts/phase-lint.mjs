@@ -39,7 +39,8 @@ const HARDENING_TITLE = "Hardening & PR";
 const RUNTIME_WORDS = new Set(["bun", "node", "npm", "npx", "git", "grep", "diff", "test", "gh"]);
 const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
 const PATH_TOKEN = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\/?$/;
-const PHASE_HEADING = /^#{2,4}\s+P(\d+)\s*[—–-]\s*(\S.*)$/;
+const HAS_LETTER = /[A-Za-z]/;
+const PHASE_HEADING = /^#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
 const CREATION_VERB = /\b(?:create|creates|created|write|writes|written|scaffold|scaffolds|add a new file|new file)\b/i;
 const ENUMERATED = /(?:^|\s)\((?:\d+|[a-h])\)|(?:^|\s)\d+[.)]\s|\b(?:first|second|third|fourth|fifth)\b/gi;
@@ -58,6 +59,8 @@ function pathTokens(text) {
   for (const raw of stripQuotedCommands(text).split(/\s+/)) {
     const token = raw.replace(/^[`"'({\[]+/, "").replace(/[`"')\]}.,;:!?]+$/, "");
     if (!PATH_TOKEN.test(token)) continue;
+    // A bare numeric ratio (`0/1`, a date) is an assertion, not a target file.
+    if (!HAS_LETTER.test(token)) continue;
     if (token.includes("/") || EXTENSIONS.some((extension) => token.endsWith(extension))) tokens.push(token);
   }
   return tokens;
@@ -108,7 +111,7 @@ function parsePhases(text) {
       doneWhen = block.join(" ").trim();
     }
     const tasks = phase.body
-      .map((line) => /^\s*-\s*\[([ xX])\]\s+(.+)$/.exec(line))
+      .map((line) => /^\s*-\s*\[([ x])\]\s+(.+)$/.exec(line))
       .filter(Boolean)
       .map((match) => match[2].trim());
     return { ...phase, layer, doneWhen, tasks };
@@ -126,11 +129,13 @@ function createdTargets(text) {
 }
 
 /** Box 1 — the title names ONE deliverable. */
+const SYMBOL_JOINER = /[\p{L}\p{N}_]\s*[+,/&]\s*[\p{L}\p{N}_]/u;
+const WORD_JOINER = /(?:^|[^\p{L}\p{N}_])[\p{L}\p{N}_]+\s+(?:and|y)\s+[\p{L}\p{N}_]+(?:$|[^\p{L}\p{N}_])/iu;
 function box1(phase) {
   const title = phase.title.trim();
   if (title === HARDENING_TITLE) return [];
-  if (/\w\s*[+,/&]\s*\w/.test(title)) return [`title joins deliverables with “+”, “,”, “/” or “&”: “${title}”`];
-  if (/\b\w+\s+(?:and|y)\s+\w+\b/i.test(title)) return [`title joins deliverables with “and”/“y”: “${title}”`];
+  if (SYMBOL_JOINER.test(title)) return [`title joins deliverables with “+”, “,”, “/” or “&”: “${title}”`];
+  if (WORD_JOINER.test(title)) return [`title joins deliverables with “and”/“y”: “${title}”`];
   return [];
 }
 
@@ -148,9 +153,9 @@ function box2(phase) {
   return { findings };
 }
 
-/** Box 3 — task count within the phase budget. */
+/** Box 3 — task count within the phase budget (the final close-out keeps ≤ 10). */
 function box3(phase) {
-  const limit = HARDENING_LAYERS.has(phase.layer) ? 10 : 8;
+  const limit = phase.finalCloseOut ? 10 : 8;
   return phase.tasks.length > limit ? [`phase has ${phase.tasks.length} tasks (limit ${limit} for layer ${phase.layer})`] : [];
 }
 
@@ -199,7 +204,7 @@ function box7(phase) {
   if (HARDENING_LAYERS.has(phase.layer)) return [];
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
-    if (/\bmanual\b/i.test(task) || /\bask the user\b/i.test(task) || /\bgh pr\b/i.test(task)) {
+    if (/manual/i.test(task) || /\bask the user\b/i.test(task) || /\bgh pr\b/i.test(task)) {
       findings.push(`task ${index + 1} carries a manual/external gate outside the hardening phase`);
     }
   }
@@ -210,18 +215,22 @@ function box7(phase) {
 function box8(phase) {
   if (!phase.doneWhen) return ["phase body has no `Done-when:` line"];
   if (!/`[^`]+`/.test(phase.doneWhen)) return ["`Done-when:` carries no backticked command"];
-  if (!/→|->|exit 0|exit zero|empty|matches|zero|pass(?:es|ed)?/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
+  if (!/→|->|exit 0|exit zero|empty|matches|zero|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
   return [];
 }
 
-const BOXES = [box1, (phase) => box2(phase).findings, box3, box4, box5, box6, box7, box8];
+const BOXES = [box1, box2, box3, box4, box5, box6, box7, box8];
 
 /** Check one phase; returns { findings: [{box, reason}] } or { ambiguous }. */
 function lintPhase(phase) {
   const findings = [];
   for (const [index, check] of BOXES.entries()) {
     const result = check(phase);
-    if (result && !Array.isArray(result) && result.ambiguous) return { ambiguous: result.ambiguous };
+    if (result && !Array.isArray(result)) {
+      if (result.ambiguous) return { ambiguous: result.ambiguous };
+      for (const reason of result.findings) findings.push({ box: index + 1, reason });
+      continue;
+    }
     for (const reason of result) findings.push({ box: index + 1, reason });
   }
   return { findings };
@@ -237,6 +246,16 @@ export function lintPlan(text) {
       return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
     }
   }
+
+  // The ≤10 task budget belongs to the FINAL hardening/close-out phase only
+  // (owner rule 3; SPEC §Design box-3) — a mid-plan `hardening` phase keeps 8.
+  let finalCloseOutIndex = -1;
+  phases.forEach((phase, index) => {
+    if (HARDENING_LAYERS.has(phase.layer)) finalCloseOutIndex = index;
+  });
+  phases.forEach((phase, index) => {
+    phase.finalCloseOut = index === finalCloseOutIndex;
+  });
 
   const fingerprints = [];
   const results = [];
