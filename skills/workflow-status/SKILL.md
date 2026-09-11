@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 3.3.0
+version: 3.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -24,8 +24,9 @@ report — it never assembles the envelope by hand.
 ## Turn contract — verify before ending the turn
 
 ```
-✓ The script was RUN — `node scripts/workflow-status.mjs [--json-only]
-  [--last-envelope <json|path>]`; the envelope is the script's stdout, never
+✓ The script was RUN — `bun scripts/workflow-status.mjs [--json-only]
+  [--last-envelope <json|path>]` (node is the fallback when bun is absent, per
+  the repository's runtime convention); the envelope is the script's stdout, never
   assembled by the model
 ✓ Nothing was edited, committed, pushed, or created — read-only, always
 ✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare

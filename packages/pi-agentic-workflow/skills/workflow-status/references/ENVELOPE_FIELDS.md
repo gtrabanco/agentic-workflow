@@ -9,6 +9,15 @@ exact shape:
 (swap `defined`/`/plan-feature` for `idea`/`/design-feature` on the design
 side). The recommendation itself is unaffected — this only adds visibility.
 
+**Shape vs. current output — read this before trusting the example below.** The
+example is the envelope's **intended shape**, not everything the deterministic
+producer emits today: per-unit `review`, `closure`, and `issues_born` (steps
+10–12) and the `next.suggested[]` surface (step 13) are **not yet mechanized**
+by `scripts/workflow-status.mjs` and do not appear in its output. A consumer
+must read their absence as "not computed", never as `closure:
+absent-legacy` or `issues_born.n: 0`; the owning note is
+`ENVELOPE_CORE.md` §Not yet mechanized.
+
 ```json
 {
   "skill": "workflow-status",

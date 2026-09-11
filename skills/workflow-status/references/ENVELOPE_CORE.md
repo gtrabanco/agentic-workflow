@@ -72,6 +72,15 @@ these need **no package change**:
   scope-bleed detection (widened by `#79`/`#89` to also match an issue
   linked from an `## Amendments` row).
 
+**Not yet mechanized (read this before consuming the three fields above).** The
+`scripts/workflow-status.mjs` sensor does **not** emit `review`, `closure`, or
+`issues_born` today: they are steps 10–12 of the published sequence and remain
+skill-side work, so no `detail.features[]`/`detail.fixes[]` entry carries them
+until a sensor phase owns them. A consumer must treat their absence as "not
+computed", never as "empty": absence is not a `closure: absent-legacy` verdict
+and not an `issues_born.n: 0`. Same discipline for `next.suggested[]` (step 13),
+which is optional by contract and omitted when no trigger fired.
+
 **`next.suggested[]`** — step 13's trigger-attributed suggestion surface,
 `{command, trigger, source_skill}[]`, **optional** (mirrors
 `packages/agentic-workflow-schema` 2.1.0's optional `EnvelopeSuggestion[]`).
@@ -105,6 +114,8 @@ field, not an error).
 | `/triage-issue` | `strong` |
 | `/product-audit` | `strong` |
 | `/execute-phase` | `cheap` |
+| `/review-spec` | `strong` |
+| `/review-plan` | `strong` |
 
 `next.tier` is read off this map by matching the resolved `next.recommended`
 command's name (ignoring its arguments) — never guessed and never copied from
