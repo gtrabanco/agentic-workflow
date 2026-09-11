@@ -502,7 +502,10 @@ function senseStage(unitDir, unitId, stage, parent) {
   if (!receipt) {
     return { label: "missing", verdict: null, boundDigest: null, observedDigest: null, reason: "no receipt for this stage" };
   }
-  const args = ["verify", "--stage", stage, "--unit", unitId];
+  // `--root`/`--dir` bind the verifier to the SENSED repository and unit: it resolves
+  // its repository from its own location by default, so a foreign project's receipts
+  // were re-derived against the sensor's checkout — fabricated `missing`/`stale` rows.
+  const args = ["verify", "--stage", stage, "--unit", unitId, "--dir", unitDir, "--root", PROJECT];
   const boundParent = parent ?? receipt.parent;
   if (stage === "plan" && boundParent) args.push("--parent", boundParent);
   const result = run(process.execPath, [verifier, ...args], { cwd: PROJECT });
@@ -556,8 +559,25 @@ function readPhaseProgress(unitDir) {
   return { current, total: phases.length, completed: done };
 }
 
-/** Step 8 — the durable review mark's currency (ancestor + no later bound edit). */
-function readReviewMark(unitDir) {
+/**
+ * The paths a pre-execution review binds: the stage's artifact files plus the
+ * governing authorities. Mirrors the two tables `scripts/pre-execution-snapshot.mjs`
+ * owns (`STAGE_ARTIFACTS` + `CONTEXT_SOURCES`); `pre-execution-review`'s
+ * `SNAPSHOT.md` is the owner of record for the set, and step 8 orders currency over
+ * exactly these paths.
+ */
+const REVIEW_STAGE_ARTIFACTS = {
+  spec: ["SPEC.md"],
+  plan: ["SPEC.md", "ACCEPTANCE.md", "planning-evidence.md", "planning-obligations.md", "PLAN.md", "TASKS.md", "testing.md", "decisions.md", "architecture-notes.md"],
+};
+const REVIEW_CONTEXT_PATHS = ["CLAUDE.md", "docs/workflow/REPOSITORY_STATE.md", "docs/architecture/ARCHITECTURAL_INVARIANTS.md"];
+const boundPathsFor = (unitDir, stage) => [
+  ...(REVIEW_STAGE_ARTIFACTS[stage] ?? REVIEW_STAGE_ARTIFACTS.plan).map((file) => `${unitDir}/${file}`),
+  ...REVIEW_CONTEXT_PATHS,
+];
+
+/** Step 8 — the durable review mark's currency (ancestor + no later bound-input edit). */
+function readReviewMark(unitDir, stage) {
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return null;
   const mark = ledger.split("\n").find((line) => line.startsWith("| REVIEW-RAN"));
@@ -565,7 +585,11 @@ function readReviewMark(unitDir) {
   const sha = /HEAD ([0-9a-f]{40})/.exec(mark)?.[1] ?? null;
   if (!sha) return { sha: null, current: false };
   const ancestor = run("git", ["merge-base", "--is-ancestor", sha, "HEAD"]).ok;
-  const later = git("log", "--oneline", `${sha}..HEAD`, "--", unitDir);
+  // Currency is over the BOUND inputs, never the unit directory: the ledger the mark
+  // lives in is not bound, and the commit that carries the mark touches it — scoping
+  // the check to the unit dir aged every mark on arrival, so no unit could ever
+  // report a current review.
+  const later = git("log", "--oneline", `${sha}..HEAD`, "--", ...boundPathsFor(unitDir, stage));
   return { sha, current: ancestor && (later ?? "") === "" };
 }
 
@@ -872,7 +896,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     const dir = unitDirFor(unit);
     const phase = readPhaseProgress(dir);
     if (phase) phases.set(unit.id, phase);
-    const mark = readReviewMark(dir);
+    const mark = readReviewMark(dir, stageFor(unit));
     if (mark) marks.set(unit.id, mark);
     fixNow.push(...readFixNow(dir, observations));
   }
