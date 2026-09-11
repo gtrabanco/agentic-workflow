@@ -40,11 +40,15 @@ lectura `scripts/workflow-status.mjs`. Ejecútalo como
 `bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`
 (node es el respaldo cuando bun no está disponible);
 ejecuta la secuencia publicada `SENSOR_CORE`, se autovalida e imprime un único
-documento JSON de Envelope v2 por stdout (los diagnósticos y las degradaciones
-declaradas `unavailable-<source>-<cause>` quedan en `detail`, y la invocación
-inválida es la única salida fatal). Un driver consume ese JSON directamente — la
-skill `workflow-status` es la superficie humana/interpretadora sobre el mismo
-script, y ninguna ensambla el envelope a mano.
+documento JSON de Envelope v2 por stdout. Las degradaciones declaradas
+`unavailable-<source>-<cause>` quedan en `detail`, mientras que los diagnósticos
+van a **stderr**: una discrepancia de `validateEnvelope` imprime
+`envelope self-check failed: …` y aun así sale con 0, y un fallo inesperado sale
+con un código distinto de cero nombrándose como `workflow-status failed: …`. Una
+invocación inválida es la salida fatal deliberada (estado 1 con diagnóstico de
+uso). Un driver consume ese JSON directamente — la skill `workflow-status` es la
+superficie humana/interpretadora sobre el mismo script, y ninguna ensambla el
+envelope a mano.
 
 ## Conducir un turno
 
