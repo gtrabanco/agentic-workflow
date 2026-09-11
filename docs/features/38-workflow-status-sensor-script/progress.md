@@ -372,3 +372,62 @@ Recorded for the next plan review (digests recomputed here, never copied):
 - Failed checks: none · Passed: L1 L2 L3 L4 L5 L6 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 (delta-focused re-resolution on L2/L4/L5/L6/P9/P10/P11/P12; P1/P3/P4/P5/P6/P7/P8 unchanged since rp-012's full sweep — no fold surface touches them)
 - Falsification: NO-CONFIRMED-GAPS — invented-claim probes: none (every changed claim resolves to a live probe listed above; the three machine-verified folds — F35/F36/F41 — each re-proven at these bytes); undeliverable obligation: none (O9's re-formed validator is deliverable in P3 and fails closed if the slimming is not done); wrong-reason validator: none new (F36 removed the staging-window false-FAILURE; the new shim pins assert specific codes a generic mapping would miss); broken-if-shipped-as-written: nothing beyond the declared boundaries (B-01/B-02, F29's declared grep-gap guarded by A-RV read-verification); failure state with no scenario: none remaining (F37 closed the last declared-but-unexercised states)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted beside the verdict block in the reporting turn
+
+## Dependency receipt v1
+- Fingerprint: 108269685614903f31e9ef0a7ac885661845cdb7 · Closure: 38-workflow-status-sensor-script ← (none — SPEC `## Dependencies` = None)
+- Merged PRs: none required · Fully merged: yes · Verified: 2026-09-11
+
+## Acceptance receipt v1
+- Manifest: docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md · Blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b · Status: frozen · Verified: 2026-09-11
+
+## 2026-09-11 — execute-phase preflight (38, unit loop)
+
+- Branch: `feat/38-workflow-status-sensor-script` (`git branch --show-current`).
+- Dependency gate: met — SPEC `## Dependencies` = None; no closure to traverse.
+- Own-status gate: roadmap row 38 = `planned` → proceed to the pre-execution review gate.
+- Pre-execution review gate: `node scripts/pre-execution-snapshot.mjs verify --stage plan
+  --unit 38-workflow-status-sensor-script --parent
+  8329d1d533fe42d8ff72690383239a8ab6e93400b52326c0f2497925882b9583` → exit 0,
+  `current: true`, `digestMatches: true`, `changedPaths: []`; newest plan receipt
+  `rp-38-20260911-013` (verdict `plan-review-pass`).
+- Acceptance-manifest gate: no receipt on first phase → recorded above (blob
+  `ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b`); it rides this phase's commit.
+- Phase-lint (P1, by hand — no `scripts/phase-lint.mjs` in this worktree; feature 37
+  unmerged here): 8/8 boxes tick against phase-contract v1.0.1 —
+  title names one deliverable (`P1:config/infra:8:sensor-script-core-emission`),
+  one layer (config/infra), 8 tasks, one deliverable per checkbox, zero decision
+  words, no conditional scope, no external manual gate, machine-checkable done-when.
+- Architectural invariants: `docs/architecture/ARCHITECTURAL_INVARIANTS.md` absent →
+  `n/a: no project invariants declared` (NRS F010).
+- Normalized repository state: `docs/workflow/REPOSITORY_STATE.md` present (frozen).
+- Implementation discovery (pre-write mapper): READY — see the map below.
+
+### IMPLEMENTATION MAP — 38-workflow-status-sensor-script P1
+- Map revision: 38-p1-map-1
+- Source identity: HEAD 72310a60 · clean source outside `docs/features/38-*` · cited-evidence
+  manifest: scripts/schema-runtime.mjs, packages/agentic-workflow-schema/{envelope.schema.json,src/index.ts},
+  skills/workflow-status/{SKILL.md,references/SENSOR_CORE.md,references/ENVELOPE_FIELDS.md,references/ENVELOPE_CORE.md,references/SENSOR_SIGNALS.md,references/CRASH_RECOVERY.md,references/PRE_EXECUTION.md}
+- Authority: SPEC rp-011 (74b4aae9) + Plan rp-013 (5b054300) + fingerprint P1:config/infra:8:sensor-script-core-emission
+- Planning evidence: PE-001 (schema-runtime loader explicit path), PE-002 (schema is shape authority), PE-003 (detail unconstrained), PE-004 (SENSOR_CORE sequence), PE-005 (snapshot verifier subprocess), PE-006 (CLI convention exit 1–2), PE-007 (SENSOR_CORE.md is normative-drift surface) — all confirmed live
+- Obligations: O1, O3, O8, O10, O11, O17, O20, O22, O23, O27 (+ P1-owned A:2/A:5/A:6/A:7 behavior per SPEC P1 done-when)
+- Entry points: scripts/workflow-status.mjs (new, `main()`), scripts/schema-runtime.mjs:38 `loadSchemaRuntime()`, schema `validateEnvelope` (:263)
+- Affected surfaces: read-only CLI; consumers are drivers (docs/workflow/ORCHESTRATION.md, P4) and the workflow-status skill (P3); no public API/schema change
+- Current behaviour: no script exists; the skill today is prose-instructed (SKILL.md turn contract) — this phase introduces the deterministic producer
+- Reuse and constraints: scripts/schema-runtime.mjs loader (no bare specifier, no published fallback); test fixture pattern from scripts/workflow-status-pre-execution.test.mjs (`os.tmpdir()` git repo + PATH shims); repo CLI convention exit 1 for unknown flag; `detail` schema-unconstrained
+- Expected writes: scripts/workflow-status.mjs (O1/O8/O10/O11/O17/O20/O22/O23/O27 + A:2/A:5/A:6/A:7); scripts/workflow-status-sensor.test.mjs (P1 pins); docs/features/38-*/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}
+- Validation: falsification probe — `node --test scripts/workflow-status-sensor.test.mjs` red before implementation (no script file → load failure), green after; phase gate = the same suite + existing root suites
+- Plan assumptions: confirmed — loader throws named precondition when dist missing (schema-runtime.mjs:35-42); schema root required = 14 keys (envelope.schema.json); `pr` is an object; `next.required = [recommended, alternatives, tier]`. Refined: SPEC P1 done-when names the happy-path pins (schema-validity/field-presence/read-only/idempotence/roadmap-mapping/labels-only/flag-contract/envelope-mismatch) and SPEC P1 prose says "executes SENSOR_CORE steps 1–9", while PLAN/TASKS group the step 1–9 bullets under P2. Resolution: the SPEC phase definition governs → P1 delivers the happy path (steps 1–9); P2 delivers the failure contract and re-asserts. Recorded in decisions.md.
+- Contradictions: none material — the PLAN/TASKS vs SPEC P1/P2 placement overlap is recorded and resolved in decisions.md (SPEC governs).
+- Unknowns: none — the `untriaged_issues` cap scenario (testing.md) is covered by the step-2 open-issue read; no forge state is needed to build the suite (PATH shims).
+- Decision: READY
+
+## P1 — 2026-09-11
+- Done: `scripts/workflow-status.mjs` executes SENSOR_CORE steps 1–9 into one schema-valid Envelope v2 (14 keys, fixed field order) with the closed flag contract (`--help`/`--version`/`--json-only` no-op/`--last-envelope` accepted/unknown flag fatal exit 1), the `validateEnvelope` mismatch diagnostic path, read-only + headless construction, and byte-identical consecutive runs; `scripts/workflow-status-sensor.test.mjs` carries the 19 P1 pins green on a git fixture repo with a `gh` shim.
+- Remains: P2 failure contract — crash-recovery verdict mapping, namespaced `unavailable-<source>-<cause>` codes + bounded forge timeout, `--last-envelope` no-progress guard + fail-open hint, offline/timeout/auth/missing-cli/missing-git shims, empty-state/limit-threshold/concurrent-action scenarios.
+- Gotchas: (1) Phase-cut reconciliation — SPEC P1 says “executes SENSOR_CORE steps 1–9” so the happy path ships in P1; PLAN/TASKS grouped the same bullets under P2 (recorded in decisions.md; P2 re-asserts P1 pins). (2) `check-skill-context` route ceilings are pre-existing red on `main` (known-issues B-04) — the P1 root-suite run is 226/227; A:14's global exit-0 is deferred to P3's declared re-basis. (3) The sensor senses `process.cwd()` but loads the schema/verifier from its own checkout (`SENSOR_REPO`) — the fixture runs it against a temp repo while the schema stays the built worktree package.
+- Files: scripts/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}
+- Next: P2 — Sensor script failure contract
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs (exit 0, 19/19) · Acceptance blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b
+- Next: P2 · Attempts: 1

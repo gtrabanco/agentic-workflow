@@ -4,7 +4,7 @@
 
 | Layer | Required evidence | Command or check |
 |---|---|---|
-| Script skeleton + envelope emission | schema validity, field presence, read-only greps, idempotence, flag contract, envelope-mismatch | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (P1 pins green + existing suites green) |
+| Script skeleton + envelope emission | schema validity, field presence, read-only greps, idempotence, flag contract, envelope-mismatch | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (P1 pins green + existing suites green) — P1 green 2026-09-11 (19/19); `node --test scripts/*.test.mjs` 226/227, the one failure pre-existing (`check-skill-context` route ceilings, see known-issues B-04) |
 | Failure contract | offline degradation, forge timeout, forge auth, forge missing-cli, missing-git, hint-guard, hint-fail-open, stream-separation, help/version | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (P2 pins green + P1 pins unchanged) |
 | Skill slimming | budget re-base, discipline-test pin re-targeting, version bump, normative drift | `node scripts/check-skill-context.mjs` → exit 0; `node --test scripts/bounded-delivery-loops.test.mjs scripts/pre-execution-quality.test.mjs scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs` → exit 0 (P3 pins green) |
 | Qualification | all frozen validators green, schema package untouched, Pi bundle parity, bilingual sync | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty; `node --test scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/audit-pr-receipt.test.mjs scripts/review-loop-discipline.test.mjs` → exit 0; `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` → exit 0 (P4) |
