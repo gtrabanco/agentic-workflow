@@ -189,3 +189,19 @@ Next: bounded delta re-review — spec first (Product half moved), then plan.
 - L1 parent-current result: FAIL — the Product half moved after the newest SPEC-REVIEW-PASS (rp-008): spec-product-v1 projection e6d71d51 (43160 B) → 4f2c60ff (44201 B), spec-stage snapshot 22cba9ae → 15875fe2, artifactRevisionId 38-c51c1416f9bf → 2bee477ba469, project-guide context CLAUDE.md 9ae03966 → 89908a32 (both moved in the fold commit 32bb6434, which pre-executed the release-policy line into CLAUDE.md); plan-stage bytes moved after plan PASS rp-009 (ed7aae98 + 1ce0bfae), so rp-009 binds no current bytes either. Per CHECKS §3 the sweep stopped at L1 (route: review-spec first — an orphaned plan is not reviewed); F32–F34 were recorded from the lineage-verification reads so the repair batch sees them, and L2–L6/P1–P12 were not swept this cycle
 - Falsification: CONFIRMED-GAPS — a validator (ACCEPTANCE A-07) no longer matches the governing SPEC criterion it copies (F32); frozen F27 resolution's obligation row missing from the ledger (F33); a testing.md scenario pointer contradicting the SPEC/TASKS phase cut (F34)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): verify --stage plan --parent 22cba9ae… → structural.fresh true after this append, current false (verdict is FAIL — the sanctioned exit-4 shape); JSON pasted beside the verdict block in the reporting turn
+
+## 2026-09-11 — repair batch over rp-010 findings F31–F34 + F24 (artifactRevisionId: 5eb9724bb44f)
+
+Operator-directed consolidated batch (F25–F28 precedent). SPEC: Design status
+in-file revision stamp removed — the fold batch's recorded `2bee477ba469` is
+unsupported by recomputation (sha256(SPEC.md) = `2e0ab6084f21…` at
+32bb6434/1ce0bfae; POLICY §7 claimed-beside-recomputed recorded in
+decisions.md); revision lineage lives in decisions.md/progress.md only, new id
+`5eb9724bb44f` = first 12 hex of sha256(SPEC.md) at final write. A:10 check
+text carries the version source (F24). ACCEPTANCE AC-07 + obligations O7
+re-aligned to SPEC A:7's scoped grep (F32). O25/O26/O27 restored verbatim from
+parent 2e34445b; dangling (O26) citations resolve (F33). testing.md
+envelope-mismatch row re-pointed P2 → P1 (F34). F29 stays open/advisory.
+Findings F24, F31–F34 marked resolved @ 5eb9724bb44f in planning-findings.md.
+Readiness preflight stage: spec — READY-FOR-REVIEW (delta). Next: bounded
+delta re-review — spec first (rp-010 L1 route), then plan.
