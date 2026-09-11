@@ -33,6 +33,16 @@ const PROJECT = process.cwd();
 export const COMMAND_TIMEOUT_MS = 15_000;
 /** Bound for forge (`gh`) calls, in milliseconds (E-38-5, suite-pinned). */
 export const FORGE_TIMEOUT_MS = 10_000;
+/**
+ * Total wall-clock budget for the whole forge dimension, in milliseconds (F19).
+ * `FORGE_TIMEOUT_MS` bounds ONE read; the dimension runs three reads eagerly and
+ * a fourth lazily, so four sequential reads each paying their own bound priced a
+ * poll at ~40s on a slow-but-alive forge. Every forge read draws from this one
+ * shared budget instead, and the reads left over when it is spent answer the
+ * declared timeout degradation without spawning — so a hanging forge costs one
+ * bound, which is what the failure contract already promises.
+ */
+export const FORGE_DIMENSION_MS = 10_000;
 /** The single fatal-invocation exit code (A:20; repo convention 1-2). */
 export const FATAL_EXIT_CODE = 1;
 
@@ -94,8 +104,28 @@ const git = (...args) => {
   return result.ok ? result.stdout : null;
 };
 
-/** `gh` in the sensed repository, bounded by the forge timeout. */
-const gh = (...args) => run("gh", args, { timeout: FORGE_TIMEOUT_MS });
+/** One forge dimension's shared wall-clock budget (F19) — see `FORGE_DIMENSION_MS`. */
+function forgeBudget() {
+  return { remaining: FORGE_DIMENSION_MS, exhausted: false };
+}
+
+/**
+ * `gh` in the sensed repository, bounded by both the per-call timeout and the
+ * dimension's remaining budget. A read attempted after the budget is spent
+ * answers a synthetic timeout (`timedOut: true`, no spawn), so the caller's
+ * existing degradation path names it `unavailable-forge-timeout`.
+ */
+function ghBounded(budget, ...args) {
+  if (budget.remaining <= 0) {
+    budget.exhausted = true;
+    return { ok: false, status: null, stdout: "", stderr: "", missing: false, timedOut: true };
+  }
+  const started = Date.now();
+  const result = run("gh", args, { timeout: Math.min(FORGE_TIMEOUT_MS, budget.remaining) });
+  budget.remaining -= Date.now() - started;
+  if (result.timedOut) budget.exhausted = true;
+  return result;
+}
 
 /**
  * Resolve a path under the sensed repository, or null when it escapes it. Every
@@ -213,12 +243,12 @@ const degradationFor = (failure) => {
   return "unavailable-forge-no-network";
 };
 
-function readForgeState() {
+function readForgeState(budget = forgeBudget()) {
   const observations = [];
   const degradations = [];
 
   const readList = (key) => {
-    const result = gh(...FORGE_READS[key]);
+    const result = ghBounded(budget, ...FORGE_READS[key]);
     if (result.ok) {
       try {
         return { data: JSON.parse(result.stdout), available: true };
@@ -361,7 +391,7 @@ function parseFixIndex(text) {
  * per-PR state, and when the forge cannot answer at all the `done` row stands —
  * optimistic, because a false "unmerged" blocks startable work repo-wide.
  */
-function makeMergeResolver(forge) {
+function makeMergeResolver(forge, budget = forgeBudget()) {
   const openNumbers = new Set((forge.openPrs ?? []).map((pr) => pr.number));
   const recentMerged = new Set((forge.mergedPrs ?? []).map((pr) => pr.number));
   let resolvable = Boolean(forge.available);
@@ -369,7 +399,10 @@ function makeMergeResolver(forge) {
   const allStates = () => {
     if (states) return states;
     states = new Map();
-    const result = gh(...FORGE_READS.allPrStates);
+    // The lazy fourth read draws from the same dimension budget as the eager
+    // three: an already-spent budget answers a timeout here instead of paying a
+    // fresh per-call bound (F19).
+    const result = ghBounded(budget, ...FORGE_READS.allPrStates);
     if (result.ok) {
       try {
         for (const pr of JSON.parse(result.stdout)) states.set(pr.number, String(pr.state ?? "").toUpperCase());
@@ -877,11 +910,12 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const schema = await loadSchemaRuntime();
   const nrs = readRepositoryState();
   const gitState = readGitState();
-  const forge = readForgeState();
+  const forgeBudget_ = forgeBudget();
+  const forge = readForgeState(forgeBudget_);
   const roadmap = parseRoadmap(readProject("docs/features/ROADMAP.md"));
   const fixes = parseFixIndex(readProject("docs/fix/README.md"));
   const units = [...roadmap, ...fixes];
-  const mergeResolver = makeMergeResolver(forge);
+  const mergeResolver = makeMergeResolver(forge, forgeBudget_);
   const dependencies = computeDependencies(units, mergeResolver);
 
   const observations = [...gitState.observations, ...forge.observations, ...dependencies.observations];
