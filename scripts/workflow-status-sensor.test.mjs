@@ -473,3 +473,67 @@ test("P2: two concurrent runs are safe and byte-identical (sensor:concurrent-act
   assert.equal(b.status, 0, b.stderr);
   assert.equal(a.stdout, b.stdout);
 });
+
+// ===========================================================================
+// Fold review findings — the substrate shapes the fixtures above did not pin
+// ===========================================================================
+
+const TABLE_NRS = [
+  "# Normalized Repository State",
+  "",
+  "## Snapshot",
+  "",
+  "| Field | Value |",
+  "|---|---|",
+  "| Snapshot ID | `2026-01-01-fixture` |",
+  "| Source revision | `abc123` (`main`) |",
+  "| Status | `frozen` |",
+].join("\n");
+
+test("F1: the table-form repository-state ledger reads as frozen, not draft", () => {
+  // The shipped ledger — this repository's and the template's — states its fields as
+  // a markdown table. Reading only `Status:` colon lines parsed it as `draft`, which
+  // blocked every run on the substrate the sensor was shipped with.
+  const { run } = makeFixture({ nrs: TABLE_NRS, roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.equal(envelope.detail.repository_state.status, "frozen");
+  assert.equal(envelope.detail.repository_state.snapshot_id, "2026-01-01-fixture");
+  assert.equal(envelope.detail.repository_state.source_revision, "abc123", "the backticks and the `(main)` note are stripped");
+  assert.equal(envelope.state, "OK", "a frozen ledger is not a substrate blocker");
+  assert.ok(!envelope.blockers.some((b) => b.id === "repository-state"), "no run-scoped NRS blocker on a frozen ledger");
+});
+
+test("F7/F8: a mixed-vocabulary fold ledger is normalized, and an unusable row is named", () => {
+  // The emitted envelope must satisfy its own schema on the ledgers this repository
+  // actually has: finder-scale severities (`critical`/`major`) are mapped to the
+  // published enum, `\|`-escaped cells keep their columns, a dash separator never
+  // projects a finding, and a row the enum cannot carry is dropped by name.
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|-----|-----|-----|-----|-----|-----|-----|",
+    "| F1 | scripts/a.mjs:1 — a cell with an escaped \\| pipe | code | critical | fix-now | fold into phase | no |",
+    "| F2 | scripts/b.mjs:2 | code | prose | fix-now | fold into phase | no |",
+    "| F3 | scripts/c.mjs:3 | security | major | fix-now | fold into phase | yes |",
+  ].join("\n");
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger}\n` },
+  });
+  const result = run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  const items = envelope.findings.fix_now;
+  assert.deepEqual(items.map((item) => item.id), ["F1"], `only the carryable unfolded row projects: ${JSON.stringify(items)}`);
+  assert.equal(items[0].severity, "high", "finder-scale `critical` maps to the schema's `high`");
+  assert.equal(items[0].suggested_tier, "strong");
+  assert.match(items[0].file, /escaped \| pipe/, "an escaped pipe stays inside its cell");
+  assert.ok(!items.some((item) => /^[-:]*$/.test(item.id)), "a separator row never projects a finding");
+  assert.match(
+    envelope.detail.workflow_observations.join("\n"),
+    /dropped review-findings row 'F2'.*prose.*outside high\|med\|low/,
+    "a dropped row is named, never silent",
+  );
+  assert.equal(validateEnvelope(envelope).ok, true, `schema errors: ${validateEnvelope(envelope).errors?.join("; ")}`);
+});

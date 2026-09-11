@@ -125,12 +125,22 @@ function readRepositoryState() {
   if (text === null) {
     return { status: "missing", snapshot_id: null, source_revision: null };
   }
-  const field = (label) => text.match(new RegExp(`^\\s*${label}:\\s*(.+)$`, "m"))?.[1]?.trim() ?? null;
-  const declared = (field("Status") ?? "draft").toLowerCase();
+  // The ledger ships two canonical shapes and both are read: the snapshot table
+  // (`| Status | \`frozen\` |`) and colon lines (`Status: frozen`, optionally bold).
+  // Reading only the colon shape parsed every table-form ledger — this repository's
+  // own frozen ledger and the shipped template — as `draft`, which blocked the whole
+  // run on the substrate the sensor was shipped with.
+  const field = (label) => {
+    const colon = new RegExp(`^\\s*\\*{0,2}${label}\\*{0,2}\\s*:\\s*(.+)$`, "m").exec(text)?.[1];
+    if (colon) return colon;
+    return new RegExp(`^\\s*\\|\\s*\\*{0,2}${label}\\*{0,2}\\s*\\|\\s*(.*?)\\s*\\|\\s*$`, "m").exec(text)?.[1] ?? null;
+  };
+  const clean = (value) => value?.replace(/[`*]/g, "").replace(/\s*\([^)]*\)\s*$/, "").trim() || null;
+  const declared = (clean(field("Status")) ?? "draft").toLowerCase();
   return {
     status: declared,
-    snapshot_id: field("Snapshot") ?? field("Snapshot id"),
-    source_revision: field("Source revision") ?? field("Source") ?? null,
+    snapshot_id: clean(field("Snapshot ID")) ?? clean(field("Snapshot id")) ?? clean(field("Snapshot")),
+    source_revision: clean(field("Source revision")) ?? clean(field("Source")),
   };
 }
 
@@ -247,7 +257,15 @@ function readUrgency(issues) {
 // Step 4/5 — Roadmap + fix index parsing and the dependency closure
 // ---------------------------------------------------------------------------
 
-const cellsOf = (line) => line.split("|").map((cell) => cell.trim());
+/**
+ * Split a markdown table row into cells, honoring `\|` escapes: a cell may carry a
+ * literal pipe (prose, a code fragment), and splitting on it misaligned every column
+ * after it — the fix-now projection then read prose fragments as its severity/axis.
+ */
+const cellsOf = (line) => line
+  .replace(/\\\|/g, "\u0000")
+  .split("|")
+  .map((cell) => cell.replace(/\u0000/g, "|").trim());
 
 /** Parse one status cell into `{status, raw, unknown, pr}`. */
 function parseStatus(cell) {
@@ -510,18 +528,40 @@ function readReviewMark(unitDir) {
 /** Step 9 — unfold ledger projection. */
 const STRONG_AXES = new Set(["security", "correctness", "logic", "architecture", "design", "concurrency"]);
 
-function readFixNow(unitDir) {
+/**
+ * The envelope schema's severity enum is `high|med|low`; a ledger may carry the
+ * finder scale (`critical`/`major`/`minor`) or prose. Passing a row through unmapped
+ * emitted a schema-invalid envelope (the self-check named every one) while still
+ * exiting 0, so the sensor published a document its own validator rejected.
+ */
+const SEVERITY_VOCABULARY = new Map([
+  ["critical", "high"], ["major", "med"], ["medium", "med"], ["minor", "low"],
+  ["high", "high"], ["med", "med"], ["low", "low"],
+]);
+
+function readFixNow(unitDir, observations = []) {
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return [];
   const items = [];
   for (const line of ledger.split("\n")) {
-    if (!line.startsWith("|") || line.startsWith("| id ") || line.startsWith("|---|") || line.startsWith("| ---")) continue;
+    if (!line.startsWith("|")) continue;
     const cells = cellsOf(line).slice(1, -1);
     if (cells.length < 7) continue;
     const [id, file, axis, severity, klass, route, folded] = cells;
     if (/^id$/i.test(id) || folded === "yes" || folded === "—" || folded === "n/a") continue;
-    const tier = severity === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";
-    items.push({ id, file, axis, severity, class: klass, route, suggested_tier: tier });
+    // A separator row in any dash spelling (`|---|`, `| --- |`, `|-----|`) projects a
+    // bogus finding whose id is the dash run: the guard is the id's shape, not one
+    // separator's spelling.
+    if (/^[-:\s]*$/.test(id)) continue;
+    const normalized = SEVERITY_VOCABULARY.get(String(severity).toLowerCase()) ?? null;
+    if (!normalized) {
+      // Named, never silent: the row is dropped from the envelope, and the ledger's
+      // own vocabulary drift is reported (the AC-19 degradation pattern).
+      observations.push(`${unitDir}: dropped review-findings row '${id}' — severity '${severity}' is outside high|med|low`);
+      continue;
+    }
+    const tier = normalized === "high" || STRONG_AXES.has(axis) ? "strong" : "cheap";
+    items.push({ id, file, axis, severity: normalized, class: klass, route, suggested_tier: tier });
   }
   return items;
 }
@@ -780,7 +820,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     if (phase) phases.set(unit.id, phase);
     const mark = readReviewMark(dir);
     if (mark) marks.set(unit.id, mark);
-    fixNow.push(...readFixNow(dir));
+    fixNow.push(...readFixNow(dir, observations));
   }
 
   const urgentIssues = readUrgency(forge.openIssues);
