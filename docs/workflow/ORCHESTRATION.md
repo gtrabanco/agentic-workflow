@@ -33,6 +33,16 @@ all sensor-specific extensions, including `design_candidates`, live under it.
 The package validates new v2 results strictly; `parseEnvelope()` remains for
 existing legacy consumers.
 
+The envelope has a **deterministic producer**: the read-only sensor script
+`scripts/workflow-status.mjs`. Run it as
+`node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`;
+it executes the published `SENSOR_CORE` sequence, self-validates the result, and
+prints one Envelope v2 JSON document on stdout (diagnostics and declared
+`unavailable-<source>-<cause>` degradations live in `detail`, and invalid
+invocation is the only fatal exit). A driver consumes that JSON directly — the
+`workflow-status` skill is the human/interpreter surface over the same script,
+and neither assembles the envelope by hand.
+
 ## Drive one turn
 
 Use the profile inventory and generated instruction instead of maintaining a

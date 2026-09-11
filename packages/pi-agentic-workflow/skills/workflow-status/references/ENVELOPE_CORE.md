@@ -1,6 +1,10 @@
 ## Machine envelope
 
-Schema and placement per the installed `orchestration-envelope` skill. The
+`scripts/workflow-status.mjs` is the **deterministic producer** of this
+envelope: it performs the assembly, runs the `validateEnvelope` self-check
+(diagnostic only, exit 0), and prints the one JSON document. The skill runs the
+script and interprets the JSON — it never assembles the envelope. Schema and
+placement per the installed `orchestration-envelope` skill. The
 `state` maps 1:1 from the crash-recovery verdict — **no new schema fields or
 states** (the schema package needs no release):
 
@@ -77,7 +81,7 @@ second, drifting copy of that skill's logic. Advisory only: it rides beside
 trigger this run → `next.suggested` is omitted entirely (an empty/absent
 field, not an error).
 
-**Envelope shape reminders (self-check before printing — mirrors
+**Envelope shape reminders (the script validates these before printing — mirrors
 `packages/agentic-workflow-schema/envelope.schema.json`):**
 
 - `blockers[].scope` ∈ `{"unit","run"}` — there is **no** `"code"` value;

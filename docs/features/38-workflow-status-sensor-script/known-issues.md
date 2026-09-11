@@ -17,3 +17,8 @@
 ## Open during execution
 
 None. All product and engineering decisions are resolved.
+## P4 close-out (2026-09-11)
+
+No remaining blockers. B-01 stays a recorded boundary (tracked → feature 44 /
+#198); B-02/B-03 are intended consequences of the slimming; B-04 was resolved in
+P3 by the declared budget re-basis.

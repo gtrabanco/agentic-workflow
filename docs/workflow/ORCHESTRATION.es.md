@@ -35,6 +35,16 @@ obligatorio y todas las extensiones específicas del sensor, incluida
 nuevos resultados v2; `parseEnvelope()` sigue existiendo para consumidores
 legacy.
 
+El envelope tiene un **productor determinista**: el script sensor de solo
+lectura `scripts/workflow-status.mjs`. Ejecútalo como
+`node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`;
+ejecuta la secuencia publicada `SENSOR_CORE`, se autovalida e imprime un único
+documento JSON de Envelope v2 por stdout (los diagnósticos y las degradaciones
+declaradas `unavailable-<source>-<cause>` quedan en `detail`, y la invocación
+inválida es la única salida fatal). Un driver consume ese JSON directamente — la
+skill `workflow-status` es la superficie humana/interpretadora sobre el mismo
+script, y ninguna ensambla el envelope a mano.
+
 ## Conducir un turno
 
 Usa el inventario de perfiles y la instrucción generada, en vez de mantener
