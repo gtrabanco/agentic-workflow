@@ -328,3 +328,28 @@ by rp-007/rp-010/rp-012 sweeps). The newest plan receipt (rp-012) binds the
 pre-batch bytes, so it is stale for the folded set by construction → route:
 /review-plan 38 (delta re-review re-derived over the post-batch snapshot with
 Product parent rp-011) → /execute-phase 38.
+
+### Post-batch snapshot derivation (machine, `scripts/pre-execution-snapshot.mjs`)
+
+Recorded for the next plan review (digests recomputed here, never copied):
+
+- Spec-stage snapshot re-derived at the post-batch bytes:
+  `8329d1d533fe42d8ff72690383239a8ab6e93400b52326c0f2497925882b9583`
+  (sourceRevision `4829dfce…`). Its `spec-product-v1` row is byte-identical to
+  the Product authority rp-38-20260911-011 reviewed: projection digest
+  `842615a7e9ef4fd36864462b5c29c1b7e6cc8a8a702adfd91d826f724c426e0c`,
+  45072 bytes — equal to the receipt's bound projection (Engineering-half-only
+  writes since `38a2d6d0`; the snapshot-digest rotation is the identity field
+  `sourceRevision` moving, not reviewed content — the schema's designed
+  Engineering-half carve-out). rp-011 is NOT refreshed (nothing to refresh:
+  the reviewed Product bytes never moved).
+- Plan-stage snapshot re-derived with the current Product parent:
+  `5b054300320539754edd1feeef7275db7c18667b9c5d9db78abf060b6f5febe0`
+  (sourceRevision = artifactRevisionId `4829dfce…` per RS3(b); parent
+  `8329d1d5…`; 9 bound artifacts: SPEC, ACCEPTANCE, PLAN, TASKS, testing,
+  decisions, planning-evidence, planning-obligations, architecture-notes).
+- The newest plan receipt rp-38-20260911-012 binds the pre-batch snapshot
+  `18425844…` at source revision `38a2d6d0…` → stale for the folded set by
+  construction. Route: /review-plan 38 (delta re-review re-derived over
+  `5b054300…` with parent `8329d1d5…`; the projection-identity evidence above
+  discharges the parent-lineage question at L1) → /execute-phase 38.
