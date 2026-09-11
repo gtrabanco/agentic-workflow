@@ -414,3 +414,55 @@ issue #205's proposed materiality bar and is superseded by it once landed.
 New SPEC artifactRevisionId `38-c51c1416f9bf` = first 12 hex of
 sha256(SPEC.md) at this write — POLICY §7 manual pairing. Readiness preflight
 `stage: plan`: READY-FOR-REVIEW (delta, bounded per the operator ruling).
+
+## 2026-09-11 — operator-directed consolidated repair batch over rp-38-20260909-010 F31–F34 + open F24 (artifactRevisionId: 5eb9724bb44f)
+
+**Operator instruction (2026-09-11, this session):** one consolidated repair
+batch over the four open plan-review findings F31–F34 plus the open info row
+F24 — the same consolidated form the operator authorized for F25–F28 (issue
+#205 "Immediate operator unblock"); the plan-side repairs are mechanical
+re-alignments that restore prior frozen/found forms, no reviewed product intent
+changed. New SPEC artifactRevisionId `5eb9724bb44f` = first 12 hex of
+sha256(SPEC.md) at final write — POLICY §7 manual pairing; the id is recorded
+here and in progress.md, never inline in SPEC.md (the convention receipts
+rp-001…rp-009 verified).
+
+**F31 identity repair (POLICY §7 pairing, claimed beside recomputed):** the
+fold batch (32bb6434) recorded SPEC artifactRevisionId `2bee477ba469` as
+"first 12 hex of sha256(SPEC.md) at this write" and stamped it inside the
+Design status block. Recomputation does not support it: sha256(SPEC.md) at
+32bb6434/1ce0bfae/HEAD-before-batch = `2e0ab6084f21…` — a recorded value no
+recomputation supports is a defect in the artifact that recorded it (POLICY
+§7), and an id inside the hashed file can never pair with its own hash.
+Repair (mechanical, intent-preserving): the in-file stamp is removed from the
+Design status block; the revision lineage lives only in decisions.md and
+progress.md; the old id `2bee477ba469` stays recorded above as history (never
+rewritten), with this entry carrying the recomputed value beside it. F31's
+lineage route stands unchanged: /review-spec 38 bounded delta re-review first;
+the plan receipt is then re-derived over the new snapshot — never re-copied
+digests.
+
+**Per-finding resolutions:**
+- **F24 (spec, info, open since rp-006; mechanical):** A:10's check text now
+  carries the version source (the schema package's version, per E-38-4) that
+  sweep row 13's gloss and the frozen AC-10 outcome cell already name.
+- **F32 (plan, low; mechanical):** ACCEPTANCE AC-07 + obligations O7
+  re-aligned to SPEC A:7's F28-scoped grep (forge request field lists) — the
+  ed7aae98 regression to the unscoped `\b(body|comment)` form is reverted to
+  the scoped `\-\-json[^|]*(body|comment)` form the governing criterion
+  carries; the labels-only invariant itself unchanged.
+- **F33 (plan, medium; closure completion):** O25 (bilingual-sync, P4), O26
+  (no-weakening pins, P3), O27 (envelope-mismatch diagnostic-not-gate, P1 —
+  F27's frozen resolution) restored verbatim from the parent 2e34445b ledger;
+  the dangling (O26) citations at PLAN.md:112 / TASKS.md:193 resolve again;
+  O24 is covered by its rename O-RV (same obligation, AC-RV, P4).
+- **F34 (plan, low; mechanical):** testing.md's sensor:envelope-mismatch
+  inventory row re-pointed P2 → P1 (ladder row 1, TASKS P1 pins and the SPEC
+  scenario table now agree).
+- **F29 stays open, advisory** (operator materiality bar): its fold path is
+  implementer guidance (all forge reads on explicit `--json` field lists);
+  no SPEC edit — re-litigating the F28 tradeoff would be a product change.
+
+Readiness preflight `stage: spec`: READY-FOR-REVIEW (delta over the changed
+surfaces + the findings' resolution evidence, per the operator ruling in the
+2026-09-09 entry). Route: /review-spec 38 → /review-plan 38 → /execute-phase 38.
