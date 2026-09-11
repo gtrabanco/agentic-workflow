@@ -97,9 +97,22 @@ const git = (...args) => {
 /** `gh` in the sensed repository, bounded by the forge timeout. */
 const gh = (...args) => run("gh", args, { timeout: FORGE_TIMEOUT_MS });
 
-/** Read a file under the sensed repository, or null when absent. */
+/**
+ * Resolve a path under the sensed repository, or null when it escapes it. Every
+ * filesystem read goes through this: a roadmap/fix-index cell becomes a path
+ * segment, and repo content must never direct the sensor outside the project.
+ */
+function projectPath(rel) {
+  if (typeof rel !== "string") return null;
+  const abs = path.resolve(PROJECT, rel);
+  const prefix = PROJECT.endsWith(path.sep) ? PROJECT : `${PROJECT}${path.sep}`;
+  return abs.startsWith(prefix) ? abs : null;
+}
+
+/** Read a file under the sensed repository, or null when absent (or outside it). */
 function readProject(rel) {
-  const abs = path.join(PROJECT, rel);
+  const abs = projectPath(rel);
+  if (abs === null) return null;
   try {
     return fs.lstatSync(abs).isFile() ? fs.readFileSync(abs, "utf8") : null;
   } catch {
@@ -159,7 +172,10 @@ function readGitState() {
   }
   const branch = branchProbe.ok ? branchProbe.stdout : "";
   const porcelain = git("status", "--porcelain") ?? "";
-  const fetch = run("git", ["fetch", "--quiet"]);
+  // No `git fetch`: it writes remote-tracking refs and FETCH_HEAD, and this sensor's
+  // contract is "performs no write of any kind". `ahead` is advisory and reads the
+  // local upstream ref; a stale count is a smaller cost than mutating a user's repo
+  // mid-rebase/mid-checkout.
   const shortStatus = git("status", "-sb") ?? "";
   const dirtyFiles = porcelain === "" ? [] : porcelain.split("\n").filter(Boolean);
   const ahead = /\[ahead (\d+)/.exec(shortStatus)?.[1];
@@ -169,12 +185,6 @@ function readGitState() {
   }
   if (ahead && Number(ahead) > 0) {
     observations.push(`branch ${branch} is ${ahead} commit(s) ahead of its upstream`);
-  }
-  if (!fetch.ok && !fetch.missing && !fetch.timedOut) {
-    observations.push("git fetch did not complete (offline or no remote)");
-  }
-  if (fetch.timedOut) {
-    degradations.push({ source: "git", code: "unavailable-git-fetch-timeout", detail: "git fetch exceeded its bound" });
   }
   return { branch, dirty: dirtyFiles.length > 0, dirtyFiles, ahead: ahead ? Number(ahead) : 0, observations, porcelain, degradations };
 }
@@ -529,8 +539,14 @@ function senseStage(unitDir, unitId, stage, parent) {
   };
 }
 
+/** A roadmap/fix-index slug becomes a path segment: anything that could leave the
+ *  repository is refused, and the unit is reported instead of read. */
+const SAFE_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
 function unitDirFor(unit) {
-  return unit.kind === "fix" ? `docs/fix/${unit.issue}-${unit.slug}` : `docs/features/${unit.id}`;
+  const slug = String(unit.slug ?? "");
+  if (!SAFE_SEGMENT.test(slug)) return null;
+  return unit.kind === "fix" ? `docs/fix/${unit.issue}-${slug}` : `docs/features/${unit.id}`;
 }
 
 /** The stage a unit is about to enter, per its resolved status. */
@@ -675,6 +691,8 @@ function readCrashRecovery({ gitState, units, phases }) {
   return { verdict: "AMBIGUOUS", branches };
 }
 
+const HINT_MAX_BYTES = 1024 * 1024;
+
 function loadHint(value) {
   if (value === null || value === undefined) return { provided: false };
   const trimmed = String(value).trim();
@@ -683,6 +701,11 @@ function loadHint(value) {
     const abs = path.isAbsolute(trimmed) ? trimmed : path.join(PROJECT, trimmed);
     try {
       if (!fs.existsSync(abs)) return { provided: true, code: "unavailable-hint-missing-path" };
+      // A hint is one JSON envelope: the read is bounded and must be a regular file,
+      // so an operator-supplied path cannot make the sensor allocate without limit.
+      const stats = fs.statSync(abs);
+      if (!stats.isFile()) return { provided: true, code: "unavailable-hint-unreadable" };
+      if (stats.size > HINT_MAX_BYTES) return { provided: true, code: "unavailable-hint-too-large" };
       text = fs.readFileSync(abs, "utf8");
     } catch {
       return { provided: true, code: "unavailable-hint-unreadable" };
@@ -760,13 +783,6 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
   if (crash?.verdict === "AMBIGUOUS") {
     return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status") };
   }
-  if (state === "BLOCKED" && receiptRows.length > 0) {
-    const gate = receiptRows.find((row) => row.label !== "current");
-    if (gate) {
-      const command = gate.recommended;
-      return { recommended: command, alternatives, tier: tierFor(command) };
-    }
-  }
   if (startable.length > 0) {
     const command = startable[0].next;
     for (const unit of startable.slice(1)) alternatives.push(unit.next);
@@ -776,6 +792,16 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
   if (designCandidates.length > 0) {
     const command = designCandidates[0].next;
     for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
+    return { recommended: command, alternatives, tier: tierFor(command) };
+  }
+  // Step 6a's gate, reachable here: a unit whose receipt for the stage it is about to
+  // enter is not current is demoted out of `startable_now`, so without a branch of its
+  // own the promised `/review-spec`//`/review-plan` next never fired and the unit
+  // vanished into the bland fallback.
+  const gateBlocked = receiptRows.filter((row) => row.label !== "current");
+  if (gateBlocked.length > 0) {
+    const command = gateBlocked[0].recommended;
+    for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
     return { recommended: command, alternatives, tier: tierFor(command) };
   }
   if (untriaged.count > 0) {
@@ -790,7 +816,6 @@ function buildProjections({ units, forge, readiness, phases, marks, fixNow, obse
   const features = [];
   const fixes = [];
   for (const unit of units) {
-    const dir = unitDirFor(unit);
     const phase = phases.get(unit.id) ?? null;
     const mark = marks.get(unit.id) ?? null;
     const entry = {
@@ -857,6 +882,10 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     // exactly at PR-review time.
     if (!OPEN_STATES.has(unit.status) && !(unit.status === "done" && isOpenPr(unit))) continue;
     const dir = unitDirFor(unit);
+    if (!dir) {
+      observations.push(`${unit.id}: slug '${unit.slug}' is not a safe path segment — its files are not read`);
+      continue;
+    }
     const stage = stageFor(unit);
     const specSense = senseStage(dir, unit.id, "spec");
     const planSense = stage === "plan" ? senseStage(dir, unit.id, "plan", specSense.observedDigest) : null;
@@ -894,6 +923,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const fixNow = [];
   for (const unit of units) {
     const dir = unitDirFor(unit);
+    if (!dir) continue; // an unsafe slug was already reported by the readiness pass
     const phase = readPhaseProgress(dir);
     if (phase) phases.set(unit.id, phase);
     const mark = readReviewMark(dir, stageFor(unit));
