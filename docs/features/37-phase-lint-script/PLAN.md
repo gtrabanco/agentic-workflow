@@ -1,11 +1,16 @@
 # PLAN — 37-phase-lint-script
 
-Five implementation phases (rule-owner amendment → linter implementation →
-vehicle crate → consumer skill slimming → hardening & PR). The input grammar,
-rule-check semantics, reason codes, and output contract are frozen in
-`SPEC.md` (`## Engineering half` → `### Design`). Artifact revision of this
-plan set: `37-plan-4` (repair batch for review receipt PLAN-REVIEW-37-3 — folds
-F8–F11; fingerprints re-derived mechanically over the re-cut plan, see ED7).
+Six implementation phases (rule-owner amendment → linter implementation →
+vehicle crate → consumer skill slimming → box-2 test-file mapping → hardening
+& PR). The input grammar, rule-check semantics, reason codes, and output
+contract are frozen in `SPEC.md` (`## Engineering half` → `### Design`).
+Artifact revision of this plan set: `37-plan-4` (repair batch for review
+receipt PLAN-REVIEW-37-3 — folds F8–F11; fingerprints re-derived mechanically
+over the re-cut plan, see ED7), then `37-plan-5` (user-directed replan-in-unit
+fold of code-review finding F7 — the SPEC §Design box-2 test-file mapping for
+the owner-sanctioned test-only `hardening` shape; the former close-out P5 is
+renumbered P6, and fingerprints are re-derived by `scripts/phase-lint.mjs`
+itself — see decisions.md).
 
 ## P1 — Amend phase-contract rule 1
 
@@ -51,7 +56,17 @@ CHANGELOG rows in both CHANGELOGs + README/SKILLS table sync); re-run
 edited skill itself; the run-and-paste command inside the prose is quoted
 content, not a file the phase edits.
 
-## P5 — Hardening & PR
+## P5 — Implement the box-2 test-file mapping
+
+Layer: config/infra · write the corpus fixtures red-first, then implement the
+SPEC-frozen box-2 test-file mapping: a test-file target (basename containing
+`.test.`) in a phase declared `hardening` maps to `hardening` — the
+owner-sanctioned test-only shape (`phase-contract` rule 2); every other
+target keeps the prefix-table mapping and the ambiguous flow is unchanged.
+This lands the code-review F7 fold (replan-in-unit); `phase-contract` is not
+touched (amended once in P1, sole rule owner).
+
+## P6 — Hardening & PR
 
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)

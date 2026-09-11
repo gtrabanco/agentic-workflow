@@ -1,6 +1,6 @@
 # TASKS — 37-phase-lint-script
 
-Per-phase execution checklists. Artifact revision: `37-plan-4`.
+Per-phase execution checklists. Artifact revision: `37-plan-5`.
 
 ## P1 — Amend phase-contract rule 1
 
@@ -41,7 +41,14 @@ Layer: docs · Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold
 - [x] Re-run `npm run bundle:skills` (pi mirror parity)
 - [x] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list` — both green
 
-## P5 — Hardening & PR
+## P5 — Implement the box-2 test-file mapping
+
+Layer: config/infra · Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0, and `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0.
+
+- [ ] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: a test-only `Layer: hardening` phase creating `scripts/tokenizer.test.mjs` expects box-2 PASS (the VF-7 reproducer); a `Layer: hardening` phase with source target `scripts/tokenizer.mjs` expects `BLOCKED — box 2`; a `Layer: config/infra` phase creating `scripts/phase-lint.test.mjs` beside its implementation keeps box-2 PASS
+- [ ] Implement the mapping in `scripts/phase-lint.mjs`: a test-file target (basename containing `.test.`) in a phase declared `hardening` maps to `hardening`; every other target keeps the frozen prefix-table mapping; the ambiguous flow is unchanged
+
+## P6 — Hardening & PR
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
