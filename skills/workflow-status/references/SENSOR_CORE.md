@@ -1,6 +1,7 @@
 ## Process (fixed sequence — executed by the script)
 
-`node scripts/workflow-status.mjs` executes this whole sequence (git/forge
+`bun scripts/workflow-status.mjs` (node when bun is absent — the repository's
+runtime convention) executes this whole sequence (git/forge
 collection, urgency labels-only scan, roadmap + fix-index parse, dependency
 closure, readiness + step-6a receipt sensing, phase progress, review-mark
 currency, fix-now fold projection) and prints the fixed Envelope v2 JSON. The

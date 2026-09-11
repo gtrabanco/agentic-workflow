@@ -53,7 +53,7 @@ const TIER_MAP = new Map([
   ["/review-plan", "strong"],
 ]);
 
-const USAGE = `Usage: node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]
+const USAGE = `Usage: bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]
 
 Read-only workflow sensor: compute repository, roadmap, dependency, PR, finding,
 and recovery state, then print the fixed Envelope v2 JSON on stdout.
@@ -568,11 +568,12 @@ function readPhaseProgress(unitDir) {
   if (phases.length === 0) return null;
   const boxes = [...tasks.matchAll(/^\s*-\s*\[( |x|X)\]/gm)].map((match) => match[1].toLowerCase() === "x");
   const done = boxes.filter(Boolean).length;
-  const current = phases.find((phase) => {
-    const section = tasks.split(new RegExp(`^##\\s+${phase}\\s+—`, "m"))[1]?.split(/^##\s+/m)[0] ?? "";
-    return /^\s*-\s*\[ \]/m.test(section);
-  }) ?? phases.at(-1);
-  return { current, total: phases.length, completed: done };
+  const sectionOf = (phase) => tasks.split(new RegExp(`^##\\s+${phase}\\s+—`, "m"))[1]?.split(/^##\s+/m)[0] ?? "";
+  const current = phases.find((phase) => /^\s*-\s*\[ \]/m.test(sectionOf(phase))) ?? phases.at(-1);
+  // `tasks_from_boundary`: the unticked boxes left in the current phase — the fact
+  // `detail.urgent.interruptibility` publishes as a count, never as `null`.
+  const remaining = [...sectionOf(current).matchAll(/^\s*-\s*\[ \]/gm)].length;
+  return { current, total: phases.length, completed: done, remaining };
 }
 
 /**
@@ -654,41 +655,69 @@ function readFixNow(unitDir, observations = []) {
 // Crash recovery (step 17) + hint guard
 // ---------------------------------------------------------------------------
 
+/** Worst verdict wins across the branches classified (CRASH_RECOVERY.md precedence). */
+const CRASH_RANK = { CLEAN: 0, RESUMABLE: 1, AMBIGUOUS: 2 };
+
+/** A branch with no upstream has every commit unpushed by definition (CRASH_RECOVERY). */
+function branchIsUnpushed(name) {
+  const upstream = git("rev-parse", "--abbrev-ref", `${name}@{u}`);
+  if (upstream === null) return true;
+  const count = git("rev-list", "--count", `${upstream}..${name}`);
+  return count === null ? true : Number(count) > 0;
+}
+
 function readCrashRecovery({ gitState, units, phases }) {
   const branch = gitState.branch;
-  const isUnitBranch = /^(feat|fix)\//.test(branch);
-  const branches = [];
-  if (!isUnitBranch) {
-    branches.push({ branch: branch || "—", evidence: "clean tree, coherent ledgers", verdict: "CLEAN", resume_command: null });
-    return { verdict: "CLEAN", branches };
+  const unitFor = (name) => name && units.find((candidate) => name.endsWith(candidate.id)
+    || name.includes(candidate.id)
+    || (candidate.issue != null && name.includes(`/${candidate.issue}-`))
+    || (candidate.slug && name.includes(candidate.slug)));
+
+  /** One branch's row: the dirty/unpushed facts plus its ledger's unique next phase. */
+  const classify = (name, unit, { dirty, dirtyFiles, unpushed }) => {
+    if (!dirty && !unpushed) return { branch: name, evidence: "clean tree; branch pushed", verdict: "CLEAN", resume_command: null };
+    const phase = unit ? phases.get(unit.id) : null;
+    if (unit && phase?.current) {
+      return {
+        branch: name,
+        evidence: `${dirty ? `${dirtyFiles} dirty file(s)` : "clean tree"}; ledger points at ${phase.current}/${phase.total}`,
+        verdict: "RESUMABLE",
+        resume_command: `/execute-phase ${unit.nn ?? unit.issue} ${phase.current}`,
+      };
+    }
+    return {
+      branch: name,
+      evidence: `${dirty ? `${dirtyFiles} dirty file(s)` : "clean tree"}; no unique next phase (unknown or contradictory ledger)`,
+      verdict: "AMBIGUOUS",
+      resume_command: null,
+    };
+  };
+
+  const current = branch || "—";
+  const currentUnit = unitFor(branch);
+  const rows = [classify(current, currentUnit, {
+    dirty: gitState.dirty,
+    dirtyFiles: gitState.dirtyFiles.length,
+    // Untracked/no-upstream state is only recoverable state on a unit branch: a
+    // non-unit branch (main, a scratch branch) has no interrupted execution to
+    // resume, so its own cleanliness is the whole fact.
+    unpushed: branch === "" ? false : (currentUnit ? (!git("rev-parse", "--abbrev-ref", `${branch}@{u}`) || gitState.ahead > 0) : false),
+  })];
+
+  // Every *unit* branch is classified too, and worst wins: a driver that died on
+  // another checkout left state the single reduced verdict must see. A branch that
+  // resolves to no roadmap unit is not a unit branch — it is not a recovery
+  // candidate, and letting one hijack `state` would stall every driver on a
+  // leftover scratch branch.
+  const locals = (git("for-each-ref", "--format=%(refname:short)", "refs/heads/feat", "refs/heads/fix") ?? "")
+    .split("\n").map((name) => name.trim()).filter((name) => name && name !== branch);
+  for (const name of locals) {
+    const unit = unitFor(name);
+    if (!unit) continue;
+    rows.push(classify(name, unit, { dirty: false, dirtyFiles: 0, unpushed: branchIsUnpushed(name) }));
   }
-  const unit = units.find((candidate) => branch.endsWith(candidate.id)
-    || branch.includes(candidate.id)
-    || (candidate.issue != null && branch.includes(`/${candidate.issue}-`)));
-  const hasUpstream = git("rev-parse", "--abbrev-ref", `${branch}@{u}`) !== null;
-  const unpushed = !hasUpstream || gitState.ahead > 0;
-  if (!gitState.dirty && !unpushed) {
-    branches.push({ branch, evidence: "clean tree; branch pushed", verdict: "CLEAN", resume_command: null });
-    return { verdict: "CLEAN", branches };
-  }
-  const phase = unit ? phases.get(unit.id) : null;
-  if (unit && phase?.current) {
-    const resume = `/execute-phase ${unit.nn ?? unit.issue} ${phase.current}`;
-    branches.push({
-      branch,
-      evidence: `${gitState.dirty ? `${gitState.dirtyFiles.length} dirty file(s)` : "clean tree"}; ledger points at ${phase.current}/${phase.total}`,
-      verdict: "RESUMABLE",
-      resume_command: resume,
-    });
-    return { verdict: "RESUMABLE", branches };
-  }
-  branches.push({
-    branch,
-    evidence: `${gitState.dirty ? `${gitState.dirtyFiles.length} dirty file(s)` : "clean tree"}; no unique next phase (unknown or contradictory ledger)`,
-    verdict: "AMBIGUOUS",
-    resume_command: null,
-  });
-  return { verdict: "AMBIGUOUS", branches };
+  rows.sort((a, b) => CRASH_RANK[b.verdict] - CRASH_RANK[a.verdict]);
+  return { verdict: rows[0].verdict, branches: rows };
 }
 
 const HINT_MAX_BYTES = 1024 * 1024;
@@ -1012,7 +1041,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
         unit: currentUnit?.id ?? null,
         phase: currentUnit ? (phases.get(currentUnit.id)?.current ?? null) : null,
         dirty: gitState.dirty,
-        tasks_from_boundary: null,
+        tasks_from_boundary: currentUnit ? (phases.get(currentUnit.id)?.remaining ?? null) : null,
       },
     },
   };

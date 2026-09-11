@@ -37,7 +37,8 @@ legacy.
 
 El envelope tiene un **productor determinista**: el script sensor de solo
 lectura `scripts/workflow-status.mjs`. Ejecútalo como
-`node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`;
+`bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`
+(node es el respaldo cuando bun no está disponible);
 ejecuta la secuencia publicada `SENSOR_CORE`, se autovalida e imprime un único
 documento JSON de Envelope v2 por stdout (los diagnósticos y las degradaciones
 declaradas `unavailable-<source>-<cause>` quedan en `detail`, y la invocación
