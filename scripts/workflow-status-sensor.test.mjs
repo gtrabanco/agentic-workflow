@@ -537,3 +537,52 @@ test("F7/F8: a mixed-vocabulary fold ledger is normalized, and an unusable row i
   );
   assert.equal(validateEnvelope(envelope).ok, true, `schema errors: ${validateEnvelope(envelope).errors?.join("; ")}`);
 });
+
+test("F2: a done unit's merge state comes from the PR, never from the 20-row window", () => {
+  const roadmapRows = [
+    "| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | long shipped |",
+    "| 92 | `gamma` | done · [#902](https://example.invalid/pr/902) | — | closed unmerged |",
+    "| 91 | `beta` | planned | 90 | depends on alpha |",
+    "| 93 | `delta` | planned | 92 | depends on gamma |",
+  ];
+  const fixture = makeFixture({ roadmapRows });
+  // `makeFixture`'s shim answers the recent-merge window only. A PR outside it is
+  // resolved from its own state on a second, lazy read — the read the fix added.
+  fixture.write("bin/gh", `#!/usr/bin/env node
+const args = process.argv.slice(2).join(" ");
+const out = (value) => { process.stdout.write(JSON.stringify(value)); process.exit(0); };
+if (args.includes("pr list") && args.includes("--state open")) out([]);
+if (args.includes("pr list") && args.includes("--state merged")) out([]);
+if (args.includes("pr list") && args.includes("--state all")) out([{ number: 901, state: "MERGED" }, { number: 902, state: "CLOSED" }]);
+if (args.includes("issue list")) out([]);
+process.stderr.write("unexpected gh call: " + args + "\\n");
+process.exit(1);
+`);
+  fs.chmodSync(path.join(fixture.dir, "bin", "gh"), 0o755);
+
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(!envelope.dependencies.unmet.includes("90-alpha"), `a merged PR outside the window is met: ${JSON.stringify(envelope.dependencies.unmet)}`);
+  assert.ok(!envelope.detail.blocked_units["91-beta"], "a dependent of a merged unit is not blocked");
+  assert.ok(!JSON.stringify(envelope.blockers).includes("dependencies are unmerged"), "no spurious done-but-unmerged substrate blocker");
+  assert.ok(envelope.dependencies.unmet.includes("92-gamma"), "a CLOSED-unmerged PR is still unmet");
+  assert.ok(envelope.detail.blocked_units["93-delta"], "a dependent of a closed-unmerged unit stays blocked");
+});
+
+test("F5: a done unit with a still-open PR is sensed (step 6a)", () => {
+  const { run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | PR open |"],
+    openPrs: [{ number: 901, title: "alpha", headRefName: "feat/90-alpha", url: "https://example.invalid/pr/901", statusCheckRollup: [] }],
+  });
+  const envelope = parseEnvelope(run().stdout);
+  assert.ok(
+    envelope.detail.pre_execution.some((row) => row.unit === "90-alpha"),
+    `a done-but-unmerged unit is never merge-ready and must be sensed: ${JSON.stringify(envelope.detail.pre_execution)}`,
+  );
+  assert.ok(
+    envelope.blockers.some((blocker) => blocker.kind === "gate" && blocker.id === "90-alpha"),
+    "a missing receipt on that unit is a gate blocker",
+  );
+  assert.ok(!envelope.dependencies.unmet.includes("90-alpha"), "an open PR never counts as merged");
+});
