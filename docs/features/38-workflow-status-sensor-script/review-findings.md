@@ -18,10 +18,10 @@ its `VF-` signature. `folded` is flipped to `yes` only by the unit's fold cycle
 | F6 | scripts/workflow-status.mjs:506 (currency binds unitDir, not SPEC bound inputs) | code | med | fix-now | fold into phase | yes |
 | F7 | scripts/workflow-status.mjs:513-530 + :250 (readFixNow severity passthrough + unescaped `\|` split) | verify | med | fix-now | fold into phase | yes |
 | F8 | scripts/workflow-status.mjs:518 (separator guard admits no-space dash rows) | code | med | fix-now | fold into phase | yes |
-| F9 | skills/workflow-status/references/ENVELOPE_CORE.md (steps 10-12 + tier table + tasks_from_boundary) | code | med | fix-now | fold into phase | no |
+| F9 | skills/workflow-status/references/ENVELOPE_CORE.md (steps 10-12 + tier table + tasks_from_boundary) | code | med | fix-now | fold into phase | yes |
 | F10 | scripts/workflow-status.mjs:152 (`git fetch --quiet` writes refs) | code | med | fix-now | fold into phase | yes |
-| F11 | scripts/workflow-status.mjs:727-742 (readCrashRecovery current-branch-only + false clean evidence) | code | med | fix-now | fold into phase | no |
-| F12 | skills/workflow-status/SKILL.md:27 + references/SENSOR_CORE.md:3 + docs/workflow/ORCHESTRATION.md:38 + script USAGE:56 | code | med | fix-now | fold into phase | no |
+| F11 | scripts/workflow-status.mjs:727-742 (readCrashRecovery current-branch-only + false clean evidence) | code | med | fix-now | fold into phase | yes |
+| F12 | skills/workflow-status/SKILL.md:27 + references/SENSOR_CORE.md:3 + docs/workflow/ORCHESTRATION.md:38 + script USAGE:56 | code | med | fix-now | fold into phase | yes |
 | F13 | scripts/workflow-status.mjs:465-470 + :99-107 (unitDirFor/readProject unconfined) | security | med | fix-now | fold into phase | yes |
 | F14 | scripts/workflow-status.mjs:568-587 (loadHint unbounded absolute-path read) | security | med | fix-now | fold into phase | yes |
 | F18 | scripts/workflow-status-sensor.test.mjs (no findings-ledger boundary coverage) | verify | med | fix-now | fold into phase | yes |

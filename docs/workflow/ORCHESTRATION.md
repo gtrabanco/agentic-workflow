@@ -35,7 +35,8 @@ existing legacy consumers.
 
 The envelope has a **deterministic producer**: the read-only sensor script
 `scripts/workflow-status.mjs`. Run it as
-`node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`;
+`bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`
+(node is the fallback when bun is absent);
 it executes the published `SENSOR_CORE` sequence, self-validates the result, and
 prints one Envelope v2 JSON document on stdout (diagnostics and declared
 `unavailable-<source>-<cause>` degradations live in `detail`, and invalid
