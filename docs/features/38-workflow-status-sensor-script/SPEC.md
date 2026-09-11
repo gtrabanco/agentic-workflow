@@ -727,7 +727,8 @@ see planning-obligations.md
 ### Decisions to confirm
 
 All engineering decisions are resolved here and recorded in `decisions.md`
-(2026-09-09 planning batch, `38-plan-1`); none is left for the implementer:
+(2026-09-09 planning batch, `38-plan-1`; E-38-9 recorded 2026-09-10 by the
+operator-approved #209 fold); none is left for the implementer:
 
 - **E-38-1** envelope self-validation is a stderr diagnostic, never a gate
   (exit 0); correctness is A:2's fixture suite's job.
@@ -735,9 +736,6 @@ All engineering decisions are resolved here and recorded in `decisions.md`
   external argv + envelope contract unchanged (PE-016/PE-017); compliant with
   fix #209's freeze-majors policy (minor, not major — breaking intent would
   carry a `BREAKING CHANGE:` footer while #176 is open).
-- **E-38-9** fix #209's release-policy fold into 38's scope — operator-approved
-  amendment 2026-09-10; `CLAUDE.md` line implemented pre-execution (A:25).
-  artifactRevisionId rotated (see Design status).
 - **E-38-3** discipline pins re-target from prose-presence to script-behavior
   assertions — every pin keeps its asserted behavior and gains the stronger
   form; the mechanical rules' single home becomes the script (never weakened,
@@ -772,8 +770,9 @@ All engineering decisions are resolved here and recorded in `decisions.md`
   a `gh` shim on PATH (missing, failing-fast, non-terminating variants);
   hints as inline JSON and file paths. Pins: schema validity + field presence
   (A-02), read-only greps (A-03/A-07/A-22), idempotence (A-05), ambiguous-row
-  mapping (A-06), loader import form (A-08), offline/timeout/missing-git
-  degradation (A-04/A-15/A-21), flags (A-10/A-17/A-20), hint guard + fail-open
+  mapping (A-06), loader import form (A-08), offline/timeout/auth/missing-cli/
+  missing-git degradation (A-04/A-15/A-21 + F37's forge shims), flags
+  (A-10/A-17/A-20), hint guard + fail-open
   (A-18/A-19), stream separation (A-23).
 - **Discipline suites re-targeted in P3, never weakened** (O26):
   `bounded-delivery-loops.test.mjs`, `pre-execution-quality.test.mjs`,
@@ -796,7 +795,7 @@ All engineering decisions are resolved here and recorded in `decisions.md`
 | `sensor:empty-state` | empty/zero state — no roadmap rows, no PRs, no in-flight units | fixture repo with an empty roadmap + no forge output; envelope prints the empty shapes (`design_candidates: []`, `fix_now: []`), exit 0 (A-02 fixture) |
 | `sensor:invalid-input` | invalid/oversized input — unknown flag; malformed or missing hint | `--not-a-real-flag` → non-zero + stderr usage (A-20); missing path / invalid JSON hint → `unavailable-hint-<cause>` note, exit 0 (A-19) |
 | `sensor:envelope-mismatch` | forced invalid envelope — assembly output fails `validateEnvelope` | a stub schema build whose `validateEnvelope` always fails is swapped in via the explicit-path loader (PE-001; `dist/` is a gitignored build output) → stderr diagnostic, envelope still printed, exit 0 (E-38-1; P1 mismatch pin — F27 repair) |
-| `sensor:dependency-outage` | dependency outage + timeout — network severed; forge accepts and never answers | `gh` shim failing fast → fail-fast degradation codes, exit 0 (A-04); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (A-21) |
+| `sensor:dependency-outage` | dependency outage + timeout — network severed; forge accepts and never answers; forge auth fails; `gh` absent from PATH; `git` binary missing | `gh` shim failing fast → fail-fast degradation codes, exit 0 (A-04); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (A-21); auth-failing `gh` shim → `unavailable-forge-auth`, exit 0; `gh` absent from PATH → `unavailable-forge-missing-cli`, exit 0; missing `git` binary → `unavailable-git-missing`, exit 0 (F37 fold: the declared forge/git failure states are exercised) |
 | `sensor:concurrent-action` | concurrent/duplicate action — two simultaneous sensor runs | run twice in parallel on the same tree: both exit 0, outputs byte-identical, no locks or shared state (A-05 fixture run concurrently) |
 | `sensor:limit-threshold` | limit/threshold hit — caps in the projections | fixture with > 5 open issues → `untriaged_issues.oldest_open` capped at 5; merged-PR list capped at 20 (ENVELOPE_FIELDS/SENSOR_CORE caps) |
 | `sensor:permission-denied` | n/a: the sensor is a read-only CLI with no auth, role, or permission surface — a permission-denied state cannot arise (Capability closure: Authentication/ACL rows n/a) | — |
@@ -827,8 +826,9 @@ idempotence). Phase-lint: PASS (8/8) · fingerprint
 
 Layer: config/infra · Done-when: `node --test
 scripts/workflow-status-sensor.test.mjs` → exit 0 with the offline,
-forge-timeout, missing-git, hint-guard, hint-fail-open, `--help`/`--version`,
-and stream-separation pins green and every P1 pin unchanged.
+forge-timeout, forge-auth, forge-missing-cli, missing-git, hint-guard,
+hint-fail-open, `--help`/`--version`, and stream-separation pins green and
+every P1 pin unchanged.
 
 The script's declared-failure surface: namespaced degradation codes, bounded
 forge latency, `--help`/`--version` (usage/version output), `--last-envelope`

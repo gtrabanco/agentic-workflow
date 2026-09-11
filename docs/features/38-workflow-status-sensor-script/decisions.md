@@ -466,3 +466,35 @@ digests.
 Readiness preflight `stage: spec`: READY-FOR-REVIEW (delta over the changed
 surfaces + the findings' resolution evidence, per the operator ruling in the
 2026-09-09 entry). Route: /review-spec 38 → /review-plan 38 → /execute-phase 38.
+
+## 2026-09-11 — operator ruling: fold the advisory plan-review batch F35–F41
+
+The operator directed a mechanical fold of rp-38-20260911-012's seven
+advisory/info findings (F35/F36/F37/F41 low advisory, F38/F39/F40 info —
+material open: 0) into the planned artifacts before execution, as one batch.
+Rulings within the batch:
+
+1. **No re-scaffold.** The unit is `planned`; the fold is repair-in-response on
+   the existing plan set (the review-flow's "replan the batch" route). The
+   roadmap row, the phase structure (8/8/7/9 task counts) and all four phase
+   fingerprints are untouched.
+2. **F37 takes the shim route, not the Design-scoping route.** The reviewer's
+   fold path offered "add the shim variants" or "scope the Design sentence".
+   Scoping would weaken the declared failure contract (technical goal 3:
+   declared failure, never improvised — a missing `gh` binary is a real,
+   common state) and would be a product-side change; the shim route keeps the
+   declared contract intact and closes the scenario gap. No product change.
+3. **AC-09's validator cell is re-formed** (F36) against `git diff main...HEAD`
+   + a pinned baseline count — same pre-execution fold class as F32's AC-07
+   re-alignment (rp-010 repair batch), not an execution-time manifest edit.
+4. **Handoff id `a33f09373308`** = first 12 hex of sha256(SPEC.md) at the
+   batch's final bytes, recorded beside the recomputed source revision per
+   POLICY §7 pairing; the bound artifactRevisionId remains the RS3(b) default
+   (the commit that lands these bytes), re-derived by the reviewer — never
+   copied.
+
+Consequence: the newest plan receipt (rp-012) binds pre-batch bytes → stale
+for the folded set → bounded delta re-review required: /review-plan 38 (the
+spec receipt rp-011 stays current — the `spec-product-v1` projection excludes
+the Engineering half, verified `digestMatches: true` post-write), then
+/execute-phase 38.
