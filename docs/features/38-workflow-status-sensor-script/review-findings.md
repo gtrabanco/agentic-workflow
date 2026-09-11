@@ -12,10 +12,10 @@ its `VF-` signature. `folded` is flipped to `yes` only by the unit's fold cycle
 |---|---|---|---|---|---|---|
 | F1 | scripts/workflow-status.mjs:127 (field "Status" regex `^\s*Status:`) | code | high | fix-now | fold into phase | yes |
 | F2 | scripts/workflow-status.mjs:178 (`--limit 20` merged window feeding isMerged) | code | med | fix-now | fold into phase | yes |
-| F3 | scripts/workflow-status.mjs:434-446 (step-6a verifier spawn, cwd PROJECT only) | code | med | fix-now | fold into phase | no |
+| F3 | scripts/workflow-status.mjs:434-446 (step-6a verifier spawn, cwd PROJECT only) | code | med | fix-now | fold into phase | yes |
 | F4 | scripts/workflow-status.mjs:655 (unreachable receipt-gate branch in resolveNext) | code | med | fix-now | fold into phase | no |
 | F5 | scripts/workflow-status.mjs:743 (`OPEN_STATES` filter skips done-but-unmerged units) | code | med | fix-now | fold into phase | yes |
-| F6 | scripts/workflow-status.mjs:506 (currency binds unitDir, not SPEC bound inputs) | code | med | fix-now | fold into phase | no |
+| F6 | scripts/workflow-status.mjs:506 (currency binds unitDir, not SPEC bound inputs) | code | med | fix-now | fold into phase | yes |
 | F7 | scripts/workflow-status.mjs:513-530 + :250 (readFixNow severity passthrough + unescaped `\|` split) | verify | med | fix-now | fold into phase | yes |
 | F8 | scripts/workflow-status.mjs:518 (separator guard admits no-space dash rows) | code | med | fix-now | fold into phase | yes |
 | F9 | skills/workflow-status/references/ENVELOPE_CORE.md (steps 10-12 + tier table + tasks_from_boundary) | code | med | fix-now | fold into phase | no |
