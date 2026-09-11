@@ -815,22 +815,26 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
   if (startable.length > 0) {
     const command = startable[0].next;
     for (const unit of startable.slice(1)) alternatives.push(unit.next);
+    for (const row of receiptRows.filter((entry) => entry.label !== "current")) alternatives.push(row.recommended);
+    for (const candidate of designCandidates) alternatives.push(candidate.next);
+    return { recommended: command, alternatives, tier: tierFor(command) };
+  }
+  // Step 6a's gate, reachable here: a unit whose receipt for the stage it is about to
+  // enter is not current is demoted out of `startable_now`, so without a branch of its
+  // own the promised `/review-spec`//`/review-plan` next never fired and the unit
+  // vanished into the bland fallback. It ranks above a fresh design candidate: an
+  // in-flight unit blocked only by a review gate is closer to done than an unstarted
+  // idea.
+  const gateBlocked = receiptRows.filter((row) => row.label !== "current");
+  if (gateBlocked.length > 0) {
+    const command = gateBlocked[0].recommended;
+    for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
     for (const candidate of designCandidates) alternatives.push(candidate.next);
     return { recommended: command, alternatives, tier: tierFor(command) };
   }
   if (designCandidates.length > 0) {
     const command = designCandidates[0].next;
     for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command) };
-  }
-  // Step 6a's gate, reachable here: a unit whose receipt for the stage it is about to
-  // enter is not current is demoted out of `startable_now`, so without a branch of its
-  // own the promised `/review-spec`//`/review-plan` next never fired and the unit
-  // vanished into the bland fallback.
-  const gateBlocked = receiptRows.filter((row) => row.label !== "current");
-  if (gateBlocked.length > 0) {
-    const command = gateBlocked[0].recommended;
-    for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
     return { recommended: command, alternatives, tier: tierFor(command) };
   }
   if (untriaged.count > 0) {
