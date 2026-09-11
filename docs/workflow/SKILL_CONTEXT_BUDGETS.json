@@ -244,7 +244,7 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11554,
+      "routeEstimateMax": 11558,
       "routeLinesMax": 911
     },
     "plan-feature:scaffold": {
@@ -256,7 +256,7 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24140,
+      "routeEstimateMax": 24144,
       "routeLinesMax": 1698
     },
     "plan-feature:scoped": {
@@ -267,7 +267,7 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 9058,
+      "routeEstimateMax": 9062,
       "routeLinesMax": 733
     },
     "plan-fix:issue": {
@@ -280,7 +280,7 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27013,
+      "routeEstimateMax": 27018,
       "routeLinesMax": 1941
     },
     "review-change:adversarial": {
@@ -382,7 +382,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10))",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
