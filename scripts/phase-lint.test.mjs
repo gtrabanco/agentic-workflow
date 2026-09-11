@@ -405,3 +405,12 @@ test("the node fallback matches the bun first-class run", { skip: bunAvailable ?
   assert.equal(bun.status, node.status);
   assert.equal(bun.stdout, node.stdout);
 });
+
+// Fold — zero-task phase is BLOCKED by box-3.
+test("a zero-task phase is BLOCKED", () => {
+  const file = fixture("zero-tasks.md", `# Plan\n\n### P1 — Empty\n\nLayer: docs. Done-when: \`echo ok\` \u2192 ok.\n\n### P2 — Close\n\nLayer: close-out. Done-when: \`echo ok\` \u2192 ok.\n\n- [ ] Done\n`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-3: phase has 0 tasks/m);
+});
+
