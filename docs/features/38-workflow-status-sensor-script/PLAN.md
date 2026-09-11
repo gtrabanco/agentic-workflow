@@ -123,7 +123,7 @@ budgets, bump version.
 
 ## P4 — Qualify the sensor unit
 
-Layer: hardening · Task count: 8
+Layer: hardening · Task count: 9
 
 Driver wiring, bilingual sync, Pi bundle parity, full validation, PR + roadmap.
 
