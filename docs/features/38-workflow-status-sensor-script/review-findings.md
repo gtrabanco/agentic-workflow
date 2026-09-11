@@ -10,21 +10,21 @@ its `VF-` signature. `folded` is flipped to `yes` only by the unit's fold cycle
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F1 | scripts/workflow-status.mjs:127 (field "Status" regex `^\s*Status:`) | code | high | fix-now | fold into phase | no |
+| F1 | scripts/workflow-status.mjs:127 (field "Status" regex `^\s*Status:`) | code | high | fix-now | fold into phase | yes |
 | F2 | scripts/workflow-status.mjs:178 (`--limit 20` merged window feeding isMerged) | code | med | fix-now | fold into phase | no |
 | F3 | scripts/workflow-status.mjs:434-446 (step-6a verifier spawn, cwd PROJECT only) | code | med | fix-now | fold into phase | no |
 | F4 | scripts/workflow-status.mjs:655 (unreachable receipt-gate branch in resolveNext) | code | med | fix-now | fold into phase | no |
 | F5 | scripts/workflow-status.mjs:743 (`OPEN_STATES` filter skips done-but-unmerged units) | code | med | fix-now | fold into phase | no |
 | F6 | scripts/workflow-status.mjs:506 (currency binds unitDir, not SPEC bound inputs) | code | med | fix-now | fold into phase | no |
-| F7 | scripts/workflow-status.mjs:513-530 + :250 (readFixNow severity passthrough + unescaped `\|` split) | verify | med | fix-now | fold into phase | no |
-| F8 | scripts/workflow-status.mjs:518 (separator guard admits no-space dash rows) | code | med | fix-now | fold into phase | no |
+| F7 | scripts/workflow-status.mjs:513-530 + :250 (readFixNow severity passthrough + unescaped `\|` split) | verify | med | fix-now | fold into phase | yes |
+| F8 | scripts/workflow-status.mjs:518 (separator guard admits no-space dash rows) | code | med | fix-now | fold into phase | yes |
 | F9 | skills/workflow-status/references/ENVELOPE_CORE.md (steps 10-12 + tier table + tasks_from_boundary) | code | med | fix-now | fold into phase | no |
 | F10 | scripts/workflow-status.mjs:152 (`git fetch --quiet` writes refs) | code | med | fix-now | fold into phase | no |
 | F11 | scripts/workflow-status.mjs:727-742 (readCrashRecovery current-branch-only + false clean evidence) | code | med | fix-now | fold into phase | no |
 | F12 | skills/workflow-status/SKILL.md:27 + references/SENSOR_CORE.md:3 + docs/workflow/ORCHESTRATION.md:38 + script USAGE:56 | code | med | fix-now | fold into phase | no |
 | F13 | scripts/workflow-status.mjs:465-470 + :99-107 (unitDirFor/readProject unconfined) | security | med | fix-now | fold into phase | no |
 | F14 | scripts/workflow-status.mjs:568-587 (loadHint unbounded absolute-path read) | security | med | fix-now | fold into phase | no |
-| F18 | scripts/workflow-status-sensor.test.mjs (no findings-ledger boundary coverage) | verify | med | fix-now | fold into phase | no |
+| F18 | scripts/workflow-status-sensor.test.mjs (no findings-ledger boundary coverage) | verify | med | fix-now | fold into phase | yes |
 | VF-1 | docs/workflow/REPOSITORY_STATE.md:14 · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck live run: sensor emitted repository_state status "draft" on this repo's frozen table-form ledger; colon-regex read at :127 misses `\| Status \|` rows (template/docs/workflow/REPOSITORY_STATE.md:12 same shape) | code | confirmed | finding-mark | n/a | n/a |
 | VF-2 | gh pr view 150/24 → MERGED · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck live run: 25/33 dependencies.unmet are done units with MERGED PRs outside the 20-PR window; 12 spurious substrate blockers | code | confirmed | finding-mark | n/a | n/a |
 | VF-3 | /tmp cross-root fixture · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck reproducer: sensor with PROJECT=/tmp/sensed-repo produced pre_execution rows computed from the sensor's own checkout (pre-execution-snapshot.mjs:56 binds repoRoot from import.meta.url, refuses outside-root dirs) | code | confirmed | finding-mark | n/a | n/a |
