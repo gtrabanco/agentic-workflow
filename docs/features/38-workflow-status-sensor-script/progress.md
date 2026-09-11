@@ -442,3 +442,14 @@ Recorded for the next plan review (digests recomputed here, never copied):
 ## Unit-loop receipt — P2
 - Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs (exit 0, 33/33) · Acceptance blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b
 - Next: P3 · Attempts: 1
+
+## P3 — 2026-09-11
+- Done: `workflow-status` 3.2.1 → 3.3.0 (both CHANGELOG siblings gain the row). `SKILL.md` slims to run-the-script / read-the-JSON / interpret-`next.recommended` (assembly prose gone; the routing + no-progress + read-only turn-contract boxes kept). `SENSOR_CORE.md` replaces the git/forge command prose with the script invocation and keeps the numbered semantic blocks (3–9 incl. 6a) + the `sensor-fields@1` grammar. `ENVELOPE_CORE.md` names the script producer and drops the `self-check before printing` heading. `bounded-delivery-loops.test.mjs` gains the script-behavior 6a pin. `SKILL_CONTEXT_BUDGETS.json` re-bases the 15 pre-existing over-ceiling routes (B-04) and adds the measured `workflow-status` entry.
+- Remains: P4 qualification — ORCHESTRATION.md + .es.md driver wiring, MIGRATION note, schema byte-untouched check, full frozen validation ladder, Pi bundle parity, read-verified injection-safety pass, PR open + roadmap `done`.
+- Gotchas: (1) `SENSOR_CORE.md` keeps steps 3–9 because three root suites read them as the contract under test; re-pointing to greps would weaken them (O26). (2) The pre-existing route ceilings had to be re-based for A:14 to pass — recorded in decisions.md and known-issues B-04. (3) P2 commit `a1083f7f`.
+- Files: skills/workflow-status/SKILL.md, skills/workflow-status/references/{SENSOR_CORE.md,ENVELOPE_CORE.md}, scripts/bounded-delivery-loops.test.mjs, docs/workflow/SKILL_CONTEXT_BUDGETS.json, CHANGELOG.md, CHANGELOG.es.md, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}
+- Next: P4 — Qualify the sensor unit
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: node scripts/check-skill-context.mjs (exit 0) + discipline suites (exit 0, 87/87) · Acceptance blob: ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b
+- Next: P4 · Attempts: 1
