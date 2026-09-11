@@ -569,3 +569,12 @@ named in `SKILL_CONTEXT_BUDGETS.json` `policy.declared`. A:14 now exits 0.
 routes); `node --test scripts/bounded-delivery-loops.test.mjs
 scripts/pre-execution-quality.test.mjs scripts/workflow-status-pre-execution.test.mjs
 scripts/normative-drift.test.mjs` → exit 0 (87/87).
+
+## 2026-09-11 — P4 close-out: the roadmap status edge is `done`, not `in-progress`
+
+TASKS P4's PR task wrote "update roadmap row to `in-progress · [PR #<n>](<pr-url>)`",
+but the roadmap's own status legend assigns the PR-open edge to **`done`**
+("`done` — built and its PR open … Set by the PR-open step"), and `in-progress`
+is set by `execute-phase` P1 (already applied). The plan-task wording is a
+mechanical slip; the sanctioned write is `done · [#<pr>](<pr-url>)`. Recorded
+per the execute-phase plan-conflict rule; no criterion or scope changed.

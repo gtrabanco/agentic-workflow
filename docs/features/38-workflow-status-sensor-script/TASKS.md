@@ -234,16 +234,16 @@ Layer: hardening · Done-when: every frozen validator in `ACCEPTANCE.md`
 passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
 → empty, and the PR is open with `Closes #185` (PR URL printed in the chat).
 
-- [ ] Wire driver contract in `docs/workflow/ORCHESTRATION.md` + `.es.md` — name the script
+- [x] Wire driver contract in `docs/workflow/ORCHESTRATION.md` + `.es.md` — name the script
   as the envelope's deterministic producer; add the script path and invocation convention
   to the driver integration section; bilingual sync with reciprocal switcher links in the
   same change.
-- [ ] Add additive MIGRATION note — `docs/workflow/MIGRATION.md` gains a dated note about
+- [x] Add additive MIGRATION note — `docs/workflow/MIGRATION.md` gains a dated note about
   the workflow-status slimming (the sensor now runs the script instead of prose; the
   envelope shape and the machine contract are identical).
-- [ ] Verify the schema package is byte-untouched — `git diff --name-only main...HEAD --
+- [x] Verify the schema package is byte-untouched — `git diff --name-only main...HEAD --
   packages/agentic-workflow-schema` → empty.
-- [ ] Run full regression suite — all root discipline suites exit 0 with the re-targeted
+- [x] Run full regression suite — all root discipline suites exit 0 with the re-targeted
   pins: `node --test scripts/workflow-status-sensor.test.mjs
   scripts/bounded-delivery-loops.test.mjs
   scripts/pre-execution-quality.test.mjs
@@ -254,9 +254,9 @@ passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
   scripts/audit-pr-receipt.test.mjs
   scripts/review-loop-discipline.test.mjs
   scripts/check-skill-context.mjs` → exit 0; schema package suite green.
-- [ ] Run Pi mirror re-bundle — `cd packages/pi-agentic-workflow && npm run bundle:skills`;
+- [x] Run Pi mirror re-bundle — `cd packages/pi-agentic-workflow && npm run bundle:skills`;
   verify parity tests pass; update distribution metadata as required.
-- [ ] Close planning docs truthfully — `progress.md` gains a handoff entry (Done/Remains/
+- [x] Close planning docs truthfully — `progress.md` gains a handoff entry (Done/Remains/
   Gotchas/Files); `testing.md` is complete; `known-issues.md` has no remaining blockers.
 - [ ] Open the PR and update roadmap — `gh pr create --body-file` (body as Markdown file,
   `Closes #185`, branch `feat/38-workflow-status-sensor-script`); update roadmap row to
