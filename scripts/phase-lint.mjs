@@ -155,6 +155,7 @@ function box2(phase) {
 
 /** Box 3 — task count within the phase budget (the final close-out keeps ≤ 10). */
 function box3(phase) {
+  if (phase.tasks.length === 0) return [`phase has 0 tasks (minimum 1 for layer ${phase.layer})`];
   const limit = phase.finalCloseOut ? 10 : 8;
   return phase.tasks.length > limit ? [`phase has ${phase.tasks.length} tasks (limit ${limit} for layer ${phase.layer})`] : [];
 }

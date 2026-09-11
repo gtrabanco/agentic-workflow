@@ -1,7 +1,7 @@
 ---
 name: phase-contract
 user-invocable: false
-version: 1.0.2
+version: 1.0.3
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -40,7 +40,7 @@ blocks emission/execution until the phase is re-cut or split.
    `schema/db | domain | api | ui | config/infra | docs | hardening | close-out`;
    FAIL if any task's target file belongs to another. Tests for the phase's own
    layer belong to the phase; a test-only phase declares `hardening`.
-3. **≤ 8 tasks** (close-out phase: ≤ 10, only the literal close-out chain).
+3. **≥ 1 task, ≤ 8 tasks** — every phase carries at least one checkbox task; a phase with zero tasks is BLOCKED (fail-closed). Final hardening/close-out phase: 1–10, only the literal close-out chain.
 4. **One checkbox = one deliverable** — FAIL if a task contains a `→` chain of
    implementation steps, enumerates > 3 cases/scenarios, or creates > 1 file of
    distinct concerns.
