@@ -244,8 +244,8 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11429,
-      "routeLinesMax": 907
+      "routeEstimateMax": 11554,
+      "routeLinesMax": 911
     },
     "plan-feature:scaffold": {
       "skills": [
@@ -256,8 +256,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 23908,
-      "routeLinesMax": 1688
+      "routeEstimateMax": 24140,
+      "routeLinesMax": 1698
     },
     "plan-feature:scoped": {
       "skills": [
@@ -267,8 +267,8 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 8934,
-      "routeLinesMax": 729
+      "routeEstimateMax": 9058,
+      "routeLinesMax": 733
     },
     "plan-fix:issue": {
       "skills": [
@@ -280,8 +280,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 26825,
-      "routeLinesMax": 1931
+      "routeEstimateMax": 27013,
+      "routeLinesMax": 1941
     },
     "review-change:adversarial": {
       "skills": [
@@ -382,7 +382,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4)",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
