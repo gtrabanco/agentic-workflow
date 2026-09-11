@@ -41,7 +41,7 @@ symlink gap the confinement leaves open).
 | F23 | scripts/workflow-status.mjs:1064 | code | med | fix-now | fold into phase | yes |
 | F24 | scripts/workflow-status.mjs:586-593 | code | med | fix-now | fold into phase | yes |
 | F25 | scripts/workflow-status.mjs:482-500 | code | med | fix-now | fold into phase | yes |
-| F26 | docs/workflow/MIGRATION.md:12-13 + .es.md:12-13 + ORCHESTRATION.md:41-43 + .es.md:43-44 | usage-docs | med | fix-now | fold into phase | no |
+| F26 | docs/workflow/MIGRATION.md:12-13 + .es.md:12-13 + ORCHESTRATION.md:41-43 + .es.md:43-44 | usage-docs | med | fix-now | fold into phase | yes |
 | VF-1 | docs/workflow/REPOSITORY_STATE.md:14 · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck live run: sensor emitted repository_state status "draft" on this repo's frozen table-form ledger; colon-regex read at :127 misses `\| Status \|` rows (template/docs/workflow/REPOSITORY_STATE.md:12 same shape) | code | confirmed | finding-mark | n/a | n/a |
 | VF-2 | gh pr view 150/24 → MERGED · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck live run: 25/33 dependencies.unmet are done units with MERGED PRs outside the 20-PR window; 12 spurious substrate blockers | code | confirmed | finding-mark | n/a | n/a |
 | VF-3 | /tmp cross-root fixture · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck reproducer: sensor with PROJECT=/tmp/sensed-repo produced pre_execution rows computed from the sensor's own checkout (pre-execution-snapshot.mjs:56 binds repoRoot from import.meta.url, refuses outside-root dirs) | code | confirmed | finding-mark | n/a | n/a |

@@ -38,9 +38,12 @@ The envelope has a **deterministic producer**: the read-only sensor script
 `bun scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`
 (node is the fallback when bun is absent);
 it executes the published `SENSOR_CORE` sequence, self-validates the result, and
-prints one Envelope v2 JSON document on stdout (diagnostics and declared
-`unavailable-<source>-<cause>` degradations live in `detail`, and invalid
-invocation is the only fatal exit). A driver consumes that JSON directly — the
+prints one Envelope v2 JSON document on stdout. Declared
+`unavailable-<source>-<cause>` degradations live in `detail`, while diagnostics go
+to **stderr**: a `validateEnvelope` mismatch prints `envelope self-check failed: …`
+and still exits 0, and an unexpected failure exits non-zero naming itself as
+`workflow-status failed: …`. An invalid invocation is the deliberate fatal exit
+(status 1 with a usage diagnostic). A driver consumes that JSON directly — the
 `workflow-status` skill is the human/interpreter surface over the same script,
 and neither assembles the envelope by hand.
 
