@@ -14,10 +14,15 @@ const COMMAND = { name: "design-feature", skill: "design-feature" };
 const ROUTED = { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } };
 const AVAILABLE = { "openai/gpt-5.2": { auth: true } };
 
-/** A session with a known starting point, routed through `ROUTED`. */
+/** This suite pins AC8 (the session returns after a routed turn), so every fixture
+ *  opts into the `restore` settle policy explicitly — the shipped default is now
+ *  `keep`. A fixture that wants to exercise `keep` belongs in the keep suite. */
+const restoreConfigFor = (config) => configFor({ ...config, onSettle: "restore" });
+
+/** A session with a known starting point, routed through `ROUTED` under the restore-on-settle contract (AC8). */
 function routedSession(options = {}) {
   return createSession({
-    config: configFor({ commands: ROUTED }),
+    config: restoreConfigFor({ commands: ROUTED }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -75,7 +80,7 @@ test("AC7: an explicit inherit route never snapshots and never restores", async 
 
 test("AC7: a thinking-only route restores the level and never touches the model", async () => {
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { thinking: "xhigh" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { thinking: "xhigh" } } }),
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
   });
@@ -145,7 +150,7 @@ test("AC7: two settled turns do not stack restores", async () => {
 
 test("AC8: a route that only names a model still puts the thinking level back", async () => {
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { model: "openai/gpt-5.2" } } }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "high",
@@ -163,7 +168,7 @@ test("AC8: a route that only names a model still puts the thinking level back", 
 
 test("AC7/AC8: settle applies the model first and the thinking level last", async () => {
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } } }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -201,7 +206,7 @@ test("AC7: a late `model_select` carrying the model we applied is still our own 
 
 test("AC7: a late `thinking_level_select` for the level our own switch derived is not an operator change", async () => {
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { model: "openai/gpt-5.2" } } }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "high",
@@ -223,7 +228,7 @@ test("AC7: a late `thinking_level_select` for the level our own switch derived i
 
 test("AC7: when the operator moves only the thinking level, the model comes back and their level stays", async () => {
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { model: "openai/gpt-5.2", thinking: "max" } } }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -244,7 +249,7 @@ test("AC7: when the operator moves only the thinking level, the model comes back
 
 test("AC8: a clamped thinking level is still the router's own write, not an operator move", async () => {
   const session = createSession({
-    config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" } }),
+    config: restoreConfigFor({ default: { model: "openai/gpt-5.2", thinking: "max" } }),
     models: { "openai/gpt-5.2": true },
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -264,7 +269,7 @@ test("AC8: a clamped thinking level is still the router's own write, not an oper
 
 test("AC8: an operator who really did move the level still wins over a clamped route", async () => {
   const session = createSession({
-    config: configFor({ default: { model: "openai/gpt-5.2", thinking: "max" } }),
+    config: restoreConfigFor({ default: { model: "openai/gpt-5.2", thinking: "max" } }),
     models: { "openai/gpt-5.2": true },
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "off",
@@ -320,7 +325,7 @@ test("AC8: restoring a session that had no model is said out loud, not a crash",
   // A session with no model yet is real (Pi starts headless turns without one): the
   // route still applies, and the restore has nothing to switch back to.
   const session = createSession({
-    config: configFor({ commands: ROUTED }),
+    config: restoreConfigFor({ commands: ROUTED }),
     models: AVAILABLE,
     initialModel: null,
     initialThinking: "low",
@@ -344,7 +349,7 @@ test("AC7: a thinking-only route never touches the model — including at settle
   // assertion taken before the settle, because restoring to the session's own model
   // changes no state. The log is the only witness.
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { thinking: "xhigh" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { thinking: "xhigh" } } }),
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
   });
@@ -361,7 +366,7 @@ test("AC8: a dispatch whose send throws puts the session back instead of wedging
   // proof the turn never started, so the routing must roll back right there rather
   // than leave the latch held (which would refuse every later command).
   const session = createSession({
-    config: configFor({ commands: ROUTED }),
+    config: restoreConfigFor({ commands: ROUTED }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -399,7 +404,7 @@ test("AC8: a restore that fails mid-settle must not leave the latch held", async
   // if the restore itself throws, or every later command refuses forever behind a
   // turn that no longer exists.
   const session = createSession({
-    config: configFor({ commands: ROUTED }),
+    config: restoreConfigFor({ commands: ROUTED }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -413,7 +418,7 @@ test("AC8: a restore that fails mid-settle must not leave the latch held", async
 
 test("AC8: the same rule for the console release — undo failure still clears the latch", async () => {
   const session = createSession({
-    config: configFor({ commands: ROUTED }),
+    config: restoreConfigFor({ commands: ROUTED }),
     models: AVAILABLE,
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",
@@ -427,7 +432,7 @@ test("AC8: the same rule for the console release — undo failure still clears t
 
 test("AC12: a dispatch-failed refusal on an inherit route does not claim a rollback", async () => {
   const session = createSession({
-    config: configFor({ commands: { "design-feature": { model: "inherit" } } }),
+    config: restoreConfigFor({ commands: { "design-feature": { model: "inherit" } } }),
     models: {},
     initialModel: "anthropic/claude-opus-4-5",
     initialThinking: "low",

@@ -145,7 +145,7 @@ test("AC13 through the adapter: the project config is read from Pi's cwd, and on
 });
 
 test("AC7/AC8 through the adapter: the listener guards and the restore are the ones that run", async () => {
-  const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2", thinking: "high" } } });
+  const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2", thinking: "high" }, onSettle: "restore" } });
   try {
     const before = { provider: "anthropic", id: "claude-sonnet-4-5" };
     const handlerCtx = entry.context({ model: before });
@@ -180,7 +180,7 @@ test("AC7/AC8 through the adapter: the listener guards and the restore are the o
 });
 
 test("AC7 through the adapter: a model the operator picked mid-turn is left in place", async () => {
-  const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2" } } });
+  const entry = await shippedEntry({ globalConfig: { default: { model: "openai/gpt-5.2" }, onSettle: "restore" } });
   try {
     await entry.registered.get("plan-feature").handler("", entry.context());
     const operatorModel = { provider: "anthropic", id: "claude-opus-4-5" };

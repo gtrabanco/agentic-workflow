@@ -37,6 +37,7 @@ function configLines(config: EffectiveConfig, commands: readonly string[]): stri
           `  ${overrides.length} of ${total} commands override the default route`,
         ]),
     `  when a configured model is unavailable: ${config.onUnavailableRoute}`,
+    `  after a routed command settles: ${config.onSettle}`,
   ];
 }
 
