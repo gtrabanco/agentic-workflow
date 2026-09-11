@@ -279,6 +279,10 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
   fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
   fs.copyFileSync(SCRIPT, path.join(tmp, "scripts", "workflow-status.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "schema-runtime.mjs"), path.join(tmp, "scripts", "schema-runtime.mjs"));
+  // The sensor's real import graph: the contract module it shares with the
+  // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
+  // (named precondition, never a module-not-found) are unchanged.
+  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
   const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
@@ -295,6 +299,10 @@ test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope 
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist"), { recursive: true });
   fs.copyFileSync(SCRIPT, path.join(tmp, "scripts", "workflow-status.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "schema-runtime.mjs"), path.join(tmp, "scripts", "schema-runtime.mjs"));
+  // The sensor's real import graph: the contract module it shares with the
+  // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
+  // (named precondition, never a module-not-found) are unchanged.
+  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
   fs.writeFileSync(
     path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
     "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",
@@ -685,4 +693,28 @@ test("F23: a merged PR is never reported open, and an open PR is never reported 
     roadmapRows: ["| 90 | `alpha` | planned | — | no PR yet |"],
   }).run();
   assert.equal(parseEnvelope(noneRun.stdout).pr.state, "none");
+});
+
+// ===========================================================================
+// F24/F25 — the contract's shape has one owner
+// ===========================================================================
+
+test("F24/F25: the sensor imports the contract's tables and parser, never re-declares them", () => {
+  const source = fs.readFileSync(SCRIPT, "utf8");
+  assert.match(
+    source,
+    /import \{ STAGE_ARTIFACTS, CONTEXT_SOURCES, parseReceipts \} from "\.\/pre-execution-contract\.mjs"/,
+    "the sensor reads the shared contract module",
+  );
+  assert.doesNotMatch(source, /REVIEW_STAGE_ARTIFACTS = \{\s*\n\s*spec: \[/, "no hand-mirrored stage artifact table (F24)");
+  assert.doesNotMatch(source, /const RECEIPT_SPLIT/, "no second parser of the receipt grammar (F25)");
+  assert.doesNotMatch(source, /const field = \(chunk, label\)/, "no second receipt field extractor (F25)");
+});
+
+test("F24/F25: the sensor's bound set is exactly the verifier's stage tables", () => {
+  // The bound set is derived from the shared module at import time, so a table that
+  // grows in the contract must grow in the sensor's currency check in the same edit.
+  const sensorSource = fs.readFileSync(SCRIPT, "utf8");
+  assert.match(sensorSource, /Object\.entries\(STAGE_ARTIFACTS\)\.map/, "the artifact table is read, not copied");
+  assert.match(sensorSource, /CONTEXT_SOURCES\.map\(\(source\) => source\.file\)/, "the context sources are read, not copied");
 });

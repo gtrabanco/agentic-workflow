@@ -726,8 +726,9 @@ test("findings union, dismissal, no-progress, and second-cycle diagnosis live in
 test("every receipt line the consumer parses is emitted by both stage templates (F70)", () => {
   // The consumer reads a receipt out of progress.md by label, and a label no template
   // writes parses as null - a check that then silently never runs. `Unit kind` got
-  // exactly that treatment: enforced for plans, skipped for specs.
-  const sensor = read("scripts/pre-execution-snapshot.mjs");
+  // exactly that treatment: enforced for plans, skipped for specs. The parser lives in
+  // the dependency-free contract module both scripts read (F24/F25).
+  const sensor = read("scripts/pre-execution-contract.mjs");
   const labels = [...new Set([...sensor.matchAll(/fieldFrom\(chunk, "([^"]+)"\)/g)].map((m) => m[1]))];
   assert.ok(labels.length >= 10, `only ${labels.length} parsed labels found - the scan broke`);
   // One lineage line written two ways on purpose: a SPEC receipt has no parent and
