@@ -271,6 +271,38 @@ test("`bypasses` is not a box-8 `pass` outcome", () => {
   assert.match(stdout, /^P1 box-8: /m);
 });
 
+// Fold F10 — the box-5/box-6 scans are single-pass position checks, so a
+// degenerate task line cannot backtrack quadratically (>60 s before the fix).
+const DECISION_SCAN_PLAN = `# Decision scans
+
+### P1 — Handle the input
+
+Layer: docs. Done-when: \`grep -n input docs/input.md\` → matches.
+
+- [ ] Either add \`docs/a.md\` or remove \`docs/b.md\`
+- [ ] If the flag is set then remove the legacy path
+- [ ] Move the parser work to P3
+`;
+
+test("box-5/box-6 scans keep their verdict on realistic decision text", () => {
+  const file = fixture("decision-scans.md", DECISION_SCAN_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-5: task 1 offers either\/or alternatives$/m);
+  assert.match(stdout, /^P1 box-5: task 2 carries an “If … then” scope change$/m);
+  assert.match(stdout, /^P1 box-6: task 3 moves work to another phase$/m);
+});
+
+test("a degenerate multi-hundred-KB task line completes instead of backtracking", () => {
+  const task = "either ".repeat(40_000); // ~0.28 MB, tens of thousands of scan starts
+  const plan = `# Degenerate scan\n\n### P1 — Handle the input\n\nLayer: docs. Done-when: \`grep -n input docs/input.md\` → matches.\n\n- [ ] ${task}\n`;
+  const file = fixture("degenerate-scan.md", plan);
+  const result = spawnSync(process.execPath, [LINTER, file], { encoding: "utf8", timeout: 5000 });
+  assert.equal(result.error, undefined, "the linter must finish inside 5 s");
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /^verdict PASS$/m);
+});
+
 // Fold F4 — box-7 matches the frozen substring `manual`, catching `manually`.
 const MANUALLY_GATED_PLAN = `# Manual gate
 
