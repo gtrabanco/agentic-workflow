@@ -530,3 +530,42 @@ obligations ledger records. Recorded here per the execute-phase hard rule
 (19/19 P1 pins); `node --test scripts/*.test.mjs` → 226/227, the single failure
 pre-existing on `main` (`check-skill-context` route ceilings — known-issues
 B-04).
+
+## 2026-09-11 — P3 slimming: command prose vs semantic anchors (O26), and the budget re-basis
+
+**What:** `skills/workflow-status/SKILL.md` (3.2.1 → 3.3.0) slims to
+run-the-script / read-the-JSON / interpret-`next.recommended`; the assembly
+sequence is gone and the turn contract now names the script.
+`references/SENSOR_CORE.md` replaces the git/forge command prose (the old steps
+1–2) with the script invocation, keeping the numbered semantic blocks the script
+implements (steps 3–9 including 6a, the review-mark currency rule, and the
+fix-now fold projection) plus the `sensor-fields@1` grammar block.
+`references/ENVELOPE_CORE.md` names `scripts/workflow-status.mjs` as the
+deterministic producer and drops the assembly `self-check before printing`
+heading (the script owns the `validateEnvelope` self-check).
+
+**Why the semantic anchors stay (TASKS P3 task 4 reconciliation):** three root
+suites read that prose as the *contract under test* —
+`workflow-status-pre-execution.test.mjs` reads step 8 and applies its currency
+rule to a real git fixture; `pre-execution-quality.test.mjs` reads step 6a's
+label-override rule and the verify recipe; `bounded-delivery-loops.test.mjs`
+reads the 6a heading. Re-pointing them to a grep of the script (as P3 task 4
+sketched) would **weaken** those assertions — the explicit thing O26 forbids —
+because a grep proves a string exists, not that the rule survives a real review
+turn. Keeping the prose contract *and* the script that implements it keeps every
+pin green and gains the stronger form where it applies: `bounded-delivery-loops`
+now asserts **both** the 6a semantics and the script's verifier invocation. No
+acceptance criterion, task, or scope changed.
+
+**Budget re-basis (known-issues B-04):** `node scripts/check-skill-context.mjs`
+was red repo-wide on `main` — 15 route ceilings below the tool's own
+`measured × 1.10` bound (`execute-phase:*`, `review-change:*`, predating this
+unit; growth from features 29/30/31). P3 applied the tool's prescribed
+remediation: every over-ceiling route raised to `ceil(measured × 1.10)` and the
+`workflow-status` entry added at its measured values, with the growth source
+named in `SKILL_CONTEXT_BUDGETS.json` `policy.declared`. A:14 now exits 0.
+
+**P3 gate:** `node scripts/check-skill-context.mjs` → exit 0 (39 skills / 22
+routes); `node --test scripts/bounded-delivery-loops.test.mjs
+scripts/pre-execution-quality.test.mjs scripts/workflow-status-pre-execution.test.mjs
+scripts/normative-drift.test.mjs` → exit 0 (87/87).
