@@ -167,7 +167,19 @@ const readRepo = (rel) => {
   const abs = path.join(activeRoot, rel);
   // lstat, not stat: a symlinked artifact must read as absent, never followed —
   // out-of-repo bytes must not enter the snapshot digest invisibly.
-  return fs.existsSync(abs) && fs.lstatSync(abs).isFile() ? fs.readFileSync(abs, "utf8") : null;
+  if (!fs.existsSync(abs) || !fs.lstatSync(abs).isFile()) return null;
+  // The leaf check is not confinement on its own: a symlinked *ancestor*
+  // directory (`docs/features/<unit>` → elsewhere) still ends in a regular file,
+  // so the resolved path is re-checked against the resolved root (F21). A path
+  // that cannot be resolved reads as absent.
+  try {
+    const realRoot = fs.realpathSync(activeRoot);
+    const realPrefix = realRoot.endsWith(path.sep) ? realRoot : `${realRoot}${path.sep}`;
+    if (!fs.realpathSync(abs).startsWith(realPrefix)) return null;
+  } catch {
+    return null;
+  }
+  return fs.readFileSync(abs, "utf8");
 };
 
 function unitDir(opts) {

@@ -131,12 +131,26 @@ function ghBounded(budget, ...args) {
  * Resolve a path under the sensed repository, or null when it escapes it. Every
  * filesystem read goes through this: a roadmap/fix-index cell becomes a path
  * segment, and repo content must never direct the sensor outside the project.
+ *
+ * The lexical prefix check alone is not confinement: an ancestor *directory*
+ * symlink inside the project (`docs/features/<unit>` → elsewhere) keeps the
+ * unresolved path under the root while the bytes come from outside it — the leaf
+ * `lstat` in `readProject` only refuses a symlinked leaf (F21). The resolved
+ * path is therefore re-checked against the resolved root; a path that cannot be
+ * resolved (absent) reads as absent, never as an escape hatch.
  */
 function projectPath(rel) {
   if (typeof rel !== "string") return null;
   const abs = path.resolve(PROJECT, rel);
   const prefix = PROJECT.endsWith(path.sep) ? PROJECT : `${PROJECT}${path.sep}`;
-  return abs.startsWith(prefix) ? abs : null;
+  if (!abs.startsWith(prefix)) return null;
+  try {
+    const realRoot = fs.realpathSync(PROJECT);
+    const realPrefix = realRoot.endsWith(path.sep) ? realRoot : `${realRoot}${path.sep}`;
+    return fs.realpathSync(abs).startsWith(realPrefix) ? abs : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Read a file under the sensed repository, or null when absent (or outside it). */

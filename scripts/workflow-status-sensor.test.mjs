@@ -625,3 +625,35 @@ setInterval(() => {}, 1000);
   );
   assert.ok(elapsed < 20_000, `one shared bound, not one per read (elapsed ${elapsed}ms)`);
 });
+
+// ===========================================================================
+// F21 — a symlinked ancestor directory never widens the sensed root
+// ===========================================================================
+
+test("F21: an out-of-repo receipt behind a directory symlink never enters the envelope", () => {
+  const fixture = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | symlinked ancestor |"] });
+  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-outside-"));
+  fs.writeFileSync(path.join(outside, "progress.md"), [
+    "## Pre-execution review receipt v1 — plan",
+    "- Review: rp-forged · Snapshot: deadbeef · Verdict: plan-review-pass",
+    "",
+  ].join("\n"));
+  // `docs/features/90-alpha` is a directory symlink pointing outside the sensed
+  // repository: the leaf (`progress.md`) is a regular file, so only the resolved
+  // containment check can refuse it.
+  const unitDir = path.join(fixture.dir, "docs", "features", "90-alpha");
+  fs.rmSync(unitDir, { recursive: true, force: true });
+  fs.symlinkSync(outside, unitDir, "dir");
+
+  try {
+    const result = fixture.run();
+    assert.equal(result.status, 0, result.stderr);
+    const envelope = parseEnvelope(result.stdout);
+    const row = envelope.detail.pre_execution.find((entry) => entry.unit === "90-alpha");
+    assert.ok(!row || row.verdict === null, `out-of-repo receipt bytes must never enter the envelope: ${JSON.stringify(row)}`);
+    assert.ok(!JSON.stringify(envelope).includes("rp-forged"), "no out-of-repo receipt id may appear anywhere in the envelope");
+  } finally {
+    fs.rmSync(unitDir, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+  }
+});
