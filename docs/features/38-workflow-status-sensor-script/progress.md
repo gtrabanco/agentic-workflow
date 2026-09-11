@@ -222,3 +222,30 @@ delta re-review — spec first (rp-010 L1 route), then plan.
 - Falsification: NO-CONFIRMED-GAPS under the operator's materiality bar — three invented-decision probes (flag pass-through semantics, degradation-code vocabulary, #209 fold) each resolve to a dated human decision (decisions.md 2026-09-09 q1–q4 / ask_user vocabulary / 2026-09-10 operator amendment); no promise lacking an observable check (business goal 2's proxies: A:9/A:14/A:24); no role left unspecified (3 roles, all explicit); repository-claim probes re-run live at 38a2d6d0 (A:25 greps, schema-runtime named precondition + deliberate no-published-fallback at scripts/schema-runtime.mjs:16,38, SENSOR_CORE "Steps 1-9 print these keys" at :123, spec-product projection digest re-derived by the builder)
 - Prior cycle: rp-38-20260909-010 (plan FAIL, L1 stale parent after the #209 fold) → this delta re-review; snapshot changed by design (fold + repair batches), so the no-progress guard does not apply; repeated material findings: none; new material findings: none — no CONVERGENCE-ANOMALY this turn (cycle entered on a changed snapshot with an operator-directed route, per POLICY §4's repair-in-response carve-out)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted beside the verdict block in the reporting turn
+
+## 2026-09-11 — execute-phase preflight STOP: pre-execution review gate (stale)
+
+`/execute-phase 38` ran the read-only preflight (dependency → own-status →
+pre-execution review) and stopped at the pre-execution review gate; no branch,
+planning, or source write happened beyond this ledger trace.
+
+- Dependency gate: SPEC `## Dependencies` = "None" (schema package + `workflow-status`
+  skill already on `main`; parallel-safe) → met.
+- Own-status gate: roadmap row 38 reads `planned` → proceed to the pre-execution
+  review gate.
+- Pre-execution review gate: newest `stage: plan` receipt is
+  `rp-38-20260909-010` (verdict `plan-review-fail`, snapshot `96025bc2…`).
+  `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit
+  38-workflow-status-sensor-script --parent 22cba9ae…` → exit 4,
+  `structural.reasonCode: stale-source-revision` ("the artifacts were reviewed at
+  1ce0bfae…, the bound bytes now sit at 38a2d6d0…"), changedPaths
+  `ACCEPTANCE.md`, `SPEC.md`, `decisions.md`, `planning-obligations.md`,
+  `testing.md`.
+- The plan snapshot re-derived at the current bytes with the current Product
+  parent (rp-38-20260911-011, `74b4aae9…`) is
+  `184258441e83d733b38455bf374d5e7b5e50f313cc71195293e257f5b97cb21c`; no
+  `PLAN-REVIEW-PASS` binds it. `--force` cannot reach this gate.
+
+GATE REJECTION — stale-or-missing-receipt
+Reason: stale-source-revision on the newest plan receipt rp-38-20260909-010 (plan-review-fail; reviewed at 1ce0bfae, bound bytes now at 38a2d6d0)
+Return route: /review-plan 38-workflow-status-sensor-script
