@@ -827,3 +827,39 @@ tidy past entries — they're a record.
 - **Summary:** Folded fix #209's release policy into feature 38's scope. CLAUDE.md gains the freeze-majors line (minor/patch only until #176 merges; breaking → minor + BREAKING CHANGE: footer). SPEC.md: new in-scope item 13, A:25 criterion, spec-lint counts 24→25 criteria, in-scope 1-12→1-13 mapping, E-38-9 decision. ACCEPTANCE: AC-24 row. TASKS: P4 bump task extended with #209 compliance note. Roadmap row 38 updated with fold note. ArtifactRevisionId rotated: 2bee477ba469.
 - **Decisions:** (1) The CLAUDE.md one-line policy was already in the working tree from a prior session; this commit committed it alongside the full scope amendment. (2) The existing planning artifacts (rp-007 spec receipt, rp-009 plan receipt) bind pre-amendment bytes → receipts stale for the amended set → bounded delta re-review required (spec first, then plan).
 - **Next:** /review-spec 38-workflow-status-sensor-script (bounded delta re-review over the amendment) → /review-plan 38-workflow-status-sensor-script → /execute-phase 38 P1
+
+## 2026-09-11T00:00Z — feat/38-workflow-status-sensor-script — manual
+- **Commits:** 1 (`1ce0bfae`)
+- **Files:** `docs/LOGS.md`, `docs/features/38-workflow-status-sensor-script/planning-obligations.md`
+- **Summary:** Continued the replan from where the prior session's output was cut off. Verified all plan-feature turn-contract boxes against the committed fold (32bb6434): redirect gate passes (Design status = `designed`), Product-review gate satisfied via operator-approved bounded ruling, roadmap row 38 re-read after write literally reads `planned`, readiness preflight READY-FOR-REVIEW with artifactRevisionId 2bee477ba469, dependency check clean (no blocking fix-now items; #179's gate holds until features 31/32 merge per E-38-6). Fixed obligations closure mapping line (AC-01…AC-23 → AC-01…AC-24 to include AC-24→O28(P4)). The CLAUDE.md one-line policy was already in the working tree from a prior session — no fresh implementation was needed.
+- **Decisions:** The user clarified that the original instruction was "continue the plan" (the output appeared cut off), not a fresh implementation directive. The fold was already committed; this session focused on verifying completeness and producing the closing report.
+- **Next:** /review-spec 38 (bounded delta re-review of the amendment) → /review-plan 38 → /execute-phase 38 P1
+
+## 2026-09-11T00:05Z — feat/38-workflow-status-sensor-script — manual
+- **Commits:** 0 (uncommitted — pre-execution gate blocked)
+- **Files:** none written
+- **Summary:** Attempted `execute-phase 38` (all remaining phases P1–P4). Ran all preflight gates in order: dependency (met, no deps), own-status (planned → proceed), pre-execution review — **FAILED CLOSED**. The `pre-execution-snapshot.mjs verify --stage plan` detected that receipt rp-38-20260909-009 (plan-review-pass) is stale: the fix #209 fold (`32bb6434`) changed the plan's bound `project-guide` context (`CLAUDE.md`) after the receipt was recorded. Structural reason: `stale-context`, changedPaths: [CLAUDE.md]. No implementation was performed. This confirms the fold note's own assessment that "bounded delta re-review required (spec first, then plan)".
+- **Decisions:** The pre-execution review gate is the only gate `--force` cannot reach — it guards a verdict only an independent reviewer can produce. The operator-approved fold changed bound bytes; a fresh review is mandatory before any execution.
+- **Next:** /review-spec 38-workflow-status-sensor-script (bounded delta re-review of the fix #209 fold) → /review-plan 38-workflow-status-sensor-script → /execute-phase 38 P1
+
+
+
+## 2026-09-11T00:10Z — feat/38-workflow-status-sensor-script — review-plan (in progress)
+- **Commits:** 0 (this session read-only analysis, no disk writes yet)
+- **Files:** all docs/features/38-workflow-status-sensor-script/ artifacts read (SPEC.md, ACCEPTANCE.md, PLAN.md, TASKS.md, testing.md, decisions.md, planning-evidence.md, planning-obligations.md, progress.md, architecture-notes.md, planning-findings.md)
+- **Summary:** Running review-plan on feature 38's engineering half (38-plan-1). Discovered two blocking discrepancies: (1) SPEC.md claims artifactRevisionId 2bee477ba469 but the actual sha256 prefix at both commit 32bb6434 (fix #209 fold) and HEAD is 2e0ab6084f21 — identity mismatch per POLICY section 7; (2) The parent spec receipt rp-008 is stale because the fix #209 fold changed the Product half — progress.md mandates bounded delta re-review (spec first, then plan). Verdict formulation in progress: PLAN-REVIEW-FAIL (class: product) with F31 (identity mismatch) and F32 (cross-reference drift in PLAN.md). Digest verification and receipt writing pending.
+- **Next:** finish the plan review verdict, append findings and receipt to the project artifacts, then decide routing (review-spec first, or PLAN-REVIEW-FAIL with routing instructions).
+
+## 2026-09-11T00:30Z — feat/38-workflow-status-sensor-script — manual (diagnostic)
+- **Commits:** 0 (diagnostic session, no repo changes)
+- **Files:** GitHub issue created at https://github.com/gtrabanco/pi-nan-provider/issues/2
+- **Summary:** Diagnosed the intermittent `"Model response failed: Stream ended without finish_reason"` error reported by the user when using GLM5.3-flash via the NaN provider (`api.nan.builders`). Confirmed it is an **upstream remote flake**: the LiteLLM gateway intermittently cuts the SSE stream before emitting the final chunk with `finish_reason`. Verified by (a) tracing through `pi-ai`'s `openai-completions.js:501` where the error is thrown, (b) replaying ~40 live streaming requests (plain text, tool calls, high reasoning, `include_usage:true`, 4096–8192 max_tokens) — all succeeded but gateway also returned 429s, confirming instability. No deterministic reproduction.
+- **Decisions:** (1) Root fix: add `"supportsFinishReason": false` to `NAN_COMPAT` in `scripts/generate-models.ts` (~line 79) and regenerate catalog, so pi-ai treats cut streams as `stop`/`toolUse` instead of throwing. (2) Better fix: add retry for this specific error in `pi-ai`'s streaming pipeline (current `retryProviderRequest` only handles HTTP errors). (3) Root cause: NaN's gateway should always emit `finish_reason` + `[DONE]` or an error object. (4) Created GitHub issue #2 on pi-nan-provider with full diagnosis and fix proposal.
+- **Next:** Merge the fix `"supportsFinishReason": false` into `NAN_COMPAT` → regenerate (`bun run generate-models`). Track issue #2 upstream with NaN.
+
+## 2026-09-11T12:10Z — feat/38-workflow-status-sensor-script — design-feature (repair batch)
+- **Commits:** 1 (this batch)
+- **Files:** SPEC.md, ACCEPTANCE.md, planning-obligations.md, testing.md, planning-findings.md, decisions.md, progress.md, docs/LOGS.md
+- **Summary:** Operator-directed consolidated repair batch over plan-review receipt rp-38-20260909-010 (F31–F34) + open info F24. F31 identity repair: the fold batch's in-file revision stamp (2bee477ba469) removed — recomputation gives 2e0ab6084f21… (POLICY §7 pairing recorded claimed-beside-recomputed in decisions.md); revision lineage restored to the decisions/progress-only convention (rp-001…rp-009), new artifactRevisionId 5eb9724bb44f. F32: ACCEPTANCE AC-07 + obligations O7 re-aligned to SPEC A:7's scoped grep. F33: O25/O26/O27 restored verbatim from parent 2e34445b. F34: testing.md envelope-mismatch row P2 → P1. F24: A:10 gloss aligned. F29 stays open/advisory.
+- **Decisions:** Operator picked "Repair F31–F34" from the design-feature review-mode question — consolidated batch form per the F25–F28 precedent; all repairs mechanical/intent-preserving or ledger closure completion; no receipt text touched; no severity edited; no forge issue opened.
+- **Next:** /review-spec 38-workflow-status-sensor-script (bounded delta re-review) → /review-plan 38 → /execute-phase 38 P1

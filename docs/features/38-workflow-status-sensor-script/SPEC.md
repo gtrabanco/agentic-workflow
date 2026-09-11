@@ -290,7 +290,7 @@ genuinely judgement-only criteria labelled `read-verified`.
       a gitignored build output; verified live 2026-09-09 — so a bare-specifier
       import line could never resolve and must not be mandated)
 - [ ] A:9 `skills/workflow-status/SKILL.md` slimmed: SENSOR_CORE sequence replaced by script call reference — check: `git diff` shows SENSOR_CORE steps reduced, script call added
-- [ ] A:10 `--help` and `--version` flags supported — check: `node scripts/workflow-status.mjs --help` exits 0 and prints usage; `--version` exits 0 and prints version
+- [ ] A:10 `--help` and `--version` flags supported — check: `node scripts/workflow-status.mjs --help` exits 0 and prints usage; `--version` exits 0 and prints the schema package's version (source per E-38-4; F24 repair — the criterion text now carries the version source that sweep row 13's gloss and the frozen AC-10 outcome cell already name)
 - [ ] A:11 No external dependencies beyond the schema package (consumed via the
       schema-runtime loader's built-dist precondition, same as the repo's root
       tests) — check, two cases: (a) with the schema runtime built
@@ -557,8 +557,18 @@ Engineering boxes (additionally, at scaffold time):
 product boxes pass. `plan-feature` may now plan this feature.
 
 2026-09-10 scope amendment (fix #209 fold): A:25 added, 24→25 runnable criteria,
-in-scope items 1–12→1–13, E-38-9 recorded; artifactRevisionId: 2bee477ba469
-(first 12 hex of sha256(SPEC.md)).
+in-scope items 1–12→1–13, E-38-9 recorded.
+
+2026-09-11 repair batch over plan-review receipt rp-38-20260909-010 (F31–F34 +
+open info F24; operator-directed, F25–F28 precedent): the fold batch's in-file
+revision stamp is removed as the F31 identity repair — the recorded
+artifactRevisionId 2bee477ba469 (claimed "first 12 hex of sha256(SPEC.md)") is
+unsupported by recomputation (sha256(SPEC.md) at 32bb6434/1ce0bfae =
+2e0ab6084f21…; POLICY §7 records the claimed value beside the recomputed one,
+never substitutes it). The revision lineage lives only in decisions.md and
+progress.md — the convention receipts rp-001…rp-009 verified — never inline in
+this file. A:10's check text now carries the version source named by sweep row
+13's gloss (F24, mechanical). Criterion counts unchanged.
 
 ---
 

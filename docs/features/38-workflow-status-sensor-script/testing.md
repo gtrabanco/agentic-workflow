@@ -16,7 +16,7 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
 
 - **sensor:empty-state** — fixture repo with no roadmap rows, no PRs, no in-flight units; envelope prints the empty shapes (`design_candidates: []`, `fix_now: []`), exit 0 (P2, A-02 fixture).
 - **sensor:invalid-input** — `--not-a-real-flag` → non-zero + stderr usage (P2, A-20); missing path / invalid JSON hint → `unavailable-hint-<cause>` note, exit 0 (P2, A-19).
-- **sensor:envelope-mismatch** — stub schema build whose `validateEnvelope` always fails → stderr diagnostic, envelope still printed, exit 0 (P2, E-38-1).
+- **sensor:envelope-mismatch** — stub schema build whose `validateEnvelope` always fails → stderr diagnostic, envelope still printed, exit 0 (P1, E-38-1; F34 repair re-points the stale P2 label — ladder row 1 and the TASKS P1 pin carry this scenario).
 - **sensor:dependency-outage** — `gh` shim failing fast → fail-fast degradation codes, exit 0 (P2, A-4); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (P2, A-21).
 - **sensor:concurrent-action** — run twice in parallel on the same tree: both exit 0, outputs byte-identical, no locks or shared state (P2, A-5 concurrent run).
 - **sensor:limit-threshold** — fixture with > 5 open issues → `untriaged_issues.oldest_open` capped at 5; merged-PR list capped at 20 (P2, ENVELOPE_FIELDS/SENSOR_CORE caps).
