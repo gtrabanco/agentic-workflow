@@ -36,7 +36,7 @@ symlink gap the confinement leaves open).
 | F18 | scripts/workflow-status-sensor.test.mjs (no findings-ledger boundary coverage) | verify | med | fix-now | fold into phase | yes |
 | F19 | scripts/workflow-status.mjs:229-239,35,98,371 (forge reads) | perf | med | fix-now | fold into phase | yes |
 | F20 | scripts/workflow-status.mjs:916,923-924,517 | perf | med | fix-now | fold into phase | no |
-| F21 | scripts/workflow-status.mjs:105-121 (projectPath/readProject; same leaf-only pattern pre-execution-snapshot.mjs:167) | security | med | fix-now | fold into phase | no |
+| F21 | scripts/workflow-status.mjs:105-121 (projectPath/readProject; same leaf-only pattern pre-execution-snapshot.mjs:167) | security | med | fix-now | fold into phase | yes |
 | F22 | docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md (SPEC criterion A:24 row dropped) | workflow | med | fix-now | replan-in-unit (user-confirmed manifest amendment, then /review-plan 38) | no |
 | F23 | scripts/workflow-status.mjs:1064 | code | med | fix-now | fold into phase | no |
 | F24 | scripts/workflow-status.mjs:586-593 | code | med | fix-now | fold into phase | no |
