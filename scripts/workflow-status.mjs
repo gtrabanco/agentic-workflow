@@ -22,6 +22,12 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { loadSchemaRuntime } from "./schema-runtime.mjs";
+// The contract's *shape* — the stage artifact tables, the context sources and the
+// receipt grammar — is owned by one dependency-free module this sensor and the
+// verifier both import: the sensor used to hand-mirror the tables and re-implement
+// the parser, so a change to the bound set silently checked the wrong paths (F24)
+// and the two parsers could drift (F25).
+import { STAGE_ARTIFACTS, CONTEXT_SOURCES, parseReceipts } from "./pre-execution-contract.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -526,26 +532,12 @@ function computeDependencies(units, mergeResolver) {
 // Step 6a — pre-execution receipt sensing (subprocess to the snapshot verifier)
 // ---------------------------------------------------------------------------
 
-const RECEIPT_SPLIT = /^## Pre-execution review receipt v1 — /m;
-const field = (chunk, label) => new RegExp(`${label}:\\s*([^\\n·]+)`).exec(chunk)?.[1]?.replace(/[`]/g, "").trim() ?? null;
-
-/** The newest receipt block for a stage, or null. */
+/**
+ * The newest receipt block for a stage, or null — the contract module's parser, so
+ * the sensor and the verifier can never disagree about the grammar (F25).
+ */
 function newestReceipt(progressText, stage) {
-  if (!progressText) return null;
-  const blocks = progressText.split(RECEIPT_SPLIT).slice(1);
-  let found = null;
-  for (const block of blocks) {
-    const blockStage = block.startsWith("plan") ? "plan" : block.startsWith("spec") ? "spec" : "unknown";
-    if (blockStage !== stage) continue;
-    found = {
-      stage: blockStage,
-      id: field(block, "Review"),
-      snapshot: field(block, "Snapshot"),
-      verdict: field(block, "Verdict"),
-      parent: field(block, "Parent SPEC snapshot") ?? field(block, "Parent"),
-    };
-  }
-  return found;
+  return parseReceipts(progressText).filter((receipt) => receipt.stage === stage).pop() ?? null;
 }
 
 /** Sense one stage's receipt through the verifier; returns `{label, ...}`. */
@@ -625,16 +617,15 @@ function readPhaseProgress(unitDir) {
 
 /**
  * The paths a pre-execution review binds: the stage's artifact files plus the
- * governing authorities. Mirrors the two tables `scripts/pre-execution-snapshot.mjs`
- * owns (`STAGE_ARTIFACTS` + `CONTEXT_SOURCES`); `pre-execution-review`'s
- * `SNAPSHOT.md` is the owner of record for the set, and step 8 orders currency over
- * exactly these paths.
+ * governing authorities. Derived from the contract module the verifier also reads
+ * — `pre-execution-review`'s `SNAPSHOT.md` is the owner of record for the set, and
+ * step 8 orders currency over exactly these paths — so the sensor can never bind a
+ * different set than the verifier (F24).
  */
-const REVIEW_STAGE_ARTIFACTS = {
-  spec: ["SPEC.md"],
-  plan: ["SPEC.md", "ACCEPTANCE.md", "planning-evidence.md", "planning-obligations.md", "PLAN.md", "TASKS.md", "testing.md", "decisions.md", "architecture-notes.md"],
-};
-const REVIEW_CONTEXT_PATHS = ["CLAUDE.md", "docs/workflow/REPOSITORY_STATE.md", "docs/architecture/ARCHITECTURAL_INVARIANTS.md"];
+const REVIEW_STAGE_ARTIFACTS = Object.fromEntries(
+  Object.entries(STAGE_ARTIFACTS).map(([stage, rows]) => [stage, rows.map((row) => row.file)]),
+);
+const REVIEW_CONTEXT_PATHS = CONTEXT_SOURCES.map((source) => source.file);
 const boundPathsFor = (unitDir, stage) => [
   ...(REVIEW_STAGE_ARTIFACTS[stage] ?? REVIEW_STAGE_ARTIFACTS.plan).map((file) => `${unitDir}/${file}`),
   ...REVIEW_CONTEXT_PATHS,
