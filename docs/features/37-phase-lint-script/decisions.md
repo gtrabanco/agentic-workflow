@@ -203,3 +203,57 @@ perform), run before hand-off:
   (no target file — command/assertion/process steps); zero ambiguous, zero
   cross-layer targets.
 - box-3: task counts 3/6/3/7/8, all within the ≤ 8 (≤ 10 hardening) limits.
+
+## F7 fold — box-2 test-file mapping (`37-plan-5`, 2026-09-11)
+
+User-directed replan-in-unit (review-findings.md F7, cycle-1 code review, class
+`replan-in-unit`, user-confirmed): the frozen box-2 prefix table could not
+express the owner-sanctioned test-only shape, so a plan correctly following
+`phase-contract` rule 2 ("a test-only phase declares `hardening`") was BLOCKED
+on its own test files (VF-7: test-only `Layer: hardening` phase creating
+`scripts/tokenizer.test.mjs` → `BLOCKED — box 2`).
+
+Decision (plan owner):
+
+- SPEC §Design box-2 gains the frozen test-file mapping: a **test file** is a
+  target whose basename contains `.test.` (mechanical, the repository's
+  colocated-test convention — PE-006; the surrounding dots keep
+  `latest.config` / `unit.testing.mjs` out); in a phase declared `hardening`
+  a test-file target maps to `hardening`; a non-test target in `hardening`
+  still maps via the prefix table (so `hardening` stays test-only); a test
+  file everywhere else maps via the prefix table like any file (owner rule 2
+  clause 1 — tests for the phase's own layer belong to the phase).
+  `close-out` is deliberately NOT given the mapping: the owner rule names
+  `hardening` only, and the literal close-out chain carries no test-file
+  targets — fail-closed over a guess.
+- Plan re-cut to six phases: new P5 "Implement the box-2 test-file mapping"
+  (config/infra: red-first corpus fixtures + mapping implementation; O13,
+  PE-010), and the former close-out P5 renumbered P6 — tasks, ticks and
+  fingerprint unchanged except the phase number. `phase-contract` is NOT
+  touched (amended once in P1, sole rule owner — O12). ACCEPTANCE.md is NOT
+  modified: AC1–AC10 are unchanged and the new fixtures fall under AC5's
+  corpus validator, so the frozen acceptance blob stays `21adb084…`.
+- Convergence argument (cycle-3 anomaly requirement): fingerprints and
+  grammar are re-derived by the linter itself over the re-cut plan — not by a
+  hand walk. Output:
+
+```
+$ node scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:3:amend-phase-contract-rule-1
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:implement-deterministic-phase-linter
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:create-producer-crate-vehicle
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:7:slim-three-consumer-routes-to-run-and-paste
+P5 Phase-lint: PASS (8/8) · fingerprint P5:config/infra:2:implement-box-2-test-file-mapping
+P6 Phase-lint: PASS (8/8) · fingerprint P6:hardening:8:hardening-pr
+verdict PASS
+fingerprint: 3ea28e5b965e08cfc59d5410f80fed542e5fb8e5398268130a82f98bc4794940
+```
+
+  (whole-plan sha256 after the re-cut: `3ea28e5b…`; was `b0127303…` at P2.)
+- Parent Product lineage re-proven, not assumed: `bun scripts/pre-execution-snapshot.mjs
+  build --stage spec --unit 37-phase-lint-script --source-revision 05480514…
+  --artifact-revision 05480514…` over the re-cut tree →
+  `8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0` — exact
+  match with SPEC-REVIEW-37-1's bound snapshot (the re-cut's SPEC edits are
+  confined to the Engineering half). `node --test scripts/phase-lint.test.mjs`
+  → 26/26 (no code changed in this cycle).

@@ -1,9 +1,10 @@
 Plan-stage evidence table (row shape owned by `evidence-grounding/references/ROWS.md`
 § "Plan-stage table — one declared extension"). Artifact revision: `37-plan-4`.
 
-Phase labels follow the 5-phase re-cut: rule-owner amendment (P1) → linter (P2)
-→ crate (P3) → consumer slims (P4) → hardening & PR (P5); rows PE-002/PE-003/PE-009
-previously cited the old 4-phase labels.
+Phase labels follow the 6-phase re-cut (`37-plan-5`): rule-owner amendment (P1)
+→ linter (P2) → crate (P3) → consumer slims (P4) → box-2 test-file mapping
+(P5) → hardening & PR (P6); rows PE-002/PE-003/PE-009 previously cited the old
+4-phase labels, PE-001–PE-009 the old 5-phase labels.
 
 | id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|---|
@@ -16,3 +17,4 @@ previously cited the old 4-phase labels.
 | PE-007 | Roadmap row 37 is `planned`, depends on none; features 40 and 42 depend on 37 (40 also on 38) | document | `docs/features/ROADMAP.md` rows 37/40/42; `docs/features/ROADMAP_EXECUTION_ORDER.md` | current | ordering, P-phase order | current | proven | — |
 | PE-008 | Spec review F1 (info, verified): in-scope bullet 7's "AC9 (n/a pending planning)" mapping was corrected by the design interview to AC10; AC9 verifies no schema change — this plan treats AC9 and AC10 as independent criteria | ledger | `planning-findings.md` F1 (spec-stage, info, verified); SPEC §Acceptance criteria AC9 (no schema change) and AC10 (crate + tmp convention — covers the vehicle rule, the location F1 verified) | receipt snapshot `8f736cc9…` | O-AC9, O-AC10 | current | proven | — |
 | PE-009 | Fix #191 (`handoff-review-fold-order`, in-progress · PR #193) edits `skills/execute-phase/` terminal hand-off text — a P4 touch area | forge | `docs/fix/README.md` row #191; https://github.com/gtrabanco/agentic-workflow/pull/193 | open 2026-09-09 | SPEC §Open questions risk 1 | current | proven | re-check at P4 execution time |
+| PE-010 | The owner-sanctioned test-only shape is owner rule 2 text — "a test-only phase declares `hardening`" — and the frozen box-2 prefix table could not express it: a test-only phase declared `hardening` was BLOCKED on its own test files (VF-7 reproducer, cycle-1 code review). The mapping fix and its mechanical test-file definition (basename contains `.test.`) are frozen in SPEC §Design box-2 | repository | `skills/phase-contract/SKILL.md` rule 2; `review-findings.md` F7/VF-7 (HEAD `d693fe8e`); SPEC §Design box-2 | HEAD `1392ad81` (re-cut `37-plan-5`) | O13, P5 | current | proven | — |
