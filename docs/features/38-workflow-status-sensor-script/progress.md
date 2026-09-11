@@ -268,3 +268,63 @@ Return route: /review-plan 38-workflow-status-sensor-script
 - Failed checks: none · Passed: L1 L2 L3 L4 L5 L6 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 (advisory rows recorded against their checks: F35→P12, F36→P10, F37→P11/L5, F41→L2; F38/F39/F40 informational)
 - Falsification: CONFIRMED-GAPS (advisory class only) — invented-claim probes: none (19/19 rows verified; PE-011 decay noted); undeliverable obligation: none; wrong-reason validator: A-09's staging window (F36 — a false-FAILURE at P4, not a silent pass); broken-if-shipped-as-written: nothing user-visible (B-01/B-02 declared boundaries; F37's unexercised codes are declared vocabulary); failure state with no scenario: forge-auth + forge-missing-cli (F37)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted beside the verdict block in the reporting turn
+
+## 2026-09-11 — advisory fold batch: plan-review findings F35–F41 (artifactRevisionId: a33f09373308)
+
+Operator-directed mechanical fold of rp-38-20260911-012's seven advisory/info
+findings into the planned artifacts (repair-in-response on a planned unit — no
+re-scaffold; the roadmap row is untouched). Handoff id `a33f09373308` = first
+12 hex of sha256(SPEC.md) at this batch's final bytes, recorded beside the
+recomputed source revision per POLICY §7 pairing (never substituted into it).
+
+Gates run before the write:
+- Redirect gate: roadmap row 38 reads `planned` → no scaffold this turn (the
+  gate's re-plan-loop STOP holds); the operation is a findings fold, the
+  review-flow's "replan the batch" route, not a re-cut of the artifact set.
+- Product-review gate: `node scripts/pre-execution-snapshot.mjs verify --stage
+  spec --unit 38-workflow-status-sensor-script --receipt rp-38-20260911-011` →
+  exit 0, `current: true` before the write; re-verified after the write —
+  `digestMatches: true` (the `spec-product-v1` projection excludes the
+  Engineering half, so these plan-side writes do not rotate the Product digest;
+  rp-011 remains the bound Product parent).
+- Dependency & blocker check: SPEC `## Dependencies` = None; fix index (#182
+  `planned` · PR #190 open, #179 `pending`) touches review/receipt tooling,
+  disjoint from 38's surfaces → no unmet dependency, no blocking fix-now.
+
+Folds (one commit, F-ids per planning-findings.md):
+- **F35** — TASKS P1 task 4's envelope-skeleton literal corrected to the
+  schema's actual shape: all 14 required keys in `Envelope` interface order,
+  `pr` an object (not an array), `next` = recommended + alternatives + tier
+  (the nonexistent `next.state` removed), validating placeholder sub-shapes;
+  schema (PE-002) named as the shape authority.
+- **F36** — ACCEPTANCE AC-09 + obligations O9 re-formed against
+  `git diff main...HEAD` + a pinned baseline (10 numbered-command steps in
+  SENSOR_CORE.md at `main`); the staging-window false-FAILURE at P4 is gone.
+- **F37** — shim route (the Design failure contract stays intact, no product
+  change): `unavailable-forge-missing-cli` added to P2 task 8's implemented
+  set; auth-failing + `gh`-missing-PATH shim pins added to the P2 suite;
+  `sensor:dependency-outage` scenario row + testing.md ladder/inventory
+  extended (auth / missing-cli / missing-git); P2 done-when + SPEC pins clause
+  name the new shim families.
+- **F38** — `### Decisions to confirm` deduped to one E-38-9 (the stale first
+  copy removed; the fuller end-of-list copy kept) and the lead-in dated.
+- **F39** — obligations header refreshed to AC-01…AC-24 + AC-RV and invariant
+  rows O-01/O-02 (matching the ledger's real 30 rows and Closure block).
+- **F40** — PLAN.md P4 Task count 8 → 9 (fingerprint P4:hardening:9 + TASKS
+  checkbox count agree).
+- **F41** — PE-011 refreshed at live-read 2026-09-11: fix index #182
+  `planned` · PR #190 open, #179 `pending`; branch `fix/179-…` unresolvable
+  locally; the affected decision re-verifies TRUE (no blocking fix-now).
+
+Findings F35–F41 marked `resolved` @ `a33f09373308` in planning-findings.md.
+F29 stays open/advisory (operator materiality bar, rp-008 precedent). Phase
+structure unchanged — task counts 8/8/7/9 and all four fingerprints intact
+(phase-contract 8-box preserved; no phase-lint binary in this worktree, feat
+37 unmerged here — counts re-checked by hand).
+
+Readiness preflight `stage: plan`: READY-FOR-REVIEW (delta — the fold batch's
+changed surfaces + the findings' resolution evidence; unchanged surfaces bound
+by rp-007/rp-010/rp-012 sweeps). The newest plan receipt (rp-012) binds the
+pre-batch bytes, so it is stale for the folded set by construction → route:
+/review-plan 38 (delta re-review re-derived over the post-batch snapshot with
+Product parent rp-011) → /execute-phase 38.

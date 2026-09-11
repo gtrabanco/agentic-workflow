@@ -33,11 +33,20 @@ git fixture repo, and the existing root suites still exit 0.
   (read|setRawMode)|@clack|inquirer|prompts?\(|confirm\(` — returns nothing. Both greps
   are fixture-test assertions (regex against the script source file, not runtime calls).
 - [ ] Implement envelope skeleton — build the Envelope v2 object in the schema's literal
-  field order: `unit` (empty object), `pr` (empty array), `gates` (empty object),
-  `findings` (`fix_now` empty array), `dependencies` (empty), `blockers` (empty array),
-  `recommendations` (empty object), `needs_input` (null), `next` (`state` and
-  `recommended` keys), `detail` (required, may be empty), `state` (string). Build
-  `state: "OK"`, `recommended` as a placeholder string.
+  interface order (F35 repair: all 14 required keys, `envelope.schema.json` root
+  `required` = `Envelope` :167-182): `skill` (`"workflow-status"`), `state` (`"OK"`),
+  `summary` (placeholder string), `unit` (`{type: "none", id: null, issue: null,
+  branch: null}`), `phase` (`{current: null, total: null, completed: null}`), `pr`
+  (`{number: null, url: null, state: "none", head_sha: null, merge_ready: null,
+  ci: null}` — an object, not an array), `gates` (`{verification: null,
+  review_pending: null, audit_pending: null}`), `findings` (`{fix_now: [],
+  issues_filed: [], untriaged: 0, decisions_recorded: 0}`), `blockers` (empty array),
+  `dependencies` (`{unmet: [], build_order: []}`), `recommendations`
+  (`{product_audit: false, reason: null}`), `needs_input` (null), `next`
+  (`recommended` placeholder string + `alternatives: []` + `tier: "cheap"` — no
+  `next.state` key exists), `detail` (`{}` — required, may be empty). The shape
+  authority is the schema (PE-002), not this prose: the skeleton must pass
+  `validateEnvelope` (A-02's red pin).
 - [ ] Implement self-validation — call `validateEnvelope(envelope)` after building it;
   if validation fails, print the validation error to stderr but still print the envelope
   to stdout with exit 0 (E-38-1: the self-check is diagnostic, not a gate). If validation
@@ -64,8 +73,9 @@ git fixture repo, and the existing root suites still exit 0.
 
 Layer: config/infra · Done-when: `node --test
 scripts/workflow-status-sensor.test.mjs` → exit 0 with the offline,
-forge-timeout, missing-git, hint-guard, hint-fail-open, `--help`/`--version`,
-and stream-separation pins green and every P1 pin unchanged.
+forge-timeout, forge-auth, forge-missing-cli, missing-git, hint-guard,
+hint-fail-open, `--help`/`--version`, and stream-separation pins green and
+every P1 pin unchanged.
 
 - [ ] Implement SENSOR_CORE steps 1–2 — `git branch --show-current` (returns current branch
   name), `git status --porcelain` (dirty tree detection), `git fetch` + `git status -sb`
@@ -134,12 +144,16 @@ and stream-separation pins green and every P1 pin unchanged.
   mutates `state`/`next` (A:18 pin).
 - [ ] Implement degrade-to-namespaced-codes — every environmental failure produces a
   namespaced code in `detail`: forge `unavailable-forge-no-network`,
-  `unavailable-forge-timeout` (bounded wall-clock timeout), `unavailable-forge-auth`;
-  git `unavailable-git-missing`; hint `unavailable-hint-missing-path`,
+  `unavailable-forge-timeout` (bounded wall-clock timeout), `unavailable-forge-auth`,
+  `unavailable-forge-missing-cli` (`gh` absent from PATH — F37 repair: all four forge
+  causes of the Design failure contract are implemented); git
+  `unavailable-git-missing`; hint `unavailable-hint-missing-path`,
   `unavailable-hint-invalid-json`; all degrade to exit 0. The offline fixture pin
   (A:4) asserts severed network → fail-fast degradation codes, exit 0, no hang.
   The timed-out-forge pin (A:21) asserts non-terminating `gh` shim →
-  `unavailable-forge-timeout` within the bound, exit 0.
+  `unavailable-forge-timeout` within the bound, exit 0. The F37 shim pins assert an
+  auth-failing `gh` shim → `unavailable-forge-auth`, exit 0, and `gh` absent from
+  PATH → `unavailable-forge-missing-cli`, exit 0.
 
 ## P3 — Workflow-status skill slimming
 
