@@ -186,7 +186,21 @@ function readGitState() {
 const FORGE_READS = {
   openPrs: ["pr", "list", "--state", "open", "--json", "number,title,headRefName,url,statusCheckRollup"],
   mergedPrs: ["pr", "list", "--state", "merged", "--limit", "20", "--json", "number,headRefName"],
+  // The authoritative merge state for a PR outside the recent-merge window. The
+  // `--limit 20` window above is a fast path, never evidence: reading its absence
+  // as "unmerged" falsified every long-shipped unit's dependencies and produced
+  // spurious substrate blockers. Read lazily — only a `done` row whose PR is
+  // neither open nor recently merged needs it.
+  allPrStates: ["pr", "list", "--state", "all", "--limit", "1000", "--json", "number,state"],
   openIssues: ["issue", "list", "--state", "open", "--json", "number,title,labels"],
+};
+
+/** A forge read failure degrades the whole dimension with one declared code. */
+const degradationFor = (failure) => {
+  if (failure.missing) return "unavailable-forge-missing-cli";
+  if (failure.timedOut) return "unavailable-forge-timeout";
+  if (/authenticat|401|credential|bad credentials/i.test(failure.stderr ?? "")) return "unavailable-forge-auth";
+  return "unavailable-forge-no-network";
 };
 
 function readForgeState() {
@@ -206,13 +220,6 @@ function readForgeState() {
   };
 
   /** A forge read failure degrades the whole dimension with one declared code. */
-  const degradationFor = (failure) => {
-    if (failure.missing) return "unavailable-forge-missing-cli";
-    if (failure.timedOut) return "unavailable-forge-timeout";
-    if (/authenticat|401|credential|bad credentials/i.test(failure.stderr ?? "")) return "unavailable-forge-auth";
-    return "unavailable-forge-no-network";
-  };
-
   const first = readList("openPrs");
   if (!first.available) {
     const code = degradationFor(first.failure ?? {});
@@ -332,16 +339,53 @@ function parseFixIndex(text) {
   return units;
 }
 
-/** Merge detection: `done` + a PR the forge reports merged (open PRs are NOT met). */
-function isMerged(unit, forge) {
-  if (unit.status !== "done") return false;
+/**
+ * Merge detection. A `done` row asserts its linked PR closed; the one negative the
+ * forge can prove is that the PR is still OPEN — and an open PR is NOT met.
+ *
+ * The recently-merged window (`--limit 20`) confirms a recent merge early, but its
+ * ABSENCE is never evidence of non-merge: the window is bounded, and reading a
+ * long-shipped unit's PR as unmerged there falsified its dependencies and every
+ * dependent, and produced "done but dependencies are unmerged" substrate blockers
+ * across the roadmap. A PR outside the window is resolved from the forge's own
+ * per-PR state, and when the forge cannot answer at all the `done` row stands —
+ * optimistic, because a false "unmerged" blocks startable work repo-wide.
+ */
+function makeMergeResolver(forge) {
   const openNumbers = new Set((forge.openPrs ?? []).map((pr) => pr.number));
-  if (unit.pr && openNumbers.has(unit.pr.number)) return false;
-  if (unit.pr) {
-    const mergedNumbers = new Set((forge.mergedPrs ?? []).map((pr) => pr.number));
-    return mergedNumbers.has(unit.pr.number);
-  }
-  return true;
+  const recentMerged = new Set((forge.mergedPrs ?? []).map((pr) => pr.number));
+  let resolvable = Boolean(forge.available);
+  let states = null;
+  const allStates = () => {
+    if (states) return states;
+    states = new Map();
+    const result = gh(...FORGE_READS.allPrStates);
+    if (result.ok) {
+      try {
+        for (const pr of JSON.parse(result.stdout)) states.set(pr.number, String(pr.state ?? "").toUpperCase());
+      } catch { /* an unparsable list reads as no list, handled below */ }
+    }
+    if (states.size === 0) {
+      const code = degradationFor(result);
+      (forge.degradations ?? []).push({
+        source: "forge",
+        code,
+        detail: "the all-states PR read failed; a closed-unmerged PR cannot be told from a merged one",
+      });
+      (forge.observations ?? []).push(`merge state unverified outside the recent-merge window (${code})`);
+      resolvable = false;
+    }
+    return states;
+  };
+  return (unit) => {
+    if (unit.status !== "done") return false;
+    if (!unit.pr) return true;
+    if (openNumbers.has(unit.pr.number)) return false;
+    if (recentMerged.has(unit.pr.number)) return true;
+    if (!resolvable) return true;
+    const state = allStates().get(unit.pr.number);
+    return state ? state === "MERGED" : true;
+  };
 }
 
 const byNumber = (units) => {
@@ -353,10 +397,10 @@ const byNumber = (units) => {
 };
 
 /** Step 5 — transitive dependency closure + substrate inconsistencies. */
-function computeDependencies(units, forge) {
+function computeDependencies(units, mergeResolver) {
   const featureByNumber = byNumber(units);
   const byId = new Map(units.map((unit) => [unit.id, unit]));
-  const merged = new Set(units.filter((unit) => isMerged(unit, forge)).map((unit) => unit.id));
+  const merged = new Set(units.filter((unit) => mergeResolver(unit)).map((unit) => unit.id));
   const blockers = [];
   const observations = [];
 
@@ -755,7 +799,8 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const roadmap = parseRoadmap(readProject("docs/features/ROADMAP.md"));
   const fixes = parseFixIndex(readProject("docs/fix/README.md"));
   const units = [...roadmap, ...fixes];
-  const dependencies = computeDependencies(units, forge);
+  const mergeResolver = makeMergeResolver(forge);
+  const dependencies = computeDependencies(units, mergeResolver);
 
   const observations = [...gitState.observations, ...forge.observations, ...dependencies.observations];
   for (const unit of units) {
@@ -770,6 +815,8 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const designCandidates = [];
   const blocked = {};
   const gateBlockers = [];
+  /** A `done` row whose linked PR is still open: a unit at the merge gate. */
+  const isOpenPr = (unit) => Boolean(unit.pr && (forge.openPrs ?? []).some((pr) => pr.number === unit.pr.number));
   for (const unit of units) {
     const unmetDeps = dependencies.unmetFor(unit);
     if (unit.status === "idea") {
@@ -780,7 +827,11 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       blocked[unit.id] = { unmet: unmetDeps, build_order: dependencyBuildOrder(unit, dependencies) };
       continue;
     }
-    if (!OPEN_STATES.has(unit.status)) continue;
+    // Step 6a senses `defined`/`planned`/`in-progress` AND `done` rows whose linked PR
+    // is still open: a done-but-unmerged row is a lifecycle label, never merge-ready,
+    // so skipping it left the receipts of every open PR unsensed — the blind spot sat
+    // exactly at PR-review time.
+    if (!OPEN_STATES.has(unit.status) && !(unit.status === "done" && isOpenPr(unit))) continue;
     const dir = unitDirFor(unit);
     const stage = stageFor(unit);
     const specSense = senseStage(dir, unit.id, "spec");
@@ -799,7 +850,10 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     };
     receiptRows.push(row);
     if (label === "current") {
-      startable.push({ id: unit.id, next: recommendedFor("current", unit, stage) });
+      // A done row with an open PR has no execution left: its next act is the merge
+      // gate, not another phase.
+      const command = unit.status === "done" ? `/audit-pr ${unit.pr.number}` : recommendedFor("current", unit, stage);
+      startable.push({ id: unit.id, next: command });
     } else {
       gateBlockers.push({
         kind: "gate",
