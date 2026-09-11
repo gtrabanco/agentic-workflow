@@ -8,9 +8,14 @@
 ships `scripts/workflow-status.mjs`, the deterministic producer of the Envelope
 v2 the skill used to assemble from prose. The script executes the published
 `SENSOR_CORE` sequence (steps 1–9 incl. 6a), self-validates with the schema
-package's `validateEnvelope` (diagnostic only), and prints one JSON document;
-environmental failures degrade to `unavailable-<source>-<cause>` in
-`detail.degradations` with exit 0, and only an invalid invocation is fatal.
+package's `validateEnvelope` (diagnostic only — a mismatch is printed to stderr as
+`envelope self-check failed: …` and is never a gate), and prints one JSON document
+on stdout while diagnostics go to stderr; environmental failures degrade to
+`unavailable-<source>-<cause>` in `detail.degradations` with exit 0. An invalid
+invocation is the *deliberate* fatal exit (status 1, usage diagnostic on stderr);
+an unexpected runtime failure also exits 1, naming itself as
+`workflow-status failed: …` on stderr, so `detail` alone is not the whole
+diagnostic surface.
 
 The skill slims to "run the script, read the JSON, interpret `next.recommended`".
 The **external argv and the envelope contract are unchanged** — same flags
