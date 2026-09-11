@@ -163,7 +163,7 @@ scripts/bounded-delivery-loops.test.mjs scripts/pre-execution-quality.test.mjs
 scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
 → exit 0 with the re-targeted pins.
 
-- [ ] Slim `skills/workflow-status/SKILL.md` — replace the prose-instructed ~10-command
+- [x] Slim `skills/workflow-status/SKILL.md` — replace the prose-instructed ~10-command
   assembly sequence (Step 0 → progressive loading → SENSOR_CORE → crash recovery →
   envelope assembly → human report) with a single script call:
   `node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`.
@@ -175,19 +175,19 @@ scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
   read the JSON, interpret `next.recommended` per the published contract, print the
   human report." Remove the individual numbered commands from SENSOR_CORE — they are now
   the script's responsibility.
-- [ ] Slim `skills/workflow-status/references/SENSOR_CORE.md` — replace the numbered-command
+- [x] Slim `skills/workflow-status/references/SENSOR_CORE.md` — replace the numbered-command
   prose (steps 1–9 with detailed git/gh commands) with a single script call:
   `node scripts/workflow-status.mjs` executes the complete SENSOR_CORE sequence. Keep the
   `sensor-fields@1` grammar block (it is the normative-drift surface and the field contract
   the script implements). Keep ENVELOPE_FIELDS.md, CRASH_RECOVERY.md, GUARDRAILS.md,
   PRE_EXECUTION.md, PORTABILITY.md, SENSOR_SIGNALS.md references unchanged (they own
   semantics the slimmed skill still applies).
-- [ ] Slim `skills/workflow-status/references/ENVELOPE_CORE.md` — replace the envelope
+- [x] Slim `skills/workflow-status/references/ENVELOPE_CORE.md` — replace the envelope
   assembly prose (step-by-step construction of the Envelope v2 object) with the single
   fact: "The script is the deterministic producer of the Envelope v2; the skill interprets
   it." Keep the crash-recovery state mapping (`CLEAN` → `OK`, `RESUMABLE` → `CONTINUE`,
   `AMBIGUOUS` → `NEEDS_INPUT`) and the tier map the skill interprets.
-- [ ] Re-target discipline-test pins from prose-presence to script-behavior form —
+- [x] Re-target discipline-test pins from prose-presence to script-behavior form —
   `bounded-delivery-loops.test.mjs` line 21 reads SKILL.md and line 40 reads
   SENSOR_CORE.md (6a heading): re-point the 6a heading pin from SENSOR_CORE.md's prose
   to the script invocation in SKILL.md; the SKILL.md routing pin (that the skill follows
@@ -205,12 +205,12 @@ scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
   processing logic, verified by a grep for the label-handling pattern).
   Every pin keeps its asserted behavior and gains the stronger form — script-behavior is
   strictly stronger than prose-presence (O26).
-- [ ] Update `scripts/normative-drift.test.mjs` — adjust the declared surfaces for the
+- [x] Update `scripts/normative-drift.test.mjs` — adjust the declared surfaces for the
   slimmed references. The `sensor-envelope-fields` grammar (line 845 surface) still
   references `SENSOR_CORE.md` — it remains valid because the grammar block is kept. Add a
   new surface `sensor-script-vocab` if the script now carries normative field ordering
   (it does: `validateEnvelope` ensures the field order is correct).
-- [ ] Re-measure the slimmed `workflow-status` skill — read `docs/workflow/SKILL_CONTEXT_BUDGETS.json`,
+- [x] Re-measure the slimmed `workflow-status` skill — read `docs/workflow/SKILL_CONTEXT_BUDGETS.json`,
   add the `workflow-status` entry with updated budget values (the slimmed skill has fewer
   lines → lower estimate). The skill currently has no entry → uses defaults
   (`mainEstimateMax: 2800`, `referenceEstimateMax: 2200`). After slimming, the main text
@@ -219,7 +219,7 @@ scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
   lines (SENSOR_CORE.md removes ~100 lines of command prose). Re-measure using the
   `check-skill-context.mjs` metrics (ceil(UTF-8 bytes / 4) for the estimate).
   Write the budget entry to the manifest with the re-measured value.
-- [ ] Bump `workflow-status` 3.2.1 → 3.3.0 via the bump-skill contract — minor bump
+- [x] Bump `workflow-status` 3.2.1 → 3.3.0 via the bump-skill contract — minor bump
   (process rewording, external argv + envelope contract unchanged, E-38-2); compliant
   with fix #209's freeze-majors policy (minor, not major; breaking intent would carry a
   `BREAKING CHANGE:` footer while #176 is open). Both CHANGELOG
