@@ -48,8 +48,8 @@ Review loops manufacture findings. Fix the loop first.
 | # | Issue | Maps to | Depends On |
 |---|-------|---------|------------|
 | 10 | **#182** — Scope bindings to affecting paths | feat 35 | 172 |
-| 11 | **#36** — Verification-contract-hygiene | feat 36 | 183 |
-| 12 | **#35** — Scoped-receipt-verifier | feat 35 | 172, 182 |
+| 11 | **#183** — Verification-contract-hygiene | feat 36 | 183 |
+| 12 | **#182** — Scoped-receipt-verifier | feat 35 | 172, 182 |
 
 ### Phase 4: Process Polish
 
@@ -64,7 +64,7 @@ Review loops manufacture findings. Fix the loop first.
 | # | Issue | Maps to | Depends On |
 |---|-------|---------|------------|
 | 16 | **#209** — Release policy: no major versions | (policy) | 172 |
-| 17 | **#40** — Versioned skills releases | feat 40 | 172, 180 |
+| 17 | **#180** — Versioned skills releases | feat 40 | 172, 180 |
 
 ### Phase 6: Pi Package Features
 
@@ -72,8 +72,8 @@ Review loops manufacture findings. Fix the loop first.
 |---|-------|---------|------------|
 | 18 | **#186** — Pi auto log-session | feat 39 | — |
 | 19 | **#174** — Pi state-flow lifecycle | feat 41 | 186 |
-| 20 | **#39** — Pi-auto-log-session | feat 39 | 186 |
-| 21 | **#41** — Pi-state-flow-lifecycle | feat 41 | 174 |
+| 20 | **#186** — Pi-auto-log-session | feat 39 | 186 |
+| 21 | **#174** — Pi-state-flow-lifecycle | feat 41 | 174 |
 
 ### Phase 7: New Features (Lower Priority)
 
@@ -109,8 +109,8 @@ graph TD
 
     subgraph P3["Phase 3: Consistency & Verification"]
         J[#182 scope bindings]
-        K[#36 verification hygiene]
-        L[#35 scoped receipt verifier]
+        K[#183 verification hygiene]
+        L[#182 scoped receipt verifier]
     end
 
     subgraph P4["Phase 4: Process Polish"]
@@ -121,14 +121,14 @@ graph TD
 
     subgraph P5["Phase 5: Versioning"]
         P[#209 release policy]
-        Q[#40 versioned releases]
+        Q[#180 versioned releases]
     end
 
     subgraph P6["Phase 6: Pi Features"]
         R[#186 pi auto log]
         S[#174 pi state-flow]
-        T[#39 pi auto log session]
-        U[#41 pi state-flow lifecycle]
+        T[#186 pi auto log session]
+        U[#174 pi state-flow lifecycle]
     end
 
     subgraph P7["Phase 7: New Features"]
