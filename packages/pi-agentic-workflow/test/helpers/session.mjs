@@ -30,9 +30,14 @@ export function routePair({ model = "inherit", thinking = "inherit" } = {}) {
 }
 
 /** EffectiveConfig from the same merge the shipped loader performs. */
-export function configFor({ default: def, commands, onUnavailableRoute }) {
+export function configFor({ default: def, commands, onUnavailableRoute, onSettle }) {
   return mergeConfigs(
-    { ...(def ? { default: def } : {}), ...(commands ? { commands } : {}), ...(onUnavailableRoute ? { onUnavailableRoute } : {}) },
+    {
+      ...(def ? { default: def } : {}),
+      ...(commands ? { commands } : {}),
+      ...(onUnavailableRoute ? { onUnavailableRoute } : {}),
+      ...(onSettle ? { onSettle } : {}),
+    },
     {},
   );
 }
