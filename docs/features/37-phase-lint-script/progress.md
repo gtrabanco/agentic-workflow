@@ -506,3 +506,14 @@ Notes:
 ## Unit-loop receipt — P5
 - Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` → exit 0 (30/30) · `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0 (6/6 fingerprints, sha256 `3ea28e5b…`) · O4 `diff` → empty · O6 no-network grep → empty · O9 schema diff → empty · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: P6 — close-out re-run · Attempts: 1
+
+## P6 — 2026-09-12 (close-out re-run)
+- Done: full verification gate re-run green after the P5 mapping landed — `node --test scripts/*.test.mjs` 289/289, `node --test scripts/normative-drift.test.mjs` 16/16, `bun scripts/check-skill-context.mjs` PASS (39 skills), `--routes` PASS (22 routes), `npx skills add . --list` exit 0, `bun run bundle:skills` 38 skills/123 files (pi mirror parity), `bun run test` pi package 185/185, schema package 684/684; AC1–AC10 re-run green (AC1 exit 0 with the six PASS lines, AC2 each failing rule + BLOCKED line, AC3 `missing-plan`/`no-phases`/`unparseable`, AC4 byte-identical, AC5 corpus 30/30, AC6 grep empty, AC7 exit 0, AC9 diff empty, AC10 exit 0); dev-scenario edge corpus exercised (5 MB oversized → PASS, permission-denied → `unparseable`, 8 concurrent runs byte-identical); `git status --porcelain -- docs/` empty; roadmap row 37 flipped `in-progress · [#212]` → `done · [#212]`; P5 commit `de5ddd57` reconciled.
+- Remains: none — unit finished (PR #212 open; end review next).
+- Gotchas: whole-unit review-checkpoint triggers recorded, not acted on (whole-unit mode continues; the end review covers all of it): **layer boundary** — P5 `config/infra` → P6 `hardening`; accumulation since `bedf717c` = 111 insertions / 5 files (under the 400-line / 8-file threshold); sensitivity — none (no auth, payments, destructive migration, secrets or CI config). The `## Unit-loop receipt — P5` block above stays `pending` by the loop contract (never amend a published commit to self-reference); this entry is its reconciliation. No skill changed in P5, so `bump-skill`/CHANGELOG did not move, and the `PLAN-REVIEW-37-7` plan receipt still binds the plan bytes up to the P5 landing.
+- Files: docs/features/ROADMAP.md, docs/features/37-phase-lint-script/progress.md
+- Next: unit finished — `/review-change` on the changed HEAD
+
+## Unit-loop receipt — P6
+- Commit: pending · Gate: `node --test scripts/*.test.mjs` exit 0 (289/289) · `bun scripts/check-skill-context.mjs` exit 0 · `bun scripts/check-skill-context.mjs --routes` exit 0 · `npx skills add . --list` exit 0 · `bun run test` (pi) exit 0 (185/185) · `bun run test` (schema) exit 0 (684/684) · `bun run bundle:skills` exit 0 (38 skills/123 files) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: close-out complete · PR: https://github.com/gtrabanco/agentic-workflow/pull/212 · Attempts: 1
