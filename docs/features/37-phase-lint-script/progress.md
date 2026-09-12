@@ -375,3 +375,60 @@ Next: sync `main` into the branch (3 conflict files), re-basis the routes featur
 38's merge re-grew, then `/review-spec 37` (bounded delta: the merge moved the
 bound `CLAUDE.md` authority and the receipt was produced by the superseded
 snapshot builder) and `/review-plan 37` (cycle 7).
+
+## Merge sync — feature 38 (`main` → branch, 2026-09-12)
+
+`git merge main` (`e0c18284`, PR #213) → merge commit `e3d8e0ea`. Three conflict
+files only, no code conflict:
+
+- `docs/LOGS.md` — append-only union: 17 branch entries + 15 `main` entries,
+  the two sides' headers disjoint.
+- `docs/features/ROADMAP.md` — row 37 from the branch (`in-progress · [#212]`)
+  and row 38 from `main` (`done · [#213]`, carrying the #209 release-policy
+  fold).
+- `docs/workflow/SKILL_CONTEXT_BUDGETS.json` — per-route max of both sides (the
+  branch's re-basis #2 for the four plan-feature/plan-fix routes, `main`'s
+  feature-38 re-basis for `execute-phase:*` / `review-change:*`, plus the new
+  `workflow-status` skill entry).
+
+Post-merge **re-basis #3** (ED8.4e): feature 38 re-based at its own HEAD, before
+this branch's `phase-contract` 1.0.3 rewords and the P4 `execute-phase` slim
+existed, so the seven `execute-phase:*` routes measured above their merged
+ceilings (15 route failures on the merged tree). Re-set to `ceil(measured ×
+1.10)` — 11656 / 11669 / 11539 / 11701 / 11854 / 11454 / 11616, line ceilings
+unchanged — with the growth source declared in `policy.declared` and in the
+`CHANGELOG.md` + `CHANGELOG.es.md` pair.
+
+Gates RUN after the sync (verbatim summaries):
+
+```
+$ node scripts/check-skill-context.mjs --routes
+PASS route budgets: 22 routes
+$ node scripts/check-skill-context.mjs
+PASS context budgets: 39 skills
+$ node --test scripts/*.test.mjs
+ℹ tests 285 · pass 285 · fail 0
+$ node scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md
+verdict PASS · fingerprint: 3ea28e5b965e08cfc59d5410f80fed542e5fb8e5398268130a82f98bc4794940
+$ git hash-object docs/features/37-phase-lint-script/ACCEPTANCE.md
+21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+```
+
+The suite total is `main`'s 259 plus this branch's 26 `phase-lint` tests. The
+pre-existing `check-skill-context.test.mjs` red disclosed since `f46cf450` is
+closed by the sync (fixture half: fix #200 on `main`; live half: re-basis #3) —
+`known-issues.md` and `testing.md` record it; no check was weakened.
+
+Receipt state after the sync — both causes are structural, neither repairable:
+
+- the newest plan receipt is `PLAN-REVIEW-37-6`, a `plan-review-fail` (F14–F16,
+  folded in this batch — only a fresh cycle can turn it into a PASS), and
+- the sync moved a bound context authority (`CLAUDE.md`, where feature 38 folded
+  fix #209's release-policy line) **and** replaced the snapshot builder
+  (`scripts/pre-execution-contract.mjs`; `pre-execution-snapshot.mjs` rewritten
+  by feature 38), so no recorded digest is reproducible at all. A receipt
+  refresh is forgery; a fresh review is the only route.
+
+Next: `/review-spec 37-phase-lint-script` (bounded delta over the moved bound
+authority) → `/review-plan 37-phase-lint-script` (cycle 7) → `/execute-phase 37`
+for P5 plus the P6 close-out re-run.
