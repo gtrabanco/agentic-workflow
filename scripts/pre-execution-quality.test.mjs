@@ -12,6 +12,7 @@
 
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { test } from "node:test";
@@ -725,8 +726,9 @@ test("findings union, dismissal, no-progress, and second-cycle diagnosis live in
 test("every receipt line the consumer parses is emitted by both stage templates (F70)", () => {
   // The consumer reads a receipt out of progress.md by label, and a label no template
   // writes parses as null - a check that then silently never runs. `Unit kind` got
-  // exactly that treatment: enforced for plans, skipped for specs.
-  const sensor = read("scripts/pre-execution-snapshot.mjs");
+  // exactly that treatment: enforced for plans, skipped for specs. The parser lives in
+  // the dependency-free contract module both scripts read (F24/F25).
+  const sensor = read("scripts/pre-execution-contract.mjs");
   const labels = [...new Set([...sensor.matchAll(/fieldFrom\(chunk, "([^"]+)"\)/g)].map((m) => m[1]))];
   assert.ok(labels.length >= 10, `only ${labels.length} parsed labels found - the scan broke`);
   // One lineage line written two ways on purpose: a SPEC receipt has no parent and
@@ -1110,6 +1112,22 @@ test("the snapshot sensor refuses escapes, never follows symlinks, and compares 
     assert.match(r.stderr, /absent/, "symlinked artifact must read as absent, never followed");
   } finally {
     fs.rmSync(probeDir, { recursive: true, force: true });
+  }
+  // F21: the leaf check is not confinement on its own — a symlinked *ancestor*
+  // directory ends in a regular file, so the resolved path must stay inside the
+  // resolved root.
+  const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), "pre-execution-outside-"));
+  const ancestorProbe = path.join(root, "docs", "features", "zz-ancestor-probe");
+  fs.rmSync(ancestorProbe, { recursive: true, force: true });
+  try {
+    fs.writeFileSync(path.join(outsideDir, "SPEC.md"), "# out-of-repo SPEC\n");
+    fs.symlinkSync(outsideDir, ancestorProbe, "dir");
+    const r = run(["build", "--stage", "spec", "--unit", "zz-ancestor-probe"]);
+    assert.notEqual(r.status, 0, "an out-of-repo artifact behind a directory symlink is never read");
+    assert.match(r.stderr, /absent/, "the ancestor symlink must read as absent, never followed");
+  } finally {
+    fs.rmSync(ancestorProbe, { recursive: true, force: true });
+    fs.rmSync(outsideDir, { recursive: true, force: true });
   }
   // The recorded Policy line is parsed and carried (durable assertions only: the
   // recorded-policy comparison is meaningful now (stub = receipt's policy vs

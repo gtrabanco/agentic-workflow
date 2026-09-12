@@ -1,0 +1,59 @@
+# Acceptance manifest v1 — 38-workflow-status-sensor-script
+
+Status: frozen
+
+Frozen 2026-09-09 by `plan-feature-scaffold` from the SPEC's acceptance
+criteria A:1…A:23 + read-verified. One stable ID per SPEC criterion;
+validators copied from the criteria. Extended 2026-09-10 by operator-approved
+scope amendment folding fix #209 into 38's deliverables (AC-24 / A:25,
+CLAUDE.md release-policy check). Amended 2026-09-12 by the operator-confirmed
+review-findings replan (F22): AC-25 added, restoring SPEC criterion A:24
+(`references/ENVELOPE_CORE.md` slimmed) whose manifest row was dropped in
+commit ed7aae98 when its AC-24 slot was reused for the #209 fold (A:25, commit
+32bb6434). The SPEC's criteria are unchanged; the manifest is re-synced to
+them.
+
+| ID | Required outcome | Validator |
+|---|---|---|
+| AC-01 | The sensor script file exists at the expected path | `test -f scripts/workflow-status.mjs` → exit 0 |
+| AC-02 | Script output is valid Envelope v2 — a fixture-repo test runs the script and validates the output against the schema package's envelope schema | fixture-repo property test: build git repo, run `node scripts/workflow-status.mjs`, parse stdout as JSON, validate with `validateEnvelope` → result `valid` |
+| AC-03 | Script is read-only: no mutation calls (branch/push/label-mutation/write) exist in the source | `grep -nE '(createBranch|git push|gh pr (edit|merge|close|create)|gh issue (edit|close|label|create)|writeFile|fs\.write|unlink)' scripts/workflow-status.mjs` → returns nothing |
+| AC-04 | Offline fixture: network severed → forge sections degrade to declared codes, exit 0, no hang | fixture-repo test with `gh` shim failing fast → `unavailable-forge-no-network` codes in `detail`, exit 0, no hang |
+| AC-05 | Idempotence: two consecutive runs on the same fixture tree → byte-identical output | `diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs)` → empty output |
+| AC-06 | Ambiguous roadmap row → mapped state + named degradation in output | fixture-repo test with a non-standard status row → `detail` contains the mapped state code and the raw string note in `workflow_observations` |
+| AC-07 | Urgency labels read from the labels object only — no forge request field list ever includes `body` or `comment` (never fetched or read); the labels-only scan path exists | `grep -nE '\-\-json[^\|]*(body\|comment)' scripts/workflow-status.mjs` → nothing AND `grep -cE 'labels' scripts/workflow-status.mjs` ≥ 1 (F32 repair re-aligned to SPEC A:7's F28-scoped form) |
+| AC-08 | Script consumes schema vocabulary through the repo's established loader | `grep -nE "from ['\"]\\./schema-runtime\\.mjs['\"]" scripts/workflow-status.mjs` → match AND `grep -nE "^import .*'@gtrabanco/agentic-workflow-schema'" scripts/workflow-status.mjs` → nothing |
+| AC-09 | `skills/workflow-status/SKILL.md` slimmed: SENSOR_CORE numbered-command prose replaced by script call reference | `git diff main...HEAD -- skills/workflow-status/SKILL.md \| grep -c 'workflow-status.mjs'` ≥ 1 AND `grep -cE '^[0-9]+a?\. ' skills/workflow-status/references/SENSOR_CORE.md` < 10 (pinned baseline: 10 numbered-command steps at `main` — F36 re-form, valid at the P4 close-out, not only while staged) |
+| AC-10 | `--help` exits 0 and prints usage; `--version` exits 0 and prints schema package version | `node scripts/workflow-status.mjs --help` → exit 0; `node scripts/workflow-status.mjs --version` → exit 0; version string present in output |
+| AC-11 | No external dependencies beyond the schema package — dynamic import via loader succeeds with built dist, fails with named precondition when dist is missing | `node -e "import('./scripts/workflow-status.mjs')"` → exit 0 (with built dist); same import with `dist/` gitignored → "schema runtime is not built" error message |
+| AC-12 | `decideWorkflowAction()` is NOT referenced in the script | `grep -c 'decideWorkflowAction' scripts/workflow-status.mjs` → 0 |
+| AC-13 | No change to the envelope vocabulary — the schema package is byte-untouched | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty |
+| AC-14 | Discipline-test pins and `check-skill-context` budgets re-based for the slimmed sensor route | `node scripts/check-skill-context.mjs` → exit 0 with the updated `workflow-status` budget entry |
+| AC-15 | Envelope v2 output includes `detail` section listing each degraded dimension (when offline) | offline fixture output contains `detail` key with degradation entries (`forge`, `git` sources listed) |
+| AC-16 | `docs/workflow/ORCHESTRATION.md` driver wiring points consumers at the script | `grep -c 'workflow-status.mjs' docs/workflow/ORCHESTRATION.md` → ≥ 1; bilingual `.es.md` sibling has the same wiring |
+| AC-17 | `--json-only` is an accepted no-op — output is identical with and without the flag | `diff <(node scripts/workflow-status.mjs) <(node scripts/workflow-status.mjs --json-only)` → empty |
+| AC-18 | `--last-envelope <json|path>` guard: stale hint whose `next.recommended` targeted a unit still at pre-advance status → `detail.workflow_observations` contains the no-progress note | fixture-repo test with stale hint → `workflow_observations` contains the no-progress divergence note; recomputed `state`/`next` unchanged |
+| AC-19 | Unreadable/malformed hint degrades without failing — exit 0 with `unavailable-hint-<cause>` note | fixture-repo test with missing path → `unavailable-hint-missing-path` note, exit 0; invalid JSON hint → `unavailable-hint-invalid-json` note, exit 0 |
+| AC-20 | Invalid invocation is the only fatal exit — unknown flag → non-zero exit with usage diagnostic on stderr | `node scripts/workflow-status.mjs --not-a-real-flag` → non-zero exit code; stderr contains usage diagnostic |
+| AC-21 | Slow-but-alive forge cannot hang the script — bounded wall-clock timeout degrades to `unavailable-forge-timeout` | fixture-repo test with `gh` shim that accepts connections but never terminates → script exits 0 within the timeout bound, `unavailable-forge-timeout` in `detail` |
+| AC-22 | No interactive prompts — the script is headless by construction | `grep -nE '(readline|createInterface|process\.stdin\.(read|setRawMode)|@clack|inquirer|prompts?\(|confirm\()' scripts/workflow-status.mjs` → nothing |
+| AC-23 | Stdout for data, stderr for diagnostics — stdout alone parses as one valid JSON document | `node scripts/workflow-status.mjs 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{JSON.parse(s)})'` → exit 0 (stdout alone is valid JSON) |
+| AC-24 | Fix #209's release policy documented in `CLAUDE.md` versioning guidance — freeze-majors rule (minor/patch only until #176 merges; breaking → minor + `BREAKING CHANGE:` footer) present | `grep -nE '#176' CLAUDE.md` → ≥ 1 AND `grep -nE 'BREAKING CHANGE:' CLAUDE.md` → ≥ 1 (operator-approved scope amendment 2026-09-10, A:25; pre-executed in fold batch) |
+| AC-RV | Feature 15's injection-safety invariant (urgency from labels only) preserved in the new script | read-verified at PR time: code review against feature 15 (PR #47) merge commit; urgency labels-only path preserved verbatim |
+| AC-25 | `skills/workflow-status/references/ENVELOPE_CORE.md` slimmed to interpret-and-recommend: script-backed reference present, envelope-assembly self-check prose gone (SPEC A:24 — delivered by P3; the manifest row is restored by the 2026-09-12 replan amendment, F22) | `grep -c 'scripts/workflow-status.mjs' skills/workflow-status/references/ENVELOPE_CORE.md` → ≥ 1 AND `grep -cE 'self-check before printing' skills/workflow-status/references/ENVELOPE_CORE.md` → 0 |
+
+## Quality floor
+
+- Do not remove, skip, loosen, or rewrite a validator to manufacture PASS.
+- Do not modify this manifest during execution without a user-approved SPEC amendment.
+- Passing declared checks is necessary, not sufficient; final independent review and named manual checks remain required.
+
+## Commands
+
+- `node scripts/check-skill-context.mjs`
+- `node --test scripts/workflow-status-sensor.test.mjs`
+- `node --test scripts/bounded-delivery-loops.test.mjs scripts/pre-execution-quality.test.mjs scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
+- `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
+- `cd packages/agentic-workflow-schema && npm test`
+- `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test`
+- `grep -c 'workflow-status.mjs' docs/workflow/ORCHESTRATION.md`
