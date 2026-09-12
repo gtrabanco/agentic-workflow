@@ -322,3 +322,56 @@ Notes:
 - Notes, non-findings: (a) roadmap row 37 reads `done · [#212]` while the handoff directs P5 + the P6 close-out re-run — execute-phase's own-status gate reading of a `done` row is unrecorded here; surface at execution if the gate refuses (no evidence of refusal — not a finding). (b) review-findings F8 (`packages/agentic-workflow/README.es.md`) is `folded: yes`; the plan's P3 task text predates that fold — the delta lives in the fold ledger. (c) PE-009's fix #191 re-check point was consumed at executed P4 (disjoint areas verified in the P4 receipt); no remaining phase touches that surface.
 - Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F14–F16) were appended, uncommitted by design so HEAD stays at the bound sourceRevision `e4c9e169` — the author's fold commit carries these bytes, as in cycles 1–5.
 - Convergence notice for the next cycle: F14–F16 are a new family (planning-set sync drift), first adjudication this cycle; the re-review after the repair batch is that family's second cycle and must print the CONVERGENCE-ANOMALY block before any further edit (POLICY §4). The repair batch must state its own convergence argument: one root cause (replan 6 edited artifact content without syncing the three header labels, one invariant wording cell, and one evidence status clause), one batch.
+
+## Repair 7 — F14–F16 fold + feature-38 merge readiness (`37-plan-6`, 2026-09-12)
+
+User instruction for this cycle: feature 38 is merged (`e0c18284`, PR #213), so
+sync `main` into this branch and run the repair batch; the `--json` deferred
+decision closes **plan-side**; the producer-crate re-homing becomes a recorded
+follow-up; the roadmap row returns to `in-progress` while P5 + the P6 close-out
+re-run execute.
+
+Folds applied (revision `37-plan-6`), docs-only on the planning set — no code
+changed this cycle (see decisions.md ED8 for the reasoning and the convergence
+argument):
+
+- **F14** — every live revision header now names `37-plan-6` (`SPEC.md`
+  §Engineering half, `PLAN.md`, `planning-evidence.md`, `architecture-notes.md`,
+  `TASKS.md`, `testing.md`, `planning-obligations.md`) and the SPEC's
+  Engineering-half replan-note chain gained the missing Replan 5 (`37-plan-5`)
+  and Replan 6 (this batch). `ACCEPTANCE.md` untouched — the frozen blob is
+  `21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4` before and after this batch.
+- **F15** — `architecture-notes.md` §Layer placement states the rule owner was
+  amended twice with both revisions and commits (P1: 1.0.1 → 1.0.2; cycle-1
+  fold F5: 1.0.2 → 1.0.3, `8a35face`), matching O12 and
+  `skills/phase-contract/SKILL.md:4`.
+- **F16** — `planning-evidence.md` PE-007 and `planning-obligations.md` O11
+  state the row's real value; the row was flipped `done · [#212]` →
+  `in-progress · [#212]` (user-approved merge-readiness fold; the same value
+  `execute-phase` P1 writes, so P5's own-status gate reads an executable state).
+- **Feature-38 merge readiness** (ED8.4, recorded as author-side folds — no
+  review ran between the merge and this batch):
+  - the `--json` deferred decision (SPEC `### Deferred decisions` row 2, Product
+    half) closes plan-side: the trigger "Feature 38 scaffold time" fired and the
+    merged sensor consumes receipts/git/forge, never the linter's stdout, so v1
+    adds no machine surface and the frozen Product bytes stay untouched;
+  - Product evidence E10's "it precedes 38" clause is superseded by the merge
+    order and recorded as new `planning-evidence.md` PE-011 (same freeze
+    reason);
+  - SPEC `## Engineering half` §Producer family after this feature replaces the
+    now-false "38 lands as a subcommand of the crate" claim with the fact
+    (38 merged first at `scripts/workflow-status.mjs`) and points at the
+    recorded follow-up in `known-issues.md` §Deferred items;
+  - the crate obligation (P3 / AC10) and the vehicle-rule redistribution are
+    unchanged — re-homing 38's producer is explicitly **not** this feature's
+    scope.
+- Mechanical re-derivation unchanged: `node scripts/phase-lint.mjs
+  docs/features/37-phase-lint-script/TASKS.md` → verdict PASS, six fingerprints
+  and whole-plan sha256 `3ea28e5b…` exactly as recorded (this batch does not
+  touch phase shape); the Product parent snapshot (`8f736cc9…`) still binds the
+  Product half.
+
+Next: sync `main` into the branch (3 conflict files), re-basis the routes feature
+38's merge re-grew, then `/review-spec 37` (bounded delta: the merge moved the
+bound `CLAUDE.md` authority and the receipt was produced by the superseded
+snapshot builder) and `/review-plan 37` (cycle 7).

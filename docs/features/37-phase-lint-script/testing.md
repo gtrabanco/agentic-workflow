@@ -1,6 +1,6 @@
 # Testing — 37-phase-lint-script
 
-Artifact revision: `37-plan-5`.
+Artifact revision: `37-plan-6`.
 
 ## Test layers
 
@@ -35,7 +35,8 @@ exit 0 and reproduce the six fingerprints recorded in SPEC §Phase-lint
 (P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`,
 P5 `config/infra:2`, P6 `hardening:8`). Verified in P2 (whole-plan sha256
 `b0127303708f2b471731a51a383180548c209b926251b0e79422958414f583c5`), then
-re-derived at the `37-plan-5` F7 re-cut — the new sha256 and the linter run
+re-derived at the `37-plan-5` F7 re-cut (unchanged by the `37-plan-6` repair
+batch) — the new sha256 and the linter run
 are recorded in decisions.md. M/L
 `SPEC.md` `### Phases` sections carry no checkboxes, so a SPEC run answers
 `:0:` task counts — see `known-issues.md`.
