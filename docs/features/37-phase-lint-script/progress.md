@@ -293,3 +293,32 @@ cycle:
 
 Next: /review-plan 37 (fresh re-review; prior receipt PLAN-REVIEW-37-5), then
 /execute-phase 37 for P5 plus the P6 close-out re-run.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-6 · Snapshot: 432566ce326379b845d03d906864a48431ac4201f7fc7c19cb0610d80ca59b1a · Verdict: plan-review-fail
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0 · Parent Product receipt: SPEC-REVIEW-37-1
+- Source revision: e4c9e16922f913e9bf754416fc03f8e86296240b · Artifact revision: e4c9e16922f913e9bf754416fc03f8e86296240b
+- Reviewer: review-plan (independent session) · Session: review-plan-37-cycle6-2026-09-11 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-11 / 2026-09-11 · Findings: 3 (material open: 3)
+- Ledgers read: planning-evidence 10 rows · obligations 13 rows (verified-capable: 1)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-5 @ 8c81bd16b8392e415558a0b7554112e45f78eab933b326fd02003ed9d47d21e4
+```
+
+Notes:
+- Cycle 6 of the plan loop; no-progress gate satisfied: snapshot changed `8c81bd16…` → `432566ce…` (the P2 plan-conflict repair + the user-directed `37-plan-5` replan commit `e4c9e169`). The input was a repair performed in response to persisted findings (review-findings F7, replan-in-unit) — POLICY §4's guards do not block it.
+- Falsification stance before checking: CONFIRMED-GAPS → confirmed on a new planning-set sync-drift family (F14–F16). The cycle-3 anomaly family (plan-self-conformance) did NOT recur: fingerprints were re-derived mechanically by this reviewer by running the delivered linter — `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → `verdict PASS`, six per-phase fingerprints matching SPEC §Phase-lint exactly (P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`, P5 `config/infra:2`, P6 `hardening:8`), whole-plan sha256 `3ea28e5b…` equal to the recorded re-cut value; `node --test scripts/phase-lint.test.mjs` → 0 failures.
+- Parent lineage re-proven, never copied: `stage: spec` build at the parent receipt's pinned revisions (`--source-revision 05480514… --artifact-revision 05480514…`) over the re-cut tree reproduces `8f736cc97ff87fa83e7581e1faeabbdb52fdc6ab3e9f73bc6e1cefcb3be9c0a0` exactly (Product half unmoved — replan 6's SPEC edits are Engineering-half only). Context authorities: zero commits touched `CLAUDE.md` / `docs/workflow/REPOSITORY_STATE.md` between `05480514` and HEAD; builder digests match cycle 5's (`9ae03966…`, `e8509783…`); architectural-invariants absent both sides. L1 holds.
+- The receipt's `Artifact revision:` binds the builder's canonical digest-derived value `e4c9e169…`; the planner's handoff label `37-plan-5` is recorded here (cycle-2 precedent).
+- L2: PE-001/PE-002/PE-010 verified resolving at HEAD (`skills/phase-contract/SKILL.md:4` v1.0.3; rule 2 "a test-only phase declares `hardening`" at :42; rule 3 ≥ 1-task minimum at :43; `skills/plan-fix/SKILL.md:101` and `skills/execute-phase/SKILL.md:50` land on the run-and-paste steps P4 shipped). PE-007 fails (F16); no `unknown`/`drifted`/`deferred` row otherwise.
+- L3/L4: 13 obligation rows, none blank/deferred/duplicated; O11 `verified`; O13 `planned` matching the unticked P5. O4/O6/O9's `P2 / P5` re-verification cells continue the five-cycle adjudication (re-verification points whose substance stays true under the 6-phase re-cut — P5 re-proves after the box-2 change, P6 re-runs the full gate) — recorded here, not re-litigated.
+- L5: 8 dev scenarios ↔ phases ↔ validators; every validator can fail (the corpus asserts the exit-1 paths; `diff` / `test -d` / grep are falsifiable); P5's fixtures cover the new box-2 failure states (hardening + source target → BLOCKED; test file outside hardening → prefix table). L6: honest — spec-stage F1 open info (non-material); F2–F13 folded with resolution evidence; review-findings F7 `folded: no` pending this re-cut's execution, per replan 6.
+- P-checks: P1–P8, P10, P11 pass; P9 pass on the mechanical re-derivation above; P10's frozen acceptance blob re-verified byte-identical (`git hash-object ACCEPTANCE.md` → `21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4`). Failed: L2 (F16) and P12 (F14, F15).
+- Notes, non-findings: (a) roadmap row 37 reads `done · [#212]` while the handoff directs P5 + the P6 close-out re-run — execute-phase's own-status gate reading of a `done` row is unrecorded here; surface at execution if the gate refuses (no evidence of refusal — not a finding). (b) review-findings F8 (`packages/agentic-workflow/README.es.md`) is `folded: yes`; the plan's P3 task text predates that fold — the delta lives in the fold ledger. (c) PE-009's fix #191 re-check point was consumed at executed P4 (disjoint areas verified in the P4 receipt); no remaining phase touches that surface.
+- Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F14–F16) were appended, uncommitted by design so HEAD stays at the bound sourceRevision `e4c9e169` — the author's fold commit carries these bytes, as in cycles 1–5.
+- Convergence notice for the next cycle: F14–F16 are a new family (planning-set sync drift), first adjudication this cycle; the re-review after the repair batch is that family's second cycle and must print the CONVERGENCE-ANOMALY block before any further edit (POLICY §4). The repair batch must state its own convergence argument: one root cause (replan 6 edited artifact content without syncing the three header labels, one invariant wording cell, and one evidence status clause), one batch.
