@@ -36,6 +36,15 @@
     },
     "execute-phase": {
       "referenceEstimateMax": 2588
+    },
+    "workflow-status": {
+      "mainEstimateMax": 1680,
+      "mainLinesMax": 136,
+      "referenceEstimateMax": 2200,
+      "referenceLinesMax": 280,
+      "mainSources": {
+        "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)"
+      }
     }
   },
   "routes": {
@@ -91,7 +100,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11422,
+      "routeEstimateMax": 11504,
       "routeLinesMax": 844
     },
     "execute-phase:feature": {
@@ -111,7 +120,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11435,
+      "routeEstimateMax": 11518,
       "routeLinesMax": 846
     },
     "execute-phase:final-pr": {
@@ -131,7 +140,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11305,
+      "routeEstimateMax": 11388,
       "routeLinesMax": 832
     },
     "execute-phase:finding": {
@@ -151,7 +160,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11467,
+      "routeEstimateMax": 11549,
       "routeLinesMax": 854
     },
     "execute-phase:fix": {
@@ -171,7 +180,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11620,
+      "routeEstimateMax": 11702,
       "routeLinesMax": 852
     },
     "execute-phase:legacy": {
@@ -191,7 +200,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11219,
+      "routeEstimateMax": 11302,
       "routeLinesMax": 834
     },
     "execute-phase:small": {
@@ -211,7 +220,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11382,
+      "routeEstimateMax": 11465,
       "routeLinesMax": 847
     },
     "execute-phase:unit-loop": {
@@ -300,8 +309,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18069,
-      "routeLinesMax": 1305
+      "routeEstimateMax": 18497,
+      "routeLinesMax": 1330
     },
     "review-change:default-backend": {
       "skills": [
@@ -319,8 +328,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16252,
-      "routeLinesMax": 1186
+      "routeEstimateMax": 16680,
+      "routeLinesMax": 1212
     },
     "review-change:default-web": {
       "skills": [
@@ -338,8 +347,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16252,
-      "routeLinesMax": 1186
+      "routeEstimateMax": 16680,
+      "routeLinesMax": 1212
     },
     "review-change:synthesize": {
       "skills": [
@@ -357,8 +366,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16766,
-      "routeLinesMax": 1210
+      "routeEstimateMax": 17193,
+      "routeLinesMax": 1236
     },
     "review-plan:default": {
       "skills": [
@@ -382,7 +391,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10))",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 \u2014 self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 \u2014 sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim \u2014 plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 \u2014 re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured \u00d7 1.10))",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
