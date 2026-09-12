@@ -8,7 +8,7 @@
  * that is the contract the three consumer skills paste.
  */
 
-import test from "node:test";
+import test, { after } from "node:test";
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -517,6 +517,53 @@ test("a forged phase title is neutralized in the finding line", () => {
   }
 });
 
+// Fold F32 — the forged-title fixture above carries only `\t`, which the
+// independent whitespace collapse removes on its own, so the `[\p{Cc}\p{Cf}]+`
+// strip had no discriminating fixture: a mutant that broke it stayed green.
+// This title's control character is a NON-whitespace one (U+0001) plus a format
+// character (U+200B), so only the Cc/Cf strip can remove them.
+const CONTROL_CHAR_TITLE_PLAN = `# Control character title
+
+### P1 — Alpha\u0001Beta + Gamma\u200BDelta
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("a non-whitespace control/format character never reaches the echoed title", () => {
+  const file = fixture("control-char-title.md", CONTROL_CHAR_TITLE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the box-1 violation blocks the plan");
+  const box1Line = stdout.split("\n").find((line) => line.startsWith("P1 box-1: "));
+  assert.ok(box1Line, "box-1 must be reported");
+  assert.doesNotMatch(box1Line, /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f\u200b-\u200f\u202a-\u202e]/,
+    "no Cc/Cf character may survive into the finding line");
+  assert.match(box1Line, /Alpha Beta \+ Gamma Delta/, "the title is still shown, neutralized");
+});
+
+// Fold F31 — the task grammar is the frozen one (`^\s*- \[( |x)\] `). A loose
+// dash form (`-  [ ]`, `-[ ]`) is not a task, so it neither counts toward the
+// phase budget nor reaches the fingerprint; before this fold the `-\s*\[`
+// loosening accepted both.
+const LOOSE_TASK_PLAN = `# Loose task syntax
+
+### P1 — Alpha
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+-  [ ] A loose-spaced box
+-[ ]a box welded to the dash
+`;
+
+test("a loose checkbox form is not a task (frozen grammar)", () => {
+  const file = fixture("loose-task.md", LOOSE_TASK_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "the canonical task body is valid");
+  assert.match(stdout, /fingerprint P1:docs:1:alpha$/m, "only the canonical task counts");
+});
+
 // Fold F22 — the stdout block survives a pipe: `process.exit` used to fire
 // before the async write drained, truncating the block past the pipe buffer
 // while the exit code stayed correct.
@@ -550,5 +597,12 @@ test("an early-closing pipe consumer does not flip the exit code", async () => {
     child.once("error", reject);
   });
   assert.equal(code, 0, `the intended exit 0 must survive an early close; stderr: ${stderr}`);
+});
+
+// Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
+// longer leaves ~4 MB behind per invocation (90 stale directories had
+// accumulated).
+after(() => {
+  fs.rmSync(TMP, { recursive: true, force: true });
 });
 

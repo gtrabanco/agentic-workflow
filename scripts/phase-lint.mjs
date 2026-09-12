@@ -123,7 +123,7 @@ function parsePhases(text) {
       doneWhen = block.join(" ").trim();
     }
     const tasks = phase.body
-      .map((line) => /^\s*-\s*\[([ x])\]\s+(.+)$/.exec(line))
+      .map((line) => /^\s*- \[([ x])\] (.+)$/.exec(line))
       .filter(Boolean)
       .map((match) => match[2].trim());
     return { ...phase, layer, doneWhen, tasks };
