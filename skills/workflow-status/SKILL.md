@@ -1,5 +1,7 @@
 ---
 name: workflow-status
+model: sonnet
+effort: medium
 user-invocable: true
 version: 3.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"

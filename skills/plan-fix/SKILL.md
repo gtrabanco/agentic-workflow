@@ -1,5 +1,7 @@
 ---
 name: plan-fix
+model: opus
+effort: high
 user-invocable: true
 version: 3.1.0
 argument-hint: <issue-number> [<issue-number> …]

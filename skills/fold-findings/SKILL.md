@@ -1,5 +1,7 @@
 ---
 name: fold-findings
+model: opus
+effort: high
 user-invocable: true
 version: 1.4.0
 argument-hint: [finding-id …]

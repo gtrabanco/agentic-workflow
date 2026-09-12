@@ -1,5 +1,7 @@
 ---
 name: plan-feature-scaffold
+model: opus
+effort: medium
 user-invocable: false
 version: 2.2.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"

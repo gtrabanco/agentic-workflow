@@ -1,5 +1,7 @@
 ---
 name: log-session
+model: sonnet
+effort: medium
 user-invocable: true
 version: 2.1.0
 argument-hint: "[note to prepend to the entry]"
@@ -10,7 +12,7 @@ description: >
   what was done this session, files touched, decisions taken, and the next
   step — so the next session (or another person) can pick up the thread
   without re-reading git history. Run it before `/clear`, before closing
-  Claude Code, or at any natural stopping point. On Claude Code and want hand-tuned per-skill model/effort tiers? Install the `#claude` branch instead (`npx skills add gtrabanco/agentic-workflow#claude`) — see the README. This branch is model-agnostic: the skill inherits whatever model and effort your agent session is already using.
+  Claude Code, or at any natural stopping point. Model and effort are pre-tuned for this skill on the `claude` branch (see docs/workflow/model-routing.yml).
   Triggers: "log this
   session", "log-session", "write a session log", "journal what we did",
   "record this session before I clear", "save the session summary".

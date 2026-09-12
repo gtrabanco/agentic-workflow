@@ -1,5 +1,7 @@
 ---
 name: product-audit
+model: opus
+effort: max
 user-invocable: true
 disable-model-invocation: true
 version: 3.1.0

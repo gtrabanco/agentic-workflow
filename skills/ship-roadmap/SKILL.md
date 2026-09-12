@@ -1,5 +1,7 @@
 ---
 name: ship-roadmap
+model: opus
+effort: high
 user-invocable: true
 version: 5.2.1
 author: "Gabriel Trabanco <1969593+gtrabanco@users.noreply.github.com>"

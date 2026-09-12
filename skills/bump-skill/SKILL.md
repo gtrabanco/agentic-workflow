@@ -1,5 +1,7 @@
 ---
 name: bump-skill
+model: sonnet
+effort: medium
 user-invocable: false
 version: 2.3.2
 metadata:

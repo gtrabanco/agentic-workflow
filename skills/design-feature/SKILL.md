@@ -1,5 +1,7 @@
 ---
 name: design-feature
+model: opus
+effort: high
 user-invocable: true
 version: 3.3.0
 argument-hint: <idea | NN-slug> [<instruction>]
