@@ -4,36 +4,12 @@ Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
 
-## 2026-09-12TXX:XXZ — feat/38-workflow-status-sensor-script — manual (plan-feature 38 consult)
+## 2026-09-12T16:31Z — feat/38-workflow-status-sensor-script — manual (plan-feature 38 consult)
 - **Commits:** 0 (no commits this session)
 - **Files:** none (only uncommitted: docs/LOGS.md)
 - **Summary:** User invoked `/plan-feature 38`. The redirect gate resolved bare `38` as GitHub issue #38 (CLOSED, unrelated: schema-package 1.0.2 republish fix from 2026-07) and the meaningful target as roadmap feature 38 `workflow-status-sensor-script` (governing issue #185, OPEN), whose row is `planned`. Gate STOP — nothing edited. Product half has current `spec-review-pass` (rp-38-20260911-011). Plan half: newest receipt rp-38-20260909-010 is FAIL (stale parent after #209 fold; F31–F34). Repair batch 38a2d6d0 landed after it but no plan receipt binds current bytes → unit is planned-but-not-executable. No dependency chain. No fix-now items on the workflow-status module. Real next action: `/review-plan 38` (full sweep — rp-010 stopped at L1; L2–L6/P1–P12 unswept).
 - **Decisions:** (1) The plan-review must be full, not delta — rp-010 stopped at L1 (stale parent), L2–L6/P1–P12 were never swept. (2) One known defect for the reviewer: the spec receipt flagged that `Decisions to confirm` lists E-38-9 twice — dedupe candidate at the next plan-side write.
 - **Next:** /review-plan 38 — full plan review (rp-010 stopped at L1; L2–L6/P1–P12 unswept). On PLAN-REVIEW-PASS → /execute-phase 38.
-
-
-
-**How it gets written**
-
-This checkout does not ship an automatic SessionEnd hook. Run `/log-session`
-to append a thoughtful entry with the summary, decisions, and concrete next
-step before clearing context, closing for the day, or at any natural stopping
-point.
-
-Newest entries go at the **bottom** (chronological, append-only). Don't edit or
-tidy past entries — they're a record.
-
-## Entry format
-
-```markdown
-## <ISO-8601 timestamp> — <branch> — manual|auto
-- **Commits:** <n> (`<short-sha>…<short-sha>`)
-- **Files:** <paths, or a count if many>
-- **Summary:** <what this session did>          (manual only)
-- **Decisions:** <key choices + why>            (manual only; omit if none)
-- **Next:** <the concrete next step>            (manual only)
-```
-
 ---
 
 <!-- entries appended below this line -->
@@ -982,3 +958,10 @@ tidy past entries — they're a record.
 - **Summary:** Ran `/review-plan 38` — the plan review re-derived over the post-rp-011 parent (rp-38-20260911-011, spec-review-pass @ `74b4aae9…`). Full sweep L1–L6 + P1–P12, 19/19 planning-evidence rows spot-verified live, 30 obligation rows swept. Verdict: PLAN-REVIEW-PASS (rp-38-20260911-012, snapshot `18425844…`). Self-check: `fresh: true`, `current: true`, `digestMatches: true`, exit 0.
 - **Decisions:** (1) Seven advisory/info findings filed (0 material open under the operator materiality bar from decisions.md 2026-09-09/11, issue #205): F35 TASKS P1 task 4's envelope literal contradicts the schema (omits required skill/summary/phase; invents next.state; omits required next.alternatives/tier); F36 ACCEPTANCE AC-09's `git diff --cached` form only passes in the P3 staging window and fails at P4 close-out; F37 forge auth/missing-cli codes in the failure contract with no scenario/AC (missing-cli absent from P2 task 8); F38 duplicate E-38-9 in SPEC Decisions-to-confirm; F39 obligations header says AC-01..AC-23/IS-01/IS-02 vs actual 30 rows/O-01/O-02; F40 PLAN.md P4 "Task count: 8" vs fingerprint+TASKS 9; F41 PE-011 fix-index claim decayed (#182 planned + #179 pending now in docs/fix/README.md). (2) L1 machine-verified: spec-stage verify returns `digestMatches: true`, `verdictIsPass: true`, `changedPaths: []` — parent is current. (3) Convergence gate: snapshot changed by design since rp-010 (rp-010's L1 route → /review-spec delta → rp-011 PASS → repair batch 38a2d6d0), so repair-in-response, no CONVERGENCE-ANOMALY. (4) Engram save: first attempt rejected due to multiple active runtime sessions; second attempt succeeded by registering session `review-plan-38-rp38-20260911-012`, saving observation 1807 (`obs-c24ac28a0b0c4ad5`), judging 3 conflict candidates (scoped, related, related), and closing the session.
 - **Next:** /plan-feature 38 "one mechanical batch over the advisory findings F35 + F36 + F37 + F38 + F39 + F40 + F41" — re-cut the plan set, then /review-plan 38 re-judges the new artifact revision. /execute-phase 38 only valid after the fold batch and a fresh review.
+
+## 2026-09-12T16:35Z — feat/38-workflow-status-sensor-script — review-spec (ninth)
+- **Commits:** 1 (`87f3d8d2`)
+- **Files:** 1 (docs/features/38-workflow-status-sensor-script/progress.md)
+- **Summary:** Ran `/review-spec 38` — bounded delta re-review of the Product half after the #209 scope amendment (32bb6434/1ce0bfae) and the rp-010 repair batch (38a2d6d0). Verified POLICY §7 pairing: handoff id 5eb9724bb44f = first 12 hex of sha256(SPEC.md) at HEAD (5eb9724bb44fbea2…), recomputation supported at both fold commits (2e0ab6084f21…). A:25 greps verified live at CLAUDE.md:188 (#176) and :190 (BREAKING CHANGE:). Spec-lint counts re-verified mechanically: 13 sweep rows (11/2/0), 25 runnable + 1 read-verified, 13 integration rows, 1 deferred row with trigger. All 14 Product checks pass (C1–C14). Falsification: NO-CONFIRMED-GAPS (three invented-decision probes each resolve to dated human decisions). Verdict: SPEC-REVIEW-PASS (rp-38-20260911-011). Self-check: `structural.fresh: true`, `current: true`, `digestMatches: true`, exit 0. Receipt committed 87f3d8d2.
+- **Decisions:** (1) F31's lineage half discharged by this PASS — recomputation supports the POLICY §7 pairing claim (2e0ab6084f21… at 32bb6434/1ce0bfae, removing the in-file stamp 2bee477ba469 which no recomputation supports). (2) Non-finding observation for plan reviewer: E-38-9 listed twice in Engineering half's Decisions to confirm; dedupe candidate at next plan-side write. (3) F29 low stays open as advisory under operator's materiality ruling (rp-008 precedent).
+- **Next:** /review-plan 38-workflow-status-sensor-script — the plan needs a current independent review against parent snapshot 74b4aae9… (the re-derived spec snapshot binding rp-011). On PLAN-REVIEW-PASS → /execute-phase 38.
