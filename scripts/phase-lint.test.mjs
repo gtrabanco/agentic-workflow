@@ -200,6 +200,83 @@ test("a bare numeric ratio is an assertion, not an unmappable target", () => {
   assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:wire-exit-codes$/m);
 });
 
+// Fold F7 (replan-in-unit) — the owner-sanctioned test-only `hardening` shape:
+// in a phase declared `hardening`, a test file (basename contains `.test.`)
+// maps to `hardening`, so a test-only phase is not blocked on its own tests
+// (VF-7). A source target in `hardening` still fails box-2 (hardening stays
+// test-only), a test file everywhere else keeps the prefix-table mapping
+// (tests live with their implementation's layer), and `close-out` is
+// deliberately NOT given the mapping — the owner rule names `hardening` only
+// (fail-closed; SPEC §Design box-2, decisions.md §F7 fold).
+const TEST_ONLY_HARDENING_PLAN = `# Test-only hardening
+
+### P1 — Harden the tokenizer
+
+Layer: hardening. Done-when: \`node --test scripts/tokenizer.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/tokenizer.test.mjs\` covering the edge cases
+`;
+
+const HARDENING_SOURCE_TARGET_PLAN = `# Hardening with a source target
+
+### P1 — Harden the tokenizer
+
+Layer: hardening. Done-when: \`node --test scripts/tokenizer.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/tokenizer.mjs\` with the implementation
+`;
+
+const TESTS_BESIDE_IMPLEMENTATION_PLAN = `# Tests beside their implementation
+
+### P1 — Implement the linter
+
+Layer: config/infra. Done-when: \`node --test scripts/phase-lint.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/phase-lint.mjs\` with the parser
+- [ ] Add \`scripts/phase-lint.test.mjs\` covering the corpus
+`;
+
+const TEST_FILE_IN_CLOSE_OUT_PLAN = `# Test file in close-out
+
+### P1 — Close the unit
+
+Layer: close-out. Done-when: \`node --test scripts/tokenizer.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/tokenizer.test.mjs\` covering the edge cases
+`;
+
+test("a test-only `hardening` phase passes box-2 on its test file (the VF-7 reproducer)", () => {
+  const file = fixture("test-only-hardening.md", TEST_ONLY_HARDENING_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:hardening:1:harden-tokenizer$/m);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("a source target in a `hardening` phase still blocks box-2", () => {
+  const file = fixture("hardening-source-target.md", HARDENING_SOURCE_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-2: task 1 target `scripts\/tokenizer\.mjs` belongs to layer config\/infra, not hardening$/m);
+  assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 2: /m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
+
+test("a test file outside `hardening` keeps the prefix-table mapping", () => {
+  const file = fixture("tests-beside-implementation.md", TESTS_BESIDE_IMPLEMENTATION_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:2:implement-linter$/m);
+});
+
+test("`close-out` is not given the test-file mapping (fail-closed)", () => {
+  const file = fixture("test-file-close-out.md", TEST_FILE_IN_CLOSE_OUT_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 2: /m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
+
 // Fold F12 — the frozen grammar reads tasks from `- [( |x)] ` and phase
 // headings from `[—-]`, so an uppercase checkbox is not a task and an en dash
 // is not a phase separator.

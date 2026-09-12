@@ -45,8 +45,8 @@ Layer: docs · Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold
 
 Layer: config/infra · Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0, and `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0.
 
-- [ ] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: a test-only `Layer: hardening` phase creating `scripts/tokenizer.test.mjs` expects box-2 PASS (the VF-7 reproducer); a `Layer: hardening` phase with source target `scripts/tokenizer.mjs` expects `BLOCKED — box 2`; a `Layer: config/infra` phase creating `scripts/phase-lint.test.mjs` beside its implementation keeps box-2 PASS
-- [ ] Implement the mapping in `scripts/phase-lint.mjs`: a test-file target (basename containing `.test.`) in a phase declared `hardening` maps to `hardening`; every other target keeps the frozen prefix-table mapping; the ambiguous flow is unchanged
+- [x] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: a test-only `Layer: hardening` phase creating `scripts/tokenizer.test.mjs` expects box-2 PASS (the VF-7 reproducer); a `Layer: hardening` phase with source target `scripts/tokenizer.mjs` expects `BLOCKED — box 2`; a `Layer: config/infra` phase creating `scripts/phase-lint.test.mjs` beside its implementation keeps box-2 PASS
+- [x] Implement the mapping in `scripts/phase-lint.mjs`: a test-file target (basename containing `.test.`) in a phase declared `hardening` maps to `hardening`; every other target keeps the frozen prefix-table mapping; the ambiguous flow is unchanged
 
 ## P6 — Hardening & PR
 
