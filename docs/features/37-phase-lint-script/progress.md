@@ -432,3 +432,38 @@ Receipt state after the sync — both causes are structural, neither repairable:
 Next: `/review-spec 37-phase-lint-script` (bounded delta over the moved bound
 authority) → `/review-plan 37-phase-lint-script` (cycle 7) → `/execute-phase 37`
 for P5 plus the P6 close-out re-run.
+
+## Pre-execution review receipt v1 — spec
+
+```text
+- Review: SPEC-REVIEW-37-2 · Snapshot: 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 · Verdict: spec-review-pass
+- Unit: 37-phase-lint-script · Stage: spec · Unit kind: feature · Parent: null
+- Source revision: e3d8e0ea3f07ce93892dd2ad10462bd5b25b2891 · Artifact revision: e3d8e0ea3f07ce93892dd2ad10462bd5b25b2891
+- Reviewer: review-spec (fresh context, manual portability route) · Session: 01a09632-a3bb-74b9-bf9b-2fe591053ec4 · Role: reviewer · Author: design-feature
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-12T15:18:16Z/2026-09-12T15:45:52Z · Findings: 3 (material open: 0)
+```
+
+Notes:
+
+- Bounded delta re-review routed by this file's previous entry ("a fresh review
+  is the only route"): the moved bound authorities are `CLAUDE.md` (feature 38's
+  fix #209 line) and the replaced snapshot builder — the recorded spec digests
+  (`8f736cc9…`) are therefore not reproducible by design, and lineage was proven
+  by direct extracted-Product-half diffs instead: the Product half is
+  byte-identical from its first commit (`28353158`) through HEAD (`f2c264ce`),
+  across the F8 edit (`dd68f050`) and its F12/F13 restore (`f46cf450`).
+- `sourceRevision`/`artifactRevisionId` carry the builder's identity default
+  (`e3d8e0ea…` — the merge that last touched every bound path; bound bytes
+  verified unchanged `e3d8e0ea` → HEAD `f2c264ce`). The invocation handed no
+  artifact-revision id and no runtime rotates one here; the Product half's
+  recorded labels are `37-spec-1` (decisions.md) and `37-spec-2` (the no-byte
+  rotation at `f46cf450`).
+- Governing issue #184 consulted (gh REST); contexts bound by the builder:
+  project-guide + normalized-repository-state present, architectural-invariants
+  absent (matches frozen fact F010).
+- Findings F17–F19 (`info`, verified, open — PASS-compatible per LEDGERS) are
+  recorded in `planning-findings.md` §Spec-stage findings; none is material and
+  each cites its recorded plan-side disposition. No reviewed artifact (SPEC,
+  decisions, roadmap row, ACCEPTANCE) was modified.
