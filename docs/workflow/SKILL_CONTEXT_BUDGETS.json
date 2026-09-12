@@ -100,7 +100,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11656,
+      "routeEstimateMax": 11667,
       "routeLinesMax": 844
     },
     "execute-phase:feature": {
@@ -120,7 +120,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11669,
+      "routeEstimateMax": 11680,
       "routeLinesMax": 846
     },
     "execute-phase:final-pr": {
@@ -140,7 +140,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11539,
+      "routeEstimateMax": 11550,
       "routeLinesMax": 832
     },
     "execute-phase:finding": {
@@ -160,7 +160,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11701,
+      "routeEstimateMax": 11712,
       "routeLinesMax": 854
     },
     "execute-phase:fix": {
@@ -180,7 +180,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11854,
+      "routeEstimateMax": 11865,
       "routeLinesMax": 852
     },
     "execute-phase:legacy": {
@@ -200,7 +200,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11454,
+      "routeEstimateMax": 11465,
       "routeLinesMax": 834
     },
     "execute-phase:small": {
@@ -220,7 +220,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11616,
+      "routeEstimateMax": 11627,
       "routeLinesMax": 847
     },
     "execute-phase:unit-loop": {
@@ -265,8 +265,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24144,
-      "routeLinesMax": 1698
+      "routeEstimateMax": 24175,
+      "routeLinesMax": 1700
     },
     "plan-feature:scoped": {
       "skills": [
@@ -289,8 +289,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27018,
-      "routeLinesMax": 1941
+      "routeEstimateMax": 27064,
+      "routeLinesMax": 1944
     },
     "review-change:adversarial": {
       "skills": [
@@ -391,7 +391,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 \u2014 self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 \u2014 sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim \u2014 plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 \u2014 re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured \u00d7 1.10)); 2026-09-12 (feature 37 merge sync \u2014 re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged)",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
