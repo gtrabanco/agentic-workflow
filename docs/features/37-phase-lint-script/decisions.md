@@ -187,6 +187,17 @@
         instruction, merge-readiness): the unit still owes P5 and the P6
         close-out re-run, and the own-status gate must read an executable
         state. The PR-open step restores `done`.
+     e. **Route re-basis #3 (the merge's own budget fold).** Feature 38 re-based
+        the route ceilings at its own HEAD — before `phase-contract` 1.0.3 and
+        the P4 `execute-phase` slim existed — so the seven `execute-phase:*`
+        routes measured above their merged ceilings (15 route failures on the
+        merged tree). They are re-set to `ceil(measured × 1.10)`
+        (11656 / 11669 / 11539 / 11701 / 11854 / 11454 / 11616; line ceilings
+        unchanged), with the growth source declared in `policy.declared` and in
+        the `CHANGELOG.md` + `CHANGELOG.es.md` pair — the F19/F24 recipe.
+        Result: 22/22 routes and 39/39 skills green, which also closes the
+        repo-wide red this unit had disclosed since `f46cf450`
+        (`known-issues.md`).
   **Convergence argument (required by the cycle-6 CONVERGENCE-ANOMALY):** the
   cycle-6 family was planning-set sync drift (F14 → F15/F16): replan 5 changed
   artifact content and left the surrounding self-description behind. This batch
