@@ -247,14 +247,14 @@ Notes:
 - Commit: pending · Gate: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches at :51/:101/:51 · `bun scripts/check-skill-context.mjs` → PASS (39 skills) · `npx skills add . --list` → exit 0 · `node --test scripts/normative-drift.test.mjs` → 16/16 · `bun run bundle:skills` → 38 skills/123 files · mirror parity `diff -r skills packages/pi-agentic-workflow/skills` → only `bump-skill` (excluded) · `git diff --stat -- skills/phase-contract` → empty (O12) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: P5 · Attempts: 1
 
-## P5 — 2026-09-10
+## P5 — 2026-09-10 (close-out; renumbered P6 by the F7 re-cut)
 - Done: full verification gate re-run — `node --test scripts/phase-lint.test.mjs` exit 0 (13/13), `node --test scripts/normative-drift.test.mjs` exit 0 (16/16), `bun scripts/check-skill-context.mjs` exit 0 (PASS, 39 skills), `npx skills add . --list` exit 0, `bun run test` in `packages/pi-agentic-workflow` exit 0 (185/185), AC1–AC10 re-run green (AC1 `5` PASS lines, AC2 exit 1 with rule + BLOCKED lines, AC4 byte-identical, AC6 grep empty, AC9 diff empty, AC10 exit 0); the dev-scenario edge corpus exercised (oversized input, permission-denied, concurrent runs — 3/3); `git status --porcelain -- docs/` empty; roadmap row 37 flipped to `done`; P4 commit `d3ee1658` reconciled.
 - Remains: none — unit finished (PR open).
 - Gotchas: `node --test scripts/*.test.mjs` is 220/221 — the single red is the pre-existing `check-skill-context.test.mjs` route-budget fixture failure owned by fix #200 / issue #176 (`known-issues.md` §Disclosed limitations), present at `f46cf450` too and not introduced or repaired here. The `PLAN-REVIEW-37-5` snapshot no longer matches `TASKS.md` after the P2 plan-conflict repair (recorded in `decisions.md`); a receipt refresh would be forgery, so only a fresh `/review-plan` can restore it.
 - Files: docs/features/37-phase-lint-script/{TASKS.md,progress.md,known-issues.md}, docs/features/ROADMAP.md
 - Next: unit finished — `/review-change` on the changed HEAD
 
-## Unit-loop receipt — P5
+## Unit-loop receipt — P5 (close-out; now P6)
 - Commit: `cdcec97c` (done flip) + link commit · Gate: `node --test scripts/phase-lint.test.mjs` 0 (13/13) · `node --test scripts/normative-drift.test.mjs` 0 (16/16) · `bun scripts/check-skill-context.mjs` 0 · `npx skills add . --list` 0 · `bun run test` (pi package) 0 (185/185) · `node --test scripts/*.test.mjs` 1 (220/221, pre-existing #200/#176) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: close-out complete · PR: https://github.com/gtrabanco/agentic-workflow/pull/212 · Attempts: 1
 
@@ -495,3 +495,14 @@ Notes:
 - P-checks: P1–P12 pass; P9 on the mechanical re-derivation above (order matches the no-dependency closure; last phase `hardening`); P10's validators are the project's real gates, none weakened — gates re-run by this reviewer: `node --test scripts/normative-drift.test.mjs` → 0 failures, `bun scripts/check-skill-context.mjs --routes` → 22/22, `bun scripts/check-skill-context.mjs` → 39/39 (re-basis #3 reproduced); P12's remaining claims: O12 verified by commit history (exactly `509d685c` P1 + `8a35face` F5 touched the rule owner), O10 vehicle validator → exit 0, AC9 diff `main...HEAD -- packages/agentic-workflow-schema` → empty.
 - Notes, non-findings: (a) execution state — P1–P4 and P6 ticked, P5 pending; the plan is ordered P5 → P6 and the early P6 ticks are the user-approved merge-readiness state (ED8.4d, row `in-progress`); P6's close-out re-run re-executes after P5 per O4/O6/O9's re-verification cells — not a plan defect. (b) The 2026-09-10 plan-conflict record (TASKS grammar repair, PLAN-REVIEW-37-5 snapshot staleness) is superseded: this snapshot binds the current TASKS.md carrying the `Layer:`/`Done-when:` lines, and the linter reproduces the fingerprints from it.
 - Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F20) were appended, uncommitted by design so HEAD stays at the bound sourceRevision `f2c264ce` — the next commit on the branch carries these bytes, as in cycles 1–6.
+
+## P5 — 2026-09-12 (box-2 test-file mapping; F7 fold)
+- Done: box-2 gained the owner-sanctioned test-file mapping red-first — `scripts/phase-lint.test.mjs` 26→30 tests (the VF-7 reproducer now PASSes; a source target in `hardening` still BLOCKs box 2; a test file beside its implementation keeps the prefix table; `close-out` excluded, fail-closed) and `scripts/phase-lint.mjs` maps a `.test.` basename to `hardening` only in a phase declared `hardening`; the dogfood run reproduces the six recorded fingerprints and sha256 `3ea28e5b…`.
+- Remains: P6 close-out re-run (roadmap flip to `done`, PR body refresh).
+- Gotchas: the historical `## P5 — 2026-09-10` entry above is the close-out phase the `37-plan-5` re-cut renumbered **P6** (commit `cdcec97c`) — today's P5 is the new box-2 phase, not a rerun; the two are disambiguated by the explicit qualifiers. The `PLAN-REVIEW-37-7` snapshot no longer matches `testing.md` after this phase's test-record edit (same class as P2's TASKS.md repair, disclosed; only a fresh `/review-plan` can restore it). No skill changed, so no `bump-skill`/CHANGELOG surface moved.
+- Files: scripts/phase-lint.mjs, scripts/phase-lint.test.mjs, docs/features/37-phase-lint-script/{TASKS.md,testing.md,progress.md}
+- Next: P6 — Hardening & PR (close-out re-run)
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` → exit 0 (30/30) · `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0 (6/6 fingerprints, sha256 `3ea28e5b…`) · O4 `diff` → empty · O6 no-network grep → empty · O9 schema diff → empty · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: P6 — close-out re-run · Attempts: 1

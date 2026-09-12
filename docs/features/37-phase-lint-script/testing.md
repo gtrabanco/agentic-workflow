@@ -9,8 +9,10 @@ Artifact revision: `37-plan-6`.
   per-phase fingerprints, the whole-plan sha256 line, and byte-identical
   determinism. No network, no external fixtures directory. The corpus pins the
   box-2 test-file mapping (F7 fold): a test-only `hardening` phase passes on
-  its test files, a source target in `hardening` still BLOCKs, and a test file
-  beside its implementation keeps the prefix-table mapping.
+  its test files, a source target in `hardening` still BLOCKs, a test file
+  beside its implementation keeps the prefix-table mapping, and `close-out` is
+  deliberately not given the mapping (fail-closed — the owner rule names
+  `hardening` only). Corpus 30/30 at the P5 landing.
 - **Runtime parity:** the same corpus runs under bun and node
   (`bun scripts/phase-lint.mjs` / `node scripts/phase-lint.mjs`); AC7 pins the
   node fallback with exit 0 on a valid plan.

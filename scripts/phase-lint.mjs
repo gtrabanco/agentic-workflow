@@ -66,8 +66,20 @@ function pathTokens(text) {
   return tokens;
 }
 
-/** The frozen target-file → layer prefix table (SPEC §Design, box-2). */
-function layerForTarget(target) {
+/** A test file: basename contains `.test.` (frozen mechanical definition). */
+function isTestFile(target) {
+  return target.split("/").pop().includes(".test.");
+}
+
+/**
+ * The frozen target-file → layer prefix table (SPEC §Design, box-2), plus the
+ * owner-sanctioned test-only shape: in a phase declared `hardening`, a test
+ * file maps to `hardening` (the F7 fold — a test-only phase is not blocked on
+ * its own tests). `close-out` is deliberately **not** given the mapping (the
+ * owner rule names `hardening` only), so it keeps the prefix table.
+ */
+function layerForTarget(target, phaseLayer) {
+  if (phaseLayer === "hardening" && isTestFile(target)) return "hardening";
   if (target.startsWith("skills/") || target.startsWith("docs/") || target.startsWith("template/")) return "docs";
   if (target.startsWith("scripts/") || target.startsWith("packages/") || target.startsWith(".github/") || target.startsWith(".agentic-workflow/")) return "config/infra";
   if (target.endsWith(".md")) return "docs";
@@ -164,7 +176,7 @@ function box2(phase) {
     const tokens = pathTokens(task);
     if (tokens.length === 0) continue;
     const target = tokens[0];
-    const layer = layerForTarget(target);
+    const layer = layerForTarget(target, phase.layer);
     if (layer === null) return { findings, ambiguous: target };
     if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${target}\` belongs to layer ${layer}, not ${phase.layer}`);
   }
