@@ -372,6 +372,15 @@ function main(argv) {
 const invokedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
 if (invokedDirectly) {
   const result = main(process.argv.slice(2));
+  // Early-closing pipe consumers (`head -1`, `grep -m1`) close the read end
+  // while the block is still being written; without a handler the runtime
+  // raises an unhandled EPIPE and flips the intended exit code (F25). The
+  // truncated chunk is already lost at that point, so the only correct answer
+  // is to swallow EPIPE and keep the verdict's exit code.
+  process.stdout.on("error", (error) => {
+    if (error && error.code === "EPIPE") return;
+    throw error;
+  });
   process.stdout.write(`${result.lines.join("\n")}\n`);
   // `process.exit()` here would kill the process before an async pipe write
   // drains, truncating the block past the pipe buffer (F22). Setting the code

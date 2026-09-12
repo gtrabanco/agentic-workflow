@@ -10,7 +10,7 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -529,5 +529,26 @@ test("a block larger than the pipe buffer is not truncated", () => {
   assert.equal(lines.length, 2002, "every phase line plus the verdict and fingerprint lines must reach the pipe");
   assert.match(lines[lines.length - 2], /^verdict PASS$/);
   assert.match(lines[lines.length - 1], /^fingerprint: [a-f0-9]{64}$/);
+});
+
+// Fold F25 — an early-closing pipe consumer (`head -1`, `grep -m1`) closes the
+// read end while the block is still being written; an unhandled EPIPE used to
+// crash the CLI with a stack trace and flip the intended exit code.
+test("an early-closing pipe consumer does not flip the exit code", async () => {
+  const phases = Array.from({ length: 2000 }, (_, i) => `### P${i + 1} — Work ${i + 1}\n\nLayer: config/infra. Done-when: \`node --test scripts/b${i + 1}.test.mjs\` → exit 0.\n\n- [ ] Create \`scripts/b${i + 1}.mjs\`\n`).join("\n");
+  const file = fixture("pipe-early-close.md", `# Pipe early close\n\n${phases}`);
+  const child = spawn(process.execPath, [LINTER, file], { stdio: ["ignore", "pipe", "pipe"] });
+  let stderr = "";
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk) => { stderr += chunk; });
+  // Reproduce `| head -1`: consume one chunk, then close the read end while the
+  // block is still being written (2000 phases far exceed the pipe buffer).
+  await new Promise((resolve) => child.stdout.once("data", resolve));
+  child.stdout.destroy();
+  const code = await new Promise((resolve, reject) => {
+    child.once("close", resolve);
+    child.once("error", reject);
+  });
+  assert.equal(code, 0, `the intended exit 0 must survive an early close; stderr: ${stderr}`);
 });
 
