@@ -36,18 +36,19 @@ and O-02 (envelope vocabulary unchanged). Row shape and column order per
 | O26 | Repo no-weakening pin rule (feature 30 precedent) | Discipline pins keep behavior or gain strictly stronger assertions | P3 | Pin re-targeting from prose-presence to script-behavior form | execute-phase | `node --test scripts/bounded-delivery-loops.test.mjs scripts/pre-execution-quality.test.mjs scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs` → exit 0 with re-targeted pins | suite output in progress.md | planned |
 | O27 | SPEC E-38-1 (required failure state, F27) | validateEnvelope mismatch is a diagnostic, never a gate: stderr diagnostic, envelope still printed, exit 0 | P1 | Envelope-mismatch pin: forced mismatch via a stub schema build whose `validateEnvelope` always fails, swapped in through the explicit-path loader (PE-001) | execute-phase | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (envelope-mismatch pin section) | suite output in progress.md (P1 done-when) | planned |
 | O28 | AC-24 | Fix #209's release policy documented in `CLAUDE.md` — freeze-majors rule (minor/patch only until #176 merges; breaking → minor + `BREAKING CHANGE:` footer) present | P4 | Verify the policy line in CLAUDE.md (implemented pre-execution in the fold batch 2026-09-10) | execute-phase | `grep -nE "#176" CLAUDE.md` → ≥ 1 AND `grep -nE "BREAKING CHANGE:" CLAUDE.md` → ≥ 1 (PR time: verify both #176 reference and `BREAKING CHANGE:` footer present) | read-verified at PR time; pre-executed in fold batch | verified |
+| O29 | AC-25 | SPEC A:24 — `references/ENVELOPE_CORE.md` slimmed to interpret-and-recommend: script-backed reference present, envelope-assembly self-check prose gone (delivered by P3; the manifest row was dropped by ed7aae98 and is restored by the 2026-09-12 replan amendment, F22) | P6 | Verify the restored AC-25 validators at head during the close-out ladder | execute-phase | `grep -c 'scripts/workflow-status.mjs' skills/workflow-status/references/ENVELOPE_CORE.md` → ≥ 1 AND `grep -cE 'self-check before printing' skills/workflow-status/references/ENVELOPE_CORE.md` → 0 | both greps pass at PR head | planned |
 | O-RV | AC-RV | Feature 15's injection-safety invariant (urgency from labels only) preserved in the new script | P4 | Read-verified: code review against feature 15 (PR #47) merge commit; urgency labels-only path preserved verbatim | execute-phase | read-verified at PR time: code review against feature 15 (PR #47) merge commit; the labels-only path preserved verbatim in the script's step 3 implementation | PR diff shows the labels-only path in the script matches the original invariant | planned |
 | O-01 | A-03 + A-07 (invariant) | Read-only by construction: the script performs no write action — structural proof via greps, not prose promises | P1 | Implement read-only enforcement; structural proof greps in the test suite | execute-phase | grep mutation calls returns nothing; grep no-prompt calls returns nothing | all greps return no matches; structural proof present | planned |
 | O-02 | A-13 (invariant) | Envelope vocabulary unchanged: the schema package is byte-untouched; `detail` is schema-unconstrained | P4 | Verify the PR does not modify any file under `packages/agentic-workflow-schema/` | execute-phase | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty | empty output; no schema package files changed | planned |
 
 ## Closure
 
-- Every acceptance criterion AC-01…AC-24 maps to obligation rows with exactly one
+- Every acceptance criterion AC-01…AC-25 maps to obligation rows with exactly one
   phase each: AC-01→O1(P1), AC-02→O2(P2), AC-03→O3(P1), AC-04→O4(P2), AC-05→O5(P2),
   AC-06→O6(P2), AC-07→O7(P2), AC-08→O8(P1), AC-09→O9(P3), AC-10→O10(P1),
   AC-11→O11(P1), AC-12→O12(P2), AC-13→O13(P4), AC-14→O14(P3), AC-15→O15(P2),
   AC-16→O16(P4), AC-17→O17(P1), AC-18→O18(P2), AC-19→O19(P2), AC-20→O20(P1),
-  AC-21→O21(P2), AC-22→O22(P1), AC-23→O23(P1), AC-24→O28(P4), AC-RV→O-RV(P4).
+  AC-21→O21(P2), AC-22→O22(P1), AC-23→O23(P1), AC-24→O28(P4), AC-25→O29(P6), AC-RV→O-RV(P4).
 - No obligation is `deferred` or exported.
 - One behaviour appears once: the read-only invariant is O3+O-01 (the structural proof
   is the obligation; A-03 and A-22 are separate checks of different greps).

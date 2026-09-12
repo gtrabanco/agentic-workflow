@@ -6,8 +6,12 @@ Frozen 2026-09-09 by `plan-feature-scaffold` from the SPEC's acceptance
 criteria A:1…A:23 + read-verified. One stable ID per SPEC criterion;
 validators copied from the criteria. Extended 2026-09-10 by operator-approved
 scope amendment folding fix #209 into 38's deliverables (AC-24 / A:25,
-CLAUDE.md release-policy check). Modifying this manifest during execution
-requires a user-approved SPEC amendment.
+CLAUDE.md release-policy check). Amended 2026-09-12 by the operator-confirmed
+review-findings replan (F22): AC-25 added, restoring SPEC criterion A:24
+(`references/ENVELOPE_CORE.md` slimmed) whose manifest row was dropped in
+commit ed7aae98 when its AC-24 slot was reused for the #209 fold (A:25, commit
+32bb6434). The SPEC's criteria are unchanged; the manifest is re-synced to
+them.
 
 | ID | Required outcome | Validator |
 |---|---|---|
@@ -36,6 +40,7 @@ requires a user-approved SPEC amendment.
 | AC-23 | Stdout for data, stderr for diagnostics — stdout alone parses as one valid JSON document | `node scripts/workflow-status.mjs 2>/dev/null | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{JSON.parse(s)})'` → exit 0 (stdout alone is valid JSON) |
 | AC-24 | Fix #209's release policy documented in `CLAUDE.md` versioning guidance — freeze-majors rule (minor/patch only until #176 merges; breaking → minor + `BREAKING CHANGE:` footer) present | `grep -nE '#176' CLAUDE.md` → ≥ 1 AND `grep -nE 'BREAKING CHANGE:' CLAUDE.md` → ≥ 1 (operator-approved scope amendment 2026-09-10, A:25; pre-executed in fold batch) |
 | AC-RV | Feature 15's injection-safety invariant (urgency from labels only) preserved in the new script | read-verified at PR time: code review against feature 15 (PR #47) merge commit; urgency labels-only path preserved verbatim |
+| AC-25 | `skills/workflow-status/references/ENVELOPE_CORE.md` slimmed to interpret-and-recommend: script-backed reference present, envelope-assembly self-check prose gone (SPEC A:24 — delivered by P3; the manifest row is restored by the 2026-09-12 replan amendment, F22) | `grep -c 'scripts/workflow-status.mjs' skills/workflow-status/references/ENVELOPE_CORE.md` → ≥ 1 AND `grep -cE 'self-check before printing' skills/workflow-status/references/ENVELOPE_CORE.md` → 0 |
 
 ## Quality floor
 

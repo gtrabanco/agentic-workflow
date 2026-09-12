@@ -267,3 +267,68 @@ passes, `git diff --name-only main...HEAD -- packages/agentic-workflow-schema`
   append an acceptance receipt to `progress.md` with `Status: frozen` + `Verified: 2026-09-09`.
 - [x] Print the PR URL — `gh pr view <n> --json url` → verify the PR is open and the
   URL matches the printed value (read-verified).
+
+## P5 — Sensor read-path fold batch
+
+Layer: config/infra · Done-when: `node --test
+scripts/workflow-status-sensor.test.mjs` → exit 0 with one new pin per folded
+finding (F20, F27, F28, F29, F30, F32, F33, F34, F35 behavior + F31's
+concurrency pin now truly concurrent) green, every pre-existing pin unchanged,
+and the root discipline suites still exit 0.
+
+- [ ] Correct the forge-answer handling — a zero-PR `gh pr list --state all`
+  result reads as success, not a forge failure (F28); unparseable forge stdout
+  gets its own namespaced `unavailable-forge-<cause>` code, never misattributed
+  to `no-network` (F29); a non-array forge JSON answer degrades per the
+  declared failure contract (exit 0 + code in `detail`), never exits 1 (F30).
+- [ ] Add `--limit` to the forge list calls (`openPrs`, `openIssues`) so the
+  forge's default page size cannot truncate the counts the envelope reports
+  (F35) — pin with a fixture forge returning more than the default page.
+- [ ] Collapse the duplicate full `git status` scans into one
+  `git status --porcelain=v1 -b` invocation feeding both consumers (F32).
+- [ ] Derive `build_order` once and share it between the `dependencies` and
+  `blocked_units` projections so both emit the same chain (F27) — pin asserts
+  the two projections agree on the same fixture.
+- [ ] Bound the pre-execution verifier spawns (F20) — the per-unit/stage
+  verifier invocations are capped by a suite-pinned constant; exceeding the
+  cap degrades, never hangs (declared failure contract holds).
+- [ ] Gate and batch the per-branch upstream reads (F33) —
+  `branchIsUnpushed` runs lazily/once per branch per run, not two spawns per
+  local branch on every unit resolution.
+- [ ] Gate the review-mark reads by the `OPEN_STATES` filter and batch their
+  git spawns (F34) — closed units pay zero review-mark spawns.
+- [ ] Re-cut the concurrency pin to actually run two sensor processes
+  concurrently and assert byte-identical outputs (F31) — write it red-first
+  against the sequential behavior, then green.
+
+## P6 — Close the fold cycle
+
+Layer: hardening · Done-when: every frozen validator in `ACCEPTANCE.md`
+passes at head (including the restored AC-25), `git diff --name-only
+main...HEAD -- packages/agentic-workflow-schema` → empty, and every open row
+in `review-findings.md` (F20, F22, F27–F36) reads `folded: yes` bound to this
+phase's head sha.
+
+- [ ] Fix the `MIGRATION.es.md` language-switcher self-link (F36) — the ES
+  sibling links back to `MIGRATION.md`; reciprocal switcher links verified on
+  both siblings (hard bilingual rule).
+- [ ] Verify the restored AC-25 validators at head — `grep -c
+  'scripts/workflow-status.mjs' skills/workflow-status/references/ENVELOPE_CORE.md`
+  ≥ 1 AND `grep -cE 'self-check before printing'
+  skills/workflow-status/references/ENVELOPE_CORE.md` → 0 (O29; the manifest
+  amendment rides this phase's commit).
+- [ ] Run the full frozen validation ladder from `ACCEPTANCE.md` — the sensor
+  suite, the root discipline suites, `check-skill-context.mjs`, the schema
+  package suite, pi bundle parity, and the schema byte-untouched diff.
+- [ ] Flip every open `review-findings.md` row folded by P5/P6 — F20, F22,
+  F27–F36 — to `folded: yes`, each bound to the phase head sha (F22 via the
+  restored AC-25 row; no row is reclassified).
+- [ ] Record the P5/P6 unit-loop receipts in `progress.md` and recompute the
+  frozen `ACCEPTANCE.md` blob — `git hash-object` sha appended with the
+  acceptance receipt.
+- [ ] Push the phase commits to PR #213 and re-read the roadmap row — it stays
+  `done · [#213]` (the PR remains open; merge state lives in the forge; no
+  state-machine edge touches the row).
+- [ ] Print the updated PR HEAD sha and the review hand-off — `manual`:
+  `/review-change` re-run on the new HEAD is user-initiated (the manual path
+  after a replan), never executed inside this phase.
