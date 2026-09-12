@@ -51,6 +51,13 @@ export const FORGE_TIMEOUT_MS = 10_000;
 export const FORGE_DIMENSION_MS = 10_000;
 /** The single fatal-invocation exit code (A:20; repo convention 1-2). */
 export const FATAL_EXIT_CODE = 1;
+/**
+ * Cap on pre-execution verifier subprocess spawns per run (F20). Each sense is a
+ * full `node` process against a unit's receipts; a pathological repository with
+ * dozens of in-flight units priced one spawn per unit/stage with no bound. Past
+ * the cap the row degrades by name instead of spawning, so the run stays bounded.
+ */
+export const PRE_EXECUTION_MAX_SENSES = 16;
 
 const FIVE_STATES = ["idea", "defined", "planned", "in-progress", "done"];
 const OPEN_STATES = new Set(["defined", "planned", "in-progress"]);
@@ -221,14 +228,17 @@ function readGitState() {
     return { branch: "", dirty: false, dirtyFiles: [], ahead: 0, observations: ["git is unavailable — git-derived facts are omitted"], porcelain: "", degradations };
   }
   const branch = branchProbe.ok ? branchProbe.stdout : "";
-  const porcelain = git("status", "--porcelain") ?? "";
-  // No `git fetch`: it writes remote-tracking refs and FETCH_HEAD, and this sensor's
-  // contract is "performs no write of any kind". `ahead` is advisory and reads the
-  // local upstream ref; a stale count is a smaller cost than mutating a user's repo
-  // mid-rebase/mid-checkout.
-  const shortStatus = git("status", "-sb") ?? "";
-  const dirtyFiles = porcelain === "" ? [] : porcelain.split("\n").filter(Boolean);
-  const ahead = /\[ahead (\d+)/.exec(shortStatus)?.[1];
+  // One scan (F32): `-b` prefixes the porcelain body with the `##` branch header,
+  // which carries the upstream's ahead/behind counts the separate `status -sb`
+  // scan was paying a second spawn for. No `git fetch`: it writes remote-tracking
+  // refs and FETCH_HEAD, and this sensor's contract is "performs no write of any
+  // kind". `ahead` is advisory and reads the local upstream ref; a stale count is a
+  // smaller cost than mutating a user's repo mid-rebase/mid-checkout.
+  const status = git("status", "--porcelain=v1", "-b") ?? "";
+  const lines = status === "" ? [] : status.split("\n");
+  const header = lines[0]?.startsWith("## ") ? lines[0] : "";
+  const dirtyFiles = lines.filter((line) => line && !line.startsWith("## "));
+  const ahead = /\[ahead (\d+)/.exec(header)?.[1];
   const observations = [];
   if (dirtyFiles.length > 0) {
     observations.push(`${dirtyFiles.length} uncommitted change(s) on ${branch || "(detached)"}`);
@@ -236,7 +246,7 @@ function readGitState() {
   if (ahead && Number(ahead) > 0) {
     observations.push(`branch ${branch} is ${ahead} commit(s) ahead of its upstream`);
   }
-  return { branch, dirty: dirtyFiles.length > 0, dirtyFiles, ahead: ahead ? Number(ahead) : 0, observations, porcelain, degradations };
+  return { branch, dirty: dirtyFiles.length > 0, dirtyFiles, ahead: ahead ? Number(ahead) : 0, observations, porcelain: dirtyFiles.join("\n"), degradations };
 }
 
 // ---------------------------------------------------------------------------
@@ -244,7 +254,9 @@ function readGitState() {
 // ---------------------------------------------------------------------------
 
 const FORGE_READS = {
-  openPrs: ["pr", "list", "--state", "open", "--json", "number,title,headRefName,url,statusCheckRollup"],
+  // Every list read carries its own `--limit`: `gh`'s default page is 30, and a
+  // truncated page silently falsified the counts the envelope publishes (F35).
+  openPrs: ["pr", "list", "--state", "open", "--json", "number,title,headRefName,url,statusCheckRollup", "--limit", "1000"],
   mergedPrs: ["pr", "list", "--state", "merged", "--limit", "20", "--json", "number,headRefName"],
   // The authoritative merge state for a PR outside the recent-merge window. The
   // `--limit 20` window above is a fast path, never evidence: reading its absence
@@ -252,11 +264,16 @@ const FORGE_READS = {
   // spurious substrate blockers. Read lazily — only a `done` row whose PR is
   // neither open nor recently merged needs it.
   allPrStates: ["pr", "list", "--state", "all", "--limit", "1000", "--json", "number,state"],
-  openIssues: ["issue", "list", "--state", "open", "--json", "number,title,labels"],
+  openIssues: ["issue", "list", "--state", "open", "--json", "number,title,labels", "--limit", "1000"],
 };
 
-/** A forge read failure degrades the whole dimension with one declared code. */
-const degradationFor = (failure) => {
+/**
+ * A forge read failure degrades the whole dimension with one declared code. A
+ * command that answered cleanly but whose stdout is not the expected JSON list is
+ * a `malformed-answer`, never `no-network` — the real cause stays visible (F29).
+ */
+const degradationFor = (failure = {}, malformed = false) => {
+  if (malformed) return "unavailable-forge-malformed-answer";
   if (failure.missing) return "unavailable-forge-missing-cli";
   if (failure.timedOut) return "unavailable-forge-timeout";
   if (/authenticat|401|credential|bad credentials/i.test(failure.stderr ?? "")) return "unavailable-forge-auth";
@@ -269,20 +286,23 @@ function readForgeState(budget = forgeBudget()) {
 
   const readList = (key) => {
     const result = ghBounded(budget, ...FORGE_READS[key]);
-    if (result.ok) {
-      try {
-        return { data: JSON.parse(result.stdout), available: true };
-      } catch {
-        return { data: [], available: false };
-      }
+    if (!result.ok) return { data: [], available: false, failure: result };
+    // A clean exit with unparsable stdout is its own cause; a well-formed
+    // non-array is not a usable list at all. Both degrade by name rather than
+    // throwing a later `.map` into a fatal exit (F29/F30).
+    let parsed;
+    try {
+      parsed = JSON.parse(result.stdout);
+    } catch {
+      return { data: [], available: false, malformed: true };
     }
-    return { data: [], available: false, failure: result };
+    if (!Array.isArray(parsed)) return { data: [], available: false, malformed: true };
+    return { data: parsed, available: true };
   };
 
-  /** A forge read failure degrades the whole dimension with one declared code. */
   const first = readList("openPrs");
   if (!first.available) {
-    const code = degradationFor(first.failure ?? {});
+    const code = degradationFor(first.failure ?? {}, first.malformed);
     degradations.push({ source: "forge", code, detail: "forge reads are unavailable; forge-derived sections are omitted" });
     observations.push(`forge unavailable (${code})`);
     return { openPrs: [], mergedPrs: [], openIssues: [], observations, available: false, degradations };
@@ -291,7 +311,8 @@ function readForgeState(budget = forgeBudget()) {
   const mergedPrs = readList("mergedPrs");
   const openIssues = readList("openIssues");
   if (!mergedPrs.available || !openIssues.available) {
-    const code = degradationFor(!mergedPrs.available ? (mergedPrs.failure ?? {}) : (openIssues.failure ?? {}));
+    const failed = !mergedPrs.available ? mergedPrs : openIssues;
+    const code = degradationFor(failed.failure ?? {}, failed.malformed);
     degradations.push({ source: "forge", code, detail: "a partial forge read failed; affected sections are omitted" });
     observations.push(`forge partially unavailable (${code})`);
   }
@@ -423,13 +444,16 @@ function makeMergeResolver(forge, budget = forgeBudget()) {
     // three: an already-spent budget answers a timeout here instead of paying a
     // fresh per-call bound (F19).
     const result = ghBounded(budget, ...FORGE_READS.allPrStates);
+    let parsed = null;
     if (result.ok) {
-      try {
-        for (const pr of JSON.parse(result.stdout)) states.set(pr.number, String(pr.state ?? "").toUpperCase());
-      } catch { /* an unparsable list reads as no list, handled below */ }
+      try { parsed = JSON.parse(result.stdout); } catch { parsed = null; }
     }
-    if (states.size === 0) {
-      const code = degradationFor(result);
+    // A successful read of `[]` is a real answer — a forge with no PRs is not a
+    // forge failure (F28). Only an unreadable or non-array answer degrades.
+    if (Array.isArray(parsed)) {
+      for (const pr of parsed) states.set(pr.number, String(pr.state ?? "").toUpperCase());
+    } else {
+      const code = degradationFor(result, result.ok);
       (forge.degradations ?? []).push({
         source: "forge",
         code,
@@ -509,11 +533,15 @@ function computeDependencies(units, mergeResolver) {
 
   const unmet = [];
   const buildOrder = [];
+  // One derivation (F27): the per-unit chain helper is the single source for both
+  // `dependencies.build_order` (the deduped union) and `blocked_units[id].build_order`
+  // (the same chain), so the two projections can never diverge again.
+  const dependencyApi = { merged, byId, directDeps, unmetFor };
   for (const unit of units) {
     const unmetDeps = unmetFor(unit);
     if (unmetDeps.length > 0) {
       unmet.push(unit.id, ...unmetDeps);
-      buildOrder.push(...unmetDeps, unit.id);
+      buildOrder.push(...dependencyBuildOrder(unit, dependencyApi));
     }
   }
   return {
@@ -541,7 +569,19 @@ function newestReceipt(progressText, stage) {
 }
 
 /** Sense one stage's receipt through the verifier; returns `{label, ...}`. */
-function senseStage(unitDir, unitId, stage, parent) {
+function senseStage(unitDir, unitId, stage, parent, counter = null) {
+  // Past the run's spawn cap the row degrades by name instead of spawning (F20).
+  if (counter && counter.value >= PRE_EXECUTION_MAX_SENSES) {
+    counter.capped += 1;
+    return {
+      label: "missing",
+      verdict: null,
+      boundDigest: null,
+      observedDigest: null,
+      reason: `pre-execution sense cap (${PRE_EXECUTION_MAX_SENSES}) reached`,
+      capped: true,
+    };
+  }
   const verifier = path.join(SENSOR_REPO, "scripts", "pre-execution-snapshot.mjs");
   if (!fs.existsSync(verifier)) {
     return { label: "missing", verdict: null, boundDigest: null, observedDigest: null, reason: "snapshot verifier absent" };
@@ -557,6 +597,7 @@ function senseStage(unitDir, unitId, stage, parent) {
   const args = ["verify", "--stage", stage, "--unit", unitId, "--dir", unitDir, "--root", PROJECT];
   const boundParent = parent ?? receipt.parent;
   if (stage === "plan" && boundParent) args.push("--parent", boundParent);
+  if (counter) counter.value += 1;
   const result = run(process.execPath, [verifier, ...args], { cwd: PROJECT });
   let payload = null;
   try { payload = JSON.parse(result.stdout); } catch { payload = null; }
@@ -696,16 +737,48 @@ function readFixNow(unitDir, observations = []) {
 /** Worst verdict wins across the branches classified (CRASH_RECOVERY.md precedence). */
 const CRASH_RANK = { CLEAN: 0, RESUMABLE: 1, AMBIGUOUS: 2 };
 
-/** A branch with no upstream has every commit unpushed by definition (CRASH_RECOVERY). */
-function branchIsUnpushed(name) {
-  const upstream = git("rev-parse", "--abbrev-ref", `${name}@{u}`);
-  if (upstream === null) return true;
-  const count = git("rev-list", "--count", `${upstream}..${name}`);
-  return count === null ? true : Number(count) > 0;
+/**
+ * Per-run upstream facts for every unit branch, in one `for-each-ref` spawn (F33):
+ * `%(upstream:track)` reports the ahead count and `[gone]`, so no per-branch
+ * `rev-parse @{u}` + `rev-list --count` pair is needed.
+ */
+function branchUpstreamFacts() {
+  const facts = new Map();
+  const out = git("for-each-ref", "--format=%(refname:short)%09%(upstream:short)%09%(upstream:track)", "refs/heads/feat", "refs/heads/fix") ?? "";
+  for (const line of out.split("\n")) {
+    if (!line.trim()) continue;
+    const [name, upstream = "", track = ""] = line.split("\t");
+    facts.set(name, {
+      upstream: upstream || null,
+      ahead: Number(/ahead (\d+)/.exec(track)?.[1] ?? 0),
+      gone: /gone/.test(track),
+    });
+  }
+  return facts;
 }
 
 function readCrashRecovery({ gitState, units, phases }) {
   const branch = gitState.branch;
+  const facts = branchUpstreamFacts();
+  const unpushedCache = new Map();
+  /** One branch's upstream read, memoized per run and served by the batch (F33). */
+  const isUnpushed = (name) => {
+    if (unpushedCache.has(name)) return unpushedCache.get(name);
+    let unpushed;
+    const batched = facts.get(name);
+    if (batched) {
+      unpushed = !batched.upstream || batched.gone || batched.ahead > 0;
+    } else {
+      const upstream = git("rev-parse", "--abbrev-ref", `${name}@{u}`);
+      if (upstream === null) unpushed = true;
+      else {
+        const count = git("rev-list", "--count", `${upstream}..${name}`);
+        unpushed = count === null ? true : Number(count) > 0;
+      }
+    }
+    unpushedCache.set(name, unpushed);
+    return unpushed;
+  };
   const unitFor = (name) => name && units.find((candidate) => name.endsWith(candidate.id)
     || name.includes(candidate.id)
     || (candidate.issue != null && name.includes(`/${candidate.issue}-`))
@@ -739,20 +812,20 @@ function readCrashRecovery({ gitState, units, phases }) {
     // Untracked/no-upstream state is only recoverable state on a unit branch: a
     // non-unit branch (main, a scratch branch) has no interrupted execution to
     // resume, so its own cleanliness is the whole fact.
-    unpushed: branch === "" ? false : (currentUnit ? (!git("rev-parse", "--abbrev-ref", `${branch}@{u}`) || gitState.ahead > 0) : false),
+    unpushed: branch === "" || !currentUnit ? false : isUnpushed(branch),
   })];
 
   // Every *unit* branch is classified too, and worst wins: a driver that died on
   // another checkout left state the single reduced verdict must see. A branch that
   // resolves to no roadmap unit is not a unit branch — it is not a recovery
   // candidate, and letting one hijack `state` would stall every driver on a
-  // leftover scratch branch.
-  const locals = (git("for-each-ref", "--format=%(refname:short)", "refs/heads/feat", "refs/heads/fix") ?? "")
-    .split("\n").map((name) => name.trim()).filter((name) => name && name !== branch);
+  // leftover scratch branch. The batch's branch list is reused here, so the run
+  // pays one `for-each-ref` for both the upstream facts and the branch set (F33).
+  const locals = [...facts.keys()].filter((name) => name && name !== branch);
   for (const name of locals) {
     const unit = unitFor(name);
     if (!unit) continue;
-    rows.push(classify(name, unit, { dirty: false, dirtyFiles: 0, unpushed: branchIsUnpushed(name) }));
+    rows.push(classify(name, unit, { dirty: false, dirtyFiles: 0, unpushed: isUnpushed(name) }));
   }
   rows.sort((a, b) => CRASH_RANK[b.verdict] - CRASH_RANK[a.verdict]);
   return { verdict: rows[0].verdict, branches: rows };
@@ -936,6 +1009,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const designCandidates = [];
   const blocked = {};
   const gateBlockers = [];
+  const senseCounter = { value: 0, capped: 0 };
   /** A `done` row whose linked PR is still open: a unit at the merge gate. */
   const isOpenPr = (unit) => Boolean(unit.pr && (forge.openPrs ?? []).some((pr) => pr.number === unit.pr.number));
   for (const unit of units) {
@@ -959,8 +1033,8 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
       continue;
     }
     const stage = stageFor(unit);
-    const specSense = senseStage(dir, unit.id, "spec");
-    const planSense = stage === "plan" ? senseStage(dir, unit.id, "plan", specSense.observedDigest) : null;
+    const specSense = senseStage(dir, unit.id, "spec", undefined, senseCounter);
+    const planSense = stage === "plan" ? senseStage(dir, unit.id, "plan", specSense.observedDigest, senseCounter) : null;
     const sense = stage === "plan" ? planSense : specSense;
     const label = sense.label;
     const row = {
@@ -989,6 +1063,10 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     }
   }
 
+  if (senseCounter.capped > 0) {
+    observations.push(`pre-execution sensing capped at ${PRE_EXECUTION_MAX_SENSES} verifier invocation(s) — ${senseCounter.capped} row(s) degraded`);
+  }
+
   // Steps 7-9 per unit.
   const phases = new Map();
   const marks = new Map();
@@ -998,7 +1076,10 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     if (!dir) continue; // an unsafe slug was already reported by the readiness pass
     const phase = readPhaseProgress(dir);
     if (phase) phases.set(unit.id, phase);
-    const mark = readReviewMark(dir, stageFor(unit));
+    // A closed unit is not under review: only a unit about to enter (or sitting at)
+    // the review gate pays the mark's git spawns (F34).
+    const markEligible = OPEN_STATES.has(unit.status) || (unit.status === "done" && isOpenPr(unit));
+    const mark = markEligible ? readReviewMark(dir, stageFor(unit)) : null;
     if (mark) marks.set(unit.id, mark);
     fixNow.push(...readFixNow(dir, observations));
   }

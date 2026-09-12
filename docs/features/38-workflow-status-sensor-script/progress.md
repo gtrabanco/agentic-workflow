@@ -513,3 +513,52 @@ Recorded for the next plan review (digests recomputed here, never copied):
 - Failed checks: none · Passed: L1 L2 L3 L4 L5 L6 P1 P2 P3 P4 P5 P6 P7 P8 P9 P10 P11 P12 (advisory rows recorded against their checks: F42→P11, F43→L4; F29 low/product unchanged, non-material)
 - Falsification: NO-CONFIRMED-GAPS — invented-claim probes: none (every changed claim resolves to a live probe above; the VF-anchored fold findings each re-verified at these bytes); undeliverable obligation: none (O29's greps are born-green by design — the manifest restores a row for work P3 delivered; the red-first rule governs tests written inside an implementing phase, not manifest re-syncs); wrong-reason validator: none new (P5's pins are born-red against VF-confirmed defects; F31's pin is explicitly red-first; AC-25's greps fail if ENVELOPE_CORE.md regresses); broken-if-shipped-as-written: nothing user-visible beyond the declared boundaries (B-01 recorded → #198; F29's advisory grep-gap guarded by A-RV read-verification); failure state with no scenario: the F35 page-truncation pin carries a task-level fixture pin but no testing.md inventory row → F42 (advisory)
 - Sensor self-check (POLICY §8, run in the same act as persisting this receipt): see JSON pasted beside the verdict block in the reporting turn
+
+## Dependency receipt v1 — full pass (rewritten 2026-09-12)
+- Fingerprint: 25f0397d152169c0ef6cdbd1646bc8361e32b240 · Closure: 38-workflow-status-sensor-script ← (none — SPEC `## Dependencies` = None)
+- Merged PRs: none required · Fully merged: yes · Verified: 2026-09-12
+- Recipe note: `sha1("blob <len>\0" + "None — the schema package and the \`workflow-status\` skill are already on \`main\`.")` (the `scripts/dependency-gate.test.mjs` `dependencyFingerprint` recipe). The prior receipt's `10826968…` did not re-derive under this recipe nor under the trailing-newline variant; the closure is empty so the full gate was re-run and now stands on the recomputed value (fail-closed per PREFLIGHT §"Dependency receipt").
+
+## Acceptance receipt v2 — replacement manifest (F22 / AC-25)
+- Manifest: `docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md` · Blob: `23443e269d2affbc52906aae4a2342c36e105980` · Status: frozen · Verified: 2026-09-12
+- Supersedes Acceptance receipt v1 (blob `ac06b7eeaa3fd127a8b6e68a8904f298b1180c1b`). Amendment trail: explicit operator approval (the 2026-09-12 `/plan-feature 38` replan instruction, decisions.md E-38-10) → dated SPEC amendment note (SPEC `### Phases` 2026-09-12; acceptance criterion A:24 unchanged) → this replacement manifest (committed 2c7a2da8) → this receipt.
+- Strength retained: AC-25's two validators are the unchanged SPEC A:24 greps (`scripts/workflow-status.mjs` reference ≥ 1 AND `self-check before printing` → 0 in `ENVELOPE_CORE.md`); the row restores a dropped criterion, it does not relax one. The amended manifest is the exact bytes the current plan receipt rp-38-20260912-014 binds (its `acceptance` artifact row).
+
+## 2026-09-12 — execute-phase preflight (38, unit loop, P5–P6)
+
+- Branch: `feat/38-workflow-status-sensor-script` (`git branch --show-current`).
+- Dependency gate: full pass (fast path invalidated by the unreproducible prior fingerprint) — SPEC `## Dependencies` = None, closure empty, no forge traversal required; receipt rewritten above.
+- Own-status gate: roadmap row 38 = `done · [#213]` → `planned`+ → proceed.
+- Pre-execution review gate: `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit 38-workflow-status-sensor-script --parent 0e1bb2623fedfe0077bffc3d4581fe33ce71428a90b63a762f24a9ba5a76f4b3` → exit 0, `current: true`, `digestMatches: true`, `changedPaths: []`; newest plan receipt `rp-38-20260912-014` (verdict `plan-review-pass`).
+- Acceptance-manifest gate: the manifest was operator-amended (AC-25) by the replan; the receipt was refreshed to the amended blob `23443e26…` above before any P5 edit (no self-authorization — the amendment rides the operator instruction + replacement manifest + current plan receipt).
+- Phase-lint (P5, by hand — no `scripts/phase-lint.mjs`; feature 37 unmerged here): PASS 8/8 — title one deliverable (`Sensor read-path fold batch`), one layer (config/infra), 8 tasks, one deliverable per checkbox, zero decision words, no conditional scope, no external manual gate, machine-checkable done-when. Fingerprint `P5:config/infra:8:sensor-read-path-fold-batch`.
+- Architectural invariants: `docs/architecture/ARCHITECTURAL_INVARIANTS.md` absent → `n/a: no project invariants declared`.
+- Normalized repository state: `docs/workflow/REPOSITORY_STATE.md` present, `frozen` (consumed, no contradiction).
+
+### IMPLEMENTATION MAP — 38-workflow-status-sensor-script P5
+- Map revision: 38-p5-map-1
+- Source identity: HEAD df91a4a3 · clean source outside `docs/features/38-*` · cited-evidence manifest: scripts/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs, scripts/dependency-gate.test.mjs, packages/agentic-workflow-schema/src/index.ts
+- Authority: SPEC rp-011 (74b4aae9) + Plan rp-014 (1fc3a4de) + fingerprint P5:config/infra:8:sensor-read-path-fold-batch
+- Planning evidence: carried rows PE-001/PE-002/PE-006 confirmed live (loader path, schema shape authority, repo CLI convention); the phase's engineering claims are the review-findings VF-27…VF-35 rows, each re-verified live at cc820698 and again pre-write
+- Obligations: O1, O3, O8, O10, O11, O17, O20, O22, O23, O27 + the P5-owned folded findings F20, F27–F35
+- Entry points: scripts/workflow-status.mjs:readGitState, readForgeState/readList/degradationFor/makeMergeResolver, computeDependencies/dependencyBuildOrder, senseStage, readCrashRecovery, readReviewMark, buildEnvelope
+- Affected surfaces: read-only CLI output only (detail.degradations gains `unavailable-forge-malformed-answer`; `dependencies.build_order` content aligns with `blocked_units`); no public API/schema change
+- Current behaviour: divergent build_order, zero-PR read misread as failure, parse cause lost, non-array answer fatal, unbatched spawns, uncapped verifier spawns, sequential concurrency pin
+- Reuse and constraints: shared `pre-execution-contract.mjs` (F24/F25), `gh` explicit `--json` field lists + labels-only (A:7/A-RV), no git writes, exit 0 degradation contract
+- Expected writes: scripts/workflow-status.mjs (F20/F27–F35 behavior), scripts/workflow-status-sensor.test.mjs (10 pins incl. the F31 re-cut), docs/features/38-* doc set
+- Validation: falsification probe — the 10 new/changed pins red before implementation, green after; phase gate = `node --test scripts/workflow-status-sensor.test.mjs` (51/51) + `node --test scripts/*.test.mjs` (259/259)
+- Plan assumptions: confirmed — `gh` accepts `--limit` after `--json`; `git status --porcelain=v1 -b` carries `[ahead N]`; `git for-each-ref %(upstream:track)` reports `[ahead N]`/`[gone]`; the P1 pin's `"pr", "list", "--state", "open", "--json"` adjacency survives a trailing `--limit` on the same argv line
+- Contradictions: none
+- Unknowns: none
+- Decision: READY
+
+## P5 — 2026-09-12
+- Done: closed F20 + F27–F35 in the sensor's read path — one shared `dependencyBuildOrder` derivation (`dependencies.build_order` == `blocked_units[].build_order`), forge reads distinguish success/`[]`/malformed (`unavailable-forge-malformed-answer`, never `no-network`, never a fatal exit), `--limit` on every list read, one `git status --porcelain=v1 -b` scan, one batched `git for-each-ref` upstream read (lazy/memoized), `OPEN_STATES`-gated review-mark reads, `PRE_EXECUTION_MAX_SENSES = 16` cap on verifier spawns, and the F31 concurrency pin re-cut to two genuinely overlapping processes.
+- Remains: P6 close-out — MIGRATION.es.md self-link, AC-25 verification, full frozen validation ladder, ledger flips, receipts + blob, push PR #213, review hand-off print.
+- Gotchas: (1) The default `gh` shim in the fixture suite does not answer `--state all`; the F28 pin overrides the shim so `[]` is the successful answer under test. (2) The spawn-probe `git` shim must live outside the sensed repo — writing it under `bin/` dirties the fixture tree and flips crash-recovery to AMBIGUOUS (caught while going red-first and fixed in the pin's helper). (3) `--limit` is appended after the `--json` field list so the P1 adjacency pin (`"pr", "list", "--state", "open", "--json"`) stays unchanged.
+- Files: scripts/workflow-status.mjs, scripts/workflow-status-sensor.test.mjs, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}
+- Next: P6 — Close the fold cycle
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs (exit 0, 51/51) + node --test scripts/*.test.mjs (exit 0, 259/259) · Acceptance blob: 23443e269d2affbc52906aae4a2342c36e105980
+- Next: P6 · Attempts: 1

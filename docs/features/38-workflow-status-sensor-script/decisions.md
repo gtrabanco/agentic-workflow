@@ -617,3 +617,42 @@ Decisions inside the replan:
 - **artifactRevisionId lineage:** recomputed after the replan writes as
   `sha256(SPEC.md)[:12] = 9f3529a55baf` (same convention as the 2026-09-11
   advisory fold batch; recorded in progress.md, never inline in SPEC.md).
+
+## 2026-09-12 — P5 read-path fold batch: implementation decisions
+
+P5 folded F20, F27–F35. Four decisions shaped the implementation; each is a
+place the finding left the semantics open and the fold had to pick one:
+
+- **F27 — `build_order` is one derivation, full-chain content.** The shared
+  `dependencyBuildOrder(unit, dependencies)` helper is now the sole source: the
+  top-level `dependencies.build_order` is the deduped union of the per-unit
+  chains, and `blocked_units[id].build_order` is the same chain. The chain
+  keeps the helper's original content (a merged prerequisite appears in the
+  order as already-shipped work), because that is what `blocked_units` already
+  published and the finding's defect was divergence, not content. The pin
+  asserts the two projections are `deepEqual` and that the chain closes on the
+  blocked unit.
+- **F29 — a new namespaced cause, not a re-label.** Unparsable forge stdout and
+  a well-formed non-array answer degrade as
+  `unavailable-forge-malformed-answer`. The SPEC declares the
+  `unavailable-forge-<cause>` grammar and leaves the cause set extensible at
+  implementation (SPEC:420-425); re-labelling these as `no-network` would keep
+  the real cause invisible, which is the finding itself. F28 is handled
+  separately: a successful `[]` from `gh pr list --state all` is a real answer
+  and no longer pushes any degradation or flips `resolvable` false.
+- **F20 — cap value 16, degrade by name.** `PRE_EXECUTION_MAX_SENSES = 16`
+  bounds verifier subprocess spawns per run; over-cap rows answer
+  `missing` with reason `pre-execution sense cap (16) reached` and one
+  `workflow_observations` line. Chosen as a value a real repository with a
+  handful of in-flight units never meets while still bounding a pathological
+  one; it is exported so the suite pins it (known-issues P5 close-out records
+  the trade-off).
+- **F32/F33/F34 — spawn budget measured, not inferred.** The `git status`
+  scans collapse to one `git status --porcelain=v1 -b` (its `##` header carries
+  the ahead count); the per-branch upstream reads collapse to one
+  `git for-each-ref` whose `%(upstream:track)` supplies upstream, ahead and
+  `gone`, and whose branch list is reused for the crash-recovery locals; the
+  review-mark reads are gated by `OPEN_STATES` (or a `done` row with an open
+  PR), so closed units pay zero mark spawns. The P5 pins measure these with an
+  out-of-repo `git` probe shim rather than asserting on source text, so a
+  future regression that reintroduces the spawns fails the suite.
