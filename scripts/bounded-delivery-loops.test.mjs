@@ -38,6 +38,11 @@ assert.match(planFeature, /PLAN-REVIEW-PASS|follows its PLAN-REVIEW-PASS|\/execu
 // (workflow-status step 6a owns it), so these pins follow the rule to its owner.
 assert.match(workflowStatus, /`planned`\/`in-progress` → `\/execute-phase <NN>` only on a\n  current `PLAN-REVIEW-PASS`, else `\/review-plan <NN>`/);
 assert.match(read("skills/workflow-status/references/SENSOR_CORE.md"), /6a\. \*\*Sense the pre-execution receipts\*\*/);
+// Feature 38: step 6a's mechanical form moved into the sensor script (the prose
+// above states the semantics; the script implements them). The script-behavior
+// assertion is the stronger form of the same pin.
+assert.match(read("scripts/workflow-status.mjs"), /pre-execution-snapshot\.mjs/,
+  "the sensor script must implement step 6a receipt sensing");
 assert.match(discovery, /implementation-ready feature → \/execute-phase <NN>\n/);
 assert.match(resolution, /implementation was interrupted → \/execute-phase <NN>\n/);
 assert.match(roadmap, /it becomes `\/execute-phase <NN>` only/);

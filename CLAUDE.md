@@ -185,7 +185,9 @@ Body sections every skill follows: `When to use`, `Step 0 — Discover the proje
 > independently. When you change a skill, bump its `version:` (major = rename or
 > contract/flag change; minor = backward-compatible capability; patch = wording/
 > examples) and add a line to [`CHANGELOG.md`](CHANGELOG.md). Renames are major and
-> need a note in `docs/workflow/MIGRATION.md`.
+> need a note in `docs/workflow/MIGRATION.md`. Until [#176](https://github.com/gtrabanco/agentic-workflow/issues/176)
+> is merged, freeze majors: bump `minor` (or `patch`) only, shipping breaking changes
+> as a `minor` bump with a conventional `BREAKING CHANGE:` footer ([#209](https://github.com/gtrabanco/agentic-workflow/issues/209)).
 
 > **Smoke-test wording changes to executor-path skills.** After editing
 > `execute-phase`, `plan-feature`, `plan-feature-scaffold`,

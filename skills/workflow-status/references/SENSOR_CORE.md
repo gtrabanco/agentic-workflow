@@ -1,4 +1,12 @@
-## Process (fixed sequence — run the commands, don't infer)
+## Process (fixed sequence — executed by the script)
+
+`bun scripts/workflow-status.mjs` (node when bun is absent — the repository's
+runtime convention) executes this whole sequence (git/forge
+collection, urgency labels-only scan, roadmap + fix-index parse, dependency
+closure, readiness + step-6a receipt sensing, phase progress, review-mark
+currency, fix-now fold projection) and prints the fixed Envelope v2 JSON. The
+numbered blocks below state the semantics the script implements; the model reads
+the JSON and interprets it.
 
 ### Normalized Repository State
 
@@ -12,14 +20,6 @@ readiness classification, if the ledger is missing, `draft`, `contradicted`, or
 sensor remains read-only; it never edits or resolves the ledger. Conflicting
 live evidence against a frozen ledger remains a contradiction candidate.
 
-1. **Git state.** `git branch --show-current`, `git status --porcelain`,
-   `git fetch` + `git status -sb`. A dirty tree or unpushed branch is reported
-   as-is (a `workflow`-kind observation in `detail`), never cleaned up.
-2. **Forge state.** List open + recently merged PRs and open issues with the
-   declared forge CLI (examples use `gh`):
-   `gh pr list --state open --json number,title,headRefName,url,statusCheckRollup`,
-   `gh pr list --state merged --limit 20 --json number,headRefName`,
-   `gh issue list --state open --json number,title,labels`.
 3. **Urgency labels (`detail.urgent`) — labels-only, presence-only, never
    decides.** Reuse the open-issue list from step 2 (`gh issue list --json
    labels` — the JSON labels array already carried by that call); no separate
