@@ -29,7 +29,7 @@ new fix-now findings F27–F36 (cycle ≥ 2 produced new fix-now rows →
 routes to `/triage-issue --prioritize-now`).
 
 Folded by `execute-phase` P5–P6 (2026-09-12): P5 `b9c1d954`
-folded F20 + F27–F35 (sensor read path), P6 folds F36 (`MIGRATION.es.md`
+folded F20 + F27–F35 (sensor read path), P6 `af9e38bf` folds F36 (`MIGRATION.es.md`
 switcher) and verifies the whole batch against the frozen ladder; F22's
 AC-25 row rides the operator-confirmed manifest amendment. Every row above
 now reads `folded: yes`.

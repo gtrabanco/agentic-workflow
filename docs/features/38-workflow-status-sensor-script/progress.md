@@ -571,5 +571,5 @@ Recorded for the next plan review (digests recomputed here, never copied):
 - Next: unit finished
 
 ## Unit-loop receipt — P6
-- Commit: pending · Gate: full frozen ladder (check-skill-context exit 0; root 259/259; discipline 87/87; schema 684/684; pi 185/185 + mirror parity; schema diff empty; AC-25 pass) · Acceptance blob: 23443e269d2affbc52906aae4a2342c36e105980
+- Commit: af9e38bffcea819ada9c23ac277090b92ae1edd6 · Gate: full frozen ladder (check-skill-context exit 0; root 259/259; discipline 87/87; schema 684/684; pi 185/185 + mirror parity; schema diff empty; AC-25 pass) · Acceptance blob: 23443e269d2affbc52906aae4a2342c36e105980
 - Next: close-out (PR #213 already open) · Attempts: 1
