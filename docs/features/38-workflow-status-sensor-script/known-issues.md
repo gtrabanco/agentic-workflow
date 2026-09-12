@@ -22,3 +22,14 @@ None. All product and engineering decisions are resolved.
 No remaining blockers. B-01 stays a recorded boundary (tracked → feature 44 /
 #198); B-02/B-03 are intended consequences of the slimming; B-04 was resolved in
 P3 by the declared budget re-basis.
+
+## P5 close-out (2026-09-12)
+
+No new blockers. The read-path fold batch closed F20, F27–F35. One boundary is
+recorded rather than fixed: `PRE_EXECUTION_MAX_SENSES = 16` caps pre-execution
+verifier spawns, so a repository with more than 16 in-flight unit/stage senses
+reports the over-cap rows as `missing` with a `pre-execution sense cap (16)
+reached` reason and a `workflow_observations` line. That is a deliberate
+degradation under the declared failure contract (bounded, never a hang), not a
+correctness claim — a bigger cap is a one-constant change if a real repository
+ever needs it. No other boundary opened.
