@@ -578,3 +578,42 @@ but the roadmap's own status legend assigns the PR-open edge to **`done`**
 is set by `execute-phase` P1 (already applied). The plan-task wording is a
 mechanical slip; the sanctioned write is `done · [#<pr>](<pr-url>)`. Recorded
 per the execute-phase plan-conflict rule; no criterion or scope changed.
+
+## 2026-09-12 — Operator-confirmed replan: P5–P6 appended for the review-findings residue (E-38-10)
+
+PR #213's `/review-change` cycle 3 (user-instructed, two-cycle-cap escape)
+surfaced fix-now findings F27–F36; with F20 and the replan-routed F22 still
+`folded: no`, the fold loop reached its cap and the residue routed to
+planning. The operator instructed the replan (`/plan-feature 38 — this is a
+replan to fix some findings`), which per the classification contract
+(`review-implementation/CLASSIFY.md`, hardening-already-executed placement)
+appends phases to the SAME SPEC ledger on the SAME branch — no re-scaffold, no
+new unit, no SPEC product-half change:
+
+- **P5** (config/infra, 8 tasks) folds F20 + F27–F35 into the script + suite.
+- **P6** (hardening, 7 tasks) folds F36, verifies the restored AC-25, runs the
+  frozen validation ladder, flips the ledger rows, updates PR #213 in place.
+
+Decisions inside the replan:
+
+- **F22 / AC-25:** the ACCEPTANCE manifest lost SPEC A:24's row when ed7aae98
+  removed it and 32bb6434 reused the vacated AC-24 slot for the #209 fold
+  (A:25). The amendment restores it as **AC-25** — criterion text and
+  validators copied from the unchanged SPEC A:24 (delivered by P3; the row
+  itself was the defect). The manifest's amendment rule requires user
+  approval — recorded here as operator-confirmed by this replan instruction.
+  Obligation **O29** binds AC-25 to P6; the closure mapping now covers
+  AC-01…AC-25.
+- **Roadmap row stays `done · [#213]`:** the five-state machine sets
+  `in-progress` only via execute-phase P1 on a fresh branch and defines no
+  done→in-progress edge; the unit remains built with its PR open and merge
+  state in the forge. The fold phases push to the same PR.
+- **Ledger rows flip only when the phases fold them** (CLASSIFY.md: "the
+  finding is not folded directly; it is folded by the new phase(s)") —
+  `review-findings.md` is not edited by the replan itself.
+- **Scenario evidence preserved:** the `sensor:dependency-outage` row now
+  names the malformed-forge-answer cases (F29/F30) so the appended phases'
+  behavior has a home in the frozen scenario table.
+- **artifactRevisionId lineage:** recomputed after the replan writes as
+  `sha256(SPEC.md)[:12] = 9f3529a55baf` (same convention as the 2026-09-11
+  advisory fold batch; recorded in progress.md, never inline in SPEC.md).
