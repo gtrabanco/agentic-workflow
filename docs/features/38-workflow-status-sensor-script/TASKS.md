@@ -276,28 +276,28 @@ finding (F20, F27, F28, F29, F30, F32, F33, F34, F35 behavior + F31's
 concurrency pin now truly concurrent) green, every pre-existing pin unchanged,
 and the root discipline suites still exit 0.
 
-- [ ] Correct the forge-answer handling — a zero-PR `gh pr list --state all`
+- [x] Correct the forge-answer handling — a zero-PR `gh pr list --state all`
   result reads as success, not a forge failure (F28); unparseable forge stdout
   gets its own namespaced `unavailable-forge-<cause>` code, never misattributed
   to `no-network` (F29); a non-array forge JSON answer degrades per the
   declared failure contract (exit 0 + code in `detail`), never exits 1 (F30).
-- [ ] Add `--limit` to the forge list calls (`openPrs`, `openIssues`) so the
+- [x] Add `--limit` to the forge list calls (`openPrs`, `openIssues`) so the
   forge's default page size cannot truncate the counts the envelope reports
   (F35) — pin with a fixture forge returning more than the default page.
-- [ ] Collapse the duplicate full `git status` scans into one
+- [x] Collapse the duplicate full `git status` scans into one
   `git status --porcelain=v1 -b` invocation feeding both consumers (F32).
-- [ ] Derive `build_order` once and share it between the `dependencies` and
+- [x] Derive `build_order` once and share it between the `dependencies` and
   `blocked_units` projections so both emit the same chain (F27) — pin asserts
   the two projections agree on the same fixture.
-- [ ] Bound the pre-execution verifier spawns (F20) — the per-unit/stage
+- [x] Bound the pre-execution verifier spawns (F20) — the per-unit/stage
   verifier invocations are capped by a suite-pinned constant; exceeding the
   cap degrades, never hangs (declared failure contract holds).
-- [ ] Gate and batch the per-branch upstream reads (F33) —
+- [x] Gate and batch the per-branch upstream reads (F33) —
   `branchIsUnpushed` runs lazily/once per branch per run, not two spawns per
   local branch on every unit resolution.
-- [ ] Gate the review-mark reads by the `OPEN_STATES` filter and batch their
+- [x] Gate the review-mark reads by the `OPEN_STATES` filter and batch their
   git spawns (F34) — closed units pay zero review-mark spawns.
-- [ ] Re-cut the concurrency pin to actually run two sensor processes
+- [x] Re-cut the concurrency pin to actually run two sensor processes
   concurrently and assert byte-identical outputs (F31) — write it red-first
   against the sequential behavior, then green.
 

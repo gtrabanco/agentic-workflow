@@ -15,7 +15,7 @@
  */
 
 import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -117,6 +117,23 @@ process.exit(1);`;
 }
 
 const parseEnvelope = (stdout) => JSON.parse(stdout);
+
+/**
+ * A `git` shim on an isolated PATH entry that records every invocation's argv
+ * before delegating to the real binary. It lives OUTSIDE the sensed repository
+ * (and logs outside it), so probing the read path never dirties the fixture's
+ * tree. The read path's spawn budget is a behavior, so it is measured rather
+ * than inferred from source text (F32–F34).
+ */
+function installGitProbe() {
+  const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-gitprobe-"));
+  const log = path.join(probeDir, "git-probe.log");
+  const realGit = execFileSync("sh", ["-c", "command -v git"], { encoding: "utf8" }).trim();
+  fs.writeFileSync(path.join(probeDir, "git"), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${log}"\nexec "${realGit}" "$@"\n`, { mode: 0o755 });
+  return { log, binDir: probeDir };
+}
+
+const probeEnv = (fixture, probe) => ({ PATH: `${probe.binDir}:${fixture.binDir}:${process.env.PATH}` });
 
 // ===========================================================================
 // P1 — Sensor script core emission
@@ -471,12 +488,23 @@ test("P2: the untriaged backlog is capped at 5 oldest and the merged list at 20 
   assert.match(read("scripts/workflow-status.mjs"), /--limit", "20"/);
 });
 
-test("P2: two concurrent runs are safe and byte-identical (sensor:concurrent-action)", async () => {
-  const { run } = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
-  const [a, b] = await Promise.all([
-    new Promise((resolve) => resolve(run())),
-    new Promise((resolve) => resolve(run())),
-  ]);
+test("P2: two concurrent runs are safe and byte-identical (sensor:concurrent-action, F31)", async () => {
+  // Both processes must be genuinely in flight together: the previous pin wrapped
+  // two synchronous `spawnSync` calls in promise executors, so it ran them in
+  // sequence and never exercised the property it claimed (F31).
+  const { dir, binDir } = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  const spawnOnce = () => new Promise((resolve) => {
+    const child = spawn(process.execPath, [SCRIPT], {
+      cwd: dir,
+      env: { ...process.env, PATH: `${binDir}:${process.env.PATH}` },
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
+    child.on("close", (status) => resolve({ status, stdout, stderr }));
+  });
+  const [a, b] = await Promise.all([spawnOnce(), spawnOnce()]);
   assert.equal(a.status, 0, a.stderr);
   assert.equal(b.status, 0, b.stderr);
   assert.equal(a.stdout, b.stdout);
@@ -717,4 +745,147 @@ test("F24/F25: the sensor's bound set is exactly the verifier's stage tables", (
   const sensorSource = fs.readFileSync(SCRIPT, "utf8");
   assert.match(sensorSource, /Object\.entries\(STAGE_ARTIFACTS\)\.map/, "the artifact table is read, not copied");
   assert.match(sensorSource, /CONTEXT_SOURCES\.map\(\(source\) => source\.file\)/, "the context sources are read, not copied");
+});
+
+// ===========================================================================
+// P5 — sensor read-path fold batch (F20, F27–F35)
+// ===========================================================================
+
+test("F32: one `git status` scan feeds the dirty set and the ahead count", () => {
+  const fixture = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  const probe = installGitProbe();
+  const result = fixture.run([], { env: probeEnv(fixture, probe) });
+  assert.equal(result.status, 0, result.stderr);
+  const calls = fs.readFileSync(probe.log, "utf8").split("\n").filter(Boolean);
+  const statusCalls = calls.filter((call) => call.startsWith("status "));
+  assert.equal(statusCalls.length, 1, `exactly one git status scan: ${JSON.stringify(statusCalls)}`);
+  assert.match(statusCalls[0], /--porcelain=v1/, "the single scan carries the branch header");
+  assert.equal(parseEnvelope(result.stdout).detail.crash_recovery.verdict, "CLEAN");
+});
+
+test("F33: unit-branch upstream state comes from one batched spawn", () => {
+  const fixture = makeFixture({
+    roadmapRows: [
+      "| 90 | `alpha` | planned | — | a unit |",
+      "| 91 | `beta` | planned | — | a unit |",
+      "| 92 | `gamma` | planned | — | a unit |",
+    ],
+  });
+  for (const branch of ["feat/90-alpha", "feat/91-beta", "feat/92-gamma"]) {
+    execFileSync("git", ["branch", branch], { cwd: fixture.dir });
+  }
+  const log = installGitProbe();
+  const result = fixture.run([], { env: probeEnv(fixture, log) });
+  assert.equal(result.status, 0, result.stderr);
+  const calls = fs.readFileSync(log.log, "utf8").split("\n").filter(Boolean);
+  assert.equal(calls.filter((call) => call.startsWith("for-each-ref ")).length, 1, "one batched upstream read");
+  assert.equal(calls.filter((call) => call.startsWith("rev-list --count")).length, 0, "no per-branch rev-list spawn");
+  assert.equal(calls.filter((call) => call.startsWith("rev-parse --abbrev-ref")).length, 0, "no per-branch rev-parse spawn");
+});
+
+test("F34: closed units pay zero review-mark spawns (OPEN_STATES gate)", () => {
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|-----|-----|-----|-----|-----|-----|-----|",
+    "| F1 | scripts/a.mjs:1 | code | high | fix-now | fold into phase | no |",
+    `| REVIEW-RAN | HEAD ${"0".repeat(40)} · 2026-01-01 · review-change · axes: code · verdict: REVIEW-FAIL · cycle: 1 |`,
+  ].join("\n");
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | shipped |"],
+    mergedPrs: [{ number: 901, headRefName: "feat/90-alpha" }],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger}\n` },
+  });
+  const log = installGitProbe();
+  const result = fixture.run([], { env: probeEnv(fixture, log) });
+  assert.equal(result.status, 0, result.stderr);
+  const calls = fs.readFileSync(log.log, "utf8").split("\n").filter(Boolean);
+  assert.equal(calls.filter((call) => call.startsWith("merge-base --is-ancestor")).length, 0, "a closed unit pays no ancestor spawn");
+  assert.equal(calls.filter((call) => call.startsWith("log ")).length, 0, "a closed unit pays no bound-input log spawn");
+});
+
+test("F28: a zero-PR forge answer is a successful read, not a failure", () => {
+  const fixture = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | long shipped |"],
+  });
+  fixture.write("bin/gh", `#!/usr/bin/env node
+const args = process.argv.slice(2).join(" ");
+const out = (value) => { process.stdout.write(JSON.stringify(value)); process.exit(0); };
+if (args.includes("pr list")) out([]);
+if (args.includes("issue list")) out([]);
+process.exit(0);
+`);
+  fs.chmodSync(path.join(fixture.dir, "bin", "gh"), 0o755);
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok(
+    !(envelope.detail.degradations ?? []).some((row) => row.source === "forge"),
+    `an empty-but-valid answer is not a forge failure: ${JSON.stringify(envelope.detail.degradations)}`,
+  );
+  assert.ok(!envelope.detail.workflow_observations.join("\n").includes("merge state unverified"), "no false unverified-merge observation");
+});
+
+test("F29: unparseable forge stdout names a parse cause, never no-network", () => {
+  const fixture = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  fixture.write("bin/gh", "#!/usr/bin/env node\nprocess.stdout.write(\"not-json\");\nprocess.exit(0);\n");
+  fs.chmodSync(path.join(fixture.dir, "bin", "gh"), 0o755);
+  const result = fixture.run();
+  assert.equal(result.status, 0, result.stderr);
+  const codes = (parseEnvelope(result.stdout).detail.degradations ?? []).map((row) => row.code);
+  assert.ok(codes.includes("unavailable-forge-malformed-answer"), `a parse failure names its own cause: ${JSON.stringify(codes)}`);
+  assert.ok(!codes.includes("unavailable-forge-no-network"), "the real cause is never misattributed");
+});
+
+test("F30: a non-array forge answer degrades per the contract, never exits 1", () => {
+  const fixture = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"] });
+  fixture.write("bin/gh", "#!/usr/bin/env node\nprocess.stdout.write(JSON.stringify({ oops: true }));\nprocess.exit(0);\n");
+  fs.chmodSync(path.join(fixture.dir, "bin", "gh"), 0o755);
+  const result = fixture.run();
+  assert.equal(result.status, 0, `a malformed answer degrades, never crashes: ${result.stderr}`);
+  const envelope = parseEnvelope(result.stdout);
+  assert.ok((envelope.detail.degradations ?? []).some((row) => row.code === "unavailable-forge-malformed-answer"));
+  assert.equal(validateEnvelope(envelope).ok, true, `schema errors: ${validateEnvelope(envelope).errors?.join("; ")}`);
+});
+
+test("F35: forge list reads carry --limit so the default page cannot truncate counts", () => {
+  const source = read("scripts/workflow-status.mjs");
+  const openPrLine = source.split("\n").find((line) => line.includes('"pr", "list", "--state", "open"'));
+  const openIssueLine = source.split("\n").find((line) => line.includes('"issue", "list", "--state", "open"'));
+  assert.match(openPrLine, /"--limit"/, "the open-PR read bounds its own page");
+  assert.match(openIssueLine, /"--limit"/, "the open-issue read bounds its own page");
+  const issues = Array.from({ length: 40 }, (_, i) => ({ number: i + 1, title: `issue ${i + 1}`, labels: [] }));
+  assert.equal(parseEnvelope(makeFixture({ issues }).run().stdout).detail.untriaged_issues.count, 40, "a page larger than gh's default 30 counts whole");
+});
+
+test("F27: dependencies.build_order and blocked_units[].build_order are one derivation", () => {
+  const envelope = parseEnvelope(makeFixture({
+    roadmapRows: [
+      "| 90 | `shipped` | done · [#901](https://example.invalid/pr/901) | — | merged |",
+      "| 91 | `missing` | idea | — | unstarted |",
+      "| 92 | `blocked` | planned | 90 91 | waits on both |",
+    ],
+    mergedPrs: [{ number: 901, headRefName: "feat/90-shipped" }],
+  }).run().stdout);
+  const blocked = envelope.detail.blocked_units["92-blocked"];
+  assert.ok(blocked, `92 is blocked: ${JSON.stringify(envelope.detail.blocked_units)}`);
+  assert.deepEqual(blocked.build_order, envelope.dependencies.build_order, "both projections emit the same chain");
+  assert.deepEqual(blocked.build_order, ["90-shipped", "91-missing", "92-blocked"], "the chain closes on the blocked unit");
+});
+
+test("F20: pre-execution verifier spawns are capped and degrade, never hang", () => {
+  const cap = Number(/PRE_EXECUTION_MAX_SENSES = (\d+)/.exec(read("scripts/workflow-status.mjs"))?.[1]);
+  assert.ok(Number.isInteger(cap) && cap > 0, "the cap is a suite-pinned positive constant");
+  const roadmapRows = [];
+  const extraFiles = {};
+  for (let i = 0; i < cap + 2; i += 1) {
+    const nn = 200 + i;
+    roadmapRows.push(`| ${nn} | \`unit-${nn}\` | planned | — | cap probe |`);
+    extraFiles[`docs/features/${nn}-unit-${nn}/progress.md`] =
+      "## Pre-execution review receipt v1 — plan\n- Review: rp-cap · Snapshot: deadbeef · Verdict: plan-review-pass\n\n";
+  }
+  const result = makeFixture({ roadmapRows, extraFiles }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  const capped = envelope.detail.pre_execution.filter((row) => /cap/i.test(row.reason ?? ""));
+  assert.ok(capped.length > 0, `the over-cap rows degrade by name: ${JSON.stringify(envelope.detail.pre_execution.map((row) => row.reason))}`);
 });
