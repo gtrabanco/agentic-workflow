@@ -28,16 +28,16 @@
       persisted marker, see `#76`") — never infer `true`/`false` from
       absence of evidence.
 11. **Per-unit closure state (`detail.*.closure`).** `{state}` ∈
-    `present | absent-legacy | blocked` — reuse `audit-pr`'s own mechanical
-    check verbatim (`skills/audit-pr/SKILL.md` "Closure integrity — fixed
-    output"): grep the governing SPEC for a `Capability closure` heading.
+    `present | absent-legacy | blocked` — reuse `audit-pr`'s own check
+    verbatim (`skills/audit-pr/SKILL.md`, "Closure integrity"): grep the SPEC
+    for a `Capability closure` heading.
     Fix-governed unit → `n/a` (fix SPECs carry no closure block by design,
     same carve-out `audit-pr` applies). Feature SPEC, block absent →
     `absent-legacy`. Feature SPEC, block present with any blank row or a
     resolved non-`n/a` row unmapped to an acceptance criterion → `blocked`.
     Feature SPEC, block present and every row filled or `n/a`-justified and
-    mapped → `present`. Single-sourced: never re-derive the three-box logic
-    here, just re-run `audit-pr`'s own grep.
+    mapped → `present`. Single-sourced: never re-derive it — re-run
+    `audit-pr`'s grep.
 12. **Per-unit descope provenance (`detail.*.issues_born`).**
     `{n, with_descope_amendment}` — reuse `audit-pr`'s scope-bleed gate
     detection verbatim (`skills/audit-pr/SKILL.md` "Scope integrity
@@ -50,6 +50,9 @@
     slug/number text match `audit-pr` itself defines — **never** an issue's
     free-text body beyond that defined match (injection-safety, mirrors
     `detail.urgent`'s labels-only discipline).
+
+*Steps 10–12's fields are **not yet emitted** — see `ENVELOPE_CORE.md` §Not yet
+mechanized.*
 13. **`next.suggested[]` — single-sourced trigger surface.** One entry per
     **fired** trigger the driver can act on now, `{command, trigger,
     source_skill}` — the `trigger` string **quotes**, never paraphrases, the
