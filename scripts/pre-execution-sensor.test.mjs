@@ -96,6 +96,9 @@ function makeRepo(t, { unitKind = "feature", dir = UNIT_DIR, unit = "99-toy" } =
   fs.symlinkSync(path.join(repoRoot, "packages"), path.join(root, "packages"));
   fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
   fs.copyFileSync(sensorScript, path.join(root, "scripts", "pre-execution-snapshot.mjs"));
+  // The verifier's contract-shape module (F24/F25): the sandbox mirrors its real
+  // import graph, so the assertions below stay untouched.
+  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(root, "scripts", "pre-execution-contract.mjs"));
   write(`${dir}/SPEC.md`, specText());
   write(`${dir}/ACCEPTANCE.md`, ACCEPTANCE);
   write(`${dir}/PLAN.md`, "# Plan\n\nP1 ships it.\n");

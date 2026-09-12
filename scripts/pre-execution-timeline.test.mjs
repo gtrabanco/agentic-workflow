@@ -77,6 +77,9 @@ function makeRepo(t) {
   fs.symlinkSync(path.join(repoRoot, "packages"), path.join(root, "packages"));
   fs.mkdirSync(path.join(root, "scripts"), { recursive: true });
   fs.copyFileSync(sensorScript, path.join(root, "scripts", "pre-execution-snapshot.mjs"));
+  // The verifier's contract-shape module (F24/F25): the sandbox mirrors its real
+  // import graph, so the assertions below stay untouched.
+  fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(root, "scripts", "pre-execution-contract.mjs"));
   write(`${UNIT_DIR}/SPEC.md`, specText());
   write(`${UNIT_DIR}/ACCEPTANCE.md`, ACCEPTANCE);
   write("CLAUDE.md", GUIDE);
