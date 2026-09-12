@@ -1,6 +1,6 @@
 # Architecture notes — 37-phase-lint-script
 
-Artifact revision: `37-plan-4`.
+Artifact revision: `37-plan-6`.
 
 ## Layer placement
 
@@ -9,8 +9,10 @@ Artifact revision: `37-plan-4`.
   shebang).
 - Consumer skill edits (`plan-feature-scaffold`, `plan-fix`, `execute-phase`)
   → `docs` layer (skill prose); `phase-contract` stays the sole rule owner and
-  is amended exactly once (P1, owner-sanctioned rule-1 `Hardening & PR`
-  exception, v1.0.1 → 1.0.2 — ED6), never re-edited by other phases.
+  is amended **twice**: by P1 (owner-sanctioned rule-1 `Hardening & PR`
+  exception, v1.0.1 → 1.0.2 — ED6) and by the cycle-1 review fold F5
+  (user-approved rule-3 ≥ 1-task minimum, v1.0.2 → 1.0.3, commit `8a35face`);
+  no other phase of this feature re-edits it (O12).
 - `packages/agentic-workflow` crate + `.agentic-workflow/tmp/` → `config/infra`
   (vehicle rule, declined 43 → producer family).
 
@@ -24,6 +26,9 @@ Artifact revision: `37-plan-4`.
 
 ## Binding impact
 
-- Downstream: features 40 and 42 depend on this feature; 38 lands its producer
-  as a subcommand of the crate created here. `decideWorkflowAction()` and the
-  envelope remain consumer-side (out of scope).
+- Downstream: features 40 and 42 depend on this feature. Feature 38 landed
+  first (PR #213, `e0c18284`) and put its producer at
+  `scripts/workflow-status.mjs` — outside the crate this feature creates; the
+  crate obligation is unchanged and the producer's re-homing is a recorded
+  follow-up (PE-011). `decideWorkflowAction()` and the envelope remain
+  consumer-side (out of scope).

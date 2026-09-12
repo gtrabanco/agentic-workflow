@@ -306,7 +306,7 @@ returned `READY-FOR-REVIEW`.
 ## Engineering half
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`. Engineering artifact revision: `37-plan-4`.
+half above is marked `designed`. Engineering artifact revision: `37-plan-6`.
 
 > Replan 3 (2026-09-10, user-approved in session): the F5 resolution lands the
 > rule-1 `Hardening & PR` exception IN the rule owner (`skills/phase-contract/SKILL.md`,
@@ -318,6 +318,20 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-4`.
 > fingerprints match the actual task counts; box-2's check object aligned to the
 > rule owner's rule 2 (`target file`). Fingerprints re-derived mechanically over
 > the re-cut plan — see ED7.
+
+> Replan 5 (2026-09-11, user-directed replan-in-unit fold of code-review finding
+> F7): SPEC §Design box-2 gains the frozen test-file mapping, and the plan is
+> re-cut to six phases — the new P5 owns the mapping, the former close-out P5 is
+> renumbered P6. Revision `37-plan-5`; see decisions.md §"F7 fold".
+
+> Replan 6 (2026-09-12, repair batch for review receipt PLAN-REVIEW-37-6, plus
+> the feature-38 merge readiness): folds F14–F16 — every planning artifact's
+> revision header names the current revision, architecture-notes states the rule
+> owner was amended twice (P1 and the cycle-1 fold F5), and PE-007's
+> roadmap-status claim matches the row. The same batch records the two facts
+> that landed while this plan was in flight (feature 38 merged first through PR
+> #213; the `--json` deferred decision's trigger has fired and closes plan-side —
+> ED8). Phase shape and fingerprints are **unchanged** from `37-plan-5`.
 
 ### Technical goals
 
@@ -628,8 +642,9 @@ the literal close-out tasks.
 
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
-Fingerprints below were re-derived mechanically from the `37-plan-5` phase
-tasks (checkbox counts in TASKS.md, `Layer:` declarations, title-deliverables
+Fingerprints below were re-derived mechanically from the phase tasks at the
+`37-plan-5` re-cut and are unchanged by the `37-plan-6` repair batch
+(checkbox counts in TASKS.md, `Layer:` declarations, title-deliverables
 kebab-cased; P6's `Hardening & PR` normalizes to `hardening-pr` per the
 amended rule 1 — see ED7; re-derived by `scripts/phase-lint.mjs` itself at
 the F7 re-cut, see decisions.md):
@@ -650,6 +665,13 @@ migrations, flags, or config changes.
 
 - RESOLVED (was SPEC Deferred decisions row 1): vehicle-rule mechanics — see
   ED1–ED3 above.
+- RESOLVED plan-side (was SPEC Deferred decisions row 2, `--json` /
+  machine-readable output mode): the row's decide-by trigger — "Feature 38
+  scaffold time" — has fired (feature 38 is merged, PR #213). The v1 decision
+  stands: the merged sensor reads `progress.md` receipts, git and the forge, and
+  never the linter's stdout (PE-011), so no machine-readable mode is added and
+  the frozen Product-half row is left byte-identical under SPEC-REVIEW-37-1 —
+  see ED8.
 - Risk: fix #191 (`handoff-review-fold-order`, in-progress · PR #193) edits
   `skills/execute-phase/` terminal hand-offs; P4 touches the same file's
   preflight section. Mitigation: rebase P4's edit on current `main` at
@@ -668,8 +690,15 @@ migrations, flags, or config changes.
 - Re-bundled `packages/pi-agentic-workflow` mirror
 - Frozen `ACCEPTANCE.md` + planning artifacts for this unit
 
-### Post-merge next feature
+### Producer family after this feature
 
-Feature 38 (`workflow-status-sensor-script`) — next Phase-1 producer; it lands
-as a subcommand of the crate this feature creates (roadmap rows 37→38; 40 and
-42 depend on 37+38).
+Feature 38 (`workflow-status-sensor-script`) merged into `main` first (PR #213,
+`e0c18284`) while this plan was in flight and landed its producer at
+`scripts/workflow-status.mjs` — not as a subcommand of the
+`packages/agentic-workflow` crate, because the crate did not exist yet. The
+crate obligation is unchanged and still lands here (P3, AC10); re-homing 38's
+producer under the crate is a recorded follow-up (`known-issues.md`
+§Deferred items) and is **not** part of this feature's scope. The vehicle-rule
+redistribution (roadmap row 43, declined) is unchanged: the crate is created
+here, and producers landing after this merge use it. Roadmap rows 40 and 42
+depend on 37+38 (PE-011).

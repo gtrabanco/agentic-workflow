@@ -27,8 +27,18 @@
 
 Deferred items linked to/destined for issues; never inline scope changes.
 
-- `--json` / machine-readable output mode: deferred to feature 38/42 (SPEC
-  Deferred decisions row 2; PD2). No issue opened — tracked by roadmap rows.
+- `--json` / machine-readable output mode: **closed at the `37-plan-6`
+  merge-readiness fold (ED8.4a).** Feature 38 shipped (PR #213) and its sensor
+  reads `progress.md` receipts, git and the forge — never the linter's stdout —
+  so no machine consumer exists and v1 adds no machine surface. SPEC `Deferred
+  decisions` row 2 stays frozen inside the SPEC-REVIEW-37-1 binding; the
+  closure is recorded plan-side (decision above, PE-011).
+- Re-homing feature 38's producer under the crate: feature 38 merged first
+  (PR #213) and landed `scripts/workflow-status.mjs` while
+  `packages/agentic-workflow` did not exist yet. The vehicle rule stays
+  truthful only if that producer moves into the crate in a later unit;
+  **recorded follow-up, explicitly not this feature's scope (ED8.4c, PE-011)**
+  — destined for its own issue/unit.
 - Rule-4 heuristics (`→` chains, enumerated cases, created-file counting) are
   deterministic approximations of "one deliverable"; the corpus pins their
   exact behavior. If a real plan is misjudged, the fix is a corpus-pinned
