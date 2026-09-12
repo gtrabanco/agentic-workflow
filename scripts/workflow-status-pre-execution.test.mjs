@@ -156,11 +156,12 @@ const SPEC_REL = (unit) => `${unitDir(unit)}/SPEC.md`;
 
 /**
  * The paths a plan-stage review binds. Not written here: `SNAPSHOT.md` names this set
- * in prose and `scripts/pre-execution-snapshot.mjs` implements it as `STAGE_ARTIFACTS`,
+ * in prose and `scripts/pre-execution-contract.mjs` implements it as `STAGE_ARTIFACTS`,
  * so the file names are read out of that table — a stage gaining an artifact moves this
  * fixture with it instead of letting the fixture quietly test a smaller set. The table
- * is read as text, not imported: `dist/` is a gitignored build output, and a red-first
- * run against `git archive <sha>` has no built schema to load.
+ * is read as text, not imported: the contract module is dependency-free (its sole
+ * consumers are the verifier and the sensor), and a red-first run against
+ * `git archive <sha>` may have no built schema to load.
  */
 function boundInputsFor(unit, snapshotSource) {
   const plan = /plan:\s*\[([\s\S]*?)\n\s*\],/.exec(snapshotSource)?.[1];
@@ -170,7 +171,7 @@ function boundInputsFor(unit, snapshotSource) {
   return files.map((file) => `${unitDir(unit)}/${file}`);
 }
 
-const SNAPSHOT_BUILDER_REL = "scripts/pre-execution-snapshot.mjs";
+const SNAPSHOT_BUILDER_REL = "scripts/pre-execution-contract.mjs";
 const boundTable = () => read(SNAPSHOT_BUILDER_REL);
 
 /**

@@ -1,62 +1,52 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 3.2.1
+version: 3.4.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
 description: >
-  Read-only workflow sensor: compute repository, roadmap, dependency, PR,
-  finding, and recovery state, then emit the fixed machine envelope. Never
-  edits. Triggers: "workflow-status", "workflow status", "what can I build
-  next", "state of the run".
+  Read-only workflow sensor: run the deterministic script, read the fixed
+  machine envelope, interpret the recommendation. Never edits. Triggers:
+  "workflow-status", "workflow status", "what can I build next".
 ---
 
 # Workflow Status (the orchestrator's sensor)
 
-One read-only pass over the project that answers, in a single fixed JSON
-envelope: **what exists, what is blocked on what, what is startable right now,
-and what the recommended next command is.** Built for external orchestrators
-(see `docs/workflow/ORCHESTRATION.md`) but equally useful to a human asking
-"where do we stand?".
+One read-only pass that answers, in a single fixed JSON envelope: **what exists,
+what is blocked on what, what is startable right now, and what the recommended
+next command is.** The **script is the deterministic producer**:
+`scripts/workflow-status.mjs` executes the published `SENSOR_CORE` sequence
+(steps 1–9 including 6a) and prints the envelope. This skill runs the script,
+reads the JSON, interprets it against the references below, and prints the human
+report — it never assembles the envelope by hand.
 
 ## Turn contract — verify before ending the turn
 
 ```
-✓ Every claim comes from a RUN command or a READ file (git/forge output, roadmap,
-  fix index, feature folders) — nothing inferred from memory
+✓ The script was RUN — `bun scripts/workflow-status.mjs [--json-only]
+  [--last-envelope <json|path>]` (node is the fallback when bun is absent, per
+  the repository's runtime convention); the envelope is the script's stdout, never
+  assembled by the model
 ✓ Nothing was edited, committed, pushed, or created — read-only, always
 ✓ `next.recommended` is non-bare (carries the unit's slug/NN, never a bare
-  `/plan-feature`) AND staged by the target unit's resolved status **and** its
-  current pre-execution evidence: `idea`/undesigned → `/design-feature <slug>`;
-  `defined` → `/plan-feature <slug>` only on a current `SPEC-REVIEW-PASS`, else
-  `/review-spec <slug>`; `planned`/`in-progress` → `/execute-phase <NN>` only on a
+  `/plan-feature`) AND the script computed it from the unit's resolved status
+  **and** its current pre-execution evidence: `idea`/undesigned →
+  `/design-feature <slug>`; `defined` → `/plan-feature <slug>` only on a current
+  `SPEC-REVIEW-PASS`, else `/review-spec <slug>`; `planned`/`in-progress` → `/execute-phase <NN>` only on a
   current `PLAN-REVIEW-PASS`, else `/review-plan <NN>` (step 6a)
-✓ A missing or non-frozen repository-state ledger emits a machine-readable
-  substrate blocker and routes to discovery or resolution before any unit is
-  listed as startable
-✓ Every `detail.design_candidates[].next` begins with `/design-feature ` — design
-  candidates always route to design, regardless of anything else
-✓ When `--last-envelope` is supplied: the no-progress guard ran (crash-recovery
-  checklist) — a hint that recommended `/plan-feature`/`/design-feature` for a
-  unit still at its pre-advance status produces a `workflow_observations` note,
-  never a silently repeated bland recommendation
-✓ `recommendations.product_audit` was computed by the step-16 mechanical
-  two-condition check (never guessed), and `next.tier` was derived from the
-  resolved `next.recommended` command via the command→tier map in
-  `## Machine envelope` (never guessed)
-✓ Per-unit `review`/`closure`/`issues_born` (steps 10–12) were computed per
-  their fixed rules — `adversarial.ran`/`n` stayed `null` unless real
-  evidence exists, never guessed — and any fired `next.suggested[]` entries
-  (step 13) quote their owning skill's condition verbatim, never a second
-  copy of the trigger logic
-✓ The envelope is emitted on **every** invocation of this skill, including a
-  same-session natural-language follow-up about state — never replaced by prose
-✓ The emitted envelope was checked against the shape reminders in
-  `## Machine envelope` (mirroring
-  `packages/agentic-workflow-schema/envelope.schema.json`) before printing
-✓ The human-readable summary is printed, then the machine envelope (fenced
-  ```json — see ## Machine envelope) is the ABSOLUTE last output
+✓ `detail.crash_recovery` carries a verdict from the decision table and the
+  envelope `state` matches it (CLEAN→OK, RESUMABLE→CONTINUE,
+  AMBIGUOUS→NEEDS_INPUT)
+✓ Every `detail.design_candidates[].next` begins with `/design-feature `
+✓ Every degraded dimension is named in `detail.degradations` as
+  `unavailable-<source>-<cause>` — and, when `--last-envelope` was supplied, the
+  no-progress guard's `workflow_observations` note is present (never a silently
+  repeated bland recommendation)
+✓ The envelope is emitted on **every** invocation, including a same-session
+  natural-language follow-up about state — never replaced by prose
+✓ The human-readable summary is printed, then the machine envelope (the script's
+  JSON) is the ABSOLUTE last output
 ```
 
 With `--json-only`, skip the human-readable summary: print the envelope alone.
@@ -66,42 +56,34 @@ With `--json-only`, skip the human-readable summary: print the envelope alone.
 - Between orchestration steps: an external driver runs it to decide the next
   command and model tier without parsing prose.
 - Before picking work manually: "what can I start right now?"
-- **Not** for judging quality (that's `review-change`/`audit-pr`) or product
-  health (that's `product-audit`) — this skill reports state, it never judges.
+- **Not** for judging quality (`review-change`/`audit-pr`) or product health
+  (`product-audit`) — this skill reports state, it never judges.
 
 ## Step 0 — Discover the project (always first)
 
-Per the agent guide's **Workflow conventions** + **documentation map**, then
-read what THIS skill needs: `docs/features/ROADMAP.md`, the fix index
-(`docs/fix/README.md`), every in-flight feature folder's `TASKS.md` +
-`progress.md` + `known-issues.md`, and `docs/features/SHIP_DECISIONS.md` if a
-ship-roadmap run exists.
-
+Per the agent guide's **Workflow conventions** + **documentation map**. The
+script reads what THIS skill needs (`docs/features/ROADMAP.md`, the fix index
+`docs/fix/README.md`, every in-flight feature folder's `TASKS.md` +
+`progress.md` + `review-findings.md`, and `docs/workflow/REPOSITORY_STATE.md`);
+read them yourself only to interpret a field the script emitted.
 
 ## Progressive loading — fixed sensor route
 
 The reference allowlist is exactly the seven linked paths below. Never invent or
-read another `references/` path. This skill is a read-only sensor. Every
-invocation loads this baseline in order:
+read another `references/` path. This skill is a read-only sensor.
 
-1. [sensor core](references/SENSOR_CORE.md)
+1. [sensor core](references/SENSOR_CORE.md) — the sequence the script executes
 2. [crash recovery](references/CRASH_RECOVERY.md)
 3. [envelope core](references/ENVELOPE_CORE.md)
 4. [envelope fields](references/ENVELOPE_FIELDS.md)
 5. [pre-execution evidence](references/PRE_EXECUTION.md)
 6. [guardrails](references/GUARDRAILS.md)
 
-Add [pre-execution evidence](references/PRE_EXECUTION.md) whenever a unit is
-`defined`, `planned` or `in-progress` — it defines step 6a (receipt sensing, the
-one-label-per-stage table, and the legacy-adoption route).
 Add [sensor signals](references/SENSOR_SIGNALS.md) only when a unit, issue,
 finding, or recommendation exists; an empty project skips that file but still
 emits the empty shapes defined by envelope fields. Add
 [portability](references/PORTABILITY.md) only when the platform actually lacks a
 named primitive. `--json-only` does not skip any baseline file.
-
-All resources are one hop from this file. Missing required detail means
-`BLOCKED`; do not fabricate a partial envelope.
 
 ## Portability
 
@@ -122,28 +104,21 @@ the JSON contract.
 
 ## Done when
 
-- Every roadmap/fix row, open PR, and in-flight folder was actually read, the
-  dependency closures are computed transitively, and inconsistencies are
-  reported (never repaired).
-- The `CRASH RECOVERY` sub-block was printed with a verdict from the decision
-  table, and the envelope `state` matches it (CLEAN→OK, RESUMABLE→CONTINUE,
-  AMBIGUOUS→NEEDS_INPUT).
+- The script ran and every claim in the report comes from its envelope — nothing
+  inferred from memory, nothing assembled by hand.
+- `detail.design_candidates`, `detail.features`, `detail.fixes`,
+  `detail.startable_now`, `detail.blocked_units`, `detail.open_prs`,
+  `detail.untriaged_issues`, `detail.urgent`, `detail.degradations`, and
+  `detail.crash_recovery` were read from the envelope, and the envelope `state`
+  matches the crash-recovery verdict.
 - With `--last-envelope` supplied: the no-progress guard ran — a stalled
   `/plan-feature`/`/design-feature` hint surfaces as a `workflow_observations`
   note, never a silent bland repeat, with no new write path introduced.
-- The human summary (unless `--json-only`) and the envelope — with
-  `detail` carrying design_candidates, features, fixes, startable_now,
-  blocked_units, open_prs, pending_triage, `untriaged_issues`
-  (count + oldest_open) and `urgent` (labels-only issue list +
-  interruptibility facts) — are printed, envelope last.
-- Each `detail.features[]`/`detail.fixes[]` entry additionally carries
-  `review`, `closure`, and `issues_born` (steps 10–12) — `detail`-scoped, no
-  schema change — and any fired triggers appear in a top-level
-  `next.suggested[]` (step 13), single-sourced from the owning skill's own
-  condition text.
+- The human summary (unless `--json-only`) and the envelope are printed, envelope
+  last.
 - Nothing was modified anywhere.
 
 → Next: the envelope's `next.recommended` command — it is computed from the
   actual state, so it IS the recommendation
   · a human overview → read the printed table
-  · orchestrating programmatically → parse the last fenced json block
+  · orchestrating programmatically → parse the script's JSON

@@ -23,8 +23,14 @@
  *   bun scripts/pre-execution-snapshot.mjs verify --stage spec|plan --unit <id>
  *        [--dir <artifact-dir>] [--unit-kind feature|fix] [--receipt <id|64-hex>]
  *        [--parent <64-hex>] [--policy <version>] [--artifact-revision <id>]
- *        [--source-revision <sha>]
+ *        [--source-revision <sha>] [--root <repo-root>]
  *   bun scripts/pre-execution-snapshot.mjs contract
+ *
+ * `--root` re-points the repository the two git-backed facts are read from (the
+ * default is this script's own checkout). A consumer that senses another repository
+ * — `workflow-status` is the one that does — must pass it, or the verifier answers
+ * about the wrong tree and a foreign unit's receipts read as fabricated
+ * `missing`/`stale` rows.
  *
  * Exit codes: 0 fresh / digest printed · 1 usage or refused snapshot ·
  * 3 no receipt for that stage · 4 receipt exists but is no longer current.
@@ -54,6 +60,12 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+/**
+ * The root the repository facts are read from. Defaults to this script's own
+ * checkout and is re-pointed by `--root` for a consumer that senses another
+ * repository (the `gitAt` parameter below exists for exactly this testability).
+ */
+let activeRoot = repoRoot;
 const schemaPath = path.join(repoRoot, "packages", "agentic-workflow-schema", "dist", "index.js");
 const schema = fs.existsSync(schemaPath)
   ? require(schemaPath)
@@ -74,54 +86,25 @@ const {
   isImpossibleReceiptTimeline,
 } = schema;
 
-/**
- * Artifact rows per stage — the same lists `review-spec`/`review-plan` publish.
- * A required file that is absent is refused (a silent omission would bind a
- * smaller set than the contract reviewed); an optional one is skipped because an
- * XS/S or fix unit legitimately embeds its ledgers in the SPEC (D20) and a fix
- * unit has no PLAN/architecture notes at all.
- */
-export const STAGE_ARTIFACTS = {
-  spec: [
-    { kind: "spec", file: "SPEC.md", selector: "spec-product-v1", required: true },
-  ],
-  plan: [
-    { kind: "spec", file: "SPEC.md", required: true },
-    { kind: "acceptance", file: "ACCEPTANCE.md", required: true },
-    { kind: "planning-evidence", file: "planning-evidence.md", required: false },
-    { kind: "obligations", file: "planning-obligations.md", required: false },
-    { kind: "plan", file: "PLAN.md", required: false },
-    { kind: "tasks", file: "TASKS.md", required: false },
-    { kind: "testing", file: "testing.md", required: false },
-    { kind: "decisions", file: "decisions.md", required: false },
-    { kind: "architecture-notes", file: "architecture-notes.md", required: false },
-  ],
-};
+// The contract's *shape* — the stage artifact tables, the context sources and the
+// receipt grammar — lives in one dependency-free module both this verifier and the
+// `workflow-status` sensor import. Re-exported here so this file's published surface
+// for those tables is unchanged (F24/F25).
+import {
+  STAGE_ARTIFACTS,
+  CONTEXT_SOURCES,
+  DIGEST64,
+  recordedValue,
+  parseReceipts,
+} from "./pre-execution-contract.mjs";
 
-const CONTEXT_SOURCES = [
-  // `docs/features/ROADMAP.md` is deliberately NOT bound (roadmap scoping). It is
-  // the shared lifecycle ledger of every unit: rows for other units are appended
-  // while a plan is in flight, and the status machine's own sanctioned writes
-  // (`planned` → `in-progress` set by execute-phase P1, `done` at PR open) would
-  // otherwise invalidate every recorded receipt repo-wide and force pointless
-  // re-reviews. Its safety-relevant content is owned by gates that re-read it
-  // live: the own-status gate (every invocation) and the dependency gate (its
-  // Dependency receipt v1 fingerprints the SPEC `Depends on:` line plus the
-  // closure roadmap rows). The unit's own artifacts and the governing
-  // authorities below stay fully bound.
-  { kind: "project-guide", file: "CLAUDE.md" },
-  { kind: "normalized-repository-state", file: "docs/workflow/REPOSITORY_STATE.md" },
-  // The *project's* declared invariants only: docs/workflow/WORKFLOW_INVARIANTS.md
-  // is the portable evaluation contract, never a project's rule set, so binding it
-  // would report presence where the project declared none.
-  { kind: "architectural-invariants", file: "docs/architecture/ARCHITECTURAL_INVARIANTS.md" },
-];
+export { STAGE_ARTIFACTS, CONTEXT_SOURCES };
 
 function parseArgs(argv) {
   const action = argv[0];
   const opts = {};
   const valueFlags = new Set(["--stage", "--unit", "--dir", "--unit-kind", "--artifact-revision",
-    "--source-revision", "--parent", "--receipt", "--json", "--policy"]);
+    "--source-revision", "--parent", "--receipt", "--json", "--policy", "--root"]);
   for (let i = 1; i < argv.length; i += 1) {
     const token = argv[i];
     if (valueFlags.has(token)) { opts[argv[i].replace(/^--/, "")] = argv[i + 1]; i += 1; continue; }
@@ -139,10 +122,10 @@ function parseArgs(argv) {
 const gitAt = (root) => (...args) => {
   try { return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim(); } catch { return ""; }
 };
-const git = gitAt(repoRoot);
+const git = (...args) => gitAt(activeRoot)(...args);
 const GIT_REVISION = /^[a-f0-9]{40}$|^[a-f0-9]{64}$/;
 const isRevision = (value) => GIT_REVISION.test(String(value ?? ""));
-const normalize = (p) => path.relative(repoRoot, path.resolve(repoRoot, p)).split(path.sep).join("/");
+const normalize = (p) => path.relative(activeRoot, path.resolve(activeRoot, p)).split(path.sep).join("/");
 const contained = (rel) => {
   // Agent-supplied ids/paths (unit, dir, json) must never reach outside the
   // repository: normalize preserves `../` escapes, so refuse them explicitly.
@@ -152,10 +135,22 @@ const contained = (rel) => {
   return rel;
 };
 const readRepo = (rel) => {
-  const abs = path.join(repoRoot, rel);
+  const abs = path.join(activeRoot, rel);
   // lstat, not stat: a symlinked artifact must read as absent, never followed —
   // out-of-repo bytes must not enter the snapshot digest invisibly.
-  return fs.existsSync(abs) && fs.lstatSync(abs).isFile() ? fs.readFileSync(abs, "utf8") : null;
+  if (!fs.existsSync(abs) || !fs.lstatSync(abs).isFile()) return null;
+  // The leaf check is not confinement on its own: a symlinked *ancestor*
+  // directory (`docs/features/<unit>` → elsewhere) still ends in a regular file,
+  // so the resolved path is re-checked against the resolved root (F21). A path
+  // that cannot be resolved reads as absent.
+  try {
+    const realRoot = fs.realpathSync(activeRoot);
+    const realPrefix = realRoot.endsWith(path.sep) ? realRoot : `${realRoot}${path.sep}`;
+    if (!fs.realpathSync(abs).startsWith(realPrefix)) return null;
+  } catch {
+    return null;
+  }
+  return fs.readFileSync(abs, "utf8");
 };
 
 function unitDir(opts) {
@@ -283,61 +278,8 @@ async function buildSnapshot(opts) {
   };
 }
 
-const FIELD_RES = new Map();
-const fieldFrom = (chunk, label) => {
-  let re = FIELD_RES.get(label);
-  if (!re) FIELD_RES.set(label, (re = new RegExp(`${label}:\\s*([^\\n·]+)`)));
-  const m = chunk.match(re);
-  return m ? m[1].replace(/[`]/g, "").trim() : null;
-};
 function receipts(dir) {
-  const text = readRepo(normalize(path.join(dir, "progress.md")));
-  if (text === null) return [];
-  return text.split(/^## Pre-execution review receipt v1 — /m).slice(1).map((chunk) => ({
-    stage: chunk.startsWith("spec") ? "spec" : chunk.startsWith("plan") ? "plan" : "unknown",
-    id: fieldFrom(chunk, "Review"),
-    snapshot: fieldFrom(chunk, "Snapshot"),
-    verdict: fieldFrom(chunk, "Verdict"),
-    unit: fieldFrom(chunk, "Unit"),
-    unitKind: fieldFrom(chunk, "Unit kind"),
-    sourceRevision: fieldFrom(chunk, "Source revision"),
-    artifactRevision: fieldFrom(chunk, "Artifact revision"),
-    // A SPEC block writes `Parent: null`, a Plan block writes
-    // `Parent SPEC snapshot: <64-hex>`; either line is the lineage this receipt states.
-    parent: fieldFrom(chunk, "Parent SPEC snapshot") ?? fieldFrom(chunk, "Parent"),
-    authorExclusion: fieldFrom(chunk, "Author exclusion"),
-    contextClean: fieldFrom(chunk, "Context clean"),
-    policy: fieldFrom(chunk, "Policy"),
-    startedAt: timelineField(chunk, 0),
-    finishedAt: timelineField(chunk, 1),
-  }));
-}
-
-/**
- * The receipt's own recorded `Started/finished:` line (`…/…`), split on the
- * slash. An unparsable or absent value stays `null` (fail-open): the
- * `impossible-timeline` guard never flags a receipt it cannot read.
- */
-function timelineField(chunk, index) {
-  const line = chunk.split(/\n/).find((l) => l.trim().startsWith("- Started/finished:"));
-  if (!line) return null;
-  // The timestamps are whitespace-free tokens separated by `/`; the field ends at
-  // the ` · Findings:` sentence, so a regex that grabs exactly the two tokens never
-  // lets a trailing column into a value that is then handed to a date parser.
-  const m = line.match(/Started\/finished:\s*([^\s]+)\/([^\s]+)/);
-  if (!m) return null;
-  return recordedValue(m[index + 1]);
-}
-
-const DIGEST64 = /^[a-f0-9]{64}$/;
-const NULL_WORDS = new Set(["null", "none", "n/a", "na", "—", "-", ""]);
-
-/** A recorded line as a comparable value: backticks and a `sha256:` prefix are dress. */
-function recordedValue(value) {
-  if (value === null || value === undefined) return null;
-  const text = String(value).replace(/`/g, "").trim();
-  const bare = text.startsWith("sha256:") ? text.slice(7).trim() : text;
-  return NULL_WORDS.has(bare.toLowerCase()) ? null : bare;
+  return parseReceipts(readRepo(normalize(path.join(dir, "progress.md"))));
 }
 
 /** A recorded line that must be a digest, or `null` when the receipt binds nothing. */
@@ -461,6 +403,7 @@ export function attributeFreshness({
 
 async function main() {
   const { action, opts } = parseArgs(process.argv.slice(2));
+  if (opts.root) activeRoot = path.resolve(opts.root);
   if (action === "contract") {
     process.stdout.write(`${JSON.stringify({
       receiptContract: PRE_EXECUTION_RECEIPT_CONTRACT_ID,
@@ -474,13 +417,13 @@ async function main() {
     return;
   }
   if (!action || !["build", "verify"].includes(action) || !opts.stage || !opts.unit) {
-    throw new Error("usage: pre-execution-snapshot.mjs build|verify --stage <spec|plan> --unit <id> [--dir <path>] [--receipt <id|digest>]");
+    throw new Error("usage: pre-execution-snapshot.mjs build|verify --stage <spec|plan> --unit <id> [--dir <path>] [--receipt <id|digest>] [--root <repo>]");
   }
   const { snapshot, digest, artifactPaths, contextPaths } = await buildSnapshot(opts);
   const dir = unitDir(opts);
 
   if (action === "build") {
-    if (opts.json) fs.writeFileSync(path.resolve(repoRoot, contained(normalize(opts.json))), `${JSON.stringify({ snapshot, digest }, null, 2)}\n`);
+    if (opts.json) fs.writeFileSync(path.resolve(activeRoot, contained(normalize(opts.json))), `${JSON.stringify({ snapshot, digest }, null, 2)}\n`);
     process.stdout.write(`${digest}\n`);
     if (!opts.json) process.stdout.write(`${JSON.stringify(snapshot, null, 2)}\n`);
     return;
