@@ -795,7 +795,7 @@ operator-approved #209 fold); none is left for the implementer:
 | `sensor:empty-state` | empty/zero state — no roadmap rows, no PRs, no in-flight units | fixture repo with an empty roadmap + no forge output; envelope prints the empty shapes (`design_candidates: []`, `fix_now: []`), exit 0 (A-02 fixture) |
 | `sensor:invalid-input` | invalid/oversized input — unknown flag; malformed or missing hint | `--not-a-real-flag` → non-zero + stderr usage (A-20); missing path / invalid JSON hint → `unavailable-hint-<cause>` note, exit 0 (A-19) |
 | `sensor:envelope-mismatch` | forced invalid envelope — assembly output fails `validateEnvelope` | a stub schema build whose `validateEnvelope` always fails is swapped in via the explicit-path loader (PE-001; `dist/` is a gitignored build output) → stderr diagnostic, envelope still printed, exit 0 (E-38-1; P1 mismatch pin — F27 repair) |
-| `sensor:dependency-outage` | dependency outage + timeout — network severed; forge accepts and never answers; forge auth fails; `gh` absent from PATH; `git` binary missing | `gh` shim failing fast → fail-fast degradation codes, exit 0 (A-04); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (A-21); auth-failing `gh` shim → `unavailable-forge-auth`, exit 0; `gh` absent from PATH → `unavailable-forge-missing-cli`, exit 0; missing `git` binary → `unavailable-git-missing`, exit 0 (F37 fold: the declared forge/git failure states are exercised) |
+| `sensor:dependency-outage` | dependency outage + timeout — network severed; forge accepts and never answers; forge auth fails; `gh` absent from PATH; `git` binary missing | `gh` shim failing fast → fail-fast degradation codes, exit 0 (A-04); non-terminating `gh` shim → `unavailable-forge-timeout` within the bound (A-21); auth-failing `gh` shim → `unavailable-forge-auth`, exit 0; `gh` absent from PATH → `unavailable-forge-missing-cli`, exit 0; missing `git` binary → `unavailable-git-missing`, exit 0 (F37 fold: the declared forge/git failure states are exercised); malformed forge answers — non-JSON stdout and non-array JSON — degrade with declared namespaced codes, exit 0, never an improvised fatal exit (F29/F30 fold, P5) |
 | `sensor:concurrent-action` | concurrent/duplicate action — two simultaneous sensor runs | run twice in parallel on the same tree: both exit 0, outputs byte-identical, no locks or shared state (A-05 fixture run concurrently) |
 | `sensor:limit-threshold` | limit/threshold hit — caps in the projections | fixture with > 5 open issues → `untriaged_issues.oldest_open` capped at 5; merged-PR list capped at 20 (ENVELOPE_FIELDS/SENSOR_CORE caps) |
 | `sensor:permission-denied` | n/a: the sensor is a read-only CLI with no auth, role, or permission surface — a permission-denied state cannot arise (Capability closure: Authentication/ACL rows n/a) | — |
@@ -803,9 +803,14 @@ operator-approved #209 fold); none is left for the implementer:
 
 ### Phases
 
-Four phases (under the ~5 split threshold; every phase is one layer, zero open
-decisions, locally verifiable). Detailed checklists in `TASKS.md`; the frozen
-finish line is `ACCEPTANCE.md`.
+Six phases (every phase is one layer, zero open decisions, locally
+verifiable). P1–P4 delivered 2026-09-11 and opened PR #213; P5–P6 are appended
+by the operator-confirmed review-findings replan (2026-09-12 — residue F20,
+F22, F27–F36 of the `/review-change` cycles on PR #213): hardening had already
+executed, so the appended phases land after it per the replan placement rule
+and the ledger ends with an unexecuted hardening close-out covering them.
+Detailed checklists in `TASKS.md`; the frozen finish line is `ACCEPTANCE.md`
+(amended 2026-09-12: AC-25 restored, F22).
 
 #### P1 — Sensor script core emission
 
@@ -860,6 +865,36 @@ Driver wiring (EN + ES), MIGRATION note, pi bundle parity, full frozen
 validation ladder, read-verified injection-safety pass, truthful planning-doc
 close-out, PR open + roadmap flip. Phase-lint: PASS (8/8) · fingerprint
 `P4:hardening:9:qualify-sensor-unit`
+
+#### P5 — Sensor read-path fold batch
+
+Layer: config/infra · Done-when: `node --test
+scripts/workflow-status-sensor.test.mjs` → exit 0 with one new pin per folded
+finding (F20, F27, F28, F29, F30, F32, F33, F34, F35 behavior + F31's
+concurrency pin now truly concurrent) green, every pre-existing pin unchanged,
+and the root discipline suites still exit 0.
+
+The review-change residue folded into the script's forge/git read paths:
+forge-answer handling (zero-PR success is not a failure, parse cause is not
+`no-network`, non-array JSON degrades per the declared contract), `--limit` on
+forge list reads, one `git status` scan, one shared `build_order` derivation,
+bounded verifier spawns, gated/batched upstream and review-mark reads. Every
+fix keeps the declared failure contract (exit 0 degradation codes; invalid
+invocation stays the only fatal class). Phase-lint: PASS (8/8) · fingerprint
+`P5:config/infra:8:sensor-read-path-fold-batch`
+
+#### P6 — Close the fold cycle
+
+Layer: hardening · Done-when: every frozen validator in `ACCEPTANCE.md`
+passes at head (including the restored AC-25), `git diff --name-only
+main...HEAD -- packages/agentic-workflow-schema` → empty, and every open row
+in `review-findings.md` (F20, F22, F27–F36) reads `folded: yes` bound to this
+phase's head sha.
+
+F36's bilingual switcher fix (MIGRATION.es.md), full frozen validation ladder,
+ledger flips + unit-loop receipts, PR #213 updated in place on the same
+branch. Phase-lint: PASS (8/8) · fingerprint
+`P6:hardening:7:close-the-fold-cycle`
 
 ### Deploy & rollback
 

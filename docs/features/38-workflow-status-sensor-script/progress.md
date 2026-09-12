@@ -460,3 +460,35 @@ Recorded for the next plan review (digests recomputed here, never copied):
 - Gotchas: (1) The frozen schema-package command `npm test` needs its devDependencies — `bun install` in `packages/agentic-workflow-schema` and `packages/pi-agentic-workflow` restores `tsc`/`ajv` from the lockfile (no tracked-file change). (2) `docs/CAPABILITIES.md`: `n/a` — the sensor script is a read-only tool, not a new cross-cutting subsystem, role, or permission. (3) TASKS P4 wrote the roadmap flip as `in-progress · [PR #n]`, but the roadmap's own five-state legend says the PR-open step writes `done` — the sanctioned edge is `done · [#n](url)` (the divergence is recorded in decisions.md). (4) P3 commit `0bd91cbf`.
 - Files: docs/workflow/ORCHESTRATION.md, docs/workflow/ORCHESTRATION.es.md, docs/workflow/MIGRATION.md, docs/workflow/MIGRATION.es.md, packages/pi-agentic-workflow/skills/workflow-status/{SKILL.md,references/SENSOR_CORE.md,references/ENVELOPE_CORE.md}, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md,known-issues.md,decisions.md}
 - Next: PR open + roadmap `done` (close-out)
+
+## 2026-09-12 — operator-confirmed replan: P5–P6 appended for the review-findings residue (artifactRevisionId: 9f3529a55baf)
+
+- Routed from the review-findings residue: cycle 3 (user-instructed third
+  cycle, cap escape) left F20, F22, F27–F36 `folded: no`; the fold batch froze
+  on F22's `replan-in-unit` class and routed to planning. The operator
+  instructed `/plan-feature 38` as the replan.
+- Placement per `review-implementation/CLASSIFY.md` (hardening already
+  executed): **P5** (config/infra — F20 + F27–F35, script + suite) and **P6**
+  (hardening — F36 + AC-25 verification + validation ladder + ledger flips +
+  PR update) appended AFTER P4; the ledger ends with an unexecuted hardening
+  close-out covering them.
+- Manifest amendment (F22): **AC-25** restored from the unchanged SPEC A:24
+  (row dropped by ed7aae98, slot reused by 32bb6434 for A:25); obligation
+  **O29** binds it to P6. Operator-approved per the manifest's amendment rule
+  (this replan instruction).
+- Phase-lint receipts: P5 PASS (8/8) · fingerprint
+  `P5:config/infra:8:sensor-read-path-fold-batch`; P6 PASS (8/8) · fingerprint
+  `P6:hardening:7:close-the-fold-cycle`.
+- Dependency & blocker check: SPEC `## Dependencies` = None; no open fix-now
+  forge issue or fix-index entry touches the sensor modules — the residue IS
+  this PR's own review ledger.
+- Roadmap row re-read AFTER the writes: still `done · [#213]` — unchanged (no
+  five-state edge applies; merge state lives in the forge; the fold phases
+  push to the same PR).
+- `review-findings.md` untouched: rows flip `folded: yes` only when P5/P6 fold
+  them.
+- artifactRevisionId: `sha256(SPEC.md)[:12] = 9f3529a55baf`, recomputed
+  post-write.
+- Next: `/review-plan 38` — the amended plan bytes need a current
+  PLAN-REVIEW-PASS before P5 executes → then `/execute-phase 38 P5` (then P6)
+  → `/review-change` re-run on the new HEAD (manual path) → `/audit-pr 213`.
