@@ -17,6 +17,17 @@ report). F21 is a **new** bypass vector distinct from folded F13 (F13's
 confinement itself verified present at current bytes; F21 is the leaf-only
 symlink gap the confinement leaves open).
 
+Cycle 3 (2026-09-12, single-reviewer) over HEAD
+`cc82069884ef4547ec03c4bcbc49a91860c97b51` — user-instructed third cycle (the
+two-cycle cap's explicit-instruction escape). All 21 `folded: yes` rows were
+re-verified **pass** at current bytes (no regressions, no `regression of`
+rows). The fold-batch diff `e5fa988..cc820698` tripped both delta-escalation
+triggers (Size: 630 changed lines > 200; Width: changed files outside the
+folded rows' cited union), so the cycle ran as a **full pass** and surfaced
+new fix-now findings F27–F36 (cycle ≥ 2 produced new fix-now rows →
+`CONVERGENCE-ANOMALY` printed in the report; loop cap reached — residue
+routes to `/triage-issue --prioritize-now`).
+
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
 | F1 | scripts/workflow-status.mjs:127 (field "Status" regex `^\s*Status:`) | code | high | fix-now | fold into phase | yes |
@@ -42,6 +53,16 @@ symlink gap the confinement leaves open).
 | F24 | scripts/workflow-status.mjs:586-593 | code | med | fix-now | fold into phase | yes |
 | F25 | scripts/workflow-status.mjs:482-500 | code | med | fix-now | fold into phase | yes |
 | F26 | docs/workflow/MIGRATION.md:12-13 + .es.md:12-13 + ORCHESTRATION.md:41-43 + .es.md:43-44 | usage-docs | med | fix-now | fold into phase | yes |
+| F27 | scripts/workflow-status.mjs:1139-1152 (vs :511-524 — build_order derived twice, divergent output) | code | med | fix-now | fold into phase | no |
+| F28 | scripts/workflow-status.mjs:429-431 (zero-PR success read as forge failure) | code | med | fix-now | fold into phase | no |
+| F29 | scripts/workflow-status.mjs:273-276,284-285 (parse cause misattributed to no-network) | code | med | fix-now | fold into phase | no |
+| F30 | scripts/workflow-status.mjs:273-276,415,940,1015 (non-array forge answer → exit 1 vs declared degrade contract) | code | med | fix-now | fold into phase | no |
+| F31 | scripts/workflow-status-sensor.test.mjs:476-479 (concurrency pin runs sequentially) | verify | med | fix-now | fold into phase | no |
+| F32 | scripts/workflow-status.mjs:224,229 (duplicate full `git status` scans) | perf | med | fix-now | fold into phase | no |
+| F33 | scripts/workflow-status.mjs:700-703,755 (2 git spawns per local branch, eager) | perf | med | fix-now | fold into phase | no |
+| F34 | scripts/workflow-status.mjs:642,647,996-1004 (readReviewMark 2 spawns/ledger, no OPEN_STATES gate) | perf | med | fix-now | fold into phase | no |
+| F35 | scripts/workflow-status.mjs:247,255 (forge reads without --limit; gh page-30 truncation falsifies counts) | perf | med | fix-now | fold into phase | no |
+| F36 | docs/workflow/MIGRATION.es.md:3 (language-switcher self-link; hard bilingual rule) | usage-docs | med | fix-now | fold into phase | no |
 | VF-1 | docs/workflow/REPOSITORY_STATE.md:14 · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck live run: sensor emitted repository_state status "draft" on this repo's frozen table-form ledger; colon-regex read at :127 misses `\| Status \|` rows (template/docs/workflow/REPOSITORY_STATE.md:12 same shape) | code | confirmed | finding-mark | n/a | n/a |
 | VF-2 | gh pr view 150/24 → MERGED · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck live run: 25/33 dependencies.unmet are done units with MERGED PRs outside the 20-PR window; 12 spurious substrate blockers | code | confirmed | finding-mark | n/a | n/a |
 | VF-3 | /tmp cross-root fixture · reviewer review-change · HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · recheck reproducer: sensor with PROJECT=/tmp/sensed-repo produced pre_execution rows computed from the sensor's own checkout (pre-execution-snapshot.mjs:56 binds repoRoot from import.meta.url, refuses outside-root dirs) | code | confirmed | finding-mark | n/a | n/a |
@@ -65,5 +86,16 @@ symlink gap the confinement leaves open).
 | VF-24 | direct read · reviewer review-change · HEAD e5fa988c7973e5871387e4d1bf7fb84782452604 · recheck direct read: REVIEW_STAGE_ARTIFACTS/REVIEW_CONTEXT_PATHS re-declared :586-593 under a "Mirrors the two tables" comment; verifier exports STAGE_ARTIFACTS (:96); sensor import list (:20-24) does not import it | code | confirmed | finding-mark | n/a | n/a |
 | VF-25 | direct read · reviewer review-change · HEAD e5fa988c7973e5871387e4d1bf7fb84782452604 · recheck direct read: identical receipt split regex + field fallbacks (sensor :483-495 vs verifier :299-330, incl. `Parent SPEC snapshot` ?? `Parent`) | code | confirmed | finding-mark | n/a | n/a |
 | VF-26 | direct read · reviewer review-change · HEAD e5fa988c7973e5871387e4d1bf7fb84782452604 · recheck direct read: MIGRATION.md:12-13/.es.md:12-13 + ORCHESTRATION.md:41-43/.es.md:43-44 claim "only an invalid invocation is fatal" and "diagnostics … live in detail"; script :1152-1157 self-check failure → stderr note with exit 0, :1161-1166 any uncaught error → exit 1 | usage-docs | confirmed | finding-mark | n/a | n/a |
+| VF-27 | scripts/workflow-status.mjs:1139-1152 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck reproducer: /tmp fixture (90 done/merged, 91 idea, 92 planned deps "90 91") → blocked_units[92].build_order ["90-shipped","91-missing","92-blocked"] vs dependencies.build_order ["91-missing","92-blocked"] | code | confirmed | finding-mark | n/a | n/a |
+| VF-28 | scripts/workflow-status.mjs:429-431 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck reproducer: gh shim `--state all` → `[]` exit 0 → envelope degradation unavailable-forge-no-network + resolvable=false | code | confirmed | finding-mark | n/a | n/a |
+| VF-29 | scripts/workflow-status.mjs:273-276 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck reproducer: gh exit 0 + non-JSON stdout → degradation unavailable-forge-no-network (real cause lost) | code | confirmed | finding-mark | n/a | n/a |
+| VF-30 | scripts/workflow-status.mjs:273-276,1015 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck reproducer: gh exit 0 + non-array JSON → "workflow-status failed: (forge.openPrs ?? []).map is not a function", exit 1, 0 stdout bytes | code | confirmed | finding-mark | n/a | n/a |
+| VF-31 | scripts/workflow-status-sensor.test.mjs:476-479 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck direct read: both run() (spawnSync) calls execute synchronously inside Promise executors — strictly sequential, property untested | verify | confirmed | finding-mark | n/a | n/a |
+| VF-32 | scripts/workflow-status.mjs:224,229 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck measured: 10-iter two-call 0.324s vs single `--porcelain=v1 -b` 0.181s | perf | confirmed | finding-mark | n/a | n/a |
+| VF-33 | scripts/workflow-status.mjs:700-703 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck direct read: rev-parse @{u} + rev-list --count per call; :755 calls branchIsUnpushed eagerly per unit-resolving branch | perf | confirmed | finding-mark | n/a | n/a |
+| VF-34 | scripts/workflow-status.mjs:642,647 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck direct read: merge-base + log per marked ledger; loop :996-1004 has no OPEN_STATES gate (8 marked ledgers → 16 spawns/invocation) | perf | confirmed | finding-mark | n/a | n/a |
+| VF-35 | scripts/workflow-status.mjs:247,255 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck direct read: openPrs/openIssues argv lack --limit (mergedPrs 20, allPrStates 1000); gh default page 30 truncates counts | perf | confirmed | finding-mark | n/a | n/a |
+| VF-36 | docs/workflow/MIGRATION.es.md:3 · reviewer review-change · HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · recheck direct read: switcher is `> 🇪🇸 [Versión en español](MIGRATION.es.md)` (self-link); main had `> 🇬🇧 [English version](MIGRATION.md)`; introduced by 3161b614 (P4) | usage-docs | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 0a9b740d9a6195f4788aaffdc60725b3260e96d3 · 2026-09-11 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 1 |
 | REVIEW-RAN | HEAD e5fa988c7973e5871387e4d1bf7fb84782452604 · 2026-09-11 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 2 · folded-row re-verification: 15/15 pass | | | | | |
+| REVIEW-RAN | HEAD cc82069884ef4547ec03c4bcbc49a91860c97b51 · 2026-09-12 · review-change · axes: code, security, verify, perf (+ usage-docs inline) · verdict: REVIEW-FAIL · cycle: 3 · folded-row re-verification: 21/21 pass · user-instructed third cycle (two-cycle-cap escape) | | | | | |
