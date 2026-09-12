@@ -105,3 +105,28 @@ by row. The frozen `ACCEPTANCE.md` blob (`21adb084…`) and the Product half are
 both verified untouched, and phase shape plus all six fingerprints are unchanged
 from `37-plan-5`, so the linter reproduces its recorded output byte-identically
 for the next reviewer.
+
+## Spec-stage findings (SPEC-REVIEW-37-2, 2026-09-12)
+
+Bounded delta re-review of the Product half over the moved bound authority
+(CLAUDE.md and the snapshot builder were replaced on `main` by feature 38; the
+prior record routed here — "a fresh review is the only route"). The Product half
+was proven byte-identical from its first commit (`28353158`) through HEAD
+(`f2c264ce`), including across the F8 edit (`dd68f050`) and its F12/F13 restore
+(`f46cf450`), by direct extracted-Product-half diffs — the recorded spec digests
+are not reproducible only because feature 38 rewrote the builder itself. All
+three rows below are `info` (immaterial per LEDGERS), `verified`, and `open`;
+the PASS they coexist with is contract-legal, and each carries its recorded
+plan-side disposition as context for the owner.
+
+```text
+findings-ledger@1
+stage: spec
+artifactRevisionId: e3d8e0ea3f07ce93892dd2ad10462bd5b25b2891
+
+| id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| F17 | spec | info | product | 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 | In-scope bullet 7 (vehicle rule) maps to `AC9 (n/a pending planning)` while the vehicle rule's acceptance criterion is AC10 — the mapping cell names the wrong criterion; coverage itself exists in-half (AC10 is present, self-described as the vehicle-rule AC, and executed by P3) | SPEC.md:105-106; SPEC.md:232; git f46cf450 (F12/F13 restore of the in-half fix); decisions.md §ED7 item 1 | open | open — context: the in-half fix was attempted at 37-plan-4 (`dd68f050`) and reverted at `f46cf450` to preserve the SPEC-REVIEW-37-1 parent binding; the correction was re-pointed plan-side (PE-008, decisions.md ED7.1); amending the frozen half remains a recorded owner call (decisions.md ED8.4b) | — |
+| F18 | spec | info | product | 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 | Product-half observation cells carry design-time values superseded by the tree: E1 `phase-contract` v1.0.1 (now 1.0.3), E4 row-37 status `idea` (now `in-progress · [#212]`), E10 "precedes 38" (38 merged first, PR #213), Context "currently … by model reasoning" (P4 run-and-paste slims landed); every row's material claim (ownership, traceability, priority, three consumer routes) remains current-true | SPEC.md:293; SPEC.md:296; SPEC.md:302; SPEC.md:59; skills/phase-contract/SKILL.md:4; docs/features/ROADMAP.md:47; git e3d8e0ea merge message; decisions.md §ED7/§ED8 | open | open — context: every supersession is recorded plan-side (decisions.md ED7/ED8, incl. ED8.4a/b; planning-evidence PE-007/PE-011 per ED8.3; architecture-notes §Layer placement per ED8.2); the `observed-revision` column timestamps the observation by design; Product-half amendment stays an owner call (ED8.4b) | — |
+| F19 | spec | info | product | 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 | Expectation-sweep row 11's pointer cites "In scope bullet 4" for the English-only v1 constraint, but the constraint is recorded in PD3, not in In-scope bullet 4 nor in any Out-of-scope bullet — the row's resolution (out-of-scope) is itself correct | SPEC.md:206; SPEC.md:94-97; SPEC.md:253; decisions.md §PD3 | open | open — context: the constraint itself is binding via PD3 (SPEC.md:253, decisions.md PD3); pointer cell only | — |
+```
