@@ -90,6 +90,69 @@ cycle-3 report.
 | REVIEW-RAN | HEAD d693fe8e494c8d5f74696f7776e60e14968072c0 | n/a | n/a | review-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 7da091855af95fd2565366e73db3e374f31e3811 | n/a | n/a | review-mark | n/a | n/a |
 | REVIEW-RAN | HEAD b740bd527f39dae3ff7cd8a983872447eed83def | n/a | n/a | review-mark | n/a | n/a |
+| REVIEW-RAN | HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 | n/a | n/a | review-mark | n/a | n/a |
+
+Cycle 4 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-12 (`review-change`, single-reviewer, same five axes code/security/
+verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR #212 head
+`efe9d5ea`). The post-fold delta escalated to a full pass (width: 19 files > 15;
+size: ~200 changed lines at the ceiling, plus files outside the cited union).
+All 18 `folded: yes` rows re-verified repaired at their cited locations, and the
+dogfood run reproduces the recorded `3ea28e5b…` fingerprint. The classification
+engine (`review-implementation`, isolated) applied the CLASSIFY.md severity
+floor: ten candidates the finders reported `minor` show correctness,
+behavioral, untested-path or record-fidelity evidence, so they are classified
+`med` minimum and persist below (F27–F36). `F` (subsumed regex alternation) and
+`L` (three punctuation conventions inside a frozen pinned-output block) are
+`ignore` — report-only taste, never persisted. The bench-gate proposal is
+reported for user routing (re-report of F23/P1).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F27 | CHANGELOG.md:744-745 + CHANGELOG.es.md:746-747 | brand (record fidelity) | med | fix-now | fold: sync both re-basis rows to the shipped `SKILL_CONTEXT_BUDGETS.json` values — the 2026-09-12 row cites 11656/11669/11539/11701/11854/11454/11616 (each −11) and must state the finals 11667/11680/11550/11712/11865/11465/11627 plus the scaffold/fix finals 24175/27064 in the sentence that names those two routes; the F19 row gains the supersession note | yes |
+| VF-27 | CHANGELOG.md:744 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck direct read vs the shipped JSON: row cites 11656/…/11616 and 24144/27018 while `routes[]` ships 11667/11680/11550/11712/11865/11465/11627 and 24175/27064; stale identically in CHANGELOG.es.md:746-747 | brand | confirmed | finding-mark | n/a | n/a |
+| F28 | docs/features/37-phase-lint-script/SPEC.md:465-467 | code (normative text) | med | replan-in-unit | plan owner re-cuts the §Output contract clause: it assigns `missing-plan` to "a nonexistent or unreadable path" while the same sentence gives "read failures" to `unparseable` | no |
+| VF-28 | SPEC.md:465 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck direct read of the clause against its three agreeing authorities: script header (`unparseable (unreadable file …)`), ACCEPTANCE.md AC3 ("unreadable/unparsable file → `BLOCKED: unparseable`") and the passing corpus test; only this one sentence disagrees | code | confirmed | finding-mark | n/a | n/a |
+| F29 | docs/features/37-phase-lint-script/SPEC.md:382 | code (conformance) | med | replan-in-unit | plan owner re-states the title-deliverable rule: SPEC says "leading articles dropped", `titleDeliverable` drops `the|a|an` anywhere, and the corpus pins the mid-title drop — the corpus is the behavioral contract, so the SPEC wording is the artifact to correct | no |
+| VF-29 | SPEC.md:382 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck direct read + corpus: `phase-lint.mjs:91` uses the global article strip while the corpus asserts `### P1 — Wrap the long command` → `P1:docs:1:wrap-long-command` (`phase-lint.test.mjs:449,458`), i.e. mid-title article dropped | code | confirmed | finding-mark | n/a | n/a |
+| F30 | docs/features/37-phase-lint-script/SPEC.md:439 | code (rule breadth) | med | replan-in-unit | plan owner widens §Design box-5 to owner rule 5 (`OR` between alternatives) and the script then gains bare-OR detection red-first; the SPEC froze the narrower `either/or` form while `phase-contract` rule 5 is broader | no |
+| VF-30 | SPEC.md:439 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck failing reproducer: a task `Add scripts/a.mjs or scripts/b.mjs` → `PASS (8/8)` exit 0 (`/tmp` fixture), though `skills/phase-contract/SKILL.md` rule 5 fails on "`OR` between alternatives"; known-issues.md:46 discloses rule-4's approximations, never this one | code | confirmed | finding-mark | n/a | n/a |
+| F31 | scripts/phase-lint.mjs:126 | code (conformance) | med | fix-now | fold: tighten the task regex to the frozen grammar `^\s*- \[( \|x)\] ` (the `-\s*` loosening accepts `-  [ ]`/`-[ ]`, which the grammar rejects and GFM does not render) + corpus fixture for the rejected form | yes |
+| VF-31 | phase-lint.mjs:126 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck failing reproducer: a phase whose task lines are `- [x] real`, `-  [ ] loose`, `-[ ]third` → `PASS (8/8)`, fingerprint `P1:config/infra:2:add-module` (loose forms counted) where the frozen SPEC grammar defines 1 task; neither TASKS.md nor the corpus contains a loose form (grep 0), so tightening churns no fixture | code | confirmed | finding-mark | n/a | n/a |
+| F32 | scripts/phase-lint.test.mjs:494-507 | verify (untested path on a security control) | med | fix-now | fold: pin the F21 sanitizer with a fixture whose title carries a non-whitespace `\p{Cc}`/`\p{Cf}` character (U+0001 / U+200B / U+202E) asserted stripped from the echoed finding line | yes |
+| VF-32 | phase-lint.test.mjs:497 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck static scan of the fixture: `INJECTED_TITLE_PLAN`'s only control character is `\t`, which the independent `\s+` collapse already removes, so the `[\p{Cc}\p{Cf}]+` strip has no discriminating fixture | verify | confirmed | finding-mark | n/a | n/a |
+| F33 | scripts/phase-lint.mjs:68 | verify (false-verdict mode) | med | replan-in-unit | plan owner amends the frozen grammar to skip fenced code blocks (it names no fence handling), then the parser and corpus follow | no |
+| VF-33 | phase-lint.mjs:68 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck failing reproducer: a plan whose body quotes a plan fragment inside a ```md fence → the quoted `### P2 — Phantom phase` is parsed as a real phase (`P2 Phase-lint: PASS (8/8) · fingerprint P2:docs:1:phantom-phase`, exit 0), polluting the whole-plan fingerprint and risking a false BLOCKED | verify | confirmed | finding-mark | n/a | n/a |
+| F34 | docs/workflow/SKILL_CONTEXT_BUDGETS.json (policy.declared + `execute-phase:unit-loop`) | perf (false policy record) | med | fix-now | fold: make the re-basis #3 declaration true — conform `execute-phase:unit-loop` to `ceil(measured × 1.10)` = 12798 (measured 11634), or restate the declaration's count; batch with F27's CHANGELOG sync | yes |
+| VF-34 | SKILL_CONTEXT_BUDGETS.json (declared + unit-loop) · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck measured: `node scripts/check-skill-context.mjs --routes --json` → `execute-phase:unit-loop` measured 11634 vs budget 14000 (ceil = 12798, 20.3% headroom) while the declaration claims "the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10)" — only six were | perf | confirmed | finding-mark | n/a | n/a |
+| F35 | scripts/phase-lint.test.mjs:21 | perf (resource leak) | med | fix-now | fold: tear the fixture tmpdir down with `rmSync(TMP, { recursive: true, force: true })` in `afterAll` | yes |
+| VF-35 | phase-lint.test.mjs:21 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck measured: `mkdtempSync` at module scope with no `rmSync`/`afterAll` (grep 0 matches) → `ls -d /tmp/phase-lint-corpus-*` = 90 leftover dirs, ~4 MB per run | perf | confirmed | finding-mark | n/a | n/a |
+| F36 | packages/agentic-workflow/package.json:3 + CHANGELOG.md:73-75 / CHANGELOG.es.md:74-76 | brand (bilingual completeness) | med | fix-now | fold: add the `@gtrabanco/agentic-workflow` section and its 0.0.0 row to both changelogs' "Companion npm packages" inventory (siblings have sections; the same-PR changelog-row convention is declared) | yes |
+| VF-36 | CHANGELOG.md:73 · reviewer review-change · HEAD efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 · recheck direct read: `grep -n "@gtrabanco/agentic-workflow" CHANGELOG.md` (excluding `-schema`) → no match, while `#### [@gtrabanco/agentic-workflow-schema]` (:75) and `#### [@gtrabanco/pi-agentic-workflow]` (:92) exist; the same absence holds in CHANGELOG.es.md | brand | confirmed | finding-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: F28 (recurrence of the cycle-3 low note on SPEC.md:465) ; new: F27, F29–F36
+- Snapshots: df3d53b133af2075e028853963bdabc09079d152 → 9a82837ff01c6cebe16f0421409a8ef76e9ff98e (b740bd52 → efe9d5ea)
+- Missed: nothing missed by the prior reviews — the fold batch `9f61b2ec`/`e09640bf` repaired F21/F26 correctly and re-based four ceilings, but it re-based them without updating the record surfaces that declare those ceilings, and its two new corpus additions never pinned a non-whitespace control character
+- Owning stage: source (F27, F31, F32, F34, F35, F36) + plan (F28, F29, F30, F33)
+- Why the prior review failed: cycles 1–3 verified each fold in isolation at its own cited line and never re-read the record surfaces the folds wrote, so record fidelity (F27, F34, F36) and contract-vs-corpus divergence (F29, F30) survived three reviews
+- Route to owner: source rows → `/fold-findings` (explicit ids F27 + F31 + F32 + F34 + F35 + F36); plan rows → the plan owner's SPEC re-cut, then a fresh `/review-plan 37-phase-lint-script`
+```
+
+```text
+LOOP CAP REACHED — 37-phase-lint-script
+- Finding ids: F28 + F29 + F30 + F33 (plan-owned); source residue F27 + F31 + F32 + F34 + F35 + F36
+- Cycles: 4 (REVIEW-RAN marks + forge receipts)
+- Route: /triage-issue --prioritize-now 37-phase-lint-script F28 F29 F30 F33 (or the programmatic outer driver)
+```
+
+Cycle 4 reached the cap with the loop still producing new fix-now rows (the
+signature POLICY §4 names for a planning or root-cause defect rather than a
+review deficit). The anomaly block and the cap block above are both printed in
+the cycle-4 report; the source-owned rows are foldable in place, the four
+plan-owned rows are not — a fold cannot repair authority, so they route to the
+plan owner.
 
 The mark row is the durable `review-mark@1` record of cycle 1's review at that
 head — isolated context-clean passes (code, security, verify, brand, perf;
