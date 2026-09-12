@@ -130,3 +130,20 @@ artifactRevisionId: e3d8e0ea3f07ce93892dd2ad10462bd5b25b2891
 | F18 | spec | info | product | 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 | Product-half observation cells carry design-time values superseded by the tree: E1 `phase-contract` v1.0.1 (now 1.0.3), E4 row-37 status `idea` (now `in-progress · [#212]`), E10 "precedes 38" (38 merged first, PR #213), Context "currently … by model reasoning" (P4 run-and-paste slims landed); every row's material claim (ownership, traceability, priority, three consumer routes) remains current-true | SPEC.md:293; SPEC.md:296; SPEC.md:302; SPEC.md:59; skills/phase-contract/SKILL.md:4; docs/features/ROADMAP.md:47; git e3d8e0ea merge message; decisions.md §ED7/§ED8 | open | open — context: every supersession is recorded plan-side (decisions.md ED7/ED8, incl. ED8.4a/b; planning-evidence PE-007/PE-011 per ED8.3; architecture-notes §Layer placement per ED8.2); the `observed-revision` column timestamps the observation by design; Product-half amendment stays an owner call (ED8.4b) | — |
 | F19 | spec | info | product | 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 | Expectation-sweep row 11's pointer cites "In scope bullet 4" for the English-only v1 constraint, but the constraint is recorded in PD3, not in In-scope bullet 4 nor in any Out-of-scope bullet — the row's resolution (out-of-scope) is itself correct | SPEC.md:206; SPEC.md:94-97; SPEC.md:253; decisions.md §PD3 | open | open — context: the constraint itself is binding via PD3 (SPEC.md:253, decisions.md PD3); pointer cell only | — |
 ```
+
+## Plan-stage findings (PLAN-REVIEW-37-7, 2026-09-12)
+
+Post-repair re-review of `37-plan-6` (receipt PLAN-REVIEW-37-6's F14–F16 fold +
+the feature-38 merge readiness). The sync-drift family did not recur; the
+single row below is `info` (immaterial per LEDGERS), `verified`, and `open`,
+and the PASS it coexists with is contract-legal.
+
+```text
+findings-ledger@1
+stage: plan
+artifactRevisionId: f2c264ce72722b0a315ecf4e1b9936444f1282aa
+
+| id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| F20 | plan | info | plan | 4ed98668b3d8a49c974a08d2007044411c9c51ab8770ec031fff3c23a37e2824 | PLAN.md's revision header leads with "Artifact revision of this plan set: `37-plan-4`" and reaches the current `37-plan-6` only through the appended chain narrative — unlike the six sibling bound artifacts whose headers lead with the current value; the F14 fold's resolution enumerates PLAN.md among the seven synced headers while its PLAN.md edit extended the chain (landing the fold's substance — the current revision is named and correct) rather than replacing the leading clause | PLAN.md:7-11; SPEC.md:309; TASKS.md:3; testing.md:3; planning-evidence.md:2; planning-obligations.md:4; architecture-notes.md:3; planning-findings.md F14 fold row (cycle 6); cycle-6 receipt note "PLAN.md narrates the chain" | open | — | — |
+```

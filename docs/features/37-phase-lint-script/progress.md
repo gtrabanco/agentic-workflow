@@ -467,3 +467,31 @@ Notes:
   recorded in `planning-findings.md` §Spec-stage findings; none is material and
   each cites its recorded plan-side disposition. No reviewed artifact (SPEC,
   decisions, roadmap row, ACCEPTANCE) was modified.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-7 · Snapshot: 4ed98668b3d8a49c974a08d2007044411c9c51ab8770ec031fff3c23a37e2824 · Verdict: plan-review-pass
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 · Parent Product receipt: SPEC-REVIEW-37-2
+- Source revision: f2c264ce72722b0a315ecf4e1b9936444f1282aa · Artifact revision: f2c264ce72722b0a315ecf4e1b9936444f1282aa
+- Reviewer: review-plan (independent session) · Session: review-plan-37-cycle7-2026-09-12 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-12T15:50Z/2026-09-12T16:06Z · Findings: 1 (material open: 0)
+- Ledgers read: planning-evidence 11 rows · obligations 13 rows (verified-capable: 1)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-6 @ 432566ce326379b845d03d906864a48431ac4201f7fc7c19cb0610d80ca59b1a
+```
+
+Notes:
+- Re-review of the repaired plan (no-progress gate satisfied): snapshot changed `432566ce…` → `4ed98668…` — the input was the F14–F16 fold commit `f9aed3fe` + the feature-38 merge sync `f2c264ce` (budget re-basis #3), a repair performed in response to persisted findings; POLICY §4's guards do not block it. The receipt's `Artifact revision:` binds the builder's canonical digest-derived value `f2c264ce…`; the planner's handoff label `37-plan-6` is recorded here (cycle-2/6 precedent).
+- Convergence (cycle-6 family, second adjudication): the planning-set sync-drift family (F14–F16) did **not** recur — all seven live revision headers verified at `37-plan-6` (SPEC.md:309, PLAN.md chain extended to terminate at `37-plan-6`, planning-evidence.md:2, planning-obligations.md:4, TASKS.md:3, testing.md:3, architecture-notes.md:3), F15's amended-twice wording verified in architecture-notes.md, F16's roadmap-status clause verified in PE-007 + O11 against the row (`in-progress · [#212]`). The repair batch's own convergence argument (ED8) is accepted; the loop exits this cycle. Residual style inconsistency recorded as F20 (info, PASS-compatible).
+- Falsification stance before checking: CONFIRMED-GAPS → refuted mechanically. The delivered linter reproduces the plan's self-conformance claims byte-identically: `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → `verdict PASS`, six per-phase fingerprints matching SPEC §Phase-lint exactly, whole-plan sha256 `3ea28e5b…` equal to the recorded re-cut value; `node --test scripts/phase-lint.test.mjs` → 26/26. `git hash-object ACCEPTANCE.md` → `21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4` (frozen blob byte-identical). `skills/phase-contract/SKILL.md:4` = 1.0.3.
+- Parent lineage re-proven, never copied: SPEC-REVIEW-37-2 (snapshot `27522e96…`) is the newest current SPEC-REVIEW-PASS; between its bound revision `f2c264ce` and HEAD `f3329527` only `progress.md` + `planning-findings.md` moved (verified by `git diff --name-only`); zero commits touched `CLAUDE.md` / `docs/workflow/REPOSITORY_STATE.md` / SPEC since `f2c264ce`; builder context digests match the parent's (REPOSITORY_STATE `e8509783…`, CLAUDE.md `89908a32…`, invariants absent per frozen fact F010). L1 holds.
+- L2: PE-001…PE-011 all `current` + `proven` (PE-005 `decision`); no `unknown`/`drifted`/`deferred` row. path:line spot-checks resolved: PE-002 (`skills/plan-fix/SKILL.md:101`, `skills/execute-phase/SKILL.md:50` — run-and-paste steps P4 shipped), PE-004 (`packages/pi-agentic-workflow/package.json:47` `bundle:skills`), PE-011 (`e0c18284` = PR #213 merge). PE-009's re-check point was consumed at executed P4 (cycle-6 note); the claim itself remains true at HEAD (fix #191 still `in-progress · #193`) and no remaining phase touches that surface — non-finding.
+- L3/L4: 13 obligation rows, none blank/deferred/duplicated, ids stable; each names one phase, one task, owner, ACCEPTANCE-copied validator, required evidence; O11 `verified`; O13 `planned` matching the unticked P5. O4/O6/O9's `P2 / P5` re-verification cells continue the five-cycle adjudication — recorded, not re-litigated.
+- L5: 8 dev scenarios ↔ phases ↔ validators; every validator can fail (corpus asserts the exit-1 paths; `diff`/`test -d`/grep falsifiable). L6: honest — open rows are F1 + F17–F19 (spec-stage, info, verified, each with recorded plan-side disposition); F2–F16 folded with resolution evidence; no open material row carried into execution.
+- P-checks: P1–P12 pass; P9 on the mechanical re-derivation above (order matches the no-dependency closure; last phase `hardening`); P10's validators are the project's real gates, none weakened — gates re-run by this reviewer: `node --test scripts/normative-drift.test.mjs` → 0 failures, `bun scripts/check-skill-context.mjs --routes` → 22/22, `bun scripts/check-skill-context.mjs` → 39/39 (re-basis #3 reproduced); P12's remaining claims: O12 verified by commit history (exactly `509d685c` P1 + `8a35face` F5 touched the rule owner), O10 vehicle validator → exit 0, AC9 diff `main...HEAD -- packages/agentic-workflow-schema` → empty.
+- Notes, non-findings: (a) execution state — P1–P4 and P6 ticked, P5 pending; the plan is ordered P5 → P6 and the early P6 ticks are the user-approved merge-readiness state (ED8.4d, row `in-progress`); P6's close-out re-run re-executes after P5 per O4/O6/O9's re-verification cells — not a plan defect. (b) The 2026-09-10 plan-conflict record (TASKS grammar repair, PLAN-REVIEW-37-5 snapshot staleness) is superseded: this snapshot binds the current TASKS.md carrying the `Layer:`/`Done-when:` lines, and the linter reproduces the fingerprints from it.
+- Zero writes to any reviewed artifact: only progress.md (this receipt) and planning-findings.md (F20) were appended, uncommitted by design so HEAD stays at the bound sourceRevision `f2c264ce` — the next commit on the branch carries these bytes, as in cycles 1–6.
