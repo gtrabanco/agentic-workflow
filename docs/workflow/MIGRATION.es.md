@@ -1,6 +1,6 @@
 # Notas de migración
 
-> 🇪🇸 [Versión en español](MIGRATION.es.md)
+> 🇬🇧 [English version](MIGRATION.md)
 
 ## 2026-09-11 — el envelope de workflow-status tiene un productor determinista por script (`workflow-status` 3.3.0, aditivo)
 

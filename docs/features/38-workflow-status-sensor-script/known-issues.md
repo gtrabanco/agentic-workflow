@@ -33,3 +33,12 @@ reached` reason and a `workflow_observations` line. That is a deliberate
 degradation under the declared failure contract (bounded, never a hang), not a
 correctness claim — a bigger cap is a one-constant change if a real repository
 ever needs it. No other boundary opened.
+
+## P6 close-out (2026-09-12)
+
+The fold cycle closed: F20, F22, F27–F36 all `folded: yes` in
+`review-findings.md`. The F36 bilingual self-link is fixed; AC-25's restored
+validators pass at head (2 script refs, 0 self-check prose); the full frozen
+ladder is green (root 259/259, discipline 87/87, schema 684/684, pi 185/185 +
+mirror parity, schema byte-untouched). No open blockers. The unit is built with
+PR #213 open; merge state lives in the forge.

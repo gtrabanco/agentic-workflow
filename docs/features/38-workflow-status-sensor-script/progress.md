@@ -562,3 +562,14 @@ Recorded for the next plan review (digests recomputed here, never copied):
 ## Unit-loop receipt — P5
 - Commit: pending · Gate: node --test scripts/workflow-status-sensor.test.mjs (exit 0, 51/51) + node --test scripts/*.test.mjs (exit 0, 259/259) · Acceptance blob: 23443e269d2affbc52906aae4a2342c36e105980
 - Next: P6 · Attempts: 1
+
+## P6 — 2026-09-12
+- Done: closed F36 (MIGRATION.es.md switcher now links `MIGRATION.md`; both siblings carry reciprocal switcher links), verified the restored AC-25 validators at head (2 `scripts/workflow-status.mjs` refs, 0 `self-check before printing` prose), ran the full frozen validation ladder green (check-skill-context exit 0; root 259/259; discipline 87/87; schema package 684/684; pi package `bundle:skills` + 185/185 with mirror byte-identical; `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` empty; AC-01/03/07/08/09/12/16/20/22/24 greps green), flipped F20/F22/F27–F36 to `folded: yes` in `review-findings.md`, recomputed the frozen `ACCEPTANCE.md` blob (unchanged — no P5/P6 byte touched the manifest), and pushed the phase commits to PR #213.
+- Remains: none — unit finished. The mandatory `/review-change` re-run on the new HEAD is user-initiated (the manual path after a replan), never executed inside this phase.
+- Gotchas: (1) The plan-review receipt rp-014 binds TASKS/testing/decisions; P5's tick/doc edits move those bytes, so re-verifying the plan snapshot now reports the expected phase-bookkeeping drift — not a plan amendment. The pre-execution gate was correctly consumed once at the unit-loop preflight, before any edit. (2) `bundle:skills` re-ran clean (skills/ untouched since P4): 38 skills, 123 files, mirror byte-identical. (3) The dependency receipt was rewritten after a full pass (the prior fingerprint did not re-derive under any candidate recipe; closure empty, so the full gate is trivially met).
+- Files: docs/workflow/MIGRATION.es.md, docs/features/38-workflow-status-sensor-script/{TASKS.md,progress.md,testing.md,known-issues.md,review-findings.md}
+- Next: unit finished
+
+## Unit-loop receipt — P6
+- Commit: pending · Gate: full frozen ladder (check-skill-context exit 0; root 259/259; discipline 87/87; schema 684/684; pi 185/185 + mirror parity; schema diff empty; AC-25 pass) · Acceptance blob: 23443e269d2affbc52906aae4a2342c36e105980
+- Next: close-out (PR #213 already open) · Attempts: 1

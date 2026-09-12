@@ -10,6 +10,7 @@
 | Qualification | all frozen validators green, schema package untouched, Pi bundle parity, bilingual sync | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty; `node --test scripts/ledger-provenance.test.mjs scripts/ledger-ownership.test.mjs scripts/audit-pr-receipt.test.mjs scripts/review-loop-discipline.test.mjs` → exit 0; `cd packages/pi-agentic-workflow && npm run bundle:skills && npm test` → exit 0 (P4) — P4 green 2026-09-11: schema diff empty; root suite 241/241; schema package 684/684; pi package 173/173 |
 | Injection safety | Feature 15's labels-only invariant preserved in the new script | read-verified at PR time: code review against feature 15 (PR #47) merge commit; the labels-only path preserved verbatim |
 | Read-path fold batch | per-finding pins (F20, F27–F35), one `git status` scan, one batched upstream read, zero review-mark spawns for closed units, capped verifier spawns | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (P5 pins green + P1–P4 pins unchanged) — P5 green 2026-09-12 (51/51); `node --test scripts/*.test.mjs` → 259/259 |
+| Fold-cycle close-out | F36 bilingual switcher, restored AC-25 validators, every frozen validator at head | `node scripts/check-skill-context.mjs` → exit 0; discipline suites 87/87; schema diff empty; schema package 684/684; pi package `bundle:skills` + 185/185 with mirror parity; AC-25 (2 refs / 0 self-check prose) — P6 green 2026-09-12 |
 
 ## Mandatory scenario inventory
 

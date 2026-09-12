@@ -309,26 +309,26 @@ main...HEAD -- packages/agentic-workflow-schema` → empty, and every open row
 in `review-findings.md` (F20, F22, F27–F36) reads `folded: yes` bound to this
 phase's head sha.
 
-- [ ] Fix the `MIGRATION.es.md` language-switcher self-link (F36) — the ES
+- [x] Fix the `MIGRATION.es.md` language-switcher self-link (F36) — the ES
   sibling links back to `MIGRATION.md`; reciprocal switcher links verified on
   both siblings (hard bilingual rule).
-- [ ] Verify the restored AC-25 validators at head — `grep -c
+- [x] Verify the restored AC-25 validators at head — `grep -c
   'scripts/workflow-status.mjs' skills/workflow-status/references/ENVELOPE_CORE.md`
   ≥ 1 AND `grep -cE 'self-check before printing'
   skills/workflow-status/references/ENVELOPE_CORE.md` → 0 (O29; the manifest
   amendment rides this phase's commit).
-- [ ] Run the full frozen validation ladder from `ACCEPTANCE.md` — the sensor
+- [x] Run the full frozen validation ladder from `ACCEPTANCE.md` — the sensor
   suite, the root discipline suites, `check-skill-context.mjs`, the schema
   package suite, pi bundle parity, and the schema byte-untouched diff.
-- [ ] Flip every open `review-findings.md` row folded by P5/P6 — F20, F22,
+- [x] Flip every open `review-findings.md` row folded by P5/P6 — F20, F22,
   F27–F36 — to `folded: yes`, each bound to the phase head sha (F22 via the
   restored AC-25 row; no row is reclassified).
-- [ ] Record the P5/P6 unit-loop receipts in `progress.md` and recompute the
+- [x] Record the P5/P6 unit-loop receipts in `progress.md` and recompute the
   frozen `ACCEPTANCE.md` blob — `git hash-object` sha appended with the
   acceptance receipt.
-- [ ] Push the phase commits to PR #213 and re-read the roadmap row — it stays
+- [x] Push the phase commits to PR #213 and re-read the roadmap row — it stays
   `done · [#213]` (the PR remains open; merge state lives in the forge; no
   state-machine edge touches the row).
-- [ ] Print the updated PR HEAD sha and the review hand-off — `manual`:
+- [x] Print the updated PR HEAD sha and the review hand-off — `manual`:
   `/review-change` re-run on the new HEAD is user-initiated (the manual path
   after a replan), never executed inside this phase.
