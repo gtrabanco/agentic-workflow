@@ -10,7 +10,9 @@ over the re-cut plan, see ED7), then `37-plan-5` (user-directed replan-in-unit
 fold of code-review finding F7 — the SPEC §Design box-2 test-file mapping for
 the owner-sanctioned test-only `hardening` shape; the former close-out P5 is
 renumbered P6, and fingerprints are re-derived by `scripts/phase-lint.mjs`
-itself — see decisions.md).
+itself — see decisions.md), then `37-plan-6` (repair batch for review receipt
+PLAN-REVIEW-37-6 — folds F14–F16 — plus the feature-38 merge readiness;
+phase shape and fingerprints unchanged — see ED8).
 
 ## P1 — Amend phase-contract rule 1
 

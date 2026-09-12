@@ -130,6 +130,74 @@
   convergence argument here before hand-off — no fingerprint or grammar claim
   in this plan is hand-patched; each is re-derived from the cut tasks.
 
+## Engineering decisions (repair batch, artifact revision 37-plan-6)
+
+- **ED8 (2026-09-12, repair batch for review receipt PLAN-REVIEW-37-6 — folds
+  F14 + F15 + F16 — plus the feature-38 merge readiness; convergence argument
+  stated per the cycle-6 CONVERGENCE-ANOMALY notice)** — One batch, one root
+  cause: replan 5 (`37-plan-5`) edited artifact content without syncing the
+  three revision headers, one invariant-wording cell, and one evidence status
+  clause. The same batch records the two facts that landed on `main` while this
+  plan was in flight, because the next review reads the merged tree.
+  1. **F14** — every bound planning artifact's header now names the current
+     revision `37-plan-6` (`SPEC.md` §Engineering half, `PLAN.md`,
+     `planning-evidence.md`, `architecture-notes.md`, `TASKS.md`, `testing.md`,
+     `planning-obligations.md`), and the SPEC's Engineering-half replan-note
+     chain no longer stops at Replan 4: the missing Replan 5 (the `37-plan-5`
+     F7 re-cut) and Replan 6 (this batch) are recorded. `ACCEPTANCE.md` is
+     **not** touched — it is frozen and its `37-plan-3` reference is the
+     freeze's own revision, not a live header.
+  2. **F15** — `architecture-notes.md` §Layer placement states the rule owner
+     was amended **twice**, with both revisions and commits (P1: rule 1,
+     v1.0.1 → 1.0.2; cycle-1 review fold F5: rule 3 ≥ 1-task minimum,
+     v1.0.2 → 1.0.3, `8a35face`), matching O12 and the tree. No decision.md
+     lookup is required to read a bound artifact any more.
+  3. **F16** — the roadmap-status claim matches the row: `planning-evidence.md`
+     PE-007 and `planning-obligations.md` O11 now state the row's real value
+     (`in-progress · [#212]` while P5+P6 execute; `done` again at the PR-open
+     step), not the scaffold-time `planned`. The row was flipped by
+     user-approved merge-readiness decision (see 4d) — the same value
+     `execute-phase` P1 writes, so the flip is idempotent when P5 runs.
+  4. **Feature-38 merge readiness** (recorded here, not as review findings —
+     no review ran between the merge and this batch):
+     a. **`--json` deferred decision closed plan-side.** SPEC `### Deferred
+        decisions` row 2's decide-by trigger — "Feature 38 scaffold time" —
+        fired: feature 38 is merged (PR #213). The v1 decision stands, because
+        the merged sensor reads `progress.md` receipts, git and the forge —
+        never the linter's stdout (PE-011) — so no machine-readable mode is
+        added. The row lives in the frozen Product half, so the closure is
+        recorded here and in the SPEC §Open questions (plan-side) rather than
+        by editing the bound Product bytes, which would break the
+        SPEC-REVIEW-37-1 parent binding (F12/F13's class).
+     b. **E10's ordering clause superseded, product half untouched.** Product
+        evidence row E10 says feature 37 "precedes 38"; the merge order is the
+        reverse (38 merged first). Recorded as `planning-evidence.md` PE-011
+        for the same freeze reason as (a); if a later reviewer requires the
+        Product half itself to change, that is a Product-half amendment plus a
+        delta `/review-spec` — an owner call, not this batch's.
+     c. **Producer family paragraph rewritten.** The SPEC's "Post-merge next
+        feature" section claimed 38 lands as a subcommand of the crate this
+        feature creates; it now records the fact (38 merged first at
+        `scripts/workflow-status.mjs`, outside the crate) while the crate
+        obligation (P3/AC10) and the vehicle-rule redistribution stay
+        unchanged. Re-homing 38's producer is recorded in `known-issues.md`
+        §Deferred items as a follow-up unit — explicitly **not** this
+        feature's scope.
+     d. **Roadmap row 37 flipped `done` → `in-progress · [#212]`** (user
+        instruction, merge-readiness): the unit still owes P5 and the P6
+        close-out re-run, and the own-status gate must read an executable
+        state. The PR-open step restores `done`.
+  **Convergence argument (required by the cycle-6 CONVERGENCE-ANOMALY):** the
+  cycle-6 family was planning-set sync drift (F14 → F15/F16): replan 5 changed
+  artifact content and left the surrounding self-description behind. This batch
+  is one root cause in one pass — every live revision header, the rule-owner
+  history cell, the roadmap-status clause in both places that assert it (PE-007
+  and O11), and the feature-38 facts — all re-derived from the tree as it now
+  stands, none hand-patched row by row, with the frozen `ACCEPTANCE.md` blob
+  (`21adb084…`) and the Product half both verified untouched. Phase shape and
+  all six fingerprints are unchanged from `37-plan-5`, so the linter's output
+  is reproduced verbatim by the reviewer's own run.
+
 ## Opportunistic findings (execute-phase)
 
 | Date | Finding | Evidence | Estimate | Risk | Local files | Decision | Why | Trigger | Record |

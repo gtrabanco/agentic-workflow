@@ -1,6 +1,6 @@
 # TASKS — 37-phase-lint-script
 
-Per-phase execution checklists. Artifact revision: `37-plan-5`.
+Per-phase execution checklists. Artifact revision: `37-plan-6`.
 
 ## P1 — Amend phase-contract rule 1
 
