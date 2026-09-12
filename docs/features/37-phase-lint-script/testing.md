@@ -22,6 +22,14 @@ Artifact revision: `37-plan-6`.
   drive their version surface through `bump-skill` (CHANGELOG ×2 + README
   tables) or this gate goes red at P5.
 
+**Merge-sync state (2026-09-12, `37-plan-6`):** `main` (feature 38) is merged
+into this branch and the whole route set is green —
+`node scripts/check-skill-context.mjs --routes` → `PASS route budgets: 22 routes`
+and `node scripts/check-skill-context.mjs` → `PASS context budgets: 39 skills` —
+through the re-basis #3 recorded in `CHANGELOG.md` + `CHANGELOG.es.md`. P6's
+gate re-run must reproduce both; the previously disclosed pre-existing red is
+closed (see `known-issues.md`).
+
 ## Command rule
 
 bun first (`bun scripts/phase-lint.mjs <plan.md>`), node fallback with the same

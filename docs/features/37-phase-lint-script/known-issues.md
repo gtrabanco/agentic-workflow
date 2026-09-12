@@ -15,13 +15,16 @@
   housekeeping task with no backticked command in its `Done-when:`; a phase with
   zero tasks). The remedy is a re-cut at planning time, never a relaxed rule —
   `phase-contract` stays the sole rule owner.
-- **Pre-existing repo defect** (not this unit's): `node --test
-  scripts/check-skill-context.test.mjs` fails at HEAD and at `f46cf450` for two
-  independent reasons owned elsewhere — the stale over-budget fixture and the
-  route-budget red are tracked by fix #200
-  (`docs/fix/200-over-budget-fixture-stale-guard/SPEC.md` §Goal, which declares
-  the route red out of its scope) and by issue #176 (slim the routes that
-  overshoot their budgets). Disclosed for P5; not repaired here.
+- **Pre-existing repo defect, closed by the feature-38 sync** (was not this
+  unit's): `node --test scripts/check-skill-context.test.mjs` failed at the
+  unit's HEAD (`f46cf450`) for two independent reasons owned elsewhere — the
+  stale over-budget fixture (fix #200, `3872fa1a` on `main`) and the repo-wide
+  route-budget red (issue #176; fix #200's SPEC declares that half out of its
+  scope). The merge with feature 38 brings both: main's feature-38 re-basis plus
+  this branch's re-basis #3 (`CHANGELOG.md` 2026-09-12) put the live route set
+  green (`PASS route budgets: 22 routes`, `PASS context budgets: 39 skills`) and
+  the fixture is green on `main`. Repaired by the sync — no check was weakened
+  and no ceiling was raised without a named growth source.
 
 ## Deferred items
 
