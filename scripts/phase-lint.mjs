@@ -306,12 +306,19 @@ function box6(phase) {
   return findings;
 }
 
-/** Box 7 — no external/manual gates inside implementation phases. */
+/**
+ * Box 7 — no external/manual gates inside implementation phases. `manual` and
+ * `ask the user` are layer-scoped (allowed anywhere in a hardening/close-out
+ * phase); `gh pr` is position-scoped — SPEC §Design box-7 fails it "in a phase
+ * other than the final hardening phase" (F39).
+ */
 function box7(phase) {
-  if (HARDENING_LAYERS.has(phase.layer)) return [];
+  const hardened = HARDENING_LAYERS.has(phase.layer);
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
-    if (/manual/i.test(task) || /\bask the user\b/i.test(task) || /\bgh pr\b/i.test(task)) {
+    const manualGate = !hardened && (/manual/i.test(task) || /\bask the user\b/i.test(task));
+    const forgeGate = /\bgh pr\b/i.test(task) && !phase.finalCloseOut;
+    if (manualGate || forgeGate) {
       findings.push(`task ${index + 1} carries a manual/external gate outside the hardening phase`);
     }
   }
@@ -354,14 +361,12 @@ export function lintPlan(text) {
     }
   }
 
-  // The ≤10 task budget belongs to the FINAL hardening/close-out phase only
-  // (owner rule 3; SPEC §Design box-3) — a mid-plan `hardening` phase keeps 8.
-  let finalCloseOutIndex = -1;
+  // The ≤10 task budget belongs to the plan's FINAL phase when that phase is
+  // hardening/close-out (owner rule 3; SPEC §Design box-3) — a hardening phase
+  // followed by non-hardening work is mid-plan and keeps 8. Keying this to the
+  // last hardening-*layered* phase was fail-open (F37, regression of F3).
   phases.forEach((phase, index) => {
-    if (HARDENING_LAYERS.has(phase.layer)) finalCloseOutIndex = index;
-  });
-  phases.forEach((phase, index) => {
-    phase.finalCloseOut = index === finalCloseOutIndex;
+    phase.finalCloseOut = index === phases.length - 1 && HARDENING_LAYERS.has(phase.layer);
   });
 
   const fingerprints = [];
