@@ -457,7 +457,7 @@ async function pickCommand(deps: SettingsDeps, options: readonly string[]): Prom
     return undefined;
   }
   const sorted = [...options].sort((a, b) => a.localeCompare(b));
-  return deps.ui.select(prompts.command, sorted);
+  return pagedSelect((title, list) => deps.ui.select(title, list), prompts.command, sorted);
 }
 
 /** Multi-select command picker over the seam's `multiple` mode; a non-rich UI falls back to repeated single selects. */
@@ -477,7 +477,7 @@ async function pickCommandsMulti(deps: SettingsDeps, options: readonly string[])
   for (;;) {
     const remaining = sorted.filter((option) => !chosen.includes(option));
     if (remaining.length === 0) break;
-    const picked = await deps.ui.select(prompts.command, remaining);
+    const picked = await pagedSelect((title, list) => deps.ui.select(title, list), prompts.command, remaining);
     if (picked === undefined) break;
     chosen.push(picked);
     if (!(await deps.ui.confirm(prompts.addAnother, `Picked ${chosen.join(", ")}.`))) break;

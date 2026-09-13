@@ -431,11 +431,11 @@ Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 → exit 0.
 
-- [ ] Red-first console tests: "bounded command selection over 30 commands"
+- [x] Red-first console tests: "bounded command selection over 30 commands"
       (paged single select with navigation to page 2) and "bounded command
       multi-select rounds over 30 commands" (two picks across bounded rounds
       via the bulk-apply flow) (O6, PE-004).
-- [ ] Route `pickCommand` and each `pickCommandsMulti` non-rich round through
+- [x] Route `pickCommand` and each `pickCommandsMulti` non-rich round through
       `pagedSelect` when the option list exceeds `SELECT_OPTION_LIMIT` (sorted
       order unchanged; ≤ 24 lists keep today's single `select` call
       byte-identical) (O6).
