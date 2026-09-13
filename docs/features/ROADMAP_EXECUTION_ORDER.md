@@ -208,9 +208,9 @@ Fase 8: Final Slimming (SIEMPRE ÚLTIMO)
 | Task | Paralelizable con | Por qué | Conflictos de archivos |
 |------|-------------------|---------|------------------------|
 | #36 + #34 | sí | Superficies disjoint: #36 = verification-contract + golden-fixture; #34 = docs EN/ES + scripts de drift | Ninguno |
-| #36 + #37 | sí | #37 ya merged, #36 toca surfaces disjoint | Ninguno |
+| #36 + #37 | sí | #37 en vuelo (PR #212 OPEN, aún no merged), #36 toca surfaces disjoint | Ninguno |
 | #36 + #38 | sí | #38 ya merged, #36 toca surfaces disjoint | Ninguno |
-| #34 + #37 | sí | #37 ya merged, #34 toca docs EN/ES | Ninguno |
+| #34 + #37 | sí | #37 en vuelo (PR #212 OPEN, aún no merged), #34 toca docs EN/ES | Ninguno |
 | #34 + #38 | sí | #38 ya merged, #34 toca docs EN/ES | Ninguno |
 
 ### Grupo B: Paralelizables en Fase 2 (Review Convergence)
@@ -397,7 +397,7 @@ Session N: #176 (slim SKILL context) — SIEMPRE último
 
 1. **#205 (Review loops)** no es una feature separada — es la meta-issue que describe el problema de loops de review. Su solución se distribuye en: #31 (materiality bar, two-cycle cap) + #46 (research gate widening, convergence pass) + #32 (canonical severity, derived blocking gate).
 
-2. **#209 (Release policy)** está CLOSED — la política fue adoptada. Eliminar referencia de ROADMAP_EXECUTION_ORDER.md.
+2. **#209 (Release policy)** está CLOSED — la política fue adoptada; su referencia ya fue eliminada de este documento.
 
 3. **#177 (Planning-review scope)** tiene el mismo dominio que #31/#171. Se resuelve como parte de #31. No necesita roadmap row propio.
 
