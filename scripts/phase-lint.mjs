@@ -1,0 +1,429 @@
+#!/usr/bin/env node
+/**
+ * phase-lint.mjs — deterministic checker for the eight phase-lint rules.
+ *
+ * The rules, the fixed PASS/BLOCKED result, and the normalized phase
+ * fingerprint are owned by `skills/phase-contract/SKILL.md`; this script only
+ * mechanizes checking them (it never carries a second copy of rule semantics).
+ *
+ * Usage
+ *   bun scripts/phase-lint.mjs <plan.md>      (node fallback, same argv)
+ *
+ * stdout: one fixed, byte-stable text block — a `Phase-lint:` line per phase,
+ * one `<rule-id>: <finding>` line per failing rule, a final verdict line, and a
+ * `fingerprint: <sha256>` line over the newline-joined per-phase fingerprints.
+ * exit: 0 only when every phase is `PASS (8/8)` and the verdict is `PASS`.
+ *
+ * Fail-closed reason codes: `missing-plan` (no argument, or a path that does
+ * not exist), `no-phases` (readable file with zero phase headings),
+ * `unparseable` (unreadable file, missing/out-of-enum `Layer:` line, or a task
+ * target the frozen prefix table cannot map), `lint-blocked` (a rule failure).
+ *
+ * Read-only: never writes, never calls the network, no external dependencies.
+ *
+ * Deterministic approximations (frozen by the unit's SPEC §Design and pinned by
+ * `scripts/phase-lint.test.mjs`): the `→` chain test counts arrows, so one arrow
+ * is an outcome annotation and two or more are a chain; "enumerated cases" means
+ * numbered/lettered markers or ordinal words, not a bare comma list; the box-2
+ * target is the first path-like token outside a backticked command span.
+ */
+
+import fs from "node:fs";
+import process from "node:process";
+import { createHash } from "node:crypto";
+import { pathToFileURL } from "node:url";
+
+const LAYERS = ["schema/db", "domain", "api", "ui", "config/infra", "docs", "hardening", "close-out"];
+const HARDENING_LAYERS = new Set(["hardening", "close-out"]);
+const HARDENING_TITLE = "Hardening & PR";
+const RUNTIME_WORDS = new Set(["bun", "node", "npm", "npx", "git", "grep", "diff", "test", "gh"]);
+const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
+const PATH_TOKEN = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\/?$/;
+const HAS_LETTER = /[A-Za-z]/;
+const PHASE_HEADING = /^#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
+const FENCE_OPEN = /^(`{3,}|~{3,})/;
+const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
+const INLINE_COMMAND = /`([^`]*)`/g;
+const CREATION_VERB = /\b(?:create|creates|created|write|writes|written|scaffold|scaffolds|add a new file|new file)\b/i;
+const ENUMERATED = /(?:^|\s)\((?:\d+|[a-h])\)|(?:^|\s)\d+[.)]\s|\b(?:first|second|third|fourth|fifth)\b/gi;
+
+/** Strip backticked spans that are quoted commands (a runtime word leads them). */
+function stripQuotedCommands(text) {
+  return text.replace(INLINE_COMMAND, (whole, inner) => {
+    const head = inner.trim().split(/\s+/)[0].replace(/:$/, "");
+    return RUNTIME_WORDS.has(head) ? " " : whole;
+  });
+}
+
+/** Every path-like token in the text, outside quoted command spans. */
+function pathTokens(text) {
+  const tokens = [];
+  for (const raw of stripQuotedCommands(text).split(/\s+/)) {
+    const token = raw.replace(/^[`"'({\[]+/, "").replace(/[`"')\]}.,;:!?]+$/, "");
+    if (!PATH_TOKEN.test(token)) continue;
+    // A bare numeric ratio (`0/1`, a date) is an assertion, not a target file.
+    if (!HAS_LETTER.test(token)) continue;
+    if (token.includes("/") || EXTENSIONS.some((extension) => token.endsWith(extension))) tokens.push(token);
+  }
+  return tokens;
+}
+
+/** A test file: basename contains `.test.` (frozen mechanical definition). */
+function isTestFile(target) {
+  return target.split("/").pop().includes(".test.");
+}
+
+/**
+ * The frozen target-file → layer prefix table (SPEC §Design, box-2), plus the
+ * owner-sanctioned test-only shape: in a phase declared `hardening`, a test
+ * file maps to `hardening` (the F7 fold — a test-only phase is not blocked on
+ * its own tests). `close-out` is deliberately **not** given the mapping (the
+ * owner rule names `hardening` only), so it keeps the prefix table.
+ */
+function layerForTarget(target, phaseLayer) {
+  if (phaseLayer === "hardening" && isTestFile(target)) return "hardening";
+  if (target.startsWith("skills/") || target.startsWith("docs/") || target.startsWith("template/")) return "docs";
+  if (target.startsWith("scripts/") || target.startsWith("packages/") || target.startsWith(".github/") || target.startsWith(".agentic-workflow/")) return "config/infra";
+  if (target.endsWith(".md")) return "docs";
+  return null;
+}
+
+/** Title-deliverable: lowercased, kebab-cased, `&` a separator, articles dropped. */
+function titleDeliverable(title) {
+  return title
+    .toLowerCase()
+    .replace(/&/g, " ")
+    .replace(/\b(?:the|a|an)\b/g, " ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** The fence a line opens, or null: three-or-more backticks (optional info string) or tildes. */
+function openFence(trimmed) {
+  const match = FENCE_OPEN.exec(trimmed);
+  return match ? { char: match[1][0], length: match[1].length } : null;
+}
+
+/** A closing fence: only the same character repeated at equal-or-greater length. */
+function closesFence(trimmed, fence) {
+  const match = FENCE_CLOSE.exec(trimmed);
+  return Boolean(match && match[1][0] === fence.char && match[1].length >= fence.length);
+}
+
+/**
+ * Parse the phase headings and their bodies out of a Markdown plan.
+ *
+ * Fenced code blocks are recognized before any other grammar rule and
+ * contribute nothing to the parse (F33 re-cut): no phase heading,
+ * `Layer:`/`Done-when:` line, or task inside a fence is recognized, and the
+ * fence lines themselves are inert. An unclosed fence runs to end of file
+ * (GFM semantics), so everything after it is fenced — deterministic, never a
+ * guess.
+ */
+function parsePhases(text) {
+  const phases = [];
+  let current = null;
+  let fence = null;
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
+    const heading = PHASE_HEADING.exec(line);
+    if (heading) {
+      current = { number: Number(heading[1]), title: heading[2].trim(), body: [] };
+      phases.push(current);
+      continue;
+    }
+    if (current) current.body.push(line);
+  }
+  return phases.map((phase) => {
+    const layerIndex = phase.body.findIndex((line) => /Layer:\s*\S/.test(line));
+    const layer = layerIndex === -1 ? null : phase.body[layerIndex].replace(/.*?Layer:\s*/, "").trim().split(/\s+/)[0].replace(/[.,;:]+$/, "").replace(/^`|`$/g, "");
+    const doneIndex = phase.body.findIndex((line) => /Done-when:/.test(line));
+    let doneWhen = null;
+    if (doneIndex !== -1) {
+      const block = [phase.body[doneIndex].replace(/.*?Done-when:\s*/, "")];
+      for (let i = doneIndex + 1; i < phase.body.length; i += 1) {
+        if (phase.body[i].trim() === "" || /^\s*-\s*\[/.test(phase.body[i])) break;
+        block.push(phase.body[i].trim());
+      }
+      doneWhen = block.join(" ").trim();
+    }
+    const tasks = phase.body
+      .map((line) => /^\s*- \[([ x])\] (.+)$/.exec(line))
+      .filter(Boolean)
+      .map((match) => match[2].trim());
+    return { ...phase, layer, doneWhen, tasks };
+  });
+}
+
+function enumeratedCount(text) {
+  const matches = text.match(ENUMERATED);
+  return matches ? matches.length : 0;
+}
+
+function createdTargets(text) {
+  if (!CREATION_VERB.test(text)) return [];
+  return [...new Set(pathTokens(text))];
+}
+
+/**
+ * Neutralize plan-derived text before echoing it into a finding line (F21).
+ * A phase title can originate in a third-party forge issue body (`plan-fix`),
+ * so the echo must carry neither instructions nor fake block lines into the
+ * stdout block the consumer skills paste: control and format characters become
+ * spaces, backticks are dropped, whitespace collapses, and the length is
+ * bounded. Rule decisions read the RAW title; only the echo is sanitized.
+ */
+function sanitizeEcho(text, limit = 120) {
+  const cleaned = text
+    .replace(/[\p{Cc}\p{Cf}]+/gu, " ")
+    .replace(/`+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned.length > limit ? `${cleaned.slice(0, limit)}…` : cleaned;
+}
+
+/** Box 1 — the title names ONE deliverable. */
+const SYMBOL_JOINER = /[\p{L}\p{N}_]\s*[+,/&]\s*[\p{L}\p{N}_]/u;
+const WORD_JOINER = /(?:^|[^\p{L}\p{N}_])[\p{L}\p{N}_]+\s+(?:and|y)\s+[\p{L}\p{N}_]+(?:$|[^\p{L}\p{N}_])/iu;
+function box1(phase) {
+  const title = phase.title.trim();
+  if (title === HARDENING_TITLE) return [];
+  const shown = sanitizeEcho(title);
+  if (SYMBOL_JOINER.test(title)) return [`title joins deliverables with “+”, “,”, “/” or “&”: “${shown}”`];
+  if (WORD_JOINER.test(title)) return [`title joins deliverables with “and”/“y”: “${shown}”`];
+  return [];
+}
+
+/** Box 2 — one declared layer; every task target belongs to it. */
+function box2(phase) {
+  const findings = [];
+  for (const [index, task] of phase.tasks.entries()) {
+    const tokens = pathTokens(task);
+    if (tokens.length === 0) continue;
+    const target = tokens[0];
+    const layer = layerForTarget(target, phase.layer);
+    if (layer === null) return { findings, ambiguous: target };
+    if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${target}\` belongs to layer ${layer}, not ${phase.layer}`);
+  }
+  return { findings };
+}
+
+/** Box 3 — task count within the phase budget (the final close-out keeps ≤ 10). */
+function box3(phase) {
+  if (phase.tasks.length === 0) return [`phase has 0 tasks (minimum 1 for layer ${phase.layer})`];
+  const limit = phase.finalCloseOut ? 10 : 8;
+  return phase.tasks.length > limit ? [`phase has ${phase.tasks.length} tasks (limit ${limit} for layer ${phase.layer})`] : [];
+}
+
+/** Box 4 — one checkbox = one deliverable. */
+function box4(phase) {
+  const findings = [];
+  for (const [index, task] of phase.tasks.entries()) {
+    const arrows = (task.match(/→/g) || []).length;
+    if (arrows >= 2) {
+      findings.push(`task ${index + 1} is a → chain of ${arrows + 1} steps`);
+      continue;
+    }
+    const enumerated = enumeratedCount(task);
+    if (enumerated > 3) {
+      findings.push(`task ${index + 1} enumerates ${enumerated} cases`);
+      continue;
+    }
+    const created = createdTargets(task);
+    if (created.length > 1) findings.push(`task ${index + 1} creates ${created.length} files of distinct concerns`);
+  }
+  return findings;
+}
+
+/**
+ * Standalone alternatives word (box-5, F30 re-cut): a case-insensitive `or`
+ * with no word character and no hyphen adjacent on either side. Embedded forms
+ * (`editor`) and hyphen-joined compounds (`equal-or-greater`) are one token,
+ * never a joiner — the same compound-word rule box-1 uses. This subsumes the
+ * previously frozen narrower `either … or` shape.
+ */
+const STANDALONE_OR = /(?<![\p{L}\p{N}_-])or(?![\p{L}\p{N}_-])/iu;
+function hasStandaloneOr(task) {
+  return STANDALONE_OR.test(task);
+}
+
+/**
+ * Single-pass `If … then <scope change>` scan, dot-bounded like the rule: all
+ * three tokens must sit in the same sentence. The first `if` and the first
+ * `then` after it dominate any later pair (a later `then` is also after the
+ * first `if`), so one linear walk per sentence is equivalent.
+ */
+function hasIfThenScopeChange(task) {
+  for (const segment of task.split(".")) {
+    const at = segment.search(/\bif\b/i);
+    if (at === -1) continue;
+    const then = /\bthen\b/i.exec(segment.slice(at));
+    if (then && /\b(?:add|remove|move|split|merge|defer)\w*\b/i.test(segment.slice(at + then.index))) return true;
+  }
+  return false;
+}
+
+/** Box 5 — zero decision words. */
+function box5(phase) {
+  const findings = [];
+  for (const [index, task] of phase.tasks.entries()) {
+    if (/\b(?:decide|decides|decided|choose|chooses|choosing)\b/i.test(task)) findings.push(`task ${index + 1} carries a decision word`);
+    else if (hasStandaloneOr(task)) findings.push(`task ${index + 1} offers either/or alternatives`);
+    else if (hasIfThenScopeChange(task)) findings.push(`task ${index + 1} carries an “If … then” scope change`);
+  }
+  return findings;
+}
+
+/**
+ * Single-pass move-target scan: within one sentence, a `to|into P<n>` after
+ * the first move/defer verb also follows every later one, so one walk per
+ * sentence is equivalent to the old `[^.]*` per-verb walk.
+ */
+function movesToPhase(task) {
+  for (const segment of task.split(".")) {
+    const at = segment.search(/\b(?:moves?|defers?)\b/i);
+    if (at === -1) continue;
+    if (/\b(?:to|into)\s+P\d+\b/i.test(segment.slice(at))) return true;
+  }
+  return false;
+}
+
+/** Box 6 — no conditional scope mutation across phases. */
+function box6(phase) {
+  const findings = [];
+  for (const [index, task] of phase.tasks.entries()) {
+    if (movesToPhase(task)) findings.push(`task ${index + 1} moves work to another phase`);
+  }
+  return findings;
+}
+
+/** Box 7 — no external/manual gates inside implementation phases. */
+function box7(phase) {
+  if (HARDENING_LAYERS.has(phase.layer)) return [];
+  const findings = [];
+  for (const [index, task] of phase.tasks.entries()) {
+    if (/manual/i.test(task) || /\bask the user\b/i.test(task) || /\bgh pr\b/i.test(task)) {
+      findings.push(`task ${index + 1} carries a manual/external gate outside the hardening phase`);
+    }
+  }
+  return findings;
+}
+
+/** Box 8 — machine-checkable done-when. */
+function box8(phase) {
+  if (!phase.doneWhen) return ["phase body has no `Done-when:` line"];
+  if (!/`[^`]+`/.test(phase.doneWhen)) return ["`Done-when:` carries no backticked command"];
+  if (!/→|->|exit 0|exit zero|empty|matches|zero|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
+  return [];
+}
+
+const BOXES = [box1, box2, box3, box4, box5, box6, box7, box8];
+
+/** Check one phase; returns { findings: [{box, reason}] } or { ambiguous }. */
+function lintPhase(phase) {
+  const findings = [];
+  for (const [index, check] of BOXES.entries()) {
+    const result = check(phase);
+    if (result && !Array.isArray(result)) {
+      if (result.ambiguous) return { ambiguous: result.ambiguous };
+      for (const reason of result.findings) findings.push({ box: index + 1, reason });
+      continue;
+    }
+    for (const reason of result) findings.push({ box: index + 1, reason });
+  }
+  return { findings };
+}
+
+/** The full run over one Markdown document. */
+export function lintPlan(text) {
+  const phases = parsePhases(text);
+  if (phases.length === 0) return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
+
+  for (const phase of phases) {
+    if (!phase.layer || !LAYERS.includes(phase.layer)) {
+      return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
+    }
+  }
+
+  // The ≤10 task budget belongs to the FINAL hardening/close-out phase only
+  // (owner rule 3; SPEC §Design box-3) — a mid-plan `hardening` phase keeps 8.
+  let finalCloseOutIndex = -1;
+  phases.forEach((phase, index) => {
+    if (HARDENING_LAYERS.has(phase.layer)) finalCloseOutIndex = index;
+  });
+  phases.forEach((phase, index) => {
+    phase.finalCloseOut = index === finalCloseOutIndex;
+  });
+
+  const fingerprints = [];
+  const results = [];
+  for (const phase of phases) {
+    fingerprints.push(`P${phase.number}:${phase.layer}:${phase.tasks.length}:${titleDeliverable(phase.title)}`);
+    const result = lintPhase(phase);
+    if (result.ambiguous) {
+      return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
+    }
+    results.push({ phase, findings: result.findings });
+  }
+
+  const lines = [];
+  let blocked = false;
+  for (const [index, { phase, findings }] of results.entries()) {
+    if (findings.length === 0) {
+      lines.push(`P${phase.number} Phase-lint: PASS (8/8) · fingerprint ${fingerprints[index]}`);
+      continue;
+    }
+    blocked = true;
+    for (const finding of findings) lines.push(`P${phase.number} box-${finding.box}: ${finding.reason}`);
+    lines.push(`P${phase.number} Phase-lint: BLOCKED — box ${findings[0].box}: ${findings[0].reason}`);
+  }
+  lines.push(blocked ? "verdict BLOCKED: lint-blocked" : "verdict PASS");
+  lines.push(`fingerprint: ${digest(fingerprints)}`);
+  return { verdict: blocked ? "BLOCKED: lint-blocked" : "PASS", exitCode: blocked ? 1 : 0, lines };
+}
+
+function digest(fingerprints) {
+  return createHash("sha256").update(fingerprints.join("\n")).digest("hex");
+}
+
+/** CLI: one explicit path argument, nothing else. */
+function main(argv) {
+  const file = argv[0];
+  if (!file) return { verdict: "BLOCKED: missing-plan", exitCode: 1, lines: ["verdict BLOCKED: missing-plan", `fingerprint: ${digest([])}`] };
+  let text;
+  try {
+    text = fs.readFileSync(file, "utf8");
+  } catch (error) {
+    const code = error && error.code === "ENOENT" ? "missing-plan" : "unparseable";
+    return { verdict: `BLOCKED: ${code}`, exitCode: 1, lines: [`verdict BLOCKED: ${code}`, `fingerprint: ${digest([])}`] };
+  }
+  return lintPlan(text);
+}
+
+const invokedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (invokedDirectly) {
+  const result = main(process.argv.slice(2));
+  // Early-closing pipe consumers (`head -1`, `grep -m1`) close the read end
+  // while the block is still being written; without a handler the runtime
+  // raises an unhandled EPIPE and flips the intended exit code (F25). The
+  // truncated chunk is already lost at that point, so the only correct answer
+  // is to swallow EPIPE and keep the verdict's exit code.
+  process.stdout.on("error", (error) => {
+    if (error && error.code === "EPIPE") return;
+    throw error;
+  });
+  process.stdout.write(`${result.lines.join("\n")}\n`);
+  // `process.exit()` here would kill the process before an async pipe write
+  // drains, truncating the block past the pipe buffer (F22). Setting the code
+  // and letting the event loop empty flushes stdout first.
+  process.exitCode = result.exitCode;
+}
