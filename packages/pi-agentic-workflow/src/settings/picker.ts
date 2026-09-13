@@ -117,6 +117,21 @@ export async function pagedSelect(
 }
 
 /**
+ * The provider prefix Pi resolves a reference by — everything before the first
+ * `/` (SPEC Decision 6).
+ *
+ * Lenient on purpose, and deliberately distinct from the strict
+ * `parseModelReference` in `../config/schema.js`, which validates and rejects:
+ * this split must answer for any registry string. Both the console's
+ * provider-first grouping and the slash-aware filter below take their provider
+ * from here, so the two settings-side consumers cannot drift apart.
+ */
+export function providerOf(reference: string): string {
+  const slash = reference.indexOf("/");
+  return slash === -1 ? reference : reference.slice(0, slash);
+}
+
+/**
  * Token/subsequence, slash-aware reference filter (OB-2).
  *
  * - An empty query returns every reference.
@@ -139,7 +154,7 @@ function matchesToken(token: string, ref: string): boolean {
   if (token.endsWith("/")) {
     const provider = token.slice(0, -1);
     if (provider === "") return true;
-    const refProvider = ref.split("/")[0] ?? "";
+    const refProvider = providerOf(ref);
     return refProvider.startsWith(provider);
   }
   return isSubsequence(token, ref);
