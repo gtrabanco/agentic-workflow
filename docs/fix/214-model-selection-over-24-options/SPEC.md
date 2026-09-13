@@ -461,12 +461,12 @@ marked `manual`). Done-when:
 `grep -c "SMOKE .* outcome: pass" docs/fix/214-model-selection-over-24-options/progress.md`
 → `2`.
 
-- [ ] manual: In pi-web on a registry whose model list exceeds the cap (the
+- [x] manual: In pi-web on a registry whose model list exceeds the cap (the
       report's environment), open `/agentic-workflow-settings` → Set a command
       override: the provider dialog appears (no cap error), choose a provider,
       the model dialog completes and saves; record a
       `- SMOKE … outcome: pass|fail` row in progress.md (O8, PE-009).
-- [ ] manual: In pi-web on a ≤ 24 registry, verify the single-step dialog is
+- [x] manual: In pi-web on a ≤ 24 registry, verify the single-step dialog is
       unchanged, "Type another reference…" still completes an entry, and a
       bulk apply over the command list stays bounded; record the second
       `- SMOKE` row (O9).
