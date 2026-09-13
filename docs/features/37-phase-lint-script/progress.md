@@ -517,3 +517,88 @@ Notes:
 ## Unit-loop receipt — P6
 - Commit: pending · Gate: `node --test scripts/*.test.mjs` exit 0 (289/289) · `bun scripts/check-skill-context.mjs` exit 0 · `bun scripts/check-skill-context.mjs --routes` exit 0 · `npx skills add . --list` exit 0 · `bun run test` (pi) exit 0 (185/185) · `bun run test` (schema) exit 0 (684/684) · `bun run bundle:skills` exit 0 (38 skills/123 files) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: close-out complete · PR: https://github.com/gtrabanco/agentic-workflow/pull/212 · Attempts: 1
+
+## Replan 8 — the four plan-owned rows re-cut (`37-plan-7`, 2026-09-12)
+
+User directive: plan-feature on this unit — "the four plan-owned rows need the
+plan authority re-cut (a fold cannot repair authority)". This is the
+loop-cap route cycle 4 printed (review-findings.md "Route to owner": plan rows
+→ the plan owner's SPEC re-cut, then a fresh `/review-plan
+37-phase-lint-script`); the source-owned rows F27/F31/F32/F34/F35/F36 were
+already folded (`c32b41d5`, `c45902de`) and flipped. The redirect gate's
+`done` state is acknowledged: PR #212 is open and the review loop is still
+running on it — this is the replan-in-unit repair of persisted findings (the
+F7 precedent, replan 6), never a re-scaffold of the feature.
+
+Preflight: Stage 1 — NRS consumed (`docs/workflow/REPOSITORY_STATE.md`) · arch: deferred
+
+Re-cut applied (revision `37-plan-7`), docs-only on the planning set — no code
+changed this cycle:
+
+- **F28** — SPEC §Output contract: `missing-plan` = no argument or a
+  nonexistent path; `unparseable` = a path that exists but cannot be read plus
+  parse/ambiguity failures (the script header, AC3, and the corpus already
+  agree; the SPEC clause was the lone dissent).
+- **F29** — SPEC §Design title-deliverable: the articles `the`, `a`, `an` are
+  dropped wherever they appear as standalone words, not only leading (the
+  corpus pins the mid-title drop; the implementation was already global).
+- **F30** — SPEC §Design box-5 widened to owner rule 5 (`OR` between
+  alternatives), mechanical definition frozen: a standalone case-insensitive
+  `or` with no word character and no hyphen adjacent on either side (embedded
+  forms and hyphen-joined compounds are one token — the box-1 compound-word
+  precedent). New P6 lands the detection red-first.
+- **F33** — SPEC §Design input grammar gains fenced-code-block handling: a
+  fence (three-or-more backticks, optionally with an info string, or tildes,
+  closed by the same character at equal-or-greater length) contributes nothing
+  to the parse, fences are recognized before any other grammar rule, an
+  unclosed fence runs to end of file. New P6 lands the parser change
+  red-first.
+- **Plan re-cut to seven phases** — new P6 "Conform the linter to the re-cut
+  grammar" (`config/infra`, two red-first tasks); former close-out P6
+  renumbered P7. Ledgers: testing.md records the seven fingerprints + new
+  whole-plan sha256; planning-obligations gains O14, O13 flips `verified`
+  (P5 landed at `de5ddd57`, 33/33 corpus), O11 states the full lifecycle;
+  planning-evidence gains PE-012 (the four rows + their agreeing authorities)
+  and PE-007 refreshes the row status; architecture-notes/PLAN/plan headers
+  all name `37-plan-7` (the F14 invariant). ACCEPTANCE.md and
+  `skills/phase-contract/` untouched — frozen blob `21adb084…` byte-identical,
+  owner still v1.0.3 (O12). No skill changed → no `bump-skill`/CHANGELOG
+  surface.
+- **Roadmap row** — flipped `done · [#212]` → `in-progress · [#212]` for the
+  re-cut execution window (the F16-class plan-side flip; the PR-open step
+  restores `done`). Re-read after the write: row 37 reads
+  `in-progress · [#212]`.
+- Product-half confinement: every SPEC hunk sits at line ≥ 309 (the
+  `## Engineering half` marker is line 306); lines 1–305 are byte-identical to
+  the SPEC-REVIEW-37-2 binding (`git diff` hunks verified).
+
+Preflight: NRS consumed · invariant classification: n/a (no project invariants declared)
+
+Mechanical re-derivation (convergence evidence — recorded in decisions.md
+ED9): `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md`
+→ verdict PASS, seven per-phase fingerprints matching SPEC §Phase-lint exactly
+(P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`,
+P5 `config/infra:2`, P6 `config/infra:2:conform-linter-to-re-cut-grammar`,
+P7 `hardening:8`), whole-plan sha256
+`3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed`
+(was `3ea28e5b…`); node fallback byte-identical; `node --test
+scripts/phase-lint.test.mjs` → 33/33 (no code changed this cycle);
+`git hash-object ACCEPTANCE.md` →
+`21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4`.
+
+Notes:
+- The re-cut task text carries no standalone `or` and no `either … or` pair —
+  the plan must survive the widened box-5 it ships (the P7 close-out re-run
+  lints TASKS.md with the post-P6 linter). The hyphen-safety clause in the
+  frozen definition exists for the same reason (`equal-or-greater` in the
+  P6 text).
+- review-findings rows F28/F29/F30/F33 stay `folded: no` — the fold cycle
+  flips them after the P6 execution lands and re-verifies (the F7 precedent,
+  `87d451f3`).
+- Same-surface check: the fix index names no open fix-now row on
+  `scripts/phase-lint.mjs`, `phase-lint.test.mjs`, or `phase-contract`
+  (grep 0); fix #191's execute-phase surface is not touched by P6/P7.
+
+Next: `/review-plan 37-phase-lint-script` (fresh cycle 8; prior receipt
+PLAN-REVIEW-37-7 binds the pre-re-cut bytes), then `/execute-phase 37` for the
+new P6 plus the P7 close-out re-run.

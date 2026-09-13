@@ -1,6 +1,6 @@
 # Architecture notes — 37-phase-lint-script
 
-Artifact revision: `37-plan-6`.
+Artifact revision: `37-plan-7`.
 
 ## Layer placement
 

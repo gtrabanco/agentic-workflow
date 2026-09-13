@@ -337,3 +337,87 @@ fingerprint: 3ea28e5b965e08cfc59d5410f80fed542e5fb8e5398268130a82f98bc4794940
   match with SPEC-REVIEW-37-1's bound snapshot (the re-cut's SPEC edits are
   confined to the Engineering half). `node --test scripts/phase-lint.test.mjs`
   → 26/26 (no code changed in this cycle).
+
+- **ED9 (2026-09-12, user-directed replan-in-unit re-cut of the four
+  plan-owned review rows F28 + F29 + F30 + F33 — revision `37-plan-7`;
+  convergence argument stated per the cycle-4 CONVERGENCE-ANOMALY and
+  LOOP-CAP blocks)** — One batch, one root cause: the frozen Engineering half
+  diverged from its own agreeing authorities at four freeze points, and the
+  cycle-1–3 reviews verified folds at their cited lines without re-reading the
+  frozen text against those authorities. A fold repairs source bytes; these
+  four rows are plan-owned — the plan authority itself must be re-cut, so the
+  route is the plan owner's SPEC re-cut plus a fresh `/review-plan`
+  (review-findings.md "Route to owner").
+  1. **F28 (§Output contract)** — the clause assigned `missing-plan` to "a
+     nonexistent or unreadable path" while the same sentence gave read
+     failures to `unparseable`. The script header (`unparseable (unreadable
+     file …)`), AC3, and the passing corpus test agree: `missing-plan` = no
+     argument or nonexistent path; `unparseable` = unreadable file +
+     parse/ambiguity failures. The clause is re-stated to the three
+     authorities; the script and corpus already behave this way (no code
+     change).
+  2. **F29 (title-deliverable)** — the grammar said "leading articles dropped"
+     while `titleDeliverable` strips `the|a|an` wherever they appear and the
+     corpus pins the mid-title drop (`Wrap the long command` →
+     `wrap-long-command`). The corpus is the behavioral contract; the SPEC
+     wording is re-stated ("wherever they appear as standalone words — not
+     only leading"). No code change.
+  3. **F30 (§Design box-5)** — the SPEC froze the narrower `either … or` form
+     below owner rule 5 (`OR` between alternatives, `phase-contract` v1.0.3);
+     the reproducer `Add scripts/a.mjs or scripts/b.mjs` passed. Box-5 is
+     widened to owner rule 5 with the mechanical definition frozen in the
+     SPEC: a standalone case-insensitive `or` with no word character and no
+     hyphen adjacent on either side — embedded forms (`editor`) and
+     hyphen-joined compounds (`equal-or-greater`) are one token, never a
+     joiner, per the box-1 compound-word precedent. The new P6 lands the
+     detection red-first.
+  4. **F33 (input grammar)** — the frozen grammar named no fence handling, so
+     a plan quoting a plan fragment inside a ```md fence parsed the quoted
+     `### P2 — Phantom phase` as a real phase (false verdict + fingerprint
+     pollution). The grammar gains a fenced-code-block rule: a fence of
+     three-or-more backticks (optionally with an info string) or tildes,
+     closed by the same character at equal-or-greater length, contributes
+     nothing to the parse; fences are recognized before any other grammar
+     rule; an unclosed fence runs to end of file (GFM semantics,
+     deterministic). The new P6 lands the parser change red-first.
+  5. **Plan re-cut to seven phases** — new P6 "Conform the linter to the
+     re-cut grammar" (`config/infra`, two red-first tasks) inserted before the
+     close-out; the former close-out P6 is renumbered P7 (tasks, ticks and
+     fingerprint unchanged except the number). testing.md records the seven
+     fingerprints; planning-obligations gains O14; planning-evidence gains
+     PE-012; ACCEPTANCE.md and `skills/phase-contract/` are untouched (O12;
+     the frozen acceptance blob stays `21adb084…`). No skill changed, so no
+     `bump-skill`/CHANGELOG surface moves.
+  6. **Roadmap row** — flipped `done · [#212]` → `in-progress · [#212]` for
+     the re-cut execution window, the same F16-class plan-side flip the user
+     approved for the P5 window (execute-phase writes the identical value at
+     P1; the PR-open step restores `done`). O11 and PE-007 are amended to
+     state the full lifecycle.
+  7. **Convergence argument** — one root cause (frozen-wording divergence
+     between the Engineering half and its agreeing authorities), one batch:
+     four §Design/§Output-contract re-statements + one phase re-cut; each
+     widened behavior is corpus-pinned red-first by P6, and the widened box-5
+     definition is hyphen-safe so the re-cut TASKS.md never trips the rule it
+     ships. POLICY §4's guards are satisfied: the plan snapshot changes
+     (whole-plan sha256 `3ea28e5b…` → `3afa2601…`), and the input is a repair
+     performed in response to persisted findings.
+
+  Mechanical re-derivation (convergence evidence):
+
+```
+$ bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:3:amend-phase-contract-rule-1
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:implement-deterministic-phase-linter
+P3 Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:create-producer-crate-vehicle
+P4 Phase-lint: PASS (8/8) · fingerprint P4:docs:7:slim-three-consumer-routes-to-run-and-paste
+P5 Phase-lint: PASS (8/8) · fingerprint P5:config/infra:2:implement-box-2-test-file-mapping
+P6 Phase-lint: PASS (8/8) · fingerprint P6:config/infra:2:conform-linter-to-re-cut-grammar
+P7 Phase-lint: PASS (8/8) · fingerprint P7:hardening:8:hardening-pr
+verdict PASS
+fingerprint: 3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed
+```
+
+  (whole-plan sha256 after the re-cut: `3afa2601…`; was `3ea28e5b…` at
+  `37-plan-5`/`37-plan-6`. `node scripts/phase-lint.mjs` — the fallback —
+  reproduces the block byte-identically. Corpus `node --test
+  scripts/phase-lint.test.mjs` → 33/33, no code changed in this cycle.)

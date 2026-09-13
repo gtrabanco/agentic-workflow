@@ -1,18 +1,26 @@
 # PLAN — 37-phase-lint-script
 
-Six implementation phases (rule-owner amendment → linter implementation →
-vehicle crate → consumer skill slimming → box-2 test-file mapping → hardening
-& PR). The input grammar, rule-check semantics, reason codes, and output
-contract are frozen in `SPEC.md` (`## Engineering half` → `### Design`).
-Artifact revision of this plan set: `37-plan-4` (repair batch for review
-receipt PLAN-REVIEW-37-3 — folds F8–F11; fingerprints re-derived mechanically
-over the re-cut plan, see ED7), then `37-plan-5` (user-directed replan-in-unit
-fold of code-review finding F7 — the SPEC §Design box-2 test-file mapping for
-the owner-sanctioned test-only `hardening` shape; the former close-out P5 is
-renumbered P6, and fingerprints are re-derived by `scripts/phase-lint.mjs`
-itself — see decisions.md), then `37-plan-6` (repair batch for review receipt
-PLAN-REVIEW-37-6 — folds F14–F16 — plus the feature-38 merge readiness;
-phase shape and fingerprints unchanged — see ED8).
+Seven implementation phases (rule-owner amendment → linter implementation →
+vehicle crate → consumer skill slimming → box-2 test-file mapping → grammar
+conformance → hardening & PR). The input grammar, rule-check semantics, reason
+codes, and output contract are frozen in `SPEC.md` (`## Engineering half` →
+`### Design`). Artifact revision of this plan set: `37-plan-4` (repair batch
+for review receipt PLAN-REVIEW-37-3 — folds F8–F11; fingerprints re-derived
+mechanically over the re-cut plan, see ED7), then `37-plan-5`
+(user-directed replan-in-unit fold of code-review finding F7 — the SPEC §Design
+box-2 test-file mapping for the owner-sanctioned test-only `hardening` shape;
+the former close-out P5 is renumbered P6, and fingerprints are re-derived by
+`scripts/phase-lint.mjs` itself — see decisions.md), then `37-plan-6` (repair
+batch for review receipt PLAN-REVIEW-37-6 — folds F14–F16 — plus the
+feature-38 merge readiness; phase shape and fingerprints unchanged — see
+ED8), then `37-plan-7` (user-directed replan-in-unit re-cut of the four
+plan-owned review rows F28 + F29 + F30 + F33 — the loop-cap route: §Design
+box-5 widened to owner rule 5, the grammar gains fenced-code-block handling,
+the title-deliverable article rule and the §Output contract reason codes
+re-stated to their agreeing authorities; the plan is re-cut to seven phases —
+the new P6 owns the two behavioral conformance fixes, the former close-out P6
+is renumbered P7; fingerprints re-derived by the linter — see decisions.md
+ED9).
 
 ## P1 — Amend phase-contract rule 1
 
@@ -68,7 +76,21 @@ target keeps the prefix-table mapping and the ambiguous flow is unchanged.
 This lands the code-review F7 fold (replan-in-unit); `phase-contract` is not
 touched (amended once in P1, sole rule owner).
 
-## P6 — Hardening & PR
+## P6 — Conform the linter to the re-cut grammar
+
+Layer: config/infra · write the corpus fixtures red-first (the VF-30 bare
+standalone alternatives-word reproducer expecting `BLOCKED — box 5` with an
+embedded-word negative, the VF-33 quoted-plan-fragment-inside-a-fence
+reproducer, the unclosed-fence edge), then implement the two behaviors in
+`scripts/phase-lint.mjs`: box-5 fails the standalone alternatives word per the
+mechanical definition frozen in SPEC §Design box-5 (no word character and no
+hyphen adjacent on both sides; hyphen-joined compounds are one token, never a
+joiner), and the parser recognizes fenced code blocks and ignores every line
+inside one, an unclosed fence running to end of file. This lands the F30 +
+F33 re-cut (replan-in-unit); `phase-contract` is not touched (amended twice,
+sole rule owner — O12).
+
+## P7 — Hardening & PR
 
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)
