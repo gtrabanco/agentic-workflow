@@ -5,7 +5,7 @@ Status: frozen
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | The package suite (tsc + bun test across all files, including the new suites) is green | `cd packages/pi-agentic-workflow && bun run test` → exit 0 |
-| AC2 | With > 23 models the console selects provider-first: the first dialog offers providers (+ "Type another reference…"), the second only the chosen provider's models; every dialog ≤ 24 options | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"` → 2 pass (rich fixture + pick-less `rich: false` fixture) |
+| AC2 | With > 23 models the console selects provider-first: the first dialog offers providers (+ "Type another reference…"), the second only the chosen provider's models; every dialog ≤ 24 options | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"` → 3 pass (rich fixture + pick-less `rich: false` fixture + over-cap provider-list fixture) |
 | AC3 | A single provider with > 23 models pages its model dialog (21/page, `More options…`, TYPED last) instead of crashing | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "pages within one provider"` → pass |
 | AC4 | With ≤ 23 models the single-step flow is byte-identical (rich pick with preselection when the seam exists, plain select otherwise) | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "single-step preserved"` → pass |
 | AC5 | "Type another reference…" is the last option of every model dialog (provider dialog, every page, model dialog) | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "Type another reference"` → pass |
@@ -15,7 +15,7 @@ Status: frozen
 | AC9 | Package version bumped for the release | `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → `0.9.2` |
 | AC10 | Release rows present in the bilingual changelog pair | read-verified: from repo root, `grep -c "0.9.2" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 each (companion-packages table row) |
 | AC11 | Package README pair documents the bounded large-list behavior | read-verified: the console paragraph in `packages/pi-agentic-workflow/README.md` and `README.es.md` names the > 24-option bounding (provider-first / paging) |
-| AC12 | Fix index carries the #214 unit row | read-verified: from repo root, `grep -c "model-selection-over-24-options" docs/fix/README.md` → 1 (flipped to `done · [PR]` at close-out) |
+| AC12 | Fix index carries the #214 unit row and is flipped to `done · [PR]` at close-out | read-verified: from repo root, `grep -cE "model-selection-over-24-options.*done · \[#"` → 1 (plain presence is green from plan time — the flip is the outcome; review-plan finding PL-4) |
 | AC13 | Live behavior verified in pi-web on both registry sizes | manual: two `- SMOKE … outcome: pass` rows recorded in `docs/fix/214-model-selection-over-24-options/progress.md` (P5) |
 
 ## Quality floor
@@ -28,6 +28,7 @@ Status: frozen
 
 - `cd packages/pi-agentic-workflow && bun run test`
 - `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"`
+- `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "over 30 providers"`
 - `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "pages within one provider"`
 - `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "single-step preserved"`
 - `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "Type another reference"`
@@ -36,4 +37,4 @@ Status: frozen
 - `cd packages/pi-agentic-workflow && bun test test/shipped-adapter.test.mjs -t "pages long option lists"`
 - `node -p "require('./packages/pi-agentic-workflow/package.json').version"`
 - `grep -c "0.9.2" CHANGELOG.md CHANGELOG.es.md` (repo root)
-- `grep -c "model-selection-over-24-options" docs/fix/README.md` (repo root)
+- `grep -cE "model-selection-over-24-options.*done · \[#"` docs/fix/README.md (repo root)
