@@ -1219,6 +1219,103 @@ test("a past-the-engine-limit target token agrees across runtimes (F57)", { skip
   assert.match(viaNode.stdout, /^verdict BLOCKED: unparseable$/m);
 });
 
+// Fold F58 — box-1's word joiner (`and`/`y`) and the `,`/`/` symbol joiners had
+// no corpus coverage: a mutant replacing WORD_JOINER with a never-matching
+// regex left the suite 57/57 green, so the frozen rule-1 shape could vanish
+// undetected (the acceptance quality floor makes the corpus the behavioral
+// contract).
+const joinerPlan = (title) => `# Joiner\n\n### P1 — ${title}\n\nLayer: docs. Done-when: \`grep -n x docs/x.md\` → matches.\n\n- [ ] Create \`docs/x.md\`\n`;
+
+const JOINER_CASES = [
+  { name: "word-and", title: "Parse and emit the tokens", message: "title joins deliverables with “and”/“y”" },
+  { name: "word-y", title: "Parse y emit the tokens", message: "title joins deliverables with “and”/“y”" },
+  { name: "symbol-comma", title: "Parse, emit the tokens", message: "title joins deliverables with “+”, “,”, “/” or “&”" },
+  { name: "symbol-slash", title: "Parse/emit the tokens", message: "title joins deliverables with “+”, “,”, “/” or “&”" },
+];
+
+for (const { name, title, message } of JOINER_CASES) {
+  test(`box-1 blocks the ${name} joiner (F58)`, () => {
+    const file = fixture(`joiner-${name}.md`, joinerPlan(title));
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 1);
+    assert.ok(
+      stdout.split("\n").some((line) => line.startsWith("P1 box-1: ") && line.includes(message)),
+      `box-1 must report ${message}`,
+    );
+  });
+}
+
+test("a single-deliverable title passes box 1 (word-joiner control, F58)", () => {
+  const file = fixture("joiner-control.md", joinerPlan("Parse the tokens"));
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+// Fold F59 — secondary frozen branches that no fixture pinned: box-6's `defer`
+// verb form, box-7's `ask the user`, the box-2 prefix rows `template/` /
+// `.github/` / `.agentic-workflow/`, box-3's ≤10 final-phase upper boundary,
+// and sanitizeEcho's 120-char cap. Mutants in any of them would have survived
+// the suite.
+const F59_BODY = `Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.\n`;
+const f59Plan = (task, title = "Handle the config") => `# F59\n\n### P1 — ${title}\n\n${F59_BODY}\n- [ ] ${task}\n`;
+
+test("the box-6 `defer` verb form is pinned (F59)", () => {
+  const file = fixture("f59-defer.md", f59Plan("Defer the cleanup to P4"));
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-6: task 1 moves work to another phase$/m);
+});
+
+test("the box-7 `ask the user` gate is pinned (F59)", () => {
+  const file = fixture("f59-ask-user.md", f59Plan("Ask the user about the fallback"));
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-7: task 1 carries a manual\/external gate outside the hardening phase$/m);
+});
+
+const PREFIX_ROW_CASES = [
+  { name: "github", target: ".github/workflows/ci.yml", layer: "docs", blocked: true },
+  { name: "agentic-workflow", target: ".agentic-workflow/tmp/.gitkeep", layer: "docs", blocked: true },
+  { name: "template", target: "template/x.md", layer: "docs", blocked: false },
+];
+
+for (const { name, target, layer, blocked } of PREFIX_ROW_CASES) {
+  test(`the box-2 \`${name}/\` prefix row maps to its layer (F59)`, () => {
+    const plan = `# Prefix row\n\n### P1 — Handle the config\n\nLayer: ${layer}. Done-when: \`grep -n x docs/x.md\` → matches.\n\n- [ ] Update \`${target}\` with the change\n`;
+    const file = fixture(`f59-prefix-${name}.md`, plan);
+    const { status, stdout } = nodeRun(file);
+    if (blocked) {
+      assert.equal(status, 1);
+      assert.match(stdout, /^P1 box-2: task 1 target /m);
+    } else {
+      assert.equal(status, 0, `${target} maps to docs, the declared layer`);
+      assert.match(stdout, /^verdict PASS$/m);
+    }
+  });
+}
+
+test("a final hardening phase with nine tasks passes box 3 (≤10 boundary, F59)", () => {
+  const plan = `# Final budget\n\n### P1 — Hardening & PR\n\nLayer: hardening. Done-when: \`git status --porcelain\` → empty.\n\n${Array.from({ length: 9 }, (_, i) => `- [ ] Re-run gate ${i + 1} and paste the exit code`).join("\n")}\n`;
+  const file = fixture("f59-final-nine.md", plan);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "the final hardening phase budget is 10");
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:hardening:9:hardening-pr$/m);
+});
+
+test("the echoed title is capped at 120 characters plus an ellipsis (F59)", () => {
+  const title = `Parse and emit ${"x".repeat(180)}`;
+  const file = fixture("f59-echo-cap.md", joinerPlan(title));
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the word joiner breaks box 1");
+  const box1Line = stdout.split("\n").find((line) => line.startsWith("P1 box-1: "));
+  assert.ok(box1Line, "box-1 must be reported");
+  const echoed = /: “(.+)”$/.exec(box1Line);
+  assert.ok(echoed, "the echoed title is quoted at the end of the finding line");
+  assert.equal(echoed[1].length, 121, "120 characters plus the ellipsis");
+  assert.ok(echoed[1].endsWith("…"), "the truncation is marked");
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).
