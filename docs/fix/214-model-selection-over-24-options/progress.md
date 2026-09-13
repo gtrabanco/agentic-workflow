@@ -85,8 +85,22 @@ Session ledger for this unit. Receipt blocks follow the
 - Files: packages/pi-agentic-workflow/src/extension/index.ts · packages/pi-agentic-workflow/test/shipped-adapter.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P4 ticks) · progress.md
 - Next: P5 — pi-web manual smoke
 
+## Ordering decision — P6 executed before P5 (recorded, not silent)
+- P5's two tasks are `manual` (live pi-web, human operator) and cannot be performed by the executor; P6 is docs/version bookkeeping with no behavioural dependency on the smoke. Executing P6 first makes the branch a complete candidate for the operator's smoke without leaving machine-checkable work undone. P7 (`Hardening & PR`) still runs only after P5 is green — the final phase never runs while an earlier one is unfinished. No SPEC/acceptance byte changed (blob stayed `94fc0ec5`).
+
+## P6 — 2026-09-13
+- Done: package `version` 0.9.1 → 0.9.2; a 0.9.2 companion-package row added to `CHANGELOG.md` and `CHANGELOG.es.md` in the same commit (bilingual pair); the package `README.md` + `README.es.md` console paragraph now names the bounded large-list behavior (provider-first over the cap, paging via `More options…` / `◀ Previous page`). Validators: `node -p` version → `0.9.2`; `grep -c "0.9.2" CHANGELOG.md CHANGELOG.es.md` → 1 each; README pair read-verified; repo `bun test scripts/normative-drift.test.mjs` → 16 pass (version cells recomputed, both languages publish the same set); package suite → 203 pass. Phase-lint re-checked PASS (8/8) at fingerprint `P6:docs:3:release-bookkeeping-0.9.2`.
+- Remains: P5 (human pi-web smoke) then P7 (Hardening & PR).
+- Gotchas: the `normative-drift` rendered-facts check recomputes `package:version` against both changelog tables, so the bump and the rows must land together (they do). No `skills/` change, so no `bundle:skills` re-run is owed, and the context-budget/doc generators are untouched.
+- Files: packages/pi-agentic-workflow/package.json · CHANGELOG.md · CHANGELOG.es.md · packages/pi-agentic-workflow/README.md · packages/pi-agentic-workflow/README.es.md · docs/fix/214-model-selection-over-24-options/SPEC.md (P6 ticks) · progress.md
+- Next: P5 — pi-web manual smoke (human-gated)
+
+## Unit-loop receipt — P6
+- Commit: pending · Gate: `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → 0.9.2 · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Next: P5 (human smoke) → P7 · Attempts: 1
+
 ## Unit-loop receipt — P4
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 203 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Commit: 2cb84746 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 203 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Trigger: layer boundary (P3 `domain` → P4 `ui`) · Next: P5 · Attempts: 1
 
 ## Unit-loop receipt — P3

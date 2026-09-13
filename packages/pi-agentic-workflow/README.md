@@ -158,7 +158,11 @@ you are, and the value currently in force is pre-selected and labelled
 model field can build an ordered fallback chain (`a/m1 → b/m2`); and one pass
 can apply or clear a route across several commands, warning per command when a
 reference is missing from the live registry. Outside a TUI session the pickers
-fall back to a plain prompt, so the console never dead-ends.
+fall back to a plain prompt, so the console never dead-ends. Lists longer than
+24 options never reach a single dialog either: over the cap the model picker
+asks for the provider first, and an overlong provider or model list pages
+(`More options…` / `◀ Previous page`) instead of crashing the host's select
+dialog.
 
 ## Troubleshooting
 
