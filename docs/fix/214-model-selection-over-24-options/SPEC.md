@@ -79,7 +79,8 @@ surfaces above) and against the installed runtime
 - `src/settings/console.ts` `pickModelEntry`: when the model list exceeds
   `SELECT_OPTION_LIMIT - 1` (TYPED occupies one slot), switch to the issue's
   provider-first two-step flow — unique providers (prefix before the first
-  `/`, `localeCompare`-sorted) in a first bounded dialog, then that provider's
+  `/`, `localeCompare`-sorted) in a first bounded dialog — itself paged when
+  the provider list exceeds the cap (O15) — then that provider's
   models in a second bounded dialog, "Type another reference…" last in every
   dialog and still answered by the existing `input` flow. Lists ≤ 23 keep
   today's single-step flow byte-identical (rich pick with preselection when
@@ -131,6 +132,7 @@ use case — one compact row each. Never an exploration transcript.
 | PE-011 | Bilingual rule — human docs (README/CHANGELOG) carry EN + ES siblings updated in the same change; SPECs, commits, PRs stay English-only | ledger | `docs/workflow/REPOSITORY_STATE.md` AD-002 + F011; `CLAUDE.md` §"Working rules" | e0c18284 | AC10, AC11 · O11, O12 | current | proven | ledger row |
 | PE-012 | Required failure state — no dialog the console or adapter drives may ever offer more than 24 options: `scriptedUi` records every `select`/`pick` option array, so any over-cap option list in a test fails its assertions | derived | rule "option-array capture proves the bound" (inputs PE-001 + PE-003 + PE-004); `test/settings-console.test.mjs:31-60` | e0c18284 | AC2-AC8 · O1-O7 | current | proven | code read |
 | PE-013 | Validator capability — `scriptedUi` also supports a pick-less UI (`rich: false`) that drives the select fallback and records every `select` option array, so O1's "every UI mode" claim is provable only by an over-cap pick-less case: without one, a two-step implemented only in the rich branch passes every frozen validator while `console.ts:269` stays unbounded (review-plan finding PL-2) | repository | `packages/pi-agentic-workflow/test/settings-console.test.mjs:26-60` (scriptedUi harness) and :266-286 (`rich: false` fallback test); `packages/pi-agentic-workflow/src/settings/console.ts:268-270` (the unbounded fallback branch) | e0c18284 | AC2 · O1 | current | proven | code read |
+| PE-014 | Required failure state — the provider dialog itself must page when the unique provider list exceeds the cap: Pi imposes no provider ceiling (the issue's "providers are always ≤ 24" is an assumption, not an invariant), so Decision 2's provider-list paging needs a frozen over-cap provider case; without one, an implementation asking the provider with plain `pick`/`select` passes AC2-AC6 while a > 24-provider registry crashes the first dialog (review-plan finding PL-3) | derived | SPEC `## Decisions made during drafting` 2 (provider-count gap, paging closer); issue #214 body ("siempre ≤ 24 porque el registro de providers de Pi es pequeño" — assumption); planning-findings.md PL-3 | e0c18284 (source) / 2fbcedf0 (finding) | AC2, AC6 · O1, O15 | current | proven | review finding + issue body read this repair |
 
 ### Obligations
 
@@ -141,10 +143,10 @@ deferred`; `n/a` requires evidence, and no current-unit obligation may be
 
 | obligation-id | Authority source | Affected use case or invariant | Phase | Task | Implementation owner | Validator | Required evidence | Status |
 |---|---|---|---|---|---|---|---|---|
-| O1 | AC2; PE-001, PE-002, PE-003, PE-009, PE-013 | > 23 model lists select provider-first in two bounded steps in every UI mode | P2 | 3 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"` → 2 pass (rich fixture + pick-less `rich: false` fixture) | test output in progress.md | planned |
-| O2 | AC3; PE-001, PE-012 | a single provider registering > 23 models still never exceeds the cap (paged model step) | P2 | 3 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "pages within one provider"` → pass | test output in progress.md | planned |
-| O3 | AC4; PE-005 | ≤ 23 model lists keep the single-step dialog byte-identical (rich pick with preselection / plain select) | P2 | 3 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "single-step preserved"` → pass | test output in progress.md | planned |
-| O4 | AC5; PE-007, PE-009 | "Type another reference…" is the last option of every model dialog | P2 | 3 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "Type another reference"` → pass | test output in progress.md | planned |
+| O1 | AC2; PE-001, PE-002, PE-003, PE-009, PE-013, PE-014 | > 23 model lists select provider-first in two bounded steps in every UI mode | P2 | 4 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"` → 3 pass (rich fixture + pick-less `rich: false` fixture + over-cap provider-list fixture) | test output in progress.md | planned |
+| O2 | AC3; PE-001, PE-012 | a single provider registering > 23 models still never exceeds the cap (paged model step) | P2 | 4 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "pages within one provider"` → pass | test output in progress.md | planned |
+| O3 | AC4; PE-005 | ≤ 23 model lists keep the single-step dialog byte-identical (rich pick with preselection / plain select) | P2 | 4 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "single-step preserved"` → pass | test output in progress.md | planned |
+| O4 | AC5; PE-007, PE-009 | "Type another reference…" is the last option of every model dialog | P2 | 4 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "Type another reference"` → pass | test output in progress.md | planned |
 | O5 | AC6; PE-001, PE-012 | `pagedSelect` never builds a dialog over `SELECT_OPTION_LIMIT` (21 data + pager entries + trailing ≤ 24) | P1 | 3 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/paged-select.test.mjs` → all pass | test output in progress.md | planned |
 | O6 | AC7; PE-004, PE-008 | command selection (single and multi rounds) never offers > 24 options | P3 | 2 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "bounded command"` → 2 pass | test output in progress.md | planned |
 | O7 | AC8; PE-002 | the adapter's non-TUI pick fallback pages option lists > 24 before calling `base.select` | P4 | 2 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/shipped-adapter.test.mjs -t "pages long option lists"` → pass | test output in progress.md | planned |
@@ -153,8 +155,9 @@ deferred`; `n/a` requires evidence, and no current-unit obligation may be
 | O10 | AC9; PE-010 | package version bumped 0.9.1 → 0.9.2 | P6 | 1 | execute-phase | `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → `0.9.2` | command output | planned |
 | O11 | AC10; PE-010, PE-011 | CHANGELOG companion-package rows updated as a bilingual pair in the same commit | P6 | 2 | execute-phase | read-verified: `grep -c "0.9.2" CHANGELOG.md CHANGELOG.es.md` → ≥ 1 each | grep output | planned |
 | O12 | AC11; PE-011 | package README pair documents the bounded large-list behavior | P6 | 3 | execute-phase | read-verified: console paragraph in both README siblings names the bounding | read evidence | planned |
-| O13 | AC12; PE-009 | fix index carries the unit row and is flipped to `done · [PR]` at close-out | P7 | 3 | execute-phase | read-verified: `grep -c "model-selection-over-24-options" docs/fix/README.md` → 1 | grep output | planned |
+| O13 | AC12; PE-009 | fix index carries the unit row and is flipped to `done · [PR]` at close-out | P7 | 6 | execute-phase | read-verified: from repo root, `grep -cE "model-selection-over-24-options.*done · \[#"` → 1 (plain presence is green from plan time — review-plan finding PL-4; only the `done · [PR]` flip proves the outcome) | grep output | planned |
 | O14 | AC1; PE-005, PE-006 | no regression: the full package suite (all pre-existing flows) stays green at close-out | P7 | 1 | execute-phase | `cd packages/pi-agentic-workflow && bun run test` → exit 0 | pasted commands + exit codes | planned |
+| O15 | AC2; PE-012, PE-014 | the provider dialog itself pages when the unique provider list exceeds the cap (Decision 2's provider-list paging) | P2 | 4 | execute-phase | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "over 30 providers"` → pass | test output in progress.md | planned |
 
 ## Acceptance
 
@@ -228,7 +231,8 @@ judgement. Any FAIL → fix the SPEC before the commit.
 
 None — no scheduled jobs, queues, caches, schema, or external adapters
 interact with dialog construction; the console still edits one config file at
-a time behind the same parse gates (`console.ts:101-116` unchanged). The only
+a time behind the same parse gates (`console.ts:216` invalid-file save
+refusal, `:427` invalid-draft save refusal — both unchanged). The only
 operational surface is the interactive dialog flow itself.
 
 ## Security risks
@@ -319,6 +323,13 @@ bounded well under a day.
     `rich: false` through the select fallback, kept separate from the
     rich-fixture case list so the shared-path implementation cannot hide
     behind the rich branch (PE-013).
+11. **The over-cap provider list is its own frozen case** (repair of
+    review-plan finding PL-3): Decision 2's provider-list paging needs a
+    scenario that forces the provider dialog over the cap; a dedicated case
+    (30 providers × 1 model each) keeps every frozen two-step test
+    single-dimension — the main fixture's provider dialog fits (30 models
+    across 4 providers), so provider paging is asserted only where it is the
+    point (PE-014).
 
 ## Testing
 
@@ -326,8 +337,9 @@ Unit level (scripted-UI integration over the console flow), red-first, names
 frozen — validators key on these exact strings:
 
 - `test/settings-console.test.mjs` (new cases):
-  - "settings console model picker: provider-first two-step over 30 models"
+  - "settings console model picker: provider-first two-step over 30 models" — 30 models across 4 providers (the provider dialog itself fits the cap; the two-step split is the exercise) (O1)
   - "settings console model picker: provider-first two-step over 30 models in a pick-less UI" — drives `rich: false` (the OB-12 harness mode) so the two-step runs through the select fallback (`console.ts:269`), asserting every dialog ≤ 24 options and "Type another reference…" last (O1, PE-013)
+  - "settings console model picker: provider-first two-step over 30 providers" — 30 providers × 1 model each, so the provider dialog itself exceeds the cap and pages (`More options…` reaches the page-2 providers; choosing one completes the model step); every dialog ≤ 24 options (O15, PE-014)
   - "settings console model picker: pages within one provider over 30 models"
   - "settings console model picker: single-step preserved at 23 models"
   - "settings console model picker: Type another reference is the last option in every model dialog"
@@ -360,7 +372,7 @@ Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
 record the result here per phase.
 
 - P1 — `Phase-lint: PASS (8/8) · fingerprint P1:domain:3:bounded-paged-select-helper`
-- P2 — `Phase-lint: PASS (8/8) · fingerprint P2:domain:3:provider-first-two-step-model-selection`
+- P2 — `Phase-lint: PASS (8/8) · fingerprint P2:domain:4:provider-first-two-step-model-selection`
 - P3 — `Phase-lint: PASS (8/8) · fingerprint P3:domain:2:bounded-command-selection`
 - P4 — `Phase-lint: PASS (8/8) · fingerprint P4:ui:2:adapter-non-tui-pick-paging`
 - P5 — `Phase-lint: PASS (8/8) · fingerprint P5:hardening:2:pi-web-manual-smoke`
@@ -400,6 +412,11 @@ Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
       runs with `rich: false` so the two-step executes through the select
       fallback (`console.ts:269`), every dialog ≤ 24 options, TYPED last
       (O1, PE-003, PE-013).
+- [ ] Red-first over-cap provider-list case in `test/settings-console.test.mjs`:
+      "provider-first two-step over 30 providers" — a registry of 30 providers
+      × 1 model each makes the provider dialog itself exceed the cap, so the
+      first dialog pages (`More options…` reaches the page-2 providers) and
+      every dialog stays ≤ 24 options (O15, PE-014).
 - [ ] Implement in `pickModelEntry` (`src/settings/console.ts`): when
       `deps.models.length > SELECT_OPTION_LIMIT - 1`, extract unique providers
       (prefix before the first `/`, `localeCompare`-sorted), ask the provider
@@ -407,7 +424,7 @@ Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
       `input`), then ask the model within the chosen provider with
       `[...providerModels, TYPED]` (TYPED → `input`); add
       `prompts.modelProvider(target)`; keep the ≤ 23 single-step branch
-      byte-identical (O1-O4).
+      byte-identical (O1-O4, O15).
 
 ### P3 — Bounded command selection
 
