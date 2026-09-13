@@ -86,6 +86,45 @@ test("AC6: the trailing option is last on every page, and 21 + two pagers + trai
   assert.equal(calls[1].options.length, SELECT_OPTION_LIMIT, "a middle page is exactly 21 data + PREV + NEXT + trailing");
 });
 
+test("AC6: a data option that spells a pager label stays selectable (reserved labels are decorated)", async () => {
+  // A registry entry (or a command) may legitimately read `More options…`. On a
+  // non-last page the plain string is ambiguous with the pager entry, so the
+  // pager label is decorated and the data value keeps its name (F2).
+  const list = options(30);
+  list[5] = PAGED_SELECT_NEXT;
+
+  const { calls, select } = scriptedSelect([PAGED_SELECT_NEXT]);
+  assert.equal(
+    await pagedSelect(select, "Pick", list, { trailing: TRAILING }),
+    PAGED_SELECT_NEXT,
+    "the data entry is returned, never read as navigation",
+  );
+  assert.equal(calls.length, 1, "answering the data entry does not open another page");
+
+  const pager = calls[0].options.filter((option) => option !== TRAILING && !list.includes(option));
+  assert.equal(pager.length, 1, "page 1 still offers exactly one NEXT pager entry");
+  assert.ok(pager[0].startsWith(PAGED_SELECT_NEXT), "the pager keeps the NEXT label as its base");
+  assert.notEqual(pager[0], PAGED_SELECT_NEXT, "the colliding pager label is decorated, so both stay selectable");
+
+  // Navigation through the decorated label still reaches the next page.
+  const navCalls = [];
+  const navigated = await pagedSelect(
+    async (_title, dialogOptions) => {
+      navCalls.push({ options: [...dialogOptions] });
+      if (navCalls.length === 1) {
+        return dialogOptions.find((option) => option !== TRAILING && !list.includes(option));
+      }
+      return "option-25";
+    },
+    "Pick",
+    list,
+    { trailing: TRAILING },
+  );
+  assert.equal(navigated, "option-25", "the decorated NEXT entry navigates to page 2");
+  assert.equal(navCalls.length, 2);
+  assert.equal(navCalls[1].options[0], "option-22", "page 2 is the remainder of the list");
+});
+
 test("AC6: an undefined answer passes straight through and stops the dialog", async () => {
   const { calls, select } = scriptedSelect([undefined]);
   assert.equal(await pagedSelect(select, "Pick", options(30), { trailing: TRAILING }), undefined);
