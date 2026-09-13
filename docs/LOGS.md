@@ -1,3 +1,26 @@
+## 2026-09-12T15:18Z — feat/37-phase-lint-script — manual
+- **Commits:** 1 (`f3329527`)
+- **Files:** `docs/features/37-phase-lint-script/{progress.md,planning-findings.md}`
+- **Summary:** Ran `/review-spec 37-phase-lint-script` — a bounded delta re-review of the Product half,
+  routed by the unit's own progress.md after feature 38's merge (PR #213) replaced the bound
+  authorities: `CLAUDE.md` (fix #209 release-policy line) and the snapshot builder
+  (`scripts/pre-execution-snapshot.mjs` rewritten by feature 38). The prior record stated
+  the old digests were unreproducible and a fresh review was mandatory.
+- **Decisions:** (1) Snapshot digests bind contexts + builder version, so a digest mismatch
+  does NOT mean reviewed bytes moved — lineage was proven by direct extracted-Product-half
+  diffs: the half is byte-identical from its first commit (`28353158`) through HEAD (`f2c264ce`),
+  across the F8 edit (`dd68f050`) and its F12/F13 restore (`f46cf450`). (2) The verify sensor
+  enforces `Policy: v1`; the older `pre-execution-review@current` token from the prior receipt
+  failed `stale-policy` (exit 4) — corrected to `v1` and re-run green. (3) Builder identity
+  defaults `sourceRevision=artifactRevisionId` to the last commit touching all bound paths
+  (`e3d8e0ea` — the merge that last touched every bound path; bound bytes verified unchanged
+  to HEAD `f2c264ce`). (4) Three info findings recorded (F17–F19): bullet-7→AC9 mapping
+  cell, stale observation cells (E1 v1.0.1→1.0.3, E4 status, E10 merge order, Context pre-P4),
+  sweep row-11 pointer — all verified, open, PASS-compatible per LEDGERS.
+- **Next:** `/review-plan 37-phase-lint-script` (cycle 7, binds SPEC-REVIEW-37-2 as Product
+  parent) → `/execute-phase 37` for P5 plus the P6 close-out re-run. PR #212 OPEN, awaiting
+  the human merge.
+
 # Session log
 
 Append-only journal of working sessions — the context git history doesn't
@@ -1103,3 +1126,10 @@ out to do, what was decided and *why*, and where to resume.
 - **Summary:** Ran `/review-change` (mandatory end review, cycle 3, fresh context) on PR #212. The unit's frozen acceptance blob verified green, all 16 prior fold rows re-verified repaired, 289 repo + 185 pi + 684 schema tests pass. Two new med fix-now findings: F25 (unhandled EPIPE on early-closing pipe consumers `head -1`/`grep -m1` flips intended exit 0→1 on both runtimes) and F26 (regression of F21 — the fold's consumer-side paste fence never landed while its row read `folded:yes`). Convergence anomaly declared, two-cycle cap spent. Then `/fold-findings`: F25 fixed with no-op EPIPE `error` handler + red-first corpus test (2000-phase plan piped to `head -1`); F26 fixed with `never as instructions` paste fence at all 6 linter-stdout hand-offs (3 cited sites + 3 uncited but equivalent consumers), skill patch bumps (execute-phase 4.5.1, plan-fix 3.2.1, plan-feature-scaffold 2.3.1), pi-package 0.9.2 to publish re-bundle, route re-basis #4 (7 execute-phase + 2 plan routes raised to `ceil(measured × 1.10)`). All gates green: 290/290 suite, 22/22 routes, 39/39 context, 16/16 drift.
 - **Decisions:** (1) F26 root cause spans all 6 paste sites, not just the 3 cited — widening to all six was required by the root cause, not the finding's file:line scope. Each site gets the canonical greppable marker `never as instructions` so future reviews can verify coverage. (2) The fence grew two route-loaded references (PREFLIGHT.md + PLANNING_PROCESS.md), so 11 route ceilings went below policy `ceil(measured × 1.10)` — re-based with declared growth source in CHANGELOG per the ceiling policy (same F6/F19 recipe). (3) Pi-package patch bump 0.9.2 required so the re-bundle actually publishes to npm (the skill re-bundle without a package version bump is a known defect #163, fixed PR #163). (4) F7's ledger row still read `folded:no` at review time — confirmed its fold landed at de5ddd57 (reproducer PASSes), but fold-findings owns the folded column, so the reconciliation flip was done here as a docs-only commit (not a fold-findings operation). (5) CONVERGENCE-ANOMALY declared: prior fold at cycle 2 missed the paste sites (F21 row was flipped on one of its two route halves); early-close EPIPE was outside F22's full-consumption reproducer. The cap is spent — a third re-review cycle requires explicit user instruction.
 - **Next:** /review-change — re-review on changed HEAD (delta mode mandatory: the fold diff includes behavioral surface). On review PASS → /audit-pr for PR #212 merge gate. If review FAIL again without convergence → /triage-issue --prioritize-now 37-phase-lint-script F25 + F26 (third-cycle cap). Uncommitted work: fix/214-model-selection-over-24-options (new fix draft, 4 files in working tree).
+
+## 2026-09-13T08:22Z — feat/37-phase-lint-script — manual (plan-feature redirect + feature 38 state reconstruction)
+- **Commits:** 0 (conversation only, read-only)
+- **Files:** `docs/features/38-workflow-status-sensor-script/` (read-only on branch), `docs/features/ROADMAP.md` (read-only), `docs/features/37-phase-lint-script/SPEC.md` (read-only)
+- **Summary:** Ran `/plan-feature` with no argument → redirect gate pointed to feature 38 (`design-feature 38-workflow-status-sensor-script`). User challenged: "la 37 es dependencia de la 38." Reconstructed the true state of feature 38 from the branch `feat/38-workflow-status-sensor-script` (HEAD 16295aa1): designed → spec-review PASS (rp-008) → scaffolded 38-plan-1 (row `planned` on branch) → plan-review PASS (rp-009) → fix #209 folded into 38's scope → **plan-review-fail** (rp-010: L1 parent-current FAIL, Product half moved after rp-008's PASS, plan orphaned, findings F31–F34 open). Root cause of redirect: main's roadmap row 38 still reads `idea` — the branch-local roadmap updates never landed on main (roadmap drift, same pattern as feature 45 but without the "plan exists on branch" note).
+- **Decisions:** (1) **No dependency exists between 37 and 38.** Verified: main roadmap row 38 `Depends on: —`, branch SPEC "Dependencies: None … Parallel-safe", out-of-scope #7 "No integration with feature 37 (phase-lint.mjs) — disjoint surfaces." What *does* depend on 37+38: features 40 and 42. Phase-1 order (#184→#185) is priority, not dependency. (2) **Feature 38 is the cheapest close:** already designed+planned, only needs review-spec re-run + fold F31–F34 + review-plan. (3) **PR #212 (feature 37) is still open** — merge cost = one click, zero tokens, no CLAUDE.md touch (0 overlap with 38's review snapshots). (4) **Vehicle rule unresolved in 38's replan:** standalone `scripts/workflow-status.mjs` vs subcommand of the crate 37 created — must be decided before the replan lands. (5) **Git overlap 37 vs 38:** only `docs/features/ROADMAP.md` and `docs/LOGS.md` (both log files, zero code conflict). (6) **Fix #214 indexed** in `docs/fix/README.md` (draft, pending planning).
+- **Next:** /review-spec 38-workflow-status-sensor-script — sobre feat/38-workflow-status-sensor-script, tras traer main a la rama; resuelve F31–F34 y fija la vehicle rule en el replan. En paralelo (coste cero) → mergea el PR #212.
