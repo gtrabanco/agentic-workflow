@@ -38,8 +38,8 @@ export const PAGED_SELECT_PREV = "◀ Previous page";
 export const PAGED_SELECT_NEXT = "More options…";
 
 /**
- * Data entries per page: the cap leaves room for both pager entries and the
- * caller's trailing option (`21 + 2 + 1 = 24`).
+ * Data entries per page: `SELECT_OPTION_LIMIT - 3` — room inside one dialog for
+ * both pager entries and the caller's trailing option.
  */
 const PAGED_SELECT_PAGE_SIZE = SELECT_OPTION_LIMIT - 3;
 
