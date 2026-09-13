@@ -375,6 +375,10 @@ test("`close-out` is not given the test-file mapping (fail-closed)", () => {
   const file = fixture("test-file-close-out.md", TEST_FILE_IN_CLOSE_OUT_PLAN);
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
+  // Fold F41 — the exact reason is asserted, not just the box-2 prefix: a
+  // wrong-but-blocking mapping (close-out receiving the test-file mapping)
+  // emits `belongs to layer hardening, not close-out` and must not stay green.
+  assert.match(stdout, /^P1 box-2: task 1 target `scripts\/tokenizer\.test\.mjs` belongs to layer config\/infra, not close-out$/m);
   assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 2: /m);
   assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
 });
