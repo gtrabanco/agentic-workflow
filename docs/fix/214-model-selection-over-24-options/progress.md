@@ -96,8 +96,21 @@ Session ledger for this unit. Receipt blocks follow the
 - Next: P5 — pi-web manual smoke (human-gated)
 
 ## Unit-loop receipt — P6
-- Commit: pending · Gate: `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → 0.9.2 · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Commit: b3125586 · Gate: `node -p "require('./packages/pi-agentic-workflow/package.json').version"` → 0.9.2 · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P5 (human smoke) → P7 · Attempts: 1
+
+## P5 — 2026-09-13
+- Done: the two live pi-web checks were performed by the human operator against the candidate and both passed. Rows (operator attestation, recorded by execute-phase):
+- SMOKE A (over-cap registry, > 24 live models) · `/agentic-workflow-settings` → Set a command override → provider dialog opens with no "A select dialog must not offer more than 24 options" error, provider chosen, model dialog completes and saves · outcome: pass · reported by the operator 2026-09-13.
+- SMOKE B (≤ 24 registry) · single-step model dialog unchanged, "Type another reference…" still completes an entry, bulk apply/clear over the command list stays bounded · outcome: pass · reported by the operator 2026-09-13.
+- Remains: P7 — Hardening & PR.
+- Gotchas: none. The P5 done-when counts exactly two outcome-pass rows in this file (the two above). Phase-lint re-checked PASS (8/8) at fingerprint `P5:hardening:2:pi-web-manual-smoke`.
+- Files: docs/fix/214-model-selection-over-24-options/SPEC.md (P5 ticks) · progress.md
+- Next: P7 — Hardening & PR
+
+## Unit-loop receipt — P5
+- Commit: pending · Gate: two live SMOKE rows recorded above (both outcome-pass) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Next: P7 · Attempts: 1
 
 ## Unit-loop receipt — P4
 - Commit: 2cb84746 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 203 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
