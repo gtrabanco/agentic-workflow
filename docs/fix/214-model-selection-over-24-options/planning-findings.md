@@ -1,0 +1,10 @@
+# planning-findings — fix-214 (model-selection-over-24-options)
+
+One stage-aware table; rows are appended by reviewers and resolved only by the
+stage's author through its own route. Shape:
+`finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| PL-1 | plan | low | plan | c7b0461dfd4f21912efaf238d0a570ed74a941cf9da5746928bec86f4e79f4d9 | PE-007's `source-and-location` anchors do not resolve at the cited lines: the test-facing-contract comment sits at `console.ts:45-47` (cited `:62-66`), the `prompts` table spans `:48-80` with `} as const;` at `:80` (cited `:76-99`), and `scriptedUi` spans `test/settings-console.test.mjs:26-60` (cited `:16-20`, which is the import block) | read of `packages/pi-agentic-workflow/src/settings/console.ts:45-80` and `test/settings-console.test.mjs:14-60` at sourceRevision af8d6431; `grep -n` pins: "The console's questions" comment → `:45-47`, `export const prompts` → `:48`, `command:` → `:54`, `} as const;` → `:80`, `function scriptedUi` → `:28` | open | — | — |
+| PL-2 | plan | medium | plan | c7b0461dfd4f21912efaf238d0a570ed74a941cf9da5746928bec86f4e79f4d9 | The scenario matrix never exercises the pick-less over-cap model path: O1 claims "> 23 model lists select provider-first in two bounded steps in every UI mode" and PE-003 names the select fallback (`console.ts:269`) as root-cause surface #2, but every frozen model-picker test name runs the rich fixture (`scriptedUi` defines `pick`, `test/settings-console.test.mjs:53`), so a two-step implemented only inside the rich branch passes all frozen validators while `console.ts:269` stays unbounded | SPEC `## Testing` + P2 task 1 + O1 vs `test/settings-console.test.mjs:53` (pick fixture) and `:263-299` — the harness already supports a pick-less UI (`rich: false`, used by the "P4/OB-12" test at `:264`), but no frozen case pairs it with an over-cap list | open | — | — |
