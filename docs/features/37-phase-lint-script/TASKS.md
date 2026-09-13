@@ -1,6 +1,6 @@
 # TASKS — 37-phase-lint-script
 
-Per-phase execution checklists. Artifact revision: `37-plan-6`.
+Per-phase execution checklists. Artifact revision: `37-plan-7`.
 
 ## P1 — Amend phase-contract rule 1
 
@@ -48,7 +48,14 @@ Layer: config/infra · Done-when: `node --test scripts/phase-lint.test.mjs` → 
 - [x] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: a test-only `Layer: hardening` phase creating `scripts/tokenizer.test.mjs` expects box-2 PASS (the VF-7 reproducer); a `Layer: hardening` phase with source target `scripts/tokenizer.mjs` expects `BLOCKED — box 2`; a `Layer: config/infra` phase creating `scripts/phase-lint.test.mjs` beside its implementation keeps box-2 PASS
 - [x] Implement the mapping in `scripts/phase-lint.mjs`: a test-file target (basename containing `.test.`) in a phase declared `hardening` maps to `hardening`; every other target keeps the frozen prefix-table mapping; the ambiguous flow is unchanged
 
-## P6 — Hardening & PR
+## P6 — Conform the linter to the re-cut grammar
+
+Layer: config/infra · Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0, and `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0.
+
+- [ ] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: the VF-30 reproducer (a task joining two path targets with a bare standalone alternatives word) expects `BLOCKED — box 5`, and an embedded-word form like `editor` stays PASS; a plan quoting a phase fragment inside a fenced code block expects the quoted heading ignored (the VF-33 reproducer); an unclosed fence runs deterministically to end of file
+- [ ] Implement both behaviors in `scripts/phase-lint.mjs`: box-5 fails the standalone alternatives word per the mechanical definition frozen in SPEC §Design box-5 (no word character and no hyphen adjacent on both sides; hyphen-joined compounds are one token, never a joiner), and the parser recognizes fenced code blocks — three-or-more backticks, optionally with an info string, the same for tildes, closed by the same character at equal-or-greater length — and ignores every line inside one, an unclosed fence running to end of file
+
+## P7 — Hardening & PR
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 

@@ -306,7 +306,7 @@ returned `READY-FOR-REVIEW`.
 ## Engineering half
 
 Written by `plan-feature` / `plan-feature-scaffold`, only once the Product
-half above is marked `designed`. Engineering artifact revision: `37-plan-6`.
+half above is marked `designed`. Engineering artifact revision: `37-plan-7`.
 
 > Replan 3 (2026-09-10, user-approved in session): the F5 resolution lands the
 > rule-1 `Hardening & PR` exception IN the rule owner (`skills/phase-contract/SKILL.md`,
@@ -332,6 +332,23 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-6`.
 > that landed while this plan was in flight (feature 38 merged first through PR
 > #213; the `--json` deferred decision's trigger has fired and closes plan-side —
 > ED8). Phase shape and fingerprints are **unchanged** from `37-plan-5`.
+
+> Replan 7 (2026-09-12, user-directed replan-in-unit re-cut of the four
+> plan-owned review rows F28 + F29 + F30 + F33 — the loop-cap route: a fold
+> cannot repair plan authority): the frozen Engineering half had diverged from
+> its agreeing authorities in four places. §Output contract now assigns
+> `missing-plan` to no-argument/nonexistent-path and `unparseable` to
+> unreadable-file/read failures (F28 — the script header, AC3, and the corpus
+> already agreed); the title-deliverable rule drops the articles `the`, `a`,
+> `an` wherever they appear, not only leading (F29 — the corpus pins the
+> mid-title drop); §Design box-5 is widened to owner rule 5 — `OR` between
+> alternatives, frozen mechanically as a standalone `or` with no word
+> character and no hyphen adjacent on either side (F30); the input grammar
+> gains fenced-code-block handling — a fence contributes nothing to the parse
+> (F33). The plan is re-cut to seven phases: the new P6 owns the two
+> behavioral conformance fixes (bare-OR detection, fence skipping), and the
+> former close-out P6 is renumbered P7. Revision `37-plan-7`; see decisions.md
+> ED9.
 
 ### Technical goals
 
@@ -379,8 +396,9 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-6`.
 - A *phase heading* is a Markdown heading of level 2–4 whose text matches
   `^P(\d+)\s*[—-]\s*(.+)$`. The title-deliverable is the text after the
   separator, normalized for the fingerprint: lowercased, kebab-cased, `&`
-  treated as a separator (amended rule 1), and leading articles (`the`, `a`,
-  `an`) dropped.
+  treated as a separator (amended rule 1), and the articles (`the`, `a`,
+  `an`) dropped wherever they appear as standalone words — not only leading
+  (the corpus pins the mid-title drop; F29 re-cut).
 - The *body* of a phase runs from its heading to the next phase heading (or
   end of file). Within a body:
   - the *layer declaration* is the first line matching
@@ -388,6 +406,16 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-6`.
     `schema/db | domain | api | ui | config/infra | docs | hardening | close-out`;
   - the *done-when* is the `Done-when:` line's remainder in the same block;
   - *tasks* are lines matching `^\s*- \[( |x)\] ` in the body.
+- A *fenced code block* — a line whose trimmed form is three-or-more
+  backticks (optionally followed by an info string) or three-or-more tildes,
+  through the closing line whose trimmed form is only the same character
+  repeated at equal-or-greater length — contributes nothing to the parse: no
+  phase heading, `Layer:`/`Done-when:` line, or task inside a fence is
+  recognized, and the fence lines themselves are inert. Fences are recognized
+  before any other grammar rule, so a plan fragment quoted inside a fence can
+  never be parsed as a real phase. An unclosed fence runs to end of file
+  (GFM semantics): everything after it is fenced — deterministic, never a
+  guess (F33 re-cut).
 - A `P<n>` heading with a missing, malformed, or out-of-enum `Layer:` line makes
   the file unparseable → `BLOCKED: unparseable` (fail-closed; no per-phase
   partial judgment is attempted).
@@ -436,8 +464,13 @@ states them; rule ids `box-1`…`box-8` for finding lines):
   steps, enumerates more than 3 numbered/enumerated cases, or names more than
   1 created file of distinct concerns (creation verbs + > 1 path).
 - box-5: task text must not contain decision words `Decide`, `choose`, `Choose`,
-  `either/or` between alternatives, or an `If … then <scope change>` pattern
-  (`If .* then (add|remove|move|split|merge|defer)`).
+  an `OR` between alternatives (owner rule 5 — mechanical: a standalone
+  case-insensitive `or` with no word character and no hyphen adjacent on
+  either side; embedded forms like `editor` and hyphen-joined compounds like
+  `equal-or-greater` are one token, never a joiner — the box-1 compound-word
+  rule), or an `If … then <scope change>` pattern
+  (`If .* then (add|remove|move|split|merge|defer)`). The standalone-word form
+  subsumes the previously frozen narrower `either … or` shape (F30 re-cut).
 - box-6: a task must not move work between phases at runtime — FAIL on task text
   referencing `P\d+` as a move target (`move(s)? .*(to|into) P\d+`, `defer(s)?
   .*(to|into) P\d+`).
@@ -462,17 +495,22 @@ fingerprint: <sha256>           (lowercase hex sha256 over the newline-joined
 ```
 
 Exit codes: `0` only when every phase shows `PASS (8/8)` and the final verdict
-is `PASS`; `1` on any BLOCKED/parse failure. `missing-plan` for a nonexistent
-or unreadable path or no argument; `no-phases` for a parsed file containing
-zero phase headings; `unparseable` for read/parse/ambiguity failures.
+is `PASS`; `1` on any BLOCKED/parse failure. `missing-plan` for no argument or
+a path that does not exist; `no-phases` for a parsed file containing zero
+phase headings; `unparseable` for a path that exists but cannot be read and
+for parse/ambiguity failures — the script header, AC3, and the corpus agree:
+unreadable → `unparseable`, never `missing-plan` (F28 re-cut).
 
 **Corpus** (`scripts/phase-lint.test.mjs`, embedded fixtures — no network, no
 fixtures dir dependency): a minimal valid 2-phase plan; an invalid plan
 violating boxes 1, 4, 5; an ambiguous-layer plan (`Layer:` line absent) →
 `unparseable`; a plan with no phases → `no-phases`; missing file →
 `missing-plan`; a 9-task-phase plan → `BLOCKED — box 3` (owns the
-`lint:threshold` dev scenario); a determinism pair (two runs byte-identical);
-a node-fallback parity run.
+`lint:threshold` dev scenario); a task joining two path targets with a bare
+standalone alternatives word → `BLOCKED — box 5`, an embedded-word form like
+`editor` stays PASS; a plan quoting a phase fragment inside a fenced code
+block is not parsed, and an unclosed fence runs to end of file; a
+determinism pair (two runs byte-identical); a node-fallback parity run.
 
 **Skill slims (P4):** in each of the three consumer skills, the phase-lint
 step becomes: run `bun scripts/phase-lint.mjs <plan>` (node fallback) and paste
@@ -631,7 +669,38 @@ box-2 amendment in this replan freezes the test-file mapping; this phase
 lands it red-first in the corpus and in the script. `phase-contract` is not
 touched (amended once in P1, sole rule owner).
 
-#### P6 — Hardening & PR
+#### P6 — Conform the linter to the re-cut grammar
+
+Layer: config/infra. Done-when: `node --test scripts/phase-lint.test.mjs` →
+exit 0, and `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0.
+
+- [ ] Add the red-first corpus fixtures to `scripts/phase-lint.test.mjs`: the
+      VF-30 reproducer (a task joining two path targets with a bare standalone
+      alternatives word) expects `BLOCKED — box 5`, and an embedded-word form
+      like `editor` stays PASS; a plan quoting a phase fragment inside a
+      fenced code block expects the quoted heading ignored (the VF-33
+      reproducer); an unclosed fence runs deterministically to end of file
+- [ ] Implement both behaviors in `scripts/phase-lint.mjs`: box-5 fails the
+      standalone alternatives word per the mechanical definition frozen in
+      SPEC §Design box-5 (no word character and no hyphen adjacent on both
+      sides; hyphen-joined compounds are one token, never a joiner), and the
+      parser recognizes fenced code blocks — three-or-more backticks,
+      optionally with an info string, the same for tildes, closed by the same
+      character at equal-or-greater length — and ignores every line inside
+      one, an unclosed fence running to end of file
+
+Re-cut for the four plan-owned review rows (replan-in-unit, user-directed
+2026-09-12, the loop-cap route): the frozen Engineering half diverged from its
+agreeing authorities in four places — §Output contract assigned read failures
+to the wrong reason code (F28), the title-deliverable rule said "leading
+articles" while the corpus pins the mid-title drop (F29), box-5 froze the
+narrower `either/or` form below owner rule 5 (F30), and the grammar named no
+fence handling, so a plan quoting a plan fragment inside a fence was parsed
+as real phases (F33). The §Design/§Output-contract amendments re-state the
+frozen text; this phase lands the two behavioral gaps red-first.
+`phase-contract` is not touched (amended twice, sole rule owner — O12).
+
+#### P7 — Hardening & PR
 
 Layer: hardening. Done-when: `git status --porcelain -- docs/` → empty, and the
 project verification gate commands exit 0.
@@ -643,18 +712,21 @@ the literal close-out tasks.
 #### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
 
 Fingerprints below were re-derived mechanically from the phase tasks at the
-`37-plan-5` re-cut and are unchanged by the `37-plan-6` repair batch
-(checkbox counts in TASKS.md, `Layer:` declarations, title-deliverables
-kebab-cased; P6's `Hardening & PR` normalizes to `hardening-pr` per the
-amended rule 1 — see ED7; re-derived by `scripts/phase-lint.mjs` itself at
-the F7 re-cut, see decisions.md):
+`37-plan-5` re-cut, unchanged by the `37-plan-6` repair batch, and re-derived
+again at the `37-plan-7` re-cut (new grammar-conformance P6; the former
+close-out renumbered P7 — see ED9; checkbox counts in TASKS.md, `Layer:`
+declarations, title-deliverables kebab-cased with articles dropped wherever
+they appear; P7's `Hardening & PR` normalizes to `hardening-pr` per the
+amended rule 1 — see ED7; re-derived by `scripts/phase-lint.mjs` itself, see
+decisions.md):
 
 - P1 — Phase-lint: PASS (8/8) · fingerprint P1:docs:3:amend-phase-contract-rule-1
 - P2 — Phase-lint: PASS (8/8) · fingerprint P2:config/infra:6:implement-deterministic-phase-linter
 - P3 — Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:create-producer-crate-vehicle
 - P4 — Phase-lint: PASS (8/8) · fingerprint P4:docs:7:slim-three-consumer-routes-to-run-and-paste
 - P5 — Phase-lint: PASS (8/8) · fingerprint P5:config/infra:2:implement-box-2-test-file-mapping
-- P6 — Phase-lint: PASS (8/8) · fingerprint P6:hardening:8:hardening-pr
+- P6 — Phase-lint: PASS (8/8) · fingerprint P6:config/infra:2:conform-linter-to-re-cut-grammar
+- P7 — Phase-lint: PASS (8/8) · fingerprint P7:hardening:8:hardening-pr
 
 ### Deploy & rollback
 
