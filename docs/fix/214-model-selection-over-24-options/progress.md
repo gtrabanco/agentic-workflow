@@ -112,6 +112,17 @@ Session ledger for this unit. Receipt blocks follow the
 - Commit: dd7aa72f · Gate: two live SMOKE rows recorded above (both outcome-pass) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P7 · Attempts: 1
 
+## P7 — 2026-09-13
+- Done: Full gate re-run — `cd packages/pi-agentic-workflow && bun run test` → exit 0, 203 pass / 0 fail; `bun test scripts/normative-drift.test.mjs` → 16 pass; `bun scripts/check-skill-context.mjs` → exit 0 (`PASS context budgets: 39 skills`). Pending-docs check `git status --porcelain -- docs/` → empty. Fix index flipped to `done`, pushed, PR opened with `--body-file` (real backticks verified: 100, zero escaped), then linked to `done · [#217](https://github.com/gtrabanco/agentic-workflow/pull/217)` and pushed. Phase-lint re-checked PASS (8/8) at fingerprint `P7:close-out:7:hardening-and-pr`.
+- Remains: none in-unit — the independent `/review-change` end review and the `/audit-pr` merge gate remain, and the fix-index entry stays until the PR merges.
+- Gotchas: AC13 is a human-operator attestation (the two SMOKE rows record the operator's reported result, not an executor-observed one). The P5 validator counts exactly two outcome-pass rows in this file — never restate the literal pattern elsewhere here or the count drifts (a first draft did and was corrected before the P5 commit).
+- Files: docs/fix/README.md · docs/fix/214-model-selection-over-24-options/SPEC.md (P7 ticks) · progress.md
+- Next: unit finished
+
+## Unit-loop receipt — P7
+- Commit: pending (terminal close-out commit — this entry rides it; there is no later phase to reconcile the sha) · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 203 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Next: none (unit finished) · Attempts: 1
+
 ## Unit-loop receipt — P4
 - Commit: 2cb84746 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 203 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Trigger: layer boundary (P3 `domain` → P4 `ui`) · Next: P5 · Attempts: 1
