@@ -183,8 +183,8 @@ Fase 6: Pi Package Features (paralelizables entre sí)
     └── Sin dependencias de features ★ PARALELIZABLE CON TODO
 
 Fase 7: Experimental / Low Priority
-└── [192] doc toolchain (experimental)
-    └── Estado: idea (sin folder)
+└── [192] doc toolchain (issue sin fila en ROADMAP.md — NO es una feature del roadmap)
+    └── Estado: issue abierta, sin unidad asignada (el sibling `TRIAGE_REREPORT_2026-09-13.md` la marca "[NO MAPPED]")
     ├── Markdown as source + derived JSON index
     ├── AST-based edit CLI
     └── Sin dependencias ★ PARALELIZABLE CON TODO
@@ -255,7 +255,7 @@ Fase 8: Final Slimming (SIEMPRE ÚLTIMO)
 
 ## Matriz de Conflictividad
 
-**Leyenda:** `✓` = conflicto de archivos (NO paralelizable) · ` ` = sin conflicto (paralelizable)
+**Leyenda:** `✓` = conflicto de archivos (NO paralelizable) · ` ` = sin conflicto (paralelizable). **La matriz es triangular inferior:** el conflicto es simétrico y cada par se escribe una sola vez, en la celda cuya fila tiene el número mayor; el triángulo superior queda en blanco por convención y nunca significa "sin conflicto".
 
 | Feature \ Con | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 39 | 40 | 41 | 42 | 44 | 45 | 46 | 47 | 48 | 49 | 192 | 176 |
 |---------------|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|-----|-----|
