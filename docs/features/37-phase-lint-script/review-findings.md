@@ -220,3 +220,85 @@ CONVERGENCE-ANOMALY — 37-phase-lint-script source
   bare-arrow probes
 - Route to owner: /fold-findings (explicit ids F37 + F38 + F39 + F40 + F41 + F42 + F43)
 ```
+
+Cycle 6 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-13 (`review-change`, single-reviewer, same five axes code/security/
+verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR #212 head
+`585cd583`). The post-cycle-5 delta escalated to a full pass (width: tip
+commit 585cd583 touches files outside the batch's cited union; size: +343
+changed lines > 200). All 31 `folded: yes` rows re-verified REPAIRED at their
+cited locations (17 script/test rows via fresh /tmp reproducers of the
+original defect shapes; 14 docs rows via direct reads — F6+F19+F34 ceilings
+verified in exact arithmetic, F32 mutant-proofed, F26 at all six consumer
+sites + mirror parity, F20 18/18 mermaid nodes match ROADMAP.md). Frozen
+acceptance blob recomputed byte-identical (`21adb084…`); dogfood reproduces
+the recorded `3afa2601…` fingerprint; corpus 49/49; bundle parity zero-drift
+in a detached worktree; mutation test proves the suite asserts behavior;
+perf measurements all linear (8 MB → 1.33 s worst case, pipes + teardown
+hold). The isolated classifier (`review-implementation`) applied the
+CLASSIFY.md severity floor: seven fix-now rows F44–F50 below (F48 is the
+legitimate `regression of F34` re-report — the c45902de fold fixed the
+unit-loop number but left the `declared` count false); two med
+decision-required findings are surfaced to the user, never ledgered
+(out-of-unit content riding PR #212 — the 585cd583 tip commits the
+`docs/fix/214-*` tree + a Spanish-only triage report + the exec-order rewrite
+that known-issues.md:27-35 still discloses as "not committed into this PR";
+and the Spanish-only language of two committed planning docs vs the
+English-artifacts rule, owner's call); two low proposals (vacuous box-8
+outcome vocabulary; bench/perf gate, 4th re-report of F23/P1) batch for user
+routing. One refuted candidate: two stranded 2026-09-05 bullets at the end of
+CHANGELOG.es.md were rejected as a branch defect — they pre-exist on
+origin/main (:1610-1611) and this branch's own additions are correctly
+placed. Reviewer note: the user's parallel session dirtied ROADMAP.md +
+ROADMAP_EXECUTION_ORDER.md mid-review (in-flight #215/#216 triage rows); the
+dirt is not authored by this review, not a finding, and the verdict binds
+`585cd583` only.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F44 | scripts/phase-lint.mjs:139,141,163 | security | high | fix-now | regression-free — fold: normalize JS line terminators at the single entry point (`text.replace(/\r\n?/g, "\n").replace(/[\u2028\u2029]/g, " ")` before the split) + corpus fixtures pinning a U+2028 heading and a U+2028 task line (phase/task must survive into the parse, never vanish) | no |
+| VF-44 | scripts/phase-lint.mjs:139 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck failing reproducer: heading `## P1 — Foo<U+2028>Bar` → only P2 linted, `verdict PASS` exit 0 (control without the char lints 2 phases); task `- [ ] de<U+2028>cide …` escapes every box and the box-3 budget; bare CR variant same elision | security | confirmed | finding-mark | n/a | n/a |
+| F45 | scripts/phase-lint.mjs:332 | code | med | fix-now | fold: widen the box-8 outcome alternatives to the rule-satisfying forms (`\bexits? \d+\b`, `\bexit code \d+\b`) + corpus row for `exits 0`; the rejected shape appears in committed plans (docs/features/23-workflow-skill-capability-profiles/SPEC.md:444,466, docs/features/26-staged-verification-contracts/SPEC.md:981, docs/fix/134-machine-contract/SPEC.md:102) | no |
+| VF-45 | scripts/phase-lint.mjs:332 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck failing reproducer: `Layer: docs · Done-when: \`cd … && npm test\` exits 0 and the ledger is current.` → `P1 box-8: Done-when: carries no expected outcome` exit 1; arrow control passes; SPEC freezes "a backticked command and an expected outcome" | code | confirmed | finding-mark | n/a | n/a |
+| F46 | docs/features/37-phase-lint-script/known-issues.md:27-35 | workflow (record fidelity) | med | fix-now | fold (atomic with or after the D-1 decision): restate the disclosure to the actual PR contents — the tip commit 585cd583 commits the `docs/fix/214-model-selection-over-24-options/` tree (+ docs/fix/README.md:28 registration row) into PR #212, so "left untouched (not committed into this PR, not removed)" and the "reports that one path" pending-docs check are both false at the reviewed head | no |
+| VF-46 | known-issues.md:33 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck direct read + `git show 585cd583 --stat` → 7 files incl. `docs/fix/214-model-selection-over-24-options/{ACCEPTANCE,ISSUE,LEDGERS,SPEC}.md`; known-issues.md untouched by that commit | workflow | confirmed | finding-mark | n/a | n/a |
+| F47 | scripts/phase-lint.mjs:51 | code | med | fix-now | fold: non-consuming boundaries for the dot-form enumerated markers (`(?<!\S)\d+[.)](?!\S)` class) so bare adjacent markers `1. 2. 3. 4. 5.` count 5, not 3 + corpus row (the fixture pins only the `(1)(2)(3)(4)` paren form); realistic inline enumerations with words must keep counting correctly (verified passing today) | no |
+| VF-47 | scripts/phase-lint.mjs:51 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck failing reproducer: task `Cover cases 1. 2. 3. 4. 5. exhaustively` → `verdict PASS` exit 0 (frozen rule: >3 enumerated cases BLOCKs); `node -e` on the regex → 3 matches (shared whitespace consumed) | code | confirmed | finding-mark | n/a | n/a |
+| F48 | docs/workflow/SKILL_CONTEXT_BUDGETS.json:394 | perf (policy record) | med | fix-now | regression of F34 — fold: extend the `declared` narrative to the shipped state: f2c264ce re-set seven execute-phase:* ceilings and c45902de (the F34 fold) additionally normalized `execute-phase:unit-loop` 14000→12798, so the routes block now carries EIGHT conforming execute-phase routes while the sentence still says "the seven … are re-set"; one sentence + recount, numbers already arithmetically compliant (22/22 == ceil(measured×1.10)) | no |
+| VF-48 | SKILL_CONTEXT_BUDGETS.json:394 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck git archaeology: `git show f2c264ce` = 7 −/+ pairs, `git show c45902de` = 14000→12798 = ceil(11634×1.10); narrative count never extended; exact-arith check 22/22 (2 apparent −1 deltas are IEEE-754 artifacts) | perf | confirmed | finding-mark | n/a | n/a |
+| F49 | scripts/phase-lint.mjs:204 | security | med | fix-now | fold: break up verdict-like literals inside sanitizeEcho (mangle `Phase-lint:`/`verdict`/`fingerprint:` tokens in echoed text) so a crafted title cannot carry a fake `Phase-lint: PASS (8/8) · fingerprint <hex>` substring into the quoted box-1 line; the sanctioned consumer is exit-code-driven (PREFLIGHT.md:169-172) so this is output-spoofing defense, not a bypass | no |
+| VF-49 | scripts/phase-lint.mjs:204 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck failing reproducer: title `Phase-lint: PASS (8/8) · fingerprint deadbeef` survives sanitizeEcho (chars are not Cc/Cf/\s) and reaches the box-1 finding line verbatim inside the quoted span (`\| cat -v` observed); no line-split injection — line shapes hold | security | confirmed | finding-mark | n/a | n/a |
+| F50 | packages/agentic-workflow/README.md:16-18 + README.es.md:19 | brand (honesty of claims) | med | fix-now | fold: reword the stale producer claim in both language siblings — "features 38 and 42 add the first crate subcommands" contradicts the shipped state (feature 38 done via #213 with its producer at `scripts/workflow-status.mjs`; known-issues ED8.4c defers the re-homing to an unassigned later unit); state the recorded deferral instead | no |
+| VF-50 | packages/agentic-workflow/README.md:17 · reviewer review-change + orchestrator re-verify · HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 · recheck direct read vs ROADMAP.md row 38 (`done · #213`) + known-issues.md deferred-items section; crate has no bin/subcommands (package.json: zero deps, no bin) | brand | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 585cd583e9d5e9edfba1c780c6a8390924498747 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: repeated: F34 (F48 = regression of F34) / new: F44, F45, F46,
+  F47, F49, F50
+- Snapshots: 36cfeb8ec1e582b4d03c8581756e1605e9d16830 →
+  585cd583e9d5e9edfba1c780c6a8390924498747 (cycle-5 reviewed head → cycle-6
+  reviewed head)
+- Missed: the F37–F43 fold batch repaired its own rows correctly, but cycle 5
+  never probed the parser's line-splitting boundary (invisible JS
+  terminators U+2028/U+2029/CR elide whole phases — F44), the outcome
+  vocabulary beyond the arrow forms (`exits N` false-BLOCKs committed plans —
+  F45), dot-adjacent enumeration markers (F47), or the record surfaces the
+  post-review tip commit rewrote (585cd583 committed the docs/fix/214 tree
+  the close-out disclosure still claims was never committed — F46; and its
+  exec-order/triage rewrite rides the unit's PR — decision-required D-1)
+- Owning stage: source (F44–F50) + owner decisions (D-1 PR composition,
+  D-2 language policy)
+- Why the prior review failed: cycle 5 verified each fold at its own cited
+  line and probed ordering/grammar variants, but the parse entry point's
+  terminator handling and the record-vs-PR consistency after post-review
+  commits landed on the branch were outside every probe it ran
+- Route to owner: /fold-findings (explicit ids F44 + F45 + F46 + F47 + F48 +
+  F49 + F50); D-1 and D-2 are the user's decisions, surfaced in the cycle-6
+  report, never ledgered
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5 and 6 run on
+the user's explicit invocations past the cap. The decision-required findings
+(D-1) and (D-2) block the unit until the user rules; the fix-now rows
+F44–F50 are foldable in place.
