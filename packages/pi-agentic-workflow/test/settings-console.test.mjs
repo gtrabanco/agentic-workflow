@@ -1226,3 +1226,61 @@ test("settings console model picker: Type another reference is the last option i
   assert.ok(modelDialogs.every((entry) => entry.options.at(-1) === TYPED_OPTION), "TYPED is last on every model dialog");
 });
 
+test("settings console model picker: bounded command selection over 30 commands", async () => {
+  const commandSet = Object.fromEntries(
+    Array.from({ length: 30 }, (_, i) => [`cmd${String(i + 1).padStart(2, "0")}`, { model: "a/m1" }]),
+  );
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: JSON.stringify({ commands: commandSet }) },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.clearOverride, prompts.save, prompts.cancel],
+        [prompts.command]: [PAGED_SELECT_NEXT, "cmd25"],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.ok(!saved.commands.cmd25, "the command picked from page 2 was removed");
+  assert.equal(Object.keys(saved.commands).length, 29);
+  const pages = scripted.asked.filter((entry) => entry.title === prompts.command);
+  assert.equal(pages.length, 2, "the command list paged");
+  assert.ok(pages[0].options.includes(PAGED_SELECT_NEXT), "page 1 offers the pager");
+  assert.ok(pages[1].options.includes("cmd25"), "the pager reached page 2");
+  assert.ok(fitsCap(scripted));
+});
+
+test("settings console model picker: bounded command multi-select rounds over 30 commands", async () => {
+  const commandSet = Object.fromEntries(
+    Array.from({ length: 30 }, (_, i) => [`cmd${String(i + 1).padStart(2, "0")}`, { model: "a/m1" }]),
+  );
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: JSON.stringify({ commands: commandSet }) },
+    {
+      rich: false,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: [PAGED_SELECT_NEXT, "cmd22", "cmd01"],
+        [prompts.addAnother]: [true, false],
+        [prompts.fields]: prompts.fieldsThinking,
+        [prompts.thinking("cmd22")]: "low",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.equal(saved.commands.cmd22.thinking, "low");
+  assert.equal(saved.commands.cmd01.thinking, "low");
+  const rounds = scripted.asked.filter((entry) => entry.title === prompts.command);
+  assert.equal(rounds.length, 3, "two bounded rounds (page 2 of round 1, page 1 of round 2)");
+  assert.ok(rounds[0].options.includes(PAGED_SELECT_NEXT), "round 1 page 1 offers the pager");
+  assert.ok(rounds[1].options.includes("cmd22"), "round 1 reached page 2");
+  assert.ok(rounds[2].options.includes("cmd01"), "round 2 starts a fresh bounded page");
+  assert.ok(fitsCap(scripted));
+});

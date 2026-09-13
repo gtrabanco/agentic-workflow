@@ -71,8 +71,19 @@ Session ledger for this unit. Receipt blocks follow the
 - Files: packages/pi-agentic-workflow/src/settings/console.ts · packages/pi-agentic-workflow/test/settings-console.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P2 ticks) · progress.md
 - Next: P3 — Bounded command selection
 
-## Unit-loop receipt — P2
+## P3 — 2026-09-13
+- Done: `pickCommand` and each `pickCommandsMulti` non-rich round now route through `pagedSelect`; a list ≤ `SELECT_OPTION_LIMIT` keeps today's single sorted `select` call byte-identical, an over-cap list pages (commands carry no trailing option, so a page is 21 data + pager(s)). New red-first console cases "bounded command selection over 30 commands" (paged single select with page-2 navigation) and "bounded command multi-select rounds over 30 commands" (two picks across bounded rounds through bulk apply). Validator `-t "bounded command"` → 2 pass; full suite → 201 pass. Phase-lint re-checked PASS (8/8) at fingerprint `P3:domain:2:bounded-command-selection`.
+- Remains: P4–P7.
+- Gotchas: a paged command dialog never exceeds 22 options (21 data + at most one pager at the ends, 22 with both); the non-rich multi-select bounds each round's shrinking `remaining` list, never the whole list. Ordering note: the command routing and its two tests first landed inside the P2 commit; that commit was rewritten (local, unpushed) to keep P2/P3 un-bundled — this commit is the one that carries them.
+- Files: packages/pi-agentic-workflow/src/settings/console.ts · packages/pi-agentic-workflow/test/settings-console.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P3 ticks) · progress.md
+- Next: P4 — Adapter non-TUI pick paging
+
+## Unit-loop receipt — P3
 - Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 201 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Next: P4 · Attempts: 1
+
+## Unit-loop receipt — P2
+- Commit: 10d1dfb1 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 201 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P3 · Attempts: 1
 
 ## Unit-loop receipt — P1
