@@ -132,6 +132,41 @@ test("more than three enumerated cases fails box 4", () => {
   assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 4: /m);
 });
 
+// Fold F40 — the enumerated-case counter matched only `[a-h]` letters and
+// required a separating whitespace, so multi-letter roman markers and adjacent
+// whitespace-free markers evaded the >3-cases rule (SPEC §Design box-4).
+const ROMAN_ENUMERATED_PLAN = `# Roman enumerated cases
+
+### P1 — Handle the input modes
+
+Layer: config/infra. Done-when: \`node --test scripts/modes.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/modes.mjs\` covering (i) stdin, (ii) file, (iii) dir, (iv) url, (v) socket
+`;
+
+const ADJACENT_ENUMERATED_PLAN = `# Adjacent enumerated cases
+
+### P1 — Handle the input modes
+
+Layer: config/infra. Done-when: \`node --test scripts/modes.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/modes.mjs\` covering (1)(2)(3)(4) input modes
+`;
+
+test("roman-numeral enumerated cases fail box 4 (F40)", () => {
+  const file = fixture("roman-enumerated.md", ROMAN_ENUMERATED_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-4: task 1 enumerates 5 cases$/m);
+});
+
+test("adjacent enumerated markers fail box 4 (F40)", () => {
+  const file = fixture("adjacent-enumerated.md", ADJACENT_ENUMERATED_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-4: task 1 enumerates 4 cases$/m);
+});
+
 test("a phase with more than eight tasks fails box 3", () => {
   const file = fixture("threshold.md", THRESHOLD_PLAN);
   const { status, stdout } = nodeRun(file);
@@ -563,8 +598,9 @@ test("a non-ASCII word joined by `+` fails box 1", () => {
   assert.match(stdout, /^P1 box-1: /m);
 });
 
-// Fold F15 — the box-8 outcome test is word-anchored, so `bypasses` is not a
-// `pass` outcome.
+// Fold F15 — the box-8 outcome test is word-anchored for `pass`, so `bypasses`
+// is not a `pass` outcome (F42 keeps that anchored and anchors the other weak
+// outcome words too).
 const BYPASS_OUTCOME_PLAN = `# Bypass outcome
 
 ### P1 — Wire the linter
@@ -579,6 +615,41 @@ test("`bypasses` is not a box-8 `pass` outcome", () => {
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
   assert.match(stdout, /^P1 box-8: /m);
+});
+
+// Fold F42 — box-8 requires an expected outcome: a bare `→`/`->` with nothing
+// after it is not an outcome, and the weak outcome words are word-anchored
+// ("nonempty" is not the frozen word "empty").
+const BARE_ARROW_OUTCOME_PLAN = `# Bare arrow outcome
+
+### P1 — Wire the linter
+
+Layer: docs. Done-when: \`bun run lint\` →
+
+- [ ] Create \`docs/x.md\`
+`;
+
+const SUBSTRING_OUTCOME_PLAN = `# Substring outcome
+
+### P1 — Wire the linter
+
+Layer: docs. Done-when: \`bun run lint\` nonempty
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("a bare `Done-when:` arrow carries no expected outcome (F42)", () => {
+  const file = fixture("bare-arrow-outcome.md", BARE_ARROW_OUTCOME_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: `Done-when:` carries no expected outcome$/m);
+});
+
+test("a substring of a weak outcome word is not an outcome (F42)", () => {
+  const file = fixture("substring-outcome.md", SUBSTRING_OUTCOME_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: `Done-when:` carries no expected outcome$/m);
 });
 
 // Fold F10 — the box-5/box-6 scans are single-pass position checks, so a
@@ -601,6 +672,42 @@ test("box-5/box-6 scans keep their verdict on realistic decision text", () => {
   assert.match(stdout, /^P1 box-5: task 1 offers either\/or alternatives$/m);
   assert.match(stdout, /^P1 box-5: task 2 carries an “If … then” scope change$/m);
   assert.match(stdout, /^P1 box-6: task 3 moves work to another phase$/m);
+});
+
+// Fold F38 — the box-5 `If … then` and box-6 move scans read the WHOLE task
+// text: the SPEC-frozen `If .* then (…)` / `move(s)? .*(to|into) P\d+` let the
+// middle span cross sentence periods, so bounding a scan to one sentence was
+// fail-open.
+const CROSS_SENTENCE_MOVE_PLAN = `# Cross-sentence move
+
+### P1 — Handle the parser
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Move the parser work. The cleanup goes to P4
+`;
+
+const CROSS_SENTENCE_IF_PLAN = `# Cross-sentence if then
+
+### P1 — Handle the flag
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] If tests flake. Then remove the legacy flag
+`;
+
+test("a move target in a later sentence still fails box 6 (F38)", () => {
+  const file = fixture("cross-sentence-move.md", CROSS_SENTENCE_MOVE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-6: task 1 moves work to another phase$/m);
+});
+
+test("an `If … then` scope change in a later sentence still fails box 5 (F38)", () => {
+  const file = fixture("cross-sentence-if.md", CROSS_SENTENCE_IF_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-5: task 1 carries an “If … then” scope change$/m);
 });
 
 test("a degenerate multi-hundred-KB task line completes instead of backtracking", () => {
