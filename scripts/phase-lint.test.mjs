@@ -165,6 +165,73 @@ test("a mid-plan hardening phase with nine tasks fails box 3 (close-out keeps te
   assert.match(stdout, /^P2 Phase-lint: PASS \(8\/8\)/m);
 });
 
+// Fold F37 — the ≤10 budget belongs to the plan's FINAL phase when that phase
+// is hardening/close-out; a hardening phase followed by non-hardening work is
+// mid-plan and keeps the ≤8 base limit. The F3 fold keyed the budget to the
+// last hardening-*layered* phase, so this ordering kept ≤10 (regression of F3).
+const HARDENING_THEN_DOCS_PLAN = `# Hardening then docs
+
+### P1 — Harden the parser
+
+Layer: hardening. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+${Array.from({ length: 9 }, (_, i) => `- [ ] Re-run gate ${i + 1} and paste the exit code`).join("\n")}
+
+### P2 — Document the parser
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("a hardening phase followed by non-hardening work keeps the ≤8 budget (F37)", () => {
+  const file = fixture("hardening-then-docs.md", HARDENING_THEN_DOCS_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-3: phase has 9 tasks \(limit 8 for layer hardening\)$/m);
+});
+
+// Fold F39 — `gh pr` is a human/external gate in any phase other than the
+// plan's FINAL hardening/close-out phase (SPEC §Design box-7); the layer-only
+// exemption let a mid-plan hardening phase carry it.
+const MID_HARDENING_GH_PR_PLAN = `# Mid hardening gh pr
+
+### P1 — Harden the parser
+
+Layer: hardening. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Check gh pr status of the dependency branch
+
+### P2 — Document the parser
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("`gh pr` in a mid-plan hardening phase fails box 7 (F39)", () => {
+  const file = fixture("mid-hardening-gh-pr.md", MID_HARDENING_GH_PR_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-7: /m);
+});
+
+const FINAL_HARDENING_GH_PR_PLAN = `# Final hardening gh pr
+
+### P1 — Hardening & PR
+
+Layer: hardening. Done-when: \`git status --porcelain\` → empty.
+
+- [ ] Run gh pr create --fill
+`;
+
+test("`gh pr` in the final hardening phase stays clean (box 7)", () => {
+  const file = fixture("final-hardening-gh-pr.md", FINAL_HARDENING_GH_PR_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
 // Fold F2 — the box-2 `ambiguous` flag must reach the file-level verdict.
 const UNMAPPABLE_TARGET_PLAN = `# Unmappable target
 
