@@ -477,12 +477,12 @@ Layer: `docs`. Done-when:
 `node -p "require('./packages/pi-agentic-workflow/package.json').version"` →
 `0.9.2`.
 
-- [ ] Bump `version:` 0.9.1 → 0.9.2 in
+- [x] Bump `version:` 0.9.1 → 0.9.2 in
       `packages/pi-agentic-workflow/package.json` (O10, PE-010).
-- [ ] Add the 0.9.2 row to the companion-packages tables in `CHANGELOG.md`
+- [x] Add the 0.9.2 row to the companion-packages tables in `CHANGELOG.md`
       and `CHANGELOG.es.md` (bilingual pair, same commit) (O11, PE-010,
       PE-011).
-- [ ] Add one sentence to the console paragraph in the package `README.md` and
+- [x] Add one sentence to the console paragraph in the package `README.md` and
       `README.es.md` pair: lists longer than 24 options never reach a single
       dialog — models group provider-first and overlong lists page
       (O12, PE-011).
