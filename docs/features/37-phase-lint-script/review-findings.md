@@ -371,3 +371,97 @@ on the user's explicit invocations past the cap. The decision-required
 findings (D-1, D-2 — now including the ROADMAP_EXECUTION_ORDER.md language
 surface) block the unit until the user rules; the fix-now rows F51–F53 are
 foldable in place.
+
+Cycle 8 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-13 (`review-change`, single-reviewer, five applicable axes
+code/security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface;
+PR #212 head `7ba99775`). The post-cycle-7 fold delta (`f56dc5c1..7ba99775`)
+escalated to a full pass on WIDTH — `scripts/phase-lint.test.mjs` (+26 at
+:1087) and the ledger append fall outside the F51–F53 cited union; size stayed
+under the caps (+103/−7, 4 files). All 48 `folded: yes` rows re-verified
+REPAIRED at their cited locations — 26 script rows via fresh /tmp reproducers
+of the original defect shapes on bun and node (F57's parity sweep excluded;
+F52's mangled target echo, F44's U+2028/CR survival, F37/F39 position checks,
+F43 usage error, F22/F25 pipes all hold), 22 docs/JSON/SPEC rows via direct
+reads, exact ceil(measured × 1.10) arithmetic, mirror diffs and transpose
+checks. Structural preconditions green at `7ba99775`: acceptance blob
+`21adb084…` byte-identical; dogfood bun+node reproduce the recorded
+`3afa2601…` fingerprint; corpus 57/57; scripts suite 316/316; contexts 39
+skills + 22 routes; skills-list green; bundle parity zero-drift in a detached
+worktree; schema diff empty; AC1–AC10 validators re-run green (AC8's
+validator-as-written nit is finding V4 below). The isolated classifier
+(`review-implementation`) applied the CLASSIFY.md severity floor: nine
+fix-now rows F54–F62 below — F57 and F58 are `high` (the bun/JSC-vs-V8
+PATH_TOKEN divergence breaks the frozen node/bun verdict parity and bypasses
+the box-2 fail-closed gate under the primary runtime; and the box-1
+word-joiner branch ships with zero corpus coverage — a mutant deleting the
+whole frozen rule-1 shape leaves the suite 57/57 green). Four debt items are
+report-only (P2/P3 hot-path waste + memory amplification, V3 test-name
+accuracy; P4 is the FIFTH re-report of the bench-gate proposal — DEBT-1's
+recorded trigger "5th re-report or next hot-path commit" FIRES this cycle).
+Decision-required surfaces merge into the standing D-1/D-2 rulings (B1–B4,
+B6, B8 riding-doc corrections; C1 — the `f8afc6d0` toolstate commit riding
+the PR unpinning the filesystem MCP server with zero traceability, its
+@latest pin-policy angle being the settled F18) plus ONE new frozen-manifest
+amendment decision (V4+B10: AC8's validator is unrunnable as written and AC6's
+row carries an unescaped pipe — both inside the blob-frozen ACCEPTANCE.md,
+unfixable without a user-approved SPEC amendment). B12 (historical ledger-row
+pipes) is `ignore`. One refuted candidate: S1, the `.pi/mcp.json` `@latest`
+float re-reported as a security finding — refuted by the unit's own record
+(F18, cycles 1 and 5: owner-intentional, never re-litigated).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F54 | scripts/phase-lint.mjs:293 + SPEC.md:469-471 | code | med | fix-now | fold: anchor the box-5 scope-change verb to the frozen adjacency — require the verb immediately after the first `then` per `If .* then (add\|remove\|move\|split\|merge\|defer)` and drop the `\w*` suffix drift + corpus fixture for the tail-position false-BLOCK shape ("then rerun; the added fixture …") | no |
+| VF-54 | scripts/phase-lint.mjs:293 · reviewer review-change + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck failing reproducer: task `If the snapshot mismatches, then rerun; the added fixture is committed separately` → `P1 box-5: task 1 carries an "If … then" scope change` exit 1; the frozen pattern requires the verb immediately after `then` ("rerun" is no scope verb; the implementation's `\b(?:add\|…)\w*\b` over the whole tail also admits derived forms like "added") | code | confirmed | finding-mark | n/a | n/a |
+| F55 | scripts/phase-lint.mjs:211 | security | med | fix-now | fold: extend the F49 verdict-token breakup to derived forms (match the token families without the trailing word boundary) so `Phase-linting`/`fingerprinting` cannot carry a matchable token through the quoted echo + corpus fixture pinning a derived form | no |
+| VF-55 | scripts/phase-lint.mjs:211 · reviewer review-change (security pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck failing reproducer: title `Phase-linting + fingerprinting cleanup and more` → the box-1 line echoes both derived forms intact (the `\b(phase-lint\|verdict\|fingerprint)\b` breakup leaves them); a substring-grepping consumer still matches `fingerprint` inside the echoed span — the F49/F52 invariant is not delivered for derived forms | security | confirmed | finding-mark | n/a | n/a |
+| F56 | scripts/phase-lint.mjs:46,64 | code | med | fix-now | fold: fail closed on untokenizable path-like targets — an emphasis-wrapped target (`*docs/x.md*`) must take the ambiguous → `unparseable` path like the `_…_` shape, never silently drop to targetless-exempt + corpus fixtures for both shapes | no |
+| VF-56 | scripts/phase-lint.mjs:46,64 · reviewer review-change + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck failing reproducers: `- [ ] Update *docs/x.md* with the link` in a config/infra phase → `verdict PASS` (target fails PATH_TOKEN, silently dropped, layer check never runs) while the identical task with `_docs/x.md_` → `BLOCKED: unparseable`; SPEC.md:444-462 freezes "a target the table cannot map is ambiguous → BLOCKED: unparseable, never a guess" (PD1 fail-closed) | code | confirmed | finding-mark | n/a | n/a |
+| F57 | scripts/phase-lint.mjs:23 | code | high | fix-now | fold: make PATH_TOKEN runtime-stable — replace the nested-quantifier shape (`[C]+(?:/[C]+)*/?$`) with a single-pass segment tokenizer (split on `/`, validate each segment) or bound the match length so node and bun agree at every input size + corpus fixture at the divergence boundary + re-run the node/bun parity sweep over degenerate inputs | no |
+| VF-57 | scripts/phase-lint.mjs:23 · reviewer review-change (perf pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck failing reproducer: identical 4.0 MB single-task fixture (target `a/`×2e6 + `a`) → node `BLOCKED: unparseable` vs bun `verdict PASS` — bun/JSC returns no-match for the nested-quantifier PATH_TOKEN at ≥ ~3M chars where node/V8 matches (control `/^[a]+$/` still matches at 4M under bun, so it is the regex shape, not a generic length limit); the frozen node/bun verdict parity (AC7 family) breaks and the box-2 fail-closed gate is bypassed under the primary runtime | code | confirmed | finding-mark | n/a | n/a |
+| F58 | scripts/phase-lint.test.mjs (corpus; rule at scripts/phase-lint.mjs:219) | verify | high | fix-now | fold: pin the box-1 word-joiner branch (`and`/`y`) with corpus fixtures asserting both the BLOCK shape (`and` joiner) and the PASS control, plus the `,`/`/` symbol-joiner variants — the frozen acceptance quality floor makes the corpus the behavioral contract | no |
+| VF-58 | scripts/phase-lint.mjs:219 · reviewer review-change (verify pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck mutation probe: WORD_JOINER replaced by a never-matching regex in a /tmp copy → `node --test` still 57 pass / 0 fail (zero coverage — deleting the entire frozen rule-1 shape ships green); live probe confirms the rule fires correctly (`Parse and emit` → box-1 BLOCK) — coverage gap, not a behavior bug | verify | confirmed | finding-mark | n/a | n/a |
+| F59 | scripts/phase-lint.test.mjs (corpus) | verify | med | fix-now | fold: pin the remaining frozen branches — box-6 `defer` verb form, box-7 `ask the user`, box-2 prefix rows `.github/`/`template/`/`.agentic-workflow/`, box-3 ≤10 upper boundary (9-task final-hardening PASS), sanitizeEcho 120-char cap | no |
+| VF-59 | scripts/phase-lint.test.mjs · reviewer review-change (verify pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck grep of the corpus for `defers?\|ask the user\|github/\|template/\|agentic-workflow/\|10 tasks` → 0 matches; every branch probed correct live (defer → box-6, ask-the-user → box-7, 9-task final hardening → PASS) — mutants in any would survive | verify | confirmed | finding-mark | n/a | n/a |
+| F60 | docs/features/ROADMAP_EXECUTION_ORDER.md:256-276 | workflow (record fidelity) | med | fix-now | fold: symmetrize the conflict matrix (fill the transpose cells or mark one triangle authoritative-by-legend) so every feature pair answers the same parallelization question from either row; the correction travels with the file under either D-1 outcome | no |
+| VF-60 | docs/features/ROADMAP_EXECUTION_ORDER.md:256-276 · reviewer review-change (brand pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck transpose check: 13 ✓-asymmetric pairs (e.g. row31[32]=∅ vs row32[31]=✓; row31[40]=∅ vs row40[31]=✓) under the legend ✓ = conflict / blank = parallelizable — one table gives opposite answers | workflow | confirmed | finding-mark | n/a | n/a |
+| F61 | docs/features/ROADMAP_EXECUTION_ORDER.md:186-188 | workflow (record fidelity) | med | fix-now | fold: restate the #192 entry without roadmap-status vocabulary — ROADMAP.md has no row 192 (rows 1–49) and the sibling triage doc marks it "[NO MAPPED]", so record it as an unmapped issue, never a roadmap feature | no |
+| VF-61 | docs/features/ROADMAP_EXECUTION_ORDER.md:186-188 · reviewer review-change (brand pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck direct read + grep: `grep -c "#192" docs/features/ROADMAP.md` → 0; exec-order:186-188 presents `[192] doc toolchain … Estado: idea (sin folder)` inside the execution tree | workflow | confirmed | finding-mark | n/a | n/a |
+| F62 | CHANGELOG.md:95 + CHANGELOG.es.md:97 | brand (bilingual completeness) | med | fix-now | fold: extend the 0.9.2 row in both siblings to name the pi mirror's phase-contract 1.0.1→1.0.3 bump — including the rule-3 semantic change (zero-task phase BLOCKs) the version carries | no |
+| VF-62 | CHANGELOG.md:95 · reviewer review-change (brand pass) + orchestrator re-verify · HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 · recheck git archaeology: `git show main:packages/pi-agentic-workflow/skills/phase-contract/SKILL.md` = 1.0.1 vs HEAD mirror 1.0.3; the 0.9.2 row enumerates only the paste-fence + P4 wording bumps, so the rule-3 behavioral change ships undocumented in both language siblings | brand | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: new: F54–F62 (no folded id re-opened: F38's promised cross-
+  period shapes still hold at head; F54's tail-position verb drift is a new
+  deviation of the same scan, causally rooted in the F38 whole-text rewrite,
+  not a failed repair)
+- Snapshots: f56dc5c170569424b10a334d28361d07271b35d9 →
+  7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 (cycle-7 reviewed head → cycle-8
+  reviewed head)
+- Missed: cycles 1–7 never probed runtime-dependent regex behavior (F57 —
+  PATH_TOKEN's nested quantifier matches under V8, silently no-matches under
+  JSC ≥ ~3M chars), killed-rule mutants (F58 — the box-1 word-joiner branch
+  has no corpus coverage), tokenizer fail-open shapes (F56 — emphasis-wrapped
+  targets), the box-5 verb-adjacency drift (F54), derived verdict-like forms
+  through sanitizeEcho (F55), or the record surfaces the user-authored
+  triage/exec-order rewrites re-published (F60–F62)
+- Owning stage: source (F54–F62) + owner decisions (D-1 PR composition, now
+  including the f8afc6d0 toolstate commit; D-2 language policy; NEW
+  frozen-manifest amendment decision V4+B10)
+- Why the prior review failed: cycle 7 verified each fold at its own cited
+  line and swept the echo sites, but never mutated the frozen rules to test
+  corpus coverage, never cross-runtime-compared verdicts on degenerate
+  inputs, and treated the riding triage report as pure composition (D-1)
+  without reading its claims against the roadmap
+- Route to owner: /fold-findings (explicit ids F54 + F55 + F56 + F57 + F58 +
+  F59 + F60 + F61 + F62)
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–8 run on the
+user's explicit invocations past the cap. The decision-required surfaces (D-1
+PR composition incl. C1, D-2 language policy, the frozen-manifest amendment
+V4+B10) block the unit until the user rules; the fix-now rows F54–F62 are
+foldable in place.
