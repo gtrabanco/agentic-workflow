@@ -765,6 +765,32 @@ test("a nonexistent file and a missing argument both answer missing-plan", () =>
   assert.match(noArg.stdout, /^verdict BLOCKED: missing-plan$/m);
 });
 
+// Fold F43 — extra argv beyond the plan path is a usage error, never a silent
+// drop: linting only the first plan hands the caller a verdict for a file it
+// did not choose, while a second would-block plan goes unexamined.
+const NO_DONE_WHEN_PLAN = `# Missing the gate
+
+### P1 — Without a Done-when
+
+Layer: docs.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("extra argv is a usage error, never a silent drop (F43)", () => {
+  const good = fixture("extra-argv-good.md", VALID_PLAN);
+  const bad = fixture("extra-argv-bad.md", NO_DONE_WHEN_PLAN);
+  // The would-block plan is linted alone it must block; neither argument order
+  // may be silently accepted.
+  assert.equal(nodeRun(bad).status, 1, "the second plan would block if linted");
+  for (const args of [[good, bad], [bad, good]]) {
+    const { status, stdout, stderr } = nodeRun(...args);
+    assert.equal(status, 1, "a usage error is fail-closed");
+    assert.doesNotMatch(stdout, /^verdict PASS$/m, "no plan is silently linted");
+    assert.match(stderr, /expected exactly one plan path, got 2/);
+  }
+});
+
 test("an unreadable file is unparseable (permission denied)", () => {
   const file = fixture("unreadable.md", VALID_PLAN);
   fs.chmodSync(file, 0o000);
