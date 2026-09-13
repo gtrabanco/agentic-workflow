@@ -28,7 +28,10 @@
  * `scripts/phase-lint.test.mjs`): the `→` chain test counts arrows, so one arrow
  * is an outcome annotation and two or more are a chain; "enumerated cases" means
  * numbered/lettered markers or ordinal words, not a bare comma list; the box-2
- * target is the first path-like token outside a backticked command span; and
+ * target is the first path-like token outside a backticked command span,
+ * recognized by a single-pass segment check (runtime-stable across node and
+ * bun); an emphasis-wrapped target the grammar cannot tokenize fails closed as
+ * ambiguous, never silently targetless (F56/F57); and
  * every JavaScript line terminator is normalized before the grammar sees the
  * text, so no rendered-as-invisible separator can elide a phase (F44).
  */
@@ -43,8 +46,9 @@ const HARDENING_LAYERS = new Set(["hardening", "close-out"]);
 const HARDENING_TITLE = "Hardening & PR";
 const RUNTIME_WORDS = new Set(["bun", "node", "npm", "npx", "git", "grep", "diff", "test", "gh"]);
 const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
-const PATH_TOKEN = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\/?$/;
+const PATH_SEGMENT = /^[A-Za-z0-9_.-]+$/;
 const HAS_LETTER = /[A-Za-z]/;
+const EMPHASIS_EDGE = /^[*_~]+|[*_~]+$/g;
 const PHASE_HEADING = /^#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
 const FENCE_OPEN = /^(`{3,}|~{3,})/;
 const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
@@ -60,17 +64,72 @@ function stripQuotedCommands(text) {
   });
 }
 
-/** Every path-like token in the text, outside quoted command spans. */
-function pathTokens(text) {
-  const tokens = [];
+/**
+ * A path-like token the grammar can judge: one or more `/`-separated segments
+ * of `[A-Za-z0-9_.-]`, with an optional trailing slash. A single-pass split,
+ * never an anchored nested-quantifier regex: the equivalent
+ * `^[C]+(?:\/[C]+)*\/?$` answers differently per engine (V8 matches, JSC
+ * reports no-match past ~3 MB), which flipped the verdict between node and bun
+ * and bypassed the box-2 fail-closed gate on the first-class runtime (F57).
+ */
+function isPathToken(token) {
+  const body = token.endsWith("/") ? token.slice(0, -1) : token;
+  if (body.length === 0) return false;
+  return body.split("/").every((segment) => PATH_SEGMENT.test(segment));
+}
+
+/**
+ * The frozen target test: a valid token, with a letter, that is a file path
+ * (contains `/` or ends in a known extension). A bare numeric ratio (`0/1`, a
+ * date) is an assertion, not a target file.
+ */
+function isTargetToken(token) {
+  return (
+    isPathToken(token) &&
+    HAS_LETTER.test(token) &&
+    (token.includes("/") || EXTENSIONS.some((extension) => token.endsWith(extension)))
+  );
+}
+
+/**
+ * A token that reads as a path (used only to pick candidates): a `/` or a
+ * known extension once markdown emphasis edges are removed.
+ */
+function looksPathLike(token) {
+  const core = token.replace(EMPHASIS_EDGE, "");
+  if (core.length === 0) return false;
+  return core.includes("/") || EXTENSIONS.some((extension) => core.endsWith(extension));
+}
+
+/**
+ * A path-like token the grammar cannot tokenize but that is a valid target
+ * once markdown emphasis edges are removed — `*docs/x.md*` for `docs/x.md`.
+ * The emphasis-wrapped shape used to be silently dropped while the `_…_`
+ * variant (underscores are in the path charset) failed closed, so the task was
+ * judged targetless and exempt and the layer check never ran: a false PASS.
+ * Detect it and fail closed the same way (F56).
+ */
+function emphasisWrappedTarget(token) {
+  const core = token.replace(EMPHASIS_EDGE, "");
+  return core !== token && isTargetToken(core);
+}
+
+/** Whitespace-split path-like candidates in document order, with the grammar's verdict. */
+function candidatePathTokens(text) {
+  const candidates = [];
   for (const raw of stripQuotedCommands(text).split(/\s+/)) {
     const token = raw.replace(/^[`"'({\[]+/, "").replace(/[`"')\]}.,;:!?]+$/, "");
-    if (!PATH_TOKEN.test(token)) continue;
-    // A bare numeric ratio (`0/1`, a date) is an assertion, not a target file.
-    if (!HAS_LETTER.test(token)) continue;
-    if (token.includes("/") || EXTENSIONS.some((extension) => token.endsWith(extension))) tokens.push(token);
+    if (!looksPathLike(token)) continue;
+    candidates.push({ token, valid: isPathToken(token) });
   }
-  return tokens;
+  return candidates;
+}
+
+/** Every judgeable path-like token in the text, outside quoted command spans. */
+function pathTokens(text) {
+  return candidatePathTokens(text)
+    .filter(({ token }) => isTargetToken(token))
+    .map(({ token }) => token);
 }
 
 /** A test file: basename contains `.test.` (frozen mechanical definition). */
@@ -230,12 +289,22 @@ function box1(phase) {
 function box2(phase) {
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
-    const tokens = pathTokens(task);
-    if (tokens.length === 0) continue;
-    const target = tokens[0];
-    const layer = layerForTarget(target, phase.layer);
-    if (layer === null) return { findings, ambiguous: target };
-    if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${sanitizeEcho(target)}\` belongs to layer ${layer}, not ${phase.layer}`);
+    for (const { token, valid } of candidatePathTokens(task)) {
+      // An emphasis-wrapped target the grammar cannot tokenize is ambiguous,
+      // never silently targetless (F56): dropping it let the task be judged
+      // exempt and the layer check never run (false PASS), while the `_…_`
+      // variant blocked. Ordinary prose that merely contains a `/` (an inline
+      // `--body`/heredoc note, a URL, a glob) is not a target and stays exempt.
+      if (!valid) {
+        if (emphasisWrappedTarget(token)) return { findings, ambiguous: token };
+        continue;
+      }
+      if (!isTargetToken(token)) continue;
+      const layer = layerForTarget(token, phase.layer);
+      if (layer === null) return { findings, ambiguous: token };
+      if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${sanitizeEcho(token)}\` belongs to layer ${layer}, not ${phase.layer}`);
+      break;
+    }
   }
   return { findings };
 }

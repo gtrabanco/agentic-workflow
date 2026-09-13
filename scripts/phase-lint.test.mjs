@@ -1110,6 +1110,61 @@ test("verdict-like literals in a task target never reach the box-2 finding line"
   assert.match(box2Line, /P hase-lint\.md/, "the target is still shown, neutralized");
 });
 
+// Fold F56 — an emphasis-wrapped path-like target (`*docs/x.md*`) failed the
+// target grammar and was silently dropped, so the task was judged targetless
+// and exempt while the `_docs/x.md_` shape blocked as unparseable. A path-like
+// span the grammar cannot tokenize must fail closed like any other unmappable
+// target (SPEC PD1 "never a guess").
+const EMPHASIS_TARGET_PLAN = `# Emphasis target
+
+### P1 — Wire the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Update *docs/x.md* with the link
+`;
+
+const UNDERSCORE_TARGET_PLAN = `# Underscore target
+
+### P1 — Wire the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Update _docs/x.md_ with the link
+`;
+
+test("an emphasis-wrapped path-like target is ambiguous, never silently exempt (F56)", () => {
+  const file = fixture("emphasis-target.md", EMPHASIS_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the asterisk-wrapped target must not pass as targetless");
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+test("the underscore-wrapped target shape stays fail-closed too (F56)", () => {
+  const file = fixture("underscore-target.md", UNDERSCORE_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+// Fold F57 — the target grammar was an anchored nested-quantifier regex whose
+// answer diverges by engine: V8 matches, JSC reports no-match past ~3 MB, so
+// the same plan answered `BLOCKED: unparseable` under node and `PASS` under the
+// first-class bun runtime (the box-2 fail-closed gate silently bypassed). The
+// guard is a single-pass segment check, and this boundary fixture pins that
+// both runtimes agree (the runtime sweep is the parity barrier).
+test("a past-the-engine-limit target token agrees across runtimes (F57)", { skip: bunAvailable ? false : "bun not installed" }, () => {
+  const token = `${"a/".repeat(1_800_000)}a`; // 3.6 MB single token, past the JSC divergence
+  const plan = `# Giant target\n\n### P1 — Docs phase\n\nLayer: docs. Done-when: \`grep -n x docs/x.md\` → matches.\n\n- [ ] Edit \`${token}\`\n`;
+  const file = fixture("giant-target.md", plan);
+  const viaNode = spawnSync(process.execPath, [LINTER, file], { encoding: "utf8", timeout: 30_000 });
+  const viaBun = spawnSync("bun", [LINTER, file], { encoding: "utf8", timeout: 30_000 });
+  assert.equal(viaNode.error, undefined, "the linter must finish inside 30 s under node");
+  assert.equal(viaBun.error, undefined, "the linter must finish inside 30 s under bun");
+  assert.equal(viaNode.stdout, viaBun.stdout, "node and bun must agree byte for byte on the giant target");
+  assert.match(viaNode.stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).
