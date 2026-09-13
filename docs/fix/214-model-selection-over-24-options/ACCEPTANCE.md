@@ -5,7 +5,7 @@ Status: frozen
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | The package suite (tsc + bun test across all files, including the new suites) is green | `cd packages/pi-agentic-workflow && bun run test` → exit 0 |
-| AC2 | With > 23 models the console selects provider-first: the first dialog offers providers (+ "Type another reference…"), the second only the chosen provider's models; every dialog ≤ 24 options | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"` → pass |
+| AC2 | With > 23 models the console selects provider-first: the first dialog offers providers (+ "Type another reference…"), the second only the chosen provider's models; every dialog ≤ 24 options | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "provider-first"` → 2 pass (rich fixture + pick-less `rich: false` fixture) |
 | AC3 | A single provider with > 23 models pages its model dialog (21/page, `More options…`, TYPED last) instead of crashing | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "pages within one provider"` → pass |
 | AC4 | With ≤ 23 models the single-step flow is byte-identical (rich pick with preselection when the seam exists, plain select otherwise) | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "single-step preserved"` → pass |
 | AC5 | "Type another reference…" is the last option of every model dialog (provider dialog, every page, model dialog) | `cd packages/pi-agentic-workflow && bun test test/settings-console.test.mjs -t "Type another reference"` → pass |
