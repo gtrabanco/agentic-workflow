@@ -195,12 +195,13 @@ function createdTargets(text) {
 /**
  * Neutralize plan-derived text before echoing it into a finding line (F21).
  * A phase title can originate in a third-party forge issue body (`plan-fix`),
- * so the echo must carry neither instructions nor fake block lines into the
- * stdout block the consumer skills paste: control and format characters become
+ * and a task target is plan text too, so both echo sites go through here: the
+ * echo must carry neither instructions nor fake block lines into the stdout
+ * block the consumer skills paste: control and format characters become
  * spaces, backticks are dropped, whitespace collapses, verdict-like literals
  * (`Phase-lint:`, `verdict`, `fingerprint`) are broken up so a substring-
  * grepping consumer can never mistake echoed text for a block line (F49), and
- * the length is bounded. Rule decisions read the RAW title; only the echo is
+ * the length is bounded. Rule decisions read the RAW text; only the echo is
  * sanitized.
  */
 function sanitizeEcho(text, limit = 120) {
@@ -234,7 +235,7 @@ function box2(phase) {
     const target = tokens[0];
     const layer = layerForTarget(target, phase.layer);
     if (layer === null) return { findings, ambiguous: target };
-    if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${target}\` belongs to layer ${layer}, not ${phase.layer}`);
+    if (layer !== phase.layer) findings.push(`task ${index + 1} target \`${sanitizeEcho(target)}\` belongs to layer ${layer}, not ${phase.layer}`);
   }
   return { findings };
 }

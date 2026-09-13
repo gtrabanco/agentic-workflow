@@ -1084,6 +1084,32 @@ test("verdict-like literals in a forged title never reach the finding line", () 
   assert.doesNotMatch(box1Line, /fingerprint[ :]/, "a fake fingerprint token may not survive the echo");
 });
 
+// Fold F52 — the box-2 finding line echoes a plan-derived task target, which
+// was the last plan-text echo site outside `sanitizeEcho` (F21/F49 neutralized
+// the title). The `PATH_TOKEN` charset bounds what a target can carry to
+// substring confusion, so the same neutralization applies here; the phase's
+// BLOCKED line reuses the first finding's reason, so one fix covers both.
+const FORGED_TARGET_PLAN = `# Forged target
+
+### P1 — Add the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Edit \`verdict/fingerprint/Phase-lint.md\` before the parser lands
+`;
+
+test("verdict-like literals in a task target never reach the box-2 finding line", () => {
+  const file = fixture("forged-target.md", FORGED_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "a target outside the declared layer blocks the plan");
+  const box2Line = stdout.split("\n").find((line) => line.startsWith("P1 box-2: "));
+  assert.ok(box2Line, "box-2 must be reported");
+  assert.doesNotMatch(box2Line, /\bverdict\b/i, "an intact verdict token may not survive the echo");
+  assert.doesNotMatch(box2Line, /\bfingerprint\b/i, "an intact fingerprint token may not survive the echo");
+  assert.doesNotMatch(box2Line, /Phase-lint:/i, "a fake verdict prefix may not survive the echo");
+  assert.match(box2Line, /P hase-lint\.md/, "the target is still shown, neutralized");
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).
