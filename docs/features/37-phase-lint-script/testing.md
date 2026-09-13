@@ -1,6 +1,6 @@
 # Testing — 37-phase-lint-script
 
-Artifact revision: `37-plan-6`.
+Artifact revision: `37-plan-7`.
 
 ## Test layers
 
@@ -12,7 +12,9 @@ Artifact revision: `37-plan-6`.
   its test files, a source target in `hardening` still BLOCKs, a test file
   beside its implementation keeps the prefix-table mapping, and `close-out` is
   deliberately not given the mapping (fail-closed — the owner rule names
-  `hardening` only). Corpus 30/30 at the P5 landing.
+  `hardening` only). Corpus 33/33 at the `37-plan-7` re-cut (30 at the P5
+  landing; the cycle-4 source folds F31/F32/F35 added the task-grammar,
+  sanitizer, and teardown fixtures).
 - **Runtime parity:** the same corpus runs under bun and node
   (`bun scripts/phase-lint.mjs` / `node scripts/phase-lint.mjs`); AC7 pins the
   node fallback with exit 0 on a valid plan.
@@ -41,12 +43,15 @@ argv; shebang `#!/usr/bin/env node`; both runtimes must pass.
 
 The lint target for this unit is `TASKS.md` (the file carrying the phase tasks):
 `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` must
-exit 0 and reproduce the six fingerprints recorded in SPEC §Phase-lint
+exit 0 and reproduce the seven fingerprints recorded in SPEC §Phase-lint
 (P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`,
-P5 `config/infra:2`, P6 `hardening:8`). Verified in P2 (whole-plan sha256
+P5 `config/infra:2`, P6 `config/infra:2`, P7 `hardening:8`). Verified in P2
+(whole-plan sha256
 `b0127303708f2b471731a51a383180548c209b926251b0e79422958414f583c5`), then
 re-derived at the `37-plan-5` F7 re-cut (unchanged by the `37-plan-6` repair
-batch) — the new sha256 and the linter run
-are recorded in decisions.md. M/L
+batch), then re-derived again at the `37-plan-7` re-cut — the new P6 plus the
+renumbered close-out make the whole-plan sha256
+`3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed` — the
+linter run is recorded in decisions.md ED9. M/L
 `SPEC.md` `### Phases` sections carry no checkboxes, so a SPEC run answers
 `:0:` task counts — see `known-issues.md`.
