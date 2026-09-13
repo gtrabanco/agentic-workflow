@@ -277,6 +277,172 @@ test("`close-out` is not given the test-file mapping (fail-closed)", () => {
   assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
 });
 
+// Re-cut F30 (`37-plan-7`) — box-5 is widened to owner rule 5: a standalone
+// case-insensitive `or` with no word character and no hyphen adjacent on
+// either side (the SPEC §Design mechanical definition). The older narrower
+// `either … or` shape is subsumed (the decision-scan fixture above keeps it);
+// embedded words (`editor`) and hyphen-joined compounds (`equal-or-greater`)
+// are one token, never a joiner.
+const BARE_ALTERNATIVES_PLAN = `# Bare alternatives
+
+### P1 — Update the spec index
+
+Layer: docs. Done-when: \`grep -n index docs/index.md\` → matches.
+
+- [ ] Update \`docs/index.md\` or \`docs/summary.md\` with the link
+`;
+
+const EMBEDDED_OR_PLAN = `# Embedded alternatives word
+
+### P1 — Add the editor route
+
+Layer: config/infra. Done-when: \`node --test scripts/editor.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/editor.mjs\` serving the editor views
+`;
+
+test("a bare standalone `or` between two path targets fails box 5 (the VF-30 reproducer)", () => {
+  const file = fixture("bare-alternatives.md", BARE_ALTERNATIVES_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-5: /m);
+  assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 5: /m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+});
+
+test("an embedded `or` inside a word keeps the task clean (box 5)", () => {
+  const file = fixture("embedded-or.md", EMBEDDED_OR_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:add-editor-route$/m);
+});
+
+// Re-cut F33 (`37-plan-7`) — the input grammar recognizes fenced code blocks
+// (three-or-more backticks with an optional info string, or tildes, closed by
+// the same character at equal-or-greater length) and contributes nothing to
+// the parse: a plan fragment quoted inside a fence is never a phase heading,
+// and an unclosed fence runs deterministically to end of file.
+const FENCED_FRAGMENT_PLAN = `# Fenced fragment
+
+### P1 — Add the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/parser.mjs\` with the parser
+
+\`\`\`markdown
+### P2 — Quoted fragment
+
+Layer: docs.
+
+- [ ] Create \`docs/quoted.md\`
+\`\`\`
+
+### P2 — Document the parser
+
+Layer: docs. Done-when: \`grep -n parser docs/parser.md\` → matches.
+
+- [ ] Create \`docs/parser.md\` describing the interface
+`;
+
+const UNCLOSED_FENCE_PLAN = `# Unclosed fence
+
+### P1 — Add the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/parser.mjs\` with the parser
+
+\`\`\`
+### P2 — Never parsed
+
+Layer: docs.
+
+- [ ] Create \`docs/never.md\`
+`;
+
+const TILDE_FENCE_PLAN = `# Tilde fence
+
+### P1 — Add the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/parser.mjs\` with the parser
+
+~~~text
+### P2 — Tilde quoted
+
+Layer: docs.
+~~~
+
+### P2 — Document the parser
+
+Layer: docs. Done-when: \`grep -n parser docs/parser.md\` → matches.
+
+- [ ] Create \`docs/parser.md\` describing the interface
+`;
+
+const NESTED_FENCE_PLAN = `# Nested fence lengths
+
+### P1 — Add the parser
+
+Layer: config/infra. Done-when: \`node --test scripts/parser.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/parser.mjs\` with the parser
+
+\`\`\`\`markdown
+\`\`\`
+### P2 — Still inside
+
+Layer: docs.
+\`\`\`
+\`\`\`\`
+
+### P2 — Document the parser
+
+Layer: docs. Done-when: \`grep -n parser docs/parser.md\` → matches.
+
+- [ ] Create \`docs/parser.md\` describing the interface
+`;
+
+test("a phase fragment quoted inside a fenced code block is not parsed (the VF-33 reproducer)", () => {
+  const file = fixture("fenced-fragment.md", FENCED_FRAGMENT_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:add-parser$/m);
+  assert.match(stdout, /^P2 Phase-lint: PASS \(8\/8\) · fingerprint P2:docs:1:document-parser$/m);
+  assert.doesNotMatch(stdout, /quoted/);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("an unclosed fence runs to end of file (deterministic, never a guess)", () => {
+  const file = fixture("unclosed-fence.md", UNCLOSED_FENCE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:add-parser$/m);
+  assert.doesNotMatch(stdout, /P2/);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("a tilde fence is recognized like a backtick fence", () => {
+  const file = fixture("tilde-fence.md", TILDE_FENCE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P2 Phase-lint: PASS \(8\/8\) · fingerprint P2:docs:1:document-parser$/m);
+  assert.doesNotMatch(stdout, /tilde-quoted/);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("a fence closes only on the same character at equal-or-greater length", () => {
+  const file = fixture("nested-fence.md", NESTED_FENCE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:add-parser$/m);
+  assert.match(stdout, /^P2 Phase-lint: PASS \(8\/8\) · fingerprint P2:docs:1:document-parser$/m);
+  assert.doesNotMatch(stdout, /still-inside/);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
 // Fold F12 — the frozen grammar reads tasks from `- [( |x)] ` and phase
 // headings from `[—-]`, so an uppercase checkbox is not a task and an en dash
 // is not a phase separator.
