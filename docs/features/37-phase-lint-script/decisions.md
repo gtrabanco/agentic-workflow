@@ -445,3 +445,31 @@ fingerprint: 3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed
   was written for the narrower shape and the SPEC fixes no message text; the
   widened rule subsumes that shape, so the wording stays accurate and the
   immutable fixture keeps its assertion. No test expectation was edited.
+
+## Cycle-5 review fold — grammar alignment and CLI edges (2026-09-13)
+
+- **ED11 (2026-09-13, fold-findings for review cycle 5, F37–F43):** seven med
+  fix-now rows landed in four atomic batches, red-first. (a) *F37/F39 — the
+  plan-final phase owns the close-out semantics:* the ≤10 task budget and the
+  box-7 `gh pr` exemption now require `index === phases.length - 1` **and** a
+  hardening/close-out layer; keying them to the last hardening-*layered* phase
+  granted ≤10 to a mid-plan hardening phase and exempted its `gh pr` gate (the
+  F3 regression). `manual`/`ask the user` stay layer-scoped — SPEC §Design
+  box-7 scopes only `gh pr` to the final hardening phase. (b) *F38/F40/F42 —
+  frozen-grammar scan alignment:* box-5 `If … then` and box-6 move/defer scan
+  the whole task text (the frozen `.*` crosses sentence periods), the
+  enumerated-case counter also matches multi-letter roman numerals and
+  whitespace-free adjacent markers, and box-8 requires text after the `→`/`->`
+  arrow with `empty`/`matches`/`zero` word-anchored. The script header no
+  longer claims the SPEC freezes these mechanical approximations — it pins them
+  to this corpus. (c) *F41:* the close-out fail-closed fixture asserts the
+  exact box-2 reason, not only the verdict prefix. (d) *F43 — extra argv:*
+  passing more than one path is a usage error on stderr with exit 1 and **no**
+  verdict block on stdout, never a silent drop of the extra arguments. The SPEC
+  §Output contract enumerates the fail-closed reason codes and freezes exit
+  codes 0/1; extra argv is a CLI misuse with no plan to judge, so it takes the
+  usage-error path rather than inventing a reason code (`missing-plan` would
+  misname it). No consumer skill changes: every consumer already invokes the
+  linter with exactly one path. Corpus grew 39 → 49; the repo-wide plan sweep
+  (141 plan docs) changed no verdict, and the dogfood fingerprint stays
+  `3afa2601…`.

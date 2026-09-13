@@ -20,6 +20,8 @@
  * target the frozen prefix table cannot map), `lint-blocked` (a rule failure).
  *
  * Read-only: never writes, never calls the network, no external dependencies.
+ * Passing more than one path is a usage error (stderr + exit 1), never a
+ * silent drop of the extra arguments (F43).
  *
  * Deterministic approximations (the script's mechanical realization of the
  * rules the unit's SPEC §Design freezes, pinned by
@@ -400,6 +402,11 @@ function digest(fingerprints) {
 
 /** CLI: one explicit path argument, nothing else. */
 function main(argv) {
+  if (argv.length > 1) {
+    // A second path is a usage error, never a silent drop (F43): linting only
+    // the first plan hands the caller a verdict for a file it did not choose.
+    return { usageError: `expected exactly one plan path, got ${argv.length}` };
+  }
   const file = argv[0];
   if (!file) return { verdict: "BLOCKED: missing-plan", exitCode: 1, lines: ["verdict BLOCKED: missing-plan", `fingerprint: ${digest([])}`] };
   let text;
@@ -424,9 +431,16 @@ if (invokedDirectly) {
     if (error && error.code === "EPIPE") return;
     throw error;
   });
-  process.stdout.write(`${result.lines.join("\n")}\n`);
-  // `process.exit()` here would kill the process before an async pipe write
-  // drains, truncating the block past the pipe buffer (F22). Setting the code
-  // and letting the event loop empty flushes stdout first.
-  process.exitCode = result.exitCode;
+  if (result.usageError) {
+    // Fail closed on stderr, with no verdict block on stdout: there is no plan
+    // to judge, so no block may be pasted as one.
+    process.stderr.write(`phase-lint: ${result.usageError}\n`);
+    process.exitCode = 1;
+  } else {
+    process.stdout.write(`${result.lines.join("\n")}\n`);
+    // `process.exit()` here would kill the process before an async pipe write
+    // drains, truncating the block past the pipe buffer (F22). Setting the code
+    // and letting the event loop empty flushes stdout first.
+    process.exitCode = result.exitCode;
+  }
 }
