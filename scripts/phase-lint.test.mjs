@@ -1121,6 +1121,23 @@ test("verdict-like literals in a forged title never reach the finding line", () 
   assert.doesNotMatch(box1Line, /fingerprint[ :]/, "a fake fingerprint token may not survive the echo");
 });
 
+// Fold F55 — the verdict-token breakup matched whole words only, so derived
+// forms (`Phase-linting`, `fingerprinting`) carried an intact token through the
+// echoed title and a substring-grepping consumer could still match it. The
+// token now breaks at the word start, so a derived form cannot carry it either.
+const DERIVED_TOKEN_TITLE_PLAN = "# Derived token title\n\n### P1 — Phase-linting + fingerprinting cleanup\n\nLayer: docs. Done-when: `grep -n x docs/x.md` → matches.\n\n- [ ] Create `docs/x.md`\n";
+
+test("derived verdict-like forms never reach the finding line (F55)", () => {
+  const file = fixture("derived-token.md", DERIVED_TOKEN_TITLE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the `+` joiner breaks box 1");
+  const box1Line = stdout.split("\n").find((line) => line.startsWith("P1 box-1: "));
+  assert.ok(box1Line, "box-1 must be reported");
+  assert.doesNotMatch(box1Line, /phase-lint/i, "a derived phase-lint token may not survive the echo");
+  assert.doesNotMatch(box1Line, /fingerprint/i, "a derived fingerprint token may not survive the echo");
+  assert.match(box1Line, /P hase-linting/, "the title is still shown, neutralized");
+});
+
 // Fold F52 — the box-2 finding line echoes a plan-derived task target, which
 // was the last plan-text echo site outside `sanitizeEcho` (F21/F49 neutralized
 // the title). The `PATH_TOKEN` charset bounds what a target can carry to

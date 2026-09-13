@@ -258,8 +258,11 @@ function createdTargets(text) {
  * echo must carry neither instructions nor fake block lines into the stdout
  * block the consumer skills paste: control and format characters become
  * spaces, backticks are dropped, whitespace collapses, verdict-like literals
- * (`Phase-lint:`, `verdict`, `fingerprint`) are broken up so a substring-
- * grepping consumer can never mistake echoed text for a block line (F49), and
+ * (`Phase-lint:`, `verdict`, `fingerprint`) are broken up so a
+ * substring-grepping consumer can never mistake echoed text for a block line
+ * (F49), including derived forms such as `Phase-linting`/`fingerprinting`
+ * (F55 — the leading word boundary breaks the token at the word start, so no
+ * trailing `\b` may be required), and
  * the length is bounded. Rule decisions read the RAW text; only the echo is
  * sanitized.
  */
@@ -267,7 +270,7 @@ function sanitizeEcho(text, limit = 120) {
   const cleaned = text
     .replace(/[\p{Cc}\p{Cf}]+/gu, " ")
     .replace(/`+/g, "")
-    .replace(/\b(phase-lint|verdict|fingerprint)\b/gi, (word) => `${word[0]} ${word.slice(1)}`)
+    .replace(/\b(phase-lint|verdict|fingerprint)/gi, (word) => `${word[0]} ${word.slice(1)}`)
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}…` : cleaned;
