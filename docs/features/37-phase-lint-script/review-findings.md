@@ -159,3 +159,64 @@ head — isolated context-clean passes (code, security, verify, brand, perf;
 each returned only its findings table + verdict; verification of every
 candidate against the reviewed head's bytes, with reproducers for behavioral
 claims). It says a review ran, never that the candidate passed.
+
+Cycle 5 (mandatory end review, fresh context, user-invoked past the cap,
+adversarial) ran 2026-09-13 (`review-change --adversarial 2`: two context-clean
+diff-only reviewers — R1 correctness/logic, R2 security/inputs, same model
+family per the portability disclosure; both ran the full applicable pack
+code/security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface;
+PR #212 head `36cfeb8e`). The post-cycle-4 delta escalated to a full pass
+(width: 18 files > 15; size: +878/−63 > 200). All 24 `folded: yes` rows
+re-verified at their cited locations: 23 repaired, one regression — F3's
+task-budget fold survives in the [hardening → non-hardening-final] phase
+ordering (F37 below, red reproducer at the reviewed head). The four plan-owned
+rows F28/F29/F30/F33 are verified repaired by the 37-plan-7 re-cut + P6 landing
+(SPEC amendment clauses read at :92-94/:340-346/:694-700; standalone-`or`
+BLOCKs box 5 and the ```md fence skips a phantom phase, both reproduced live).
+Frozen acceptance blob recomputed byte-identical (`21adb084…`); dogfood
+reproduces the recorded `3afa2601…` fingerprint; corpus 39/39; budgets/routes/
+discovery green; schema diff empty. The isolated classifier
+(`review-implementation`) applied the CLASSIFY.md severity floor: seven
+candidates the finders reported `minor` show correctness/behavioral/untested-
+path evidence → `med` minimum (F37–F43); `.pi/mcp.json` `@latest` stands as
+the recorded cycle-1 owner decision F18 (ignore, never re-litigated); the
+bench-gate proposal is re-reported for user routing (F23/P1, 2/2 reviewers).
+All 9 candidates verified `confirmed` (one with a corrected citation) — none
+refuted.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F37 | scripts/phase-lint.mjs:357-364 | code | med | fix-now | regression of F3 — fold: key the ≤10 budget to the plan's FINAL phase being hardening/close-out (position check `index === phases.length - 1`, not layer membership; the comment at :357-358 already states the intent) + red-first corpus fixture pinning [hardening(9 tasks), docs] (the fixture also pins F39's `gh pr` assertion) | no |
+| VF-37 | scripts/phase-lint.mjs:357-364 · reviewer review-change R1 + orchestrator re-verify · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck failing reproducer: [P1 `Layer: hardening` 9 tasks, P2 `Layer: docs`] → `P1 Phase-lint: PASS (8/8)` fingerprint `P1:hardening:9:…` exit 0 at the reviewed head; authorities skills/phase-contract/SKILL.md:43 rule 3 ("Final hardening/close-out phase: 1–10, only the literal close-out chain"), SPEC.md:462 box-3, and the code's own comment :357-358 ("a mid-plan `hardening` phase keeps 8"); the corpus pins only the [hardening, hardening] shape (phase-lint.test.mjs:143-166) | code | confirmed | finding-mark | n/a | n/a |
+| F38 | scripts/phase-lint.mjs:265-272,291-296 | code | med | fix-now | fold: scan the whole task text for box-5 `If…then` and box-6 move/defer (the SPEC-frozen `.*` crosses sentence periods — drop the `task.split(".")` bounding) + corpus fixtures for the cross-period shapes; correct the "dot-bounded like the rule"/"equivalent" comments (:260,:263,:289) | no |
+| VF-38 | scripts/phase-lint.mjs:265-272,291-296 · reviewer review-change R1 · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck failing reproducers: docs task `Move the parser work. The cleanup goes to P4` → `PASS (8/8)` exit 0 (frozen `move(s)? .*(to|into) P\d+` matches across the period); config/infra task `If tests flake. Then remove the legacy flag` → `PASS (8/8)` exit 0 (frozen `If .* then remove` matches); SPEC.md:466-476; known-issues.md:51-53 discloses only rule-4 | code | confirmed | finding-mark | n/a | n/a |
+| F39 | scripts/phase-lint.mjs:310-311 | code | med | fix-now | fold: scope the box-7 hardening/close-out exemption to the plan's final hardening/close-out phase for the `gh pr` gate (SPEC.md:477-479: "`gh pr` in a phase other than the final hardening phase") + corpus fixture (pinned jointly by F37's fixture) | no |
+| VF-39 | scripts/phase-lint.mjs:310-311 · reviewer review-change R1 · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck failing reproducer: [P1 `Layer: hardening` task `Check gh pr status of the dependency branch`, P2 `Layer: docs`] → `verdict PASS` exit 0 at the reviewed head; SPEC.md:477-479 freezes the position-scoped gate | code | confirmed | finding-mark | n/a | n/a |
+| F40 | scripts/phase-lint.mjs:48 | code | med | fix-now | fold: widen the ENUMERATED marker set (roman numerals beyond `[a-h]`, adjacency without separating whitespace) + corpus fixtures — or, minimum fold, name both gaps explicitly in known-issues.md's rule-4 disclosure (behavioral refinement stays corpus-pinned per the disclosure's own remedy rule) | no |
+| VF-40 | scripts/phase-lint.mjs:48 · reviewer review-change R1 · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck failing reproducers: task `Cover (i) stdin, (ii) file, (iii) dir, (iv) url, (v) socket` → `PASS (8/8)` exit 0; task `Cover (1)(2)(3)(4) input modes` → `PASS (8/8)` exit 0; SPEC.md:463-465 box-4 ("enumerates more than 3 numbered/enumerated cases"); known-issues.md:51-53 names neither gap | code | confirmed | finding-mark | n/a | n/a |
+| F41 | scripts/phase-lint.test.mjs:272-277 | verify | med | fix-now | fold: assert the exact box-2 reason text (`belongs to layer config/infra, not close-out`) so the fail-closed mapping the test names is actually pinned (a wrong-but-blocking mapping currently keeps the test green) | no |
+| VF-41 | scripts/phase-lint.test.mjs:276 · reviewer review-change R1 · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck direct read + /tmp patched-copy demo: `assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 2: /m)` (:276) matches any box-2 reason; a patched linter mapping the close-out test file to `docs` still passes the suite | verify | confirmed | finding-mark | n/a | n/a |
+| F42 | scripts/phase-lint.mjs:325 + :24-26 | code | med | fix-now | fold: box-8 must require outcome text after the `→`/`->` arrow and anchor `matches|empty|zero` + corpus fixture; correct the header over-claim (:24-26 — the SPEC freezes no exact regex; SPEC.md:480-481 requires "a backticked command and an expected outcome") and the F15 corpus comment ("word-anchored" names only `pass`) | no |
+| VF-42 | scripts/phase-lint.mjs:325 · reviewer review-change R2 · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck failing reproducer: docs phase `Done-when: \`bun run lint\` →` → `PASS (8/8)` exit 0 (the bare arrow itself satisfies the outcome regex); SPEC.md:480-481 freezes no exact regex; phase-lint.test.mjs:499-500 F15 comment over-claims | code | confirmed | finding-mark | n/a | n/a |
+| F43 | scripts/phase-lint.mjs:398-401 | code | med | fix-now | fold: usage-error (exit 1) on extra argv beyond the plan path + corpus fixture asserting a second would-block file is never silently dropped (SPEC.md:94 freezes "exactly one file path argument"; the code comment :398 says "nothing else") | no |
+| VF-43 | scripts/phase-lint.mjs:399 · reviewer review-change R2 · HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 · recheck failing reproducer: `bun scripts/phase-lint.mjs good.md bad2.md` → exit 0 `verdict PASS` linting good.md only; bad2.md (no `Done-when:`) BLOCKs if linted alone; no warning emitted | code | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 36cfeb8ec1e582b4d03c8581756e1605e9d16830 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: repeated: F3 (F37 = regression of F3) / new: F38–F43
+- Snapshots: efe9d5ea46c8ea2fd2fd84f3f97f7856c866b546 → 36cfeb8ec1e582b4d03c8581756e1605e9d16830 (cycle-4 reviewed head → cycle-5 reviewed head)
+- Missed: the F3 fold's corpus fixture pinned only the [hardening, hardening]
+  ordering — the [hardening → non-hardening-final] shape kept the ≤10 budget
+  on a mid-plan hardening phase (F37), and the same layer-vs-final-position
+  conflation survives in box-7's `gh pr` gate (F39); the F10 single-pass
+  rewrite moved the box-5/6 scans behind sentence bounding no fixture spans
+  (F38)
+- Owning stage: source
+- Why the prior review failed: cycle 4 verified each fold at its own cited
+  line and never probed phase-ordering variants of the folded rules; the F3
+  fixture re-used the defect shape it replaced instead of spanning orderings,
+  and the re-cut grammar landing (P6) was reviewed without cross-period or
+  bare-arrow probes
+- Route to owner: /fold-findings (explicit ids F37 + F38 + F39 + F40 + F41 + F42 + F43)
+```
