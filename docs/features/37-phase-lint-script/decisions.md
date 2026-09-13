@@ -421,3 +421,27 @@ fingerprint: 3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed
   `37-plan-5`/`37-plan-6`. `node scripts/phase-lint.mjs` — the fallback —
   reproduces the block byte-identically. Corpus `node --test
   scripts/phase-lint.test.mjs` → 33/33, no code changed in this cycle.)
+
+## P6 landing — grammar conformance (`37-plan-7`, 2026-09-13)
+
+- **ED10 (2026-09-13, execute-phase P6):** the two `37-plan-7` behavioral
+  re-cuts landed red-first in `scripts/phase-lint.mjs`. Box-5 now detects the
+  standalone alternatives word with a Unicode lookaround
+  (`(?<![\p{L}\p{N}_-])or(?![\p{L}\p{N}_-])`, case-insensitive) — no word
+  character and no hyphen adjacent on either side, so `editor` and
+  `equal-or-greater` stay one token; the retired `hasEitherOr` helper is
+  removed because the widened shape subsumes it. The parser recognizes fenced
+  code blocks before any other grammar rule: three-or-more backticks (optional
+  info string) or tildes, closed by the same character at equal-or-greater
+  length, every line inside inert, and an unclosed fence runs to EOF — the
+  phase fragment quoted inside a fence can no longer become a phase. The
+  corpus grew 33 → 39 with six fixtures (bare `or`, embedded-word negative,
+  backtick fragment, unclosed fence, tilde fence, and the 4-vs-3-backtick
+  equal-or-greater nesting). No consumer skill changed, so no
+  `bump-skill`/CHANGELOG surface moved; `phase-contract` untouched (O12) and
+  the frozen ACCEPTANCE.md blob stays `21adb084…`.
+- **Retained finding wording:** the standalone-`or` finding keeps the shipped
+  message `offers either/or alternatives`. The existing decision-scan fixture
+  was written for the narrower shape and the SPEC fixes no message text; the
+  widened rule subsumes that shape, so the wording stays accurate and the
+  immutable fixture keeps its assertion. No test expectation was edited.
