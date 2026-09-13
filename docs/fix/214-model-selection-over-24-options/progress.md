@@ -109,7 +109,7 @@ Session ledger for this unit. Receipt blocks follow the
 - Next: P7 — Hardening & PR
 
 ## Unit-loop receipt — P5
-- Commit: pending · Gate: two live SMOKE rows recorded above (both outcome-pass) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Commit: dd7aa72f · Gate: two live SMOKE rows recorded above (both outcome-pass) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P7 · Attempts: 1
 
 ## Unit-loop receipt — P4
