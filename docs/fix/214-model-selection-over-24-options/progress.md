@@ -78,8 +78,19 @@ Session ledger for this unit. Receipt blocks follow the
 - Files: packages/pi-agentic-workflow/src/settings/console.ts · packages/pi-agentic-workflow/test/settings-console.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P3 ticks) · progress.md
 - Next: P4 — Adapter non-TUI pick paging
 
+## P4 — 2026-09-13
+- Done: `richUi` exported as a test seam; its non-TUI `pick` fallback now pages through `pagedSelect` before `base.select`, so a > 24 option list never builds a dialog the host rejects; a ≤ cap list is still one `base.select` call with the same options in order, and `multiple: true` still returns `[picked] | undefined`. New red-first adapter cases: "the adapter non-TUI pick fallback pages long option lists before base.select" (30 options, NEXT navigation, value returned) and a ≤ cap + `multiple` preservation case. Validator `-t "pages long option lists"` → 1 pass; full suite → 203 pass. Phase-lint re-checked PASS (8/8) at fingerprint `P4:ui:2:adapter-non-tui-pick-paging`.
+- Remains: P5–P7.
+- Gotchas: the import of `SELECT_OPTION_LIMIT` into `extension/index.ts` is unnecessary — `pagedSelect` owns the cap and the file only needs `pagedSelect` (`noUnusedLocals` catches the leftover). Unit-loop trigger recorded for final risk selection: **layer boundary** at P3 (`domain`) → P4 (`ui`); no intermediate checkpoint taken (unit-loop mode).
+- Files: packages/pi-agentic-workflow/src/extension/index.ts · packages/pi-agentic-workflow/test/shipped-adapter.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P4 ticks) · progress.md
+- Next: P5 — pi-web manual smoke
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 203 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Trigger: layer boundary (P3 `domain` → P4 `ui`) · Next: P5 · Attempts: 1
+
 ## Unit-loop receipt — P3
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 201 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Commit: 3d0d9e42 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 201 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P4 · Attempts: 1
 
 ## Unit-loop receipt — P2

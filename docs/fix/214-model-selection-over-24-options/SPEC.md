@@ -445,11 +445,11 @@ Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 Layer: `ui`. Done-when: `cd packages/pi-agentic-workflow && bun run test` →
 exit 0.
 
-- [ ] Red-first adapter test in `test/shipped-adapter.test.mjs` — "the adapter
+- [x] Red-first adapter test in `test/shipped-adapter.test.mjs` — "the adapter
       non-TUI pick fallback pages long option lists before base.select": mode
       ≠ `tui`, 30 options → every `base.select` call receives ≤ 24 options,
       NEXT navigates, the picked value is returned (O7, PE-002).
-- [ ] In `richUi().pick`'s non-TUI branch (`src/extension/index.ts`), page
+- [x] In `richUi().pick`'s non-TUI branch (`src/extension/index.ts`), page
       through `pagedSelect` when `[...options].length > SELECT_OPTION_LIMIT`;
       leave the ≤ 24 branch and the `multiple: true` return semantics
       unchanged (O7).
