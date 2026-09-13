@@ -15,5 +15,8 @@ aterrizan sus scripts como subcomandos de ella.
   (`.gitkeep`) para que la convención exista en un clon nuevo.
 
 Productores actuales: ninguno todavía. `scripts/phase-lint.mjs` se queda
-deliberadamente en el árbol `scripts/` del repositorio (feature 37 ED1); las
-features 38 y 42 añaden los primeros subcomandos de la crate.
+deliberadamente en el árbol `scripts/` del repositorio (feature 37 ED1). El
+`scripts/workflow-status.mjs` de la feature 38 aterrizó en ese mismo árbol
+antes de que existiera esta crate, así que realojarlo aquí es un seguimiento
+registrado (feature 37 ED8.4c) sin unidad asignada todavía; la feature 42 es
+la siguiente candidata a añadir el primer subcomando de la crate.
