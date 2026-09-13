@@ -384,15 +384,15 @@ record the result here per phase.
 Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 → exit 0 (all suites green).
 
-- [ ] Red-first `test/paged-select.test.mjs`: cover single-dialog fit (≤ 24
+- [x] Red-first `test/paged-select.test.mjs`: cover single-dialog fit (≤ 24
       with/without trailing), the 21-per-page arithmetic with
       `◀ Previous page` / `More options…` entries (≤ 24 per dialog with
       trailing), trailing-last on every page, PREV/NEXT navigation,
       `undefined` passthrough, and the at-limit boundary (24 options / 23 +
       trailing) — run to red (O5, PE-001, PE-012).
-- [ ] Add `SELECT_OPTION_LIMIT = 24`, `PAGED_SELECT_PREV`, and
+- [x] Add `SELECT_OPTION_LIMIT = 24`, `PAGED_SELECT_PREV`, and
       `PAGED_SELECT_NEXT` exports to `src/settings/picker.ts` (PE-001).
-- [ ] Implement `pagedSelect(select, title, options, { trailing })` in
+- [x] Implement `pagedSelect(select, title, options, { trailing })` in
       `src/settings/picker.ts` per the frozen arithmetic: when the list fits,
       one `select` call; otherwise 21-item pages with PREV/NEXT appended
       before the trailing option (O5).
