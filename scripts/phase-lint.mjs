@@ -21,7 +21,8 @@
  *
  * Read-only: never writes, never calls the network, no external dependencies.
  *
- * Deterministic approximations (frozen by the unit's SPEC §Design and pinned by
+ * Deterministic approximations (the script's mechanical realization of the
+ * rules the unit's SPEC §Design freezes, pinned by
  * `scripts/phase-lint.test.mjs`): the `→` chain test counts arrows, so one arrow
  * is an outcome annotation and two or more are a chain; "enumerated cases" means
  * numbered/lettered markers or ordinal words, not a bare comma list; the box-2
@@ -45,7 +46,7 @@ const FENCE_OPEN = /^(`{3,}|~{3,})/;
 const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
 const CREATION_VERB = /\b(?:create|creates|created|write|writes|written|scaffold|scaffolds|add a new file|new file)\b/i;
-const ENUMERATED = /(?:^|\s)\((?:\d+|[a-h])\)|(?:^|\s)\d+[.)]\s|\b(?:first|second|third|fourth|fifth)\b/gi;
+const ENUMERATED = /\((?:\d+|[a-z]|[ivxlcdm]{2,4})\)|\b(?:first|second|third|fourth|fifth)\b|(?:^|\s)\d+[.)]\s/gi;
 
 /** Strip backticked spans that are quoted commands (a runtime word leads them). */
 function stripQuotedCommands(text) {
@@ -257,19 +258,17 @@ function hasStandaloneOr(task) {
 }
 
 /**
- * Single-pass `If … then <scope change>` scan, dot-bounded like the rule: all
- * three tokens must sit in the same sentence. The first `if` and the first
- * `then` after it dominate any later pair (a later `then` is also after the
- * first `if`), so one linear walk per sentence is equivalent.
+ * Single-pass `If … then <scope change>` scan over the whole task text: the
+ * SPEC-frozen `If .* then (add|remove|move|split|merge|defer)` lets the middle
+ * span cross sentence periods, so sentence bounding was fail-open (F38). The
+ * first `if` and the first `then` after it dominate any later pair, so one
+ * linear walk is equivalent.
  */
 function hasIfThenScopeChange(task) {
-  for (const segment of task.split(".")) {
-    const at = segment.search(/\bif\b/i);
-    if (at === -1) continue;
-    const then = /\bthen\b/i.exec(segment.slice(at));
-    if (then && /\b(?:add|remove|move|split|merge|defer)\w*\b/i.test(segment.slice(at + then.index))) return true;
-  }
-  return false;
+  const at = task.search(/\bif\b/i);
+  if (at === -1) return false;
+  const then = /\bthen\b/i.exec(task.slice(at));
+  return Boolean(then && /\b(?:add|remove|move|split|merge|defer)\w*\b/i.test(task.slice(at + then.index)));
 }
 
 /** Box 5 — zero decision words. */
@@ -284,17 +283,16 @@ function box5(phase) {
 }
 
 /**
- * Single-pass move-target scan: within one sentence, a `to|into P<n>` after
- * the first move/defer verb also follows every later one, so one walk per
- * sentence is equivalent to the old `[^.]*` per-verb walk.
+ * Single-pass move-target scan over the whole task text: the SPEC-frozen
+ * `move(s)? .*(to|into) P\d+` lets the middle span cross sentence periods, so
+ * sentence bounding was fail-open (F38). A `to|into P<n>` after the first
+ * move/defer verb also follows every later one, so one linear walk is
+ * equivalent to the frozen per-verb form.
  */
 function movesToPhase(task) {
-  for (const segment of task.split(".")) {
-    const at = segment.search(/\b(?:moves?|defers?)\b/i);
-    if (at === -1) continue;
-    if (/\b(?:to|into)\s+P\d+\b/i.test(segment.slice(at))) return true;
-  }
-  return false;
+  const at = task.search(/\b(?:moves?|defers?)\b/i);
+  if (at === -1) return false;
+  return /\b(?:to|into)\s+P\d+\b/i.test(task.slice(at));
 }
 
 /** Box 6 — no conditional scope mutation across phases. */
@@ -329,7 +327,7 @@ function box7(phase) {
 function box8(phase) {
   if (!phase.doneWhen) return ["phase body has no `Done-when:` line"];
   if (!/`[^`]+`/.test(phase.doneWhen)) return ["`Done-when:` carries no backticked command"];
-  if (!/→|->|exit 0|exit zero|empty|matches|zero|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
+  if (!/→\s*\S|->\s*\S|\bexit (?:0|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
   return [];
 }
 
