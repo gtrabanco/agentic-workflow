@@ -25,14 +25,18 @@
   green (`PASS route budgets: 22 routes`, `PASS context budgets: 39 skills`) and
   the fixture is green on `main`. Repaired by the sync — no check was weakened
   and no ceiling was raised without a named growth source.
-- **Unrelated untracked tree in the shared worktree (P7 close-out note).** At
-  the close-out the working tree carried
+- **A separate unit's planning tree rode into this PR at the close-out (P7
+  note; re-cut by the cycle-6 fold F46).** The shared worktree carries
   `docs/fix/214-model-selection-over-24-options/` — a separate unit's planning
-  tree (registered `pending` in `docs/fix/README.md`, never committed on any
-  branch). It is neither this unit's work nor a reviewed artifact, so it was
-  left untouched (not committed into this PR, not removed). The literal
-  pending-docs check `git status --porcelain -- docs/` therefore reports that
-  one path; every path this unit owns is committed and clean.
+  tree, registered `pending` in `docs/fix/README.md`. The post-close-out tip
+  commit `585cd583` committed that tree into PR #212 together with the
+  `README.md` registration row, so it is neither this unit's work nor a
+  reviewed artifact, yet it *is* present in this PR's diff. Whether it stays,
+  moves to the `fix/214-model-selection-over-24-options` branch, or comes back
+  out is the owner's pending decision (review cycle 6, D-1): this note
+  describes the tip-commit state, and if the tree is re-homed this paragraph
+  must be re-worded to match. Every path this unit authored is committed and
+  clean — the literal check `git status --porcelain` reports no unit-owned path.
 
 ## Deferred items
 

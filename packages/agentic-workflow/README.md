@@ -14,5 +14,8 @@ as subcommands of it.
   convention exists on a fresh clone.
 
 Current producers: none yet. `scripts/phase-lint.mjs` deliberately stays in the
-repository's `scripts/` tree (feature 37 ED1); features 38 and 42 add the first
-crate subcommands.
+repository's `scripts/` tree (feature 37 ED1). Feature 38's
+`scripts/workflow-status.mjs` landed in that same repository tree before this
+crate existed, so re-homing it here is a recorded follow-up (feature 37
+ED8.4c) with no unit assigned yet; feature 42 is the next candidate to add the
+first crate subcommand.
