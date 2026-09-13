@@ -25,6 +25,14 @@
   green (`PASS route budgets: 22 routes`, `PASS context budgets: 39 skills`) and
   the fixture is green on `main`. Repaired by the sync — no check was weakened
   and no ceiling was raised without a named growth source.
+- **Unrelated untracked tree in the shared worktree (P7 close-out note).** At
+  the close-out the working tree carried
+  `docs/fix/214-model-selection-over-24-options/` — a separate unit's planning
+  tree (registered `pending` in `docs/fix/README.md`, never committed on any
+  branch). It is neither this unit's work nor a reviewed artifact, so it was
+  left untouched (not committed into this PR, not removed). The literal
+  pending-docs check `git status --porcelain -- docs/` therefore reports that
+  one path; every path this unit owns is committed and clean.
 
 ## Deferred items
 
