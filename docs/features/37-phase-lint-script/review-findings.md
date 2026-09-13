@@ -302,3 +302,72 @@ Cap status: the two-cycle cap was reached at cycle 4; cycles 5 and 6 run on
 the user's explicit invocations past the cap. The decision-required findings
 (D-1) and (D-2) block the unit until the user rules; the fix-now rows
 F44–F50 are foldable in place.
+
+Cycle 7 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-13 (`review-change`, single-reviewer, same five axes code/security/
+verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR #212 head
+`f56dc5c1`). The post-cycle-6 fold delta escalated to a full pass (width:
+ROADMAP.md, ROADMAP_EXECUTION_ORDER.md and phase-lint.test.mjs fall outside
+the F44–F50 cited union; size: +391/−130 = 521 changed lines > 200). All 43
+`folded: yes` rows re-verified repaired at their cited locations — 24 script
+rows via fresh /tmp reproducers on bun and node (F44's U+2028/CR heading+task
+survive the parse; F45 `exits 0`/`exit code 2` accepted; F47 dot-form counts
+5; F49 forged-verdict echo mangled; F43 extra argv usage-error; F22/F25 pipes
+and early-close hold; corpus 56/56), 19 docs rows via direct reads and exact
+arithmetic (F6/F19/F34/F48 ceilings recomputed = ceil(measured × 1.10); F27
+rows cite the shipped finals; F26 fence at all 6 sites + byte-identical
+mirrors; F20's mermaid defect shape is gone with the f56dc5c1 rewrite — 0
+mermaid blocks remain, replacement tree cross-checks 18/18 against
+ROADMAP.md). Structural preconditions green at `f56dc5c1`: acceptance blob
+`21adb084…` byte-identical; dogfood reproduces `3afa2601…`; 315/315 scripts
+suite; 39/39 skills + 22/22 routes; discovery + parity green; schema diff
+empty; AC1–AC10 validators re-run green. The isolated classifier
+(`review-implementation`) applied the CLASSIFY.md severity floor: three
+fix-now rows F51–F53 below (C2 is the never-ledgered completeness residue of
+F21/F49's echo defense — the box-2 target site; C1/C3 live in the
+user-authored exec-order doc but hold under either D-1 outcome, so they are
+independently foldable); the third Spanish-bearing committed doc
+(ROADMAP_EXECUTION_ORDER.md, whole file) is decision-required and merges into
+the pending D-2 ruling, never ledgered. One refuted candidate: the suspected
+fabricated counts on the #48 tree entries are verbatim restatements of issue
+#215's body (≤4 codes, "closed, start with 3" classes) — reported with
+counter-evidence, never a row. The 4×-recurring bench-gate proposal (F23/P1)
+is minted as DEBT-1 with a hard trigger (5th re-report or next hot-path
+commit) and stays user-routed report-only.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F51 | docs/features/ROADMAP_EXECUTION_ORDER.md:211,213 | workflow (record fidelity) | high | fix-now | fold: reword both parallelization rationale cells to the true state ("#37 in flight — PR #212 open; the linter lives on this branch, not yet on `main`") or gate the cells on merge; the correction is true under either D-1 outcome (it travels with the file) — starting dependents (#40/#42/#33) against the roadmap's own merged-dependency convention is the risk the false claim licenses | no |
+| VF-51 | docs/features/ROADMAP_EXECUTION_ORDER.md:211,213 · reviewer review-change + orchestrator re-verify · HEAD f56dc5c170569424b10a334d28361d07271b35d9 · recheck direct read: :211 `#37 ya merged, #36 toca surfaces disjoint`, :213 `#37 ya merged, #34 toca docs EN/ES` vs the same doc's :14 state table `#37 … OPEN (#212) | in-progress` and docs/features/ROADMAP.md:47 `in-progress · [#212]`; pre-existing at 585cd583 (3 sites), the f56dc5c1 rewrite fixed the tree but re-published the two Grupo A cells verbatim | workflow | confirmed | finding-mark | n/a | n/a |
+| F52 | scripts/phase-lint.mjs:237 | security | med | fix-now | fold: route the box-2 finding's plan-derived task target through `sanitizeEcho` (or mangle the same three token families) before interpolation + corpus fixture for a `verdict*`/`fingerprint*` target; bounded by the PATH_TOKEN charset (no forgery), so this is the substring-confusion bar F49 already set for the title echo, extended to the last uncovered echo site | no |
+| VF-52 | scripts/phase-lint.mjs:237 · reviewer review-change (security pass) + orchestrator re-verify · HEAD f56dc5c170569424b10a334d28361d07271b35d9 · recheck failing reproducer: task `- [ ] Edit verdict/PASS.md` → `P3 box-2: task 1 target \`verdict/PASS.md\` belongs to layer docs, not config/infra` (raw echo observed at the reviewed head); `sanitizeEcho` is applied only to the title (:222); no ledgered row covers this site (F21 = title echo, F49 = title mangling) | security | confirmed | finding-mark | n/a | n/a |
+| F53 | docs/features/ROADMAP_EXECUTION_ORDER.md:400 | workflow (record fidelity) | med | fix-now | fold: delete the vacuous #209 cleanup note (or reword it to record that the removal already landed) | no |
+| VF-53 | docs/features/ROADMAP_EXECUTION_ORDER.md:400 · reviewer review-change + orchestrator re-verify · HEAD f56dc5c170569424b10a334d28361d07271b35d9 · recheck direct read: note 2 instructs "Eliminar referencia de ROADMAP_EXECUTION_ORDER.md" for closed #209 while `grep -c "#209"` = 1 (the note itself) — the f56dc5c1 rewrite already removed every #209 reference, so the dated doc carries a pending action targeting its own carrier | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD f56dc5c170569424b10a334d28361d07271b35d9 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: new: F51, F52, F53 (C4 — the third Spanish-bearing doc — is
+  an owner decision merged into D-2, never a source row)
+- Snapshots: 585cd583e9d5e9edfba1c780c6a8390924498747 →
+  f56dc5c170569424b10a334d28361d07271b35d9 (cycle-6 reviewed head → cycle-7
+  reviewed head)
+- Missed: cycle 6 treated the post-review tip commits' contents as PR
+  composition (D-1) and never probed their internal truthfulness — the
+  f56dc5c1 rewrite re-published the "ya merged" cells and the stale #209
+  note (F51, F53) — and F49's sanitizer coverage was verified at its cited
+  title site without sweeping the other plan-text interpolation sites (F52,
+  the box-2 target)
+- Owning stage: source (F51–F53)
+- Why the prior review failed: the D-1 surfacing absorbed the exec-order
+  doc as a scope question, so no record-fidelity finder read its cells
+  against the roadmap; the echo-defense verification stopped at the folded
+  site instead of enumerating echo sites
+- Route to owner: /fold-findings (explicit ids F51 + F52 + F53)
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5, 6 and 7 run
+on the user's explicit invocations past the cap. The decision-required
+findings (D-1, D-2 — now including the ROADMAP_EXECUTION_ORDER.md language
+surface) block the unit until the user rules; the fix-now rows F51–F53 are
+foldable in place.
