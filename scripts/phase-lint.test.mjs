@@ -714,6 +714,43 @@ test("an `If … then` scope change in a later sentence still fails box 5 (F38)"
   assert.match(stdout, /^P1 box-5: task 1 carries an “If … then” scope change$/m);
 });
 
+// Fold F54 — the box-5 scan searched the whole tail after the first `then` for
+// a scope verb, so a verb anywhere later in the task (including a derived form
+// like `added`) satisfied the frozen `If .* then (verb)` pattern. The verb must
+// sit immediately after a `then` that follows an `if`; the greedy `.*` crosses
+// periods (F38) but never moves the verb away from `then`.
+const TAIL_VERB_FALSE_BLOCK_PLAN = `# Tail verb
+
+### P1 — Handle the snapshot
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] If the snapshot mismatches, then rerun; the added fixture is committed separately
+`;
+
+const ADJACENT_THEN_PLAN = `# Adjacent then
+
+### P1 — Handle the snapshot
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] If the snapshot mismatches then add the fallback fixture
+`;
+
+test("a scope verb later in the tail is not an `If … then` scope change (F54)", () => {
+  const file = fixture("tail-verb.md", TAIL_VERB_FALSE_BLOCK_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "a verb that does not follow `then` must not block box 5");
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("a scope verb immediately after `then` still fails box 5 (F54)", () => {
+  const file = fixture("adjacent-then.md", ADJACENT_THEN_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-5: task 1 carries an “If … then” scope change$/m);
+});
+
 test("a degenerate multi-hundred-KB task line completes instead of backtracking", () => {
   const task = "either ".repeat(40_000); // ~0.28 MB, tens of thousands of scan starts
   const plan = `# Degenerate scan\n\n### P1 — Handle the input\n\nLayer: docs. Done-when: \`grep -n input docs/input.md\` → matches.\n\n- [ ] ${task}\n`;

@@ -349,17 +349,17 @@ function hasStandaloneOr(task) {
 }
 
 /**
- * Single-pass `If … then <scope change>` scan over the whole task text: the
- * SPEC-frozen `If .* then (add|remove|move|split|merge|defer)` lets the middle
- * span cross sentence periods, so sentence bounding was fail-open (F38). The
- * first `if` and the first `then` after it dominate any later pair, so one
- * linear walk is equivalent.
+ * The SPEC-frozen `If .* then (add|remove|move|split|merge|defer)` scan over
+ * the whole task text: the `.*` may cross sentence periods (F38), but the scope
+ * verb must sit immediately after a `then` that follows an `if` — the greedy
+ * `.*` backtracks onto any qualifying `then`, so a verb later in the tail never
+ * satisfies the pattern. Searching the whole tail for the verb (plus the `\w*`
+ * derived forms) was a false BLOCK (F54).
  */
 function hasIfThenScopeChange(task) {
   const at = task.search(/\bif\b/i);
   if (at === -1) return false;
-  const then = /\bthen\b/i.exec(task.slice(at));
-  return Boolean(then && /\b(?:add|remove|move|split|merge|defer)\w*\b/i.test(task.slice(at + then.index)));
+  return /\bthen\s+(?:add|remove|move|split|merge|defer)\b/i.test(task.slice(at));
 }
 
 /** Box 5 — zero decision words. */
