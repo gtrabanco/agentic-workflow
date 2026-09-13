@@ -16,7 +16,7 @@ import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_PO
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
 import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
-import { SELECT_OPTION_LIMIT, pagedSelect } from "./picker.js";
+import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
 
 export interface SettingsDeps {
   ui: SettingsUi;
@@ -294,12 +294,6 @@ async function pickModelEntry(deps: SettingsDeps, target: string, current?: Mode
     return undefined;
   }
   return `${parts.provider}/${parts.id}`;
-}
-
-/** The provider prefix Pi resolves a reference by (everything before the first `/`). */
-function providerOf(reference: string): string {
-  const slash = reference.indexOf("/");
-  return slash === -1 ? reference : reference.slice(0, slash);
 }
 
 /**
