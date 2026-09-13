@@ -43,6 +43,17 @@ export const PAGED_SELECT_NEXT = "More options…";
  */
 const PAGED_SELECT_PAGE_SIZE = SELECT_OPTION_LIMIT - 3;
 
+/**
+ * The pager label actually offered: `base`, decorated with `marker` while some
+ * value in the dialog spells it, so a label-colliding data entry can never be
+ * swallowed by the navigation guard (see the contract above).
+ */
+function pagerLabel(base: string, marker: string, spoken: readonly string[]): string {
+  let label = base;
+  while (spoken.includes(label)) label += marker;
+  return label;
+}
+
 /** The plain-dialog shape `pagedSelect` drives (Pi's `ctx.ui.select`). */
 export type SelectFn = (title: string, options: readonly string[]) => string | undefined | Promise<string | undefined>;
 
@@ -53,10 +64,16 @@ export type SelectFn = (title: string, options: readonly string[]) => string | u
  * - A list that fits — data plus `trailing` — opens exactly one dialog, in the
  *   caller's order with `trailing` last, so a ≤ cap flow is byte-identical to a
  *   plain `select` call.
- * - A longer list pages 21 data entries at a time, appending `PAGED_SELECT_PREV`
- *   and/or `PAGED_SELECT_NEXT` before `trailing`. Pager entries navigate;
- *   `trailing` and data entries are returned to the caller; `undefined`
- *   (cancel) passes straight through.
+ * - A longer list pages `PAGED_SELECT_PAGE_SIZE` data entries at a time —
+ *   `SELECT_OPTION_LIMIT - 3`, so the derived page never hardcodes the cap —
+ *   appending `PAGED_SELECT_PREV` and/or `PAGED_SELECT_NEXT` before `trailing`.
+ *   Pager entries navigate; `trailing` and data entries are returned to the
+ *   caller; `undefined` (cancel) passes straight through.
+ *
+ * The two pager labels are reserved: a data value (or a `trailing` value) that
+ * spells one is indistinguishable from the pager entry in the string `select`
+ * answers with, so a colliding pager label is decorated until it names nothing
+ * else on the dialog — the data value stays selectable and so does the pager.
  */
 export async function pagedSelect(
   select: SelectFn,
@@ -69,23 +86,29 @@ export async function pagedSelect(
     return await select(title, trailing !== undefined ? [...items, trailing] : items);
   }
 
+  // A label-colliding data value must stay reachable, so compute the offered
+  // pager labels once against every string that can appear in a dialog.
+  const spoken = trailing !== undefined ? [...items, trailing] : items;
+  const prevLabel = pagerLabel(PAGED_SELECT_PREV, " ‹", spoken);
+  const nextLabel = pagerLabel(PAGED_SELECT_NEXT, " ›", spoken);
+
   const pageCount = Math.ceil(items.length / PAGED_SELECT_PAGE_SIZE);
   let page = 0;
   for (;;) {
     const start = page * PAGED_SELECT_PAGE_SIZE;
     const entries = [
       ...items.slice(start, start + PAGED_SELECT_PAGE_SIZE),
-      ...(page > 0 ? [PAGED_SELECT_PREV] : []),
-      ...(page < pageCount - 1 ? [PAGED_SELECT_NEXT] : []),
+      ...(page > 0 ? [prevLabel] : []),
+      ...(page < pageCount - 1 ? [nextLabel] : []),
       ...(trailing !== undefined ? [trailing] : []),
     ];
     const answer = await select(title, entries);
     if (answer === undefined) return undefined;
-    if (answer === PAGED_SELECT_NEXT && page < pageCount - 1) {
+    if (answer === nextLabel && page < pageCount - 1) {
       page += 1;
       continue;
     }
-    if (answer === PAGED_SELECT_PREV && page > 0) {
+    if (answer === prevLabel && page > 0) {
       page -= 1;
       continue;
     }
