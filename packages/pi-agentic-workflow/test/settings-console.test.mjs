@@ -1284,3 +1284,86 @@ test("settings console model picker: bounded command multi-select rounds over 30
   assert.ok(rounds[2].options.includes("cmd01"), "round 2 starts a fresh bounded page");
   assert.ok(fitsCap(scripted));
 });
+
+// F7: the over-cap two-step's preselection and its TYPED-from-a-paged-dialog
+// path were correct but uncovered — a regression there passed the whole suite.
+// These cases seed the value in force and answer TYPED from a paged dialog, so
+// `askProvider`'s and `askModelWithinProvider`'s `opts.initial` contract and
+// `askModelOverCap`'s TYPED → text-input fallback fail loudly when broken.
+
+test("settings console model picker: the over-cap two-step preselects the value in force at both steps", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"commands":{"plan-feature":{"model":"beta/m5"}}}' },
+    {
+      models: overCapModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "beta",
+        [prompts.modelPicked("plan-feature")]: "beta/m9",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "beta/m9");
+  const providerDialog = scripted.asked.find((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.deepEqual(providerDialog.opts, { initial: "beta" }, "the provider in force is preselected");
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.deepEqual(modelDialog.opts, { initial: "beta/m5" }, "the model in force is preselected within its provider");
+});
+
+test("settings console model picker: the over-cap two-step never leaks the value in force into another provider", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"commands":{"plan-feature":{"model":"beta/m5"}}}' },
+    {
+      models: overCapModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "alpha",
+        [prompts.modelPicked("plan-feature")]: "alpha/m2",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "alpha/m2");
+  const providerDialog = scripted.asked.find((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.deepEqual(providerDialog.opts, { initial: "beta" }, "the provider in force is still preselected");
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.deepEqual(modelDialog.opts, {}, "another provider's dialog preselects nothing");
+});
+
+test("settings console model picker: Type another reference from a paged dialog reaches the text input", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: singleProviderModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "solo",
+        [prompts.modelPicked("plan-feature")]: [PAGED_SELECT_NEXT, TYPED_OPTION],
+        [prompts.model("plan-feature")]: "custom/ref-9",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "custom/ref-9");
+  const pages = scripted.asked.filter((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.equal(pages.length, 2, "TYPED was answered from a paged (page-2) dialog");
+  const asked = scripted.questions();
+  assert.ok(asked.includes(prompts.model("plan-feature")), "TYPED fell through to the text input");
+  assert.ok(fitsCap(scripted));
+});
