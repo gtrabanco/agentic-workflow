@@ -402,22 +402,22 @@ Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 Layer: `domain`. Done-when: `cd packages/pi-agentic-workflow && bun run test`
 → exit 0.
 
-- [ ] Red-first console tests in `test/settings-console.test.mjs` (names
+- [x] Red-first console tests in `test/settings-console.test.mjs` (names
       frozen in `## Testing`): the four model-picker cases — two-step over 30
       models, paging within one provider, single-step preserved at 23 (select
       and rich pick with preselection), TYPED-last on every dialog
       (O1-O4, PE-003, PE-007, PE-009).
-- [ ] Red-first pick-less over-cap case in `test/settings-console.test.mjs`:
+- [x] Red-first pick-less over-cap case in `test/settings-console.test.mjs`:
       "provider-first two-step over 30 models in a pick-less UI" — the console
       runs with `rich: false` so the two-step executes through the select
       fallback (`console.ts:269`), every dialog ≤ 24 options, TYPED last
       (O1, PE-003, PE-013).
-- [ ] Red-first over-cap provider-list case in `test/settings-console.test.mjs`:
+- [x] Red-first over-cap provider-list case in `test/settings-console.test.mjs`:
       "provider-first two-step over 30 providers" — a registry of 30 providers
       × 1 model each makes the provider dialog itself exceed the cap, so the
       first dialog pages (`More options…` reaches the page-2 providers) and
       every dialog stays ≤ 24 options (O15, PE-014).
-- [ ] Implement in `pickModelEntry` (`src/settings/console.ts`): when
+- [x] Implement in `pickModelEntry` (`src/settings/console.ts`): when
       `deps.models.length > SELECT_OPTION_LIMIT - 1`, extract unique providers
       (prefix before the first `/`, `localeCompare`-sorted), ask the provider
       via `pick`/`pagedSelect` with `[...providers, TYPED]` (TYPED → direct

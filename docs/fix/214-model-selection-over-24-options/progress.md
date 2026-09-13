@@ -64,6 +64,17 @@ Session ledger for this unit. Receipt blocks follow the
 - Files: packages/pi-agentic-workflow/src/settings/picker.ts · packages/pi-agentic-workflow/test/paged-select.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P1 ticks) · progress.md
 - Next: P2 — Provider-first two-step model selection
 
+## P2 — 2026-09-13
+- Done: `pickModelEntry` over `SELECT_OPTION_LIMIT - 1` models now runs the provider-first two-step: unique providers (`localeCompare`-sorted) via `pick` while they fit, `pagedSelect` when the provider list itself exceeds the cap, then that provider's models via `pick`/`pagedSelect`; `prompts.modelProvider(target)` added (no existing prompt renamed, PE-007); TYPED trails every dialog and still reaches `input`, so a pick-less UI completes (OB-12). ≤ 23 models keep the single-step branch byte-identical. New red-first console cases: provider-first over 30 models (rich + pick-less `rich: false`), provider-first over 30 providers (provider dialog pages), pages within one provider, single-step preserved at 23 (rich preselection + pick-less select), TYPED-last. Validators: `-t "provider-first"` → 3 pass; `-t "pages within one provider"` → 1 pass; `-t "single-step preserved"` → 2 pass; `-t "Type another reference"` → 1 pass; `-t "over 30 providers"` → 1 pass; full suite → 201 pass. Phase-lint re-checked PASS (8/8) at fingerprint `P2:domain:4:provider-first-two-step-model-selection`.
+- Remains: P3–P7.
+- Gotchas: the two-step triggers at `models.length > SELECT_OPTION_LIMIT - 1` (24 models + TYPED would be 25); the provider step pages with plain `select` even when the rich seam exists (Decision 7 — paged dialogs are select-based); TYPED or a cancel at either step falls through to the text input, so the flow never dead-ends.
+- Files: packages/pi-agentic-workflow/src/settings/console.ts · packages/pi-agentic-workflow/test/settings-console.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P2 ticks) · progress.md
+- Next: P3 — Bounded command selection
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 201 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Next: P3 · Attempts: 1
+
 ## Unit-loop receipt — P1
-- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 192 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Commit: 84299b06 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 192 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P2 · Attempts: 1
