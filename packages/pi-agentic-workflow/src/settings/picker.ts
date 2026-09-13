@@ -10,6 +10,10 @@
 //    to narrow the list, selection, and cancel. The Pi-free `SettingsUi.pick`
 //    seam stays separated so the filter and the component are exercisable
 //    without a live session.
+//  - `pagedSelect` is the plain-`select` counterpart: the host's dialog cap
+//    (pi-web rejects > 24 options, PE-001) is never a picker concern — a UI
+//    without the rich seam still gets a bounded dialog, and an over-cap list
+//    pages instead of crashing.
 //
 // The filter is implemented in this package (not imported from Pi): PE-004
 // confirmed pi-coding-agent's `fuzzyFilter` is internal, so the same
@@ -19,6 +23,75 @@ import { SelectList, type Component, type SelectItem, type SelectListTheme } fro
 
 /** Default window height for the SelectList (the built-in position indicator scales to the list). */
 export const PICKER_MAX_VISIBLE = 10;
+
+/**
+ * The host dialog cap this package must never exceed (PE-001): pi-web rejects a
+ * `select` dialog offering more than 24 options with "A select dialog must not
+ * offer more than 24 options". It is the single knob if a future host enforces a
+ * different bound.
+ */
+export const SELECT_OPTION_LIMIT = 24;
+
+/** Pager entry offered on every page but the first. */
+export const PAGED_SELECT_PREV = "◀ Previous page";
+/** Pager entry offered on every page but the last. */
+export const PAGED_SELECT_NEXT = "More options…";
+
+/**
+ * Data entries per page: the cap leaves room for both pager entries and the
+ * caller's trailing option (`21 + 2 + 1 = 24`).
+ */
+const PAGED_SELECT_PAGE_SIZE = SELECT_OPTION_LIMIT - 3;
+
+/** The plain-dialog shape `pagedSelect` drives (Pi's `ctx.ui.select`). */
+export type SelectFn = (title: string, options: readonly string[]) => string | undefined | Promise<string | undefined>;
+
+/**
+ * Present `options` through `select` without ever offering more than
+ * `SELECT_OPTION_LIMIT` entries in one dialog (AC6, PE-001, PE-012).
+ *
+ * - A list that fits — data plus `trailing` — opens exactly one dialog, in the
+ *   caller's order with `trailing` last, so a ≤ cap flow is byte-identical to a
+ *   plain `select` call.
+ * - A longer list pages 21 data entries at a time, appending `PAGED_SELECT_PREV`
+ *   and/or `PAGED_SELECT_NEXT` before `trailing`. Pager entries navigate;
+ *   `trailing` and data entries are returned to the caller; `undefined`
+ *   (cancel) passes straight through.
+ */
+export async function pagedSelect(
+  select: SelectFn,
+  title: string,
+  options: readonly string[],
+  { trailing }: { trailing?: string } = {},
+): Promise<string | undefined> {
+  const items = [...options];
+  if (items.length + (trailing !== undefined ? 1 : 0) <= SELECT_OPTION_LIMIT) {
+    return await select(title, trailing !== undefined ? [...items, trailing] : items);
+  }
+
+  const pageCount = Math.ceil(items.length / PAGED_SELECT_PAGE_SIZE);
+  let page = 0;
+  for (;;) {
+    const start = page * PAGED_SELECT_PAGE_SIZE;
+    const entries = [
+      ...items.slice(start, start + PAGED_SELECT_PAGE_SIZE),
+      ...(page > 0 ? [PAGED_SELECT_PREV] : []),
+      ...(page < pageCount - 1 ? [PAGED_SELECT_NEXT] : []),
+      ...(trailing !== undefined ? [trailing] : []),
+    ];
+    const answer = await select(title, entries);
+    if (answer === undefined) return undefined;
+    if (answer === PAGED_SELECT_NEXT && page < pageCount - 1) {
+      page += 1;
+      continue;
+    }
+    if (answer === PAGED_SELECT_PREV && page > 0) {
+      page -= 1;
+      continue;
+    }
+    return answer;
+  }
+}
 
 /**
  * Token/subsequence, slash-aware reference filter (OB-2).

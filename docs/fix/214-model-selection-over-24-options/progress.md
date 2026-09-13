@@ -48,3 +48,22 @@ Session ledger for this unit. Receipt blocks follow the
 - Ledgers read: planning-evidence 14 rows · obligations 15 rows (verified-capable: 13 — O8/O9 are human manual smoke rows)
 - Prior plan receipt (re-review only): rp-214-20260913-002 @ 5ef96fc8be539a225e92627f23ee7371bb967ce2fdeae78c62eccca9c660fb6f
 - Notes: re-review after repair ar-214-3 — PL-3 (over-cap provider case), PL-4 (flip validator), PL-5 (operational-risks anchor) verified resolved against the bytes, not taken on faith; PL-1 + PL-2 resolutions re-verified too (corrected PE-007 anchors, pick-less over-cap case, PE-013). Repair rotation label ar-214-3 pairs with the recomputed artifact revision 6e6d3d78 (no separate revision id exists in the manual flow — same convention as rp-001/rp-002). Snapshot built with `bun scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-214 --dir docs/fix/214-model-selection-over-24-options --unit-kind fix` (digest = stdout first line). Third cycle is lawful: both prior cycles followed persisted FAIL verdicts with changed snapshots (POLICY §4 — a repair produces a new snapshot by design); cycle 2 printed the CONVERGENCE-ANOMALY block in rp-002. Evidence anchors re-verified at 6e6d3d78 (package source unchanged since e0c18284 — `git diff e0c18284..HEAD -- packages/pi-agentic-workflow/{src,test}` empty; every commit since is docs-only): PE-001 against the installed runtime `@jmfederico/pi-web@1.202609.0` (`apiTypes.js:37` + throw site `pendingExtensionDialogStore.js:136-139`), PE-002/003/004/005/007/008/013 against package source, PE-012 harness capture; exhaustive `ui.select`/`ui.pick` sweep of `console.ts` confirms the three-surface root cause is complete (menu :103, policies :170/:175, scope :199, fields :251, chainAction :324, thinking :348-358 are fixed literal sets). Dependency closure proven: #203 (84b7f0e9) is an ancestor of HEAD. One info finding PL-6 (Rules prose anchor, non-blocking) appended in the same act.
+
+## Dependency receipt v1
+- Fingerprint: a5b16343783a441a939074c7acd4bfeca1ded22a · Closure: fix-214 ← (none — the SPEC `## Depends on` section lists no dependency unit)
+- Merged PRs: none · Fully merged: yes · Verified: 2026-09-13
+- Fingerprint recipe: `git hash-object --stdin` over the `## Depends on` section body (both lines, heading excluded), as recomputed at 4639760e → a5b16343. The seam this fix extends is #203 (`84b7f0e9`, merged 2026-09-09), proven an ancestor of HEAD (`git merge-base --is-ancestor`) — a prerequisite already in the base, not a `Depends on` edge.
+
+## Acceptance receipt v1
+- Manifest: docs/fix/214-model-selection-over-24-options/ACCEPTANCE.md · Blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22 · Status: frozen · Verified: 2026-09-13
+
+## P1 — 2026-09-13
+- Done: `src/settings/picker.ts` gains `SELECT_OPTION_LIMIT = 24`, `PAGED_SELECT_PREV` (`◀ Previous page`), `PAGED_SELECT_NEXT` (`More options…`), and the async `pagedSelect(select, title, options, { trailing })` helper (21 data per page = `SELECT_OPTION_LIMIT - 3`, PREV/NEXT before the trailing option, cancel passthrough). New red-first `test/paged-select.test.mjs` (7 cases: fit, 30-item paging, PREV, trailing-last on every page, cancel, at-limit boundary, property sweep 1–100). Phase-lint re-checked PASS (8/8) at fingerprint `P1:domain:3:bounded-paged-select-helper`.
+- Remains: P2–P7.
+- Gotchas: the ≤ cap branch calls `select(title, [...items, trailing])` verbatim, so any caller that fits keeps byte-identical behavior; `pagedSelect` awaits its `select` argument, so both `Promise`-returning and sync `SettingsUi.select` shapes work. No production caller wired yet — P2/P3/P4 consume it.
+- Files: packages/pi-agentic-workflow/src/settings/picker.ts · packages/pi-agentic-workflow/test/paged-select.test.mjs · docs/fix/214-model-selection-over-24-options/SPEC.md (P1 ticks) · progress.md
+- Next: P2 — Provider-first two-step model selection
+
+## Unit-loop receipt — P1
+- Commit: pending · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 192 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
+- Next: P2 · Attempts: 1
