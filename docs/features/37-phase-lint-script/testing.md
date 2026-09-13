@@ -12,9 +12,12 @@ Artifact revision: `37-plan-7`.
   its test files, a source target in `hardening` still BLOCKs, a test file
   beside its implementation keeps the prefix-table mapping, and `close-out` is
   deliberately not given the mapping (fail-closed — the owner rule names
-  `hardening` only). Corpus 33/33 at the `37-plan-7` re-cut (30 at the P5
-  landing; the cycle-4 source folds F31/F32/F35 added the task-grammar,
-  sanitizer, and teardown fixtures).
+  `hardening` only). Corpus 39/39 after the P6 grammar-conformance landing
+  (33 at the `37-plan-7` re-cut and 30 at the P5 landing; the cycle-4 source
+  folds F31/F32/F35 added the task-grammar, sanitizer, and teardown fixtures,
+  and P6 added the six F30/F33 fixtures: bare standalone `or`, embedded-word
+  negative, fenced fragment, unclosed fence, tilde fence, and the
+  equal-or-greater fence-closing nesting).
 - **Runtime parity:** the same corpus runs under bun and node
   (`bun scripts/phase-lint.mjs` / `node scripts/phase-lint.mjs`); AC7 pins the
   node fallback with exit 0 on a valid plan.
@@ -52,6 +55,8 @@ re-derived at the `37-plan-5` F7 re-cut (unchanged by the `37-plan-6` repair
 batch), then re-derived again at the `37-plan-7` re-cut — the new P6 plus the
 renumbered close-out make the whole-plan sha256
 `3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed` — the
-linter run is recorded in decisions.md ED9. M/L
+linter run is recorded in decisions.md ED9 and was re-confirmed by P6: the
+source fix does not change `TASKS.md` bytes, so P6 reproduces the identical
+block and sha256. M/L
 `SPEC.md` `### Phases` sections carry no checkboxes, so a SPEC run answers
 `:0:` task counts — see `known-issues.md`.

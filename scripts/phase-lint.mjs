@@ -41,6 +41,8 @@ const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
 const PATH_TOKEN = /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*\/?$/;
 const HAS_LETTER = /[A-Za-z]/;
 const PHASE_HEADING = /^#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
+const FENCE_OPEN = /^(`{3,}|~{3,})/;
+const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
 const CREATION_VERB = /\b(?:create|creates|created|write|writes|written|scaffold|scaffolds|add a new file|new file)\b/i;
 const ENUMERATED = /(?:^|\s)\((?:\d+|[a-h])\)|(?:^|\s)\d+[.)]\s|\b(?:first|second|third|fourth|fifth)\b/gi;
@@ -96,11 +98,43 @@ function titleDeliverable(title) {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Parse the phase headings and their bodies out of a Markdown plan. */
+/** The fence a line opens, or null: three-or-more backticks (optional info string) or tildes. */
+function openFence(trimmed) {
+  const match = FENCE_OPEN.exec(trimmed);
+  return match ? { char: match[1][0], length: match[1].length } : null;
+}
+
+/** A closing fence: only the same character repeated at equal-or-greater length. */
+function closesFence(trimmed, fence) {
+  const match = FENCE_CLOSE.exec(trimmed);
+  return Boolean(match && match[1][0] === fence.char && match[1].length >= fence.length);
+}
+
+/**
+ * Parse the phase headings and their bodies out of a Markdown plan.
+ *
+ * Fenced code blocks are recognized before any other grammar rule and
+ * contribute nothing to the parse (F33 re-cut): no phase heading,
+ * `Layer:`/`Done-when:` line, or task inside a fence is recognized, and the
+ * fence lines themselves are inert. An unclosed fence runs to end of file
+ * (GFM semantics), so everything after it is fenced — deterministic, never a
+ * guess.
+ */
 function parsePhases(text) {
   const phases = [];
   let current = null;
+  let fence = null;
   for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (fence) {
+      if (closesFence(trimmed, fence)) fence = null;
+      continue;
+    }
+    const opened = openFence(trimmed);
+    if (opened) {
+      fence = opened;
+      continue;
+    }
     const heading = PHASE_HEADING.exec(line);
     if (heading) {
       current = { number: Number(heading[1]), title: heading[2].trim(), body: [] };
@@ -210,10 +244,16 @@ function box4(phase) {
   return findings;
 }
 
-/** Single-pass `either … or` scan (never a `[\s\S]*` backtracking walk). */
-function hasEitherOr(task) {
-  const at = task.search(/\beither\b/i);
-  return at !== -1 && /\bor\b/i.test(task.slice(at));
+/**
+ * Standalone alternatives word (box-5, F30 re-cut): a case-insensitive `or`
+ * with no word character and no hyphen adjacent on either side. Embedded forms
+ * (`editor`) and hyphen-joined compounds (`equal-or-greater`) are one token,
+ * never a joiner — the same compound-word rule box-1 uses. This subsumes the
+ * previously frozen narrower `either … or` shape.
+ */
+const STANDALONE_OR = /(?<![\p{L}\p{N}_-])or(?![\p{L}\p{N}_-])/iu;
+function hasStandaloneOr(task) {
+  return STANDALONE_OR.test(task);
 }
 
 /**
@@ -237,7 +277,7 @@ function box5(phase) {
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
     if (/\b(?:decide|decides|decided|choose|chooses|choosing)\b/i.test(task)) findings.push(`task ${index + 1} carries a decision word`);
-    else if (hasEitherOr(task)) findings.push(`task ${index + 1} offers either/or alternatives`);
+    else if (hasStandaloneOr(task)) findings.push(`task ${index + 1} offers either/or alternatives`);
     else if (hasIfThenScopeChange(task)) findings.push(`task ${index + 1} carries an “If … then” scope change`);
   }
   return findings;

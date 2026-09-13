@@ -602,3 +602,114 @@ Notes:
 Next: `/review-plan 37-phase-lint-script` (fresh cycle 8; prior receipt
 PLAN-REVIEW-37-7 binds the pre-re-cut bytes), then `/execute-phase 37` for the
 new P6 plus the P7 close-out re-run.
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-37-8 · Snapshot: 2d25a6dfe8a86c69e5aaa2da5b9ded9270c5414340cfed65c13dc210f31e75cd · Verdict: plan-review-pass
+- Unit: 37-phase-lint-script · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 27522e96dd726b2eb4dc12ff6ba4e6655c38a4dd0908b3f6d2af945037da6669 · Parent Product receipt: SPEC-REVIEW-37-2
+- Source revision: bf50037435ba77c6f2265908059053d28ee0f4c3 · Artifact revision: bf50037435ba77c6f2265908059053d28ee0f4c3
+- Reviewer: review-plan (fresh context, manual portability route) · Session: review-plan-37-cycle8-2026-09-13 · Role: reviewer · Author: plan-feature-scaffold
+- Author exclusion: enforced · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Started/finished: 2026-09-13T08:25Z/2026-09-13T08:58Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 12 rows · obligations 14 rows (verified-capable: 2)
+- Prior plan receipt (re-review only): PLAN-REVIEW-37-7 @ 4ed98668b3d8a49c974a08d2007044411c9c51ab8770ec031fff3c23a37e2824
+```
+
+Notes:
+- Re-review of the replan-8 re-cut (no-progress gate satisfied, POLICY §4): the
+  snapshot changed `4ed98668…` → `2d25a6df…` because the input was the
+  user-directed re-cut of the four plan-owned review rows F28+F29+F30+F33
+  (commit `bf500374`, the planner's handoff label `37-plan-7`) — a repair
+  performed in response to persisted findings (review-findings.md "Route to
+  owner"), never a blind re-review, so no cycle cap or anomaly rule blocks it.
+  The receipt's `Artifact revision:` binds the builder's canonical
+  digest-derived value `bf500374…`; the handoff label `37-plan-7` is recorded
+  here (cycle-2/6/7 precedent).
+- Falsification stance before checking: CONFIRMED-GAPS → refuted mechanically.
+  The four re-cut clauses were attacked at their agreeing authorities and
+  held: §Output contract reason codes match the script header verbatim
+  (`missing-plan` = no argument/nonexistent path; `unparseable` = unreadable
+  file + parse/ambiguity — AC3 and the permission-denied corpus agree); the
+  title-deliverable article rule matches `scripts/phase-lint.mjs:91`
+  (`\b(?:the|a|an)\b`, global) and the corpus mid-title pin
+  (`scripts/phase-lint.test.mjs:449-458`, `Wrap the long command` →
+  `wrap-long-command`); box-5's widened mechanical definition matches owner
+  rule 5 with the `hasEitherOr` predecessor still at `:214` awaiting P6; the
+  fence rule is grammar-new with its P6 fixtures red-first. The re-cut plan
+  survives the box-5 it ships: no standalone `or` and no `either` anywhere in
+  TASKS.md (grep-verified by this reviewer).
+- L1: parent lineage re-proven, never copied. SPEC-REVIEW-37-2 (snapshot
+  `27522e96…`) is the newest current SPEC-REVIEW-PASS; the Product half
+  (SPEC lines 1–305) is byte-identical `e3d8e0ea…` → HEAD `bf500374…` (direct
+  extracted diff, empty), the only commit touching SPEC since the parent
+  binding is the re-cut itself, and every hunk sits at line ≥ 306 (the
+  `## Engineering half` marker is line 306); contexts byte-identical across
+  the same span (CLAUDE.md and `docs/workflow/REPOSITORY_STATE.md` unmoved;
+  architectural-invariants absent on both sides). L1 holds.
+- L2: PE-001…PE-012 all `current` + `proven` (PE-005 `decision`); no
+  `unknown`/`drifted`/`deferred` row. Path:line spot-checks resolved: PE-002
+  (`skills/plan-fix/SKILL.md:101`, `skills/execute-phase/SKILL.md:50` — the
+  run-and-paste steps shipped at P4), PE-004
+  (`packages/pi-agentic-workflow/package.json:47` `bundle:skills`), PE-007
+  (roadmap row 37 re-read `in-progress · [#212]` at `37-plan-7`), PE-012
+  (review-findings.md F27–F36 rows + CONVERGENCE-ANOMALY `:134` + LOOP CAP
+  `:144` present at HEAD; linter header reason codes + `:91` + `hasEitherOr`
+  `:214`; test `:449,458`), PE-009 (fix #191 still `in-progress · #193`; no
+  remaining phase touches that surface — non-finding).
+- L3/L4: 14 obligation rows, none blank/deferred/duplicated, ids stable; each
+  names one phase, one task, an implementation-owner, an ACCEPTANCE-copied
+  validator, and required evidence. O11 + O13 `verified` (O13 flipped with the
+  P5 landing evidence `de5ddd57`, 33/33 corpus); O14 `planned` matching the
+  unticked P6; O1–O10/O12 `planned` — their statuses flip at the phase owner's
+  final gate, the same pre-ship state all seven prior receipts adjudicated.
+- L5: 8 dev scenarios ↔ phases ↔ validators; every validator can fail (the
+  corpus asserts the exit-1 paths; `diff`/`test -d`/grep falsifiable). The
+  F30/F33 grammar behaviors are corpus-pinned red-first under O14's validator
+  (grammar cases live in the corpus, not the infra-edge dev-scenario table).
+  L6: honest — open rows are F1 + F17–F19 (spec-stage, info, verified) and F20
+  (plan-stage, info, re-verified true at this revision: PLAN.md still leads
+  `37-plan-4` with the chain reaching `37-plan-7`); F2–F16 folded with
+  resolution evidence; no open material row carried into execution.
+- P-checks: P1–P12 pass. Reviewer-run mechanical re-derivations:
+  `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` →
+  verdict PASS, seven per-phase fingerprints matching SPEC §Phase-lint exactly
+  (P1 `docs:3`, P2 `config/infra:6`, P3 `config/infra:3`, P4 `docs:7`,
+  P5 `config/infra:2`, P6 `config/infra:2:conform-linter-to-re-cut-grammar`,
+  P7 `hardening:8`), whole-plan sha256
+  `3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed` (ED9's
+  re-cut value); node fallback byte-identical;
+  `node --test scripts/phase-lint.test.mjs` → 33/33;
+  `git hash-object ACCEPTANCE.md` →
+  `21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4` (frozen blob byte-identical);
+  `skills/phase-contract/SKILL.md:4` = 1.0.3; O12's `git log main..HEAD --
+  skills/phase-contract` = exactly `509d685c` (P1) + `8a35face` (F5 fold);
+  O10 exit 0; AC9 diff `main...HEAD -- packages/agentic-workflow-schema` →
+  empty; gates re-run by this reviewer: `node --test
+  scripts/normative-drift.test.mjs` → 16/16,
+  `bun scripts/check-skill-context.mjs` → 39/39, `--routes` → 22/22,
+  `npx skills add . --list` → exit 0.
+- P9: order matches the no-dependency closure (owner amendment → linter →
+  crate → consumer slims → box-2 mapping → grammar conformance → hardening);
+  the last phase is hardening/close-out; no phase builds a later phase's
+  deliverable early (P6's widened box-5 and fence handling are exactly the
+  deliverable P7's close-out re-run lints with).
+- Zero writes to any reviewed artifact: only progress.md (this receipt) was
+  appended and planning-findings.md gains no new rows (the findings array is
+  empty; standing open info rows re-verified, unchanged), uncommitted by
+  design so HEAD stays at the bound sourceRevision `bf500374…` — the next
+  commit on the branch carries these bytes, as in cycles 1–7.
+
+## P6 — 2026-09-13 (grammar conformance; the `37-plan-7` P6)
+- Done: the two `37-plan-7` behavioral re-cuts landed red-first — `scripts/phase-lint.test.mjs` 33→39 tests (six F30/F33 fixtures: bare standalone `or` blocks box 5, the embedded `editor` form stays PASS, the backtick-fenced phase fragment is not parsed, an unclosed fence runs to EOF, a tilde fence is recognized, and a 4-backtick fence is not closed by a 3-backtick line) and `scripts/phase-lint.mjs` now implements box-5's standalone-word definition (`(?<![\p{L}\p{N}_-])or(?![\p{L}\p{N}_-])`, hyphen-safe; the retired `hasEitherOr` helper is removed) and fence-aware parsing (backticks with optional info string or tildes, closed by the same character at equal-or-greater length, lines inside inert, unclosed → EOF). The dogfood run reproduces the seven recorded fingerprints and sha256 `3afa2601…` unchanged.
+- Remains: P7 close-out re-run (gate re-run, roadmap flip, push, PR refresh).
+- Gotchas: the historical `## P6 — 2026-09-12 (close-out re-run)` and its `## Unit-loop receipt — P6` above are the pre-re-cut close-out — today's P6 is the new grammar-conformance phase (the former close-out is now P7), disambiguated by the explicit qualifiers (the P5 precedent). The box-5 finding message stays `offers either/or alternatives` so the immutable decision-scan fixture keeps its assertion (recorded in decisions.md ED10). The standalone-`or` definition is hyphen-safe by construction, so `TASKS.md` (which carries `three-or-more` / `equal-or-greater`) passes the very rule it ships. No skill changed, so no `bump-skill`/CHANGELOG surface moved.
+- Files: scripts/phase-lint.mjs, scripts/phase-lint.test.mjs, docs/features/37-phase-lint-script/{TASKS.md,testing.md,decisions.md,progress.md}
+- Next: P7 — Hardening & PR
+
+## Unit-loop receipt — P6 (grammar conformance, `37-plan-7`)
+- Commit: pending · Gate: `node --test scripts/phase-lint.test.mjs` → exit 0 (39/39) · `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/TASKS.md` → exit 0 (7/7 fingerprints, sha256 `3afa2601…`) · `node --test scripts/*.test.mjs` → exit 0 (298/298) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
+- Next: P7 — close-out re-run · Attempts: 1
