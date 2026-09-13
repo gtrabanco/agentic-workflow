@@ -969,6 +969,121 @@ test("an early-closing pipe consumer does not flip the exit code", async () => {
   assert.equal(code, 0, `the intended exit 0 must survive an early close; stderr: ${stderr}`);
 });
 
+// Fold F44 — a JavaScript line terminator (a lone CR, or U+2028/U+2029) inside
+// a heading or a task line is invisible in the rendered plan but terminates
+// `.` and `$` in the grammar regexes, so the line silently failed every match:
+// whole phases escaped the eight boxes and the task budget, and the lint
+// answered a false `PASS` on exactly the forge-derived plan text this tool
+// exists to gate. The terminator normalizes at the single entry point.
+const TERMINATOR_HEADING_PLAN = `# Terminator heading
+
+### P1 — Implement\u2028the linter
+
+Layer: config/infra. Done-when: \`node --test scripts/p.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/p.mjs\`
+
+### P2 — Document it
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("a U+2028 inside a heading never elides the phase", () => {
+  const file = fixture("u2028-heading.md", TERMINATOR_HEADING_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "both phases are valid once the terminator is normalized");
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:/m, "P1 must be parsed and linted, not vanish");
+  assert.match(stdout, /^P2 Phase-lint: PASS \(8\/8\)/m);
+});
+
+const TERMINATOR_TASK_PLAN = `# Terminator task
+
+### P1 — Docs phase
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Verify the rendered site\u2028manually on staging
+`;
+
+test("a U+2028 inside a task line never hides the task", () => {
+  const file = fixture("u2028-task.md", TERMINATOR_TASK_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the manual gate in a docs phase blocks");
+  assert.match(stdout, /^P1 box-7: task 1 carries a manual\/external gate/m, "the task must be seen by box 7, not dropped from the parse");
+});
+
+const CR_HEADING_PLAN = "# Carriage return\n\n### P1 — Implement\rthe linter\n\nLayer: config/infra. Done-when: `node --test scripts/p.test.mjs` → exit 0.\n\n- [ ] Create `scripts/p.mjs`\n";
+
+test("a lone CR inside a heading never elides the phase", () => {
+  const file = fixture("cr-heading.md", CR_HEADING_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "a bare CR is a line ending, not an invisible phase-killer");
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\)/m);
+});
+
+// Fold F45 — box 8's outcome vocabulary rejected the `exits N` / `exit code N`
+// forms, so a rule-satisfying Done-when false-BLOCKed the plan; the rejected
+// shape appears in this repository's own committed plans.
+const OUTCOME_FORM_PLAN = (done) => `# Outcome form\n\n### P1 — Docs phase\n\nLayer: docs. Done-when: ${done}\n\n- [ ] Create \`docs/x.md\`\n`;
+
+test("the `exits N` and `exit code N` outcome forms satisfy box 8", () => {
+  const forms = [
+    "`cd packages/x && npm test` exits 0 and the ledger is current.",
+    "`bun run lint` exits 1 on a bad plan.",
+    "`node scripts/x.mjs` exit code 2 for a missing path.",
+  ];
+  forms.forEach((done, index) => {
+    const file = fixture(`outcome-form-${index}.md`, OUTCOME_FORM_PLAN(done));
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 0, `expected PASS for outcome form: ${done}`);
+    assert.match(stdout, /^verdict PASS$/m);
+  });
+});
+
+// Fold F47 — the dot-form enumerated counter consumed the whitespace between
+// adjacent markers, so `1. 2. 3. 4. 5.` counted three cases and box 4 passed
+// where the frozen rule (more than three enumerated cases) requires BLOCK.
+const ADJACENT_DOT_PLAN = `# Adjacent markers
+
+### P1 — Docs phase
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Cover cases 1. 2. 3. 4. 5. exhaustively
+`;
+
+test("adjacent dot-form markers each count as one enumerated case", () => {
+  const file = fixture("adjacent-dots.md", ADJACENT_DOT_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "five enumerated cases exceed the box-4 limit of three");
+  assert.match(stdout, /^P1 box-4: task 1 enumerates 5 cases$/m);
+});
+
+test("a decimal number is not an enumerated marker", () => {
+  const file = fixture("decimal.md", "# Decimal\n\n### P1 — Docs phase\n\nLayer: docs. Done-when: `grep -n x docs/x.md` → matches.\n\n- [ ] Keep the 0.5 ratio stable and documented\n");
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "a ratio is not an enumeration");
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+// Fold F49 — a crafted title could carry verdict-like literals through the echo
+// into the finding line; a substring-grepping consumer could misread them as
+// real block lines. The tokens are broken up in the echo only.
+const FORGED_VERDICT_TITLE_PLAN = "# Forged verdict title\n\n### P1 — Phase-lint: PASS (8/8) · fingerprint deadbeef + Alpha\n\nLayer: docs. Done-when: `grep -n x docs/x.md` → matches.\n\n- [ ] Create `docs/x.md`\n";
+
+test("verdict-like literals in a forged title never reach the finding line", () => {
+  const file = fixture("forged-verdict.md", FORGED_VERDICT_TITLE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the forged title breaks box 1");
+  const box1Line = stdout.split("\n").find((line) => line.startsWith("P1 box-1: "));
+  assert.ok(box1Line, "box-1 must be reported");
+  assert.match(box1Line, /PASS \(8\/8\)/, "the title text is still shown, neutralized");
+  assert.doesNotMatch(box1Line, /Phase-lint: PASS/, "a fake verdict prefix may not survive the echo");
+  assert.doesNotMatch(box1Line, /fingerprint[ :]/, "a fake fingerprint token may not survive the echo");
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).

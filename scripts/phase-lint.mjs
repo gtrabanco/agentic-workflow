@@ -28,7 +28,9 @@
  * `scripts/phase-lint.test.mjs`): the `→` chain test counts arrows, so one arrow
  * is an outcome annotation and two or more are a chain; "enumerated cases" means
  * numbered/lettered markers or ordinal words, not a bare comma list; the box-2
- * target is the first path-like token outside a backticked command span.
+ * target is the first path-like token outside a backticked command span; and
+ * every JavaScript line terminator is normalized before the grammar sees the
+ * text, so no rendered-as-invisible separator can elide a phase (F44).
  */
 
 import fs from "node:fs";
@@ -48,7 +50,7 @@ const FENCE_OPEN = /^(`{3,}|~{3,})/;
 const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
 const CREATION_VERB = /\b(?:create|creates|created|write|writes|written|scaffold|scaffolds|add a new file|new file)\b/i;
-const ENUMERATED = /\((?:\d+|[a-z]|[ivxlcdm]{2,4})\)|\b(?:first|second|third|fourth|fifth)\b|(?:^|\s)\d+[.)]\s/gi;
+const ENUMERATED = /\((?:\d+|[a-z]|[ivxlcdm]{2,4})\)|\b(?:first|second|third|fourth|fifth)\b|(?<!\S)\d+[.)](?!\S)/gi;
 
 /** Strip backticked spans that are quoted commands (a runtime word leads them). */
 function stripQuotedCommands(text) {
@@ -111,6 +113,19 @@ function openFence(trimmed) {
 function closesFence(trimmed, fence) {
   const match = FENCE_CLOSE.exec(trimmed);
   return Boolean(match && match[1][0] === fence.char && match[1].length >= fence.length);
+}
+
+/**
+ * Normalize every JavaScript line terminator before parsing (F44). A lone CR,
+ * or a U+2028/U+2029 inside a heading or a task line, renders as no line break
+ * at all yet terminates `.` and `$` in the grammar regexes — so the line
+ * silently failed every match, whole phases vanished from the parse, the task
+ * budget went unchecked, and the lint answered a false `PASS`. CR becomes the
+ * line ending it is in Markdown; U+2028/U+2029 become a space, because Markdown
+ * has no line break there and the content must stay on its line, never vanish.
+ */
+function normalizeTerminators(text) {
+  return text.replace(/\r\n?/g, "\n").replace(/[\u2028\u2029]/g, " ");
 }
 
 /**
@@ -182,13 +197,17 @@ function createdTargets(text) {
  * A phase title can originate in a third-party forge issue body (`plan-fix`),
  * so the echo must carry neither instructions nor fake block lines into the
  * stdout block the consumer skills paste: control and format characters become
- * spaces, backticks are dropped, whitespace collapses, and the length is
- * bounded. Rule decisions read the RAW title; only the echo is sanitized.
+ * spaces, backticks are dropped, whitespace collapses, verdict-like literals
+ * (`Phase-lint:`, `verdict`, `fingerprint`) are broken up so a substring-
+ * grepping consumer can never mistake echoed text for a block line (F49), and
+ * the length is bounded. Rule decisions read the RAW title; only the echo is
+ * sanitized.
  */
 function sanitizeEcho(text, limit = 120) {
   const cleaned = text
     .replace(/[\p{Cc}\p{Cf}]+/gu, " ")
     .replace(/`+/g, "")
+    .replace(/\b(phase-lint|verdict|fingerprint)\b/gi, (word) => `${word[0]} ${word.slice(1)}`)
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}…` : cleaned;
@@ -329,7 +348,7 @@ function box7(phase) {
 function box8(phase) {
   if (!phase.doneWhen) return ["phase body has no `Done-when:` line"];
   if (!/`[^`]+`/.test(phase.doneWhen)) return ["`Done-when:` carries no backticked command"];
-  if (!/→\s*\S|->\s*\S|\bexit (?:0|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
+  if (!/→\s*\S|->\s*\S|\bexit(?:s| code)?\s+(?:\d+|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
   return [];
 }
 
@@ -352,7 +371,7 @@ function lintPhase(phase) {
 
 /** The full run over one Markdown document. */
 export function lintPlan(text) {
-  const phases = parsePhases(text);
+  const phases = parsePhases(normalizeTerminators(text));
   if (phases.length === 0) return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
 
   for (const phase of phases) {
