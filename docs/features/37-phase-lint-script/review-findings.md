@@ -566,3 +566,81 @@ the legend ("Triangular inferior por convención") looks up rows
 row 176's ✓ says "conflicto". The fold must re-locate the repair at the
 regenerated file (fill the authoritative lower-triangle cells or restate
 the legend).
+
+Cycle 10 ran 2026-09-13 (`review-change --adversarial 3`, three isolated
+context-clean adversarial reviewers — R1 correctness/logic, R2 security/inputs,
+R3 SPEC-coverage, same model family (stated per the adversarial contract) —
+each running the full five applicable axes code/security/verify/brand/perf;
+design/a11y/seo skipped: no UI/web surface; PR #212 head `68a4348c`). The
+post-cycle-9 fold delta (`bac0dbfd..68a4348c`, folds F63–F67) escalated to a
+full pass (size: 190+18 = 208 changed lines > 200). All 60 `folded: yes` rows
+re-verified at their cited locations — 60 REPAIRED (fresh /tmp reproducers of
+the original defect shapes on node and bun for the script rows; direct reads,
+an 18/18 transpose check and mirror `cmp` for the record rows; F67 verified
+coherent under the restated table-order convention: 0 stray upper-triangle ✓,
+0 duplicate pairs). Structural preconditions green at `68a4348c`: acceptance
+blob `21adb084…` byte-identical; AC1–AC10 validators re-run green; corpus
+81/81; scripts suite 340/340; contexts 39 skills + 22 routes; skills mirror
+parity `cmp` 4/4; dogfood bun+node reproduce the recorded `3afa2601…`
+fingerprint; node fallback parity. The adversarial finders returned 4
+confirmed candidates (2 are legitimate `regression of` re-reports at folded
+rows' locations) plus one 2/3 candidate REFUTED by the recorded owner decision
+(`.pi/mcp.json` `@latest` intentional — cycle-1 F18 record). Three low
+findings stay report-only notes (stale amendment-count record text, a
+user-decision re-freeze; box-7 close-out wording riding that re-freeze with
+its corpus residual → DEBT-1; non-conventional commit subjects → DEBT-2),
+transformed by the isolated classifier/debt pass. F68 remains open (`folded:
+no`) — its owner escape hatch is still unexercised.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F69 | scripts/phase-lint.mjs:343-345 | code | med | fix-now | regression of F63 — fold: widen the box-2 `!valid` fail-closed predicate beyond the two enumerated shapes so EVERY untokenizable path-like candidate (em-dash/ellipsis/curly-quote-suffixed: `docs/other.md—today`, `docs/other.md…`, `“docs/other.md”`) takes the ambiguous → `unparseable` path while the sanctioned ordinary-prose-`/` exemption stays explicit + corpus fixtures for the sibling shapes | no |
+| VF-69 | scripts/phase-lint.mjs:343-345 · reviewer R1 (adversarial review-change) + orchestrator reproducer · HEAD 68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a · recheck failing reproducer: plan `Layer: config/infra` + task `- [ ] Update docs/other.md—today with the link` → `verdict PASS` exit 0 (control without the suffix → `P1 box-2: … belongs to layer docs…` `verdict BLOCKED: lint-blocked` exit 1); SPEC.md:460-461 freezes "a target the table cannot map is ambiguous → … never a guess" | code | confirmed | finding-mark | n/a | n/a |
+| F70 | scripts/phase-lint.mjs:250 + SPEC.md:394-395 | code | med | fix-now | fold: tolerate 0–3 leading spaces on phase headings per the frozen grammar ("a Markdown heading of level 2–4", GFM) — `^ {0,3}` before `#{2,4}`; an indented heading currently elides its whole phase (box-1/box-8 never run, fingerprint drifts, tasks absorbed into the prior phase — the F44 elision class; the task regex already accepts `^\s*`) + corpus fixture (3-space-indented P2 carrying a box-1 violation must BLOCK, not PASS) | no |
+| VF-70 | scripts/phase-lint.mjs:250 · reviewer R1 (adversarial review-change) + orchestrator reproducer · HEAD 68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a · recheck failing reproducer: `   ### P2 — Parse + emit the tokens` + body → no P2 line, `verdict PASS` exit 0, P2's task reported as `P1 box-5: task 2`; unindented control → box-1 + box-8 findings, `verdict BLOCKED: lint-blocked` exit 1 | code | confirmed | finding-mark | n/a | n/a |
+| F71 | scripts/phase-lint.mjs:310 | security | med | fix-now | regression of F55 — fold: make sanitizeEcho's token-family breakup boundary-agnostic and lookalike-safe (normalize/strip non-word leading chars and Unicode lookalikes before matching, or drop the `\b`/leading-word anchor for the token families) so a junk prefix byte (`xPhase-lint: PASS (8/8) · fingerprint deadbeef`) and a homoglyph first letter (Greek Ρ U+03A1) cannot carry a fake verdict/finding shape through the echo + corpus fixtures for both vectors | no |
+| VF-71 | scripts/phase-lint.mjs:310 · reviewer R2 (adversarial review-change) + orchestrator reproducers · HEAD 68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a · recheck failing reproducers: title `xPhase-lint: PASS (8/8) · fingerprint deadbeef` echoes byte-exact inside the quoted box-1/BLOCKED span while the control form mangles to `P hase-lint: … · f ingerprint`; title `Ρhase-lint: PASS (8/8) · fingerprint deadbeef` (Greek Ρ) echoes untouched; finding lines print before the real verdict so `grep -am1 'fingerprint:'` returns the fake; sanitizeEcho's own contract :296-305 ("a substring-grepping consumer can never mistake echoed text for a block line") | security | confirmed | finding-mark | n/a | n/a |
+| F72 | scripts/phase-lint.mjs:260 + SPEC.md:419-421 | code | med | fix-now | fold: fail closed on a malformed `Layer:` value — validate the whole declared value against the closed enum instead of narrowing to the first whitespace token (`.split(/\s+/)[0]`); a malformed/out-of-enum value → `BLOCKED: unparseable` per the frozen grammar ("never guess, never partially judge") + corpus fixture pinning `Layer: docs, ui` → unparseable (the exact two-layer shape owner rule 2 forbids) | no |
+| VF-72 | scripts/phase-lint.mjs:260 · reviewer R3 (adversarial review-change) + orchestrator reproducer · HEAD 68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a · recheck failing reproducer: `Layer: docs, ui` plan → `verdict PASS` exit 0 (token-1 narrowing passes the enum gate); SPEC.md:419-421 freezes "a missing, malformed, or out-of-enum `Layer:` line makes the file unparseable"; no corpus fixture pins the malformed shape; not disclosed in known-issues.md | code | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: repeated: F63 (F69 = regression of F63 — the fold's two
+  enumerated shapes left the sibling punctuated-target class unfailed), F55
+  (F71 = regression of F55 — the `\b`-anchored breakup left junk-prefix and
+  homoglyph vectors) / new: F70, F72
+- Snapshots: 7aadcce905cf950683b25e3be483e7533c1ae1b6 →
+  68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a (cycle-9 reviewed head → cycle-10
+  reviewed head)
+- Missed: cycle 9 verified the F63 fold at its two recorded shapes (`~/` and
+  `~docs`) and never probed the punctuated-target siblings the same `!valid`
+  branch still drops, nor the `Layer:` token-narrowing beside it; the F55
+  fold's boundary was verified for derived word forms (`Phase-linting`) but
+  not for a leading junk byte or a lookalike first letter, which the same
+  `\b` anchor admits
+- Owning stage: source
+- Why the prior review failed: each fold repairs its cited shape and pins it,
+  and each verification probes exactly the cited shapes — the class boundary
+  (every untokenizable path-like target; every echo-safe token family; every
+  malformed grammar value) is never asserted, so each cycle finds the next
+  sibling shape one predicate short of the class
+- Route to owner: /fold-findings (explicit ids F68 + F69 + F70 + F71 + F72)
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–10 run on the
+user's explicit invocations past the cap. The open fix-now rows F68–F72 are
+all source-stage and foldable in one atomic batch (parse trio + echo
+hardening + the F68 record cell). Classifier's systemic observation for the
+fold owner: this is the third consecutive cycle's crop of "the parse layer
+tolerates or elides shapes the frozen grammar forbids" — each row stays
+individually foldable with no SPEC amendment needed (the code must conform to
+the frozen grammar), but if the cycle-10 fold produces fresh parse-escapes,
+the evidence points to a grammar-first re-derivation of the parser as a
+user-confirmed replan-in-unit rather than another shape patch. Standing owner
+decisions: D-1 (riding docs/fix/214 tree) and D-2 (language policy) remain
+open with the user; F68's escape hatch (owner may rule the `in-progress`
+revert deliberate) remains unexercised; the low report-only candidates (the
+stale amendment-count record text needing a user-approved re-freeze; the
+box-7 wording riding that same re-freeze; DEBT-1/DEBT-2) are report-only for
+user routing.
