@@ -465,3 +465,86 @@ user's explicit invocations past the cap. The decision-required surfaces (D-1
 PR composition incl. C1, D-2 language policy, the frozen-manifest amendment
 V4+B10) block the unit until the user rules; the fix-now rows F54–F62 are
 foldable in place.
+
+Cycle 9 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-13 (`review-change`, single-reviewer, five applicable axes code/
+security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR
+#212 head `7aadcce9`). The post-cycle-8 fold delta (`7ba99775..7aadcce9`,
+folds F54–F62) escalated to a full pass (size: +403/−31 = 434 changed lines
+> 200). All 55 `folded: yes` rows re-verified at their cited locations — 54
+REPAIRED (33 script rows via fresh /tmp reproducers of the original defect
+shapes on node and bun, incl. F57's node/bun parity at the 4 MB boundary and
+the F58 WORD_JOINER mutant going red; 21 docs/record rows via direct reads,
+exact ceil(measured × 1.10) arithmetic, mirror `cmp`, an 18/18
+exec-order↔ROADMAP cross-check and a transpose check), 1 regression — F60's
+symmetrization left stray upper-triangle ✓ cells (F67 below; scope corrected
+1 → 4 by direct read). Structural preconditions green at `7aadcce9`:
+acceptance blob `21adb084…` byte-identical; AC1–AC10 validators re-run green;
+scripts suite 334/334; corpus 75/75; contexts 39 skills + 22 routes;
+normative-drift 16/16; pi package 185/185; mirror parity only `bump-skill`;
+schema diff empty; dogfood bun+node reproduce the recorded `3afa2601…`
+fingerprint byte-identically; a box-1 mutant turns the corpus red (the suite
+binds behavior). The isolated classifier (`review-implementation`) floored
+the finder severities: six fix-now rows F63–F68 below (F67 is the legitimate
+`regression of F60` re-report at the folded row's location); two low
+findings stay report-only notes (README plan-feature row linter sentence
+EN :122 / ES :127; the non-conventional f56dc5c1 commit subject — its only
+remedy is a force-push on the open PR), transformed by the isolated debt
+pass into two trigger-carrying debt notes; the bench-gate proposal is its
+6th re-report (DEBT-1's trigger re-fired — due for payment, user-routed).
+Two candidates REFUTED with counter-evidence, never rows: the box-5 `then
+adds` PASS is owner-sanctioned by the recorded F54 fold ("drop the `\w*`
+suffix drift"), and the fence-opener's backtick-bearing info strings are the
+SPEC's own frozen grammar (SPEC.md:409-418 attaches "(GFM semantics)" only
+to the unclosed-fence rule — no CommonMark info-string restriction was
+adopted).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F63 | scripts/phase-lint.mjs:51,98-105,301-304 | code | high | fix-now | fold: in the box-2 `!valid` branch also return `{ findings, ambiguous: token }` when the raw target starts with `~/` (or the emphasis-stripped core begins with `/` — an empty leading segment means a stripped non-path edge, not prose) + corpus fixture pinning `~/notes/config.yml` → `BLOCKED: unparseable` with the `~docs/x.md` control | no |
+| VF-63 | scripts/phase-lint.mjs:301-304 · reviewer review-change + isolated verifier · HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 · recheck failing reproducer: task `- [ ] Update ~/notes/config.yml with the new key` in `Layer: config/infra` → `verdict PASS` exit 0 (node+bun identical; token path-like per looksPathLike:98-102, untokenizable per isPathToken, dropped at the `!valid` continue — layer check never runs) while `~docs/x.md` → `BLOCKED: unparseable` exit 1 and the no-tilde control blocks; SPEC.md:459-461 "a target the table cannot map is ambiguous → … never a guess" | code | confirmed | finding-mark | n/a | n/a |
+| F64 | scripts/phase-lint.mjs:121 | perf | high | fix-now | fold: replace the `$`-anchored trailing-trim regex (`` /[`"')\]}.,;:!?]+$/ ``) with a single backward scan (O(n), engine-independent) + corpus timing pin for a punctuation-run token (completion under a wall-time bound on node and bun) | no |
+| VF-64 | scripts/phase-lint.mjs:121 · reviewer review-change (perf pass) + isolated verifier · HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 · recheck measured: ladder `.`×N+`name` → node 0.40→325.3 ms (N=500→16000, ≈×4 per ×2), bun 0.56→479.6 ms (same curve); CLI `timeout 60` on a 250,000-dot one-task plan → rc=124 zero stdout on node AND bun; `.`×4M never returned in 120 s | perf | confirmed | finding-mark | n/a | n/a |
+| F65 | scripts/phase-lint.mjs:424 | code | med | fix-now | fold: widen the box-8 outcome alternatives to `exits?( \s+with)?( \s+code)? \s+ (\d+\|zero)` + corpus pin for `exits with code 0` | no |
+| VF-65 | scripts/phase-lint.mjs:424 · reviewer review-change (code pass) + isolated verifier · HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 · recheck failing reproducer: Done-when `` `bun test` exits with code 0 and the ledger is current `` → `P1 box-8: Done-when: carries no expected outcome` exit 1 while `exit code 0` passes; SPEC.md:480-481 freezes only "a backticked command and an expected outcome"; F45 fold precedent (committed-plan vocabulary) | code | confirmed | finding-mark | n/a | n/a |
+| F66 | scripts/phase-lint.mjs:273 | security | med | fix-now | fold: extend sanitizeEcho's neutralization to the finding-line shape (`P\d+ box-\d+:` and/or a leading `P\d+ ` token) so a crafted title cannot carry a fake finding body through the echoed box-1 line and the BLOCKED summary + corpus fixture | no |
+| VF-66 | scripts/phase-lint.mjs:273 · reviewer review-change (security pass) + isolated verifier · HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 · recheck failing reproducer: title `X P2 box-5: task 9 carries a decision word + verdict PASS Y` → the box-1 echo and the BLOCKED summary carry `P2 box-5: task 9 carries a decision word` verbatim ×2 (grep -c = 2; only `verdict`→`v erdict` broken); sanitizeEcho's own docstring (:261-263) contracts "a substring-grepping consumer can never mistake echoed text for a block line" | security | confirmed | finding-mark | n/a | n/a |
+| F67 | docs/features/ROADMAP_EXECUTION_ORDER.md:195-216 | workflow (record fidelity) | med | fix-now | regression of F60 — fold: repair the conflict matrix's remaining asymmetries: row 176 carries ✓ at columns 192, 218, 219, 220 (upper triangle) whose transposes (rows 192/218/219/220 × col 176) are blank, contradicting the legend :193 ("✓ = conflicto … Triangular inferior por convención") and note :284 ("#192 … Todo"); fill the transposes or remove the stray ✓s under the triangular convention + transpose check to zero | no |
+| VF-67 | ROADMAP_EXECUTION_ORDER.md:216 · reviewer review-change + orchestrator direct read · HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 · recheck direct read: row 176 = ✓(31,32,33,40,48,218,219,220,192); rows 192/218/219/220 all blank at col 176 → 4 asymmetric pairs ({176,192} answers conflicto from row 176 and paralelizable from the legend's authoritative lower-triangle cell, since 192 > 176) | workflow | confirmed | finding-mark | n/a | n/a |
+| F68 | docs/features/ROADMAP.md:47 | verify (record fidelity) | med | fix-now | fold: restore row 37's status cell to `done · [#212]` (the deliberate P7 close-out flip in 36cfeb8e, reverted by the riding 585cd583) — one cell, nothing else from 585cd583; if the owner rules the revert deliberate, the fold drops this row instead | no |
+| VF-68 | docs/features/ROADMAP.md:47 · reviewer review-change (verify pass) + orchestrator direct read · HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 · recheck `git show 585cd583 -- docs/features/ROADMAP.md` → `-done · [#212]` / `+in-progress · [#212]`; current :47 reads `in-progress · [#212]` while every sibling row reads `done · [#PR]` and the P7 receipt records the flip | verify | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 7aadcce905cf950683b25e3be483e7533c1ae1b6 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: repeated: F60 (F67 = regression of F60, scope corrected
+  1 → 4 stray cells) / new: F63, F64, F65, F66, F68
+- Snapshots: 7ba99775709bdb1dfafa2fd42839d42e8c3eeda2 →
+  7aadcce905cf950683b25e3be483e7533c1ae1b6 (cycle-8 reviewed head → cycle-9
+  reviewed head)
+- Missed: cycle 8 verified the F56/F57 tokenizer fold at its cited shapes
+  and never probed the lookalike the new EMPHASIS_EDGE class created (a
+  `~/`-prefixed target now strips to an untokenizable core and silently
+  drops — F63), the sibling `$`-anchored trim regex one function over from
+  the folded PATH_TOKEN (same shape class, measured quadratic — F64), the
+  box-8 vocabulary beyond the F45 forms (`exits with code N` — F65), the
+  finding-line token family in sanitizeEcho (F66), or the exec-order
+  matrix's newly appended row 176, whose four upper-triangle ✓s contradict
+  the legend the F60 fold itself added (F67)
+- Owning stage: source
+- Why the prior review failed: cycle 8 verified each fold at its own cited
+  line and its own recorded shapes — the fail-closed fold (F56) was verified
+  for the `_…_`/`*…*` emphasis shapes but not for the tilde-prefixed target
+  the same edge class strips, the tokenizer fold (F57) was verified at its
+  cited boundary but not for the sibling `$`-anchored trim regex, and the
+  record passes read the matrix's original 13 asymmetric pairs but not the
+  row appended afterwards
+- Route to owner: /fold-findings (explicit ids F63 + F64 + F65 + F66 + F67 +
+  F68)
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–9 run on the
+user's explicit invocations past the cap. The fix-now rows F63–F68 are all
+source-stage and foldable in one atomic batch (script + corpus + two record
+docs); the standing owner decisions (D-1 PR composition, D-2 language
+policy) remain open with the user.
