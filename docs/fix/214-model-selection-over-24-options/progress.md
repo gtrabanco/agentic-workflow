@@ -153,3 +153,14 @@ Session ledger for this unit. Receipt blocks follow the
 ## Unit-loop receipt — P1
 - Commit: 84299b06 · Gate: `cd packages/pi-agentic-workflow && bun run test` (exit 0, 192 pass / 0 fail) · Acceptance blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22
 - Next: P2 · Attempts: 1
+
+## Unit-loop close-out reconciliation — execute-phase, 2026-09-14
+- Queue: empty — P1–P7 all ticked, each tick reconciled against repository evidence (phase commits present, validators green). No phase executed this invocation.
+- Gates re-run: dependency receipt v1 present (closure none) · own-status n/a (fix unit) · pre-execution gate `node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-214 --dir docs/fix/214-model-selection-over-24-options` → `current: true`, digest `b3e777b7`, verdict `PLAN-REVIEW-PASS` (rp-214-20260914-001) · acceptance manifest `4ea24ed7` equals the receipt blob · phase-lint P1–P7 recorded PASS (8/8 each).
+- Gate: `cd packages/pi-agentic-workflow && bun run test` → exit 0, 214 pass / 0 fail; AC2–AC8 tsc-first validators green (3 / 1 / 1 / 2 / 2 / 8 / 2 / 1); `version` → 0.9.2; `grep -c 0.9.2` CHANGELOG pair → 1 each; fix index `done · [#217]`.
+- Action: `git push` published the plan-review receipt `2a3e2b69`; branch remote-current (0 ahead). Nothing bound by the plan snapshot changed, so the receipt stays current (re-verified after the push).
+- Remains: none in-unit — the mandatory `/review-change` end review and the `/audit-pr` merge gate remain.
+
+## Out-of-scope proposal — execute-phase, 2026-09-14 (not triaged; no forge operation)
+- **Sensor reports a false `missing` gate for fix plan receipts.** `scripts/workflow-status.mjs:598` derives `boundParent = parent ?? receipt.parent`; a fix receipt legitimately carries `Parent SPEC snapshot: null` (SNAPSHOT.md: a fix unit binds no parent), which the contract parser returns as the string `"null"`, so the sensor invokes `verify --parent null` and the verifier refuses with `invalid-value@/parentSpecSnapshotDigest` → every done-with-open-PR fix unit is reported `plan-stage receipt is missing` (observed: fix-214, fix-191). The authoritative check without `--parent` returns `current: true` / `PLAN-REVIEW-PASS`.
+- Classification: **Proposal** (independent, >40 lines/3 files, risk judgment needed; opportunistic policy). Routing target: the sensor's own unit (`feat/38-workflow-status-sensor-script`), outside fix-214's package-only scope. Fix direction: treat the literal `"null"` as absent, or skip the `receipt.parent` fallback for `unitKind: fix`. Trigger: next sensor touch. Recorded here (not `decisions.md`) because creating `decisions.md` adds a bound `decisions` row and voids the frozen plan receipt (verified: a one-line probe flipped `verify` to `current: false`).
