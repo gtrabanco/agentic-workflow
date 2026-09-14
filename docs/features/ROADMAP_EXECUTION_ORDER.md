@@ -190,7 +190,7 @@ Fase 8: Final Slimming (SIEMPRE ÚLTIMO)
 
 ## Matriz de Conflictividad
 
-**Leyenda:** `✓` = conflicto de archivos (NO paralelizable) · ` ` = sin conflicto. Triangular inferior por convención. Filas 39/47/49 eliminadas (folded).
+**Leyenda:** `✓` = conflicto de archivos (NO paralelizable) · ` ` = sin conflicto. Triangular inferior por convención: cada par se escribe una sola vez, en la celda que queda por debajo de la diagonal según el orden de la tabla (manda la posición en la tabla, no el número de feature). Filas 39/47/49 eliminadas (folded).
 
 | Feature \ Con | 31 | 32 | 33 | 34 | 35 | 36 | 37 | 38 | 40 | 41 | 42 | 44 | 45 | 46 | 48 | 218 | 219 | 220 | 192 | 176 |
 |---------------|----|----|----|----|----|----|----|----|----|----|----|----|----|----|----|-----|-----|-----|-----|-----|
