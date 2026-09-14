@@ -1199,6 +1199,7 @@ test("settings console model picker: single-step preserved at 23 models in a pic
   const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
   assert.equal(modelDialog.kind, "select", "the plain select fallback is preserved below the cap");
   assert.equal(modelDialog.options.length, 24);
+  assert.equal(modelDialog.options.at(-1), TYPED_OPTION, "TYPED is last on the below-cap pick-less dialog too");
   assert.ok(fitsCap(scripted));
 });
 
