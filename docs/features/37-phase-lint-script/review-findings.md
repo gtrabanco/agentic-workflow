@@ -731,3 +731,103 @@ DEBT-1's recorded trigger ("5th re-report or next hot-path commit") has
 FIRED and is due for payment; DEBT-3 (the `[X]` SPEC-amendment question),
 DEBT-4 (dead branch, next touch) and DEBT-5 (double tokenization, next
 touch) are report-only with explicit triggers.
+
+Cycle 12 (mandatory end review, fresh context, user-invoked past the cap,
+adversarial) ran 2026-09-14 (`review-change --adversarial 3`: three isolated
+context-clean diff-only adversarial reviewers — R1 correctness/logic, R2
+security/inputs, R3 SPEC-coverage, same model family, stated per the
+adversarial contract; each ran the full applicable pack code/security/verify/
+brand/perf — design/a11y/seo skipped: no UI/web surface; PR #212 head
+`c922a34a`). The post-cycle-11 fold delta (`98f5821e..c922a34a`, folds
+F73–F79) escalated to a full pass (size: 278+17 = 295 changed lines > 200;
+width held — every changed file is the batch's cited union plus the ledger).
+All 71 `folded: yes` rows re-verified REPAIRED at their cited locations by
+four isolated re-verification agents — 40 script rows via fresh /tmp
+reproducers of the original defect shapes on node and bun (runtime parity at
+the F57/F64 degenerate boundaries held; pipes, sanitizers, position checks,
+fail-closed parse edges all hold), 9 corpus/coverage rows via mutation probes
+(WORD_JOINER, stripQuotedCommands, box-4 multi-file, prose/path exemption —
+every mutant red) + teardown measurement (0 tmpdirs delta) + exact-reason
+greps, 26 docs/record rows via direct reads, exact ceil(measured × 1.10)
+arithmetic across all 22 routes, an 18/18 exec-order↔ROADMAP cross-check, a
+0-asymmetry matrix transpose check and mirror `cmp`. Structural
+preconditions green at `c922a34a`: acceptance blob `21adb084…` byte-identical;
+AC1–AC10 validators re-run green (AC4 byte-identical ×2; AC6 empty; AC8 refs +
+39 skills + 22 routes + skills-list; AC9 empty; AC10 vehicle); scripts suite
+358/358; dogfood bun+node reproduce the recorded `3afa2601…` fingerprint
+byte-identically; mirror parity only `bump-skill`. The adversarial finders
+returned 19 candidates; the isolated verifier confirmed 10 deduped findings
+(19 → 11 after fusion) and refuted 1 by the recorded owner decision
+(`.pi/mcp.json` `@latest` — F18, 4th refutation). The isolated classifier
+(`review-implementation`) applied the CLASSIFY.md severity floor: nine
+fix-now rows F80, F83–F90 below (four pure folds, five gated on plan-owner
+SPEC re-cuts); the Spanish-docs (D-2) and riding-content (D-1) surfaces were
+re-flagged by 2/3 fresh reviewers and remain decision-required, never
+ledgered; the bench/perf-gate proposal is its 8th re-report (DEBT-1 overdue).
+The isolated debt pass minted DEBT-6 (distribution gap, armed) and DEBT-7
+(sanitizeEcho ASCII-strips accented letters in echoes, armed) and marked
+DEBT-3 due (F87's AC8 correction routes through the frozen-manifest amendment
+path). One refuted candidate, never a row. Two stray untracked fixture files
+left in the repo root by a verification harness (`nophases.md`,
+`unreadable.md` — AC3 edge shapes) were removed by the review before the
+ledger commit; named here, never reviewed.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F80 | scripts/phase-lint.mjs:293-305 + SPEC.md:95,405-419 | code/verify | high | fix-now | fold: widen the layer-line parse to accept the canonical `Layer: <enum> · <prose>` tail (and its wrapped continuation) before the closed-enum whole-value match, keeping F72's fail-closed semantics for genuine two-layer shapes (`docs, ui…` stays unparseable) + corpus rows for both committed PLAN shapes (37/38) — the PREFLIGHT gate must stop bricking on the unit's own PLAN.md | no |
+| VF-80 | docs/features/37-phase-lint-script/PLAN.md:27 · reviewer R1 + orchestrator reproducer · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck failing reproducer: `node scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` and `…/38-workflow-status-sensor-script/PLAN.md` → both `verdict BLOCKED: unparseable` exit 1 (cause `Layer: docs · amend …` — the `· <prose>` tail is out-of-enum); SPEC.md:95 declares PLAN.md in-scope input; known-issues.md discloses only the TASKS-vs-SPEC target, never this shape; PREFLIGHT.md:171 "Exit 1 → STOP before any edit" | code | confirmed | finding-mark | n/a | n/a |
+| F83 | scripts/phase-lint.mjs:293-305 + SPEC.md:406-408 | code | med | fix-now | replan-in-unit: plan owner re-cuts the §Design "first line matching" clause to exactly-one `Layer:` line per phase (a second/conflicting declaration → unparseable), then fold: duplicate-line fail-closed + corpus row | no |
+| VF-83 | scripts/phase-lint.mjs:293-305 · reviewer R1 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck failing reproducer: phase with `Layer: docs` + task + second `Layer: ui` → `PASS (8/8) · fingerprint P1:docs:2:two-layers` exit 0 (conflicting declaration silently ignored); F72's single-line `Layer: docs, ui` fails closed — the two-line twin does not; phase-contract rule 2 requires exactly one | code | confirmed | finding-mark | n/a | n/a |
+| F84 | scripts/phase-lint.mjs (box-7 phrase) | code | med | fix-now | fold: widen the box-7 human-gate phrase to `ask the users?\b` (the F4 `manual` substring class) + corpus row for the plural shape | no |
+| VF-84 | scripts/phase-lint.mjs · reviewer R1 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck failing reproducer: docs task `Ask the users to verify the rendered output on staging` → `PASS (8/8)` exit 0; singular control `Ask the user about the fallback` → box-7 BLOCK exit 1 | code | confirmed | finding-mark | n/a | n/a |
+| F85 | scripts/phase-lint.mjs (task grammar) + SPEC.md:409 | code/security | med | fix-now | replan-in-unit: plan owner re-cuts the frozen task grammar (a wrapped continuation line is scanned with its parent task for boxes 4–7, fence-inertness preserved), then fold: scan extension + wrapped-prose corpus row | no |
+| VF-85 | scripts/phase-lint.mjs · reviewer R2 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck failing reproducer: task `- [ ] Edit docs/a.md whichever is faster` + next non-checkbox line `or move to P2, then ask the user to manually verify` → `PASS (8/8)` exit 0; identical words on the task line → box-5 + box-6 + box-7 BLOCK exit 1; the pre-diff model reasoning read whole phase bodies, the deterministic gate silently does not | security | confirmed | finding-mark | n/a | n/a |
+| F86 | skills/execute-phase/references/PREFLIGHT.md:165-171 + skills/plan-fix/SKILL.md:101 + skills/plan-feature-scaffold/SKILL.md:51 | code/brand/verify | high | fix-now | fold: amend the run-and-paste fences at the three consumer sites (+ mirror re-bundle) with the disclosed safe fallback when `scripts/phase-lint.mjs` is absent (the frozen 8-rule manual checklist, explicitly labeled weaker) — the script does not travel on `npx skills add` (ROADMAP row 44 owns the distribution fix) and PREFLIGHT currently hard-STOPs every install-target pre-flight with no disclosed limitation | no |
+| VF-86 | skills/execute-phase/references/PREFLIGHT.md:168 · reviewer R2 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck direct reads: all three skills order the script run, PREFLIGHT "if the script cannot run, STOP" + "Exit 1 → STOP before any edit"; ROADMAP.md row 44 records the non-travel gap; grep of docs/features/37-phase-lint-script/ for install/distribution disclosure → zero hits (brand rule: an undisclosed limitation is a major finding) | brand | confirmed | finding-mark | n/a | n/a |
+| F87 | docs/features/37-phase-lint-script/ACCEPTANCE.md (AC8) + SPEC.md:330,588 | code/brand (record fidelity) | med | fix-now | replan-in-unit: plan owner re-cuts SPEC.md:588 stale "1.0.1 → 1.0.2" to the shipped 1.0.3 (same stale-version class at :369); the AC8 "amended once in P1 … never re-edited afterward" correction rides the user-approved frozen-manifest amendment path (V4+B10 / DEBT-3, now due) | no |
+| VF-87 | ACCEPTANCE.md AC8 · reviewer R2 + R3 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck git archaeology: `git log main..HEAD -- skills/phase-contract/SKILL.md` = 2 amendment commits (509d685c →1.0.2, 8a35face →1.0.3, both substance user-approved); ACCEPTANCE AC8 says "amended once … never re-edited"; SPEC.md:330 says "amended twice"; SPEC.md:588 still says 1.0.2 vs shipped 1.0.3 | brand | confirmed | finding-mark | n/a | n/a |
+| F88 | docs/features/37-phase-lint-script/SPEC.md:302 (E10 evidence row) | scope/record | med | fix-now | replan-in-unit: plan owner re-cuts the E10 evidence row — cite a real in-branch blob for `ROADMAP_EXECUTION_ORDER.md` or downgrade the status honestly; `8bab5c90` is an unknown revision anywhere in the repo and the file does not exist on main | no |
+| VF-88 | SPEC.md:302 · reviewer R3 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck: `git cat-file -e main:docs/features/ROADMAP_EXECUTION_ORDER.md` → absent on main (authored in-PR at 917ac9ab); `git rev-parse 8bab5c90` → unknown revision; the E10 row marks the claim `proven` | scope | confirmed | finding-mark | n/a | n/a |
+| F89 | docs/LOGS.md:1 | brand (record fidelity) | med | fix-now | fold: relocate the 2026-09-12T15:18Z entry below the `# Session log` H1 + intro block (restore the append-after-intro shape every other entry follows) | no |
+| VF-89 | docs/LOGS.md:1-24 · reviewer R3 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck direct read: line 1 is the newest entry H2; the `# Session log` H1 sits at line 24 — entry prepended above the document title | brand | confirmed | finding-mark | n/a | n/a |
+| F90 | docs/fix/_TEMPLATE/SPEC.md vs SPEC.md:368-373 + TASKS.md | workflow (record fidelity) | med | fix-now | replan-in-unit: plan owner re-cuts §Architecture impact affected-surfaces to include `docs/fix/_TEMPLATE/SPEC.md` and adds the TASKS.md phase row; the +2-line template edit itself stays | no |
+| VF-90 | docs/fix/_TEMPLATE/SPEC.md · reviewer R3 + isolated verifier · HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 · recheck: `git diff main...HEAD -- docs/fix/_TEMPLATE/SPEC.md` = +2 lines (template P2 gains `Layer: hardening · Done-when:`); SPEC:368-373 affected-surfaces omits it; `grep fix/_TEMPLATE TASKS.md` → zero hits | workflow | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD c922a34a2a2e57da4345614359cee0e02663a9a5 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: new: F80, F83–F90 (no folded id re-opened; F81/F82 are the
+  standing decision-required surfaces, re-flagged 2/3 by fresh adversarial
+  reviewers, never ledgered)
+- Snapshots: 98f5821e13753eb21124ca0fa290ad1ed709ef74 →
+  c922a34a2a2e57da4345614359cee0e02663a9a5 (cycle-11 reviewed head → cycle-12
+  reviewed head)
+- Missed: cycles 1–11 never linted the unit's own canonical PLAN.md
+  artifacts (F80 — the gate bricks on the input SPEC.md:95 declares in
+  scope, undisclosed in known-issues), never probed the grammar-evasion
+  shapes outside the checkbox line (F85 continuation lines), the plural
+  human-gate form (F84), the duplicate `Layer:` line (F83), or the
+  frozen-plan record rows against git reality (F87/F88/F90) and the
+  install-target behavior of the shipped gate (F86)
+- Owning stage: source (F80, F84, F86, F89) + plan (F83, F85, F87, F88, F90)
+  + owner decisions (D-1 riding content, D-2 language policy)
+- Why the prior review failed: cycle 11 verified each fold at its cited
+  shape and the record rows by direct read, but the adversarial probes ran
+  against synthetic fixtures only — the two committed PLAN.md files (the
+  linter's declared primary input), the no-checkbox line class, and the
+  git-archaeology of the amendment/version records were outside every
+  corpus and every read
+- Route to owner: /fold-findings (explicit ids F80 + F84 + F86 + F89); plan
+  rows F83 + F85 + F87 + F88 + F90 → the plan owner's SPEC re-cut, then a
+  fresh /review-plan 37-phase-lint-script; D-1/D-2 → the user's ruling
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–12 run on the
+user's explicit invocations past the cap. Decision-required surfaces D-1
+(riding docs/fix/214 tree + consolidation workstream) and D-2 (Spanish-only
+committed docs) block the unit until the user rules — 7+ cycles pending. The
+fix-now rows F80, F84, F86, F89 are foldable in place; F83, F85, F87, F88,
+F90 need the plan owner's SPEC re-cut first. DEBT-1 (bench/perf gate) is
+overdue; DEBT-3 (frozen-manifest amendment path) fired via F87 and is due;
+DEBT-6 (distribution gap) and DEBT-7 (sanitizeEcho ASCII-strip) are armed;
+DEBT-4/DEBT-5 fire at the scheduled linter fold touch.
