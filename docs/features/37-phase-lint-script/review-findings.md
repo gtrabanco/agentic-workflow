@@ -831,3 +831,15 @@ F90 need the plan owner's SPEC re-cut first. DEBT-1 (bench/perf gate) is
 overdue; DEBT-3 (frozen-manifest amendment path) fired via F87 and is due;
 DEBT-6 (distribution gap) and DEBT-7 (sanitizeEcho ASCII-strip) are armed;
 DEBT-4/DEBT-5 fire at the scheduled linter fold touch.
+
+Post-report addendum (cycle 12, owner rulings landed 2026-09-14): the user
+resolved the three open decisions — D-1: the riding fix/214 tree and the
+`.pi/mcp.json` toolstate stay on PR #212, no split and no revert (ED12);
+D-2: TRIAGE_REREPORT_2026-09-13.md and ROADMAP_EXECUTION_ORDER.md are ruled
+temporary artifacts and moved to the gitignored `tmp/` folder (ED13 — the
+D-2 surface dissolves; F88's E10 re-cut must account for the file now being
+untracked); the frozen-manifest amendment was authorized and landed (ED14):
+AC8 corrected to the shipped two-amendment state, the SPEC stale-version
+surfaces swept, a dated `## Amendments` row added and a fresh acceptance
+receipt recorded — F87's surfaces are repaired via the owner-authorized
+amendment path; its row flip stays owed to the fold cycle.

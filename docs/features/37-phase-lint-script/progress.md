@@ -724,3 +724,7 @@ Notes:
 ## Unit-loop receipt — P7 (close-out re-run, `37-plan-7`)
 - Commit: pending · Gate: `node --test scripts/*.test.mjs` exit 0 (298/298) · `bun scripts/check-skill-context.mjs` exit 0 · `--routes` exit 0 · `npx skills add . --list` exit 0 · `bun run test` pi 185/185 · schema 684/684 · `bun run bundle:skills` exit 0 (38 skills/123 files) · Acceptance blob: 21adb08445ef1b1994ae3adfbcfc3bbe32a5a7b4
 - Next: close-out complete · PR: https://github.com/gtrabanco/agentic-workflow/pull/212 · Attempts: 1
+
+## Acceptance receipt v1 — amendment 2026-09-14 (ED14)
+- Manifest: docs/features/37-phase-lint-script/ACCEPTANCE.md · Blob: 63f62e4e17d910a8b8171c23017cb97b6aab499b · Status: frozen · Verified: 2026-09-14
+- Reason: user-approved amendment (AC8 amendment-count correction; SPEC ## Amendments 2026-09-14) — no validator narrowed, grep targets unchanged
