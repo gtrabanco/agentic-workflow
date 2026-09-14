@@ -16,6 +16,7 @@ import { MAX_MODEL_CHAIN, SETTLE_POLICIES, THINKING_LEVELS, UNAVAILABLE_ROUTE_PO
 import type { RoutingControls, SettingsUi } from "../routing/types.js";
 import type { ConfigFile, ModelRef, ModelSetting, Route, RouteFile, SettlePolicy, ThinkingSetting, UnavailableRoutePolicy } from "../config/types.js";
 import { renderMergedConfig, routePath, DEFAULT_ROUTE } from "./view.js";
+import { SELECT_OPTION_LIMIT, pagedSelect, providerOf } from "./picker.js";
 
 export interface SettingsDeps {
   ui: SettingsUi;
@@ -68,6 +69,7 @@ export const prompts = {
   cancel: "Cancel",
   model: (target: string): string => `Model for ${target}?`,
   modelPicked: (target: string): string => `Which model for ${target}?`,
+  modelProvider: (target: string): string => `Provider for ${target}?`,
   thinking: (target: string): string => `Thinking level for ${target}?`,
   fields: "Which fields should change?",
   fieldsBoth: "model and thinking",
@@ -257,16 +259,22 @@ async function askFields(deps: SettingsDeps): Promise<{ model: boolean; thinking
 
 /** Ask for one model entry; `undefined` means cancelled/skipped, `"inherit"` means the whole-route setting. */
 async function pickModelEntry(deps: SettingsDeps, target: string, current?: ModelSetting): Promise<"inherit" | ModelRef | undefined> {
+  const models = deps.models ?? [];
   let answer: string | undefined;
-  if (typeof deps.ui.pick === "function" && deps.models && deps.models.length > 0) {
+  if (models.length > SELECT_OPTION_LIMIT - 1) {
+    // Over the cap: TYPED occupies one dialog slot, so 24 models + TYPED would
+    // still crash (Decision 1). The issue's provider-first two-step keeps every
+    // dialog bounded in every UI mode (Decision 3).
+    answer = await askModelOverCap(deps, target, models, current);
+  } else if (typeof deps.ui.pick === "function" && models.length > 0) {
     // Rich seam: filterable, windowed, preselected to the value in force (OB-1).
-    const picked = await deps.ui.pick(prompts.modelPicked(target), [...deps.models, TYPED], {
+    const picked = await deps.ui.pick(prompts.modelPicked(target), [...models, TYPED], {
       initial: typeof current === "string" ? current : undefined,
     });
     answer = typeof picked === "string" ? picked : undefined;
     if (answer === TYPED || answer === undefined) answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
-  } else if (deps.models && deps.models.length > 0) {
-    answer = await deps.ui.select(prompts.modelPicked(target), [...deps.models, TYPED]);
+  } else if (models.length > 0) {
+    answer = await deps.ui.select(prompts.modelPicked(target), [...models, TYPED]);
     if (answer === TYPED || answer === undefined) answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
   } else {
     answer = await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
@@ -286,6 +294,80 @@ async function pickModelEntry(deps: SettingsDeps, target: string, current?: Mode
     return undefined;
   }
   return `${parts.provider}/${parts.id}`;
+}
+
+/**
+ * The provider-first two-step the issue prescribes when the live registry exceeds
+ * the single-dialog cap (PE-003, PE-014). Unique providers (prefix before the
+ * first `/`, `localeCompare`-sorted) come first — through the rich picker while
+ * it fits, `pagedSelect` otherwise — then that provider's models in registry
+ * order. "Type another reference…" is the trailing entry of every dialog and
+ * still reaches the text input, so a pick-less UI completes the flow (OB-12).
+ */
+async function askModelOverCap(
+  deps: SettingsDeps,
+  target: string,
+  models: readonly string[],
+  current?: ModelSetting,
+): Promise<string | undefined> {
+  const currentProvider = typeof current === "string" ? providerOf(current) : undefined;
+  const providers = [...new Set(models.map((model) => providerOf(model)))].sort((a, b) => a.localeCompare(b));
+
+  const provider = await askProvider(deps, target, providers, currentProvider);
+  if (provider === TYPED || provider === undefined) {
+    return await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
+  }
+  const providerModels = models.filter((model) => providerOf(model) === provider);
+  const picked = await askModelWithinProvider(deps, target, providerModels, provider, current);
+  if (picked === TYPED || picked === undefined) {
+    return await deps.ui.input(prompts.model(target), "provider/modelId or inherit");
+  }
+  return picked;
+}
+
+/**
+ * Ask which provider. The rich picker handles it while `providers + TYPED` fits
+ * the cap (preselected to the value in force's provider); over the cap — Pi
+ * imposes no provider ceiling, so a > 24-provider registry is real (PE-014) —
+ * the dialog pages instead of crashing.
+ */
+async function askProvider(
+  deps: SettingsDeps,
+  target: string,
+  providers: readonly string[],
+  currentProvider?: string,
+): Promise<string | undefined> {
+  const title = prompts.modelProvider(target);
+  if (typeof deps.ui.pick === "function" && providers.length + 1 <= SELECT_OPTION_LIMIT) {
+    const picked = await deps.ui.pick(title, [...providers, TYPED], {
+      ...(currentProvider !== undefined ? { initial: currentProvider } : {}),
+    });
+    return typeof picked === "string" ? picked : undefined;
+  }
+  return pagedSelect((selectTitle, options) => deps.ui.select(selectTitle, options), title, providers, { trailing: TYPED });
+}
+
+/**
+ * Ask the model within one provider. The rich picker handles it while `models +
+ * TYPED` fits the cap (preselected only when the value in force belongs to this
+ * provider); over the cap the dialog pages.
+ */
+async function askModelWithinProvider(
+  deps: SettingsDeps,
+  target: string,
+  models: readonly string[],
+  provider: string,
+  current?: ModelSetting,
+): Promise<string | undefined> {
+  const title = prompts.modelPicked(target);
+  if (typeof deps.ui.pick === "function" && models.length + 1 <= SELECT_OPTION_LIMIT) {
+    const initial = typeof current === "string" && providerOf(current) === provider ? current : undefined;
+    const picked = await deps.ui.pick(title, [...models, TYPED], {
+      ...(initial !== undefined ? { initial } : {}),
+    });
+    return typeof picked === "string" ? picked : undefined;
+  }
+  return pagedSelect((selectTitle, options) => deps.ui.select(selectTitle, options), title, models, { trailing: TYPED });
 }
 
 /** Ask for a model; a lone reference is returned as-is, several references are returned as an ordered chain. */
@@ -368,7 +450,8 @@ async function pickCommand(deps: SettingsDeps, options: readonly string[]): Prom
     deps.ui.notify("There is no command to pick here.", "warning");
     return undefined;
   }
-  return deps.ui.select(prompts.command, [...options].sort((a, b) => a.localeCompare(b)));
+  const sorted = [...options].sort((a, b) => a.localeCompare(b));
+  return pagedSelect((title, list) => deps.ui.select(title, list), prompts.command, sorted);
 }
 
 /** Multi-select command picker over the seam's `multiple` mode; a non-rich UI falls back to repeated single selects. */
@@ -388,7 +471,7 @@ async function pickCommandsMulti(deps: SettingsDeps, options: readonly string[])
   for (;;) {
     const remaining = sorted.filter((option) => !chosen.includes(option));
     if (remaining.length === 0) break;
-    const picked = await deps.ui.select(prompts.command, remaining);
+    const picked = await pagedSelect((title, list) => deps.ui.select(title, list), prompts.command, remaining);
     if (picked === undefined) break;
     chosen.push(picked);
     if (!(await deps.ui.confirm(prompts.addAnother, `Picked ${chosen.join(", ")}.`))) break;
