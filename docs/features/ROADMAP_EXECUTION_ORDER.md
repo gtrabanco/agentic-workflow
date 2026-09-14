@@ -11,7 +11,7 @@
 
 | Feature | Issue | Estado PR | Estado Roadmap | Notas |
 |---------|-------|-----------|----------------|-------|
-| #37 | #184 | OPEN (#212) | in-progress | close-out completo (gate 298/298 verde); pendiente review/merge — **primera acción** |
+| #37 | #184 | OPEN (#212) | done | close-out completo (gate 298/298 verde); pendiente review/merge — **primera acción** |
 | #38 | #185 | MERGED (#213) | done | — |
 | #31 | #171 | sin PR | idea | + mecanismo **asymmetric filter** (OCR study — ver comentario en la issue) |
 | #32 | #172 | sin PR | idea | + amendment: findings-table strict validation + Ground A/B en derived blocking gate |
@@ -21,7 +21,7 @@
 | #45 | #201 | sin PR (branch existe) | idea | necesita redesign post #43 declined |
 | #46 | #206 | sin PR | idea | **absorbe #47** (fases: research gate → convergence pass → reuse ladder) |
 | #48 | #215 | sin PR | idea | **absorbe #49** como stage experimental (journeys canary) |
-| — | #218 | sin PR | idea — fila pendiente de plan-feature (próximo nº libre: 50) | **NUEVA** — review evidence substrate (producer family; crea el JS crate) |
+| — | #218 | sin PR | idea — fila pendiente de plan-feature (próximo nº libre: 50) | **NUEVA** — review evidence substrate (producer family; usa el JS crate de la feature 37) |
 | — | #219 | sin PR | idea — fila pendiente de plan-feature | **NUEVA** — Serena MCP provisioning (pi + init-workspace, ask-first) |
 | — | #220 | sin PR | idea — fila pendiente de plan-feature | **NUEVA** — path-protection guards (defaults deterministas + config del owner) |
 | — | #192 | sin PR | issue sin fila (experimental) | doc toolchain; + guardrails del índice derivado (comentario en la issue) |
@@ -46,7 +46,7 @@ Las filas de roadmap 39, 47 y 49 quedan **folded → 41 / 46 / 48** respectivame
 
 | Issue | Título | Tipo | Triage | Acción |
 |-------|--------|------|--------|--------|
-| **#218** | Review evidence substrate — per-file review state, evidence-bound findings, optional LSP verification | enhancement (M, producer family) | plan-feature → próxima fila (50) | Depende de #35 (#182 manifest CLI); consumido por #42; mecanismo de #205. **Crea el JS crate** (vehicle rule de #43 declined) |
+| **#218** | Review evidence substrate — per-file review state, evidence-bound findings, optional LSP verification | enhancement (M, producer family) | plan-feature → próxima fila (50) | Depende de #35 (#182 manifest CLI); consumido por #42; mecanismo de #205. **Usa el JS crate de la feature 37** (vehicle rule de #43 declined) |
 | **#219** | Serena MCP provisioning — pi package dependency + init-workspace opt-in install | enhancement (S) | plan-feature → fila propia | Paralelo a todo; provisioning por defecto (ask-first), runtime con degradación elegante |
 | **#220** | Path-protection guards — shipped deterministic defaults, owner-configurable, tests freeze (TDD) | enhancement (S/M) | plan-feature → fila propia | Tier 1 portable (gate en checkpoint de fase, fingerprint de #37) + Tier 2 extensión pi (bloqueo en `tool_call`); escape = justificación + aprobación owner, jamás auto |
 
@@ -63,7 +63,7 @@ Fase 0: Bugs Críticos (inmediatos)
 
 Fase 1: Foundation Scripts (token savings máximos)
 ├── [37] phase-lint-script (#184)
-│   └── Estado: in-progress (PR #212 OPEN) — MERGE PRIMERO
+│   └── Estado: done · PR #212 OPEN — MERGE PRIMERO
 ├── [38] workflow-status-sensor-script (#185)
 │   └── Estado: done (PR #213 MERGED)
 ├── [36] verification-contract-hygiene (#183)
@@ -94,7 +94,7 @@ Fase 2.5: Evidence Substrate (NUEVO — mecaniza el lado output del review)
     ├── Evidence binding (snippet citado verbatim en el árbol candidato)
     ├── LSP opcional (Serena) con fallback verbatim · cost estimate pre-run
     ├── Depende de: [35] (manifest CLI) · coordina con [42] (scope contract)
-    └── Crea el JS crate (vehicle rule #43) — ancla del futuro runner @gtrabanco/agentic-workflow
+    └── Usa el JS crate (creado por la feature 37 · vehicle rule #43) — ancla del futuro runner @gtrabanco/agentic-workflow
 
 Fase 3: Turn Contract & Release Hygiene
 ├── [33] turn-contract-single-owner (#173)
@@ -246,7 +246,7 @@ Fase 8: Final Slimming (SIEMPRE ÚLTIMO)
 
 | Feature | Impacto | Paralelizable con |
 |---------|---------|-------------------|
-| 218 (evidence substrate) | Mechaniza anti-manufacture de findings + cobertura cerrada; **crea el JS crate** | Tras #35; coordina con #42 |
+| 218 (evidence substrate) | Mechaniza anti-manufacture de findings + cobertura cerrada; **usa el JS crate de la feature 37** | Tras #35; coordina con #42 |
 
 ### P3: Envelope Infrastructure
 
@@ -314,7 +314,7 @@ Session 5: #33 continúa (migración de skills, una por fase)
 Session 6: #42 (deterministic review-change — necesita #37+#38)
          + #45 (model routing, tras redesign)
 
-Session 7: #218 (evidence substrate — necesita #35 + coordinación con #42; crea el crate)
+Session 7: #218 (evidence substrate — necesita #35 + coordinación con #42; usa el crate de la feature 37)
          + #46 (design research + reuse ladder — necesita #31)
 
 Session 8: Buffer / #192 si quedó pendiente / journeys stage de #48 si el canary arranca
@@ -334,7 +334,7 @@ Session N: #176 (slim SKILL context) — SIEMPRE ÚLTIMO
 4. **#45** tiene branch `feat/45` pero requiere redesign post #43-declined. No empezar antes.
 5. **#192** es experimental + guardrails del índice (2026-09-13): cache, nunca fuente de verdad; FTS5 vía `node:sqlite` (built-in, verificado Node 24); vectores = tier opt-in futuro (proveedor enchufable, model+version por fila, reindex determinista). Engram = capa de memoria de sesión, no fuente de compuerta.
 6. **#215 → feat 48** es infraestructura nueva de alto valor (mejora todos los `→ Next:`); **absorbe #216/feat 49** como stage experimental (journeys canary, generalize-or-close).
-7. **#218** es producer family: su implementación **crea el JS crate** (vehicle rule de #43-declined) — punto de anclaje para la futura incorporación del runner `@gtrabanco/agentic-workflow` / `-loop`. Fila de roadmap pendiente de `plan-feature-scaffold` (próximo número libre: 50; #219/#220 siguen).
+7. **#218** es producer family: su implementación **extiende el JS crate** ya creado por la feature 37 (vehicle rule de #43-declined) — punto de anclaje para la futura incorporación del runner `@gtrabanco/agentic-workflow` / `-loop`. Fila de roadmap pendiente de `plan-feature-scaffold` (próximo número libre: 50; #219/#220 siguen).
 8. **Consolidación 2026-09-13**: cerradas por absorción #177→#171, #186→#174, #207→#206, #216→#215; creadas #218/#219/#220; filas 39/47/49 marcadas `folded → 41/46/48` (números conservados, nunca reutilizados). Issues abiertas: 22 → 21 (4 cierres + 3 altas).
 9. **Feature 37 (PR #212)**: close-out completo, gate verde (298/298 + 185/185 + bundle) — merge es la primera acción del plan.
 
