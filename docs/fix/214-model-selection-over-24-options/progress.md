@@ -55,7 +55,7 @@ Session ledger for this unit. Receipt blocks follow the
 - Fingerprint recipe: `git hash-object --stdin` over the `## Depends on` section body (both lines, heading excluded), as recomputed at 4639760e → a5b16343. The seam this fix extends is #203 (`84b7f0e9`, merged 2026-09-09), proven an ancestor of HEAD (`git merge-base --is-ancestor`) — a prerequisite already in the base, not a `Depends on` edge.
 
 ## Acceptance receipt v1
-- Manifest: docs/fix/214-model-selection-over-24-options/ACCEPTANCE.md · Blob: 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22 · Status: frozen · Verified: 2026-09-13
+- Manifest: docs/fix/214-model-selection-over-24-options/ACCEPTANCE.md · Blob: 4ea24ed70be9c40090202eb6a35fefc91d1fea8d · Status: frozen · Verified: 2026-09-14 (amended 2026-09-14 by the user-approved F9 replan — tsc-first validators; previous blob 94fc0ec5fc49ca4415dfa695615ef2c016a5ad22)
 
 ## P1 — 2026-09-13
 - Done: `src/settings/picker.ts` gains `SELECT_OPTION_LIMIT = 24`, `PAGED_SELECT_PREV` (`◀ Previous page`), `PAGED_SELECT_NEXT` (`More options…`), and the async `pagedSelect(select, title, options, { trailing })` helper (21 data per page = `SELECT_OPTION_LIMIT - 3`, PREV/NEXT before the trailing option, cancel passthrough). New red-first `test/paged-select.test.mjs` (7 cases: fit, 30-item paging, PREV, trailing-last on every page, cancel, at-limit boundary, property sweep 1–100). Phase-lint re-checked PASS (8/8) at fingerprint `P1:domain:3:bounded-paged-select-helper`.
