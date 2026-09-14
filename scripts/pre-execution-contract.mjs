@@ -129,7 +129,13 @@ export function parseReceipts(text) {
     artifactRevision: fieldFrom(chunk, "Artifact revision"),
     // A SPEC block writes `Parent: null`, a Plan block writes
     // `Parent SPEC snapshot: <64-hex>`; either line is the lineage this receipt states.
-    parent: fieldFrom(chunk, "Parent SPEC snapshot") ?? fieldFrom(chunk, "Parent"),
+    // #221: a fix plan receipt's contract-mandated `Parent SPEC snapshot: null`
+    // must parse as the ABSENCE value, not the truthy string `"null"` — the sensor
+    // keyed on a truthy parent and spawned `verify --parent null`, which the schema
+    // refuses. Route the lineage through the module's own `recordedValue`/NULL_WORDS
+    // (PE-007) so a null-word line reads `null` and a `sha256:`-dressed digest reads
+    // its bare hex; feature receipts record bare hex (PE-008), so this is their no-op.
+    parent: recordedValue(fieldFrom(chunk, "Parent SPEC snapshot") ?? fieldFrom(chunk, "Parent")),
     authorExclusion: fieldFrom(chunk, "Author exclusion"),
     contextClean: fieldFrom(chunk, "Context clean"),
     policy: fieldFrom(chunk, "Policy"),
