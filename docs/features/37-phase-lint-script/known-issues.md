@@ -31,12 +31,20 @@
   tree, registered `pending` in `docs/fix/README.md`. The post-close-out tip
   commit `585cd583` committed that tree into PR #212 together with the
   `README.md` registration row, so it is neither this unit's work nor a
-  reviewed artifact, yet it *is* present in this PR's diff. Whether it stays,
-  moves to the `fix/214-model-selection-over-24-options` branch, or comes back
-  out is the owner's pending decision (review cycle 6, D-1): this note
-  describes the tip-commit state, and if the tree is re-homed this paragraph
-  must be re-worded to match. Every path this unit authored is committed and
+  reviewed artifact, yet it *is* present in this PR's diff. Resolved by the
+  owner (2026-09-14, decisions.md ED12): the tree stays — the fix/214 unit
+  continues in its own worktree and its planning docs ride PR #212 as
+  disclosed, unreviewed. Every path this unit authored is committed and
   clean — the literal check `git status --porcelain` reports no unit-owned path.
+- **The exec-order and triage-report artifacts left the committed tree
+  (owner ruling ED13, 2026-09-14).**
+  `docs/features/ROADMAP_EXECUTION_ORDER.md` and
+  `docs/workflow/TRIAGE_REREPORT_2026-09-13.md` are ruled temporary
+  artifacts, not repo docs: both now live locally only, in the gitignored
+  `tmp/` folder. Their committed pointers (SPEC.md:71, SPEC.md:302 E10,
+  planning-evidence.md:20 PE-007) are stale-by-ruling and remain owned by
+  open finding F88's plan re-cut; the ROADMAP.md row-31 pointer was removed
+  in the same ruling commit.
 
 ## Deferred items
 

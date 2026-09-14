@@ -473,3 +473,30 @@ fingerprint: 3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed
   linter with exactly one path. Corpus grew 39 → 49; the repo-wide plan sweep
   (141 plan docs) changed no verdict, and the dogfood fingerprint stays
   `3afa2601…`.
+
+- **ED12 (2026-09-14, owner ruling on review-cycle-12 D-1 — riding content):**
+  The out-of-unit content on PR #212 stays: "ya hay un worktree para ese
+  issue; no hacer nada, ni incluirlo ni descartarlo". The
+  `docs/fix/214-model-selection-over-24-options/` tree remains committed (the
+  fix/214 unit continues in its own worktree; its planning docs ride PR #212
+  as disclosed, unreviewed) and the `.pi/mcp.json` toolstate commit stays. The
+  D-1 decision-required surface is closed — no split, no revert.
+
+- **ED13 (2026-09-14, owner ruling on review-cycle-12 D-2 — language):**
+  `docs/workflow/TRIAGE_REREPORT_2026-09-13.md` and
+  `docs/features/ROADMAP_EXECUTION_ORDER.md` are ruled temporary artifacts,
+  not repo docs: both moved out of the committed tree to the gitignored
+  `tmp/` folder (`.gitignore` `tmp/`). The English-artifacts concern dissolves
+  with the files. Committed pointers that cited the exec-order (SPEC.md:71,
+  SPEC.md:302 E10, planning-evidence.md:20 PE-007) are stale-by-ruling and
+  stay owned by open finding F88's plan re-cut; the ROADMAP.md row-31 pointer
+  is removed in the same ruling commit.
+
+- **ED14 (2026-09-14, owner authorization — frozen-manifest amendment):**
+  The user approved amending the frozen ACCEPTANCE.md: AC8's amendment-count
+  claim is corrected to the shipped two-amendment state (P1 rule-1 → 1.0.2;
+  cycle-1 fold F5 rule-3 → 1.0.3), the SPEC stale-version surfaces
+  (:368-370, :588) are swept to the shipped 1.0.3, a dated `## Amendments`
+  row is added to the SPEC, and a fresh acceptance receipt is recorded with
+  the replacement blob. Closes the F87 route and pays DEBT-3's amendment
+  path; no validator is narrowed and the grep targets are unchanged.
