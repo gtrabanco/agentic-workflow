@@ -548,3 +548,21 @@ user's explicit invocations past the cap. The fix-now rows F63–F68 are all
 source-stage and foldable in one atomic batch (script + corpus + two record
 docs); the standing owner decisions (D-1 PR composition, D-2 language
 policy) remain open with the user.
+
+Post-persist addendum (same turn, pre-report): the owner's parallel session
+landed `917ac9ab` mid-review (after the reviewed head `7aadcce9`, before this
+ledger commit) — a roadmap consolidation that regenerates
+`ROADMAP_EXECUTION_ORDER.md`. The cycle-9 verdict binds `7aadcce9`; re-checks
+at the new head: `scripts/` untouched (F63–F66 unaffected); F68's surface
+unchanged (`ROADMAP.md:47` still `in-progress · [#212]`) — and the
+consolidation re-states #37 as `in-progress` in the regenerated state table
+(:14) and note 9, so F68 keeps its recorded escape hatch (if the owner rules
+in-progress-until-merge deliberate, the fold drops the row). F67's defect
+shape evolved: the regenerated matrix DROPS the 176 column, so the four
+pairs {176,192}, {176,218}, {176,219}, {176,220} are now answered only from
+row 176 (upper triangle) with no transpose cells at all — a reader following
+the legend ("Triangular inferior por convención") looks up rows
+218/219/220/192, finds no authoritative cell, reads "sin conflicto", while
+row 176's ✓ says "conflicto". The fold must re-locate the repair at the
+regenerated file (fill the authoritative lower-triangle cells or restate
+the legend).
