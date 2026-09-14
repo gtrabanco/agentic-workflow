@@ -644,3 +644,90 @@ revert deliberate) remains unexercised; the low report-only candidates (the
 stale amendment-count record text needing a user-approved re-freeze; the
 box-7 wording riding that same re-freeze; DEBT-1/DEBT-2) are report-only for
 user routing.
+
+Cycle 11 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-14 (`review-change`, single-reviewer, five applicable axes code/
+security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR
+#212 head `98f5821e`). The post-cycle-10 fold delta (`68a4348c..98f5821e`,
+folds F68–F72) escalated to a full pass (size: +322/−44 = 366 changed lines
+> 200; width held — all four changed files are the batch's cited union plus
+the ledger itself). All 65 `folded: yes` rows re-verified REPAIRED at their
+cited locations — 34 script rows via fresh /tmp reproducers of the original
+defect shapes on node and bun (runtime parity at the F57/F64 degenerate
+boundaries, both EPIPE modes, the sanitizer's junk-prefix/homoglyph/derived-
+form vectors, the F69 punctuated-target siblings, F72's malformed `Layer:`),
+5 corpus rows via pin greps + a WORD_JOINER mutation probe (red 89/93) and a
+measured teardown (0 → 0 tmpdirs across the 93-test run), 26 docs/record rows
+via direct reads, exact ceil(measured × 1.10) arithmetic, a 15/15
+exec-order↔ROADMAP issue cross-check, a 20×20 matrix transpose check (0
+asymmetries) and mirror `cmp`. Structural preconditions green at `98f5821e`:
+acceptance blob `21adb084…` byte-identical; AC1–AC10 validators re-run green
+(nonexistent → `missing-plan`, chmod-000 → `unparseable`, each exit 1);
+scripts suite 352/352; corpus 93/93 (+12 from the F68–F72 folds); contexts 39
+skills + 22 routes; normative-drift green; schema diff empty; pi package
+185/185; mirror parity only `bump-skill`; dogfood bun+node reproduce the
+recorded `3afa2601…` fingerprint byte-identically. The isolated context-clean
+finders (code/security/verify/brand/perf) returned seven confirmed candidates
+(two re-probed by the orchestrator against the reviewed head's bytes), two
+low notes, one REFUTED candidate (`.pi/mcp.json` `@latest` — the recorded F18
+owner decision, third refutation), and the bench-gate proposal's 7th
+re-report. The isolated classifier (`review-implementation`) floored the
+finder severities: seven med fix-now rows F73–F79 below; the `[X]`
+SPEC-amendment question is minted as DEBT-3 and DEBT-1's bench gate — whose
+recorded trigger has FIRED — is due for payment, both user-routed report-only
+(no issues created); the isolated debt pass added next-touch triggers DEBT-4
+and DEBT-5.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F73 | scripts/phase-lint.mjs:239 (normalizeTerminators) + :56 (PHASE_HEADING anchor) | code | med | fix-now | fold: strip a UTF-8 BOM (leading U+FEFF at file start and any line start) in normalizeTerminators, the same invisible-prefix class F44 fixed for CR/U+2028/U+2029 + corpus fixture: a BOM-prefixed violating P1 must BLOCK, never elide | no |
+| VF-73 | scripts/phase-lint.mjs:239,56 · reviewer review-code pass + orchestrator re-verify · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck failing reproducer: BOM directly prefixing the first `### P1` heading (P1 carries the wrong-layer task `Update scripts/evil.mjs` in a docs phase) → only P2 linted, `verdict PASS` exit 0; BOM-free control → `P1 box-2: task 1 target \`scripts/evil.mjs\` belongs to layer config/infra, not docs` + `verdict BLOCKED: lint-blocked` exit 1 | code | confirmed | finding-mark | n/a | n/a |
+| F74 | scripts/phase-lint.mjs:127 (embeddedTarget) + :79 (isPathToken) | code | med | fix-now | fold: collapse empty path segments (or fail closed on empty-segment candidates) so `scripts//evil.mjs` — a valid POSIX path ≡ `scripts/evil.mjs` — cannot be exempted as prose while its single-slash twin blocks + corpus row | no |
+| VF-74 | scripts/phase-lint.mjs:127,79 · reviewer review-code pass + orchestrator re-verify · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck failing reproducer: docs task `Update scripts//evil.mjs with the change` → `verdict PASS` exit 0 (box-2 never runs); control `scripts/evil.mjs` → `P1 box-2 … belongs to layer config/infra, not docs` + `verdict BLOCKED: lint-blocked` exit 1; the F69-class rule requires every untokenizable path-like candidate to fail closed | code | confirmed | finding-mark | n/a | n/a |
+| F75 | scripts/phase-lint.test.mjs (corpus; rule at scripts/phase-lint.mjs:64 stripQuotedCommands) | verify | med | fix-now | fold: pin the SPEC-frozen quoted-command clause (SPEC.md:449 "a backticked span beginning with a runtime word … is a quoted command, never a target") with a fixture whose task carries a runtime-led backticked span (e.g. `Run \`gh pr create --body docs/x.md\``) asserting the inner path is never a target; the deletion mutant currently keeps the suite 93/93 green | no |
+| VF-75 | scripts/phase-lint.mjs:64 · reviewer review-verify pass · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck mutation probe: `stripQuotedCommands` → `return text;` in a /tmp copy → `node --test scripts/phase-lint.test.mjs` 93 pass / 0 fail (identical to shipped) — the frozen clause could vanish undetected | verify | confirmed | finding-mark | n/a | n/a |
+| F76 | scripts/phase-lint.test.mjs (corpus; clause at scripts/phase-lint.mjs:416 `created.length > 1`) | verify | med | fix-now | fold: pin box-4's multi-file clause ("task N creates 2 files of distinct concerns") with a fixture incl. an `add a new file`/`new file` CREATION_VERB variant; the deletion mutant currently keeps the suite green | no |
+| VF-76 | scripts/phase-lint.mjs:416 · reviewer review-verify pass · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck mutation probe: deleting the clause in a /tmp copy → 93/93 green; grep corpus for `creates\b` and `add a new file`/`new file` → 0 hits | verify | confirmed | finding-mark | n/a | n/a |
+| F77 | scripts/phase-lint.test.mjs (corpus; prose/path exemption at scripts/phase-lint.mjs:127-134) | verify | med | fix-now | fold: pin BOTH readings of the prose-compound exemption — a prose compound (`stdout/stderr`, `P5/P6`, `contract/schema`) stays exempt (PASS control) and a real dotless target (e.g. `CRASH_RECOVERY.md`) still maps/blocks — closing the gap where a one-line mutant flips two real committed plans; the bare token-less `BLOCKED: unparseable` diagnosability stays out of scope (frozen §Output contract) | no |
+| VF-77 | scripts/phase-lint.mjs:127-134 · reviewer review-verify pass · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck measured + mutant: `node scripts/phase-lint.mjs docs/features/38-workflow-status-sensor-script/TASKS.md` and `docs/fix/134-machine-contract/SPEC.md` → bare `verdict BLOCKED: unparseable` exit 1 (offending prose tokens `stdout/stderr`, `P5/P6`, `no-I/O`, `contract/schema` via instrumented /tmp copy); mutant exempting dotless compounds → corpus 92/93 (only F57's mega-token red) and 38/TASKS.md flips to `P2 box-2 … CRASH_RECOVERY.md …`; fail-closed behavior generically disclosed (known-issues.md:13) but the discrimination is contract-incomplete per the acceptance quality floor | verify | confirmed | finding-mark | n/a | n/a |
+| F78 | docs/features/ROADMAP_EXECUTION_ORDER.md:24,:97,:249,:317,:337 | brand (record fidelity) | med | fix-now | fold: reword the five "crea el JS crate" #218 cells to "usa/extiende el crate `packages/agentic-workflow` ya creado por la feature 37 (vehicle rule)" — the shipped state this same PR records (ROADMAP.md:47 vehicle rule; packages/agentic-workflow/README.md:5-7 "Feature 37 created it as the vehicle"; CHANGELOG 0.0.0 row "Producer crate vehicle (feature 37, P1)"); the correction travels with the file under either standing D-1 outcome | no |
+| VF-78 | docs/features/ROADMAP_EXECUTION_ORDER.md:24,97,249,317,337 · reviewer review-brand pass + orchestrator direct read · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck direct read: 5 sites assign crate creation to future #218 vs the crate README + CHANGELOG recording feature 37 as the creator | brand | confirmed | finding-mark | n/a | n/a |
+| F79 | docs/features/ROADMAP_EXECUTION_ORDER.md:14,:22,:66 | brand (record fidelity) | med | fix-now | fold: set the #37 "Estado Roadmap" cells to `done` (the PR state stays OPEN in the Estado PR column) to match the normative ROADMAP.md:47 `done · [#212]` restored by the F68 fold; travels with the file under either standing D-1 outcome | no |
+| VF-79 | docs/features/ROADMAP_EXECUTION_ORDER.md:14,22,66 · reviewer review-brand pass + RV-C verifier, corroborated by two independent finders · HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 · recheck direct read: :14/:22/:66 `in-progress` vs ROADMAP.md:47 `done · [#212]` (sibling rows read `done · [#PR]`) | brand | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 98f5821e13753eb21124ca0fa290ad1ed709ef74 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: new: F73–F79 (no folded id re-opened)
+- Snapshots: 68a4348c7ff7260a4d8bd871f5ef6c16c6d5da0a →
+  98f5821e13753eb21124ca0fa290ad1ed709ef74 (cycle-10 reviewed head → cycle-11
+  reviewed head)
+- Missed: cycles 1–10 normalized CR/U+2028/U+2029 at the parse entry but
+  never the UTF-8 BOM the same invisible-prefix class needs (F73); the F69
+  fail-closed predicate enumerated punctuated/emphasis/tilde shapes but not
+  the empty-segment form a real POSIX target carries (F74); three frozen
+  branches still ship without a discriminating fixture — the quoted-command
+  clause, box-4's multi-file clause, and the prose/path exemption's positive
+  reading (F75–F77); the riding exec-order regeneration re-published the
+  crate-creation claim against the state this same PR records (F78) and the
+  pre-restore #37 status cells (F79)
+- Owning stage: source (F73–F77) + record (F78, F79)
+- Why the prior review failed: cycle 10 verified each fold at its cited
+  shapes and the parse-entry normalization at CR/U+2028/U+2029, but never
+  probed the BOM prefix, the double-slash target form, or the remaining
+  unpinned frozen branches; the record passes read the state table's
+  rationale cells but not the crate-creation claims or the post-F68 status
+  cells
+- Route to owner: /fold-findings (explicit ids F73 + F74 + F75 + F76 + F77 +
+  F78 + F79)
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–11 run on the
+user's explicit invocations past the cap. The fix-now rows F73–F79 are all
+foldable in one atomic batch (parse/normalizer fixes + three corpus pins +
+two exec-order record rewords). Standing owner decisions: D-1 (riding
+docs/fix/214 tree) and D-2 (language policy) remain open with the user;
+DEBT-1's recorded trigger ("5th re-report or next hot-path commit") has
+FIRED and is due for payment; DEBT-3 (the `[X]` SPEC-amendment question),
+DEBT-4 (dead branch, next touch) and DEBT-5 (double tokenization, next
+touch) are report-only with explicit triggers.
