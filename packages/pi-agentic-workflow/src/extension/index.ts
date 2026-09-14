@@ -86,6 +86,7 @@ export function richUi(ctx: ExtensionContext): SettingsUi {
             items,
             maxVisible: PICKER_MAX_VISIBLE,
             theme: selectListTheme,
+            initial: opts.initial,
             onSelect: (value) => done(value),
             onCancel: () => done(undefined),
           });
