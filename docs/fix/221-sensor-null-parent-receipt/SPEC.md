@@ -368,13 +368,13 @@ scripts/workflow-status-sensor.test.mjs` → exit 0 (schema `dist/` built
 first: `cd packages/agentic-workflow-schema && bun install
 --frozen-lockfile && bun run build`).
 
-- [ ] Red-first `scripts/pre-execution-receipt-parent.test.mjs` (new;
+- [x] Red-first `scripts/pre-execution-receipt-parent.test.mjs` (new;
       imports `parseReceipts` from `./pre-execution-contract.mjs`): pin the
       three lineage shapes — a fix plan receipt's `Parent SPEC snapshot:
       null` and a SPEC receipt's `Parent: null` both parse `parent ===
       null`, and a feature receipt's bare/`sha256:`-dressed 64-hex parent
       parses as the bare hex — run to red (O1, O2; PE-003, PE-005, PE-007).
-- [ ] Red-first pinned case in `scripts/workflow-status-sensor.test.mjs` —
+- [x] Red-first pinned case in `scripts/workflow-status-sensor.test.mjs` —
       "a current fix-unit plan receipt senses current, not missing (#221)":
       `makeFixture` with an `in-progress` fix-index row for
       `sensor-null-parent-receipt`, `extraFiles` writing the unit's
@@ -390,15 +390,15 @@ first: `cd packages/agentic-workflow-schema && bun install
       `Verdict: plan-review-pass`), asserting the unit's
       `detail.pre_execution` row reads `label: "current"` with no gate
       blocker for it — run to red (O3; PE-001, PE-002, PE-004, PE-011).
-- [ ] Site 1 — `scripts/pre-execution-contract.mjs:132`: wrap the lineage
+- [x] Site 1 — `scripts/pre-execution-contract.mjs:132`: wrap the lineage
       extraction in the module's own normalizer — `parent:
       recordedValue(fieldFrom(chunk, "Parent SPEC snapshot") ??
       fieldFrom(chunk, "Parent"))` (O1, O2; PE-007) — parser suite green.
-- [ ] Site 2 — `scripts/workflow-status.mjs:598`: never bind a parent for a
+- [x] Site 2 — `scripts/workflow-status.mjs:598`: never bind a parent for a
       fix receipt — `const boundParent = receipt.unitKind === "fix" ? null
       : (parent ?? receipt.parent);` with a comment citing SNAPSHOT.md's
       fix-omits-parent rule (O3; PE-005, PE-013) — sensor suite green.
-- [ ] Regression gate: `node --test scripts/pre-execution-sensor.test.mjs
+- [x] Regression gate: `node --test scripts/pre-execution-sensor.test.mjs
       scripts/pre-execution-attribution.test.mjs
       scripts/pre-execution-timeline.test.mjs
       scripts/pre-execution-quality.test.mjs` → exit 0 (O4; PE-006,
