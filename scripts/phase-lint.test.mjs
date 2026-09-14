@@ -1816,6 +1816,163 @@ test("a real dotless target still maps by the `*.md` row (F77)", () => {
   assert.match(stdout, /^P1 box-2: task 1 target `CRASH_RECOVERY\.md` belongs to layer docs, not config\/infra$/m);
 });
 
+// Fold F91 — a Cf/Zs invisible char after the phase number (or an empty
+// title) must not elide the phase boundary: the next phase's `Layer:` + tasks
+// used to absorb into the prior phase and a docs-declared `scripts/` task
+// laundered to PASS under the prior layer (F91).
+test("an invisible char after the phase number does not elide the phase (F91)", () => {
+  const file = fixture(
+    "f91-invisible-heading.md",
+    `# Invisible heading
+
+### P1 — Real phase
+
+Layer: config/infra
+
+- [ ] Create \`scripts/a.ts\`
+
+Done-when: \`bun test\` exits 0.
+
+### P2\u200b — Ghost docs
+
+Layer: docs
+
+- [ ] Create \`scripts/b.ts\`
+
+Done-when: \`bun test\` exits 0.
+`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.ok(stdout.includes("P2 box-2: task 1 target `scripts/b.ts` belongs to layer config/infra, not docs"), stdout);
+});
+
+test("an empty phase title still parses its phase (F91)", () => {
+  const file = fixture(
+    "f91-empty-title.md",
+    `# Empty title
+
+### P1 — Real phase
+
+Layer: docs
+
+- [ ] Edit docs/a.md
+
+Done-when: \`bun test\` exits 0.
+
+### P2 —
+
+Layer: config/infra
+
+- [ ] Update \`docs/b.md\` with the link
+
+Done-when: \`bun test\` exits 0.
+`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.ok(stdout.includes("P2 Phase-lint: BLOCKED — box 2: task 1 target `docs/b.md` belongs to layer docs, not config/infra"), stdout);
+});
+
+// Fold F94 — box-5's hyphen-adjacent guard must be pinned: a task carrying the
+// hyphen-joined compound `equal-or-greater` is one token, never a standalone
+// `or`. A mutant dropping the `-` from the lookaround flips this to a box-5
+// finding, so the fixture must go red under that mutant.
+test("a hyphen-joined compound stays one token, never a box-5 `or` (F94)", () => {
+  const file = fixture(
+    "f94-hyphen-or.md",
+    `# Hyphen or
+
+### P1 — Time the parser
+
+Layer: config/infra
+
+- [ ] Make startup equal-or-greater than one second faster
+
+Done-when: \`bun bench\` exits 0.
+`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+  assert.doesNotMatch(stdout, /box-5|either\/or/);
+});
+
+// Fold F95 — box-1's hyphen-joined-compound guard must be pinned: a title like
+// "Slim the routes to run-and-paste" keeps `run-and-paste` one token, never an
+// `and`-joiner. A mutant adding `\s*-\s*` to the WORD_JOINER flips this to a
+// box-1 finding, so the fixture must go red under that mutant.
+test("a hyphen-joined compound title stays one token (F95)", () => {
+  const file = fixture(
+    "f95-hyphen-title.md",
+    `# Hyphen title
+
+### P1 — Slim the routes to run-and-paste
+
+Layer: docs
+
+- [ ] Edit docs/a.md
+
+Done-when: \`bun test\` exits 0.
+`,
+  );
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+  assert.doesNotMatch(stdout, /joins deliverables/);
+});
+
+// Fold F98/F99 — the O(L²) `$`-anchored emphasis trim and the edge-slash trim
+// must stay linear: an interior punctuation run must not exceed the wall-time
+// bound on both runtimes (ReDoS on adversarial plan input).
+test("an interior emphasis run completes within the timing bound (F98)", {
+  timeout: 30_000,
+}, () => {
+  const token = `docs/name.md${"*".repeat(120_000)}`;
+  const file = fixture(
+    "f98-emphasis-run.md",
+    `# Emphasis run
+
+### P1 — Wire the sensor
+
+Layer: config/infra
+
+- [ ] Update ${token} with the link
+
+Done-when: \`bun test\` exits 0.
+`,
+  );
+  const started = Date.now();
+  const { status } = nodeRun(file);
+  const elapsed = Date.now() - started;
+  assert.equal(status, 1, "the fail-closed verdict holds");
+  assert.ok(elapsed < 30_000, `emphasis run must stay linear, took ${elapsed}ms`);
+});
+
+test("an interior slash run completes within the timing bound (F99)", {
+  timeout: 30_000,
+}, () => {
+  const token = `a${"/".repeat(120_000)}b`;
+  const file = fixture(
+    "f99-slash-run.md",
+    `# Slash run
+
+### P1 — Wire the sensor
+
+Layer: config/infra
+
+- [ ] Update \`${token}\` with the link
+
+Done-when: \`bun test\` exits 0.
+`,
+  );
+  const started = Date.now();
+  const { status } = nodeRun(file);
+  const elapsed = Date.now() - started;
+  assert.equal(status, 1, "the fail-closed verdict holds");
+  assert.ok(elapsed < 30_000, `slash run must stay linear, took ${elapsed}ms`);
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).
