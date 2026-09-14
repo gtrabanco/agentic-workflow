@@ -300,7 +300,17 @@ function parsePhases(text) {
     const layerText =
       layerIndex === -1
         ? null
-        : stripDeclaredEdges(phase.body[layerIndex].replace(/.*?Layer:\s*/, "").split(/Done-when:/)[0]);
+        : stripDeclaredEdges(
+            phase.body[layerIndex]
+              .replace(/.*?Layer:\s*/, "")
+              .split(/Done-when:/)[0]
+              // The canonical committed shape is `Layer: <enum> · <prose>` (the
+              // tail wraps onto following lines): only the first `·`-segment is
+              // the declared value, so a prose tail cannot reject the phase
+              // (F80). A genuine second layer (`docs, ui`) has no `·` and stays
+              // a whole-value reject (F72).
+              .split("·")[0],
+          );
     const layer = layerText !== null && LAYERS.includes(layerText) ? layerText : null;
     const doneIndex = phase.body.findIndex((line) => /Done-when:/.test(line));
     let doneWhen = null;
@@ -503,7 +513,7 @@ function box7(phase) {
   const hardened = HARDENING_LAYERS.has(phase.layer);
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
-    const manualGate = !hardened && (/manual/i.test(task) || /\bask the user\b/i.test(task));
+    const manualGate = !hardened && (/manual/i.test(task) || /\bask the users?\b/i.test(task));
     const forgeGate = /\bgh pr\b/i.test(task) && !phase.finalCloseOut;
     if (manualGate || forgeGate) {
       findings.push(`task ${index + 1} carries a manual/external gate outside the hardening phase`);
