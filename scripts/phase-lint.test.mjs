@@ -1603,6 +1603,61 @@ for (const [shape, layerBlock] of ACCEPTED_LAYER_FORMS) {
   });
 }
 
+// Fold F80 — the canonical `Layer: <enum> · <prose>` tail (the shape BOTH
+// committed PLAN.md artifacts use, prose wrapping onto the next line) must reach
+// the closed-enum match, not the whole-value reject that bricked the linter on
+// its own declared primary input. The F72 two-layer shape stays unparseable.
+const LAYER_PROSE_TAIL_CONFIG_PLAN = `# Layer prose tail config
+
+### P1 — Wire the sensor
+
+Layer: config/infra · Task count: 8, prose tail wrapping onto
+the next line.
+
+Done-when: \`node --test scripts/sensor.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/sensor.mjs\`
+`;
+
+const LAYER_PROSE_TAIL_DOCS_PLAN = `# Layer prose tail docs
+
+### P1 — Amend the rule
+
+Layer: docs · amend \`skills/phase-contract/SKILL.md\` rule 1 with the
+new wording.
+
+Done-when: \`grep -n rule1 skills/phase-contract/SKILL.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("the canonical `Layer: <enum> · <prose>` tail is accepted (F80)", () => {
+  const config = nodeRun(fixture("f80-layer-prose-config.md", LAYER_PROSE_TAIL_CONFIG_PLAN));
+  assert.equal(config.status, 0, "the config/infra PLAN.md shape must parse");
+  assert.match(config.stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:wire-sensor$/m);
+  const docs = nodeRun(fixture("f80-layer-prose-docs.md", LAYER_PROSE_TAIL_DOCS_PLAN));
+  assert.equal(docs.status, 0, "the wrapped docs PLAN.md shape must parse");
+  assert.match(docs.stdout, /^P1 Phase-lint: PASS \(8\/8\)/m);
+});
+
+// Fold F84 — the box-7 human-gate phrase also matches the plural form (`ask the
+// users`), the same substring class the F4 fold established for `manual`.
+const PLURAL_HUMAN_GATE_PLAN = `# Plural human gate
+
+### P1 — Render the docs
+
+Layer: docs. Done-when: \`node --test scripts/render.test.mjs\` → exit 0.
+
+- [ ] Ask the users to confirm the copy
+`;
+
+test("`ask the users` outside hardening fails box 7 (F84)", () => {
+  const file = fixture("f84-plural-human-gate.md", PLURAL_HUMAN_GATE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-7: /m);
+});
+
 // Fold F73 — the parse-entry normalization covered CR/U+2028/U+2029 (F44) but
 // not the UTF-8 BOM: a `\uFEFF` before the first heading made the
 // `^`-anchored heading regex miss, so the whole phase vanished from the parse,
