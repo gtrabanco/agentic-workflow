@@ -1316,6 +1316,130 @@ test("the echoed title is capped at 120 characters plus an ellipsis (F59)", () =
   assert.ok(echoed[1].endsWith("…"), "the truncation is marked");
 });
 
+// Fold F63 — a `~/`-prefixed target reads as a path (it carries a `/`), but
+// the emphasis-edge strip removed the `~` (a home-dir prefix, not markdown
+// emphasis), so the remainder began with `/`, failed the segment grammar and
+// was silently dropped as targetless: the layer check never ran and an
+// unmappable target answered `verdict PASS`. The `~docs/x.md` variant blocked,
+// so the same class answered both ways. A stripped non-path edge now fails
+// closed like the emphasis-wrapped shape (SPEC box-2 "never a guess").
+const HOME_TARGET_PLAN = `# Home target
+
+### P1 — Update the config
+
+Layer: config/infra. Done-when: \`node --test scripts/config.test.mjs\` → exit 0.
+
+- [ ] Update ~/notes/config.yml with the new key
+`;
+
+const TILDE_PREFIX_TARGET_PLAN = `# Tilde prefix
+
+### P1 — Update the docs
+
+Layer: config/infra. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Update ~docs/x.md with the link
+`;
+
+test("a home-dir target token fails closed, never silently exempt (F63)", () => {
+  const file = fixture("f63-home-target.md", HOME_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "an unmappable `~/` target must not pass as targetless");
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+test("the `~`-prefixed target shape stays fail-closed too (F63)", () => {
+  const file = fixture("f63-tilde-prefix.md", TILDE_PREFIX_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+// Fold F64 — the trailing edge trim was a `$`-anchored `+`-quantified class,
+// which retries at every start position: O(L²) on a punctuation-run token. A
+// ~244 KB crafted plan text (linter input that may originate in a third-party
+// forge issue) exceeded 60 s per run and hung the pre-flight gate. The two
+// bounded scans are O(L); this fixture pins completion inside a generous
+// wall-clock bound on both runtimes (a killed child is the failure mode).
+const PUNCTUATION_RUN_PLAN = `# Punctuation run
+
+### P1 — Handle the config
+
+Layer: config/infra. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Update ${".".repeat(250_000)}name with the key
+`;
+
+test("a punctuation-run target token completes inside the time bound (F64)", () => {
+  const file = fixture("f64-punctuation-run.md", PUNCTUATION_RUN_PLAN);
+  const runtimes = [process.execPath, ...(bunAvailable ? ["bun"] : [])];
+  for (const runtime of runtimes) {
+    const result = spawnSync(runtime, [LINTER, file], { encoding: "utf8", timeout: 20_000 });
+    assert.equal(result.signal, null, `${runtime} must complete, not be killed by the bound`);
+    assert.equal(result.status, 0, `${runtime} answers PASS`);
+  }
+});
+
+// Fold F65 — box-8's outcome vocabulary covered `exit 0`/`exits 0`/`exit code 0`
+// but not the equally explicit `exits with code 0`, so a plan carrying an
+// expected outcome false-blocked as "carries no expected outcome". Committed
+// plans use the explicit exit form (the F45 precedent), so the vocabulary
+// widens; the control keeps a command with no outcome failing.
+const EXITS_WITH_CODE_PLAN = `# Exit phrasing
+
+### P1 — Document the flag
+
+Layer: docs. Done-when: \`bun test\` exits with code 0 and the ledger is current.
+
+- [ ] Create \`docs/flag.md\`
+`;
+
+const NO_OUTCOME_PLAN = `# No outcome
+
+### P1 — Document the flag
+
+Layer: docs. Done-when: \`bun test\` exits the process.
+
+- [ ] Create \`docs/flag.md\`
+`;
+
+test("box 8 accepts the `exits with code N` outcome form (F65)", () => {
+  const file = fixture("f65-exits-with-code.md", EXITS_WITH_CODE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "an explicit expected outcome must not false-block");
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\)/m);
+});
+
+test("box 8 still rejects a command with no expected outcome (F65)", () => {
+  const file = fixture("f65-no-outcome.md", NO_OUTCOME_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-8: `Done-when:` carries no expected outcome$/m);
+});
+
+// Fold F66 — sanitizeEcho broke `Phase-lint`/`verdict`/`fingerprint` (F49/F55)
+// but not the framework's own finding-line shape `P<n> box-<n>:`, so a crafted
+// title carried a verbatim fake finding body into the echoed box-1 line and the
+// repeated BLOCKED summary — against the function's contract that a
+// substring-grepping consumer can never mistake echoed text for a block line.
+const FORGED_BLOCK_LINE_PLAN = `# Forged block line
+
+### P1 — Parse and emit P2 box-5: task 9 carries a decision word
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` → matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("the finding-line shape in a forged title never reaches the echo (F66)", () => {
+  const file = fixture("f66-forged-block-line.md", FORGED_BLOCK_LINE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the word joiner breaks box 1");
+  assert.match(stdout, /^P1 box-1: /m, "box-1 must be reported");
+  assert.doesNotMatch(stdout, /P2 box-5:/, "the finding-line shape must not survive the echo");
+  assert.doesNotMatch(stdout, /box-5/, "the box token family must not survive the echo");
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).
