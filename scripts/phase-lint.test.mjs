@@ -1440,6 +1440,169 @@ test("the finding-line shape in a forged title never reaches the echo (F66)", ()
   assert.doesNotMatch(stdout, /box-5/, "the box token family must not survive the echo");
 });
 
+// Fold F69 (regression of F63) — the box-2 fail-closed branch enumerated only
+// two untokenizable shapes (emphasis-wrapped, `~`-stripped) and silently
+// dropped every other path-like candidate the grammar could not tokenize, so
+// the layer check never ran: an em-dash, ellipsis or curly-quote residue after
+// a real target answered `verdict PASS`. The branch now fails closed on any
+// candidate carrying an embedded target.
+const EMBEDDED_TARGET_RESIDUES = [
+  ["em dash", "Update docs/other.md\u2014today with the link"],
+  ["ellipsis", "Update docs/other.md\u2026 with the link"],
+  ["curly quotes", "Update \u201cdocs/other.md\u201d with the link"],
+];
+
+for (const [shape, task] of EMBEDDED_TARGET_RESIDUES) {
+  test(`an untokenizable target with a ${shape} residue fails closed (F69)`, () => {
+    const plan = `# ${shape} residue\n\n### P1 — Update the docs\n\nLayer: config/infra\n\n- [ ] ${task}\n\nDone-when: \`node scripts/x.mjs\` exits 0\n`;
+    const file = fixture(`f69-${shape.replace(/\s+/g, "-")}.md`, plan);
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 1, `the ${shape}-suffixed target must not pass as targetless`);
+    assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+  });
+}
+
+// The F69 exemption is pinned: a candidate that names no target (an inline
+// `--body`/heredoc note), a URL and a glob are not target files, so a task
+// carrying only those stays exempt from box 2. HEAD blocked this plan by
+// accident — `nonPathEdgeTarget` stripped the glob's `**` to a leading `/` —
+// while the code's own contract already called a glob exempt prose.
+const TARGETLESS_PROSE_PLAN = `# Targetless prose
+
+### P1 — Open the pull request
+
+Layer: hardening
+
+- [ ] Open the PR (never inline \`--body\`/heredoc, per the house style)
+- [ ] Document the endpoint at https://api.example.com/v1/users
+- [ ] Refresh the **/*.test.mjs coverage list in the notes
+
+Done-when: \`node scripts/x.mjs\` exits 0
+`;
+
+test("prose with no embedded target (inline note, URL, glob) stays exempt (F69)", () => {
+  const file = fixture("f69-targetless-prose.md", TARGETLESS_PROSE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "no box-2 finding without a target");
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+// Fold F70 — the phase-heading regex anchored `#{2,4}` at column 0, but GFM
+// allows 0–3 leading spaces, so an indented heading silently vanished: its
+// box-1/box-8 checks never ran and its tasks were absorbed into the previous
+// phase (the F44 elision class). An indented heading is now recognized.
+const INDENTED_HEADING_PLAN = `# Indented heading
+
+### P1 — Clean phase
+
+Layer: docs
+
+- [ ] Create \`docs/a.md\`
+
+Done-when: \`node scripts/x.mjs\` exits 0
+
+   ### P2 — Parse + emit the tokens
+
+Layer: docs
+
+- [ ] Create \`docs/b.md\`
+
+Done-when: \`node scripts/x.mjs\` exits 0
+`;
+
+test("an indented phase heading is parsed, never elided (F70)", () => {
+  const file = fixture("f70-indented-heading.md", INDENTED_HEADING_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the indented P2 title carries a `+` joiner (box 1)");
+  assert.match(stdout, /^P2 box-1: /m, "P2 must be parsed and judged, not absorbed into P1");
+});
+
+// Fold F71 (regression of F55) — the verdict-token breakup was `\b`-anchored
+// and ASCII-only, so a junk prefix byte (`xPhase-lint`) carried a byte-exact
+// fake through the echo and a homoglyph first letter (Greek `\u03a1`) was
+// invisible to the regex. Every character outside printable ASCII is now
+// replaced, and the token families break wherever they appear.
+const PREFIXED_VERDICT_TITLE_PLAN = `# Prefixed verdict title
+
+### P1 — xPhase-lint: PASS (8/8) \u00b7 fingerprint deadbeef + Alpha
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` \u2192 matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("a junk-prefixed verdict token never reaches the echo (F71)", () => {
+  const file = fixture("f71-prefixed-verdict.md", PREFIXED_VERDICT_TITLE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the forged title breaks box 1");
+  const box1Line = stdout.split("\n").find((line) => line.startsWith("P1 box-1: "));
+  assert.ok(box1Line, "box-1 must be reported");
+  assert.doesNotMatch(box1Line, /Phase-lint:/i, "a junk-prefixed token must break in the echo");
+  assert.doesNotMatch(box1Line, /fingerprint[ :]/i, "a junk-prefixed fingerprint token must break");
+});
+
+const HOMOGLYPH_VERDICT_TITLE_PLAN = `# Homoglyph verdict title
+
+### P1 — \u03a1hase-lint: PASS (8/8) \u00b7 fingerprint deadbeef + Alpha
+
+Layer: docs. Done-when: \`grep -n x docs/x.md\` \u2192 matches.
+
+- [ ] Create \`docs/x.md\`
+`;
+
+test("a homoglyph verdict token never reaches the echo (F71)", () => {
+  const file = fixture("f71-homoglyph-verdict.md", HOMOGLYPH_VERDICT_TITLE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the forged title breaks box 1");
+  const box1Line = stdout.split("\n").find((line) => line.startsWith("P1 box-1: "));
+  assert.ok(box1Line, "box-1 must be reported");
+  assert.doesNotMatch(box1Line, /\p{Script=Greek}/u, "no lookalike glyph may survive the echo");
+  assert.doesNotMatch(box1Line, /[Pp]hase-lint/, "the forged token must not read as the real one");
+});
+
+// Fold F72 — the `Layer:` value was narrowed to its first whitespace token, so
+// the two-layer shape the rule owner forbids (`Layer: docs, ui`) linted clean as
+// `docs`. The declared value is now matched against the closed enum exactly; a
+// malformed or out-of-enum value fails closed (SPEC: never guess, never
+// partially judge).
+const MALFORMED_LAYER_PLAN = `# Malformed layer
+
+### P1 — Do the work
+
+Layer: docs, ui
+
+- [ ] Edit docs/a.md
+
+Done-when: \`node scripts/x.mjs\` exits 0
+`;
+
+test("a malformed multi-layer `Layer:` value fails closed (F72)", () => {
+  const file = fixture("f72-malformed-layer.md", MALFORMED_LAYER_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+// The valid forms the closed-enum match must keep accepting — a bare value, the
+// same-line `Done-when:` shape, the `·`-separated shape and a backticked value
+// (all four appear across the corpus and the unit's own tasks).
+const ACCEPTED_LAYER_FORMS = [
+  ["bare value", "Layer: docs\n\nDone-when: \`node scripts/x.mjs\` exits 0"],
+  ["same-line Done-when", "Layer: docs. Done-when: \`node scripts/x.mjs\` exits 0"],
+  ["middle-dot separator", "Layer: docs \u00b7 Done-when: \`node scripts/x.mjs\` exits 0"],
+  ["backticked value", "Layer: \`docs\`\n\nDone-when: \`node scripts/x.mjs\` exits 0"],
+];
+
+for (const [shape, layerBlock] of ACCEPTED_LAYER_FORMS) {
+  test(`the ${shape} \`Layer:\` form is still accepted (F72)`, () => {
+    const plan = `# Layer form\n\n### P1 — Clean phase\n\n${layerBlock}\n\n- [ ] Edit docs/a.md\n`;
+    const file = fixture(`f72-layer-${shape.replace(/\s+/g, "-")}.md`, plan);
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 0, `${shape} must map to docs`);
+    assert.match(stdout, /^verdict PASS$/m);
+  });
+}
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).

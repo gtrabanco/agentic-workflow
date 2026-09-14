@@ -31,12 +31,13 @@
  * target is the first path-like token outside a backticked command span,
  * recognized by a single-pass segment check (runtime-stable across node and
  * bun) whose edge trim is two bounded scans (a `$`-anchored trim class is
- * quadratic on a punctuation-run token — F64); a path-like target the grammar
- * cannot tokenize fails closed as ambiguous, never silently targetless, both
- * when it is emphasis-wrapped and when a non-emphasis leading edge was
- * stripped (`~/notes/x.md` — F56/F57/F63); and
- * every JavaScript line terminator is normalized before the grammar sees the
- * text, so no rendered-as-invisible separator can elide a phase (F44).
+ * quadratic on a punctuation-run token — F64); a URL or a glob carries a
+ * scheme separator or a wildcard and is a reference, never a path-like
+ * target; every other path-like target the grammar cannot tokenize fails
+ * closed as ambiguous, never silently targetless (the emphasis-wrapped shape
+ * F56, the `~`-stripped shape F63, and the whole untokenizable class F69);
+ * and every JavaScript line terminator is normalized before the grammar sees
+ * the text, so no rendered-as-invisible separator can elide a phase (F44).
  */
 
 import fs from "node:fs";
@@ -52,7 +53,7 @@ const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
 const PATH_SEGMENT = /^[A-Za-z0-9_.-]+$/;
 const HAS_LETTER = /[A-Za-z]/;
 const EMPHASIS_EDGE = /^[*_~]+|[*_~]+$/g;
-const PHASE_HEADING = /^#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
+const PHASE_HEADING = /^ {0,3}#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
 const FENCE_OPEN = /^(`{3,}|~{3,})/;
 const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
@@ -96,39 +97,56 @@ function isTargetToken(token) {
 
 /**
  * A token that reads as a path (used only to pick candidates): a `/` or a
- * known extension once markdown emphasis edges are removed.
+ * known extension once markdown emphasis edges are removed. A link/URL (it
+ * carries a scheme separator) and a glob (its core carries a wildcard) are
+ * references, never the task's target file, so neither is a path-like
+ * candidate — `*docs/x.md*` keeps its wildcards at the edges only, which
+ * `EMPHASIS_EDGE` removes before this test. Discriminating here is what lets
+ * the box-2 fail-closed branch cover the whole untokenizable class (F69):
+ * every candidate that survives this test is a genuine target the grammar
+ * must either map or fail closed on, and ordinary prose with no target stays
+ * exempt because it never reaches the candidate set.
  */
 function looksPathLike(token) {
   const core = token.replace(EMPHASIS_EDGE, "");
   if (core.length === 0) return false;
+  if (core.includes("://") || /[*?]/.test(core)) return false;
   return core.includes("/") || EXTENSIONS.some((extension) => core.endsWith(extension));
 }
 
 /**
- * A path-like token the grammar cannot tokenize but that is a valid target
- * once markdown emphasis edges are removed — `*docs/x.md*` for `docs/x.md`.
- * The emphasis-wrapped shape used to be silently dropped while the `_…_`
- * variant (underscores are in the path charset) failed closed, so the task was
- * judged targetless and exempt and the layer check never ran: a false PASS.
- * Detect it and fail closed the same way (F56).
+ * The valid target token embedded in an untokenizable candidate, or `null`.
+ * A candidate that only reads as a path because a markdown/punctuation edge or
+ * an interior residue was removed still names a real target —
+ * `docs/other.md—today`, `docs/other.md…`, `“docs/other.md”`, `*docs/x.md*`,
+ * `~/notes/x.md` — so a `!valid` candidate carrying one must fail closed like
+ * any other unmappable target (F56/F63/F69). A candidate with no embedded
+ * target is prose that merely contains a `/` (an inline `--body`/heredoc note,
+ * a URL, a glob) and stays exempt.
  */
-function emphasisWrappedTarget(token) {
-  const core = token.replace(EMPHASIS_EDGE, "");
-  return core !== token && isTargetToken(core);
+function embeddedTarget(token) {
+  for (const run of token.split(/[^A-Za-z0-9_./-]+/)) {
+    const candidate = run.replace(/^\/+|\/+$/g, "");
+    if (candidate !== "" && isTargetToken(candidate)) return candidate;
+  }
+  return null;
 }
 
 /**
- * A path-like token that reads as a path only because a non-emphasis leading
- * edge was stripped: `~/notes/x.md` loses its `~` (a home-dir prefix, not
- * markdown emphasis) and the remainder begins with `/`, an empty leading
- * segment the grammar cannot tokenize. The stripped shape used to be silently
- * dropped, so the task was judged targetless and exempt and the layer check
- * never ran: `~/notes/x.md` answered `verdict PASS` while the `~docs/x.md`
- * variant failed closed as `unparseable` (F63). Same remedy as the
- * emphasis-wrapped shape: fail closed, never a guess.
+ * Strip the grammar's edge characters — whitespace, backticks, sentence
+ * punctuation and the `·`/dash line separators — from a declared `Layer:`
+ * value in one bounded pass over each end. Used so the value can be matched
+ * against the closed layer enum exactly, instead of being narrowed to its
+ * first whitespace token (F72).
  */
-function nonPathEdgeTarget(token) {
-  return token.replace(EMPHASIS_EDGE, "").startsWith("/") && !isPathToken(token);
+function stripDeclaredEdges(value) {
+  const LEAD = "` \t";
+  const TRAIL = "` \t.,;:·—–";
+  let start = 0;
+  let end = value.length;
+  while (start < end && LEAD.includes(value[start])) start += 1;
+  while (end > start && TRAIL.includes(value[end - 1])) end -= 1;
+  return value.slice(start, end);
 }
 
 /**
@@ -257,7 +275,17 @@ function parsePhases(text) {
   }
   return phases.map((phase) => {
     const layerIndex = phase.body.findIndex((line) => /Layer:\s*\S/.test(line));
-    const layer = layerIndex === -1 ? null : phase.body[layerIndex].replace(/.*?Layer:\s*/, "").trim().split(/\s+/)[0].replace(/[.,;:]+$/, "").replace(/^`|`$/g, "");
+    // The declared value is matched against the closed enum exactly, never
+    // narrowed to its first whitespace token: `Layer: docs, ui` (the two-layer
+    // shape the rule owner forbids) used to lint clean as `docs`, so a
+    // malformed or out-of-enum value silently guessed instead of failing closed
+    // (F72, SPEC: a missing, malformed, or out-of-enum `Layer:` line makes the
+    // file unparseable — never guess, never partially judge).
+    const layerText =
+      layerIndex === -1
+        ? null
+        : stripDeclaredEdges(phase.body[layerIndex].replace(/.*?Layer:\s*/, "").split(/Done-when:/)[0]);
+    const layer = layerText !== null && LAYERS.includes(layerText) ? layerText : null;
     const doneIndex = phase.body.findIndex((line) => /Done-when:/.test(line));
     let doneWhen = null;
     if (doneIndex !== -1) {
@@ -304,13 +332,21 @@ function createdTargets(text) {
  * sanitized.
  */
 function sanitizeEcho(text, limit = 120) {
-  const cleaned = text
-    .replace(/[\p{Cc}\p{Cf}]+/gu, " ")
+  const cleaned = String(text)
+    // Every character outside printable ASCII is replaced, so no Unicode
+    // lookalike (a Greek `Ρ` for `P`, a Cyrillic `а` for `a`) can impersonate
+    // a block-line token in the echo. Cc/Cf were already neutered; F71 extends
+    // the strip to the whole lookalike class: destroying the glyph is what
+    // makes a forged token unreadable rather than merely byte-different.
+    .replace(/[^\x20-\x7e]+/g, " ")
     .replace(/`+/g, "")
-    .replace(/\b(phase-lint|verdict|fingerprint)/gi, (word) => `${word[0]} ${word.slice(1)}`)
-    .replace(/\b(P\d+)\s+(box)\s*-\s*(\d+)/gi, (_, phase, box, n) => `${phase[0]} ${phase.slice(1)} ${box[0]} ${box.slice(1)}-${n}`)
-    .replace(/\b(box)\s*-\s*(\d+)/gi, (_, box, n) => `${box[0]} ${box.slice(1)}-${n}`)
-    .replace(/\bP(\d+)\b/g, (_, n) => `P ${n}`)
+    // The token families are broken wherever they appear, not only at a word
+    // boundary: a junk prefix byte (`xPhase-lint`) defeated the old leading
+    // `\b` and carried a byte-exact fake through the echo (F71).
+    .replace(/(phase-lint|verdict|fingerprint)/gi, (word) => `${word[0]} ${word.slice(1)}`)
+    .replace(/(P\d+)\s+(box)\s*-\s*(\d+)/gi, (_, phase, box, n) => `${phase[0]} ${phase.slice(1)} ${box[0]} ${box.slice(1)}-${n}`)
+    .replace(/(box)\s*-\s*(\d+)/gi, (_, box, n) => `${box[0]} ${box.slice(1)}-${n}`)
+    .replace(/P(\d+)\b/g, (_, n) => `P ${n}`)
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}…` : cleaned;
@@ -333,15 +369,16 @@ function box2(phase) {
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
     for (const { token, valid } of candidatePathTokens(task)) {
-      // A path-like target the grammar cannot tokenize is ambiguous, never
-      // silently targetless (F56): dropping it let the task be judged exempt
-      // and the layer check never run (false PASS), while the `_…_` variant
-      // blocked. The same holds when a non-emphasis leading edge was stripped
-      // (`~/notes/x.md` — F63). Ordinary prose that merely contains a `/` (an
-      // inline `--body`/heredoc note, a URL, a glob) is not a target and stays
-      // exempt.
+      // Every path-like candidate the grammar cannot tokenize but that carries
+      // an embedded target is ambiguous, never silently targetless: dropping
+      // one let the task be judged exempt and the layer check never ran — a
+      // false PASS. That covers the emphasis-wrapped shape (F56), the
+      // `~`-stripped shape (F63) and the whole untokenizable class (F69: an
+      // em-dash, ellipsis or curly-quote residue). Prose that carries no target
+      // (an inline `--body`/heredoc note) stays exempt, and a URL or a glob is
+      // never a candidate at all (`looksPathLike` rejects those references).
       if (!valid) {
-        if (emphasisWrappedTarget(token) || nonPathEdgeTarget(token)) return { findings, ambiguous: token };
+        if (embeddedTarget(token) !== null) return { findings, ambiguous: token };
         continue;
       }
       if (!isTargetToken(token)) continue;
