@@ -843,3 +843,109 @@ AC8 corrected to the shipped two-amendment state, the SPEC stale-version
 surfaces swept, a dated `## Amendments` row added and a fresh acceptance
 receipt recorded — F87's surfaces are repaired via the owner-authorized
 amendment path; its row flip stays owed to the fold cycle.
+
+Cycle 13 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-14 (`review-change`, single-reviewer, five applicable axes code/
+security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR
+#212 head `5eb7f105`). The post-cycle-12 fold delta (`c922a34a..5eb7f105`,
+folds F80/F84/F86/F87/F89 + the ED12–ED14 owner rulings) escalated to a full
+pass (size: 27 files, +408/−761 > 200; width: CHANGELOG/ROADMAP/budgets/
+decisions outside the F80–F89 cited union). All 76 previously `folded: yes`
+rows re-verified REPAIRED at their cited locations by five isolated
+re-verification agents — 25 parser/grammar rows via fresh /tmp reproducers on
+node and bun (F57 runtime parity at a 3M-char boundary, F80 tail accepted in a
+clean fixture), 14 echo/output/perf rows (EPIPE + drain, sanitizer vectors,
+degenerate-input timing), 7 corpus rows via mutation probes (every mutant red),
+and 30 record rows via direct reads, exact ceil(measured × 1.10) arithmetic,
+transpose checks and mirror `cmp`. Structural preconditions green at
+`5eb7f105`: acceptance blob `63f62e4e…` recomputed = the fresh ED14 receipt;
+AC1–AC10 validators re-run green (AC1 dogfood `3afa2601…`, AC3 fail-closed
+edges, AC4 determinism, AC5 corpus 101/101, AC6 no-network, AC7 node parity,
+AC8 all three skills + budgets + routes + discovery + mirrors byte-identical,
+AC9 schema diff empty, AC10 vehicle); full scripts suite 360/360; pi package
+185/185; workspace clean of the reviewed diff (the fix/221 WIP files in the
+tree — `scripts/pre-execution-contract.mjs`,
+`scripts/workflow-status-sensor.test.mjs`, `scripts/workflow-status.mjs`,
+`scripts/pre-execution-receipt-parent.test.mjs`, `docs/fix/221-*`, mtimes
+19:29–19:32 — are a parallel-session unit, not authored by this review and not
+a finding; the verdict binds `5eb7f105` only). The isolated context-clean
+finders (code/security/verify/brand/perf) returned candidates; the classifier
+(`review-implementation`) applied the severity floor: nine fix-now rows
+F91–F99 below (F92 is `regression of F80`, F93 is `regression of F27`), one
+replan-in-unit (F92's plan-owned artifact re-cut), and four report-only notes
+never persisted (the untracked `tmp/` stale "ya merged" — ED13, no longer on
+the committed tree; the bun `--bun node --test` shim limitation; the
+root-level `bundle:skills` script absence; a 13.35 s test-suite wall time
+micro-opt). One candidate REFUTED, never a row: `.pi/mcp.json` `@latest` — the
+recorded F18 owner decision (5th refutation).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F91 | scripts/phase-lint.mjs:56 (PHASE_HEADING) | code/security | high | fix-now | fold: normalize the invisible/whitespace after the phase number and require a non-empty title — a Cf/Zs char (U+200B, mid-line U+FEFF) or an empty `### P2 —` heading defeats `\s*`/`(\S.*)`, eliding the phase boundary so the next phase's `Layer:`+tasks absorb into the prior phase and a docs-declared `scripts/` task launder to PASS under the prior layer; contradicts the code's own F44 claim; corpus fixture + a control | no |
+| VF-91 | scripts/phase-lint.mjs:56 · reviewer review-change (code+security pass) + orchestrator reproducer · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck failing reproducers: control `### P2 — Ghost docs` (`Layer: docs`, task `Create \`scripts/b.ts\``) → `P2 box-2: … belongs to layer config/infra, not docs` exit 1; launder `### P2\u200b — Ghost docs` → `P1 Phase-lint: PASS (8/8) · fingerprint P1:config/infra:2:real-phase`, `verdict PASS`, exit 0; empty-title `### P2 —` (1 task) → P2 elides, its task merges into P1, `verdict PASS` exit 0; node+bun identical | code | confirmed | finding-mark | n/a | n/a |
+| F92 | docs/features/37-phase-lint-script/PLAN.md:93 + docs/features/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55} | code | med | replan-in-unit | regression of F80 — plan owner re-cuts the unit's own planning artifacts so the gate stops blocking on them: 37-PLAN P7 (`Hardening & PR`) carries no `Layer:` line; 38-PLAN/TASKS carry ordinary prose slash-compounds (`stdout/stderr`, `roadmap/fix-index`) that the F77-folded fail-closed branch treats as ambiguous → whole-file `BLOCKED: unparseable`, masking a latent box-3 defect (38-PLAN P4 declares "Task count: 9" but has 12 real tasks, over the hardening ≤10 budget); the gate's fail-closed behavior is correct — the artifacts are the defect | no |
+| VF-92 | docs/features/37-phase-lint-script/PLAN.md:93 · reviewer review-change (verify pass) + orchestrator reproducer · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck: `bun scripts/phase-lint.mjs docs/features/37-phase-lint-script/PLAN.md` → `verdict BLOCKED: unparseable` exit 1 (P7 layerLine=-1, 8 tasks); 38-PLAN.md + 38-TASKS.md → exit 1 each (P1 token `stdout/stderr`); 38-PLAN P4 = 12 `- [` lines vs declared "Task count: 9"; F80's cited tail shape itself REPAIRED (clean /tmp `Layer: docs · <prose>` → PASS) | code | confirmed | finding-mark | n/a | n/a |
+| F93 | CHANGELOG.md:753 + CHANGELOG.es.md:755 + docs/workflow/SKILL_CONTEXT_BUDGETS.json (policy.declared, re-basis #5) | brand/record | med | fix-now | regression of F27 — fold: re-basis the 2026-09-12 CHANGELOG rows to the shipped ceilings (the F86 fold's re-basis #5 moved them: the seven execute-phase:* 11667/…/11627 → 11739/…/11699, the scaffold/fix pair 24175/27064 → 24286/27169) and repoint/repair the `policy.declared` re-basis #5 growth-source, which names the CHANGELOG 2026-09-14 release-log entry (CHANGELOG.md:752) that says nothing about ceilings — a dangling pointer | no |
+| VF-93 | CHANGELOG.md:753 · reviewer review-change (brand pass) + orchestrator direct read · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck direct read vs JSON: CHANGELOG.md:753/.es.md:755 cite 11667/…/11627 + 24175/27064; docs/workflow/SKILL_CONTEXT_BUDGETS.json `routes[]` = 11739/…/11699 + 24286/27169 (all −71…−111 off); grep of the finals in both changelogs = 0 hits; `policy.declared` re-basis #5 ends "the CHANGELOG 2026-09-14 release-log entry is the named growth source" while CHANGELOG.md:752 covers only the linter-absent fallback | brand | confirmed | finding-mark | n/a | n/a |
+| F94 | scripts/phase-lint.mjs:454 (STANDALONE_OR) + phase-lint.test.mjs (corpus) | verify | med | fix-now | fold: pin box-5's hyphen-adjacent guard with a corpus fixture — a mutant dropping the `-` from `(?<![\p{L}\p{N}_-])or(?!…)` survives the suite 101/101 while flipping a real `equal-or-greater` task into a box-5 finding; the corpus has no discriminating fixture | no |
+| VF-94 | phase-lint.mjs:454 · reviewer review-change (verify pass) + orchestrator mutant probe · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck: mutant (guard `-` dropped) → `node --test` 101 pass/0 fail (green); live on task `Make startup equal-or-greater than one second faster` → mutant `P1 box-5: task 1 offers either/or alternatives` vs pristine `PASS` exit 0 | verify | confirmed | finding-mark | n/a | n/a |
+| F95 | scripts/phase-lint.mjs:383 (WORD_JOINER) + phase-lint.test.mjs (corpus) | verify | med | fix-now | fold: pin box-1's hyphen-joined-compound guard with a corpus fixture — a mutant adding `\s*-\s*` to the `and` joiner survives 101/101 while flipping the real title "Slim the routes to run-and-paste" PASS→BLOCKED | no |
+| VF-95 | phase-lint.mjs:383 · reviewer review-change (verify pass) + orchestrator mutant probe · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck: mutant → 101 pass/0 fail; live title `Slim the routes to run-and-paste` → mutant `P1 box-1: title joins deliverables with “and”/“y”` exit 1 vs pristine `PASS` exit 0 | verify | confirmed | finding-mark | n/a | n/a |
+| F96 | docs/features/37-phase-lint-script/testing.md:15 | verify/record | med | fix-now | fold: correct the live corpus count — "Corpus 39/39 after the P6 grammar-conformance landing" is stale; the suite at HEAD is 101 tests (folds F31–F89 added fixtures without updating the count; testing.md last touched by P6 commit d77f1f48) | no |
+| VF-96 | testing.md:15 · reviewer review-change (verify pass) · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck: `node --test scripts/phase-lint.test.mjs` → 101 pass; `grep -c '^test('` → 87 top-level; `git log --oneline -- docs/features/37-phase-lint-script/testing.md` → last commit d77f1f48 (P6) | verify | confirmed | finding-mark | n/a | n/a |
+| F97 | CHANGELOG.md:95 + CHANGELOG.es.md:97 | brand/record | med | fix-now | fold: sync the 0.9.2 row's mirror skill versions — it cites `execute-phase` 4.5.1, `plan-fix` 3.2.1, `plan-feature-scaffold` 2.3.1, but the shipped 0.9.2 package (packages/pi-agentic-workflow/skills/*/SKILL.md) carries 4.5.2/3.2.2/2.3.2 (the F86 re-bundle f2c3aed0 landed in the same version with no bump row) | no |
+| VF-97 | CHANGELOG.md:95 · reviewer review-change (brand pass) · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck direct read: CHANGELOG.md:95/.es.md:97 cite 4.5.1/3.2.1/2.3.1; packages/pi-agentic-workflow/skills/execute-phase/SKILL.md:4 = 4.5.2, plan-fix/SKILL.md:4 = 3.2.2, plan-feature-scaffold/SKILL.md:4 = 2.3.2; package.json version 0.9.2 | brand | confirmed | finding-mark | n/a | n/a |
+| F98 | scripts/phase-lint.mjs:55 (EMPHASIS_EDGE) | perf | high | fix-now | fold: linearize the `[*~_]+$` alternation — O(L²) on any whitespace-delimited token with an interior `*~_` run, run on every token of every task before the path-like verdict; a ~250 KB token (`a`+250k×`*`+`b`) → `timeout 60` rc=124 on node AND bun (ReDoS on untrusted plan input; same class the header :30-33 and F64 documented/fixed) + corpus timing pin | no |
+| VF-98 | phase-lint.mjs:55 · reviewer review-change (perf pass) + orchestrator reproducer · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck measured: node scaling 12.5k→180 ms, 25k→737 ms, 50k→2883 ms, 100k→10481 ms, 250k→69492 ms (×4 per doubling); own 250 KB fixture → `timeout 60 node` rc=124 and `timeout 60 bun` rc=124 | perf | confirmed | finding-mark | n/a | n/a |
+| F99 | scripts/phase-lint.mjs:129 (embeddedTarget) + :407 (box2) | perf | high | fix-now | fold: linearize the `/^\/+|\/+$/g` edge-trim — O(L²) on invalid path-like candidates with an interior `/` run (`a///…///b`: empty segments make isPathToken false, so embeddedTarget runs); fail-closed verdict correct but unreachable at size; ~250 KB token → rc=124 node+bun + corpus timing pin | no |
+| VF-99 | phase-lint.mjs:129 · reviewer review-change (perf pass) + orchestrator reproducer · HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c · recheck measured: node 25k→610 ms, 50k→2458 ms, 100k→9434 ms, 250k→61013 ms (bun 25k→1045 ms, 50k→4211 ms); own 250 KB fixture → `timeout 60 node` rc=124, `timeout 60 bun` rc=124; at n=20k verdict parity holds (BLOCKED: unparseable) — the defect is the time cliff, not the verdict | perf | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 5eb7f10524c777a0b48235d0cd8d1b130191285c | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: repeated: F80 (F92 = regression of F80 — the gate still bricks on
+  the unit's own PLAN/38 artifacts, though the cited tail shape is now
+  repaired), F27 (F93 = regression of F27 — the F86 re-basis #5 moved the
+  ceilings again without syncing the record rows) / new: F91, F94–F99
+- Snapshots: c922a34a2a2e57da4345614359cee0e02663a9a5 →
+  5eb7f10524c777a0b48235d0cd8d1b130191285c (cycle-12 reviewed head → cycle-13
+  reviewed head)
+- Missed: cycle 12 verified each fold at its cited shape and its recorded
+  shape class, but never probed the phase-heading boundary's invisible-char /
+  empty-title elision (F91 — a Cf/Zs after the number, or an empty title,
+  defeats `\s*`/`(\S.*)`, a shape outside CR/U+2028/U+2029/BOM-at-line-start),
+  never mutation-probed the box-5/box-1 hyphen-joined guards (F94/F95 — the
+  `equal-or-greater`/`run-and-paste` compounds have no discriminating fixture,
+  so a one-line mutant shipped green), never re-read the record surfaces the
+  F86 fold rewrote (F93/F97 — re-basis #5 and the 0.9.2 re-bundle landed in
+  the same versions without touching the CHANGELOG/declared rows), and the
+  perf pass never swept the sibling `-anchored-$` trim class one function over
+  the fixed PATH_TOKEN/EDGE sites (F98/F99 — O(L²) on interior `*~_`/`/` runs,
+  rc=124 on both runtimes)
+- Owning stage: source (F91, F93–F99) + plan (F92 — the unit's planning
+  artifacts)
+- Why the prior review failed: each fold repairs its cited shape and pins it,
+  and cycle 12 verified at the recorded shapes; the heading-boundary's
+  invisible-prefix class was bounded at CR/U+2028/U+2029/BOM-line-start (never
+  the Cf/Zs-after-number or empty-title forms), the hyphen-joined compound
+  guards shipped with the F58/F59 corpus pins but without a mutant-killing
+  fixture of their own, the F86 fold re-bundled/ re-based without the
+  synchronous CHANGELOG/declared updates that the same fold's own policy
+  requires, and the `$`-anchored trim class was fixed at its cited site only
+- Route to owner: /fold-findings (explicit ids F91 + F93 + F94 + F95 + F96 +
+  F97 + F98 + F99); F92 → the plan owner's artifact re-cut, then a fresh
+  /review-plan 37-phase-lint-script
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–13 run on the
+user's explicit invocations past the cap. The eight source-owned fix-now rows
+F91 + F93–F99 are foldable in one atomic batch (parser/normalizer fix + two
+corpus pins + three record syncs + two perf linearizations); F92 is
+plan-owned (artifact re-cut, then /review-plan). Standby owner decisions D-1/
+D-2 are resolved (ED12/ED13); the frozen-manifest amendment (ED14) landed and
+F87's row was flipped by the fold cycle. The four report-only notes (the
+untracked `tmp/` stale "ya merged" — ED13 residual; the bun `--bun node
+--test` shim limitation; the root-level `bundle:skills` script absence; a
+13.35 s test-suite wall-time micro-opt) are report-only, never persisted, and
+carry no trigger-based debt (the perf O(L²) rows are immediate fix-now, not
+deferred debt).
