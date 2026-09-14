@@ -366,8 +366,9 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-7`.
 ### Architecture impact
 
 - Affected surfaces: `scripts/phase-lint.mjs` (new), `scripts/phase-lint.test.mjs`
-  (new), `skills/phase-contract/SKILL.md` (rule-1 amendment, v1.0.1 → 1.0.2 —
-  owner-sanctioned, P1 of this PR), `skills/plan-feature-scaffold/SKILL.md`,
+  (new), `skills/phase-contract/SKILL.md` (rule amendments, v1.0.1 → 1.0.2 in
+  P1 — owner-sanctioned — and v1.0.2 → 1.0.3 in the cycle-1 fold F5, per the
+  2026-09-14 amendment), `skills/plan-feature-scaffold/SKILL.md`,
   `skills/plan-fix/SKILL.md`, `skills/execute-phase/SKILL.md` (+ its preflight
   reference), and the pi package mirror (`packages/pi-agentic-workflow`,
   re-bundled via `npm run bundle:skills`).
@@ -585,7 +586,9 @@ Layer: docs. Done-when: `grep -n "Hardening & PR" skills/phase-contract/SKILL.md
       literal closing title `Hardening & PR` as the sole exception (`&` is a
       normalization separator; title-deliverable normalizes to `hardening-pr`);
       any other `&`-joined title still FAILs
-- [ ] Run `bump-skill` for the amended skill: bump version 1.0.1 to 1.0.2 and
+- [ ] Run `bump-skill` for the amended skill: bump version 1.0.1 to 1.0.2 in
+      P1 (the cycle-1 fold F5 later carried the owner to 1.0.3 — see
+      Amendments) and
       add the new
       CHANGELOG.md and CHANGELOG.es.md rows + README/SKILLS table sync
 - [ ] Re-run `npm run bundle:skills` (pi mirror parity)
@@ -774,3 +777,16 @@ producer under the crate is a recorded follow-up (`known-issues.md`
 redistribution (roadmap row 43, declined) is unchanged: the crate is created
 here, and producers landing after this merge use it. Roadmap rows 40 and 42
 depend on 37+38 (PE-011).
+
+## Amendments
+
+- **2026-09-14 — AC8 amendment-count correction (user-approved via the
+  review-cycle-12 decision form; decisions.md ED14).** The frozen AC8 row said
+  the `phase-contract` owner was "amended once in P1 (rule-owner exception)
+  and never re-edited afterward". The shipped state is two amendments — P1
+  rule-1 authorization (v1.0.1 → 1.0.2) and the cycle-1 fold F5 rule-3
+  ≥1-task minimum (v1.0.2 → 1.0.3), both user-approved and CHANGELOG-recorded
+  — so the AC8 row is replaced to match, the stale v1.0.2-only surfaces at
+  :368-370 and :588 are swept to the shipped state, and a fresh acceptance
+  receipt is recorded with the replacement blob. No validator is narrowed;
+  the grep targets are unchanged.

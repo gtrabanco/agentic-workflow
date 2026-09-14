@@ -18,7 +18,7 @@ user-approved SPEC amendment.
 | AC5 | Corpus of test plans (valid, invalid, ambiguous) maps to its expected verdict + reason code | `node --test scripts/phase-lint.test.mjs` → exit 0 |
 | AC6 | No network calls in the linter | `grep -nE "fetch\(|require\(['\"](http|https)" scripts/phase-lint.mjs` → empty |
 | AC7 | Node fallback parity | `node scripts/phase-lint.mjs <corpus-valid-plan.md>` → exit 0 |
-| AC8 | The three consumer skills reference the script; `phase-contract` amended once in P1 (rule-owner exception) and never re-edited afterward; context budgets + CLI discovery pass; pi mirror re-bundled | `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches in all three; `bun scripts/check-skill-context.mjs` → exit 0; `npx skills add . --list` → exit 0; `npm run bundle:skills` re-run |
+| AC8 | The three consumer skills reference the script; `phase-contract` amended twice (P1 rule-1 authorization → 1.0.2; cycle-1 fold F5 rule-3 ≥1-task minimum → 1.0.3 — both user-approved per the 2026-09-14 SPEC amendment); context budgets + CLI discovery pass; pi mirror re-bundled | `grep -n "phase-lint.mjs" skills/plan-feature-scaffold/SKILL.md skills/plan-fix/SKILL.md skills/execute-phase/SKILL.md` → matches in all three; `bun scripts/check-skill-context.mjs` → exit 0; `npx skills add . --list` → exit 0; `npm run bundle:skills` re-run |
 | AC9 | No schema vocabulary change | `git diff --name-only main...HEAD -- packages/agentic-workflow-schema` → empty |
 | AC10 | Vehicle-rule artifacts present (crate + tmp convention) | `test -d packages/agentic-workflow && test -f packages/agentic-workflow/package.json && test -d .agentic-workflow/tmp` → exit 0 |
 
