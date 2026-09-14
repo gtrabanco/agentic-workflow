@@ -30,8 +30,11 @@
  * numbered/lettered markers or ordinal words, not a bare comma list; the box-2
  * target is the first path-like token outside a backticked command span,
  * recognized by a single-pass segment check (runtime-stable across node and
- * bun); an emphasis-wrapped target the grammar cannot tokenize fails closed as
- * ambiguous, never silently targetless (F56/F57); and
+ * bun) whose edge trim is two bounded scans (a `$`-anchored trim class is
+ * quadratic on a punctuation-run token — F64); a path-like target the grammar
+ * cannot tokenize fails closed as ambiguous, never silently targetless, both
+ * when it is emphasis-wrapped and when a non-emphasis leading edge was
+ * stripped (`~/notes/x.md` — F56/F57/F63); and
  * every JavaScript line terminator is normalized before the grammar sees the
  * text, so no rendered-as-invisible separator can elide a phase (F44).
  */
@@ -114,11 +117,43 @@ function emphasisWrappedTarget(token) {
   return core !== token && isTargetToken(core);
 }
 
+/**
+ * A path-like token that reads as a path only because a non-emphasis leading
+ * edge was stripped: `~/notes/x.md` loses its `~` (a home-dir prefix, not
+ * markdown emphasis) and the remainder begins with `/`, an empty leading
+ * segment the grammar cannot tokenize. The stripped shape used to be silently
+ * dropped, so the task was judged targetless and exempt and the layer check
+ * never ran: `~/notes/x.md` answered `verdict PASS` while the `~docs/x.md`
+ * variant failed closed as `unparseable` (F63). Same remedy as the
+ * emphasis-wrapped shape: fail closed, never a guess.
+ */
+function nonPathEdgeTarget(token) {
+  return token.replace(EMPHASIS_EDGE, "").startsWith("/") && !isPathToken(token);
+}
+
+/**
+ * Trim markdown/punctuation edges in one bounded pass over each end. The
+ * trailing edge used to be a `$`-anchored `+`-quantified class, which retries
+ * at every start position and is therefore O(L²) on a punctuation-run token
+ * (`.....name`): a ~244 KB crafted plan — linter input that may originate in a
+ * third-party forge issue — exceeded 60 s per run and hung the pre-flight gate
+ * (F64). Two bounded scans are O(L) and answer identically on node and bun.
+ */
+const LEAD_EDGE = "`\"'({[";
+const TRAIL_EDGE = "`\"')]}.,;:!?";
+function trimTokenEdges(raw) {
+  let start = 0;
+  while (start < raw.length && LEAD_EDGE.includes(raw[start])) start += 1;
+  let end = raw.length;
+  while (end > start && TRAIL_EDGE.includes(raw[end - 1])) end -= 1;
+  return raw.slice(start, end);
+}
+
 /** Whitespace-split path-like candidates in document order, with the grammar's verdict. */
 function candidatePathTokens(text) {
   const candidates = [];
   for (const raw of stripQuotedCommands(text).split(/\s+/)) {
-    const token = raw.replace(/^[`"'({\[]+/, "").replace(/[`"')\]}.,;:!?]+$/, "");
+    const token = trimTokenEdges(raw);
     if (!looksPathLike(token)) continue;
     candidates.push({ token, valid: isPathToken(token) });
   }
@@ -262,7 +297,9 @@ function createdTargets(text) {
  * substring-grepping consumer can never mistake echoed text for a block line
  * (F49), including derived forms such as `Phase-linting`/`fingerprinting`
  * (F55 — the leading word boundary breaks the token at the word start, so no
- * trailing `\b` may be required), and
+ * trailing `\b` may be required), and the framework's own finding-line shape
+ * `P<n> box-<n>:` together with its leading phase token (F66 — a crafted title
+ * could otherwise carry a verbatim fake finding body into the echo), and
  * the length is bounded. Rule decisions read the RAW text; only the echo is
  * sanitized.
  */
@@ -271,6 +308,9 @@ function sanitizeEcho(text, limit = 120) {
     .replace(/[\p{Cc}\p{Cf}]+/gu, " ")
     .replace(/`+/g, "")
     .replace(/\b(phase-lint|verdict|fingerprint)/gi, (word) => `${word[0]} ${word.slice(1)}`)
+    .replace(/\b(P\d+)\s+(box)\s*-\s*(\d+)/gi, (_, phase, box, n) => `${phase[0]} ${phase.slice(1)} ${box[0]} ${box.slice(1)}-${n}`)
+    .replace(/\b(box)\s*-\s*(\d+)/gi, (_, box, n) => `${box[0]} ${box.slice(1)}-${n}`)
+    .replace(/\bP(\d+)\b/g, (_, n) => `P ${n}`)
     .replace(/\s+/g, " ")
     .trim();
   return cleaned.length > limit ? `${cleaned.slice(0, limit)}…` : cleaned;
@@ -293,13 +333,15 @@ function box2(phase) {
   const findings = [];
   for (const [index, task] of phase.tasks.entries()) {
     for (const { token, valid } of candidatePathTokens(task)) {
-      // An emphasis-wrapped target the grammar cannot tokenize is ambiguous,
-      // never silently targetless (F56): dropping it let the task be judged
-      // exempt and the layer check never run (false PASS), while the `_…_`
-      // variant blocked. Ordinary prose that merely contains a `/` (an inline
-      // `--body`/heredoc note, a URL, a glob) is not a target and stays exempt.
+      // A path-like target the grammar cannot tokenize is ambiguous, never
+      // silently targetless (F56): dropping it let the task be judged exempt
+      // and the layer check never run (false PASS), while the `_…_` variant
+      // blocked. The same holds when a non-emphasis leading edge was stripped
+      // (`~/notes/x.md` — F63). Ordinary prose that merely contains a `/` (an
+      // inline `--body`/heredoc note, a URL, a glob) is not a target and stays
+      // exempt.
       if (!valid) {
-        if (emphasisWrappedTarget(token)) return { findings, ambiguous: token };
+        if (emphasisWrappedTarget(token) || nonPathEdgeTarget(token)) return { findings, ambiguous: token };
         continue;
       }
       if (!isTargetToken(token)) continue;
@@ -417,11 +459,17 @@ function box7(phase) {
   return findings;
 }
 
-/** Box 8 — machine-checkable done-when. */
+/**
+ * Box 8 — machine-checkable done-when. The outcome vocabulary covers the
+ * explicit exit forms committed plans actually use — `exits 0`, `exit code 2`
+ * and `exits with code 0` (F45/F65) — while a bare arrow or a command with no
+ * outcome still fails.
+ */
+const OUTCOME_ANCHOR = /→\s*\S|->\s*\S|\bexits?(?:\s+with)?(?:\s+code)?\s+(?:\d+|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i;
 function box8(phase) {
   if (!phase.doneWhen) return ["phase body has no `Done-when:` line"];
   if (!/`[^`]+`/.test(phase.doneWhen)) return ["`Done-when:` carries no backticked command"];
-  if (!/→\s*\S|->\s*\S|\bexit(?:s| code)?\s+(?:\d+|zero)\b|\b(?:empty|matches|zero)\b|\bpass(?:es|ed)?\b/i.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
+  if (!OUTCOME_ANCHOR.test(phase.doneWhen)) return ["`Done-when:` carries no expected outcome"];
   return [];
 }
 
