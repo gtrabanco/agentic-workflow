@@ -129,7 +129,7 @@ export function parseReceipts(text) {
     artifactRevision: fieldFrom(chunk, "Artifact revision"),
     // A SPEC block writes `Parent: null`, a Plan block writes
     // `Parent SPEC snapshot: <64-hex>`; either line is the lineage this receipt states.
-    parent: fieldFrom(chunk, "Parent SPEC snapshot") ?? fieldFrom(chunk, "Parent"),
+    parent: recordedValue(fieldFrom(chunk, "Parent SPEC snapshot") ?? fieldFrom(chunk, "Parent")),
     authorExclusion: fieldFrom(chunk, "Author exclusion"),
     contextClean: fieldFrom(chunk, "Context clean"),
     policy: fieldFrom(chunk, "Policy"),

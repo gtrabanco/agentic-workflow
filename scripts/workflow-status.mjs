@@ -595,7 +595,8 @@ function senseStage(unitDir, unitId, stage, parent, counter = null) {
   // its repository from its own location by default, so a foreign project's receipts
   // were re-derived against the sensor's checkout — fabricated `missing`/`stale` rows.
   const args = ["verify", "--stage", stage, "--unit", unitId, "--dir", unitDir, "--root", PROJECT];
-  const boundParent = parent ?? receipt.parent;
+  // A fix unit binds no parent (SNAPSHOT.md): never pass --parent for fix receipts.
+  const boundParent = receipt.unitKind === "fix" ? null : (parent ?? receipt.parent);
   if (stage === "plan" && boundParent) args.push("--parent", boundParent);
   if (counter) counter.value += 1;
   const result = run(process.execPath, [verifier, ...args], { cwd: PROJECT });

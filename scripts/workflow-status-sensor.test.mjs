@@ -889,3 +889,59 @@ test("F20: pre-execution verifier spawns are capped and degrade, never hang", ()
   const capped = envelope.detail.pre_execution.filter((row) => /cap/i.test(row.reason ?? ""));
   assert.ok(capped.length > 0, `the over-cap rows degrade by name: ${JSON.stringify(envelope.detail.pre_execution.map((row) => row.reason))}`);
 });
+
+// ===========================================================================
+// O3 — a current fix-unit plan receipt senses current, not missing (#221)
+// ===========================================================================
+
+test("a current fix-unit plan receipt senses current, not missing (#221)", async () => {
+  // Create a fixture with an in-progress fix-index row for the #221 unit.
+  const { dir, run } = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+    extraFiles: {
+      "docs/fix/README.md": "# Active fixes\n\n## Active\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|\n| 221 | sensor-null-parent-receipt | in-progress | — | fix |",
+      "docs/fix/221-sensor-null-parent-receipt/SPEC.md": read("docs/fix/221-sensor-null-parent-receipt/SPEC.md"),
+      "docs/fix/221-sensor-null-parent-receipt/ACCEPTANCE.md": read("docs/fix/221-sensor-null-parent-receipt/ACCEPTANCE.md"),
+    },
+  });
+
+  // Build the plan snapshot digest from the fixture's committed unit files.
+  // The build action writes: digest-hash\n{JSON snapshot}
+  const buildOut = execFileSync(
+    process.execPath,
+    [path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs"), "build", "--stage", "plan", "--unit", "fix-221", "--dir", "docs/fix/221-sensor-null-parent-receipt", "--root", dir, "--unit-kind", "fix"],
+    { cwd: repoRoot, encoding: "utf8" },
+  );
+  // First line is the bare digest; the rest is the full JSON snapshot.
+  const digestLine = buildOut.indexOf("\n");
+  const digest = buildOut.slice(0, digestLine).trim();
+  const snapshot = JSON.parse(buildOut.slice(digestLine + 1));
+  const sourceRev = snapshot.sourceRevision;
+
+  // Write the receipt with the correct digest to the fixture's progress.md,
+  // then commit so the contentRevision matches the git HEAD.
+  const unitDir = path.join(dir, "docs", "fix", "221-sensor-null-parent-receipt");
+  const progressContent = [
+    "## Pre-execution review receipt v1 — plan",
+    `- Review: rp-221-001 · Snapshot: ${digest} · Verdict: plan-review-pass`,
+    "- Unit: fix-221 · Stage: plan · Unit kind: fix",
+    "- Parent SPEC snapshot: null · Parent Product receipt: none",
+    `- Source revision: ${sourceRev} · Policy: v1`,
+    `- Artifact revision: ${sourceRev}`,
+    "- Started/finished: 2027-01-01T00:00:00Z/2027-01-01T00:01:00Z · Findings: 0",
+  ].join("\n");
+  fs.writeFileSync(path.join(unitDir, "progress.md"), progressContent);
+  execFileSync("git", ["add", "docs/fix/221-sensor-null-parent-receipt/progress.md"], { cwd: dir });
+  execFileSync("git", ["commit", "-m", "docs(221): record plan review receipt"], { cwd: dir });
+
+  // Run the sensor against the fixture.
+  const result = run([]);
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+
+  // The fix-221 row must sense `current` with no gate blocker.
+  const fix221Row = envelope.detail.units?.find((u) => u.id === "fix-221");
+  assert.ok(fix221Row, "the envelope should include the fix-221 unit");
+  assert.equal(fix221Row.detail.pre_execution?.label, "current",
+    `fix-221 plan receipt should be current, not missing — ${JSON.stringify(fix221Row.detail.pre_execution)}`);
+});
