@@ -1,3 +1,9 @@
+# Session log
+
+Append-only journal of working sessions — the context git history doesn't
+record. A commit says *what* changed; an entry here says what the session set
+out to do, what was decided and *why*, and where to resume.
+
 ## 2026-09-12T15:18Z — feat/37-phase-lint-script — manual
 - **Commits:** 1 (`f3329527`)
 - **Files:** `docs/features/37-phase-lint-script/{progress.md,planning-findings.md}`
@@ -20,12 +26,6 @@
 - **Next:** `/review-plan 37-phase-lint-script` (cycle 7, binds SPEC-REVIEW-37-2 as Product
   parent) → `/execute-phase 37` for P5 plus the P6 close-out re-run. PR #212 OPEN, awaiting
   the human merge.
-
-# Session log
-
-Append-only journal of working sessions — the context git history doesn't
-record. A commit says *what* changed; an entry here says what the session set
-out to do, what was decided and *why*, and where to resume.
 
 ## 2026-09-13T07:53Z — feat/37-phase-lint-script — manual
 - **Commits:** 46 (`e60229d0`…`9eb6b5e4`)
