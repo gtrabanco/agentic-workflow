@@ -1603,6 +1603,164 @@ for (const [shape, layerBlock] of ACCEPTED_LAYER_FORMS) {
   });
 }
 
+// Fold F73 — the parse-entry normalization covered CR/U+2028/U+2029 (F44) but
+// not the UTF-8 BOM: a `\uFEFF` before the first heading made the
+// `^`-anchored heading regex miss, so the whole phase vanished from the parse,
+// its wrong-layer task was never judged, and the lint answered a false `PASS`.
+// PowerShell's `Out-File` and legacy Notepad emit the BOM by default, so the
+// elision is reachable from a plan authored elsewhere.
+const BOM_HEADING_PLAN = `\uFEFF### P1 — Docs update
+
+Layer: docs
+
+- [ ] Update \`scripts/evil.mjs\` with the change
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+
+### P2 — Second phase
+
+Layer: docs
+
+- [ ] Update \`docs/x.md\` with the change
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+`;
+
+const NO_BOM_HEADING_PLAN = BOM_HEADING_PLAN.slice(1);
+
+test("a BOM-prefixed heading never elides its phase (F73)", () => {
+  const file = fixture("f73-bom-heading.md", BOM_HEADING_PLAN);
+  const control = fixture("f73-no-bom-heading.md", NO_BOM_HEADING_PLAN);
+  const { status, stdout } = nodeRun(file);
+  const controlRun = nodeRun(control);
+  assert.equal(status, 1, "the BOM must not hide the wrong-layer task");
+  assert.match(stdout, /^P1 box-2: task 1 target `scripts\/evil\.mjs` belongs to layer config\/infra, not docs$/m);
+  assert.match(stdout, /^verdict BLOCKED: lint-blocked$/m);
+  assert.equal(stdout, controlRun.stdout, "the BOM must not change the verdict");
+});
+
+// Fold F74 — an empty path segment defeated the box-2 fail-closed predicate:
+// `scripts//evil.mjs` is a real POSIX target (interchangeable with
+// `scripts/evil.mjs`) but failed the segment test, so the candidate dropped to
+// targetless prose, the layer check never ran, and the file answered `PASS`
+// while its single-slash twin blocked.
+const EMPTY_SEGMENT_TARGET_PLAN = `# Empty segment
+
+### P1 — Docs update
+
+Layer: docs
+
+- [ ] Update \`scripts//evil.mjs\` with the change
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+`;
+
+const SINGLE_SLASH_TARGET_PLAN = EMPTY_SEGMENT_TARGET_PLAN.replace("scripts//evil.mjs", "scripts/evil.mjs");
+
+test("an empty path segment fails closed, never drops to prose (F74)", () => {
+  const file = fixture("f74-empty-segment.md", EMPTY_SEGMENT_TARGET_PLAN);
+  const control = fixture("f74-single-slash.md", SINGLE_SLASH_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the double-slash target must not pass as targetless");
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+  // The single-slash twin keeps the ordinary box-2 layer finding: the two
+  // shapes are the same target, so neither may answer PASS.
+  const controlRun = nodeRun(control);
+  assert.equal(controlRun.status, 1);
+  assert.match(controlRun.stdout, /^P1 box-2: task 1 target `scripts\/evil\.mjs` belongs to layer config\/infra, not docs$/m);
+});
+
+// Fold F75 — the SPEC-frozen quoted-command clause (SPEC §Design box-2: a
+// backticked span beginning with a runtime word is a quoted command, never a
+// target) shipped with no discriminating fixture: deleting
+// `stripQuotedCommands` left the suite green, so the clause could vanish
+// undetected while committed plans block on the span's inner path.
+const QUOTED_COMMAND_PLAN = `# Quoted command
+
+### P1 — Run the diff
+
+Layer: config/infra
+
+- [ ] Run \`git diff --stat docs/x.md\` before the review
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+`;
+
+test("a runtime-led backticked span is a quoted command, never a target (F75)", () => {
+  const file = fixture("f75-quoted-command.md", QUOTED_COMMAND_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0, "the quoted span's inner path is not the task target");
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+// Fold F76 — box-4's multi-file clause ("names more than 1 created file of
+// distinct concerns") shipped with no fixture: deleting the clause kept the
+// suite green, and the CREATION_VERB variant `add a new file` was never
+// exercised at all.
+const MULTI_FILE_PLAN = `# Multi file
+
+### P1 — Extract the helpers
+
+Layer: docs
+
+- [ ] Create \`docs/a.md\` and \`docs/b.md\`
+- [ ] Add a new file \`docs/c.md\` and \`docs/d.md\`
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+`;
+
+test("box 4 reports a task that creates two files (F76)", () => {
+  const file = fixture("f76-multi-file.md", MULTI_FILE_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-4: task 1 creates 2 files of distinct concerns$/m);
+  assert.match(stdout, /^P1 box-4: task 2 creates 2 files of distinct concerns$/m);
+});
+
+// Fold F77 — the box-2 discrimination between a prose slash-compound and a real
+// target was unpinned (only the 3.6 MB degenerate F57 token exercised the
+// dotless-compound class), so a one-line mutant that exempted realistic
+// compounds kept the suite green while flipping committed plans. The frozen
+// reading is pinned on both sides here: a path-like token the prefix table
+// cannot map is *ambiguous* → `unparseable`, "never a guess" (SPEC §Design
+// box-2), while a real dotless target still maps by the `*.md` row. Changing
+// either reading is a SPEC amendment, not a corpus edit.
+const PROSE_COMPOUND_PLAN = `# Prose compound
+
+### P1 — Capture the streams
+
+Layer: config/infra
+
+- [ ] Ensure \`stdout/stderr\` is captured in the run log
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+`;
+
+const DOTLESS_REAL_TARGET_PLAN = `# Dotless real target
+
+### P1 — Handle recovery
+
+Layer: config/infra
+
+- [ ] Update \`CRASH_RECOVERY.md\` with the fallback
+
+Done-when: \`grep -n x docs/x.md\` → matches.
+`;
+
+test("an unmappable prose compound fails closed, never guesses a layer (F77)", () => {
+  const file = fixture("f77-prose-compound.md", PROSE_COMPOUND_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+test("a real dotless target still maps by the `*.md` row (F77)", () => {
+  const file = fixture("f77-dotless-target.md", DOTLESS_REAL_TARGET_PLAN);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^P1 box-2: task 1 target `CRASH_RECOVERY\.md` belongs to layer docs, not config\/infra$/m);
+});
+
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no
 // longer leaves ~4 MB behind per invocation (90 stale directories had
 // accumulated).

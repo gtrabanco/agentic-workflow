@@ -127,7 +127,15 @@ function looksPathLike(token) {
 function embeddedTarget(token) {
   for (const run of token.split(/[^A-Za-z0-9_./-]+/)) {
     const candidate = run.replace(/^\/+|\/+$/g, "");
-    if (candidate !== "" && isTargetToken(candidate)) return candidate;
+    if (candidate === "") continue;
+    // A repeated separator (`scripts//evil.mjs`) still names a real POSIX
+    // target — interchangeable with `scripts/evil.mjs` — but the frozen token
+    // grammar accepts only one-or-more `/`-separated segments, so the token is
+    // untokenizable and must fail closed instead of dropping to targetless
+    // prose and skipping the layer check (F74; the F69 class one segment
+    // short of the class boundary).
+    const collapsed = candidate.replace(/\/{2,}/g, "/");
+    if (isTargetToken(collapsed)) return collapsed;
   }
   return null;
 }
@@ -228,16 +236,24 @@ function closesFence(trimmed, fence) {
 }
 
 /**
- * Normalize every JavaScript line terminator before parsing (F44). A lone CR,
- * or a U+2028/U+2029 inside a heading or a task line, renders as no line break
- * at all yet terminates `.` and `$` in the grammar regexes — so the line
- * silently failed every match, whole phases vanished from the parse, the task
- * budget went unchecked, and the lint answered a false `PASS`. CR becomes the
- * line ending it is in Markdown; U+2028/U+2029 become a space, because Markdown
- * has no line break there and the content must stay on its line, never vanish.
+ * Normalize every JavaScript line terminator before parsing (F44), plus the
+ * UTF-8 BOM (F73). A lone CR, or a U+2028/U+2029 inside a heading or a task
+ * line, renders as no line break at all yet terminates `.` and `$` in the
+ * grammar regexes — so the line silently failed every match, whole phases
+ * vanished from the parse, the task budget went unchecked, and the lint
+ * answered a false `PASS`. CR becomes the line ending it is in Markdown;
+ * U+2028/U+2029 become a space, because Markdown has no line break there and
+ * the content must stay on its line, never vanish. A U+FEFF at the start of
+ * the file or of any line is invisible in rendered Markdown, yet it made the
+ * `^`-anchored heading regex miss — the same elision, reachable from any plan
+ * written by PowerShell's `Out-File` or legacy Notepad, which emit a BOM by
+ * default.
  */
 function normalizeTerminators(text) {
-  return text.replace(/\r\n?/g, "\n").replace(/[\u2028\u2029]/g, " ");
+  return text
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u2028\u2029]/g, " ")
+    .replace(/(^|\n)\uFEFF/g, "$1");
 }
 
 /**
