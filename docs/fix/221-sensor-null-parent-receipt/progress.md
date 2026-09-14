@@ -54,3 +54,24 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
 - `node --test --test-name-pattern="current fix-unit plan receipt senses current" scripts/workflow-status-sensor.test.mjs` → exit 0 (1 pass)
 - `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (52 pass)
 - `node --test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/pre-execution-timeline.test.mjs scripts/pre-execution-quality.test.mjs` → exit 0 (93 pass)
+
+## execute-phase P2 — Hardening & PR
+
+- Task 1 — full verification gate:
+  - `cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build` → exit 0 (dist rebuilt)
+  - `node --test scripts/*.test.mjs` → exit 0 (266 pass)
+  - `bun scripts/check-skill-context.mjs` → exit 0 (39 skills PASS)
+- Task 2 — pending-docs: `git status --porcelain -- docs/` → empty after the flip commit (the only untracked docs artifact was the transient `pr-body.md`, deleted after PR open; not repo content).
+- Task 3 — set `docs/fix/README.md` #221 row to `done`, commit (`chore(fix): mark #221 done as built, PR pending`).
+- Task 4 — `git push -u origin fix/221-sensor-null-parent-receipt` → pushed.
+- Task 5 — `gh pr create --base main --title "fix(sensor): receipt parent null-word + fix no-parent bind (#221)" --body-file docs/fix/221-sensor-null-parent-receipt/pr-body.md` → **PR #223**: https://github.com/gtrabanco/agentic-workflow/pull/223 · body includes `Closes #221`.
+- Task 6 — updated the #221 index row to `done · [#223](https://github.com/gtrabanco/agentic-workflow/pull/223)`.
+- Task 7 — `docs: link PR #221` committed and pushed (`git status --porcelain` empty; nothing unpushed).
+- O5 green (full suite 266 + skill-context 39); O6 green via read-verify: `grep -cE "sensor-null-parent-receipt.*done · \[#"` → 1.
+- Fix unit is `done` (built, PR #223 open — merge state lives in the forge).
+
+## P2 validators
+- `cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build` → exit 0
+- `node --test scripts/*.test.mjs` → exit 0 (266 pass)
+- `bun scripts/check-skill-context.mjs` → exit 0 (39 skills)
+- `grep -cE "sensor-null-parent-receipt.*done · \[#"` docs/fix/README.md → 1
