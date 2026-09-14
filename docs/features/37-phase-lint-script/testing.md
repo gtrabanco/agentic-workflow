@@ -12,12 +12,10 @@ Artifact revision: `37-plan-7`.
   its test files, a source target in `hardening` still BLOCKs, a test file
   beside its implementation keeps the prefix-table mapping, and `close-out` is
   deliberately not given the mapping (fail-closed — the owner rule names
-  `hardening` only). Corpus 39/39 after the P6 grammar-conformance landing
-  (33 at the `37-plan-7` re-cut and 30 at the P5 landing; the cycle-4 source
-  folds F31/F32/F35 added the task-grammar, sanitizer, and teardown fixtures,
-  and P6 added the six F30/F33 fixtures: bare standalone `or`, embedded-word
-  negative, fenced fragment, unclosed fence, tilde fence, and the
-  equal-or-greater fence-closing nesting).
+  `hardening` only). Corpus 101/101 after the cycle-13 review folds (37 at the
+  `37-plan-7` re-cut; the cycle-4 fold F31/F32/F35, the F37–F77 folds, the
+  F80–F89 folds, and the cycle-13 F91–F99 folds added the task-grammar,
+  sanitizer, teardown, hyphen-guard, invisible-char, and timing fixtures).
 - **Runtime parity:** the same corpus runs under bun and node
   (`bun scripts/phase-lint.mjs` / `node scripts/phase-lint.mjs`); AC7 pins the
   node fallback with exit 0 on a valid plan.

@@ -52,8 +52,23 @@ const RUNTIME_WORDS = new Set(["bun", "node", "npm", "npx", "git", "grep", "diff
 const EXTENSIONS = [".md", ".mjs", ".js", ".json", ".yml", ".yaml", ".ts"];
 const PATH_SEGMENT = /^[A-Za-z0-9_.-]+$/;
 const HAS_LETTER = /[A-Za-z]/;
-const EMPHASIS_EDGE = /^[*_~]+|[*_~]+$/g;
-const PHASE_HEADING = /^ {0,3}#{2,4}\s+P(\d+)\s*[—-]\s*(\S.*)$/;
+const PHASE_HEADING = /^ {0,3}#{2,4}\s+P(\d+)\s*[—-]\s*(.*)$/;
+/**
+ * Strip markdown emphasis (asterisks, underscores, tildes) from both ends of a
+ * token in one bounded pass over each end. The `$`-anchored `+`-quantified
+ * alternation it replaces retries at every start position and is therefore
+ * O(L²) on a token with an interior `*~_` run (`a***…**b`): a ~250 KB crafted
+ * plan — linter input that may originate in a third-party forge issue —
+ * exceeded 60 s per run and hung the pre-flight gate on node AND bun (F98;
+ * the same class as the F64 trailing-trim, fixed the same way).
+ */
+function trimEmphasisEdges(raw) {
+  let start = 0;
+  while (start < raw.length && "*_~".includes(raw[start])) start += 1;
+  let end = raw.length;
+  while (end > start && "*_~".includes(raw[end - 1])) end -= 1;
+  return raw.slice(start, end);
+}
 const FENCE_OPEN = /^(`{3,}|~{3,})/;
 const FENCE_CLOSE = /^(`{3,}|~{3,})$/;
 const INLINE_COMMAND = /`([^`]*)`/g;
@@ -108,7 +123,7 @@ function isTargetToken(token) {
  * exempt because it never reaches the candidate set.
  */
 function looksPathLike(token) {
-  const core = token.replace(EMPHASIS_EDGE, "");
+  const core = trimEmphasisEdges(token);
   if (core.length === 0) return false;
   if (core.includes("://") || /[*?]/.test(core)) return false;
   return core.includes("/") || EXTENSIONS.some((extension) => core.endsWith(extension));
@@ -126,7 +141,7 @@ function looksPathLike(token) {
  */
 function embeddedTarget(token) {
   for (const run of token.split(/[^A-Za-z0-9_./-]+/)) {
-    const candidate = run.replace(/^\/+|\/+$/g, "");
+    const candidate = trimEdgeSlashes(run);
     if (candidate === "") continue;
     // A repeated separator (`scripts//evil.mjs`) still names a real POSIX
     // target — interchangeable with `scripts/evil.mjs` — but the frozen token
@@ -165,6 +180,15 @@ function stripDeclaredEdges(value) {
  * third-party forge issue — exceeded 60 s per run and hung the pre-flight gate
  * (F64). Two bounded scans are O(L) and answer identically on node and bun.
  */
+/** Trim leading/trailing slashes in one bounded pass over each end (F99). */
+function trimEdgeSlashes(value) {
+  let start = 0;
+  while (start < value.length && value[start] === "/") start += 1;
+  let end = value.length;
+  while (end > start && value[end - 1] === "/") end -= 1;
+  return value.slice(start, end);
+}
+
 const LEAD_EDGE = "`\"'({[";
 const TRAIL_EDGE = "`\"')]}.,;:!?";
 function trimTokenEdges(raw) {
@@ -253,6 +277,7 @@ function normalizeTerminators(text) {
   return text
     .replace(/\r\n?/g, "\n")
     .replace(/[\u2028\u2029]/g, " ")
+    .replace(/[\u200B\uFEFF]/g, " ")
     .replace(/(^|\n)\uFEFF/g, "$1");
 }
 
