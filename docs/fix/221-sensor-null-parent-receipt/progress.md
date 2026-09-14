@@ -1,0 +1,77 @@
+# Unit 221 — progress log (fix/221-sensor-null-parent-receipt)
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-221-20260914-001 · Snapshot: 32dd6ba1b18af4649a802d2928914472585cae4e8080c7ecf538757518619daa · Verdict: plan-review-pass
+- Unit: fix-221 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); the contract forbids a parent on a fix plan snapshot (D30)
+- Source revision: bb9fff7a491b8ecd6851142cee4fcec54f09be96 · Artifact revision: bb9fff7a491b8ecd6851142cee4fcec54f09be96
+- Reviewer: review-plan (fresh pi session) · Session: pi-web review turn on `fix/221-sensor-null-parent-receipt` · Role: reviewer · Author: plan-fix (commit `bb9fff7a`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Context-clean note: this conversation wrote/replanned no part of the unit (review-only turn)
+- Started/finished: 2026-09-14T18:57:53Z/2026-09-14T19:01:30Z · Findings: 2 (material open: 0)
+- Ledgers read: planning-evidence 13 rows (PE-001…PE-013, embedded in the SPEC) · obligations 6 rows (O1…O6, verified-capable: 0 — all validators pin future work)
+- Prior plan receipt (re-review only): none — first cycle
+- Portability note: the planner's handoff declared no `artifactRevisionId`; the builder fell back to the source revision (`contentRevision` over the bound paths = `bb9fff7a`, the SPEC-draft commit). Nothing in this runtime rotates the id — mutate-and-revert detection depends on the next repair producing new bytes and a fresh snapshot.
+
+### Review-run evidence (commands + results)
+
+- `node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-221 --dir docs/fix/221-sensor-null-parent-receipt` → digest `32dd6ba1b18af4649a802d2928914472585cae4e8080c7ecf538757518619daa`, schema-validated by the recipe owner (no refusal); `unitKind: fix` derived from the `docs/fix/` prefix, no `--parent` passed, `parentSpecSnapshotDigest: null` ✓. Artifacts: spec (29788 B) + acceptance (2453 B); planning-evidence/obligations rows absent — the tables are embedded in the SPEC (XS/S fix convention) and bound through the whole-file `spec` row. Contexts: `project-guide` and `normalized-repository-state` present and bound; `architectural-invariants` absent (the optional doc does not exist — the invariant classification is carried by the SPEC's "Rules that must never be violated" + PE rows).
+- Falsification stance before checking: **NO-CONFIRMED-GAPS** — the three strongest hostile-reader candidates all resolved to repository evidence at `bb9fff7a`: (1) parse site — `scripts/pre-execution-contract.mjs:132` captures the lineage raw, its own comment (`:127-128`) documents "A SPEC block writes `Parent: null`", and only `timelineField` (`:96-107`) normalizes through `recordedValue` (`:75-83`) — PE-003/PE-007 proven; (2) bind site — `scripts/workflow-status.mjs:598-599` binds `parent ?? receipt.parent` and pushes `--parent` when truthy, the explicit parent is `specSense.observedDigest` (`:1036-1037`, null for fix units — no spec receipt) and `stageFor` (`:633`) sends an `in-progress`/`planned` fix row to stage `plan` — PE-002 proven; (3) the pinned e2e recipe is mechanically executable as written: `pre-execution-snapshot.mjs` accepts `--root` (`:26`, `:107`), the plan-stage artifact table marks `tasks`/`testing`/`decisions`/`architecture-notes` `required: false` (the fixture's SPEC+ACCEPTANCE-only build is legal), the fixture's `write` order lets `extraFiles` override the canned fix index, `sourceRevision` defaults to `contentRevision` over **bound paths** (`pre-execution-snapshot.mjs:168-179`), so appending the receipt to the unbound `progress.md` never rotates it — no re-commit needed before sensing.
+- Live corroboration of PE-001 at this revision (`node scripts/workflow-status.mjs` at `bb9fff7a`): fix-191 and fix-182 still sense `label: "missing"`, fix-221 produces **no** pre-execution row — its fix-index status `pending` maps outside `FIVE_STATES` (`parseStatus` → `idea`, unknown) and therefore outside `OPEN_STATES` (`:63`), so `pending` fix rows are not sensed at all. This vindicates Decision 6: the pinned e2e case had to pin an `in-progress` fixture row (the cheapest state the sensor actually senses), and it explains why the unit's own row cannot demonstrate the false blocker until execute-phase flips it to `in-progress`.
+- Falsification of the deliverable set: no SPEC obligation silently dies (O1–O6 ↔ AC1–AC6 ↔ affected surfaces; the F25 one-parser invariant is exercised inside O3's validator suite by the pinned test at `scripts/workflow-status-sensor.test.mjs:730-739`); no validator passes on a no-op (both new suites run to red first — the pinned case asserts `label: "current"`, which today's code cannot produce); post-ship residue is honest and in scope (fix-191's receipt is genuinely stale post-fix — the sensor will report the real answer instead of masking it as `missing`, exactly as the SPEC's #193 cross-issue note states); legacy receipts without a `Unit kind` line fail open to current semantics with the parser normalization still covering their lineage (Decision 5).
+- Ledger sweep L1–L6: L1 pass (`parentSpecSnapshotDigest: null`, stated plainly; no invented parent) · L2 pass (13/13 rows current + proven or decision; PE-009's `freshness: not-applicable` is the sanctioned decision-row shape; no unknown/drifted/stale) · L3 pass (6 obligations, none missing/duplicated: null-word parse, value preservation, sensor fix-path, regression scope, repo-wide gates, index row) · L4 pass (each row: one phase, owner `execute-phase`, validator copied verbatim from ACCEPTANCE, required evidence named, all `planned`; the two multi-task cells are recorded as PL-2, info) · L5 pass (every named failure state — false `missing` class, null-word mis-parse, dress/passthrough, feature-path drift, budget/skill drift, index drift — maps to a phase and a validator that can fail) · L6 pass (no prior findings ledger — first cycle).
+- Engineering checks: P1 pass (surfaces named with `path:line` rows — PE-002/003/006/008/013; invariant = **preserves**: recorded grammar bytes untouched, only their parse changes, feature path byte-identical, schema backstop untouched) · P2 pass (Depends on: none; PE-012 forge sweep 2026-09-15 — only #212 open, disjoint files) · P3 pass (boundary stated: parse-only change, feature receipts bare-hex no-op — PE-008, verifier report echo unchanged — Decision 4, envelope shape unchanged) · P4 pass (explicit n/a: no auth/secrets/PII/webhooks; local files + public forge reads) · P5 pass (no persisted-format migration; docs change = the fix-index row; bilingual rule explicitly n/a per CLAUDE.md's process-artifact scope exception) · P6 pass (phases are idempotent command lists ticked in the SPEC ledger; re-entry re-runs validators; no mid-write ambiguity) · P7 pass (one-PR revert; no data cleanup; causal limits stated — reverted code re-parses existing receipts identically, PE-009) · P8 pass (the sensor's own envelope is the observable; regression alarm is the pinned fixture at PR time — stated, none added) · P9 pass (both phase-lint fingerprints recorded PASS 8/8 — `P1:domain:5:fix-receipts-bind-no-parent` (5 tasks) and `P2:close-out:7:hardening-and-pr` (7 tasks); last phase is Hardening & PR; no early build of a later phase's deliverable) · P10 pass (every done-when is a command with an expected outcome; gates are the project's real gates — full scripts suite + skill-context; red-first discipline explicit; AC6 labelled read-verified with the flip-only `done · \[#` pattern, absorbing the PL-4 lesson from fix-214) · P11 pass (all NULL_WORDS behavior routes through the one `recordedValue` call site — the tests pin the call-site grammar, not a re-pin of the pre-existing normalizer, PE-007; empty/oversize/concurrency n/a for a read-only two-line change; legacy-receipt edge documented, Decision 5) · P12 pass (every cited `path:line` resolves at `bb9fff7a` for code bytes — `bb9fff7a` touched only `docs/fix/221*`; the one window drift is PL-1, info).
+- Fix checks: F1 pass (reproduction: live sensor run pinned at `170b25f6` in PE-001 with observed `missing`/`receipt is not current` output and the `plan-stage receipt is missing` blocker; re-run live at `bb9fff7a` — still reproducing) · F2 pass (root cause evidenced at the exact two sites the fix edits — `pre-execution-contract.mjs:132`, `workflow-status.mjs:598-599`; the competing hypothesis "the verifier is broken" is recorded and ruled out with evidence, PE-006: its comparison path self-normalizes at `:377-379`, `--parent` binding only at `:266`) · F3 pass (regression scope: `parseReceipts` has exactly two consumers — sensor import + verifier `receipts()`; `receipt.parent`'s only consumer is `workflow-status.mjs:598`; feature receipts record bare hex — verified against features 28/29; catch-net named: O4 quartet + O5 full suite + the two new red-first suites) · F4 pass (un-ship = one `git revert`; no data or doc side effects; no fake Product-half ceremony).
+- Findings:
+  - PL-1 (info, plan): PE-004's schema citation window `packages/agentic-workflow-schema/src/pre-execution-contract.ts:383-393` is offset — the `parentSpecSnapshotDigest` validator row spans `:390-397` (`key` at `:390`, `pattern: LOWERCASE_64HEX_PATTERN` at `:396`, `violationCode: "invalid-value"` at `:397`). Substance identical: the row refuses any non-64-hex value exactly as claimed. Advisory; no repair required.
+  - PL-2 (info, plan): obligations O3 (Task `2, 4`) and O6 (Task `3, 6`) list two tasks per cell where ENG-CHECKS L4 reads "exactly one phase, one task" — no PASS-reviewed sibling uses a multi-task cell (fix-214's O1–O15 are all single-task). Substance complete and unambiguous: one phase each, single validator each copied verbatim from ACCEPTANCE, tasks in execution order, and execute-phase runs all tasks regardless — no acceptance outcome can be missed. Advisory; splitting the cells is optional, not required.
+
+- Self-check (`node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-221 --dir docs/fix/221-sensor-null-parent-receipt --unit-kind fix`, fix omits `--parent`): exit 0 — `current: true`, `verdictIsPass: true`, `digestMatches: true`, `structural.fresh: true` ("the digest the receipt bound equals the digest re-derived from the bytes on disk", `changedPaths: []`), observed digest `32dd6ba1…18619daa` = bound digest. The mark landed; the verdict is emit-able this turn.
+
+Verdict: **PLAN-REVIEW-PASS** — 0 material open findings.
+
+## Acceptance receipt v1
+- Manifest: docs/fix/221-sensor-null-parent-receipt/ACCEPTANCE.md · blob abd61938f3541c52899b419020121237b158a3c2
+- Baseline recorded 2026-09-15 (first phase, before edits) — the just-computed blob is the finish line.
+
+## execute-phase P1 — fix receipts bind no parent
+
+- Gate: dependency pass (`Depends on: none`) · own-status n/a (fix) · pre-execution PASS (rp-221-20260914-001, `current: true`, fresh) · acceptance manifest recorded (blob abd61938f3541c52899b419020121237b158a3c2) · phase-lint PASS (8/8, fingerprint P1:domain:5:fix-receipts-bind-no-parent).
+- Pre-write implementation discovery: READY (map fix-221-map-0001; source HEAD bb9fff7a; all PE rows confirmed).
+- Red-first: `scripts/pre-execution-receipt-parent.test.mjs` ran RED before the fix (parent parsed as `"null"` string & `sha256:` dress kept); pinned e2e case ran RED (`label: "missing"`, `reason: "receipt is not current"`) before the sensor fix.
+- Task 1 — parser suite red-first → green after fix: `node --test scripts/pre-execution-receipt-parent.test.mjs` → exit 0 (6 pass). ✅
+- Task 2 — pinned e2e case red-first → green after fix: `node --test --test-name-pattern="current fix-unit plan receipt senses current" scripts/workflow-status-sensor.test.mjs` → exit 0. ✅
+- Task 3 — `scripts/pre-execution-contract.mjs:132`: lineage wrapped in `recordedValue(...)`. ✅
+- Task 4 — `scripts/workflow-status.mjs:598`: `const boundParent = receipt.unitKind === "fix" ? null : (parent ?? receipt.parent);` with SNAPSHOT.md-citing comment. ✅
+- Task 5 — regression gate (O4): `node --test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/pre-execution-timeline.test.mjs scripts/pre-execution-quality.test.mjs` → exit 0 (93 pass). ✅
+- O1/O2 green (parser suite 6), O3 green (sensor suite 52 incl. pinned case), O4 green (93).
+- Live sensor re-run (post-fix): fix-191 no longer senses the false `missing`/`receipt is not current` — it now senses `stale`/`stale-context` (its receipt genuinely moved — the #193 cross-issue note's predicted real answer). fix-221 senses no block (index still `pending`). False `plan-stage receipt is missing` class is dead.
+
+## P1 validators
+- `node --test scripts/pre-execution-receipt-parent.test.mjs` → exit 0 (6 pass)
+- `node --test --test-name-pattern="current fix-unit plan receipt senses current" scripts/workflow-status-sensor.test.mjs` → exit 0 (1 pass)
+- `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (52 pass)
+- `node --test scripts/pre-execution-sensor.test.mjs scripts/pre-execution-attribution.test.mjs scripts/pre-execution-timeline.test.mjs scripts/pre-execution-quality.test.mjs` → exit 0 (93 pass)
+
+## execute-phase P2 — Hardening & PR
+
+- Task 1 — full verification gate:
+  - `cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build` → exit 0 (dist rebuilt)
+  - `node --test scripts/*.test.mjs` → exit 0 (266 pass)
+  - `bun scripts/check-skill-context.mjs` → exit 0 (39 skills PASS)
+- Task 2 — pending-docs: `git status --porcelain -- docs/` → empty after the flip commit (the only untracked docs artifact was the transient `pr-body.md`, deleted after PR open; not repo content).
+- Task 3 — set `docs/fix/README.md` #221 row to `done`, commit (`chore(fix): mark #221 done as built, PR pending`).
+- Task 4 — `git push -u origin fix/221-sensor-null-parent-receipt` → pushed.
+- Task 5 — `gh pr create --base main --title "fix(sensor): receipt parent null-word + fix no-parent bind (#221)" --body-file docs/fix/221-sensor-null-parent-receipt/pr-body.md` → **PR #223**: https://github.com/gtrabanco/agentic-workflow/pull/223 · body includes `Closes #221`.
+- Task 6 — updated the #221 index row to `done · [#223](https://github.com/gtrabanco/agentic-workflow/pull/223)`.
+- Task 7 — `docs: link PR #221` committed and pushed (`git status --porcelain` empty; nothing unpushed).
+- O5 green (full suite 266 + skill-context 39); O6 green via read-verify: `grep -cE "sensor-null-parent-receipt.*done · \[#"` → 1.
+- Fix unit is `done` (built, PR #223 open — merge state lives in the forge).
+
+## P2 validators
+- `cd packages/agentic-workflow-schema && bun install --frozen-lockfile && bun run build` → exit 0
+- `node --test scripts/*.test.mjs` → exit 0 (266 pass)
+- `bun scripts/check-skill-context.mjs` → exit 0 (39 skills)
+- `grep -cE "sensor-null-parent-receipt.*done · \[#"` docs/fix/README.md → 1

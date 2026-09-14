@@ -1,0 +1,10 @@
+# planning-findings — fix-221 (sensor-null-parent-receipt)
+
+One stage-aware table; rows are appended by reviewers and resolved only by the
+stage's author through its own route. Shape:
+`finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision`.
+
+| finding-id | stage | severity | class | snapshot-digest | claim | evidence | status | resolution-evidence | resolving-artifact-revision |
+|---|---|---|---|---|---|---|---|---|---|
+| PL-1 | plan | info | plan | 32dd6ba1b18af4649a802d2928914472585cae4e8080c7ecf538757518619daa | PE-004's schema citation window `packages/agentic-workflow-schema/src/pre-execution-contract.ts:383-393` is offset: the `parentSpecSnapshotDigest` validator row spans `:390-397`, so the tokens the row claims (`pattern: LOWERCASE_64HEX_PATTERN`, `violationCode: "invalid-value"`) sit at `:396-397`, just past the cited window | `grep -n` at `bb9fff7a`: `key: "parentSpecSnapshotDigest"` → `:390`, `pattern: LOWERCASE_64HEX_PATTERN` → `:396`, `violationCode: "invalid-value"` → `:397`; the row's semantics (non-64-hex refused, `invalid-value`) are exactly as PE-004 claims — same genus as fix-214's PL-6 (adjacent content, unambiguous substance → info, non-blocking) | open | — | — |
+| PL-2 | plan | info | plan | 32dd6ba1b18af4649a802d2928914472585cae4e8080c7ecf538757518619daa | Obligations O3 (Task `2, 4`) and O6 (Task `3, 6`) list two tasks per cell where the Engineering L4 check reads "each row names exactly one phase, one task" — no PASS-reviewed sibling uses a multi-task cell (fix-214's O1–O15 are all single-task) | SPEC `### Obligations` rows O3/O6 vs `skills/review-plan/references/ENG-CHECKS.md` L4 at `bb9fff7a`; delivery mapping otherwise complete: one phase each, validator copied verbatim from ACCEPTANCE each, tasks listed in execution order, `execute-phase` runs all tasks of all remaining phases — no acceptance outcome can be missed, so advisory (info), non-blocking | open | — | — |
