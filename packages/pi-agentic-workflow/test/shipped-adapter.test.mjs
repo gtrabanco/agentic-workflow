@@ -339,6 +339,74 @@ function nonTuiContext(answers) {
   };
 }
 
+// --- fix #214, F8: the TUI picker preselects the value in force (OB-3) ---
+
+/**
+ * A TUI context whose `custom` builds the picker the adapter hands it and drives
+ * that component with the scripted keys, capturing both the built component and
+ * what `done` received.
+ */
+function tuiContext(keys) {
+  const captured = {};
+  return {
+    captured,
+    ctx: {
+      mode: "tui",
+      ui: {
+        select: async () => {
+          throw new Error("the rich TUI path must not fall back to base.select");
+        },
+        input: async () => undefined,
+        confirm: async () => false,
+        notify: () => {},
+        custom: async (factory, customOpts) => {
+          captured.customOpts = customOpts;
+          return new Promise((resolve) => {
+            const component = factory(
+              {},
+              { bold: (text) => text, inverse: (text) => text, italic: (text) => text },
+              {},
+              (value) => {
+                captured.result = value;
+                resolve(value);
+              },
+            );
+            captured.component = component;
+            for (const key of keys) component.handleInput(key);
+          });
+        },
+      },
+    },
+  };
+}
+
+test("the adapter TUI pick preselects the value in force", async () => {
+  const options = ["model-01", "model-02", "model-03", "model-04"];
+  const { ctx, captured } = tuiContext(["\r"]);
+
+  const picked = await richUi(ctx).pick("Pick a model", options, { initial: "model-03" });
+
+  assert.equal(picked, "model-03", "Enter accepts the preselected value, not the first option");
+  assert.equal(captured.result, "model-03", "the adapter forwarded `initial` into the component");
+});
+
+test("the adapter TUI pick keeps the first option when nothing is in force", async () => {
+  const single = tuiContext(["\r"]);
+  assert.equal(await richUi(single.ctx).pick("Pick a model", ["model-01", "model-02"]), "model-01");
+
+  const unmatched = tuiContext(["\r"]);
+  assert.equal(
+    await richUi(unmatched.ctx).pick("Pick a model", ["model-01", "model-02"], { initial: "model-09" }),
+    "model-01",
+    "a stale value in force preselects nothing outside the offered list",
+  );
+});
+
+test("the adapter TUI pick keeps its multiple return shape", async () => {
+  const { ctx } = tuiContext(["\r"]);
+  assert.deepEqual(await richUi(ctx).pick("Pick several", ["model-01", "model-02"], { multiple: true }), ["model-01"]);
+});
+
 test("the adapter non-TUI pick fallback pages long option lists before base.select", async () => {
   const options = Array.from({ length: 30 }, (_, i) => `model-${String(i + 1).padStart(2, "0")}`);
   const { ctx, selects } = nonTuiContext([PAGED_SELECT_NEXT, "model-25"]);

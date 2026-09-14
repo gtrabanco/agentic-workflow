@@ -174,16 +174,22 @@ function isSubsequence(needle: string, haystack: string): boolean {
  * `filterReferences` as the operator types so the subsequence/slash-aware
  * filter (OB-2) — not `SelectList`'s own prefix `setFilter` — drives what the
  * window shows. Control keys (arrows, Enter, Escape) forward to the list.
+ *
+ * `initial` — the value in force — is selected in the window the picker opens
+ * with, through the SelectList's own `setSelectedIndex` (OB-3).
  */
 export function createPickerComponent(options: {
   items: readonly SelectItem[];
   maxVisible: number;
   theme: SelectListTheme;
+  /** The value in force, selected in the window the picker opens with (OB-3). */
+  initial?: string;
   onSelect: (value: string) => void;
   onCancel?: () => void;
 }): Component & { dispose?(): void } {
-  const { items, maxVisible, theme, onSelect, onCancel } = options;
+  const { items, maxVisible, theme, initial, onSelect, onCancel } = options;
   let filterText = "";
+  let openSelectionApplied = false;
 
   const byValue = new Map(items.map((item) => [item.value, item]));
   const buildList = (): SelectList => {
@@ -191,6 +197,14 @@ export function createPickerComponent(options: {
       (value) => byValue.get(value) ?? { value, label: value },
     );
     const list = new SelectList(visible, maxVisible, theme);
+    // Preselection is an open-time concern (OB-3): the value in force applies to
+    // the first window only, so narrowing afterwards keeps the narrowed window's
+    // own first match instead of yanking the selection to a filtered-out value.
+    if (!openSelectionApplied) {
+      openSelectionApplied = true;
+      const index = initial === undefined ? -1 : visible.findIndex((item) => item.value === initial);
+      if (index > 0) list.setSelectedIndex(index); // index 0 is already the SelectList default
+    }
     list.onSelect = (item) => onSelect(item.value);
     list.onCancel = onCancel;
     return list;
