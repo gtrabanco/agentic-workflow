@@ -19,7 +19,7 @@ import { execFileSync, spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { test } from "node:test";
+import { after, test } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -61,11 +61,30 @@ const FROZEN_NRS = [
 ].join("\n");
 
 /**
+ * Every temp directory this file creates, torn down once the suite ends: a run
+ * used to leave one directory (plus its git objects) behind per fixture — a
+ * measured +49 per run, and still +2 after only the newest test was covered.
+ * Centralizing the creation is what makes the whole pattern leak-free rather
+ * than one call site at a time (F112).
+ */
+const FIXTURE_DIRS = new Set();
+
+function mkTmp(prefix) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  FIXTURE_DIRS.add(dir);
+  return dir;
+}
+
+after(() => {
+  for (const dir of FIXTURE_DIRS) fs.rmSync(dir, { recursive: true, force: true });
+});
+
+/**
  * A throwaway git repository with the substrate the sensor reads, plus a `gh`
  * shim whose canned JSON is controlled per test. Returns `{dir, binDir, run}`.
  */
 function makeFixture({ roadmapRows = [], issues = [], openPrs = [], mergedPrs = [], nrs = FROZEN_NRS, extraFiles = {}, ghMode = "ok", branch = "main", dirty = null, pathWithoutGit = false } = {}) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-fixture-"));
+  const dir = mkTmp("workflow-status-fixture-");
   const binDir = path.join(dir, "bin");
   fs.mkdirSync(binDir, { recursive: true });
 
@@ -126,7 +145,7 @@ const parseEnvelope = (stdout) => JSON.parse(stdout);
  * than inferred from source text (F32–F34).
  */
 function installGitProbe() {
-  const probeDir = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-gitprobe-"));
+  const probeDir = mkTmp("workflow-status-gitprobe-");
   const log = path.join(probeDir, "git-probe.log");
   const realGit = execFileSync("sh", ["-c", "command -v git"], { encoding: "utf8" }).trim();
   fs.writeFileSync(path.join(probeDir, "git"), `#!/bin/sh\nprintf '%s\\n' "$*" >> "${log}"\nexec "${realGit}" "$@"\n`, { mode: 0o755 });
@@ -292,7 +311,7 @@ test("P1: importing the module with the built runtime present exits 0 (A:11 case
 });
 
 test("P1: importing with dist/ absent fails with the named precondition (A:11 case b)", () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-nodist-"));
+  const tmp = mkTmp("workflow-status-nodist-");
   fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
   fs.copyFileSync(SCRIPT, path.join(tmp, "scripts", "workflow-status.mjs"));
   fs.copyFileSync(path.join(repoRoot, "scripts", "schema-runtime.mjs"), path.join(tmp, "scripts", "schema-runtime.mjs"));
@@ -311,7 +330,7 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
 
 test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope printed, exit 0 (E-38-1)", () => {
   const { dir } = makeFixture();
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-stub-"));
+  const tmp = mkTmp("workflow-status-stub-");
   fs.mkdirSync(path.join(tmp, "scripts"), { recursive: true });
   fs.mkdirSync(path.join(tmp, "packages", "agentic-workflow-schema", "dist"), { recursive: true });
   fs.copyFileSync(SCRIPT, path.join(tmp, "scripts", "workflow-status.mjs"));
@@ -668,7 +687,7 @@ setInterval(() => {}, 1000);
 
 test("F21: an out-of-repo receipt behind a directory symlink never enters the envelope", () => {
   const fixture = makeFixture({ roadmapRows: ["| 90 | `alpha` | planned | — | symlinked ancestor |"] });
-  const outside = fs.mkdtempSync(path.join(os.tmpdir(), "workflow-status-outside-"));
+  const outside = mkTmp("workflow-status-outside-");
   fs.writeFileSync(path.join(outside, "progress.md"), [
     "## Pre-execution review receipt v1 — plan",
     "- Review: rp-forged · Snapshot: deadbeef · Verdict: plan-review-pass",
@@ -939,9 +958,17 @@ test("a current fix-unit plan receipt senses current, not missing (#221)", async
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
 
-  // The fix-221 row must sense `current` with no gate blocker.
-  const fix221Row = envelope.detail.units?.find((u) => u.id === "fix-221");
-  assert.ok(fix221Row, "the envelope should include the fix-221 unit");
-  assert.equal(fix221Row.detail.pre_execution?.label, "current",
-    `fix-221 plan receipt should be current, not missing — ${JSON.stringify(fix221Row.detail.pre_execution)}`);
+  // The sensed row is the sensor's `detail.pre_execution` projection — the
+  // observable fix/221's own SPEC names (PE-001 “the sensor reports fix-191 …
+  // as `label: \"missing\"`”; O3 “the `detail.pre_execution` row reads
+  // `label: \"current\"` with no gate blocker”). `detail.units` never existed
+  // on the envelope — `detail` carries `pre_execution`/`features`/`fixes`/… —
+  // so the original assertion could never pass (F103).
+  const fix221Row = envelope.detail.pre_execution?.find((row) => row.unit === "fix-221");
+  assert.ok(fix221Row, `the envelope should carry the fix-221 pre-execution row: ${JSON.stringify(envelope.detail.pre_execution)}`);
+  assert.equal(fix221Row.stage, "plan", "the fix unit is sensed at the plan stage");
+  assert.equal(fix221Row.label, "current",
+    `fix-221 plan receipt should be current, not missing — ${JSON.stringify(fix221Row)}`);
+  assert.ok(!envelope.blockers.some((b) => b.kind === "gate" && b.id === "fix-221"),
+    `no gate blocker for the unit — ${JSON.stringify(envelope.blockers)}`);
 });
