@@ -50,6 +50,24 @@ test("AC1: replan wins over a co-resident fold and decision row", () => {
   assert.equal(rowLine(result.stdout), "F1 F2 F3", "the router lists every open row without being told an id");
 });
 
+const statusLine = (stdout) => /^status: (.*)$/m.exec(stdout)?.[1] ?? null;
+const nextLine = (stdout) => /^next: (.*)$/m.exec(stdout)?.[1] ?? null;
+
+test("AC1/fix #224: a finished unit answers the terminal route, never the executor", () => {
+  const result = run(["15-done-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "close-out");
+  assert.equal(nextLine(result.stdout), "/audit-pr");
+  assert.equal(rowLine(result.stdout), "none");
+});
+
+test("AC1/fix #224: the status field reads the bare token out of a decorated fix-index cell", () => {
+  const result = run(["21-done-fix"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(statusLine(result.stdout), "done", "the markdown cell decoration never reaches the field");
+  assert.equal(routeLine(result.stdout), "close-out");
+});
+
 test("AC1: decision fires when no row routes to the plan owner", () => {
   const result = run(["12-decision-unit"]);
   assert.equal(result.status, 0, result.stderr);

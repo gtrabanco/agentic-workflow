@@ -11,7 +11,8 @@
  *   replan          an open row whose frozen route is the plan owner
  *   decision        an open row that needs a product/architecture decision
  *   fold            an open row that folds into the current unit
- *   execute         a known unit with no open row
+ *   execute         a known unit with no open row and open work
+ *   close-out       a done unit with no open row (the merge gate is next)
  *   plan-from-issue a tracked issue with no unit folder yet
  *
  * Diagnostics go to stderr; the routed block goes to stdout. The script writes
@@ -33,7 +34,7 @@ export const READ_SET_MAX = 12;
 /** Longest echoed cell before the sanitizer truncates it. */
 export const CELL_MAX = 160;
 
-const ROUTES = Object.freeze(["replan", "decision", "fold", "execute", "plan-from-issue"]);
+const ROUTES = Object.freeze(["replan", "decision", "fold", "execute", "close-out", "plan-from-issue"]);
 const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
 const DECISION_ROUTE = /decision[- ]required|surface (the )?decision|needs a decision/i;
 const KNOWN_UNIT_FILES = ["SPEC.md", "ACCEPTANCE.md", "PLAN.md", "TASKS.md", "progress.md", "review-findings.md"];
@@ -194,6 +195,15 @@ function fixIndexIssues() {
   return numbers;
 }
 
+/**
+ * The bare status token out of a status cell: the fix index decorates it
+ * (`` `done · [#225](…)` ``) while the roadmap does not (`done · [#212](…)`),
+ * and the field the block publishes carries the token only, never the markdown.
+ */
+function statusToken(cell) {
+  return cell.replace(/[`*]/g, "").split("·")[0].trim();
+}
+
 /** Roadmap rows whose first cell carries the unit number. */
 function roadmapStatus(number) {
   const text = readProject("docs/features/ROADMAP.md") ?? "";
@@ -202,7 +212,7 @@ function roadmapStatus(number) {
     const cells = line.split("|").map((cell) => cell.trim());
     if (cells.length < 4) continue;
     if (cells[1] !== String(number)) continue;
-    return sanitize(cells[3].split("·")[0].trim()) || "unknown";
+    return sanitize(statusToken(cells[3])) || "unknown";
   }
   return null;
 }
@@ -215,7 +225,7 @@ function fixIndexStatus(number) {
     const cells = line.split("|").map((cell) => cell.trim());
     if (cells.length < 4) continue;
     if (!new RegExp(`issues/${number}\\b|#${number}\\b`).test(cells[1])) continue;
-    return sanitize(cells[3].split("·")[0].trim()) || "unknown";
+    return sanitize(statusToken(cells[3])) || "unknown";
   }
   return null;
 }
@@ -283,8 +293,9 @@ const USAGE = `usage: node scripts/unit-route.mjs <unit|issue>
 Prints the route one delivery unit takes now, from its own ledger. The routes,
 first match winning: replan (an open row whose frozen route is the plan owner),
 decision (an open row that needs a product/architecture decision), fold (any
-other open row), execute (a known unit with no open row), plan-from-issue (a
-tracked issue with no unit folder yet).
+other open row), execute (a known unit with no open row that is still open work),
+close-out (a done unit with no open row — the merge gate is the next step),
+plan-from-issue (a tracked issue with no unit folder yet).
 
 The routed block goes to stdout: unit, status, open-rows, route, next, rows,
 read-set (at most ${READ_SET_MAX} paths, then an explicit remainder line),
@@ -327,6 +338,7 @@ function main(argv) {
   const ledgerPath = `${unit.dir}/review-findings.md`;
   const ledger = readProject(ledgerPath) ?? "";
   const rows = openRows(ledger);
+  const status = (unit.kind === "fix" ? fixIndexStatus(unit.number) : roadmapStatus(unit.number)) ?? "absent";
 
   let route;
   let command;
@@ -343,13 +355,18 @@ function main(argv) {
     route = "fold";
     selected = rows;
     command = "/fold-findings";
+  } else if (status === "done") {
+    // The work is finished; the only step left is the merge gate. Routing here to
+    // `/execute-phase` sent an operator at a fully-ticked unit (F24).
+    route = "close-out";
+    selected = [];
+    command = "/audit-pr";
   } else {
     route = "execute";
     selected = [];
     command = `/execute-phase ${unit.slug}`;
   }
 
-  const status = (unit.kind === "fix" ? fixIndexStatus(unit.number) : roadmapStatus(unit.number)) ?? "absent";
   const base = route === "replan" || route === "decision" || route === "fold"
     ? ["review-findings.md", "SPEC.md", "ACCEPTANCE.md"]
     : ["SPEC.md", "progress.md"];
