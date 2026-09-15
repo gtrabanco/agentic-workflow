@@ -272,8 +272,10 @@ assert.match(foldPolicy, /BLOCKED/);
 assert.match(foldPolicy, /missing input/);
 assert.match(foldPolicy, /materializ/);
 
-// 10j. Version — fold-findings is bumped to 1.4.0 for this contract.
-assert.match(foldSkill, /version: 1\.4\.0/);
+// 10j. Version — fold-findings is bumped for this contract. The exact pin is
+// maintained on every later bump: fix #224 moved it 1.4.0 → 1.5.0 (the
+// conditional replan destination) with the assertion unchanged in strength.
+assert.match(foldSkill, /version: 1\.5\.0/);
 
 // 10k. The existing bounded-loop fold pins survive verbatim.
 assert.match(foldProcess, /one `FOLDED <same-sha>` line per/);
