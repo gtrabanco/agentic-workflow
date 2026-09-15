@@ -71,7 +71,13 @@ mechanized.*
       planned work → `{command: "/design-feature <slug>", trigger: "closure
       absent, SPEC predates the rule — retrofit trigger", source_skill:
       "audit-pr"}` (`#78`).
-    - a unit's `review-findings.md` ledger carries any `folded: no` row →
+    - a unit's `review-findings.md` ledger carries an open row whose frozen
+      route is the plan owner → `{command: "/plan-feature <unit>" |
+      "/plan-fix <issue>", trigger: "an open finding's frozen route is the plan
+      owner — replan-in-unit (<ids>)", source_skill: "review-change"}`
+      (`#224`) — the same class→destination decision `scripts/unit-route.mjs`
+      owns; and
+    - a unit's `review-findings.md` ledger carries any other `folded: no` row →
       `{command: "/fold-findings", trigger: "unfolded fix-now finding(s) on
       the ledger", source_skill: "fold-findings"}` (`#65`).
     No trigger fired for a unit → it contributes nothing (not an error, same

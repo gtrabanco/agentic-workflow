@@ -4,7 +4,7 @@
 
 The skills that make up the agentic workflow, grouped by role.
 
-**19 user-facing skills** (one menu entry each) + **18 internal steps**
+**19 user-facing skills** (one menu entry each) + **19 internal steps**
 composed for you (the `plan-feature` router's two planning steps, the two
 pre-execution evidence owners `evidence-grounding` (authoring readiness) and
 `pre-execution-review` (the shared review cycle + the planning ledgers), the
@@ -106,6 +106,7 @@ deterministic readiness result, never a verdict.
 | `review-perf` | Performance-regression checklist over the diff. `user-invocable: false` — internal review pack |
 | `review-seo` | SEO checklist over public-facing pages/routes. `user-invocable: false` — internal review pack |
 | `implementation-discovery` | Bounded, read-only pre-write mapper contract: closes seven evidence questions, emits one fixed compact map, and routes `READY \| REPLAN \| NEEDS-DESIGN \| BLOCKED` before any branch/planning/source write. `user-invocable: false` — consumed only by `execute-phase` on the pre-write route |
+| `replan-findings` | Conditional replan entry: loaded only when `node scripts/unit-route.mjs <unit>` prints `route: replan`; turns the router's bounded read set into phases appended to the unit's SPEC and carries the artifact-revision duty. `user-invocable: false` — composed by `plan-feature` / `plan-fix` on that route |
 
 ## Execute
 

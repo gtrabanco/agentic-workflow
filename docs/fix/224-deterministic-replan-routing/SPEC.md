@@ -595,14 +595,14 @@ Layer: `docs`. Done-when: `grep -c "unit-route" docs/workflow/REVIEW_AND_CLASSIF
 
 Layer: `docs`. Done-when: `grep -q "unit-route" CHANGELOG.md && grep -q "unit-route" CHANGELOG.es.md && grep -q "replan-findings" docs/workflow/SKILLS.md && grep -q "replan-findings" docs/workflow/SKILLS.es.md` → exit 0.
 
-- [ ] Name the new internal contract in `docs/workflow/SKILLS.md` and update
+- [x] Name the new internal contract in `docs/workflow/SKILLS.md` and update
       the internal-step count (OB-7; PE-012)
-- [ ] Add the faithful sibling text to `docs/workflow/SKILLS.es.md` (OB-7)
-- [ ] Withdraw the stale documented signal in
+- [x] Add the faithful sibling text to `docs/workflow/SKILLS.es.md` (OB-7)
+- [x] Withdraw the stale documented signal in
       `skills/workflow-status/references/SENSOR_SIGNALS.md` (OB-5; PE-005)
-- [ ] Add the release row to `CHANGELOG.md` (OB-7; PE-012)
-- [ ] Add the faithful sibling row to `CHANGELOG.es.md` (OB-7)
-- [ ] Bump `skills/workflow-status/SKILL.md` for the withdrawn signal (OB-5)
+- [x] Add the release row to `CHANGELOG.md` (OB-7; PE-012)
+- [x] Add the faithful sibling row to `CHANGELOG.es.md` (OB-7)
+- [x] Bump `skills/workflow-status/SKILL.md` for the withdrawn signal (OB-5)
 
 ### P7 — Mirror parity
 

@@ -186,3 +186,11 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - Gotchas: `PORTABLE_PROMPT.es.md` mirrors the English prompt text, so both sides carry the identical sentence (no translation drift).
 - Files: docs/workflow/REVIEW_AND_CLASSIFY.md (+ ES) · docs/workflow/FEATURE_WORKFLOW.md (+ ES) · docs/workflow/PORTABLE_PROMPT.md (+ ES) · docs/fix/224-deterministic-replan-routing/SPEC.md (P5 ticks) · progress.md
 - Next: P6 — Release bookkeeping
+
+## P6 — 2026-09-15
+- Phase-lint re-checked PASS (8/8) at fingerprint `P6:docs:6:release-bookkeeping`.
+- Done: `docs/workflow/SKILLS.md` (+ ES) names `replan-findings` in the internal-step table and moves the internal-step count 18 → 19 (user-facing count unchanged at 19). `skills/workflow-status/references/SENSOR_SIGNALS.md` step 13 withdraws the stale "any `folded: no` row → `/fold-findings`" signal and documents the class-routed emission (plan-owned → the unit's planner, `source_skill: review-change`; any other open row → the fold). `skills/workflow-status/SKILL.md` 3.4.0 → 3.5.0. CHANGELOG.md + CHANGELOG.es.md: the `workflow-status` 3.5.0 row and the new `replan-findings` 1.0.0 row.
+- Gate: `grep -q "unit-route" CHANGELOG.md && grep -q "unit-route" CHANGELOG.es.md && grep -q "replan-findings" docs/workflow/SKILLS.md && grep -q "replan-findings" docs/workflow/SKILLS.es.md` → exit 0; `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail.
+- Gotchas: the SENSOR_SIGNALS.md addition pushed that reference to 2297 est > the 2200 default; the `workflow-status` `referenceEstimateMax` was re-based to 2300 with a declared `referenceSources` note (measured 2297) rather than trimming the required signal out.
+- Files: docs/workflow/SKILLS.md (+ ES) · skills/workflow-status/references/SENSOR_SIGNALS.md · skills/workflow-status/SKILL.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · CHANGELOG.md · CHANGELOG.es.md · docs/fix/224-deterministic-replan-routing/SPEC.md (P6 ticks) · progress.md
+- Next: P7 — Mirror parity

@@ -45,10 +45,13 @@
     "workflow-status": {
       "mainEstimateMax": 1680,
       "mainLinesMax": 136,
-      "referenceEstimateMax": 2200,
+      "referenceEstimateMax": 2300,
       "referenceLinesMax": 280,
       "mainSources": {
         "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)"
+      },
+      "referenceSources": {
+        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est)"
       }
     }
   },
