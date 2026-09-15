@@ -118,6 +118,8 @@ Layer: `<schema/db|domain|api|ui|config/infra|docs|hardening>`. Done-when:
 
 ### P2 — Hardening & PR
 
+Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
+
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the fix-index row status to `done` and commit the flip
