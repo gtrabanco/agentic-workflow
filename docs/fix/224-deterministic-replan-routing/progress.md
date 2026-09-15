@@ -869,3 +869,45 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   audit) run at this head; a later write to any bound artifact rotates
   `artifactRevisionId` and makes this receipt stale by construction, which is the
   contract working, not a defect.
+
+## P8 task 9 (first pass) — end review F26–F28 and their fold (2026-09-16)
+
+- **End review** (`/review-change`, delta mode at head `c3eca237`): **REVIEW-FAIL**
+  with three findings — `F26` (brand/med, the armed-box enumeration in the
+  phase-contract rule text), `F27` (verify/med, the corpus triple missing the
+  box-8 case AC14 names), `F28` (security/**high**, the one sanitizer's flatten
+  class leaving C1 controls and the Unicode line/paragraph separators intact).
+  No receipt was posted, as the contract requires on FAIL. Evidence commit
+  `81f2d8cc` (pushed).
+- **Fold cycle** (one batch, `all-repair-in-place`):
+  - F26 — `skills/phase-contract/SKILL.md` 1.0.4 → **1.0.5**: the scope sentence
+    now reads "boxes 1, 2, 4, 5, 6 and 8", naming the armed boxes instead of the
+    range that wrongly included the exempt box 7; both changelog cells added and
+    the Pi mirror re-bundled (package 0.10.3 → **0.10.4**, row in both changelogs).
+  - F27 — `scripts/phase-lint.test.mjs` gained the box-8 pre-ticked case beside
+    the box-4 one, so AC14's "box-4/box-8" wording is fully pinned (corpus 130
+    pass / 0 fail).
+  - F28 — `scripts/unit-route.mjs`'s sanitizer flatten class extended to
+    `[\u0000-\u001f\u007f-\u009f\u2028\u2029]` (C1 controls are not matched
+    by `\s`), and the S7 pin gained a NEL-prefixed and a U+2028-prefixed row plus
+    the assertion that both are flattened (`F11 X F12 Y`), with the pre-existing
+    rows-line assertion widened to the four sanitized ids.
+  - Gate repair, disclosed: the corrected wording grew two routes by one estimate
+    unit each, so `plan-feature:scoped` and `plan-fix:issue` were re-based to
+    `ceil(measured × 1.10)` with the growth source named in `policy.declared`.
+
+```text
+## REPAIR-RECEIPT
+- Repaired: F26 + F27 + F28
+- Refuted/open: none
+- Gate: node --test scripts/*.test.mjs → exit 0 at head 81f2d8cc26772c913a8f54285b49d0c7108a22dc · 419 pass / 0 fail
+- Batch class: all-repair-in-place
+- Fold diff:  10 files changed, 61 insertions(+), 24 deletions(-)
+- Branch: RE-REVIEW-REQUIRED (delta) — a folded row carries frozen severity `high`
+```
+
+- Gate: `node --test scripts/*.test.mjs` → 419 pass / 0 fail; the Pi package
+  suite → 214 pass / 0 fail; `node scripts/check-skill-context.mjs --routes
+  --budgets` → PASS; `normative-drift` → 17 pass.
+- Next: `/review-change` again (delta cycle 2, the last the loop allows without
+  an explicit instruction), then `/audit-pr` at the resulting head.

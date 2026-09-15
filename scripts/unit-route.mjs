@@ -47,10 +47,15 @@ const BRACE_CITE_RE = /([A-Za-z0-9_.@/-]+)\{([^{}]*)\}/g;
  * One sanitizer over every echoed value: flatten control whitespace, collapse
  * runs, truncate. Ledger cells are repository-authored but forge-adjacent, so
  * they are data, never instructions, and never reach stdout verbatim.
+ *
+ * The flatten class covers the whole control surface, not just C0: the C1 range
+ * (U+0080-U+009F, e.g. NEL U+0085) is not matched by `\s`, and the Unicode line
+ * and paragraph separators are named explicitly, so no echoed cell can carry a
+ * character a consumer might read structurally (F28, extending F16).
  */
 export function sanitize(value) {
   const flat = String(value ?? "")
-    .replace(/[\u0000-\u001f\u007f]+/g, " ")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return flat.length > CELL_MAX ? `${flat.slice(0, CELL_MAX - 1)}…` : flat;
