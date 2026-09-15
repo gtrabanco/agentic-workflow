@@ -38,6 +38,7 @@
     "./skills/planning-preflight",
     "./skills/pre-execution-review",
     "./skills/product-audit",
+    "./skills/replan-findings",
     "./skills/resolve-repository-state",
     "./skills/review-a11y",
     "./skills/review-brand",

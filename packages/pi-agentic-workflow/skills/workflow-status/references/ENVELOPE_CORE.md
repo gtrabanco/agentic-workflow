@@ -78,8 +78,7 @@ these need **no package change**:
 skill-side work, so no `detail.features[]`/`detail.fixes[]` entry carries them
 until a sensor phase owns them. A consumer must treat their absence as "not
 computed", never as "empty": absence is not a `closure: absent-legacy` verdict
-and not an `issues_born.n: 0`. Same discipline for `next.suggested[]` (step 13),
-which is optional by contract and omitted when no trigger fired.
+and not an `issues_born.n: 0`.
 
 **`next.suggested[]`** — step 13's trigger-attributed suggestion surface,
 `{command, trigger, source_skill}[]`, **optional** (mirrors
@@ -87,8 +86,9 @@ which is optional by contract and omitted when no trigger fired.
 Each `trigger` string quotes the owning skill's own condition — never a
 second, drifting copy of that skill's logic. Advisory only: it rides beside
 `next.recommended`/`next.tier`, never replaces them. No unit has a fired
-trigger this run → `next.suggested` is omitted entirely (an empty/absent
-field, not an error).
+trigger this run → `next.suggested` is emitted as an empty array
+(`"suggested": []`), never an absent key: a consumer keys on the array, not on
+the key's presence.
 
 **Envelope shape reminders (the script validates these before printing — mirrors
 `packages/agentic-workflow-schema/envelope.schema.json`):**

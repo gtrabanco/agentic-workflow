@@ -43,7 +43,7 @@
 
    | Condition over the taken batch | Batch class | Fold behavior |
    |---|---|---|
-   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops and routes to planning |
+   | ≥ 1 row with frozen class `replan-in-unit` or `decision-required` | `frozen (replan present)` | **freeze-batch** — nothing folds, no `folded: yes` flips, no commits; the receipt records the REPLAN-ROUTE and every retained (unfolded) row id; the loop stops and routes to `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the planner |
    | all taken rows foldable, none replan-class | `all-repair-in-place` | fold as today (group → fix → gate → commit → flip) |
    | empty queue (zero findings taken) | `none` | receipt only |
 
@@ -58,8 +58,11 @@
    `DISPUTED <evidence → user decision>`; never edit classification or create an
    issue.
 9. **Replan.** If the smallest correct group exceeds a reviewable correction,
-   emit `REPLAN` with proposed phases appended to the same unit. After user
-   confirmation, `/execute-phase <unit>` completes them and ticks the rows.
+   run `node scripts/unit-route.mjs <unit>` — its `route: replan` line names the
+   planner (`/plan-feature <unit>` or `/plan-fix <n>`) that appends the proposed
+   phases to the unit's SPEC. After the user confirms and a fresh
+   `/review-plan <unit>` passes, `/execute-phase <unit>` completes them and ticks
+   the rows.
 
 ## REPAIR-RECEIPT — fixed printed block (verbatim copy)
 
