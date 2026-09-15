@@ -14,9 +14,11 @@ after `/fold-findings` leaves rows unresolved.
    - A complete correction that fits the current unit and is reviewable now
      remains on the current unit. Route it to `/fold-findings` or an explicit
      `/execute-phase <unit> P<n>`.
-   - A correction too large for the current fold is `replan-in-unit`. For a
-     feature, re-run `/plan-feature <slug>`; for a fix, re-run `/plan-fix
-     <issue-number>`. The plan must append concrete `P<n>` phases to the unit's
+   - A correction too large for the current fold is `replan-in-unit`. Run
+     `node scripts/unit-route.mjs <unit>`; its `route: replan` line names the
+     planner (`/plan-feature <unit>` for a feature, `/plan-fix <issue-number>`
+     for a fix) and the fresh `/review-plan <unit>` that must pass before
+     execution. The plan must append concrete `P<n>` phases to the unit's
      SPEC and preserve the finding's acceptance evidence.
    - A product, architecture, or acceptance decision that blocks safe work is
      `decision-required`. Ask the user; do not guess or weaken the finish line.

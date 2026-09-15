@@ -1,5 +1,14 @@
 ## Planning process
 
+**Replan detection — run the router before ingest.** When the target resolves to
+an existing unit folder, run `node scripts/unit-route.mjs <unit>` first. A
+`route: replan` line means the unit carries an open finding whose frozen route
+is the plan owner: load [the replan contract](<../../replan-findings/SKILL.md>)
+and append phases to that unit's SPEC ledger on its own branch — do not draft a
+new fix SPEC. Every other route keeps this skill's ordinary process; a router
+that cannot run (missing script) is `BLOCKED`, and a missing run is never
+inferred around.
+
 1. **Ingest all inputs.** Each token must be a numeric issue resolved by
    `gh issue view <n> --json title,body,labels,number,author,createdAt,comments`
    (use the declared forge equivalent). Any failure stops the whole set. Translate

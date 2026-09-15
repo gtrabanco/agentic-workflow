@@ -53,10 +53,12 @@ the user routes a proposal to `triage-issue`.
 
 An in-scope fix-now too large to fold as-is (multi-file redesign, or evidence
 the unit should have been split) keeps its **fix-now** class — size is never a
-reason to downgrade. Set its `Route` to **`replan-in-unit`**: the unit's SPEC
-`## Phases` ledger gets one or more new phases covering the work, on the SAME
-branch — proposed to the user for confirmation, then executed via
-`execute-phase`. It never routes to `plan-fix` or a new issue (AC 12). Placement
+reason to downgrade. Set its `Route` to **`replan-in-unit`**: run
+`node scripts/unit-route.mjs <unit>` — its `route: replan` line names the planner
+(`/plan-feature <unit>` or `/plan-fix <n>`) — and the unit's SPEC `## Phases`
+ledger gets one or more new phases covering the work, on the SAME branch, a fresh
+`/review-plan <unit>` passing before `execute-phase` runs them. It never routes to
+`plan-fix` for a new unit or a new issue (AC 12). Placement
 depends on whether the final `Hardening & PR` phase has already run:
 
 - **Hardening not yet executed** → insert the new phase(s) BEFORE it; the
@@ -94,9 +96,10 @@ your domains):
 
 - **fix-now** → fold directly into the current unit's open phase; never a
   tracked issue, never `plan-fix` (AC 12).
-- **fix-now / `replan-in-unit`** → new phase(s) appended to the unit's SPEC
-  `## Phases` ledger (user confirms first), then `execute-phase` on the same
-  branch — never a downgrade, never a tracked issue (AC 12).
+- **fix-now / `replan-in-unit`** → `node scripts/unit-route.mjs <unit>` prints
+  `route: replan`; the planner it names re-cuts the SPEC `## Phases` ledger
+  (user confirms), a fresh `/review-plan <unit>` passes, then `execute-phase`
+  runs the new phases — never a downgrade, never a tracked issue (AC 12).
 - **fix-now / `decision-required`** → stop and surface the decision; the unit
   blocks until the user decides. No issue is created.
 - **proposal** (independent future capability) → batched in the report with a
@@ -114,7 +117,7 @@ finding in its `Route` cell.
 | Owning stage | Hand-off | Never |
 |---|---|---|
 | `source` | fold locally: `/fold-findings`, then re-run `/review-change` on the changed HEAD | — |
-| `plan` | the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then a **fresh `/review-plan <unit>`** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
+| `plan` | run `node scripts/unit-route.mjs <unit>` → `route: replan`; the planning author re-cuts the artifact (SPEC `## Phases`, an obligation row, an acceptance mapping, a ledger) on the same branch with the user's confirmation, then a **fresh `/review-plan <unit>`** precedes `execute-phase` | fold it in code and leave the plan describing the old build |
 | `product` | `/design-feature <unit>` repairs the half, then `/review-spec <unit>` re-judges it | patch the product claim into agreement in code |
 | `environment` / `runtime` | the existing retry/`BLOCKED` paths | translate into a PASS, or an issue |
 
