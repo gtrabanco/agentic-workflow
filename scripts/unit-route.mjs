@@ -73,9 +73,26 @@ function cellsOf(line) {
   return cells;
 }
 
-const isOpen = (folded) => {
+/**
+ * The one open-row predicate, owned here and projected by the sensor: a row is open
+ * unless its `folded` cell carries one of the ledger's not-open spellings. Two
+ * vocabularies let the same ledger row answer `execute` here and `fold` there.
+ */
+export const isOpen = (folded) => {
   const value = String(folded ?? "").trim().toLowerCase();
   return value !== "yes" && value !== "—" && value !== "-" && value !== "n/a" && value !== "";
+};
+
+/**
+ * Mark rows are not findings: `VF-<n>` carries a finding's verification signature
+ * and `REVIEW-RAN` a review's, and a padded mark row reaches the row parser looking
+ * like a finding whose cells are empty. The id shape is the guard — a value-based
+ * guard ("`folded: n/a` means not a finding") breaks the moment a mark is padded
+ * differently.
+ */
+export const isMarkRow = (id) => {
+  const value = String(id ?? "").trim();
+  return /^VF-/i.test(value) || /^REVIEW-RAN$/i.test(value);
 };
 
 const isSeparator = (id) => /^[-:\s]*$/.test(String(id ?? ""));
@@ -90,7 +107,7 @@ export function openRows(ledgerText) {
     if (cells.length < 7) continue;
     const [id, file, axis, severity, klass, route, folded] = cells;
     if (/^id$/i.test(id) || isSeparator(id) || !isOpen(folded)) continue;
-    if (/^VF-/i.test(id)) continue; // finding-mark rows are not fold rows
+    if (isMarkRow(id)) continue; // a mark row carries no destination of its own
     rows.push({ id, file, axis, severity, klass, route, folded });
   }
   return rows;

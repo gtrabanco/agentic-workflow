@@ -77,9 +77,22 @@ mechanized.*
       owner — replan-in-unit (<ids>)", source_skill: "review-change"}`
       (`#224`) — the same class→destination decision `scripts/unit-route.mjs`
       owns; and
-    - a unit's `review-findings.md` ledger carries any other `folded: no` row →
+    - a unit's `review-findings.md` ledger carries any other open row →
       `{command: "/fold-findings", trigger: "unfolded fix-now finding(s) on
       the ledger", source_skill: "fold-findings"}` (`#65`).
+
+    A row is **open** under the router's own predicate (`scripts/unit-route.mjs`
+    `isOpen`), never a re-derived one: `folded: yes`, `—`, `-`, `n/a` and an empty
+    cell all close it. The id shapes `VF-<n>` (a finding's verification mark) and
+    `REVIEW-RAN` (a review mark) are **never** findings — a ledger pads a mark row
+    with empty cells, so it reaches the row parser looking like an open finding and
+    would otherwise project a suggestion for a merged unit. A **decision-required**
+    open row contributes **nothing**: it outranks the fold in the route table (which
+    is first-match) and its work stops for the user, so it is not a driver command —
+    the unit must not be sent to the fold on the strength of a co-resident plain row.
+    The plan-entry ids ride the same 160-char cell bound (`CELL_MAX`) as every other
+    echoed ledger cell.
+
     No trigger fired for a unit → it contributes nothing (not an error, same
     convention as `findings.fix_now`). **Additive advisory only**:
     `next.recommended`/`next.tier` (step 6/turn contract) are computed
