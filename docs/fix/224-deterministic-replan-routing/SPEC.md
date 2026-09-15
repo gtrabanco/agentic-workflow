@@ -203,7 +203,7 @@ and the selection of the finding are taken deterministically by code.
 | OB-14 | F25; SPEC `## Amendments` 2026-09-16 | A phase whose tasks are all ticked is historical: boxes 3 and 7 do not re-judge it, while every unemitted phase keeps both checks armed | P10 | 2 | execute-phase | `node --test scripts/phase-lint.test.mjs` → exit 0 (the corpus pair) | the pair's PASS and BLOCKED assertions | verified |
 | OB-15 | F24; SPEC `## Amendments` 2026-09-16 | The terminal route token and the bare `status` field are documented in the replan contract and its version cell lands in both changelogs | P11 | 4 | execute-phase | `grep -q "close-out" skills/replan-findings/SKILL.md && node --test scripts/normative-drift.test.mjs` → exit 0 | the grep hit, the drift verdict plus the `replan-findings` version cell | verified |
 | OB-16 | F25; SPEC `## Amendments` 2026-09-16 | The phase contract — sole owner of the eight rules — states the executed-phase exemption as an owner-side rule: a fully-ticked phase is historical for boxes 3 and 7, every other box stays armed, pre-ticking to dodge a check is a defect, and its version cell lands in both changelogs | P11 | 3 | execute-phase | `grep -q "fully-ticked phase is historical" skills/phase-contract/SKILL.md && node --test scripts/normative-drift.test.mjs` → exit 0 | the rule text plus the `phase-contract` version cell | verified |
-| OB-17 | F32; SPEC `## Amendments` 2026-09-16 | A known unit with no open row whose status source is gone (its index or roadmap row was removed after the merge) answers the archived state instead of the executor route | P13 | 2 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 (the archived-state pins) | the two pins' asserted `route:`/`next:` lines | planned |
+| OB-17 | F32; SPEC `## Amendments` 2026-09-16 | A known unit with no open row whose status source is gone (its index or roadmap row was removed after the merge) answers the archived state instead of the executor route | P13 | 2 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 (the archived-state pins) | the two pins' asserted `route:`/`next:` lines | verified |
 
 ## Acceptance
 
@@ -769,16 +769,16 @@ void the plan receipt they produce.
 
 Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → exit 0.
 
-- [ ] Red-first `scripts/unit-route.test.mjs` pins the archived state from two new
+- [x] Red-first `scripts/unit-route.test.mjs` pins the archived state from two new
       fixture units (a fix unit with no index row, a feature with no roadmap row):
       no open row plus a gone status source answers `historical` with a prose
       `next:` (F32; OB-17)
-- [ ] `scripts/unit-route.mjs` answers `historical` for that state and documents
+- [x] `scripts/unit-route.mjs` answers `historical` for that state and documents
       the token in its usage block and header (F32; OB-17)
-- [ ] `scripts/normative-drift.test.mjs` extends the closed-vocabulary pin to the
+- [x] `scripts/normative-drift.test.mjs` extends the closed-vocabulary pin to the
       seven published route tokens (F32; OB-17)
-- [ ] Re-run `node --test scripts/*.test.mjs` to exit 0
-- [ ] Reconcile the `OB-17` row to `verified` with its validator's evidence
+- [x] Re-run `node --test scripts/*.test.mjs` to exit 0
+- [x] Reconcile the `OB-17` row to `verified` with its validator's evidence
       recorded in this phase's receipt (RP-224-16; OB-17)
 
 ### P14 — Hardening & PR
