@@ -2064,3 +2064,110 @@ after(() => {
   fs.rmSync(TMP, { recursive: true, force: true });
 });
 
+
+// ===========================================================================
+// F83 re-cut — the layer declaration is exactly-one: a second `Layer:` line
+// in a phase body blocks as unparseable (first-match-wins is forbidden).
+// ===========================================================================
+
+test("a second Layer: line in a phase body blocks as unparseable (F83)", () => {
+  const file = fixture("f83-duplicate-layer.md", `# Plan
+
+### P1 — One phase, two declarations
+
+Layer: docs. Done-when: \`grep -n "tokenizer" docs/tokenizer.md\` → matches.
+
+Layer: config/infra
+
+- [ ] Create \`docs/tokenizer.md\` describing the interface
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /^verdict BLOCKED: unparseable$/m);
+});
+
+test("a single Layer: line per phase still passes (F83 non-regression)", () => {
+  const file = fixture("f83-single-layer.md", `# Plan
+
+### P1 — Ordinary phase
+
+Layer: docs. Done-when: \`grep -n "tokenizer" docs/tokenizer.md\` → matches.
+
+- [ ] Create \`docs/tokenizer.md\` describing the interface
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+// ===========================================================================
+// F85 re-cut — a wrapped continuation line is scanned with its parent task
+// for boxes 4–7; the wrap ends at a blank line, a heading, the next task, a
+// layer-declaration, or a `Done-when:` line; boxes 2–3 keep the checkbox-line
+// scope; fence-inertness is preserved.
+// ===========================================================================
+
+test("a box-5 violation hidden in a wrapped continuation line is caught (F85)", () => {
+  const file = fixture("f85-wrap-box5.md", `# Plan
+
+### P1 — Wrapped task prose
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the parser
+  the flag reads \`strict\` or \`loose\` per the config contract
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1);
+  assert.match(stdout, /P1 box-5: task 1 offers either\/or alternatives/);
+});
+
+test("box-2 does not scan continuation lines — the F85 scope is boxes 4-7 (F85)", () => {
+  const file = fixture("f85-wrap-box2-scope.md", `# Plan
+
+### P1 — Continuation carries a docs target
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Wire \`scripts/x.mjs\` with the parser
+  cross-reference docs/parser-notes.md for the accepted shape
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("a blank line ends the wrap: later prose is not a continuation (F85)", () => {
+  const file = fixture("f85-blank-ends-wrap.md", `# Plan
+
+### P1 — Blank line terminates the join
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the parser
+
+Standalone prose below the blank line mentions or alternatives freely — it is
+body prose, never scanned as task text.
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("a fenced block after a task line is never scanned as a continuation (F85)", () => {
+  const file = fixture("f85-fence-inert.md", `# Plan
+
+### P1 — Fence stays inert
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the parser
+
+\`\`\`
+the fence mentions or alternatives and docs/notes.md — inert to every box
+\`\`\`
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 0);
+  assert.match(stdout, /^verdict PASS$/m);
+});

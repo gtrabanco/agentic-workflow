@@ -411,10 +411,11 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-7`.
     (fail-closed, F83 re-cut);
   - the *done-when* is the `Done-when:` line's remainder in the same block;
   - *tasks* are lines matching `^\s*- \[( |x)\] ` in the body; a wrapped
-    continuation line (a non-empty body line following a task line that is
-    not itself a task, layer-declaration, or `Done-when:` line) is scanned
-    with its parent task for boxes 4–7; fence-inertness is preserved
-    (F85 re-cut).
+    continuation line (a non-empty body line immediately following a task
+    line — the wrap ends at a blank line, a heading, the next task, a
+    layer-declaration, or a `Done-when:` line) is scanned with its parent
+    task for boxes 4–7; boxes 2–3 keep the checkbox-line scope and
+    fence-inertness is preserved (F85 re-cut).
 - A *fenced code block* — a line whose trimmed form is three-or-more
   backticks (optionally followed by an info string) or three-or-more tildes,
   through the closing line whose trimmed form is only the same character

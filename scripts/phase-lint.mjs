@@ -324,7 +324,7 @@ function parsePhases(text) {
     if (current) current.body.push(line);
   }
   return phases.map((phase) => {
-    const layerIndex = phase.body.findIndex((line) => /Layer:\s*\S/.test(line));
+    const layerIndex = phase.body.findIndex((line) => /^\s*Layer:\s*\S/.test(line));
     // The declared value is matched against the closed enum exactly, never
     // narrowed to its first whitespace token: `Layer: docs, ui` (the two-layer
     // shape the rule owner forbids) used to lint clean as `docs`, so a
@@ -356,11 +356,39 @@ function parsePhases(text) {
       }
       doneWhen = block.join(" ").trim();
     }
-    const tasks = phase.body
-      .map((line) => /^\s*- \[([ x])\] (.+)$/.exec(line))
-      .filter(Boolean)
-      .map((match) => match[2].trim());
-    return { ...phase, layer, doneWhen, tasks };
+    // Tasks (F85 re-cut): the checkbox line is the task, and immediately
+    // following wrapped-continuation lines — non-empty body lines whose run
+    // ends at a blank line, a heading, the next task, a layer-declaration, or
+    // a `Done-when:` line — join the parent task's scan text for boxes 4–7.
+    // `tasks` keeps the checkbox line alone (boxes 2–3 scope: per-line targets
+    // and task count); `taskScan` carries the joined text (boxes 4–7 scope:
+    // deliverable shape, decision words, scope mutation, gates). Fence lines
+    // never reach the body (the parser drops them), so fence-inertness is
+    // preserved.
+    const tasks = [];
+    const taskScan = [];
+    for (let i = 0; i < phase.body.length; i += 1) {
+      const match = /^\s*- \[([ x])\] (.+)$/.exec(phase.body[i]);
+      if (!match) continue;
+      const parts = [match[2].trim()];
+      let j = i + 1;
+      for (; j < phase.body.length; j += 1) {
+        const line = phase.body[j];
+        const trimmed = line.trim();
+        if (
+          trimmed === "" ||
+          /^\s*- \[([ x])\] /.test(line) ||
+          /^#{1,6}\s/.test(trimmed) ||
+          /^\s*Layer:\s*\S/.test(line) ||
+          /Done-when:/.test(line)
+        ) break;
+        parts.push(trimmed);
+      }
+      i = j - 1;
+      tasks.push(parts[0]);
+      taskScan.push(parts.join(" "));
+    }
+    return { ...phase, layer, doneWhen, tasks, taskScan };
   });
 }
 
@@ -582,7 +610,13 @@ const BOXES = [box1, box2, box3, box4, box5, box6, box7, box8];
 function lintPhase(phase) {
   const findings = [];
   for (const [index, check] of BOXES.entries()) {
-    const result = check(phase);
+    // F85 re-cut: boxes 4–7 (positions 3–6) scan the joined task text; boxes
+    // 1–3 and 8 keep their own scopes (title, per-line targets, task count,
+    // done-when).
+    const view = index >= 3 && index <= 6 && phase.taskScan
+      ? { ...phase, tasks: phase.taskScan }
+      : phase;
+    const result = check(view);
     if (result && !Array.isArray(result)) {
       if (result.ambiguous) return { ambiguous: result.ambiguous };
       for (const reason of result.findings) findings.push({ box: index + 1, reason });
@@ -599,6 +633,13 @@ export function lintPlan(text) {
   if (phases.length === 0) return { verdict: "BLOCKED: no-phases", exitCode: 1, lines: ["verdict BLOCKED: no-phases", `fingerprint: ${digest([])}`] };
 
   for (const phase of phases) {
+    // F83 re-cut: the layer declaration is exactly-one. A second `Layer:` line
+    // in the same phase body used to be silently ignored (first-match-wins),
+    // so a conflicting declaration could hide behind the first one — it now
+    // fails closed as unparseable, same as a missing or out-of-enum value.
+    if (phase.body.filter((line) => /^\s*Layer:\s*\S/.test(line)).length > 1) {
+      return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
+    }
     if (!phase.layer || !LAYERS.includes(phase.layer)) {
       return { verdict: "BLOCKED: unparseable", exitCode: 1, lines: ["verdict BLOCKED: unparseable", `fingerprint: ${digest([])}`] };
     }
