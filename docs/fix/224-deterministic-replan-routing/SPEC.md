@@ -608,9 +608,9 @@ Layer: `docs`. Done-when: `grep -q "unit-route" CHANGELOG.md && grep -q "unit-ro
 
 Layer: `config/infra`. Done-when: `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0.
 
-- [ ] Re-bundle the Pi mirror with `bun run bundle:skills` from
+- [x] Re-bundle the Pi mirror with `bun run bundle:skills` from
       `packages/pi-agentic-workflow` after the last skill edit (OB-8; PE-012)
-- [ ] Bump the mirror package version and add its changelog row (OB-8)
+- [x] Bump the mirror package version and add its changelog row (OB-8)
 
 ### P8 — Hardening & PR
 

@@ -194,3 +194,10 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - Gotchas: the SENSOR_SIGNALS.md addition pushed that reference to 2297 est > the 2200 default; the `workflow-status` `referenceEstimateMax` was re-based to 2300 with a declared `referenceSources` note (measured 2297) rather than trimming the required signal out.
 - Files: docs/workflow/SKILLS.md (+ ES) · skills/workflow-status/references/SENSOR_SIGNALS.md · skills/workflow-status/SKILL.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · CHANGELOG.md · CHANGELOG.es.md · docs/fix/224-deterministic-replan-routing/SPEC.md (P6 ticks) · progress.md
 - Next: P7 — Mirror parity
+
+## P7 — 2026-09-15
+- Phase-lint re-checked PASS (8/8) at fingerprint `P7:config/infra:2:mirror-parity`.
+- Done: `bun run bundle:skills` (from `packages/pi-agentic-workflow`) re-bundled 39 skills / 125 files after the last skill edit (P6), adding the mirror copy of `replan-findings/**` and refreshing the 15 touched files. Package version 0.9.2 → 0.10.0 with its changelog row in `CHANGELOG.md` + `CHANGELOG.es.md`.
+- Gate: `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 7 pass / 0 fail, exit 0 (every bundled file byte-identical to its `skills/` source); `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail (package-versions recompute to 0.10.0).
+- Files: packages/pi-agentic-workflow/skills/** · packages/pi-agentic-workflow/package.json · CHANGELOG.md · CHANGELOG.es.md · docs/fix/224-deterministic-replan-routing/SPEC.md (P7 ticks) · progress.md
+- Next: P8 — Hardening & PR
