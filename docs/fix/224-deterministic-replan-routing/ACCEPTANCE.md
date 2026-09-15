@@ -2,10 +2,12 @@
 
 Status: frozen
 
-Frozen 2026-09-15 by `plan-fix` from the SPEC's acceptance criteria AC1–AC12.
+Frozen 2026-09-15 by `plan-fix` from the SPEC's acceptance criteria AC1–AC13.
 Re-frozen by the repair batch `fix-224-artrev-0002` (user-authorized; SPEC
 `## Amendments`) — AC5 re-targeted to the unit-37 fixture, AC7 widened to the
-full destination census, AC12 added.
+full destination census, AC12 added. Re-frozen again by `fix-224-artrev-0003`
+(user-authorized; SPEC `## Amendments`) — AC13 added (the `review-change`
+version signal, RP-224-6).
 One stable ID per criterion; validators copied from the criteria. Modifying this
 manifest during execution requires a user-approved SPEC amendment.
 
@@ -23,6 +25,7 @@ manifest during execution requires a user-approved SPEC amendment.
 | AC10 | The Pi mirror is byte-identical to `skills/` after the last skill edit and the package suite passes | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 |
 | AC11 | The repository gate is green at the executed head | `node --test scripts/*.test.mjs` → exit 0 |
 | AC12 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions) | `node --test scripts/unit-route.test.mjs` → exit 0 (the S7 sanitizer pin) |
+| AC13 | The version signal rides the reference edit: `skills/review-change`'s `version:` is bumped from 3.5.0 to 3.5.1 (patch — prose only) and its per-skill changelog cell records the change in both `CHANGELOG.md` and `CHANGELOG.es.md` | `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 |
 
 ## Quality floor
 

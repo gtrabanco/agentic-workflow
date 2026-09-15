@@ -175,6 +175,7 @@ and the selection of the finding are taken deterministically by code.
 | PE-012 | Convention — adding a skill obliges a budget entry, version bumps, changelog rows and a byte-identical Pi mirror | repository | `CLAUDE.md` mirror rule; `packages/pi-agentic-workflow/scripts/bundle-skills.mjs`; `packages/pi-agentic-workflow/test/skill-parity.test.mjs`; `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | `b5358666` | OB-7, OB-8 | current | proven | AC9, AC10 |
 | PE-013 | Dogfood target — AC5's live target does not exist at the bound revision: unit 37's directory is absent from HEAD and its 1065-line ledger lives only on `feat/37-phase-lint-script`, roadmap row 37 = `idea` | repository | `git ls-tree HEAD docs/features/ --name-only \| grep -c 37` → 0; `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md \| wc -l` → 1065 at `e1e282c5`; `docs/features/ROADMAP.md:47` row 37 = `idea` | `48aac035` | AC5's verification target (fixture-based; live variant post-merge, informational) | current | proven | the dogfood fixture case in `scripts/unit-route.test.mjs` |
 | PE-014 | Untrusted-text echo — the router echoes repository-authored but forge-adjacent ledger text, so the workflow's data-never-instructions policy obliges a single sanitizer over its stdout | policy | `pre-execution-review/references/POLICY.md` §7; this SPEC's `## Security risks` bullet 2 | `48aac035` | OB-10, AC12 | current | proven | the sanitizer pin in `scripts/unit-route.test.mjs` |
+| PE-015 | Convention — editing a skill's routing prose obliges its `version:` bump and a per-skill changelog cell in both CHANGELOG tables ("Version every change"; the per-skill tables are the source of truth), and the drift gate makes the pair machine-enforced | policy | `CLAUDE.md` §"Version every change"; `CHANGELOG.md` §"Versioning policy (per skill)" and the `review-change` 3.2.1 cell (patch for prose renumbering); `scripts/normative-drift.test.mjs` `version-tables` check (newest per-skill cell must equal frontmatter) | `0bea68fa` | OB-11, AC13 | current | proven | P4 task 8's grep validator |
 
 ### Obligations
 
@@ -190,6 +191,7 @@ and the selection of the finding are taken deterministically by code.
 | OB-8 | PE-012 | The Pi mirror stays byte-identical to `skills/` after the last skill edit | P7 | 2 | execute-phase | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 | suite output | planned |
 | OB-9 | PE-006; PE-011 | The router stays read-only and byte-deterministic, and every phase re-lints at execution | P1 | 5 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the determinism pin and the pasted lint block | planned |
 | OB-10 | PE-014 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells | P1 | 6 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the S7 sanitizer pin's asserted output | planned |
+| OB-11 | PE-015 | The reference-only routing edit carries its version signal: `review-change`'s `version:` is bumped (patch 3.5.0 → 3.5.1) and its per-skill changelog cell lands in both CHANGELOG tables | P4 | 8 | execute-phase | `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 | the three grep hits pasted | planned |
 
 ## Acceptance
 
@@ -210,6 +212,7 @@ command, with `read-verified` labelled where the observation is a read.
 | AC10 | The Pi mirror is byte-identical to `skills/` after the last skill edit and the package suite passes | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 |
 | AC11 | The repository gate is green at the executed head | `node --test scripts/*.test.mjs` → exit 0 |
 | AC12 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions) | `node --test scripts/unit-route.test.mjs` → exit 0 (the S7 sanitizer pin) |
+| AC13 | The version signal rides the reference edit: `skills/review-change`'s `version:` is bumped from 3.5.0 to 3.5.1 (patch — prose only) and its per-skill changelog cell records the change in both `CHANGELOG.md` and `CHANGELOG.es.md` | `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -338,8 +341,8 @@ repository router.
 | `docs/workflow/SKILLS.md` | The new internal contract in the internal-step list and the internal count | AC8 |
 | `docs/workflow/SKILLS.es.md` | Faithful sibling of the above, same commit | AC8 |
 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | The new skill's budget entry | AC9 |
-| `CHANGELOG.md` | The release row naming the router, the conditional load and the signal | AC11 |
-| `CHANGELOG.es.md` | Faithful sibling of the above, same commit | AC11 |
+| `CHANGELOG.md` | The release row naming the router, the conditional load and the signal; `review-change`'s per-skill changelog cell | AC11; AC13 |
+| `CHANGELOG.es.md` | Faithful sibling of the above, same commit | AC11; AC13 |
 | `docs/fix/README.md` | This unit's index row, opened `pending`, flipped at close-out | AC11 |
 
 ## Observability
@@ -549,12 +552,12 @@ Layer: `config/infra`. Done-when: `node --test scripts/workflow-status-sensor.te
 
 ### P4 — Skills replan destination
 
-Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/review-change/references/OUTPUT_AND_GUARDRAILS.md skills/review-implementation/references/CLASSIFY.md skills/review-implementation/SKILL.md skills/triage-issue/SKILL.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md` → ≥1 per file.
+Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/review-change/references/OUTPUT_AND_GUARDRAILS.md skills/review-implementation/references/CLASSIFY.md skills/review-implementation/SKILL.md skills/triage-issue/SKILL.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md` → ≥1 per file, and `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 (OB-11, AC13).
 
-- [ ] Restate the replan destination in
-      `skills/review-change/references/PERSIST_AND_DECIDE.md` (OB-4; PE-003)
-- [ ] Restate the replan destination in
-      `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md` (OB-4; PE-007)
+- [ ] Restate the replan destination in review-change's two reference files —
+      `skills/review-change/references/PERSIST_AND_DECIDE.md` and
+      `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md` (OB-4; PE-003,
+      PE-007)
 - [ ] Restate the replan destination in
       `skills/review-implementation/references/CLASSIFY.md` (OB-4; PE-003)
 - [ ] Restate the replan destination in `skills/review-implementation/SKILL.md`
@@ -567,6 +570,9 @@ Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/
       `skills/fold-findings/references/FOLD_PROCESS.md` (OB-4; PE-004)
 - [ ] Restate the replan destination in `skills/fold-findings/SKILL.md` and bump
       its version (OB-4; PE-004)
+- [ ] Bump `skills/review-change/SKILL.md` from 3.5.0 to 3.5.1 (patch — prose
+      only) and add its per-skill changelog cell to `CHANGELOG.md` and
+      `CHANGELOG.es.md` (OB-11; PE-015)
 
 ### P5 — Tutorial destination convergence
 
@@ -634,15 +640,16 @@ leave.
 | date | artifact revision | change | authority |
 |---|---|---|---|
 | 2026-09-15 | `fix-224-artrev-0002` | Repair batch after PLAN-REVIEW-FAIL (receipt `rp-224-20260915-001`, snapshot `843327b1…0be566`): RP-224-1 — AC5 re-targeted to the committed unit-37 fixture (PE-013) and `Depends on` states the ordering note; RP-224-2 — PE-010 provenance corrected to `feat/37-phase-lint-script@e1e282c5`; RP-224-3 — destination convergence widened to the census (eight skill files + three tutorial pairs, PE-007), P4 re-cut and P5/P6 added, AC7's validator covers all 14 files; RP-224-4 — sanitizer given OB-10 + AC12 + P1 task 6; RP-224-5 — PE-005/PE-006 line windows corrected to `:713`/`:735`; phases re-cut 7 → 8 under the ≤8-task box | user-authorized repair batch (`plan-fix 224`) |
+| 2026-09-15 | `fix-224-artrev-0003` | Repair batch after PLAN-REVIEW-FAIL (receipt `rp-224-20260915-002`, snapshot `605f53068f5e0d43509750aecfb752fd5afe7d98cc3dbff08b1ae871a7424b35`): RP-224-6 — the version-bump sweep made even: P4's two review-change reference tasks merged into one same-skill task (box 3's ≤8 preserved, P4's fingerprint string unchanged) and new P4 task 8 bumps `review-change` 3.5.0 → 3.5.1 (patch) with its per-skill changelog cell in `CHANGELOG.md` + `CHANGELOG.es.md`; grounded as PE-015, owned by OB-11 + AC13, P4's done-when extended with the version-signal grep; ledgers re-frozen | user-authorized repair batch (`plan-fix 224`) |
 
 ## Status
 
 `pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)
 
-Acceptance manifest blob at planning time (re-frozen by the repair batch,
-`fix-224-artrev-0002`):
+Acceptance manifest blob at planning time (re-frozen by the repair batches,
+`fix-224-artrev-0002` and `fix-224-artrev-0003`):
 `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
-`b6dc545edf96e99a6d0081eadac298124c7ac592` — recorded in the review receipt written by `review-plan` and
+`0dd2747222ce25617ffcf6eae851035a215d6504` — recorded in the review receipt written by `review-plan` and
 re-checked before every phase, per `verification-contract`.
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
