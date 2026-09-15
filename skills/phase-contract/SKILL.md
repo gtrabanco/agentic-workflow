@@ -1,7 +1,7 @@
 ---
 name: phase-contract
 user-invocable: false
-version: 1.0.1
+version: 1.0.3
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -31,12 +31,16 @@ skills) or executed (`execute-phase` pre-flight). Fail-closed: any unticked box
 blocks emission/execution until the phase is re-cut or split.
 
 1. **Title names ONE deliverable** — FAIL if it joins nouns with `+`, `,`, `&`,
-   `and`/`y`, or `/`.
+   `and`/`y`, or `/`. Sole authorized exception: the templates' literal closing
+   title `Hardening & PR` (`docs/features/_TEMPLATE/SPEC.md`,
+   `docs/fix/_TEMPLATE/SPEC.md`) is kept verbatim — its `&` is a *normalization
+   separator*, not a deliverable joiner, and its title-deliverable normalizes to
+   `hardening-pr`. Any other `&`-joined title still FAILs.
 2. **One declared layer** — each phase declares exactly one of the fixed enum
    `schema/db | domain | api | ui | config/infra | docs | hardening | close-out`;
    FAIL if any task's target file belongs to another. Tests for the phase's own
    layer belong to the phase; a test-only phase declares `hardening`.
-3. **≤ 8 tasks** (close-out phase: ≤ 10, only the literal close-out chain).
+3. **≥ 1 task, ≤ 8 tasks** — every phase carries at least one checkbox task; a phase with zero tasks is BLOCKED (fail-closed). Final hardening/close-out phase: 1–10, only the literal close-out chain.
 4. **One checkbox = one deliverable** — FAIL if a task contains a `→` chain of
    implementation steps, enumerates > 3 cases/scenarios, or creates > 1 file of
    distinct concerns.

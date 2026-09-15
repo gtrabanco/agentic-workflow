@@ -141,7 +141,7 @@ use case — one compact row each. Never an exploration transcript.
 | PE-010 | Invariant / use case — the sensor's review/plan rows are the merge-gate surface operators route on; a false `missing` on every sensed fix unit makes the gate untrustworthy, and #205's verdict-landing tail routes ruled-but-unclosed units from exactly these rows | forge | https://github.com/gtrabanco/agentic-workflow/issues/221 (Impact section, read 2026-09-15); `docs/features/ROADMAP.md` row 50 (#205) | issue state 2026-09-15 | AC2 · O3 | current | proven | issue body + roadmap read |
 | PE-011 | Test capability — the sensor suite's `makeFixture` writes fix-index rows and `extraFiles` pre-commit and returns `write` for post-build receipt append; the verifier suite's `recordReceipt` shows the real `build` invocation recipe; root suites run `node --test`; the schema `dist/` must be built first | repository | `scripts/workflow-status-sensor.test.mjs:67-133` (makeFixture: `extraFiles`, gh shim, `write` return), `scripts/pre-execution-sensor.test.mjs:161-175` (recordReceipt build recipe), `scripts/schema-runtime.mjs:12` (dist precondition) | 170b25f6 | AC1, AC2 · O1, O3 | current | proven | code read |
 | PE-012 | Forge sweep 2026-09-15 — open PRs: #212 only (phase-lint script, no shared file); #205 related downstream consumer, does not absorb this; #217 and #193 merged | forge | https://github.com/gtrabanco/agentic-workflow/pulls (open list 2026-09-15); `docs/fix/README.md` rows | forge state 2026-09-15 | O6 | current | proven | forge read this plan |
-| PE-013 | Fix receipts record `Unit kind: fix` (grammar-required), so the sensor can key the no-parent rule on the receipt's own recorded kind without re-deriving the dir-prefix rule the verifier owns | repository | `docs/fix/214-model-selection-over-24-options/progress.md:9` and `docs/fix/191-handoff-review-fold-order/progress.md:6` (`Unit kind: fix` lines); `scripts/pre-execution-snapshot.mjs:208` (the verifier's own dir-prefix derivation — the literal the sensor must not duplicate) | 170b25f6 | AC2 · O3 | current | proven | code + receipt read |
+| PE-013 | Fix receipts record `Unit kind: fix` (grammar-required), so the sensor can key the no-parent rule on the receipt's own recorded kind without re-deriving the dir-prefix rule the verifier owns | document | `skills/review-plan/references/OUTPUT.md:17` (the receipt grammar's own unit line — `- Unit: <unitId> · Stage: plan · Unit kind: <feature\|fix>` — mandates `Unit kind` on every plan receipt); surviving instance `docs/fix/191-handoff-review-fold-order/progress.md:6` (`Unit kind: fix`); `scripts/pre-execution-snapshot.mjs:208` (the verifier's own dir-prefix derivation — the literal the sensor must not duplicate) | d3be6b65 | AC2 · O3 | current | proven | grammar + code + receipt read |
 
 ### Obligations
 
@@ -331,6 +331,16 @@ single-commit-sized, well under the S bound.
    which authority / what was observed / contradictions / unknowns) was
    answered from repository evidence — code, receipts, skill references,
    roadmap, forge; nothing external to fetch.
+9. **PE-013 re-cut (replan, review finding F110)**: the draft cited the
+   fix-214 receipt transcript (`docs/fix/214-model-selection-over-24-options/progress.md:9`,
+   observed at `170b25f6`) as an instance of `Unit kind: fix`, but that file
+   does not exist on this branch nor at its delta base — it lives only on
+   `main`'s line, where the post-merge close-out (`a5900c2e`) has already
+   moved the cited line — so an instance citation is not stable evidence
+   here. Re-pointed at the receipt grammar itself (`OUTPUT.md:17`, which
+   mandates the `Unit kind` line on every plan receipt) plus the surviving
+   fix-191 instance; the row's id, claim, and bound obligation (AC2 · O3)
+   are unchanged.
 
 ## Testing
 
