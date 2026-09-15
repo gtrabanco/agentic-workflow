@@ -22,6 +22,12 @@
     "orchestration-envelope": {
       "descriptionEstimateMax": 170
     },
+    "plan-feature": {
+      "mainEstimateMax": 3079,
+      "mainSources": {
+        "fix 224 / #224": "conditional replan entry wiring grew the skill to 2799 est / 207 lines; ceiling re-based to ceil(measured x 1.10) so the next correction is not blocked by a 1-unit headroom"
+      }
+    },
     "pre-execution-review": {
       "referenceEstimateMax": 3557
     },
@@ -45,13 +51,13 @@
     "workflow-status": {
       "mainEstimateMax": 1680,
       "mainLinesMax": 136,
-      "referenceEstimateMax": 2300,
+      "referenceEstimateMax": 2527,
       "referenceLinesMax": 280,
       "mainSources": {
         "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)"
       },
       "referenceSources": {
-        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est)"
+        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)"
       }
     }
   },
@@ -420,7 +426,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224)",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",
