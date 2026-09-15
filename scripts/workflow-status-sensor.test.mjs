@@ -574,6 +574,57 @@ test("F7/F8: a mixed-vocabulary fold ledger is normalized, and an unusable row i
   assert.equal(validateEnvelope(envelope).ok, true, `schema errors: ${validateEnvelope(envelope).errors?.join("; ")}`);
 });
 
+test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now row to the fold, and no row to nothing", () => {
+  const ledger = (route) => [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|-----|-----|-----|-----|-----|-----|-----|",
+    `| F1 | scripts/a.mjs:1 | code | med | fix-now | ${route} | no |`,
+  ].join("\n");
+
+  const replan = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger("replan-in-unit: plan owner re-cuts the phase")}\n` },
+  }).run();
+  assert.equal(replan.status, 0, replan.stderr);
+  assert.deepEqual(parseEnvelope(replan.stdout).next.suggested, [{
+    command: "/plan-feature 90-alpha",
+    trigger: "an open finding's frozen route is the plan owner — replan-in-unit (F1)",
+    source_skill: "review-change",
+  }], "a plan-owned row points at the unit's planner, not the fold");
+  assert.equal(validateEnvelope(parseEnvelope(replan.stdout)).ok, true);
+
+  const fold = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger("fold into phase")}\n` },
+  }).run();
+  assert.equal(fold.status, 0, fold.stderr);
+  assert.deepEqual(parseEnvelope(fold.stdout).next.suggested, [{
+    command: "/fold-findings",
+    trigger: "unfolded fix-now finding(s) on the ledger",
+    source_skill: "fold-findings",
+  }]);
+
+  const fixIndex = [
+    "# Active fixes",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    "|---|---|---|---|",
+    "| [#91](https://example.invalid/issues/91) | `alpha` | in-progress | x |",
+  ].join("\n");
+  const fix = makeFixture({
+    extraFiles: {
+      "docs/fix/README.md": `${fixIndex}\n`,
+      "docs/fix/91-alpha/review-findings.md": `${ledger("replan-in-unit: plan owner re-cuts the phase")}\n`,
+    },
+  }).run();
+  assert.equal(fix.status, 0, fix.stderr);
+  assert.equal(parseEnvelope(fix.stdout).next.suggested[0].command, "/plan-fix 91", "a fix unit's planner command is /plan-fix <issue>");
+
+  const none = makeFixture({ roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"] }).run();
+  assert.equal(none.status, 0, none.stderr);
+  assert.deepEqual(parseEnvelope(none.stdout).next.suggested, [], "a unit with no open row contributes no suggestion");
+});
+
 test("F2: a done unit's merge state comes from the PR, never from the 20-row window", () => {
   const roadmapRows = [
     "| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | long shipped |",
