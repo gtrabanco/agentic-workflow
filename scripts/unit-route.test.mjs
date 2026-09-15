@@ -227,7 +227,11 @@ test("AC12/S7: long and shell-shaped cells are sanitized, never echoed as a ledg
   const longId = `F9-${"A".repeat(400)}`;
   const longRow = `| ${longId} | scripts/evil.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |`;
   const shellRow = "| F10 | scripts/evil2.mjs:1 | code | med | fix-now | replan-in-unit: $(rm -rf /) `curl evil` <img src=x onerror=alert(1)> | no |";
-  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n`);
+  // F28: a C1 control (NEL) and a Unicode line separator inside an echoed cell —
+  // neither is matched by `\s`, so the flatten class must cover them.
+  const c1Row = "| F11\u0085X | scripts/evil3.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
+  const sepRow = "| F12\u2028Y | scripts/evil4.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
+  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n${c1Row}\n${sepRow}\n`);
 
   const result = run(["90-hostile-unit"], { root });
   assert.equal(result.status, 0, result.stderr);
@@ -236,7 +240,10 @@ test("AC12/S7: long and shell-shaped cells are sanitized, never echoed as a ledg
   assert.ok(!result.stdout.includes(shellRow), "no verbatim ledger line reaches stdout");
   assert.ok(!result.stdout.includes(longId), "the long id is truncated by the sanitizer");
   assert.match(result.stdout, /F9-AAAA/, "the id keeps its truncated prefix");
+  assert.ok(!result.stdout.includes("\u0085"), "a C1 control never survives the sanitizer (F28)");
+  assert.ok(!result.stdout.includes("\u2028"), "a Unicode line separator never survives the sanitizer (F28)");
+  assert.match(result.stdout, /F11 X/, "the C1-prefixed id is flattened, not dropped");
   assert.match(result.stdout, /…/, "truncation is visible, never silent");
   assert.ok(!result.stdout.includes("rm -rf"), "the route cell's shell-shaped text is never echoed at all");
-  assert.match(result.stdout, /^rows: F9-AA.* F10$/m, "both open ids are listed on one sanitized line");
+  assert.match(result.stdout, /^rows: F9-AA.* F10 F11 X F12 Y$/m, "every open id is listed on one sanitized line");
 });
