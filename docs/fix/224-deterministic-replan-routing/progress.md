@@ -644,3 +644,26 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   scripts/fixtures/unit-route/docs/features/ROADMAP.md · scripts/fixtures/unit-route/docs/fix/README.md ·
   docs/fix/224-deterministic-replan-routing/SPEC.md (P9 ticks) · progress.md
 - Next: P10.
+
+## P10 — 2026-09-16
+
+- Phase-lint re-checked PASS (8/8) at execution start
+  (`P10:config/infra:3:executed-phase-lint-exemption`).
+- Done: `scripts/phase-lint.mjs` — the parser now records each task's tick state
+  (`ticks`), `executedPhase()` treats a phase whose ticks are all `true` as
+  historical, and `lintPhase` skips **box 3 and box 7 only** for it. The comment
+  names the reason (the replan append contract makes the executed hardening
+  non-last, and both boxes are positional) and the scope (boxes 1, 2, 4–8 stay
+  armed, so pre-ticking cannot dodge a real defect). The owner-side rule text
+  lands in `skills/phase-contract/SKILL.md` in P11 (OB-16).
+- Tests: `scripts/phase-lint.test.mjs` gained the corpus triple (run as a
+  discriminator set): an executed mid-plan hardening with a forge task PASSes;
+  the same phase unticked BLOCKs on box 7; a pre-ticked phase with a box-4
+  defect still BLOCKs on box 4. Mutant check: forcing
+  `const historical = false` kills exactly the first case (128 pass / 1 fail)
+  and leaves both blocking cases green — the triple discriminates.
+- Gate: `node --test scripts/phase-lint.test.mjs` → 129 pass / 0 fail;
+  `node --test scripts/*.test.mjs` → 418 pass / 0 fail.
+- Files: scripts/phase-lint.mjs · scripts/phase-lint.test.mjs ·
+  docs/fix/224-deterministic-replan-routing/SPEC.md (P10 ticks) · progress.md
+- Next: P11.
