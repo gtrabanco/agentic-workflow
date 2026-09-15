@@ -957,7 +957,7 @@ security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR
 folds F91+F93–F99 + the ledger persist + the riding fix/221 commit) escalated
 to a full pass on BOTH triggers (width: the `docs/fix/221-*` tree and the
 `scripts/pre-execution-*`/`workflow-status*` files fall outside the F91+F93–
-F99 cited union; size: +801/−14 = 815 changed lines > 200 across 12 files).
+F99 cited union; size: +955/−18 = 973 changed lines > 200 across 12 files).
 All 85 `folded: yes` rows re-verified at their cited locations by four
 isolated re-verification agents plus nine targeted orchestrator checks — 83
 REPAIRED (24 parser/grammar rows via fresh /tmp reproducers of the original
@@ -1095,9 +1095,9 @@ DEBT-8 minted (recurring stale-at-birth record figures).
 
 | id | file:line | axis | severity | class | route | folded |
 |---|---|---|---|---|---|---|
-| F113 | docs/fix/README.md:29 (Active-table #221 row) | brand/record | high | fix-now | fold: reword the row's status cell to merged reality — from `in-progress` to `done · [#223](…pull/223)` matching main's record at b5358666 (the unit's PR #223 merged 2026-09-14T22:23:59Z, ~10 h before this row landed in dd264f68) — which also completes the riding fix-221 unit's ACCEPTANCE AC6 `done · [` flip leg and removes the #212-merge row conflict | no |
+| F113 | docs/fix/README.md:29 (Active-table #221 row) | brand/record | high | fix-now | fold: reword the row's status cell to merged reality — from `in-progress` to `done · [#223](…pull/223)` matching main's record at b5358666 (the unit's PR #223 merged 2026-09-14T22:23:59Z, ~10 h before this row landed in dd264f68) — which also completes the riding fix-221 unit's ACCEPTANCE AC6 `done · [` flip leg and removes the #212-merge row conflict | yes |
 | VF-113 | docs/fix/README.md:29 · reviewer review-change (brand pass) · HEAD e1e282c517e17035dc54f3efee4c5fbdfa378fa5 · recheck: `gh pr view 223 --json state,mergedAt` → MERGED 2026-09-14T22:23:59Z merge b5358666; `sed -n 29p docs/fix/README.md` → status cell `in-progress`; `git show b5358666:docs/fix/README.md` :17 → `done · [#223](…)` merged-reality row; index legend :8-14 defines `in-progress` = branch open, work ongoing | brand | confirmed | finding-mark | n/a | n/a |
-| F114 | docs/features/37-phase-lint-script/review-findings.md:960 (cycle-14 escalation sentence) | brand/record | med | fix-now | fold: correct the recorded diffstat figures "+801/−14 = 815" → "+955/−18 = 973" in the same sentence (real shortstat over 5eb7f105..4d6b4756; the file count 12 and both full SHAs in the sentence are correct; the >200 escalation conclusion holds under either figure) | no |
+| F114 | docs/features/37-phase-lint-script/review-findings.md:960 (cycle-14 escalation sentence) | brand/record | med | fix-now | fold: correct the recorded diffstat figures "+801/−14 = 815" → "+955/−18 = 973" in the same sentence (real shortstat over 5eb7f105..4d6b4756; the file count 12 and both full SHAs in the sentence are correct; the >200 escalation conclusion holds under either figure) | yes |
 | VF-114 | review-findings.md:960 · reviewer review-change (brand pass) · HEAD e1e282c517e17035dc54f3efee4c5fbdfa378fa5 · recheck: `git diff --shortstat 5eb7f105..4d6b4756` → "12 files changed, 955 insertions(+), 18 deletions(-)" vs the sentence's "+801/−14 = 815"; escalation conclusion unaffected | brand | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD e1e282c517e17035dc54f3efee4c5fbdfa378fa5 | n/a | n/a | review-mark | n/a | n/a |
 
