@@ -33,12 +33,14 @@ convention).
 
 None for this fix's own delivery: `#205`, `#172` and `#194` are independent; it
 consumes their vocabulary without re-opening their decisions. One cross-unit
-ordering note (RP-224-1): unit `37-phase-lint-script` is unmerged at the bound
-revision (`docs/features/ROADMAP.md:47` row 37 = `idea`; the unit directory
-exists only on `feat/37-phase-lint-script`, PE-013), so AC5's dogfood leg is
-verified against a committed fixture copied from that branch's ledger and the
-live variant `node scripts/unit-route.mjs 37-phase-lint-script` becomes runnable
-only after that unit merges — recorded as an informational post-merge check in
+ordering note (RP-224-1, refreshed by the replan `fix-224-artrev-0004`/`-0005`):
+unit `37-phase-lint-script` was unmerged when AC5's fixture leg was frozen and is
+now merged into `main` (`docs/features/ROADMAP.md:47` row 37 = `done · [#212]`;
+the unit directory and `scripts/phase-lint.mjs` are on the branch — PE-011 and
+PE-013 carry the refreshed observation). AC5 therefore keeps its committed
+fixture as the accepted evidence and the live variant
+`node scripts/unit-route.mjs 37-phase-lint-script` — now runnable against the
+real unit — was executed as the informational post-merge check in
 `### Testing`, never an acceptance criterion.
 
 ## Root cause
@@ -108,6 +110,10 @@ and the selection of the finding are taken deterministically by code.
   one fixed output block, one documented exit-code contract, read-only.
 - `scripts/unit-route.test.mjs` — red-first fixtures for every route, the
   bounded read set, the failure states, determinism and read-only behaviour.
+- `scripts/phase-lint.mjs` and `scripts/phase-lint.test.mjs` — the executed-phase
+  exemption (F25): a phase whose tasks are all ticked is historical and is not
+  re-judged by boxes 3 and 7, pinned by a corpus triple that keeps both checks
+  armed for every unemitted phase.
 - `skills/replan-findings/SKILL.md` plus
   `skills/replan-findings/references/PHASE_APPEND.md` — the internal contract
   that is loaded **only** when the router prints the replan route.
@@ -171,9 +177,9 @@ and the selection of the finding are taken deterministically by code.
 | PE-008 | Rollback path — revert the single PR; skills, one script, its tests and docs only | repository | `docs/fix/_TEMPLATE/SPEC.md` rollback row; no migration or schema vocabulary in `packages/agentic-workflow-schema` | `b5358666` | rollback section | current | proven | `git revert <merge sha>` clean |
 | PE-009 | Affected use case — the operator path "a finding's frozen route is the plan owner → the planner appends phases → the fold lands them" | repository | `skills/review-implementation/references/CLASSIFY.md:97`; `#224` body | `b5358666` | OB-1, OB-2 | current | proven | scenario matrix row S1 |
 | PE-010 | Cost evidence — the lookup is unbounded today: unit 37's ledger is 1065 lines and both planners consume the full preflight | repository | `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md \| wc -l` → 1065; `skills/plan-feature/SKILL.md:63-67`; `skills/plan-fix/SKILL.md:99-100` | `feat/37-phase-lint-script@e1e282c5` (the ledger is absent at `b5358666` and at HEAD; cross-branch read, disclosed as in PE-011) | the bounded read set | current | proven | router output path count |
-| PE-011 | Tooling — `scripts/phase-lint.mjs` does not exist on `main`; the linter ships with the unmerged unit 37 | repository | `test -f scripts/phase-lint.mjs` → absent at `b5358666`; present on `feat/37-phase-lint-script` | `b5358666` | how the phases were linted at planning time | current | proven | `execute-phase` pre-flight re-lints at execution |
+| PE-011 | Tooling — `scripts/phase-lint.mjs` ships with the workflow repository and is **present** on the bound revision because unit 37 merged into `main` | repository | `test -f scripts/phase-lint.mjs` → present at `bf88bccc` (absent on the pre-merge tree `b5358666`) | `bf88bccc` | how the phases were linted at planning time; the replan's `P9`–`P12` and the re-opened `P8` were linted with this shipped linter | current | proven | `execute-phase` pre-flight re-lints at execution |
 | PE-012 | Convention — adding a skill obliges a budget entry, version bumps, changelog rows and a byte-identical Pi mirror | repository | `CLAUDE.md` mirror rule; `packages/pi-agentic-workflow/scripts/bundle-skills.mjs`; `packages/pi-agentic-workflow/test/skill-parity.test.mjs`; `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | `b5358666` | OB-7, OB-8 | current | proven | AC9, AC10 |
-| PE-013 | Dogfood target — AC5's live target does not exist at the bound revision: unit 37's directory is absent from HEAD and its 1065-line ledger lives only on `feat/37-phase-lint-script`, roadmap row 37 = `idea` | repository | `git ls-tree HEAD docs/features/ --name-only \| grep -c 37` → 0; `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md \| wc -l` → 1065 at `e1e282c5`; `docs/features/ROADMAP.md:47` row 37 = `idea` | `48aac035` | AC5's verification target (fixture-based; live variant post-merge, informational) | current | proven | the dogfood fixture case in `scripts/unit-route.test.mjs` |
+| PE-013 | Dogfood target — unit 37's directory was absent when AC5's fixture was frozen and is on the branch now, so both the fixture leg and the live invocation exist | repository | `git ls-tree HEAD docs/features/ --name-only \| grep -c 37` → 1 at `bf88bccc`; the fixture ledger was copied at `e1e282c5` (`wc -l` → 1065) and the live one reads 1153 lines at `bf88bccc`; `docs/features/ROADMAP.md:47` row 37 = `done · [#212]` | `bf88bccc` | AC5's verification target (the committed fixture is the accepted evidence; the live variant is the post-merge informational check) | current | proven | the dogfood fixture case in `scripts/unit-route.test.mjs` plus the live run recorded in `### Testing` |
 | PE-014 | Untrusted-text echo — the router echoes repository-authored but forge-adjacent ledger text, so the workflow's data-never-instructions policy obliges a single sanitizer over its stdout | policy | `pre-execution-review/references/POLICY.md` §7; this SPEC's `## Security risks` bullet 2 | `48aac035` | OB-10, AC12 | current | proven | the sanitizer pin in `scripts/unit-route.test.mjs` |
 | PE-015 | Convention — editing a skill's routing prose obliges its `version:` bump and a per-skill changelog cell in both CHANGELOG tables ("Version every change"; the per-skill tables are the source of truth), and the drift gate makes the pair machine-enforced | policy | `CLAUDE.md` §"Version every change"; `CHANGELOG.md` §"Versioning policy (per skill)" and the `review-change` 3.2.1 cell (patch for prose renumbering); `scripts/normative-drift.test.mjs` `version-tables` check (newest per-skill cell must equal frontmatter) | `0bea68fa` | OB-11, AC13 | current | proven | P4 task 8's grep validator |
 
@@ -192,10 +198,11 @@ and the selection of the finding are taken deterministically by code.
 | OB-9 | PE-006; PE-011 | The router stays read-only and byte-deterministic, and every phase re-lints at execution | P1 | 5 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the determinism pin and the pasted lint block | planned |
 | OB-10 | PE-014 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells | P1 | 6 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the S7 sanitizer pin's asserted output | planned |
 | OB-11 | PE-015 | The reference-only routing edit carries its version signal: `review-change`'s `version:` is bumped (patch 3.5.0 → 3.5.1) and its per-skill changelog cell lands in both CHANGELOG tables | P4 | 8 | execute-phase | `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 | the three grep hits pasted | planned |
-| OB-12 | F24; SPEC `## Amendments` 2026-09-16 | A unit whose work is finished (status `done`, no open row) is routed to the merge gate rather than to the executor, and the new route token is documented and released | P9 | 3 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 (the terminal-route pin) | the terminal-route pin's asserted `route:`/`next:` lines | planned |
+| OB-12 | F24; SPEC `## Amendments` 2026-09-16 | A unit whose work is finished (status `done`, no open row) is routed to the merge gate rather than to the executor | P9 | 3 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 (the terminal-route pin) | the terminal-route pin's asserted `route:`/`next:` lines | planned |
 | OB-13 | F23; SPEC `## Amendments` 2026-09-16 | The `status` field carries the bare status token from the fix-index and roadmap cells, never the surrounding markdown | P9 | 2 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 (the status-token pin) | the status-token pin's asserted `status:` line | planned |
 | OB-14 | F25; SPEC `## Amendments` 2026-09-16 | A phase whose tasks are all ticked is historical: boxes 3 and 7 do not re-judge it, while every unemitted phase keeps both checks armed | P10 | 2 | execute-phase | `node --test scripts/phase-lint.test.mjs` → exit 0 (the corpus pair) | the pair's PASS and BLOCKED assertions | planned |
-| OB-15 | F24, F25; SPEC `## Amendments` 2026-09-16 | Both new contracts are documented and released: the terminal route token and bare `status` in the replan contract, the executed-phase exemption in the phase contract, each with its version cell in both changelogs | P11 | 3 | execute-phase | `node --test scripts/normative-drift.test.mjs` → exit 0 | the drift verdict plus the two version cells | planned |
+| OB-15 | F24; SPEC `## Amendments` 2026-09-16 | The terminal route token and the bare `status` field are documented in the replan contract and its version cell lands in both changelogs | P11 | 4 | execute-phase | `node --test scripts/normative-drift.test.mjs` → exit 0 | the drift verdict plus the `replan-findings` version cell | planned |
+| OB-16 | F25; SPEC `## Amendments` 2026-09-16 | The phase contract — sole owner of the eight rules — states the executed-phase exemption as an owner-side rule: a fully-ticked phase is historical for boxes 3 and 7, every other box stays armed, pre-ticking to dodge a check is a defect, and its version cell lands in both changelogs | P11 | 3 | execute-phase | `grep -q "fully-ticked phase is historical" skills/phase-contract/SKILL.md && node --test scripts/normative-drift.test.mjs` → exit 0 | the rule text plus the `phase-contract` version cell | planned |
 
 ## Acceptance
 
@@ -246,11 +253,14 @@ validator that exercise it.
 | S1 — a unit carries an open row whose frozen route is the plan owner, and the operator invokes the planner directly | wrong route (the dead end this fix repairs) | P1 | `node --test scripts/unit-route.test.mjs` → the replan fixture exits 0 with `route: replan` |
 | S2 — a unit carries only plain fix-now rows | wrong route (fold work sent to the planner) | P1, P3 | the fold fixture plus `node --test scripts/workflow-status-sensor.test.mjs` → the fold suggestion |
 | S3 — a unit carries a `decision-required` row | wrong route (a human decision taken by an agent) | P1, P3 | the decision fixture plus the sensor's decision pin |
-| S4 — the unit exists with no open row | wrong route (re-planning a planned unit) | P1 | the execute fixture |
+| S4 — the unit exists with no open row | wrong route (re-planning a planned unit) | P1 | the execute fixture; the `done` half of the same input is S9 |
 | S5 — no unit exists, only the tracked issue | wrong route (planning without a unit) | P1 | the plan-from-issue fixture |
 | S6 — the operator passes an unknown, extra, or ambiguous argument | guessed route instead of a failure state | P1 | the exit-code pins (1, 1, 2) |
 | S7 — a ledger cell carries long or shell-shaped text | echoed untrusted text read as instructions | P1, P4 | the sanitizer pin (AC12, OB-10) plus the contract's data-never-instructions rule |
 | S8 — the ledger is absent for a unit | silent success on a missing input | P1 | the absent-ledger fixture answers the unit's own status route |
+| S9 — a finished unit (`done`, no open row) is handed to the executor | wrong route (re-executing a closed unit instead of reaching the merge gate) | P9 | the terminal-route pin (F24) in `scripts/unit-route.test.mjs` |
+| S10 — a replan re-judges a phase that already ran | gate cannot be satisfied (the sanctioned append shape becomes unemittable) | P10 | the executed-phase corpus triple (F25) in `scripts/phase-lint.test.mjs` |
+| S11 — a unit's status cell carries its markdown decoration | wrong value in the routed block's contract (a consumer reads `\`done`, not `done`) | P9 | the status-token pin (F23) in `scripts/unit-route.test.mjs` |
 
 ## Rules that must never be violated
 
@@ -278,12 +288,13 @@ of them:
 
 ## Impact
 
-- **Layers touched:** `config/infra` (the router script, the sensor, their
-  tests), `docs` (skill prose, the tutorial pair, changelogs, the budget
-  manifest).
+- **Layers touched:** `config/infra` (the router script, the sensor, the shared
+  phase linter, their tests), `docs` (skill prose, the tutorial pair, changelogs,
+  the budget manifest).
 - **Modules and files:** `scripts/unit-route.mjs`,
   `scripts/unit-route.test.mjs`, `scripts/workflow-status.mjs`,
-  `scripts/workflow-status-sensor.test.mjs`,
+  `scripts/workflow-status-sensor.test.mjs`, `scripts/phase-lint.mjs`,
+  `scripts/phase-lint.test.mjs`,
   `scripts/normative-drift.test.mjs`, `skills/replan-findings/**`,
   `skills/plan-feature/**`, `skills/plan-fix/**`, `skills/review-change/**`,
   `skills/review-implementation/**`, `skills/triage-issue/**`,
@@ -295,9 +306,16 @@ of them:
   (+ ES), `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md` (+ ES),
   `docs/fix/README.md`, `packages/pi-agentic-workflow/skills/**`.
 - **Blast radius:** every unit that carries an open `folded: no` row, plus the
-  sensor envelope every consumer reads. The router is additive and read-only;
+  sensor envelope every consumer reads, plus — from the replan — every unit whose
+  plan is linted, because `scripts/phase-lint.mjs` runs in the planners' emission
+  step and in `execute-phase`'s pre-flight. The router is additive and read-only;
   the envelope gains one optional array. No existing route changes for a unit
-  with no plan-routed row.
+  with no plan-routed row. The linter edit narrows **when** two boxes fire: a
+  fully-ticked phase is no longer re-judged by boxes 3 and 7, while boxes 2 and
+  4–8 stay armed for it and every box stays armed for every unemitted phase — so
+  no plan that lints PASS before the change lints BLOCKED after it, and the
+  exemption cannot be dodged by pre-ticking (a pre-ticked phase with a box-2/4–8
+  defect still blocks; the corpus triple pins it).
 - **Detection lead time:** immediate — the router's answer and the sensor's
   `next.suggested` are observed on the next invocation. A regression in the
   route table is caught by `scripts/unit-route.test.mjs` in the same gate run.
@@ -508,9 +526,9 @@ record the result here per phase.
 - P7 — `Phase-lint: PASS (8/8) · fingerprint P7:config/infra:2:mirror-parity`
 - P9 — `Phase-lint: PASS (8/8) · fingerprint P9:config/infra:4:terminal-route-for-finished-unit`
 - P10 — `Phase-lint: PASS (8/8) · fingerprint P10:config/infra:3:executed-phase-lint-exemption`
-- P11 — `Phase-lint: PASS (8/8) · fingerprint P11:docs:4:replan-path-contract-docs`
-- P12 — `Phase-lint: PASS (8/8) · fingerprint P12:close-out:6:terminal-receipt-closure`
-- P8 — `Phase-lint: PASS (8/8) · fingerprint P8:hardening:7:hardening-pr`
+- P11 — `Phase-lint: PASS (8/8) · fingerprint P11:docs:5:replan-path-contract-docs`
+- P12 — `Phase-lint: PASS (8/8) · fingerprint P12:close-out:3:terminal-receipt-closure`
+- P8 — `Phase-lint: PASS (8/8) · fingerprint P8:hardening:10:hardening-pr`
 
 > Planning-time note: the original phases were linted with the unmerged linter from
 > `feat/37-phase-lint-script`, because `scripts/phase-lint.mjs` did not exist on
@@ -524,6 +542,14 @@ record the result here per phase.
 > linter (`verdict PASS`, overall fingerprint
 > `751f72932d6b3c0c46af3df062824c020f049861e22eeca609c3bcf35bcc1fda`). The
 > pre-flight re-lint at execution time stays binding.
+>
+> Repair note (2026-09-16, `fix-224-artrev-0005`): the plan-review findings
+> RP-224-7…RP-224-11 were repaired in one batch (the phase-contract rule task,
+> the refreshed `Depends on`/evidence rows, the idempotent re-opened `P8` with
+> the receipts moved behind the commits, the extended declared surface and the
+> new scenario rows). Re-linted with the shipped linter → `verdict PASS`,
+> overall fingerprint
+> `597c922a20d352504d840cab86282fd149fbea9c636246481877650518e9a3fa`.
 
 ### P1 — Deterministic unit router
 
@@ -651,10 +677,11 @@ Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → 
 
 Layer: `config/infra`. Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0.
 
-- [ ] Red-first `scripts/phase-lint.test.mjs` corpus pair: a fully-ticked hardening phase
-      carrying a forge task passes, while the same phase unticked mid-plan blocks (F25)
+- [ ] Red-first `scripts/phase-lint.test.mjs` corpus triple: an executed hardening
+      phase carrying a forge task passes, the same phase unticked mid-plan blocks,
+      and a pre-ticked phase with a box-4/box-8 defect still blocks (F25; OB-16)
 - [ ] `scripts/phase-lint.mjs` stops re-judging a phase whose tasks are all ticked
-      under boxes 3 and 7, keeping both armed for every unemitted phase (F25)
+      under boxes 3 and 7 only, keeping every other box armed (F25; OB-16)
 - [ ] Re-run `node --test scripts/*.test.mjs` to exit 0
 
 ### P11 — Replan path contract docs
@@ -662,13 +689,17 @@ Layer: `config/infra`. Done-when: `node --test scripts/phase-lint.test.mjs` → 
 Layer: `docs`. Done-when: `node --test scripts/normative-drift.test.mjs` → exit 0 and the mirror parity suite passes.
 
 - [ ] `skills/replan-findings/SKILL.md` documents the terminal route token and the
-      bare `status` token in the block it owns (F24; OB-12, OB-13)
+      bare `status` token in the block it owns (F24; OB-15)
 - [ ] Bump `skills/replan-findings/SKILL.md` to the next minor version for the new
-      routing case (F24; OB-12)
-- [ ] Add the `replan-findings` version cell to `CHANGELOG.md` and
-      `CHANGELOG.es.md` (OB-12)
+      routing case (F24; OB-15)
+- [ ] `skills/phase-contract/SKILL.md` states the executed-phase exemption as the
+      sole rule owner — a fully-ticked phase is historical for boxes 3 and 7, every
+      other box stays armed, and pre-ticking to dodge a check is a defect — and
+      bumps to the next patch version (F25; OB-16)
+- [ ] Add both per-skill version cells to `CHANGELOG.md` and `CHANGELOG.es.md`
+      (OB-15, OB-16)
 - [ ] Re-bundle the Pi mirror and add the package release row to both changelogs
-      (OB-12)
+      (OB-15, OB-16)
 
 ### P12 — Terminal receipt closure
 
@@ -677,37 +708,42 @@ Layer: `close-out`. Done-when: the project verification gate exits 0 at the term
 - [ ] Reconcile every `OB-` row to the status its cited validator and recorded
       evidence support, writing the evidence inline (F21, F22)
 - [ ] Re-freeze the acceptance manifest at the terminal head and record its blob (F22)
-- [ ] Run the independent plan review on the terminal candidate as the last
-      governed-artifact write and paste `current: true` (F22)
-- [ ] Run the independent end review on the exact terminal candidate and paste its
-      receipt line (F21)
 - [ ] Fold every new fix-now finding through the fold cycle, then re-review on a
       changed snapshot (F21)
-- [ ] Run the merge audit on the terminal head and paste its verdict with the PR URL
-      (F21)
 
 ### P8 — Hardening & PR
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
+Re-opened by the replan (`fix-224-artrev-0004`): PR #225 already exists and the
+fix-index row already reads `done · [#225]`, so every task below re-verifies its
+outcome against the live PR and never re-creates it. The three receipt tasks run
+**after** the ledger is fully ticked, because a later write to `SPEC.md` would
+void the plan receipt they produce.
+
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
+- [ ] Confirm the fix-index row reads `done · [#225]` and commit the flip only if it is missing
 - [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
-      Markdown file, real backticks, never inline `--body`/heredoc) and
-      PRINT THE PR URL in the chat; the body includes `Closes #224`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [ ] Verify the open PR and print its URL (`gh pr view --json url`) — it exists, so never re-create it; the template's create step would fail here
+- [ ] Confirm the fix-index row links PR #225 and re-commit only if the link moved
+- [ ] Commit `docs: link PR #225` and push (no empty commit when the link already holds)
+- [ ] Run the independent plan review as the last action of this phase, after every
+      box in this ledger is ticked, and paste `current: true` (F21, F22; OB-16)
+- [ ] Run the independent end review on the exact terminal candidate and paste its
+      receipt line (F21)
+- [ ] Run the merge audit on the terminal head and paste its verdict with the PR URL
+      (F21)
 
 ## Rollback
 
 Revert the merge commit (`git revert <merge sha>`) or close the PR. The change
-is confined to skills prose, one new script with its tests, one sensor emission
-and documentation; there is no data migration, no schema vocabulary change and no
-external side effect. A revert restores the three contradictory destination
-sentences, so the dead end returns — the fix is safe to revert and unsafe to
-leave.
+is confined to skills prose, one new script with its tests, one sensor emission,
+the shared phase linter's executed-phase exemption, and documentation; there is
+no data migration, no schema vocabulary change and no external side effect. A
+revert restores the three contradictory destination sentences, the `execute`
+mis-route for a finished unit and the retro-block of a replanned plan, so the
+dead ends return — the fix is safe to revert and unsafe to leave.
 
 ## Amendments
 
@@ -715,6 +751,7 @@ leave.
 |---|---|---|---|
 | 2026-09-15 | `fix-224-artrev-0002` | Repair batch after PLAN-REVIEW-FAIL (receipt `rp-224-20260915-001`, snapshot `843327b1…0be566`): RP-224-1 — AC5 re-targeted to the committed unit-37 fixture (PE-013) and `Depends on` states the ordering note; RP-224-2 — PE-010 provenance corrected to `feat/37-phase-lint-script@e1e282c5`; RP-224-3 — destination convergence widened to the census (eight skill files + three tutorial pairs, PE-007), P4 re-cut and P5/P6 added, AC7's validator covers all 14 files; RP-224-4 — sanitizer given OB-10 + AC12 + P1 task 6; RP-224-5 — PE-005/PE-006 line windows corrected to `:713`/`:735`; phases re-cut 7 → 8 under the ≤8-task box | user-authorized repair batch (`plan-fix 224`) |
 | 2026-09-15 | `fix-224-artrev-0003` | Repair batch after PLAN-REVIEW-FAIL (receipt `rp-224-20260915-002`, snapshot `605f53068f5e0d43509750aecfb752fd5afe7d98cc3dbff08b1ae871a7424b35`): RP-224-6 — the version-bump sweep made even: P4's two review-change reference tasks merged into one same-skill task (box 3's ≤8 preserved, P4's fingerprint string unchanged) and new P4 task 8 bumps `review-change` 3.5.0 → 3.5.1 (patch) with its per-skill changelog cell in `CHANGELOG.md` + `CHANGELOG.es.md`; grounded as PE-015, owned by OB-11 + AC13, P4's done-when extended with the version-signal grep; ledgers re-frozen | user-authorized repair batch (`plan-fix 224`) |
+| 2026-09-16 | `fix-224-artrev-0005` | One-batch repair of the plan-review cycle-2 findings (receipt `rp-224-20260915-004`, snapshot `bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065`, PLAN-REVIEW-FAIL — RP-224-7…RP-224-11): `P11` gains the phase-contract rule task and `OB-16`, `OB-15` is narrowed to the replan contract, `OB-12` drops its duplicated half; `## Depends on` and PE-011/PE-013 are refreshed to the merged reality of unit 37; the re-opened `P8` becomes idempotent for the live PR and gains the three receipt tasks (moved out of `P12`) ordered after every tick, so the plan receipt cannot be voided by a later write; `### In scope`, `## Impact` and `## Rollback` declare the shared-linter edit; the scenario matrix gains S9–S11. `AC14` extended to cover the owner-side rule statement and the corpus triple, re-frozen (blob above); phases re-linted with the shipped linter → `verdict PASS`, fingerprint `597c922a20d352504d840cab86282fd149fbea9c636246481877650518e9a3fa` | user-authorized in-PR replan scope (operator decision 2026-09-16) |
 | 2026-09-16 | `fix-224-artrev-0004` | Replan after the `feat/37-phase-lint-script` merge and the `audit-pr` BLOCKED verdict on PR #225 (`route: replan` from `node scripts/unit-route.mjs 224-deterministic-replan-routing`, bounded read set of 7 paths; findings F21–F25 in the fix-now fold ledger). Appends `P9` (terminal route for a finished unit + bare `status` token — F23, F24), `P10` (executed-phase lint exemption — F25), `P11` (contract docs + release signal for both), `P12` (terminal receipt closure — F21, F22) and **re-opens the executed `P8`** as the terminal close-out. **Placement:** inserted *before* `P8` rather than appended after it, because the sanctioned append (fresh final `Hardening & PR`) makes the executed `P8` non-last, and the shipped linter keys box-3's budget and box-7's `gh pr` position rule off the last phase (`scripts/phase-lint.mjs:653`) — the executed phase is then retro-blocked and the replan is unemittable (`verdict BLOCKED: lint-blocked`). Re-opening `P8` satisfies the placement rule's purpose (the ledger again ends with an unexecuted hardening closing out every phase) while keeping the plan lintable today; `P10` repairs the linter so the next replan does not need the workaround. **AC1 amended** to include the terminal route token and the bare `status` field; **OB-12, OB-13, OB-14, OB-15 added** as the owners of the new normative behaviours; `Depends on` unchanged (unit 37 is now on `main`, so AC5's live variant is recorded as executed evidence, not a new criterion) | user-authorized in-PR replan scope (operator decisions 2026-09-16: replan first, fix the post-merge dogfood defects inside this PR, insert-before placement, and repair the linter defect in-PR) |
 
 ## Status
@@ -725,7 +762,7 @@ Acceptance manifest blob at planning time (re-frozen by the repair batches
 `fix-224-artrev-0002` and `fix-224-artrev-0003`, and by the replan
 `fix-224-artrev-0004`):
 `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
-`b89e915f33a8c49151eca65cea966b3e7e2e03e9` — recorded in the review receipt written by `review-plan` and
+`15e9661fdcafbc628419926806b27ae0532f021d` — recorded in the review receipt written by `review-plan` and
 re-checked before every phase, per `verification-contract`.
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
