@@ -7,13 +7,16 @@ Re-frozen by the repair batch `fix-224-artrev-0002` (user-authorized; SPEC
 `## Amendments`) — AC5 re-targeted to the unit-37 fixture, AC7 widened to the
 full destination census, AC12 added. Re-frozen again by `fix-224-artrev-0003`
 (user-authorized; SPEC `## Amendments`) — AC13 added (the `review-change`
-version signal, RP-224-6).
+version signal, RP-224-6). Re-frozen again by `fix-224-artrev-0004`
+(user-authorized; SPEC `## Amendments`) — AC1 amended (the terminal route token
+for a finished unit and the bare `status` field join the closed route table's
+contract, F23/F24) and AC14 added (the executed-phase lint exemption, F25).
 One stable ID per criterion; validators copied from the criteria. Modifying this
 manifest during execution requires a user-approved SPEC amendment.
 
 | ID | Required outcome | Validator |
 |---|---|---|
-| AC1 | The router's closed route table answers `replan`, `decision`, `fold`, `execute` and `plan-from-issue` from fixture ledgers, first match winning | `node --test scripts/unit-route.test.mjs` → exit 0 |
+| AC1 | The router's closed route table answers `replan`, `decision`, `fold`, `execute`, `close-out` and `plan-from-issue` from fixture ledgers, first match winning, where `close-out` is the route of a finished unit; the `status` field carries the bare status token, never the surrounding markdown | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC2 | The bounded read set is derived from the selected rows only: the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` and each cited repository path, deduped, sorted, and capped with an explicit remainder line | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC3 | Failure states fail closed: an unknown unit and extra arguments exit 1, an ambiguous unit exits 2, and no route is printed on either | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC4 | The router is deterministic and read-only: two consecutive runs print byte-identical stdout, and `git status --porcelain` is unchanged after a run | `node --test scripts/unit-route.test.mjs` → exit 0 |
@@ -26,6 +29,10 @@ manifest during execution requires a user-approved SPEC amendment.
 | AC11 | The repository gate is green at the executed head | `node --test scripts/*.test.mjs` → exit 0 |
 | AC12 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions) | `node --test scripts/unit-route.test.mjs` → exit 0 (the S7 sanitizer pin) |
 | AC13 | The version signal rides the reference edit: `skills/review-change`'s `version:` is bumped from 3.5.0 to 3.5.1 (patch — prose only) and its per-skill changelog cell records the change in both `CHANGELOG.md` and `CHANGELOG.es.md` | `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 |
+| AC14 | A phase whose tasks are all ticked is historical: the linter does not re-judge it under boxes 3 and 7, while an unticked mid-plan phase keeps both checks armed — pinned as a corpus pair (executed hardening with a forge task passes; the same phase unticked blocks) | `node --test scripts/phase-lint.test.mjs` → exit 0 |
+
+Each new criterion carries its obligation owner: AC1 → OB-12 + OB-13, AC14 →
+OB-14, and the documented release signal of both → OB-15.
 
 ## Quality floor
 
@@ -39,6 +46,7 @@ manifest during execution requires a user-approved SPEC amendment.
 ## Commands
 
 - `node --test scripts/unit-route.test.mjs`
+- `node --test scripts/phase-lint.test.mjs`
 - `node --test scripts/workflow-status-sensor.test.mjs`
 - `node --test scripts/normative-drift.test.mjs`
 - `bun scripts/check-skill-context.mjs`
