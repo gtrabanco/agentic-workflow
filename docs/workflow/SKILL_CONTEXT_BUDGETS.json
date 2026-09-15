@@ -25,6 +25,11 @@
     "pre-execution-review": {
       "referenceEstimateMax": 3557
     },
+    "replan-findings": {
+      "referenceSources": {
+        "fix 224 / #224": "conditional replan entry; PHASE_APPEND.md holds the append contract and the artifact-revision duty, measured within the default reference budget"
+      }
+    },
     "review-change": {
       "referenceEstimateMax": 2800,
       "referenceSources": {

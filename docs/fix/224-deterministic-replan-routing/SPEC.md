@@ -524,19 +524,19 @@ Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → 
 
 Layer: `docs`. Done-when: `bun scripts/check-skill-context.mjs` → exit 0.
 
-- [ ] Create `skills/replan-findings/SKILL.md` with the load condition gated on
+- [x] Create `skills/replan-findings/SKILL.md` with the load condition gated on
       the router's replan line (OB-2; PE-002, PE-009)
-- [ ] Create `skills/replan-findings/references/PHASE_APPEND.md` with the append
+- [x] Create `skills/replan-findings/references/PHASE_APPEND.md` with the append
       contract and its artifact-revision duty (OB-2)
-- [ ] Wire the conditional load into `skills/plan-feature/SKILL.md` and bump its
+- [x] Wire the conditional load into `skills/plan-feature/SKILL.md` and bump its
       version (OB-2; PE-002)
-- [ ] Add the replan route and the router line to
+- [x] Add the replan route and the router line to
       `skills/plan-feature/references/ROUTING.md` (OB-2; PE-001)
-- [ ] Wire the conditional load into `skills/plan-fix/SKILL.md` and bump its
+- [x] Wire the conditional load into `skills/plan-fix/SKILL.md` and bump its
       version (OB-2; PE-002)
-- [ ] Add the replan detection to
+- [x] Add the replan detection to
       `skills/plan-fix/references/PLANNING_PROCESS.md` (OB-2; PE-002)
-- [ ] Register the new skill's budget in
+- [x] Register the new skill's budget in
       `docs/workflow/SKILL_CONTEXT_BUDGETS.json` (OB-7; PE-012)
 
 ### P3 — Class-routed machine signal

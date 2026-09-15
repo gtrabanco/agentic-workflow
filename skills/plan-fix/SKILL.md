@@ -1,7 +1,7 @@
 ---
 name: plan-fix
 user-invocable: true
-version: 3.1.0
+version: 3.2.0
 argument-hint: <issue-number> [<issue-number> …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -90,7 +90,7 @@ One or more GitHub issue numbers from this repo, space-separated.
 
 ## Progressive loading — validate before drafting
 
-The allowlist is exactly these five paths:
+The allowlist is exactly the paths below:
 
 1. Every invocation: read [planning process](references/PLANNING_PROCESS.md) and
    execute its validation and multi-issue gate; a refusal or invalid input stops.
@@ -107,6 +107,11 @@ The allowlist is exactly these five paths:
    hand-off run evidence-grounding's `stage: plan` readiness preflight and paste
    the block. `READY-FOR-REVIEW` licenses the hand-off; it is never a review
    verdict, and this skill does not review its own plan.
+7. Only when `node scripts/unit-route.mjs <N>` prints `route: replan` for the
+   target unit: load the [replan contract](<../replan-findings/SKILL.md>) and
+   follow it — the open finding is plan-owned, so its phases are appended to the
+   unit's existing SPEC ledger on the same branch instead of a new fix SPEC. On
+   every other route the router's line decides and this contract is not loaded.
 
 Resources are normative and one hop from this file. Missing required resource →
 stop; never approximate fixed blocks or phase rules.
