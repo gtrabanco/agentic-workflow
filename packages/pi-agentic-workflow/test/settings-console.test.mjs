@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { readConfigFile, writeConfigFile } from "../dist/settings/store.js";
 
 import { runSettingsConsole, prompts } from "../dist/settings/console.js";
+import { PAGED_SELECT_NEXT, PAGED_SELECT_PREV, SELECT_OPTION_LIMIT } from "../dist/settings/picker.js";
 import { renderMergedConfig } from "../dist/settings/view.js";
 import { loadConfig, configFilePaths } from "../dist/config/load.js";
 import { SETTINGS_COMMAND } from "../dist/routing/types.js";
@@ -1003,4 +1004,367 @@ test("AC10: a failed undo is told to the operator, not papered over", async () =
     scripted.notify.some(({ message, kind }) => /Nothing was in flight/i.test(message) && kind === "warning"),
     `the refusal is shown: ${JSON.stringify(scripted.notify)}`,
   );
+});
+
+// --- fix #214: the 24-option dialog cap (AC2-AC5, AC7) ---
+// Pi-web rejects a select dialog offering more than 24 options (PE-001). The
+// frozen names below are the AC2/AC3/AC4/AC5/AC7 validators' `-t` filters; every
+// option dialog a test provokes is checked against the cap.
+
+/** The trailing option `pickModelEntry` appends to every model dialog. */
+const TYPED_OPTION = "Type another reference…";
+
+/** 30 registry references across four providers (over the cap, provider dialog fits). */
+const overCapModels = [
+  ...Array.from({ length: 8 }, (_, i) => `alpha/m${i + 1}`),
+  ...Array.from({ length: 8 }, (_, i) => `beta/m${i + 1}`),
+  ...Array.from({ length: 8 }, (_, i) => `delta/m${i + 1}`),
+  ...Array.from({ length: 6 }, (_, i) => `gamma/m${i + 1}`),
+];
+
+/** 30 providers with one model each — the provider dialog itself exceeds the cap. */
+const overCapProviders = Array.from({ length: 30 }, (_, i) => `prov${String(i + 1).padStart(2, "0")}/m1`);
+
+/** 30 models from one provider — the model dialog pages within it. */
+const singleProviderModels = Array.from({ length: 30 }, (_, i) => `solo/m${String(i + 1).padStart(2, "0")}`);
+
+const optionDialogs = (scripted) => scripted.asked.filter((entry) => Array.isArray(entry.options));
+const fitsCap = (scripted) => optionDialogs(scripted).every((entry) => entry.options.length <= SELECT_OPTION_LIMIT);
+
+test("settings console model picker: provider-first two-step over 30 models", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: overCapModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "delta",
+        [prompts.modelPicked("plan-feature")]: "delta/m3",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "delta/m3");
+
+  const providerDialog = scripted.asked.find((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.ok(providerDialog, "the provider dialog is asked before the model list");
+  assert.equal(providerDialog.kind, "pick", "the rich seam drives the provider dialog while it fits");
+  assert.deepEqual(providerDialog.options, ["alpha", "beta", "delta", "gamma", TYPED_OPTION]);
+
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.ok(modelDialog, "the chosen provider's models come second");
+  assert.ok(
+    modelDialog.options.every((option) => option.startsWith("delta/") || option === TYPED_OPTION),
+    `only the chosen provider's models are offered: ${JSON.stringify(modelDialog.options)}`,
+  );
+  assert.equal(modelDialog.options.at(-1), TYPED_OPTION, "TYPED is last");
+  assert.ok(fitsCap(scripted), `every dialog is under the cap: ${JSON.stringify(optionDialogs(scripted))}`);
+});
+
+test("settings console model picker: provider-first two-step over 30 models in a pick-less UI", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      rich: false,
+      models: overCapModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "beta",
+        [prompts.modelPicked("plan-feature")]: "beta/m5",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "beta/m5");
+  const providerDialog = scripted.asked.find((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.equal(providerDialog.kind, "select", "a pick-less UI drives the two-step through the select fallback (OB-12)");
+  assert.ok(scripted.asked.every((entry) => entry.kind !== "pick"), "no rich picker is used");
+  assert.equal(providerDialog.options.at(-1), TYPED_OPTION);
+  assert.ok(fitsCap(scripted));
+});
+
+test("settings console model picker: provider-first two-step over 30 providers", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: overCapProviders,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: [PAGED_SELECT_NEXT, "prov25"],
+        [prompts.modelPicked("plan-feature")]: "prov25/m1",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "prov25/m1");
+  const pages = scripted.asked.filter((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.equal(pages.length, 2, "the provider dialog itself paged");
+  assert.ok(pages[0].options.includes(PAGED_SELECT_NEXT), "page 1 offers the pager");
+  assert.ok(!pages[0].options.includes("prov25"), "prov25 is beyond page 1");
+  assert.ok(pages[1].options.includes("prov25"), "the pager reached the page-2 providers");
+  assert.ok(pages[1].options.includes(PAGED_SELECT_PREV), "page 2 offers PREV");
+  assert.equal(pages[1].options.at(-1), TYPED_OPTION, "TYPED stays last on the paged provider dialog");
+  assert.ok(fitsCap(scripted));
+});
+
+test("settings console model picker: pages within one provider over 30 models", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: singleProviderModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "solo",
+        [prompts.modelPicked("plan-feature")]: [PAGED_SELECT_NEXT, "solo/m25"],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "solo/m25");
+  const pages = scripted.asked.filter((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.equal(pages.length, 2, "the model dialog paged within the provider");
+  assert.ok(pages[0].options.includes(PAGED_SELECT_NEXT), "page 1 offers the pager");
+  assert.ok(pages[1].options.includes("solo/m25"), "the pager reached the page-2 models");
+  assert.ok(fitsCap(scripted));
+});
+
+test("settings console model picker: single-step preserved at 23 models", async () => {
+  const models = Array.from({ length: 23 }, (_, i) => `alpha/m${i + 1}`);
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"default":{"model":"alpha/m1"}}' },
+    {
+      models,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setDefaultRoute, prompts.save, prompts.cancel],
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelPicked("the default route")]: "alpha/m9",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).default.model, "alpha/m9");
+  assert.ok(
+    !scripted.asked.some((entry) => entry.title === prompts.modelProvider("the default route")),
+    "no provider dialog below the cap",
+  );
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("the default route"));
+  assert.equal(modelDialog.kind, "pick", "the single-step rich pick is preserved");
+  assert.deepEqual(modelDialog.opts, { initial: "alpha/m1" }, "the value in force is preselected");
+  assert.equal(modelDialog.options.length, 24, "23 models + TYPED fit one dialog");
+  assert.equal(modelDialog.options.at(-1), TYPED_OPTION);
+});
+
+test("settings console model picker: single-step preserved at 23 models in a pick-less UI", async () => {
+  const models = Array.from({ length: 23 }, (_, i) => `alpha/m${i + 1}`);
+  const { outcome, scripted } = await run(
+    {},
+    {
+      rich: false,
+      models,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelPicked("plan-feature")]: "alpha/m9",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.equal(modelDialog.kind, "select", "the plain select fallback is preserved below the cap");
+  assert.equal(modelDialog.options.length, 24);
+  assert.equal(modelDialog.options.at(-1), TYPED_OPTION, "TYPED is last on the below-cap pick-less dialog too");
+  assert.ok(fitsCap(scripted));
+});
+
+test("settings console model picker: Type another reference is the last option in every model dialog", async () => {
+  const { scripted } = await run(
+    {},
+    {
+      models: singleProviderModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "solo",
+        [prompts.modelPicked("plan-feature")]: [PAGED_SELECT_NEXT, "solo/m25"],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  const modelDialogs = scripted.asked.filter(
+    (entry) => entry.title === prompts.modelProvider("plan-feature") || entry.title === prompts.modelPicked("plan-feature"),
+  );
+  assert.ok(modelDialogs.length >= 3, "the provider dialog plus both model pages were asked");
+  assert.ok(modelDialogs.every((entry) => entry.options.at(-1) === TYPED_OPTION), "TYPED is last on every model dialog");
+});
+
+test("settings console model picker: bounded command selection over 30 commands", async () => {
+  const commandSet = Object.fromEntries(
+    Array.from({ length: 30 }, (_, i) => [`cmd${String(i + 1).padStart(2, "0")}`, { model: "a/m1" }]),
+  );
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: JSON.stringify({ commands: commandSet }) },
+    {
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.clearOverride, prompts.save, prompts.cancel],
+        [prompts.command]: [PAGED_SELECT_NEXT, "cmd25"],
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.ok(!saved.commands.cmd25, "the command picked from page 2 was removed");
+  assert.equal(Object.keys(saved.commands).length, 29);
+  const pages = scripted.asked.filter((entry) => entry.title === prompts.command);
+  assert.equal(pages.length, 2, "the command list paged");
+  assert.ok(pages[0].options.includes(PAGED_SELECT_NEXT), "page 1 offers the pager");
+  assert.ok(pages[1].options.includes("cmd25"), "the pager reached page 2");
+  assert.ok(fitsCap(scripted));
+});
+
+test("settings console model picker: bounded command multi-select rounds over 30 commands", async () => {
+  const commandSet = Object.fromEntries(
+    Array.from({ length: 30 }, (_, i) => [`cmd${String(i + 1).padStart(2, "0")}`, { model: "a/m1" }]),
+  );
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: JSON.stringify({ commands: commandSet }) },
+    {
+      rich: false,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.bulkApply, prompts.save, prompts.cancel],
+        [prompts.command]: [PAGED_SELECT_NEXT, "cmd22", "cmd01"],
+        [prompts.addAnother]: [true, false],
+        [prompts.fields]: prompts.fieldsThinking,
+        [prompts.thinking("cmd22")]: "low",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  const saved = JSON.parse(written.get(paths.global));
+  assert.equal(saved.commands.cmd22.thinking, "low");
+  assert.equal(saved.commands.cmd01.thinking, "low");
+  const rounds = scripted.asked.filter((entry) => entry.title === prompts.command);
+  assert.equal(rounds.length, 3, "two bounded rounds (page 2 of round 1, page 1 of round 2)");
+  assert.ok(rounds[0].options.includes(PAGED_SELECT_NEXT), "round 1 page 1 offers the pager");
+  assert.ok(rounds[1].options.includes("cmd22"), "round 1 reached page 2");
+  assert.ok(rounds[2].options.includes("cmd01"), "round 2 starts a fresh bounded page");
+  assert.ok(fitsCap(scripted));
+});
+
+// F7: the over-cap two-step's preselection and its TYPED-from-a-paged-dialog
+// path were correct but uncovered — a regression there passed the whole suite.
+// These cases seed the value in force and answer TYPED from a paged dialog, so
+// `askProvider`'s and `askModelWithinProvider`'s `opts.initial` contract and
+// `askModelOverCap`'s TYPED → text-input fallback fail loudly when broken.
+
+test("settings console model picker: the over-cap two-step preselects the value in force at both steps", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"commands":{"plan-feature":{"model":"beta/m5"}}}' },
+    {
+      models: overCapModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "beta",
+        [prompts.modelPicked("plan-feature")]: "beta/m9",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "beta/m9");
+  const providerDialog = scripted.asked.find((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.deepEqual(providerDialog.opts, { initial: "beta" }, "the provider in force is preselected");
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.deepEqual(modelDialog.opts, { initial: "beta/m5" }, "the model in force is preselected within its provider");
+});
+
+test("settings console model picker: the over-cap two-step never leaks the value in force into another provider", async () => {
+  const { outcome, written, scripted } = await run(
+    { [paths.global]: '{"commands":{"plan-feature":{"model":"beta/m5"}}}' },
+    {
+      models: overCapModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "alpha",
+        [prompts.modelPicked("plan-feature")]: "alpha/m2",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "alpha/m2");
+  const providerDialog = scripted.asked.find((entry) => entry.title === prompts.modelProvider("plan-feature"));
+  assert.deepEqual(providerDialog.opts, { initial: "beta" }, "the provider in force is still preselected");
+  const modelDialog = scripted.asked.find((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.deepEqual(modelDialog.opts, {}, "another provider's dialog preselects nothing");
+});
+
+test("settings console model picker: Type another reference from a paged dialog reaches the text input", async () => {
+  const { outcome, written, scripted } = await run(
+    {},
+    {
+      models: singleProviderModels,
+      answers: {
+        [prompts.scope]: "Global",
+        [prompts.menu]: [prompts.setOverride, prompts.save, prompts.cancel],
+        [prompts.command]: "plan-feature",
+        [prompts.fields]: prompts.fieldsModel,
+        [prompts.modelProvider("plan-feature")]: "solo",
+        [prompts.modelPicked("plan-feature")]: [PAGED_SELECT_NEXT, TYPED_OPTION],
+        [prompts.model("plan-feature")]: "custom/ref-9",
+        [prompts.saveTo(paths.global)]: true,
+      },
+    },
+  );
+
+  assert.equal(outcome.status, "saved");
+  assert.equal(JSON.parse(written.get(paths.global)).commands["plan-feature"].model, "custom/ref-9");
+  const pages = scripted.asked.filter((entry) => entry.title === prompts.modelPicked("plan-feature"));
+  assert.equal(pages.length, 2, "TYPED was answered from a paged (page-2) dialog");
+  const asked = scripted.questions();
+  assert.ok(asked.includes(prompts.model("plan-feature")), "TYPED fell through to the text input");
+  assert.ok(fitsCap(scripted));
 });

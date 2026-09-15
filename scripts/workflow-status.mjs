@@ -595,8 +595,14 @@ function senseStage(unitDir, unitId, stage, parent, counter = null) {
   // its repository from its own location by default, so a foreign project's receipts
   // were re-derived against the sensor's checkout — fabricated `missing`/`stale` rows.
   const args = ["verify", "--stage", stage, "--unit", unitId, "--dir", unitDir, "--root", PROJECT];
-  // A fix unit binds no parent (SNAPSHOT.md): never pass --parent for fix receipts.
-  const boundParent = receipt.unitKind === "fix" ? null : (parent ?? receipt.parent);
+  // #221 — a fix unit binds no parent: SNAPSHOT.md's rule is "a fix check must omit
+  // it — the snapshot it re-derives has to be the same shape the reviewer bound".
+  // Keyed on the receipt's own recorded `Unit kind: fix` (PE-013), never a dir-prefix
+  // re-derivation the verifier owns (pre-execution-snapshot.mjs:208). This makes the
+  // no-parent rule hold independent of what any lineage line or spec sense produced,
+  // so the sensor never spawns `verify --parent null` for a fix receipt.
+  const boundParent =
+    receipt.unitKind === "fix" ? null : (parent ?? receipt.parent);
   if (stage === "plan" && boundParent) args.push("--parent", boundParent);
   if (counter) counter.value += 1;
   const result = run(process.execPath, [verifier, ...args], { cwd: PROJECT });

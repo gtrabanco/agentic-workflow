@@ -10,7 +10,7 @@ import { THINKING_LEVELS } from "../config/types.js";
 import { createExtension } from "./factory.js";
 import type { CommandRegistrar } from "./factory.js";
 import type { InvocationContext, SettingsUi } from "../routing/types.js";
-import { createPickerComponent, PICKER_MAX_VISIBLE } from "../settings/picker.js";
+import { createPickerComponent, PICKER_MAX_VISIBLE, pagedSelect } from "../settings/picker.js";
 import { createHintStore, stateFilePath } from "../routing/state.js";
 import { runSettingsConsole } from "../settings/console.js";
 import { readConfigFile, writeConfigFile } from "../settings/store.js";
@@ -49,8 +49,10 @@ const thinkingLevelsInSyncWithPi: ThinkingLevelsMirrorMatchesPi = true;
  * The interactive slice the settings console sees: Pi's own `ui` plus the rich
  * picker (P4). The picker is terminal-only, so a non-TUI mode (headless/RPC)
  * gets the plain `select` path — the console never dead-ends (OB-12, PE-004).
+ * Exported as a test seam: the fallback's bounded paging (AC8) is exercised
+ * directly, without standing up the whole extension.
  */
-function richUi(ctx: ExtensionContext): SettingsUi {
+export function richUi(ctx: ExtensionContext): SettingsUi {
   const base = ctx.ui;
   return {
     select: (title, options) => base.select(title, [...options]),
@@ -59,7 +61,14 @@ function richUi(ctx: ExtensionContext): SettingsUi {
     notify: (message, kind) => base.notify(message, kind),
     pick: async (title, options, opts = {}) => {
       if (ctx.mode !== "tui") {
-        const picked = await base.select(title, [...options]);
+        // Non-TUI: the host's `select` dialog carries the same 24-option cap, so
+        // an over-cap list pages instead of crashing `pick` (AC8, PE-002). A
+        // list within the cap is one call with the same options, in order.
+        const picked = await pagedSelect(
+          (selectTitle, selectOptions) => base.select(selectTitle, [...selectOptions]),
+          title,
+          [...options],
+        );
         if (opts.multiple) return picked ? [picked] : undefined;
         return picked;
       }
@@ -77,6 +86,7 @@ function richUi(ctx: ExtensionContext): SettingsUi {
             items,
             maxVisible: PICKER_MAX_VISIBLE,
             theme: selectListTheme,
+            initial: opts.initial,
             onSelect: (value) => done(value),
             onCancel: () => done(undefined),
           });

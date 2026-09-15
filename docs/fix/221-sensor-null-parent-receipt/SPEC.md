@@ -378,13 +378,13 @@ scripts/workflow-status-sensor.test.mjs` → exit 0 (schema `dist/` built
 first: `cd packages/agentic-workflow-schema && bun install
 --frozen-lockfile && bun run build`).
 
-- [ ] Red-first `scripts/pre-execution-receipt-parent.test.mjs` (new;
+- [x] Red-first `scripts/pre-execution-receipt-parent.test.mjs` (new;
       imports `parseReceipts` from `./pre-execution-contract.mjs`): pin the
       three lineage shapes — a fix plan receipt's `Parent SPEC snapshot:
       null` and a SPEC receipt's `Parent: null` both parse `parent ===
       null`, and a feature receipt's bare/`sha256:`-dressed 64-hex parent
       parses as the bare hex — run to red (O1, O2; PE-003, PE-005, PE-007).
-- [ ] Red-first pinned case in `scripts/workflow-status-sensor.test.mjs` —
+- [x] Red-first pinned case in `scripts/workflow-status-sensor.test.mjs` —
       "a current fix-unit plan receipt senses current, not missing (#221)":
       `makeFixture` with an `in-progress` fix-index row for
       `sensor-null-parent-receipt`, `extraFiles` writing the unit's
@@ -400,15 +400,15 @@ first: `cd packages/agentic-workflow-schema && bun install
       `Verdict: plan-review-pass`), asserting the unit's
       `detail.pre_execution` row reads `label: "current"` with no gate
       blocker for it — run to red (O3; PE-001, PE-002, PE-004, PE-011).
-- [ ] Site 1 — `scripts/pre-execution-contract.mjs:132`: wrap the lineage
+- [x] Site 1 — `scripts/pre-execution-contract.mjs:132`: wrap the lineage
       extraction in the module's own normalizer — `parent:
       recordedValue(fieldFrom(chunk, "Parent SPEC snapshot") ??
       fieldFrom(chunk, "Parent"))` (O1, O2; PE-007) — parser suite green.
-- [ ] Site 2 — `scripts/workflow-status.mjs:598`: never bind a parent for a
+- [x] Site 2 — `scripts/workflow-status.mjs:598`: never bind a parent for a
       fix receipt — `const boundParent = receipt.unitKind === "fix" ? null
       : (parent ?? receipt.parent);` with a comment citing SNAPSHOT.md's
       fix-omits-parent rule (O3; PE-005, PE-013) — sensor suite green.
-- [ ] Regression gate: `node --test scripts/pre-execution-sensor.test.mjs
+- [x] Regression gate: `node --test scripts/pre-execution-sensor.test.mjs
       scripts/pre-execution-attribution.test.mjs
       scripts/pre-execution-timeline.test.mjs
       scripts/pre-execution-quality.test.mjs` → exit 0 (O4; PE-006,
@@ -416,15 +416,15 @@ first: `cd packages/agentic-workflow-schema && bun install
 
 ### P2 — Hardening & PR
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Set the fix-index row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Set the fix-index row status to `done` and commit the flip
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a
       Markdown file, real backticks, never inline `--body`/heredoc) and
       PRINT THE PR URL in the chat; the body includes `Closes #221`
-- [ ] Update the fix-index row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #221` and push
+- [x] Update the fix-index row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #221` and push
 
 ## Rollback
 
@@ -436,7 +436,7 @@ reverted code.
 
 ## Status
 
-`pending` · `in-progress` · `done` (built, PR open — merge state lives in the
+`done` (built, PR open — merge state lives in the
 forge)
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
