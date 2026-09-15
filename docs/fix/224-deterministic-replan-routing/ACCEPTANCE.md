@@ -20,7 +20,7 @@ manifest during execution requires a user-approved SPEC amendment.
 
 | ID | Required outcome | Validator |
 |---|---|---|
-| AC1 | The router's closed route table answers `replan`, `decision`, `fold`, `execute`, `close-out` and `plan-from-issue` from fixture ledgers, first match winning, where `close-out` is the route of a finished unit and `historical` that of an archived unit whose status source is gone; the `status` field carries the bare status token, never the surrounding markdown | `node --test scripts/unit-route.test.mjs` → exit 0 |
+| AC1 | The router's closed route table answers `replan`, `decision`, `fold`, `execute`, `close-out`, `historical` and `plan-from-issue` from fixture ledgers, first match winning, where `close-out` is the route of a finished unit and `historical` that of an archived unit whose status source is gone; the `status` field carries the bare status token, never the surrounding markdown | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC2 | The bounded read set is derived from the selected rows only: the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` and each cited repository path, deduped, sorted, and capped with an explicit remainder line | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC3 | Failure states fail closed: an unknown unit and extra arguments exit 1, an ambiguous unit exits 2, and no route is printed on either | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC4 | The router is deterministic and read-only: two consecutive runs print byte-identical stdout, and `git status --porcelain` is unchanged after a run | `node --test scripts/unit-route.test.mjs` → exit 0 |

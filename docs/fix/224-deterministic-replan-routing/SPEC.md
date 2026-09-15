@@ -263,6 +263,7 @@ validator that exercise it.
 | S9 — a finished unit (`done`, no open row) is handed to the executor | wrong route (re-executing a closed unit instead of reaching the merge gate) | P9 | the terminal-route pin (F24) in `scripts/unit-route.test.mjs` |
 | S10 — a replan re-judges a phase that already ran | gate cannot be satisfied (the sanctioned append shape becomes unemittable) | P10 | the executed-phase corpus triple (F25) in `scripts/phase-lint.test.mjs` |
 | S11 — a unit's status cell carries its markdown decoration | wrong value in the routed block's contract (a consumer reads `\`done`, not `done`) | P9 | the status-token pin (F23) in `scripts/unit-route.test.mjs` |
+| S12 — a unit's status source is gone (its row was removed after the merge) and it carries no open row | silent success or a wrong route (an archived unit sent to the executor) | P13 | the archived-state pins (F32) in `scripts/unit-route.test.mjs` |
 
 ## Rules that must never be violated
 
@@ -311,8 +312,10 @@ of them:
   sensor envelope every consumer reads, plus — from the replan — every unit whose
   plan is linted, because `scripts/phase-lint.mjs` runs in the planners' emission
   step and in `execute-phase`'s pre-flight. The router is additive and read-only;
-  the envelope gains one optional array. No existing route changes for a unit
-  with no plan-routed row. The linter edit narrows **when** two boxes fire: a
+  the envelope gains one optional array. The replan's `P13` does change one
+  route for a unit with no plan-routed row — `execute` becomes `historical` when
+  the unit's status source is gone — which is the archived state `F32` names, not
+  a regression: an unfinished unit with no open row keeps `execute`. The linter edit narrows **when** two boxes fire: a
   fully-ticked phase is no longer re-judged by boxes 3 and 7, while boxes 2 and
   4–8 stay armed for it and every box stays armed for every unemitted phase — so
   no plan that lints PASS before the change lints BLOCKED after it, and the
@@ -531,7 +534,7 @@ record the result here per phase.
 - P11 — `Phase-lint: PASS (8/8) · fingerprint P11:docs:5:replan-path-contract-docs`
 - P12 — `Phase-lint: PASS (8/8) · fingerprint P12:close-out:3:terminal-receipt-closure`
 - P8 — `Phase-lint: PASS (8/8) · fingerprint P8:hardening:10:hardening-pr`
-- P13 — `Phase-lint: PASS (8/8) · fingerprint P13:config/infra:4:archived-unit-state`
+- P13 — `Phase-lint: PASS (8/8) · fingerprint P13:config/infra:5:archived-unit-state`
 - P14 — `Phase-lint: PASS (8/8) · fingerprint P14:hardening:10:hardening-pr`
 
 > Planning-time note: the original phases were linted with the unmerged linter from
@@ -567,6 +570,14 @@ record the result here per phase.
 > sanctioned append shape, lintable because `F25`'s exemption stops boxes 3 and 7
 > from re-judging the fully-ticked `P8`. `verdict PASS`, overall fingerprint
 > `dd3e140687ae85fff9b44b46478a840ae354375ee94c7df9321b61f0573aa27b`.
+>
+> Repair note 3 (2026-09-16, `fix-224-artrev-0009`): the replan review's
+> RP-224-16…RP-224-20 were repaired in one batch — `P13` gained the
+> `OB-17` reconciliation task, `## Impact` states the archived-state route change
+> instead of denying it, the scenario matrix gained `S12`, the manifest's `AC1`
+> enumerates the seven tokens, and the `RP-224-6` ledger row was rebuilt to the
+> canonical shape. Re-linted → `verdict PASS`, overall fingerprint
+> `1268a833c5fde7351e3dfbdcd591cba7de3737dee21be99880d5679f73697191`.
 
 ### P1 — Deterministic unit router
 
@@ -767,6 +778,8 @@ Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → 
 - [ ] `scripts/normative-drift.test.mjs` extends the closed-vocabulary pin to the
       seven published route tokens (F32; OB-17)
 - [ ] Re-run `node --test scripts/*.test.mjs` to exit 0
+- [ ] Reconcile the `OB-17` row to `verified` with its validator's evidence
+      recorded in this phase's receipt (RP-224-16; OB-17)
 
 ### P14 — Hardening & PR
 
@@ -809,6 +822,7 @@ dead ends return — the fix is safe to revert and unsafe to leave.
 | 2026-09-16 | `fix-224-artrev-0004` | Replan after the `feat/37-phase-lint-script` merge and the `audit-pr` BLOCKED verdict on PR #225 (`route: replan` from `node scripts/unit-route.mjs 224-deterministic-replan-routing`, bounded read set of 7 paths; findings F21–F25 in the fix-now fold ledger). Appends `P9` (terminal route for a finished unit + bare `status` token — F23, F24), `P10` (executed-phase lint exemption — F25), `P11` (contract docs + release signal for both), `P12` (terminal receipt closure — F21, F22) and **re-opens the executed `P8`** as the terminal close-out. **Placement:** inserted *before* `P8` rather than appended after it, because the sanctioned append (fresh final `Hardening & PR`) makes the executed `P8` non-last, and the shipped linter keys box-3's budget and box-7's `gh pr` position rule off the last phase (`scripts/phase-lint.mjs:653`) — the executed phase is then retro-blocked and the replan is unemittable (`verdict BLOCKED: lint-blocked`). Re-opening `P8` satisfies the placement rule's purpose (the ledger again ends with an unexecuted hardening closing out every phase) while keeping the plan lintable today; `P10` repairs the linter so the next replan does not need the workaround. **AC1 amended** to include the terminal route token and the bare `status` field; **OB-12, OB-13, OB-14, OB-15 added** as the owners of the new normative behaviours; `Depends on` unchanged (unit 37 is now on `main`, so AC5's live variant is recorded as executed evidence, not a new criterion) | user-authorized in-PR replan scope (operator decisions 2026-09-16: replan first, fix the post-merge dogfood defects inside this PR, insert-before placement, and repair the linter defect in-PR) |
 | 2026-09-16 | `fix-224-artrev-0005` | One-batch repair of the plan-review cycle-2 findings (receipt `rp-224-20260915-004`, snapshot `bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065`, PLAN-REVIEW-FAIL — RP-224-7…RP-224-11): `P11` gains the phase-contract rule task and `OB-16`, `OB-15` is narrowed to the replan contract, `OB-12` drops its duplicated half; `## Depends on` and PE-011/PE-013 are refreshed to the merged reality of unit 37; the re-opened `P8` becomes idempotent for the live PR and gains the three receipt tasks (moved out of `P12`) ordered after every tick, so the plan receipt cannot be voided by a later write; `### In scope`, `## Impact` and `## Rollback` declare the shared-linter edit; the scenario matrix gains S9–S11. `AC14` extended to cover the owner-side rule statement and the corpus triple, re-frozen (blob above); phases re-linted with the shipped linter → `verdict PASS`, fingerprint `597c922a20d352504d840cab86282fd149fbea9c636246481877650518e9a3fa` | user-authorized in-PR replan scope (operator decision 2026-09-16) |
 | 2026-09-16 | `fix-224-artrev-0008` | Replan for the end review's plan-owned finding `F32` (the archived half of F24, the plan-owned row of the third review cycle): appends `P13` (the archived-unit state — a seventh route token `historical` for a unit whose status source is gone, F32/OB-17) and a fresh final `P14 Hardening & PR` after the executed `P8`, which the `F25` exemption keeps lintable. **AC1 amended** to the seven-token vocabulary; **OB-17 added** | user-authorized (operator decision 2026-09-16: fold the source rows in one batch and replan the plan-owned one, third review cycle authorized) |
+| 2026-09-16 | `fix-224-artrev-0009` | One-batch repair of the replan review's findings (RP-224-16…RP-224-20): `P13` gained the `OB-17` reconciliation task; `## Impact` names the archived-state route change; `S12` joins the scenario matrix; the manifest's `AC1` enumerates seven tokens (re-frozen, blob above); the `RP-224-6` row is canonical again (`resolved` + merged evidence) | user-authorized (operator decision 2026-09-16) |
 
 ## Status
 
@@ -820,7 +834,7 @@ Acceptance manifest blob at planning time — re-frozen by the repair batches
 `fix-224-artrev-0008` (each row of
 `## Amendments` names what changed):
 `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
-`ed2a25a819ba02483116c857b2809414566cea44` — recorded in the review receipt written by `review-plan` and
+`13580b459b1d93e8e80176ecf47311ca165b68fa` — recorded in the review receipt written by `review-plan` and
 re-checked before every phase, per `verification-contract`.
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
