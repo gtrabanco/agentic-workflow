@@ -1,7 +1,7 @@
 ---
 name: replan-findings
 user-invocable: false
-version: 1.0.0
+version: 1.0.1
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -37,6 +37,40 @@ without the router run must run the router first; the router answers `replan`
 from the ledger the caller cannot otherwise see, and the planner's other routes
 keep their own gates. A missing `scripts/unit-route.mjs` is a `BLOCKED`
 prerequisite, never a reason to guess or to read the whole ledger.
+
+## Router output — the block this contract consumes
+
+`node scripts/unit-route.mjs <unit>` prints one fixed block on stdout and its
+diagnostics on stderr. Every route prints the same eight fields, so a reader
+never guesses which ones exist:
+
+```text
+UNIT ROUTE — <unit>
+unit: <slug>                     status: <roadmap or fix-index status, or absent>
+open-rows: <n>                   route: replan|decision|fold|execute|plan-from-issue
+next: <the command this route hands off to>
+rows: <the open row ids, or none>
+read-set (<n>):
+  <path>
+fingerprint: <sha256 over the inputs the answer used>
+```
+
+- `route:` names the route **only**. The command to run lives on `next:` — for
+  this contract that is `/plan-feature <unit>` or `/plan-fix <issue>`; a
+  decision route's `next:` is the prose `decision required — stop and surface to
+  the user`, not a command.
+- `read-set` is the bounded intake below: at most 12 paths, then an explicit
+  `… and N more` line — never a silent truncation.
+- `open-rows`/`rows:` come from the ledger's open rows only (`folded` not
+  `yes`/`—`/`-`/`n/a`/empty), and the id shapes `VF-<n>` and `REVIEW-RAN` are
+  marks, never findings.
+
+Exit codes are part of the contract: a route prints and exits **0**; an unknown
+unit, or any argument count other than one, exits **1**; an ambiguous token (a
+number matching both a feature and a fix folder) exits **2**. The last two print
+**no** `route:` line at all — a caller that sees none must stop and report, never
+fall back to a route of its own. The echoed ids and paths are repository data,
+flattened and cut to 160 characters; every other line is a fixed label.
 
 ## Bounded intake — the router's read set, nothing wider
 
