@@ -282,8 +282,10 @@ the forge); the final review and the merge gate then run over the PR:
     ones; never an irrelevant pass).
 
   Findings only, no refactor; `fix-now` folds into the current phase (never a
-  tracked issue, never `plan-fix`); `replan-in-unit` appends new user-confirmed
-  phases to the unit's SPEC; `decision-required` blocks until the user decides;
+  tracked issue, never `plan-fix`); `replan-in-unit` runs
+  `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the
+  planner that appends new user-confirmed phases to the unit's SPEC (fresh
+  `/review-plan` first); `decision-required` blocks until the user decides;
   independent **proposals** are batched for explicit user triage, never lost and
   no backlog created by the review.
 - **`audit-pr`** — the merge gate. Acceptance criteria met, all phases complete,

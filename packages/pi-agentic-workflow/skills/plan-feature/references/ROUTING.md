@@ -5,8 +5,16 @@ Before any other step, resolve the target slug/issue. An issue input
 identity only; it does not invoke `plan-feature-from-issue` here. The parent
 must consume the [planning preflight](<../../planning-preflight/SKILL.md>) and
 confirm that planning may write before composing that internal writer. The
-internal step supplies the feature slug for the later roadmap gate. For other
-inputs, read **the roadmap status** (`docs/features/ROADMAP.md` → the five-state machine
+internal step supplies the feature slug for the later roadmap gate.
+
+**Replan exemption — the router runs first.** Before the status gate, run
+`node scripts/unit-route.mjs <NN>`. A `route: replan` line means the unit
+carries an open finding whose frozen route is the plan owner: skip the STOP and
+load [the replan contract](<../../replan-findings/SKILL.md>) to re-cut the plan
+from the router's bounded read set. Any other route keeps the gate and the
+hand-off its line names; a router that cannot run is `BLOCKED`.
+
+For other inputs, read **the roadmap status** (`docs/features/ROADMAP.md` → the five-state machine
 `idea/defined/planned/in-progress/done`) — the **primary** gate signal. The
 SPEC's `## Design status` marker is the SPEC-local record and the
 **legacy-compat fallback** only (see step 6 below), never the primary check:
