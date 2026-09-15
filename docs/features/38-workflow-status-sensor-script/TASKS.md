@@ -52,7 +52,7 @@ git fixture repo, and the existing root suites still exit 0.
   to stdout with exit 0 (E-38-1: the self-check is diagnostic, not a gate). If validation
   passes, proceed to stdout print. The envelope-mismatch pin asserts that a stubbed
   failing schema's `validateEnvelope` produces stderr diagnostic + envelope printed + exit 0.
-- [x] Implement stdout/stderr separation — `process.stdout.write(json)` for the envelope;
+- [x] Implement stdout and stderr separation — `process.stdout.write(json)` for the envelope;
   `process.stderr.write()` for diagnostics, validation errors, and error messages;
   the `--json-only` flag suppresses any human-readable summary (the script only prints
   the envelope anyway — A:17 no-op). A:23 pin asserts stdout alone parses as valid JSON.
@@ -65,7 +65,7 @@ git fixture repo, and the existing root suites still exit 0.
   empty), flag contracts (`--help` exit 0, `--version` exit 0, `--json-only` byte-identical,
   unknown flag non-zero + stderr usage).
 - [x] Phase-lint all 8 tasks against the 8-box contract (phase-contract: title names one
-  deliverable, one layer = config/infra, ≤ 8 tasks, one checkbox = one deliverable,
+  deliverable, one layer = `config/infra`, ≤ 8 tasks, one checkbox = one deliverable,
   zero decision words, no conditional scope, no external manual gates, machine-checkable
   done-when). Record fingerprint `P1:config/infra:8:sensor-script-core-emission`.
 
@@ -92,7 +92,7 @@ every P1 pin unchanged.
   is redundant); in-flight unit's interruptibility facts: current phase from step 7
   (later), dirty tree from step 1, distance to commit boundary — all from the same
   reads. A:7 pin asserts the script source never references `body` or `comment` strings.
-- [x] Implement SENSOR_CORE steps 4–5 — roadmap/fix-index parsing: read
+- [x] Implement SENSOR_CORE steps 4–5 — roadmap and fix-index parsing: read
   `docs/features/ROADMAP.md` rows into the five-state machine
   (`idea/defined/planned/in-progress/done`); for rows with non-standard status, map to the
   nearest five-state value with `default: idea` and note the raw status string in
@@ -169,7 +169,7 @@ scripts/workflow-status-pre-execution.test.mjs scripts/normative-drift.test.mjs`
   `node scripts/workflow-status.mjs [--json-only] [--last-envelope <json|path>]`.
   Keep: the turn-contract boxes (read-only, envelope on every invocation, the
   no-progress guard ran when `--last-envelope` is supplied), the `--json-only` flag docs,
-  the relationship/when-to-use sections, the schema package reference in Machine envelope
+  the `relationship/when-to-use` sections, the schema package reference in Machine envelope
   (the schema owner, envelope fields pointer). Keep the portability section (sensor uses
   repository and forge commands). Replace the human report section with: "run the script,
   read the JSON, interpret `next.recommended` per the published contract, print the
@@ -289,11 +289,11 @@ and the root discipline suites still exit 0.
 - [x] Derive `build_order` once and share it between the `dependencies` and
   `blocked_units` projections so both emit the same chain (F27) — pin asserts
   the two projections agree on the same fixture.
-- [x] Bound the pre-execution verifier spawns (F20) — the per-unit/stage
+- [x] Bound the pre-execution verifier spawns (F20) — the per-unit and per-stage
   verifier invocations are capped by a suite-pinned constant; exceeding the
   cap degrades, never hangs (declared failure contract holds).
 - [x] Gate and batch the per-branch upstream reads (F33) —
-  `branchIsUnpushed` runs lazily/once per branch per run, not two spawns per
+  `branchIsUnpushed` runs lazily, once per branch per run, not two spawns per
   local branch on every unit resolution.
 - [x] Gate the review-mark reads by the `OPEN_STATES` filter and batch their
   git spawns (F34) — closed units pay zero review-mark spawns.
@@ -320,10 +320,10 @@ phase's head sha.
 - [x] Run the full frozen validation ladder from `ACCEPTANCE.md` — the sensor
   suite, the root discipline suites, `check-skill-context.mjs`, the schema
   package suite, pi bundle parity, and the schema byte-untouched diff.
-- [x] Flip every open `review-findings.md` row folded by P5/P6 — F20, F22,
+- [x] Flip every open `review-findings.md` row folded by P5 and P6 — F20, F22,
   F27–F36 — to `folded: yes`, each bound to the phase head sha (F22 via the
   restored AC-25 row; no row is reclassified).
-- [x] Record the P5/P6 unit-loop receipts in `progress.md` and recompute the
+- [x] Record the P5 and P6 unit-loop receipts in `progress.md` and recompute the
   frozen `ACCEPTANCE.md` blob — `git hash-object` sha appended with the
   acceptance receipt.
 - [x] Push the phase commits to PR #213 and re-read the roadmap row — it stays
