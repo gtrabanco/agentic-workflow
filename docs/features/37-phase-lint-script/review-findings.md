@@ -949,3 +949,117 @@ untracked `tmp/` stale "ya merged" — ED13 residual; the bun `--bun node
 13.35 s test-suite wall-time micro-opt) are report-only, never persisted, and
 carry no trigger-based debt (the perf O(L²) rows are immediate fix-now, not
 deferred debt).
+
+Cycle 14 (mandatory end review, fresh context, user-invoked past the cap) ran
+2026-09-14 (`review-change`, single-reviewer, five applicable axes code/
+security/verify/brand/perf — design/a11y/seo skipped: no UI/web surface; PR
+#212 head `4d6b4756`). The post-cycle-13 fold delta (`5eb7f105..4d6b4756`,
+folds F91+F93–F99 + the ledger persist + the riding fix/221 commit) escalated
+to a full pass on BOTH triggers (width: the `docs/fix/221-*` tree and the
+`scripts/pre-execution-*`/`workflow-status*` files fall outside the F91+F93–
+F99 cited union; size: +801/−14 = 815 changed lines > 200 across 12 files).
+All 85 `folded: yes` rows re-verified at their cited locations by four
+isolated re-verification agents plus nine targeted orchestrator checks — 83
+REPAIRED (24 parser/grammar rows via fresh /tmp reproducers of the original
+defect shapes on node and bun; 14 echo/output/perf rows incl. runtime parity
+at the F57 4 MB boundary, both EPIPE polarities and flat ladders for the
+F98/F99 linearizations; 9 corpus rows via mutation probes — 8 mutants red,
+tmpdir teardown delta 0; docs/record rows via direct reads, exact
+ceil(measured × 1.10) arithmetic, mirror `cmp` and the live routes checker)
+— and 2 REGRESSIONS re-verified into new rows (F106 = regression of F96, F111
+= partial regression of F59). Structural preconditions at `4d6b4756`:
+acceptance blob `63f62e4e…` recomputed = the fresh ED14 receipt; dogfood
+bun+node reproduce the recorded `3afa2601…` fingerprint byte-identically;
+AC3/AC6/AC9/AC10 green; corpus 107/107; contexts 39 skills + 22 routes exit
+0; mirrors byte-identical; normative-drift 16/16; pi package 186/186; schema
+package 684/684 under its declared runner — BUT the full scripts suite is
+371/372 RED at the reviewed head: the riding fix/221 commit's own new test
+asserts a key the sensor never emits (F103). The five isolated context-clean
+finders returned 21 raw candidates; the isolated classifier
+(`review-implementation`) fused them to 13 deduped rows (the fix/221 red-test,
+testing.md-count and fix-index signals each surfaced from 2–4 axes), floored
+severities, and classified 2 high + 11 med fix-now (F100–F112 below) + 1 low
+report-only note; 0 refuted candidates, 0 proposals. The perf linearization
+sweep is CLEAN (every remaining regex measured flat on both runtimes — 12 MB
+all-stuffed file 0.84 s node / 0.40 s bun; `titleDeliverable`'s remaining
+`$`-anchor defused by the preceding collapse; fix/221 `recordedValue` parent
+flow spawn-argv-safe, no shell, traversal-guarded). The isolated debt pass
+minted nothing new: DEBT-1 count 8→9 (overdue, user-routed); DEBT-4 (dead
+branch) and DEBT-5 (double tokenization) triggers FIRE with the coming fold
+batch; DEBT-2/6/7 unchanged.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F100 | scripts/phase-lint.mjs:56,280 (PHASE_HEADING + normalizeTerminators) | code | high | fix-now | regression of F91 — fold: widen the Cf normalization to the whole invisible-char class (`\u00AD \u061C \u180E \u200B-\u200F \u2060-\u2064 \u206A-\u206F \uFEFF` → space) — only U+200B/U+FEFF are mapped today, so U+200C/U+200D/U+00AD/U+2060/U+061C after the phase number still defeat `\s*[—-]`, elide the phase boundary and launder a docs-declared `scripts/` task to false `verdict PASS` — + corpus fixtures for ≥2 new members (U+200C, U+00AD) + clean control | no |
+| VF-100 | scripts/phase-lint.mjs:56,280 · reviewer review-change (code pass) + orchestrator probe · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck failing reproducers: `### P2\u200C — Ghost docs` (and U+200D/U+00AD/U+2060/U+061C variants) → `P1 Phase-lint: PASS (8/8)` `verdict PASS` exit 0 each with the docs-declared `scripts/b.ts` task laundered, while the clean control and the recorded U+200B/U+FEFF shapes → `P2 box-2 … belongs to layer config/infra, not docs` exit 1 | code | confirmed | finding-mark | n/a | n/a |
+| F101 | scripts/phase-lint.mjs:56,389-397 (PHASE_HEADING + box-1) | code | med | fix-now | regression of F91 — fold: enforce the route's second leg ("require a non-empty title") — `### P1 —` with an empty or whitespace-only title in an otherwise-valid phase lints `PASS (8/8) · fingerprint P1:docs:1:` (empty slug) because box-1 never tests emptiness — box-1 returns a finding when `phase.title.trim() === ""` + corpus fixture + control | no |
+| VF-101 | scripts/phase-lint.mjs:56,389-397 · reviewer review-change (code pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck failing reproducer: `### P1 —` + valid docs body → `P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:1:` exit 0 (empty slug; whitespace-only title ditto); control with a real title lints normally | code | confirmed | finding-mark | n/a | n/a |
+| F102 | scripts/phase-lint.mjs:276-282 (normalizeTerminators) | code | med | fix-now | fold: strip a line-start U+FEFF (`(^|\n)\uFEFF` → `$1`) BEFORE the `\u200B\uFEFF`→space pass — the current order converts a line-start BOM into a leading space, so `\uFEFF   ### P1` reads 4 spaces, misses `^ {0,3}#{2,4}` and answers `BLOCKED: no-phases` on a VALID plan (0–2 spaces still pass); delete the now-dead `(^|\n)\uFEFF` replace at :281 (unreachable — U+FEFF already consumed) + corpus fixture (BOM + 3-space heading) | no |
+| VF-102 | scripts/phase-lint.mjs:276-282 · reviewer review-change (code pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck failing reproducer: `\uFEFF   ### P1 — T` → `verdict BLOCKED: no-phases` exit 1; BOM+0/1/2-space variants parse; after the first three replaces no U+FEFF survives (probe false — the :281 replace is dead code) | code | confirmed | finding-mark | n/a | n/a |
+| F103 | scripts/workflow-status-sensor.test.mjs:943-946 (+ scripts/workflow-status.mjs:1161-1179) | verify | high | fix-now | fold (riding fix/221 lane per ED12 — coordinate with the owner's in-flight session): correct the O3 test's accessor — it asserts `envelope.detail.units?.find(...)` but the sensor's `detail` never emits a `units` key (`features`/`fixes`/`pre_execution`/…), so the test can never pass and the full scripts suite is RED 371/372 at the reviewed head; the product behavior itself is CORRECT — the identical fixture senses `fix-221 … label: current` via the `detail.pre_execution` rows; proven-mis-encoding amendment: re-point the assertion at the emitted key keeping the `label === "current"` pin (or the sensor owner adds the projection) | no |
+| VF-103 | scripts/workflow-status-sensor.test.mjs:944 · reviewer review-change (code+verify+brand+perf passes) + orchestrator re-verify · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: `node --test scripts/workflow-status-sensor.test.mjs` → 51/52, ✖ `a current fix-unit plan receipt senses current, not missing (#221)` `AssertionError: the envelope should include the fix-221 unit` (deterministic 3/3, isolated and full-suite); `node --test scripts/*.test.mjs` → 372 tests / 1 fail; instrumented re-run of the identical fixture with the correct accessor passes (`detail.pre_execution` row `unit fix-221 · label current`); the schema/sensor `detail` carries no `units` key | verify | confirmed | finding-mark | n/a | n/a |
+| F104 | scripts/phase-lint.test.mjs:1928-1949 (F98 timing pin) | verify | med | fix-now | regression of F98's pin leg — fold: rebuild the timing fixture on an INTERIOR `*` run (`a`+250k×`*`+`b`, the recorded VF-98 attack) — the shipped pin measures a TRAILING run (`docs/name.md`+120k×`*`) on which the old O(L²) regex is linear (~4 ms), so a mutant restoring the quadratic passes the corpus 107/107 and the linearization can silently rot; assert the interior-run elapsed under a bound the linear code clears ~500× | no |
+| VF-104 | scripts/phase-lint.test.mjs:1928-1949 · reviewer review-change (verify pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: mutant (restore `/^[*_~]+\|[*_~]+$/g` in a /tmp copy) → corpus 107/107 green (pin passes ~113 ms); interior-run measurement under the old regex: 15.8 s @120k, 67 s @250k vs 0.116 s linear at the reviewed head | verify | confirmed | finding-mark | n/a | n/a |
+| F105 | scripts/phase-lint.test.mjs:1952-1973 (F99 timing pin) | verify | med | fix-now | regression of F99's pin leg — fold: tighten the pin's bound — the shape is right (interior `a`+120k×`/`+`b`) but the 30 s `elapsed`/timeout bound admits the quadratic (14.27 s < 30 s), so the restoring mutant stays green 107/107; bound ~5 s (linear ~0.12 s = 40× headroom) or raise the run to ~250k so the quadratic exceeds the existing bound | no |
+| VF-105 | scripts/phase-lint.test.mjs:1952-1973 · reviewer review-change (verify pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: mutant (restore `/^\/+\|\/+$/g` in a /tmp copy) → corpus 107/107 green, the pin itself passes at 14.27 s; quadratic ladder 25k→610 ms, 50k→2458 ms, 100k→9434 ms (×4 per doubling) vs 0.163 s linear at the reviewed head | verify | confirmed | finding-mark | n/a | n/a |
+| F106 | docs/features/37-phase-lint-script/testing.md:15-17 | brand/record | med | fix-now | regression of F96 — fold: recount both numbers the F96 fold rewrote — "Corpus 101/101" (the live suite is 107: the same batch's F91×2/F94/F95/F98/F99 fixtures added 6) and "37 at the `37-plan-7` re-cut" (bf500374 runs 33 — the fold changed a TRUE number into a false one); prefer wording that names counts as of a revision, never a bare total the next fixture-adding fold stales | no |
+| VF-106 | testing.md:15-17 · reviewer review-change (verify+brand passes) + orchestrator re-verify · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: `node --test scripts/phase-lint.test.mjs` → tests 107 / pass 107 (bun agrees); bf500374's phase-lint.{mjs,test.mjs} re-run in /tmp → 33/33; testing.md:15 reads "101/101 … 37 at the `37-plan-7` re-cut" | brand | confirmed | finding-mark | n/a | n/a |
+| F107 | docs/fix/README.md (Active table) | verify/record | med | fix-now | fold (riding fix/221 lane — coordinate with the owner's in-flight session): add the unit's registration row (`\| 221 \| sensor-null-parent-receipt \| in-progress \| — \| fix \|`) — the committed tree carries docs/fix/221-* SPEC+ACCEPTANCE but no index row, so the unit's own ACCEPTANCE AC6 grep (=1) is red at HEAD and the sensor cannot discover the unit outside hand-built fixtures (SPEC in-scope item "docs/fix/README.md: the #221 unit row" never landed; the index's own convention keeps the row until the PR merges) | no |
+| VF-107 | docs/fix/README.md · reviewer review-change (verify+brand passes) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: `grep -n "sensor-null-parent-receipt\|#221" docs/fix/README.md` → 0 hits; docs/fix/221-sensor-null-parent-receipt/ committed at 4d6b4756 (SPEC.md + ACCEPTANCE.md); fix-221 ACCEPTANCE AC6 declares the grep → 1 | verify | confirmed | finding-mark | n/a | n/a |
+| F108 | CHANGELOG.md:754 + CHANGELOG.es.md:756 | brand/record | med | fix-now | fold: sync the 2026-09-11 row's present-tense "is now 24175 / es ahora 27064" values to the shipped 24286/27169 — the same fold batch that rewrote the 2026-09-12 row (24286/27169 = shipped JSON) left this older row's present-tense pointer contradicting it; EN+ES in the same commit (bilingual hard rule) | no |
+| VF-108 | CHANGELOG.md:754 · reviewer review-change (brand pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck direct read: CHANGELOG.md:754 "is now 24175 and … 27064" vs :753 "24286/27169" and SKILL_CONTEXT_BUDGETS.json routes (plan-feature:scaffold 24286, plan-fix:issue 27169); same drift at CHANGELOG.es.md:756 | brand | confirmed | finding-mark | n/a | n/a |
+| F109 | CHANGELOG.md:752 + CHANGELOG.es.md:754 | brand/record | med | fix-now | fold: complete the F93 growth-source repair (9/10) — the fresh re-basis #5 row declares "for the seven execute-phase:*" while `policy.declared` says EIGHT: `execute-phase:unit-loop` 12798→12869 (moved by the same re-basis, f2c3aed0) is named nowhere and the row self-contradicts ("grew every execute-phase:* estimate ceiling" vs seven listed); add unit-loop's 12869 (or reword "the seven … plus unit-loop's normalization") in EN+ES | no |
+| VF-109 | CHANGELOG.md:752 · reviewer review-change (brand pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck direct read vs JSON: CHANGELOG.md:752/.es:754 name seven ceilings, 12869 absent (grep 0 both); SKILL_CONTEXT_BUDGETS.json policy.declared re-basis #5 says "the eight execute-phase:* estimate ceilings"; routes execute-phase:unit-loop = 12869; `git log -S 12869` → f2c3aed0 only | brand | confirmed | finding-mark | n/a | n/a |
+| F110 | docs/fix/221-sensor-null-parent-receipt/SPEC.md (PE-013 evidence row) | brand/record | med | fix-now | replan-in-unit (riding fix/221 planning lane): the planning author re-cuts the PE-013 evidence row — it cites `docs/fix/214-model-selection-over-24-options/progress.md:9` (`Unit kind: fix`) with freshness "current", but that file does not exist at HEAD nor at the delta base (only at revision 170b25f6) — re-point at a surviving authority or annotate the removal with its revision | no |
+| VF-110 | docs/fix/221-sensor-null-parent-receipt/SPEC.md PE-013 · reviewer review-change (brand pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: `ls docs/fix/214-model-selection-over-24-options/` → ACCEPTANCE/ISSUE/LEDGERS/SPEC only (no progress.md); `git ls-tree 5eb7f105` same; `git show 170b25f6:…progress.md` line 9 exists; PE-013 freshness cell says "current" | brand | confirmed | finding-mark | n/a | n/a |
+| F111 | scripts/phase-lint.mjs (box-2 prefix table, `template/` row) | verify | med | fix-now | regression of F59 (partial) — fold: pin the `template/` prefix row (or disclose the shadowing) — a mutant deleting the row survives the corpus 107/107 green because `template/x.md` falls through to the identical `*.md`→docs mapping (6/7 of F59's branches are discriminated, this one is not — a frozen table row can vanish without a red suite); a structural pin (assert the prefix table contains the row) or a known-issues disclosure of the shadowing closes it | no |
+| VF-111 | scripts/phase-lint.mjs prefix table · reviewer re-verification (mutation probe) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck: mutant (`template/` row deleted in a /tmp copy) → `node --test` 107/107 green; the sibling `.github/` and `.agentic-workflow/` row mutants go red (106/107 each); pristine 107/107 | verify | confirmed | finding-mark | n/a | n/a |
+| F112 | scripts/workflow-status-sensor.test.mjs:897-949 (+ the makeFixture helper :68) | perf | med | fix-now | fold: tear the delta's new sensor-test fixture down (rmSync in afterAll/finally) — measured +1 untorn-down mkdtemp dir per suite run from the new test on a pre-existing leaky helper pattern (+49 dirs/run total, 6347→6396); the identical leak class was folded med as F35 for the corpus suite; prefer repairing the shared helper so the whole pattern stops leaking | no |
+| VF-112 | scripts/workflow-status-sensor.test.mjs:897-949 · reviewer review-change (perf pass) · HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 · recheck measured: one sensor-suite run → /tmp/workflow-status-* 6347→6396 dirs (+49; the delta's test contributes 1); corpus-suite control tears down cleanly (phase-lint-corpus-* 5→5, delta 0) | perf | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 4d6b4756c2494569c6afbb3c33b72f7903c34213 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: repeated: F91 (F100 + F101 = regressions of its two route
+  legs — the Cf class is members-short and the empty-title requirement never
+  landed), F96 (F106 = the recount went stale at birth, 101 vs 107, and
+  flipped a true 33 into a false 37), F59 (F111 = the template/ prefix row
+  is behaviorally shadowed, mutant green) / new: F102–F105, F107–F110, F112
+- Snapshots: 5eb7f10524c777a0b48235d0cd8d1b130191285c →
+  4d6b4756c2494569c6afbb3c33b72f7903c34213 (cycle-13 reviewed head → cycle-14
+  reviewed head)
+- Missed: cycle 13 verified the F91 fold at its recorded shapes (U+200B,
+  mid-line U+FEFF, empty title carrying a violating task) and never swept
+  the Cf class members beside those two (F100) nor the empty-title PASS on
+  an otherwise-valid phase (F101); the F96 recount was written against the
+  pre-batch count and immediately falsified by its own batch's six new
+  fixtures (F106); the F98/F99 timing pins shipped on trailing-run/
+  loose-bound shapes the quadratic mutants survive (F104/F105); and the
+  riding fix/221 commit entered the PR with its own acceptance validator
+  red (F103), no fix-index row (F107), a dangling "current" evidence
+  pointer (F110), plus two record rows the fold's own CHANGELOG rewrite
+  invalidated (F108/F109)
+- Owning stage: source (F100–F106, F108, F109, F111, F112) + riding-unit
+  records (F107, F110 — fix/221's own lane, foldable on this branch per
+  ED12)
+- Why the prior review failed: cycle 13 verified each fold at its cited
+  shapes and re-read the record surfaces it knew about, but the Cf
+  normalization's class boundary was again asserted at two enumerated
+  members, the corpus count was updated in the same commit that invalidated
+  it, the timing pins were built on shapes the recorded attacks do not
+  use, and the riding unit's own gate state was never run before its
+  commit landed
+- Route to owner: /fold-findings (explicit ids F100 + F101 + F102 + F103 +
+  F104 + F105 + F106 + F107 + F108 + F109 + F111 + F112); F110 rides the
+  fix/221 planning author's SPEC re-cut on the same branch
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–14 run on the
+user's explicit invocations past the cap. The thirteen open fix-now rows
+F100–F112 are foldable in one atomic batch (Cf-class widen + empty-title
+finding + BOM-order fix + the fix/221 test accessor + two timing-pin
+rebuilds + five record syncs + the template-row pin + the sensor teardown);
+F110 additionally needs the fix/221 planning author's PE-013 re-cut. Standing
+plan-owned rows F83 + F85 + F88 + F90 + F92 remain `folded: no` awaiting the
+plan owner's re-cuts. DEBT-1 is overdue (9th re-report this cycle, user-routed);
+DEBT-4 and DEBT-5 fire with the coming fold batch; DEBT-2/6/7 unchanged.
