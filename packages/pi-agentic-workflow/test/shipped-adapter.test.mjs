@@ -19,6 +19,8 @@ import { join } from "node:path";
 import { SETTINGS_COMMAND } from "../dist/routing/types.js";
 import { readCatalogue } from "../dist/routing/catalogue.js";
 import { prompts } from "../dist/settings/console.js";
+import { richUi } from "../dist/extension/index.js";
+import { PAGED_SELECT_NEXT, PAGED_SELECT_PREV, SELECT_OPTION_LIMIT } from "../dist/settings/picker.js";
 import { createExtension } from "../dist/extension/factory.js";
 
 const bundleSkills = join(import.meta.dirname, "..", "skills");
@@ -309,4 +311,129 @@ test("AC7 through the adapter: a level the operator moved mid-turn survives the 
   } finally {
     entry.cleanup();
   }
+});
+
+// --- fix #214, P4: the non-TUI pick fallback is bounded (AC8, PE-002) ---
+
+/** A non-TUI context whose `select` records every dialog and answers from a queue. */
+function nonTuiContext(answers) {
+  const selects = [];
+  return {
+    selects,
+    ctx: {
+      mode: "non-tui",
+      ui: {
+        select: async (title, offered) => {
+          selects.push({ title, options: [...offered] });
+          if (answers.length === 0) throw new Error("no scripted answer left");
+          return answers.shift();
+        },
+        input: async () => undefined,
+        confirm: async () => false,
+        notify: () => {},
+        custom: async () => {
+          throw new Error("the TUI path must not run outside a tui session");
+        },
+      },
+    },
+  };
+}
+
+// --- fix #214, F8: the TUI picker preselects the value in force (OB-3) ---
+
+/**
+ * A TUI context whose `custom` builds the picker the adapter hands it and drives
+ * that component with the scripted keys, capturing both the built component and
+ * what `done` received.
+ */
+function tuiContext(keys) {
+  const captured = {};
+  return {
+    captured,
+    ctx: {
+      mode: "tui",
+      ui: {
+        select: async () => {
+          throw new Error("the rich TUI path must not fall back to base.select");
+        },
+        input: async () => undefined,
+        confirm: async () => false,
+        notify: () => {},
+        custom: async (factory, customOpts) => {
+          captured.customOpts = customOpts;
+          return new Promise((resolve) => {
+            const component = factory(
+              {},
+              { bold: (text) => text, inverse: (text) => text, italic: (text) => text },
+              {},
+              (value) => {
+                captured.result = value;
+                resolve(value);
+              },
+            );
+            captured.component = component;
+            for (const key of keys) component.handleInput(key);
+          });
+        },
+      },
+    },
+  };
+}
+
+test("the adapter TUI pick preselects the value in force", async () => {
+  const options = ["model-01", "model-02", "model-03", "model-04"];
+  const { ctx, captured } = tuiContext(["\r"]);
+
+  const picked = await richUi(ctx).pick("Pick a model", options, { initial: "model-03" });
+
+  assert.equal(picked, "model-03", "Enter accepts the preselected value, not the first option");
+  assert.equal(captured.result, "model-03", "the adapter forwarded `initial` into the component");
+});
+
+test("the adapter TUI pick keeps the first option when nothing is in force", async () => {
+  const single = tuiContext(["\r"]);
+  assert.equal(await richUi(single.ctx).pick("Pick a model", ["model-01", "model-02"]), "model-01");
+
+  const unmatched = tuiContext(["\r"]);
+  assert.equal(
+    await richUi(unmatched.ctx).pick("Pick a model", ["model-01", "model-02"], { initial: "model-09" }),
+    "model-01",
+    "a stale value in force preselects nothing outside the offered list",
+  );
+});
+
+test("the adapter TUI pick keeps its multiple return shape", async () => {
+  const { ctx } = tuiContext(["\r"]);
+  assert.deepEqual(await richUi(ctx).pick("Pick several", ["model-01", "model-02"], { multiple: true }), ["model-01"]);
+});
+
+test("the adapter non-TUI pick fallback pages long option lists before base.select", async () => {
+  const options = Array.from({ length: 30 }, (_, i) => `model-${String(i + 1).padStart(2, "0")}`);
+  const { ctx, selects } = nonTuiContext([PAGED_SELECT_NEXT, "model-25"]);
+
+  const picked = await richUi(ctx).pick("Pick a model", options);
+
+  assert.equal(picked, "model-25", "the picked value is returned");
+  assert.equal(selects.length, 2, "the fallback paged instead of forwarding all 30 options");
+  assert.ok(selects.every((call) => call.options.length <= SELECT_OPTION_LIMIT), "every base.select dialog is under the cap");
+  assert.ok(selects[0].options.includes(PAGED_SELECT_NEXT), "page 1 offers the pager");
+  assert.ok(!selects[0].options.includes("model-25"), "model-25 is beyond page 1");
+  assert.ok(selects[1].options.includes("model-25"), "the pager reached page 2");
+  assert.ok(selects[1].options.includes(PAGED_SELECT_PREV), "page 2 offers PREV");
+});
+
+test("the adapter non-TUI pick fallback keeps ≤ cap lists and the multiple return shape unchanged", async () => {
+  const atCap = Array.from({ length: 24 }, (_, i) => `model-${String(i + 1).padStart(2, "0")}`);
+  const single = nonTuiContext(["model-02"]);
+  assert.equal(await richUi(single.ctx).pick("Pick a model", atCap), "model-02");
+  assert.equal(single.selects.length, 1, "a ≤ cap list still opens one dialog");
+  assert.deepEqual(single.selects[0].options, atCap, "the option order is unchanged");
+
+  const overCap = Array.from({ length: 30 }, (_, i) => `model-${String(i + 1).padStart(2, "0")}`);
+  const multiple = nonTuiContext([PAGED_SELECT_NEXT, "model-25"]);
+  assert.deepEqual(
+    await richUi(multiple.ctx).pick("Pick several", overCap, { multiple: true }),
+    ["model-25"],
+    "multiple still returns an array outside TUI",
+  );
 });

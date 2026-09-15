@@ -910,65 +910,126 @@ test("F20: pre-execution verifier spawns are capped and degrade, never hang", ()
 });
 
 // ===========================================================================
-// O3 — a current fix-unit plan receipt senses current, not missing (#221)
+// #221 — a current fix-unit plan receipt must sense `current`, never `missing`
 // ===========================================================================
 
-test("a current fix-unit plan receipt senses current, not missing (#221)", async () => {
-  // Create a fixture with an in-progress fix-index row for the #221 unit.
-  const { dir, run } = makeFixture({
-    roadmapRows: ["| 90 | `alpha` | planned | — | a unit |"],
+test("a current fix-unit plan receipt senses current, not missing (#221)", () => {
+  const unitSlug = "sensor-null-parent-receipt";
+  const unitDir = `docs/fix/221-${unitSlug}`;
+  const unit = "fix-221";
+  const fixIndex = [
+    "# Active fixes",
+    "",
+    "## Active",
+    "",
+    "| Issue | Topic | Status | Notes |",
+    "|---|---|---|---|",
+    `| [221](https://github.com/gtrabanco/agentic-workflow/issues/221) | \`${unitSlug}\` | \`in-progress\` | a fix-unit receipt must sense current |`,
+  ].join("\n");
+
+  const fixture = makeFixture({
+    // An in-progress fix unit is the cheapest reproducing state OPEN_STATES senses
+    // (Decision 6): the #221 fix-index row must read `in-progress` or the sensor
+    // never senses it at all.
     extraFiles: {
-      "docs/fix/README.md": "# Active fixes\n\n## Active\n\n| Issue | Topic | Status | Notes |\n|---|---|---|---|\n| 221 | sensor-null-parent-receipt | in-progress | — | fix |",
-      "docs/fix/221-sensor-null-parent-receipt/SPEC.md": read("docs/fix/221-sensor-null-parent-receipt/SPEC.md"),
-      "docs/fix/221-sensor-null-parent-receipt/ACCEPTANCE.md": read("docs/fix/221-sensor-null-parent-receipt/ACCEPTANCE.md"),
+      "docs/fix/README.md": fixIndex,
+      [`${unitDir}/SPEC.md`]: [
+        "# fix/221-sensor-null-parent-receipt",
+        "",
+        "## Goal",
+        "",
+        "Stop the false missing.",
+        "",
+        "## Branch",
+        "",
+        "`fix/221-sensor-null-parent-receipt`",
+        "",
+        "## Scope",
+        "",
+        "- the sensor",
+        "",
+        "## Acceptance",
+        "",
+        "- A1 the sensor reads current.",
+        "",
+        "## Phases",
+        "",
+        "### P1",
+        "",
+        "- do it",
+        "",
+        "## Status",
+        "",
+        "`in-progress`",
+        "",
+      ].join("\n"),
+      [`${unitDir}/ACCEPTANCE.md`]: "# Acceptance\n\n- A1 the sensor reads current.\n",
     },
+    roadmapRows: [],
   });
 
-  // Build the plan snapshot digest from the fixture's committed unit files.
-  // The build action writes: digest-hash\n{JSON snapshot}
-  const buildOut = execFileSync(
-    process.execPath,
-    [path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs"), "build", "--stage", "plan", "--unit", "fix-221", "--dir", "docs/fix/221-sensor-null-parent-receipt", "--root", dir, "--unit-kind", "fix"],
-    { cwd: repoRoot, encoding: "utf8" },
-  );
-  // First line is the bare digest; the rest is the full JSON snapshot.
-  const digestLine = buildOut.indexOf("\n");
-  const digest = buildOut.slice(0, digestLine).trim();
-  const snapshot = JSON.parse(buildOut.slice(digestLine + 1));
-  const sourceRev = snapshot.sourceRevision;
+  // The impossible-timeline guard requires the source revision's commit date to
+  // PRECEDE the receipt's recorded finish. `makeFixture`'s own init commit is dated
+  // "now" (real wall-clock), which would land after a fixed finish, so amend the
+  // fixture's committed artifacts to a fixed past date first — the same FIXTURE_DATE
+  // discipline pre-execution-sensor.test.mjs applies to every commit it writes.
+  const FIXTURE_DATE = "2026-08-30T00:00:00Z";
+  const gitDate = (...args) => execFileSync("git", args, {
+    cwd: fixture.dir, encoding: "utf8",
+    env: { ...process.env, GIT_COMMITTER_DATE: FIXTURE_DATE, GIT_AUTHOR_DATE: FIXTURE_DATE },
+  }).trim();
+  gitDate("commit", "--amend", "--no-edit", "--reset-author");
 
-  // Write the receipt with the correct digest to the fixture's progress.md,
-  // then commit so the contentRevision matches the git HEAD.
-  const unitDir = path.join(dir, "docs", "fix", "221-sensor-null-parent-receipt");
-  const progressContent = [
-    "## Pre-execution review receipt v1 — plan",
-    `- Review: rp-221-001 · Snapshot: ${digest} · Verdict: plan-review-pass`,
-    "- Unit: fix-221 · Stage: plan · Unit kind: fix",
+  // Build the plan snapshot the receipt will bind, against the fixture tree. The
+  // verifier resolves its repo from its own location, so `--root` must point at the
+  // fixture — the same root the sensor passes when it senses (PROJECT = cwd).
+  const build = (...args) => {
+    const r = spawnSync(process.execPath, [path.join(repoRoot, "scripts", "pre-execution-snapshot.mjs"), ...args], {
+      cwd: fixture.dir, encoding: "utf8", timeout: 120_000,
+    });
+    assert.equal(r.status, 0, `build failed: ${r.stderr}`);
+    const [observedDigest, ...rest] = r.stdout.split("\n");
+    return { digest: observedDigest.trim(), snapshot: JSON.parse(rest.join("\n")) };
+  };
+  const built = build("build", "--stage", "plan", "--unit", unit, "--unit-kind", "fix",
+    "--dir", unitDir, "--root", fixture.dir);
+  assert.equal(built.snapshot.unitKind, "fix");
+  assert.equal(built.snapshot.parentSpecSnapshotDigest, null, "a fix unit binds no parent (RS14/D6)");
+
+  // Append the grammar-exact receipt block and commit it. A receipt write is an
+  // unbound path, so committing it must NOT rotate the plan snapshot; the source
+  // revision recorded is the newest commit that touched a bound path (already dated
+  // to FIXTURE_DATE by the amend above, ahead of the finish below).
+  const sourceRevision = gitDate("rev-parse", "HEAD");
+  const block = [
+    `## Pre-execution review receipt v1 — plan`,
+    `- Review: rp-221-e2e · Snapshot: ${built.digest} · Verdict: plan-review-pass`,
+    `- Unit: ${unit} · Stage: plan · Unit kind: fix`,
     "- Parent SPEC snapshot: null · Parent Product receipt: none",
-    `- Source revision: ${sourceRev} · Policy: v1`,
-    `- Artifact revision: ${sourceRev}`,
-    "- Started/finished: 2027-01-01T00:00:00Z/2027-01-01T00:01:00Z · Findings: 0",
+    `- Source revision: ${sourceRevision} · Artifact revision: ${sourceRevision}`,
+    "- Reviewer: reviewer-session · Session: s-221 · Role: reviewer · Author: author-team",
+    "- Author exclusion: not-enforceable · Context clean: true",
+    "- Model diversity: not-applicable · Policy: v1",
+    `- Started/finished: 2026-08-31T00:00:00Z/2026-08-31T00:05:00Z · Findings: 0 (material open: 0)`,
+    "",
   ].join("\n");
-  fs.writeFileSync(path.join(unitDir, "progress.md"), progressContent);
-  execFileSync("git", ["add", "docs/fix/221-sensor-null-parent-receipt/progress.md"], { cwd: dir });
-  execFileSync("git", ["commit", "-m", "docs(221): record plan review receipt"], { cwd: dir });
+  fixture.write(`${unitDir}/progress.md`, block);
 
-  // Run the sensor against the fixture.
-  const result = run([]);
+  // Sense it after committing the receipt (a receipt write is unbound, so it must
+  // not move the snapshot). The sensor runs the verifier with --root <PROJECT> = the
+  // fixture cwd, so it re-derives against the same tree the receipt was built in.
+  gitDate("add", "-A", "--", ".");
+  gitDate("commit", "-qm", "docs(fix-221): record plan review receipt");
+  const result = fixture.run();
   assert.equal(result.status, 0, result.stderr);
   const envelope = parseEnvelope(result.stdout);
 
-  // The sensed row is the sensor's `detail.pre_execution` projection — the
-  // observable fix/221's own SPEC names (PE-001 “the sensor reports fix-191 …
-  // as `label: \"missing\"`”; O3 “the `detail.pre_execution` row reads
-  // `label: \"current\"` with no gate blocker”). `detail.units` never existed
-  // on the envelope — `detail` carries `pre_execution`/`features`/`fixes`/… —
-  // so the original assertion could never pass (F103).
-  const fix221Row = envelope.detail.pre_execution?.find((row) => row.unit === "fix-221");
-  assert.ok(fix221Row, `the envelope should carry the fix-221 pre-execution row: ${JSON.stringify(envelope.detail.pre_execution)}`);
-  assert.equal(fix221Row.stage, "plan", "the fix unit is sensed at the plan stage");
-  assert.equal(fix221Row.label, "current",
-    `fix-221 plan receipt should be current, not missing — ${JSON.stringify(fix221Row)}`);
-  assert.ok(!envelope.blockers.some((b) => b.kind === "gate" && b.id === "fix-221"),
-    `no gate blocker for the unit — ${JSON.stringify(envelope.blockers)}`);
+  const row = envelope.detail.pre_execution.find((r) => r.unit === "fix-221");
+  assert.ok(row, `the sensor must emit a pre_execution row for fix-221: ${JSON.stringify(envelope.detail.pre_execution)}`);
+  assert.equal(row.stage, "plan", "the fix unit is sensed at the plan stage");
+  assert.equal(row.label, "current", `a current fix receipt must sense current, got ${row.label}: reason=${row.reason}`);
+  assert.equal(row.reason, null, `no reason on a current receipt, got ${row.reason}`);
+  assert.ok(!(envelope.blockers ?? []).some((b) => String(b?.id).includes("221")),
+    `no gate blocker for fix-221: ${JSON.stringify(envelope.blockers)}`);
 });
+

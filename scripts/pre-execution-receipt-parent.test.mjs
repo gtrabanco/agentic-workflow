@@ -1,134 +1,109 @@
 #!/usr/bin/env node
 
 /**
- * Fix #221 — pre-execution-receipt-parent
+ * fix #221 — the one receipt parser must read a null-word lineage line as absent.
  *
- * Proves that `parseReceipts` normalizes the `parent` field through
- * `recordedValue` so that null-word lineage lines parse as JS `null`
- * and non-null ones pass through (bare hex or `sha256:`-dress stripped).
+ * `parseReceipts` (F25's one parser in `scripts/pre-execution-contract.mjs`)
+ * captured the lineage line raw, so a fix plan receipt's contract-mandated
+ * `Parent SPEC snapshot: null` parsed as the truthy string `"null"`. The sensor
+ * then spawned `verify --parent null`, the schema validator refused
+ * `invalid-value@/parentSpecSnapshotDigest`, and every sensed fix unit with a
+ * plan receipt degraded to a false `label: "missing"` gate blocker.
  *
- * Three lineage shapes:
- *  - Fix plan:  `Parent SPEC snapshot: null`  → `parent === null`
- *  - SPEC:      `Parent: null`                → `parent === null`
- *  - Feature:   `Parent SPEC snapshot: <64-hex>` → `parent === <64-hex>` bare
- *               `Parent SPEC snapshot: sha256:<64-hex>` → `parent === <64-hex>` bare
+ * What this suite pins (O1, O2):
+ *   - a null-word lineage line (`null`/`none`/`n/a`/`na`/`—`/`-`) parses as
+ *     `parent === null` — both the fix plan receipt's `Parent SPEC snapshot`
+ *     line and the SPEC receipt's `Parent` line;
+ *   - a non-null lineage line keeps its recorded bare value — bare 64-hex
+ *     passthrough and `sha256:`-dressed input parsed as the bare hex;
+ *   - every other parsed field stays byte-identical (the fix touches only the
+ *     `parent` field).
+ *
+ * The suite imports `parseReceipts` directly (the cheapest layer — no existing
+ * suite does, and a direct import pins the grammar semantics at its source).
  */
 
 import assert from "node:assert/strict";
 import { test } from "node:test";
+
 import { parseReceipts } from "./pre-execution-contract.mjs";
 
-// ===========================================================================
-// O1: null-word lineage lines must parse as JS `null`
-// ===========================================================================
+const HEX64 = "a".repeat(64);
+const HEX64B = "b".repeat(64);
+const REV = "c".repeat(40);
 
-test("O1: fix plan `Parent SPEC snapshot: null` → parent is null", () => {
-  const text = [
-    "## Pre-execution review receipt v1 — plan",
-    "- Review: rp-001 · Snapshot: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Verdict: plan-review-pass",
-    "- Unit: fix-001 · Stage: plan · Unit kind: fix",
-    "- Parent SPEC snapshot: null · Parent Product receipt: none",
-    "- Source revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Artifact revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Policy: v1",
-  ].join("\n");
+/** A complete, grammar-exact receipt block for the stage, with a chosen lineage line. */
+function receipt({ stage = "plan", unitKind = "fix", parentLine, verdict = "plan-review-pass" }) {
+  const unit = "fix-221";
+  const kindLine = stage === "spec"
+    ? `- Unit: ${unit} · Stage: ${stage} · Parent: null`
+    : `- Unit: ${unit} · Stage: ${stage} · Unit kind: ${unitKind}\n- ${parentLine}`;
+  return `## Pre-execution review receipt v1 — ${stage}
+- Review: rp-221-001 · Snapshot: ${HEX64} · Verdict: ${verdict}
+${kindLine}
+- Source revision: ${REV} · Artifact revision: ${REV}
+- Reviewer: reviewer-session · Session: s-1 · Role: reviewer · Author: author-team
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-14T00:00:00Z/2026-09-14T00:05:00Z · Findings: 0 (material open: 0)
+`;
+}
 
-  const receipts = parseReceipts(text);
-  assert.equal(receipts.length, 1);
-  assert.equal(receipts[0].parent, null, "null-word must parse as JS null, not the string 'null'");
-  assert.equal(receipts[0].unitKind, "fix");
-  assert.equal(receipts[0].stage, "plan");
+test("the parse of a null-word lineage line is the absence value, never the string 'null'", () => {
+  const cases = ["null", "none", "n/a", "na", "—", "-"];
+  for (const word of cases) {
+    for (const stage of ["spec", "plan"]) {
+      const line = stage === "spec"
+        ? `- Unit: fix-221 · Stage: ${stage} · Parent: ${word}`
+        : `- Unit: fix-221 · Stage: ${stage} · Unit kind: fix\n- Parent SPEC snapshot: ${word} · Parent Product receipt: none`;
+      const [parsed] = parseReceipts(receipt({ stage, unitKind: "fix", parentLine: line }));
+      assert.equal(parsed.parent, null, `${stage} receipt with parent word ${JSON.stringify(word)} must parse parent === null`);
+    }
+  }
 });
 
-test("O1: SPEC `Parent: null` → parent is null", () => {
-  const text = [
-    "## Pre-execution review receipt v1 — spec",
-    "- Review: rp-002 · Snapshot: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Verdict: spec-review-pass",
-    "- Unit: 90-alpha · Stage: spec",
-    "- Parent: null",
-    "- Source revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Artifact revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Policy: v1",
-  ].join("\n");
-
-  const receipts = parseReceipts(text);
-  assert.equal(receipts.length, 1);
-  assert.equal(receipts[0].parent, null, "null-word must parse as JS null");
+test("a fix plan receipt's `Parent SPEC snapshot: null` parses parent === null (O1)", () => {
+  const [parsed] = parseReceipts(receipt({ parentLine: `Parent SPEC snapshot: null · Parent Product receipt: none` }));
+  assert.equal(parsed.stage, "plan");
+  assert.equal(parsed.unitKind, "fix");
+  assert.equal(parsed.parent, null);
+  assert.equal(parsed.verdict, "plan-review-pass");
 });
 
-// ===========================================================================
-// O2: non-null parent values must pass through (bare hex passthrough)
-// ===========================================================================
-
-test("O2: feature receipt bare-hex parent → bare hex passthrough", () => {
-  const parentHex = "deadbeef1234567890abcdef1234567890abcdef1234567890abcdef1234567890";
-  const text = [
-    "## Pre-execution review receipt v1 — spec",
-    `- Review: rp-003 · Snapshot: ${parentHex}`,
-    "- Verdict: spec-review-pass",
-    "- Unit: 91-beta · Stage: spec",
-    `- Parent: ${parentHex} · Parent SPEC snapshot: ${parentHex}`,
-    "- Source revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Artifact revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Policy: v1",
-  ].join("\n");
-
-  const receipts = parseReceipts(text);
-  assert.equal(receipts.length, 1);
-  assert.equal(receipts[0].parent, parentHex, "bare hex must pass through unchanged");
+test("a SPEC receipt's `Parent: null` parses parent === null (O1)", () => {
+  const [parsed] = parseReceipts(receipt({ stage: "spec", parentLine: `- Unit: fix-221 · Stage: spec · Parent: null` }));
+  assert.equal(parsed.parent, null);
 });
 
-test("O2: feature receipt `sha256:`-dress → stripped bare hex", () => {
-  const parentHex = "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab";
-  const dressed = `sha256:${parentHex}`;
-  const text = [
-    "## Pre-execution review receipt v1 — spec",
-    `- Review: rp-004 · Snapshot: ${parentHex}`,
-    "- Verdict: spec-review-pass",
-    "- Unit: 92-gamma · Stage: spec",
-    `- Parent: ${dressed} · Parent SPEC snapshot: ${dressed}`,
-    "- Source revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Artifact revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Policy: v1",
-  ].join("\n");
-
-  const receipts = parseReceipts(text);
-  assert.equal(receipts.length, 1);
-  assert.equal(receipts[0].parent, parentHex, "sha256: dress must be stripped");
+test("a bare 64-hex parent parses as the bare hex (O2, feature passthrough)", () => {
+  const [parsed] = parseReceipts(receipt({
+    stage: "plan", unitKind: "feature",
+    parentLine: `Parent SPEC snapshot: ${HEX64B} · Parent Product receipt: rs-001`,
+  }));
+  assert.equal(parsed.parent, HEX64B);
+  assert.equal(parsed.parent, HEX64B, "a bare hex must pass through unchanged");
 });
 
-// ===========================================================================
-// O3: all other fields must remain byte-identical (regression guard)
-// ===========================================================================
+test("a sha256:-dressed parent parses as the bare hex (O2)", () => {
+  const [parsed] = parseReceipts(receipt({
+    stage: "plan", unitKind: "feature",
+    parentLine: `Parent SPEC snapshot: sha256:${HEX64B} · Parent Product receipt: rs-002`,
+  }));
+  assert.equal(parsed.parent, HEX64B, "the sha256: dress is stripped to the bare digest");
+});
 
-test("O3: no other field is changed by the normalization", () => {
-  const text = [
-    "## Pre-execution review receipt v1 — plan",
-    "- Review: rp-005 · Snapshot: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Verdict: plan-review-pass",
-    "- Unit: fix-002 · Stage: plan · Unit kind: fix",
-    "- Parent SPEC snapshot: null · Parent Product receipt: none",
-    "- Source revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Artifact revision: abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-    "- Author exclusion: not-enforceable",
-    "- Context clean: true",
-    "- Policy: v1",
-    "- Started/finished: 2026-09-14T18:57:53Z/2026-09-14T19:01:30Z · Findings: 0",
-  ].join("\n");
-
-  const receipts = parseReceipts(text);
-  assert.equal(receipts.length, 1);
-  assert.equal(receipts[0].parent, null);
-  assert.equal(receipts[0].id, "rp-005");
-  assert.equal(receipts[0].unit, "fix-002");
-  assert.equal(receipts[0].unitKind, "fix");
-  assert.equal(receipts[0].snapshot, "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab");
-  assert.equal(receipts[0].verdict, "plan-review-pass");
-  assert.equal(receipts[0].sourceRevision, "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab");
-  assert.equal(receipts[0].artifactRevision, "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab");
-  assert.equal(receipts[0].authorExclusion, "not-enforceable");
-  assert.equal(receipts[0].contextClean, "true");
-  assert.equal(receipts[0].policy, "v1");
+test("only `parent` changes: every other parsed field is byte-identical (O2)", () => {
+  const other = { par: HEX64 };
+  const [parsed] = parseReceipts(receipt({ parentLine: `Parent SPEC snapshot: null · Parent Product receipt: none` }));
+  assert.equal(parsed.snapshot, HEX64, "snapshot stays raw — the verifier's digest-match path and JSON echo rely on it");
+  assert.equal(parsed.id, "rp-221-001");
+  assert.equal(parsed.unit, "fix-221");
+  assert.equal(parsed.stage, "plan");
+  assert.equal(parsed.unitKind, "fix");
+  assert.equal(parsed.verdict, "plan-review-pass");
+  assert.equal(parsed.sourceRevision, REV);
+  assert.equal(parsed.artifactRevision, REV);
+  assert.equal(parsed.authorExclusion, "not-enforceable");
+  assert.equal(parsed.contextClean, "true");
+  assert.equal(parsed.policy, "v1");
 });

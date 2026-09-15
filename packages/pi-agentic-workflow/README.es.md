@@ -164,7 +164,11 @@ byte a byte idéntico; el campo de modelo puede construir una cadena de respaldo
 ordenada (`a/m1 → b/m2`); y una sola pasada puede aplicar o limpiar una ruta en
 varios comandos, avisando por comando cuando una referencia falta del registro
 vivo. Fuera de una sesión TUI los selectores caen a un prompt simple, así que la
-consola nunca se queda sin salida.
+consola nunca se queda sin salida. Las listas de más de 24 opciones tampoco
+llegan nunca a un solo diálogo: por encima del tope el selector de modelo
+pregunta primero el proveedor, y una lista de proveedores o de modelos
+demasiado larga pagina (`More options…` / `◀ Previous page`) en vez de tumbar
+el diálogo de select del host.
 
 ## Diagnóstico
 
