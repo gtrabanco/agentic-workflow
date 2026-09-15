@@ -259,8 +259,31 @@ function fail(code, message) {
   process.exit(code);
 }
 
+/** The `--help`/`-h` contract: printed on stdout, exit 0 — help is not a failure. */
+const USAGE = `usage: node scripts/unit-route.mjs <unit|issue>
+
+Prints the route one delivery unit takes now, from its own ledger. The routes,
+first match winning: replan (an open row whose frozen route is the plan owner),
+decision (an open row that needs a product/architecture decision), fold (any
+other open row), execute (a known unit with no open row), plan-from-issue (a
+tracked issue with no unit folder yet).
+
+The routed block goes to stdout: unit, status, open-rows, route, next, rows,
+read-set (at most ${READ_SET_MAX} paths, then an explicit remainder line),
+fingerprint.
+
+Exit codes: 0 a route was printed; 1 an unknown unit or an argument count other
+than one; 2 an ambiguous unit token (a number matching both a feature and a fix
+folder). The last two print no route at all. Diagnostics go to stderr, the
+script writes nothing, and UNIT_ROUTE_REPO re-points it at a fixture tree.
+`;
+
 function main(argv) {
   const args = argv.slice(2).filter((arg) => arg !== "");
+  if (args.length === 1 && (args[0] === "--help" || args[0] === "-h")) {
+    process.stdout.write(USAGE);
+    return;
+  }
   if (args.length === 0) fail(1, "usage: node scripts/unit-route.mjs <unit|issue>");
   if (args.length > 1) fail(1, `usage: node scripts/unit-route.mjs <unit|issue> — expected exactly one argument, got ${args.length}`);
 
