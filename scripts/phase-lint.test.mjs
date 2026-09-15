@@ -302,6 +302,65 @@ test("a bare numeric ratio is an assertion, not an unmappable target", () => {
   assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:config\/infra:1:wire-exit-codes$/m);
 });
 
+// Fix 224 / F25 — the executed-phase exemption (owner rule: phase-contract box 3
+// and box 7). The replan append contract (`skills/replan-findings/references/
+// PHASE_APPEND.md`) appends the new phases *after* an executed hardening and then
+// a fresh final `Hardening & PR`; because boxes 3 and 7 are positional, the
+// executed phase was retro-blocked and the replanned plan could not be emitted
+// (`verdict BLOCKED: lint-blocked`). A fully-ticked phase is historical for those
+// two boxes only — every other box stays armed, so pre-ticking cannot dodge a
+// real defect (third case below).
+const EXECUTED_MID_PLAN_HARDENING_PLAN = `# Replanned plan
+
+### P1 — Hardening & PR
+
+Layer: hardening. Done-when: \`git status --porcelain -- docs/\` → empty.
+
+- [x] Open the PR (\`gh pr create --body-file <path>\`) and print the URL
+
+### P2 — Wire the exit codes
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the implementation
+`;
+
+const UNTICKED_MID_PLAN_HARDENING_PLAN = EXECUTED_MID_PLAN_HARDENING_PLAN.replace("- [x] Open the PR", "- [ ] Open the PR");
+
+const PRETICKED_BOX4_PLAN = `# Pre-ticked dodge
+
+### P1 — Hardening & PR
+
+Layer: hardening. Done-when: \`git status --porcelain -- docs/\` → empty.
+
+- [x] Create \`scripts/z.test.mjs\` → wire it → run the gate
+
+### P2 — Wire the exit codes
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the implementation
+`;
+
+test("F25: an executed mid-plan hardening is not re-judged by box 3 or box 7", () => {
+  const { status, stdout } = nodeRun(fixture("executed-hardening.md", EXECUTED_MID_PLAN_HARDENING_PLAN));
+  assert.equal(status, 0, stdout);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\)/m);
+  assert.match(stdout, /^verdict PASS$/m);
+});
+
+test("F25: the same phase unticked mid-plan still fails box 7", () => {
+  const { status, stdout } = nodeRun(fixture("unticked-hardening.md", UNTICKED_MID_PLAN_HARDENING_PLAN));
+  assert.notEqual(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 7:/m);
+});
+
+test("F25: a pre-ticked phase with a box-4 defect still blocks (only boxes 3 and 7 are exempt)", () => {
+  const { status, stdout } = nodeRun(fixture("preticked-box4.md", PRETICKED_BOX4_PLAN));
+  assert.notEqual(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 4:/m);
+});
+
 // Fold F7 (replan-in-unit) — the owner-sanctioned test-only `hardening` shape:
 // in a phase declared `hardening`, a test file (basename contains `.test.`)
 // maps to `hardening`, so a test-only phase is not blocked on its own tests

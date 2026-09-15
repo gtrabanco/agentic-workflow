@@ -687,12 +687,12 @@ Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → 
 
 Layer: `config/infra`. Done-when: `node --test scripts/phase-lint.test.mjs` → exit 0.
 
-- [ ] Red-first `scripts/phase-lint.test.mjs` corpus triple: an executed hardening
+- [x] Red-first `scripts/phase-lint.test.mjs` corpus triple: an executed hardening
       phase carrying a forge task passes, the same phase unticked mid-plan blocks,
       and a pre-ticked phase with a box-4/box-8 defect still blocks (F25; OB-16)
-- [ ] `scripts/phase-lint.mjs` stops re-judging a phase whose tasks are all ticked
+- [x] `scripts/phase-lint.mjs` stops re-judging a phase whose tasks are all ticked
       under boxes 3 and 7 only, keeping every other box armed (F25; OB-16)
-- [ ] Re-run `node --test scripts/*.test.mjs` to exit 0
+- [x] Re-run `node --test scripts/*.test.mjs` to exit 0
 
 ### P11 — Replan path contract docs
 
