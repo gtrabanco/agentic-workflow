@@ -300,6 +300,10 @@ test("P1: importing with dist/ absent fails with the named precondition (A:11 ca
   // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
   // (named precondition, never a module-not-found) are unchanged.
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
+  // The F13 fold added the router edge to that graph (the sensor imports the
+  // router's row semantics); the sandbox mirrors it, so the assertions stay "the
+  // named precondition, never a module-not-found".
+  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
   const result = spawnSync(process.execPath, ["-e", `import(${JSON.stringify(pathToFileURL(path.join(tmp, "scripts", "workflow-status.mjs")).href)})`], {
     cwd: tmp,
     encoding: "utf8",
@@ -320,6 +324,10 @@ test("P1: a failing validateEnvelope is a diagnostic, never a gate — envelope 
   // verifier. Copying it keeps the sandbox a faithful mirror — the assertions
   // (named precondition, never a module-not-found) are unchanged.
   fs.copyFileSync(path.join(repoRoot, "scripts", "pre-execution-contract.mjs"), path.join(tmp, "scripts", "pre-execution-contract.mjs"));
+  // The F13 fold added the router edge to that graph (the sensor imports the
+  // router's row semantics); the sandbox mirrors it, so the assertions stay "the
+  // named precondition, never a module-not-found".
+  fs.copyFileSync(path.join(repoRoot, "scripts", "unit-route.mjs"), path.join(tmp, "scripts", "unit-route.mjs"));
   fs.writeFileSync(
     path.join(tmp, "packages", "agentic-workflow-schema", "dist", "index.js"),
     "export function validateEnvelope() { return { ok: false, errors: ['forced mismatch'] }; }\n",
@@ -623,6 +631,72 @@ test("P3/AC6: next.suggested routes a replan row to the planner, a plain fix-now
   const none = makeFixture({ roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"] }).run();
   assert.equal(none.status, 0, none.stderr);
   assert.deepEqual(parseEnvelope(none.stdout).next.suggested, [], "a unit with no open row contributes no suggestion");
+});
+
+test("F13: a mark row is never an open row, and the folded vocabulary matches the router's", () => {
+  // A ledger carries three row families: findings (`F<n>`), per-finding marks
+  // (`VF-<n>`) and review marks (`REVIEW-RAN`). Only a finding can be open, and an
+  // added ledger pads its mark rows with trailing empty cells — so a `REVIEW-RAN`
+  // row reaches the row parser looking like a finding whose `folded` cell is empty.
+  // The router closes `yes`/`—`/`-`/`n/a`/empty; the sensor must answer the same, or
+  // a merged unit keeps a spurious `/fold-findings` suggestion forever.
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|-----|-----|-----|-----|-----|-----|-----|",
+    `| VF-1 | scripts/a.mjs:1 · reviewer review-change · HEAD ${"0".repeat(40)} · recheck direct read | n/a | confirmed | finding-mark | n/a | n/a |`,
+    `| REVIEW-RAN | HEAD ${"0".repeat(40)} · 2026-01-01 · review-change · axes: code · verdict: REVIEW-FAIL · cycle: 1 | | | | | |`,
+    "| F1 | scripts/b.mjs:2 | code | med | fix-now | fold into phase | - |",
+    "| F2 | scripts/c.mjs:3 | code | med | fix-now | fold into phase |  |",
+  ].join("\n");
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | done · [#901](https://example.invalid/pr/901) | — | shipped |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger}\n` },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.findings.fix_now, [], "a mark row or a dash/empty-folded row is not an open finding");
+  assert.deepEqual(envelope.next.suggested, [], "nor does it project a fold suggestion for a merged unit");
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("F2: a decision-required open row stops the unit, it does not project a fold", () => {
+  // The router's route table is first-match: `decision` outranks `fold` for the same
+  // unit. The sensor projects that same decision, so a co-resident plain fix-now row
+  // must not become a `/fold-findings` suggestion — decision work is not a driver
+  // command, it stops for the user.
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|-----|-----|-----|-----|-----|-----|-----|",
+    "| F1 | scripts/a.mjs:1 | code | med | decision-required | surface decision, block | no |",
+    "| F2 | scripts/b.mjs:2 | code | med | fix-now | fold into phase | no |",
+  ].join("\n");
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger}\n` },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const envelope = parseEnvelope(result.stdout);
+  assert.deepEqual(envelope.next.suggested, [], "the decision route wins over the co-resident fold row and is not a driver command");
+  assert.equal(validateEnvelope(envelope).ok, true);
+});
+
+test("F15: a long ledger id is bounded before it reaches the suggestion trigger", () => {
+  const longId = `F1-${"A".repeat(400)}`;
+  const ledger = [
+    "| id | file:line | axis | severity | class | route | folded |",
+    "|-----|-----|-----|-----|-----|-----|-----|",
+    `| ${longId} | scripts/a.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |`,
+  ].join("\n");
+  const result = makeFixture({
+    roadmapRows: ["| 90 | `alpha` | in-progress | — | a unit |"],
+    extraFiles: { "docs/features/90-alpha/review-findings.md": `${ledger}\n` },
+  }).run();
+  assert.equal(result.status, 0, result.stderr);
+  const suggested = parseEnvelope(result.stdout).next.suggested;
+  assert.equal(suggested.length, 1, JSON.stringify(suggested));
+  assert.ok(!suggested[0].trigger.includes(longId), "the raw id never reaches the envelope verbatim");
+  assert.match(suggested[0].trigger, /…/, "truncation is visible, never silent");
+  assert.equal(validateEnvelope(parseEnvelope(result.stdout)).ok, true);
 });
 
 test("F2: a done unit's merge state comes from the PR, never from the 20-row window", () => {

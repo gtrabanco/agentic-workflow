@@ -28,6 +28,12 @@ import { loadSchemaRuntime } from "./schema-runtime.mjs";
 // the parser, so a change to the bound set silently checked the wrong paths (F24)
 // and the two parsers could drift (F25).
 import { STAGE_ARTIFACTS, CONTEXT_SOURCES, parseReceipts } from "./pre-execution-contract.mjs";
+// The router owns the ledger's row semantics — the open/closed `folded` vocabulary,
+// which id shapes are marks rather than findings, the class→route table, and the
+// echoed-cell bound. The sensor imports them instead of re-deriving them: two
+// vocabularies let the same ledger row answer `route: execute` from the router and
+// `/fold-findings` from the sensor (#224 fold F13/F2/F15).
+import { isOpen, isMarkRow, routeOfRow, sanitize } from "./unit-route.mjs";
 
 const SCRIPT_DIR = path.dirname(fileURLToPath(import.meta.url));
 /** The sensor's own checkout — owns the schema runtime and the snapshot verifier. */
@@ -710,10 +716,8 @@ const SEVERITY_VOCABULARY = new Map([
   ["high", "high"], ["med", "med"], ["low", "low"],
 ]);
 
-/** An open row whose frozen route is the plan owner demands a replan entry. */
-const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
-
-/** The open (`folded: no`) rows of a unit's fix-now ledger, in file order. */
+/** The open rows of a unit's fix-now ledger, in file order — the router's own
+ *  predicate and mark-row guard, so the two surfaces cannot disagree on a row. */
 function readOpenRows(unitDir) {
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return [];
@@ -723,13 +727,13 @@ function readOpenRows(unitDir) {
     const cells = cellsOf(line).slice(1, -1);
     if (cells.length < 7) continue;
     const [id, file, axis, severity, klass, route, folded] = cells;
-    if (/^id$/i.test(id) || folded === "yes" || folded === "—" || folded === "n/a") continue;
+    if (/^id$/i.test(id) || !isOpen(folded)) continue;
     // A separator row in any dash spelling (`|---|`, `| --- |`, `|-----|`) projects a
     // bogus finding whose id is the dash run: the guard is the id's shape, not one
     // separator's spelling.
     if (/^[-:\s]*$/.test(id)) continue;
-    // `VF-` finding-mark rows carry no destination of their own.
-    if (/^VF-/i.test(id)) continue;
+    // Mark rows (`VF-<n>`, `REVIEW-RAN`) carry no destination of their own.
+    if (isMarkRow(id)) continue;
     rows.push({ id, file, axis, severity, klass, route });
   }
   return rows;
@@ -754,20 +758,23 @@ function readFixNow(unitDir, observations = []) {
 /**
  * Step 13 — the class-routed `next.suggested` entries a unit contributes.
  * The router (`scripts/unit-route.mjs`) owns the class→route decision; this
- * surface projects it for an envelope consumer: a plan-owned open row points at
- * the unit's planner, a plain fix-now row at the fold, no open row at nothing.
+ * surface projects the router's own classifier for an envelope consumer: a
+ * plan-owned open row points at the unit's planner, a decision row stops the unit
+ * (its route outranks the fold in the route table, and decision work is not a
+ * driver command), a plain fix-now row at the fold, no open row at nothing.
  */
 function readSuggestions(unit, unitDir) {
   const rows = readOpenRows(unitDir);
-  const plan = rows.filter((row) => PLAN_ROUTE.test(String(row.route ?? "")) || PLAN_ROUTE.test(String(row.klass ?? "")));
+  const plan = rows.filter((row) => routeOfRow(row) === "replan");
   if (plan.length > 0) {
     const command = unit.kind === "fix" ? `/plan-fix ${unit.issue}` : `/plan-feature ${unit.id}`;
     return [{
       command,
-      trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => row.id).join(", ")})`,
+      trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => sanitize(row.id)).join(", ")})`,
       source_skill: "review-change",
     }];
   }
+  if (rows.some((row) => routeOfRow(row) === "decision")) return [];
   if (rows.length > 0) {
     return [{ command: "/fold-findings", trigger: "unfolded fix-now finding(s) on the ledger", source_skill: "fold-findings" }];
   }
