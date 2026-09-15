@@ -277,3 +277,95 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - **Next:** `/review-plan fix-224` — a fresh independent review of the re-cut
   plan; `PLAN-REVIEW-PASS` licenses `/execute-phase --fix 224` for `P9`–`P12`
   plus the re-opened `P8`.
+
+## Pre-execution review receipt v1 — plan
+- Review: rp-224-20260915-004 · Snapshot: bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065 · Verdict: plan-review-fail
+- Unit: fix-224 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); the contract forbids a parent on a fix plan snapshot (D30)
+- Source revision: 2f801ad36ee80a2fc15a5a1e3d626f48d86c73df · Artifact revision: 2f801ad36ee80a2fc15a5a1e3d626f48d86c73df
+- Reviewer: review-plan (fresh pi session) · Session: pi-web review turn on `fix/224-deterministic-replan-routing` (replan cycle 4) · Role: reviewer · Author: plan-fix (commit `2f801ad3`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Context-clean note: this conversation wrote/replanned no part of the unit (review-only turn; the only writes are this receipt and the findings rows it emits)
+- Started/finished: 2026-09-15T20:28:00Z/2026-09-15T20:35:00Z · Findings: 5 (material open: 5)
+- Ledgers read: planning-evidence 15 rows (PE-001…PE-015, embedded in the SPEC) · obligations 15 rows (OB-1…OB-15, verified-capable: 11 — the OB-1…OB-11 validators ran and their evidence is recorded in the phase receipts below; the `status` cells stay `planned` and P12 task 1 owns the reconciliation)
+- Prior plan receipt (re-review only): rp-224-20260915-003 @ a65783d87c171aa99e9c2db19c15a2a014256339774e426c7d267b25593f779f
+- Portability note: the planner's handoff named `fix-224-artrev-0004` = `2f801ad36ee80a2fc15a5a1e3d626f48d86c73df`; the builder resolved `sourceRevision`/`artifactRevisionId` to the same 40-hex (`contentRevision` over the bound paths = the replan commit), so the label and the bound bytes agree. The schema package was present (`NODE_PATH=packages/agentic-workflow-schema/node_modules`); the authoritative validator executed, no install needed; the tree stayed clean throughout the review reads.
+
+### Review-run evidence (commands + results)
+
+- Snapshot build: `NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing` → digest `bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065`, schema-validated by the recipe owner (no refusal); `unitKind: fix` derived from the `docs/fix/` prefix, no `--parent` passed, `parentSpecSnapshotDigest: null` ✓. Artifacts: spec (57007 B, digest `842ef1fa…e663b`) + acceptance (6430 B, digest `e61f4819…bdc7`); both planning ledgers are embedded in the SPEC (fix contract, SPEC Decision 5, precedent fix-179) and bound through the whole-file `spec` row, so their snapshot rows are `absent` — the fix unit carries no `tasks`/`testing`/`decisions` files at all (fix contract: no separate planning artifacts), the same shape cycles 1–3 bound and the authoritative validator accepted. Contexts: `project-guide` (CLAUDE.md) + `normalized-repository-state` present and bound; `architectural-invariants` absent (`docs/architecture/` does not exist — honestly unbound). Acceptance manifest blob recomputed: `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` → `b89e915f33a8c49151eca65cea966b3e7e2e03e9`, equal to the value recorded in the SPEC `## Status` (`SPEC.md:728`) ✓.
+- Prior-receipt staleness re-derived, never assumed: `verify --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing` → `current:false`, `digestMatches:false`, `reasonCode: stale-source-revision`, `changedPaths: [ACCEPTANCE.md, SPEC.md]`, exit 4 (the replan rotation, F22). Repeat sanctioned: the snapshot changed (`a65783d8…779f` → `bcde3ca1…0065`) and the question was re-cut by the replan; no blind re-run of an identical snapshot.
+- Phase-lint re-derived with the shipped linter: `node scripts/phase-lint.mjs docs/fix/224-deterministic-replan-routing/SPEC.md` → `verdict PASS`, `Phase-lint: PASS (8/8)` for P1–P7, P9–P12 and the re-opened P8, overall fingerprint `751f72932d6b3c0c46af3df062824c020f049861e22eeca609c3bcf35bcc1fda`, exit 0; every per-phase fingerprint matches the SPEC's `### Phase-lint` block (P1 6, P2 7, P3 3, P4 8, P5 6, P6 6, P7 2, P9 4, P10 3, P11 4, P12 6, P8 7 tasks). PE-011's closure is real: `scripts/phase-lint.mjs` is present on this branch.
+- Citation re-verification at the bound revision `2f801ad3`: F23 reproduced live — `node scripts/unit-route.mjs 224-deterministic-replan-routing` → `status: `done` (leading backtick, the raw fix-index cell), `open-rows: 5`, `route: replan`, `next: /plan-fix 224`, `rows: F21 F22 F23 F24 F25`, `read-set (9)`, exit 0; F24 corroborated by `ROUTES` (`scripts/unit-route.mjs:36`: five tokens, no `close-out`) and the route chain (`:336-352`); F25 corroborated by `scripts/phase-lint.mjs:651-657` (`finalCloseOut = index === phases.length - 1 && HARDENING_LAYERS.has(layer)`), `:489-493` (box-3 limit 8, 10 only for `finalCloseOut`) and `:580-590` (box-7 `gh pr` fires outside `finalCloseOut`) — the append-after shape is genuinely unlintable today, so the insert-before placement is the only shape that emits now, and the workaround is disclosed in the SPEC `## Amendments` (`:718`) and the replan note (`:488-492`).
+- Falsified current-state claims at the bound revision (RP-224-8): `git show 2f801ad3:docs/features/ROADMAP.md | sed -n 47p` → `done · [#212]`; `git ls-tree 2f801ad3 docs/features/ --name-only | grep 37` → `docs/features/37-phase-lint-script`; `git cat-file -e 2f801ad3:scripts/phase-lint.mjs` → present; `git show 2f801ad3:docs/features/37-phase-lint-script/review-findings.md | wc -l` → 1153 (PE-010's 1065 is pinned to `e1e282c5`, so only the HEAD-relative prose drifts).
+- Obligation/scope map checks (RP-224-7/9/10/11): all 15 `| OB-` rows end `| planned |` (P12 task 1 owns their reconciliation); `grep -n "phase-contract"` over the P9–P12 bodies → no task edits `skills/phase-contract/SKILL.md` (v1.0.3; rule 3 `:43`, rule 7 `:51`, guardrail `:85`, sole-owner claim `:17`); `grep -n "phase-lint"` over the SPEC → no Scope/Impact/Rollback row for the P10 targets (`:650-659`), while `## Impact` (`:279-304`) and `## Rollback` (`:703-710`) still describe the change without the linter; `docs/fix/README.md:30` → `done · [#225](https://github.com/gtrabanco/agentic-workflow/pull/225)` with the P8 close-out receipt recording the same PR at head `a74ee351`.
+
+### Ledger sweep L1–L6 + Engineering/fix checks
+
+- L1 pass — the snapshot binds `parentSpecSnapshotDigest: null` and the receipt says so plainly; no invented parent (fix unit, D6/D30).
+- L2 finding (RP-224-8) — PE-011 and PE-013 keep `freshness: current` while their assertions are falsified at the bound revision (the linter and unit-37's directory exist there; roadmap row 37 = `done · #212`); PE-005's "never emitted" is likewise closed by the executed P3, though its observed-revision is pinned. All other rows are `current` + `proven`/`decision`; no `unknown` without an owner.
+- L3 finding (RP-224-7) — one behaviour appears twice (OB-12's "and the new route token is documented and released" repeats OB-15's release behaviour) and the phase-contract half of OB-15 has no owner, so the normative-behaviour set is both duplicated and incomplete.
+- L4 finding (RP-224-7) — OB-12 names one phase and one task (P9.3) but its content spans P9 and P11; OB-15 names P11.3, whose deliverable cannot produce the row's required evidence ("the two version cells" — P11.3 adds the `replan-findings` cells only). Every other row names exactly one phase + task, owner, validator copied from `ACCEPTANCE.md`/the phase done-when, and required evidence.
+- L5 finding (RP-224-11) — the scenario matrix carries no row for the replan's new failure categories (F24's finished-unit mis-route, F25's retro-blocked executed phase, F23's raw status token), and P11's named validator can pass while OB-15's phase-contract half stays undelivered.
+- L6 pass — RP-224-1…RP-224-6 are all `resolved` with resolution evidence pinned to their own revisions; no `dismissed` row lacks counter-evidence; the only open material rows are the five emitted here, and `review-findings.md` F21–F25 stay `folded: no` (their fold is execution's, never this review's).
+- P1 pass (surfaces named with `path:line` evidence rows; invariant posture = the `## Rules that must never be violated` list; the phase-contract sole-ownership invariant the P10 relaxation touches is not in that list — carried as RP-224-7) · P2 pass (the dependency closure is empty and correctly so; the stale ordering note in `## Depends on` is RP-224-8, not a closure defect) · P3 pass (the boundary is honest: `suggested` is already schema-declared at `envelope.schema.json:169`, the amended route vocabulary is the router's own contract and P11 documents it, `review-change`/`fold-findings` classification untouched) · P4 pass (the sanitizer owns the echoed ids/paths, OB-10/AC12, and the new terminal route adds no injection surface; no secrets/auth/PII) · P5 pass (no migration; P11.3 names both changelog languages for the `replan-findings` cell — the missing phase-contract cell is RP-224-7) · P6 finding (RP-224-9: the re-opened P8's already-satisfied/invalid tasks and unstated idempotent re-entry) · P7 finding (RP-224-10: the rollback prose no longer covers the P10 linter change) · P8 pass (the router block, the sensor's `next.suggested` and the suites observe the shipped behaviour; the terminal route's own observability is P9/P11) · P9 finding (RP-224-9: the receipt-closure phase is ordered before the head-finalizing hardening phase; the disclosed placement itself is accepted as the only currently lintable shape) · P10 pass (every done-when is a command with an expected outcome on the repo's real gates; P10 adds a corpus pair rather than deleting one — its owner-side consequence is RP-224-7) · P11 finding (RP-224-11) · P12 finding (RP-224-8 for the dependency/status claims; RP-224-10 for the stale Impact/Rollback surface) · F1 pass (the operator report and the cited gates reproduce the dead end by reading; the router supplies the missing selection, reproduced live) · F2 pass (four causes at `path:line`, the extend-the-sensor alternative recorded and ruled out in Decision 1; the replan's three post-merge defects reproduce at their cited lines) · F3 finding (RP-224-10: the linter surface P10 edits is not named in Scope/Impact/Regression) · F4 finding (RP-224-10: the same accounting gap in `## Rollback`; no fake Product-half ceremony anywhere).
+
+### Verdict
+
+```text
+PLAN-REVIEW-FAIL — fix-224 BLOCKED
+- Snapshot: bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065 · Artifact revision: 2f801ad36ee80a2fc15a5a1e3d626f48d86c73df
+- Failed checks: L2, L3, L4, L5, P6, P7, P9, P11, P12, F3, F4
+- Findings (unioned, one row each):
+  | id | severity | class | check | claim |
+  |---|---|---|---|---|
+  | RP-224-7 | medium | plan | L3, L4 | OB-15's phase-contract half has no executing task: no phase edits `skills/phase-contract/SKILL.md`, so the exemption P10 makes the linter skip for ticked phases is never stated by the sole rule owner and its required evidence is unreachable; OB-12 duplicates the release behaviour |
+  | RP-224-8 | medium | plan | L2, P12 | `## Depends on` and PE-011/PE-013 assert unit 37 is unmerged at the bound revision while the bound tree has it merged (row 37 = `done · #212`, directory and `phase-lint.mjs` present, ledger 1153 lines) — a self-contradiction with the same revision's amendment row |
+  | RP-224-9 | medium | plan | P6, P9 | The re-opened P8 is not executable/resumable at this branch state (PR #225 open, fix-index row already `done · [#225]`), and P12's end-review/merge-audit are ordered before it, so F21's "no receipt at the close-out head" can recur |
+  | RP-224-10 | medium | plan | P7, P12, F3, F4 | P10 edits `scripts/phase-lint.mjs`/`.test.mjs` but Scope, Impact and Rollback still describe the change without the linter, so the regression scope and un-ship accounting omit a shared validator |
+  | RP-224-11 | low | plan | L5, P11 | The scenario matrix has no row for the replan's new failure categories (F23/F24/F25) and P11's drift-test validator can pass while OB-15's phase-contract half stays undelivered |
+- Repair owner: `plan-fix 224` — one batch over this whole set
+- Parent state: n/a — fix unit, no Product half exists (D6); no Product lineage to go stale
+```
+
+### Self-check (POLICY §8) — pasted sensor answer
+
+```json
+NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing
+{
+  "current": false,
+  "stage": "plan",
+  "unit": "fix-224",
+  "receipt": {
+    "id": "rp-224-20260915-004",
+    "verdict": "plan-review-fail",
+    "snapshot": "bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065",
+  "digestMatches": true,
+  "verdictIsPass": false,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+`structural.fresh: true` + `digestMatches: true`; `current: false` / `exit 4` is the sanctioned form for a persisted FAIL verdict per POLICY §8 ("`exit 4`/`current: false` means a verdict persisted but not a PASS — the verdict itself is the emit result, route per verdict").
+
+### CONVERGENCE-ANOMALY — fix-224 plan (replan re-entry)
+
+- Finding ids: repeated: none / new: RP-224-7, RP-224-8, RP-224-9, RP-224-10, RP-224-11
+- Snapshots: a65783d87c171aa99e9c2db19c15a2a014256339774e426c7d267b25593f779f → bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065 (artifactRevisionId dbbd6a92f7dd5348e397ae07f8c9947e69921bb1 → 2f801ad36ee80a2fc15a5a1e3d626f48d86c73df, label `fix-224-artrev-0004`)
+- Missed: the obligation map's release half (the phase-contract amendment + its version cells), the bound-revision truthfulness of `## Depends on`/PE-011/PE-013 after unit 37 merged into this branch, the terminal phase's executability once its PR already exists, and the declared surface/rollback of the P10 linter change
+- Owning stage: plan
+- Why the prior review/repair failed: cycle 3's PASS was correct for `artrev-0003`'s bytes, and the `audit-pr` BLOCKED verdict predates this replan; the replan added P9–P12 grounded in F21–F25 but did not re-derive the dependency section, the obligation map's release half, or the terminal phase against the branch's post-merge state, so a new material set exists on the new revision
+- Route to owner: `plan-fix 224` — one repair batch over RP-224-7…RP-224-11, rotate the artifact revision, then `/review-plan fix-224` re-reviews the new snapshot
+
+Verdict: **PLAN-REVIEW-FAIL** — 5 material open findings (4 × class `plan` medium, 1 × class `plan` low); repair owner `plan-fix 224`.
