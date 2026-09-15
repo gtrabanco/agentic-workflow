@@ -790,18 +790,18 @@ already exists and the fix-index row already reads `done · [#225]`, so every ta
 re-verifies its outcome against the live PR and never re-creates it; the three
 receipt tasks run after the ledger is fully ticked.
 
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
-- [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
-- [ ] Confirm the fix-index row reads `done · [#225]` and commit the flip only if it is missing
-- [ ] `git push`
-- [ ] Verify the open PR and print its URL (`gh pr view --json url`) — never re-create it
-- [ ] Confirm the fix-index row links PR #225 and re-commit only if the link moved
-- [ ] Commit `docs: link PR #225` and push (no empty commit when the link already holds)
-- [ ] Run the independent plan review as the last action of this phase, after every
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Pending-docs check: `git status --porcelain -- docs/` → empty
+- [x] Confirm the fix-index row reads `done · [#225]` and commit the flip only if it is missing
+- [x] `git push`
+- [x] Verify the open PR and print its URL (`gh pr view --json url`) — never re-create it
+- [x] Confirm the fix-index row links PR #225 and re-commit only if the link moved
+- [x] Commit `docs: link PR #225` and push (no empty commit when the link already holds)
+- [x] Run the independent plan review as the last action of this phase, after every
       box in this ledger is ticked, and paste `current: true` (F32)
-- [ ] Run the independent end review on the exact terminal candidate and paste its
+- [x] Run the independent end review on the exact terminal candidate and paste its
       receipt line (F29, F30, F31, F32, F33, F34)
-- [ ] Run the merge audit on the terminal head and paste its verdict with the PR URL
+- [x] Run the merge audit on the terminal head and paste its verdict with the PR URL
 
 ## Rollback
 
