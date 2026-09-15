@@ -153,3 +153,11 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - Gotchas: the route cell text is never echoed — only ids, the route name and repository paths are; the read set keeps only paths that exist under the root, so a path cited by a FOLDED row (F89 → `docs/LOGS.md`) is provably absent from the replan set.
 - Files: scripts/unit-route.mjs · scripts/unit-route.test.mjs · scripts/fixtures/unit-route/** · docs/fix/224-deterministic-replan-routing/SPEC.md (P1 ticks) · progress.md
 - Next: P2 — Replan entry contract
+
+## P2 — 2026-09-15
+- Phase-lint re-checked PASS (8/8) at fingerprint `P2:docs:7:replan-entry-contract`.
+- Done: new internal skill `skills/replan-findings/SKILL.md` (load condition gated on the router's `route: replan` line, bounded intake, guardrails) + `references/PHASE_APPEND.md` (append contract, hardening placement, artifact-revision duty, hand-off). Conditional load wired into `skills/plan-feature/SKILL.md` (progressive-loading item 4) and `skills/plan-fix/SKILL.md` (item 7); the replan exemption added to `skills/plan-feature/references/ROUTING.md` (router runs before the status gate) and `skills/plan-fix/references/PLANNING_PROCESS.md` (router before ingest). Version bumps: plan-feature 5.1.0 → 5.2.0, plan-fix 3.1.0 → 3.2.0, each with its per-skill changelog cell in `CHANGELOG.md` + `CHANGELOG.es.md`. Budget manifest entry for `replan-findings`.
+- Gate: `bun scripts/check-skill-context.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → 16 pass / 0 fail (the version tables and package versions recompute equal).
+- Gotchas: the added prose pushed plan-feature's main estimate to 2802 > 2800 and ROUTING.md to 2227 > 2200; both were compressed back under the defaults rather than raising the budget (plan-feature now 2799, ROUTING under 2200).
+- Files: skills/replan-findings/SKILL.md · skills/replan-findings/references/PHASE_APPEND.md · skills/plan-feature/SKILL.md · skills/plan-feature/references/ROUTING.md · skills/plan-fix/SKILL.md · skills/plan-fix/references/PLANNING_PROCESS.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json · CHANGELOG.md · CHANGELOG.es.md · docs/fix/224-deterministic-replan-routing/SPEC.md (P2 ticks) · progress.md
+- Next: P3 — Class-routed machine signal
