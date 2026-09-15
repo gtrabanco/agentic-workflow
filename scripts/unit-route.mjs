@@ -51,11 +51,15 @@ const BRACE_CITE_RE = /([A-Za-z0-9_.@/-]+)\{([^{}]*)\}/g;
  * The flatten class covers the whole control surface, not just C0: the C1 range
  * (U+0080-U+009F, e.g. NEL U+0085) is not matched by `\s`, and the Unicode line
  * and paragraph separators are named explicitly, so no echoed cell can carry a
- * character a consumer might read structurally (F28, extending F16).
+ * character a consumer might read structurally (F28, extending F16). The
+ * **format** characters (F33 — a regression of F28's declared invariant) are
+ * covered too: the word joiner, zero-width space/en/em-joiner, the bidi marks and
+ * embeddings/overrides/isolates, the soft hyphen and the BOM, all of which are
+ * invisible to a reader and structural to a parser that honours them.
  */
 export function sanitize(value) {
   const flat = String(value ?? "")
-    .replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]+/g, " ")
+    .replace(/[\u0000-\u001f\u007f-\u009f\u00ad\u200b-\u200f\u2028-\u202e\u2060-\u2064\u2066-\u2069\ufeff]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   return flat.length > CELL_MAX ? `${flat.slice(0, CELL_MAX - 1)}…` : flat;
@@ -85,10 +89,18 @@ function cellsOf(line) {
  * The one open-row predicate, owned here and projected by the sensor: a row is open
  * unless its `folded` cell carries one of the ledger's not-open spellings. Two
  * vocabularies let the same ledger row answer `execute` here and `fold` there.
+ *
+ * The ledger annotates a closed cell with its provenance — `yes · fold <sha>`
+ * (`ledger-provenance.mjs`) or `yes ↳ folded by <sha>` — so the comparison is on
+ * the cell's leading token, never on the whole cell (F30: the annotated spellings
+ * made merged units read as open, which routed them to the fold and the planner).
  */
+const NOT_OPEN = new Set(["yes", "—", "-", "n/a", ""]);
 export const isOpen = (folded) => {
   const value = String(folded ?? "").trim().toLowerCase();
-  return value !== "yes" && value !== "—" && value !== "-" && value !== "n/a" && value !== "";
+  if (value === "") return false;
+  const head = value.split(/[\s·↳(,;:]/)[0];
+  return !NOT_OPEN.has(head);
 };
 
 /**
@@ -113,7 +125,13 @@ export function openRows(ledgerText) {
     if (!line.startsWith("|")) continue;
     const cells = cellsOf(line).slice(1, -1);
     if (cells.length < 7) continue;
-    const [id, file, axis, severity, klass, route, folded] = cells;
+    const [id, file, axis, severity, klass] = cells;
+    // `folded` is the row's LAST cell, never a fixed index: a row whose route or
+    // file cell carries an unescaped pipe splits into extra cells, and reading
+    // index 6 then returns route text — which made every such row look open (F29).
+    // Joining the middle cells back recovers the split route for classification.
+    const route = cells.slice(5, cells.length - 1).join(" | ");
+    const folded = cells[cells.length - 1];
     if (/^id$/i.test(id) || isSeparator(id) || !isOpen(folded)) continue;
     if (isMarkRow(id)) continue; // a mark row carries no destination of its own
     rows.push({ id, file, axis, severity, klass, route, folded });
@@ -186,6 +204,18 @@ function resolveUnit(token) {
     ? folders.filter((folder) => folder.number === clean)
     : folders.filter((folder) => folder.slug === clean || folder.dir.endsWith(`/${clean}`));
   return { matches, clean };
+}
+
+/** Issue numbers referenced by the roadmap's own rows (a tracked feature). */
+function roadmapIssues() {
+  const text = readProject("docs/features/ROADMAP.md") ?? "";
+  const numbers = new Set();
+  for (const line of text.split("\n")) {
+    if (!line.startsWith("|")) continue;
+    const match = /issues\/(\d+)/.exec(line);
+    if (match) numbers.add(match[1]);
+  }
+  return numbers;
 }
 
 /** Issue numbers referenced by the fix index (the tracked-issue surface). */
@@ -300,7 +330,8 @@ first match winning: replan (an open row whose frozen route is the plan owner),
 decision (an open row that needs a product/architecture decision), fold (any
 other open row), execute (a known unit with no open row that is still open work),
 close-out (a done unit with no open row — the merge gate is the next step),
-plan-from-issue (a tracked issue with no unit folder yet).
+plan-from-issue (a tracked issue with no unit folder yet: a fix-index number or a
+roadmap row's own issue number).
 
 The routed block goes to stdout: unit, status, open-rows, route, next, rows,
 read-set (at most ${READ_SET_MAX} paths, then an explicit remainder line),
@@ -336,6 +367,13 @@ function main(argv) {
       print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/fix", [], ["README.md"]) });
       return;
     }
+    // A roadmap row's own issue number is the other tracked-issue surface this
+    // command documents, so it resolves instead of dead-ending (F34).
+    if (numeric && roadmapIssues().has(clean)) {
+      const command = `/plan-feature --from-issue ${clean}`;
+      print({ unit: clean, status: "pending", route: "plan-from-issue", command, openCount: 0, rows: [], readSet: readSetFor("docs/features", [], ["ROADMAP.md"]) });
+      return;
+    }
     fail(1, `unknown unit: ${sanitize(clean)}`);
   }
 
@@ -369,7 +407,9 @@ function main(argv) {
   } else {
     route = "execute";
     selected = [];
-    command = `/execute-phase ${unit.slug}`;
+    // The frozen fix invocation is `--fix <n>` (`execute-phase`'s own hint), so the
+    // machine signal names it instead of the feature-shaped command (F31).
+    command = unit.kind === "fix" ? `/execute-phase --fix ${unit.number}` : `/execute-phase ${unit.slug}`;
   }
 
   const base = route === "replan" || route === "decision" || route === "fold"

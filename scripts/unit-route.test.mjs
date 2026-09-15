@@ -230,8 +230,11 @@ test("AC12/S7: long and shell-shaped cells are sanitized, never echoed as a ledg
   // F28: a C1 control (NEL) and a Unicode line separator inside an echoed cell —
   // neither is matched by `\s`, so the flatten class must cover them.
   const c1Row = "| F11\u0085X | scripts/evil3.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
+  // F33: a format character — a bidi override — is invisible to a reader and
+  // structural to a parser that honours it, so the flatten class covers Cf too.
+  const cfRow = "| F13\u202eX | scripts/evil5.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
   const sepRow = "| F12\u2028Y | scripts/evil4.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
-  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n${c1Row}\n${sepRow}\n`);
+  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n${c1Row}\n${sepRow}\n${cfRow}\n`);
 
   const result = run(["90-hostile-unit"], { root });
   assert.equal(result.status, 0, result.stderr);
@@ -243,7 +246,61 @@ test("AC12/S7: long and shell-shaped cells are sanitized, never echoed as a ledg
   assert.ok(!result.stdout.includes("\u0085"), "a C1 control never survives the sanitizer (F28)");
   assert.ok(!result.stdout.includes("\u2028"), "a Unicode line separator never survives the sanitizer (F28)");
   assert.match(result.stdout, /F11 X/, "the C1-prefixed id is flattened, not dropped");
+  assert.ok(!result.stdout.includes("\u202e"), "a bidi override never survives the sanitizer (F33)");
+  assert.match(result.stdout, /F13 X/, "the format-character-prefixed id is flattened too");
   assert.match(result.stdout, /…/, "truncation is visible, never silent");
   assert.ok(!result.stdout.includes("rm -rf"), "the route cell's shell-shaped text is never echoed at all");
-  assert.match(result.stdout, /^rows: F9-AA.* F10 F11 X F12 Y$/m, "every open id is listed on one sanitized line");
+  assert.match(result.stdout, /^rows: F9-AA.* F10 F11 X F12 Y F13 X$/m, "every open id is listed on one sanitized line");
+});
+
+// ===========================================================================
+// Fold cycle 3 — the row parser and the issue surfaces (F29, F30, F31, F34)
+// ===========================================================================
+
+const hostileLedger = (rows) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-fold3-"));
+  fs.cpSync(FIXTURE, root, { recursive: true });
+  const dir = path.join(root, "docs", "features", "90-fold3-unit");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "review-findings.md"),
+    `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${rows.join("\n")}\n`,
+  );
+  return run(["90-fold3-unit"], { root });
+};
+
+test("F29: `folded` is the row's last cell, never a fixed index", () => {
+  // An unescaped pipe inside the route cell splits the row past seven cells, so
+  // the closed marking sits at the end instead of index 6.
+  const result = hostileLedger([
+    "| F20 | scripts/a.mjs:1 | code | med | fix-now | fold: tighten the | boundary handling | yes |",
+    "| F21 | scripts/b.mjs:1 | code | med | fix-now | fold: tighten the | boundary handling | no |",
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(rowLine(result.stdout), "F21", "only the row whose LAST cell is `no` is open");
+  assert.equal(/^open-rows: 1$/m.exec(result.stdout)?.[0], "open-rows: 1");
+});
+
+test("F30: the ledger's annotated closed spellings are not open rows", () => {
+  const result = hostileLedger([
+    "| F22 | scripts/c.mjs:1 | code | med | fix-now | fold: x | yes · fold c95ff5b4 |",
+    "| F23 | scripts/d.mjs:1 | code | med | fix-now | fold: y | yes ↳ folded by 942ab62 |",
+    "| F24 | scripts/e.mjs:1 | code | med | fix-now | fold: z | no · pending |",
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(rowLine(result.stdout), "F24", "the annotated `yes` spellings are closed; the annotated `no` is open");
+});
+
+test("F31: the execute route names the frozen `--fix <n>` invocation for a fix unit", () => {
+  const result = run(["22-execute-fix"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "execute");
+  assert.equal(nextLine(result.stdout), "/execute-phase --fix 22");
+});
+
+test("F34: a roadmap row's own issue number resolves instead of dead-ending", () => {
+  const result = run(["140"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "plan-from-issue");
+  assert.equal(nextLine(result.stdout), "/plan-feature --from-issue 140");
 });
