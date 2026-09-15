@@ -1,7 +1,5 @@
 # @gtrabanco/agentic-workflow-schema
 
-> 🇪🇸 [Versión en español](README.es.md)
-
 Zero-runtime-dependency machine contracts for
 [agentic-workflow](https://github.com/gtrabanco/agentic-workflow). Version 3
 keeps the established `workflow-status` envelope while giving headless drivers
@@ -602,7 +600,7 @@ installed-package consumer can run:
 | `npm run check:verification-schemas` | rebuild and byte-check generated projections |
 | `npm run check:verification-package` | inspect the package tarball contract |
 | `npm run bench:verification -- --commands 128` | run the AC10 warm-process benchmark |
-| `npm run test:verification-docs` | run the executable bilingual documentation suite |
+| `npm run test:verification-docs` | run the executable documentation suite |
 | `npm run gate:verification` | compose all verification release checks |
 
 **Two-stage model:** requesting `fast` executes only fast commands; requesting

@@ -5,8 +5,8 @@
 //   - a `grep -c "capabilities"` word count is NOT an inventory validator
 //     (the word also appears in the `capabilities` field on the public type,
 //     so the count is 14 in src/index.ts, never the 12 built-in profiles);
-//   - the AC7 semantics must be proven in BOTH package languages
-//     (English authoritative/advisory, Spanish autoritativa/orientativo);
+//   - the AC7 semantics must be proven against the package's single English
+//     reference (repository evidence is authoritative, context is advisory);
 //   - the AC8 pack manifest must require every artifact INDEPENDENTLY,
 //     not with an alternation that succeeds when one artifact is present.
 import { test } from "node:test";
@@ -20,30 +20,20 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is 4.1.1", () => {
+test("AC8 read-verified: package version is 4.1.2", () => {
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "4.1.1");
+  assert.equal(pkg.version, "4.1.2");
 });
 
-// AC7 — language-aware capability semantics. Each language is asserted with
-// its own wording for the same two claims: repository evidence is
-// authoritative, semantic/episodic context is advisory.
-test("AC7: English reference states authoritative repository evidence and advisory context", () => {
+// AC7 — capability semantics. Repository evidence is authoritative,
+// semantic/episodic context is advisory.
+test("AC7: the reference states authoritative repository evidence and advisory context", () => {
   const en = readPkg("README.md");
   assert.match(en, /\*\*Repository evidence is authoritative\.\*\*/);
   assert.match(en, /document the reviewed maximum capabilities from/);
   assert.match(en, /never promise anything about a\s+model or provider runtime/);
   assert.match(en, /\*\*Context is advisory\.\*\*/);
   assert.match(en, /semantic-context.*episodic-memory[\s\S]*never change what a skill may do/);
-});
-
-test("AC7 Spanish reference states the equivalent autoritativa/orientativo semantics", () => {
-  const es = readPkg("README.es.md");
-  assert.match(es, /\*\*La evidencia del repositorio es autoritativa\.\*\*/);
-  assert.match(es, /documentan las capacidades m[áa]ximas revisadas de los\s+documentos del propio workflow/);
-  assert.match(es, /nunca prometen nada sobre un modelo\s+o un runtime de proveedor/);
-  assert.match(es, /\*\*El contexto es orientativo\.\*\*/);
-  assert.match(es, /semantic-context[\s\S]*episodic-memory[\s\S]*nunca cambian lo que una skill puede\s+hacer/);
 });
 
 // AC8 — commands — `npm pack --dry-run --json` manifest requires the four
@@ -59,7 +49,7 @@ test("AC8: npm pack manifest independently contains all four required public art
   assert.ok(record && Array.isArray(record.files), "pack manifest exposes a files list");
   const paths = new Set(record.files.map((entry) => entry.path));
 
-  const required = ["dist/index.js", "dist/index.d.ts", "README.md", "README.es.md", "verification-plan.schema.json", "verification-receipt.schema.json"];
+  const required = ["dist/index.js", "dist/index.d.ts", "README.md", "verification-plan.schema.json", "verification-receipt.schema.json"];
   for (const artifact of required) {
     assert.ok(paths.has(artifact), `required packed artifact missing: ${artifact}`);
   }

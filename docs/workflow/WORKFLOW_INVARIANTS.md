@@ -1,7 +1,5 @@
 # Workflow architectural invariants
 
-> 🇪🇸 [Versión en español](WORKFLOW_INVARIANTS.es.md)
-
 Architectural invariants are long-lived repository constraints. They protect the
 boundaries that must remain true while features, fixes, specifications, and
 implementation details evolve. They are constraints, not recommendations.

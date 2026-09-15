@@ -22,8 +22,19 @@
     "orchestration-envelope": {
       "descriptionEstimateMax": 170
     },
+    "plan-feature": {
+      "mainEstimateMax": 3079,
+      "mainSources": {
+        "fix 224 / #224": "conditional replan entry wiring grew the skill to 2799 est / 207 lines; ceiling re-based to ceil(measured x 1.10) so the next correction is not blocked by a 1-unit headroom"
+      }
+    },
     "pre-execution-review": {
       "referenceEstimateMax": 3557
+    },
+    "replan-findings": {
+      "referenceSources": {
+        "fix 224 / #224": "conditional replan entry; PHASE_APPEND.md holds the append contract and the artifact-revision duty, measured within the default reference budget"
+      }
     },
     "review-change": {
       "referenceEstimateMax": 2800,
@@ -40,10 +51,13 @@
     "workflow-status": {
       "mainEstimateMax": 1680,
       "mainLinesMax": 136,
-      "referenceEstimateMax": 2200,
+      "referenceEstimateMax": 2527,
       "referenceLinesMax": 280,
       "mainSources": {
         "feature 38 / #185": "skill slimmed to run-the-script (measured 1527 est / 123 lines)"
+      },
+      "referenceSources": {
+        "fix 224 / #224": "SENSOR_SIGNALS.md step 13 gains the class-routed next.suggested signal and withdraws the stale fold-only one (measured 2297 est, ceiling re-based to ceil(measured x 1.10) by the fold pair F19+F2 so the decision-class entry fits)"
       }
     }
   },
@@ -100,8 +114,8 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11739,
-      "routeLinesMax": 844
+      "routeEstimateMax": 11910,
+      "routeLinesMax": 846
     },
     "execute-phase:feature": {
       "skills": [
@@ -120,7 +134,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11752,
+      "routeEstimateMax": 11923,
       "routeLinesMax": 846
     },
     "execute-phase:final-pr": {
@@ -140,7 +154,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11622,
+      "routeEstimateMax": 11794,
       "routeLinesMax": 832
     },
     "execute-phase:finding": {
@@ -160,7 +174,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11784,
+      "routeEstimateMax": 11955,
       "routeLinesMax": 854
     },
     "execute-phase:fix": {
@@ -180,7 +194,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11937,
+      "routeEstimateMax": 12108,
       "routeLinesMax": 852
     },
     "execute-phase:legacy": {
@@ -200,7 +214,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11536,
+      "routeEstimateMax": 11708,
       "routeLinesMax": 834
     },
     "execute-phase:small": {
@@ -220,7 +234,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 11699,
+      "routeEstimateMax": 11871,
       "routeLinesMax": 847
     },
     "execute-phase:unit-loop": {
@@ -241,7 +255,7 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 12869,
+      "routeEstimateMax": 13041,
       "routeLinesMax": 980
     },
     "plan-feature:issue": {
@@ -253,8 +267,11 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11558,
-      "routeLinesMax": 911
+      "routeEstimateMax": 11873,
+      "routeLinesMax": 931,
+      "sources": {
+        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
+      }
     },
     "plan-feature:scaffold": {
       "skills": [
@@ -265,8 +282,8 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 24286,
-      "routeLinesMax": 1705
+      "routeEstimateMax": 24458,
+      "routeLinesMax": 1715
     },
     "plan-feature:scoped": {
       "skills": [
@@ -276,8 +293,11 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 9062,
-      "routeLinesMax": 733
+      "routeEstimateMax": 9377,
+      "routeLinesMax": 753,
+      "sources": {
+        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
+      }
     },
     "plan-fix:issue": {
       "skills": [
@@ -289,8 +309,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 27169,
-      "routeLinesMax": 1949
+      "routeEstimateMax": 27608,
+      "routeLinesMax": 1974,
+      "sources": {
+        "fix 224 / #224 + feature 37 / #184 (main-sync)": "merged-tree re-basis: the #224 replan-convergence prose and feature 37's linter wording are both loaded by this route; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:adversarial": {
       "skills": [
@@ -309,8 +332,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18497,
-      "routeLinesMax": 1330
+      "routeEstimateMax": 18676,
+      "routeLinesMax": 1338,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:default-backend": {
       "skills": [
@@ -328,8 +354,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16680,
-      "routeLinesMax": 1212
+      "routeEstimateMax": 16859,
+      "routeLinesMax": 1219,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:default-web": {
       "skills": [
@@ -347,8 +376,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16680,
-      "routeLinesMax": 1212
+      "routeEstimateMax": 16859,
+      "routeLinesMax": 1219,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:synthesize": {
       "skills": [
@@ -366,8 +398,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17193,
-      "routeLinesMax": 1236
+      "routeEstimateMax": 17373,
+      "routeLinesMax": 1243,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-plan:default": {
       "skills": [
@@ -391,7 +426,7 @@
   "policy": {
     "name": "relative-headroom",
     "headroom": 0.1,
-    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source)",
+    "declared": "2026-08-31 (PR #155 F7); 2026-09-06 (fix/162 fold F3 — self-check RUN box reword grows review-plan and review-spec reference lines); 2026-09-11 (feature 38 — sensor slimming; workflow-status entry added; over-ceiling execute-phase:* and review-change:* routes re-based to measured x 1.10, growth source features 29/30/31 already on main); 2026-09-11 (feature 37 P4 run-and-paste slim — plan-feature:issue/scaffold/scoped + plan-fix:issue estimate+lines re-based; growth from the phase-lint swap in P4); 2026-09-11 (feature 37 cycle-2 fold F19 — re-basis #2: the F5 fold's phase-contract rule-3 reword (1.0.3) is loaded by every plan-feature/plan-fix route, so it re-grew plan-feature:issue/scaffold/scoped + plan-fix:issue past the re-basis #1 ceilings from the same fold batch; the four ceilings are re-set to ceil(measured × 1.10)); 2026-09-12 (feature 37 merge sync — re-basis #3: main's feature-38 re-basis predates this branch's phase-contract rule-1/rule-3 rewords (1.0.3) and the P4 execute-phase slim, both loaded by every execute-phase:* route, so the seven execute-phase:* routeEstimateMax ceilings are re-set to ceil(measured x 1.10) over the merged tree; the lines ceilings stay unchanged); 2026-09-12 (feature 37 cycle-3 fold F34, completed by the cycle-6 fold F48 — the execute-phase:unit-loop ceiling is normalized 14000 → 12798 = ceil(measured 11634 x 1.10), so all EIGHT execute-phase:* routeEstimateMax ceilings carry the declared 10% headroom; the re-basis #3 entry above re-set the other seven, and this normalization raises no ceiling, so it names no growth source); 2026-09-14 (feature 37 review F86 fold — re-basis #5: the linter-absent fallback disclosed at the two execute-phase route-loaded files and the plan-feature-scaffold / plan-fix reference pairs grows the eight execute-phase:* estimate ceilings and the plan-feature:scaffold + plan-fix:issue estimate/line ceilings past re-basis #4, so they are re-set to ceil(measured × 1.10); the CHANGELOG 2026-09-14 release-log entry is the named growth source); 2026-09-15 (fix/224 fold F19 — the #224 replan-convergence prose left plan-feature at 2799/2800 and the workflow-status reference at 2297/2300; both per-skill ceilings re-based to ceil(measured x 1.10), growth source fix 224); 2026-09-15 (fix/224 × feature 37 main-sync — re-basis #6: both branches re-based the same plan-feature:issue/scoped and plan-fix:issue ceilings independently, and the merged tree measures 10637/837, 8368/675 and 24942/1785 — above either side — so those three routes' estimate+line ceilings are re-set to ceil(measured × 1.10); growth source = the union of fix 224's replan-convergence prose and feature 37's phase-lint wording); 2026-09-16 (fix/224 replan P11 — the phase-contract executed-phase exemption (1.0.4) is loaded by every plan-feature/plan-fix and execute-phase route, so the affected estimate and line ceilings are re-set to ceil(measured × 1.10); growth source = the F25 owner-side rule text); 2026-09-16 (fix/224 replan fold F26 — the corrected armed-box enumeration in the phase-contract rule text grew plan-feature:scoped and plan-fix:issue by one estimate unit each; both re-set to ceil(measured × 1.10))",
     "rules": [
       "ceiling = ceil(measured x 1.10) at each declared re-basis",
       "every ceiling raise names its real growth source in the commit and changelog row",

@@ -1,7 +1,5 @@
 # Migration notes
 
-> 🇪🇸 [Versión en español](MIGRATION.es.md)
-
 ## 2026-09-11 — the workflow-status envelope has a deterministic script producer (`workflow-status` 3.3.0, additive)
 
 **Additive minor bump, no migration required.** `workflow-status` 3.2.1 → 3.3.0
@@ -404,7 +402,7 @@ Upgrade mode closes that gap.
 **Action needed for existing installs.** After updating the skills, run
 `init-workspace` once — it now detects your existing scaffold and proposes
 the blocks you're missing instead of re-bootstrapping. See the "Updating an
-existing install" section in `README.md` / `README.es.md` for the full
+existing install" section in `README.md` for the full
 ordered path (update skills → read this file → `init-workspace` upgrade →
 optional `product-audit`). Nothing is applied without confirmation; skipping
 the run leaves your substrate exactly as it is today — no regression, just
@@ -571,8 +569,8 @@ out of `plan-feature` into a new user-facing skill, **`design-feature`**.
   written retroactively from the existing Acceptance criteria) before
   continuing to plan or execute — see `docs/features/_TEMPLATE/SPEC.md` for
   the exact section layout to backfill against.
-- Re-run `bump-skill` bookkeeping is already reflected in `CHANGELOG.md` /
-  `CHANGELOG.es.md` and the README skills + model tables for this change.
+- Re-run `bump-skill` bookkeeping is already reflected in `CHANGELOG.md`
+  and the README skills + model tables for this change.
 
 ## 2026-07-04 — v3: the default branch becomes model-agnostic
 

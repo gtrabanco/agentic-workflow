@@ -54,8 +54,8 @@ for (const [specifier, target] of Object.entries(manifest.exports ?? {})) {
   }
 }
 
-// 3. The build output and the human/ES documentation surface must ship.
-for (const required of ["dist/index.js", "dist/index.d.ts", "README.md", "README.es.md", "LICENSE"]) {
+// 3. The build output and the human documentation surface must ship.
+for (const required of ["dist/index.js", "dist/index.d.ts", "README.md", "LICENSE"]) {
   if (!shipped.has(required)) failures.push(`${required} is not packed`);
 }
 

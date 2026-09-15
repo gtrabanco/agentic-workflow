@@ -2,9 +2,9 @@
 //
 // Driven by `npm run test:verification-docs` (and by `npm test`, so docs drift can
 // never pass the main gate). P13 registered the harness; P14 added the content
-// assertions below: the six AC6 topics in both languages, every D14 limit with its
+// assertions below: the six AC6 topics, every D14 limit with its
 // number, the projection boundary, the D16 diagnostic contract, the freshness
-// vocabulary, EN/ES code parity, and examples that compile AND run.
+// vocabulary, and examples that compile AND run.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
@@ -14,67 +14,50 @@ import { join } from "node:path";
 
 const read = (relative) => readFileSync(new URL(relative, import.meta.url), "utf8");
 const README_EN = read("../README.md");
-const README_ES = read("../README.es.md");
 const verificationModule = await import("../dist/index.js");
 const { VERIFICATION_LIMITS, VERIFICATION_FRESHNESS_CODES, VERIFICATION_DIAGNOSTIC_CODES } = verificationModule;
 
-const both = { "README.md": README_EN, "README.es.md": README_ES };
+const references = { "README.md": README_EN };
 
 /** Fenced TypeScript example blocks, in document order. */
 function tsBlocks(text) {
   return [...text.matchAll(/```ts\n([\s\S]*?)```/g)].map((match) => match[1]);
 }
 
-/** Example code with comments and blank lines removed — the parity unit. */
-function codeOnly(block) {
-  return block
-    .split("\n")
-    .map((line) => line.replace(/\/\/.*$/, "").trimEnd())
-    .filter((line) => line.trim() !== "" && !/^\s*\/?\*/.test(line))
-    .join("\n");
-}
-
 // ---------------------------------------------------------------------------
-// AC6 — the six statements, in both languages
+// AC6 — the six statements
 // ---------------------------------------------------------------------------
 
 const AC6_TOPICS = [
   {
     name: "two-stage model",
     en: /\*\*Two-stage model:?\*\*|Two-stage model/i,
-    es: /modelo de dos etapas/i,
   },
   {
     name: "delivery-gate rule",
     en: /\*\*Delivery-gate rule:?\*\*|delivery gate is satisfied/i,
-    es: /regla del gate de entrega|regla de la puerta de entrega|gate de entrega se satisface/i,
   },
   {
     name: "no-execution boundary",
     en: /\*\*No-execution boundary:?\*\*|does not execute commands/i,
-    es: /límite de no-ejecución|no ejecuta comandos/i,
   },
   {
     name: "single validation authority",
     en: /two (public )?authoritative entr|sole plan-validation authority|single validation authority/i,
-    es: /dos entradas autoritativas|autoridad de validación única|única autoridad/i,
   },
   {
     name: "structural-projection status",
     en: /non-authoritative/i,
-    es: /no\s+autoritativa|no es autorizada|proyecci[oó]n(es)?\s+estructural/i,
   },
   {
     name: "v1 usability limits",
     en: /Usability limits/i,
-    es: /L[íi]mites de usabilidad/i,
   },
 ];
 
-test("AC6: both references state the two-stage model, gate rule, no-execution, authority, projection status and limits", () => {
+test("AC6: the reference states the two-stage model, gate rule, no-execution, authority, projection status and limits", () => {
   for (const topic of AC6_TOPICS) {
     assert.match(README_EN, topic.en, `README.md never states the ${topic.name}`);
-    assert.match(README_ES, topic.es, `README.es.md never states the ${topic.name}`);
   }
 });
 
@@ -94,7 +77,7 @@ function limitRows(text) {
 
 test("AC6: every published limit appears in the table with its exact number", () => {
   const keys = Object.keys(VERIFICATION_LIMITS);
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     const rows = limitRows(text);
     assert.deepEqual(
       keys.filter((key) => !rows.has(key)),
@@ -111,8 +94,8 @@ test("AC6: every published limit appears in the table with its exact number", ()
   }
 });
 
-test("AC6: the aggregate stage budgets and the p95 ceiling are documented in both languages", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("AC6: the aggregate stage budgets and the p95 ceiling are documented", () => {
+  for (const [name, text] of Object.entries(references)) {
     for (const phrase of [/10 min|10 minutos/, /15 min|15 minutos/, /60 min|60 minutos/, /2 h|120 min|2 horas/]) {
       assert.match(text, phrase, `${name} omits a D14 time bound (${phrase})`);
     }
@@ -126,8 +109,8 @@ test("AC6: the aggregate stage budgets and the p95 ceiling are documented in bot
 // Projection boundary + diagnostic contract
 // ---------------------------------------------------------------------------
 
-test("AC9: both references name the projections, their generator and their authority", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("AC9: the reference names the projections, their generator and their authority", () => {
+  for (const [name, text] of Object.entries(references)) {
     for (const file of ["verification-plan.schema.json", "verification-receipt.schema.json"]) {
       assert.ok(text.includes(file), `${name} never mentions ${file}`);
     }
@@ -139,8 +122,8 @@ test("AC9: both references name the projections, their generator and their autho
   }
 });
 
-test("D16: both references describe the bounded diagnostic failure shape", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("D16: the reference describes the bounded diagnostic failure shape", () => {
+  for (const [name, text] of Object.entries(references)) {
     assert.match(text, /diagnostics/, `${name} never names the diagnostics field`);
     assert.match(text, /truncated/, `${name} never names the truncation flag`);
     assert.match(text, /RFC 6901|puntero RFC 6901/i, `${name} never states the path form`);
@@ -153,8 +136,8 @@ test("D16: both references describe the bounded diagnostic failure shape", () =>
   }
 });
 
-test("AC4: all six freshness reason codes appear in both references", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("AC4: all six freshness reason codes appear in the reference", () => {
+  for (const [name, text] of Object.entries(references)) {
     for (const code of VERIFICATION_FRESHNESS_CODES) {
       assert.ok(text.includes(code), `${name} omits freshness code ${code}`);
     }
@@ -163,7 +146,7 @@ test("AC4: all six freshness reason codes appear in both references", () => {
 
 test("D16: the diagnostic vocabulary is disclosed, not just referenced", () => {
   // Every code must be findable in each limits/diagnostics table row.
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     const missing = VERIFICATION_DIAGNOSTIC_CODES.filter((code) => !text.includes(code));
     assert.deepEqual(missing, [], `${name} omits diagnostic codes: ${missing.join(", ")}`);
   }
@@ -175,7 +158,7 @@ test("D16: the diagnostic vocabulary is disclosed, not just referenced", () => {
 
 test("AC6: no reference mentions a validator the package does not export", async () => {
   const exported = new Set(Object.keys(await import("../dist/index.js")));
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     // Only call-like identifiers: prose verbs such as "validates" are not API.
     const candidates = new Set(
       [...text.matchAll(/\b(validate[A-Z][A-Za-z0-9]*|canonicalize[A-Z][A-Za-z0-9]*|digest[A-Z][A-Za-z0-9]*|derive[A-Z][A-Za-z0-9]*|compare[A-Z][A-Za-z0-9]*)\(/g)]
@@ -188,7 +171,7 @@ test("AC6: no reference mentions a validator the package does not export", async
 });
 
 test("AC6: the retired standalone receipt validator appears in no example or section", () => {
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     assert.ok(!text.includes("validateVerificationReceiptV1"), `${name} still names validateVerificationReceiptV1`);
   }
 });
@@ -196,13 +179,13 @@ test("AC6: the retired standalone receipt validator appears in no example or sec
 const TEMP_ROOT = join(fileURLToPath(new URL("..", import.meta.url)), ".tmp-verification-docs");
 
 /**
- * Only the feature-26 example is compiled and run. The pre-existing blocks in both
- * references use undeclared placeholders (`snapshot`, `headSha`, an `invokeAgent`
+ * Only the feature-26 example is compiled and run. The pre-existing blocks in the
+ * reference use undeclared placeholders (`snapshot`, `headSha`, an `invokeAgent`
  * the reader supplies) and are already tracked as a routed review proposal to make
  * every snippet self-contained; asserting on them here would hide the claim this
  * unit actually owns.
  */
-const VERIFICATION_EXAMPLES = [...tsBlocks(README_EN), ...tsBlocks(README_ES)].filter((block) =>
+const VERIFICATION_EXAMPLES = [...tsBlocks(README_EN)].filter((block) =>
   block.includes("validateVerificationPlanV1"),
 );
 
@@ -264,7 +247,7 @@ function compileAndRun(index, block) {
 }
 
 test("AC6: the feature-26 example in each reference typechecks against the published types and runs", () => {
-  assert.equal(VERIFICATION_EXAMPLES.length, 2, "exactly one verification example per reference");
+  assert.equal(VERIFICATION_EXAMPLES.length, 1, "exactly one verification example in the reference");
   mkdirSync(TEMP_ROOT, { recursive: true });
   try {
     VERIFICATION_EXAMPLES.forEach((block, index) => compileAndRun(index, block));
@@ -278,8 +261,8 @@ test("AC6: the feature-26 example in each reference typechecks against the publi
 // of the frozen vocabulary exports. Red first: neither exists yet.
 // ---------------------------------------------------------------------------
 
-test("F93: both references disclose workingDirectory as an opaque, never-percent-decoded path", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("F93: the reference discloses workingDirectory as an opaque, never-percent-decoded path", () => {
+  for (const [name, text] of Object.entries(references)) {
     assert.match(text, /opaque|opaca/, `${name} never calls the validated path opaque`);
     assert.match(text, /percent-decod/i, `${name} never warns against percent-decoding before resolution`);
   }
@@ -287,14 +270,14 @@ test("F93: both references disclose workingDirectory as an opaque, never-percent
 
 
 
-test("F96: both references name every frozen verification vocabulary export", () => {
+test("F96: the reference names every frozen verification vocabulary export", () => {
   const VOCABULARY = [
     "VERIFICATION_STAGES",
     "VERIFICATION_COST_CLASSES",
     "VERIFICATION_FRESHNESS_CODES",
     "VERIFICATION_CANONICAL_VECTORS",
   ];
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     for (const constant of VOCABULARY) {
       assert.ok(text.includes(constant), `${name} never names ${constant}`);
     }
@@ -305,7 +288,7 @@ test("F96: both references name every frozen verification vocabulary export", ()
 // usable from the tarball boundary, disclose the complete verification API,
 // name every public contract validator, and tell callers how to recover from
 // redacted diagnostics.
-test("F102: repository-only verification commands are marked source-checkout-only in both references", () => {
+test("F102: repository-only verification commands are marked source-checkout-only", () => {
   const sourceOnly = [
     "check:verification-schemas",
     "check:verification-package",
@@ -313,7 +296,7 @@ test("F102: repository-only verification commands are marked source-checkout-onl
     "test:verification-docs",
     "gate:verification",
   ];
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     assert.match(text, /source-checkout-only|solo (?:en|para) (?:un )?checkout (?:del código )?fuente/i, `${name} omits the source-checkout-only boundary`);
     for (const command of sourceOnly) {
       assert.ok(text.includes(command), `${name} never marks npm run ${command} as source-checkout-only`);
@@ -329,7 +312,7 @@ test("F102: repository-only verification commands are marked source-checkout-onl
 // F110: marking the table is not enough — the prose that *offers* a source-only
 // command as proof has to carry the same boundary, or an installed consumer
 // follows the sentence and hits a missing script.
-test("F110: every prose mention of a source-checkout-only command carries the qualifier in both references", () => {
+test("F110: every prose mention of a source-checkout-only command carries the qualifier", () => {
   const qualifier =
     /source[- ]checkout[- ]only|solo (?:en|para) (?:un )?checkout (?:del c[oó]digo )?fuente/i;
   const sourceOnlyCommands = [
@@ -339,7 +322,7 @@ test("F110: every prose mention of a source-checkout-only command carries the qu
     "test:verification-docs",
     "gate:verification",
   ];
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     const lines = text.split("\n");
     for (const command of sourceOnlyCommands) {
       lines.forEach((line, index) => {
@@ -356,7 +339,7 @@ test("F110: every prose mention of a source-checkout-only command carries the qu
   }
 });
 
-test("F103: both references inventory the exact public verification runtime and type surfaces", () => {
+test("F103: the reference inventories the exact public verification runtime and type surfaces", () => {
   const runtime = [
     "VERIFICATION_CANONICAL_VECTORS",
     "VERIFICATION_COMMAND_STATUSES",
@@ -412,14 +395,14 @@ test("F103: both references inventory the exact public verification runtime and 
   if (section.includes("export type { VerificationDiagnosticV1 };")) declaredTypes.push("VerificationDiagnosticV1");
   assert.deepEqual(declaredTypes.sort(), types, "the pinned verification type inventory drifted");
 
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     for (const identifier of [...runtime, ...types]) {
       assert.ok(text.includes(identifier), `${name} omits public verification identifier ${identifier}`);
     }
   }
 });
 
-test("F104: both references name every public contract validator", () => {
+test("F104: the reference names every public contract validator", () => {
   const validators = [
     "validateEnvelopeV2Strict",
     "validateSkillOutcomeV1",
@@ -429,7 +412,7 @@ test("F104: both references name every public contract validator", () => {
     "validateVerificationPlanV1",
     "validateVerificationReceiptAgainstPlan",
   ];
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     for (const validator of validators) {
       assert.ok(text.includes(validator), `${name} omits public validator ${validator}`);
     }
@@ -437,7 +420,7 @@ test("F104: both references name every public contract validator", () => {
 });
 
 test("F105: every diagnostic row gives caller recovery without submitted values", () => {
-  for (const [name, text] of Object.entries(both)) {
+  for (const [name, text] of Object.entries(references)) {
     for (const code of VERIFICATION_DIAGNOSTIC_CODES) {
       const row = text.split("\n").find((line) => line.startsWith(`| \`${code}\` |`));
       assert.ok(row, `${name} has no diagnostic row for ${code}`);
@@ -453,8 +436,8 @@ test("F105: every diagnostic row gives caller recovery without submitted values"
 // Deferred consumer boundary (D15) — documented, no issue created
 // ---------------------------------------------------------------------------
 
-test("D15: both references record the deferred AWL consumer boundary", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("D15: the reference records the deferred AWL consumer boundary", () => {
+  for (const [name, text] of Object.entries(references)) {
     assert.match(text, /AWL/, `${name} never mentions AWL`);
     assert.match(text, /not\s+part\s+of|out of scope|no\s+forma\s+parte|fuera\s+del\s+alcance|no\s+es\s+parte/i, `${name} does not mark it deferred`);
   }
@@ -464,8 +447,8 @@ test("D15: both references record the deferred AWL consumer boundary", () => {
 // P13 registration facts still hold (harness wiring)
 // ---------------------------------------------------------------------------
 
-test("both language references exist and carry content", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("the reference exists and carries content", () => {
+  for (const [name, text] of Object.entries(references)) {
     assert.ok(text.length > 4000, `${name} is unexpectedly short (${text.length} chars)`);
     assert.match(text, /^# /m, `${name} has no top-level heading`);
   }
@@ -492,8 +475,8 @@ const FALSE_FINGERPRINT_CLAIMS = [
   /digesto\s+del\s+blob\s+de\s+`?ACCEPTANCE\.md`?/i,
 ];
 
-test("the acceptance-fingerprint guidance names the real derivation in both languages", () => {
-  for (const [name, text] of Object.entries(both)) {
+test("the acceptance-fingerprint guidance names the real derivation", () => {
+  for (const [name, text] of Object.entries(references)) {
     for (const claim of FALSE_FINGERPRINT_CLAIMS) {
       assert.doesNotMatch(
         text,
@@ -522,7 +505,7 @@ const PACKAGE_HEADING = "#### [`@gtrabanco/agentic-workflow-schema`](packages/ag
 test("the changelog of record carries a row for the version being shipped", () => {
   const { version } = JSON.parse(read("../package.json"));
   const row = new RegExp(`^\\|\\s*${version.replace(/\./g, "\\.")}\\s*\\|`, "m");
-  for (const relative of ["../../../CHANGELOG.md", "../../../CHANGELOG.es.md"]) {
+  for (const relative of ["../../../CHANGELOG.md"]) {
     const text = read(relative);
     const start = text.indexOf(PACKAGE_HEADING);
     assert.notStrictEqual(start, -1, `${relative} no longer carries the package table`);
@@ -539,14 +522,13 @@ test("the changelog of record carries a row for the version being shipped", () =
 
 // F90 (review @8213ebd): the shipped row claimed a "13-case" docs suite while
 // 15 cases were on disk — a number a human cannot re-derive. This case makes
-// the claim self-checking: the count BOTH changelog languages state must equal
+// the claim self-checking: the count the changelog states must equal
 // the count this file's own source ships (1:1 with the registered cases the
-// runner reports). One changelog regex per language; both must exist.
+// runner reports). One changelog regex; it must exist.
 test("F90: the changelog's docs-suite case count equals this suite's real case count", () => {
   const shipped = (read("../test/verification-docs.test.mjs").match(/^test\(/gm) || []).length;
   const claims = {
     "../../../CHANGELOG.md": /a (\d+)-case bilingual docs suite/,
-    "../../../CHANGELOG.es.md": /suite bilingüe de documentación de (\d+) casos/,
   };
   for (const [relative, claim] of Object.entries(claims)) {
     const text = read(relative);
@@ -563,17 +545,13 @@ test("F90: the changelog's docs-suite case count equals this suite's real case c
 // F100 — 3.4.0 hardened the shared canonical core with a named `unsupported leaf`
 // refusal, which was an observable change on the pre-feature-26 `canonicalize*` /
 // `digest*` exports until the guard was scoped to the verification canonicalizers.
-// The ship record must say so in both languages: a reader deciding whether an
+// The ship record must say so: a reader deciding whether an
 // unsupported leaf throws needs the SCOPE, not the word "additive".
-test("F100: the ship record scopes the leaf guard to the verification canonicalizers in both languages", () => {
+test("F100: the ship record scopes the leaf guard to the verification canonicalizers", () => {
   const claims = {
     "../../../CHANGELOG.md": {
       legacy: /pre-feature-26 `canonicalize\*`\/`digest\*` exports are behaviour-identical/,
       scope: /scoped to the feature-26 verification canonicalizers/,
-    },
-    "../../../CHANGELOG.es.md": {
-      legacy: /exportaciones `canonicalize\*`\/`digest\*` anteriores a feature 26 mantienen un comportamiento idéntico/,
-      scope: /acotada a los canonizadores de verificación de feature 26/,
     },
   };
   for (const [relative, claim] of Object.entries(claims)) {

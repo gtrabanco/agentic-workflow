@@ -1,7 +1,7 @@
 ---
 name: review-implementation
 user-invocable: false
-version: 1.7.0
+version: 1.8.0
 argument-hint: <path-or-glob>
 allowed-tools: Read, Grep, Glob, Bash, WebFetch
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
@@ -96,8 +96,9 @@ each classification as its table row immediately and drop raw file content.
   composes this engine to classify. `audit-pr` and `product-audit` reuse this
   rubric.
 - Sits in **Stage 4** of the feature workflow (verification & review).
-- `fix-now` folds into the current unit; `replan-in-unit` appends
-  user-confirmed phases then `execute-phase` on the same branch;
+- `fix-now` folds into the current unit; `replan-in-unit` runs
+  `node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the
+  planner that appends user-confirmed phases before `execute-phase`;
   `decision-required` blocks for the user; independent work becomes proposals
   the user routes to `triage-issue` (D3).
 
