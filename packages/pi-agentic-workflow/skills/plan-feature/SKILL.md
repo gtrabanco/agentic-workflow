@@ -1,7 +1,7 @@
 ---
 name: plan-feature
 user-invocable: true
-version: 5.1.0
+version: 5.2.0
 argument-hint: <NN-slug | #N> | --from-issue N | --scaffold <slug> | --next
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -55,19 +55,20 @@ and roadmap registration match the project's real layout.
 
 ## Progressive loading — route before planning
 
-The reference allowlist is exactly the two paths below:
+The allowlist:
 
 1. Every invocation: read [redirect gate and routing](references/ROUTING.md),
-   apply the status gate first, then the Product-review gate, and stop on its
-   exact block when instructed.
+   apply the status gate, then the Product-review gate, and stop on its exact
+   block when instructed.
 2. Any route that can write planning artifacts: after the redirect gate permits
    routing, consume the [planning preflight](<../planning-preflight/SKILL.md>) —
-   it owns the normalized repository state read and the ONE final architectural
-   classification — before composing an internal step, including the
-   issue-derived route.
+   it owns the normalized repository-state read and the ONE final architectural
+   classification — before composing an internal step.
 3. Before composing an internal step: load the [phase contract](<../phase-contract/SKILL.md>)
    so every SPEC written this turn carries the canonical 8-box phase-lint and
    the normalized phase fingerprint.
+4. Only when `node scripts/unit-route.mjs <NN>` prints `route: replan`: load the
+   [replan contract](<../replan-findings/SKILL.md>); it owns the exemption.
 
 Do not load planning gates after a redirect stop. Both resources are normative,
 one hop from this file, and fail closed when missing.

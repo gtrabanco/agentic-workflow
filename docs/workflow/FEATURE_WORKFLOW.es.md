@@ -316,8 +316,10 @@ puerta de merge se ejecutan entonces sobre el PR:
     aplicables; nunca una pasada irrelevante).
 
   Solo hallazgos, sin refactorizar; `fix-now` se incorpora a la fase actual
-  (nunca un issue rastreado, nunca `plan-fix`); `replan-in-unit` añade nuevas
-  fases confirmadas por el usuario al SPEC de la unidad; `decision-required`
+  (nunca un issue rastreado, nunca `plan-fix`); `replan-in-unit` ejecuta
+  `node scripts/unit-route.mjs <unit>`, cuya línea `route: replan` nombra el
+  planificador que añade nuevas fases confirmadas por el usuario al SPEC de la
+  unidad (con `/review-plan` fresco antes); `decision-required`
   bloquea hasta que el usuario decida; las **proposals** independientes se
   agrupan para triaje explícito del usuario, nunca se pierden y la revisión no
   crea backlog.

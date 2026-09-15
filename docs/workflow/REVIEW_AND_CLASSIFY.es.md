@@ -85,11 +85,13 @@ y la revisión no crea backlog (D3):
 
 - **fix-now** → se incorpora directamente a la fase abierta de la unidad
   actual. Nunca un issue rastreado, nunca `plan-fix` (AC 12).
-- **fix-now / replan-in-unit** → nuevas fase(s) confirmadas por el usuario
-  añadidas al ledger `## Phases` del SPEC de la unidad (antes del cierre de
-  hardening, o después de él más una fase final de hardening fresca si ya
-  corrió), luego `execute-phase` en la misma rama — nunca una degradación
-  (AC 12).
+- **fix-now / replan-in-unit** → ejecutar `node scripts/unit-route.mjs <unit>`;
+  su línea `route: replan` nombra el planificador (`/plan-feature` para una
+  feature, `/plan-fix` para un fix), que añade fase(s) confirmadas por el usuario
+  al ledger `## Phases` del SPEC de la unidad (antes del cierre de hardening, o
+  después de él más una fase final de hardening fresca si ya corrió); un
+  `/review-plan <unit>` fresco pasa y luego `execute-phase` las ejecuta en la
+  misma rama — nunca una degradación (AC 12).
 - **fix-now / decision-required** → parar y presentar la decisión; la unidad
   bloquea hasta que el usuario decida.
 - **proposal** (capacidad futura independiente) → lote en el reporte con un
@@ -153,7 +155,9 @@ un revisor se le escaparía.
 Etapa 4 (verificación & revisión), junto a `/code-review`,
 `/security-review`, `/verify`. Añade la **clasificación + los ejes
 conscientes del proyecto** que aquellas no tienen, en un solo pase. Enruta
-**fix-now** a la fase abierta de la unidad actual, **replan-in-unit** a
-nuevas fases del SPEC confirmadas por el usuario, presenta **decision-required**
+**fix-now** a la fase abierta de la unidad actual, **replan-in-unit** por
+`node scripts/unit-route.mjs <unit>` y el planificador que nombra hacia
+nuevas fases del SPEC confirmadas por el usuario (con `/review-plan` fresco
+antes de ejecutar), presenta **decision-required**
 al usuario y agrupa las **proposals** independientes para que el usuario las
 enrute a `triage-issue`.

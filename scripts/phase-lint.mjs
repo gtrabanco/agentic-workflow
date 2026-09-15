@@ -367,6 +367,7 @@ function parsePhases(text) {
     // preserved.
     const tasks = [];
     const taskScan = [];
+    const ticks = [];
     for (let i = 0; i < phase.body.length; i += 1) {
       const match = /^\s*- \[([ x])\] (.+)$/.exec(phase.body[i]);
       if (!match) continue;
@@ -386,9 +387,10 @@ function parsePhases(text) {
       }
       i = j - 1;
       tasks.push(parts[0]);
+      ticks.push(match[1] === "x");
       taskScan.push(parts.join(" "));
     }
-    return { ...phase, layer, doneWhen, tasks, taskScan };
+    return { ...phase, layer, doneWhen, tasks, taskScan, ticks };
   });
 }
 
@@ -606,10 +608,32 @@ function box8(phase) {
 
 const BOXES = [box1, box2, box3, box4, box5, box6, box7, box8];
 
+/**
+ * An executed phase: every checkbox in it is ticked. Execution progress is the
+ * one corroboration the bytes carry that a phase already ran, and it is what
+ * the replan append contract needs (F25): appending the mandated fresh final
+ * `Hardening & PR` makes the executed hardening non-last, and boxes 3 and 7
+ * are positional — so without this the executed phase is retro-blocked and a
+ * replanned plan can never be emitted.
+ *
+ * Scope is deliberately minimal: only boxes 3 (task budget) and 7 (external
+ * gates, `gh pr`) consult it, because those are the two the placement rule
+ * disturbs; boxes 1, 2, 4, 5, 6 and 8 stay armed for an executed phase, so a
+ * plan that pre-ticks a phase to dodge a check still fails (pinned by the
+ * corpus triple). The rule is stated owner-side in
+ * `skills/phase-contract/SKILL.md`, which owns the eight rules.
+ */
+const executedPhase = (phase) => Array.isArray(phase.ticks) && phase.ticks.length > 0 && phase.ticks.every(Boolean);
+
 /** Check one phase; returns { findings: [{box, reason}] } or { ambiguous }. */
 function lintPhase(phase) {
   const findings = [];
+  const historical = executedPhase(phase);
   for (const [index, check] of BOXES.entries()) {
+    // The executed-phase exemption (F25): a phase that already ran is not
+    // re-judged by the two positional boxes. See `executedPhase` for why the
+    // scope stops there.
+    if (historical && (index === 2 || index === 6)) continue;
     // F85 re-cut: boxes 4–7 (positions 3–6) scan the joined task text; boxes
     // 1–3 and 8 keep their own scopes (title, per-line targets, task count,
     // done-when).

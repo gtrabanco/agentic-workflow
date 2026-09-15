@@ -76,10 +76,13 @@ the review (D3):
 
 - **fix-now** → folds directly into the current unit's open phase. Never a
   tracked issue, never `plan-fix` (AC 12).
-- **fix-now / replan-in-unit** → new user-confirmed phase(s) appended to the
-  unit's SPEC `## Phases` ledger (before the hardening close-out, or after it
-  plus a fresh final hardening phase if it already ran), then `execute-phase`
-  on the same branch — never a downgrade (AC 12).
+- **fix-now / replan-in-unit** → run `node scripts/unit-route.mjs <unit>`; its
+  `route: replan` line names the planner (`/plan-feature` for a feature,
+  `/plan-fix` for a fix), which appends user-confirmed phase(s) to the unit's
+  SPEC `## Phases` ledger (before the hardening close-out, or after it plus a
+  fresh final hardening phase if it already ran); a fresh `/review-plan <unit>`
+  passes, then `execute-phase` runs them on the same branch — never a downgrade
+  (AC 12).
 - **fix-now / decision-required** → stop and surface the decision; the unit
   blocks until the user decides.
 - **proposal** (independent future capability) → batched in the report with a
@@ -137,5 +140,7 @@ gate, because the whole point is to catch what one reviewer would miss.
 Stage 4 (verification & review), alongside `/code-review`, `/security-review`,
 `/verify`. It adds the **classification + project-aware axes** those don't, in
 one pass. Routes **fix-now** into the current unit's open phase, **replan-in-unit**
-into new user-confirmed SPEC phases, surfaces **decision-required** to the user,
+through `node scripts/unit-route.mjs <unit>` and the planner it names into new
+user-confirmed SPEC phases (fresh `/review-plan` before execution), surfaces
+**decision-required** to the user,
 and batches independent **proposals** for the user to route to `triage-issue`.

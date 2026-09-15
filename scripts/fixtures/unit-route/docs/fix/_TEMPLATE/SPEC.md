@@ -1,0 +1,1 @@
+# fix SPEC template stub

@@ -4,7 +4,7 @@
 
 Las skills que componen el flujo de trabajo agéntico, agrupadas por rol.
 
-**19 skills orientadas al usuario** (una entrada de menú cada una) + **18 pasos
+**19 skills orientadas al usuario** (una entrada de menú cada una) + **19 pasos
 internos** compuestos por ti (los dos pasos de planificación del router
 `plan-feature`, los dos dueños de evidencia pre-ejecución `evidence-grounding`
 (preparación de autoría) y `pre-execution-review` (el ciclo de revisión común
@@ -108,6 +108,7 @@ un resultado de preparación determinista, nunca un veredicto.
 | `review-perf` | Checklist de regresión de rendimiento sobre el diff. `user-invocable: false` — paquete de revisión interno |
 | `review-seo` | Checklist de SEO sobre páginas/rutas públicas. `user-invocable: false` — paquete de revisión interno |
 | `implementation-discovery` | Contrato del mapper pre-escritura acotado y de solo lectura: cierra siete preguntas de evidencia, emite un mapa compacto fijo y enruta `READY \| REPLAN \| NEEDS-DESIGN \| BLOCKED` antes de cualquier escritura de rama/planificación/código. `user-invocable: false` — consumido solo por `execute-phase` en la ruta pre-escritura |
+| `replan-findings` | Entrada de replan condicional: se carga solo cuando `node scripts/unit-route.mjs <unit>` imprime `route: replan`; convierte el conjunto de lectura acotado del router en fases añadidas al SPEC de la unidad y asume el deber de rotación de artefacto. `user-invocable: false` — compuesto por `plan-feature` / `plan-fix` en esa ruta |
 
 ## Ejecución
 
