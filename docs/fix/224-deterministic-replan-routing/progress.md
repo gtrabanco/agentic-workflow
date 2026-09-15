@@ -749,3 +749,29 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
 - Files: docs/fix/224-deterministic-replan-routing/{SPEC.md,review-findings.md,progress.md}
 - Next: P8 (the re-opened terminal close-out, whose tasks 8–10 produce the
   receipts this batch's `high` rows are re-reviewed against).
+
+## P8 — 2026-09-16 (re-opened terminal close-out)
+
+The ledger write for this phase is **all ten boxes in one write, before the
+receipt tasks run** — task 8 prescribes exactly that ordering, so the plan
+receipt it produces binds the fully-ticked `SPEC.md` and no later tick can void
+it. The re-entry is idempotent against the live PR: nothing below re-creates the
+PR or the fix-index flip.
+
+- Tasks 1–2: `node --test scripts/*.test.mjs` → **418 pass / 0 fail**; the Pi
+  package suite → **214 pass / 0 fail**; `node scripts/check-skill-context.mjs
+  --routes --budgets` → PASS (22 routes, 40 skills);
+  `git status --porcelain -- docs/` → empty.
+- Tasks 3, 6, 7: the fix-index row already reads
+  `done · [#225](https://github.com/gtrabanco/agentic-workflow/pull/225)` and
+  links PR #225, so no flip or link commit was needed and **no empty commit was
+  created** (the re-entry verifies instead of re-creating).
+- Task 4: `git push` — the replan and repair commits (14 ahead of
+  `origin/fix/224-deterministic-replan-routing`) are on the branch.
+- Task 5: `gh pr view 225 --json url` → the PR exists
+  (`https://github.com/gtrabanco/agentic-workflow/pull/225`); it was **not**
+  re-created (the template's create step would fail here, which is why the task
+  was reworded for the re-entry).
+- Tasks 8–10: run after this write, in order — the independent plan review
+  (`current: true` over these bytes), the independent end review at the resulting
+  head, and the merge audit. Their receipts are pasted below as they land.
