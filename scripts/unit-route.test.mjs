@@ -132,6 +132,21 @@ test("AC3: an ambiguous unit exits 2 and prints no route", () => {
   assert.match(result.stderr, /ambiguous unit: 30 matches/);
 });
 
+test("F6: --help and -h print the usage contract on stdout and exit 0", () => {
+  // Both standard help flags used to be read as unit tokens and answered with a
+  // misleading `unknown unit: --help` on stderr, exit 1 — a first-contact defect on
+  // the unit's own entry point. Help is a request for the contract, not a failure.
+  for (const flag of ["--help", "-h"]) {
+    const result = run([flag]);
+    assert.equal(result.status, 0, `${flag}: ${result.stderr}`);
+    assert.match(result.stdout, /^usage: node scripts\/unit-route\.mjs/m, flag);
+    assert.match(result.stdout, /Exit codes/i, `${flag}: the exit-code contract is named`);
+    assert.match(result.stdout, /replan/, `${flag}: the closed route table is named`);
+    assert.equal(result.stderr, "", `${flag}: help is not an error`);
+    assert.equal(routeLine(result.stdout), null, `${flag}: help prints no route`);
+  }
+});
+
 // ===========================================================================
 // AC4 — deterministic and read-only
 // ===========================================================================
