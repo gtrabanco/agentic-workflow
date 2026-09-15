@@ -222,3 +222,57 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - `git status --porcelain -- docs/` was empty before the flip; `git status --porcelain` is empty after the link commit.
 - Unit status: **done** (built, PR open — merge state lives in the forge).
 - Next: `/review-change` (the mandatory end review), then `/fold-findings` only on `REVIEW-FAIL`, then re-run `/review-change`, then `/audit-pr` as the merge gate.
+
+## Replan — `fix-224-artrev-0004` (2026-09-16)
+
+- **Trigger:** `audit-pr` on PR #225 returned **BLOCKED (2 blockers)** after the
+  `feat/37-phase-lint-script` merge — no `review-change` receipt at the head
+  (F21) and a stale `stage: plan` receipt whose `changedPaths` is the executed
+  SPEC's tick flips (F22) — plus two defects the post-merge dogfood run
+  surfaced (F23, F24) and one the replan itself hit (F25).
+- **Router line that licensed this write:**
+  `node scripts/unit-route.mjs 224-deterministic-replan-routing` → `route: replan`,
+  `next: /plan-fix 224`, `rows: F21 F22 F23 F24 F25`, `read-set (9)`.
+  The bounded intake below is exactly that read set plus the cited finding rows —
+  **no planning preflight** (the findings pin the scope), per
+  `skills/replan-findings/SKILL.md`.
+- **Appended phases:** `P9` terminal route for a finished unit (F23, F24) ·
+  `P10` executed-phase lint exemption (F25) · `P11` replan path contract docs
+  (F24, F25) · `P12` terminal receipt closure (F21, F22) — each closing its
+  selected rows in its task text.
+- **Placement — the one deviation, disclosed:** inserted **before** a re-opened
+  `P8` instead of appended after it. Reason: appending the mandated fresh final
+  `Hardening & PR` makes the executed `P8` non-last, and `scripts/phase-lint.mjs:653`
+  keys box-3's budget **and** box-7's `gh pr` position rule off the last phase, so
+  the executed phase is retro-blocked and the replan is unemittable —
+  `verdict BLOCKED: lint-blocked`. Re-opening `P8` (task list byte-identical, all
+  seven boxes un-ticked) satisfies the placement rule's purpose — the ledger again
+  ends with an unexecuted `Hardening & PR` closing out every phase — and stays
+  lintable today; `P10` repairs the linter so the next replan needs no workaround.
+  Recorded in the SPEC `## Amendments` with the operator decision.
+- **Phase-lint:** `node scripts/phase-lint.mjs docs/fix/224-deterministic-replan-routing/SPEC.md`
+  → `verdict PASS` for `P1`–`P7`, `P9`–`P12` and the re-opened `P8`
+  (8/8 each), overall fingerprint
+  `751f72932d6b3c0c46af3df062824c020f049861e22eeca609c3bcf35bcc1fda`.
+  Linted with the **shipped** linter (PE-011 is closed: the merge brought
+  `scripts/phase-lint.mjs` onto this branch); the executor's pre-flight re-lint
+  stays binding.
+- **Ledgers:** findings `F21`–`F25` persisted in `review-findings.md`
+  (`route: replan-in-unit`, `folded: no` — the fold cycle flips them after the
+  execution); obligations `OB-12`–`OB-15` added as the owners of the four new
+  normative behaviours; planning evidence unchanged (the findings ledger is the
+  authority for this write, not new repository reads).
+- **Acceptance re-freeze:** `AC1` amended (the `close-out` token for a finished
+  unit and the bare `status` field) and `AC14` added (the executed-phase lint
+  exemption). New blob
+  `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
+  `b89e915f33a8c49151eca65cea966b3e7e2e03e9`, recorded in the SPEC `## Status`.
+  User-authorized manifest change (SPEC `## Amendments`, 2026-09-16).
+- **Artifact revision:** `fix-224-artrev-0004` — the commit that carries this
+  write (sha recorded below once committed; the write rotates the id, so the
+  current `stage: plan` receipt `rp-224-20260915-003` is void by design).
+- **Gate at this write:** `node --test scripts/*.test.mjs` → 413 pass / 0 fail.
+- **`git status --porcelain -- docs/`:** empty after this write's commit.
+- **Next:** `/review-plan fix-224` — a fresh independent review of the re-cut
+  plan; `PLAN-REVIEW-PASS` licenses `/execute-phase --fix 224` for `P9`–`P12`
+  plus the re-opened `P8`.
