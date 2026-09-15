@@ -2171,3 +2171,38 @@ the fence mentions or alternatives and docs/notes.md — inert to every box
   assert.equal(status, 0);
   assert.match(stdout, /^verdict PASS$/m);
 });
+
+// F85 re-cut — the box-4 and box-6 branches of the joined-scan scope. The
+// existing F85 fixtures pin box-5 (a wrapped `or`) and box-2's scope boundary;
+// these pin the remaining two boxes the view-swap feeds, so a mutant that
+// dropped `taskScan` for boxes 4–7 (leaving only the checkbox line scanned)
+// cannot survive on the box-5 fixture alone.
+test("a box-4 arrow chain hidden in a wrapped continuation line is caught (F85)", () => {
+  const file = fixture("f85-wrap-box4.md", `# Plan
+
+### P1 — Wrapped task prose
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the parser
+  wire the entry → dispatch the call → emit the result
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the wrapped arrow chain must not pass as a single deliverable");
+  assert.match(stdout, /P1 box-4: task 1 is a → chain of 3 steps/);
+});
+
+test("a box-6 move-to-phase hidden in a wrapped continuation line is caught (F85)", () => {
+  const file = fixture("f85-wrap-box6.md", `# Plan
+
+### P1 — Wrapped task prose
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the parser
+  move the retry logic to P3 when the flag is absent
+`);
+  const { status, stdout } = nodeRun(file);
+  assert.equal(status, 1, "the wrapped cross-phase move must not pass as a single deliverable");
+  assert.match(stdout, /P1 box-6: task 1 moves work to another phase/);
+});
