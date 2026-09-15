@@ -12,13 +12,15 @@ version signal, RP-224-6). Re-frozen again by `fix-224-artrev-0004`
 for a finished unit and the bare `status` field join the closed route table's
 contract, F23/F24) and AC14 added (the executed-phase lint exemption, F25);
 AC14's outcome was extended by the repair batch `fix-224-artrev-0005` to cover
-the owner-side rule statement and the corpus triple.
+the owner-side rule statement and the corpus triple. Re-frozen again by the
+replan `fix-224-artrev-0008` (user-authorized; SPEC `## Amendments`) — AC1 gains
+the seventh route token (`historical`, F32).
 One stable ID per criterion; validators copied from the criteria. Modifying this
 manifest during execution requires a user-approved SPEC amendment.
 
 | ID | Required outcome | Validator |
 |---|---|---|
-| AC1 | The router's closed route table answers `replan`, `decision`, `fold`, `execute`, `close-out` and `plan-from-issue` from fixture ledgers, first match winning, where `close-out` is the route of a finished unit; the `status` field carries the bare status token, never the surrounding markdown | `node --test scripts/unit-route.test.mjs` → exit 0 |
+| AC1 | The router's closed route table answers `replan`, `decision`, `fold`, `execute`, `close-out` and `plan-from-issue` from fixture ledgers, first match winning, where `close-out` is the route of a finished unit and `historical` that of an archived unit whose status source is gone; the `status` field carries the bare status token, never the surrounding markdown | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC2 | The bounded read set is derived from the selected rows only: the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` and each cited repository path, deduped, sorted, and capped with an explicit remainder line | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC3 | Failure states fail closed: an unknown unit and extra arguments exit 1, an ambiguous unit exits 2, and no route is printed on either | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC4 | The router is deterministic and read-only: two consecutive runs print byte-identical stdout, and `git status --porcelain` is unchanged after a run | `node --test scripts/unit-route.test.mjs` → exit 0 |
