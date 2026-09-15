@@ -775,3 +775,97 @@ PR or the fix-index flip.
 - Tasks 8–10: run after this write, in order — the independent plan review
   (`current: true` over these bytes), the independent end review at the resulting
   head, and the merge audit. Their receipts are pasted below as they land.
+
+## Pre-execution review receipt v1 — plan (terminal re-bind, 2026-09-15)
+- Review: rp-224-20260915-007 · Snapshot: 3d5009783b84b41be4c4000dc3ae0f7538a500a30c07c01824033fb1a74734fa · Verdict: plan-review-pass
+- Unit: fix-224 · Stage: plan · Unit kind: fix
+- Parent SPEC snapshot: null · Parent Product receipt: none
+- Parent note: fix unit — no Product half exists (D6); the contract forbids a parent on a fix plan snapshot (D30)
+- Source revision: 72f2f58d0ebf19189c77b2e3e8e8b4213e4b7548 · Artifact revision: 72f2f58d0ebf19189c77b2e3e8e8b4213e4b7548
+- Reviewer: review-plan (fresh pi session) · Session: pi-web review turn on `fix/224-deterministic-replan-routing` (terminal re-bind after execution) · Role: reviewer · Author: plan-fix + execute-phase (commit `72f2f58d`)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: same-model · Policy: v1
+- Context-clean note: this conversation wrote or replanned no part of the unit; the only writes are this receipt block, its self-check output and the evidence commit — no reviewed artifact was touched.
+- Started/finished: 2026-09-15T21:24:00Z/2026-09-15T21:33:00Z · Findings: 0 (material open: 0)
+- Ledgers read: planning-evidence 15 rows (PE-001…PE-015, embedded in the SPEC) · obligations 16 rows (OB-1…OB-16, all read `verified` at this head)
+- Prior plan receipt (re-review only): rp-224-20260915-006 @ 14371db77f33dc2be00db5d062ce4e7aa7d07dcd4281427f1f83f5faf38d7303
+- Re-bind note (why this receipt exists): the executor's hand-off names the terminal close-out write `fix-224-artrev-0007` = `72f2f58d`; executing `P9`–`P12` ticked the bound `SPEC.md`, so the prior PASS `rp-224-20260915-006` is stale **by construction** (`current:false`, `reasonCode: stale-source-revision`, `changedPaths: [SPEC.md]`) and this review re-binds a current receipt over the executed bytes. That hop is the plan's own `P8` task 8, sanctioned by the contract — the previous verdict is not re-litigated and its staleness is not a defect.
+- Handoff re-derivation: the planner's hand-off named the artifact revision; the builder resolved `sourceRevision`/`artifactRevisionId` to the same 40-hex (`contentRevision` over the bound paths), and `verify` matched it. HEAD is the pushed head (`git rev-parse origin/fix/224-deterministic-replan-routing` → `72f2f58d`), working tree clean before the receipt write.
+
+### Review-run evidence (commands + results)
+
+- Branch verified first: `git branch --show-current` → `fix/224-deterministic-replan-routing`; `git status --porcelain` empty; `git rev-parse HEAD` → `72f2f58d0ebf19189c77b2e3e8e8b4213e4b7548`; `git rev-parse origin/fix/224-deterministic-replan-routing` → the same sha (pushed).
+- Snapshot build: `NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-execution-snapshot.mjs build --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing` → digest `3d5009783b84b41be4c4000dc3ae0f7538a500a30c07c01824033fb1a74734fa`, schema-validated by the recipe owner with no refusal; `unitKind: fix` derived from the `docs/fix/` prefix, no `--parent` passed, `parentSpecSnapshotDigest: null`. Artifacts: `acceptance` (6836 B, digest `60e9a8b619bc72e14e46879a91240be7e76ebf451da66630557c788c8bcee41d`) + `spec` (63664 B, digest `efe91f676ee5b2461845ad369d05975d77d358244963c834ca174971fc61a1c2`); both planning ledgers are embedded in the SPEC (fix contract, SPEC Decision 5, precedent fix-179) and bound through the whole-file `spec` row, so their own rows are `absent` — the shape cycles 1–4 bound and the authoritative validator accepted. Contexts: `project-guide` (`CLAUDE.md`) + `normalized-repository-state` (`docs/workflow/REPOSITORY_STATE.md`) present and bound; `architectural-invariants` absent (`docs/architecture/` does not exist — honestly unbound).
+- Acceptance manifest blob re-derived, never copied: `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` → `15e9661fdcafbc628419926806b27ae0532f021d`, equal to the value recorded in the SPEC `## Status` note ✓ (re-checked before this review, per `verification-contract`).
+- Prior-receipt staleness re-derived: `verify --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing` → `current:false`, `digestMatches:false`, `reasonCode: stale-source-revision`, `detail: reviewed at 7ca619b7, bound bytes now sit at 72f2f58d`, `changedPaths: [SPEC.md]`, exit 4 — exactly the executed-tick hop the hand-off describes, not a plan defect.
+- Phase-lint re-derived with the shipped linter: `node scripts/phase-lint.mjs docs/fix/224-deterministic-replan-routing/SPEC.md` → `verdict PASS`, `Phase-lint: PASS (8/8)` for P1–P7, P9–P12, P8, exit 0; every per-phase fingerprint matches the SPEC `### Phase-lint` block — `P1:config/infra:6:deterministic-unit-router`, `P2:docs:7:replan-entry-contract`, `P3:config/infra:3:class-routed-machine-signal`, `P4:docs:8:skills-replan-destination`, `P5:docs:6:tutorial-destination-convergence`, `P6:docs:6:release-bookkeeping`, `P7:config/infra:2:mirror-parity`, `P9:config/infra:5:terminal-route-for-finished-unit`, `P10:config/infra:3:executed-phase-lint-exemption`, `P11:docs:5:replan-path-contract-docs`, `P12:close-out:3:terminal-receipt-closure`, `P8:hardening:10:hardening-pr` — overall fingerprint `1299caaa5db0fbec7062dc5a0a702397f8d518839c1dacc516019e212bbb1c6a`, matching the recorded value. The executed `P9`–`P12`/`P8` boxes are all ticked (the `P8` write `72f2f58d` flipped exactly ten boxes) and the linter's executed-phase exemption is what keeps the non-last executed `P8` emissible without weakening a box that can still fail.
+- Repository gate at the bound revision: `NODE_PATH=packages/agentic-workflow-schema/node_modules node --test scripts/*.test.mjs` → exit 0 · 418 pass / 0 fail. Owner suites re-derived individually: `unit-route.test.mjs` 18/0, `phase-lint.test.mjs` 129/0, `normative-drift.test.mjs` 17/0, `workflow-status-sensor.test.mjs` 56/0.
+- Pi package suite: `cd packages/pi-agentic-workflow && bun test test/*.test.mjs` → 214 pass / 0 fail (includes `skill-parity.test.mjs`); `diff -rq skills packages/pi-agentic-workflow/skills` → only the excluded `bump-skill`, so the mirror is byte-identical.
+- Skill registration/budgets: `bun scripts/check-skill-context.mjs` → `PASS context budgets: 40 skills`, exit 0; `bun scripts/check-skill-context.mjs --routes --budgets` → PASS, exit 0; `npx skills add . --list` → exit 0 (the new internal contract discoverable). `docs/workflow/SKILL_CONTEXT_BUDGETS.json` names the `fix/224 replan P11` growth source in `policy.declared` (the phase-contract 1.0.4 text loaded by every plan-feature/plan-fix and execute-phase route).
+- Live dogfood signal: `node scripts/unit-route.mjs 224-deterministic-replan-routing` → `status: done`, `open-rows: 0`, `route: close-out`, `next: /audit-pr`, `rows: none`, exit 0 — the terminal route the executed `P9` added, on this unit's own ledger.
+- `P9`/`P10`/`P11` artifacts re-derived, never copied: `scripts/unit-route.mjs:37` `ROUTES` carries the six published tokens including `close-out`, and `:203` `statusToken()` strips the fix-index cell's markdown; `scripts/normative-drift.test.mjs:1093` asserts the six-token closed vocabulary (a token *addition*, no assertion removed); `scripts/phase-lint.mjs:626` `executedPhase()` is `ticks.every(Boolean)` and `:636` skips only boxes at index 2 and 6, with `scripts/phase-lint.test.mjs` carrying the three-case corpus; `skills/replan-findings/SKILL.md` `version: 1.1.0` documents the six tokens, the bare `status` and `close-out`; `skills/phase-contract/SKILL.md` `version: 1.0.4` states "a fully-ticked phase is historical" scoped to boxes 3 and 7 with pre-ticking named a defect; `skills/review-change/SKILL.md` `version: 3.5.1` with its `3.5.1` per-skill cells in `CHANGELOG.md` (3 hits) and `CHANGELOG.es.md` (3 hits); `packages/pi-agentic-workflow/package.json` `0.10.3`.
+- `P12` fold re-derived: `review-findings.md` shows `F21`, `F22`, `F23`, `F24`, `F25` all `folded: yes` (patched by `P9`–`P11` plus the `P8` receipt tasks this review is part of), and the router answers `open-rows: 0` — no open material row is carried into the close-out.
+- Findings ledger re-derived: `RP-224-1`…`RP-224-15` are all `resolved` with per-revision resolution evidence; no `dismissed` row exists; the report-only debt notes (`F8`–`F18`) and the proposal (`F20`) carry re-open triggers and are not rows.
+- Falsification pass (`FALSIFICATION — fix-224 plan @ 72f2f58d`): three hostile candidate claims probed — (1) "PE-007's regression census is invented" → the count drifted with the executed edits (43/21 at `48aac035` → 44/22 now), but the claim it grounds (14 converged routing surfaces, each named in Scope/Impact) re-verifies by read and the row pins its observation revision; recorded as immaterial pointer drift, no material row; (2) "PE-010's 1065-line cost figure is invented" → re-derived cross-branch as disclosed, and the claim (the ledger read is unbounded today) holds; (3) "AC14's phase-lint exemption lets a phase pass for the wrong reason" → the corpus triple keeps both boxes armed for every unemitted phase and for the non-exempt boxes of an executed one, and the mutant check the execution recorded kills exactly the executed case. No SPEC obligation the plan cannot deliver (all 16 rows `verified`); no phase whose done-when is not a command with an expected outcome; every failure category S1–S11 maps to a phase and a failing-capable validator; stance before checking: NO-CONFIRMED-GAPS.
+
+### Ledger sweep L1–L6 + Engineering/fix checks
+
+- L1 pass — the snapshot binds `parentSpecSnapshotDigest: null` and the receipt says so plainly; the fix unit claims no Product parent (D6/D30), so there is no lineage to forge and no `review-spec` upstream to route.
+- L2 pass — PE-001…PE-015 are `current` + `proven`/`decision`, every row pins the revision it was observed at, and the three pre-fix rows whose window drifted with the execution (`PE-001`…`PE-004` at `b5358666`, `PE-007`/`## Root cause` item 4 at the pre-P3 pointer) ground claims that still hold: they describe the dead end the executed `P4`/`P5`/`P6`/`P9`–`P11` converge. `PE-005` (`workflow-status.mjs:1192`), `PE-006` (`:742,753`), `PE-011` (`scripts/phase-lint.mjs` present), `PE-013` (row 37 `done · [#212]`) and `PE-015` (the `version-tables` drift check) re-verify at the bound revision. No `unknown` row lacks an owner; no `drifted`/`stale` row survives; the pointer drift is recorded here as a non-material observation, not carried as a material row.
+- L3 pass — OB-1…OB-16 cover every normative behaviour the fix adds (route decision, conditional load, bounded read, canonical destination, machine signal, fail-closed exits, budget/discoverability, mirror parity, determinism/read-only, sanitizer, version signal, terminal route, bare status token, executed-phase exemption, contract documentation) and every required failure state (S1–S11); none missing, none duplicated, ids stable, none `deferred`.
+- L4 pass — every row names exactly one phase and one task: OB-1→P1/2, OB-2→P2/3, OB-3→P1/3, OB-4→P4/1, OB-5→P3/1, OB-6→P1/4, OB-7→P2/7, OB-8→P7/2, OB-9→P1/5, OB-10→P1/6, OB-11→P4/8, OB-12→P9/3, OB-13→P9/2, OB-14→P10/2, OB-15→P11/4, OB-16→P11/3; owner `execute-phase`; a validator copied from `ACCEPTANCE.md`/the phase done-when; required evidence; status `verified` — none blank, none deferred.
+- L5 pass — S1–S11 each map to a phase and a validator that can fail; the S3 decision pin is present (`workflow-status-sensor.test.mjs:681`, folded `F2`), OB-15's grep lands on documented text (`close-out` → 2 hits) and OB-16's on the owner-side rule (`fully-ticked phase is historical` → 1 hit), and the phase-lint corpus triple adds coverage rather than deleting it. The one loose validator (`OB-11`'s `grep -q "^| 3\.5\.1 |"` can match another skill's cell) is backed by `normative-drift`'s `version-tables` check, which scopes the newest per-skill cell to the frontmatter and passes — substance machine-checked, not vacuous.
+- L6 pass — RP-224-1…RP-224-15 all `resolved`; no `dismissed` row; `review-findings.md` rows are `folded: yes` (open-row count 0); no open material row is being carried into execution or into the merge audit.
+- P1 pass (every affected surface is named with a `path:line` evidence row or a Scope entry; the invariant posture is `## Rules that must never be violated` — frozen classification, linter grammar, agnosticism, budget and mirror constraints) · P2 pass (unit 37 is merged, `#205`/`#172`/`#194`/`#198` are independent by the SPEC's own statement, and every phase's input exists on the branch) · P3 pass (the boundary is stated: `next.suggested` already exists at `envelope.schema.json:169`, the route vocabulary is the router's own contract, `review-change`/`fold-findings` classification is untouched) · P4 pass (the router sanitizer owns the echoed ids/paths via OB-10/AC12/S7; the status-token and terminal-route reads add no injection surface; no secrets/auth/PII) · P5 pass (no migration; EN+ES pairs landed in P5/P6 and P11 task 4 named both changelog languages; the mirror re-bundled) · P6 pass (per-phase receipts in this ledger, idempotent re-entry stated for the re-opened `P8`, exit-0 validators, the receipt tasks ordered after every tick) · P7 pass (the revert path is executable — revert the single PR; it names the shared-linter edit and the dead ends a revert restores rather than overclaiming) · P8 pass (the router block, the sensor's `next.suggested`, the terminal route, the docs and the suites observe the shipped behaviour) · P9 pass (all twelve phases PASS 8/8 with recorded fingerprints; order matches the `Depends on` closure; no phase builds a later phase's deliverable early; the ledger again ends with the close-out phase) · P10 pass (every phase's done-when is a command with an expected outcome on the repo's real gates; red-first explicit; no validator weakened, skipped or re-scoped — the `P9` drift edit adds a token and the `P10` exemption is itself pinned by a corpus triple) · P11 pass (S1–S11 cover every named failure state; S4 points at S9 for the `done` half; each maps to a phase and validator) · P12 pass (every cited `path:line`/grep/version/status claim re-verified at `72f2f58d`; the pre-fix pointer drift is noted and immaterial) · F1 pass (the operator report and the cited gates reproduce the dead end; the router supplies the missing deterministic selection) · F2 pass (four causes at `path:line`; the extend-the-sensor alternative is recorded and ruled out in SPEC Decision 1) · F3 pass (regression scope covers the 14 converged surfaces plus the new shared-linter and drift-pin edits, with the suites that would catch a re-break) · F4 pass (revert; the receipt states plainly that no Product review preceded it — no fake Product-half ceremony).
+
+### Verdict
+
+```text
+PLAN-REVIEW-PASS — fix-224
+- Snapshot: 3d5009783b84b41be4c4000dc3ae0f7538a500a30c07c01824033fb1a74734fa · Artifact revision: 72f2f58d0ebf19189c77b2e3e8e8b4213e4b7548 · Checks: L1–L6 + P1–P12 + F1–F4
+- Obligations: 16 rows, none blank/deferred/unvalidated (all `verified` at this head) · Material findings open: 0
+- Read-only: no plan artifact modified
+- Authority: execution may bind this receipt for this exact snapshot
+```
+
+### Self-check (POLICY §8) — pasted sensor answer
+
+Command and its JSON answer, run in this same act as the append above: the
+newest receipt is this one, `current: true` and `structural.fresh: true`.
+
+```json
+NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing
+{
+  "current": true,
+  "stage": "plan",
+  "unit": "fix-224",
+  "receipt": {
+    "id": "rp-224-20260915-007",
+    "verdict": "plan-review-pass",
+    "snapshot": "3d5009783b84b41be4c4000dc3ae0f7538a500a30c07c01824033fb1a74734fa",
+    "authorExclusion": "not-enforceable",
+    "contextClean": "true",
+    "policy": "v1"
+  },
+  "observedDigest": "3d5009783b84b41be4c4000dc3ae0f7538a500a30c07c01824033fb1a74734fa",
+  "digestMatches": true,
+  "verdictIsPass": true,
+  "structural": {
+    "fresh": true,
+    "detail": "the digest the receipt bound equals the digest re-derived from the bytes on disk",
+    "changedPaths": []
+  }
+}
+```
+
+### What this receipt binds
+
+- The exact bound bytes: `docs/fix/224-deterministic-replan-routing/SPEC.md`
+  (`efe91f67…a1c2`, 63664 B) + `ACCEPTANCE.md` (`60e9a8b6…e41d`, 6836 B), over
+  `CLAUDE.md` + `docs/workflow/REPOSITORY_STATE.md` as bound contexts.
+- No Product lineage: `Parent SPEC snapshot: null` is the fix contract's own
+  answer (D6/D30), stated rather than faked.
+- The terminal hop: `P8` tasks 9–10 (the independent end review, then the merge
+  audit) run at this head; a later write to any bound artifact rotates
+  `artifactRevisionId` and makes this receipt stale by construction, which is the
+  contract working, not a defect.
