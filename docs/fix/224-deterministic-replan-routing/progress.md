@@ -218,3 +218,7 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - Gotcha: the `docs/` pending check is a *post-commit* check; this receipt is committed with the phase, so the check runs against a clean tree.
 - Files: scripts/review-loop-discipline.test.mjs · docs/workflow/SKILL_CONTEXT_BUDGETS.json · docs/fix/224-deterministic-replan-routing/SPEC.md (P8 ticks) · progress.md
 - Next: flip the fix index to `done`, push, open the PR with `Closes #224`, link it.
+- Close-out: fix-index row flipped to `done` and committed (`eb09fdda`), branch pushed, PR opened and printed — **https://github.com/gtrabanco/agentic-workflow/pull/225** (`Closes #224`); the row updated to `done · [#225](…)` in the link commit.
+- `git status --porcelain -- docs/` was empty before the flip; `git status --porcelain` is empty after the link commit.
+- Unit status: **done** (built, PR open — merge state lives in the forge).
+- Next: `/review-change` (the mandatory end review), then `/fold-findings` only on `REVIEW-FAIL`, then re-run `/review-change`, then `/audit-pr` as the merge gate.
