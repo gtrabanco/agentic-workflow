@@ -1233,3 +1233,34 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   scripts/fixtures/unit-route/docs/{fix/23-merged-fix,features/16-merged-unit}/review-findings.md ·
   docs/fix/224-deterministic-replan-routing/SPEC.md (P13 ticks + OB-17) · progress.md
 - Next: P14 (the fresh final close-out).
+
+## P8/P14 close-out — F32 folded, P14 ledger write (2026-09-16)
+
+- **Fold cycle for the plan-owned row** `F32` (`P13`'s repair landed):
+  `all-repair-in-place`, one row. `F32` flipped `no → yes`; the router confirms
+  the closed state — `node scripts/unit-route.mjs 224-deterministic-replan-routing`
+  → `status: done`, `open-rows: 0`, `route: close-out`, `next: /audit-pr`,
+  `rows: none`.
+
+```text
+## REPAIR-RECEIPT
+- Repaired: F32
+- Refuted/open: none
+- Gate: node --test scripts/*.test.mjs → exit 0 at head 55225a1667fc57dffd6bcd70aaf1090474001697 · 424 pass / 0 fail
+- Batch class: all-repair-in-place
+- Fold diff:  2 files changed, 11 insertions(+), 11 deletions(-)
+- Branch: RE-REVIEW-REQUIRED (delta) — the third end review, already authorized
+```
+
+- **P14's ledger write is all ten boxes in one write**, as task 8 prescribes, so
+  the plan receipt it produces binds the fully-ticked `SPEC.md`.
+- Tasks 1–2 (run after this commit): gate **424 pass / 0 fail**, Pi suite
+  **214 pass / 0 fail**, `check-skill-context --routes --budgets` PASS,
+  `git status --porcelain -- docs/` → empty.
+- Tasks 3, 6, 7: the fix-index row already reads
+  `done · [#225](https://github.com/gtrabanco/agentic-workflow/pull/225)` and links
+  the PR, so no flip, no link commit, **no empty commit** (idempotent re-entry).
+- Task 4: `git push`.
+- Task 5: the PR is verified and its URL printed, never re-created.
+- Tasks 8–10 (plan re-bind, the third end review, the merge audit) run after this
+  write, in order; their receipts are pasted as they land.
