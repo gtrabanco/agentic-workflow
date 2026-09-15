@@ -31,8 +31,15 @@ convention).
 
 ## Depends on
 
-None. Independent of `#205`, `#172` and `#194`; it consumes their vocabulary
-without re-opening their decisions.
+None for this fix's own delivery: `#205`, `#172` and `#194` are independent; it
+consumes their vocabulary without re-opening their decisions. One cross-unit
+ordering note (RP-224-1): unit `37-phase-lint-script` is unmerged at the bound
+revision (`docs/features/ROADMAP.md:47` row 37 = `idea`; the unit directory
+exists only on `feat/37-phase-lint-script`, PE-013), so AC5's dogfood leg is
+verified against a committed fixture copied from that branch's ledger and the
+live variant `node scripts/unit-route.mjs 37-phase-lint-script` becomes runnable
+only after that unit merges — recorded as an informational post-merge check in
+`### Testing`, never an acceptance criterion.
 
 ## Root cause
 
@@ -78,7 +85,7 @@ to learn which finding needs replanning is to read the unit's ledger in full
 (unit 37's is 1065 lines, `wc -l`) or be told the id, and both planners then
 consume `planning-preflight`'s full normalized-repository-state read even though
 the finding already pins the scope. The data needed to decide does exist and is
-already parsed: `scripts/workflow-status.mjs:708-729` projects every
+already parsed: `scripts/workflow-status.mjs:713,735` projects every
 `folded: no` row as `{id, file, axis, severity, class, route, suggested_tier}`
 into `findings.fix_now[]`.
 
@@ -110,15 +117,23 @@ and the selection of the finding are taken deterministically by code.
 - The class-routed `next.suggested` emission in `scripts/workflow-status.mjs`
   with its pins, and the withdrawal of the stale documented signal in
   `skills/workflow-status/references/SENSOR_SIGNALS.md`.
-- One canonical replan destination across
+- One canonical replan destination across every surface the census shows routing
+  the class (PE-007) — the eight skill files:
   `skills/review-change/references/PERSIST_AND_DECIDE.md`,
+  `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md`,
+  `skills/review-implementation/references/CLASSIFY.md`,
+  `skills/review-implementation/SKILL.md`,
+  `skills/triage-issue/SKILL.md`,
   `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md`,
-  `skills/fold-findings/references/FOLD_PROCESS.md` and
-  `skills/fold-findings/SKILL.md`.
-- Tutorial and release surfaces: `docs/workflow/REVIEW_AND_CLASSIFY.md` (+ ES),
-  `docs/workflow/SKILLS.md` (+ ES), `CHANGELOG.md` (+ ES), the touched skills'
-  `version:` bumps, the new skill's budget entry in
-  `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, and the Pi mirror re-bundle.
+  `skills/fold-findings/references/FOLD_PROCESS.md`,
+  `skills/fold-findings/SKILL.md` — plus the tutorial prose that repeats it:
+  `docs/workflow/REVIEW_AND_CLASSIFY.md` (+ ES),
+  `docs/workflow/FEATURE_WORKFLOW.md` (+ ES) and
+  `docs/workflow/PORTABLE_PROMPT.md` (+ ES).
+- Tutorial and release surfaces: `docs/workflow/SKILLS.md` (+ ES),
+  `CHANGELOG.md` (+ ES), the touched skills' `version:` bumps, the new skill's
+  budget entry in `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, and the Pi mirror
+  re-bundle.
 
 ### Out of scope
 
@@ -150,14 +165,16 @@ and the selection of the finding are taken deterministically by code.
 | PE-002 | Root cause — neither planner's progressive-loading allowlist includes `review-findings.md` | repository | `skills/plan-feature/SKILL.md:56-68`; `skills/plan-fix/SKILL.md:91-108` | `b5358666` | where the ledger read belongs | current | proven | code read by `review-plan` |
 | PE-003 | Root cause — three contradictory destinations exist for one class | repository | `skills/review-change/references/PERSIST_AND_DECIDE.md:133`, `:135-136`; `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md:17-21` | `b5358666` | the canonical destination string | current | proven | grep the three surfaces after the fold |
 | PE-004 | Root cause — the fold freeze-batches on a replan row and routes back to the refusing planner | repository | `skills/fold-findings/references/FOLD_PROCESS.md:46`; `skills/fold-findings/SKILL.md:122` | `b5358666` | the fold's REPLAN-ROUTE receipt text | current | proven | fold receipt read after the fold |
-| PE-005 | Doc/code gap — `next.suggested` is documented and schema-declared but never emitted | repository | `skills/workflow-status/references/SENSOR_SIGNALS.md:74-76`; `packages/agentic-workflow-schema/envelope.schema.json:169`; `grep -n suggested scripts/workflow-status.mjs` → only `:729` | `b5358666` | the sensor's routing signal | current | proven | sensor suite pin |
-| PE-006 | Available machine data — the sensor already projects every open row with its `class` and `route` | repository | `scripts/workflow-status.mjs:708-729` | `b5358666` | the router's per-class decision table | current | proven | `readFixNow` read |
-| PE-007 | Regression scope — the destination text is consumed by prose surfaces and one emitted envelope field; no runtime consumer parses it | repository | `grep -rn "replan-in-unit" skills/ docs/`; `scripts/workflow-status.mjs:729` | `b5358666` | which surfaces the fold must change | current | proven | grep count before and after |
+| PE-005 | Doc/code gap — `next.suggested` is documented and schema-declared but never emitted | repository | `skills/workflow-status/references/SENSOR_SIGNALS.md:74-76`; `packages/agentic-workflow-schema/envelope.schema.json:169`; `grep -n suggested scripts/workflow-status.mjs` → only `:735` | `48aac035` | the sensor's routing signal | current | proven | sensor suite pin |
+| PE-006 | Available machine data — the sensor already projects every open row with its `class` and `route` | repository | `scripts/workflow-status.mjs:713,735` (`readFixNow` at `:713`, projection push at `:735`) | `48aac035` | the router's per-class decision table | current | proven | `readFixNow` read |
+| PE-007 | Regression scope — the class is routed by eight skill files and three tutorial pairs (EN+ES) and projected into one emitted envelope field; no runtime consumer parses the prose | repository | `grep -rn "replan-in-unit" skills/ docs/workflow/ --include="*.md"` → 43 hits over 21 files, of which 14 files carry routing sentences (enumerated in Scope; the rest are class definitions or summaries that name no destination); `scripts/workflow-status.mjs:735` | `48aac035` | the converged surface set (Scope, P4/P5) | current | proven | grep count before and after |
 | PE-008 | Rollback path — revert the single PR; skills, one script, its tests and docs only | repository | `docs/fix/_TEMPLATE/SPEC.md` rollback row; no migration or schema vocabulary in `packages/agentic-workflow-schema` | `b5358666` | rollback section | current | proven | `git revert <merge sha>` clean |
 | PE-009 | Affected use case — the operator path "a finding's frozen route is the plan owner → the planner appends phases → the fold lands them" | repository | `skills/review-implementation/references/CLASSIFY.md:97`; `#224` body | `b5358666` | OB-1, OB-2 | current | proven | scenario matrix row S1 |
-| PE-010 | Cost evidence — the lookup is unbounded today: unit 37's ledger is 1065 lines and both planners consume the full preflight | repository | `wc -l docs/features/37-phase-lint-script/review-findings.md` → 1065; `skills/plan-feature/SKILL.md:63-67`; `skills/plan-fix/SKILL.md:99-100` | `b5358666` | the bounded read set | current | proven | router output path count |
+| PE-010 | Cost evidence — the lookup is unbounded today: unit 37's ledger is 1065 lines and both planners consume the full preflight | repository | `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md \| wc -l` → 1065; `skills/plan-feature/SKILL.md:63-67`; `skills/plan-fix/SKILL.md:99-100` | `feat/37-phase-lint-script@e1e282c5` (the ledger is absent at `b5358666` and at HEAD; cross-branch read, disclosed as in PE-011) | the bounded read set | current | proven | router output path count |
 | PE-011 | Tooling — `scripts/phase-lint.mjs` does not exist on `main`; the linter ships with the unmerged unit 37 | repository | `test -f scripts/phase-lint.mjs` → absent at `b5358666`; present on `feat/37-phase-lint-script` | `b5358666` | how the phases were linted at planning time | current | proven | `execute-phase` pre-flight re-lints at execution |
 | PE-012 | Convention — adding a skill obliges a budget entry, version bumps, changelog rows and a byte-identical Pi mirror | repository | `CLAUDE.md` mirror rule; `packages/pi-agentic-workflow/scripts/bundle-skills.mjs`; `packages/pi-agentic-workflow/test/skill-parity.test.mjs`; `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | `b5358666` | OB-7, OB-8 | current | proven | AC9, AC10 |
+| PE-013 | Dogfood target — AC5's live target does not exist at the bound revision: unit 37's directory is absent from HEAD and its 1065-line ledger lives only on `feat/37-phase-lint-script`, roadmap row 37 = `idea` | repository | `git ls-tree HEAD docs/features/ --name-only \| grep -c 37` → 0; `git show feat/37-phase-lint-script:docs/features/37-phase-lint-script/review-findings.md \| wc -l` → 1065 at `e1e282c5`; `docs/features/ROADMAP.md:47` row 37 = `idea` | `48aac035` | AC5's verification target (fixture-based; live variant post-merge, informational) | current | proven | the dogfood fixture case in `scripts/unit-route.test.mjs` |
+| PE-014 | Untrusted-text echo — the router echoes repository-authored but forge-adjacent ledger text, so the workflow's data-never-instructions policy obliges a single sanitizer over its stdout | policy | `pre-execution-review/references/POLICY.md` §7; this SPEC's `## Security risks` bullet 2 | `48aac035` | OB-10, AC12 | current | proven | the sanitizer pin in `scripts/unit-route.test.mjs` |
 
 ### Obligations
 
@@ -166,12 +183,13 @@ and the selection of the finding are taken deterministically by code.
 | OB-1 | `#224` body; PE-001 | A unit with an open row whose frozen route is the plan owner decides to `replan` | P1 | 2 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | suite output naming the replan fixture | planned |
 | OB-2 | PE-009; `skills/plan-feature/SKILL.md` | The replan contract loads only when the router prints the replan route | P2 | 3 | execute-phase | `grep -c "scripts/unit-route.mjs" skills/plan-feature/SKILL.md skills/plan-fix/SKILL.md` → ≥1 each | grep counts pasted | planned |
 | OB-3 | PE-010 | The replan route reaches the finding without the full normalized-repository-state read | P1 | 3 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the bounded-set pin's asserted path list | planned |
-| OB-4 | PE-003 | Every destination surface names one canonical replan destination | P4 | 1 | execute-phase | `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md` → ≥1 each | grep counts pasted | planned |
+| OB-4 | PE-003; PE-007 | Every surface the census shows routing the class names one canonical replan destination | P4 | 1 | execute-phase | `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/review-change/references/OUTPUT_AND_GUARDRAILS.md skills/review-implementation/references/CLASSIFY.md skills/review-implementation/SKILL.md skills/triage-issue/SKILL.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md` → ≥1 each | grep counts pasted | planned |
 | OB-5 | PE-005 | The sensor emits `next.suggested` routed by the open row's class, and no documented signal contradicts it | P3 | 1 | execute-phase | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 | the three class pins | planned |
 | OB-6 | PE-002 | An unknown or ambiguous unit never yields a guessed route | P1 | 4 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the exit-code pins | planned |
 | OB-7 | PE-012 | The new internal skill carries a registered budget and the skill tree stays discoverable | P2 | 7 | execute-phase | `bun scripts/check-skill-context.mjs` → exit 0 | checker tail | planned |
-| OB-8 | PE-012 | The Pi mirror stays byte-identical to `skills/` after the last skill edit | P6 | 2 | execute-phase | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 | suite output | planned |
+| OB-8 | PE-012 | The Pi mirror stays byte-identical to `skills/` after the last skill edit | P7 | 2 | execute-phase | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 | suite output | planned |
 | OB-9 | PE-006; PE-011 | The router stays read-only and byte-deterministic, and every phase re-lints at execution | P1 | 5 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the determinism pin and the pasted lint block | planned |
+| OB-10 | PE-014 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells | P1 | 6 | execute-phase | `node --test scripts/unit-route.test.mjs` → exit 0 | the S7 sanitizer pin's asserted output | planned |
 
 ## Acceptance
 
@@ -184,13 +202,14 @@ command, with `read-verified` labelled where the observation is a read.
 | AC2 | The bounded read set is derived from the selected rows only: the unit's `review-findings.md`, `SPEC.md`, `ACCEPTANCE.md` and each cited repository path, deduped, sorted, and capped with an explicit remainder line | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC3 | Failure states fail closed: an unknown unit and extra arguments exit 1, an ambiguous unit exits 2, and no route is printed on either | `node --test scripts/unit-route.test.mjs` → exit 0 |
 | AC4 | The router is deterministic and read-only: two consecutive runs print byte-identical stdout, and `git status --porcelain` is unchanged after a run | `node --test scripts/unit-route.test.mjs` → exit 0 |
-| AC5 | Dogfood — on the reviewer's own comparison unit the router answers `replan` and lists the plan-routed rows without being told any id | read-verified: `node scripts/unit-route.mjs 37-phase-lint-script` → `route: replan` plus the row ids |
+| AC5 | Dogfood-shaped end-to-end — against the committed fixture replicating unit 37's plan-routed ledger rows (copied from `feat/37-phase-lint-script` at `e1e282c5`, PE-013), the router answers `replan` and lists the plan-routed row ids without being told any id | `node --test scripts/unit-route.test.mjs` → exit 0 (the dogfood fixture case) |
 | AC6 | The sensor emits `next.suggested` routed by class: a replan row points at the unit's planner command, a plain fix-now row points at the fold, and a unit with no open row contributes no suggestion | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 |
-| AC7 | One canonical replan destination: the four consumer surfaces name the router and the same planner command, and no surface sends a replan row to the executor or the fold | read-verified: `grep -c "unit-route" <the four cited files>` → ≥1 each, plus `grep -c "plan-feature\\|plan-fix"` on the same lines |
+| AC7 | One canonical replan destination: every surface the census shows routing the class — the eight skill files and six tutorial files enumerated in Scope — names the router and the same planner command, and no converged surface sends a replan row to the executor or the fold | read-verified: `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/review-change/references/OUTPUT_AND_GUARDRAILS.md skills/review-implementation/references/CLASSIFY.md skills/review-implementation/SKILL.md skills/triage-issue/SKILL.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md docs/workflow/REVIEW_AND_CLASSIFY.md docs/workflow/REVIEW_AND_CLASSIFY.es.md docs/workflow/FEATURE_WORKFLOW.md docs/workflow/FEATURE_WORKFLOW.es.md docs/workflow/PORTABLE_PROMPT.md docs/workflow/PORTABLE_PROMPT.es.md` → ≥1 per file |
 | AC8 | The replan contract is loaded conditionally: both planners name the router in their progressive-loading section and reference the contract behind the router's replan line only | read-verified: `grep -n "unit-route" skills/plan-feature/SKILL.md skills/plan-fix/SKILL.md` and the surrounding lines |
 | AC9 | The new internal skill is registered: a budget entry exists and the skill tree passes its own checks and CLI discovery | `bun scripts/check-skill-context.mjs` → exit 0; `npx skills add . --list` → exit 0 |
 | AC10 | The Pi mirror is byte-identical to `skills/` after the last skill edit and the package suite passes | `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 |
 | AC11 | The repository gate is green at the executed head | `node --test scripts/*.test.mjs` → exit 0 |
+| AC12 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions) | `node --test scripts/unit-route.test.mjs` → exit 0 (the S7 sanitizer pin) |
 
 ### Spec-lint (mechanical — presence checks only)
 
@@ -223,7 +242,7 @@ validator that exercise it.
 | S4 — the unit exists with no open row | wrong route (re-planning a planned unit) | P1 | the execute fixture |
 | S5 — no unit exists, only the tracked issue | wrong route (planning without a unit) | P1 | the plan-from-issue fixture |
 | S6 — the operator passes an unknown, extra, or ambiguous argument | guessed route instead of a failure state | P1 | the exit-code pins (1, 1, 2) |
-| S7 — a ledger cell carries long or shell-shaped text | echoed untrusted text read as instructions | P1, P4 | the sanitizer pin plus the contract's data-never-instructions rule |
+| S7 — a ledger cell carries long or shell-shaped text | echoed untrusted text read as instructions | P1, P4 | the sanitizer pin (AC12, OB-10) plus the contract's data-never-instructions rule |
 | S8 — the ledger is absent for a unit | silent success on a missing input | P1 | the absent-ledger fixture answers the unit's own status route |
 
 ## Rules that must never be violated
@@ -260,9 +279,12 @@ of them:
   `scripts/workflow-status-sensor.test.mjs`,
   `scripts/normative-drift.test.mjs`, `skills/replan-findings/**`,
   `skills/plan-feature/**`, `skills/plan-fix/**`, `skills/review-change/**`,
-  `skills/triage-issue/**`, `skills/fold-findings/**`,
+  `skills/review-implementation/**`, `skills/triage-issue/**`,
+  `skills/fold-findings/**`,
   `skills/workflow-status/references/SENSOR_SIGNALS.md`,
-  `docs/workflow/REVIEW_AND_CLASSIFY.md` (+ ES), `docs/workflow/SKILLS.md`
+  `docs/workflow/REVIEW_AND_CLASSIFY.md` (+ ES),
+  `docs/workflow/FEATURE_WORKFLOW.md` (+ ES),
+  `docs/workflow/PORTABLE_PROMPT.md` (+ ES), `docs/workflow/SKILLS.md`
   (+ ES), `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md` (+ ES),
   `docs/fix/README.md`, `packages/pi-agentic-workflow/skills/**`.
 - **Blast radius:** every unit that carries an open `folded: no` row, plus the
@@ -309,6 +331,10 @@ repository router.
 |---|---|---|
 | `docs/workflow/REVIEW_AND_CLASSIFY.md` | The replan destination and the router in the routing prose | AC7 |
 | `docs/workflow/REVIEW_AND_CLASSIFY.es.md` | Faithful sibling of the above, same commit | AC7 |
+| `docs/workflow/FEATURE_WORKFLOW.md` | The replan destination and the router in the review-step prose | AC7 |
+| `docs/workflow/FEATURE_WORKFLOW.es.md` | Faithful sibling of the above, same commit | AC7 |
+| `docs/workflow/PORTABLE_PROMPT.md` | The replan destination and the router in the portable prompt | AC7 |
+| `docs/workflow/PORTABLE_PROMPT.es.md` | Faithful sibling of the above, same commit | AC7 |
 | `docs/workflow/SKILLS.md` | The new internal contract in the internal-step list and the internal count | AC8 |
 | `docs/workflow/SKILLS.es.md` | Faithful sibling of the above, same commit | AC8 |
 | `docs/workflow/SKILL_CONTEXT_BUDGETS.json` | The new skill's budget entry | AC9 |
@@ -326,8 +352,10 @@ repository router.
   prose.
 - **Silent-failure alarm:** a unit that carries an open plan-routed row and still
   answers `execute` is the failure mode this fix exists to prevent; the router
-  test suite fails loudly on it, and the dogfood row (AC5) records the answer for
-  a unit known to carry such rows.
+  test suite fails loudly on it, and the dogfood fixture (AC5) pins the answer
+  for a ledger shape known to carry such rows; after unit 37 merges, the live
+  run `node scripts/unit-route.mjs 37-phase-lint-script` re-checks it on real
+  data (informational, PE-013).
 
 ## Cross-issue notes
 
@@ -347,16 +375,19 @@ repository router.
   no absolute path in its own logic.
 - **`docs/features/37-phase-lint-script/`** — owns the box-2 prefix table whose
   root-file gap this unit routes around; the gap is reported to that unit's
-  owner, not patched here.
+  owner, not patched here. Its ledger also supplies AC5's fixture rows
+  (PE-013); once it merges, the live dogfood becomes runnable as an
+  informational check.
 - **`#213`/`#223`** — the fix-221 unit merged through `#223`; its sensor work is
   the substrate this fix extends (`readFixNow`).
 
 ## Effort
 
 **M** (>4h, multi-commit): one new deterministic script plus its red-first
-suite, one new internal contract with a reference, four consumer prose surfaces,
-one sensor emission with pins, a tutorial pair and a release batch. Split into
-seven phases because each layer's validator and rollback boundary differ.
+suite, one new internal contract with a reference, eight consumer prose surfaces
+plus three tutorial pairs, one sensor emission with pins, and a release batch.
+Split into eight phases because each layer's validator and rollback boundary
+differ.
 
 ## Decisions made during drafting
 
@@ -397,6 +428,25 @@ seven phases because each layer's validator and rollback boundary differ.
    `main` (PE-011). The check is stronger than the hand-applied rules but is not
    the shipped one; `execute-phase`'s pre-flight re-lints every phase at
    execution time, and that re-lint is the binding one.
+7. **AC5 is fixture-based; the live dogfood is post-merge and informational.**
+   The reviewer's comparison unit (`37-phase-lint-script`) does not exist at the
+   bound revision (PE-013), so an acceptance criterion naming it could never
+   pass where acceptance is verified. The dogfood leg therefore runs against a
+   committed fixture copied from that branch's ledger (real rows, real shape),
+   and the live invocation is recorded as an informational post-merge check in
+   `### Testing` — deliberately not an acceptance criterion, because its
+   precondition (another unit's merge) is outside this unit's control.
+8. **The destination census is scoped to routing sentences.**
+   `grep -rn "replan-in-unit"` over `skills/` and `docs/workflow/` returns 43
+   hits over 21 files (PE-007); only the 14 files whose hits route the class to
+   a destination converge (eight skill files, three tutorial pairs). The
+   remaining hits are class definitions or summaries that name no destination
+   (`review-change/SKILL.md:157`, `REVIEW_PROCESS.md:151-152`,
+   `WORKFLOW_INVARIANTS.md:80` and sibling, `SKILLS.md:96,:226` and sibling,
+   `OPPORTUNISTIC_FINDING.md:21`) and stay untouched. `triage-issue/SKILL.md:118`
+   was added beyond the reviewer's enumeration because it carries the same
+   planner-only routing sentence as its own `REVIEW_FINDING_PROCESS.md` — leaving
+   it would re-open the contradiction inside one skill.
 
 ## Testing
 
@@ -412,7 +462,12 @@ seven phases because each layer's validator and rollback boundary differ.
 - **Surface:** `bun scripts/check-skill-context.mjs` and
   `packages/pi-agentic-workflow/test/skill-parity.test.mjs` for the new skill's
   budget and the mirror.
-- **Live:** the dogfood run on a unit known to carry plan-routed rows (AC5).
+- **Live:** the dogfood fixture case inside `scripts/unit-route.test.mjs`
+  (AC5, PE-013). After unit 37 merges, an informational live run —
+  `node scripts/unit-route.mjs 37-phase-lint-script` → `route: replan` plus the
+  row ids — re-checks the answer on real data; it is not an acceptance criterion
+  because its precondition (another unit's merge) is outside this unit's
+  control.
 
 ## Phases
 
@@ -431,13 +486,14 @@ unticked box blocks emission/execution until the phase is re-cut or split.
 Consume the canonical checklist from `skills/phase-contract/SKILL.md` and
 record the result here per phase.
 
-- P1 — `Phase-lint: PASS (8/8) · fingerprint P1:config/infra:5:deterministic-unit-router`
+- P1 — `Phase-lint: PASS (8/8) · fingerprint P1:config/infra:6:deterministic-unit-router`
 - P2 — `Phase-lint: PASS (8/8) · fingerprint P2:docs:7:replan-entry-contract`
 - P3 — `Phase-lint: PASS (8/8) · fingerprint P3:config/infra:3:class-routed-machine-signal`
-- P4 — `Phase-lint: PASS (8/8) · fingerprint P4:docs:8:canonical-replan-destination`
-- P5 — `Phase-lint: PASS (8/8) · fingerprint P5:docs:4:release-bookkeeping`
-- P6 — `Phase-lint: PASS (8/8) · fingerprint P6:config/infra:2:mirror-parity`
-- P7 — `Phase-lint: PASS (8/8) · fingerprint P7:hardening:7:hardening-pr`
+- P4 — `Phase-lint: PASS (8/8) · fingerprint P4:docs:8:skills-replan-destination`
+- P5 — `Phase-lint: PASS (8/8) · fingerprint P5:docs:6:tutorial-destination-convergence`
+- P6 — `Phase-lint: PASS (8/8) · fingerprint P6:docs:6:release-bookkeeping`
+- P7 — `Phase-lint: PASS (8/8) · fingerprint P7:config/infra:2:mirror-parity`
+- P8 — `Phase-lint: PASS (8/8) · fingerprint P8:hardening:7:hardening-pr`
 
 > Planning-time note: these phases were linted with the unmerged linter from
 > `feat/37-phase-lint-script`, because `scripts/phase-lint.mjs` does not exist on
@@ -449,14 +505,17 @@ record the result here per phase.
 
 Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → exit 0.
 
-- [ ] Red-first `scripts/unit-route.test.mjs` pinning the five route outcomes
-      from fixture ledgers, run to red (OB-1; PE-001, PE-009)
+- [ ] Red-first `scripts/unit-route.test.mjs` pinning the five route outcomes,
+      the unit-37 dogfood fixture (PE-013) and the failure states from fixture
+      ledgers, run to red (OB-1; PE-001, PE-009)
 - [ ] `scripts/unit-route.mjs` closing the route table, the fixed output block
       and the `route:`/`fingerprint:` machine lines (OB-1; PE-006)
 - [ ] Bounded read set extraction into a sorted deduped path list with an
       explicit remainder line (OB-3; PE-010)
 - [ ] Usage, unknown-unit and ambiguous-unit exits that print no route (OB-6)
 - [ ] Determinism and read-only proof over two consecutive runs (OB-9; PE-011)
+- [ ] Sanitize the router's echoed output: one sanitizer truncates long cells
+      and keeps verbatim ledger lines off stdout (OB-10; PE-014)
 
 ### P2 — Replan entry contract
 
@@ -488,12 +547,19 @@ Layer: `config/infra`. Done-when: `node --test scripts/workflow-status-sensor.te
 - [ ] Pin the canonical destination vocabulary in
       `scripts/normative-drift.test.mjs` (OB-4; PE-003)
 
-### P4 — Canonical replan destination
+### P4 — Skills replan destination
 
-Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md` → ≥1 per file.
+Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/review-change/references/OUTPUT_AND_GUARDRAILS.md skills/review-implementation/references/CLASSIFY.md skills/review-implementation/SKILL.md skills/triage-issue/SKILL.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md` → ≥1 per file.
 
 - [ ] Restate the replan destination in
       `skills/review-change/references/PERSIST_AND_DECIDE.md` (OB-4; PE-003)
+- [ ] Restate the replan destination in
+      `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md` (OB-4; PE-007)
+- [ ] Restate the replan destination in
+      `skills/review-implementation/references/CLASSIFY.md` (OB-4; PE-003)
+- [ ] Restate the replan destination in `skills/review-implementation/SKILL.md`
+      and bump its version (OB-4)
+- [ ] Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)
 - [ ] Restate the replan destination in
       `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md` and bump that
       skill's version (OB-4; PE-003)
@@ -501,25 +567,38 @@ Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/
       `skills/fold-findings/references/FOLD_PROCESS.md` (OB-4; PE-004)
 - [ ] Restate the replan destination in `skills/fold-findings/SKILL.md` and bump
       its version (OB-4; PE-004)
-- [ ] Withdraw the stale documented signal in
-      `skills/workflow-status/references/SENSOR_SIGNALS.md` (OB-5; PE-005)
+
+### P5 — Tutorial destination convergence
+
+Layer: `docs`. Done-when: `grep -c "unit-route" docs/workflow/REVIEW_AND_CLASSIFY.md docs/workflow/REVIEW_AND_CLASSIFY.es.md docs/workflow/FEATURE_WORKFLOW.md docs/workflow/FEATURE_WORKFLOW.es.md docs/workflow/PORTABLE_PROMPT.md docs/workflow/PORTABLE_PROMPT.es.md` → ≥1 per file.
+
 - [ ] Add the router and the destination to
       `docs/workflow/REVIEW_AND_CLASSIFY.md` (OB-4)
 - [ ] Add the faithful sibling text to
       `docs/workflow/REVIEW_AND_CLASSIFY.es.md` (OB-4)
+- [ ] Add the router and the destination to
+      `docs/workflow/FEATURE_WORKFLOW.md` (OB-4; PE-007)
+- [ ] Add the faithful sibling text to
+      `docs/workflow/FEATURE_WORKFLOW.es.md` (OB-4)
+- [ ] Add the router and the destination to
+      `docs/workflow/PORTABLE_PROMPT.md` (OB-4; PE-007)
+- [ ] Add the faithful sibling text to
+      `docs/workflow/PORTABLE_PROMPT.es.md` (OB-4)
+
+### P6 — Release bookkeeping
+
+Layer: `docs`. Done-when: `grep -q "unit-route" CHANGELOG.md && grep -q "unit-route" CHANGELOG.es.md && grep -q "replan-findings" docs/workflow/SKILLS.md && grep -q "replan-findings" docs/workflow/SKILLS.es.md` → exit 0.
+
 - [ ] Name the new internal contract in `docs/workflow/SKILLS.md` and update
       the internal-step count (OB-7; PE-012)
-
-### P5 — Release bookkeeping
-
-Layer: `docs`. Done-when: `grep -c "unit-route" CHANGELOG.md CHANGELOG.es.md` → ≥1 each.
-
 - [ ] Add the faithful sibling text to `docs/workflow/SKILLS.es.md` (OB-7)
+- [ ] Withdraw the stale documented signal in
+      `skills/workflow-status/references/SENSOR_SIGNALS.md` (OB-5; PE-005)
 - [ ] Add the release row to `CHANGELOG.md` (OB-7; PE-012)
 - [ ] Add the faithful sibling row to `CHANGELOG.es.md` (OB-7)
 - [ ] Bump `skills/workflow-status/SKILL.md` for the withdrawn signal (OB-5)
 
-### P6 — Mirror parity
+### P7 — Mirror parity
 
 Layer: `config/infra`. Done-when: `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0.
 
@@ -527,7 +606,7 @@ Layer: `config/infra`. Done-when: `node --test packages/pi-agentic-workflow/test
       `packages/pi-agentic-workflow` after the last skill edit (OB-8; PE-012)
 - [ ] Bump the mirror package version and add its changelog row (OB-8)
 
-### P7 — Hardening & PR
+### P8 — Hardening & PR
 
 Layer: hardening · Done-when: `git status --porcelain -- docs/` → empty, and the project verification gate commands exit 0.
 
@@ -550,13 +629,20 @@ external side effect. A revert restores the three contradictory destination
 sentences, so the dead end returns — the fix is safe to revert and unsafe to
 leave.
 
+## Amendments
+
+| date | artifact revision | change | authority |
+|---|---|---|---|
+| 2026-09-15 | `fix-224-artrev-0002` | Repair batch after PLAN-REVIEW-FAIL (receipt `rp-224-20260915-001`, snapshot `843327b1…0be566`): RP-224-1 — AC5 re-targeted to the committed unit-37 fixture (PE-013) and `Depends on` states the ordering note; RP-224-2 — PE-010 provenance corrected to `feat/37-phase-lint-script@e1e282c5`; RP-224-3 — destination convergence widened to the census (eight skill files + three tutorial pairs, PE-007), P4 re-cut and P5/P6 added, AC7's validator covers all 14 files; RP-224-4 — sanitizer given OB-10 + AC12 + P1 task 6; RP-224-5 — PE-005/PE-006 line windows corrected to `:713`/`:735`; phases re-cut 7 → 8 under the ≤8-task box | user-authorized repair batch (`plan-fix 224`) |
+
 ## Status
 
 `pending` · `in-progress` · `done` (built, PR open — merge state lives in the forge)
 
-Acceptance manifest blob at planning time:
+Acceptance manifest blob at planning time (re-frozen by the repair batch,
+`fix-224-artrev-0002`):
 `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
-recorded in the review receipt written by `review-plan` and re-checked before
-every phase, per `verification-contract`.
+`b6dc545edf96e99a6d0081eadac298124c7ac592` — recorded in the review receipt written by `review-plan` and
+re-checked before every phase, per `verification-contract`.
 
 (Removed from `docs/fix/README.md` only **after** the PR merges.)
