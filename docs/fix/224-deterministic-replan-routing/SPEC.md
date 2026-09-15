@@ -698,17 +698,17 @@ Layer: `config/infra`. Done-when: `node --test scripts/phase-lint.test.mjs` → 
 
 Layer: `docs`. Done-when: `grep -q "close-out" skills/replan-findings/SKILL.md`, `node --test scripts/normative-drift.test.mjs` and the mirror parity suite all exit 0.
 
-- [ ] `skills/replan-findings/SKILL.md` documents the terminal route token and the
+- [x] `skills/replan-findings/SKILL.md` documents the terminal route token and the
       bare `status` token in the block it owns (F24; OB-15)
-- [ ] Bump `skills/replan-findings/SKILL.md` to the next minor version for the new
+- [x] Bump `skills/replan-findings/SKILL.md` to the next minor version for the new
       routing case (F24; OB-15)
-- [ ] `skills/phase-contract/SKILL.md` states the executed-phase exemption as the
+- [x] `skills/phase-contract/SKILL.md` states the executed-phase exemption as the
       sole rule owner — a fully-ticked phase is historical for boxes 3 and 7, every
       other box stays armed, and pre-ticking to dodge a check is a defect — and
       bumps to the next patch version (F25; OB-16)
-- [ ] Add both per-skill version cells to `CHANGELOG.md` and `CHANGELOG.es.md`
+- [x] Add both per-skill version cells to `CHANGELOG.md` and `CHANGELOG.es.md`
       (OB-15, OB-16)
-- [ ] Re-bundle the Pi mirror and add the package release row to both changelogs
+- [x] Re-bundle the Pi mirror and add the package release row to both changelogs
       (OB-15, OB-16)
 
 ### P12 — Terminal receipt closure

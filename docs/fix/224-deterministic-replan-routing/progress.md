@@ -667,3 +667,34 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
 - Files: scripts/phase-lint.mjs · scripts/phase-lint.test.mjs ·
   docs/fix/224-deterministic-replan-routing/SPEC.md (P10 ticks) · progress.md
 - Next: P11.
+
+## P11 — 2026-09-16
+
+- Phase-lint re-checked PASS (8/8) at execution start
+  (`P11:docs:5:replan-path-contract-docs`).
+- Done: `skills/replan-findings/SKILL.md` 1.0.1 → **1.1.0** — the documented
+  block lists the six tokens, the `status:` field is stated to carry the bare
+  token, and two new bullets define `close-out` (a finished unit, `next:
+  /audit-pr`) and keep the `execute` route for unfinished units.
+  `skills/phase-contract/SKILL.md` 1.0.3 → **1.0.4** — the owner-side paragraph
+  "a fully-ticked phase is historical" scoped to boxes 3 and 7 only, with the
+  pre-ticking defect named; the phrase is OB-16's grep target.
+  Both per-skill version cells landed in `CHANGELOG.md` + `CHANGELOG.es.md`.
+- Release signal: the Pi mirror re-bundled (`bun run bundle:skills`, 39 skills /
+  125 files) with the package bumped 0.10.2 → **0.10.3** and its row in both
+  changelogs; mirror parity verified byte-identical (`diff -rq`, only the
+  excluded `bump-skill`).
+- Gate repair, disclosed (the F25 text grew a route-loaded skill): 17 route
+  ceilings re-based to `ceil(measured × 1.10)` — the eight `execute-phase:*`
+  estimate ceilings, and `plan-feature:issue/scaffold/scoped` +
+  `plan-fix:issue` estimate **and** line ceilings — with the growth source named
+  in `policy.declared`. Measured values: 10826/769, 10838, 10720, 10867, 11006,
+  10642, 10790, 11854, 10792/846, 22233/1559, 8523/684, 25097/1794.
+- Gate: `node --test scripts/*.test.mjs` → 418 pass / 0 fail; the Pi package
+  suite → 214 pass / 0 fail; `node scripts/check-skill-context.mjs --routes
+  --budgets` → PASS (22 routes, 40 skills); `normative-drift` → 17 pass.
+- Files: skills/replan-findings/SKILL.md · skills/phase-contract/SKILL.md ·
+  CHANGELOG.md · CHANGELOG.es.md · docs/workflow/SKILL_CONTEXT_BUDGETS.json ·
+  packages/pi-agentic-workflow/{package.json,skills/**} ·
+  docs/fix/224-deterministic-replan-routing/SPEC.md (P11 ticks) · progress.md
+- Next: P12.
