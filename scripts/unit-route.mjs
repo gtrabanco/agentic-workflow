@@ -38,7 +38,9 @@ const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
 const DECISION_ROUTE = /decision[- ]required|surface (the )?decision|needs a decision/i;
 const KNOWN_UNIT_FILES = ["SPEC.md", "ACCEPTANCE.md", "PLAN.md", "TASKS.md", "progress.md", "review-findings.md"];
 const PATH_RE = /[A-Za-z0-9_.@-]+(?:\/[A-Za-z0-9_.@-]+)+/g;
-const BARE_FILE_RE = /(?:^|[\s(`[])((?:SPEC|ACCEPTANCE|PLAN|TASKS|progress|review-findings|planning-evidence)\.md)\b/g;
+const BARE_FILE_RE = /(?:^|[\s(`[{,])((?:SPEC|ACCEPTANCE|PLAN|TASKS|progress|review-findings|planning-evidence)\.md)\b/g;
+/** A composed citation: `dir/{PLAN.md:29,TASKS.md:55}` names several artifacts. */
+const BRACE_CITE_RE = /([A-Za-z0-9_.@/-]+)\{([^{}]*)\}/g;
 
 /**
  * One sanitizer over every echoed value: flatten control whitespace, collapse
@@ -219,13 +221,29 @@ function fixIndexStatus(number) {
 }
 
 /**
+ * Flatten a brace-composed citation (`dir/{PLAN.md:29,TASKS.md:55}`) into the
+ * paths it names, so the delimiter classes below see each one. Without it only
+ * the composed directory survives and the isDir guard drops it, which silently
+ * loses cited artifacts from the read set.
+ */
+function expandBraces(text) {
+  return text.replace(BRACE_CITE_RE, (whole, prefix, members) => {
+    const expanded = members
+      .split(",")
+      .map((member) => `${prefix}${member.trim()}`)
+      .filter((entry) => entry.length > prefix.length);
+    return expanded.length ? expanded.join(" ") : whole;
+  });
+}
+
+/**
  * Repository paths cited by the selected rows. Only paths that exist under the
  * project root are kept, so the printed set is real and bounded.
  */
 export function citedPaths(rows) {
   const found = [];
   for (const row of rows) {
-    const text = `${row.file} ${row.route} ${row.klass}`;
+    const text = expandBraces(`${row.file} ${row.route} ${row.klass}`);
     for (const match of text.matchAll(PATH_RE)) found.push(match[0]);
     for (const match of text.matchAll(BARE_FILE_RE)) found.push(match[1]);
   }
