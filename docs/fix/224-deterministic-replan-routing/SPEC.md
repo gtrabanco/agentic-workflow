@@ -578,17 +578,17 @@ Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/
 
 Layer: `docs`. Done-when: `grep -c "unit-route" docs/workflow/REVIEW_AND_CLASSIFY.md docs/workflow/REVIEW_AND_CLASSIFY.es.md docs/workflow/FEATURE_WORKFLOW.md docs/workflow/FEATURE_WORKFLOW.es.md docs/workflow/PORTABLE_PROMPT.md docs/workflow/PORTABLE_PROMPT.es.md` → ≥1 per file.
 
-- [ ] Add the router and the destination to
+- [x] Add the router and the destination to
       `docs/workflow/REVIEW_AND_CLASSIFY.md` (OB-4)
-- [ ] Add the faithful sibling text to
+- [x] Add the faithful sibling text to
       `docs/workflow/REVIEW_AND_CLASSIFY.es.md` (OB-4)
-- [ ] Add the router and the destination to
+- [x] Add the router and the destination to
       `docs/workflow/FEATURE_WORKFLOW.md` (OB-4; PE-007)
-- [ ] Add the faithful sibling text to
+- [x] Add the faithful sibling text to
       `docs/workflow/FEATURE_WORKFLOW.es.md` (OB-4)
-- [ ] Add the router and the destination to
+- [x] Add the router and the destination to
       `docs/workflow/PORTABLE_PROMPT.md` (OB-4; PE-007)
-- [ ] Add the faithful sibling text to
+- [x] Add the faithful sibling text to
       `docs/workflow/PORTABLE_PROMPT.es.md` (OB-4)
 
 ### P6 — Release bookkeeping
