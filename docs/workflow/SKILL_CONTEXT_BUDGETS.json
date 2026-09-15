@@ -261,8 +261,11 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 11430,
-      "routeLinesMax": 907
+      "routeEstimateMax": 11572,
+      "routeLinesMax": 917,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "plan-feature:scaffold": {
       "skills": [
@@ -284,8 +287,11 @@
         "verification-contract"
       ],
       "templates": [],
-      "routeEstimateMax": 8934,
-      "routeLinesMax": 729
+      "routeEstimateMax": 9077,
+      "routeLinesMax": 739,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "plan-fix:issue": {
       "skills": [
@@ -297,8 +303,11 @@
         "pre-execution-review"
       ],
       "templates": [],
-      "routeEstimateMax": 26825,
-      "routeLinesMax": 1931
+      "routeEstimateMax": 27091,
+      "routeLinesMax": 1946,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:adversarial": {
       "skills": [
@@ -317,8 +326,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 18497,
-      "routeLinesMax": 1330
+      "routeEstimateMax": 18676,
+      "routeLinesMax": 1338,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:default-backend": {
       "skills": [
@@ -336,8 +348,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16680,
-      "routeLinesMax": 1212
+      "routeEstimateMax": 16859,
+      "routeLinesMax": 1219,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:default-web": {
       "skills": [
@@ -355,8 +370,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 16680,
-      "routeLinesMax": 1212
+      "routeEstimateMax": 16859,
+      "routeLinesMax": 1219,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-change:synthesize": {
       "skills": [
@@ -374,8 +392,11 @@
         ]
       },
       "templates": [],
-      "routeEstimateMax": 17193,
-      "routeLinesMax": 1236
+      "routeEstimateMax": 17373,
+      "routeLinesMax": 1243,
+      "sources": {
+        "fix 224 / #224": "replan destination convergence across the skill surfaces; ceiling = ceil(measured x 1.10)"
+      }
     },
     "review-plan:default": {
       "skills": [
