@@ -962,3 +962,26 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   so `/plan-fix 224` re-cuts the plan on this branch, then a fresh
   `/review-plan fix-224`, then `/execute-phase --fix 224`, then the third end
   review.
+
+## Replan 2 — `fix-224-artrev-0008` = `60993f44dc751cd162e1bddbf088d5ba54c299c7` (2026-09-16)
+
+- **Trigger:** the third end review's plan-owned row `F32`; the router's own line
+  licensed this write (`node scripts/unit-route.mjs 224-deterministic-replan-routing`
+  → `route: replan` / `next: /plan-fix 224`, `rows: F32`).
+- **Appended:** `P13` (archived unit state — a seventh route token `historical`
+  for a known unit with no open row whose status source is gone, plus two fixture
+  units and the drift pin; F32/OB-17) and a fresh final `P14 Hardening & PR` after
+  the executed `P8`. Placement follows the executed-hardening branch: append the
+  new phase(s), then a fresh final hardening — lintable because `F25`'s exemption
+  stops boxes 3 and 7 from re-judging the fully-ticked `P8` (its first real use).
+- **Phase-lint:** `verdict PASS` for all fourteen phases, overall fingerprint
+  `dd3e140687ae85fff9b44b46478a840ae354375ee94c7df9321b61f0573aa27b`.
+- **Acceptance:** `AC1` amended to the seven-token vocabulary (manifest + SPEC
+  mirror), re-frozen; blob
+  `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
+  `ed2a25a819ba02483116c857b2809414566cea44`, recorded in `## Status`.
+- **Ledgers:** `OB-17` added; the fold ledger's `F32` stays open until its
+  implementation lands.
+- **Gate at this write:** `node --test scripts/*.test.mjs` → 423 pass / 0 fail.
+- **Next:** `/review-plan fix-224` — a fresh independent review of the re-cut
+  plan; `PLAN-REVIEW-PASS` licenses `/execute-phase --fix 224` for `P13` + `P14`.
