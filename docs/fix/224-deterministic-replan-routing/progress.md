@@ -497,3 +497,37 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
 - Owning stage: plan
 - Why the prior review/repair failed: the artrev-0005 batch closed all five cycle-2 rows exactly as routed, but its root-cause analysis stopped at the SPEC's obligation map and dependency prose — it rotated `ACCEPTANCE.md` (AC1 amended, AC14 added then extended) and the amendment table without bringing the SPEC's own `## Acceptance` mirror along, and it added the terminal route to the manifest's vocabulary without discovering the drift test's closed-set pin or the unreachable documentation evidence.
 - Route to owner: `plan-fix 224` — one repair batch over RP-224-12…RP-224-15, rotate the artifact revision, then `/review-plan fix-224` re-reviews the new snapshot.
+
+## Repair batch 2 — `fix-224-artrev-0006` = `7ca619b779944e39bc6e3c7245d7cf20ce7ab4b7` (2026-09-16)
+
+- **Trigger:** plan-review cycle 3 (receipt `rp-224-20260915-005`, snapshot
+  `6394ed8cb51cb15df0bba56eeb5e3af7df7fa2b4df7e74abd565354f053a13bc`) returned
+  **PLAN-REVIEW-FAIL** on the previous batch — it re-derived all five earlier
+  resolutions as holding, and found four new gaps (RP-224-12…RP-224-15).
+- **Repaired in one batch:** the SPEC's `## Acceptance` mirror rotates with the
+  frozen manifest (AC1 six routes + bare `status`, AC14 present in both files),
+  the `## Status` re-freeze list names every re-freeze and `## Amendments` reads
+  chronologically (RP-224-12); `P9` gained the task that extends
+  `scripts/normative-drift.test.mjs`'s closed-vocabulary pin to the six published
+  route tokens, so the drift gate and the router's `ROUTES` agree (RP-224-13);
+  `OB-15` gained a validator that can fail — `grep -q "close-out"
+  skills/replan-findings/SKILL.md` plus the drift verdict — and `P11`'s done-when
+  runs it (RP-224-14); `PE-005`/`PE-006` were re-observed at the bound revision
+  (`next.suggested` assigned at `scripts/workflow-status.mjs:1192`; the projection
+  window `:742,753`) with `freshness: current` (RP-224-15).
+- **Pre-emptive checks run while repairing** (to shorten the next cycle):
+  `scripts/phase-lint.test.mjs`'s 100 corpus plans contain **no** ticked task, so
+  the box-3/box-7 exemption cannot change an existing verdict; the
+  `13-execute-unit` fixture is `in-progress`, so the new terminal route leaves the
+  existing `execute` pin intact; the remainder of the `#224` drift test pins only
+  the canonical tokens (`replan-in-unit`, `/plan-feature`, `/plan-fix`,
+  `/fold-findings`), which the new token does not disturb.
+- **Ledgers:** the four reviewer rows are `resolved` in `planning-findings.md`
+  with per-finding resolution evidence and this artifact revision.
+- **Phase-lint:** `verdict PASS`; overall fingerprint
+  `1299caaa5db0fbec7062dc5a0a702397f8d518839c1dacc516019e212bbb1c6a`.
+  Acceptance manifest unchanged by this batch (the mirror was the defect), so the
+  blob stays `15e9661fdcafbc628419926806b27ae0532f021d`.
+- **Gate at this write:** `node --test scripts/*.test.mjs` → 413 pass / 0 fail.
+- **Next:** `/review-plan fix-224` (cycle 4) — a fresh independent review of this
+  artifact revision; `PLAN-REVIEW-PASS` licenses `/execute-phase --fix 224`.
