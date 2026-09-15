@@ -268,9 +268,10 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
   `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
   `b89e915f33a8c49151eca65cea966b3e7e2e03e9`, recorded in the SPEC `## Status`.
   User-authorized manifest change (SPEC `## Amendments`, 2026-09-16).
-- **Artifact revision:** `fix-224-artrev-0004` — the commit that carries this
-  write (sha recorded below once committed; the write rotates the id, so the
-  current `stage: plan` receipt `rp-224-20260915-003` is void by design).
+- **Artifact revision:** `fix-224-artrev-0004` = `2f801ad36ee80a2fc15a5a1e3d626f48d86c73df` (the commit that carries this
+  write). The write rotates the id, so the prior `stage: plan` receipt
+  `rp-224-20260915-003` is void by design — only a fresh `/review-plan` restores
+  currency over these bytes.
 - **Gate at this write:** `node --test scripts/*.test.mjs` → 413 pass / 0 fail.
 - **`git status --porcelain -- docs/`:** empty after this write's commit.
 - **Next:** `/review-plan fix-224` — a fresh independent review of the re-cut
