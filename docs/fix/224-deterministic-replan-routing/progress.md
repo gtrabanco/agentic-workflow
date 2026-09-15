@@ -618,3 +618,29 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
 - Owning stage: plan
 - Why the prior review/repair failed: the cycle-3 review's four findings were each a real gap on artrev-0005 (the mirror did not rotate; the closed-vocabulary pin had no owner; OB-15's documentation evidence was unreachable; two evidence rows were stale); the repair batch addressed each root cause in one write
 - Route to owner: none — the loop terminates here on PASS; `/execute-phase --fix 224` is the next owner and binds snapshot `14371db77f33dc2be00db5d062ce4e7aa7d07dcd4281427f1f83f5faf38d7303`
+
+## P9 — 2026-09-16
+
+- Phase-lint re-checked PASS (8/8) at execution start with the shipped linter
+  (`P9:config/infra:5:terminal-route-for-finished-unit`).
+- Done: `scripts/unit-route.mjs` — a shared `statusToken()` strips the cell's
+  markdown decoration (`` `done · [#225](…)` `` → `done`), applied to both the
+  fix-index and roadmap readers; `ROUTES` gained `close-out`, selected when a
+  unit has no open row and its status is `done`, with `next: /audit-pr`; the
+  usage block and the header comment document the new token. `status` is now
+  computed before the route decision.
+- Tests: `scripts/unit-route.test.mjs` gained two red-first pins (run to red
+  before the change: `execute` instead of `close-out`, and `` `done `` instead of
+  `done`) plus the fixture tree for them — `docs/features/15-done-unit/` with a
+  fully-folded ledger and a `done` roadmap row, and `docs/fix/21-done-fix/` with a
+  decorated `done · [#99]` fix-index row.
+- `scripts/normative-drift.test.mjs`'s `#224` closed-vocabulary pin extended to
+  the six published tokens (the drift gate and the router agree).
+- Gate: `node --test scripts/unit-route.test.mjs` → 18 pass / 0 fail;
+  `node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail;
+  `node --test scripts/*.test.mjs` → 415 pass / 0 fail.
+- Files: scripts/unit-route.mjs · scripts/unit-route.test.mjs ·
+  scripts/normative-drift.test.mjs · scripts/fixtures/unit-route/docs/{features/15-done-unit,fix/21-done-fix}/review-findings.md ·
+  scripts/fixtures/unit-route/docs/features/ROADMAP.md · scripts/fixtures/unit-route/docs/fix/README.md ·
+  docs/fix/224-deterministic-replan-routing/SPEC.md (P9 ticks) · progress.md
+- Next: P10.
