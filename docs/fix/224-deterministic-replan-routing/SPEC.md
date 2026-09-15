@@ -508,16 +508,16 @@ record the result here per phase.
 
 Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → exit 0.
 
-- [ ] Red-first `scripts/unit-route.test.mjs` pinning the five route outcomes,
+- [x] Red-first `scripts/unit-route.test.mjs` pinning the five route outcomes,
       the unit-37 dogfood fixture (PE-013) and the failure states from fixture
       ledgers, run to red (OB-1; PE-001, PE-009)
-- [ ] `scripts/unit-route.mjs` closing the route table, the fixed output block
+- [x] `scripts/unit-route.mjs` closing the route table, the fixed output block
       and the `route:`/`fingerprint:` machine lines (OB-1; PE-006)
-- [ ] Bounded read set extraction into a sorted deduped path list with an
+- [x] Bounded read set extraction into a sorted deduped path list with an
       explicit remainder line (OB-3; PE-010)
-- [ ] Usage, unknown-unit and ambiguous-unit exits that print no route (OB-6)
-- [ ] Determinism and read-only proof over two consecutive runs (OB-9; PE-011)
-- [ ] Sanitize the router's echoed output: one sanitizer truncates long cells
+- [x] Usage, unknown-unit and ambiguous-unit exits that print no route (OB-6)
+- [x] Determinism and read-only proof over two consecutive runs (OB-9; PE-011)
+- [x] Sanitize the router's echoed output: one sanitizer truncates long cells
       and keeps verbatim ledger lines off stdout (OB-10; PE-014)
 
 ### P2 — Replan entry contract

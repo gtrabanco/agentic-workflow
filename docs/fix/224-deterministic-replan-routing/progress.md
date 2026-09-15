@@ -121,3 +121,35 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - Owning stage: plan
 - Why the prior review/repair failed: the plan's version-bump sweep covered workflow-status's reference-only edit but omitted review-change's two reference edits; the repair batch made the sweep even
 - Route to owner: none — the loop terminates here on PASS; execution (`/execute-phase --fix 224`) is the next owner
+
+## Execution preflight — `execute-phase --fix 224` (2026-09-15)
+
+- **Dependency gate: PASS** — the SPEC's `## Depends on` section declares no dependency unit; the transitive closure is empty, so nothing needs a forge check. Fingerprint: `793a4040121ca59c1a8ae16b39aabac5dc2b9e71` (`git hash-object --stdin` over the `## Depends on` section body, heading excluded — the fix-214 recipe).
+- **Own-status precondition: n/a** — a fix unit has no roadmap-status equivalent; its own state is the fix-index row (`docs/fix/README.md:30`, `pending`).
+- **Pre-execution review gate: PASS** — newest `stage: plan` receipt `rp-224-20260915-003`, verdict `plan-review-pass`. Re-derived with `NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-execution-snapshot.mjs verify --stage plan --unit fix-224 --dir docs/fix/224-deterministic-replan-routing` → `current: true`, `observedDigest: a65783d87c171aa99e9c2db19c15a2a014256339774e426c7d267b25593f779f`, `digestMatches: true`, `verdictIsPass: true`, `structural.changedPaths: []`.
+- **Acceptance-manifest gate: PASS** — `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` → `0dd2747222ce25617ffcf6eae851035a215d6504`, equal to the blob recorded in the SPEC `## Status` after the `fix-224-artrev-0003` re-freeze. Receipt appended below; re-checked before every phase.
+- **Phase-lint: PASS (8/8) for P1–P8** — `node /tmp/phase-lint.mjs docs/fix/224-deterministic-replan-routing/SPEC.md` (the linter extracted from the unmerged `feat/37-phase-lint-script`, PE-011) → every phase `PASS (8/8)`, `verdict PASS`, overall fingerprint `044734b3f34f66983a7ec7aade48d3700e83e6ee4b8f40703122ce3a37f67848`; per-phase fingerprints still match the SPEC's `### Phase-lint` block (P1 6, P2 7, P3 3, P4 8, P5 6, P6 6, P7 2, P8 7 tasks). `scripts/phase-lint.mjs` remains absent on this branch — the binding re-lint is this run.
+- **Pre-write implementation discovery: READY** — inline mapper (localized writes, every question answered by the SPEC's `### Planning evidence` rows, targeted reads below). Compact map:
+  - Entry points: `scripts/unit-route.mjs` (new CLI); `scripts/workflow-status.mjs` `readFixNow` (:713) / projection (:735) / `resolveNext` (:918); the eight routing skill files and three tutorial pairs named in Scope.
+  - Affected surfaces: the sensor envelope's `next` object (schema already declares `suggested`, `envelope.schema.json:169-175`), both planners' progressive-loading allowlists, the fold's REPLAN-ROUTE receipt, `check-skill-context.mjs` discovery, the Pi mirror parity test.
+  - Reuse/constraints: `cellsOf`-style escaped-pipe parsing; the `{command, trigger, source_skill}` shape from `SENSOR_SIGNALS.md:13`; `CLAUDE.md` version-every-change + bilingual-doc rules; the eight phase-lint rules.
+  - Validation: red-first `node --test scripts/unit-route.test.mjs` (14/14 red absent the script, 14/14 green with it), `node --test scripts/workflow-status-sensor.test.mjs`, `node --test scripts/normative-drift.test.mjs`, `bun scripts/check-skill-context.mjs`, `npx skills add . --list`, the Pi parity suite.
+  - Contradictions: none. Unknowns: none — PE-001…PE-015 re-verified by the cycle-3 receipt against `dbbd6a92`.
+- **Gate-rejection traces:** none — every gate passed; no `--force` was passed or recorded.
+
+## Dependency receipt v1
+- Fingerprint: 793a4040121ca59c1a8ae16b39aabac5dc2b9e71 · Closure: fix-224 ← (none — the SPEC `## Depends on` section names no dependency unit)
+- Merged PRs: none required · Fully merged: yes · Verified: 2026-09-15
+- Recipe note: `sha1("blob <len>\0" + body)` over the `## Depends on` section body, heading excluded (the fix-214 recipe). The three named cross-issue units (#205, #172, #194) are independent by the SPEC's own statement, never `Depends on` edges; the unit-37 ordering note is informational (RP-224-1).
+
+## Acceptance receipt v1
+- Manifest: docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md · Blob: 0dd2747222ce25617ffcf6eae851035a215d6504 · Status: frozen · Verified: 2026-09-15
+
+## P1 — 2026-09-15
+- Phase-lint re-checked PASS (8/8) at fingerprint `P1:config/infra:6:deterministic-unit-router`.
+- Done: `scripts/unit-route.mjs` — the closed route table (`replan`/`decision`/`fold`/`execute`/`plan-from-issue`, first match winning), the fixed block (`unit`, `status`, `open-rows`, `route`, `next`, `rows`, `read-set`, `fingerprint`), the bounded read set (unit `review-findings.md`/`SPEC.md`/`ACCEPTANCE.md` + cited existing paths, deduped, sorted, capped at 12 with `… and N more`), the fail-closed exits (unknown/usage → 1, ambiguous → 2, no route printed), and one sanitizer (control-char flatten + 160-char truncation) over every echoed id/path. `scripts/unit-route.test.mjs` (14 cases) + the committed fixture tree `scripts/fixtures/unit-route/` (unit-37 dogfood ledger copied from `feat/37-phase-lint-script@e1e282c5`, route cases, the cap case). `UNIT_ROUTE_REPO` re-points the router at a fixture root; the router spawns no shell and writes nothing.
+- Red-first: 14/14 fail without `scripts/unit-route.mjs`, 14/14 pass with it.
+- Gate: `node --test scripts/unit-route.test.mjs` → 14 pass / 0 fail, exit 0.
+- Gotchas: the route cell text is never echoed — only ids, the route name and repository paths are; the read set keeps only paths that exist under the root, so a path cited by a FOLDED row (F89 → `docs/LOGS.md`) is provably absent from the replan set.
+- Files: scripts/unit-route.mjs · scripts/unit-route.test.mjs · scripts/fixtures/unit-route/** · docs/fix/224-deterministic-replan-routing/SPEC.md (P1 ticks) · progress.md
+- Next: P2 — Replan entry contract
