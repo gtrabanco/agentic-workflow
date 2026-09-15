@@ -121,3 +121,189 @@ all folded, then the audit-pr gate rows F21–F25 folded through the replan, the
 this cycle produced three new fix-now rows). The three rows are source-owned and
 small enough to fold in place, but a verifying third cycle is the **user's**
 escape, never a reviewer election — the cap block above names the residue route.
+
+---
+
+Cycle 3 — delta on the fold receipt's `RE-REVIEW-REQUIRED (delta)` branch,
+**escalated to a full pass** — ran 2026-09-16 (`review-change --adversarial 3`:
+three isolated, context-clean reviewers R1 correctness/logic, R2 security/inputs,
+R3 SPEC-coverage — same model family, `Diversity label: same-model`,
+`authorExclusion: not-enforceable`, reviewed head
+`1e8080a76cc678c207d3916ee3bb8145b1762709`, PR #225). Cycle 3 = 2 completed
+`REVIEW-RAN` marks + 1, and it runs **on the user's explicit instruction** — the
+two-cycle cap was reached in cycle 2 and a third cycle never starts without one,
+so this is the user's escape observed, never a reviewer election. No receipt is
+posted: the table is not clean.
+
+**Escalation — the width trigger fired; the size trigger did not.** *Width:* of
+the fold batch `81f2d8cc..1e8080a7`'s **11 changed files**, **8 lie outside the
+union of the folded rows' cited files** (`skills/phase-contract/SKILL.md:62`,
+`scripts/phase-lint.test.mjs:358`, `scripts/unit-route.mjs:51-57`) —
+`CHANGELOG.md`, `CHANGELOG.es.md`, `progress.md`, `review-findings.md`,
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json`,
+`packages/pi-agentic-workflow/package.json`,
+`packages/pi-agentic-workflow/skills/phase-contract/SKILL.md`,
+`scripts/unit-route.test.mjs` (no cited-file changed line sits more than 50 lines
+from a cited line). *Size — not fired:* 11 files (limit 15) and 127 changed lines
+(limit 200). The contract escalated the run to a **full pass over
+`git diff origin/main...HEAD`** (111 files, +3843/−166), and that scope is what
+surfaced F29–F34: every one of those defects sits in bytes **unchanged since
+`c3eca237`**, so a delta-scoped run would have re-confirmed three clean folds and
+missed all six.
+
+**Delta obligations, all discharged at the reviewed head.** Workspace clean and
+remote-current (`git status --porcelain` empty; `git status -sb` in sync with
+`origin/fix/224-deterministic-replan-routing`). Acceptance manifest blob
+`git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
+`15e9661fdcafbc628419926806b27ae0532f021d`, an exact match with the value recorded
+in the SPEC `## Status`. Plan receipt `rp-224-20260915-007` re-derived over
+snapshot `3d5009783b84b41be4c4000dc3ae0f7538a500a30c07c01824033fb1a74734fa` →
+`current: true`, `digestMatches: true`, `verdictIsPass: true`. No
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md` exists → architectural invariants
+`n/a`.
+
+**Gates re-derived at the reviewed head.** `node --test scripts/*.test.mjs` →
+**419 pass / 0 fail**, exit 0 · `cd packages/pi-agentic-workflow && bun run test`
+→ **214 pass / 0 fail** · `node scripts/check-skill-context.mjs --routes
+--budgets` → `PASS route budgets: 22 routes` + `PASS context budgets: 40 skills`,
+exit 0 · `node scripts/phase-lint.mjs docs/fix/224-deterministic-replan-routing/\
+SPEC.md` → `verdict PASS`, overall fingerprint
+`1299caaa5db0fbec7062dc5a0a702397f8d518839c1dacc516019e212bbb1c6a`, exit 0 ·
+`node --test scripts/normative-drift.test.mjs` → 17 pass / 0 fail ·
+`node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 7 pass / 0
+fail · `npx skills add . --list` → exit 0 ·
+`node scripts/unit-route.mjs 224-deterministic-replan-routing` → `status: done` /
+`open-rows: 0` / `route: close-out` / `next: /audit-pr`, fingerprint
+`8dbfbbb10f2bc1d50198909cb7be0d7e3912cb715cf0556cc1fe7578a9ec4efd`. ACPI1–AC14
+were each re-derived by its own validator (AC1/AC2/AC3/AC4/AC5/AC12 by
+`scripts/unit-route.test.mjs`, AC6 by `scripts/workflow-status-sensor.test.mjs`,
+AC7/AC8 by the 16 greps ≥ 1 each, AC9 by the budget checker + `npx skills add .
+--list`, AC10 by the parity suite, AC11 by the whole-script gate, AC13 by the
+three version greps, AC14 by `scripts/phase-lint.test.mjs` → 130 pass / 0 fail
+plus the owner-text grep). All 18 evaluation rows met, none untouched.
+
+**Folded-row re-verification — 19/19 rows re-verified at their cited locations;
+18 repaired, 1 re-opened.** F26 `skills/phase-contract/SKILL.md:62` now reads
+"boxes 1, 2, 4, 5, 6 and 8 stay armed", matching `scripts/phase-lint.mjs:621` and
+`:636` (`index === 2 || index === 6`), with frontmatter `1.0.5`, both per-skill
+changelog cells and a byte-identical Pi mirror (`diff` empty); F27
+`scripts/phase-lint.test.mjs:358` carries the box-8 pre-ticked case beside the
+box-4 one (130 pass / 0 fail); F28's cited defect (C1 + U+2028/U+2029 survival) is
+repaired — a scratch fixture with NEL-, U+2028- and ESC-prefixed ids renders one
+`rows:` line with no control byte surviving, and Python `str.splitlines()` returns
+a single line. **F28's declared class invariant is not repaired → recorded as F33
+`regression of F28`.** F1 `.claude-plugin/plugin.json` still registers
+`./skills/replan-findings` · F2/F4/F5 the shared predicate is imported by the
+sensor, the decision pin lives at `scripts/workflow-status-sensor.test.mjs:681`,
+and both envelope references state `next.suggested` is emitted as an array · F3 the
+four rows this batch added carry their table's arity (4 in the package table, 5 in
+the per-skill table) and no delimiter row was touched · F6 `--help`/`-h` exit 0 ·
+F7 the whole block is documented in `skills/replan-findings/SKILL.md` · F13 the
+sensor imports `isOpen`/`isMarkRow`/`routeOfRow`/`sanitize` from the router · F14 the
+brace-composed citation resolves to all seven paths · F15 ids still ride
+`sanitize`/`CELL_MAX` · F19 all 22 route estimate ceilings sit exactly at
+`ceil(measured × 1.10)` · F21 the re-opened `P8` still carries tasks 9–10 · F22 the
+plan receipt is `current: true` · F23/F24/F25 live `status: done` /
+`route: close-out` / `next: /audit-pr` and `verdict PASS`.
+
+**Gate repair disclosed in the batch, verified sanctioned.**
+`docs/workflow/SKILL_CONTEXT_BUDGETS.json` moved **12** `routeEstimateMax`
+ceilings (not the two the commit message and `policy.declared` name): every route
+loading `phase-contract` crossed its `ceil(measured × 1.10)` floor when the +9-byte
+wording landed, and `scripts/check-skill-context.mjs:337-346` enforces that floor
+for routes ("raise it at a declared re-basis … or trim the route"), so the raises
+were **required**, not a weakening; a re-measure confirms all 12 equal the formula
+exactly. The under-disclosure is carried as report note D-224-03 below.
+
+**New rows F29–F34 below** come from the three reviewers (F29/F30/F31/F32/F34 from
+single reviewers with independent reproducers, F33 flagged by 2/3). Three
+candidates were **refuted** with counter-evidence (C6, C9, C11 — see the report).
+The classification engine (`review-implementation`, isolated) returned
+`COVERAGE: PASS`, moved C4 to `replan-in-unit` as plan-owned (the AC1 route
+vocabulary needs a user-confirmed phase) and raised C10 from finder-low to `med`
+under the severity floor.
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F29 | scripts/unit-route.mjs:116 | code | high | fix-now | fold (source) — read `folded` as the row's **last** cell, never `cells[6]`, and pin an 8–9-cell corpus row | no |
+| VF-29 | scripts/unit-route.mjs:116 · reviewer review-change · HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 · recheck failing reproducer (live checkouts, no scratch): `node scripts/unit-route.mjs 37-phase-lint-script` → `status: done` / `open-rows: 5` / `route: replan` / `rows: F12 F15 F29 F42 F99`, while all five rows of `docs/features/37-phase-lint-script/review-findings.md` (lines 64, 68, 116, 199, 900) end `\| yes \|`; importing `openRows` returns `folded: "x)]` checkbox) + corpus fixtures"` for line 64 — route text — because an unescaped `\|` inside the route cell yields 8–9 cells and the destructuring at `:116` reads `cells[6]`; `scripts/unit-route.mjs` is this unit's new file (absent on `origin/main`), AC1 freezes `close-out` as "the route of a finished unit", and the sensor projects the same rows through the imported predicate; this ledger itself already carries a 21-cell `VF-` row at line 22 (cycle 1's, quoting the changelog fragments) that only the mark-row id filter keeps out of the projection — the parser's fragility is visible inside the unit's own ledger | code | confirmed | finding-mark | n/a | n/a |
+| F30 | scripts/unit-route.mjs:89-92 | code | high | fix-now | fold (source) — accept the ledger's own annotated closed spellings (prefix match on `yes`/`—`/`-`/`n/a`) and pin them | no |
+| VF-30 | scripts/unit-route.mjs:89-92 · reviewer review-change · HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 · recheck failing reproducer: `isOpen("yes · fold c95ff5b4") === true` and `isOpen("yes ↳ folded by 942ab62") === true` (direct import), while `skills/pre-execution-review/references/LEDGERS.md:119,141` declares that `scripts/ledger-provenance.mjs` appends exactly `· fold <sha>` / `· ticked <sha>` to the `folded` cell; `node scripts/unit-route.mjs 166-pi-0850-baseline-refresh` (ledger line 3 ends `yes · fold c95ff5b4`, unit `done`) → `open-rows: 1` / `route: fold` / `next: /fold-findings`, and `node scripts/unit-route.mjs 20-runtime-guardrails-progressive-skills` (roadmap `done`, 10 rows `yes ↳ folded by <sha>`) → `open-rows: 10` / `route: replan`; the predicate is this unit's code (F13's fold made the sensor import it, so both surfaces share the defect) | code | confirmed | finding-mark | n/a | n/a |
+| F31 | scripts/unit-route.mjs:370-372 | usage-docs | med | fix-now | fold (source) — emit the documented `--fix <n>` invocation for a `docs/fix/` unit and pin the execute route's `next:` line | no |
+| VF-31 | scripts/unit-route.mjs:370-372 · reviewer review-change · HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 · recheck failing reproducer: `node scripts/unit-route.mjs 179-declared-ledger-delta-receipts` → `route: execute` / `next: /execute-phase 179-declared-ledger-delta-receipts`, while the fix invocation is frozen at `skills/execute-phase/SKILL.md:5` (`--fix <n>`), `skills/execute-phase/references/UNIT_LOOP.md:9-10` and `references/WORKFLOWS_FIX.md:3`, and the canonical machine strings print `--fix` (`scripts/workflow-status.mjs:649`, `skills/plan-fix/SKILL.md:69`); no test asserts the execute route's `next:` line | usage-docs | confirmed | finding-mark | n/a | n/a |
+| F32 | scripts/unit-route.mjs:344,370 | workflow | med | fix-now | replan-in-unit (plan-owned): the archived half of F24 — give the closed route table a historical/merged state for a unit whose status source is gone (AC1 vocabulary + fixtures), via the plan owner | no |
+| VF-32 | scripts/unit-route.mjs:344,370 · reviewer review-change · HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 · recheck failing reproducer: `node scripts/unit-route.mjs 100-stale-fix-index-rows` → `status: absent` / `route: execute` / `next: /execute-phase 100-stale-fix-index-rows` while `gh issue view 100 --json state` → `CLOSED`; `fixIndexStatus(...) ?? "absent"` at `:344`, and `docs/fix/README.md`'s legend plus `skills/execute-phase/references/WORKFLOWS_FIX.md:9` remove the index row on merge, so ~30 archived folders answer `execute`; F24's cited range `:331-351` contains `:344`, so this row is the unclosed part of F24 rather than a plain new location | workflow | confirmed | finding-mark | n/a | n/a |
+| F33 (regression of F28) | scripts/unit-route.mjs:51-58 | security | med | fix-now | fold (source) — `regression of F28`: extend the one flatten class to the Unicode format characters, or stop claiming the class is closed, and pin a Cf case in S7 | no |
+| VF-33 | scripts/unit-route.mjs:51-58 · reviewer review-change · HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 · recheck failing reproducer: `sanitize("A\u202eB") === "A\u202eB"` (direct import) — U+202A–U+202E, U+2066–U+2069, U+200B–U+200D and U+00AD all survive the regex `[\u0000-\u001f\u007f-\u009f\u2028\u2029]`, while the comment the fold batch added at `:51-53` claims "no echoed cell can carry a character a consumer might read structurally"; F28's cited defect (C1 + U+2028/U+2029 survival) IS repaired at this location — the same sanitizer's declared class invariant is not, which is exactly the `regression of F28` the delta rule admits | security | confirmed | finding-mark | n/a | n/a |
+| F34 | scripts/unit-route.mjs:303,334 | usage-docs | med | fix-now | fold (source) — either recognise a roadmap-tracked feature issue number or narrow the `--help`/header contract to fix-index issues, with a fixture | no |
+| VF-34 | scripts/unit-route.mjs:303,334 · reviewer review-change · HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 · recheck failing reproducer: `node scripts/unit-route.mjs 205` → stderr `UNIT ROUTE — error` / `unknown unit: 205`, exit 1, although #205 is an OPEN `docs/features/ROADMAP.md` row-50 feature issue with no unit folder and the router's own `--help` contract and header promise `<unit\|issue>` and "a tracked issue with no unit folder yet" (scenario S5); `fixIndexIssues()` reads only `docs/fix/README.md` (`:192-203`) and is the sole gate at `:334`; the classifier raised the finder-low to `med` under the severity floor (a documented input class dead-ends) | usage-docs | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD 1e8080a76cc678c207d3916ee3bb8145b1762709 | n/a | n/a | review-mark | n/a | n/a |
+
+Report-only notes (low/ignore · never persisted, never blocking — debt items with
+re-open triggers):
+
+- **D-224-03** (perf/workflow, low): `docs/workflow/SKILL_CONTEXT_BUDGETS.json:429`
+  (`policy.declared`) and the fold commit message name **two** routes
+  (`plan-feature:scoped`, `plan-fix:issue`) as having grown, while the batch moved
+  **12** `routeEstimateMax` ceilings — every route loading `phase-contract` crossed
+  its `ceil(measured × 1.10)` floor. The named growth source is correct and all 12
+  raises were required by the checker's route headroom floor, so no gate is
+  weakened; only the enumeration under-reports. TRIGGER: next edit of
+  `policy.declared` or the next re-basis → name every route the batch moved.
+- **D-224-04** (brand, low): `CHANGELOG.md:634` · `CHANGELOG.es.md:636` — the
+  `phase-contract` **1.0.4** cells still read "boxes 1, 2 and 4–8" / "cajas 1, 2 y
+  4–8" (includes the exempt box 7, omits box 1). The classifier kept it `ignore`:
+  1.0.4 is a released historical record, the 1.0.5 cell directly below carries the
+  correction, and `scripts/normative-drift.test.mjs` checks only the newest
+  per-skill cell. TRIGGER: next changelog/normative-drift round → decide whether
+  released history is rewritten or annotated.
+- **D-224-05** (brand, low): `docs/fix/224-deterministic-replan-routing/SPEC.md:316,318`
+  and `progress.md:656` repeat the same false enumeration ("boxes 2 and 4–8 stay
+  armed"). The SPEC is frozen authority — a review may not edit it and the repair
+  needs a user-approved amendment. TRIGGER: next user-approved SPEC
+  amendment/replan touching `## Impact`; owning stage **plan**.
+- **D-224-06** (verify, low): `scripts/phase-lint.mjs:636` — the executed-phase
+  exemption keys only on "fully ticked", so a 12-task all-ticked phase lints
+  `PASS (8/8)` where the same phase unticked is `BLOCKED — box 3`, and a pre-ticked
+  non-final `gh pr` phase passes box 7; the owner's "pre-ticking … is a defect" is a
+  policy declaration the plan text cannot mechanize. TRIGGER: next revision of the
+  exemption/result contract, or a consumer that must distinguish pre-ticked from
+  executed → enforce or restate the declaration.
+- The cycle-1 report-only notes **F8–F12, F17–F18** and the proposal **F20** stand.
+  **F8's trigger has fired** (`docs/workflow/REVIEW_AND_CLASSIFY.md:80`,
+  `FEATURE_WORKFLOW.md:286`, `PORTABLE_PROMPT.md:141-142`, the router prose in
+  `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md:30-32`,
+  `skills/review-implementation/SKILL.md:100`, `skills/fold-findings/SKILL.md:125`
+  still say the planner is named on the `route: replan` line, while it is on
+  `next:`), and **F12's trigger has fired**
+  (`docs/workflow/PORTABLE_PROMPT.es.md:146-148` gained another English clause);
+  both stay below the severity floor and are re-confirmed, not re-opened.
+
+Cross-pass disagreement (recorded, never silently dropped): R2 called the sanitizer
+residual a `DISPUTED` F28-fold; R1 assessed the same surface as `minor`/security.
+Fusion kept the higher severity and the delta rule's only legitimate id
+(`regression of F28`) instead of a plain new row. No other disagreement remains.
+
+```text
+CONVERGENCE-ANOMALY — fix-224 source
+- Finding ids: new: F29, F30, F31, F32, F34 + F33 (regression of F28); none is a plain re-report of a prior row's location except F32, which is F24's own unclosed half (F24 cited :331-351, F32 sits at :344)
+- Snapshots: c3eca2379a917a332ff2d45cdb5678140b0a9b3f -> 1e8080a76cc678c207d3916ee3bb8145b1762709 (cycle-2 reviewed head -> cycle-3 reviewed head; the plan artifacts are byte-identical across it — no artifactRevisionId rotation, plan receipt rp-224-20260915-007 still current)
+- Missed: cycle 2 ran a full pass over the same bytes but exercised the router only through its committed fixture — whose rows carry exactly 7 cells and a bare `yes` — and never across the live `docs/features/*` and `docs/fix/*` ledgers, so the one row parser's positional `cells[6]` read (F29), the one open-row predicate's closed vocabulary against the workflow's own annotator token (F30), the fix-unit invocation string (F31), the missing status source of an archived unit (F32), the Cf character class (F33) and the roadmap-issue input class (F34) were all inside its scope and none was falsified.
+- Owning stage: source (F29, F30, F31, F33, F34 — all in scripts/unit-route.mjs, this unit's new file) + plan (F32 — the closed AC1 route vocabulary)
+- Why the prior review failed: both cycles verified the router against its own fixture and its own pins instead of against the fleet's ledgers; the fixture was authored alongside the parser, so it encoded the parser's assumptions. A reviewer that only runs the suite cannot falsify a parser whose corpus was written by the same hand.
+- Route to owner: source rows -> `/fold-findings` with the explicit ids F29 + F30 + F31 + F33 + F34; plan row F32 -> `node scripts/unit-route.mjs 224-deterministic-replan-routing` (after this ledger write it prints `route: replan` and names `/plan-fix 224`) -> `/plan-fix 224` -> fresh `/review-plan fix-224` -> `/execute-phase 224`
+```
+
+```text
+LOOP CAP REACHED — fix-224 (cycle 3 run on the user's explicit instruction)
+- Finding ids: F29 + F30 + F31 + F32 + F33 + F34 (five source-owned and foldable in one batch, one plan-owned)
+- Cycles: 3 (REVIEW-RAN marks + forge receipts); the cap of 2 was already reached in cycle 2, so cycle 4 needs the user's explicit instruction — never a reviewer election
+- Route: /fold-findings F29 + F30 + F31 + F33 + F34 and /plan-fix 224 for F32, or /triage-issue --prioritize-now 224-deterministic-replan-routing F29 F30 F31 F32 F33 F34 (or the programmatic outer driver)
+```
+
+The cycle-3 residue splits cleanly: five source rows in one new file are one
+atomic fold batch, and F32 is plan authority (the frozen AC1 route vocabulary),
+so it takes the planner route that `node scripts/unit-route.mjs` now names. The
+review's own scope decision is the lesson of this cycle: the fold batch was three
+small in-scope repairs, but the width trigger escalated the run to a full pass,
+and every new finding came from bytes the delta would have skipped.
