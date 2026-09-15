@@ -554,23 +554,23 @@ Layer: `config/infra`. Done-when: `node --test scripts/workflow-status-sensor.te
 
 Layer: `docs`. Done-when: `grep -c "unit-route" skills/review-change/references/PERSIST_AND_DECIDE.md skills/review-change/references/OUTPUT_AND_GUARDRAILS.md skills/review-implementation/references/CLASSIFY.md skills/review-implementation/SKILL.md skills/triage-issue/SKILL.md skills/triage-issue/references/REVIEW_FINDING_PROCESS.md skills/fold-findings/references/FOLD_PROCESS.md skills/fold-findings/SKILL.md` → ≥1 per file, and `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 (OB-11, AC13).
 
-- [ ] Restate the replan destination in review-change's two reference files —
+- [x] Restate the replan destination in review-change's two reference files —
       `skills/review-change/references/PERSIST_AND_DECIDE.md` and
       `skills/review-change/references/OUTPUT_AND_GUARDRAILS.md` (OB-4; PE-003,
       PE-007)
-- [ ] Restate the replan destination in
+- [x] Restate the replan destination in
       `skills/review-implementation/references/CLASSIFY.md` (OB-4; PE-003)
-- [ ] Restate the replan destination in `skills/review-implementation/SKILL.md`
+- [x] Restate the replan destination in `skills/review-implementation/SKILL.md`
       and bump its version (OB-4)
-- [ ] Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)
-- [ ] Restate the replan destination in
+- [x] Restate the replan destination in `skills/triage-issue/SKILL.md` (OB-4)
+- [x] Restate the replan destination in
       `skills/triage-issue/references/REVIEW_FINDING_PROCESS.md` and bump that
       skill's version (OB-4; PE-003)
-- [ ] Restate the replan destination in
+- [x] Restate the replan destination in
       `skills/fold-findings/references/FOLD_PROCESS.md` (OB-4; PE-004)
-- [ ] Restate the replan destination in `skills/fold-findings/SKILL.md` and bump
+- [x] Restate the replan destination in `skills/fold-findings/SKILL.md` and bump
       its version (OB-4; PE-004)
-- [ ] Bump `skills/review-change/SKILL.md` from 3.5.0 to 3.5.1 (patch — prose
+- [x] Bump `skills/review-change/SKILL.md` from 3.5.0 to 3.5.1 (patch — prose
       only) and add its per-skill changelog cell to `CHANGELOG.md` and
       `CHANGELOG.es.md` (OB-11; PE-015)
 
