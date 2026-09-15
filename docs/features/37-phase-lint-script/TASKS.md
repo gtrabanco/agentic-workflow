@@ -40,6 +40,8 @@ Layer: docs · Done-when: `grep -n "phase-lint.mjs" skills/plan-feature-scaffold
 - [x] Run `bump-skill` for the three edited skills: minor bumps + CHANGELOG rows in CHANGELOG.md and CHANGELOG.es.md + README/SKILLS table sync
 - [x] Re-run `npm run bundle:skills` (pi mirror parity)
 - [x] Run `bun scripts/check-skill-context.mjs` and `npx skills add . --list` — both green
+- [x] Fold F1 record-sync — `docs/fix/_TEMPLATE/SPEC.md` P2 gains the canonical
+  `Layer:`/`Done-when:` lines (+2 lines; `9117d0cc`, cycle-1 fold batch)
 
 ## P5 — Implement the box-2 test-file mapping
 

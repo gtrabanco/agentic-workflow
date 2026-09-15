@@ -500,3 +500,36 @@ fingerprint: 3afa260181a9c2385b178572874d609c67126e144ffc0887fdbf802dfbab05ed
   row is added to the SPEC, and a fresh acceptance receipt is recorded with
   the replacement blob. Closes the F87 route and pays DEBT-3's amendment
   path; no validator is narrowed and the grep targets are unchanged.
+
+## 37-plan-8 — F83/F85/F88/F90/F92 re-cuts (2026-09-15, user-approved)
+
+The five standing `replan-in-unit` rows were owner-routed to re-cuts after
+cycle 15 — the fold batches could not close them. Decisions taken in the
+re-cut:
+
+1. **F92 scope — the named defects are fixed exactly.** 37-PLAN P7 gains its
+   `Layer: hardening` line (the missing-layer whole-file `unparseable` fired
+   before box judging; TASKS.md was already the passing gate target per
+   testing.md:47). The 38 artifacts are de-ambiguated (`stdout/stderr`,
+   `roadmap/fix-index`, `per-unit/stage`, `lazily/once`, `P5/P6`, plus the
+   bare `config/infra` and `relationship/when-to-use` prose compounds —
+   backticked, their canonical written form elsewhere). 38-PLAN P4's three
+   close-out micro-steps merge into their parent tasks (12 → 9 real tasks,
+   the declared `Task count: 9` becomes true, ≤10 hardening budget restored;
+   box-3 silent). Newly unmasked findings (38 PLAN/TASKS box-2 layer
+   mismatches on mixed-surface phases, box-8 `Done-when:` gaps in PLAN prose
+   form) are inherent to the pre-linter authoring of a merged unit and are
+   recorded as report-only notes — no live gate lints the 38 artifacts (the
+   preflight lints the executing unit's own plan).
+2. **F88 + E9** — both evidence rows cited the dead revision `8bab5c90`
+   (unresolvable anywhere in the repo). E10's primary authority
+   (`ROADMAP_EXECUTION_ORDER.md`) left the tree in the D-1/D-2 owner rulings
+   (`9e127cca`, moved to gitignored `tmp/`), so the row re-points to the
+   in-tree `ROADMAP.md` rows 37/38/40/42 at `b7197bd7`; E9 (same dead sha,
+   owner-approved one-cell add-on) re-points to the same revision.
+3. **F90 row placement** — the executed template row lands under TASKS.md P4
+   (the docs-layer phase; box-2-safe) citing its landing commit `9117d0cc`:
+   the row records the edit, it does not claim a phase window.
+4. **No validator narrowed** — the frozen ACCEPTANCE manifest bytes are
+   untouched; the linter's behavioral changes (F83/F85 folds) are additive
+   fail-closed extensions pinned by new red-first corpus rows.

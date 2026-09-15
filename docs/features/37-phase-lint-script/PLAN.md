@@ -92,6 +92,8 @@ sole rule owner — O12).
 
 ## P7 — Hardening & PR
 
+Layer: hardening · final close-out re-run, gate, roadmap flip, PR.
+
 - [ ] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Exercise dev-scenario edge corpus: oversized input, permission-denied, concurrent runs (see SPEC Dev scenarios)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty

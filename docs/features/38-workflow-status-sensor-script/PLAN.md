@@ -26,7 +26,7 @@ envelope emission + self-validation, fixture-repo test harness.
 - [ ] Implement the envelope skeleton — build the Envelope v2 object in the schema's field
   order with `state`, `next`, and empty `detail`; import `validateEnvelope` and self-check
   the envelope before printing (E-38-1: self-check is diagnostic only, not a gate).
-- [ ] Implement stdout/stderr separation — the envelope JSON goes to stdout only; all
+- [ ] Implement stdout and stderr separation — the envelope JSON goes to stdout only; all
   diagnostics, validation mismatches, and error messages go to stderr; stdout alone
   parses as one valid JSON document (A:23 pin).
 - [ ] Write red-first fixture test — `scripts/workflow-status-sensor.test.mjs` with a
@@ -51,7 +51,7 @@ timeout, crash-recovery verdict mapping, `--last-envelope` no-progress guard.
   (`{number, title, label}` array from step-2's `--json` output); `urgent` dominates when
   both labels present; in-flight unit's interruptibility facts from the same reads
   (reusing phase progress from step 7, crash recovery from step 7).
-- [ ] Implement SENSOR_CORE steps 4–5 — roadmap/fix-index parsing into the five-state
+- [ ] Implement SENSOR_CORE steps 4–5 — roadmap and fix-index parsing into the five-state
   machine (`idea/defined/planned/in-progress/done`); non-standard status maps to nearest
   five-state value with `default: idea` and notes the raw string in `workflow_observations`;
   transitive depends-on closure with met/unmet edges (done-with-open-PR is NOT met);
@@ -145,16 +145,13 @@ Driver wiring, bilingual sync, Pi bundle parity, full validation, PR + roadmap.
   verify parity tests pass; update distribution metadata as required.
 - [ ] Close planning docs truthfully — `progress.md` (handoff entry with Done/Remains/
   Gotchas/Files); `testing.md` (validation ladder complete); `known-issues.md` (no
-  remaining blockers).
+  remaining blockers); recompute and record the frozen `ACCEPTANCE.md` blob
+  (`git hash-object docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md` →
+  sha), appending the receipt to `progress.md` with `Status: frozen` +
+  `Verified: <date>`.
 - [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file,
-  real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat.
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`.
-- [ ] Commit `docs: link PR #<n>` and push.
-
-### Close-out (P4 completion)
-
-- [ ] Run the PR URL print: `gh pr view <n> --json url` → verify the PR is open and the
-  URL matches the printed value.
-- [ ] Recompute and record the frozen `ACCEPTANCE.md` blob: `git hash-object
-  docs/features/38-workflow-status-sensor-script/ACCEPTANCE.md` → sha; append receipt
-  to `progress.md` with `Status: frozen` + `Verified: <date>`.
+  real backticks, never inline `--body`/heredoc), PRINT THE PR URL in the chat, and
+  verify with `gh pr view <n> --json url` that the PR is open and the URL matches the
+  printed value.
+- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`, then commit
+  `docs: link PR #<n>` and push.

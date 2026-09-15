@@ -298,8 +298,8 @@ returned `READY-FOR-REVIEW`.
 | E6 | Skill edits require `npm run bundle:skills` (pi package mirror parity, `test/skill-parity.test.mjs`) and context budgets (`bun scripts/check-skill-context.mjs`) | project-convention | `CLAUDE.md` §Verification | current | current | proven | — |
 | E7 | Deterministic static analysis: same input → same output, explainable/reproducible diagnostics | external-fetch | https://vizejs.dev/blog/notes/2026-03-26-why-ai-needs-deterministic-fast-static-analysis/ (accessed 2026-09-09) | current | current | proven | — |
 | E8 | Linter practice: rulesets of built-in rules, fail-closed validation with explicit errors, custom rules on top of a validation engine | external-fetch | https://www.speakeasy.com/docs/sdks/prep-openapi/linting/ (accessed 2026-09-09) | current | current | proven | — |
-| E9 | Vehicle rule: first producer feature (37/38/42/45) creates the `packages/agentic-workflow` crate + `.agentic-workflow/tmp` convention | owner-decision (roadmap) | `docs/features/ROADMAP.md` row 43 (declined) and rows 37/38/42 | git `8bab5c90` | current | decision | — |
-| E10 | Feature 37 is Phase 1 priority (biggest token saver); it precedes 38, 40, 42 | roadmap | `docs/features/ROADMAP_EXECUTION_ORDER.md`; `docs/features/ROADMAP.md` rows 37/38/40/42 | git `8bab5c90` | current | proven | — |
+| E9 | Vehicle rule: first producer feature (37/38/42/45) creates the `packages/agentic-workflow` crate + `.agentic-workflow/tmp` convention | owner-decision (roadmap) | `docs/features/ROADMAP.md` row 43 (declined) and rows 37/38/42 | git `b7197bd7` | current | decision | — |
+| E10 | Feature 37 is Phase 1 priority (biggest token saver); it precedes 38, 40, 42 | roadmap | `docs/features/ROADMAP.md` rows 37/38/40/42 (in-tree authority; the execution-order doc left the tree for gitignored `tmp/` per owner rulings D-1/D-2, `9e127cca`) | git `b7197bd7` | current | proven | — |
 
 ---
 
@@ -370,8 +370,9 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-7`.
   P1 — owner-sanctioned — and v1.0.2 → 1.0.3 in the cycle-1 fold F5, per the
   2026-09-14 amendment), `skills/plan-feature-scaffold/SKILL.md`,
   `skills/plan-fix/SKILL.md`, `skills/execute-phase/SKILL.md` (+ its preflight
-  reference), and the pi package mirror (`packages/pi-agentic-workflow`,
-  re-bundled via `npm run bundle:skills`).
+  reference), `docs/fix/_TEMPLATE/SPEC.md` (canonical `Layer:`/`Done-when:`
+  template lines, fold F1), and the pi package mirror
+  (`packages/pi-agentic-workflow`, re-bundled via `npm run bundle:skills`).
 - Invariant held: one writer per phase-lint rule set — `phase-contract` is
   amended exactly once in this PR (P1, the owner-approved `Hardening & PR`
   rule-1 exception) and never re-edited by this feature's other phases; the
@@ -402,11 +403,18 @@ half above is marked `designed`. Engineering artifact revision: `37-plan-7`.
   (the corpus pins the mid-title drop; F29 re-cut).
 - The *body* of a phase runs from its heading to the next phase heading (or
   end of file). Within a body:
-  - the *layer declaration* is the first line matching
+  - the *layer declaration* is the exactly-one line matching
     `Layer:\s*<value>` where `<value>` is one of the closed enum
     `schema/db | domain | api | ui | config/infra | docs | hardening | close-out`;
+    a phase body containing a second `Layer:` line is unparseable
+    (whole-file `BLOCKED: unparseable`) — first-match-wins is forbidden
+    (fail-closed, F83 re-cut);
   - the *done-when* is the `Done-when:` line's remainder in the same block;
-  - *tasks* are lines matching `^\s*- \[( |x)\] ` in the body.
+  - *tasks* are lines matching `^\s*- \[( |x)\] ` in the body; a wrapped
+    continuation line (a non-empty body line following a task line that is
+    not itself a task, layer-declaration, or `Done-when:` line) is scanned
+    with its parent task for boxes 4–7; fence-inertness is preserved
+    (F85 re-cut).
 - A *fenced code block* — a line whose trimmed form is three-or-more
   backticks (optionally followed by an info string) or three-or-more tildes,
   through the closing line whose trimmed form is only the same character
@@ -790,3 +798,12 @@ depend on 37+38 (PE-011).
   :368-370 and :588 are swept to the shipped state, and a fresh acceptance
   receipt is recorded with the replacement blob. No validator is narrowed;
   the grep targets are unchanged.
+- **2026-09-15 — 37-plan-8 re-cut: F83/F85/F88/F90/F92 remedies (user-approved
+  in the review-convergence session).** §Design: the layer declaration becomes
+  exactly-one (a second `Layer:` line is unparseable — F83) and task wrapped
+  continuation lines are scanned with their parent task for boxes 4–7 (F85).
+  §Architecture affected-surfaces gains `docs/fix/_TEMPLATE/SPEC.md` (F90).
+  Evidence rows E9/E10 re-point the dead revision `8bab5c90` to `b7197bd7`
+  (F88; the execution-order doc left the tree per owner rulings D-1/D-2,
+  `9e127cca`). The frozen ACCEPTANCE manifest is untouched — no validator
+  narrowed, no blob rotation.
