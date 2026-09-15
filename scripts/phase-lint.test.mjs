@@ -355,6 +355,27 @@ test("F25: the same phase unticked mid-plan still fails box 7", () => {
   assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 7:/m);
 });
 
+const PRETICKED_BOX8_PLAN = `# Pre-ticked box-8 dodge
+
+### P1 — Hardening & PR
+
+Layer: hardening. Done-when: the close-out is complete.
+
+- [x] Create \`scripts/z.test.mjs\` covering the cases
+
+### P2 — Wire the exit codes
+
+Layer: config/infra. Done-when: \`node --test scripts/x.test.mjs\` → exit 0.
+
+- [ ] Create \`scripts/x.mjs\` with the implementation
+`;
+
+test("F25/AC14: a pre-ticked phase with a box-8 defect still blocks (only boxes 3 and 7 are exempt)", () => {
+  const { status, stdout } = nodeRun(fixture("preticked-box8.md", PRETICKED_BOX8_PLAN));
+  assert.notEqual(status, 0);
+  assert.match(stdout, /^P1 Phase-lint: BLOCKED — box 8:/m);
+});
+
 test("F25: a pre-ticked phase with a box-4 defect still blocks (only boxes 3 and 7 are exempt)", () => {
   const { status, stdout } = nodeRun(fixture("preticked-box4.md", PRETICKED_BOX4_PLAN));
   assert.notEqual(status, 0);
