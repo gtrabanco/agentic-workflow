@@ -297,33 +297,25 @@ test("AC3: the shipped entry registers the full alias set against a Pi-shaped AP
   }
 });
 
-test("AC15: the README command table is the catalogue, in both languages", () => {
+test("AC15: the README command table is the catalogue", () => {
   const expected = readCatalogue(bundleSkills).commands.map((command) => command.name).sort();
   const readme = (file) => {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
-    const names = [...text.matchAll(/^\| `(\/[^`]+)` /gmu)].map(([, name]) => name.slice(1));
-    const sections = [...text.matchAll(/^## /gmu)].length;
-    const example = text.match(/```json\n([\s\S]*?)\n```/u)?.[1] ?? "";
-    return { names: names.sort(), sections, example };
+    return [...text.matchAll(/^\| `(\/[^`]+)` /gmu)].map(([, name]) => name.slice(1)).sort();
   };
 
-  const en = readme("../README.md");
-  const es = readme("../README.es.md");
-  assert.deepEqual(en.names, expected, "README.md lists exactly the commands that exist");
-  assert.deepEqual(es.names, expected, "README.es.md lists the same commands");
-  assert.equal(en.sections, es.sections, "the sibling has the same number of sections (AD-002)");
-  assert.equal(es.example, en.example, "the config example is the same JSON in both languages");
+  assert.deepEqual(readme("../README.md"), expected, "README.md lists exactly the commands that exist");
 });
 
 test("AC15: the troubleshooting table quotes messages the code actually emits", () => {
   // A docs table that paraphrases an error is worse than none: the operator
   // searches for a string that never appears. Each row's quoted message is
-  // therefore checked against the source that builds it, in both languages.
+  // therefore checked against the source that builds it.
   const emitters = ["../src/routing/dispatch.ts", "../src/settings/console.ts"]
     .map((file) => readFileSync(new URL(file, import.meta.url), "utf8"))
     .join("\n");
 
-  for (const file of ["../README.md", "../README.es.md"]) {
+  for (const file of ["../README.md"]) {
     const text = readFileSync(new URL(file, import.meta.url), "utf8");
     // Only the troubleshooting section: the command table is pinned elsewhere.
     const heading = /^(?:## Troubleshooting|## Diagnóstico)$/mu.exec(text);

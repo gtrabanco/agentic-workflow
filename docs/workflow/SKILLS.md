@@ -1,7 +1,5 @@
 # Skill system reference
 
-> 🇪🇸 [Versión en español](SKILLS.es.md)
-
 The skills that make up the agentic workflow, grouped by role.
 
 **19 user-facing skills** (one menu entry each) + **19 internal steps**
@@ -158,7 +156,7 @@ deterministic readiness result, never a verdict.
 
 | Skill | Role |
 |---|---|
-| `bump-skill` | After editing a SKILL.md: bump `version:`, add CHANGELOG.md + CHANGELOG.es.md rows, update the README skill/model tables. Repo-only — its description keeps it from triggering in other projects |
+| `bump-skill` | After editing a SKILL.md: bump `version:`, add CHANGELOG.md rows, update the README skill/model tables. Repo-only — its description keeps it from triggering in other projects |
 
 ## Invocation & arguments reference
 

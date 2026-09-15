@@ -26,7 +26,7 @@ docs/workflow/           the tutorial: feature flow, issue flow, skill reference
 docs/features/_TEMPLATE  feature SPEC template + ROADMAP
 docs/fix/                fix SPEC template + index
 .github/                 issue + PR templates the workflow expects
-README.md / README.es.md project overview (EN / ES)
+README.md                project overview
 ```
 
 **Dogfooding model (authoring):** repo sessions consume the workflow from the
@@ -40,26 +40,14 @@ skill via per-session flags (e.g. `pi --no-skills --skill skills/<name>/SKILL.md
 
 ## Working rules
 
-- **Docs language is English.** Every committed artifact (skills, docs, templates,
-  commits, PR descriptions) is in English, regardless of the language used to
-  request the work. Reply to the user in the user's language.
-- **Human-readable docs carry EN + ES siblings.** `README`, `CHANGELOG`,
-  `docs/workflow/*.md`, and the schema package `README` each get a faithful
-  `.es.md` sibling with reciprocal language-switcher links
-  (`> 🇪🇸 [Versión en español](<name>.es.md)` on the English original,
-  `> 🇬🇧 [English version](<name>.md)` on the Spanish sibling).
-  **Hard rule — the ES sibling is updated in the SAME change, never
-  deferred.** If a change edits an English doc that has a `.es.md` sibling (or
-  is documentation that should be translated), it MUST update the Spanish
-  version in the same commit/PR — a diff that touches only the English side of
-  a bilingual pair is incomplete and must not be committed or merged. This is
-  not "on next touch, best effort": whoever edits the English doc owns the
-  reciprocal ES edit right then. There is no automated staleness check, so the
-  rule is enforced by the author and by review. **Scope exception:** `SKILL.md`,
-  SPECs, commits, PRs, and machine config (`model-routing.yml`) stay
-  English-only per the docs-language rule above and have **no** ES sibling — the
-  bilingual sync rule applies only to docs that actually have a translatable
-  sibling (human tutorial/reference prose), never to process artifacts.
+- **Docs language is English-only (interim).** Every committed artifact (skills,
+  docs, templates, `README`, `CHANGELOG`, commits, PR descriptions) is in English,
+  regardless of the language used to request the work; reply to the user in the
+  user's language. The bilingual EN/ES `.es.md` siblings and their reciprocal
+  language-switcher links were removed repo-wide (2026-09-15) to stop paying a
+  per-commit translation cost. Feature 57 (`per-release-bilingual`, issue #232)
+  restores bilingualism as a per-release batch pass. Until then: do **not** create
+  or update any `.es.md` sibling and do **not** add a language-switcher link.
 - **Vendored third-party code carries its provenance.** Any code copied from a
   third party into this repository — into a package's `src/`, a script, or a
   skill reference — keeps a header comment naming the **source URL, the author,
@@ -288,7 +276,7 @@ block and refuses the schedule if a mutating step is ever re-marked as a tail st
 ```text
 normalizer-inventory@1
 step | kind | side
-bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, both CHANGELOG tables, README/SKILLS cells) | before
+bump-skill | version bumper and doc writer (rewrites SKILL.md `version:`, the CHANGELOG table, README/SKILLS cells) | before
 bun run bundle:skills | bundler (copies `skills/` into the Pi package mirror `packages/pi-agentic-workflow/skills/`) | before
 bun run build (packages/agentic-workflow-schema) | generator (`tsc`, emits `dist/`) | before
 generate-pre-execution-schemas.mjs | generator (writes the two `pre-execution-*.schema.json` projections) | before
@@ -359,9 +347,8 @@ not pinned here is a known-issue with its re-trigger condition, never a silent g
 rendered-facts@1
 surface | claim | machine | rule
 docs/workflow/SKILLS.md | pattern:\*\*(\d+) user-facing skills\*\* | count:user-facing | equals
-docs/workflow/SKILLS.es.md | pattern:\*\*(\d+) skills orientadas al usuario\*\* | count:user-facing | equals
-CHANGELOG.md + CHANGELOG.es.md | version-tables | frontmatter:version | equals-each
-CHANGELOG.md + CHANGELOG.es.md | package-versions | package:version | equals-each
+CHANGELOG.md | version-tables | frontmatter:version | equals-each
+CHANGELOG.md | package-versions | package:version | equals-each
 skills/review-spec/references/OUTPUT.md + skills/review-plan/references/OUTPUT.md | literal:agentic-workflow/pre-execution-review-receipt@1 | const:PRE_EXECUTION_RECEIPT_CONTRACT_ID | equals
 ```
 
@@ -389,15 +376,15 @@ hoists.
   `--provenance` are npm-CLI-specific tooling Bun doesn't replicate).
 - **Dependency versions are pinned.** Every `dependencies`/`devDependencies` entry in both packages uses an **exact version** (no `^`, `~`, or major-only ranges) — a fresh install must reproduce the committed lockfile byte-for-byte. `peerDependencies` stay ranges by nature (they resolve against the host's own version — e.g. the pi peer). Dependency **upgrades are deliberate `fix(deps)` PRs on a cadence** (not side effects of other work): bump the pinned versions, re-run the gate, ship as a patch.
 - **Version bumps are manual and same-PR.** Bump `version:` in the touched
-  package's `package.json` and add a row to the "Companion npm packages" /
-  "Paquetes npm complementarios" table in `CHANGELOG.md` + `CHANGELOG.es.md`
-  in the same PR. CI publishes on merge to `main` when the version differs
+  package's `package.json` and add a row to the "Companion npm packages"
+  table in `CHANGELOG.md` in the same PR. CI publishes on merge to `main`
+  when the version differs
   from the registry (`publish-schema.yml`, `publish-pi-package.yml` — one
   file per package, because npm Trusted Publisher records pin the workflow
   filename; a rename would break the npm-side record until re-registered by
   hand).
 - **Changesets: deliberately not adopted** (decided 2026-08-30). The curated
-  bilingual changelog tables above are the release-notes surface; changesets
+  changelog tables above are the release-notes surface; changesets
   would fork them into per-package English-only `CHANGELOG.md` files,
   require re-binding both packages' npm Trusted Publisher records to a new
   release workflow, and add a version-PR loop for exactly two independent
@@ -427,8 +414,8 @@ reusable operational knowledge as a skill under `skills/`.
 **Repo maintenance skill (specific to this repo):**
 
 - **`bump-skill`** — after editing any SKILL.md, run this before committing.
-  It bumps `version:`, adds changelog rows to `CHANGELOG.md` and
-  `CHANGELOG.es.md`, and updates the skills and model tables in both READMEs.
+  It bumps `version:`, adds changelog rows to `CHANGELOG.md`, and updates the
+  skills and model tables in `README.md`.
   This is the mechanical enforcement of the "Version every change" rule above.
   `bump-skill` itself is `user-invocable: false` — invoke it via the Skill
   tool / by following its `SKILL.md` directly, not the slash-command menu.
