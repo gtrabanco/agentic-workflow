@@ -911,3 +911,54 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   --budgets` → PASS; `normative-drift` → 17 pass.
 - Next: `/review-change` again (delta cycle 2, the last the loop allows without
   an explicit instruction), then `/audit-pr` at the resulting head.
+
+## P8 task 9 (second pass) — end review F29–F34 and the fold of the five source rows (2026-09-16)
+
+- **End review** (`/review-change --adversarial 3`, delta mode at head `1e8080a7`):
+  **REVIEW-FAIL** with six rows — `F29` (code/high), `F30` (code/high), `F31`
+  (usage-docs/med), `F32` (workflow/med, **replan-in-unit**), `F33`
+  (security/med, a regression of F28's declared class) and `F34`
+  (usage-docs/med). Evidence commit `269a7987` (pushed). Operator authorization
+  recorded for the third review cycle and for this single-batch fold.
+- **Fold cycle** (one batch, `all-repair-in-place`, the five source rows):
+  - **F29** — `openRows` now reads `folded` from the row's **last** cell and
+    joins the middle cells back into `route`, so a row whose cell carries an
+    unescaped pipe can no longer be misread as open. Pinned by a two-row corpus
+    (an 8-cell closed row and an 8-cell open row → `rows: F21`).
+  - **F30** — `isOpen` compares the cell's **leading token** against
+    `yes | — | - | n/a | ""`, so the ledger's annotated closed spellings
+    (`yes · fold <sha>`, `yes ↳ folded by <sha>`) read as closed. Pinned by a
+    three-row corpus. Real-data effect: `166-pi-0850-baseline-refresh` and
+    `37-phase-lint-script` now answer `open-rows: 0` / `close-out` instead of a
+    bogus `fold` / `replan`.
+  - **F31** — the execute route names the frozen invocation for a fix unit:
+    `/execute-phase --fix <n>`. Pinned with a new fixture (`docs/fix/22-execute-fix`).
+  - **F33** — the sanitizer's flatten class now covers the Unicode format
+    characters (soft hyphen, ZWSP/ZWNJ/ZWJ, bidi marks and embeddings/overrides/
+    isolates, word joiner, BOM), and the comment no longer overclaims. Pinned in
+    the S7 case (`F13 X`, no `U+202E` in stdout).
+  - **F34** — a roadmap row's own issue number resolves through
+    `plan-from-issue` as `/plan-feature --from-issue <n>` instead of dead-ending,
+    and the `--help` contract names both tracked-issue surfaces. Pinned with a
+    fixture roadmap row (`140`).
+  - Not folded (routed to the plan): **F32**, the archived half of F24 — the
+    closed route vocabulary needs a historical/merged state.
+- Gate: `node --test scripts/*.test.mjs` → 423 pass / 0 fail (four new pins);
+  Pi package suite → 214 pass / 0 fail; `check-skill-context --routes --budgets`
+  → PASS; `normative-drift` → 17 pass.
+
+```text
+## REPAIR-RECEIPT
+- Repaired: F29 + F30 + F31 + F33 + F34
+- Refuted/open: none (F32 routed to the plan owner)
+- Gate: node --test scripts/*.test.mjs → exit 0 at head 269a7987baea8a7b59715c398e09dbd545a36074 · 423 pass / 0 fail
+- Batch class: all-repair-in-place
+- Fold diff:  6 files changed, 115 insertions(+), 14 deletions(-)
+- Branch: RE-REVIEW-REQUIRED (delta) — folded rows carry frozen severity `high`
+```
+
+- Next: the plan route for F32 — `node scripts/unit-route.mjs
+  224-deterministic-replan-routing` prints `route: replan` / `next: /plan-fix 224`,
+  so `/plan-fix 224` re-cuts the plan on this branch, then a fresh
+  `/review-plan fix-224`, then `/execute-phase --fix 224`, then the third end
+  review.
