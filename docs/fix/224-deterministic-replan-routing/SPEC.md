@@ -671,16 +671,16 @@ Layer: `config/infra`. Done-when: `node --test packages/pi-agentic-workflow/test
 
 Layer: `config/infra`. Done-when: `node --test scripts/unit-route.test.mjs` → exit 0.
 
-- [ ] Red-first `scripts/unit-route.test.mjs` pins for the two post-merge states: a
+- [x] Red-first `scripts/unit-route.test.mjs` pins for the two post-merge states: a
       real-shaped fix-index status cell reads as its bare token, and a `done` unit
       with no open row answers the terminal route (F23, F24; OB-12, OB-13)
-- [ ] `scripts/unit-route.mjs` reads the status token out of the fix-index and
+- [x] `scripts/unit-route.mjs` reads the status token out of the fix-index and
       roadmap cells instead of echoing the markdown cell verbatim (F23; OB-13)
-- [ ] `scripts/unit-route.mjs` answers the terminal route for a `done` unit whose
+- [x] `scripts/unit-route.mjs` answers the terminal route for a `done` unit whose
       open rows are none, naming the merge audit as its `next:` command (F24; OB-12)
-- [ ] `scripts/normative-drift.test.mjs` extends its closed-vocabulary pin to the
+- [x] `scripts/normative-drift.test.mjs` extends its closed-vocabulary pin to the
       six published route tokens, so the drift gate and the router agree (F24; OB-12)
-- [ ] Re-run `node --test scripts/*.test.mjs` and
+- [x] Re-run `node --test scripts/*.test.mjs` and
       `node scripts/check-skill-context.mjs --routes` to exit 0
 
 ### P10 — Executed-phase lint exemption
