@@ -27,8 +27,11 @@ lost, and none becomes reviewer-created backlog (D3):
   always fix-now / replan-in-unit — never a postpone/tradeoff/wontfix/new-issue
   escape.
 - **fix-now / `replan-in-unit`** (too large to fold as-is) → keeps its fix-now
-  class and ledger row; propose the new SPEC phase(s) to the user, then
-  `execute-phase` on the same branch folds it.
+  class and ledger row; run `node scripts/unit-route.mjs <unit>` — its
+  `route: replan` line names the planner (`/plan-feature <unit>` for a feature,
+  `/plan-fix <n>` for a fix). The planner re-cuts the plan on this branch, the
+  user confirms the appended SPEC phase(s), a fresh `/review-plan <unit>` passes,
+  and only then `execute-phase` runs them.
 - **fix-now / `decision-required`** → stop and surface the decision to the user;
   the unit blocks until decided. No issue is created.
 - **proposal** (independent future capability) → batched in the report with a

@@ -1,7 +1,5 @@
 # Portable prompt — install the agentic workflow skill system
 
-> 🇪🇸 [Versión en español](PORTABLE_PROMPT.es.md)
-
 Paste the prompt below into Claude Code (or any capable coding agent) **from the
 root of the target repository**. It regenerates the agentic workflow — **16
 user-facing skills + 13 internal steps** (minus `init-workspace`, which this
@@ -138,7 +136,8 @@ the frozen ledger and route missing or contradictory state to these skills.
    contradicted, silently exceeded, or left untouched), and synthesize ONE classified
    table + an explicit manual-verification checklist. Give **every finding a
    destination**: fix-now folds into the current unit's open phase, replan-in-unit
-   appends user-confirmed phases, decision-required surfaces to the user, and
+   runs `node scripts/unit-route.mjs <unit>` so the planner its `route: replan`
+   line names appends user-confirmed phases, decision-required surfaces to the user, and
    independent proposals are batched for explicit user triage (never create
    backlog yourself). Findings only; on failure recommend the manual path
    `/fold-findings`, then re-run `/review-change`; unresolved findings route to

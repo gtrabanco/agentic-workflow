@@ -1,0 +1,321 @@
+#!/usr/bin/env node
+
+/**
+ * Fix 224 / P1 — `scripts/unit-route.mjs`, the deterministic unit router.
+ *
+ * Red-first pins for the closed route table, the bounded read set, the
+ * fail-closed exit contract, determinism/read-only behaviour, the committed
+ * unit-37 dogfood fixture (SPEC PE-013) and the stdout sanitizer (AC12).
+ *
+ * The router is read-only; every fixture is either the committed tree at
+ * `scripts/fixtures/unit-route/` or a copy of it under `os.tmpdir()`.
+ */
+
+import assert from "node:assert/strict";
+import { execFileSync, spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { test } from "node:test";
+import { fileURLToPath } from "node:url";
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SCRIPT = path.join(repoRoot, "scripts", "unit-route.mjs");
+const FIXTURE = path.join(repoRoot, "scripts", "fixtures", "unit-route");
+
+const run = (args, { root = FIXTURE, cwd = repoRoot } = {}) => spawnSync(
+  process.execPath,
+  [SCRIPT, ...args],
+  { cwd, encoding: "utf8", env: root ? { ...process.env, UNIT_ROUTE_REPO: root } : process.env },
+);
+
+const routeLine = (stdout) => /^route: (\S+)$/m.exec(stdout)?.[1] ?? null;
+const rowLine = (stdout) => /^rows: (.*)$/m.exec(stdout)?.[1] ?? null;
+const readSet = (stdout) => {
+  const block = /read-set \((\d+)\):\n([\s\S]*?)\nfingerprint: /.exec(stdout);
+  if (!block) return null;
+  const entries = block[2].split("\n").filter((line) => line.startsWith("  ") && !line.startsWith("  …"));
+  const remainder = /  … and (\d+) more/.exec(block[2]);
+  return { count: Number(block[1]), entries: entries.map((line) => line.trim()), remainder: remainder ? Number(remainder[1]) : 0 };
+};
+
+// ===========================================================================
+// AC1 — the closed route table, first match winning
+// ===========================================================================
+
+test("AC1: replan wins over a co-resident fold and decision row", () => {
+  const result = run(["10-replan-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "replan");
+  assert.equal(rowLine(result.stdout), "F1 F2 F3", "the router lists every open row without being told an id");
+});
+
+const statusLine = (stdout) => /^status: (.*)$/m.exec(stdout)?.[1] ?? null;
+const nextLine = (stdout) => /^next: (.*)$/m.exec(stdout)?.[1] ?? null;
+
+test("AC1/fix #224: a finished unit answers the terminal route, never the executor", () => {
+  const result = run(["15-done-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "close-out");
+  assert.equal(nextLine(result.stdout), "/audit-pr");
+  assert.equal(rowLine(result.stdout), "none");
+});
+
+test("AC1/fix #224: the status field reads the bare token out of a decorated fix-index cell", () => {
+  const result = run(["21-done-fix"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(statusLine(result.stdout), "done", "the markdown cell decoration never reaches the field");
+  assert.equal(routeLine(result.stdout), "close-out");
+});
+
+test("AC1: decision fires when no row routes to the plan owner", () => {
+  const result = run(["12-decision-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "decision");
+});
+
+test("AC1: a plain fix-now row routes to the fold", () => {
+  const result = run(["11-fold-unit"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "fold");
+  assert.equal(readSet(result.stdout).count, 1, "the fold reads its own ledger");
+});
+
+test("AC1: a unit with no open row routes to execute", () => {
+  for (const unit of ["13-execute-unit", "14-empty-unit"]) {
+    const result = run([unit]);
+    assert.equal(result.status, 0, `${unit}: ${result.stderr}`);
+    assert.equal(routeLine(result.stdout), "execute", unit);
+    assert.equal(rowLine(result.stdout), "none", unit);
+  }
+});
+
+test("AC1: a tracked issue with no unit folder routes to plan-from-issue", () => {
+  const result = run(["20"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "plan-from-issue");
+  assert.match(result.stdout, /^next: \/plan-fix 20$/m);
+});
+
+// ===========================================================================
+// AC2 — the bounded read set is derived from the selected rows only
+// ===========================================================================
+
+test("AC2: the read set carries the unit surfaces and the selected rows' cited paths", () => {
+  const result = run(["37-phase-lint-script"]);
+  assert.equal(result.status, 0, result.stderr);
+  const set = readSet(result.stdout);
+  assert.deepEqual(set.entries, [
+    "docs/features/37-phase-lint-script/ACCEPTANCE.md",
+    "docs/features/37-phase-lint-script/SPEC.md",
+    "docs/features/37-phase-lint-script/review-findings.md",
+    "docs/features/38-workflow-status-sensor-script/PLAN.md",
+    "docs/features/38-workflow-status-sensor-script/TASKS.md",
+    "docs/fix/_TEMPLATE/SPEC.md",
+    "scripts/phase-lint.mjs",
+  ]);
+  assert.ok(!set.entries.includes("docs/LOGS.md"), "a path cited only by a FOLDED row is not in the replan read set");
+});
+
+test("F14: a brace-composed citation resolves to every file it names", () => {
+  // Row F92's file cell cites two artifacts in one composed citation
+  // (`…/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55}`). The delimiter
+  // classes stopped at the `{`, so only the composed directory was found and the
+  // isDir guard dropped it — two cited paths silently missing from the set AC2
+  // promises ("each cited repository path").
+  const result = run(["37-phase-lint-script"]);
+  assert.equal(result.status, 0, result.stderr);
+  const set = readSet(result.stdout);
+  for (const cited of [
+    "docs/features/38-workflow-status-sensor-script/PLAN.md",
+    "docs/features/38-workflow-status-sensor-script/TASKS.md",
+  ]) {
+    assert.ok(set.entries.includes(cited), `${cited} is on the read set`);
+  }
+});
+
+test("AC2: the set is deduped, sorted and capped with an explicit remainder line", () => {
+  const result = run(["40-cited-paths"]);
+  assert.equal(result.status, 0, result.stderr);
+  const set = readSet(result.stdout);
+  assert.equal(set.count, 23, "3 unit surfaces + 20 distinct cited files");
+  assert.equal(set.entries.length, 12, "the printed set is capped at 12");
+  assert.equal(set.remainder, 11, "the remainder is explicit, never silently dropped");
+  assert.deepEqual(set.entries, [...set.entries].sort(), "the set is sorted");
+});
+
+// ===========================================================================
+// AC3 — failure states fail closed
+// ===========================================================================
+
+test("AC3: an unknown unit exits 1 and prints no route", () => {
+  const result = run(["999"]);
+  assert.equal(result.status, 1);
+  assert.equal(routeLine(result.stdout), null);
+  assert.match(result.stderr, /unknown unit: 999/);
+});
+
+test("AC3: extra arguments exit 1 and print no route", () => {
+  const result = run(["10-replan-unit", "extra"]);
+  assert.equal(result.status, 1);
+  assert.equal(routeLine(result.stdout), null);
+  assert.match(result.stderr, /exactly one argument/);
+});
+
+test("AC3: an ambiguous unit exits 2 and prints no route", () => {
+  const result = run(["30"]);
+  assert.equal(result.status, 2);
+  assert.equal(routeLine(result.stdout), null);
+  assert.match(result.stderr, /ambiguous unit: 30 matches/);
+});
+
+test("F6: --help and -h print the usage contract on stdout and exit 0", () => {
+  // Both standard help flags used to be read as unit tokens and answered with a
+  // misleading `unknown unit: --help` on stderr, exit 1 — a first-contact defect on
+  // the unit's own entry point. Help is a request for the contract, not a failure.
+  for (const flag of ["--help", "-h"]) {
+    const result = run([flag]);
+    assert.equal(result.status, 0, `${flag}: ${result.stderr}`);
+    assert.match(result.stdout, /^usage: node scripts\/unit-route\.mjs/m, flag);
+    assert.match(result.stdout, /Exit codes/i, `${flag}: the exit-code contract is named`);
+    assert.match(result.stdout, /replan/, `${flag}: the closed route table is named`);
+    assert.equal(result.stderr, "", `${flag}: help is not an error`);
+    assert.equal(routeLine(result.stdout), null, `${flag}: help prints no route`);
+  }
+});
+
+// ===========================================================================
+// AC4 — deterministic and read-only
+// ===========================================================================
+
+test("AC4: two consecutive runs print byte-identical stdout", () => {
+  const first = run(["224-deterministic-replan-routing"], { root: null });
+  const second = run(["224-deterministic-replan-routing"], { root: null });
+  assert.equal(first.status, 0, first.stderr);
+  assert.equal(first.stdout, second.stdout);
+});
+
+test("AC4: a run leaves `git status --porcelain` unchanged", () => {
+  const before = execFileSync("git", ["status", "--porcelain"], { cwd: repoRoot, encoding: "utf8" });
+  const result = run(["224-deterministic-replan-routing"], { root: null });
+  assert.equal(result.status, 0, result.stderr);
+  const after = execFileSync("git", ["status", "--porcelain"], { cwd: repoRoot, encoding: "utf8" });
+  assert.equal(after, before, "the router writes nothing");
+});
+
+// ===========================================================================
+// AC5 — the committed dogfood fixture
+// ===========================================================================
+
+test("AC5: the unit-37 fixture answers replan and lists the plan-routed ids", () => {
+  const result = run(["37-phase-lint-script"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "replan");
+  assert.equal(rowLine(result.stdout), "F83 F85 F88 F90 F92", "the plan-routed open rows, no id passed in");
+  assert.match(result.stdout, /^open-rows: 5$/m);
+});
+
+// ===========================================================================
+// AC12 — one sanitizer over every echoed value
+// ===========================================================================
+
+test("AC12/S7: long and shell-shaped cells are sanitized, never echoed as a ledger line", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-hostile-"));
+  fs.cpSync(FIXTURE, root, { recursive: true });
+  const dir = path.join(root, "docs", "features", "90-hostile-unit");
+  fs.mkdirSync(dir, { recursive: true });
+  const longId = `F9-${"A".repeat(400)}`;
+  const longRow = `| ${longId} | scripts/evil.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |`;
+  const shellRow = "| F10 | scripts/evil2.mjs:1 | code | med | fix-now | replan-in-unit: $(rm -rf /) `curl evil` <img src=x onerror=alert(1)> | no |";
+  // F28: a C1 control (NEL) and a Unicode line separator inside an echoed cell —
+  // neither is matched by `\s`, so the flatten class must cover them.
+  const c1Row = "| F11\u0085X | scripts/evil3.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
+  // F33: a format character — a bidi override — is invisible to a reader and
+  // structural to a parser that honours it, so the flatten class covers Cf too.
+  const cfRow = "| F13\u202eX | scripts/evil5.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
+  const sepRow = "| F12\u2028Y | scripts/evil4.mjs:1 | code | med | fix-now | replan-in-unit: plan owner re-cuts the phase | no |";
+  fs.writeFileSync(path.join(dir, "review-findings.md"), `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${longRow}\n${shellRow}\n${c1Row}\n${sepRow}\n${cfRow}\n`);
+
+  const result = run(["90-hostile-unit"], { root });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "replan");
+  assert.ok(!result.stdout.includes(longRow), "no verbatim ledger line reaches stdout");
+  assert.ok(!result.stdout.includes(shellRow), "no verbatim ledger line reaches stdout");
+  assert.ok(!result.stdout.includes(longId), "the long id is truncated by the sanitizer");
+  assert.match(result.stdout, /F9-AAAA/, "the id keeps its truncated prefix");
+  assert.ok(!result.stdout.includes("\u0085"), "a C1 control never survives the sanitizer (F28)");
+  assert.ok(!result.stdout.includes("\u2028"), "a Unicode line separator never survives the sanitizer (F28)");
+  assert.match(result.stdout, /F11 X/, "the C1-prefixed id is flattened, not dropped");
+  assert.ok(!result.stdout.includes("\u202e"), "a bidi override never survives the sanitizer (F33)");
+  assert.match(result.stdout, /F13 X/, "the format-character-prefixed id is flattened too");
+  assert.match(result.stdout, /…/, "truncation is visible, never silent");
+  assert.ok(!result.stdout.includes("rm -rf"), "the route cell's shell-shaped text is never echoed at all");
+  assert.match(result.stdout, /^rows: F9-AA.* F10 F11 X F12 Y F13 X$/m, "every open id is listed on one sanitized line");
+});
+
+// ===========================================================================
+// Fold cycle 3 — the row parser and the issue surfaces (F29, F30, F31, F34)
+// ===========================================================================
+
+const hostileLedger = (rows) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "unit-route-fold3-"));
+  fs.cpSync(FIXTURE, root, { recursive: true });
+  const dir = path.join(root, "docs", "features", "90-fold3-unit");
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, "review-findings.md"),
+    `| id | file:line | axis | severity | class | route | folded |\n|---|---|---|---|---|---|---|\n${rows.join("\n")}\n`,
+  );
+  return run(["90-fold3-unit"], { root });
+};
+
+test("F29: `folded` is the row's last cell, never a fixed index", () => {
+  // An unescaped pipe inside the route cell splits the row past seven cells, so
+  // the closed marking sits at the end instead of index 6.
+  const result = hostileLedger([
+    "| F20 | scripts/a.mjs:1 | code | med | fix-now | fold: tighten the | boundary handling | yes |",
+    "| F21 | scripts/b.mjs:1 | code | med | fix-now | fold: tighten the | boundary handling | no |",
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(rowLine(result.stdout), "F21", "only the row whose LAST cell is `no` is open");
+  assert.equal(/^open-rows: 1$/m.exec(result.stdout)?.[0], "open-rows: 1");
+});
+
+test("F30: the ledger's annotated closed spellings are not open rows", () => {
+  const result = hostileLedger([
+    "| F22 | scripts/c.mjs:1 | code | med | fix-now | fold: x | yes · fold c95ff5b4 |",
+    "| F23 | scripts/d.mjs:1 | code | med | fix-now | fold: y | yes ↳ folded by 942ab62 |",
+    "| F24 | scripts/e.mjs:1 | code | med | fix-now | fold: z | no · pending |",
+  ]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(rowLine(result.stdout), "F24", "the annotated `yes` spellings are closed; the annotated `no` is open");
+});
+
+test("F31: the execute route names the frozen `--fix <n>` invocation for a fix unit", () => {
+  const result = run(["22-execute-fix"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "execute");
+  assert.equal(nextLine(result.stdout), "/execute-phase --fix 22");
+});
+
+test("F34: a roadmap row's own issue number resolves instead of dead-ending", () => {
+  const result = run(["140"]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(routeLine(result.stdout), "plan-from-issue");
+  assert.equal(nextLine(result.stdout), "/plan-feature --from-issue 140");
+});
+
+test("F32/OB-17: an archived unit (no status source, no open row) answers `historical`", () => {
+  // A fix unit whose index row was removed after the merge, and a feature whose
+  // roadmap row is gone: both are archived, never sent to the executor.
+  const fix = run(["23-merged-fix"]);
+  assert.equal(fix.status, 0, fix.stderr);
+  assert.equal(routeLine(fix.stdout), "historical");
+  assert.equal(statusLine(fix.stdout), "absent");
+  assert.match(nextLine(fix.stdout), /^nothing to do — the unit is archived/);
+
+  const feature = run(["16-merged-unit"]);
+  assert.equal(feature.status, 0, feature.stderr);
+  assert.equal(routeLine(feature.stdout), "historical");
+  assert.equal(rowLine(feature.stdout), "none");
+});

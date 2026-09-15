@@ -1,7 +1,7 @@
 ---
 name: fold-findings
 user-invocable: true
-version: 1.4.0
+version: 1.5.0
 argument-hint: [finding-id …]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -121,7 +121,9 @@ no schema field). Six fields, always present:
 **Freeze-batch (replan present).** When the taken queue contains any row whose
 frozen class is `replan-in-unit` or `decision-required`, nothing folds: no
 `folded: yes` flips, no commits. The receipt records the `REPLAN-ROUTE` branch
-and every retained (unfolded) row id, and the loop stops to route to planning.
+and every retained (unfolded) row id, and the loop stops and routes to
+`node scripts/unit-route.mjs <unit>`, whose `route: replan` line names the
+planner that re-cuts the plan.
 
 ## Guardrails
 
@@ -179,7 +181,7 @@ decision to skip.
 
 | Batch state | Branch | `→ Next:` (consumer) |
 |---|---|---|
-| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | plan-fix/execute-phase on this unit after the user confirms the replan |
+| freeze-batch (≥ 1 replan-class row) | `REPLAN-ROUTE` | `node scripts/unit-route.mjs <unit>` → the planner it names re-cuts the plan, then `/review-plan` before `/execute-phase` on this unit |
 | `all-repair-in-place` + docs-only + no folded row severity `high` + prior consumer skip decision | `RE-REVIEW-SKIPPED` | skip — consumer has explicitly decided to skip the re-review |
 | `all-repair-in-place` + docs-only + no folded row severity `high` | `RE-REVIEW-OPTIONAL` | `/review-change` (default, delta mode) — or the consumer's recorded skip decision |
 | empty batch (class `none`) | `RE-REVIEW-OPTIONAL` | `/review-change` by default — safe: the head is unchanged |

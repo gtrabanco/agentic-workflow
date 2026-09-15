@@ -4,8 +4,6 @@ source-unit: docs/workflow/model-routing.yml
 updated: 2026-08-22
 -->
 
-> 🇪🇸 [Versión en español](model-routing.es.md)
-
 # Route models and effort by workflow skill
 
 ## What this is
@@ -315,4 +313,3 @@ Additional levers:
 - [Workflow skill reference](../../../workflow/SKILLS.md)
 - [Canonical Claude model routing](../../../workflow/model-routing.yml)
 - [Research snapshot and source notes](../../../research/model-routing-2026-08-22.md)
-- [Spanish version](model-routing.es.md)

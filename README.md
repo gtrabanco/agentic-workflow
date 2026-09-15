@@ -12,8 +12,6 @@
 
 # Agentic Workflow Skills
 
-> 🇪🇸 [Versión en español](README.es.md)
-
 A reusable set of **agent skills** that run a disciplined, doc-driven workflow
 for building software with agents — from idea/issue to a reviewed, classified,
 merge-ready change. The skills are **project-adaptive**: they discover and obey
@@ -187,7 +185,7 @@ Projects that do not declare the document remain compatible.
 
 | Skill        | What it does                                                                                                                                                                                                                                                                                                                                                                        |
 | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md + CHANGELOG.es.md, and updates the skill and model tables in README.md + README.es.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array and `model-routing.yml`'s keys stay alphabetical; any skill that's both `user-invocable: false` and absent from `plugin.json` — repo-internal, meaningless to a consumer — carries `metadata.internal: true`, the `skills` CLI's own mechanism for staying out of `npx skills add` discovery). Run before every commit that touches a skill. |
+| `bump-skill` | After editing a skill in this repo: bumps `version:` in the SKILL.md frontmatter, adds rows to CHANGELOG.md, and updates the skill and model tables in README.md. Also **lints the repo's authoring rules** (every skill closes with a `→ Next:` block; phases are `P1, P2, …`, never `S1`/"Steps") and the **machine-surface registration rules** (every `user-invocable: true` skill has a matching entry in `.claude-plugin/plugin.json`; that array and `model-routing.yml`'s keys stay alphabetical; any skill that's both `user-invocable: false` and absent from `plugin.json` — repo-internal, meaningless to a consumer — carries `metadata.internal: true`, the `skills` CLI's own mechanism for staying out of `npx skills add` discovery). Run before every commit that touches a skill. |
 
 ### Autopilot — the whole flow, end to end
 

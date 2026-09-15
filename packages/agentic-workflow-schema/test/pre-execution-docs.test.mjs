@@ -3,8 +3,8 @@
 // Documentation drift is a contract bug: a consumer that reads only the reference
 // must be able to reproduce every name, limit, code, and example the runtime
 // publishes. This suite therefore compares the prose against the compiled surface
-// (so an undocumented export fails here), asserts each statement in BOTH language
-// versions, and compiles and runs the TypeScript example out of each README.
+// (so an undocumented export fails here), asserts each statement in the
+// reference, and compiles and runs the TypeScript example out of the README.
 //
 // Driven by `npm run test:pre-execution-docs`, and by `npm test` through
 // `node --test test/*.test.mjs`, so docs drift can never pass the main gate.
@@ -18,15 +18,12 @@ import { fileURLToPath } from "node:url";
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const TEMP_ROOT = join(ROOT, ".tmp-pre-execution-docs");
 const README_EN = readFileSync(join(ROOT, "README.md"), "utf8");
-const README_ES = readFileSync(join(ROOT, "README.es.md"), "utf8");
 const schema = await import("../dist/index.js");
-
-const DOCS = { "README.md": README_EN, "README.es.md": README_ES };
 
 /** The feature-28 section of a README, up to the next `## ` heading. */
 function featureSection(text) {
   const lines = text.split("\n");
-  const start = lines.findIndex((line) => /^## .*(Pre-Execution Review|pre-ejecución)/i.test(line));
+  const start = lines.findIndex((line) => /^## .*Pre-Execution Review/i.test(line));
   assert.ok(start >= 0, "no feature-28 section found");
   const end = lines.findIndex((line, i) => i > start && line.startsWith("## "));
   return lines.slice(start, end === -1 ? lines.length : end).join("\n");
@@ -37,63 +34,47 @@ function tsBlocks(section) {
   return [...section.matchAll(/```ts\n([\s\S]*?)```/g)].map((match) => match[1]);
 }
 
-/** Example code with comments and blank lines removed — the parity unit. */
-function codeOnly(block) {
-  return block
-    .split("\n")
-    .map((line) => line.replace(/\/\/.*$/, "").trimEnd())
-    .filter((line) => line.trim() !== "" && !/^\s*\/?\*/.test(line))
-    .join("\n");
-}
-
-const SECTIONS = { "README.md": featureSection(README_EN), "README.es.md": featureSection(README_ES) };
+const SECTIONS = { "README.md": featureSection(README_EN) };
 
 // ---------------------------------------------------------------------------
-// AC8 — the statements a reader must be able to find, in both languages
+// AC8 — the statements a reader must be able to find
 // ---------------------------------------------------------------------------
 
 const CLAIMS = [
   {
     name: "pre-execution purpose: no code exists yet",
     en: /before any code exists/i,
-    es: /antes de que exista c[óo]digo/i,
   },
   {
     name: "no substitution for candidate or verification receipts",
     en: /never validates as a pre-execution receipt|no\s+contract in this family substitutes/i,
-    es: /nunca valida como recibo pre-ejecuci[óo]n|ning[úu]n contrato de esta familia sustituye/i,
   },
   {
     name: "the binding is to the projection, not the mutable file",
     en: /never to the mutable file|binds the \*\*selection\*\*|digests? .*never to the file/i,
-    es: /nunca al archivo mutable|jam[áa]s al archivo mutable|la \*\*selecci[óo]n\*\*, no el archivo/i,
   },
   {
     name: "staleness precedence and no resurrection",
     en: /cannot be\s*\n?resurrected|stale-artifact-revision/i,
-    es: /no puede resucitar|stale-artifact-revision/i,
   },
   {
     name: "diagnostics are redacted",
     en: /never a submitted value|codes? and field pointers only/i,
-    es: /jam[áa]s un valor enviado|c[óo]digos y\s*\n?punteros/i,
   },
   {
     name: "no quorum over an unresolved finding",
     en: /no quorum|votes never erase/i,
-    es: /no hay qu[óo]rum|los votos nunca borran/i,
   },
   {
     name: "the package never reads Git or the filesystem",
     en: /never touches Git or the filesystem|caller-supplied bytes|bytes the caller supplied/i,
-    es: /nunca toca Git ni el sistema de archivos|bytes del llamante|bytes que el llamante/i,
   },
 ];
 
 for (const claim of CLAIMS) {
-  test(`AC8: "${claim.name}" is stated in both reference languages`, () => {
+  test(`AC8: "${claim.name}" is stated in the reference`, () => {
     for (const [file, section] of Object.entries(SECTIONS)) {
-      const pattern = file === "README.md" ? claim.en : claim.es;
+      const pattern = claim.en;
       assert.match(section.replace(/\s+/g, " "), new RegExp(pattern.source.replace(/\\\n/g, ""), "i"),
         `${file} loses the ${claim.name} claim`);
     }
@@ -104,7 +85,7 @@ for (const claim of CLAIMS) {
 // Names, numbers and codes: the reference must equal the compiled surface
 // ---------------------------------------------------------------------------
 
-test("AC8: every runtime export of the family is named in both references", () => {
+test("AC8: every runtime export of the family is named in the reference", () => {
   // Fail-closed: derive the guarded set from name patterns (not an allowlist
   // that can silently pass exports outside the patterns — the guard was
   // previously a hard-coded name list that let CANONICAL_VECTORS and
@@ -196,21 +177,13 @@ test("AC8: the selector is documented as a closed contract, not a heuristic", ()
 });
 
 // ---------------------------------------------------------------------------
-// EN/ES parity + runnable examples
+// Runnable examples
 // ---------------------------------------------------------------------------
 
-test("AC8: the English and Spanish examples are the same code", () => {
-  const en = tsBlocks(SECTIONS["README.md"]).map(codeOnly);
-  const es = tsBlocks(SECTIONS["README.es.md"]).map(codeOnly);
-  assert.equal(en.length, 1, "exactly one feature-28 example in README.md");
-  assert.equal(es.length, 1, "exactly one feature-28 example in README.es.md");
-  assert.equal(en[0], es[0], "a divergent example is a second, untested contract");
-});
+const EXAMPLES = tsBlocks(SECTIONS["README.md"]);
 
-const EXAMPLES = tsBlocks(SECTIONS["README.md"]).concat(tsBlocks(SECTIONS["README.es.md"]));
-
-test("AC8: the example in each reference typechecks against the published types and runs", () => {
-  assert.equal(EXAMPLES.length, 2, "one example per reference language");
+test("AC8: the example in the reference typechecks against the published types and runs", () => {
+  assert.equal(EXAMPLES.length, 1, "exactly one feature-28 example");
   mkdirSync(TEMP_ROOT, { recursive: true });
   try {
     EXAMPLES.forEach((block, index) => compileAndRun(index, block));
