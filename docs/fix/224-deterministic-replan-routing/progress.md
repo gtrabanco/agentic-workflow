@@ -698,3 +698,54 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   packages/pi-agentic-workflow/{package.json,skills/**} ·
   docs/fix/224-deterministic-replan-routing/SPEC.md (P11 ticks) · progress.md
 - Next: P12.
+
+## P12 — 2026-09-16
+
+- Phase-lint re-checked PASS (8/8) at execution start
+  (`P12:close-out:3:terminal-receipt-closure`).
+- **Obligation sweep — every row run, then flipped to `verified`** (writer this
+  phase, per `LEDGERS.md` §2). In the SPEC `### Obligations`, `OB-1`…`OB-16` all
+  read `verified`; the validators and their observed outputs at this head:
+  - OB-1, OB-3, OB-6, OB-9, OB-10, OB-12, OB-13 — `node --test scripts/unit-route.test.mjs` → 18 pass / 0 fail (exit 0), including the replan fixture, the exit-code pins, the determinism/read-only pair, the sanitizer pin, and the two new pins (terminal route, bare `status`).
+  - OB-2 — `grep -c "scripts/unit-route.mjs" skills/plan-feature/SKILL.md skills/plan-fix/SKILL.md` → `1` and `1`.
+  - OB-4 — `grep -c "unit-route"` over the eight converged routing files → `1 1 3 1 2 1 2 2`.
+  - OB-5 — `node --test scripts/workflow-status-sensor.test.mjs` → 56 pass (exit 0).
+  - OB-7 — `node scripts/check-skill-context.mjs` → exit 0 (40 skills, 22 routes).
+  - OB-8 — `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → 7 pass (exit 0) and `diff -rq skills packages/pi-agentic-workflow/skills` → only the excluded `bump-skill`.
+  - OB-11 — `grep -c "^version: 3.5.1" skills/review-change/SKILL.md` → 1; `grep -c "^| 3.5.1 |" CHANGELOG.md CHANGELOG.es.md` → 3 and 3.
+  - OB-14 — `node --test scripts/phase-lint.test.mjs` → 129 pass / 0 fail (exit 0), the corpus triple included.
+  - OB-15 — `grep -c "close-out" skills/replan-findings/SKILL.md` → 2 and `node --test scripts/normative-drift.test.mjs` → 17 pass (exit 0).
+  - OB-16 — `grep -c "fully-ticked phase is historical" skills/phase-contract/SKILL.md` → 1 and the same drift verdict (exit 0).
+- **Acceptance re-verification at the terminal head:**
+  `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
+  `15e9661fdcafbc628419926806b27ae0532f021d`, equal to the blob recorded in the SPEC `## Status` — the manifest is
+  frozen and unchanged by P9–P12, so no new freeze was needed (the P12 write only
+  records this verification).
+- **Fold cycle** (per `fold-findings`' contract, one batch): the five replan rows.
+  Their repairs landed in P9–P11 (`F23` bare `status`, `F24` terminal route,
+  `F25` executed-phase exemption, all proven by the reproducers above), and
+  `F21`/`F22` are repaired by the ledger itself — `P8` tasks 8–10 now schedule
+  the plan receipt, the end review and the merge audit that close them, and the
+  tasks passed the phase-lint. All five `folded` cells flipped `no → yes`; the
+  router confirms the closed state: `node scripts/unit-route.mjs
+  224-deterministic-replan-routing` → `status: done`, `open-rows: 0`,
+  `route: close-out`, `next: /audit-pr`, `rows: none`.
+  No VF mark rows were added: `finding-mark@1` is `review-change`'s single writer
+  and the delta review below records them.
+
+```text
+## REPAIR-RECEIPT
+- Repaired: F21 + F22 + F23 + F24 + F25 (VF marks land with the delta review)
+- Refuted/open: none
+- Gate: node --test scripts/*.test.mjs → exit 0 at head a26ae001375bbd49c1c0e7edf0f4ff6fe40e3d5e · 418 pass / 0 fail
+- Batch class: all-repair-in-place
+- Fold diff: SPEC.md (16 obligation cells) + review-findings.md (5 `folded` cells) + progress.md
+- Branch: RE-REVIEW-REQUIRED (delta) — a folded row carries frozen severity `high`
+```
+
+- **Gate:** `node --test scripts/*.test.mjs` → 418 pass / 0 fail;
+  `node scripts/check-skill-context.mjs --routes --budgets` → PASS (22 routes, 40
+  skills); the Pi package suite → 214 pass / 0 fail.
+- Files: docs/fix/224-deterministic-replan-routing/{SPEC.md,review-findings.md,progress.md}
+- Next: P8 (the re-opened terminal close-out, whose tasks 8–10 produce the
+  receipts this batch's `high` rows are re-reviewed against).
