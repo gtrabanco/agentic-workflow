@@ -1274,24 +1274,25 @@ test("the box-7 `ask the user` gate is pinned (F59)", () => {
   assert.match(stdout, /^P1 box-7: task 1 carries a manual\/external gate outside the hardening phase$/m);
 });
 
+// Each row is pinned by its *own* discriminating target: `template/x.md` was
+// shadowed by the `*.md` → docs fallthrough, so a mutant deleting the
+// `template/` row survived the whole suite green (F111). A non-`.md` target
+// under that prefix can only map through the row itself — without it the target
+// is untokenizable and the answer is `BLOCKED: unparseable`, not the box-2 layer
+// finding the assertion demands.
 const PREFIX_ROW_CASES = [
-  { name: "github", target: ".github/workflows/ci.yml", layer: "docs", blocked: true },
-  { name: "agentic-workflow", target: ".agentic-workflow/tmp/.gitkeep", layer: "docs", blocked: true },
-  { name: "template", target: "template/x.md", layer: "docs", blocked: false },
+  { name: "github", target: ".github/workflows/ci.yml", declared: "docs", mapped: "config/infra" },
+  { name: "agentic-workflow", target: ".agentic-workflow/tmp/.gitkeep", declared: "docs", mapped: "config/infra" },
+  { name: "template", target: "template/x.yml", declared: "config/infra", mapped: "docs" },
 ];
 
-for (const { name, target, layer, blocked } of PREFIX_ROW_CASES) {
+for (const { name, target, declared, mapped } of PREFIX_ROW_CASES) {
   test(`the box-2 \`${name}/\` prefix row maps to its layer (F59)`, () => {
-    const plan = `# Prefix row\n\n### P1 — Handle the config\n\nLayer: ${layer}. Done-when: \`grep -n x docs/x.md\` → matches.\n\n- [ ] Update \`${target}\` with the change\n`;
+    const plan = `# Prefix row\n\n### P1 — Handle the config\n\nLayer: ${declared}. Done-when: \`grep -n x docs/x.md\` → matches.\n\n- [ ] Update \`${target}\` with the change\n`;
     const file = fixture(`f59-prefix-${name}.md`, plan);
     const { status, stdout } = nodeRun(file);
-    if (blocked) {
-      assert.equal(status, 1);
-      assert.match(stdout, /^P1 box-2: task 1 target /m);
-    } else {
-      assert.equal(status, 0, `${target} maps to docs, the declared layer`);
-      assert.match(stdout, /^verdict PASS$/m);
-    }
+    assert.equal(status, 1, stdout);
+    assert.match(stdout, new RegExp(`^P1 box-2: task 1 target \`${target}\` belongs to layer ${mapped}, not ${declared}$`, "m"));
   });
 }
 
@@ -1819,11 +1820,10 @@ test("a real dotless target still maps by the `*.md` row (F77)", () => {
 // Fold F91 — a Cf/Zs invisible char after the phase number (or an empty
 // title) must not elide the phase boundary: the next phase's `Layer:` + tasks
 // used to absorb into the prior phase and a docs-declared `scripts/` task
-// laundered to PASS under the prior layer (F91).
-test("an invisible char after the phase number does not elide the phase (F91)", () => {
-  const file = fixture(
-    "f91-invisible-heading.md",
-    `# Invisible heading
+// laundered to PASS under the prior layer (F91). Fold F100 completes the rule:
+// the normalization matches the `Cf` *class*, so no sibling member can re-open
+// the same elision.
+const launderPlan = (ch) => `# Invisible heading
 
 ### P1 — Real phase
 
@@ -1833,19 +1833,31 @@ Layer: config/infra
 
 Done-when: \`bun test\` exits 0.
 
-### P2\u200b — Ghost docs
+### P2${ch} — Ghost docs
 
 Layer: docs
 
 - [ ] Create \`scripts/b.ts\`
 
 Done-when: \`bun test\` exits 0.
-`,
-  );
-  const { status, stdout } = nodeRun(file);
-  assert.equal(status, 1);
-  assert.ok(stdout.includes("P2 box-2: task 1 target `scripts/b.ts` belongs to layer config/infra, not docs"), stdout);
-});
+`;
+
+for (const [name, ch] of [
+  ["U+200B zero-width space", "\u200b"],
+  ["U+200C zero-width non-joiner", "\u200c"],
+  ["U+200D zero-width joiner", "\u200d"],
+  ["U+00AD soft hyphen", "\u00ad"],
+  ["U+2060 word joiner", "\u2060"],
+  ["U+061C Arabic letter mark", "\u061c"],
+  ["U+FEFF zero-width no-break space", "\ufeff"],
+]) {
+  test(`an invisible char after the phase number does not elide the phase (F91/F100): ${name}`, () => {
+    const file = fixture(`f91-invisible-${ch.codePointAt(0).toString(16)}.md`, launderPlan(ch));
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 1, stdout);
+    assert.ok(stdout.includes("P2 box-2: task 1 target `scripts/b.ts` belongs to layer config/infra, not docs"), stdout);
+  });
+}
 
 test("an empty phase title still parses its phase (F91)", () => {
   const file = fixture(
@@ -1871,8 +1883,76 @@ Done-when: \`bun test\` exits 0.
   );
   const { status, stdout } = nodeRun(file);
   assert.equal(status, 1);
-  assert.ok(stdout.includes("P2 Phase-lint: BLOCKED — box 2: task 1 target `docs/b.md` belongs to layer docs, not config/infra"), stdout);
+  // F101 supersedes this fixture's box-2 verdict line: the empty title is its
+  // own box-1 finding, and box 1 precedes box 2 on the same phase. The
+  // boundary evidence is strictly stronger than before — the phase is linted
+  // as its own phase with its own declared layer (the box-2 line can only be
+  // evaluated against P2's `config/infra`, never P1's `docs`), and exactly two
+  // phase lines appear, so P2 was never absorbed into P1.
+  assert.match(stdout, /^P2 box-1: title names no deliverable/m);
+  assert.match(stdout, /^P2 box-2: task 1 target `docs\/b\.md` belongs to layer docs, not config\/infra$/m);
+  assert.match(stdout, /^P2 Phase-lint: BLOCKED — box 1: /m);
+  assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\)/m);
+  assert.equal((stdout.match(/^P\d Phase-lint: /gm) ?? []).length, 2, "both phases are linted, never one absorbed");
 });
+
+// Fold F101 — the frozen input grammar requires a title (`(.+)`) and box 1
+// requires it to name one deliverable, so an empty (or whitespace-only) heading
+// names none. The F91 fold admitted the shape into the parse so it could never
+// elide its phase; that left the phase linting `PASS (8/8)` with an empty
+// fingerprint slug in an otherwise-valid plan (F101).
+for (const [name, title] of [["empty", ""], ["whitespace-only", "   "]]) {
+  test(`a ${name} phase title is a box-1 finding (F101)`, () => {
+    const file = fixture(
+      `f101-${name}.md`,
+      `# Empty title
+
+### P1 — Real phase
+
+Layer: docs
+
+- [ ] Edit docs/a.md
+
+Done-when: \`bun test\` exits 0.
+
+### P2 —${title}
+
+Layer: docs
+
+- [ ] Edit docs/b.md
+
+Done-when: \`bun test\` exits 0.
+`,
+    );
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 1, stdout);
+    assert.match(stdout, /^P2 box-1: title names no deliverable — the heading carries an empty title$/m);
+    assert.match(stdout, /^P2 Phase-lint: BLOCKED — box 1: /m);
+    assert.equal((stdout.match(/^P\d Phase-lint: /gm) ?? []).length, 2, "the empty-title phase is linted, never absorbed");
+  });
+}
+
+// Fold F102 — a line-start invisible run is removed, never turned into a space:
+// the space pushed the heading past the grammar's ` {0,3}` indent allowance and a
+// VALID plan answered `BLOCKED: no-phases`.
+for (const [name, prefix] of [["BOM", "\ufeff"], ["BOM plus indentation", "\ufeff   "], ["indentation plus zero-width space", "   \u200b"]]) {
+  test(`a valid plan with a ${name} before the heading still parses (F102)`, () => {
+    const file = fixture(
+      `f102-${prefix.length}.md`,
+      `${prefix}### P1 — Real phase
+
+Layer: docs
+
+- [ ] Edit docs/a.md
+
+Done-when: \`bun test\` exits 0.
+`,
+    );
+    const { status, stdout } = nodeRun(file);
+    assert.equal(status, 0, stdout);
+    assert.match(stdout, /^P1 Phase-lint: PASS \(8\/8\) · fingerprint P1:docs:1:real-phase$/m);
+  });
+}
 
 // Fold F94 — box-5's hyphen-adjacent guard must be pinned: a task carrying the
 // hyphen-joined compound `equal-or-greater` is one token, never a standalone
@@ -1924,11 +2004,15 @@ Done-when: \`bun test\` exits 0.
 
 // Fold F98/F99 — the O(L²) `$`-anchored emphasis trim and the edge-slash trim
 // must stay linear: an interior punctuation run must not exceed the wall-time
-// bound on both runtimes (ReDoS on adversarial plan input).
+// bound on both runtimes (ReDoS on adversarial plan input). The bound is far
+// above the linear cost (~0.12 s) and far below the quadratic one (15.8 s at
+// the same size), so restoring either regex turns the pin red (F104 tightened
+// the F98 shape from a trailing run, on which the old regex was linear, and
+// F105 the bound, which admitted the quadratic at 14.3 s).
 test("an interior emphasis run completes within the timing bound (F98)", {
   timeout: 30_000,
 }, () => {
-  const token = `docs/name.md${"*".repeat(120_000)}`;
+  const token = `a${"*".repeat(120_000)}b`;
   const file = fixture(
     "f98-emphasis-run.md",
     `# Emphasis run
@@ -1945,8 +2029,8 @@ Done-when: \`bun test\` exits 0.
   const started = Date.now();
   const { status } = nodeRun(file);
   const elapsed = Date.now() - started;
-  assert.equal(status, 1, "the fail-closed verdict holds");
-  assert.ok(elapsed < 30_000, `emphasis run must stay linear, took ${elapsed}ms`);
+  assert.equal(status, 0, "a bare prose token with no target stays exempt");
+  assert.ok(elapsed < 5_000, `emphasis run must stay linear, took ${elapsed}ms`);
 });
 
 test("an interior slash run completes within the timing bound (F99)", {
@@ -1970,7 +2054,7 @@ Done-when: \`bun test\` exits 0.
   const { status } = nodeRun(file);
   const elapsed = Date.now() - started;
   assert.equal(status, 1, "the fail-closed verdict holds");
-  assert.ok(elapsed < 30_000, `slash run must stay linear, took ${elapsed}ms`);
+  assert.ok(elapsed < 5_000, `slash run must stay linear, took ${elapsed}ms`);
 });
 
 // Fold F35 — the module-scope fixture tmpdir is torn down, so a suite run no

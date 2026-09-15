@@ -261,24 +261,33 @@ function closesFence(trimmed, fence) {
 
 /**
  * Normalize every JavaScript line terminator before parsing (F44), plus the
- * UTF-8 BOM (F73). A lone CR, or a U+2028/U+2029 inside a heading or a task
- * line, renders as no line break at all yet terminates `.` and `$` in the
- * grammar regexes — so the line silently failed every match, whole phases
- * vanished from the parse, the task budget went unchecked, and the lint
- * answered a false `PASS`. CR becomes the line ending it is in Markdown;
- * U+2028/U+2029 become a space, because Markdown has no line break there and
- * the content must stay on its line, never vanish. A U+FEFF at the start of
- * the file or of any line is invisible in rendered Markdown, yet it made the
- * `^`-anchored heading regex miss — the same elision, reachable from any plan
+ * whole Unicode `Cf` (format) class (F73, F100). A lone CR, or a
+ * U+2028/U+2029 inside a heading or a task line, renders as no line break at
+ * all yet terminates `.` and `$` in the grammar regexes — so the line silently
+ * failed every match, whole phases vanished from the parse, the task budget
+ * went unchecked, and the lint answered a false `PASS`. CR becomes the line
+ * ending it is in Markdown; U+2028/U+2029 become a space, because Markdown has
+ * no line break there and the content must stay on its line, never vanish.
+ *
+ * The invisible format characters take two passes, and the order is the whole
+ * point. `Cf` is matched as the *property*, never as an enumerated list: every
+ * enumerated version of this rule shipped one member short — F91 fixed
+ * U+200B/U+FEFF and left U+200C, U+200D, U+00AD, U+2060 and U+061C eliding the
+ * heading just the same, because the defect is the class, not its members
+ * (F100). A run of them at the start of a line is *removed* rather than turned
+ * into a space — a BOM in front of `### P2`, with or without indentation, would
+ * otherwise push the heading past the grammar's ` {0,3}` allowance and the
+ * valid plan answered `BLOCKED: no-phases` (F102; reachable from any plan
  * written by PowerShell's `Out-File` or legacy Notepad, which emit a BOM by
- * default.
+ * default). Everywhere else they become a space: Markdown renders them as
+ * nothing, so the content must stay on its line and never vanish.
  */
 function normalizeTerminators(text) {
   return text
     .replace(/\r\n?/g, "\n")
     .replace(/[\u2028\u2029]/g, " ")
-    .replace(/[\u200B\uFEFF]/g, " ")
-    .replace(/(^|\n)\uFEFF/g, "$1");
+    .replace(/(^|\n)( *)\p{Cf}+/gu, "$1$2")
+    .replace(/\p{Cf}/gu, " ");
 }
 
 /**
@@ -409,6 +418,12 @@ const WORD_JOINER = /(?:^|[^\p{L}\p{N}_])[\p{L}\p{N}_]+\s+(?:and|y)\s+[\p{L}\p{N
 function box1(phase) {
   const title = phase.title.trim();
   if (title === HARDENING_TITLE) return [];
+  // The frozen input grammar requires a title (`^P(\d+)\s*[—-]\s*(.+)$`) and
+  // the rule is that it names one deliverable, so an empty (or
+  // whitespace-only) one names none. The F91 fold admitted the shape into the
+  // parse — an empty heading must never elide its phase — which left it
+  // linting `PASS (8/8)` with an empty fingerprint slug (F101).
+  if (title === "") return ["title names no deliverable — the heading carries an empty title"];
   const shown = sanitizeEcho(title);
   if (SYMBOL_JOINER.test(title)) return [`title joins deliverables with “+”, “,”, “/” or “&”: “${shown}”`];
   if (WORD_JOINER.test(title)) return [`title joins deliverables with “and”/“y”: “${shown}”`];
