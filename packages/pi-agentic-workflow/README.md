@@ -1,7 +1,5 @@
 # @gtrabanco/pi-agentic-workflow
 
-> 🇪🇸 [Versión en español](README.es.md)
-
 One install of the [agentic-workflow](https://github.com/gtrabanco/agentic-workflow)
 method into [Pi](https://github.com/badlogic/pi-mono): the canonical skills, a
 friendly slash command for each of them, and optional per-command model routing

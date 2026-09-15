@@ -991,29 +991,26 @@ test("render-only prose: a restatement that drifts from the machine value is the
 test("version cells and package versions are recomputed, not trusted", () => {
   const model = buildSurfaceModel();
   const en = read("CHANGELOG.md");
-  const es = read("CHANGELOG.es.md");
   for (const [skill, meta] of model.hints) {
-    for (const [name, text] of [["CHANGELOG.md", en], ["CHANGELOG.es.md", es]]) {
-      const cell = newestVersionCell(text, skill);
-      if (cell !== null && meta.version) assert.equal(cell, meta.version, `${name} must restate ${skill} at its frontmatter version`);
-    }
+    const cell = newestVersionCell(en, skill);
+    if (cell !== null && meta.version) assert.equal(cell, meta.version, `CHANGELOG.md must restate ${skill} at its frontmatter version`);
   }
   assert.equal(newestVersionCell(en, "pi-agentic-workflow"), JSON.parse(read("packages/pi-agentic-workflow/package.json")).version);
   assert.equal(newestVersionCell(en, "agentic-workflow-schema"), JSON.parse(read("packages/agentic-workflow-schema/package.json")).version);
 });
 
 // A1 + A2 (P16 fold). The check above reads a MAXIMUM per skill, which is the gate
-// gap: `CHANGELOG.es.md` stated `pre-execution-review` 1.1.0, `plan-feature-scaffold`
+// gap: a changelog table once stated `pre-execution-review` 1.1.0, `plan-feature-scaffold`
 // 2.1.0 and `evidence-grounding` 1.1.1 twice in the same table and stayed green, and
 // `CHANGELOG.md` lost `plan-fix` 3.0.0 out of its table entirely while the file
 // self-describes as the source of truth for what changed between versions. Both are
 // set properties of the same rows, so both are computed here, once, in the file that
 // owns the changelog grammar.
-test("a changelog version row appears once per table, and both languages publish the same set", () => {
+test("a changelog version row appears once per table", () => {
   const model = buildSurfaceModel();
   const names = new Set([...model.hints.keys(), "agentic-workflow-schema", "pi-agentic-workflow"]);
   const byFile = new Map();
-  for (const file of ["CHANGELOG.md", "CHANGELOG.es.md"]) {
+  for (const file of ["CHANGELOG.md"]) {
     const rows = changelogVersionRows(read(file), names);
     const total = [...rows.values()].reduce((sum, list) => sum + list.length, 0);
     assert.ok(total >= 400, `${file} yields ${total} version rows — the reader stopped matching the tables`);
@@ -1033,11 +1030,6 @@ test("a changelog version row appears once per table, and both languages publish
       const hits = (rows.get(name) ?? []).filter((v) => v === version).length;
       assert.equal(hits, 2, `${file}: the exempted ${name} ${version} duplicate is no longer a duplicate (seen ${hits}) — delete the exemption (known-issue 23)`);
     }
-  }
-  for (const name of new Set([...byFile.get("CHANGELOG.md").keys(), ...byFile.get("CHANGELOG.es.md").keys()])) {
-    const en = uniq(byFile.get("CHANGELOG.md").get(name) ?? []).sort();
-    const es = uniq(byFile.get("CHANGELOG.es.md").get(name) ?? []).sort();
-    assert.deepEqual(es, en, `${name}: CHANGELOG.es.md must publish the same version set as CHANGELOG.md (${en.join(", ")})`);
   }
 });
 
