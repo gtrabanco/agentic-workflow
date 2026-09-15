@@ -1,7 +1,7 @@
 ---
 name: replan-findings
 user-invocable: false
-version: 1.0.1
+version: 1.1.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 description: >
@@ -47,7 +47,7 @@ never guesses which ones exist:
 ```text
 UNIT ROUTE — <unit>
 unit: <slug>                     status: <roadmap or fix-index status, or absent>
-open-rows: <n>                   route: replan|decision|fold|execute|plan-from-issue
+open-rows: <n>                   route: replan|decision|fold|execute|close-out|plan-from-issue
 next: <the command this route hands off to>
 rows: <the open row ids, or none>
 read-set (<n>):
@@ -55,6 +55,11 @@ read-set (<n>):
 fingerprint: <sha256 over the inputs the answer used>
 ```
 
+- `status:` carries the bare status token read from the roadmap or fix-index cell
+  (`done`, never the cell's markdown decoration).
+- `close-out` is the route of a unit whose work is finished (`status: done`) and
+  which carries no open row: `next:` is then `/audit-pr`, the merge gate. An
+  unfinished unit with no open row keeps the `execute` route.
 - `route:` names the route **only**. The command to run lives on `next:` — for
   this contract that is `/plan-feature <unit>` or `/plan-fix <issue>`; a
   decision route's `next:` is the prose `decision required — stop and surface to
