@@ -178,3 +178,11 @@ Verdict: **PLAN-REVIEW-PASS** — 0 material open findings; execution may bind t
 - Gotchas: `review-implementation` had no `####` section; its version row lives in the `### Internal (user-invocable: false)` table, so the 1.8.0 row was added there in both languages, keeping the version-set equality check green.
 - Files: skills/review-change/**, skills/review-implementation/**, skills/triage-issue/**, skills/fold-findings/**, CHANGELOG.md · CHANGELOG.es.md · docs/fix/224-deterministic-replan-routing/SPEC.md (P4 ticks) · progress.md
 - Next: P5 — Tutorial destination convergence
+
+## P5 — 2026-09-15
+- Phase-lint re-checked PASS (8/8) at fingerprint `P5:docs:6:tutorial-destination-convergence`.
+- Done: the three tutorial pairs route `replan-in-unit` through `node scripts/unit-route.mjs <unit>` and the planner its `route: replan` line names, with the fresh `/review-plan` before execution: `REVIEW_AND_CLASSIFY.md` (+ ES) routing bullet and "Where it sits", `FEATURE_WORKFLOW.md` (+ ES) review-step prose, `PORTABLE_PROMPT.md` (+ ES) the finding-destination sentence. EN and ES edited in the same commit.
+- Gate: `grep -c "unit-route"` on the six files → 2, 2, 1, 1, 1, 1; the full AC7 census over all 14 files → ≥1 each.
+- Gotchas: `PORTABLE_PROMPT.es.md` mirrors the English prompt text, so both sides carry the identical sentence (no translation drift).
+- Files: docs/workflow/REVIEW_AND_CLASSIFY.md (+ ES) · docs/workflow/FEATURE_WORKFLOW.md (+ ES) · docs/workflow/PORTABLE_PROMPT.md (+ ES) · docs/fix/224-deterministic-replan-routing/SPEC.md (P5 ticks) · progress.md
+- Next: P6 — Release bookkeeping
