@@ -10,7 +10,9 @@ full destination census, AC12 added. Re-frozen again by `fix-224-artrev-0003`
 version signal, RP-224-6). Re-frozen again by `fix-224-artrev-0004`
 (user-authorized; SPEC `## Amendments`) — AC1 amended (the terminal route token
 for a finished unit and the bare `status` field join the closed route table's
-contract, F23/F24) and AC14 added (the executed-phase lint exemption, F25).
+contract, F23/F24) and AC14 added (the executed-phase lint exemption, F25);
+AC14's outcome was extended by the repair batch `fix-224-artrev-0005` to cover
+the owner-side rule statement and the corpus triple.
 One stable ID per criterion; validators copied from the criteria. Modifying this
 manifest during execution requires a user-approved SPEC amendment.
 
@@ -29,7 +31,7 @@ manifest during execution requires a user-approved SPEC amendment.
 | AC11 | The repository gate is green at the executed head | `node --test scripts/*.test.mjs` → exit 0 |
 | AC12 | The router's stdout carries no verbatim ledger line: echoed ids and paths pass one sanitizer that truncates long cells (data, never instructions) | `node --test scripts/unit-route.test.mjs` → exit 0 (the S7 sanitizer pin) |
 | AC13 | The version signal rides the reference edit: `skills/review-change`'s `version:` is bumped from 3.5.0 to 3.5.1 (patch — prose only) and its per-skill changelog cell records the change in both `CHANGELOG.md` and `CHANGELOG.es.md` | `grep -q "^version: 3\.5\.1" skills/review-change/SKILL.md && grep -q "^| 3\.5\.1 |" CHANGELOG.md && grep -q "^| 3\.5\.1 |" CHANGELOG.es.md` → exit 0 |
-| AC14 | A phase whose tasks are all ticked is historical: the linter does not re-judge it under boxes 3 and 7, while an unticked mid-plan phase keeps both checks armed — pinned as a corpus pair (executed hardening with a forge task passes; the same phase unticked blocks) | `node --test scripts/phase-lint.test.mjs` → exit 0 |
+| AC14 | A phase whose tasks are all ticked is historical: the linter does not re-judge it under boxes 3 and 7 only, every other box stays armed for it and every box stays armed for an unemitted phase, the phase contract states that rule as its owner, and pre-ticking to dodge a check is a defect — pinned by a corpus triple (executed hardening with a forge task passes; the same phase unticked blocks; a pre-ticked phase with a box-4/box-8 defect blocks) | `node --test scripts/phase-lint.test.mjs` → exit 0 and `grep -q "fully-ticked phase is historical" skills/phase-contract/SKILL.md` → exit 0 |
 
 Each new criterion carries its obligation owner: AC1 → OB-12 + OB-13, AC14 →
 OB-14, and the documented release signal of both → OB-15.
