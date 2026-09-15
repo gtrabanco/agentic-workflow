@@ -1063,3 +1063,72 @@ F110 additionally needs the fix/221 planning author's PE-013 re-cut. Standing
 plan-owned rows F83 + F85 + F88 + F90 + F92 remain `folded: no` awaiting the
 plan owner's re-cuts. DEBT-1 is overdue (9th re-report this cycle, user-routed);
 DEBT-4 and DEBT-5 fire with the coming fold batch; DEBT-2/6/7 unchanged.
+
+Cycle 15 (user-invoked past the cap) ran 2026-09-15 (`review-change`,
+single-reviewer, five applicable axes code/security/verify/brand/perf —
+design/a11y/seo skipped: no UI/web surface; PR #212 head `e1e282c5`). The
+review opened with the branch ahead 2 (the F110 re-cut `06cf8399` + its
+ledger flip `e1e282c5`, left unpushed by the fold/re-cut turn); the reviewer
+completed that turn's own pending push so the forge head equals the reviewed
+head, then froze `e1e282c5`. The post-cycle-14 fold delta
+(`4d6b4756..e1e282c5`, folds F100–F112 + the F110 re-cut) escalated to a full
+pass on SIZE (+316/−59 = 375 changed lines > 200 across 10 files; width
+clean — every changed file is inside the batch's cited union). Structural
+preconditions at the reviewed head: acceptance blob `63f62e4e…` recomputed =
+the frozen ED14 receipt; full scripts suite 383/383 green on node; AC1–AC10
+evidence re-derived (valid plan exit 0 with the recorded fingerprint
+`3afa2601…` byte-identical at bf500374 parity, corpus 118/118, determinism,
+no-network grep empty, 3 consumer refs, schema diff empty, crate + tmp/
+vehicle artifacts). All 98 `folded: yes` rows re-verified at their cited
+locations by four isolated re-verification agents — 98 REPAIRED, 0
+regressions, 0 unverifiable (F110's re-cut verified byte-exact: OUTPUT.md:17
+is the receipt-grammar unit line, fix-191 progress.md:6 reads
+`Unit kind: fix`, the dead fix-214 citation is gone, drafting-decision 9
+records the delta). The five isolated context-clean finders returned 2
+candidates; the isolated classifier (`review-implementation`) classified both
+fix-now (F113 high, F114 med below) with complete axis coverage; 0 refuted
+candidates, 0 proposals. The isolated debt pass re-derived the register:
+DEBT-3 and DEBT-4 PAID (the F87/ED14 amendment and the F102 dead-branch
+deletion), DEBT-5 FIRED (box-2 double tokenization still live at HEAD, due
+at the next linter fold), DEBT-1 overdue (user-routed), DEBT-2/6/7 armed,
+DEBT-8 minted (recurring stale-at-birth record figures).
+
+| id | file:line | axis | severity | class | route | folded |
+|---|---|---|---|---|---|---|
+| F113 | docs/fix/README.md:29 (Active-table #221 row) | brand/record | high | fix-now | fold: reword the row's status cell to merged reality — from `in-progress` to `done · [#223](…pull/223)` matching main's record at b5358666 (the unit's PR #223 merged 2026-09-14T22:23:59Z, ~10 h before this row landed in dd264f68) — which also completes the riding fix-221 unit's ACCEPTANCE AC6 `done · [` flip leg and removes the #212-merge row conflict | no |
+| VF-113 | docs/fix/README.md:29 · reviewer review-change (brand pass) · HEAD e1e282c517e17035dc54f3efee4c5fbdfa378fa5 · recheck: `gh pr view 223 --json state,mergedAt` → MERGED 2026-09-14T22:23:59Z merge b5358666; `sed -n 29p docs/fix/README.md` → status cell `in-progress`; `git show b5358666:docs/fix/README.md` :17 → `done · [#223](…)` merged-reality row; index legend :8-14 defines `in-progress` = branch open, work ongoing | brand | confirmed | finding-mark | n/a | n/a |
+| F114 | docs/features/37-phase-lint-script/review-findings.md:960 (cycle-14 escalation sentence) | brand/record | med | fix-now | fold: correct the recorded diffstat figures "+801/−14 = 815" → "+955/−18 = 973" in the same sentence (real shortstat over 5eb7f105..4d6b4756; the file count 12 and both full SHAs in the sentence are correct; the >200 escalation conclusion holds under either figure) | no |
+| VF-114 | review-findings.md:960 · reviewer review-change (brand pass) · HEAD e1e282c517e17035dc54f3efee4c5fbdfa378fa5 · recheck: `git diff --shortstat 5eb7f105..4d6b4756` → "12 files changed, 955 insertions(+), 18 deletions(-)" vs the sentence's "+801/−14 = 815"; escalation conclusion unaffected | brand | confirmed | finding-mark | n/a | n/a |
+| REVIEW-RAN | HEAD e1e282c517e17035dc54f3efee4c5fbdfa378fa5 | n/a | n/a | review-mark | n/a | n/a |
+
+```text
+CONVERGENCE-ANOMALY — 37-phase-lint-script source
+- Finding ids: new: F113, F114 (no folded id re-opened; both are record-
+  fidelity rows — one born of the riding-unit merge race, one inherited from
+  the cycle-14 narrative)
+- Snapshots: 4d6b4756c2494569c6afbb3c33b72f7903c34213 →
+  e1e282c517e17035dc54f3efee4c5fbdfa378fa5 (cycle-14 reviewed head → cycle-15
+  reviewed head)
+- Missed: the fold batch wrote the #221 fix-index row with `in-progress`
+  ~10 h after the riding unit's PR #223 had already merged (the fold never
+  queried the forge for the riding unit's state), and the cycle-14 narrative
+  quoted an escalation diffstat (+801/−14 = 815) that was never recomputed at
+  persist time (real: +955/−18 = 973)
+- Owning stage: source records (docs/fix/README.md row cell + this ledger's
+  own cycle-14 sentence)
+- Why the prior review failed: cycle 14 verified the F107 fold as "row
+  present, grep = 1" without cross-checking the status word against the
+  riding unit's forge state, and no pass re-read the review's own narrative
+  figures against git reality
+- Route to owner: /fold-findings (explicit ids F113 + F114)
+```
+
+Cap status: the two-cycle cap was reached at cycle 4; cycles 5–15 run on the
+user's explicit invocations past the cap. The two open fix-now rows F113 +
+F114 are foldable in one atomic batch (one status-cell reword + two figures
+in one sentence). Standing plan-owned rows F83 + F85 + F88 + F90 + F92 remain
+`folded: no` awaiting the plan owner's re-cuts. DEBT-3 and DEBT-4 are paid as
+of this cycle; DEBT-5 has fired and is due at the next linter fold; DEBT-1 is
+overdue (user-routed); DEBT-2/6/7 are armed; DEBT-8 is minted (trigger: the
+next stale-at-birth record figure after F114 — pay by deriving record figures
+mechanically at persist time).
