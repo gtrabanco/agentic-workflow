@@ -13,6 +13,7 @@
  *   fold            an open row that folds into the current unit
  *   execute         a known unit with no open row and open work
  *   close-out       a done unit with no open row (the merge gate is next)
+ *   historical      an archived unit: no open row and no status source left
  *   plan-from-issue a tracked issue with no unit folder yet
  *
  * Diagnostics go to stderr; the routed block goes to stdout. The script writes
@@ -34,7 +35,7 @@ export const READ_SET_MAX = 12;
 /** Longest echoed cell before the sanitizer truncates it. */
 export const CELL_MAX = 160;
 
-const ROUTES = Object.freeze(["replan", "decision", "fold", "execute", "close-out", "plan-from-issue"]);
+const ROUTES = Object.freeze(["replan", "decision", "fold", "execute", "close-out", "historical", "plan-from-issue"]);
 const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
 const DECISION_ROUTE = /decision[- ]required|surface (the )?decision|needs a decision/i;
 const KNOWN_UNIT_FILES = ["SPEC.md", "ACCEPTANCE.md", "PLAN.md", "TASKS.md", "progress.md", "review-findings.md"];
@@ -330,6 +331,8 @@ first match winning: replan (an open row whose frozen route is the plan owner),
 decision (an open row that needs a product/architecture decision), fold (any
 other open row), execute (a known unit with no open row that is still open work),
 close-out (a done unit with no open row — the merge gate is the next step),
+historical (a known unit with no open row whose status source is gone: the index
+or roadmap row was removed after the merge),
 plan-from-issue (a tracked issue with no unit folder yet: a fix-index number or a
 roadmap row's own issue number).
 
@@ -404,6 +407,14 @@ function main(argv) {
     route = "close-out";
     selected = [];
     command = "/audit-pr";
+  } else if (status === "absent") {
+    // A known unit whose status source is gone — the index row is removed only
+    // after the merge — is archived, not pending work (F32). The `next:` prose
+    // names what was observed, so a unit whose row was never written is visible
+    // instead of silent.
+    route = "historical";
+    selected = [];
+    command = "nothing to do — the unit is archived: its status source is gone (merge state lives in the forge)";
   } else {
     route = "execute";
     selected = [];

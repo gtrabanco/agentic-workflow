@@ -304,3 +304,18 @@ test("F34: a roadmap row's own issue number resolves instead of dead-ending", ()
   assert.equal(routeLine(result.stdout), "plan-from-issue");
   assert.equal(nextLine(result.stdout), "/plan-feature --from-issue 140");
 });
+
+test("F32/OB-17: an archived unit (no status source, no open row) answers `historical`", () => {
+  // A fix unit whose index row was removed after the merge, and a feature whose
+  // roadmap row is gone: both are archived, never sent to the executor.
+  const fix = run(["23-merged-fix"]);
+  assert.equal(fix.status, 0, fix.stderr);
+  assert.equal(routeLine(fix.stdout), "historical");
+  assert.equal(statusLine(fix.stdout), "absent");
+  assert.match(nextLine(fix.stdout), /^nothing to do — the unit is archived/);
+
+  const feature = run(["16-merged-unit"]);
+  assert.equal(feature.status, 0, feature.stderr);
+  assert.equal(routeLine(feature.stdout), "historical");
+  assert.equal(rowLine(feature.stdout), "none");
+});

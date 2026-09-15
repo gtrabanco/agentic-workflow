@@ -1206,3 +1206,30 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   }
 }
 ```
+
+## P13 — 2026-09-16
+
+- Phase-lint re-checked PASS (8/8) at execution start
+  (`P13:config/infra:5:archived-unit-state`).
+- Done: `scripts/unit-route.mjs` answers a seventh route, **`historical`**, for a
+  known unit with no open row whose status source is gone (`status: absent`) —
+  the index row is removed only after the merge — with the prose `next:`
+  "nothing to do — the unit is archived: its status source is gone (merge state
+  lives in the forge)"; `ROUTES` carries the token, and the usage block and the
+  header comment document it. `scripts/normative-drift.test.mjs`'s
+  closed-vocabulary pin moved to the seven tokens.
+- Tests: `scripts/unit-route.test.mjs` gained the archived-state pin over two new
+  fixture units — `docs/fix/23-merged-fix` (no index row) and
+  `docs/features/16-merged-unit` (no roadmap row): both answer `historical`, the
+  fix one with `status: absent` and the explanatory `next:`, and neither is sent
+  to the executor. Gate: `node --test scripts/*.test.mjs` → **424 pass / 0 fail**.
+- Real-data check: `docs/fix/100-stale-fix-index-rows` (a merged fix unit whose
+  index row is gone) → `status: absent`, `open-rows: 0`, `route: historical`,
+  `next: nothing to do — the unit is archived: …`.
+- `OB-17` reconciled to `verified` against its named validator (the archived-state
+  pins above), per this phase's fifth task.
+- Files: scripts/unit-route.mjs · scripts/unit-route.test.mjs ·
+  scripts/normative-drift.test.mjs ·
+  scripts/fixtures/unit-route/docs/{fix/23-merged-fix,features/16-merged-unit}/review-findings.md ·
+  docs/fix/224-deterministic-replan-routing/SPEC.md (P13 ticks + OB-17) · progress.md
+- Next: P14 (the fresh final close-out).
