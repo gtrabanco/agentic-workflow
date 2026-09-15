@@ -91,10 +91,29 @@ test("AC2: the read set carries the unit surfaces and the selected rows' cited p
     "docs/features/37-phase-lint-script/ACCEPTANCE.md",
     "docs/features/37-phase-lint-script/SPEC.md",
     "docs/features/37-phase-lint-script/review-findings.md",
+    "docs/features/38-workflow-status-sensor-script/PLAN.md",
+    "docs/features/38-workflow-status-sensor-script/TASKS.md",
     "docs/fix/_TEMPLATE/SPEC.md",
     "scripts/phase-lint.mjs",
   ]);
   assert.ok(!set.entries.includes("docs/LOGS.md"), "a path cited only by a FOLDED row is not in the replan read set");
+});
+
+test("F14: a brace-composed citation resolves to every file it names", () => {
+  // Row F92's file cell cites two artifacts in one composed citation
+  // (`…/38-workflow-status-sensor-script/{PLAN.md:29,TASKS.md:55}`). The delimiter
+  // classes stopped at the `{`, so only the composed directory was found and the
+  // isDir guard dropped it — two cited paths silently missing from the set AC2
+  // promises ("each cited repository path").
+  const result = run(["37-phase-lint-script"]);
+  assert.equal(result.status, 0, result.stderr);
+  const set = readSet(result.stdout);
+  for (const cited of [
+    "docs/features/38-workflow-status-sensor-script/PLAN.md",
+    "docs/features/38-workflow-status-sensor-script/TASKS.md",
+  ]) {
+    assert.ok(set.entries.includes(cited), `${cited} is on the read set`);
+  }
 });
 
 test("AC2: the set is deduped, sorted and capped with an explicit remainder line", () => {
