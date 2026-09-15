@@ -1402,3 +1402,26 @@ out to do, what was decided and *why*, and where to resume.
 - **Files:** none committed; `scripts/{pre-execution-contract.mjs,workflow-status.mjs,workflow-status-sensor.test.mjs}` modified, `docs/fix/221-sensor-null-parent-receipt/` and `scripts/pre-execution-receipt-parent.test.mjs` untracked
 - **Summary:** Attempted `/review-change` on unit 37-phase-lint-script (PR #212). The review was BLOCKED by the workspace-state precondition — 3 tracked files modified and 2 untracked files present, so the forge cannot see the commit and no verdict may be issued. After the workspace was cleaned, no further review was run.
 - **Next:** /review-change on the clean HEAD → /review-plan 37-phase-lint-script → /audit-pr for the merge gate (PR #212 still OPEN, awaiting human merge; zero reviews so far)
+
+## 2026-09-15T22:00Z — feat/40-versioned-skills-releases — manual
+
+- **Commits:** 1 (`0f114cf5`)
+- **Files:** docs/features/ROADMAP.md (merge commit from `docs/roadmap-bureaucracy-order`); docs/LOGS.md (this entry)
+- **Summary:** Owner-directed bureaucracy-reduction project — audit of token waste in the skill system, research-backed analysis, and creation of a prioritized issue set (9 new issues, 2 folds, 3 comment additions) plus a roadmap order section and PR #234 to `main`.
+
+  **A. Token audit (measured before cutting):** 39 `SKILL.md` files (35.5K words) + 87 `references/*.md` (59.5K words) = ~127K tokens instruction surface. A full feature run loads ~129K tokens of skill text. Model-authored artifacts per feature: ~17–24K tokens (real folders 9.2–17.9K words). SPEC template: 2,354 words / 35 sections (real 4–5.2K words). Turn tax: 11-box contract + `→ Next:` + envelope re-emitted per turn. Review loops: up to 12–16 cycles (unit 37: 12 cycles, F1–F90).
+
+  **B. Research (papers verifiable on arXiv):** Chain of Draft (2502.18600) — CoT accuracy at 7.6% tokens; TALE (2412.18547) — token budgets compress reasoning with slight loss; Stop Overthinking (2503.16419) / Do NOT Think That Much (2412.21187) — overthinking measurable and quality-neutral; LLMs Cannot Self-Correct (2310.01798, ICLR'24) — intrinsic self-correction without new evidence fails (validates non-convergent loops); Let Me Speak Freely (2408.02442) — format restrictions degrade reasoning (structure machine-consumed data only); SWE-agent (2405.15793) — interface design drives performance; Lost in the Middle (2307.03172) — attention budget degrades with volume. Primary sources: Anthropic Agent Skills (progressive disclosure 3 levels), Cognition (single-threaded linear agent + compression model), Claude Code best practices.
+
+  **C. 8 new GitHub issues created:** #226 (machine-checked turn contract), #227 (deterministic artifact emitters), #228 (retire progress.md), #229 (two-level SPEC), #230 (executable golden fixture), #231 (design-interview batching), #232 (per-release bilingual), #233 (remove ship-roadmap).
+
+  **D. Issue merges (owner-approved consolidation):** #228 absorbed into #229 (Phase 2 satellite-file retirement — same surfaces, one unit instead of two); #152 absorbed into #232 (Phase 1 drift checker — same surface). #183 partially re-scoped (fixture metric row → #230; anti-flakiness + property/fuzz stay).
+
+  **E. Comment additions:** #194 (review-pack 10→1 consolidation rides the deterministic-review-change unit); #205 (one-line findings format + evidence rule from paper); #182 (CLI computes evidence freshness columns); #173 (order note — adopts 52's machine profile); #176 (D18 scope: plan-feature family 3→1 consolidation).
+
+  **F. Roadmap update PR #234 (docs/roadmap-bureaucracy-order → main):** New rows 52–58 with issue references, row 34 folded → 57, new section "Bureaucracy-reduction execution order (2026-09-15)". Execution order: Phase 0 quick-wins (fix #224, 52, 56, 55, 48) → Phase 1 loop policy (~40–60% lever: 31→32→35→42→51→50) → Phase 2 artifact formats (~60% authoring: 44→54→53→40) → Phase 3 structural (57→58→33) → #176 always last with D18.
+
+  **G. Key design decision:** Principle = "eliminate narration, not checks." Scripts run and paste, model only judges materiality. Structure data consumed by machines, prose only where the model reasons. Estimated ~60–70% process-token reduction by #176 with quality guarantees intact.
+
+- **Decisions:** (1) User explicitly accepted all audit recommendations but chose incremental issues over monolithic refactor. (2) `ship-roadmap` removal is user-explicit; replacement is a deterministic pi-agentic-workflow command wrapping `decideWorkflowAction()` + sensor, or AWL runner. (3) Golden fixture is a skill test, not human doc — English-only, executable, out of bilingual scope. (4) Bilingual rule shifted from per-commit to per-release batch, guarded by drift check. (5) `review-change` stage alone loads 12 skills / 16.4K words — the single largest stage cost; consolidation here is highest-value.
+- **Next:** Phase 0 execution starts with #226 (machine-checked turn contract) or #224 (replan fix) — whichever the owner prefers. Then #231 (interview batching, quick win), #230 (fixture), #48 (#215 continuations). Loop-policy Phase 1 (#31/#171) is the single biggest lever.
