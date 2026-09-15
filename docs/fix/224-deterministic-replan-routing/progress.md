@@ -369,3 +369,31 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
 - Route to owner: `plan-fix 224` — one repair batch over RP-224-7…RP-224-11, rotate the artifact revision, then `/review-plan fix-224` re-reviews the new snapshot
 
 Verdict: **PLAN-REVIEW-FAIL** — 5 material open findings (4 × class `plan` medium, 1 × class `plan` low); repair owner `plan-fix 224`.
+
+## Repair batch — `fix-224-artrev-0005` = `9cc6bf904d41737e69493f58385caae823fd2121` (2026-09-16)
+
+- **Trigger:** plan-review cycle 2 (receipt `rp-224-20260915-004`, snapshot
+  `bcde3ca15fa0f63fd16166833a3674668654715c8a89a6c13796362bbd610065`) returned
+  **PLAN-REVIEW-FAIL** on the replan with RP-224-7…RP-224-11.
+- **Repaired in one batch** (all five, no partial pass): the phase-contract rule
+  owner now carries the executed-phase exemption plus the corpus triple
+  (`OB-16`, RP-224-7); `## Depends on` and PE-011/PE-013 state unit 37's merged
+  reality, re-observed at `bf88bccc` (RP-224-8); the re-opened `P8` is idempotent
+  for the live PR #225 and the three receipt tasks moved out of `P12` into `P8`,
+  ordered after every tick so no later write can void the plan receipt
+  (RP-224-9); `### In scope`, `## Impact` and `## Rollback` declare the shared
+  linter edit and its narrowed blast radius (RP-224-10); the scenario matrix
+  gained S9–S11 and `S4` points at S9 for the `done` half (RP-224-11).
+- **Ledgers:** the five reviewer rows are `resolved` in `planning-findings.md`
+  with per-finding resolution evidence and this artifact revision.
+- **Phase-lint:** `verdict PASS` with the shipped linter; overall fingerprint
+  `597c922a20d352504d840cab86282fd149fbea9c636246481877650518e9a3fa`
+  (`P8:hardening:10:hardening-pr`, `P11:docs:5:replan-path-contract-docs`,
+  `P12:close-out:3:terminal-receipt-closure`).
+- **Acceptance re-freeze:** `AC14` extended (owner-side rule statement + the
+  corpus triple); blob
+  `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
+  `15e9661fdcafbc628419926806b27ae0532f021d`, recorded in the SPEC `## Status`.
+- **Gate at this write:** `node --test scripts/*.test.mjs` → 413 pass / 0 fail.
+- **Next:** `/review-plan fix-224` (cycle 3) — a fresh independent review of this
+  artifact revision; `PLAN-REVIEW-PASS` licenses `/execute-phase --fix 224`.
