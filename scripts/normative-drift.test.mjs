@@ -1083,6 +1083,25 @@ test("F41: the readiness heading box cites the machine's Product heading list in
   assert.ok(!/SPEC_PRODUCT_REQUIRED_HEADINGS/.test(stripped), "the fixture models a reworded-away owner");
 });
 
+test("#224 canonical destination vocabulary: the router publishes one closed route set and the sensor projects it", (t) => {
+  const routerRel = "scripts/unit-route.mjs";
+  if (!exists(routerRel)) return t.skip("unit-route.mjs is absent in this injected tree");
+  const router = read(routerRel);
+  const routes = /const ROUTES = Object\.freeze\(\[([^\]]+)\]\)/.exec(router);
+  assert.ok(routes, "the router declares its route table as one closed set");
+  const names = routes[1].split(",").map((token) => token.trim().replace(/"/g, "")).filter(Boolean);
+  assert.deepEqual(names, ["replan", "decision", "fold", "execute", "plan-from-issue"], "the route vocabulary is closed");
+  // The sensor projects the router's class→destination mapping; neither may invent a
+  // fourth destination for the same class (`#224`'s three-contradictory-sentences defect).
+  const sensor = read("scripts/workflow-status.mjs");
+  for (const token of ["replan-in-unit", "/plan-feature", "/plan-fix", "/fold-findings"]) {
+    assert.ok(sensor.includes(token), `the sensor names the canonical token ${token}`);
+  }
+  for (const token of ["/plan-feature", "/plan-fix", "/fold-findings"]) {
+    assert.ok(router.includes(token), `the router names the same canonical destination ${token}`);
+  }
+});
+
 test("the gate fails closed: a surface that loses its grammar block is refused", (t) => {
   if (isChildRun) return t.skip("the child run is itself the injected tree");
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "normative-drift-"));

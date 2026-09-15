@@ -543,11 +543,11 @@ Layer: `docs`. Done-when: `bun scripts/check-skill-context.mjs` → exit 0.
 
 Layer: `config/infra`. Done-when: `node --test scripts/workflow-status-sensor.test.mjs` → exit 0.
 
-- [ ] Emit `next.suggested` routed by the open row's class in
+- [x] Emit `next.suggested` routed by the open row's class in
       `scripts/workflow-status.mjs` (OB-5; PE-005, PE-006)
-- [ ] Pin the three class outcomes in `scripts/workflow-status-sensor.test.mjs`
+- [x] Pin the three class outcomes in `scripts/workflow-status-sensor.test.mjs`
       (OB-5)
-- [ ] Pin the canonical destination vocabulary in
+- [x] Pin the canonical destination vocabulary in
       `scripts/normative-drift.test.mjs` (OB-4; PE-003)
 
 ### P4 — Skills replan destination

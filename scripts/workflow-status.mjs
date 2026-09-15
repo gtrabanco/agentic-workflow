@@ -710,10 +710,14 @@ const SEVERITY_VOCABULARY = new Map([
   ["high", "high"], ["med", "med"], ["low", "low"],
 ]);
 
-function readFixNow(unitDir, observations = []) {
+/** An open row whose frozen route is the plan owner demands a replan entry. */
+const PLAN_ROUTE = /replan[- ]in[- ]unit|owned by plan|plan owner|plan-owner/i;
+
+/** The open (`folded: no`) rows of a unit's fix-now ledger, in file order. */
+function readOpenRows(unitDir) {
   const ledger = readProject(path.join(unitDir, "review-findings.md"));
   if (!ledger) return [];
-  const items = [];
+  const rows = [];
   for (const line of ledger.split("\n")) {
     if (!line.startsWith("|")) continue;
     const cells = cellsOf(line).slice(1, -1);
@@ -724,6 +728,16 @@ function readFixNow(unitDir, observations = []) {
     // bogus finding whose id is the dash run: the guard is the id's shape, not one
     // separator's spelling.
     if (/^[-:\s]*$/.test(id)) continue;
+    // `VF-` finding-mark rows carry no destination of their own.
+    if (/^VF-/i.test(id)) continue;
+    rows.push({ id, file, axis, severity, klass, route });
+  }
+  return rows;
+}
+
+function readFixNow(unitDir, observations = []) {
+  const items = [];
+  for (const { id, file, axis, severity, klass, route } of readOpenRows(unitDir)) {
     const normalized = SEVERITY_VOCABULARY.get(String(severity).toLowerCase()) ?? null;
     if (!normalized) {
       // Named, never silent: the row is dropped from the envelope, and the ledger's
@@ -735,6 +749,29 @@ function readFixNow(unitDir, observations = []) {
     items.push({ id, file, axis, severity: normalized, class: klass, route, suggested_tier: tier });
   }
   return items;
+}
+
+/**
+ * Step 13 — the class-routed `next.suggested` entries a unit contributes.
+ * The router (`scripts/unit-route.mjs`) owns the class→route decision; this
+ * surface projects it for an envelope consumer: a plan-owned open row points at
+ * the unit's planner, a plain fix-now row at the fold, no open row at nothing.
+ */
+function readSuggestions(unit, unitDir) {
+  const rows = readOpenRows(unitDir);
+  const plan = rows.filter((row) => PLAN_ROUTE.test(String(row.route ?? "")) || PLAN_ROUTE.test(String(row.klass ?? "")));
+  if (plan.length > 0) {
+    const command = unit.kind === "fix" ? `/plan-fix ${unit.issue}` : `/plan-feature ${unit.id}`;
+    return [{
+      command,
+      trigger: `an open finding's frozen route is the plan owner — replan-in-unit (${plan.map((row) => row.id).join(", ")})`,
+      source_skill: "review-change",
+    }];
+  }
+  if (rows.length > 0) {
+    return [{ command: "/fold-findings", trigger: "unfolded fix-now finding(s) on the ledger", source_skill: "fold-findings" }];
+  }
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -1078,6 +1115,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
   const phases = new Map();
   const marks = new Map();
   const fixNow = [];
+  const nextSuggested = [];
   for (const unit of units) {
     const dir = unitDirFor(unit);
     if (!dir) continue; // an unsafe slug was already reported by the readiness pass
@@ -1089,6 +1127,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     const mark = markEligible ? readReviewMark(dir, stageFor(unit)) : null;
     if (mark) marks.set(unit.id, mark);
     fixNow.push(...readFixNow(dir, observations));
+    nextSuggested.push(...readSuggestions(unit, dir));
   }
 
   const urgentIssues = readUrgency(forge.openIssues);
@@ -1141,6 +1180,9 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
 
   const designCandidates_ = designCandidates;
   const next = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash });
+  // Step 13 — additive advisory: the class-routed triggers the driver can act on
+  // now, never reordering `recommended`/`alternatives`/`tier`.
+  next.suggested = nextSuggested;
 
   const hintInfo = loadHint(lastEnvelope);
   const hint = hintGuard(hintInfo, units, state, next.recommended);
