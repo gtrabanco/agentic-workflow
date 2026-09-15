@@ -1138,3 +1138,16 @@ Cycle 16 (user-invoked past the cap; programmatic outer driver per REVIEW_PROCES
 | F115 | CHANGELOG.es.md:98 (vs CHANGELOG.md:96) | brand | med | fix-now | fold: add the Spanish renumbering disclosure to the 0.9.3 row ("Renumerado 0.9.2 → 0.9.3 en el merge de sincronización con main: el propio 0.9.2 de main (fix #214, 2026-09-13) se publicó primero, así que este re-bundle toma el siguiente patch.") — CLAUDE.md bilingual hard rule | yes |
 | VF-115 | CHANGELOG.es.md:98 vs CHANGELOG.md:96 · reviewer review-change · HEAD 34783231e882008a7a6a684af2d4d44617adffce · recheck: direct read — EN row carries "Renumbered 0.9.2 → 0.9.3 in the main-sync merge…", ES row ends at "…publicar el re-empaquetado." with no equivalent | brand | confirmed | finding-mark | n/a | n/a |
 | REVIEW-RAN | HEAD 34783231e882008a7a6a684af2d4d44617adffce | n/a | n/a | review-mark | n/a | n/a |
+
+Cycle 17 (adversarial `--adversarial 5` re-review at HEAD `34783231`, same five
+axes) surfaced one coverage gap the cycle-16 single-reviewer pass did not:
+the F85 joined-scan scope (boxes 4–7 read the parent task plus its wrapped
+continuation lines) was pinned only by a box-5 fixture, so a mutant that left
+the checkbox line alone for boxes 4 and 6 survived the corpus green. Persisted
+as **F116** and folded in the same batch. The same cycle's separately reported
+"acceptance blob mismatch" was a false positive (see the cycle-16 refutation:
+`sha256sum` compared against the receipt's `git hash-object` blob) and is not
+a row.
+
+| F116 | scripts/phase-lint.test.mjs:2175 (F85 block, after the box-5 fixture) | code (coverage) | low | fix-now | fold: add continuation-specific corpus fixtures for box-4 (wrapped `→` chain) and box-6 (wrapped `move … to P<n>`), pinning the `lintPhase` view-swap for the two boxes the existing box-5 fixture left unpinned | yes |
+| VF-116 | scripts/phase-lint.mjs:616 (`lintPhase` view-swap) · reviewer review-change · HEAD 34783231e882008a7a6a684af2d4d44617adffce · recheck: mutant `index >= 3 && index <= 6` → `index === 4` (only box-5 keeps the joined scan) run against the corpus → 124 pass / 2 fail, the two failures exactly the new box-4 + box-6 fixtures; mutant reverted, corpus 126/126 | code | confirmed | finding-mark | n/a | n/a |
