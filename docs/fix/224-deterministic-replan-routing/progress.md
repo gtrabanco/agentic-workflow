@@ -1085,3 +1085,26 @@ NODE_PATH=packages/agentic-workflow-schema/node_modules node scripts/pre-executi
   }
 }
 ```
+
+## Replan-2 repair batch — `fix-224-artrev-0009` = `32a6c21275ab0c903a9c6a08f190ef20b093d5e4` (2026-09-16)
+
+- **Trigger:** the replan's plan review (receipt `rp-224-20260915-008`,
+  snapshot `5286729185a902f0315236766f8eca3781d786fdddfbc5961d228a8e9901de02`)
+  returned **PLAN-REVIEW-FAIL** with RP-224-16…RP-224-20, and confirmed the `F25`
+  exemption is load-bearing (a mutant disabling `phase-lint.mjs`'s exemption
+  blocks the plan on `P8` boxes 3+7 — it is not hiding a live violation).
+- **Repaired in one batch:** `P13` gained its `OB-17` reconciliation task
+  (RP-224-16); `## Impact` states the archived-state route change instead of
+  denying it (RP-224-17); the scenario matrix gained `S12` (RP-224-18); the
+  manifest's `AC1` enumerates the seven tokens and was re-frozen (RP-224-19); the
+  `RP-224-6` row was rebuilt to the canonical ten-field shape with `resolved` in
+  its status cell (RP-224-20).
+- **Phase-lint:** `verdict PASS`; overall fingerprint
+  `1268a833c5fde7351e3dfbdcd591cba7de3737dee21be99880d5679f73697191`
+  (`P13:config/infra:5:archived-unit-state`).
+- **Acceptance:** re-frozen; blob
+  `git hash-object docs/fix/224-deterministic-replan-routing/ACCEPTANCE.md` →
+  `13580b459b1d93e8e80176ecf47311ca165b68fa`, recorded in `## Status`.
+- **Gate at this write:** `node --test scripts/*.test.mjs` → 423 pass / 0 fail.
+- **Next:** `/review-plan fix-224` — a fresh review of this artifact revision;
+  `PLAN-REVIEW-PASS` licenses executing `P13` + `P14`.
