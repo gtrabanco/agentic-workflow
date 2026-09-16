@@ -144,3 +144,75 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
   the next design turn walk a live inventory instead of re-deriving one.
   Not done now — the file is a maintained substrate, and the skill requires
   user confirmation to seed it.
+
+## 2026-09-16 — ED-52-1: Phase cut is surface-first (P1 docs → P2 config/infra)
+
+- **What**: The 3-phase cut ships P1 = shim + hook test + grammar block +
+  machine-check profile + normative-surfaces row + bump/bundle + docs
+  pointers (docs), P2 = engine + engine suite + parity suite + conformance
+  test (config/infra), P3 = Hardening & PR — reversing the design sketch's
+  "engines → profile/registration" order while preserving D-52-1's
+  three-phase count.
+- **Why**: The frozen phase-lint prefix table maps `template/`/`skills/`/
+  `docs/` → docs and `packages/`/`scripts/` → config/infra
+  (`scripts/phase-lint.mjs` `layerForTarget()`); one phase cannot carry the
+  shim (`template/`) beside the engine (`packages/`) — box 2 would BLOCK
+  the mixed-layer phase (PE-001). The grammar-block phase must also precede
+  the conformance test that pins it.
+- **Authority**: authoring decision under user-delegated sizing (D-52-1:
+  "size should be defined automatically by you"); recorded here and in
+  SPEC §Phases for the reviewer.
+
+## 2026-09-16 — ED-52-2: Box2 unit resolution from the branch name
+
+- **What**: Box2 applies when the branch is unit-shaped — `feat/<rest>` →
+  `docs/features/<rest>`, `fix/<rest>` → `docs/fix/<rest>` — and the unit
+  directory exists; then `<unit-dir>/ACCEPTANCE.md` must exist at HEAD
+  (`git cat-file -e`). A branch that is not unit-shaped, or whose unit
+  directory does not exist, leaves box2 not-applicable.
+- **Why**: The SPEC freezes box2's semantics ("frozen-acceptance artifacts
+  present at HEAD", "cheap deterministic checks only") but not the unit
+  identification; branch-name resolution is the deterministic mechanism
+  this workflow already uses for unit branches, and the n/a branch keeps
+  the verifier from failing non-unit work (e.g. docs-only branches) the
+  contract's box 1 already gates.
+- **Authority**: authoring decision under the SPEC's frozen box semantics
+  (scope item 5); recorded for the reviewer.
+
+## 2026-09-16 — ED-52-3: The shim's box2 is presence-only
+
+- **What**: The scaffold shim checks frozen-acceptance presence only; the
+  conditional phase-lint clause of D-52-4 is implemented by the crate
+  engine only.
+- **Why**: AC12 forbids any node/bun/npm/npx token in the shim, so it
+  cannot invoke `scripts/phase-lint.mjs` even when a target project has
+  one; D-52-4's degradation is the shim's standing condition. No AC is
+  narrowed — AC2–AC5 pin the engine, AC12 pins the shim.
+- **Authority**: synthesis of the SPEC's own frozen constraints (D-52-4 ×
+  AC12); disclosed in `known-issues.md`.
+
+## 2026-09-16 — ED-52-4: Default-branch resolution chain
+
+- **What**: Default branch = target of `refs/remotes/origin/HEAD`, else
+  local `main`, else local `master`; if none exists, box3 counts every
+  commit on HEAD as not-on-default.
+- **Why**: The engine and shim need one deterministic default-branch
+  answer for boxes 1 and 3; the chain matches what this repo and typical
+  targets expose (sampled: `refs/remotes/origin/main`), and the no-default
+  fallback keeps fresh fixture repos deterministic.
+- **Authority**: authoring decision (PE-004 sampled plumbing).
+
+## 2026-09-16 — ED-52-5: CI wiring of `scripts/` suites stays out of this unit
+
+- **What**: The grammar conformance test is registered under `scripts/`
+  and validated node-first (`node --test`, AC8) but is not added to the
+  CI node-compat jobs; the gap is disclosed in `known-issues.md` and
+  triaged with #198.
+- **Why**: The integration-closure row's "run by the node-compat CI job"
+  is loose prose — today's node-compat jobs run only the packages' own
+  suites (PE-012), and no AC requires a workflow edit; adding one would
+  widen the change surface to publish infrastructure without a frozen
+  criterion demanding it. The row's substance (the test passes under plain
+  node) holds by construction.
+- **Authority**: authoring decision; disclosed rather than silently
+  dropped, per the anti-gap rule.
