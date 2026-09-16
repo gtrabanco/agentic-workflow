@@ -310,7 +310,8 @@ throwaway git repos built by the suites) or labelled `read-verified`.
 
 - **AC1 (command)**: `node packages/agentic-workflow/bin/turn-contract.mjs --help`
   exits 0 and prints usage naming both flags.
-- **AC2 (command)**: engine suite green — `node --test packages/agentic-workflow/test/`;
+- **AC2 (command)**: engine suite green — `bun test packages/agentic-workflow/test/`
+  (bun-first; Node 24 fallback: `node --test packages/agentic-workflow/test/*.test.mjs`);
   it covers, at minimum: clean feature branch (≥ 1 commit ahead of default,
   clean tree) → stdout exactly `TURN-CONTRACT ok`, exit 0; invocation from a
   subdirectory; and a no-tree-mutation assertion.
@@ -450,37 +451,268 @@ Product boxes:
 boxes all tick, readiness preflight `READY-FOR-REVIEW` (see closing block).
 Awaiting independent review by `review-spec`.
 
+## Amendments
+
+| Date | Authority | Change |
+|---|---|---|
+| 2026-09-16 | User-approved (execute-phase P2 gate decision) | The engine/parity validators no longer freeze the directory form `node --test packages/agentic-workflow/test/`, which Node ≥ 22 rejects with `Cannot find module` (the repository pins `.node-version` v22.23.1) and only Node ≤ 20 accepts. AC2 and AC7 become **bun-first with a Node-24 glob fallback**: `bun test packages/agentic-workflow/test/` → exit 0, fallback `node --test packages/agentic-workflow/test/*.test.mjs` → exit 0 (the form the repository's own `test:node` scripts use). No test file, assertion, or expected outcome is narrowed — the identical suite runs on the documented bun-first runtime. Planning evidence PE-005 (Node v22 directory mode) is marked **refuted**. Finding PLAN52-F9; decisions.md ED-52-7/ED-52-8. |
+
 ---
 
 ## Engineering half
 
-<!-- TODO: plan-feature → -->
-<!-- This section is written by `plan-feature` after an independent Product review. -->
-<!-- Not yet started. -->
+Written by `plan-feature` (scaffold, 2026-09-16; plan-review repair batch
+2026-09-16). Artifact revision of this plan set: `52-plan-2`. Grounded in
+`planning-evidence.md` (PE-001…PE-016); obligations frozen in
+`planning-obligations.md` (O1…O16).
 
-- `### Technical goals`
-- `### Architecture impact`
-- `### Design`
-- `### Planning evidence`
-- `### Obligations`
-- `### Decisions to confirm`
-- `### Testing requirements`
-- `### Dev scenarios`
-- `### Phases`
-- `### Deploy & rollback`
-- `### Open questions / risks`
-- `### Deliverables`
-- `### Post-merge next feature`
+### Technical goals
+
+- Compliance evidence for boxes 1–5 becomes deterministic: one pasted
+  receipt line (`TURN-CONTRACT ok` / `TURN-CONTRACT fail box<N>: <code>`)
+  plus the git/gh evidence already in the transcript — zero model calls in
+  the verification path.
+- One grammar, two engines: the producer-crate engine for this repo and a
+  scaffold shim for target projects emit byte-identical lines (D-52-2).
+- The canonical contract gains a machine-check profile that removes the
+  prose-recitation duty for boxes 1–5 when the verifier ran, and permits
+  echoing the closing hand-off from the sensor envelope (D-52-8) — without
+  changing what any box requires.
+
+### Architecture impact
+
+Surfaces touched: producer crate (new `bin/` + `test/`), template scaffold
+(new hook + hook test), `orchestration-envelope` reference (profile section
++ grammar block), `CLAUDE.md` normative-surfaces (one row), two workflow
+docs (one pointer each), `scripts/` (one conformance test).
+
+- Layer placement follows the frozen phase-lint prefix table: `template/`,
+  `skills/`, `docs/` → docs; `packages/`, `scripts/` → config/infra
+  (PE-001). This is what splits P1 (docs) from P2 (config/infra).
+- Invariants held: verifier is read-only (asserted in-suite); schema
+  package untouched (D-52-5, O13); crate stays private with zero
+  dependencies (D-52-2, PE-006); canonical contract only (D-52-7); skills
+  mirror re-bundled byte-identically same PR (PE-010); English-only
+  committed artifacts (F011/AD-002).
+- Preflight: Stage 1 — NRS consumed · arch: deferred.
+- Preflight: NRS consumed · invariant classification: n/a (no project
+  invariants declared — REPOSITORY_STATE.md F010).
+
+### Design
+
+**Resolution and defaults (both engines).** Repo root =
+`git rev-parse --show-toplevel`; failure → box1 `not-a-repo` (this is also
+what makes subdirectory invocation work — AC2). Default branch = target of
+`refs/remotes/origin/HEAD`, else local `main`, else local `master`, first
+existing wins (sampled: `refs/remotes/origin/main` here — PE-004); if none
+exists, box3 counts every commit on HEAD as not-on-default.
+
+**Box semantics (mechanical, first failure wins in 1→5 order).**
+
+| Box | Check | Reason code on failure |
+|---|---|---|
+| 1 | current branch ≠ default branch (`git branch --show-current` vs the chain above) | `branch-default` (repo-level: `not-a-repo`) |
+| 2 | when the branch is unit-shaped — `feat/<rest>` → `docs/features/<rest>`, `fix/<rest>` → `docs/fix/<rest>` — and that unit directory exists: `<unit-dir>/ACCEPTANCE.md` must exist at HEAD (`git cat-file -e HEAD:<path>`); plumbing failure counts as missing (fail-closed). A branch that is not unit-shaped, or whose unit directory does not exist, leaves box2 not-applicable (ED-52-2). Engine only: when `scripts/phase-lint.mjs` exists AND the unit has `TASKS.md`, run it over `<unit-dir>/TASKS.md` (bun-else-node) → nonzero exit fails the box. Shim: presence check only (ED-52-3) | `acceptance-missing` · `phase-lint-failed` |
+| 3 | `git rev-list --count <default>..HEAD` ≥ 1 (unborn HEAD or plumbing failure → 0, fail-closed) | `no-commits` |
+| 4 | only with `--finished`; without the flag box4 is not-applicable and never fails the line. With the flag: no upstream → no PR can exist → `pr-not-open`; the branch's own pull requests are read with `gh pr list --head <branch> --state open --json state,headRefOid` (the `--head` scope keeps an all-numeric branch name from being read as a PR number) and an invocation failing (any gh error) → `pr-unreachable` (fail-closed, never a fake ok — PE-003); no PR for the branch (an empty result) or an entry whose state ≠ `OPEN` → `pr-not-open`; `headRefOid` ≠ local HEAD sha → `pr-head-mismatch` | `pr-not-open` · `pr-unreachable` · `pr-head-mismatch` |
+| 5 | `git status --porcelain` non-empty → dirty; else `git rev-list --count @{upstream}..HEAD` > 0 → ahead (no upstream configured → 0; rev-list error with an upstream present → fail-closed as ahead). Within box5, dirty-tree precedes ahead-of-remote | `dirty-tree` · `ahead-of-remote` |
+
+**CLI contract.** Flags: `--finished`, `--help`. `--help` prints usage
+naming both flags and exits 0, short-circuiting any other flag. Unknown
+flag → usage on stderr, exit 2 (house precedent: `guard-command.sh` —
+PE-007). A receipt run prints exactly one line on stdout and never
+diagnostics; exit `0` ok · `1` contract fail · `2` usage error (D-52-6).
+
+**Receipt grammar.** The fenced `turn-contract-receipt@1` block frozen in
+the Product half (§Acceptance criteria) is the single grammar source; its
+canonical copy lives in `TURN_CONTRACT.md` from P1. Engines implement it,
+never redefine it (PE-016). The closed reason-code vocabulary is exactly
+the ten codes above, extended only through a SPEC change (D-52-6).
+
+**Engines.** Crate engine `packages/agentic-workflow/bin/turn-contract.mjs`:
+node-stdlib-only, zero dependencies, `#!/usr/bin/env node` shebang,
+bun-first invocation per repo convention with the node fallback guaranteed
+(PE-005/PE-006). Shim `template/.agentic-workflow/hooks/turn-contract.sh`:
+bash + git + gh only — AC12 forbids a node/bun/npm/npx token anywhere in
+the file, which is also why the shim cannot invoke the phase-lint script
+(ED-52-3) — `set -u` house style (PE-007).
+
+**Machine-check profile (P1 writes it into `TURN_CONTRACT.md`, ≤ 20
+lines — six skills load that file, PE-015).** Clauses (AC9): boxes 1–5 are
+demonstrated by running the verifier and pasting the one-line receipt;
+prose recitation of boxes 1–5 is not required when the receipt is pasted;
+verifier unavailable → recite boxes 1–5 as today (the profile never
+weakens a box); boxes 6–11 unchanged and agent-attested. Echo clause
+(AC10, D-52-8): the closing `→ Next:` block may be composed from the
+workflow-status envelope's `next.recommended` + `next.alternatives`
+(`scripts/workflow-status.mjs:922`, `:1270` — PE-002), preserving the
+fixed block shape (recommended line + `·` alternatives).
+
+**Tests (D-52-9 proportionality).** Per-box pass/fail/n-a cases in the
+engine suite and the hook suite (throwaway `git init -b` fixture repos; gh
+stubbed via a PATH shim), the two-engine parity matrix (AC7), and the
+grammar conformance test (AC8). No combinatorial flag × state sweep.
+
+**CI note.** The conformance test is node-first (AC8's validator is
+`node --test`), satisfying the node-compat guarantee; `scripts/` suites
+are not wired into a CI job today (PE-012) — disclosed in
+`known-issues.md`, triage with #198.
+
+### Planning evidence
+
+see `planning-evidence.md` (PE-001…PE-016, all `current` + `proven`;
+frozen before phases were cut).
+
+### Obligations
+
+see `planning-obligations.md` (O1…O16; every normative behaviour, invariant,
+use case, and failure state has exactly one row with phase, task, owner,
+validator, and required evidence).
+
+### Decisions to confirm
+
+All engineering decisions are made and recorded in `decisions.md`
+(ED-52-1…ED-52-5); none is open. The Product decisions D-52-1…D-52-9 are
+inherited unchanged.
+
+- **ED-52-1** phase cut is surface-first: P1 (docs) ships shim + hook test
+  + grammar block + profile + registration + bump/bundle + docs pointers;
+  P2 (config/infra) ships engine + suites + conformance. The design
+  sketch's "engines first" is impossible in 3 phases without a mixed-layer
+  phase (phase-lint box 2 blocks `template/` beside `packages/` — PE-001);
+  the D-52-1 three-phase count is preserved, the order is reversed.
+- **ED-52-2** box2 unit resolution derives from the branch name
+  (`feat/<rest>` / `fix/<rest>`); a branch that is not unit-shaped, or
+  whose unit directory does not exist, leaves box2 not-applicable — the
+  SPEC's "cheap deterministic checks only" semantics.
+- **ED-52-3** the shim's box2 is presence-only: AC12 (no runtime token in
+  the shim) makes D-52-4's phase-lint clause unreachable there; the engine
+  implements it in full.
+- **ED-52-4** default-branch resolution chain `origin/HEAD` → `main` →
+  `master`; none → box3 counts all HEAD commits (fixture determinism,
+  PE-004).
+- **ED-52-5** the integration-closure row's "run by the node-compat CI
+  job" is satisfied by the conformance test's node-first invocation;
+  wiring `scripts/` suites into CI is disclosed in `known-issues.md` and
+  triaged with #198, not smuggled into this unit (PE-012).
+
+### Testing requirements
+
+see `testing.md`. Integration-first: engine suite (`bun test
+packages/agentic-workflow/test/`; Node 24 fallback: `node --test
+packages/agentic-workflow/test/*.test.mjs`), hook suite (house bash-test pattern),
+parity suite, grammar conformance, plus the standing skill-surface suites
+(context budgets, mirror parity, sensor). No network; gh stubbed; fixtures
+are throwaway temp repos; the verifier's read-only property is asserted.
+
+### Dev scenarios
+
+Failure modes are exercised as edge fixtures in the engine and hook suites
+(P3 hardening corpus, O11). Scenarios are orchestration through existing
+mechanisms (fixture repos, PATH-stubbed gh) — no new domain.
+
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `verifier:empty-repo` | repository with zero commits on an unborn, non-default branch | `git init -b feature/x` fixture, no commits → box3 `no-commits`, no stack trace |
+| `verifier:plumbing-denied` | unreadable `.git` (permission denied class) | fixture with restricted permissions → exit 1 with a fail line, never exit 0 |
+| `verifier:gh-outage` | gh unreachable / failing with `--finished` | PATH-stubbed gh exiting nonzero → `pr-unreachable`, fail-closed |
+| `verifier:dirty-ordering` | dirty tree AND ahead-of-remote simultaneously | fixture with both states → `box5: dirty-tree` (documented precedence) |
+| `verifier:oversized-status` | dirty tree with many/oddly-named files (unicode, spaces) | fixture files → still exactly one receipt line, stdout-only |
+| `verifier:concurrent` | two verifier runs racing | n/a: the verifier is stateless and read-only — no shared state to race on |
+| `verifier:threshold` | limit/threshold hit | n/a: box3's ≥ 1-commit threshold is the only threshold, covered by `verifier:empty-repo` |
+
+### Phases
+
+High-level breakdown; detailed tasks live in `TASKS.md` (the lint target),
+narrative in `PLAN.md`. Planning is not a numbered phase; `P1` is the first
+implementation phase (it also commits the planning artifacts); `P3` is the
+hardening/close-out phase carrying the literal close-out chain (M/L: the
+PR is the final step of hardening).
+
+- **P1 — Ship the machine-check receipt surface** (docs): shim + hook test
+  + machine-check profile + grammar block + normative-surfaces row +
+  bump/bundle + two docs pointers. Order note ED-52-1: the surface ships
+  before the engine because the frozen prefix table forbids a mixed-layer
+  phase; the engine consumes the declared grammar in P2.
+- **P2 — Implement the turn-contract verifier engine** (config/infra):
+  crate engine + engine suite + parity suite + grammar conformance test.
+- **P3 — Hardening & PR** (hardening): dev-scenario edge corpus, full
+  verification gate, literal close-out chain (`Closes #226`).
+
+#### Phase-lint (owned by `skills/phase-contract/SKILL.md` — keep in sync with `docs/fix/_TEMPLATE/SPEC.md`)
+
+Run over the emitted plan (`bun scripts/phase-lint.mjs
+docs/features/52-machine-checked-turn-contract/TASKS.md`, node fallback):
+
+```text
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:7:ship-machine-check-receipt-surface
+P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:4:implement-turn-contract-verifier-engine
+P3 Phase-lint: PASS (8/8) · fingerprint P3:hardening:8:hardening-pr
+verdict PASS
+fingerprint: 2c7d8179e6598cec42870674f000b1802d7270c977cc5d160f6150204bb7db05
+```
+
+Re-synced 2026-09-16 with the plan-review repair batch (plan set `52-plan-2`):
+P1 gains one regression task (context budgets + sensor suite — PLAN52-F3),
+rotating its task count 6 → 7.
+
+### Deploy & rollback
+
+n/a — merging is enough. No schema migrations, no feature flags, no config
+changes. Rollback = revert PR; the verifier is additive tooling with no
+persisted state (D-52-3).
+
+### Open questions / risks
+
+- **Risk — context budgets:** the profile section grows
+  `TURN_CONTRACT.md`, which six skills load (PE-015). Mitigated by the ≤
+  20-line cap and AC11 re-running `check-skill-context.mjs` in P1/P3.
+- **Risk — gh output drift:** box4 parses the `gh pr list --head <branch>
+  --json state,headRefOid` payload (the same two fields PE-003 sampled; the
+  `--head` scope and the empty-result reading are pinned by the shared box4
+  fixtures). A future gh CLI change would surface
+  as `pr-unreachable` (fail-closed), never a false ok; the stub contract in
+  the engine suite pins the parsed fields.
+- **Disclosed limitation — CI wiring:** `scripts/` suites are not wired
+  into a CI job (PE-012, ED-52-5) — see `known-issues.md`; triage with
+  #198.
+- Inherited open questions: none (the Product half recorded `Deferred
+  decisions: none`).
+
+### Deliverables
+
+- `packages/agentic-workflow/bin/turn-contract.mjs` — the crate verifier engine
+- `packages/agentic-workflow/test/turn-contract.engine.test.mjs` — engine suite
+- `packages/agentic-workflow/test/turn-contract.parity.test.mjs` — two-engine parity suite
+- `template/.agentic-workflow/hooks/turn-contract.sh` — the scaffold shim
+- `template/.agentic-workflow/hooks/tests/test-turn-contract.sh` — hook suite
+- `scripts/turn-contract-grammar.test.mjs` — grammar conformance test
+- `skills/orchestration-envelope/references/TURN_CONTRACT.md` — machine-check profile + `turn-contract-receipt@1` grammar block
+- `CLAUDE.md` — normative-surfaces row
+- `docs/workflow/ORCHESTRATION.md`, `docs/workflow/FEATURE_WORKFLOW.md` — one pointer each
+- skill release mechanics: `orchestration-envelope` 2.0.2 → 2.1.0, CHANGELOG row, README/SKILLS sync, re-bundled pi mirror
+- planning artifacts: this SPEC's Engineering half, `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`, `testing.md`, `known-issues.md`, `architecture-notes.md`, `planning-evidence.md`, `planning-obligations.md`
+
+### Post-merge next feature
+
+Per `docs/features/ROADMAP.md` Phase 0 build order (fix #224 · 52 · 56 ·
+55 · 48): next is **56 `design-interview-batching` (#231)**. Feature **33
+`turn-contract-single-owner` (#173)** later adopts this unit's machine
+profile for bespoke contracts and must not start before this feature lands
+(soft dependency — SPEC §Dependencies).
 
 ---
 
-## Artifacts that still need to be created by plan-feature
+## Artifacts created by plan-feature (2026-09-16)
 
-- `docs/features/52-machine-checked-turn-contract/PLAN.md` — phased plan
-- `docs/features/52-machine-checked-turn-contract/TASKS.md` — task breakdown
-- `docs/features/52-machine-checked-turn-contract/ACCEPTANCE.md` — frozen acceptance manifest
-- `docs/features/52-machine-checked-turn-contract/planning-evidence.md` — engineering claims
-- `docs/features/52-machine-checked-turn-contract/planning-obligations.md` — obligations ledger
+- `PLAN.md` / `TASKS.md` — phased plan (prose + linted checklists)
+- `ACCEPTANCE.md` — frozen acceptance manifest (AC1–AC14)
+- `planning-evidence.md` — engineering claims PE-001…PE-016
+- `planning-obligations.md` — obligations ledger O1…O16 (O15/O16 added by
+  the plan-review repair batch — PLAN52-F2, PLAN52-F5)
+- `testing.md`, `known-issues.md`, `architecture-notes.md` — supporting
+  artifacts; engineering decisions ED-52-1…ED-52-5 appended to
+  `decisions.md`
 
 ## Artifacts already created by this design-feature session
 

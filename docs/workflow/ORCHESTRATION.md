@@ -45,6 +45,11 @@ and still exits 0, and an unexpected failure exits non-zero naming itself as
 `workflow-status` skill is the human/interpreter surface over the same script,
 and neither assembles the envelope by hand.
 
+Compliance for the canonical turn contract's boxes 1–5 is machine-checked: the
+profile in `skills/orchestration-envelope/references/TURN_CONTRACT.md`
+demonstrates them by pasting the verifier's one-line receipt beside the git/gh
+evidence instead of reciting them.
+
 ## Drive one turn
 
 Use the profile inventory and generated instruction instead of maintaining a
