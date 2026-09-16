@@ -330,6 +330,7 @@ ledger-finding-mark-shape | skills/pre-execution-review/references/LEDGERS.md | 
 sensor-envelope-fields | skills/workflow-status/references/SENSOR_CORE.md | block:sensor-fields@1 | envelope-field | no
 turn-contract-fields | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-fields@1 | envelope-field:next | yes
 turn-contract-transitions | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:hand-off-transitions@1 | workflow-intent | no
+turn-contract-receipt | skills/orchestration-envelope/references/TURN_CONTRACT.md | block:turn-contract-receipt@1 | n/a | no
 ```
 
 ### Rendered facts (prose that restates a machine value)

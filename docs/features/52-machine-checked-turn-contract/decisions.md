@@ -144,3 +144,226 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
   the next design turn walk a live inventory instead of re-deriving one.
   Not done now — the file is a maintained substrate, and the skill requires
   user confirmation to seed it.
+
+## 2026-09-16 — ED-52-1: Phase cut is surface-first (P1 docs → P2 config/infra)
+
+- **What**: The 3-phase cut ships P1 = shim + hook test + grammar block +
+  machine-check profile + normative-surfaces row + bump/bundle + docs
+  pointers (docs), P2 = engine + engine suite + parity suite + conformance
+  test (config/infra), P3 = Hardening & PR — reversing the design sketch's
+  "engines → profile/registration" order while preserving D-52-1's
+  three-phase count.
+- **Why**: The frozen phase-lint prefix table maps `template/`/`skills/`/
+  `docs/` → docs and `packages/`/`scripts/` → config/infra
+  (`scripts/phase-lint.mjs` `layerForTarget()`); one phase cannot carry the
+  shim (`template/`) beside the engine (`packages/`) — box 2 would BLOCK
+  the mixed-layer phase (PE-001). The grammar-block phase must also precede
+  the conformance test that pins it.
+- **Authority**: authoring decision under user-delegated sizing (D-52-1:
+  "size should be defined automatically by you"); recorded here and in
+  SPEC §Phases for the reviewer.
+
+## 2026-09-16 — ED-52-2: Box2 unit resolution from the branch name
+
+- **What**: Box2 applies when the branch is unit-shaped — `feat/<rest>` →
+  `docs/features/<rest>`, `fix/<rest>` → `docs/fix/<rest>` — and the unit
+  directory exists; then `<unit-dir>/ACCEPTANCE.md` must exist at HEAD
+  (`git cat-file -e`). A branch that is not unit-shaped, or whose unit
+  directory does not exist, leaves box2 not-applicable.
+- **Why**: The SPEC freezes box2's semantics ("frozen-acceptance artifacts
+  present at HEAD", "cheap deterministic checks only") but not the unit
+  identification; branch-name resolution is the deterministic mechanism
+  this workflow already uses for unit branches, and the n/a branch keeps
+  the verifier from failing non-unit work (e.g. docs-only branches) the
+  contract's box 1 already gates.
+- **Authority**: authoring decision under the SPEC's frozen box semantics
+  (scope item 5); recorded for the reviewer.
+
+## 2026-09-16 — ED-52-3: The shim's box2 is presence-only
+
+- **What**: The scaffold shim checks frozen-acceptance presence only; the
+  conditional phase-lint clause of D-52-4 is implemented by the crate
+  engine only.
+- **Why**: AC12 forbids any node/bun/npm/npx token in the shim, so it
+  cannot invoke `scripts/phase-lint.mjs` even when a target project has
+  one; D-52-4's degradation is the shim's standing condition. No AC is
+  narrowed — AC2–AC5 pin the engine, AC12 pins the shim.
+- **Authority**: synthesis of the SPEC's own frozen constraints (D-52-4 ×
+  AC12); disclosed in `known-issues.md`.
+
+## 2026-09-16 — ED-52-4: Default-branch resolution chain
+
+- **What**: Default branch = target of `refs/remotes/origin/HEAD`, else
+  local `main`, else local `master`; if none exists, box3 counts every
+  commit on HEAD as not-on-default.
+- **Why**: The engine and shim need one deterministic default-branch
+  answer for boxes 1 and 3; the chain matches what this repo and typical
+  targets expose (sampled: `refs/remotes/origin/main`), and the no-default
+  fallback keeps fresh fixture repos deterministic.
+- **Authority**: authoring decision (PE-004 sampled plumbing).
+
+## 2026-09-16 — ED-52-5: CI wiring of `scripts/` suites stays out of this unit
+
+- **What**: The grammar conformance test is registered under `scripts/`
+  and validated node-first (`node --test`, AC8) but is not added to the
+  CI node-compat jobs; the gap is disclosed in `known-issues.md` and
+  triaged with #198.
+- **Why**: The integration-closure row's "run by the node-compat CI job"
+  is loose prose — today's node-compat jobs run only the packages' own
+  suites (PE-012), and no AC requires a workflow edit; adding one would
+  widen the change surface to publish infrastructure without a frozen
+  criterion demanding it. The row's substance (the test passes under plain
+  node) holds by construction.
+- **Authority**: authoring decision; disclosed rather than silently
+  dropped, per the anti-gap rule.
+
+## 2026-09-16 — ED-52-6: box4 gh failure mapping
+
+- **What**: With `--finished`, the verifier runs `gh pr view <branch> --json
+  state,headRefOid`. A nonzero exit is `pr-unreachable` (gh could not be
+  asked); an output with no `state`, an empty payload, or a state other than
+  `OPEN` is `pr-not-open`. A missing upstream short-circuits to `pr-not-open`
+  before gh is invoked.
+- **Why**: The SPEC's own named command exits nonzero when a branch has no PR
+  at all, so a blanket `any gh error → pr-unreachable` would make `no PR →
+  pr-not-open` unreachable. Splitting the two by observable payload keeps the
+  fail-closed guarantee (an unreachable gh is never a fake ok) while still
+  naming a branch whose PR is absent or closed as `pr-not-open`. Both suites
+  pin all four box4 outcomes against a PATH-stubbed gh, so the contract is
+  testable without a forge.
+- **Authority**: execution refinement of SPEC §Design box4 / PE-003, inside the
+  frozen reason-code vocabulary (D-52-6); no acceptance criterion narrowed.
+
+## 2026-09-16 — Execution hygiene: pre-existing feature-59 bytes relocated
+
+- **What**: The worktree carried uncommitted cross-unit bytes before P1 —
+  `docs/features/ROADMAP.md` consolidation edits folding rows 48/55 into a new
+  feature 59, and the untracked `docs/features/59-executable-continuations-fixture/`
+  design folder. They were moved to the `feat/59-executable-continuations-fixture`
+  worktree (the branch that owns them), leaving this unit's tree clean for the
+  box-5 gate.
+- **Why**: Box 5 requires an empty `git status --porcelain`, and committing
+  another unit's design work on `feat/52` would bundle out-of-scope artifacts
+  into this PR.
+- **Authority**: repo hygiene / turn-contract box 5; not a deliverable of this
+  unit.
+
+## 2026-09-16 — ED-52-7: P2 gate blocked by the frozen validator's Node form
+
+- **What**: The P2 gate command `node --test packages/agentic-workflow/test/`
+  (AC2, AC7, TASKS P2 done-when) cannot pass on the repository's pinned Node
+  (`v22.23.1`) or the environment default (`v24.19.0`): Node ≥ 22 resolves the
+  directory positional as a module and exits `Cannot find module`. The suite
+  passes under the documented form `node --test packages/agentic-workflow/test/*.test.mjs`
+  (40/40) and under the directory form on Node 20 (41 pass).
+- **Why**: Planning-evidence **PE-005** ("node v22.23.1 supports `node --test
+  <dir>` directory mode") is false — Node's own v22 docs accept files or glob
+  patterns, and the repo's `test:node` scripts already use the glob form. This
+  is a **Plan-level validator defect** (implementation-discovery question 6
+  contradiction), not a source/test defect: no engine or suite byte is wrong.
+- **Authority**: discovered at execution; routed as finding `PLAN52-F9`. The
+  frozen `ACCEPTANCE.md` may only change through the verification contract's
+  amendment path (explicit user approval → dated SPEC `## Amendments` row →
+  replacement manifest → fresh receipt); the executor does not self-authorize
+  it.
+
+## 2026-09-16 — ED-52-8: AC2/AC7 amended to bun-first (user-approved)
+
+- **What**: On the owner's explicit approval, the frozen ACCEPTANCE validators
+  for AC2 and AC7 (and TASKS/PLAN P2 done-when, testing.md, obligations O6/O9)
+  change from directory mode `node --test packages/agentic-workflow/test/` to
+  `bun test packages/agentic-workflow/test/` (bun-first) with a Node-24 glob
+  fallback `node --test packages/agentic-workflow/test/*.test.mjs`. SPEC gains
+  a dated `## Amendments` row; PE-005 is marked `refuted`; the replacement
+  `ACCEPTANCE.md` is re-frozen (blob
+  `c088a621b794fe6b9d4bf3c138406c0c488c4889`) and a fresh acceptance receipt is
+  recorded.
+- **Why**: The owner directed the repository's documented bun-first runtime
+  (bun default, Node 24 fallback). Directory mode is not a Node ≥ 22 interface,
+  so the original validator could never pass on the pinned runtime; the suite
+  bytes and every assertion are unchanged.
+- **Authority**: explicit user approval at the P2 gate; verification contract
+  amendment order (approval → SPEC amendment → replacement manifest → fresh
+  receipt). Finding `PLAN52-F9`.
+
+## 2026-09-16 — ED-52-9: the shim reads `git status` to its first byte (user-directed)
+
+- **What**: box5 in `template/.agentic-workflow/hooks/turn-contract.sh` no longer
+  captures the whole `git status --porcelain` listing into a shell variable. It
+  pipes the listing through `{ IFS= read -r -n 1; }` and reads the pipeline's
+  statuses from `${PIPESTATUS[@]}`, cloned as the very next command: git's own
+  exit status must be 0, and the read must have consumed a byte (any output at
+  all means "dirty"). A `box5 huge listing fails closed` case (≈1.2 MB of
+  porcelain, past the engine's 1 MiB read cap and past the shim's pipe buffer)
+  joins the shared fixture matrix and the shim suite.
+- **Why**: Finding F6 was **disputed** — its stated divergence does not
+  reproduce (with a 1 147 992-byte listing BOTH engines print
+  `TURN-CONTRACT fail box5: dirty-tree`, exit 1, byte-identical: the engine
+  throws on Node's 1 MiB `maxBuffer`, the shim buffered and failed on non-empty),
+  so no verdict changes and no red-first test can exist. The owner then directed
+  the residual to be fixed anyway, choosing the fastest + lowest-storage option.
+  Measured on an 18 MB listing: 816 ms → 178 ms and 112.7 MB → 3.4 MB peak RSS;
+  on a clean repository 39.6 ms → 32.6 ms. Variants `set -o pipefail` + `head -c`
+  (adds an external process and a global shell option) and a `TMPDIR` temp file
+  (contradicts the verifier's "mutates nothing" claim, and moves the buffer to
+  disk instead of removing it) were rejected.
+- **Authority**: explicit user decision on the F6 dispute after the measured
+  comparison; no frozen field of the F6 row was edited.
+- **Guard**: the F1 corrupt-index case (`box5 unreadable status fails closed`)
+  is what detects a bounded read that loses git's status — verified by running
+  the suite against a deliberately mis-ordered `PIPESTATUS` implementation,
+  which it fails (`exit 0, want 1`).
+
+## 2026-09-16 — ED-52-10: box4 asks for the branch's pull requests (amends ED-52-6)
+
+- **What**: Both engines read box4's pull request with `gh pr list --head
+  <branch> --state open --json state,headRefOid` instead of `gh pr view
+  <branch> --json state,headRefOid`. An empty result is `pr-not-open`, a
+  non-`OPEN` entry is `pr-not-open`, an invocation that exits nonzero is
+  `pr-unreachable`, and an `OPEN` entry whose `headRefOid` ≠ local HEAD is
+  `pr-head-mismatch`. The SPEC box4 row and the gh-drift risk row name the new
+  command; no clause of the row, no acceptance criterion and no validator
+  changed.
+- **Why**: F9 (review cycle 3, med, spec-drift) — the SPEC's `no PR →
+  pr-not-open` clause was unimplementable as written. A branch that is pushed
+  with no PR yet makes `gh pr view` exit nonzero, and ED-52-6's mapping sent
+  every nonzero exit to `pr-unreachable`: the real "PR not opened yet" case was
+  reported as a gh outage, pointing the agent at gh auth/network instead of at
+  creating the PR. `pr list` answers that same state with exit 0 and an empty
+  result, which is the observable ED-52-6's split needed; the `state ≠ OPEN`
+  branch of the row also gains the fixture coverage it lacked. F11 (same cycle,
+  med, code) — `gh pr view <arg>` reads an all-numeric argument as a PR
+  *number*, so a branch named e.g. `123` made box4 judge the unrelated PR #123:
+  a direction-changing verdict (`pr-head-mismatch` on a branch with no PR at
+  all, or a false ok when that PR's head happened to equal local HEAD). `--head`
+  scopes the query to the branch.
+- **Authority**: `review-change` cycle 3 verdict REVIEW-FAIL, findings F9 + F11
+  (fix-now); folded by `/fold-findings` with red-first coverage.
+- **Guard**: the shared box4 matrix — `box4 no PR for the branch` (red against
+  the pre-fold engines: `pr-unreachable`), `box4 merged PR is not an open PR`
+  (the previously untested `state ≠ OPEN` branch), `box4 numeric branch is not
+  a PR number` (red: `pr-head-mismatch`) and the re-shaped head-mismatch/open-PR
+  payloads — asserted through both engines by the parity suite.
+
+## 2026-09-16 — ED-52-11: the box5 status read is input-pinned and lock-free
+
+- **What**: Both engines read box5's listing with `--untracked-files=all`, and
+  lock-free: the shim runs `git --no-optional-locks … status --porcelain
+  --untracked-files=all`, the engine passes `--no-optional-locks` to every git
+  invocation through its `git()` helper.
+- **Why**: F8 (review cycle 3, med, security) — box5 trusted a repo-local
+  `status.showUntrackedFiles=no`, which hides every untracked file, so a tree
+  holding untracked files won a false `TURN-CONTRACT ok`, exit 0: the exact
+  fail-open class F1/F6 were folded to prevent, and the suites' own read-only
+  assertions already pinned the flag the verifier did not. F10 (same cycle, med,
+  code) — a plain `git status --porcelain` opportunistically refreshes and
+  rewrites `.git/index`, contradicting the engine header's "mutates nothing of
+  its own" and ACCEPTANCE's read-only quality floor; `--no-optional-locks` is
+  git's documented switch for precisely that write (measured: the index hash
+  changes without it, is unchanged with it).
+- **Authority**: `review-change` cycle 3 verdict REVIEW-FAIL, findings F8 + F10
+  (fix-now); folded by `/fold-findings` with red-first coverage.
+- **Guard**: `box5 ignores status.showUntrackedFiles=no` (red: `ok`, exit 0) in
+  both suites, and the index-bytes assertions in both suites (red: the verifier
+  rewrote `.git/index`); the pre-existing corrupt-index and huge-listing cases
+  re-run green, proving the added flags did not weaken either fail-closed read.
