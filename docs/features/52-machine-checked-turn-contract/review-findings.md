@@ -20,16 +20,33 @@ VF-5 | packages/agentic-workflow/bin/turn-contract.mjs:89 + template/.agentic-wo
 VF-6 | template/.agentic-workflow/hooks/turn-contract.sh:91 · reviewer review-change · HEAD 81ec300f5e940e9cce398095328523c6f065f586 · recheck direct read + probe: cmd-substitution `status_out=$(git -C "$repo_root" status --porcelain 2>/dev/null)` captures the full listing unbounded; engine counterpart (turn-contract.mjs:141) caps at the 1 MiB default maxBuffer and fails closed → on a >1 MiB porcelain the engine prints `fail box5: dirty-tree` exit 1 while the shim prints ok exit 0 | perf | confirmed | finding-mark | n/a | n/a
 VF-7 | skills/orchestration-envelope/references/TURN_CONTRACT.md:23-36 · reviewer review-change · HEAD 81ec300f5e940e9cce398095328523c6f065f586 · recheck direct read: profile grants the recitation exemption listing shim and engine as interchangeable verifiers; grep -iE "engine-only|phase-lint" on that file → only :7 (gate list) and :44 (codes list), no caveat in the profile section; pointer docs (FEATURE_WORKFLOW.md, ORCHESTRATION.md) zero hits; disclosure exists only at turn-contract.sh:55-56, known-issues.md:24-30, decisions.md ED-52-3 | brand | confirmed | finding-mark | n/a | n/a
 REVIEW-RAN | HEAD 81ec300f5e940e9cce398095328523c6f065f586 | n/a | n/a | review-mark | n/a | n/a
-F8 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 | security | med | fix-now | fold | no
-F9 | docs/features/52-machine-checked-turn-contract/SPEC.md:517 | spec-drift | med | fix-now | fold | no
-F10 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 | code | med | fix-now | fold | no
-F11 | packages/agentic-workflow/bin/turn-contract.mjs:124 + template/.agentic-workflow/hooks/turn-contract.sh:79 | code | med | fix-now | fold | no
+F8 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 | security | med | fix-now | fold | yes
+F9 | docs/features/52-machine-checked-turn-contract/SPEC.md:517 | spec-drift | med | fix-now | fold | yes
+F10 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 | code | med | fix-now | fold | yes
+F11 | packages/agentic-workflow/bin/turn-contract.mjs:124 + template/.agentic-workflow/hooks/turn-contract.sh:79 | code | med | fix-now | fold | yes
 VF-8 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck reproducer: /tmp/vf/c1 fixture (feat/x, 1 commit, clean, `git config status.showUntrackedFiles no`, untracked file present) → engine AND shim print `TURN-CONTRACT ok` exit 0; control after `git config --unset status.showUntrackedFiles` → both `TURN-CONTRACT fail box5: dirty-tree` exit 1 | security | confirmed | finding-mark | n/a | n/a
 VF-9 | docs/features/52-machine-checked-turn-contract/SPEC.md:517 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck direct read + probe: box4 clauses quoted ("no PR or state ≠ OPEN → pr-not-open" vs "any gh error → pr-unreachable"); stub gh exit 1 empty stdout → both engines `fail box4: pr-unreachable` (a missing PR IS a gh error, so the pre-PR case can never reach pr-not-open); grep MERGED\|CLOSED over fixtures.mjs + test-turn-contract.sh → no gh-exit-0 state≠OPEN fixture | spec-drift | confirmed | finding-mark | n/a | n/a
 VF-10 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck reproducer: /tmp/vf/c5 (tracked file touched to a stale date) → `.git/index` mtime advances across both engines' plain `git status --porcelain` (no `--no-optional-locks`), contradicting engine header :4-5 "mutates nothing of its own" and the ACCEPTANCE read-only quality floor | code | confirmed | finding-mark | n/a | n/a
 VF-11 | packages/agentic-workflow/bin/turn-contract.mjs:124 + template/.agentic-workflow/hooks/turn-contract.sh:79 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck reproducer: /tmp/vf/c8 argv-capture gh stub on branch `123` with upstream → both engines ran `pr view 123 --json state,headRefOid` (bare all-numeric branch; gh resolves such args as PR numbers, so box4 can check a different PR) | code | confirmed | finding-mark | n/a | n/a
 REVIEW-RAN | HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 | n/a | n/a | review-mark | n/a | n/a
 ```
+
+Fold cycle 3 (`/fold-findings`, user-invoked after the cycle-3 REVIEW-FAIL):
+F8/F9/F10/F11 folded as ONE atomic batch — one homogeneous correction class (the
+verifier's two external reads trusted ambient state instead of pinning their
+inputs: git's repo-local config and optional index locks, gh's argument
+heuristics and its single nonzero exit for a missing PR), one validator set
+(both suites + the two-engine parity matrix), one rollback boundary (this PR).
+Red-first: every new detector was run against the unchanged engines before the
+fix, and each failed for its own reason — `box4 no PR for the branch` →
+`pr-unreachable`, `box4 numeric branch is not a PR number` → `pr-head-mismatch`
+(box4 judging the unrelated PR #123), `box5 ignores status.showUntrackedFiles=no`
+→ `ok` exit 0, and the index-bytes assertion → the verifier rewrote
+`.git/index`. The `gh` PATH-stub gained its per-verb answer (`pr list` vs
+`pr view`, with an independent view exit) because the *real* gh exits nonzero
+for a branch that has no PR — that error is the whole of F9. Decisions.md
+ED-52-10 (box4) / ED-52-11 (box5); SPEC box4 and gh-drift risk rows updated to
+the implemented command with every clause's semantics unchanged.
 
 Cycle 1 (first review; no prior marks or forge receipts). Refuted candidates
 are reported in the review's chat report only — they never become rows.

@@ -313,3 +313,57 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
   is what detects a bounded read that loses git's status — verified by running
   the suite against a deliberately mis-ordered `PIPESTATUS` implementation,
   which it fails (`exit 0, want 1`).
+
+## 2026-09-16 — ED-52-10: box4 asks for the branch's pull requests (amends ED-52-6)
+
+- **What**: Both engines read box4's pull request with `gh pr list --head
+  <branch> --state open --json state,headRefOid` instead of `gh pr view
+  <branch> --json state,headRefOid`. An empty result is `pr-not-open`, a
+  non-`OPEN` entry is `pr-not-open`, an invocation that exits nonzero is
+  `pr-unreachable`, and an `OPEN` entry whose `headRefOid` ≠ local HEAD is
+  `pr-head-mismatch`. The SPEC box4 row and the gh-drift risk row name the new
+  command; no clause of the row, no acceptance criterion and no validator
+  changed.
+- **Why**: F9 (review cycle 3, med, spec-drift) — the SPEC's `no PR →
+  pr-not-open` clause was unimplementable as written. A branch that is pushed
+  with no PR yet makes `gh pr view` exit nonzero, and ED-52-6's mapping sent
+  every nonzero exit to `pr-unreachable`: the real "PR not opened yet" case was
+  reported as a gh outage, pointing the agent at gh auth/network instead of at
+  creating the PR. `pr list` answers that same state with exit 0 and an empty
+  result, which is the observable ED-52-6's split needed; the `state ≠ OPEN`
+  branch of the row also gains the fixture coverage it lacked. F11 (same cycle,
+  med, code) — `gh pr view <arg>` reads an all-numeric argument as a PR
+  *number*, so a branch named e.g. `123` made box4 judge the unrelated PR #123:
+  a direction-changing verdict (`pr-head-mismatch` on a branch with no PR at
+  all, or a false ok when that PR's head happened to equal local HEAD). `--head`
+  scopes the query to the branch.
+- **Authority**: `review-change` cycle 3 verdict REVIEW-FAIL, findings F9 + F11
+  (fix-now); folded by `/fold-findings` with red-first coverage.
+- **Guard**: the shared box4 matrix — `box4 no PR for the branch` (red against
+  the pre-fold engines: `pr-unreachable`), `box4 merged PR is not an open PR`
+  (the previously untested `state ≠ OPEN` branch), `box4 numeric branch is not
+  a PR number` (red: `pr-head-mismatch`) and the re-shaped head-mismatch/open-PR
+  payloads — asserted through both engines by the parity suite.
+
+## 2026-09-16 — ED-52-11: the box5 status read is input-pinned and lock-free
+
+- **What**: Both engines read box5's listing with `--untracked-files=all`, and
+  lock-free: the shim runs `git --no-optional-locks … status --porcelain
+  --untracked-files=all`, the engine passes `--no-optional-locks` to every git
+  invocation through its `git()` helper.
+- **Why**: F8 (review cycle 3, med, security) — box5 trusted a repo-local
+  `status.showUntrackedFiles=no`, which hides every untracked file, so a tree
+  holding untracked files won a false `TURN-CONTRACT ok`, exit 0: the exact
+  fail-open class F1/F6 were folded to prevent, and the suites' own read-only
+  assertions already pinned the flag the verifier did not. F10 (same cycle, med,
+  code) — a plain `git status --porcelain` opportunistically refreshes and
+  rewrites `.git/index`, contradicting the engine header's "mutates nothing of
+  its own" and ACCEPTANCE's read-only quality floor; `--no-optional-locks` is
+  git's documented switch for precisely that write (measured: the index hash
+  changes without it, is unchanged with it).
+- **Authority**: `review-change` cycle 3 verdict REVIEW-FAIL, findings F8 + F10
+  (fix-now); folded by `/fold-findings` with red-first coverage.
+- **Guard**: `box5 ignores status.showUntrackedFiles=no` (red: `ok`, exit 0) in
+  both suites, and the index-bytes assertions in both suites (red: the verifier
+  rewrote `.git/index`); the pre-existing corrupt-index and huge-listing cases
+  re-run green, proving the added flags did not weaken either fail-closed read.
