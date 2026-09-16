@@ -1,5 +1,7 @@
 ---
 name: resolve-repository-state
+model: opus
+effort: high
 user-invocable: true
 version: 1.2.1
 argument-hint: <contradiction-id>

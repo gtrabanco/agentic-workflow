@@ -1,5 +1,7 @@
 ---
 name: generate-docs
+model: sonnet
+effort: medium
 user-invocable: true
 version: 2.0.1
 argument-hint: "[NN-slug | fix-n | path/glob] [--review]"
