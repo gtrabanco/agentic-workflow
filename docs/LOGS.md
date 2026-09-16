@@ -4,6 +4,13 @@ Append-only journal of working sessions — the context git history doesn't
 record. A commit says *what* changed; an entry here says what the session set
 out to do, what was decided and *why*, and where to resume.
 
+## 2026-09-16T08:00Z — feat/52-machine-checked-turn-contract — manual (review-spec pass)
+- **Commits:** 1 (`f38f9bb8`) on branch `feat/52-machine-checked-turn-contract` (later merged into main via PR #236, merge commit `251383f5`)
+- **Files:** `docs/features/52-machine-checked-turn-contract/{progress.md,planning-findings.md}`
+- **Summary:** Ran `/review-spec 52-machine-checked-turn-contract` — the mandatory Product-half gate before plan-feature. Built the pre-execution snapshot (digest `a768d95c…`, schema package unavailable → recipe-owner canonical serializer used, `validated: manual`), ran the clean-context falsification prompt (stance: `NO-CONFIRMED-GAPS`), and swept all 14 Product checks (C1–C14). Verdict: **SPEC-REVIEW-PASS** (14/14 pass, zero material open). One non-material info finding (SPEC52-F1): E2's capability closure cites the house bash-test pattern as `tests/test-command-guard.sh style` — the file is actually at `template/.agentic-workflow/hooks/tests/test-command-guard.sh`; no top-level `tests/` dir exists. Substance holds, AC13's own target path is already correct. §8 self-check: `structural.fresh: true`, `current: true`, exit 0. Receipt persisted, findings ledger created, committed, clean tree confirmed. Feature branch created (`feat/52-machine-checked-turn-contract`) since box1 forbids edits on default.
+- **Decisions:** (1) The recipe-owner canonical builder (`scripts/pre-execution-snapshot.mjs build`) was used instead of the schema package (not installed locally). The builder's own stdout digest is the binding mechanism. (2) `governing-issue` is NOT a bound context in this repo's canonical builder (only `project-guide`, `normalized-repository-state`, `architectural-invariants`). The snapshot correctly reflects the builder's own context list. (3) `docs/CAPABILITIES.md` exists as an unfilled seed template — C6 correctly treats the integration closure as a derived inventory. (4) Feature 52 was subsequently planned, executed, reviewed, and merged (PR #236) — the full lifecycle is logged in later entries.
+- **Next:** Feature 52 is done (merged `251383f5`). Next roadmap unit: 56 `design-interview-batching` (#231, Phase 0 build order: fix #224 → 52 → 56 → 55 → 48). Run `/plan-feature --next` or `/workflow-status` to discover startable work.
+
 ## 2026-09-12T15:18Z — feat/37-phase-lint-script — manual
 - **Commits:** 1 (`f3329527`)
 - **Files:** `docs/features/37-phase-lint-script/{progress.md,planning-findings.md}`
