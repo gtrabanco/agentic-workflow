@@ -292,3 +292,16 @@ would otherwise guess. Evidence rows live in `planning-evidence.md`.
   (index-only), so the evidence digest must be reachable from the package entry.
   The re-export is additive; the internal `dist/sha256.js` import the package
   suite uses is unchanged.
+
+## 2026-09-16 — Execution decision (P3)
+
+- **E-59-13 — Route ceilings re-based in P3, not P4.** P3's quote sentences land in
+  `review-spec`/`review-plan`/`review-change` reference files, which the
+  `review-spec:default`, `review-plan:default`, and four `review-change:*` routes
+  load, so `scripts/check-skill-context.mjs --routes` went red the moment the text
+  landed. The six affected route ceilings are re-based to `ceil(measured × 1.10)`
+  with the growth source named in each route's `sources` and in `policy.declared`
+  (the tool's own declared re-basis) inside P3; P4 re-bases only the `design-feature`
+  skill entry and the `design-feature:*` routes its own text grows. `PLAN.md`'s P4
+  wording ("budgets re-based ... now that all skill text is final") stays true for
+  the skills P4 touches; the split is recorded here rather than silently diverging.

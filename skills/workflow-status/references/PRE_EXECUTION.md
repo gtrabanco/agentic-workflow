@@ -41,7 +41,7 @@ sensor reports a missing gate, never a verdict that no review ever happened.
 |---|---|---|
 | `current` | stage PASS verdict **and** recomputed digest = bound digest | spec: `/plan-feature <slug>` · plan: `/execute-phase <NN>` |
 | `missing` | no receipt block for the stage | `defined` → `/review-spec <slug>` · planned/in-progress → `/review-plan <NN>` |
-| `stale` | bound digest differs, or a bound context row moved | re-run **that stage's** review |
+| `stale` | bound digest differs, or a bound context row moved | re-run **that stage's** review — quote the emitted planning-gate re-run continuation (`next.continuation`, `rendering` for display), never author exact tokens |
 | `wrong-stage` | the only PASS belongs to the other stage | the stage that is missing — never the stage that passed |
 | `substitute` | prose verdict, legacy block, or internal attestation stands where a receipt should be | that stage's review, and report the substitute as a blocker detail |
 | `self-approved` | the author of the artifact recorded the PASS | that stage's review in a clean context |
@@ -50,9 +50,11 @@ sensor reports a missing gate, never a verdict that no review ever happened.
 | `impossible-timeline` | `structural.fresh: false`, `structural.reasonCode: impossible-timeline` — digest and revision match by construction; a receipt's own recorded timeline is physically impossible (finish predating source revision's commit date beyond the published skew); a legacy receipt with no parsable Started/finished: line, or a source revision git cannot resolve, stays unflagged (fail-open) | that stage's review — the timeline is self-refuting, not a stale source |
 
 A stale receipt re-runs the **review**, not the authoring skill: the artifacts may be
-exactly right and simply need re-judging in a clean context. A missing verdict block,
-or a verdict outside the stage's fixed set, is `missing` with the reason recorded —
-never a guess in the recommended direction.
+exactly right and simply need re-judging in a clean context. The command to re-run is
+the **emitted** `next.continuation` (`rendering` for display) — quoted as-is, never
+authored as fresh command prose. A missing verdict block, or a verdict outside the
+stage's fixed set, is `missing` with the reason recorded — never a guess in the
+recommended direction.
 
 ### Envelope projection
 

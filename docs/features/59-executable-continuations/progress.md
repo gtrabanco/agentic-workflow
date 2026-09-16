@@ -205,3 +205,22 @@ Notes:
 - Commit: pending · Gate: `node --test scripts/workflow-status-sensor.test.mjs scripts/continuation-discipline.test.mjs` (exit 0, 67 pass / 0 fail) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
 - Next: P3 · Attempts: 1
 - Reconciliation: P1 commit resolved to `0f28b5cd`.
+
+## P3 — 2026-09-16
+- Done: Quote-not-author adoption at the five pinned surfaces plus the single `FEATURE_WORKFLOW.md` pointer; the `CLAUDE.md` `normative-surfaces@1` refusal-vocabulary row (`schema-export:CONTINUATION_REFUSALS`, machine `continuation-refusal-type`, must-name `yes`) and the `schema-export:` grammar extractor in `scripts/normative-drift.test.mjs` as one atomic deliverable; `workflow-status` bumped 3.6.0 → 3.7.0 (CHANGELOG row + release-log line + README cell) per the repo's version-every-change rule; the six affected review/plan route ceilings re-based (E-59-13).
+- Remains: P4 (batched interview), P5 (hardening & PR — includes the Pi mirror re-bundle).
+- Gotchas: (1) **Route re-basis moved to P3 (E-59-13).** The quote sentences grow `review-spec`/`review-plan`/`review-change` reference files, so `scripts/check-skill-context.mjs --routes` went red in P3; the six affected route ceilings (`review-change:adversarial/backend/web/synthesize`, `review-plan:default`, `review-spec:default`) are re-based to `ceil(measured × 1.10)` with the growth source named in each `sources` entry and in `policy.declared`. P4 still re-bases the `design-feature` skill and `design-feature:*` route entries after its own text lands. (2) The `hand-off-fields@1` `next | continuation` row landed in P2 (E-59-10); the P3 task for it is recorded as done-in-P2 here. (3) **Pi mirror parity is red until P5** — `skills/` changed without `common: bundle:skills`; that is the plan's sequencing (P5 re-bundles the final tree). (4) The drift gate now treats a `schema-export:` surface as the declaration home of its vocabulary, so `must-name: yes` is satisfied by the export read from committed source (documented in `scripts/normative-drift.test.mjs`).
+- Read-verified quote sentences (AC-10):
+  - `skills/workflow-status/SKILL.md`: "When the envelope carries `next.continuation`, the next-command echo **quotes the emitted `next.continuation`** (`rendering` for display), never author exact command tokens; the human-facing prose `→ Next:` block below stays."
+  - `skills/workflow-status/references/PRE_EXECUTION.md` (`stale` row): "re-run **that stage's** review — quote the emitted planning-gate re-run continuation (`next.continuation`, `rendering` for display), never author exact tokens"; re-run sentence: "The command to re-run is the **emitted** `next.continuation` (`rendering` for display) — quoted as-is, never authored as fresh command prose."
+  - `skills/review-spec/references/OUTPUT.md`: "When a missing or stale receipt is the reason for re-entry, the re-entry command is the **emitted** `next.continuation` (`rendering` for display): quote it, never author exact command tokens."
+  - `skills/review-plan/references/OUTPUT.md`: "When a missing or stale receipt is the reason for re-entry, the re-entry command is the **emitted** `next.continuation` (`rendering` for display): quote it, never author exact command tokens."
+  - `skills/review-change/references/PERSIST_AND_DECIDE.md`: "When the unit's review receipt is missing or stale, the re-entry command is the **emitted** `next.continuation` (`rendering` for display) — quote it, never author exact command tokens."
+  - `docs/workflow/FEATURE_WORKFLOW.md` (one pointer): "When the sensor emits `next.continuation`, a driver quotes that emitted command (its `rendering` for display) instead of re-authoring the pointer; the prose `→ Next:` blocks stay for humans."
+- Files: `skills/workflow-status/SKILL.md`, `skills/workflow-status/references/PRE_EXECUTION.md`, `skills/review-spec/references/OUTPUT.md`, `skills/review-plan/references/OUTPUT.md`, `skills/review-change/references/PERSIST_AND_DECIDE.md`, `docs/workflow/FEATURE_WORKFLOW.md`, `CLAUDE.md`, `scripts/normative-drift.test.mjs`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `README.md`, `docs/features/59-executable-continuations/{TASKS.md,progress.md,testing.md,decisions.md}`
+- Next: P4 — Batched design interview
+
+## Unit-loop receipt — P3
+- Commit: pending · Gate: `node --test scripts/normative-drift.test.mjs` (exit 0, 17 pass / 0 fail) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
+- Next: P4 · Attempts: 1
+- Reconciliation: P2 commit resolved to `ee1008ab`.
