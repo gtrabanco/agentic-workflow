@@ -20,6 +20,15 @@ VF-5 | packages/agentic-workflow/bin/turn-contract.mjs:89 + template/.agentic-wo
 VF-6 | template/.agentic-workflow/hooks/turn-contract.sh:91 · reviewer review-change · HEAD 81ec300f5e940e9cce398095328523c6f065f586 · recheck direct read + probe: cmd-substitution `status_out=$(git -C "$repo_root" status --porcelain 2>/dev/null)` captures the full listing unbounded; engine counterpart (turn-contract.mjs:141) caps at the 1 MiB default maxBuffer and fails closed → on a >1 MiB porcelain the engine prints `fail box5: dirty-tree` exit 1 while the shim prints ok exit 0 | perf | confirmed | finding-mark | n/a | n/a
 VF-7 | skills/orchestration-envelope/references/TURN_CONTRACT.md:23-36 · reviewer review-change · HEAD 81ec300f5e940e9cce398095328523c6f065f586 · recheck direct read: profile grants the recitation exemption listing shim and engine as interchangeable verifiers; grep -iE "engine-only|phase-lint" on that file → only :7 (gate list) and :44 (codes list), no caveat in the profile section; pointer docs (FEATURE_WORKFLOW.md, ORCHESTRATION.md) zero hits; disclosure exists only at turn-contract.sh:55-56, known-issues.md:24-30, decisions.md ED-52-3 | brand | confirmed | finding-mark | n/a | n/a
 REVIEW-RAN | HEAD 81ec300f5e940e9cce398095328523c6f065f586 | n/a | n/a | review-mark | n/a | n/a
+F8 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 | security | med | fix-now | fold | no
+F9 | docs/features/52-machine-checked-turn-contract/SPEC.md:517 | spec-drift | med | fix-now | fold | no
+F10 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 | code | med | fix-now | fold | no
+F11 | packages/agentic-workflow/bin/turn-contract.mjs:124 + template/.agentic-workflow/hooks/turn-contract.sh:79 | code | med | fix-now | fold | no
+VF-8 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck reproducer: /tmp/vf/c1 fixture (feat/x, 1 commit, clean, `git config status.showUntrackedFiles no`, untracked file present) → engine AND shim print `TURN-CONTRACT ok` exit 0; control after `git config --unset status.showUntrackedFiles` → both `TURN-CONTRACT fail box5: dirty-tree` exit 1 | security | confirmed | finding-mark | n/a | n/a
+VF-9 | docs/features/52-machine-checked-turn-contract/SPEC.md:517 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck direct read + probe: box4 clauses quoted ("no PR or state ≠ OPEN → pr-not-open" vs "any gh error → pr-unreachable"); stub gh exit 1 empty stdout → both engines `fail box4: pr-unreachable` (a missing PR IS a gh error, so the pre-PR case can never reach pr-not-open); grep MERGED\|CLOSED over fixtures.mjs + test-turn-contract.sh → no gh-exit-0 state≠OPEN fixture | spec-drift | confirmed | finding-mark | n/a | n/a
+VF-10 | packages/agentic-workflow/bin/turn-contract.mjs:144 + template/.agentic-workflow/hooks/turn-contract.sh:95 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck reproducer: /tmp/vf/c5 (tracked file touched to a stale date) → `.git/index` mtime advances across both engines' plain `git status --porcelain` (no `--no-optional-locks`), contradicting engine header :4-5 "mutates nothing of its own" and the ACCEPTANCE read-only quality floor | code | confirmed | finding-mark | n/a | n/a
+VF-11 | packages/agentic-workflow/bin/turn-contract.mjs:124 + template/.agentic-workflow/hooks/turn-contract.sh:79 · reviewer review-change · HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 · recheck reproducer: /tmp/vf/c8 argv-capture gh stub on branch `123` with upstream → both engines ran `pr view 123 --json state,headRefOid` (bare all-numeric branch; gh resolves such args as PR numbers, so box4 can check a different PR) | code | confirmed | finding-mark | n/a | n/a
+REVIEW-RAN | HEAD 126ef68ecb632a613d5f471596cbad562ff2d025 | n/a | n/a | review-mark | n/a | n/a
 ```
 
 Cycle 1 (first review; no prior marks or forge receipts). Refuted candidates
@@ -50,3 +59,16 @@ fails closed` case (≈1.2 MB, past the engine's cap and the shim's pipe buffer)
 the pre-existing F1 corrupt-index case is the detector for a bounded read that
 loses git's status (verified against a deliberately mis-ordered implementation:
 the suite fails it).
+
+Cycle 3 (fold batch `81ec300f..126ef68e`: F5/F6/F7 re-verified repaired at their
+cited locations; the delta escalated to a full pass — width trigger: 4 files
+outside the cited union (`decisions.md`, `review-findings.md`, `fixtures.mjs`,
+`tests/test-turn-contract.sh`); size did not fire: 149+20 lines / 8 files).
+Adversarial N=2 (R1 correctness, R2 security — same model family, single-family
+agent), a user-initiated third cycle. All six folded rows pass re-verification,
+no regressions. New fix-now rows F8–F11 (F8/F10 share the status invocation
+site, distinct axes; F10/F11 are rubric-floor reclasses minor→med by the
+classifier: a frozen read-only floor violation and a direction-changing
+wrong-PR verdict). Refuted candidate — detached HEAD prints ok — lives in the
+cycle-3 chat report only: both engines actually print `fail box3: no-commits`
+exit 1 (`main..HEAD` = 0).
