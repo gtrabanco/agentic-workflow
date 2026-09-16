@@ -128,10 +128,9 @@ test("the collection rules are enforced by the runtime the projection describes"
   // The split above is only honest while the runtime really refuses these; the
   // snapshot suite owns each code, this test owns that the split is disclosed.
   const readme = readFileSync(join(ROOT, "README.md"), "utf8");
-  const readmeEs = readFileSync(join(ROOT, "README.es.md"), "utf8");
-  for (const [name, text] of [["README.md", readme], ["README.es.md", readmeEs]]) {
+  for (const [name, text] of [["README.md", readme]]) {
     const lines = text.split("\n");
-    const start = lines.findIndex((line) => /^### (?:Collection rules|Las reglas de colecci)/.test(line));
+    const start = lines.findIndex((line) => /^### Collection rules/.test(line));
     assert.ok(start >= 0, `${name} never discloses that collection rules are runtime-only`);
     const end = lines.findIndex((line, i) => i > start && line.startsWith("### "));
     const section = lines.slice(start, end).join("\n");

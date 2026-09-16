@@ -232,7 +232,7 @@ no stack leak) → commit → (push) → your review.
   New skills get both — the heavy auditors lean high/max: `product-audit` → max,
   `audit-pr` / `review-change` → high.
 - **Docs sync on completion.** When the build finishes, update **all**
-  documentation to the new skill set: `README.md` + `README.es.md`,
+  documentation to the new skill set: `README.md`,
   `docs/workflow/*` (SKILLS, FEATURE_WORKFLOW, ISSUE_WORKFLOW, REVIEW_AND_CLASSIFY,
   REPLICATE, PORTABLE_PROMPT), `CLAUDE.md`, and the **Notion** mirror.
 ```

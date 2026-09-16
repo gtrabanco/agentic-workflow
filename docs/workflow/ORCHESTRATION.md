@@ -1,7 +1,5 @@
 # Programmatic orchestration
 
-> 🇪🇸 [Versión en español](ORCHESTRATION.es.md)
-
 Skills are text-first instructions. An external driver may run them headlessly
 without turning every skill into a large JSON prompt: it asks for a small
 machine result at the invocation boundary and combines it with facts compiled
