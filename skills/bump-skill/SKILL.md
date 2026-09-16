@@ -1,7 +1,7 @@
 ---
 name: bump-skill
 user-invocable: false
-version: 2.3.2
+version: 2.3.3
 metadata:
   internal: true
 description: >
@@ -33,7 +33,7 @@ before committing. Handles the full documentation surface so nothing drifts.
 
 This skill is **specific to the `agentic-workflow` repository**. Before doing
 anything, confirm you are in that repo (presence of `skills/` + `CHANGELOG.md`
-+ `CHANGELOG.es.md`). If not, stop and tell the user.
++ `CHANGELOG.md`). If not, stop and tell the user.
 
 Versioning policy (from `CHANGELOG.md`):
 
@@ -71,7 +71,7 @@ Then print the next step:
 
 > All documentation updated. Stage and commit:
 > ```
-> git add skills/<name>/SKILL.md CHANGELOG.md CHANGELOG.es.md README.md README.es.md
+> git add skills/<name>/SKILL.md CHANGELOG.md README.md
 > git commit -m "chore(skills): bump <name> to <version> — <one-line reason>"
 > ```
 > If this is a major bump with a migration note, also add `docs/workflow/MIGRATION.md`.
@@ -109,9 +109,8 @@ be worked on from any agent:
 ## Done when
 
 - Every modified skill's `version:` field is updated.
-- `CHANGELOG.md` and `CHANGELOG.es.md` each have a new row for every bumped
-  skill, newest first.
-- `README.md` and `README.es.md` skills and model tables are accurate.
+- `CHANGELOG.md` has a new row for every bumped skill, newest first.
+- The `README.md` skills and model tables are accurate.
 - Major bumps have a migration note and cross-reference updates.
 - Any authoring-rule violations (missing `→ Next:` block, `S1`/"Step" phase labels,
   a `user-invocable: true` skill absent from `plugin.json`, a non-alphabetical
