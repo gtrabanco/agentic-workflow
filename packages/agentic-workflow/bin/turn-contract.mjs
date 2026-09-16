@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Deterministic verifier for the canonical turn contract's mechanical boxes
 // (branch, pre-edit artifacts, commit, pushed pull request, clean tree).
-// Node standard library only, zero dependencies, read-only.
+// Node standard library only, zero dependencies. The verifier mutates nothing
+// of its own: its one spawned process is the repository's own
+// scripts/phase-lint.mjs (box2, engine-only clause).
 // See skills/orchestration-envelope/references/TURN_CONTRACT.md.
 //
 // usage: turn-contract [--finished|--help]
