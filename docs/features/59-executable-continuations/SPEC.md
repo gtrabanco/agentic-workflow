@@ -589,13 +589,14 @@ protocol; the upsert and review modes are untouched.
 ### Planning evidence
 
 See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 20 rows,
-PE-001…PE-020, all `current` + `proven`/`derived`).
+PE-001…PE-020, all `current` + `proven`).
 
 ### Obligations
 
-See `planning-obligations.md` (M/L — O1…O17, one row per acceptance criterion
-plus the read-only, vocabulary-closure, and refusal-terminality invariants;
-every row `planned` at freeze).
+See `planning-obligations.md` (M/L — O1…O19, one row per acceptance criterion
+plus the read-only, vocabulary-closure, and refusal-terminality invariants and
+the two P2 dev-scenario pins (`continuation:empty-state`,
+`continuation:concurrent-emit`); every row `planned` at freeze).
 
 ### Decisions to confirm
 
@@ -669,7 +670,8 @@ artifacts with its first change.
   Done-when: `bun run test` (schema package) → exit 0.
 - **P2 — Sensor continuation emission** (config/infra): emitter wired at the
   `resolveNext()`/attach points, four fail-closed refusal paths, evidence-token
-  binding, emission/refusal pins, per-class discipline suite + rendering pins.
+  binding, emission/refusal pins, empty-state and concurrent-emit scenario pins,
+  per-class discipline suite + rendering pins.
   Done-when: `node --test scripts/workflow-status-sensor.test.mjs
   scripts/continuation-discipline.test.mjs` → exit 0.
 - **P3 — Quote-surface adoption** (docs): quote rule at the five pinned
