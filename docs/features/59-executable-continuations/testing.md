@@ -58,3 +58,10 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
 - `grep -c 'next.continuation' docs/workflow/FEATURE_WORKFLOW.md` → 1.
 - `node scripts/check-skill-context.mjs --routes` → exit 0, 22 routes (six ceilings re-based at a declared re-basis); `--manifest-only` → PASS.
 - Full root suite regression: `node --test scripts/*.test.mjs` → exit 0, 435 pass / 0 fail.
+
+### P4 — Batched design interview (2026-09-16)
+
+- `node scripts/check-skill-context.mjs` → exit 0, PASS context budgets: 40 skills; `--routes` → exit 0, 22 routes; `--manifest-only` → PASS.
+- `grep -c 'One question per turn' skills/design-feature/references/INTERVIEW.md` → 0.
+- `node --test scripts/normative-drift.test.mjs` → exit 0 (version tables recompute against the bumped `design-feature` 3.4.0).
+- Full root suite regression: `node --test scripts/*.test.mjs` → exit 0, 435 pass / 0 fail.

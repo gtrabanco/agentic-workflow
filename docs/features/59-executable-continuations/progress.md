@@ -224,3 +224,19 @@ Notes:
 - Commit: pending · Gate: `node --test scripts/normative-drift.test.mjs` (exit 0, 17 pass / 0 fail) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
 - Next: P4 · Attempts: 1
 - Reconciliation: P2 commit resolved to `ee1008ab`.
+
+## P4 — 2026-09-16
+- Done: `INTERVIEW.md` §3 rewritten to the bounded form protocol (one compact form-turn over the ≤ 6 fixed rubric slots + identity rows with one-word defaults, ≤ 2 ambiguity follow-ups); the one-question-per-turn rule deleted; rubric/mandatory-question/ask-nothing/deferred-decision/`NEEDS_INPUT` escalation restated unchanged. `design-feature/SKILL.md` hard-stop paragraph + progressive-loading row updated to the form protocol; upsert/review-mode text untouched. `GOLDEN_FIXTURE.md` gained the add-don't-replace form-turn shape boxes. `design-feature` bumped 3.3.0 → 3.4.0 (CHANGELOG row + release-log line + README cell); `design-feature:product`/`:repair` route ceilings re-based at the declared re-basis.
+- Remains: P5 (hardening & PR: full ladder, Pi mirror re-bundle + parity, acceptance receipt, PR open, roadmap `done`).
+- Gotchas: (1) The `design-feature` skill manifest entry stayed under its `mainEstimateMax` (3327 ≤ 3400), so only the two `design-feature:*` route ceilings needed re-basing. (2) The Pi mirror parity suite is still red until P5 re-bundles the final skill tree (P3 + P4 changed `skills/`). (3) `docs/workflow/GOLDEN_FIXTURE.md`'s run-log table was not touched (AC-11).
+- Read-verified (AC-08/AC-09/AC-11):
+  - AC-08 — `grep -c 'One question per turn' skills/design-feature/references/INTERVIEW.md` → 0. `INTERVIEW.md` §3 now reads: "**One form-turn, then at most 2 follow-up turns.** The first interview turn is ONE compact form covering every rubric slot below plus the identity slots, each row carrying a recommended default the user accepts with one word (or edits in place). Ask nothing the docs or the instruction already answer. Genuine ambiguity the form cannot resolve gets at most **2 follow-up turns** — never a third ask." The six rubric slots, the mandatory-question rule, and the escalation paragraph are carried verbatim.
+  - AC-09 — `design-feature/SKILL.md` hard stop: "Present its ONE compact form-turn — the ≤ 6 fixed rubric slots plus the identity rows, each carrying a recommended default the user can accept with one word — then return `NEEDS_INPUT` and end the turn when slots remain unresolved; genuine ambiguity gets at most **2 follow-up turns**, never a third ask." Progressive-loading row: "Brand-new idea with any mandatory interview slot unresolved | [interview](references/INTERVIEW.md) only; present exactly one form-turn (≤ 6 slots + identity, each with a default) and stop". Upsert/review-mode rows and text unchanged.
+  - AC-11 — `GOLDEN_FIXTURE.md` "Form-turn shape (`design-feature`) — add-don't-replace" boxes added (form-turn not one-question turns · one-word defaults resolve in one turn · ≤ 2 follow-ups then `NEEDS_INPUT` · rubric/mandatory/ask-nothing unchanged); the run-log table is untouched.
+- Files: `skills/design-feature/references/INTERVIEW.md`, `skills/design-feature/SKILL.md`, `docs/workflow/GOLDEN_FIXTURE.md`, `docs/workflow/SKILL_CONTEXT_BUDGETS.json`, `CHANGELOG.md`, `README.md`, `docs/features/59-executable-continuations/{TASKS.md,progress.md,testing.md}`
+- Next: P5 — Hardening & PR
+
+## Unit-loop receipt — P4
+- Commit: pending · Gate: `node scripts/check-skill-context.mjs` (exit 0, 40 skills) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
+- Next: P5 · Attempts: 1
+- Reconciliation: P3 commit resolved to `258bba77`.
