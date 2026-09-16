@@ -51,3 +51,10 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
 - Sensor pins: non-terminal emission (argv, rendering, convergence, preconditions, evidence digest), `precondition-uncheckable` (no progress.md), `sensor-degraded` (offline forge), empty-state (`no-decision-available`, exit 0), unknown-class refusal, and two-run byte-identity with a clean `git status` (no continuation store).
 - Discipline pins: one fixture repo per class — status refresh (`AMBIGUOUS` → `/workflow-status`, `next.recommended` advances to `/execute-phase 90 P1`), planning-gate re-run (`stale` → `current` on `detail.pre_execution.spec.label`), review-receipt refresh (`missing` → `current`) — plus rendering derivation per family, argv immutability, and the divergence-fails case.
 - Full root suite (regression check): `node --test scripts/*.test.mjs` → exit 0, 435 pass / 0 fail. Schema package suite still 707 pass / 0 fail.
+
+### P3 — Quote-surface adoption (2026-09-16)
+
+- `node --test scripts/normative-drift.test.mjs` → exit 0, 17 pass / 0 fail, with the `continuation-refusal-vocabulary` row resolved through the new `schema-export:` grammar and `next | continuation` ordered by `hand-off-fields@1`.
+- `grep -c 'next.continuation' docs/workflow/FEATURE_WORKFLOW.md` → 1.
+- `node scripts/check-skill-context.mjs --routes` → exit 0, 22 routes (six ceilings re-based at a declared re-basis); `--manifest-only` → PASS.
+- Full root suite regression: `node --test scripts/*.test.mjs` → exit 0, 435 pass / 0 fail.

@@ -40,13 +40,13 @@ Done-when: `node --test scripts/workflow-status-sensor.test.mjs scripts/continua
 
 Layer: docs · fingerprint `P3:docs:7:quote-surface-adoption` · Phase-lint: PASS (8/8)
 
-- [ ] State the quote rule in `skills/workflow-status/SKILL.md` at the next-command echo — quote the emitted `next.continuation` (rendering for display), never author exact tokens; the human-facing rendered `→ Next:` block stays
-- [ ] Re-point the stale-receipt re-run route in `skills/workflow-status/references/PRE_EXECUTION.md` — the `stale` label row and its re-run sentence quote the emitted planning-gate re-run continuation instead of authoring the command prose
-- [ ] Re-point the three receipt-persistence surfaces — `skills/review-spec/references/OUTPUT.md`, `skills/review-plan/references/OUTPUT.md`, `skills/review-change/references/PERSIST_AND_DECIDE.md` quote the emitted review-receipt-refresh continuation instead of authoring exact tokens
-- [ ] Add exactly one quote-rule pointer to `docs/workflow/FEATURE_WORKFLOW.md` hand-off section — prose `→ Next:` blocks remain for humans
-- [ ] Add the refusal-vocabulary row to the `normative-surfaces@1` table in `CLAUDE.md` (grammar `schema-export:CONTINUATION_REFUSALS`, machine `continuation-refusal-type`, must-name `yes`) and declare the `schema-export:` grammar extractor for the drift gate in `scripts/normative-drift.test.mjs` as one atomic deliverable
-- [ ] Extend the `hand-off-fields@1` block in `skills/orchestration-envelope/references/TURN_CONTRACT.md` with the `next | continuation` row
-- [ ] Run the drift gate green: `node --test scripts/normative-drift.test.mjs` → exit 0
+- [x] State the quote rule in `skills/workflow-status/SKILL.md` at the next-command echo — quote the emitted `next.continuation` (rendering for display), never author exact tokens; the human-facing rendered `→ Next:` block stays — evidence: the Done-when bullet quoted in the P3 handoff
+- [x] Re-point the stale-receipt re-run route in `skills/workflow-status/references/PRE_EXECUTION.md` — the `stale` label row and its re-run sentence quote the emitted planning-gate re-run continuation instead of authoring the command prose — evidence: both sentences quoted in the P3 handoff
+- [x] Re-point the three receipt-persistence surfaces — `skills/review-spec/references/OUTPUT.md`, `skills/review-plan/references/OUTPUT.md`, `skills/review-change/references/PERSIST_AND_DECIDE.md` quote the emitted review-receipt-refresh continuation instead of authoring exact tokens — evidence: each sentence quoted in the P3 handoff
+- [x] Add exactly one quote-rule pointer to `docs/workflow/FEATURE_WORKFLOW.md` hand-off section — prose `→ Next:` blocks remain for humans — evidence: pointer quoted in the P3 handoff; `grep -c 'next.continuation'` → 1
+- [x] Add the refusal-vocabulary row to the `normative-surfaces@1` table in `CLAUDE.md` (grammar `schema-export:CONTINUATION_REFUSALS`, machine `continuation-refusal-type`, must-name `yes`) and declare the `schema-export:` grammar extractor for the drift gate in `scripts/normative-drift.test.mjs` as one atomic deliverable — evidence: `CLAUDE.md` row + the `schema-export:` branch in `buildSurfaceModel`; drift gate green (17 pass)
+- [x] Extend the `hand-off-fields@1` block in `skills/orchestration-envelope/references/TURN_CONTRACT.md` with the `next | continuation` row — **landed in P2 (E-59-10)** because P2's envelope key cannot land without it (the drift gate reads the contract as the key's ordering surface); evidence: `TURN_CONTRACT.md` row + P2 commit `ee1008ab`
+- [x] Run the drift gate green: `node --test scripts/normative-drift.test.mjs` → exit 0 — evidence: exit 0, 17 pass / 0 fail
 
 Done-when: `node --test scripts/normative-drift.test.mjs` → exit 0 with the refusal-vocabulary row and the hand-off-fields row resolved by the gate.
 
