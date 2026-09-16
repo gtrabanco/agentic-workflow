@@ -193,3 +193,15 @@ Notes:
 ## Unit-loop receipt — P1
 - Commit: pending · Gate: `cd packages/agentic-workflow-schema && bun run test` (exit 0, 707 pass / 0 fail) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
 - Next: P2 · Attempts: 1
+
+## P2 — 2026-09-16
+- Done: Sensor emission wired in `scripts/workflow-status.mjs` — `resolveNext()` now returns an internal branch tag, `buildContinuation()` projects the resolved command into `next.continuation` through the schema runtime's pure `emitContinuation`, the four fail-closed paths write `detail.continuation_refusal` with no field, the offline forge path maps to `sensor-degraded`, and the evidence token binds `<unitDir>/progress.md` through the package's `sha256HexSync` (re-exported from the package root). New `scripts/continuation-discipline.test.mjs` (3 classes + rendering pins); `scripts/workflow-status-sensor.test.mjs` gained the emission/refusal/offline/empty-state/unknown-class/concurrent-emit pins.
+- Remains: P3 (quote surfaces + CLAUDE.md refusal row + `schema-export:` extractor), P4 (batched interview), P5 (hardening & PR).
+- Gotchas: (1) **Phase-cut adjustment (E-59-10).** Adding the envelope key made the root drift suite red until the turn contract ordered it, so the `next | continuation` row of `skills/orchestration-envelope/references/TURN_CONTRACT.md` and the drift test's expected `next` list landed in P2, not P3; P3 keeps the CLAUDE.md refusal row + `schema-export:` extractor + quote surfaces. (2) The v1 class set is genuinely closed: `/execute-phase`, `/plan-feature`, `/audit-pr`, `/discover-repository-state` all refuse with `no-decision-available` — only the status-refresh echo and the two receipt shapes emit (D-59-5). (3) The status-refresh class is reachable only on the crash-recovery `AMBIGUOUS` branch (the fallback is the empty state and refuses); its discipline fixture resolves the ledger and re-runs to show `next.recommended` advance. (4) Evidence artifact is the unit's `progress.md` (carries the receipt block); an unreadable progress.md is exactly the `precondition-uncheckable` fixture. (5) Fixture commits are dated 2026-08-30 so the `impossible-timeline` guard never mis-flags a receipt stamped 2026-09-01.
+- Files: `scripts/workflow-status.mjs`, `scripts/continuation-discipline.test.mjs`, `scripts/workflow-status-sensor.test.mjs`, `scripts/normative-drift.test.mjs`, `skills/orchestration-envelope/references/TURN_CONTRACT.md`, `packages/agentic-workflow-schema/src/index.ts`, `docs/features/59-executable-continuations/{TASKS.md,progress.md,testing.md,decisions.md}`
+- Next: P3 — Quote-surface adoption
+
+## Unit-loop receipt — P2
+- Commit: pending · Gate: `node --test scripts/workflow-status-sensor.test.mjs scripts/continuation-discipline.test.mjs` (exit 0, 67 pass / 0 fail) · Acceptance blob: d046f0b537da92251c6d81893e816bbc0de1a252
+- Next: P3 · Attempts: 1
+- Reconciliation: P1 commit resolved to `0f28b5cd`.

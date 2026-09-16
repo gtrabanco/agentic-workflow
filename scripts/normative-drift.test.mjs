@@ -876,7 +876,10 @@ test("machine → text: every value of the must-name vocabularies is ordered by 
   const named = new Set([...live.printedGateTypes, ...live.verdicts.map((v) => v.token), ...live.fields.filter((f) => f.object === "next").map((f) => f.field)]);
   for (const value of live.machine.vocabularies.get("gate-rejection-type")) assert.ok(named.has(value), `gate type ${value} is named`);
   for (const value of live.machine.vocabularies.get("pre-execution-verdict")) assert.ok(named.has(value), `verdict ${value} is named`);
-  assert.deepEqual(live.machine.fieldsOf("next", "envelope").keys, ["recommended", "alternatives", "tier", "suggested"],
+  // Feature 59 added `next.continuation` to the envelope; the turn contract's
+  // `hand-off-fields@1` row orders it (`next | continuation`), so the machine list
+  // and the text surface stay the same closed set.
+  assert.deepEqual(live.machine.fieldsOf("next", "envelope").keys, ["recommended", "alternatives", "tier", "suggested", "continuation"],
     "the envelope's `next` is the object the turn contract names, not the outcome's");
   for (const value of live.machine.fieldsOf("next", "envelope").keys) assert.ok(named.has(value), `next.${value} is named`);
 });
