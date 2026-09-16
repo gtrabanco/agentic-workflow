@@ -112,7 +112,7 @@ Findings rows for this snapshot: `planning-findings.md`
 SPEC-touching design turn alongside `PLAN52-F6`).
 
 ## Acceptance receipt v1
-- Manifest: docs/features/52-machine-checked-turn-contract/ACCEPTANCE.md · Blob: e3bfd8fffbdf6035cb552a197204c92c5c9d170d · Status: frozen · Verified: 2026-09-16
+- Manifest: docs/features/52-machine-checked-turn-contract/ACCEPTANCE.md · Blob: c088a621b794fe6b9d4bf3c138406c0c488c4889 · Status: frozen · Verified: 2026-09-16 (blob replaced by the user-approved amendment of 2026-09-16 — AC2/AC7 bun-first; supersedes e3bfd8fffbdf6035cb552a197204c92c5c9d170d)
 
 ## Dependency receipt v1
 - Fingerprint: 963f208fc252807a04d84f0971c4961e8ede8a96 · Closure: 52-machine-checked-turn-contract ← (none — SPEC hard deps: none)
@@ -166,3 +166,18 @@ passes on every installed Node. PE-005 is falsified. The fix is a SPEC
 `## Amendments` row + replacement `ACCEPTANCE.md` (glob form) and needs the
 owner's explicit approval per the verification contract; P2's TASKS stay
 unticked until then.
+
+## P2 gate (amended validators, 2026-09-16) — PASS
+- `bun test packages/agentic-workflow/test/` → exit 0 (40 pass, 0 fail) — amended default
+- `node --test packages/agentic-workflow/test/*.test.mjs` → exit 0 (40/40) — Node 24 fallback
+- `node --test scripts/turn-contract-grammar.test.mjs` → exit 0 (20/20)
+- `bun test scripts/turn-contract-grammar.test.mjs` → exit 0 (20/20)
+- Acceptance manifest re-frozen: blob `c088a621b794fe6b9d4bf3c138406c0c488c4889` (user-approved amendment, SPEC §Amendments; ED-52-8)
+- PLAN52-F9 → resolved; PE-005 → refuted
+
+## P2 — 2026-09-16
+- Done: crate verifier engine `packages/agentic-workflow/bin/turn-contract.mjs` (boxes 1–5, engine-only phase-lint clause), shared fixture matrix, engine suite + two-engine parity suite (AC2–AC7), grammar conformance test (AC8); AC2/AC7 validators amended to bun-first with a Node-24 glob fallback
+- Remains: P3 — hardening edge corpus, full verification gate, PR close-out (`Closes #226`)
+- Gotchas: `node --test <dir>` is not a Node ≥ 22 interface — use `bun test <dir>` (default) or the glob (`node --test packages/agentic-workflow/test/*.test.mjs`); the engine's `process.exitCode` (never `process.exit`) avoids pipe-truncated receipts; `bun test` supports directory args, `node` needs the glob
+- Files: packages/agentic-workflow/bin/turn-contract.mjs, packages/agentic-workflow/test/fixtures.mjs, packages/agentic-workflow/test/turn-contract.engine.test.mjs, packages/agentic-workflow/test/turn-contract.parity.test.mjs, scripts/turn-contract-grammar.test.mjs, SPEC.md, ACCEPTANCE.md, TASKS.md, PLAN.md, testing.md, planning-evidence.md, planning-obligations.md, planning-findings.md, known-issues.md, decisions.md
+- Next: P3 — Hardening & PR

@@ -18,12 +18,12 @@ Layer: docs · Done-when: `bash template/.agentic-workflow/hooks/tests/test-turn
 
 ## P2 — Implement the turn-contract verifier engine
 
-Layer: config/infra · Done-when: `node --test packages/agentic-workflow/test/` → exit 0, and `node --test scripts/turn-contract-grammar.test.mjs` → exit 0.
+Layer: config/infra · Done-when: `bun test packages/agentic-workflow/test/` → exit 0 (Node 24 fallback: `node --test packages/agentic-workflow/test/*.test.mjs`), and `node --test scripts/turn-contract-grammar.test.mjs` → exit 0.
 
-- [ ] Create `packages/agentic-workflow/bin/turn-contract.mjs`: a node-stdlib-only engine with a portable `env node` shebang and zero dependencies, flags `--finished` and `--help`, box checks 1–5 per SPEC §Design (resolution chain, reason codes, first-failure-wins order, fail-closed gh), the receipt grammar, exit codes 0, 1 and 2, read-only
-- [ ] Create `packages/agentic-workflow/test/turn-contract.engine.test.mjs`: throwaway fixture repos plus a PATH-stubbed gh asserting per-box pass, fail and n-a cases (box2's `acceptance-missing` and `phase-lint-failed` named among the codes — the phase-lint clause is engine-only, ED-52-3), `--help`, unknown flag, subdirectory invocation, and a no-tree-mutation assertion (D-52-9 proportionality)
-- [ ] Create `packages/agentic-workflow/test/turn-contract.parity.test.mjs`: the same fixture-repo matrix run through both engines asserting byte-identical stdout lines and exit codes
-- [ ] Create `scripts/turn-contract-grammar.test.mjs`: both engines' outputs conform to the fenced `turn-contract-receipt@1` block and the normative-surfaces registration is present
+- [x] Create `packages/agentic-workflow/bin/turn-contract.mjs`: a node-stdlib-only engine with a portable `env node` shebang and zero dependencies, flags `--finished` and `--help`, box checks 1–5 per SPEC §Design (resolution chain, reason codes, first-failure-wins order, fail-closed gh), the receipt grammar, exit codes 0, 1 and 2, read-only
+- [x] Create `packages/agentic-workflow/test/turn-contract.engine.test.mjs`: throwaway fixture repos plus a PATH-stubbed gh asserting per-box pass, fail and n-a cases (box2's `acceptance-missing` and `phase-lint-failed` named among the codes — the phase-lint clause is engine-only, ED-52-3), `--help`, unknown flag, subdirectory invocation, and a no-tree-mutation assertion (D-52-9 proportionality)
+- [x] Create `packages/agentic-workflow/test/turn-contract.parity.test.mjs`: the same fixture-repo matrix run through both engines asserting byte-identical stdout lines and exit codes
+- [x] Create `scripts/turn-contract-grammar.test.mjs`: both engines' outputs conform to the fenced `turn-contract-receipt@1` block and the normative-surfaces registration is present
 
 ## P3 — Hardening & PR
 

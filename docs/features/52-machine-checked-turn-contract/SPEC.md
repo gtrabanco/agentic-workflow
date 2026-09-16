@@ -310,7 +310,8 @@ throwaway git repos built by the suites) or labelled `read-verified`.
 
 - **AC1 (command)**: `node packages/agentic-workflow/bin/turn-contract.mjs --help`
   exits 0 and prints usage naming both flags.
-- **AC2 (command)**: engine suite green — `node --test packages/agentic-workflow/test/`;
+- **AC2 (command)**: engine suite green — `bun test packages/agentic-workflow/test/`
+  (bun-first; Node 24 fallback: `node --test packages/agentic-workflow/test/*.test.mjs`);
   it covers, at minimum: clean feature branch (≥ 1 commit ahead of default,
   clean tree) → stdout exactly `TURN-CONTRACT ok`, exit 0; invocation from a
   subdirectory; and a no-tree-mutation assertion.
@@ -449,6 +450,12 @@ Product boxes:
 `designed` — capability closure complete (zero blank rows), product spec-lint
 boxes all tick, readiness preflight `READY-FOR-REVIEW` (see closing block).
 Awaiting independent review by `review-spec`.
+
+## Amendments
+
+| Date | Authority | Change |
+|---|---|---|
+| 2026-09-16 | User-approved (execute-phase P2 gate decision) | The engine/parity validators no longer freeze the directory form `node --test packages/agentic-workflow/test/`, which Node ≥ 22 rejects with `Cannot find module` (the repository pins `.node-version` v22.23.1) and only Node ≤ 20 accepts. AC2 and AC7 become **bun-first with a Node-24 glob fallback**: `bun test packages/agentic-workflow/test/` → exit 0, fallback `node --test packages/agentic-workflow/test/*.test.mjs` → exit 0 (the form the repository's own `test:node` scripts use). No test file, assertion, or expected outcome is narrowed — the identical suite runs on the documented bun-first runtime. Planning evidence PE-005 (Node v22 directory mode) is marked **refuted**. Finding PLAN52-F9; decisions.md ED-52-7/ED-52-8. |
 
 ---
 
@@ -591,8 +598,9 @@ inherited unchanged.
 
 ### Testing requirements
 
-see `testing.md`. Integration-first: engine suite (`node --test
-packages/agentic-workflow/test/`), hook suite (house bash-test pattern),
+see `testing.md`. Integration-first: engine suite (`bun test
+packages/agentic-workflow/test/`; Node 24 fallback: `node --test
+packages/agentic-workflow/test/*.test.mjs`), hook suite (house bash-test pattern),
 parity suite, grammar conformance, plus the standing skill-surface suites
 (context budgets, mirror parity, sensor). No network; gh stubbed; fixtures
 are throwaway temp repos; the verifier's read-only property is asserted.

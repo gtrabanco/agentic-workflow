@@ -266,3 +266,22 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
   amendment path (explicit user approval → dated SPEC `## Amendments` row →
   replacement manifest → fresh receipt); the executor does not self-authorize
   it.
+
+## 2026-09-16 — ED-52-8: AC2/AC7 amended to bun-first (user-approved)
+
+- **What**: On the owner's explicit approval, the frozen ACCEPTANCE validators
+  for AC2 and AC7 (and TASKS/PLAN P2 done-when, testing.md, obligations O6/O9)
+  change from directory mode `node --test packages/agentic-workflow/test/` to
+  `bun test packages/agentic-workflow/test/` (bun-first) with a Node-24 glob
+  fallback `node --test packages/agentic-workflow/test/*.test.mjs`. SPEC gains
+  a dated `## Amendments` row; PE-005 is marked `refuted`; the replacement
+  `ACCEPTANCE.md` is re-frozen (blob
+  `c088a621b794fe6b9d4bf3c138406c0c488c4889`) and a fresh acceptance receipt is
+  recorded.
+- **Why**: The owner directed the repository's documented bun-first runtime
+  (bun default, Node 24 fallback). Directory mode is not a Node ≥ 22 interface,
+  so the original validator could never pass on the pinned runtime; the suite
+  bytes and every assertion are unchanged.
+- **Authority**: explicit user approval at the P2 gate; verification contract
+  amendment order (approval → SPEC amendment → replacement manifest → fresh
+  receipt). Finding `PLAN52-F9`.

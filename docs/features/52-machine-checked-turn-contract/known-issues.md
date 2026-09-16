@@ -31,14 +31,12 @@
 
 ## Execution-discovered limitations (P2)
 
-- **The frozen AC2/AC7 validator form is unsatisfiable on the pinned Node.**
-  `node --test packages/agentic-workflow/test/` (directory mode) is not a
-  supported invocation on Node ≥ 22; the repo pins `.node-version` v22.23.1
-  and the environment default is v24.19.0, both of which resolve the
-  directory as a module and fail with `Cannot find module`. Planning
-  evidence PE-005 asserted the opposite and is false (finding `PLAN52-F9`).
-  The suite itself is green — `node --test packages/agentic-workflow/test/*.test.mjs`
-  → 40/40, and the same directory command passes on Node 20. Fixing the
-  frozen validator string is a SPEC `## Amendments` + replacement
-  `ACCEPTANCE.md` change and requires explicit user approval (verification
-  contract); it is not applied here.
+- **Resolved (2026-09-16): the AC2/AC7 validator form.** The original
+  validators froze directory mode (`node --test packages/agentic-workflow/test/`),
+  which Node ≥ 22 rejects and only Node ≤ 20 accepts; planning evidence
+  PE-005 was false (finding `PLAN52-F9`). With the owner's approval the
+  manifest was amended to `bun test packages/agentic-workflow/test/`
+  (bun-first) with a Node-24 glob fallback
+  `node --test packages/agentic-workflow/test/*.test.mjs` (SPEC §Amendments;
+  decisions.md ED-52-8). No assertion, test file, or expected outcome was
+  narrowed.
