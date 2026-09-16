@@ -141,3 +141,28 @@ SPEC-touching design turn alongside `PLAN52-F6`).
 - Gotchas: box4 maps a nonzero `gh pr view` exit to `pr-unreachable` and an absent/empty/non-`OPEN` state to `pr-not-open` (ED-52-6); the shim never emits `phase-lint-failed` (ED-52-3); the shim's `--help` output is frozen byte-for-byte by its hook suite; pre-existing cross-unit feature-59 design bytes found uncommitted in this worktree were relocated to the `feat/59` worktree before P1 (repo hygiene, not this unit's scope)
 - Files: template/.agentic-workflow/hooks/turn-contract.sh, template/.agentic-workflow/hooks/tests/test-turn-contract.sh, skills/orchestration-envelope/SKILL.md, skills/orchestration-envelope/references/TURN_CONTRACT.md, CLAUDE.md, CHANGELOG.md, docs/workflow/ORCHESTRATION.md, docs/workflow/FEATURE_WORKFLOW.md, packages/pi-agentic-workflow/skills/orchestration-envelope/SKILL.md, packages/pi-agentic-workflow/skills/orchestration-envelope/references/TURN_CONTRACT.md
 - Next: P2 — Implement the turn-contract verifier engine
+
+## P2 gate (2026-09-16) — implementation green, frozen validator form BLOCKED
+
+Implementation delivered: `packages/agentic-workflow/bin/turn-contract.mjs`
+(node-stdlib-only engine, boxes 1–5 incl. the engine-only phase-lint clause),
+`packages/agentic-workflow/test/fixtures.mjs` (shared matrix),
+`packages/agentic-workflow/test/turn-contract.engine.test.mjs`,
+`packages/agentic-workflow/test/turn-contract.parity.test.mjs`,
+`scripts/turn-contract-grammar.test.mjs`.
+
+- `node --test packages/agentic-workflow/test/*.test.mjs` → exit 0 (40/40: engine + parity).
+- `node --test scripts/turn-contract-grammar.test.mjs` → exit 0 (20/20).
+- `node packages/agentic-workflow/bin/turn-contract.mjs --help` → exit 0, usage names both flags.
+- `node packages/agentic-workflow/bin/turn-contract.mjs --nope` → exit 2, usage on stderr.
+- `node --test scripts/normative-drift.test.mjs` → exit 0 (17/17, unchanged).
+
+**BLOCKED on the frozen validator form** (finding `PLAN52-F9`, `decisions.md`
+ED-52-7): AC2/AC7 freeze `node --test packages/agentic-workflow/test/`
+(directory mode), which Node ≥ 22 — the pinned `.node-version` v22.23.1 and the
+environment default v24.19.0 — rejects with `Cannot find module`. The same
+command passes on Node 20 (`pass 41 · fail 0`), and the documented glob form
+passes on every installed Node. PE-005 is falsified. The fix is a SPEC
+`## Amendments` row + replacement `ACCEPTANCE.md` (glob form) and needs the
+owner's explicit approval per the verification contract; P2's TASKS stay
+unticked until then.

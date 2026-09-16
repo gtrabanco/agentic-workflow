@@ -1,0 +1,232 @@
+// Shared throwaway-repo fixture matrix for the turn-contract suites.
+//
+// The engine suite, the two-engine parity suite, and the grammar conformance
+// test all drive the SAME matrix so a per-box outcome and the receipt grammar
+// are asserted once and reused (D-52-9 proportionality, no combinatorial
+// flag x state sweep). Everything lives in one temp directory; `gh` is a
+// PATH-stub because no suite contacts a forge.
+
+import { spawnSync } from "node:child_process";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+export const REPO_ROOT = path.resolve(here, "..", "..", "..");
+export const ENGINE = path.join(REPO_ROOT, "packages/agentic-workflow/bin/turn-contract.mjs");
+export const SHIM = path.join(REPO_ROOT, "template/.agentic-workflow/hooks/turn-contract.sh");
+
+const GIT_CONFIG = ["-c", "user.email=t@example.com", "-c", "user.name=test", "-c", "commit.gpgsign=false"];
+
+export function git(cwd, ...args) {
+  const r = spawnSync("git", [...GIT_CONFIG, "-C", cwd, ...args], { encoding: "utf8" });
+  if (r.status !== 0) throw new Error(`git ${args.join(" ")} in ${cwd} failed: ${r.stderr}`);
+  return r.stdout.trimEnd();
+}
+
+function gitInit(dir, branch) {
+  const r = spawnSync("git", ["init", "-q", "-b", branch, dir], { encoding: "utf8" });
+  if (r.status !== 0) throw new Error(`git init ${dir} failed: ${r.stderr}`);
+}
+
+function newRepo(root, name, branch) {
+  const dir = path.join(root, name);
+  gitInit(dir, branch);
+  writeFileSync(path.join(dir, "README.md"), "base\n");
+  git(dir, "add", "README.md");
+  git(dir, "commit", "-qm", "base");
+  return dir;
+}
+
+export { newRepo, commitFile };
+
+function commitFile(dir, rel, content) {
+  const target = path.join(dir, rel);
+  mkdirSync(path.dirname(target), { recursive: true });
+  writeFileSync(target, content);
+  git(dir, "add", rel);
+  git(dir, "commit", "-qm", `add ${rel}`);
+}
+
+function bareRemote(root, dir, branch) {
+  const bare = path.join(root, `${path.basename(dir)}-remote.git`);
+  const r = spawnSync("git", ["init", "-q", "--bare", bare], { encoding: "utf8" });
+  if (r.status !== 0) throw new Error(`git init --bare failed: ${r.stderr}`);
+  git(dir, "remote", "add", "origin", bare);
+  git(dir, "push", "-qu", "origin", branch);
+}
+
+function unitBranch(root, name, branch, acceptance = "frozen") {
+  const dir = newRepo(root, name, "main");
+  git(dir, "checkout", "-q", "-b", branch);
+  commitFile(dir, `docs/features/${branch.split("/")[1]}/ACCEPTANCE.md`, `${acceptance}\n`);
+  return dir;
+}
+
+function ghStub(root) {
+  const dir = path.join(root, "bin");
+  mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, "gh");
+  writeFileSync(
+    file,
+    '#!/usr/bin/env bash\nprintf \'%s\\n\' "${GH_STUB_JSON:-}"\n[ "${GH_STUB_EXIT:-0}" -eq 0 ] || exit "${GH_STUB_EXIT}"\n',
+  );
+  chmodSync(file, 0o755);
+  return dir;
+}
+
+function buildFixtures(root) {
+  const fx = {};
+
+  // Unit-shaped, clean, no upstream -> the ok path.
+  fx.ok = unitBranch(root, "ok", "feat/ok");
+
+  // On the default branch.
+  fx.default = newRepo(root, "default", "main");
+
+  // Not a repository at all.
+  fx.notrepo = path.join(root, "notrepo");
+  mkdirSync(fx.notrepo, { recursive: true });
+
+  // Branch with no own commit.
+  fx.nocommits = newRepo(root, "nocommits", "main");
+  git(fx.nocommits, "checkout", "-q", "-b", "feat/none");
+
+  // Unborn branch, zero commits anywhere (dev scenario verifier:empty-repo).
+  fx.empty = path.join(root, "empty");
+  gitInit(fx.empty, "feature/x");
+
+  // Unit directory exists but ACCEPTANCE.md is absent at HEAD.
+  fx.missing = newRepo(root, "missing", "main");
+  git(fx.missing, "checkout", "-q", "-b", "feat/missing");
+  commitFile(fx.missing, "docs/features/missing/SPEC.md", "no acceptance here\n");
+
+  // Not unit-shaped -> box2 not applicable.
+  fx.plain = newRepo(root, "plain", "main");
+  git(fx.plain, "checkout", "-q", "-b", "chore/plain");
+  commitFile(fx.plain, "note.txt", "x\n");
+
+  // Dirty tree.
+  fx.dirty = unitBranch(root, "dirty", "feat/dirty");
+  writeFileSync(path.join(fx.dirty, "README.md"), "base\ndirty\n");
+
+  // Pushed branch plus one local commit -> ahead of remote.
+  fx.ahead = unitBranch(root, "ahead", "feat/ahead");
+  bareRemote(root, fx.ahead, "feat/ahead");
+  commitFile(fx.ahead, "extra.txt", "local only\n");
+
+  // Dirty AND ahead simultaneously -> dirty wins inside box5.
+  fx.dirtyahead = unitBranch(root, "dirtyahead", "feat/dirtyahead");
+  bareRemote(root, fx.dirtyahead, "feat/dirtyahead");
+  commitFile(fx.dirtyahead, "extra.txt", "local only\n");
+  writeFileSync(path.join(fx.dirtyahead, "README.md"), "base\ndirty\n");
+
+  // Dirty tree with spaces / unicode filenames (dev scenario).
+  fx.unicode = unitBranch(root, "unicode", "feat/unicode");
+  writeFileSync(path.join(fx.unicode, "a b.txt"), "x\n");
+  writeFileSync(path.join(fx.unicode, "café.txt"), "x\n");
+
+  // Pushed branch with an upstream -> box4 exercises the gh stub.
+  fx.b4 = unitBranch(root, "b4", "feat/b4");
+  bareRemote(root, fx.b4, "feat/b4");
+
+  // Engine-only: the phase-lint clause of box2 (the shim cannot run it).
+  fx.lintfail = unitBranch(root, "lintfail", "feat/lintfail");
+  commitFile(fx.lintfail, "docs/features/lintfail/TASKS.md", "# TASKS\n");
+  commitFile(fx.lintfail, "scripts/phase-lint.mjs", "process.exit(1);\n");
+  fx.lintpass = unitBranch(root, "lintpass", "feat/lintpass");
+  commitFile(fx.lintpass, "docs/features/lintpass/TASKS.md", "# TASKS\n");
+  commitFile(fx.lintpass, "scripts/phase-lint.mjs", "process.exit(0);\n");
+
+  return fx;
+}
+
+function baseEnv(ghDir) {
+  return {
+    ...process.env,
+    PATH: `${ghDir}:${process.env.PATH}`,
+    AGENTIC_WORKFLOW_RUNTIME: "node",
+  };
+}
+
+export function makeContext() {
+  const root = mkdtempSync(path.join(os.tmpdir(), "tc-fixtures-"));
+  const ghDir = ghStub(root);
+  const fx = buildFixtures(root);
+  return {
+    root,
+    ghDir,
+    fx,
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+    runEngine(cwd, args = [], env = {}) {
+      const r = spawnSync(process.execPath, [ENGINE, ...args], {
+        cwd,
+        encoding: "utf8",
+        env: { ...baseEnv(ghDir), ...env },
+      });
+      return { code: r.status, stdout: r.stdout, stderr: r.stderr };
+    },
+    runShim(cwd, args = [], env = {}) {
+      const r = spawnSync("bash", [SHIM, ...args], {
+        cwd,
+        encoding: "utf8",
+        env: { ...baseEnv(ghDir), ...env },
+      });
+      return { code: r.status, stdout: r.stdout, stderr: r.stderr };
+    },
+  };
+}
+
+// The shared matrix for BOTH engines (no phase-lint fixture: that clause is
+// engine-only, ED-52-3).
+export function receiptCases(ctx) {
+  const head = git(ctx.fx.b4, "rev-parse", "HEAD");
+  return [
+    { name: "box1 default branch", dir: ctx.fx.default, code: 1, line: "TURN-CONTRACT fail box1: branch-default" },
+    { name: "box1 not a repo", dir: ctx.fx.notrepo, code: 1, line: "TURN-CONTRACT fail box1: not-a-repo" },
+    { name: "box2 acceptance missing", dir: ctx.fx.missing, code: 1, line: "TURN-CONTRACT fail box2: acceptance-missing" },
+    { name: "box2 not applicable", dir: ctx.fx.plain, code: 0, line: "TURN-CONTRACT ok" },
+    { name: "box3 no commits", dir: ctx.fx.nocommits, code: 1, line: "TURN-CONTRACT fail box3: no-commits" },
+    { name: "box3 empty repo", dir: ctx.fx.empty, code: 1, line: "TURN-CONTRACT fail box3: no-commits" },
+    { name: "box4 not applicable", dir: ctx.fx.ok, code: 0, line: "TURN-CONTRACT ok" },
+    { name: "box4 no upstream", dir: ctx.fx.ok, args: ["--finished"], code: 1, line: "TURN-CONTRACT fail box4: pr-not-open" },
+    {
+      name: "box4 gh unreachable",
+      dir: ctx.fx.b4,
+      args: ["--finished"],
+      env: { GH_STUB_EXIT: "1" },
+      code: 1,
+      line: "TURN-CONTRACT fail box4: pr-unreachable",
+    },
+    {
+      name: "box4 head mismatch",
+      dir: ctx.fx.b4,
+      args: ["--finished"],
+      env: { GH_STUB_JSON: JSON.stringify({ headRefOid: "0".repeat(40), state: "OPEN" }) },
+      code: 1,
+      line: "TURN-CONTRACT fail box4: pr-head-mismatch",
+    },
+    {
+      name: "box4 open PR at HEAD",
+      dir: ctx.fx.b4,
+      args: ["--finished"],
+      env: { GH_STUB_JSON: JSON.stringify({ headRefOid: head, state: "OPEN" }) },
+      code: 0,
+      line: "TURN-CONTRACT ok",
+    },
+    { name: "box5 dirty tree", dir: ctx.fx.dirty, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
+    { name: "box5 ahead of remote", dir: ctx.fx.ahead, code: 1, line: "TURN-CONTRACT fail box5: ahead-of-remote" },
+    { name: "box5 dirty precedes ahead", dir: ctx.fx.dirtyahead, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
+    { name: "box5 unicode/space names", dir: ctx.fx.unicode, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
+    { name: "clean feature branch", dir: ctx.fx.ok, code: 0, line: "TURN-CONTRACT ok" },
+  ];
+}
+
+// Engine-only cases: the phase-lint clause of box2.
+export function engineOnlyCases(ctx) {
+  return [
+    { name: "box2 phase-lint failed", dir: ctx.fx.lintfail, code: 1, line: "TURN-CONTRACT fail box2: phase-lint-failed" },
+    { name: "box2 phase-lint green", dir: ctx.fx.lintpass, code: 0, line: "TURN-CONTRACT ok" },
+  ];
+}
