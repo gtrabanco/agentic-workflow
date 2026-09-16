@@ -477,23 +477,252 @@ block). Awaiting independent re-review by `review-spec`.
 
 ## Engineering half
 
-<!-- TODO: plan-feature → -->
-<!-- This section is written by `plan-feature` after an independent Product review. -->
-<!-- Not yet started. -->
+Written by `plan-feature` / `plan-feature-scaffold` after the Product-review
+gate passed (receipt SPEC-REVIEW-59-2, snapshot `2e2d00d6…ebc7f0e`). Product
+bytes are untouched; the artifact revision of this plan set is `59-plan-1`.
 
-- `### Technical goals`
-- `### Architecture impact`
-- `### Design`
-- `### Planning evidence`
-- `### Obligations`
-- `### Decisions to confirm`
-- `### Testing requirements`
-- `### Dev scenarios`
-- `### Phases`
-- `### Deploy & rollback`
-- `### Open questions / risks`
-- `### Deliverables`
-- `### Post-merge next feature`
+### Technical goals
+
+- One deterministic emitter, many quoters: the schema package owns a pure,
+  fail-closed continuation emitter; the sensor is its only caller; skill text
+  quotes what was emitted. No model authors exact command tokens (C2).
+- The Envelope v2 contract grows additively: `next.continuation` is optional,
+  envelopes without it stay byte-valid, and the release is a minor (4.1.2 →
+  4.2.0) under the repo's majors freeze (D-59-6).
+- Failure is typed, never fabricated: four closed refusal codes replace every
+  dead-end advice path; a refusal is terminal at the driver layer (D-59-4).
+- The design interview pays one form-turn (+ ≤ 2 ambiguity follow-ups) instead
+  of one turn per question, with the rubric semantics unchanged (D-59-1, #231).
+
+### Architecture impact
+
+Two layers are touched; both are outer layers, so no layering rule is stressed:
+
+- **config/infra** — `packages/agentic-workflow-schema/src/index.ts:159-167`
+  (`EnvelopeNext` gains the optional `continuation` member),
+  `packages/agentic-workflow-schema/envelope.schema.json:161-182` (the JSON
+  Schema projection gains the same optional property — required, because `next`
+  sets `additionalProperties: false`), and `scripts/workflow-status.mjs:961-1004`
+  + `:1192` (emission hook at `resolveNext()`/attach; `next.suggested` router at
+  `:759` stays). The sensor's read-only invariant holds: emission only adds
+  fields to the envelope it already prints (O15; feature 38's read-only greps
+  keep passing).
+- **docs** — the five quote surfaces (PE-011), one FEATURE_WORKFLOW pointer,
+  `CLAUDE.md`'s `normative-surfaces@1` (:311-335) + the `hand-off-fields@1`
+  block (`skills/orchestration-envelope/references/TURN_CONTRACT.md:47-54`),
+  `INTERVIEW.md` §3 + `design-feature/SKILL.md` step 3 / progressive loading,
+  and the golden-fixture pass criteria.
+
+The existing single-emitter boundary is preserved and extended: feature 38's
+frozen pin keeps `decideWorkflowAction()` out of the sensor (PE-005), so the
+emitter consumes the sensor's own `resolveNext()` output — it projects, never
+re-decides (PE-004).
+
+Preflight (planning-preflight contract):
+
+```text
+Preflight: Stage 1 — NRS consumed · arch: deferred
+Preflight: NRS consumed · invariant classification: n/a (no project invariants declared — REPOSITORY_STATE.md F010)
+```
+
+### Design
+
+**Continuation object (frozen shape).**
+`next.continuation: { argv: string[]; rendering?: string; preconditions: Array<{ id: string; check: string; satisfied: boolean }>; evidence?: { artifact: string; digest: string }; convergence: string }`
+— all members required unless shown optional; omission of the whole field is
+the absence semantics (never `null`, never defaulted — D-59-8 provenance).
+
+- `argv` is the command of record, parsed from the resolved `next.recommended`
+  slash-command string by whitespace splitting (quoted args stay single
+  tokens). `rendering` is display-only, derived per platform family; v1 emits
+  the POSIX-shell rendering (join with spaces, shell-quote members containing
+  whitespace or quotes). argv is never altered by rendering (AC5, D-59-7).
+- `preconditions` carry the emitter's at-emit evaluation; a precondition the
+  emitter cannot evaluate is the `precondition-uncheckable` refusal, not a
+  guess (AC2, AC3).
+- `evidence` is receiver-verifiable by digest equality: `digest` is the
+  lowercase SHA-256 of the referenced snapshot/report (computed with the
+  package's `sha256HexSync` helpers, feature 25); the receiver re-derives it
+  and a mismatch fails verification. Nothing is persisted (D-59-9).
+- `convergence` names the envelope/state field that must measurably advance
+  when the command is executed exactly as emitted (D-59-8).
+
+**Emitter API.** `emitContinuation(input)` exported by the schema package:
+pure, deterministic, fail-closed — returns `{ ok: true, continuation }` or
+`{ ok: false, refusal: ContinuationRefusalCode }`. Input is the already-resolved
+command string plus the unit context; the emitter never re-derives the decision
+(PE-004, PE-005). The sensor calls it at the `resolveNext()`/attach points and:
+
+- on `ok` — attaches `next.continuation`;
+- on refusal — attaches **no** `continuation` field and records the code at
+  `detail.continuation_refusal` (`detail` is schema-unconstrained, PE-003 —
+  no schema change needed for refusals).
+
+**Refusal vocabulary (closed, ≤ 4, D-59-5).** `precondition-uncheckable ·
+rendering-failed · no-decision-available · sensor-degraded` — exported as
+`CONTINUATION_REFUSALS` and pinned by the `normative-surfaces@1` row
+(grammar `schema-export:CONTINUATION_REFUSALS`, machine
+`continuation-refusal-type`, must-name `yes`).
+
+**v1 class table (closed; D-59-5).**
+
+| Class | Owning quote surface (AC10) | argv (shape) | convergence field |
+|---|---|---|---|
+| status refresh | `skills/workflow-status/SKILL.md` (next-command echo) | `[/workflow-status]` | `next.recommended` — the refreshed envelope recomputes it against the advanced tree |
+| planning-gate re-run | `skills/workflow-status/references/PRE_EXECUTION.md:44,52` (`stale` row + re-run sentence) | `[/review-spec <unit>]` or `[/review-plan <NN>]` per stage | `detail.pre_execution.<stage>.label` — stale → current |
+| review-receipt refresh | `skills/review-spec/references/OUTPUT.md:3`, `skills/review-plan/references/OUTPUT.md:3`, `skills/review-change/references/PERSIST_AND_DECIDE.md:3` | `[/review-spec <unit>]` / `[/review-plan <NN>]` per stage | `detail.pre_execution.<stage>.label` — missing/stale → current |
+
+**Normative additions.** `hand-off-fields@1` gains `next | continuation`
+(machine `envelope-field:next`, must-name `yes` — the drift gate's machine→text
+closed set covers the new field); the drift gate gains a `schema-export:`
+grammar resolver that reads the exported const from committed source (PE-010).
+
+**Interview protocol (AC8/AC9).** §3's ask protocol becomes: one form-turn
+covering the six fixed rubric slots, each slot carrying a recommended default
+the user accepts with one word; at most 2 follow-up turns for genuine
+ambiguity. The vagueness rubric, mandatory-question rule, ask-nothing rule,
+deferral rows, and `NEEDS_INPUT` escalation carry over verbatim; the
+one-question-per-turn rule is deleted outright (no second live protocol).
+`SKILL.md` step 3 and the progressive-loading hard stop describe the same
+protocol; the upsert and review modes are untouched.
+
+### Planning evidence
+
+See `planning-evidence.md` (M/L — the Plan-stage table is frozen there; 20 rows,
+PE-001…PE-020, all `current` + `proven`/`derived`).
+
+### Obligations
+
+See `planning-obligations.md` (M/L — O1…O17, one row per acceptance criterion
+plus the read-only, vocabulary-closure, and refusal-terminality invariants;
+every row `planned` at freeze).
+
+### Decisions to confirm
+
+Frozen as engineering decisions in `decisions.md` (E-59-1…E-59-6); none is open:
+
+- **E-59-1** — the product sketch's "P2 emission + quote surfaces" is cut into
+  P2 (config/infra) + P3 (docs) by the one-layer-per-phase rule (derivation
+  PE-020); the plan stays inside the ≤ 5-phase bound the Product half records.
+  Product bytes untouched.
+- **E-59-2** — the emitter lives in the schema package and consumes the sensor's
+  resolved command; `decideWorkflowAction()` stays out of the sensor (PE-005).
+- **E-59-3** — refusal codes surface at `detail.continuation_refusal`; the
+  `continuation` field is absent on every refusal path.
+- **E-59-4** — `evidence` binds a recomputed snapshot/report digest
+  (receiver-verifiable, nothing persisted).
+- **E-59-5** — v1 rendering = POSIX-shell derivation; per-family derivation is
+  what AC5's test pins.
+- **E-59-6** — convergence field names per class (table above); the discipline
+  suite advances the tree between emit and re-run to make the advance
+  measurable.
+
+### Testing requirements
+
+Test layers (repo convention — integration over mocks; throwaway git fixture
+repos per `scripts/workflow-status-sensor.test.mjs:87-123`):
+
+- **Schema package suite** (`bun run test` in the package) — backward compat,
+  valid object, four fail-closed shapes, canonical vectors, evidence-digest
+equality + mismatch, refusal-vocabulary export (AC1, AC4, AC7).
+- **Sensor suite** (`node --test scripts/workflow-status-sensor.test.mjs`) —
+  emission on non-terminal fixtures, refusal paths, offline degradation (AC2).
+- **Discipline suite** (`node --test scripts/continuation-discipline.test.mjs`,
+  new) — 3 classes × parse/precondition-checkable/convergence-advances, plus
+  rendering derivation + forced divergence (AC3, AC5).
+- **Normative + budget gates** — `node --test scripts/normative-drift.test.mjs`
+  (AC6), `node scripts/check-skill-context.mjs` (AC12).
+- **Mirror parity** — `npm run bundle:skills` +
+  `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` (AC12).
+- **Read-verified rows** — AC8, AC9, AC10, AC11 (manual-protocol part) checked
+  by the phase handoff quoting the landed text.
+
+### Dev scenarios
+
+| Scenario | Reproduces | Mechanism it drives |
+|---|---|---|
+| `continuation:empty-state` | Terminal/empty roadmap state — nothing to emit | fixture repo with no startable unit; envelope carries no `continuation` field, exit 0 (P2 pins) |
+| `continuation:invalid-shape` | Malformed continuation input at the validator | package-suite fail-closed cases (missing argv, empty convergence, non-string-array argv, non-object precondition) → typed refusal, never a printed envelope (P1 pins) |
+| `continuation:offline-forge` | Forge unavailable during precondition evaluation | `gh` shim failing fast in the fixture → `sensor-degraded` refusal at `detail.continuation_refusal`, no `continuation` key, exit 0 (P2 pins) |
+| `continuation:concurrent-emit` | Two consecutive sensor runs on the same tree | stateless projection — byte-identical envelopes (idempotence pins), no continuation store exists (P2/D-59-9) |
+| `interview:ambiguity-cap` | Genuine ambiguity persists past the follow-up budget | form-turn fixture run: 2 follow-up turns then the rubric's own `NEEDS_INPUT` escalation — no third ask (P4 text; exercised by the golden-fixture procedure, AC11) |
+| `interview:defaults-accept` | User accepts every recommended default in one word | form-turn completes in one turn; six slots resolved; spec-lint product boxes still tickable (P4 text + AC8) |
+
+Category walk: empty/zero state → `continuation:empty-state`; invalid or
+oversized input → `continuation:invalid-shape`; permission denied / wrong role →
+n/a: the sensor is read-only and role-free (NRS F-layer; no ACL surface in
+scope — C1–C5 are doc-level denials, not runtime checks); dependency outage or
+timeout → `continuation:offline-forge` (forge) and the existing git/hint
+degradation codes; concurrent/duplicate action → `continuation:concurrent-emit`;
+limit or threshold hit → `interview:ambiguity-cap` (the protocol's own 2-turn
+threshold).
+
+### Phases
+
+Five phases, one layer each, zero open decisions; detailed checklists in
+`TASKS.md`, phase-lint output in the scaffold report. P1 commits the planning
+artifacts with its first change.
+
+- **P1 — Envelope continuation schema** (config/infra): optional
+  `next.continuation` in the TS interface + JSON Schema, closed refusal const,
+  pure emitter API, canonical vectors, digest cases, 4.2.0 additive minor.
+  Done-when: `bun run test` (schema package) → exit 0.
+- **P2 — Sensor continuation emission** (config/infra): emitter wired at the
+  `resolveNext()`/attach points, four fail-closed refusal paths, evidence-token
+  binding, emission/refusal pins, per-class discipline suite + rendering pins.
+  Done-when: `node --test scripts/workflow-status-sensor.test.mjs
+  scripts/continuation-discipline.test.mjs` → exit 0.
+- **P3 — Quote-surface adoption** (docs): quote rule at the five pinned
+  surfaces, one FEATURE_WORKFLOW pointer, `normative-surfaces@1` row +
+  `hand-off-fields@1` row + drift extractor. Done-when:
+  `node --test scripts/normative-drift.test.mjs` → exit 0.
+- **P4 — Batched design interview** (docs): INTERVIEW.md §3 form protocol
+  (superseded rule deleted), SKILL.md step 3 + progressive loading, golden-
+  fixture boxes, budgets re-based. Done-when:
+  `node scripts/check-skill-context.mjs` → exit 0.
+- **P5 — Hardening & PR** (hardening): full ladder, mirror re-bundle + parity,
+  release evidence, acceptance blob receipt, close-out tasks (PR open, roadmap
+  `done`, link commit). Done-when: discipline suite → exit 0 with the whole
+  ladder green and the PR URL printed.
+
+### Deploy & rollback
+
+n/a — docs-and-scripts repository; shipping is the PR merge. Rollback is the
+standard revert; the additive minor means a pre-4.2.0 consumer never sees the
+field (backward compat is an AC1 pin, not a migration).
+
+### Open questions / risks
+
+None open. Risks with owners:
+
+- The drift gate's `schema-export:` resolver is new gate machinery — owner P3;
+  risk contained by extending the existing extractor set (PE-010) and the AC6
+  gate run.
+- Budget re-basis may grow ceilings for text-heavy skills — owner P4; the
+  tool's own declared re-basis convention is the prescribed mechanism (PE-014;
+  feature 38 precedent B-04).
+- `resolveNext()` line numbers may drift by P2 — owner execute-phase; PE-006
+  names the re-verify step before editing.
+
+### Deliverables
+
+- Schema package: `next.continuation` (TS + JSON Schema),
+  `CONTINUATION_REFUSALS` + typed refusal, `emitContinuation`, vectors, suite
+  cases, 4.2.0 + CHANGELOG row + additive-guarantee sentence.
+- Sensor: emission + refusal paths + evidence binding in
+  `scripts/workflow-status.mjs`; `scripts/continuation-discipline.test.mjs`;
+  extended `scripts/workflow-status-sensor.test.mjs`.
+- Skill text: quote rule at the five pinned surfaces + FEATURE_WORKFLOW
+  pointer; `INTERVIEW.md` §3 + `design-feature/SKILL.md` form protocol.
+- Normative: `CLAUDE.md` refusal row; `TURN_CONTRACT.md` `next | continuation`
+  row; drift-gate `schema-export:` resolver; golden-fixture boxes; re-based
+  budgets; re-bundled Pi mirror.
+
+### Post-merge next feature
+
+Feature 52 (`machine-checked-turn-contract`, #226) composes with the emitted
+continuations; feature 58 (`remove-ship-roadmap`, #233) is the future consumer
+this unit's `next.continuation` satisfies early. See `docs/features/ROADMAP.md`.
 
 ---
 
@@ -511,16 +740,21 @@ block). Awaiting independent re-review by `review-spec`.
 
 ---
 
-## Artifacts that still need to be created by plan-feature
+## Artifacts created by plan-feature (2026-09-16, `59-plan-1`)
 
-- `docs/features/59-executable-continuations/PLAN.md` — phased plan
-- `docs/features/59-executable-continuations/TASKS.md` — task breakdown
+- `docs/features/59-executable-continuations/PLAN.md` — 5-phase plan (P1 schema ·
+  P2 sensor emission + discipline · P3 quote surfaces · P4 batched interview ·
+  P5 hardening & PR) — phase-lint PASS 8/8 all phases
+- `docs/features/59-executable-continuations/TASKS.md` — per-phase task checklists
 - `docs/features/59-executable-continuations/ACCEPTANCE.md` — frozen acceptance
-  manifest
-- `docs/features/59-executable-continuations/planning-evidence.md` —
-  engineering claims
-- `docs/features/59-executable-continuations/planning-obligations.md` —
-  obligations ledger
+  manifest (AC-01…AC-12)
+- `docs/features/59-executable-continuations/planning-evidence.md` — PE-001…PE-020
+- `docs/features/59-executable-continuations/planning-obligations.md` — O1…O17
+- `docs/features/59-executable-continuations/testing.md` — validation ladder
+- `docs/features/59-executable-continuations/known-issues.md` — tracked boundaries
+- `docs/features/59-executable-continuations/architecture-notes.md` — layer impact
+- `decisions.md` — engineering decisions E-59-1…E-59-6 appended (product
+  decisions D-59-1…D-59-10 untouched)
 
 ## Artifacts already created by this design-feature session
 

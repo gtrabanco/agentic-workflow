@@ -1,5 +1,7 @@
 # Progress — 59-executable-continuations
 
+Last reviewed: —
+
 ## Pre-execution review receipt v1 — spec
 
 ```text
@@ -86,3 +88,7 @@ Notes:
   rows — zero new findings; F1–F3 already carry `resolved` rows). Committed on the
   unit branch per turn contract; no reviewed artifact (`SPEC.md`, `decisions.md`,
   `ROADMAP.md`) modified — reviewed bytes unchanged after the commit.
+
+## Acceptance receipt v1
+
+- Manifest: docs/features/59-executable-continuations/ACCEPTANCE.md · Blob: d046f0b537da92251c6d81893e816bbc0de1a252 · Status: frozen · Verified: 2026-09-16 (recorded at plan freeze by `plan-feature-scaffold`; recomputed before every phase and final review per `verification-contract`)
