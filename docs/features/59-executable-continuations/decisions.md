@@ -245,3 +245,25 @@ would otherwise guess. Evidence rows live in `planning-evidence.md`.
   `detail.pre_execution.<stage>.label` (stale/missing → current). The
   discipline suite advances the fixture tree between emit and re-run so the
   advance is measurable (D-59-8).
+
+## 2026-09-16 — Execution decision (P1)
+
+- **E-59-7 — Release-evidence version pins move with the bump.** Two
+  pre-existing release-contract tests asserted the literal shipped version
+  (`test/release-contract.test.mjs:23` "package version is 4.1.2";
+  `test/verification-gates.test.mjs:115` "the package version matches the AC7
+  release contract"). The SPEC/AC-07 require 4.1.2 → 4.2.0, so both pins were
+  updated to 4.2.0 in the same commit as the bump. This is a release-evidence
+  pin tracking the version the package ships — not a behavioral assertion
+  loosened to make a candidate pass; the anti-gaming rules allow the version pin
+  to move because the frozen manifest itself requires the new version. No other
+  release assertion was touched.
+- **E-59-8 — Continuation validation is folded into the existing envelope
+  validator.** `validateContinuation` lives in `src/continuation.ts` and is
+  called from `validateEnvelope` (and, through the strict allow-list,
+  `validateEnvelopeV2Strict`). No second envelope validator was introduced: the
+  frozen shape stays one definition that both entry points consume.
+- **E-59-9 — Malformed evidence maps to `precondition-uncheckable`.** The
+  refusal vocabulary is closed at four codes (D-59-5); a malformed evidence
+  token is a token the emitter cannot check, so it takes the
+  `precondition-uncheckable` code rather than adding a fifth "evidence" code.
