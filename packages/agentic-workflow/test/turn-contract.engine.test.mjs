@@ -60,6 +60,14 @@ test("the verifier is read-only", () => {
   assert.equal(after, before, "the verifier must not mutate tree or index");
 });
 
+test("the box2 phase-lint clause is read-only", () => {
+  const before = git(ctx.fx.lintpass, "status", "--porcelain", "--untracked-files=all");
+  const r = ctx.runEngine(ctx.fx.lintpass);
+  const after = git(ctx.fx.lintpass, "status", "--porcelain", "--untracked-files=all");
+  assert.equal(r.stdout, "TURN-CONTRACT ok\n");
+  assert.equal(after, before, "the phase-lint spawn must not mutate tree or index");
+});
+
 test("unreadable .git fails closed with a fail line", (t) => {
   if (typeof process.getuid === "function" && process.getuid() === 0) {
     t.skip("running as root: permission bits are not enforced");
