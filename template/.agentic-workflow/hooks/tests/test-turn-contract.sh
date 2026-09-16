@@ -94,6 +94,14 @@ commit_file "$unicode_repo" docs/features/unicode/ACCEPTANCE.md 'frozen'
 printf 'x\n' > "$unicode_repo/a b.txt"
 printf 'x\n' > "$unicode_repo/café.txt"
 
+# corrupt: `git status` itself errors (corrupt .git/index) -> box5 fails
+# closed, never a fake ok (F1, review cycle 1).
+corrupt_repo=$tmp/corrupt
+new_branch "$corrupt_repo" main
+gitc -C "$corrupt_repo" checkout -q -b feat/corrupt
+commit_file "$corrupt_repo" docs/features/corrupt/ACCEPTANCE.md 'frozen'
+printf 'not a git index\n' > "$corrupt_repo/.git/index"
+
 # dirty: the ok fixture plus an unstaged edit.
 dirty_repo=$tmp/dirty
 new_branch "$dirty_repo" main
@@ -219,6 +227,10 @@ run_dir=$unicode_repo
 run
 assert "box5 unicode/space names" 1 'TURN-CONTRACT fail box5: dirty-tree'
 
+run_dir=$corrupt_repo
+run
+assert "box5 unreadable status fails closed" 1 'TURN-CONTRACT fail box5: dirty-tree'
+
 # ---- read-only + cwd -------------------------------------------------------
 
 before=$(gitc -C "$ok_repo" status --porcelain --untracked-files=all)
@@ -272,4 +284,4 @@ if ! grep -q 'unknown argument: --nope' "$tmp/stderr"; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS turn contract: 22 cases\n'
+printf 'PASS turn contract: 23 cases\n'

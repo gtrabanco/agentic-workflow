@@ -124,9 +124,11 @@ function main(argv) {
     if (prHead !== localHead) return fail(4, "pr-head-mismatch");
   }
 
-  // box5 — clean tree, then not ahead of the configured upstream.
+  // box5 — clean tree, then not ahead of the configured upstream. A status
+  // query that cannot be answered (error, or output past the buffer cap) is
+  // never proof of a clean tree: it fails closed as dirty-tree.
   const status = git(root, ["status", "--porcelain"]);
-  if (status.ok && status.out !== "") return fail(5, "dirty-tree");
+  if (!status.ok || status.out !== "") return fail(5, "dirty-tree");
   const upstream = git(root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]);
   if (upstream.ok && upstream.out !== "") {
     const ahead = count(root, `${upstream.out}..HEAD`);

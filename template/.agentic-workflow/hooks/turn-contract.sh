@@ -85,8 +85,11 @@ if [ "$finished" -eq 1 ]; then
   [ "$pr_head" = "$local_head" ] || fail 4 pr-head-mismatch
 fi
 
-# box5 — clean tree, then not ahead of the configured upstream.
-if [ -n "$(git -C "$repo_root" status --porcelain 2>/dev/null)" ]; then
+# box5 — clean tree, then not ahead of the configured upstream. A status
+# query that cannot be answered is never proof of a clean tree: it fails
+# closed as dirty-tree.
+status_out=$(git -C "$repo_root" status --porcelain 2>/dev/null) || fail 5 dirty-tree
+if [ -n "$status_out" ]; then
   fail 5 dirty-tree
 fi
 upstream=$(git -C "$repo_root" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)

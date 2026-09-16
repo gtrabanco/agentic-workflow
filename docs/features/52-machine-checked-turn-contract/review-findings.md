@@ -6,7 +6,7 @@ Fix-now fold ledger for the unit's review cycles. Rows are appended by
 ```text
 review-findings@1
 id | file:line | axis | severity | class | route | folded
-F1 | packages/agentic-workflow/bin/turn-contract.mjs:128 + template/.agentic-workflow/hooks/turn-contract.sh:89 | code | high | fix-now | fold | no
+F1 | packages/agentic-workflow/bin/turn-contract.mjs:128 + template/.agentic-workflow/hooks/turn-contract.sh:89 | code | high | fix-now | fold | yes
 F2 | scripts/turn-contract-grammar.test.mjs:4-6 | code | med | fix-now | fold | no
 F4 | packages/agentic-workflow/bin/turn-contract.mjs:4 | security | med | fix-now | fold | no
 VF-1 | packages/agentic-workflow/bin/turn-contract.mjs:128 · reviewer review-change · HEAD 9b6528668c2736a876ec363bfbd926c4c8fb1834 · recheck failing reproducer: /tmp fixture repo (feat/x, 1 commit, unit-shaped docs/features/x, dirty untracked file), corrupt `.git/index` → `git status --porcelain` exit 128 while `rev-parse --show-toplevel`/`rev-list --count` exit 0 → engine prints `TURN-CONTRACT ok` exit 0; control with working index → `TURN-CONTRACT fail box5: dirty-tree` exit 1; secondary trigger by code read: execFileSync default maxBuffer 1 MiB → oversize porcelain lands in the same {ok:false} path | code | confirmed | finding-mark | n/a | n/a
