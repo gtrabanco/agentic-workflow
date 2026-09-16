@@ -6,7 +6,8 @@ sketch's "P2 emission + quote surfaces" is cut into two phases by the
 one-layer-per-phase rule (E-59-1 in `decisions.md`; derivation PE-020) — the cut
 stays inside the ≤ 5-phase bound the Product half itself records. Every phase is
 one layer, zero open decisions, locally verifiable. Artifact revision of this
-plan set: `59-plan-1` (rotated by `plan-feature-scaffold` on 2026-09-16).
+plan set: `59-plan-2` (rotated on 2026-09-16 by the F4–F6 repair batch; initial
+cut `59-plan-1` by `plan-feature-scaffold`).
 
 ## P1 — Envelope continuation schema
 
@@ -42,12 +43,12 @@ projects, never re-derives the decision (PE-004, PE-005).
 - [ ] Implement the four fail-closed refusal paths in `scripts/workflow-status.mjs` — an uncheckable precondition, a rendering failure, no available decision, and a degraded sensor each suppress the `continuation` field entirely and emit only the mapped refusal code in `detail`
 - [ ] Implement the offline path in `scripts/workflow-status.mjs` — forge state unavailable at emit time maps to the `sensor-degraded` refusal, never a guessed command, keeping the sensor's degrade-not-fail exit contract
 - [ ] Bind the evidence token in `scripts/workflow-status.mjs` — the token carries the referenced receipt digest computed through the schema package's sha256 helpers; the receiver re-derives it and a mismatch fails verification
-- [ ] Extend `scripts/workflow-status-sensor.test.mjs` with the emission pins — a non-terminal fixture yields well-formed argv; each refusal fixture yields no `continuation` key plus a closed-vocabulary code; the offline fixture yields the refusal
+- [ ] Extend `scripts/workflow-status-sensor.test.mjs` with the emission pins — a non-terminal fixture yields well-formed argv; each refusal fixture yields no `continuation` key plus a closed-vocabulary code; the offline fixture yields the refusal; the empty-state fixture (roadmap with no startable unit) yields no `continuation` field and exit 0, and the concurrent-emit fixture (two consecutive runs on the same tree) yields byte-identical envelopes with no continuation store (D-59-9)
 - [ ] Create `scripts/continuation-discipline.test.mjs` — one git fixture repo per class (status refresh, planning-gate re-run, review-receipt refresh) proving the emitted command parses, its preconditions are checkable at emit time, and executing it exactly as emitted advances the named `convergence` field
 - [ ] Pin the rendering-derivation cases in `scripts/continuation-discipline.test.mjs` — rendering derivable from argv per platform family, argv never altered by rendering, a forced divergence fails the suite
 - [ ] Run both suites green: `node --test scripts/workflow-status-sensor.test.mjs scripts/continuation-discipline.test.mjs` → exit 0
 
-Done-when: `node --test scripts/workflow-status-sensor.test.mjs scripts/continuation-discipline.test.mjs` → exit 0 with the emission, refusal, offline, digest, per-class discipline, and rendering pins green.
+Done-when: `node --test scripts/workflow-status-sensor.test.mjs scripts/continuation-discipline.test.mjs` → exit 0 with the emission, refusal, offline, empty-state, concurrent-emit idempotence, digest, per-class discipline, and rendering pins green.
 
 Phase-lint: PASS (8/8) · fingerprint `P2:config/infra:8:sensor-continuation-emission`
 
