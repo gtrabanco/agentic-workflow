@@ -6,8 +6,9 @@ sketch's "P2 emission + quote surfaces" is cut into two phases by the
 one-layer-per-phase rule (E-59-1 in `decisions.md`; derivation PE-020) — the cut
 stays inside the ≤ 5-phase bound the Product half itself records. Every phase is
 one layer, zero open decisions, locally verifiable. Artifact revision of this
-plan set: `59-plan-2` (rotated on 2026-09-16 by the F4–F6 repair batch; initial
-cut `59-plan-1` by `plan-feature-scaffold`).
+plan set: `59-plan-3` (rotated on 2026-09-16 by the F4–F6 repair batch;
+re-rotated on 2026-09-16 by the F7 repair batch; initial cut `59-plan-1` by
+`plan-feature-scaffold`).
 
 ## P1 — Envelope continuation schema
 
