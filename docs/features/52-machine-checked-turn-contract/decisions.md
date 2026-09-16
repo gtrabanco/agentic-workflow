@@ -285,3 +285,31 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
 - **Authority**: explicit user approval at the P2 gate; verification contract
   amendment order (approval → SPEC amendment → replacement manifest → fresh
   receipt). Finding `PLAN52-F9`.
+
+## 2026-09-16 — ED-52-9: the shim reads `git status` to its first byte (user-directed)
+
+- **What**: box5 in `template/.agentic-workflow/hooks/turn-contract.sh` no longer
+  captures the whole `git status --porcelain` listing into a shell variable. It
+  pipes the listing through `{ IFS= read -r -n 1; }` and reads the pipeline's
+  statuses from `${PIPESTATUS[@]}`, cloned as the very next command: git's own
+  exit status must be 0, and the read must have consumed a byte (any output at
+  all means "dirty"). A `box5 huge listing fails closed` case (≈1.2 MB of
+  porcelain, past the engine's 1 MiB read cap and past the shim's pipe buffer)
+  joins the shared fixture matrix and the shim suite.
+- **Why**: Finding F6 was **disputed** — its stated divergence does not
+  reproduce (with a 1 147 992-byte listing BOTH engines print
+  `TURN-CONTRACT fail box5: dirty-tree`, exit 1, byte-identical: the engine
+  throws on Node's 1 MiB `maxBuffer`, the shim buffered and failed on non-empty),
+  so no verdict changes and no red-first test can exist. The owner then directed
+  the residual to be fixed anyway, choosing the fastest + lowest-storage option.
+  Measured on an 18 MB listing: 816 ms → 178 ms and 112.7 MB → 3.4 MB peak RSS;
+  on a clean repository 39.6 ms → 32.6 ms. Variants `set -o pipefail` + `head -c`
+  (adds an external process and a global shell option) and a `TMPDIR` temp file
+  (contradicts the verifier's "mutates nothing" claim, and moves the buffer to
+  disk instead of removing it) were rejected.
+- **Authority**: explicit user decision on the F6 dispute after the measured
+  comparison; no frozen field of the F6 row was edited.
+- **Guard**: the F1 corrupt-index case (`box5 unreadable status fails closed`)
+  is what detects a bounded read that loses git's status — verified by running
+  the suite against a deliberately mis-ordered `PIPESTATUS` implementation,
+  which it fails (`exit 0, want 1`).
