@@ -206,3 +206,42 @@ above):
 |---|---|---|---|---|---|---|
 | The quote rule's consuming surfaces exist at the paths the repaired item 4 / AC10 pin (skill text; stale-receipt re-run route; three receipt-persistence surfaces) | repository | `skills/workflow-status/SKILL.md:121` (today's next-command echo); `skills/workflow-status/references/PRE_EXECUTION.md:44,52` (`stale` label + re-run sentence); `skills/review-spec/references/OUTPUT.md:3`; `skills/review-plan/references/OUTPUT.md:3`; `skills/review-change/references/PERSIST_AND_DECIDE.md:3` | main @ repair turn | current | proven | — |
 | decisions.md records no role list — the SPEC's role matrix is the unit's only role record | ledger | finding F3, `docs/features/59-executable-continuations/planning-findings.md` (snapshot `55a70fd3…`) | receipt SPEC-REVIEW-59-1 | current | proven | — |
+
+## 2026-09-16 — Engineering decisions (plan stage, artifact revision `59-plan-1`)
+
+Recorded by `plan-feature-scaffold` while cutting the Engineering half. Product
+decisions D-59-1…D-59-10 above are untouched; these freeze what an implementer
+would otherwise guess. Evidence rows live in `planning-evidence.md`.
+
+- **E-59-1 — Phase cut 4 → 5 (one-layer rule).** The product sketch's "P2
+  emission + quote surfaces" spans `scripts/` + `packages/` (config/infra) and
+  `skills/` + `docs/` text (docs); the phase-lint's frozen target→layer table
+  judges each task's first path-like target against the phase's one declared
+  layer (PE-20), so the sketch's P2 cannot pass as one phase. Cut: P2 (sensor
+  continuation emission, config/infra) + P3 (quote-surface adoption, docs).
+  The plan stays inside the ≤ 5-phase bound D-59-2 itself records; scope, ACs,
+  and ordering are unchanged; Product bytes untouched (the sketch remains the
+  design-stage sizing record).
+- **E-59-2 — Emitter home and inputs.** The emitter (`emitContinuation`) lives
+  in the schema package and is pure; its input is the already-resolved command
+  string plus unit context. The sensor is the only caller. `decideWorkflowAction()`
+  stays out of the sensor (feature 38's frozen AC-12 pin, PE-005) — the emitter
+  projects, never re-decides (SPEC Dependencies note, PE-004).
+- **E-59-3 — Refusal surface.** A refusal emits no `continuation` field and
+  records the code at `detail.continuation_refusal` (`detail` is
+  schema-unconstrained — PE-003), so no envelope-vocabulary change is needed
+  for refusals. D-59-4's terminality is a driver-layer reading of that shape.
+- **E-59-4 — Evidence token binding.** `evidence: { artifact, digest }` where
+  `digest` is the lowercase SHA-256 (feature 25's `sha256HexSync`, PE-007) of
+  the referenced snapshot/report the emitter recomputes at emit time; the
+  receiver re-derives and compares. Nothing is persisted (D-59-9).
+- **E-59-5 — Rendering family.** v1 emits the POSIX-shell rendering of `argv`
+  (join with spaces, shell-quote members containing whitespace or quotes);
+  AC5's "per platform family" is the derivation rule the discipline test pins,
+  with argv never altered (D-59-7). Other families are future SPEC work (B-02).
+- **E-59-6 — Convergence field names.** status refresh → `next.recommended`
+  (the refreshed envelope recomputes it against the advanced tree);
+  planning-gate re-run and review-receipt refresh →
+  `detail.pre_execution.<stage>.label` (stale/missing → current). The
+  discipline suite advances the fixture tree between emit and re-run so the
+  advance is measurable (D-59-8).
