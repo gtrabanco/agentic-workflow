@@ -5,7 +5,8 @@ Artifact revision: `52-plan-2`.
 ## Test layers
 
 - **Integration (primary) — engine suite:** `packages/agentic-workflow/test/turn-contract.engine.test.mjs`
-  (`node --test packages/agentic-workflow/test/`, node v22 per `.node-version` —
+  (`bun test packages/agentic-workflow/test/`, bun-first; Node 24 fallback
+  `node --test packages/agentic-workflow/test/*.test.mjs` —
   directory mode). Each case builds a throwaway fixture repo with
   `git init -b <default>` in a temp directory, runs the engine with the
   fixture as cwd (subdirectory case included), and asserts the exact stdout

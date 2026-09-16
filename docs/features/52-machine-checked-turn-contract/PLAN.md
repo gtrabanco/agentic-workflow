@@ -93,7 +93,8 @@ its suite, the two-engine parity suite, and the grammar conformance test.
   `TURN_CONTRACT.md`, and the `CLAUDE.md` normative-surfaces row is present
   (AC8).
 
-Done-when: `node --test packages/agentic-workflow/test/` exits 0 and
+Done-when: `bun test packages/agentic-workflow/test/` exits 0 (Node 24 fallback:
+`node --test packages/agentic-workflow/test/*.test.mjs`) and
 `node --test scripts/turn-contract-grammar.test.mjs` exits 0.
 
 ## P3 — Hardening & PR

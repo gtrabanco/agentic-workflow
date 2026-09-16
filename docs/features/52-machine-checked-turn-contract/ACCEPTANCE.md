@@ -10,12 +10,12 @@ user-approved SPEC amendment.
 | ID | Required outcome | Validator |
 |---|---|---|
 | AC1 | `--help` exits 0 and prints usage naming both flags | `node packages/agentic-workflow/bin/turn-contract.mjs --help` → exit 0, usage names `--finished` and `--help` |
-| AC2 | Engine suite green: clean feature branch (≥ 1 commit ahead of default, clean tree) → stdout exactly `TURN-CONTRACT ok`, exit 0; invocation from a subdirectory; no-tree-mutation assertion | `node --test packages/agentic-workflow/test/` → exit 0 |
-| AC3 | Engine suite case: dirty tree in the fixture → stdout exactly `TURN-CONTRACT fail box5: dirty-tree`, exit 1 | `node --test packages/agentic-workflow/test/` (dirty-tree case) → exit 0 |
-| AC4 | Engine suite cases: default branch → `TURN-CONTRACT fail box1: branch-default`, exit 1; not a git repo → `TURN-CONTRACT fail box1: not-a-repo`, exit 1; no own commits → `TURN-CONTRACT fail box3: no-commits`, exit 1 | `node --test packages/agentic-workflow/test/` (box1/box3 cases) → exit 0 |
-| AC5 | Engine suite cases for box4: `--finished` with no open PR → `TURN-CONTRACT fail box4: pr-not-open`, exit 1; gh unreachable → `TURN-CONTRACT fail box4: pr-unreachable`, exit 1; PR head mismatch → `TURN-CONTRACT fail box4: pr-head-mismatch`, exit 1; stubbed open PR with head == local HEAD → box4 passes | `node --test packages/agentic-workflow/test/` (box4 cases) → exit 0 |
+| AC2 | Engine suite green: clean feature branch (≥ 1 commit ahead of default, clean tree) → stdout exactly `TURN-CONTRACT ok`, exit 0; invocation from a subdirectory; no-tree-mutation assertion | `bun test packages/agentic-workflow/test/` → exit 0 (Node 24 fallback: `node --test packages/agentic-workflow/test/*.test.mjs` → exit 0) |
+| AC3 | Engine suite case: dirty tree in the fixture → stdout exactly `TURN-CONTRACT fail box5: dirty-tree`, exit 1 | `bun test packages/agentic-workflow/test/` (dirty-tree case) → exit 0 |
+| AC4 | Engine suite cases: default branch → `TURN-CONTRACT fail box1: branch-default`, exit 1; not a git repo → `TURN-CONTRACT fail box1: not-a-repo`, exit 1; no own commits → `TURN-CONTRACT fail box3: no-commits`, exit 1 | `bun test packages/agentic-workflow/test/` (box1/box3 cases) → exit 0 |
+| AC5 | Engine suite cases for box4: `--finished` with no open PR → `TURN-CONTRACT fail box4: pr-not-open`, exit 1; gh unreachable → `TURN-CONTRACT fail box4: pr-unreachable`, exit 1; PR head mismatch → `TURN-CONTRACT fail box4: pr-head-mismatch`, exit 1; stubbed open PR with head == local HEAD → box4 passes | `bun test packages/agentic-workflow/test/` (box4 cases) → exit 0 |
 | AC6 | Unknown flag → usage on stderr, exit 2 | `node packages/agentic-workflow/bin/turn-contract.mjs --nope` → exit 2, usage on stderr |
-| AC7 | Parity suite green: the same fixture-repo matrix through both engines asserts byte-identical stdout lines and exit codes | `node --test packages/agentic-workflow/test/` (parity file) → exit 0 |
+| AC7 | Parity suite green: the same fixture-repo matrix through both engines asserts byte-identical stdout lines and exit codes | `bun test packages/agentic-workflow/test/turn-contract.parity.test.mjs` → exit 0 (Node 24 fallback: `node --test packages/agentic-workflow/test/turn-contract.parity.test.mjs` → exit 0) |
 | AC8 | Grammar conformance: both engines' outputs match the fenced `turn-contract-receipt@1` block in `TURN_CONTRACT.md`; the `CLAUDE.md` normative-surfaces row is present; normative-drift stays green | `node --test scripts/turn-contract-grammar.test.mjs` → exit 0; `node --test scripts/normative-drift.test.mjs` → exit 0 |
 | AC9 | `TURN_CONTRACT.md` carries the machine-check profile: boxes 1–5 demonstrated by pasting the receipt; prose recitation of boxes 1–5 not required when the verifier ran; the fallback is stated; boxes 6–11 requirements unchanged | read-verified: the four profile clauses checked against `skills/orchestration-envelope/references/TURN_CONTRACT.md` |
 | AC10 | Sensor suite passes; the envelope carries the `next` fields and the profile's echo rule maps the `→ Next:` block from `next.recommended` + `next.alternatives` | `node --test scripts/workflow-status-sensor.test.mjs` → exit 0; read-verified: echo rule in `TURN_CONTRACT.md` maps both fields |
@@ -35,7 +35,7 @@ user-approved SPEC amendment.
 ## Commands
 
 - `node packages/agentic-workflow/bin/turn-contract.mjs [--finished|--help]` (bun-first convention: `bun packages/agentic-workflow/bin/turn-contract.mjs …`)
-- `node --test packages/agentic-workflow/test/`
+- `bun test packages/agentic-workflow/test/` (bun-first; Node 24 fallback: `node --test packages/agentic-workflow/test/*.test.mjs`)
 - `node --test scripts/turn-contract-grammar.test.mjs`
 - `node --test scripts/normative-drift.test.mjs`
 - `node --test scripts/workflow-status-sensor.test.mjs`
