@@ -1,7 +1,7 @@
 ---
 name: design-feature
 user-invocable: true
-version: 3.3.0
+version: 3.4.0
 argument-hint: <idea | NN-slug> [<instruction>]
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
@@ -89,15 +89,18 @@ another `references/` path; in the DEFER column, bare names live in the same
 directory as the links.
 
 **Hard stop for an incomplete raw-idea interview:** LOAD exactly
-`references/INTERVIEW.md` and no other reference. Ask its one next
-question, return `NEEDS_INPUT`, and end the turn. `WRITE_AND_UPSERT.md` is
+`references/INTERVIEW.md` and no other reference. Present its ONE compact
+form-turn — the ≤ 6 fixed rubric slots plus the identity rows, each carrying a
+recommended default the user can accept with one word — then return
+`NEEDS_INPUT` and end the turn when slots remain unresolved; genuine ambiguity
+gets at most **2 follow-up turns**, never a third ask. `WRITE_AND_UPSERT.md` is
 forbidden until every mandatory interview slot is resolved; that resource then
 owns closure rows and writing.
 
 | Condition now | LOAD now | DEFER / SKIP now |
 |---|---|---|
 | Bare existing slug, no instruction | [interview](references/INTERVIEW.md) through its interaction rule; report status and stop | `WRITE_AND_UPSERT.md`, `UPSERT_EXAMPLE.md`, `REPAIR.md`, `PORTABILITY.md` |
-| Brand-new idea with any mandatory interview slot unresolved | [interview](references/INTERVIEW.md) only; ask exactly its next question and stop | `WRITE_AND_UPSERT.md`, `UPSERT_EXAMPLE.md`, `REPAIR.md`, `PORTABILITY.md` |
+| Brand-new idea with any mandatory interview slot unresolved | [interview](references/INTERVIEW.md) only; present exactly one form-turn (≤ 6 slots + identity, each with a default) and stop | `WRITE_AND_UPSERT.md`, `UPSERT_EXAMPLE.md`, `REPAIR.md`, `PORTABILITY.md` |
 | New idea after every mandatory interview slot resolves | [interview](references/INTERVIEW.md), then [closure, write, and upsert](references/WRITE_AND_UPSERT.md) | `UPSERT_EXAMPLE.md` unless shape is ambiguous; `REPAIR.md`, `PORTABILITY.md` |
 | Existing slug plus instruction | interview, then closure/write/upsert | [upsert example](references/UPSERT_EXAMPLE.md) unless shape is ambiguous; `REPAIR.md`, `PORTABILITY.md` |
 | Existing slug whose `progress.md` carries `SPEC-REVIEW-FAIL` or `NEEDS-DESIGN` | [interview](references/INTERVIEW.md), then [review repair](references/REPAIR.md) | `UPSERT_EXAMPLE.md`, `PORTABILITY.md` |
