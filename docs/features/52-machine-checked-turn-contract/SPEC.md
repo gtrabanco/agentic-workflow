@@ -454,9 +454,10 @@ Awaiting independent review by `review-spec`.
 
 ## Engineering half
 
-Written by `plan-feature` (scaffold, 2026-09-16). Artifact revision of this
-plan set: `52-plan-1`. Grounded in `planning-evidence.md` (PE-001…PE-016);
-obligations frozen in `planning-obligations.md` (O1…O14).
+Written by `plan-feature` (scaffold, 2026-09-16; plan-review repair batch
+2026-09-16). Artifact revision of this plan set: `52-plan-2`. Grounded in
+`planning-evidence.md` (PE-001…PE-016); obligations frozen in
+`planning-obligations.md` (O1…O16).
 
 ### Technical goals
 
@@ -557,7 +558,7 @@ frozen before phases were cut).
 
 ### Obligations
 
-see `planning-obligations.md` (O1…O14; every normative behaviour, invariant,
+see `planning-obligations.md` (O1…O16; every normative behaviour, invariant,
 use case, and failure state has exactly one row with phase, task, owner,
 validator, and required evidence).
 
@@ -636,12 +637,16 @@ Run over the emitted plan (`bun scripts/phase-lint.mjs
 docs/features/52-machine-checked-turn-contract/TASKS.md`, node fallback):
 
 ```text
-P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:6:ship-machine-check-receipt-surface
+P1 Phase-lint: PASS (8/8) · fingerprint P1:docs:7:ship-machine-check-receipt-surface
 P2 Phase-lint: PASS (8/8) · fingerprint P2:config/infra:4:implement-turn-contract-verifier-engine
 P3 Phase-lint: PASS (8/8) · fingerprint P3:hardening:8:hardening-pr
 verdict PASS
-fingerprint: e3c2aec7354ce4d5ac3da0ae2ee48af394bb7677efac15b0b3c3b0e0461fbf0b
+fingerprint: 2c7d8179e6598cec42870674f000b1802d7270c977cc5d160f6150204bb7db05
 ```
+
+Re-synced 2026-09-16 with the plan-review repair batch (plan set `52-plan-2`):
+P1 gains one regression task (context budgets + sensor suite — PLAN52-F3),
+rotating its task count 6 → 7.
 
 ### Deploy & rollback
 
@@ -693,7 +698,8 @@ profile for bespoke contracts and must not start before this feature lands
 - `PLAN.md` / `TASKS.md` — phased plan (prose + linted checklists)
 - `ACCEPTANCE.md` — frozen acceptance manifest (AC1–AC14)
 - `planning-evidence.md` — engineering claims PE-001…PE-016
-- `planning-obligations.md` — obligations ledger O1…O14
+- `planning-obligations.md` — obligations ledger O1…O16 (O15/O16 added by
+  the plan-review repair batch — PLAN52-F2, PLAN52-F5)
 - `testing.md`, `known-issues.md`, `architecture-notes.md` — supporting
   artifacts; engineering decisions ED-52-1…ED-52-5 appended to
   `decisions.md`

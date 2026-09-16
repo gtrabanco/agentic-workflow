@@ -3,7 +3,7 @@
 One row per Engineering claim (ledger contract:
 `pre-execution-review/references/LEDGERS.md` §1; row shape:
 `evidence-grounding/references/ROWS.md` §Plan-stage table). Artifact revision:
-`52-plan-1`.
+`52-plan-2`.
 
 | id | claim-or-obligation | authority-kind | source-and-location | observed-revision | affected-decision-or-obligation | freshness | status | owner-or-next-evidence |
 |---|---|---|---|---|---|---|---|---|

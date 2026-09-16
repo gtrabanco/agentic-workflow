@@ -1,6 +1,6 @@
 # Architecture notes — 52-machine-checked-turn-contract
 
-Artifact revision: `52-plan-1`.
+Artifact revision: `52-plan-2`.
 
 ## Layer placement
 
