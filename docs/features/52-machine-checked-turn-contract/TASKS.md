@@ -33,7 +33,7 @@ Layer: hardening · Done-when: `git status --porcelain` → empty.
 - [x] Re-run the project's full verification gate (commands + exit codes pasted)
 - [x] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [x] Set the roadmap row status to `done` and commit the flip
-- [ ] `git push`
-- [ ] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #226`
-- [ ] Update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] Commit `docs: link PR #<n>` and push
+- [x] `git push`
+- [x] Open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc) and PRINT THE PR URL in the chat; the body includes `Closes #226`
+- [x] Update the roadmap row to `done · [#<pr>](<pr-url>)`
+- [x] Commit `docs: link PR #<n>` and push

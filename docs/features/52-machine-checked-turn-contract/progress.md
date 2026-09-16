@@ -195,3 +195,10 @@ unticked until then.
 - `npx skills add . --list` → exit 0 (all skills discovered)
 - AC12 grep → no matches; AC14 pointers 1 per file; AC14 restatement check → canonical `TURN_CONTRACT.md` + this unit's records only (FEATURE_WORKFLOW.md pointer trimmed to stop restating the grammar)
 - O13 schema diff (`git diff main...HEAD -- packages/agentic-workflow-schema`) → empty; O16 `dependenc` 0, `private: true` 1
+
+## P3 — 2026-09-16
+- Done: dev-scenario edge corpus in both suites; full verification gate green; pending-docs check empty; roadmap row flipped `done`; pushed; PR opened — https://github.com/gtrabanco/agentic-workflow/pull/236 (`Closes #226`); roadmap row linked to the PR
+- Remains: none — the unit is finished. The mandatory end review (`/review-change`) must run in a conversation that did not implement this change.
+- Gotchas: `node --test <dir>` is not a Node ≥ 22 interface (use `bun test <dir>` or the glob fallback); the receipt grammar is canonical only in `TURN_CONTRACT.md` — a doc that repeats `TURN-CONTRACT ok` violates AC14
+- Files: template/.agentic-workflow/hooks/tests/test-turn-contract.sh, docs/workflow/FEATURE_WORKFLOW.md, docs/features/ROADMAP.md, docs/features/52-machine-checked-turn-contract/{TASKS.md,planning-obligations.md,progress.md,testing.md}
+- Next: unit finished — run `/review-change` in a clean context, then `/audit-pr`
