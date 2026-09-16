@@ -33,3 +33,9 @@
 
 - Seed `docs/CAPABILITIES.md` from the derived inventory recorded in the SPEC's
   Integration closure (deferred; see SPEC Deferred decisions).
+
+## Opportunistic fixes (this unit's PR)
+
+| Date | Finding | Class | Fix |
+|---|---|---|---|
+| 2026-09-17 | `ROADMAP.md` row 40 linked `pull/240` as feature 40's PR — a dangling forward reference (no PR #240 existed; feature 40's real PR is #235, merged). This unit's own PR then took number 240, making the stale link actively misleading. | Opportunistic Fix (1 line, same file the unit already touches, verified via `gh pr view 235`) | Row 40 status cell now links `#235`. |
