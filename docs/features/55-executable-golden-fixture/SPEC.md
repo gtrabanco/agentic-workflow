@@ -157,6 +157,12 @@ so the inventory below is **derived from the repo's real subsystems**
 (`CLAUDE.md` repository layout + `scripts/` family); the open offer to seed
 `docs/CAPABILITIES.md` from it is deferred (see Deferred decisions).
 
+**Architectural invariants:** `n/a: no project invariants declared` —
+`docs/architecture/ARCHITECTURAL_INVARIANTS.md` is absent;
+`docs/workflow/WORKFLOW_INVARIANTS.md` is the portable contract template with
+no invariant declared for this repository (NRS F010). No invariant
+classification applies to this docs-only unit.
+
 **1. Entity closure** — entities this feature introduces or touches:
 
 **E1 — executor fixture tree** (`scripts/fixtures/golden-fixture/` toy CSV
