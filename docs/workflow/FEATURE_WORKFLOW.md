@@ -204,6 +204,11 @@ atomic behavior and executes exactly that phase:
    branch-only), then hands off to the mandatory manual review→fold path
    (`/fold-findings`, then re-run `/review-change`) → `/audit-pr` gate.
 
+> Boxes 1–5 of the canonical turn contract are machine-checked: the profile in
+> `skills/orchestration-envelope/references/TURN_CONTRACT.md` demonstrates them by
+> pasting the verifier's one-line receipt (`TURN-CONTRACT ok` /
+> `TURN-CONTRACT fail box<N>: <code>`) instead of reciting them.
+
 **Fresh context is a phase boundary, not a user-intervention boundary.** A
 capable agent uses a fresh subagent/worker for each phase while the outer unit
 run continues. A headless driver opens a new context and persists the phase

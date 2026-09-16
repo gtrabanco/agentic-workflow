@@ -49,3 +49,15 @@ Artifact revision: `52-plan-2`.
 - No network: the only forge access is gh in box4, stubbed in every suite.
 - Fixtures are throwaway temp git repos; nothing is written inside the
   repository under test (asserted).
+
+## P1 executed (2026-09-16)
+
+- `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` → exit 0,
+  `PASS turn contract: 18 cases` (box1 pass/fail, box2 pass/n-a/fail, box3 fail,
+  box4 n-a/`pr-not-open`/`pr-unreachable`/`pr-head-mismatch`/pass, box5
+  `dirty-tree`/`ahead-of-remote`, read-only + one-line stdout, subdirectory,
+  `--help`, unknown flag).
+- `node --test scripts/normative-drift.test.mjs` → exit 0, 17/17.
+- `node --test scripts/workflow-status-sensor.test.mjs` → exit 0, 56/56.
+- `bun scripts/check-skill-context.mjs` → exit 0, `PASS context budgets: 40 skills`.
+- `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0, 7/7.

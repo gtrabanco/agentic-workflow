@@ -20,6 +20,36 @@
 
 **Push policy supplement:** Box 4 covers the end-of-unit push. Some consumers (e.g. `execute-phase/references/PREFLIGHT.md`) define additional push rules for mid-phase commits when a PR is already open — those per-consumer supplements extend this contract and must be loaded alongside it by the consumer skill.
 
+## Machine-check profile (boxes 1–5)
+
+Boxes 1–5 are mechanical. Demonstrate them by running the verifier — the
+scaffold shim `template/.agentic-workflow/hooks/turn-contract.sh` (bash + git +
+gh) or the producer-crate engine
+`packages/agentic-workflow/bin/turn-contract.mjs` — and pasting its one-line
+receipt beside the git/gh evidence. When the receipt is pasted, reciting boxes
+1–5 in prose is **not** required. Verifier unavailable (no bash, or no
+shim/engine in the project)? Recite boxes 1–5 exactly as before — the profile
+never weakens a box, and a turn with neither receipt nor recitation is
+unverified. Boxes 6–11 are unchanged: they stay agent-attested judgment calls
+no script may speak for. The closing `→ Next:` block may be echoed from the
+`workflow-status` envelope instead of hand-authored: `next.recommended`
+supplies the recommended line and `next.alternatives` the `·` sub-bullets,
+preserving the fixed block shape.
+
+```text
+turn-contract-receipt@1
+ok-line:    TURN-CONTRACT ok
+fail-line:  TURN-CONTRACT fail box<N>: <code>
+codes:      branch-default | not-a-repo | no-commits | acceptance-missing |
+            phase-lint-failed | pr-not-open | pr-head-mismatch |
+            pr-unreachable | dirty-tree | ahead-of-remote
+exit:       0 ok | 1 contract fail | 2 usage error
+order:      boxes 1→5, first failure wins; within box5, dirty-tree precedes
+            ahead-of-remote
+stdout:     exactly one line; diagnostics never (git/gh evidence stays in the
+            agent's transcript)
+```
+
 ## Hand-off grammar (versioned — read by `scripts/normative-drift.test.mjs`)
 
 Box 9's closing hand-off and box 10's machine result are ordered here, so the
