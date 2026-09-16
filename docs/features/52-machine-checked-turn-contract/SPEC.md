@@ -514,7 +514,7 @@ exists, box3 counts every commit on HEAD as not-on-default.
 | 1 | current branch ≠ default branch (`git branch --show-current` vs the chain above) | `branch-default` (repo-level: `not-a-repo`) |
 | 2 | when the branch is unit-shaped — `feat/<rest>` → `docs/features/<rest>`, `fix/<rest>` → `docs/fix/<rest>` — and that unit directory exists: `<unit-dir>/ACCEPTANCE.md` must exist at HEAD (`git cat-file -e HEAD:<path>`); plumbing failure counts as missing (fail-closed). A branch that is not unit-shaped, or whose unit directory does not exist, leaves box2 not-applicable (ED-52-2). Engine only: when `scripts/phase-lint.mjs` exists AND the unit has `TASKS.md`, run it over `<unit-dir>/TASKS.md` (bun-else-node) → nonzero exit fails the box. Shim: presence check only (ED-52-3) | `acceptance-missing` · `phase-lint-failed` |
 | 3 | `git rev-list --count <default>..HEAD` ≥ 1 (unborn HEAD or plumbing failure → 0, fail-closed) | `no-commits` |
-| 4 | only with `--finished`; without the flag box4 is not-applicable and never fails the line. With the flag: no upstream → no PR can exist → `pr-not-open`; `gh pr view <branch> --json state,headRefOid` failing (any gh error) → `pr-unreachable` (fail-closed, never a fake ok — PE-003); no PR or state ≠ `OPEN` → `pr-not-open`; `headRefOid` ≠ local HEAD sha → `pr-head-mismatch` | `pr-not-open` · `pr-unreachable` · `pr-head-mismatch` |
+| 4 | only with `--finished`; without the flag box4 is not-applicable and never fails the line. With the flag: no upstream → no PR can exist → `pr-not-open`; the branch's own pull requests are read with `gh pr list --head <branch> --state open --json state,headRefOid` (the `--head` scope keeps an all-numeric branch name from being read as a PR number) and an invocation failing (any gh error) → `pr-unreachable` (fail-closed, never a fake ok — PE-003); no PR for the branch (an empty result) or an entry whose state ≠ `OPEN` → `pr-not-open`; `headRefOid` ≠ local HEAD sha → `pr-head-mismatch` | `pr-not-open` · `pr-unreachable` · `pr-head-mismatch` |
 | 5 | `git status --porcelain` non-empty → dirty; else `git rev-list --count @{upstream}..HEAD` > 0 → ahead (no upstream configured → 0; rev-list error with an upstream present → fail-closed as ahead). Within box5, dirty-tree precedes ahead-of-remote | `dirty-tree` · `ahead-of-remote` |
 
 **CLI contract.** Flags: `--finished`, `--help`. `--help` prints usage
@@ -667,8 +667,10 @@ persisted state (D-52-3).
 - **Risk — context budgets:** the profile section grows
   `TURN_CONTRACT.md`, which six skills load (PE-015). Mitigated by the ≤
   20-line cap and AC11 re-running `check-skill-context.mjs` in P1/P3.
-- **Risk — gh output drift:** box4 parses `gh pr view --json
-  state,headRefOid` (sampled, PE-003). A future gh CLI change would surface
+- **Risk — gh output drift:** box4 parses the `gh pr list --head <branch>
+  --json state,headRefOid` payload (the same two fields PE-003 sampled; the
+  `--head` scope and the empty-result reading are pinned by the shared box4
+  fixtures). A future gh CLI change would surface
   as `pr-unreachable` (fail-closed), never a false ok; the stub contract in
   the engine suite pins the parsed fields.
 - **Disclosed limitation — CI wiring:** `scripts/` suites are not wired

@@ -19,9 +19,16 @@ const USAGE =
   "  --finished  also check box4 (pushed branch + open pull request whose head is local HEAD)\n" +
   "  --help      print this usage and exit 0\n";
 
+// Every git call is lock-free: a read that may opportunistically write —
+// `git status` refreshing the index — would rewrite `.git/index` and contradict
+// the read-only claim above (F10, fold cycle 3).
 function git(cwd, args) {
   try {
-    const out = execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+    const out = execFileSync("git", ["--no-optional-locks", ...args], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    });
     return { ok: true, out: out.trimEnd() };
   } catch {
     return { ok: false, out: "" };
@@ -121,10 +128,18 @@ function main(argv) {
     if (!upstream.ok || upstream.out === "") return fail(4, "pr-not-open");
     const head = git(root, ["rev-parse", "HEAD"]);
     const localHead = head.ok ? head.out : "";
-    const gh = spawnSync("gh", ["pr", "view", currentBranch, "--json", "state,headRefOid"], {
-      cwd: root,
-      encoding: "utf8",
-    });
+    // This branch's own pull requests, scoped by --head: `gh pr view <arg>`
+    // reads an all-numeric argument as a PR *number*, so a branch named e.g.
+    // `123` would have box4 judge an unrelated PR (F11, fold cycle 3). The list
+    // query also answers "is there a PR at all?" with exit 0 plus an empty
+    // result, which is what separates a missing PR (pr-not-open) from a gh
+    // failure (pr-unreachable) — `gh pr view` exits nonzero for both, so the
+    // SPEC's "no PR → pr-not-open" clause was unimplementable (F9).
+    const gh = spawnSync(
+      "gh",
+      ["pr", "list", "--head", currentBranch, "--state", "open", "--json", "state,headRefOid"],
+      { cwd: root, encoding: "utf8" },
+    );
     if (gh.status !== 0) return fail(4, "pr-unreachable");
     let parsed;
     try {
@@ -132,16 +147,18 @@ function main(argv) {
     } catch {
       parsed = null;
     }
-    const state = parsed && typeof parsed.state === "string" ? parsed.state : "";
-    const prHead = parsed && typeof parsed.headRefOid === "string" ? parsed.headRefOid : "";
-    if (state !== "OPEN") return fail(4, "pr-not-open");
-    if (prHead !== localHead) return fail(4, "pr-head-mismatch");
+    const prs = Array.isArray(parsed) ? parsed : [];
+    const pr = prs.find((entry) => entry?.state === "OPEN");
+    if (pr === undefined) return fail(4, "pr-not-open");
+    if (pr.headRefOid !== localHead) return fail(4, "pr-head-mismatch");
   }
 
   // box5 — clean tree, then not ahead of the configured upstream. A status
   // query that cannot be answered (error, or output past the buffer cap) is
   // never proof of a clean tree: it fails closed as dirty-tree.
-  const status = git(root, ["status", "--porcelain"]);
+  // `--untracked-files=all` overrides a repo-local status.showUntrackedFiles=no,
+  // which would otherwise hide an untracked file and win a false ok (F8).
+  const status = git(root, ["status", "--porcelain", "--untracked-files=all"]);
   if (!status.ok || status.out !== "") return fail(5, "dirty-tree");
   const upstream = git(root, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]);
   if (upstream.ok && upstream.out !== "") {

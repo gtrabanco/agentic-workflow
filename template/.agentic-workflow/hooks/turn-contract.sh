@@ -76,7 +76,13 @@ if [ "$finished" -eq 1 ]; then
   upstream=$(git -C "$repo_root" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
   [ -n "$upstream" ] || fail 4 pr-not-open
   local_head=$(git -C "$repo_root" rev-parse HEAD 2>/dev/null || true)
-  pr_json=$(gh pr view "$current_branch" --json state,headRefOid 2>/dev/null) || fail 4 pr-unreachable
+  # This branch's own pull requests, scoped by --head: `gh pr view <arg>` reads
+  # an all-numeric argument as a PR *number*, so a branch named e.g. `123` would
+  # have box4 judge an unrelated PR (F11, fold cycle 3). The list query also
+  # answers "is there a PR at all?" with exit 0 plus an empty result, which is
+  # what separates a missing PR (pr-not-open) from a gh failure
+  # (pr-unreachable) — `gh pr view` exits nonzero for both (F9, fold cycle 3).
+  pr_json=$(gh pr list --head "$current_branch" --state open --json state,headRefOid 2>/dev/null) || fail 4 pr-unreachable
   pr_json=$(printf '%s' "$pr_json" | tr -d '\n')
   pr_state=$(printf '%s' "$pr_json" | sed -n 's/.*"state"[[:space:]]*:[[:space:]]*"\([A-Za-z]*\)".*/\1/p')
   pr_head=$(printf '%s' "$pr_json" | sed -n 's/.*"headRefOid"[[:space:]]*:[[:space:]]*"\([0-9a-fA-F]*\)".*/\1/p')
@@ -91,8 +97,11 @@ fi
 # at all means "dirty", so a huge listing (generated-tree scale) is never
 # buffered (F6, fold cycle 2). `${PIPESTATUS[@]}` must be cloned as the VERY
 # NEXT command: any command in between resets it, git's own status is lost, and
-# the shim would print a fake ok on an unanswerable query.
-git -C "$repo_root" status --porcelain 2>/dev/null | { IFS= read -r -n 1; }
+# the shim would print a fake ok on an unanswerable query. `--untracked-files=all`
+# overrides a repo-local status.showUntrackedFiles=no, which would otherwise
+# hide an untracked file (F8, fold cycle 3), and `--no-optional-locks` keeps
+# this read from refreshing (rewriting) .git/index (F10, fold cycle 3).
+git --no-optional-locks -C "$repo_root" status --porcelain --untracked-files=all 2>/dev/null | { IFS= read -r -n 1; }
 status_ps=("${PIPESTATUS[@]}")
 [ "${status_ps[0]}" -eq 0 ] || fail 5 dirty-tree
 [ "${status_ps[1]}" -ne 0 ] || fail 5 dirty-tree

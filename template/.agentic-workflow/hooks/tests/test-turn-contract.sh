@@ -155,6 +155,33 @@ gitc -C "$dirtyahead_repo" push -qu origin feat/dirtyahead
 commit_file "$dirtyahead_repo" extra.txt 'local only'
 printf 'dirty\n' >> "$dirtyahead_repo/README.md"
 
+# numeric: an all-numeric branch name on a pushed branch — the name is not a
+# PR number (F11, fold cycle 3).
+numeric_repo=$tmp/numeric
+new_branch "$numeric_repo" main
+gitc -C "$numeric_repo" checkout -q -b 123
+commit_file "$numeric_repo" note.txt 'x'
+gitc init -q --bare "$tmp/num-remote.git"
+gitc -C "$numeric_repo" remote add origin "$tmp/num-remote.git"
+gitc -C "$numeric_repo" push -qu origin 123
+
+# hidden: repo-local status.showUntrackedFiles=no must not hide an untracked
+# file from box5 (F8, fold cycle 3).
+hidden_repo=$tmp/hidden
+new_branch "$hidden_repo" main
+gitc -C "$hidden_repo" checkout -q -b feat/hidden
+commit_file "$hidden_repo" docs/features/hidden/ACCEPTANCE.md 'frozen'
+gitc -C "$hidden_repo" config status.showUntrackedFiles no
+printf 'x\n' > "$hidden_repo/untracked.txt"
+
+# index: a stale mtime on a tracked file makes `git status` want to refresh the
+# index; the read must not write it (F10, fold cycle 3).
+index_repo=$tmp/index
+new_branch "$index_repo" main
+gitc -C "$index_repo" checkout -q -b feat/index
+commit_file "$index_repo" docs/features/index/ACCEPTANCE.md 'frozen'
+touch -t 202001010000 "$index_repo/README.md"
+
 # box4 fixtures: branch with an upstream (a bare remote), clean.
 b4_repo=$tmp/b4
 new_branch "$b4_repo" main
@@ -164,17 +191,33 @@ gitc init -q --bare "$tmp/b4-remote.git"
 gitc -C "$b4_repo" remote add origin "$tmp/b4-remote.git"
 gitc -C "$b4_repo" push -qu origin feat/b4
 
-# PATH-stubbed gh: emits $GH_STUB_JSON and exits $GH_STUB_EXIT.
+# PATH-stubbed gh: `pr list --head <branch>` emits $GH_STUB_JSON (that branch's
+# pull requests); `pr view <arg>` emits $GH_STUB_VIEW_JSON — real gh reads an
+# all-numeric argument as a PR NUMBER and exits nonzero when no pull request
+# matches the branch. $GH_STUB_EXIT forces a failure exit from either
+# invocation; $GH_STUB_VIEW_EXIT forces one from `pr view` only.
 stub_dir=$tmp/bin
 mkdir -p "$stub_dir"
 cat > "$stub_dir/gh" <<'STUB'
 #!/usr/bin/env bash
-printf '%s\n' "${GH_STUB_JSON:-}"
-[ "${GH_STUB_EXIT:-0}" -eq 0 ] || exit "${GH_STUB_EXIT}"
+case "$1 $2" in
+  "pr list")
+    printf '%s\n' "${GH_STUB_JSON:-[]}"
+    exit_code="${GH_STUB_EXIT:-0}"
+    ;;
+  "pr view")
+    printf '%s\n' "${GH_STUB_VIEW_JSON:-}"
+    exit_code="${GH_STUB_VIEW_EXIT:-${GH_STUB_EXIT:-0}}"
+    ;;
+  *) exit 3 ;;
+esac
+[ "$exit_code" -eq 0 ] || exit "$exit_code"
 STUB
 chmod +x "$stub_dir/gh"
 export PATH="$stub_dir:$PATH"
 export GH_STUB_JSON=''
+export GH_STUB_VIEW_JSON=''
+unset GH_STUB_VIEW_EXIT
 export GH_STUB_EXIT=0
 
 # ---- box1 ------------------------------------------------------------------
@@ -227,16 +270,37 @@ run --finished
 assert "box4 gh unreachable" 1 'TURN-CONTRACT fail box4: pr-unreachable'
 GH_STUB_EXIT=0
 
+GH_STUB_JSON='[]'
+export GH_STUB_VIEW_EXIT=1
+run_dir=$b4_repo
+run --finished
+assert "box4 no PR for the branch" 1 'TURN-CONTRACT fail box4: pr-not-open'
+unset GH_STUB_VIEW_EXIT
+
 head_sha=$(gitc -C "$b4_repo" rev-parse HEAD)
-GH_STUB_JSON='{"headRefOid":"0000000000000000000000000000000000000000","state":"OPEN"}'
+GH_STUB_JSON="[{\"headRefOid\":\"$head_sha\",\"state\":\"MERGED\"}]"
+GH_STUB_VIEW_JSON="{\"headRefOid\":\"$head_sha\",\"state\":\"MERGED\"}"
+run_dir=$b4_repo
+run --finished
+assert "box4 merged PR is not an open PR" 1 'TURN-CONTRACT fail box4: pr-not-open'
+GH_STUB_VIEW_JSON=''
+
+GH_STUB_JSON='[{"headRefOid":"0000000000000000000000000000000000000000","state":"OPEN"}]'
 run_dir=$b4_repo
 run --finished
 assert "box4 head mismatch" 1 'TURN-CONTRACT fail box4: pr-head-mismatch'
 
-GH_STUB_JSON="{\"headRefOid\":\"$head_sha\",\"state\":\"OPEN\"}"
+GH_STUB_JSON="[{\"headRefOid\":\"$head_sha\",\"state\":\"OPEN\"}]"
 run_dir=$b4_repo
 run --finished
 assert "box4 open PR at HEAD" 0 'TURN-CONTRACT ok'
+
+GH_STUB_JSON='[]'
+GH_STUB_VIEW_JSON='{"headRefOid":"0000000000000000000000000000000000000000","state":"OPEN"}'
+run_dir=$numeric_repo
+run --finished
+assert "box4 numeric branch is not a PR number" 1 'TURN-CONTRACT fail box4: pr-not-open'
+GH_STUB_VIEW_JSON=''
 
 # ---- box5 ------------------------------------------------------------------
 
@@ -264,6 +328,10 @@ run_dir=$bigstatus_repo
 run
 assert "box5 huge listing fails closed" 1 'TURN-CONTRACT fail box5: dirty-tree'
 
+run_dir=$hidden_repo
+run
+assert "box5 ignores status.showUntrackedFiles=no" 1 'TURN-CONTRACT fail box5: dirty-tree'
+
 # ---- read-only + cwd -------------------------------------------------------
 
 before=$(gitc -C "$ok_repo" status --porcelain --untracked-files=all)
@@ -277,6 +345,17 @@ if [ "$before" != "$after" ]; then
 fi
 if [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" != "1" ]; then
   printf 'FAIL stdout: expected exactly one receipt line, got %s\n' "$out" >&2
+  failures=$((failures + 1))
+fi
+
+# The stale-stat fixture: a porcelain-only before/after comparison cannot see
+# the index write, so the index bytes are compared directly (F10, fold cycle 3).
+cp "$index_repo/.git/index" "$tmp/index.before"
+run_dir=$index_repo
+run
+assert "ok receipt leaves .git/index untouched" 0 'TURN-CONTRACT ok'
+if ! cmp -s "$tmp/index.before" "$index_repo/.git/index"; then
+  printf 'FAIL read-only: the verifier rewrote .git/index\n' >&2
   failures=$((failures + 1))
 fi
 
@@ -317,4 +396,4 @@ if ! grep -q 'unknown argument: --nope' "$tmp/stderr"; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS turn contract: 25 cases\n'
+printf 'PASS turn contract: 31 cases\n'
