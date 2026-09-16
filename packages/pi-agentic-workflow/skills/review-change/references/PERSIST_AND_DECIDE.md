@@ -1,5 +1,9 @@
 ## Persist and decide
 
+When the unit's review receipt is missing or stale, the re-entry command is the
+**emitted** `next.continuation` (`rendering` for display) — quote it, never author
+exact command tokens.
+
 11. **Persist fix-now findings to the fold ledger.** The unit's **fix-now fold
    ledger** is `review-findings.md`, located beside its other docs
    (`docs/features/<NN>-<slug>/review-findings.md` for a feature,
