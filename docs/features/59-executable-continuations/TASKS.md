@@ -68,11 +68,11 @@ Done-when: `node scripts/check-skill-context.mjs` → exit 0 after the declared 
 
 Layer: hardening · fingerprint `P5:hardening:8:hardening-pr` · Phase-lint: PASS (8/8)
 
-- [ ] Run the full verification ladder — root suites (`node --test scripts/continuation-discipline.test.mjs scripts/workflow-status-sensor.test.mjs scripts/normative-drift.test.mjs`), the schema package suite (`bun run test` in the package directory), the budget gate (`node scripts/check-skill-context.mjs`) → exit 0 across the ladder
-- [ ] Re-bundle the Pi mirror from the final skill tree via the package's own bundle script and run the parity suite (`npm run bundle:skills` then `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs`) → exit 0
-- [ ] Verify the additive-release evidence — `node -p "require('./packages/agentic-workflow-schema/package.json').version"` prints 4.2.0, and the CHANGELOG row plus the additive-guarantee sentence are present (read-verified)
-- [ ] Verify the frozen acceptance manifest blob is unchanged and record the acceptance receipt (`git hash-object docs/features/59-executable-continuations/ACCEPTANCE.md`) in the unit's progress log
-- [ ] Confirm every phase fingerprint above still matches the plan's committed phase shapes and that every read-verified row has its evidence recorded (manual)
+- [x] Run the full verification ladder — root suites (`node --test scripts/continuation-discipline.test.mjs scripts/workflow-status-sensor.test.mjs scripts/normative-drift.test.mjs`), the schema package suite (`bun run test` in the package directory), the budget gate (`node scripts/check-skill-context.mjs`) → exit 0 across the ladder — evidence: 84/84 root, 707/707 schema, budgets PASS; whole root suite 435/435
+- [x] Re-bundle the Pi mirror from the final skill tree via the package's own bundle script and run the parity suite (`npm run bundle:skills` then `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs`) → exit 0 — evidence: 39 skills / 125 files bundled; parity 7/7; full pi suite 214/214
+- [x] Verify the additive-release evidence — `node -p "require('./packages/agentic-workflow-schema/package.json').version"` prints 4.2.0, and the CHANGELOG row plus the additive-guarantee sentence are present (read-verified) — evidence: version `4.2.0`; `CHANGELOG.md` 4.2.0 row; `packages/agentic-workflow-schema/README.md` additive-guarantee section
+- [x] Verify the frozen acceptance manifest blob is unchanged and record the acceptance receipt (`git hash-object docs/features/59-executable-continuations/ACCEPTANCE.md`) in the unit's progress log — evidence: blob `d046f0b537da92251c6d81893e816bbc0de1a252`, unchanged since freeze; receipt recorded in `progress.md`
+- [x] Confirm every phase fingerprint above still matches the plan's committed phase shapes and that every read-verified row has its evidence recorded (manual) — evidence: `phase-lint` verdict PASS (8/8 × 5), whole-set fingerprint `1a3bf148…` unchanged; each read-verified row quoted in its phase handoff
 - [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
 - [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
 - [ ] commit `docs: link PR #<n>` and push

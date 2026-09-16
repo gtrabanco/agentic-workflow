@@ -65,3 +65,10 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
 - `grep -c 'One question per turn' skills/design-feature/references/INTERVIEW.md` → 0.
 - `node --test scripts/normative-drift.test.mjs` → exit 0 (version tables recompute against the bumped `design-feature` 3.4.0).
 - Full root suite regression: `node --test scripts/*.test.mjs` → exit 0, 435 pass / 0 fail.
+
+### P5 — Hardening & PR (2026-09-16)
+
+- Full ladder green: root suites 84/84 (`continuation-discipline` + `workflow-status-sensor` + `normative-drift`), schema package 707/707, whole root suite 435/435, budgets PASS (40 skills / 22 routes).
+- Pi mirror re-bundled (`bun run bundle:skills`, 39 skills / 125 files) and byte-identical: parity 7/7; full pi suite 214/214.
+- Release evidence: schema `4.2.0`; CHANGELOG row + additive-guarantee section present.
+- Acceptance blob `d046f0b5…` unchanged; phase fingerprints unchanged (`1a3bf148…`).
