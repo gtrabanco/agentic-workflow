@@ -6,7 +6,10 @@ Append the receipt to `docs/features/<NN>-<slug>/progress.md` (fix units:
 `docs/fix/<N>/progress.md`), then append every finding row to
 `planning-findings.md` (ledger contract: `pre-execution-review/references/LEDGERS.md`).
 Any later write to a reviewed plan artifact rotates `artifactRevisionId` and makes
-this receipt stale — that is the contract working, not a mistake.
+this receipt stale — that is the contract working, not a mistake. When a missing or
+stale receipt is the reason for re-entry, the re-entry command is the **emitted**
+`next.continuation` (`rendering` for display): quote it, never author exact command
+tokens.
 
 One `PreExecutionReviewReceipt v1`
 (`agentic-workflow/pre-execution-review-receipt@1`) per review:

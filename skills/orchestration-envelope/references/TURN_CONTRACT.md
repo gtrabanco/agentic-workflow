@@ -82,5 +82,6 @@ next | recommended
 next | alternatives
 next | tier
 next | suggested
+next | continuation
 ```
 

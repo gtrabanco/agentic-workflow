@@ -235,7 +235,10 @@ The cheap way to run this flow is also the documented way. Fixed rules:
   only those, not the whole prior transcript.
 - **Hand-offs to review/audit → always a fresh conversation.** Already the
   contract (a skill's model/effort composes only within its own turn); this is
-  the same rule stated for its economics, not a new one.
+  the same rule stated for its economics, not a new one. When the sensor emits
+  `next.continuation`, a driver quotes that emitted command (its `rendering` for
+  display) instead of re-authoring the pointer; the prose `→ Next:` blocks stay
+  for humans.
 - **Compact only mid-phase**, and only when you hold unpersisted state you
   cannot afford to lose. Even then, prefer committing WIP plus a `progress.md`
   note and cutting to a new conversation over compacting.

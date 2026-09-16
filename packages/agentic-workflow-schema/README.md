@@ -195,6 +195,25 @@ It refuses a nonzero issue count without identities, an unmatched unit id, and
 unstructured prose. The compatibility diagnostics make every repair visible to
 the driver.
 
+### Additive guarantee — `next.continuation` (feature 59, 4.2.0)
+
+Envelope v2's `next` gains an **optional** `continuation` object:
+`{ argv, rendering?, preconditions, evidence?, convergence }`. `argv` is the
+command of record; `rendering` is display-only and derivable from `argv` per
+platform family; `preconditions` carry the emitter's at-emit evaluation;
+`evidence` is a receiver-verifiable `{ artifact, digest }` token; `convergence`
+names the envelope/state field the command advances.
+
+**Envelopes without `next.continuation` stay valid** — the field is additive,
+so every 4.1.x consumer keeps validating and reading the same documents, and no
+release here is a major bump. Omission is the absence semantics: the field is
+never `null` and never defaulted. The public surface is `emitContinuation`
+(pure, fail-closed), `CONTINUATION_REFUSALS` (the closed four-code refusal
+vocabulary), `deriveContinuationRendering`, `parseContinuationArgv`,
+`validateContinuation`, `canonicalizeContinuation`,
+`verifyContinuationEvidence`, and the frozen `CONTINUATION_CANONICAL_VECTORS`.
+Nothing is persisted by any of them.
+
 ## Workflow transition decider
 
 Export `decideWorkflowAction(input)` — a pure, deterministic function that

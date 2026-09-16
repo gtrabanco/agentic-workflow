@@ -16,6 +16,7 @@ import {
   utf8ByteCompare,
 } from "./canonical-json.js";
 import { sha256Hex } from "./sha256.js";
+import { validateContinuation, type EnvelopeContinuation } from "./continuation.js";
 import {
   VERIFICATION_COMMAND_STATUSES,
   VERIFICATION_CONTRACT,
@@ -162,6 +163,12 @@ export interface EnvelopeNext {
   tier: Tier;
   /** Optional trigger-attributed suggestions (workflow-status only). */
   suggested?: EnvelopeSuggestion[];
+  /**
+   * Optional executable hand-off (feature 59). Present when the deterministic
+   * side could emit one; absent on every refusal path — omission IS the absence
+   * semantics, never `null` (D-59-8). Shape owned by `continuation.ts`.
+   */
+  continuation?: EnvelopeContinuation;
 }
 
 export interface Envelope {
@@ -449,6 +456,9 @@ export function validateEnvelope(value: unknown): ValidationResult {
         });
       }
     }
+    if (value.next.continuation !== undefined) {
+      errors.push(...validateContinuation(value.next.continuation));
+    }
   }
 
   if (value.needs_input !== null && value.needs_input !== undefined) {
@@ -574,11 +584,28 @@ function rejectUnexpectedEnvelopeKeys(value: Record<string, unknown>, errors: st
   if (value.needs_input !== null) {
     rejectUnexpectedKeys(value.needs_input, "needs_input", ["question", "options"], errors);
   }
-  rejectUnexpectedKeys(value.next, "next", ["recommended", "alternatives", "tier", "suggested"], errors);
+  rejectUnexpectedKeys(value.next, "next", ["recommended", "alternatives", "tier", "suggested", "continuation"], errors);
   if (isObj(value.next) && Array.isArray(value.next.suggested)) {
     value.next.suggested.forEach((suggestion, index) => {
       rejectUnexpectedKeys(suggestion, `next.suggested[${index}]`, ["command", "trigger", "source_skill"], errors);
     });
+  }
+  if (isObj(value.next)) {
+    const continuation = value.next.continuation;
+    if (isObj(continuation)) {
+      rejectUnexpectedKeys(
+        continuation,
+        "next.continuation",
+        ["argv", "rendering", "preconditions", "evidence", "convergence"],
+        errors,
+      );
+      if (Array.isArray(continuation.preconditions)) {
+        continuation.preconditions.forEach((row, index) => {
+          rejectUnexpectedKeys(row, `next.continuation.preconditions[${index}]`, ["id", "check", "satisfied"], errors);
+        });
+      }
+      rejectUnexpectedKeys(continuation.evidence, "next.continuation.evidence", ["artifact", "digest"], errors);
+    }
   }
 }
 
@@ -3782,3 +3809,39 @@ export type {
   SpecProductSelection,
   SpecProductSelectorError,
 } from "./pre-execution.js";
+
+// ---------------------------------------------------------------------------
+// next.continuation — the executable hand-off object (feature 59)
+// ---------------------------------------------------------------------------
+
+/**
+ * Re-exported so a consumer imports ONE package root for every contract family.
+ * The implementation lives in `continuation.ts`; the frozen shape stays a single
+ * definition that `EnvelopeNext.continuation` references.
+ */
+export {
+  CONTINUATION_CONTRACT_ID,
+  CONTINUATION_PLATFORM_FAMILIES,
+  CONTINUATION_REFUSALS,
+  canonicalizeContinuation,
+  deriveContinuationRendering,
+  emitContinuation,
+  parseContinuationArgv,
+  validateContinuation,
+  verifyContinuationEvidence,
+} from "./continuation.js";
+export { CONTINUATION_CANONICAL_VECTORS, CONTINUATION_VECTOR_CONTRACT } from "./continuation-vectors.js";
+
+/** The digest surface the evidence token is bound through (feature 59, D-59-9). */
+export { sha256Hex, sha256HexSync } from "./sha256.js";
+
+export type {
+  ContinuationEvidence,
+  ContinuationPlatformFamily,
+  ContinuationPrecondition,
+  ContinuationRefusalCode,
+  EmitContinuationInput,
+  EmitContinuationResult,
+  EnvelopeContinuation,
+} from "./continuation.js";
+export type { ContinuationCanonicalVector } from "./continuation-vectors.js";

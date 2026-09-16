@@ -397,6 +397,26 @@ function buildSurfaceModel() {
         // vocabulary owns them (known-issue 19 names the same residual for the
         // `machine: n/a` blocks) — the day one does, this cell gains a `machine`.
         entry.tableDataRows = table.length - 2;
+      } else if (kind === "schema-export") {
+        // `schema-export:NAME` reads a published const array straight from the
+        // committed schema source named in the surface's `file` cell and registers
+        // it under the vocabulary the row's `machine` cell declares. The export is
+        // the canonical declaration; the row is what makes it a normative surface,
+        // and `must-name: yes` is satisfied by that declaration (an export no row
+        // declares is the `unpublished-vocabulary` defect 4a refuses).
+        const exported = publishedConstArrays(text).get(arg);
+        if (!exported || exported.length === 0) {
+          entry.ok = false;
+          entry.faults.push(`surface ${entry.surface} names the schema export ${arg}, which ${file} does not publish`);
+          continue;
+        }
+        if (entry.machine.length === 0) {
+          entry.ok = false;
+          entry.faults.push(`surface ${entry.surface} reads ${arg} but declares no machine vocabulary for it`);
+          continue;
+        }
+        entry.schemaExport = arg;
+        for (const vocab of entry.machine) model.machine.vocabularies.set(vocab, exported);
       } else {
         entry.ok = false;
         entry.faults.push(`unknown grammar kind in the inventory: ${row.grammar}`);
@@ -618,6 +638,10 @@ function runDriftChecks(model) {
       if (vocab === "gate-rejection-type") for (const t of model.printedGateTypes) namedBy.add(t);
       if (vocab === "pre-execution-verdict") for (const v of model.verdicts) namedBy.add(v.token);
       if (vocab === "envelope-field:next") for (const fd of model.fields.filter((f) => f.object === "next")) namedBy.add(fd.field);
+      // A `schema-export:` surface is the declaration home of its vocabulary: the
+      // published const it reads names each value, which is exactly the surface the
+      // SPEC pins (a value exported and declared nowhere else is still not ordered).
+      if (surface.schemaExport) for (const value of values) namedBy.add(value);
       for (const value of values) {
         if (!namedBy.has(value)) {
           findings.push(refuse("value-not-named", surface.surface, `${vocab}:${value}`, `the machine publishes ${vocab}:${value} and no normative surface orders an action with it`));
@@ -838,7 +862,7 @@ test("AC15 scope: every normative surface that orders an agent action has a fixe
   assert.ok(live.surfaces.length >= 14, `the inventory orders ${live.surfaces.length} surfaces, not a handful`);
   for (const surface of live.surfaces) {
     assert.deepEqual(surface.faults, [], `${surface.surface}: ${surface.faults.join("; ")}`);
-    assert.ok(surface.grammar.startsWith("block:") || surface.grammar.startsWith("fenced:") || surface.grammar.startsWith("table:") || surface.grammar.startsWith("frontmatter:"),
+    assert.ok(surface.grammar.startsWith("block:") || surface.grammar.startsWith("fenced:") || surface.grammar.startsWith("table:") || surface.grammar.startsWith("frontmatter:") || surface.grammar.startsWith("schema-export:"),
       `${surface.surface} resolves to a fixed grammar kind`);
   }
   // The inventory is the whole scope: a row may not name a grammar kind it cannot read.
@@ -869,14 +893,17 @@ test("text → machine: the live repository orders nothing the machine surface d
 
 test("machine → text: every value of the must-name vocabularies is ordered by a surface", () => {
   const vocabularies = live.surfaces.filter((s) => s.mustName).flatMap((s) => s.machine);
-  assert.deepEqual(uniq(vocabularies).sort(), ["envelope-field:next", "gate-rejection-type", "pre-execution-verdict"],
+  assert.deepEqual(uniq(vocabularies).sort(), ["continuation-refusal-type", "envelope-field:next", "gate-rejection-type", "pre-execution-verdict"],
     "the closed set the second direction covers is declared in the file header");
   const fieldKeys = [...live.machine.fields.keys()];
   assert.ok(fieldKeys.some((k) => k.endsWith(":next")), `the envelope next list is published by name, got: ${fieldKeys.join(", ")}`);
   const named = new Set([...live.printedGateTypes, ...live.verdicts.map((v) => v.token), ...live.fields.filter((f) => f.object === "next").map((f) => f.field)]);
   for (const value of live.machine.vocabularies.get("gate-rejection-type")) assert.ok(named.has(value), `gate type ${value} is named`);
   for (const value of live.machine.vocabularies.get("pre-execution-verdict")) assert.ok(named.has(value), `verdict ${value} is named`);
-  assert.deepEqual(live.machine.fieldsOf("next", "envelope").keys, ["recommended", "alternatives", "tier", "suggested"],
+  // Feature 59 added `next.continuation` to the envelope; the turn contract's
+  // `hand-off-fields@1` row orders it (`next | continuation`), so the machine list
+  // and the text surface stay the same closed set.
+  assert.deepEqual(live.machine.fieldsOf("next", "envelope").keys, ["recommended", "alternatives", "tier", "suggested", "continuation"],
     "the envelope's `next` is the object the turn contract names, not the outcome's");
   for (const value of live.machine.fieldsOf("next", "envelope").keys) assert.ok(named.has(value), `next.${value} is named`);
 });
