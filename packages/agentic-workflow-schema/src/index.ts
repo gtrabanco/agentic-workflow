@@ -3832,6 +3832,9 @@ export {
 } from "./continuation.js";
 export { CONTINUATION_CANONICAL_VECTORS, CONTINUATION_VECTOR_CONTRACT } from "./continuation-vectors.js";
 
+/** The digest surface the evidence token is bound through (feature 59, D-59-9). */
+export { sha256Hex, sha256HexSync } from "./sha256.js";
+
 export type {
   ContinuationEvidence,
   ContinuationPlatformFamily,
