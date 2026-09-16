@@ -1,7 +1,7 @@
 ---
 name: workflow-status
 user-invocable: true
-version: 3.6.0
+version: 3.7.0
 author: "Gabriel Trabanco <gtrabanco@users.noreply.github.com>"
 license: MIT
 argument-hint: "[--json-only] [--last-envelope <json|path>]"
@@ -117,6 +117,9 @@ the JSON contract.
 - The human summary (unless `--json-only`) and the envelope are printed, envelope
   last.
 - Nothing was modified anywhere.
+- When the envelope carries `next.continuation`, the next-command echo **quotes the
+  emitted `next.continuation`** (`rendering` for display), never author exact command
+  tokens; the human-facing prose `→ Next:` block below stays.
 
 → Next: the envelope's `next.recommended` command — it is computed from the
   actual state, so it IS the recommendation

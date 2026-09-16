@@ -113,7 +113,8 @@ test("files and exports agree on the shipped schema documents", () => {
 });
 
 test("the package version matches the AC7 release contract", () => {
-  assert.equal(manifest.version, "4.1.2");
+  // Feature 59 bumped the additive `next.continuation` minor: 4.1.2 → 4.2.0.
+  assert.equal(manifest.version, "4.2.0");
 });
 
 // ---------------------------------------------------------------------------

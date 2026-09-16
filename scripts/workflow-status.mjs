@@ -965,21 +965,21 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
     const command = nrs.status === "contradicted"
       ? `/resolve-repository-state ${nrs.snapshot_id ?? "<id>"}`
       : "/discover-repository-state";
-    return { recommended: command, alternatives, tier: tierFor(command) };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "nrs" };
   }
   if (crash?.verdict === "RESUMABLE" && crash.branches[0]?.resume_command) {
     const command = crash.branches[0].resume_command;
-    return { recommended: command, alternatives, tier: tierFor(command) };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "crash-resume" };
   }
   if (crash?.verdict === "AMBIGUOUS") {
-    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status") };
+    return { recommended: "/workflow-status", alternatives, tier: tierFor("/workflow-status"), kind: "crash-ambiguous" };
   }
   if (startable.length > 0) {
     const command = startable[0].next;
     for (const unit of startable.slice(1)) alternatives.push(unit.next);
     for (const row of receiptRows.filter((entry) => entry.label !== "current")) alternatives.push(row.recommended);
     for (const candidate of designCandidates) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command) };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "startable" };
   }
   // Step 6a's gate, reachable here: a unit whose receipt for the stage it is about to
   // enter is not current is demoted out of `startable_now`, so without a branch of its
@@ -992,19 +992,104 @@ function resolveNext({ nrs, state, startable, designCandidates, openPrs, untriag
     const command = gateBlocked[0].recommended;
     for (const row of gateBlocked.slice(1)) alternatives.push(row.recommended);
     for (const candidate of designCandidates) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command) };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "gate" };
   }
   if (designCandidates.length > 0) {
     const command = designCandidates[0].next;
     for (const candidate of designCandidates.slice(1)) alternatives.push(candidate.next);
-    return { recommended: command, alternatives, tier: tierFor(command) };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "design" };
   }
   if (untriaged.count > 0) {
     const command = `/triage-issue ${untriaged.oldest_open.join(" ")}`;
-    return { recommended: command, alternatives, tier: tierFor(command) };
+    return { recommended: command, alternatives, tier: tierFor(command), kind: "untriage" };
   }
   const command = "/workflow-status";
-  return { recommended: command, alternatives, tier: tierFor(command) };
+  return { recommended: command, alternatives, tier: tierFor(command), kind: "fallback" };
+}
+
+// ---------------------------------------------------------------------------
+// Feature 59 — `next.continuation` emission (closed v1 class set, D-59-5)
+// ---------------------------------------------------------------------------
+
+/** The three v1 continuation classes (closed; extension is a SPEC change). */
+export const CONTINUATION_CLASSES = Object.freeze([
+  "status-refresh",
+  "planning-gate-rerun",
+  "review-receipt-refresh",
+]);
+
+/**
+ * The class of a resolved command, or `null` when no v1 class owns it. Only the
+ * status-refresh echo and the two receipt-refresh shapes are classes; every other
+ * verb refuses rather than emitting a guessed continuation (Expectation-sweep 4).
+ */
+function continuationClassFor(verb, label) {
+  if (verb === "/workflow-status") return "status-refresh";
+  if (verb === "/review-spec" || verb === "/review-plan") {
+    return label === "stale" || label === "impossible-timeline" ? "planning-gate-rerun" : "review-receipt-refresh";
+  }
+  return null;
+}
+
+/** The convergence field each class must advance (E-59-6 / D-59-8). */
+function convergenceForClass(kind, stage) {
+  return kind === "status-refresh" ? "next.recommended" : `detail.pre_execution.${stage}.label`;
+}
+
+/**
+ * Project the already-resolved decision into a `next.continuation` object (or a
+ * typed refusal). The emitter is the schema package's pure function; this call
+ * site only gathers the unit context and never re-decides (E-59-2/E-59-3).
+ */
+function buildContinuation({ schema, next, receiptRows, forge, decisionAvailable }) {
+  if (!decisionAvailable) return { ok: false, refusal: "no-decision-available" };
+  if (forge && forge.available === false) return { ok: false, refusal: "sensor-degraded" };
+  if (!schema || typeof schema.emitContinuation !== "function") return { ok: false, refusal: "sensor-degraded" };
+
+  const command = next.recommended;
+  const tokens = command.trim().split(/\s+/);
+  const verb = tokens[0] ?? "";
+  let row = null;
+  let stage = "plan";
+  if (verb === "/review-spec" || verb === "/review-plan") {
+    row = receiptRows.find((entry) => entry.recommended === command) ?? null;
+    stage = row?.stage ?? (verb === "/review-spec" ? "spec" : "plan");
+  }
+  const kind = continuationClassFor(verb, row?.label ?? null);
+  if (kind === null) return { ok: false, refusal: "no-decision-available" };
+
+  const preconditions = [];
+  let evidence;
+  if (kind === "status-refresh") {
+    preconditions.push({
+      id: "refresh-actionable",
+      check: "the resolved decision is a recovery action, not the nothing-to-do fallback",
+      satisfied: true,
+    });
+  } else {
+    const artifact = row?.unitDir ? `${row.unitDir}/progress.md` : null;
+    const progressText = artifact ? readProject(artifact) : null;
+    preconditions.push({
+      id: "receipt-row-sensed",
+      check: `detail.pre_execution has a ${stage}-stage row for the target unit`,
+      satisfied: Boolean(row),
+    });
+    preconditions.push({
+      id: "evidence-bindable",
+      check: `${artifact ?? "the unit progress.md"} is readable at emit time`,
+      satisfied: progressText !== null,
+    });
+    // A precondition the emitter cannot evaluate is the refusal, never a guess.
+    if (progressText === null || artifact === null) return { ok: false, refusal: "precondition-uncheckable" };
+    evidence = { artifact, digest: schema.sha256HexSync(progressText) };
+  }
+
+  return schema.emitContinuation({
+    command,
+    convergence: convergenceForClass(kind, stage),
+    preconditions,
+    evidence,
+  });
 }
 
 function buildProjections({ units, forge, readiness, phases, marks, fixNow, observations, urgent }) {
@@ -1090,6 +1175,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     const label = sense.label;
     const row = {
       unit: unit.id,
+      unitDir: dir,
       stage,
       label,
       verdict: sense.verdict,
@@ -1186,10 +1272,22 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     : null;
 
   const designCandidates_ = designCandidates;
-  const next = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash });
+  const nextResolution = resolveNext({ nrs, state, startable, designCandidates: designCandidates_, openPrs, untriaged: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) }, receiptRows, crash });
+  // The resolver's internal branch tag never ships in the envelope.
+  const next = { recommended: nextResolution.recommended, alternatives: nextResolution.alternatives, tier: nextResolution.tier };
   // Step 13 — additive advisory: the class-routed triggers the driver can act on
   // now, never reordering `recommended`/`alternatives`/`tier`.
   next.suggested = nextSuggested;
+  // Feature 59 — project the resolved decision into `next.continuation`. The
+  // fallback branch is "nothing to do": no continuation, only the refusal.
+  const continuation = buildContinuation({
+    schema,
+    next,
+    receiptRows,
+    forge,
+    decisionAvailable: nextResolution.kind !== "fallback",
+  });
+  if (continuation.ok) next.continuation = continuation.continuation;
 
   const hintInfo = loadHint(lastEnvelope);
   const hint = hintGuard(hintInfo, units, state, next.recommended);
@@ -1226,6 +1324,7 @@ export async function buildEnvelope({ lastEnvelope = null } = {}) {
     untriaged_issues: { count: untriagedNumbers.length, oldest_open: untriagedNumbers.slice(0, 5) },
     workflow_observations: observations,
     degradations,
+    ...(continuation.ok ? {} : { continuation_refusal: continuation.refusal }),
     crash_recovery: { verdict: crash.verdict, branches: crash.branches },
     urgent: {
       issues: urgentIssues,
