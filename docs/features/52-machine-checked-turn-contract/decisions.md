@@ -216,3 +216,34 @@ Research gate: two external sources fetched (StateProof, pre-commit — rows abo
   node) holds by construction.
 - **Authority**: authoring decision; disclosed rather than silently
   dropped, per the anti-gap rule.
+
+## 2026-09-16 — ED-52-6: box4 gh failure mapping
+
+- **What**: With `--finished`, the verifier runs `gh pr view <branch> --json
+  state,headRefOid`. A nonzero exit is `pr-unreachable` (gh could not be
+  asked); an output with no `state`, an empty payload, or a state other than
+  `OPEN` is `pr-not-open`. A missing upstream short-circuits to `pr-not-open`
+  before gh is invoked.
+- **Why**: The SPEC's own named command exits nonzero when a branch has no PR
+  at all, so a blanket `any gh error → pr-unreachable` would make `no PR →
+  pr-not-open` unreachable. Splitting the two by observable payload keeps the
+  fail-closed guarantee (an unreachable gh is never a fake ok) while still
+  naming a branch whose PR is absent or closed as `pr-not-open`. Both suites
+  pin all four box4 outcomes against a PATH-stubbed gh, so the contract is
+  testable without a forge.
+- **Authority**: execution refinement of SPEC §Design box4 / PE-003, inside the
+  frozen reason-code vocabulary (D-52-6); no acceptance criterion narrowed.
+
+## 2026-09-16 — Execution hygiene: pre-existing feature-59 bytes relocated
+
+- **What**: The worktree carried uncommitted cross-unit bytes before P1 —
+  `docs/features/ROADMAP.md` consolidation edits folding rows 48/55 into a new
+  feature 59, and the untracked `docs/features/59-executable-continuations-fixture/`
+  design folder. They were moved to the `feat/59-executable-continuations-fixture`
+  worktree (the branch that owns them), leaving this unit's tree clean for the
+  box-5 gate.
+- **Why**: Box 5 requires an empty `git status --porcelain`, and committing
+  another unit's design work on `feat/52` would bundle out-of-scope artifacts
+  into this PR.
+- **Authority**: repo hygiene / turn-contract box 5; not a deliverable of this
+  unit.

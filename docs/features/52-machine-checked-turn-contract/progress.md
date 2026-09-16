@@ -110,3 +110,34 @@ snapshot, and this review wrote to no reviewed artifact (appends to
 Findings rows for this snapshot: `planning-findings.md`
 (`PLAN52-F7`, `PLAN52-F8` — both info/class product, repair rides the next
 SPEC-touching design turn alongside `PLAN52-F6`).
+
+## Acceptance receipt v1
+- Manifest: docs/features/52-machine-checked-turn-contract/ACCEPTANCE.md · Blob: e3bfd8fffbdf6035cb552a197204c92c5c9d170d · Status: frozen · Verified: 2026-09-16
+
+## Dependency receipt v1
+- Fingerprint: 963f208fc252807a04d84f0971c4961e8ede8a96 · Closure: 52-machine-checked-turn-contract ← (none — SPEC hard deps: none)
+- Merged PRs: none required · Fully merged: yes · Verified: 2026-09-16
+
+## Gate receipts (2026-09-16, whole-unit entry)
+- Branch: `feat/52-machine-checked-turn-contract` (not `main`) — `git branch --show-current`.
+- Own-status: roadmap row 52 = `planned` → proceed.
+- Pre-execution review: plan receipt `plan-review-52-20260916-2` @ `1a929fa77447b16d362a9cadd512d0e8d683df05c5a10a042a64484508fa923f` — `scripts/pre-execution-snapshot.mjs verify --stage plan` → `current: true, digestMatches: true, verdictIsPass: true`.
+- Acceptance manifest: blob `e3bfd8fffbdf6035cb552a197204c92c5c9d170d` recorded above (baseline for the whole unit).
+- Phase-lint at entry: P1/P2/P3 PASS (8/8) · verdict PASS · fingerprint `2c7d8179e6598cec42870674f000b1802d7270c977cc5d160f6150204bb7db05`.
+- Implementation discovery: `READY` (map-52-p1-20260916) — seven questions closed, falsification probes green (`test-command-guard.sh` exit 0, `normative-drift.test.mjs` 17/17).
+
+## P1 gate (2026-09-16)
+- `bash template/.agentic-workflow/hooks/tests/test-turn-contract.sh` → exit 0 (PASS turn contract: 18 cases)
+- `node --test scripts/normative-drift.test.mjs` → exit 0 (17/17 — the new `turn-contract-receipt@1` block and `CLAUDE.md` row both parse)
+- `node --test scripts/workflow-status-sensor.test.mjs` → exit 0 (56/56 — AC10/O15)
+- `bun scripts/check-skill-context.mjs` → exit 0 (PASS context budgets: 40 skills — O3)
+- `node --test packages/pi-agentic-workflow/test/skill-parity.test.mjs` → exit 0 (7/7 — O5, mirror byte-identical)
+- `grep -n -e node -e bun -e npm -e npx template/.agentic-workflow/hooks/turn-contract.sh` → no matches, exit 1 (AC12)
+- `grep -c machine-check docs/workflow/ORCHESTRATION.md docs/workflow/FEATURE_WORKFLOW.md` → 1 each (O4)
+
+## P1 — 2026-09-16
+- Done: machine-check receipt surface — scaffold shim + hook suite (18 cases) + `## Machine-check profile` and `turn-contract-receipt@1` in `TURN_CONTRACT.md` + `CLAUDE.md` normative-surfaces row + `orchestration-envelope` 2.1.0 release + pi mirror re-bundle + one profile pointer each in `ORCHESTRATION.md` and `FEATURE_WORKFLOW.md`
+- Remains: P2 (crate engine + engine/parity/grammar-conformance suites), P3 (hardening & PR)
+- Gotchas: box4 maps a nonzero `gh pr view` exit to `pr-unreachable` and an absent/empty/non-`OPEN` state to `pr-not-open` (ED-52-6); the shim never emits `phase-lint-failed` (ED-52-3); the shim's `--help` output is frozen byte-for-byte by its hook suite; pre-existing cross-unit feature-59 design bytes found uncommitted in this worktree were relocated to the `feat/59` worktree before P1 (repo hygiene, not this unit's scope)
+- Files: template/.agentic-workflow/hooks/turn-contract.sh, template/.agentic-workflow/hooks/tests/test-turn-contract.sh, skills/orchestration-envelope/SKILL.md, skills/orchestration-envelope/references/TURN_CONTRACT.md, CLAUDE.md, CHANGELOG.md, docs/workflow/ORCHESTRATION.md, docs/workflow/FEATURE_WORKFLOW.md, packages/pi-agentic-workflow/skills/orchestration-envelope/SKILL.md, packages/pi-agentic-workflow/skills/orchestration-envelope/references/TURN_CONTRACT.md
+- Next: P2 — Implement the turn-contract verifier engine
