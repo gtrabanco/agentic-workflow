@@ -29,8 +29,8 @@ Layer: config/infra · Done-when: `bun test packages/agentic-workflow/test/` →
 
 Layer: hardening · Done-when: `git status --porcelain` → empty.
 
-- [ ] Exercise the SPEC §Dev scenarios failure matrix as edge fixtures in both suites
-- [ ] Re-run the project's full verification gate (commands + exit codes pasted)
+- [x] Exercise the SPEC §Dev scenarios failure matrix as edge fixtures in both suites
+- [x] Re-run the project's full verification gate (commands + exit codes pasted)
 - [ ] Pending-docs check: `git status --porcelain -- docs/` → empty
 - [ ] Set the roadmap row status to `done` and commit the flip
 - [ ] `git push`
