@@ -131,6 +131,11 @@ function buildFixtures(root) {
   fx.b4 = unitBranch(root, "b4", "feat/b4");
   bareRemote(root, fx.b4, "feat/b4");
 
+  // Corrupt index: `git status` itself errors while branch/rev-list still
+  // answer -> box5 must fail closed, never print a fake ok (F1, review cycle 1).
+  fx.corrupt = unitBranch(root, "corrupt", "feat/corrupt");
+  writeFileSync(path.join(fx.corrupt, ".git/index"), "not a git index\n");
+
   // Engine-only: the phase-lint clause of box2 (the shim cannot run it).
   fx.lintfail = unitBranch(root, "lintfail", "feat/lintfail");
   commitFile(fx.lintfail, "docs/features/lintfail/TASKS.md", "# TASKS\n");
@@ -219,6 +224,7 @@ export function receiptCases(ctx) {
     { name: "box5 ahead of remote", dir: ctx.fx.ahead, code: 1, line: "TURN-CONTRACT fail box5: ahead-of-remote" },
     { name: "box5 dirty precedes ahead", dir: ctx.fx.dirtyahead, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "box5 unicode/space names", dir: ctx.fx.unicode, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
+    { name: "box5 unreadable status fails closed", dir: ctx.fx.corrupt, code: 1, line: "TURN-CONTRACT fail box5: dirty-tree" },
     { name: "clean feature branch", dir: ctx.fx.ok, code: 0, line: "TURN-CONTRACT ok" },
   ];
 }
