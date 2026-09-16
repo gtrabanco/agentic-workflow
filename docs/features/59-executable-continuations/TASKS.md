@@ -73,8 +73,8 @@ Layer: hardening · fingerprint `P5:hardening:8:hardening-pr` · Phase-lint: PAS
 - [x] Verify the additive-release evidence — `node -p "require('./packages/agentic-workflow-schema/package.json').version"` prints 4.2.0, and the CHANGELOG row plus the additive-guarantee sentence are present (read-verified) — evidence: version `4.2.0`; `CHANGELOG.md` 4.2.0 row; `packages/agentic-workflow-schema/README.md` additive-guarantee section
 - [x] Verify the frozen acceptance manifest blob is unchanged and record the acceptance receipt (`git hash-object docs/features/59-executable-continuations/ACCEPTANCE.md`) in the unit's progress log — evidence: blob `d046f0b537da92251c6d81893e816bbc0de1a252`, unchanged since freeze; receipt recorded in `progress.md`
 - [x] Confirm every phase fingerprint above still matches the plan's committed phase shapes and that every read-verified row has its evidence recorded (manual) — evidence: `phase-lint` verdict PASS (8/8 × 5), whole-set fingerprint `1a3bf148…` unchanged; each read-verified row quoted in its phase handoff
-- [ ] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat
-- [ ] update the roadmap row to `done · [#<pr>](<pr-url>)`
-- [ ] commit `docs: link PR #<n>` and push
+- [x] open the PR (`gh pr create --body-file <path>` — body written as a Markdown file, real backticks, never inline `--body`/heredoc that leaves `\`-escaped backticks) and PRINT THE PR URL in the chat — evidence: PR #238 (already open for this branch) had its title + body updated via the REST API with `--body-file`; URL https://github.com/gtrabanco/agentic-workflow/pull/238
+- [x] update the roadmap row to `done · [#<pr>](<pr-url>)` — evidence: `docs/features/ROADMAP.md` row 59 `done · [#238](…)`
+- [x] commit `docs: link PR #<n>` and push — evidence: the link commit follows this one
 
 Done-when: `node --test scripts/continuation-discipline.test.mjs` → exit 0 with the whole ladder green, parity green, and the PR URL printed.
