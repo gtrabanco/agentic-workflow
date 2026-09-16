@@ -82,6 +82,13 @@ new_branch "$plain_repo" main
 gitc -C "$plain_repo" checkout -q -b chore/plain
 commit_file "$plain_repo" note.txt 'x'
 
+# unitfile: the unit path exists as a regular FILE, not a directory -> the unit
+# directory does not exist, so box2 is not-applicable (ED-52-2; F5, cycle 2).
+unitfile_repo=$tmp/unitfile
+new_branch "$unitfile_repo" main
+gitc -C "$unitfile_repo" checkout -q -b feat/unitfile
+commit_file "$unitfile_repo" docs/features/unitfile 'not a directory'
+
 # empty: unborn branch with no commits (dev scenario verifier:empty-repo).
 empty_repo=$tmp/empty
 gitc init -q -b feature/x "$empty_repo"
@@ -171,6 +178,10 @@ assert "box2 acceptance missing" 1 'TURN-CONTRACT fail box2: acceptance-missing'
 run_dir=$plain_repo
 run
 assert "box2 not-applicable" 0 'TURN-CONTRACT ok'
+
+run_dir=$unitfile_repo
+run
+assert "box2 unit path is a file" 0 'TURN-CONTRACT ok'
 
 # ---- box3 ------------------------------------------------------------------
 
@@ -284,4 +295,4 @@ if ! grep -q 'unknown argument: --nope' "$tmp/stderr"; then
 fi
 
 [ "$failures" -eq 0 ] || exit 1
-printf 'PASS turn contract: 23 cases\n'
+printf 'PASS turn contract: 24 cases\n'
