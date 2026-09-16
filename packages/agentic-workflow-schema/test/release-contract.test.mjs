@@ -20,9 +20,12 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const PKG_DIR = fileURLToPath(new URL("..", import.meta.url));
 const readPkg = (rel) => readFileSync(join(PKG_DIR, rel), "utf8");
 
-test("AC8 read-verified: package version is 4.1.2", () => {
+test("AC8 read-verified: package version is 4.2.0", () => {
+  // Feature 59 shipped the additive `next.continuation` minor (4.1.2 → 4.2.0).
+  // This pin tracks the release contract, not a behavior: it moves with the
+  // same-PR version bump every release records in CHANGELOG.md.
   const pkg = JSON.parse(readPkg("package.json"));
-  assert.equal(pkg.version, "4.1.2");
+  assert.equal(pkg.version, "4.2.0");
 });
 
 // AC7 — capability semantics. Repository evidence is authoritative,

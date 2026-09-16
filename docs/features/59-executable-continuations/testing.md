@@ -37,3 +37,10 @@ Each dev scenario from the SPEC resolves to the named phase's pins:
 - Throwaway git fixture repos per the existing sensor-suite harness
   (`scripts/workflow-status-sensor.test.mjs:87-123` pattern); `gh` stubs for
   forge state; no network in tests.
+
+## Execution evidence
+
+### P1 — Envelope continuation schema (2026-09-16)
+
+- `cd packages/agentic-workflow-schema && bun run test` → exit 0, **707 pass / 0 fail** (baseline was 682 pass; the new `test/continuation.test.mjs` adds 25 cases, both release-contract pins moved with the version bump).
+- Pins green: backward-compat (no field), valid object under both `validateEnvelope` and `validateEnvelopeV2Strict`, ten fail-closed shapes with typed errors, the four-code refusal closure, emitter argv/rendering/refusal paths, per-family rendering derivation + argv immutability + divergence-fails, the two published canonical vectors, and the evidence digest equality + mismatch.
