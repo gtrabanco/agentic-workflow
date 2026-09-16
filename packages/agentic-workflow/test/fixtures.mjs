@@ -107,6 +107,13 @@ function buildFixtures(root) {
   git(fx.plain, "checkout", "-q", "-b", "chore/plain");
   commitFile(fx.plain, "note.txt", "x\n");
 
+  // Unit path exists as a regular FILE, not a directory -> the unit directory
+  // does not exist, so box2 is not-applicable (ED-52-2) in BOTH engines
+  // (F5, review cycle 2).
+  fx.unitfile = newRepo(root, "unitfile", "main");
+  git(fx.unitfile, "checkout", "-q", "-b", "feat/unitfile");
+  commitFile(fx.unitfile, "docs/features/unitfile", "not a directory\n");
+
   // Dirty tree.
   fx.dirty = unitBranch(root, "dirty", "feat/dirty");
   writeFileSync(path.join(fx.dirty, "README.md"), "base\ndirty\n");
@@ -192,6 +199,7 @@ export function receiptCases(ctx) {
     { name: "box1 not a repo", dir: ctx.fx.notrepo, code: 1, line: "TURN-CONTRACT fail box1: not-a-repo" },
     { name: "box2 acceptance missing", dir: ctx.fx.missing, code: 1, line: "TURN-CONTRACT fail box2: acceptance-missing" },
     { name: "box2 not applicable", dir: ctx.fx.plain, code: 0, line: "TURN-CONTRACT ok" },
+    { name: "box2 unit path is a file", dir: ctx.fx.unitfile, code: 0, line: "TURN-CONTRACT ok" },
     { name: "box3 no commits", dir: ctx.fx.nocommits, code: 1, line: "TURN-CONTRACT fail box3: no-commits" },
     { name: "box3 empty repo", dir: ctx.fx.empty, code: 1, line: "TURN-CONTRACT fail box3: no-commits" },
     { name: "box4 not applicable", dir: ctx.fx.ok, code: 0, line: "TURN-CONTRACT ok" },
