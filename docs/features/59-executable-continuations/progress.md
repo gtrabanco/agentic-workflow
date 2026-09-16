@@ -92,3 +92,25 @@ Notes:
 ## Acceptance receipt v1
 
 - Manifest: docs/features/59-executable-continuations/ACCEPTANCE.md · Blob: d046f0b537da92251c6d81893e816bbc0de1a252 · Status: frozen · Verified: 2026-09-16 (recorded at plan freeze by `plan-feature-scaffold`; recomputed before every phase and final review per `verification-contract`)
+
+## Pre-execution review receipt v1 — plan
+
+```text
+## Pre-execution review receipt v1 — plan
+- Review: PLAN-REVIEW-59-1 · Snapshot: edf2fb501a456f623e6f63420501d63fd6b2e279a0c8d15be78f91621809917d · Verdict: plan-review-fail
+- Unit: 59-executable-continuations · Stage: plan · Unit kind: feature
+- Parent SPEC snapshot: 2e2d00d62a70a64490312f3d651ae9899c8758c0389540f1b4aa44612ebc7f0e · Parent Product receipt: SPEC-REVIEW-59-2
+- Source revision: 5e762d7dfcc41c72c26e86f163eaccb755f70b9d · Artifact revision: 59-plan-1
+- Reviewer: review-plan (fresh context, manual route) · Session: n/a (manual route) · Role: reviewer · Author: plan-feature-scaffold (2026-09-16 authoring turn)
+- Author exclusion: not-enforceable · Context clean: true
+- Model diversity: not-applicable · Policy: v1
+- Started/finished: 2026-09-16T18:55Z/2026-09-16T19:14Z · Findings: 3 (material open: 3)
+- Ledgers read: planning-evidence 20 rows · obligations 17 rows (verified-capable: 0)
+- Prior plan receipt (re-review only): none — first cycle
+```
+
+Notes:
+- Plan snapshot built with the recipe owner at one revision (`git rev-parse HEAD` = `5e762d7d…`, tree clean): all 9 applicable artifact rows present and bound whole-file (M unit — ledgers are separate files, no XS/S embed), contexts `architectural-invariants` absent (NRS F010) / NRS + project-guide present, `--artifact-revision 59-plan-1` taken from the planner handoff; digest `edf2fb50…9917d` pasted above.
+- L1 parent currency: coarse `verify --stage spec` answers `stale-source-revision` (artifacts reviewed at `e8cee5f…`, bound bytes now sit at `5e762d7d…`) — the expected consequence of sanctioned post-review commits (the plan half was appended to SPEC.md outside the Product selector; ledger receipts were committed). The decisive recomputation per POLICY §7: the parent receipt's pinned Product selector re-derived from current bytes with the schema package's `selectSpecProduct` = 26199 bytes, sha256 `15f99f5e4295cecefb5dbc40f0dd89fe941bc603809e5ebd64b3f8282a11470e` — equal to the recorded pin (claimed beside recomputed). Product bytes and context rows unmoved; parent state: current.
+- Phase-lint re-run at this revision (P9 evidence): PASS (8/8) on all five phases; fingerprints match PLAN.md/TASKS.md exactly (`1a3bf148…` over the set).
+- Ledger writes this turn: this receipt block + `planning-findings.md` rows F4–F6 only; no reviewed plan artifact (`SPEC.md`, `PLAN.md`, `TASKS.md`, `ACCEPTANCE.md`, `planning-evidence.md`, `planning-obligations.md`, `testing.md`, `decisions.md`, `architecture-notes.md`, `ROADMAP.md`) modified.
